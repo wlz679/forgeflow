@@ -57,11 +57,11 @@ const engine: ToolEngine = {
     { q: 'Is this tool free?', a: 'Yes, completely free. No signup required.' },
   ],
   howToUse: [
-    '1. Enter your topic or content area.',
-    '2. Click "Generate Viral Ideas" for 10 concepts.',
-    '3. Each uses a proven viral format.',
-    '4. Copy ideas with clear hooks that fit your style.',
-    '5. Execution matters more than the idea — great ideas fail with poor delivery.',
+    'Enter your topic or content area.',
+    'Click "Generate Viral Ideas" for 10 concepts.',
+    'Each uses a proven viral format.',
+    'Copy ideas with clear hooks that fit your style.',
+    'Execution matters more than the idea — great ideas fail with poor delivery.',
   ],
 };
 

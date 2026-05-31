@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import SearchBar from '../../components/SearchBar.astro';
+import CategorySection from '../../components/CategorySection.astro';
+import AdUnit from '../../components/AdUnit.astro';
+import { categories } from '../../data/categories';
+import { tools } from '../../data/tools';
+import { t, getLang } from '../../i18n';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
+}
+
+const lang = getLang(Astro);
+const title = t('home.title', lang);
+const description = t('home.description', lang);
+
+const translatedTools = tools.map(tool => ({
+  ...tool,
+  title: t(`tools.${tool.slug}.title`, lang),
+  description: t(`tools.${tool.slug}.description`, lang),
+}));
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <div class="relative text-center mb-10 p-10 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 overflow-hidden">
+      <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-0 left-1/4 w-80 h-80 bg-[#FF0000] rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-400 rounded-full blur-[120px]"></div>
+      </div>
+      <div class="relative z-10">
+        <div class="flex justify-center mb-6">
+          <div class="relative">
+            <div class="w-20 h-20 bg-gradient-to-br from-[#FF0000] to-[#CC0000] rounded-2xl flex items-center justify-center shadow-lg shadow-[#FF0000]/30">
+              <svg class="w-10 h-10 text-white ml-1" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">{t('home.h1', lang)}</h1>
+        <p class="text-sm text-gray-600 mt-2 max-w-xl mx-auto leading-relaxed">{t('home.subtitle', lang)}</p>
+        <div class="flex justify-center gap-6 mt-6 text-xs text-gray-500">
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            Free
+          </span>
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            No Login
+          </span>
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            Instant
+          </span>
+        </div>
+      </div>
+    </div>
+    <SearchBar />
+    <AdUnit slot="home-hero" />
+    {categories.slice(0, 3).map(cat => (
+      <CategorySection
+        id={cat.slug}
+        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        description={t(`category.${cat.id}.desc`, lang)}
+        tools={translatedTools.filter(t => t.categoryId === cat.id)}
+      />
+    ))}
+    <AdUnit slot="home-mid" />
+    {categories.slice(3).map(cat => (
+      <CategorySection
+        id={cat.slug}
+        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        description={t(`category.${cat.id}.desc`, lang)}
+        tools={translatedTools.filter(t => t.categoryId === cat.id)}
+      />
+    ))}
+    <AdUnit slot="home-footer" />
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  document.getElementById('tool-search')?.addEventListener('input', function(e) {
+    const query = (e.target as HTMLInputElement).value.toLowerCase();
+    document.querySelectorAll('section a[href]').forEach(card => {
+      const el = card as HTMLElement;
+      el.style.display = el.textContent?.toLowerCase().includes(query) ? '' : 'none';
+    });
+    document.querySelectorAll('section').forEach(section => {
+      const hasVisible = section.querySelectorAll('a:not([style*="display: none"])').length > 0;
+      (section as HTMLElement).style.display = hasVisible ? '' : 'none';
+    });
+  });
+</script>

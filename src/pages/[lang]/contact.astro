@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { t, getLang } from '../../i18n';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
+}
+
+const lang = getLang(Astro);
+const title = t('contact.title', lang);
+const description = t('contact.description', lang);
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-4">{t('contact.h1', lang)}</h1>
+    <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
+      <p>{t('contact.p1', lang)}</p>
+      <p>{t('contact.p2', lang)} <a href="mailto:contact@youtubetools.com" class="text-red-600 hover:text-red-700">contact@youtubetools.com</a></p>
+      <p>{t('contact.p3', lang)}</p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

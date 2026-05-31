@@ -56,11 +56,11 @@ const engine: ToolEngine = {
     { q: 'Is this tool free?', a: 'Yes, completely free. No signup required.' },
   ],
   howToUse: [
-    '1. Enter a skill or interest (e.g., "playing piano").',
-    '2. Click "Generate Niche Ideas" for 10 suggestions.',
-    '3. Each suggestion combines your interest with audience, style, or format.',
-    '4. Copy ideas you like and research them on YouTube.',
-    '5. Pick one niche to start with — you can expand later.',
+    'Enter a skill or interest (e.g., "playing piano").',
+    'Click "Generate Niche Ideas" for 10 suggestions.',
+    'Each suggestion combines your interest with audience, style, or format.',
+    'Copy ideas you like and research them on YouTube.',
+    'Pick one niche to start with — you can expand later.',
   ],
 };
 

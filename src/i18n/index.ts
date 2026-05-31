@@ -2,10 +2,15 @@ import { translations } from './translations';
 
 export type Lang = 'en' | 'zh';
 
-export function getLang(astro: { url: URL; cookies: { get(name: string): { value: string } | undefined } }): Lang {
+export function getLang(astro: { url: URL; params?: Record<string, string | undefined>; cookies?: { get(name: string): { value: string } | undefined } }): Lang {
+  // 1. Path param: /zh/ or /en/
+  const p = astro.params?.lang;
+  if (p === 'zh' || p === 'en') return p;
+  // 2. Query param fallback: ?lang=zh
   const q = astro.url.searchParams.get('lang');
   if (q === 'zh' || q === 'en') return q;
-  const c = astro.cookies.get('yt-lang');
+  // 3. Cookie fallback
+  const c = astro.cookies?.get('yt-lang');
   if (c && (c.value === 'zh' || c.value === 'en')) return c.value;
   return 'en';
 }

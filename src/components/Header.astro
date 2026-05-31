@@ -4,24 +4,31 @@ import { t, getLang } from '../i18n';
 const lang = getLang(Astro);
 const otherLang = lang === 'zh' ? 'en' : 'zh';
 
+// Build the other-language URL by replacing the first path segment
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '';
+const otherPath = currentPath.replace(/^\/[^/]+/, '/' + otherLang) || '/' + otherLang + '/';
+
 const navItems = [
-  { href: '/blog/', key: 'nav.blog' },
-  { href: '/about', key: 'nav.about' },
+  { href: `/${lang}/blog/`, key: 'nav.blog' },
+  { href: `/${lang}/about`, key: 'nav.about' },
 ];
 ---
 
-<header class="border-b border-gray-200 sticky top-0 bg-white z-50">
-  <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-    <a href="/" class="text-lg font-bold text-gray-900 hover:text-red-600 transition-colors">
+<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+  <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+    <a href={`/${lang}/`} class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200">
+      <svg class="w-8 h-8 text-[#FF0000]" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+      </svg>
       {t('site.name', lang)}
     </a>
-    <div class="flex items-center gap-4 text-sm">
+    <div class="flex items-center gap-6 text-sm">
       {navItems.map(item => (
-        <a href={item.href} class="text-gray-600 hover:text-red-600 transition-colors">
+        <a href={item.href} class="text-gray-600 hover:text-[#FF0000] transition-colors duration-200">
           {t(item.key, lang)}
         </a>
       ))}
-      <a href={`?lang=${otherLang}`} class="text-xs text-gray-400 hover:text-red-600 transition-colors ml-2">
+      <a href={otherPath} class="px-3 py-1.5 text-xs font-medium bg-[#FF0000] hover:bg-[#CC0000] text-white rounded-full transition-all duration-200 ml-2">
         {t('lang.switch', lang)}
       </a>
     </div>
@@ -29,9 +36,9 @@ const navItems = [
 </header>
 
 <script>
-  // Set cookie when lang is in query param
-  const q = new URLSearchParams(window.location.search).get('lang');
-  if (q === 'zh' || q === 'en') {
-    document.cookie = 'yt-lang=' + q + '; path=/; max-age=2592000; SameSite=Lax';
+  // Set cookie when lang is in path
+  const m = window.location.pathname.match(/^\/(en|zh)\//);
+  if (m) {
+    document.cookie = 'yt-lang=' + m[1] + '; path=/; max-age=2592000; SameSite=Lax';
   }
 </script>

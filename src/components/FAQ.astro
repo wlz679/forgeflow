@@ -7,12 +7,19 @@ const lang = getLang(Astro);
 ---
 
 <div class="mt-8">
-  <h2 class="text-lg font-bold mb-3">{t('faq.title', lang)}</h2>
-  <div class="space-y-1">
+  <h2 class="text-lg font-bold text-gray-900 mb-4">{t('faq.title', lang)}</h2>
+  <div class="space-y-2">
     {Astro.props.items.map(item => (
-      <details class="border border-gray-200 rounded-lg group">
-        <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 select-none">{item.q}</summary>
-        <p class="px-4 pb-3 text-sm text-gray-600 leading-relaxed">{item.a}</p>
+      <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300">
+        <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#FF0000] hover:bg-gray-50 select-none flex items-center justify-between">
+          <span>{item.q}</span>
+          <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </span>
+        </summary>
+        <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">{item.a}</p>
       </details>
     ))}
   </div>

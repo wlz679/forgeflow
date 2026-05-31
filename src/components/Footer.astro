@@ -4,18 +4,24 @@ import { t, getLang } from '../i18n';
 const lang = getLang(Astro);
 
 const legalLinks = [
-  { href: '/privacy-policy', key: 'footer.privacy' },
-  { href: '/terms', key: 'footer.terms' },
-  { href: '/contact', key: 'footer.contact' },
-  { href: '/about', key: 'footer.about' },
+  { href: `/${lang}/privacy-policy`, key: 'footer.privacy' },
+  { href: `/${lang}/terms`, key: 'footer.terms' },
+  { href: `/${lang}/contact`, key: 'footer.contact' },
+  { href: `/${lang}/about`, key: 'footer.about' },
 ];
 ---
 
-<footer class="border-t border-gray-200 mt-auto bg-gray-50">
-  <div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="flex flex-wrap justify-center gap-4 text-sm mb-2">
+<footer class="relative border-t border-gray-100 mt-auto bg-gray-50">
+  <div class="relative max-w-6xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-center gap-2 mb-6">
+      <svg class="w-5 h-5 text-[#FF0000]" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+      </svg>
+      <span class="text-gray-600 text-sm">{t('site.name', lang)}</span>
+    </div>
+    <div class="flex flex-wrap justify-center gap-6 text-sm mb-6">
       {legalLinks.map(link => (
-        <a href={link.href} class="text-gray-500 hover:text-red-600 transition-colors">
+        <a href={link.href} class="text-gray-500 hover:text-[#FF0000] transition-colors duration-200">
           {t(link.key, lang)}
         </a>
       ))}

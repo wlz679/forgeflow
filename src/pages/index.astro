@@ -1,66 +1,15 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import SearchBar from '../components/SearchBar.astro';
-import CategorySection from '../components/CategorySection.astro';
-import AdUnit from '../components/AdUnit.astro';
-import { categories } from '../data/categories';
-import { tools } from '../data/tools';
-import { t, getLang } from '../i18n';
-
-const lang = getLang(Astro);
-const title = t('home.title', lang);
-const description = t('home.description', lang);
-
-const translatedTools = tools.map(tool => ({
-  ...tool,
-  title: t(`tools.${tool.slug}.title`, lang),
-  description: t(`tools.${tool.slug}.description`, lang),
-}));
+// SSG can't read cookies — use client-side redirect with cookie check
 ---
-
-<BaseLayout title={title} description={description}>
-  <Header />
-  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
-    <div class="text-center mb-6">
-      <h1 class="text-2xl font-extrabold text-gray-900 sm:text-3xl">{t('home.h1', lang)}</h1>
-      <p class="text-sm text-gray-500 mt-2 max-w-lg mx-auto">{t('home.subtitle', lang)}</p>
-    </div>
-    <SearchBar />
-    <AdUnit slot="home-hero" />
-    {categories.slice(0, 3).map(cat => (
-      <CategorySection
-        id={cat.slug}
-        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
-        description={t(`category.${cat.id}.desc`, lang)}
-        tools={translatedTools.filter(t => t.categoryId === cat.id)}
-      />
-    ))}
-    <AdUnit slot="home-mid" />
-    {categories.slice(3).map(cat => (
-      <CategorySection
-        id={cat.slug}
-        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
-        description={t(`category.${cat.id}.desc`, lang)}
-        tools={translatedTools.filter(t => t.categoryId === cat.id)}
-      />
-    ))}
-    <AdUnit slot="home-footer" />
-  </main>
-  <Footer />
-</BaseLayout>
-
-<script>
-  document.getElementById('tool-search')?.addEventListener('input', function(e) {
-    const query = (e.target as HTMLInputElement).value.toLowerCase();
-    document.querySelectorAll('section a[href]').forEach(card => {
-      const el = card as HTMLElement;
-      el.style.display = el.textContent?.toLowerCase().includes(query) ? '' : 'none';
-    });
-    document.querySelectorAll('section').forEach(section => {
-      const hasVisible = section.querySelectorAll('a:not([style*="display: none"])').length > 0;
-      (section as HTMLElement).style.display = hasVisible ? '' : 'none';
-    });
-  });
-</script>
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="0;url=/en/" />
+  <script>
+    const m = document.cookie.match(/\byt-lang=(zh|en)\b/);
+    window.location.replace('/' + (m ? m[1] : 'en') + '/');
+  </script>
+</head>
+<body></body>
+</html>

@@ -53,11 +53,11 @@ const engine: ToolEngine = {
     { q: 'Is this tool free?', a: 'Yes, completely free. No signup required.' },
   ],
   howToUse: [
-    '1. Enter your channel niche.',
-    '2. Click "Generate Trending Ideas" for 10 trending directions.',
-    '3. Review each idea and consider how to adapt it to your style.',
-    '4. Copy ideas that resonate with your audience.',
-    '5. Research trends further on YouTube to validate demand.',
+    'Enter your channel niche.',
+    'Click "Generate Trending Ideas" for 10 trending directions.',
+    'Review each idea and consider how to adapt it to your style.',
+    'Copy ideas that resonate with your audience.',
+    'Research trends further on YouTube to validate demand.',
   ],
 };
 

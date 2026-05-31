@@ -59,11 +59,11 @@ const engine: ToolEngine = {
     { q: 'Is this tool free?', a: 'Yes, completely free. No signup required.' },
   ],
   howToUse: [
-    '1. Enter your video topic or niche (e.g., "tech reviews" or "cooking").',
-    '2. Click "Generate Ideas".',
-    '3. Review the 10 generated video ideas.',
-    '4. Click Copy on any idea you like, or use Copy All.',
-    '5. Pick your favorite and start creating!',
+    'Enter your video topic or niche (e.g., "tech reviews" or "cooking").',
+    'Click "Generate Ideas".',
+    'Review the 10 generated video ideas.',
+    'Click Copy on any idea you like, or use Copy All.',
+    'Pick your favorite and start creating!',
   ],
 };
 

@@ -70,11 +70,11 @@ const engine: ToolEngine = {
     { q: 'Is this tool free?', a: 'Yes, completely free. No signup required.' },
   ],
   howToUse: [
-    '1. Enter your channel niche.',
-    '2. Select 7 or 30 day plan.',
-    '3. Click "Generate Plan".',
-    '4. Each day gets a unique video topic. Copy individually or full plan.',
-    '5. Customize to fit your style.',
+    'Enter your channel niche.',
+    'Select 7 or 30 day plan.',
+    'Click "Generate Plan".',
+    'Each day gets a unique video topic. Copy individually or full plan.',
+    'Customize to fit your style.',
   ],
 };
 

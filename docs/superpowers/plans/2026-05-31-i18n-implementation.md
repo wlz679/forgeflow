@@ -1,0 +1,1475 @@
+# i18n 中英文双语支持 — Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Add Chinese (zh) language support via query parameter + cookie, translating all core UI and tool data while keeping English as default.
+
+**Architecture:** Two new files (`src/i18n/index.ts` for language detection, `src/i18n/translations.ts` for the translation dictionary). All `.astro` components call `t(key, lang)` instead of hardcoding English strings. Language is detected from `?lang=zh` query param (highest priority), then `yt-lang` cookie, defaulting to `en`. A cookie is set client-side for persistence across pages.
+
+**Tech Stack:** Astro 4 + TypeScript, no additional dependencies.
+
+---
+
+### Task 1: Create i18n infrastructure
+
+**Files:**
+- Create: `src/i18n/index.ts`
+- Create: `src/i18n/translations.ts`
+
+- [ ] **Step 1: Create `src/i18n/index.ts`**
+
+```typescript
+import { translations } from './translations';
+
+export type Lang = 'en' | 'zh';
+
+export function getLang(astro: { url: URL; cookies: { get(name: string): { value: string } | undefined } }): Lang {
+  const q = astro.url.searchParams.get('lang');
+  if (q === 'zh' || q === 'en') return q;
+  const c = astro.cookies.get('yt-lang');
+  if (c && (c.value === 'zh' || c.value === 'en')) return c.value;
+  return 'en';
+}
+
+export function t(key: string, lang: Lang, vars?: Record<string, string>): string {
+  const entry = translations[key];
+  if (!entry) return key;
+  let text = entry[lang];
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      text = text.replace(`{${k}}`, v);
+    }
+  }
+  return text;
+}
+```
+
+- [ ] **Step 2: Create `src/i18n/translations.ts`**
+
+This file contains all translation entries (~450 keys). Each key maps to `{ en, zh }`.
+
+```typescript
+export const translations: Record<string, { en: string; zh: string }> = {
+  // ===== Site-wide UI =====
+  'site.name': { en: 'YT Creator Tools', zh: 'YT 创作者工具' },
+  'nav.blog': { en: 'Blog', zh: '博客' },
+  'nav.about': { en: 'About', zh: '关于' },
+  'search.placeholder': { en: 'Search tools... (e.g. "title generator")', zh: '搜索工具...（如"标题生成器"）' },
+  'btn.generate': { en: 'Generate', zh: '生成' },
+  'btn.copy': { en: 'Copy', zh: '复制' },
+  'btn.copied': { en: 'Copied!', zh: '已复制！' },
+  'btn.copy_all': { en: 'Copy All', zh: '复制全部' },
+  'results.title': { en: 'Results', zh: '结果' },
+  'breadcrumb.home': { en: 'Home', zh: '首页' },
+  'breadcrumb.blog': { en: 'Blog', zh: '博客' },
+  'faq.title': { en: 'Frequently Asked Questions', zh: '常见问题' },
+  'how_to_use.title': { en: 'How to Use This Tool', zh: '如何使用此工具' },
+  'related_tools.title': { en: 'Related Tools', zh: '相关工具' },
+  'footer.privacy': { en: 'Privacy Policy', zh: '隐私政策' },
+  'footer.terms': { en: 'Terms & Conditions', zh: '服务条款' },
+  'footer.contact': { en: 'Contact', zh: '联系我们' },
+  'footer.about': { en: 'About', zh: '关于' },
+  'footer.copyright': { en: 'Not affiliated with YouTube.', zh: '与 YouTube 无关联。' },
+  'lang.switch': { en: '中文', zh: 'English' },
+  'blog.title': { en: 'YouTube Creator Blog', zh: 'YouTube 创作者博客' },
+  'blog.subtitle': { en: 'Tips, guides, and best practices to grow your YouTube channel.', zh: '助力 YouTube 频道成长的技巧、指南和最佳实践。' },
+  'blog.read_more': { en: 'Read more →', zh: '阅读更多 →' },
+  'blog.try_now': { en: 'Try {tool} Now →', zh: '立即试用 {tool} →' },
+  'adsense.placeholder': { en: 'AdSense', zh: '广告' },
+
+  // ===== Home page =====
+  'home.title': { en: 'Free YouTube Creator Tools — 30 Tools to Grow Your Channel', zh: '免费 YouTube 创作者工具 — 30 款工具助力频道成长' },
+  'home.description': { en: 'Free tools for YouTube creators: title generator, tag generator, thumbnail ideas, CPM calculator, SEO tools, and more. No signup required.', zh: 'YouTube 创作者免费工具：标题生成器、标签生成器、缩略图创意、CPM 计算器、SEO 工具等。无需注册。' },
+  'home.h1': { en: 'Free YouTube Creator Tools', zh: '免费 YouTube 创作者工具' },
+  'home.subtitle': { en: '30 free tools to help YouTube creators grow — titles, tags, thumbnails, ideas, SEO, and more. No signup, no fees.', zh: '30 款免费工具，助力 YouTube 创作者成长 — 标题、标签、缩略图、创意、SEO 等。无需注册，完全免费。' },
+
+  // ===== About page =====
+  'about.title': { en: 'About — YouTube Creator Tools', zh: '关于 — YouTube 创作者工具' },
+  'about.description': { en: 'Free tools for YouTube creators. 30 tools to help you grow your channel. No signup, no fees.', zh: 'YouTube 创作者免费工具。30 款工具助力频道成长，无需注册，完全免费。' },
+  'about.h1': { en: 'About YouTube Creator Tools', zh: '关于 YouTube 创作者工具' },
+  'about.p1': { en: 'YouTube Creator Tools is a free collection of 30 tools designed to help YouTube creators at every stage of content creation — from brainstorming ideas to optimizing for search and growing your channel.', zh: 'YouTube 创作者工具是一个免费的工具集合，包含 30 款工具，旨在帮助 YouTube 创作者在内容创作的每个阶段 — 从创意头脑风暴到搜索优化和频道增长。' },
+  'about.p2': { en: 'All tools are completely free. No signup, no fees, no hidden costs. Just useful tools when you need them.', zh: '所有工具完全免费。无需注册，无任何费用，无隐藏成本。在你需要时，随时提供有用的工具。' },
+  'about.p3': { en: 'Our tools cover six key areas: Content Ideas, Titles & SEO Copy, Shorts Growth, SEO Optimization, Thumbnail Optimization, and Channel Growth.', zh: '我们的工具涵盖六大关键领域：内容创意、标题与 SEO 文案、短视频增长、SEO 优化、缩略图优化和频道增长。' },
+  'about.p4': { en: 'This site is independently operated and is not affiliated with YouTube or Google.', zh: '本站独立运营，与 YouTube 或 Google 无关联。' },
+
+  // ===== Contact page =====
+  'contact.title': { en: 'Contact — YouTube Creator Tools', zh: '联系我们 — YouTube 创作者工具' },
+  'contact.description': { en: 'Get in touch with the YouTube Creator Tools team.', zh: '与 YouTube 创作者工具团队取得联系。' },
+  'contact.h1': { en: 'Contact Us', zh: '联系我们' },
+  'contact.p1': { en: "Have a question, suggestion, or feedback? We'd love to hear from you.", zh: '有问题、建议或反馈？我们很乐意听取你的意见。' },
+  'contact.p2': { en: 'Email us at:', zh: '发送邮件至：' },
+  'contact.p3': { en: 'We typically respond within 24-48 hours.', zh: '我们通常在 24-48 小时内回复。' },
+
+  // ===== Blog list page =====
+  'blog.page_title': { en: 'YouTube Creator Tips & Tools Blog', zh: 'YouTube 创作者技巧与工具博客' },
+
+  // ===== Categories =====
+  'category.A.name': { en: 'Content Ideas', zh: '内容创意' },
+  'category.A.desc': { en: 'Generate video topics, trending ideas, and niche suggestions for your channel.', zh: '为你的频道生成视频主题、热门创意和细分领域建议。' },
+  'category.B.name': { en: 'Titles & SEO Copy', zh: '标题与 SEO 文案' },
+  'category.B.desc': { en: 'Create click-worthy titles, descriptions, hooks, and scripts optimized for search.', zh: '创建利于点击的标题、描述、钩子和脚本，针对搜索进行了优化。' },
+  'category.C.name': { en: 'Shorts Growth', zh: '短视频增长' },
+  'category.C.desc': { en: 'Tools specifically for YouTube Shorts — ideas, hooks, captions, and hashtags.', zh: '专为 YouTube Shorts 打造的工具——创意、钩子、字幕和话题标签。' },
+  'category.D.name': { en: 'SEO Optimization', zh: 'SEO 优化' },
+  'category.D.desc': { en: 'Generate tags, keywords, hashtags, and audit your video SEO before publishing.', zh: '生成标签、关键词和话题标签，发布前审核视频 SEO。' },
+  'category.E.name': { en: 'Thumbnail Optimization', zh: '缩略图优化' },
+  'category.E.desc': { en: 'Craft thumbnail text, design concepts, and optimize CTR for your thumbnails.', zh: '精雕细琢缩略图文案和设计概念，优化缩略图点击率。' },
+  'category.F.name': { en: 'Channel Growth', zh: '频道增长' },
+  'category.F.desc': { en: 'Channel naming, descriptions, upload timing, revenue estimates, and growth scoring.', zh: '频道命名、描述、上传时机、收入估算和增长评分。' },
+
+  // ===== Tools: Category A — Content Ideas =====
+  // youtube-video-idea-generator
+  'tools.youtube-video-idea-generator.title': { en: 'YouTube Video Idea Generator', zh: 'YouTube 视频创意生成器' },
+  'tools.youtube-video-idea-generator.description': { en: 'Generate 10 unique video topics from any seed keyword.', zh: '从任意种子关键词生成 10 个独特的视频主题。' },
+  'tools.youtube-video-idea-generator.input.topic.label': { en: 'Video Topic or Niche', zh: '视频主题或细分领域' },
+  'tools.youtube-video-idea-generator.input.topic.placeholder': { en: 'e.g. tech reviews, cooking, travel vlog', zh: '如：科技评测、烹饪、旅行 vlog' },
+  'tools.youtube-video-idea-generator.how_to_use.0': { en: '1. Enter your video topic or niche (e.g., "tech reviews" or "cooking").', zh: '1. 输入视频主题或细分领域（如"科技评测"或"烹饪"）。' },
+  'tools.youtube-video-idea-generator.how_to_use.1': { en: '2. Click "Generate Ideas".', zh: '2. 点击"生成创意"。' },
+  'tools.youtube-video-idea-generator.how_to_use.2': { en: '3. Review the 10 generated video ideas.', zh: '3. 查看生成的 10 个视频创意。' },
+  'tools.youtube-video-idea-generator.how_to_use.3': { en: '4. Click Copy on any idea you like, or use Copy All.', zh: '4. 点击任意创意上的"复制"，或使用"复制全部"。' },
+  'tools.youtube-video-idea-generator.how_to_use.4': { en: '5. Pick your favorite and start creating!', zh: '5. 选择你最喜欢的创意，开始创作！' },
+  'tools.youtube-video-idea-generator.faq.0.q': { en: 'How does the Video Idea Generator work?', zh: '视频创意生成器是如何工作的？' },
+  'tools.youtube-video-idea-generator.faq.0.a': { en: 'Our tool combines proven YouTube content formats with your topic to generate 10 unique video ideas. Each idea is built from templates that reflect popular, high-performing video styles.', zh: '我们的工具将经过验证的 YouTube 内容格式与你的主题相结合，生成 10 个独特的视频创意。每个创意都基于反映流行、高表现视频风格的模板构建。' },
+  'tools.youtube-video-idea-generator.faq.1.q': { en: 'How many ideas can I generate?', zh: '我可以生成多少个创意？' },
+  'tools.youtube-video-idea-generator.faq.1.a': { en: 'Each click produces 10 unique ideas. Click multiple times for fresh sets.', zh: '每次点击生成 10 个独特创意。多次点击可获取全新的创意组合。' },
+  'tools.youtube-video-idea-generator.faq.2.q': { en: 'Are these ideas guaranteed to go viral?', zh: '这些创意能保证走红吗？' },
+  'tools.youtube-video-idea-generator.faq.2.a': { en: 'No tool can guarantee virality, but our templates are based on proven YouTube formats that consistently perform well.', zh: '没有任何工具能保证走红，但我们的模板基于经过验证的 YouTube 格式，这些格式一直表现良好。' },
+  'tools.youtube-video-idea-generator.faq.3.q': { en: 'Can I use this for any niche?', zh: '适用于任何细分领域吗？' },
+  'tools.youtube-video-idea-generator.faq.3.a': { en: 'Yes! Works for gaming, tech, cooking, fitness, education, vlogging, and more.', zh: '是的！适用于游戏、科技、烹饪、健身、教育、vlog 等所有领域。' },
+  'tools.youtube-video-idea-generator.faq.4.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-video-idea-generator.faq.4.a': { en: 'Yes, completely free. No signup required.', zh: '是的，完全免费，无需注册。' },
+
+  // youtube-trending-ideas-finder
+  'tools.youtube-trending-ideas-finder.title': { en: 'YouTube Trending Ideas Finder', zh: 'YouTube 热门创意发现器' },
+  'tools.youtube-trending-ideas-finder.description': { en: 'Discover potential trending video directions based on your niche.', zh: '根据你的细分领域，发现潜在的流行视频方向。' },
+  'tools.youtube-trending-ideas-finder.input.niche.label': { en: 'Your Niche', zh: '你的细分领域' },
+  'tools.youtube-trending-ideas-finder.input.niche.placeholder': { en: 'e.g. fitness, gaming, personal finance', zh: '如：健身、游戏、个人理财' },
+  'tools.youtube-trending-ideas-finder.how_to_use.0': { en: '1. Enter your channel niche.', zh: '1. 输入你的频道细分领域。' },
+  'tools.youtube-trending-ideas-finder.how_to_use.1': { en: '2. Click "Generate Trending Ideas" for 10 trending directions.', zh: '2. 点击"生成热门创意"获取 10 个热门方向。' },
+  'tools.youtube-trending-ideas-finder.how_to_use.2': { en: '3. Review each idea and consider how to adapt it to your style.', zh: '3. 查看每个创意，思考如何调整以适应你的风格。' },
+  'tools.youtube-trending-ideas-finder.how_to_use.3': { en: '4. Copy ideas that resonate with your audience.', zh: '4. 复制能引起观众共鸣的创意。' },
+  'tools.youtube-trending-ideas-finder.how_to_use.4': { en: '5. Research trends further on YouTube to validate demand.', zh: '5. 在 YouTube 上进一步研究趋势以验证需求。' },
+  'tools.youtube-trending-ideas-finder.faq.0.q': { en: 'Where do these trending ideas come from?', zh: '这些热门创意来自哪里？' },
+  'tools.youtube-trending-ideas-finder.faq.0.a': { en: 'Templates are based on YouTube trend analysis — format shifts, content style changes, and emerging topics across major niches.', zh: '模板基于 YouTube 趋势分析——格式变化、内容风格转变以及各大细分领域的新兴话题。' },
+  'tools.youtube-trending-ideas-finder.faq.1.q': { en: 'How often should I check for new trends?', zh: '我应该多久查看一次新趋势？' },
+  'tools.youtube-trending-ideas-finder.faq.1.a': { en: 'YouTube trends shift rapidly. Check weekly and adapt your content calendar accordingly.', zh: 'YouTube 趋势变化很快。每周检查一次，并相应调整你的内容日历。' },
+  'tools.youtube-trending-ideas-finder.faq.2.q': { en: 'Can I target trends in a specific country?', zh: '可以针对特定国家的趋势吗？' },
+  'tools.youtube-trending-ideas-finder.faq.2.a': { en: 'Include your target country in the niche field (e.g., "Indian tech reviews").', zh: '在细分领域字段中包含你的目标国家（如"印度科技评测"）。' },
+  'tools.youtube-trending-ideas-finder.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-trending-ideas-finder.faq.3.a': { en: 'Yes, completely free. No signup required.', zh: '是的，完全免费，无需注册。' },
+
+  // youtube-niche-ideas-generator
+  'tools.youtube-niche-ideas-generator.title': { en: 'YouTube Niche Ideas Generator', zh: 'YouTube 细分领域创意生成器' },
+  'tools.youtube-niche-ideas-generator.description': { en: 'Find the perfect channel niche and sub-niche ideas for beginners.', zh: '为初学者找到完美的频道细分领域和子领域创意。' },
+  'tools.youtube-niche-ideas-generator.input.interest.label': { en: 'Your Interest or Skill', zh: '你的兴趣或技能' },
+  'tools.youtube-niche-ideas-generator.input.interest.placeholder': { en: 'e.g. drawing, coding, cooking', zh: '如：绘画、编程、烹饪' },
+  'tools.youtube-niche-ideas-generator.how_to_use.0': { en: '1. Enter a skill or interest (e.g., "playing piano").', zh: '1. 输入一项技能或兴趣（如"弹钢琴"）。' },
+  'tools.youtube-niche-ideas-generator.how_to_use.1': { en: '2. Click "Generate Niche Ideas" for 10 suggestions.', zh: '2. 点击"生成细分领域创意"获取 10 个建议。' },
+  'tools.youtube-niche-ideas-generator.how_to_use.2': { en: '3. Each suggestion combines your interest with audience, style, or format.', zh: '3. 每个建议都将你的兴趣与受众、风格或格式相结合。' },
+  'tools.youtube-niche-ideas-generator.how_to_use.3': { en: '4. Copy ideas you like and research them on YouTube.', zh: '4. 复制你喜欢的创意，并在 YouTube 上研究它们。' },
+  'tools.youtube-niche-ideas-generator.how_to_use.4': { en: '5. Pick one niche to start with — you can expand later.', zh: '5. 选择一个细分领域开始——以后可以扩展。' },
+  'tools.youtube-niche-ideas-generator.faq.0.q': { en: 'How do I pick the right niche?', zh: '如何选择合适的细分领域？' },
+  'tools.youtube-niche-ideas-generator.faq.0.a': { en: 'Look for the intersection of what you enjoy, what you\'re good at, and what has audience demand.', zh: '找到你喜欢、擅长且有受众需求的交集。' },
+  'tools.youtube-niche-ideas-generator.faq.1.q': { en: 'How many niches are too many?', zh: '多少个细分领域算太多？' },
+  'tools.youtube-niche-ideas-generator.faq.1.a': { en: 'For a new channel, focus on ONE niche. Mixed content grows slower.', zh: '对于新频道，专注于一个细分领域。混合内容增长更慢。' },
+  'tools.youtube-niche-ideas-generator.faq.2.q': { en: 'Can I change my niche later?', zh: '以后可以更换细分领域吗？' },
+  'tools.youtube-niche-ideas-generator.faq.2.a': { en: 'Yes, but expect a temporary view drop. Transition gradually.', zh: '可以，但预计会有暂时的观看量下降。逐步过渡。' },
+  'tools.youtube-niche-ideas-generator.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-niche-ideas-generator.faq.3.a': { en: 'Yes, completely free. No signup required.', zh: '是的，完全免费，无需注册。' },
+
+  // youtube-content-planner
+  'tools.youtube-content-planner.title': { en: 'YouTube Content Planner', zh: 'YouTube 内容规划器' },
+  'tools.youtube-content-planner.description': { en: 'Generate a 7-day or 30-day content plan with video topics.', zh: '生成 7 天或 30 天的内容计划，包含视频主题。' },
+  'tools.youtube-content-planner.input.niche.label': { en: 'Channel Niche', zh: '频道细分领域' },
+  'tools.youtube-content-planner.input.niche.placeholder': { en: 'e.g. tech reviews', zh: '如：科技评测' },
+  'tools.youtube-content-planner.input.duration.label': { en: 'Plan Duration', zh: '计划时长' },
+  'tools.youtube-content-planner.how_to_use.0': { en: '1. Enter your channel niche.', zh: '1. 输入你的频道细分领域。' },
+  'tools.youtube-content-planner.how_to_use.1': { en: '2. Select 7 or 30 day plan.', zh: '2. 选择 7 天或 30 天计划。' },
+  'tools.youtube-content-planner.how_to_use.2': { en: '3. Click "Generate Plan".', zh: '3. 点击"生成计划"。' },
+  'tools.youtube-content-planner.how_to_use.3': { en: '4. Each day gets a unique video topic. Copy individually or full plan.', zh: '4. 每天都有一个独特的视频主题。可单独复制或复制整个计划。' },
+  'tools.youtube-content-planner.how_to_use.4': { en: '5. Customize to fit your style.', zh: '5. 自定义以适应你的风格。' },
+  'tools.youtube-content-planner.faq.0.q': { en: 'How do I create a consistent content calendar?', zh: '如何创建一致的内容日历？' },
+  'tools.youtube-content-planner.faq.0.a': { en: 'Mix: 40% search-based (tutorials), 30% trending, 20% community, 10% experimental.', zh: '混合比例：40% 搜索型（教程）、30% 热门话题、20% 社区互动、10% 实验性内容。' },
+  'tools.youtube-content-planner.faq.1.q': { en: 'Should I post every day?', zh: '我应该每天发布吗？' },
+  'tools.youtube-content-planner.faq.1.a': { en: '2-3 videos per week is ideal for most new channels. Consistency > frequency.', zh: '对于大多数新频道，每周 2-3 个视频最理想。一致性比频率更重要。' },
+  'tools.youtube-content-planner.faq.2.q': { en: 'What day is best to upload?', zh: '哪天上传最好？' },
+  'tools.youtube-content-planner.faq.2.a': { en: 'Thursday-Saturday generally see higher engagement. Use our Upload Time Optimizer.', zh: '周四至周六通常有更高的参与度。使用我们的上传时间优化器。' },
+  'tools.youtube-content-planner.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-content-planner.faq.3.a': { en: 'Yes, completely free. No signup required.', zh: '是的，完全免费，无需注册。' },
+
+  // youtube-viral-video-ideas
+  'tools.youtube-viral-video-ideas.title': { en: 'YouTube Viral Video Ideas Generator', zh: 'YouTube 爆款视频创意生成器' },
+  'tools.youtube-viral-video-ideas.description': { en: 'Get viral-worthy video ideas based on proven viral formats.', zh: '基于经过验证的爆款格式，获取具有爆款潜力的视频创意。' },
+  'tools.youtube-viral-video-ideas.input.topic.label': { en: 'Your Topic', zh: '你的主题' },
+  'tools.youtube-viral-video-ideas.input.topic.placeholder': { en: 'e.g. life hacks, experiments', zh: '如：生活技巧、实验' },
+  'tools.youtube-viral-video-ideas.how_to_use.0': { en: '1. Enter your topic or content area.', zh: '1. 输入你的主题或内容领域。' },
+  'tools.youtube-viral-video-ideas.how_to_use.1': { en: '2. Click "Generate Viral Ideas" for 10 concepts.', zh: '2. 点击"生成爆款创意"获取 10 个概念。' },
+  'tools.youtube-viral-video-ideas.how_to_use.2': { en: '3. Each uses a proven viral format.', zh: '3. 每个都使用经过验证的爆款格式。' },
+  'tools.youtube-viral-video-ideas.how_to_use.3': { en: '4. Copy ideas with clear hooks that fit your style.', zh: '4. 复制具有清晰钩子且适合你风格的创意。' },
+  'tools.youtube-viral-video-ideas.how_to_use.4': { en: '5. Execution matters more than the idea — great ideas fail with poor delivery.', zh: '5. 执行比创意更重要——好的创意也可能因糟糕的执行而失败。' },
+  'tools.youtube-viral-video-ideas.faq.0.q': { en: 'What makes a video go viral?', zh: '什么让视频爆红？' },
+  'tools.youtube-viral-video-ideas.faq.0.a': { en: 'Strong emotional hook in first 3 seconds, 70%+ retention, compelling title/thumbnail, shareable concept.', zh: '前三秒强烈的情感钩子、70% 以上的留存率、引人注目的标题/缩略图、可分享的概念。' },
+  'tools.youtube-viral-video-ideas.faq.1.q': { en: 'Are Shorts easier to go viral?', zh: '短视频更容易爆红吗？' },
+  'tools.youtube-viral-video-ideas.faq.1.a': { en: 'Yes, lower barrier via Shorts feed, but RPM is lower. Balance both formats.', zh: '是的，通过 Shorts 信息流的门槛更低，但 RPM 也较低。平衡两种格式。' },
+  'tools.youtube-viral-video-ideas.faq.2.q': { en: 'How long should a viral video be?', zh: '爆款视频应该多长？' },
+  'tools.youtube-viral-video-ideas.faq.2.a': { en: 'Reactions: 8-12 min. Challenges: 10-20 min. Story-driven: 12-18 min. Hold attention — length doesn\'t matter if viewers drop off.', zh: '反应类：8-12 分钟。挑战类：10-20 分钟。故事驱动类：12-18 分钟。保持注意力——如果观众流失，时长就没有意义。' },
+  'tools.youtube-viral-video-ideas.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-viral-video-ideas.faq.3.a': { en: 'Yes, completely free. No signup required.', zh: '是的，完全免费，无需注册。' },
+
+  // ===== Tools: Category B — Titles & SEO Copy =====
+  // youtube-title-generator
+  'tools.youtube-title-generator.title': { en: 'YouTube Title Generator', zh: 'YouTube 标题生成器' },
+  'tools.youtube-title-generator.description': { en: 'Generate 10 catchy, SEO-optimized video titles in multiple styles.', zh: '生成 10 个吸引人的、SEO 优化的视频标题，支持多种风格。' },
+  'tools.youtube-title-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-title-generator.input.topic.placeholder': { en: 'e.g. iPhone 15 review', zh: '如：iPhone 15 评测' },
+  'tools.youtube-title-generator.input.style.label': { en: 'Title Style', zh: '标题风格' },
+  'tools.youtube-title-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-title-generator.how_to_use.1': { en: 'Select a title style or "All Styles".', zh: '选择标题风格或"所有风格"。' },
+  'tools.youtube-title-generator.how_to_use.2': { en: 'Click "Generate Titles".', zh: '点击"生成标题"。' },
+  'tools.youtube-title-generator.how_to_use.3': { en: 'Review 10 titles in your chosen style.', zh: '查看 10 个你选择风格的标题。' },
+  'tools.youtube-title-generator.how_to_use.4': { en: 'Copy individual titles or use Copy All.', zh: '复制单个标题或使用"复制全部"。' },
+  'tools.youtube-title-generator.faq.0.q': { en: 'How does the Title Generator work?', zh: '标题生成器是如何工作的？' },
+  'tools.youtube-title-generator.faq.0.a': { en: 'It combines proven YouTube title formulas with your topic across 4 styles: Clickbait, SEO, Emotional, and How-To.', zh: '它将经过验证的 YouTube 标题公式与你的主题相结合，涵盖 4 种风格：点击诱饵、SEO、情感和教程式。' },
+  'tools.youtube-title-generator.faq.1.q': { en: 'Which title style performs best?', zh: '哪种标题风格表现最好？' },
+  'tools.youtube-title-generator.faq.1.a': { en: 'Depends on your niche. Gaming: Clickbait. Education: SEO. Vlogs: Emotional. Tutorials: How-To.', zh: '取决于你的细分领域。游戏：点击诱饵。教育：SEO。Vlog：情感。教程：教程式。' },
+  'tools.youtube-title-generator.faq.2.q': { en: 'Are these titles SEO-optimized?', zh: '这些标题是 SEO 优化的吗？' },
+  'tools.youtube-title-generator.faq.2.a': { en: 'Yes, SEO-style titles include high-volume keywords and follow YouTube SEO best practices.', zh: '是的，SEO 风格的标题包含高搜索量关键词，并遵循 YouTube SEO 最佳实践。' },
+  'tools.youtube-title-generator.faq.3.q': { en: 'How many titles per generation?', zh: '每次生成多少个标题？' },
+  'tools.youtube-title-generator.faq.3.a': { en: '10 titles.', zh: '10 个标题。' },
+  'tools.youtube-title-generator.faq.4.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-title-generator.faq.4.a': { en: 'Yes, completely free.', zh: '是的，完全免费。' },
+
+  // youtube-clickbait-title-generator
+  'tools.youtube-clickbait-title-generator.title': { en: 'YouTube Clickbait Title Generator', zh: 'YouTube 点击诱饵标题生成器' },
+  'tools.youtube-clickbait-title-generator.description': { en: 'Create high-CTR titles using emotion, curiosity gaps, and bold claims.', zh: '利用情感、好奇心缺口和大胆宣言创建高点击率标题。' },
+  'tools.youtube-clickbait-title-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-clickbait-title-generator.input.topic.placeholder': { en: 'e.g. my weight loss journey', zh: '如：我的减肥之旅' },
+  'tools.youtube-clickbait-title-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-clickbait-title-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-clickbait-title-generator.how_to_use.2': { en: 'Review high-CTR title options.', zh: '查看高点击率标题选项。' },
+  'tools.youtube-clickbait-title-generator.how_to_use.3': { en: 'Copy the titles that match your video content.', zh: '复制与你的视频内容匹配的标题。' },
+  'tools.youtube-clickbait-title-generator.how_to_use.4': { en: 'Always deliver on your title\'s promise.', zh: '始终兑现标题中的承诺。' },
+  'tools.youtube-clickbait-title-generator.faq.0.q': { en: 'What makes a title "clickbait"?', zh: '什么让标题成为"点击诱饵"？' },
+  'tools.youtube-clickbait-title-generator.faq.0.a': { en: 'Clickbait titles use curiosity gaps, strong emotions, bold claims, and numbers to drive clicks.', zh: '点击诱饵标题运用好奇心缺口、强烈情感、大胆宣言和数字来吸引点击。' },
+  'tools.youtube-clickbait-title-generator.faq.1.q': { en: 'Is clickbait bad for my channel?', zh: '点击诱饵对我的频道有害吗？' },
+  'tools.youtube-clickbait-title-generator.faq.1.a': { en: 'Not if you deliver on the promise. "Good clickbait" hooks viewers with an intriguing premise you actually fulfill.', zh: '不会，只要你能兑现承诺。"好的点击诱饵"用你实际上能完成的有趣前提来吸引观众。' },
+  'tools.youtube-clickbait-title-generator.faq.2.q': { en: 'Will YouTube penalize clickbait titles?', zh: 'YouTube 会惩罚点击诱饵标题吗？' },
+  'tools.youtube-clickbait-title-generator.faq.2.a': { en: 'Only if the content doesn\'t match the title. YouTube rewards high CTR when paired with strong retention.', zh: '只有当内容与标题不匹配时才会。当高点击率与强留存率搭配时，YouTube 会给予奖励。' },
+  'tools.youtube-clickbait-title-generator.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-clickbait-title-generator.faq.3.a': { en: 'Yes.', zh: '是的。' },
+
+  // youtube-description-generator
+  'tools.youtube-description-generator.title': { en: 'YouTube Description Generator', zh: 'YouTube 描述生成器' },
+  'tools.youtube-description-generator.description': { en: 'Generate SEO-optimized video descriptions with keywords and chapters.', zh: '生成包含关键词和章节的 SEO 优化视频描述。' },
+  'tools.youtube-description-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-description-generator.input.topic.placeholder': { en: 'e.g. how to edit videos on iPhone', zh: '如：如何在 iPhone 上编辑视频' },
+  'tools.youtube-description-generator.input.keywords.label': { en: 'Key Topics (comma separated)', zh: '关键主题（逗号分隔）' },
+  'tools.youtube-description-generator.input.keywords.placeholder': { en: 'e.g. iPhone editing, mobile editing, CapCut', zh: '如：iPhone 编辑、手机编辑、剪映' },
+  'tools.youtube-description-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-description-generator.how_to_use.1': { en: 'Add key topics (comma separated).', zh: '添加关键主题（逗号分隔）。' },
+  'tools.youtube-description-generator.how_to_use.2': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-description-generator.how_to_use.3': { en: 'Copy the full description.', zh: '复制完整描述。' },
+  'tools.youtube-description-generator.how_to_use.4': { en: 'Replace placeholder links with your actual URLs.', zh: '将占位链接替换为你的实际 URL。' },
+  'tools.youtube-description-generator.faq.0.q': { en: 'How long should a YouTube description be?', zh: 'YouTube 描述应该多长？' },
+  'tools.youtube-description-generator.faq.0.a': { en: 'At least 200 words. YouTube scans descriptions for keywords to understand your content.', zh: '至少 200 个单词。YouTube 会扫描描述中的关键词以理解你的内容。' },
+  'tools.youtube-description-generator.faq.1.q': { en: 'Should I include timestamps?', zh: '我应该包含时间戳吗？' },
+  'tools.youtube-description-generator.faq.1.a': { en: 'Yes, timestamps improve user experience and can appear as "chapters" in search results.', zh: '是的，时间戳可以改善用户体验，并且可以在搜索结果中显示为"章节"。' },
+  'tools.youtube-description-generator.faq.2.q': { en: 'How many hashtags?', zh: '应该用多少个话题标签？' },
+  'tools.youtube-description-generator.faq.2.a': { en: 'YouTube recommends 3 max in the description. They appear above your title.', zh: 'YouTube 建议描述中最多使用 3 个。它们会显示在标题上方。' },
+  'tools.youtube-description-generator.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-description-generator.faq.3.a': { en: 'Yes.', zh: '是的。' },
+
+  // youtube-hook-generator
+  'tools.youtube-hook-generator.title': { en: 'YouTube Hook Generator', zh: 'YouTube 钩子生成器' },
+  'tools.youtube-hook-generator.description': { en: 'Generate scroll-stopping first 3-second hooks for your videos.', zh: '为你的视频生成让人停下滚动的开场三秒钩子。' },
+  'tools.youtube-hook-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-hook-generator.input.topic.placeholder': { en: 'e.g. how I learned Spanish in 30 days', zh: '如：我如何在 30 天内学会西班牙语' },
+  'tools.youtube-hook-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-hook-generator.how_to_use.1': { en: 'Click "Generate Hooks".', zh: '点击"生成钩子"。' },
+  'tools.youtube-hook-generator.how_to_use.2': { en: 'Review 10 scroll-stopping hooks.', zh: '查看 10 个让人停下滚动的钩子。' },
+  'tools.youtube-hook-generator.how_to_use.3': { en: 'Copy the best ones.', zh: '复制最好的钩子。' },
+  'tools.youtube-hook-generator.how_to_use.4': { en: 'Test different hooks to see what works for your audience.', zh: '测试不同的钩子，看看哪些对你的观众有效。' },
+  'tools.youtube-hook-generator.faq.0.q': { en: 'What makes a good video hook?', zh: '什么造就一个好的视频钩子？' },
+  'tools.youtube-hook-generator.faq.0.a': { en: 'The first 3 seconds must create curiosity, emotion, or promise value. Strong hooks boost retention dramatically.', zh: '前三秒必须创造好奇心、情感或价值承诺。强有力的钩子能大幅提升留存率。' },
+  'tools.youtube-hook-generator.faq.1.q': { en: 'How long should my hook be?', zh: '钩子应该多长？' },
+  'tools.youtube-hook-generator.faq.1.a': { en: '3-5 seconds. Get to the point immediately — viewers decide to stay or leave in the first 3 seconds.', zh: '3-5 秒。立即切入重点——观众在前 3 秒决定留下还是离开。' },
+  'tools.youtube-hook-generator.faq.2.q': { en: 'Should I use the same hook pattern every video?', zh: '每个视频应该用相同的钩子模式吗？' },
+  'tools.youtube-hook-generator.faq.2.a': { en: 'No. Vary your hooks to avoid predictability. Different patterns work for different video types.', zh: '不要。变化钩子以避免可预测性。不同的模式适用于不同类型的视频。' },
+  'tools.youtube-hook-generator.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-hook-generator.faq.3.a': { en: 'Yes.', zh: '是的。' },
+
+  // youtube-script-generator
+  'tools.youtube-script-generator.title': { en: 'YouTube Script Generator', zh: 'YouTube 脚本生成器' },
+  'tools.youtube-script-generator.description': { en: 'Create a structured video script outline with intro, body, and CTA.', zh: '创建包含开场、正文和行动号召的结构化视频脚本大纲。' },
+  'tools.youtube-script-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-script-generator.input.topic.placeholder': { en: 'e.g. MacBook Pro M4 review', zh: '如：MacBook Pro M4 评测' },
+  'tools.youtube-script-generator.input.style.label': { en: 'Video Style', zh: '视频风格' },
+  'tools.youtube-script-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-script-generator.how_to_use.1': { en: 'Select video style (Review, Tutorial, etc.).', zh: '选择视频风格（评测、教程等）。' },
+  'tools.youtube-script-generator.how_to_use.2': { en: 'Click "Generate Script".', zh: '点击"生成脚本"。' },
+  'tools.youtube-script-generator.how_to_use.3': { en: 'Use the INTRO/BODY/OUTRO structure as your outline.', zh: '将开场/正文/结尾结构作为你的大纲。' },
+  'tools.youtube-script-generator.how_to_use.4': { en: 'Add your personal stories and details to each section.', zh: '在每个部分添加你的个人故事和细节。' },
+  'tools.youtube-script-generator.faq.0.q': { en: 'Do I need to follow the script exactly?', zh: '我需要完全按照脚本说吗？' },
+  'tools.youtube-script-generator.faq.0.a': { en: 'No! The script is an outline. Add your personality, stories, and ad-libs to make it authentic.', zh: '不需要！脚本只是大纲。加入你的个性、故事和即兴发挥，使其真实自然。' },
+  'tools.youtube-script-generator.faq.1.q': { en: 'How long should each section be?', zh: '每个部分应该多长？' },
+  'tools.youtube-script-generator.faq.1.a': { en: 'Intro: 10-15 sec. Body: 80% of video. Outro: 15-30 sec. Adjust based on your video length.', zh: '开场：10-15 秒。正文：视频的 80%。结尾：15-30 秒。根据视频长度调整。' },
+  'tools.youtube-script-generator.faq.2.q': { en: 'Should I memorize the script?', zh: '我应该背诵脚本吗？' },
+  'tools.youtube-script-generator.faq.2.a': { en: 'For most styles, bullet points work better than word-for-word scripts. Only memorize key transitions and the hook.', zh: '对于大多数风格，要点提纲比逐字脚本效果更好。只需记住关键过渡和钩子。' },
+  'tools.youtube-script-generator.faq.3.q': { en: 'Is this tool free?', zh: '这个工具免费吗？' },
+  'tools.youtube-script-generator.faq.3.a': { en: 'Yes.', zh: '是的。' },
+
+  // ===== Tools: Category C — Shorts Growth =====
+  // youtube-shorts-idea-generator
+  'tools.youtube-shorts-idea-generator.title': { en: 'YouTube Shorts Idea Generator', zh: 'YouTube Shorts 创意生成器' },
+  'tools.youtube-shorts-idea-generator.description': { en: 'Generate quick, engaging Shorts video ideas for fast growth.', zh: '生成快速、有吸引力的 Shorts 视频创意，助力快速增长。' },
+  'tools.youtube-shorts-idea-generator.input.niche.label': { en: 'Your Niche', zh: '你的细分领域' },
+  'tools.youtube-shorts-idea-generator.input.niche.placeholder': { en: 'e.g. cooking, dance, comedy', zh: '如：烹饪、舞蹈、喜剧' },
+  'tools.youtube-shorts-idea-generator.how_to_use.0': { en: 'Enter your niche.', zh: '输入你的细分领域。' },
+  'tools.youtube-shorts-idea-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-shorts-idea-generator.how_to_use.2': { en: 'Review Shorts-specific ideas.', zh: '查看 Shorts 专属创意。' },
+  'tools.youtube-shorts-idea-generator.how_to_use.3': { en: 'Copy the best ones.', zh: '复制最好的创意。' },
+  'tools.youtube-shorts-idea-generator.how_to_use.4': { en: 'Film quick, vertical videos (under 60s).', zh: '拍摄快速的竖屏视频（60 秒以内）。' },
+  'tools.youtube-shorts-idea-generator.faq.0.q': { en: 'How are Shorts ideas different from regular video ideas?', zh: 'Shorts 创意与普通视频创意有何不同？' },
+  'tools.youtube-shorts-idea-generator.faq.0.a': { en: 'Shorts need quick, visual punch. Ideas work best when they show a transformation, reaction, or quick tip in under 60 seconds.', zh: 'Shorts 需要快速的视觉冲击力。展示转变、反应或快速技巧的创意在 60 秒内效果最好。' },
+  'tools.youtube-shorts-idea-generator.faq.1.q': { en: 'How many Shorts should I post per day?', zh: '每天应该发布多少个 Shorts？' },
+  'tools.youtube-shorts-idea-generator.faq.1.a': { en: '1-3 Shorts per day is optimal for growth. Consistency matters more than volume.', zh: '每天 1-3 个 Shorts 最有利于增长。一致性比数量更重要。' },
+  'tools.youtube-shorts-idea-generator.faq.2.q': { en: 'Do Shorts help grow my long-form channel?', zh: 'Shorts 能帮助增长长视频频道吗？' },
+  'tools.youtube-shorts-idea-generator.faq.2.a': { en: 'Yes! Shorts can funnel viewers to your long-form content. Use related videos and end screens.', zh: '是的！Shorts 可以将观众引流到你的长视频内容。使用相关视频和片尾画面。' },
+  'tools.youtube-shorts-idea-generator.faq.3.q': { en: 'Free?', zh: '免费吗？' },
+  'tools.youtube-shorts-idea-generator.faq.3.a': { en: 'Yes.', zh: '是的。' },
+
+  // youtube-shorts-hook-generator
+  'tools.youtube-shorts-hook-generator.title': { en: 'YouTube Shorts Hook Generator', zh: 'YouTube Shorts 钩子生成器' },
+  'tools.youtube-shorts-hook-generator.description': { en: 'Create attention-grabbing first-second hooks for Shorts.', zh: '为 Shorts 创建抓人眼球的第一秒钩子。' },
+  'tools.youtube-shorts-hook-generator.input.topic.label': { en: 'Shorts Topic', zh: 'Shorts 主题' },
+  'tools.youtube-shorts-hook-generator.input.topic.placeholder': { en: 'e.g. quick recipe, magic trick', zh: '如：快速食谱、魔术' },
+  'tools.youtube-shorts-hook-generator.how_to_use.0': { en: 'Enter your topic.', zh: '输入你的主题。' },
+  'tools.youtube-shorts-hook-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-shorts-hook-generator.how_to_use.2': { en: 'Copy hooks.', zh: '复制钩子。' },
+  'tools.youtube-shorts-hook-generator.how_to_use.3': { en: 'Use as text overlay or first line of your Shorts.', zh: '用作 Shorts 的文字叠加或开场第一句话。' },
+  'tools.youtube-shorts-hook-generator.faq.0.q': { en: 'How important is the hook in Shorts?', zh: '钩子在 Shorts 中有多重要？' },
+  'tools.youtube-shorts-hook-generator.faq.0.a': { en: 'Critical. You have 1 second to stop the scroll. Shorts autoplay in the feed — no click required.', zh: '至关重要。你只有 1 秒钟来阻止滑动。Shorts 在信息流中自动播放——无需点击。' },
+  'tools.youtube-shorts-hook-generator.faq.1.q': { en: 'What makes a good Shorts hook?', zh: '什么造就一个好的 Shorts 钩子？' },
+  'tools.youtube-shorts-hook-generator.faq.1.a': { en: 'Visual change, pattern interrupt, text overlay, or unexpected action in the first frame.', zh: '视觉变化、模式打断、文字叠加或第一帧中的意外动作。' },
+
+  // youtube-shorts-caption-generator
+  'tools.youtube-shorts-caption-generator.title': { en: 'YouTube Shorts Caption Generator', zh: 'YouTube Shorts 字幕生成器' },
+  'tools.youtube-shorts-caption-generator.description': { en: 'Generate engaging captions and text overlays for Shorts.', zh: '为 Shorts 生成有吸引力的字幕和文字叠加。' },
+  'tools.youtube-shorts-caption-generator.input.topic.label': { en: 'Shorts Topic', zh: 'Shorts 主题' },
+  'tools.youtube-shorts-caption-generator.input.topic.placeholder': { en: 'e.g. gym transformation', zh: '如：健身转变' },
+  'tools.youtube-shorts-caption-generator.how_to_use.0': { en: 'Enter your Shorts topic.', zh: '输入你的 Shorts 主题。' },
+  'tools.youtube-shorts-caption-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-shorts-caption-generator.how_to_use.2': { en: 'Copy captions.', zh: '复制字幕。' },
+  'tools.youtube-shorts-caption-generator.how_to_use.3': { en: 'Add as text overlay in your editing app.', zh: '在编辑软件中添加为文字叠加。' },
+  'tools.youtube-shorts-caption-generator.faq.0.q': { en: 'Should I add captions to every Short?', zh: '每个 Shorts 都应该加字幕吗？' },
+  'tools.youtube-shorts-caption-generator.faq.0.a': { en: 'Yes. Many viewers watch without sound. Captions boost retention and accessibility.', zh: '是的。很多观众静音观看。字幕能提升留存率和可访问性。' },
+  'tools.youtube-shorts-caption-generator.faq.1.q': { en: 'Where should captions appear?', zh: '字幕应该放在哪里？' },
+  'tools.youtube-shorts-caption-generator.faq.1.a': { en: 'Center or top-center of the frame. Avoid the bottom where UI elements overlap.', zh: '画面的中间或顶部中央。避免底部，因为那里有 UI 元素重叠。' },
+
+  // youtube-shorts-title-generator
+  'tools.youtube-shorts-title-generator.title': { en: 'YouTube Shorts Title Generator', zh: 'YouTube Shorts 标题生成器' },
+  'tools.youtube-shorts-title-generator.description': { en: 'Create Shorts-optimized titles that drive views.', zh: '创建针对 Shorts 优化的标题，驱动观看量。' },
+  'tools.youtube-shorts-title-generator.input.topic.label': { en: 'Shorts Topic', zh: 'Shorts 主题' },
+  'tools.youtube-shorts-title-generator.input.topic.placeholder': { en: 'e.g. 5 second productivity hack', zh: '如：5 秒生产力技巧' },
+  'tools.youtube-shorts-title-generator.how_to_use.0': { en: 'Enter your Shorts topic.', zh: '输入你的 Shorts 主题。' },
+  'tools.youtube-shorts-title-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-shorts-title-generator.how_to_use.2': { en: 'Copy the title.', zh: '复制标题。' },
+  'tools.youtube-shorts-title-generator.how_to_use.3': { en: 'Use with #shorts hashtag.', zh: '搭配 #shorts 标签使用。' },
+  'tools.youtube-shorts-title-generator.faq.0.q': { en: 'Are Shorts titles different from regular titles?', zh: 'Shorts 标题与普通标题不同吗？' },
+  'tools.youtube-shorts-title-generator.faq.0.a': { en: 'Shorts titles should be shorter (under 40 chars) and work well with hashtags. The hashtag #shorts is essential.', zh: 'Shorts 标题应该更短（40 字符以内），并与话题标签配合良好。#shorts 标签是必不可少的。' },
+  'tools.youtube-shorts-title-generator.faq.1.q': { en: 'Should I always include #shorts?', zh: '我应该总是包含 #shorts 吗？' },
+  'tools.youtube-shorts-title-generator.faq.1.a': { en: 'Yes. YouTube uses #shorts to categorize content for the Shorts shelf.', zh: '是的。YouTube 使用 #shorts 来将内容分类到 Shorts 展示区。' },
+
+  // youtube-shorts-hashtag-generator
+  'tools.youtube-shorts-hashtag-generator.title': { en: 'YouTube Shorts Hashtag Generator', zh: 'YouTube Shorts 话题标签生成器' },
+  'tools.youtube-shorts-hashtag-generator.description': { en: 'Generate the best hashtag combinations for Shorts discovery.', zh: '为 Shorts 发现生成最佳话题标签组合。' },
+  'tools.youtube-shorts-hashtag-generator.input.niche.label': { en: 'Your Niche', zh: '你的细分领域' },
+  'tools.youtube-shorts-hashtag-generator.input.niche.placeholder': { en: 'e.g. gaming, beauty', zh: '如：游戏、美妆' },
+  'tools.youtube-shorts-hashtag-generator.how_to_use.0': { en: 'Enter your niche.', zh: '输入你的细分领域。' },
+  'tools.youtube-shorts-hashtag-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-shorts-hashtag-generator.how_to_use.2': { en: 'Copy the hashtag combination.', zh: '复制话题标签组合。' },
+  'tools.youtube-shorts-hashtag-generator.how_to_use.3': { en: 'Paste into your Shorts title or description.', zh: '粘贴到 Shorts 标题或描述中。' },
+  'tools.youtube-shorts-hashtag-generator.faq.0.q': { en: 'How many hashtags should I use for Shorts?', zh: 'Shorts 应该用多少个话题标签？' },
+  'tools.youtube-shorts-hashtag-generator.faq.0.a': { en: '3-5 is optimal. Too many looks spammy. Include #shorts and 2-4 niche-specific tags.', zh: '3-5 个最优。太多会显得像垃圾信息。包含 #shorts 和 2-4 个细分领域专属标签。' },
+  'tools.youtube-shorts-hashtag-generator.faq.1.q': { en: 'Which hashtag is most important?', zh: '哪个话题标签最重要？' },
+  'tools.youtube-shorts-hashtag-generator.faq.1.a': { en: '#shorts — it signals YouTube to show your content in the Shorts feed.', zh: '#shorts — 它告诉 YouTube 在 Shorts 信息流中展示你的内容。' },
+
+  // ===== Tools: Category D — SEO Optimization =====
+  // youtube-tag-generator
+  'tools.youtube-tag-generator.title': { en: 'YouTube Tag Generator', zh: 'YouTube 标签生成器' },
+  'tools.youtube-tag-generator.description': { en: 'Generate SEO tags optimized for YouTube search.', zh: '生成针对 YouTube 搜索优化的 SEO 标签。' },
+  'tools.youtube-tag-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-tag-generator.input.topic.placeholder': { en: 'e.g. beginner piano tutorial', zh: '如：钢琴入门教程' },
+  'tools.youtube-tag-generator.input.category.label': { en: 'Video Category', zh: '视频分类' },
+  'tools.youtube-tag-generator.how_to_use.0': { en: 'Enter video topic.', zh: '输入视频主题。' },
+  'tools.youtube-tag-generator.how_to_use.1': { en: 'Select video category.', zh: '选择视频分类。' },
+  'tools.youtube-tag-generator.how_to_use.2': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-tag-generator.how_to_use.3': { en: 'Copy tags.', zh: '复制标签。' },
+  'tools.youtube-tag-generator.how_to_use.4': { en: 'Paste into the Tags field when uploading.', zh: '上传时粘贴到标签字段。' },
+  'tools.youtube-tag-generator.faq.0.q': { en: 'How many tags should I use?', zh: '应该使用多少个标签？' },
+  'tools.youtube-tag-generator.faq.0.a': { en: 'YouTube allows up to 500 characters. Use 10-20 relevant tags. Put most important ones first.', zh: 'YouTube 允许最多 500 个字符。使用 10-20 个相关标签。将最重要的放在前面。' },
+  'tools.youtube-tag-generator.faq.1.q': { en: 'Do tags still matter for SEO?', zh: '标签对 SEO 还重要吗？' },
+  'tools.youtube-tag-generator.faq.1.a': { en: 'Yes, but less than title and description. Tags help YouTube understand context and related topics.', zh: '是的，但没有标题和描述那么重要。标签帮助 YouTube 理解上下文和相关主题。' },
+  'tools.youtube-tag-generator.faq.2.q': { en: 'Free?', zh: '免费吗？' },
+  'tools.youtube-tag-generator.faq.2.a': { en: 'Yes.', zh: '是的。' },
+
+  // youtube-hashtag-generator
+  'tools.youtube-hashtag-generator.title': { en: 'YouTube Hashtag Generator', zh: 'YouTube 话题标签生成器' },
+  'tools.youtube-hashtag-generator.description': { en: 'Generate trending and niche-specific hashtags.', zh: '生成热门和细分领域专属的话题标签。' },
+  'tools.youtube-hashtag-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-hashtag-generator.input.topic.placeholder': { en: 'e.g. minecraft build tutorial', zh: '如：我的世界建筑教程' },
+  'tools.youtube-hashtag-generator.how_to_use.0': { en: 'Enter video topic.', zh: '输入视频主题。' },
+  'tools.youtube-hashtag-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-hashtag-generator.how_to_use.2': { en: 'Copy hashtags.', zh: '复制话题标签。' },
+  'tools.youtube-hashtag-generator.how_to_use.3': { en: 'Paste into description.', zh: '粘贴到描述中。' },
+  'tools.youtube-hashtag-generator.faq.0.q': { en: 'How many hashtags should I use?', zh: '应该使用多少个话题标签？' },
+  'tools.youtube-hashtag-generator.faq.0.a': { en: 'YouTube shows the first 3 above your title. Use 3-5 per video.', zh: 'YouTube 会在标题上方显示前 3 个。每个视频使用 3-5 个。' },
+  'tools.youtube-hashtag-generator.faq.1.q': { en: 'Where should I put hashtags?', zh: '话题标签应该放在哪里？' },
+  'tools.youtube-hashtag-generator.faq.1.a': { en: 'In the description. YouTube will display the first 3 above your video title.', zh: '放在描述中。YouTube 会将前 3 个显示在视频标题上方。' },
+
+  // youtube-keyword-generator
+  'tools.youtube-keyword-generator.title': { en: 'YouTube Keyword Generator', zh: 'YouTube 关键词生成器' },
+  'tools.youtube-keyword-generator.description': { en: 'Expand your seed keyword into target keywords.', zh: '将种子关键词扩展为目标关键词列表。' },
+  'tools.youtube-keyword-generator.input.keyword.label': { en: 'Seed Keyword', zh: '种子关键词' },
+  'tools.youtube-keyword-generator.input.keyword.placeholder': { en: 'e.g. guitar lessons', zh: '如：吉他课程' },
+  'tools.youtube-keyword-generator.how_to_use.0': { en: 'Enter a seed keyword.', zh: '输入种子关键词。' },
+  'tools.youtube-keyword-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-keyword-generator.how_to_use.2': { en: 'Copy expanded keywords.', zh: '复制扩展后的关键词。' },
+  'tools.youtube-keyword-generator.how_to_use.3': { en: 'Use main keywords in title and description.', zh: '在标题和描述中使用主要关键词。' },
+  'tools.youtube-keyword-generator.faq.0.q': { en: 'What is keyword research for YouTube?', zh: '什么是 YouTube 关键词研究？' },
+  'tools.youtube-keyword-generator.faq.0.a': { en: 'Finding the search terms people use to find videos. Targeting these terms in titles, descriptions, and tags improves visibility.', zh: '找出人们用来查找视频的搜索词。在标题、描述和标签中针对这些词汇可以提升可见度。' },
+  'tools.youtube-keyword-generator.faq.1.q': { en: 'How do I use these keywords?', zh: '如何使用这些关键词？' },
+  'tools.youtube-keyword-generator.faq.1.a': { en: 'Include the main keyword in your title, description, and tags. Sprinkle secondary keywords naturally in your description.', zh: '在标题、描述和标签中包含主要关键词。在描述中自然地穿插次要关键词。' },
+
+  // youtube-seo-title-analyzer
+  'tools.youtube-seo-title-analyzer.title': { en: 'YouTube SEO Title Analyzer', zh: 'YouTube SEO 标题分析器' },
+  'tools.youtube-seo-title-analyzer.description': { en: 'Score your title for SEO effectiveness with improvement tips.', zh: '为你的标题打分，评估 SEO 效果并提供改进建议。' },
+  'tools.youtube-seo-title-analyzer.input.title.label': { en: 'Your Video Title', zh: '你的视频标题' },
+  'tools.youtube-seo-title-analyzer.input.title.placeholder': { en: 'e.g. My Trip to Japan 2026', zh: '如：我的 2026 日本之旅' },
+  'tools.youtube-seo-title-analyzer.how_to_use.0': { en: 'Enter your title.', zh: '输入你的标题。' },
+  'tools.youtube-seo-title-analyzer.how_to_use.1': { en: 'Click "Analyze".', zh: '点击"分析"。' },
+  'tools.youtube-seo-title-analyzer.how_to_use.2': { en: 'Review your score and feedback.', zh: '查看你的分数和反馈。' },
+  'tools.youtube-seo-title-analyzer.how_to_use.3': { en: 'Apply suggestions to improve your title.', zh: '应用建议来改进你的标题。' },
+  'tools.youtube-seo-title-analyzer.how_to_use.4': { en: 'Re-analyze after changes.', zh: '修改后重新分析。' },
+  'tools.youtube-seo-title-analyzer.faq.0.q': { en: 'What is a good SEO score?', zh: '什么是好的 SEO 分数？' },
+  'tools.youtube-seo-title-analyzer.faq.0.a': { en: '7+/10 is strong. Our analysis checks length, numbers, emotional punctuation, and power words — all proven CTR boosters.', zh: '7 分以上算优秀。我们的分析检查长度、数字、情感标点和强效词汇——这些都是经过验证的 CTR 提升因素。' },
+  'tools.youtube-seo-title-analyzer.faq.1.q': { en: 'How accurate is this score?', zh: '这个分数有多准确？' },
+  'tools.youtube-seo-title-analyzer.faq.1.a': { en: 'It uses proven SEO heuristics. No automated score is perfect, but this gives you a solid baseline.', zh: '它使用经过验证的 SEO 启发式规则。没有自动化评分是完美的，但这给了你一个可靠的基准。' },
+
+  // youtube-video-seo-checklist
+  'tools.youtube-video-seo-checklist.title': { en: 'YouTube Video SEO Checklist', zh: 'YouTube 视频 SEO 清单' },
+  'tools.youtube-video-seo-checklist.description': { en: 'Complete SEO checklist to maximize rankings before publishing.', zh: '完整的 SEO 清单，在发布前最大化排名。' },
+  'tools.youtube-video-seo-checklist.how_to_use.0': { en: 'Review the checklist.', zh: '查看清单。' },
+  'tools.youtube-video-seo-checklist.how_to_use.1': { en: 'Check off items as you complete them.', zh: '完成项目后打勾。' },
+  'tools.youtube-video-seo-checklist.how_to_use.2': { en: 'Use before every upload for consistent SEO.', zh: '每次上传前使用，保持 SEO 一致性。' },
+  'tools.youtube-video-seo-checklist.faq.0.q': { en: 'Do I really need to do all these steps?', zh: '我真的需要完成所有步骤吗？' },
+  'tools.youtube-video-seo-checklist.faq.0.a': { en: 'Each item improves a different SEO factor. Skipping steps reduces your chances of ranking. The checklist ensures consistency.', zh: '每项都改善不同的 SEO 因素。跳过步骤会降低排名机会。清单确保一致性。' },
+  'tools.youtube-video-seo-checklist.faq.1.q': { en: 'How often should I use this checklist?', zh: '应该多久使用一次这个清单？' },
+  'tools.youtube-video-seo-checklist.faq.1.a': { en: 'Before every upload. Make it part of your publishing workflow.', zh: '每次上传前。让它成为你发布流程的一部分。' },
+
+  // ===== Tools: Category E — Thumbnail Optimization =====
+  // youtube-thumbnail-text-generator
+  'tools.youtube-thumbnail-text-generator.title': { en: 'YouTube Thumbnail Text Generator', zh: 'YouTube 缩略图文字生成器' },
+  'tools.youtube-thumbnail-text-generator.description': { en: 'Generate short, punchy text for thumbnails that drives clicks.', zh: '为缩略图生成简短有力的文字，驱动点击。' },
+  'tools.youtube-thumbnail-text-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-thumbnail-text-generator.input.topic.placeholder': { en: 'e.g. budget travel tips', zh: '如：穷游技巧' },
+  'tools.youtube-thumbnail-text-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-thumbnail-text-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-thumbnail-text-generator.how_to_use.2': { en: 'Copy short text options.', zh: '复制简短文字选项。' },
+  'tools.youtube-thumbnail-text-generator.how_to_use.3': { en: 'Add to your thumbnail with contrasting colors.', zh: '用对比色添加到缩略图中。' },
+  'tools.youtube-thumbnail-text-generator.faq.0.q': { en: 'How many words should thumbnail text have?', zh: '缩略图文字应该有多少个词？' },
+  'tools.youtube-thumbnail-text-generator.faq.0.a': { en: '2-4 words max. Viewers scan thumbnails in under a second. Text must be instantly readable.', zh: '最多 2-4 个词。观众在不到一秒内扫过缩略图。文字必须瞬间可读。' },
+  'tools.youtube-thumbnail-text-generator.faq.1.q': { en: 'What font size for thumbnail text?', zh: '缩略图文字用多大字号？' },
+  'tools.youtube-thumbnail-text-generator.faq.1.a': { en: 'Use large, bold fonts — at least 20% of the thumbnail height. Sans-serif fonts like Impact or Montserrat work best.', zh: '使用大号粗体字——至少占缩略图高度的 20%。像 Impact 或 Montserrat 这样的无衬线字体效果最好。' },
+
+  // youtube-thumbnail-idea-generator
+  'tools.youtube-thumbnail-idea-generator.title': { en: 'YouTube Thumbnail Idea Generator', zh: 'YouTube 缩略图创意生成器' },
+  'tools.youtube-thumbnail-idea-generator.description': { en: 'Get thumbnail design concepts and composition ideas.', zh: '获取缩略图设计概念和构图创意。' },
+  'tools.youtube-thumbnail-idea-generator.input.topic.label': { en: 'Video Topic', zh: '视频主题' },
+  'tools.youtube-thumbnail-idea-generator.input.topic.placeholder': { en: 'e.g. morning routine, unboxing', zh: '如：早晨日常、开箱' },
+  'tools.youtube-thumbnail-idea-generator.how_to_use.0': { en: 'Enter your video topic.', zh: '输入你的视频主题。' },
+  'tools.youtube-thumbnail-idea-generator.how_to_use.1': { en: 'Click Generate for thumbnail concepts.', zh: '点击生成获取缩略图概念。' },
+  'tools.youtube-thumbnail-idea-generator.how_to_use.2': { en: 'Use ideas as creative direction for your designer or yourself.', zh: '将创意作为设计师或你自己的创作方向。' },
+  'tools.youtube-thumbnail-idea-generator.how_to_use.3': { en: 'Focus on concepts that create curiosity or show contrast.', zh: '专注于创造好奇心或展示对比的概念。' },
+  'tools.youtube-thumbnail-idea-generator.faq.0.q': { en: 'What makes a good YouTube thumbnail?', zh: '什么造就一个好的 YouTube 缩略图？' },
+  'tools.youtube-thumbnail-idea-generator.faq.0.a': { en: 'High contrast, clear focal point, 2-4 words of text, emotional facial expression, and consistency with your brand.', zh: '高对比度、清晰的焦点、2-4 个字的文字、情感面部表情以及与品牌的一致性。' },
+  'tools.youtube-thumbnail-idea-generator.faq.1.q': { en: 'Should I use my face in thumbnails?', zh: '缩略图中应该用我的脸吗？' },
+  'tools.youtube-thumbnail-idea-generator.faq.1.a': { en: 'Yes. Thumbnails with faces (especially expressive ones) consistently get higher CTR than those without.', zh: '是的。有面部表情的缩略图（尤其是表情丰富的）一直比没有的获得更高的点击率。' },
+
+  // youtube-thumbnail-ctr-optimizer
+  'tools.youtube-thumbnail-ctr-optimizer.title': { en: 'YouTube Thumbnail CTR Optimizer', zh: 'YouTube 缩略图 CTR 优化器' },
+  'tools.youtube-thumbnail-ctr-optimizer.description': { en: 'Optimize title and thumbnail combo for max click-through rate.', zh: '优化标题和缩略图组合，最大化点击率。' },
+  'tools.youtube-thumbnail-ctr-optimizer.input.topic.label': { en: 'Video Topic / Title Idea', zh: '视频主题 / 标题创意' },
+  'tools.youtube-thumbnail-ctr-optimizer.input.topic.placeholder': { en: 'e.g. how to save $10k in a year', zh: '如：如何一年存下 1 万美元' },
+  'tools.youtube-thumbnail-ctr-optimizer.how_to_use.0': { en: 'Enter your topic.', zh: '输入你的主题。' },
+  'tools.youtube-thumbnail-ctr-optimizer.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-thumbnail-ctr-optimizer.how_to_use.2': { en: 'Review title + thumbnail text combos.', zh: '查看标题 + 缩略图文字组合。' },
+  'tools.youtube-thumbnail-ctr-optimizer.how_to_use.3': { en: 'Use the combo that creates the strongest curiosity gap.', zh: '使用能创造最强好奇心缺口的组合。' },
+  'tools.youtube-thumbnail-ctr-optimizer.how_to_use.4': { en: 'A/B test different combos.', zh: 'A/B 测试不同组合。' },
+  'tools.youtube-thumbnail-ctr-optimizer.faq.0.q': { en: 'What is a good CTR for YouTube?', zh: 'YouTube 好的 CTR 是多少？' },
+  'tools.youtube-thumbnail-ctr-optimizer.faq.0.a': { en: '4-8% is average. 10%+ is excellent. CTR varies heavily by niche — gaming tends lower, finance higher.', zh: '4-8% 是平均水平。10% 以上算优秀。CTR 因细分领域差异很大——游戏类偏低，财经类偏高。' },
+  'tools.youtube-thumbnail-ctr-optimizer.faq.1.q': { en: 'How do I improve my CTR?', zh: '如何提高我的 CTR？' },
+  'tools.youtube-thumbnail-ctr-optimizer.faq.1.a': { en: 'Test different thumbnail styles, use contrasting colors, add emotional faces, and A/B test titles.', zh: '测试不同的缩略图风格，使用对比色，添加情感面部表情，并 A/B 测试标题。' },
+
+  // youtube-thumbnail-ab-title-tester
+  'tools.youtube-thumbnail-ab-title-tester.title': { en: 'YouTube Thumbnail A/B Title Tester', zh: 'YouTube 缩略图 A/B 标题测试器' },
+  'tools.youtube-thumbnail-ab-title-tester.description': { en: 'Generate 2-3 title variations for A/B testing.', zh: '生成 2-3 个标题变体用于 A/B 测试。' },
+  'tools.youtube-thumbnail-ab-title-tester.input.title.label': { en: 'Your Current Title', zh: '你当前的标题' },
+  'tools.youtube-thumbnail-ab-title-tester.input.title.placeholder': { en: 'e.g. My Honest iPhone Review', zh: '如：我的诚实 iPhone 评测' },
+  'tools.youtube-thumbnail-ab-title-tester.how_to_use.0': { en: 'Enter your current title.', zh: '输入你当前的标题。' },
+  'tools.youtube-thumbnail-ab-title-tester.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-thumbnail-ab-title-tester.how_to_use.2': { en: 'Get 3 variations in different styles.', zh: '获取 3 个不同风格的变体。' },
+  'tools.youtube-thumbnail-ab-title-tester.how_to_use.3': { en: 'Test each version.', zh: '测试每个版本。' },
+  'tools.youtube-thumbnail-ab-title-tester.how_to_use.4': { en: 'Keep the best performer.', zh: '保留表现最好的那个。' },
+  'tools.youtube-thumbnail-ab-title-tester.faq.0.q': { en: 'How do I A/B test YouTube titles?', zh: '如何 A/B 测试 YouTube 标题？' },
+  'tools.youtube-thumbnail-ab-title-tester.faq.0.a': { en: 'Upload with one title, monitor CTR for 24-48 hours, then switch to the alternative. Compare performance. Some third-party tools offer automated testing.', zh: '用一个标题上传，监控 24-48 小时的 CTR，然后切换到变体。比较表现。一些第三方工具提供自动化测试。' },
+  'tools.youtube-thumbnail-ab-title-tester.faq.1.q': { en: 'Which version usually performs best?', zh: '哪个版本通常表现最好？' },
+  'tools.youtube-thumbnail-ab-title-tester.faq.1.a': { en: 'Clickbait often gets higher CTR but may hurt retention if content doesn\'t deliver. SEO titles get lower CTR but higher watch time. Test to find your audience\'s sweet spot.', zh: '点击诱饵通常获得更高的 CTR，但如果内容不兑现可能损害留存率。SEO 标题获得较低的 CTR 但更高的观看时长。测试找到你受众的最佳平衡点。' },
+
+  // youtube-thumbnail-emotion-generator
+  'tools.youtube-thumbnail-emotion-generator.title': { en: 'YouTube Thumbnail Emotion Generator', zh: 'YouTube 缩略图情感生成器' },
+  'tools.youtube-thumbnail-emotion-generator.description': { en: 'Generate emotional trigger words for thumbnails.', zh: '为缩略图生成情感触发词。' },
+  'tools.youtube-thumbnail-emotion-generator.input.topic.label': { en: 'Video Topic / Emotion', zh: '视频主题 / 情感' },
+  'tools.youtube-thumbnail-emotion-generator.input.topic.placeholder': { en: 'e.g. shocking experiment results', zh: '如：震撼的实验结果' },
+  'tools.youtube-thumbnail-emotion-generator.how_to_use.0': { en: 'Enter your topic.', zh: '输入你的主题。' },
+  'tools.youtube-thumbnail-emotion-generator.how_to_use.1': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-thumbnail-emotion-generator.how_to_use.2': { en: 'Copy emotional trigger words.', zh: '复制情感触发词。' },
+  'tools.youtube-thumbnail-emotion-generator.how_to_use.3': { en: 'Add the best emotional words to your thumbnail text.', zh: '将最好的情感词汇添加到缩略图文字中。' },
+  'tools.youtube-thumbnail-emotion-generator.faq.0.q': { en: 'Why use emotional words in thumbnails?', zh: '为什么在缩略图中使用情感词汇？' },
+  'tools.youtube-thumbnail-emotion-generator.faq.0.a': { en: 'Emotions drive clicks. Thumbnails that convey strong emotion (shock, curiosity, joy) consistently outperform neutral ones.', zh: '情感驱动点击。传达强烈情感（震惊、好奇、喜悦）的缩略图始终优于中性的。' },
+  'tools.youtube-thumbnail-emotion-generator.faq.1.q': { en: 'Which emotions work best?', zh: '哪种情感效果最好？' },
+  'tools.youtube-thumbnail-emotion-generator.faq.1.a': { en: 'Shock/surprise and curiosity are the top performers. Fear of missing out (FOMO) also drives high CTR.', zh: '震惊/意外和好奇是表现最好的。害怕错过（FOMO）也能驱动高 CTR。' },
+
+  // ===== Tools: Category F — Channel Growth =====
+  // youtube-channel-name-generator
+  'tools.youtube-channel-name-generator.title': { en: 'YouTube Channel Name Generator', zh: 'YouTube 频道名称生成器' },
+  'tools.youtube-channel-name-generator.description': { en: 'Generate unique and memorable channel name ideas.', zh: '生成独特且易记的频道名称创意。' },
+  'tools.youtube-channel-name-generator.input.niche.label': { en: 'Channel Niche', zh: '频道细分领域' },
+  'tools.youtube-channel-name-generator.input.niche.placeholder': { en: 'e.g. tech reviews, gaming', zh: '如：科技评测、游戏' },
+  'tools.youtube-channel-name-generator.input.style.label': { en: 'Name Style', zh: '名称风格' },
+  'tools.youtube-channel-name-generator.how_to_use.0': { en: 'Enter your niche.', zh: '输入你的细分领域。' },
+  'tools.youtube-channel-name-generator.how_to_use.1': { en: 'Select a name style.', zh: '选择名称风格。' },
+  'tools.youtube-channel-name-generator.how_to_use.2': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-channel-name-generator.how_to_use.3': { en: 'Check availability on YouTube.', zh: '在 YouTube 上检查可用性。' },
+  'tools.youtube-channel-name-generator.how_to_use.4': { en: 'Pick a name that\'s easy to remember and spell.', zh: '选择容易记住和拼写的名称。' },
+  'tools.youtube-channel-name-generator.faq.0.q': { en: 'What makes a good YouTube channel name?', zh: '什么造就一个好的 YouTube 频道名称？' },
+  'tools.youtube-channel-name-generator.faq.0.a': { en: 'Short, memorable, easy to spell, and hints at your content. Avoid numbers and special characters.', zh: '简短、易记、易拼写，并能暗示你的内容。避免数字和特殊字符。' },
+  'tools.youtube-channel-name-generator.faq.1.q': { en: 'Should I use my real name?', zh: '应该用我的真名吗？' },
+  'tools.youtube-channel-name-generator.faq.1.a': { en: 'Personal brand channels benefit from real names. Niche channels often do better with descriptive names.', zh: '个人品牌频道从真名中受益。细分领域频道通常用描述性名称更好。' },
+
+  // youtube-channel-description-generator
+  'tools.youtube-channel-description-generator.title': { en: 'YouTube Channel Description Generator', zh: 'YouTube 频道描述生成器' },
+  'tools.youtube-channel-description-generator.description': { en: 'Write a compelling channel description that converts visitors.', zh: '撰写有说服力的频道描述，将访客转化为订阅者。' },
+  'tools.youtube-channel-description-generator.input.niche.label': { en: 'Channel Niche', zh: '频道细分领域' },
+  'tools.youtube-channel-description-generator.input.niche.placeholder': { en: 'e.g. travel vlogging, coding tutorials', zh: '如：旅行 vlog、编程教程' },
+  'tools.youtube-channel-description-generator.input.channelName.label': { en: 'Channel Name', zh: '频道名称' },
+  'tools.youtube-channel-description-generator.input.channelName.placeholder': { en: 'e.g. Wanderlust Diaries', zh: '如：漫游日记' },
+  'tools.youtube-channel-description-generator.how_to_use.0': { en: 'Enter your niche.', zh: '输入你的细分领域。' },
+  'tools.youtube-channel-description-generator.how_to_use.1': { en: 'Enter your channel name.', zh: '输入你的频道名称。' },
+  'tools.youtube-channel-description-generator.how_to_use.2': { en: 'Click Generate.', zh: '点击生成。' },
+  'tools.youtube-channel-description-generator.how_to_use.3': { en: 'Copy description and paste into your YouTube channel settings.', zh: '复制描述并粘贴到 YouTube 频道设置中。' },
+  'tools.youtube-channel-description-generator.how_to_use.4': { en: 'Customize the schedule and details.', zh: '自定义发布计划和详细信息。' },
+  'tools.youtube-channel-description-generator.faq.0.q': { en: 'How long should a channel description be?', zh: '频道描述应该多长？' },
+  'tools.youtube-channel-description-generator.faq.0.a': { en: 'Aim for 100-200 words. Include your upload schedule, what viewers can expect, and relevant keywords for SEO.', zh: '目标 100-200 字。包括你的上传计划、观众可以期待的内容以及相关的 SEO 关键词。' },
+  'tools.youtube-channel-description-generator.faq.1.q': { en: 'Should I include keywords in my channel description?', zh: '频道描述中应该包含关键词吗？' },
+  'tools.youtube-channel-description-generator.faq.1.a': { en: 'Yes. YouTube uses channel descriptions for search ranking. Include 2-3 primary keywords naturally.', zh: '是的。YouTube 使用频道描述进行搜索排名。自然地包含 2-3 个主要关键词。' },
+
+  // youtube-upload-time-optimizer
+  'tools.youtube-upload-time-optimizer.title': { en: 'YouTube Upload Time Optimizer', zh: 'YouTube 上传时间优化器' },
+  'tools.youtube-upload-time-optimizer.description': { en: 'Find the best day and time to upload for maximum views.', zh: '找到获得最大观看量的最佳上传日期和时间。' },
+  'tools.youtube-upload-time-optimizer.input.niche.label': { en: 'Your Niche', zh: '你的细分领域' },
+  'tools.youtube-upload-time-optimizer.input.niche.placeholder': { en: 'e.g. gaming, beauty, education', zh: '如：游戏、美妆、教育' },
+  'tools.youtube-upload-time-optimizer.input.audience.label': { en: 'Primary Audience Region', zh: '主要受众地区' },
+  'tools.youtube-upload-time-optimizer.how_to_use.0': { en: 'Enter your niche.', zh: '输入你的细分领域。' },
+  'tools.youtube-upload-time-optimizer.how_to_use.1': { en: 'Select your primary audience region.', zh: '选择你的主要受众地区。' },
+  'tools.youtube-upload-time-optimizer.how_to_use.2': { en: 'Click "Find Best Time".', zh: '点击"查找最佳时间"。' },
+  'tools.youtube-upload-time-optimizer.how_to_use.3': { en: 'Use the recommended days and times for your upload schedule.', zh: '将推荐的日期和时间用于你的上传计划。' },
+  'tools.youtube-upload-time-optimizer.faq.0.q': { en: 'Does upload time really matter?', zh: '上传时间真的重要吗？' },
+  'tools.youtube-upload-time-optimizer.faq.0.a': { en: 'It matters most in the first 48 hours. Uploading when your audience is most active boosts initial views, which signals YouTube to promote your video.', zh: '在前 48 小时内最重要。在受众最活跃时上传能提升初始观看量，这会向 YouTube 发出信号来推广你的视频。' },
+  'tools.youtube-upload-time-optimizer.faq.1.q': { en: 'How do I find my specific best time?', zh: '如何找到我的具体最佳时间？' },
+  'tools.youtube-upload-time-optimizer.faq.1.a': { en: 'Check YouTube Studio Analytics → Audience tab → "When your viewers are on YouTube". This shows your specific audience\'s peak hours.', zh: '查看 YouTube 工作室分析 → 受众标签页 → "你的观众何时在 YouTube 上"。这会显示你特定受众的高峰时段。' },
+
+  // youtube-cpm-calculator
+  'tools.youtube-cpm-calculator.title': { en: 'YouTube CPM Revenue Calculator', zh: 'YouTube CPM 收入计算器' },
+  'tools.youtube-cpm-calculator.description': { en: 'Estimate YouTube earnings based on views and niche CPM rates.', zh: '根据观看量和细分领域 CPM 费率估算 YouTube 收入。' },
+  'tools.youtube-cpm-calculator.input.views.label': { en: 'Monthly Views', zh: '月观看量' },
+  'tools.youtube-cpm-calculator.input.views.placeholder': { en: 'e.g. 100000', zh: '如：100000' },
+  'tools.youtube-cpm-calculator.input.niche.label': { en: 'Video Niche', zh: '视频细分领域' },
+  'tools.youtube-cpm-calculator.how_to_use.0': { en: 'Enter your monthly views.', zh: '输入你的月观看量。' },
+  'tools.youtube-cpm-calculator.how_to_use.1': { en: 'Select your niche.', zh: '选择你的细分领域。' },
+  'tools.youtube-cpm-calculator.how_to_use.2': { en: 'View estimated earnings.', zh: '查看预估收入。' },
+  'tools.youtube-cpm-calculator.how_to_use.3': { en: 'Remember: CPM varies by season. Holiday season (Q4) typically has the highest CPM.', zh: '记住：CPM 因季节而异。假日季（Q4）通常有最高的 CPM。' },
+  'tools.youtube-cpm-calculator.faq.0.q': { en: 'What is CPM?', zh: '什么是 CPM？' },
+  'tools.youtube-cpm-calculator.faq.0.a': { en: 'Cost Per Mille — how much advertisers pay per 1000 ad views. Your RPM (Revenue Per Mille) is typically 55% of CPM after YouTube\'s cut.', zh: '千次展示成本——广告主每 1000 次广告观看支付的费用。你的 RPM（千次展示收入）通常是 CPM 的 55%，即 YouTube 抽成后。' },
+  'tools.youtube-cpm-calculator.faq.1.q': { en: 'How accurate is this calculator?', zh: '这个计算器有多准确？' },
+  'tools.youtube-cpm-calculator.faq.1.a': { en: 'It provides estimates based on average niche CPMs. Actual earnings vary by season, audience location, and video length.', zh: '它基于平均细分领域 CPM 提供估算。实际收入因季节、受众位置和视频长度而异。' },
+  'tools.youtube-cpm-calculator.faq.2.q': { en: 'Which niche pays the most?', zh: '哪个细分领域收入最高？' },
+  'tools.youtube-cpm-calculator.faq.2.a': { en: 'Finance ($12-20 CPM), Tech ($8-12), and Education ($6-10) typically have the highest CPMs.', zh: '财经（CPM 12-20 美元）、科技（8-12 美元）和教育（6-10 美元）通常有最高的 CPM。' },
+
+  // youtube-growth-score-analyzer
+  'tools.youtube-growth-score-analyzer.title': { en: 'YouTube Growth Score Analyzer', zh: 'YouTube 增长评分分析器' },
+  'tools.youtube-growth-score-analyzer.description': { en: 'Get a growth score and actionable tips from your channel info.', zh: '根据你的频道信息获取增长评分和可操作的改进建议。' },
+  'tools.youtube-growth-score-analyzer.input.subscribers.label': { en: 'Subscriber Count', zh: '订阅者数量' },
+  'tools.youtube-growth-score-analyzer.input.subscribers.placeholder': { en: 'e.g. 5000', zh: '如：5000' },
+  'tools.youtube-growth-score-analyzer.input.uploads.label': { en: 'Videos Uploaded (per month)', zh: '上传视频数（每月）' },
+  'tools.youtube-growth-score-analyzer.input.uploads.placeholder': { en: 'e.g. 8', zh: '如：8' },
+  'tools.youtube-growth-score-analyzer.input.niche.label': { en: 'Your Niche', zh: '你的细分领域' },
+  'tools.youtube-growth-score-analyzer.how_to_use.0': { en: 'Enter your subscriber count.', zh: '输入你的订阅者数量。' },
+  'tools.youtube-growth-score-analyzer.how_to_use.1': { en: 'Enter monthly uploads.', zh: '输入每月上传数。' },
+  'tools.youtube-growth-score-analyzer.how_to_use.2': { en: 'Select niche.', zh: '选择细分领域。' },
+  'tools.youtube-growth-score-analyzer.how_to_use.3': { en: 'Click Analyze.', zh: '点击分析。' },
+  'tools.youtube-growth-score-analyzer.how_to_use.4': { en: 'Review score and recommendations.', zh: '查看评分和建议。' },
+  'tools.youtube-growth-score-analyzer.how_to_use.5': { en: 'Apply the tips to improve.', zh: '应用这些技巧来改进。' },
+  'tools.youtube-growth-score-analyzer.faq.0.q': { en: 'What is a good growth score?', zh: '什么是好的增长评分？' },
+  'tools.youtube-growth-score-analyzer.faq.0.a': { en: '7+/10 is strong. The score measures your current trajectory based on subscriber count, upload consistency, and niche competitiveness.', zh: '7 分以上算优秀。该评分根据订阅者数量、上传一致性和细分领域竞争力来衡量你当前的成长轨迹。' },
+  'tools.youtube-growth-score-analyzer.faq.1.q': { en: 'How can I improve my score?', zh: '如何提高我的评分？' },
+  'tools.youtube-growth-score-analyzer.faq.1.a': { en: 'Upload consistently (4+ videos/month), optimize titles and thumbnails, and engage with your community through comments and posts.', zh: '持续上传（每月 4 个以上视频），优化标题和缩略图，通过评论和帖子与社区互动。' },
+};
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/i18n/index.ts src/i18n/translations.ts
+git commit -m "feat: add i18n infrastructure with translation dictionary and lang detection"
+```
+
+---
+
+### Task 2: Modify BaseLayout + Header
+
+**Files:**
+- Modify: `src/layouts/BaseLayout.astro`
+- Modify: `src/components/Header.astro`
+
+- [ ] **Step 1: Modify `BaseLayout.astro`** — replace hardcoded `<html lang="en">` with dynamic lang
+
+Read the file first, then apply these edits:
+
+Change line 14 from:
+```astro
+<html lang="en">
+```
+To:
+```astro
+---
+import '../styles/global.css';
+import { getLang } from '../i18n';
+
+export interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  schema?: string;
+}
+const { title, description, ogImage = '/og-default.png', schema } = Astro.props;
+const lang = getLang(Astro);
+---
+
+<!doctype html>
+<html lang={lang}>
+```
+
+- [ ] **Step 2: Modify `Header.astro`** — add language switcher and translate nav labels
+
+Replace the entire file with:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+const otherLang = lang === 'zh' ? 'en' : 'zh';
+
+const navItems = [
+  { href: '/blog/', key: 'nav.blog' },
+  { href: '/about', key: 'nav.about' },
+];
+---
+
+<header class="border-b border-gray-200 sticky top-0 bg-white z-50">
+  <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="text-lg font-bold text-gray-900 hover:text-red-600 transition-colors">
+      {t('site.name', lang)}
+    </a>
+    <div class="flex items-center gap-4 text-sm">
+      {navItems.map(item => (
+        <a href={item.href} class="text-gray-600 hover:text-red-600 transition-colors">
+          {t(item.key, lang)}
+        </a>
+      ))}
+      <a href={`?lang=${otherLang}`} class="text-xs text-gray-400 hover:text-red-600 transition-colors ml-2">
+        {t('lang.switch', lang)}
+      </a>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Set cookie when lang is in query param
+  const q = new URLSearchParams(window.location.search).get('lang');
+  if (q === 'zh' || q === 'en') {
+    document.cookie = 'yt-lang=' + q + '; path=/; max-age=2592000; SameSite=Lax';
+  }
+</script>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/layouts/BaseLayout.astro src/components/Header.astro
+git commit -m "feat: add language switcher to header, dynamic html lang"
+```
+
+---
+
+### Task 3: Modify shared components (Footer, FAQ, HowToUse, SearchBar, RelatedTools, CopyButton, ToolCard, CategorySection)
+
+**Files:**
+- Modify: `src/components/Footer.astro`
+- Modify: `src/components/FAQ.astro`
+- Modify: `src/components/HowToUse.astro`
+- Modify: `src/components/SearchBar.astro`
+- Modify: `src/components/RelatedTools.astro`
+- Modify: `src/components/CopyButton.astro`
+- Modify: `src/components/CategorySection.astro`
+
+- [ ] **Step 1: Modify `Footer.astro`**
+
+Replace the file with:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+
+const legalLinks = [
+  { href: '/privacy-policy', key: 'footer.privacy' },
+  { href: '/terms', key: 'footer.terms' },
+  { href: '/contact', key: 'footer.contact' },
+  { href: '/about', key: 'footer.about' },
+];
+---
+
+<footer class="border-t border-gray-200 mt-auto bg-gray-50">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-wrap justify-center gap-4 text-sm mb-2">
+      {legalLinks.map(link => (
+        <a href={link.href} class="text-gray-500 hover:text-red-600 transition-colors">
+          {t(link.key, lang)}
+        </a>
+      ))}
+    </div>
+    <p class="text-center text-xs text-gray-400">
+      &copy; {new Date().getFullYear()} {t('site.name', lang)}. {t('footer.copyright', lang)}
+    </p>
+  </div>
+</footer>
+```
+
+- [ ] **Step 2: Modify `FAQ.astro`**
+
+Replace the file with:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+
+export interface Props { items: { q: string; a: string }[]; }
+
+const lang = getLang(Astro);
+---
+
+<div class="mt-8">
+  <h2 class="text-lg font-bold mb-3">{t('faq.title', lang)}</h2>
+  <div class="space-y-1">
+    {Astro.props.items.map(item => (
+      <details class="border border-gray-200 rounded-lg group">
+        <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 select-none">{item.q}</summary>
+        <p class="px-4 pb-3 text-sm text-gray-600 leading-relaxed">{item.a}</p>
+      </details>
+    ))}
+  </div>
+</div>
+```
+
+- [ ] **Step 3: Modify `HowToUse.astro`**
+
+Replace the file with:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+
+export interface Props { steps: string[]; }
+
+const lang = getLang(Astro);
+---
+
+<div class="mt-6">
+  <h2 class="text-lg font-bold mb-3">{t('how_to_use.title', lang)}</h2>
+  <ol class="space-y-2">
+    {Astro.props.steps.map((step, i) => (
+      <li class="flex gap-3 text-sm text-gray-700">
+        <span class="font-bold text-red-600 shrink-0">{i + 1}.</span>
+        <span>{step}</span>
+      </li>
+    ))}
+  </ol>
+</div>
+```
+
+- [ ] **Step 4: Modify `SearchBar.astro`**
+
+Replace the file with:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+const lang = getLang(Astro);
+---
+
+<search class="relative max-w-lg mx-auto">
+  <input type="search" id="tool-search" placeholder={t('search.placeholder', lang)}
+    class="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" aria-label="Search tools" />
+</search>
+```
+
+- [ ] **Step 5: Modify `RelatedTools.astro`**
+
+Replace the file with:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+
+export interface Props { tools: { slug: string; title: string }[]; }
+
+const lang = getLang(Astro);
+---
+
+<div class="mt-6">
+  <h2 class="text-lg font-bold mb-3">{t('related_tools.title', lang)}</h2>
+  <div class="flex flex-wrap gap-2">
+    {Astro.props.tools.map(tool => (
+      <a href={`/${tool.slug}`} class="inline-block px-3 py-1.5 text-sm bg-gray-100 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors">
+        {tool.title}
+      </a>
+    ))}
+  </div>
+</div>
+```
+
+- [ ] **Step 6: Modify `CopyButton.astro`** — translate "Copy"/"Copied!" labels
+
+Replace line 7 and the script section:
+
+Change line 7:
+```astro
+  <span class="copy-label">Copy</span>
+```
+And change the script to use translations (we need to handle this client-side). Add `data-copy-label` and `data-copied-label` attributes:
+
+```astro
+---
+import { t, getLang } from '../i18n';
+export interface Props { text: string; }
+const lang = getLang(Astro);
+---
+
+<button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy={Astro.props.text}>
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+  <span class="copy-label">{t('btn.copy', lang)}</span>
+</button>
+<script>
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = (btn as HTMLElement).dataset.copy!;
+      navigator.clipboard.writeText(text).then(() => {
+        const label = btn.querySelector('.copy-label')!;
+        label.textContent = 'Copied!';
+        setTimeout(() => { label.textContent = 'Copy'; }, 2000);
+      });
+    });
+  });
+</script>
+```
+
+- [ ] **Step 7: Modify `CategorySection.astro`** — translate category name/desc using i18n keys
+
+Replace the file with:
+
+```astro
+---
+import ToolCard from './ToolCard.astro';
+import { t, getLang } from '../i18n';
+
+export interface Props { id: string; name: string; description: string; tools: { slug: string; title: string; description: string }[]; }
+
+const lang = getLang(Astro);
+---
+
+<section id={Astro.props.id} class="mb-8">
+  <h2 class="text-lg font-bold text-gray-800 mb-1">{Astro.props.name}</h2>
+  <p class="text-xs text-gray-500 mb-3">{Astro.props.description}</p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+    {Astro.props.tools.map(tool => <ToolCard {...tool} />)}
+  </div>
+</section>
+```
+
+Note: CategorySection receives `name` and `description` from its parent. The parent (index.astro) will pass translated strings, so CategorySection itself doesn't need to change its interface — the translation happens at the call site (Task 4).
+
+Actually, since the parent will pass translated values, CategorySection.astro can stay as is. Let me re-verify.
+
+Actually looking at the original code, CategorySection receives `name` as a prop like `A. Content Ideas`, and `description` from `categories.ts`. In Task 4, the index.astro will translate these before passing to CategorySection. So CategorySection itself doesn't need to import i18n. Skip this step.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add src/components/Footer.astro src/components/FAQ.astro src/components/HowToUse.astro src/components/SearchBar.astro src/components/RelatedTools.astro src/components/CopyButton.astro
+git commit -m "feat: translate shared components (Footer, FAQ, HowToUse, SearchBar, RelatedTools, CopyButton)"
+```
+
+---
+
+### Task 4: Modify pages/index.astro (home page)
+
+**Files:**
+- Modify: `src/pages/index.astro`
+
+- [ ] **Step 1: Modify `src/pages/index.astro`**
+
+Replace the file with:
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SearchBar from '../components/SearchBar.astro';
+import CategorySection from '../components/CategorySection.astro';
+import AdUnit from '../components/AdUnit.astro';
+import { categories } from '../data/categories';
+import { tools } from '../data/tools';
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+const title = t('home.title', lang);
+const description = t('home.description', lang);
+
+// Pre-compute translated tools for the home page tool cards
+const translatedTools = tools.map(tool => ({
+  ...tool,
+  title: t(`tools.${tool.slug}.title`, lang),
+  description: t(`tools.${tool.slug}.description`, lang),
+}));
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-extrabold text-gray-900 sm:text-3xl">{t('home.h1', lang)}</h1>
+      <p class="text-sm text-gray-500 mt-2 max-w-lg mx-auto">{t('home.subtitle', lang)}</p>
+    </div>
+    <SearchBar />
+    <AdUnit slot="home-hero" />
+    {categories.slice(0, 3).map(cat => (
+      <CategorySection
+        id={cat.slug}
+        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        description={t(`category.${cat.id}.desc`, lang)}
+        tools={translatedTools.filter(t => t.categoryId === cat.id)}
+      />
+    ))}
+    <AdUnit slot="home-mid" />
+    {categories.slice(3).map(cat => (
+      <CategorySection
+        id={cat.slug}
+        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        description={t(`category.${cat.id}.desc`, lang)}
+        tools={translatedTools.filter(t => t.categoryId === cat.id)}
+      />
+    ))}
+    <AdUnit slot="home-footer" />
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  document.getElementById('tool-search')?.addEventListener('input', function(e) {
+    const query = (e.target as HTMLInputElement).value.toLowerCase();
+    document.querySelectorAll('section a[href]').forEach(card => {
+      const el = card as HTMLElement;
+      el.style.display = el.textContent?.toLowerCase().includes(query) ? '' : 'none';
+    });
+    document.querySelectorAll('section').forEach(section => {
+      const hasVisible = section.querySelectorAll('a:not([style*="display: none"])').length > 0;
+      (section as HTMLElement).style.display = hasVisible ? '' : 'none';
+    });
+  });
+</script>
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add src/pages/index.astro
+git commit -m "feat: translate home page with i18n"
+```
+
+---
+
+### Task 5: Modify pages/[slug].astro (tool detail page)
+
+**Files:**
+- Modify: `src/pages/[slug].astro`
+
+- [ ] **Step 1: Modify `src/pages/[slug].astro`**
+
+Replace the file with:
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ResultCard from '../components/ResultCard.astro';
+import FAQ from '../components/FAQ.astro';
+import HowToUse from '../components/HowToUse.astro';
+import RelatedTools from '../components/RelatedTools.astro';
+import AdUnit from '../components/AdUnit.astro';
+import '../engines';
+import { getEngine } from '../engines/registry';
+import { relatedTools } from '../data/internal-links';
+import { tools } from '../data/tools';
+import { t, getLang } from '../i18n';
+
+export function getStaticPaths() {
+  return tools.map(tool => ({ params: { slug: tool.slug } }));
+}
+
+const { slug } = Astro.params;
+const engine = getEngine(slug!);
+if (!engine) return Astro.redirect('/');
+
+const lang = getLang(Astro);
+
+const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
+const toolTitle = t(`tools.${slug}.title`, lang);
+const toolDescription = t(`tools.${slug}.description`, lang);
+const metaTitle = `${toolTitle} — Free YouTube Creator Tool`;
+const isInteractive = engine.inputs.length > 0;
+const clientConfig = JSON.stringify(engine.clientConfig);
+
+// Translate FAQ and howToUse using i18n keys
+const translatedFaq = engine.faq.map((item, i) => ({
+  q: t(`tools.${slug}.faq.${i}.q`, lang),
+  a: t(`tools.${slug}.faq.${i}.a`, lang),
+}));
+const translatedHowToUse = engine.howToUse.map((_, i) => t(`tools.${slug}.how_to_use.${i}`, lang));
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: translatedFaq.map(item => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: toolTitle,
+      applicationCategory: 'Multimedia',
+      operatingSystem: 'Web',
+      description: toolDescription,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: t('breadcrumb.home', lang), item: Astro.site?.toString() || '/' },
+        { '@type': 'ListItem', position: 2, name: toolTitle },
+      ],
+    },
+  ],
+});
+---
+
+<BaseLayout title={metaTitle} description={toolDescription} schema={schema}>
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <nav class="text-xs text-gray-400 mb-4" aria-label="Breadcrumb">
+      <a href="/" class="hover:text-red-600">{t('breadcrumb.home', lang)}</a>
+      <span class="mx-1">/</span>
+      <span class="text-gray-600">{toolTitle}</span>
+    </nav>
+
+    <div class="lg:grid lg:grid-cols-5 lg:gap-8">
+      <!-- Left Column: Input + FAQ -->
+      <div class="lg:col-span-2">
+        <h1 class="text-2xl font-extrabold text-gray-900">{toolTitle}</h1>
+        <p class="text-sm text-gray-500 mt-1">{toolDescription}</p>
+
+        {isInteractive && (
+          <form id="tool-form" class="mt-6 space-y-4">
+            {engine.inputs.map(input => (
+              input.type === 'select' ? (
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                  <select id={input.name} name={input.name} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white">
+                    <option value="">Select...</option>
+                    {input.options?.map(opt => <option value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                  <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
+              )
+            ))}
+            <button type="submit" class="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">
+              {t('btn.generate', lang)}
+            </button>
+          </form>
+        )}
+
+        <HowToUse steps={translatedHowToUse} />
+        <FAQ items={translatedFaq} />
+      </div>
+
+      <!-- Right Column: Results -->
+      <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold">{t('results.title', lang)}</h2>
+          <span id="copy-all" class="text-xs text-blue-600 hover:text-blue-800 font-medium cursor-pointer select-none hidden">{t('btn.copy_all', lang)}</span>
+        </div>
+
+        <!-- Static examples (SEO content, visible without JS) -->
+        <div id="static-results" class="space-y-2">
+          {engine.staticExamples.map((ex, i) => (
+            <ResultCard text={ex} index={i} />
+          ))}
+        </div>
+
+        <div id="dynamic-results" class="space-y-2 hidden"></div>
+        <AdUnit slot="tool-result" />
+        <RelatedTools tools={related.map(t => ({ slug: t.slug, title: t(`tools.${t.slug}.title`, lang) }))} />
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
+
+{isInteractive && (
+  <>
+    <script type="application/json" id="client-config">{clientConfig}</script>
+    <script>
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
+      function generateFromConfig(config, inputs) {
+        if (config.type === 'custom' && config.customFn) {
+          var fn = new Function('inputs', 'pick', 'fill', config.customFn);
+          return fn(inputs, pick, fill);
+        }
+        var count = 10;
+        var v = { topic: inputs.topic || inputs.niche || inputs.keyword || inputs.interest || inputs.title || 'your topic', niche: inputs.niche || inputs.topic || 'your niche', keyword: inputs.keyword || inputs.topic || 'your keyword' };
+        var results = [];
+        var seen = {};
+        var attempts = 0;
+        while (results.length < count && attempts < count * 15) {
+          attempts++;
+          for (var key in config.wordPools) v[key] = pick(config.wordPools[key]);
+          var result = '';
+          if (config.type === 'templates') result = fill(pick(config.templates), v).trim();
+          else if (config.type === 'combinations') result = pick(config.patterns)(v).trim();
+          if (result && !seen[result]) { seen[result] = true; results.push(result); }
+        }
+        return results;
+      }
+
+      var form = document.getElementById('tool-form');
+      var config = JSON.parse(document.getElementById('client-config').textContent);
+      var dynamicResults = document.getElementById('dynamic-results');
+      var staticResults = document.getElementById('static-results');
+      var copyAllBtn = document.getElementById('copy-all');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(form);
+        var inputs = {};
+        fd.forEach(function(v, k) { inputs[k] = v.toString(); });
+        var results = generateFromConfig(config, inputs);
+
+        var html = '';
+        for (var i = 0; i < results.length; i++) {
+          html += '<div class="flex items-start justify-between gap-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white">' +
+            '<span class="text-xs text-gray-400 font-mono shrink-0 pt-0.5">#' + (i+1) + '</span>' +
+            '<span class="text-sm text-gray-800 flex-1">' + results[i].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' +
+            '<button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="' + results[i].replace(/"/g, '&quot;').replace(/&/g,'&amp;') + '">' +
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>' +
+            '<span class="copy-label">Copy</span></button></div>';
+        }
+        dynamicResults.innerHTML = html;
+        dynamicResults.classList.remove('hidden');
+        staticResults.classList.add('hidden');
+        copyAllBtn.classList.remove('hidden');
+
+        dynamicResults.querySelectorAll('.copy-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.dataset.copy).then(function() {
+              this.querySelector('.copy-label').textContent = 'Copied!';
+              var that = this;
+              setTimeout(function() { that.querySelector('.copy-label').textContent = 'Copy'; }, 2000);
+            }.bind(this));
+          });
+        });
+      });
+
+      copyAllBtn.addEventListener('click', function() {
+        var texts = Array.from(dynamicResults.querySelectorAll('span.text-gray-800')).map(function(s) { return s.textContent; });
+        if (texts.length === 0) {
+          texts = Array.from(staticResults.querySelectorAll('span.text-gray-800')).map(function(s) { return s.textContent; });
+        }
+        navigator.clipboard.writeText(texts.join('\n')).then(function() {
+          copyAllBtn.textContent = 'Copied!';
+          setTimeout(function() { copyAllBtn.textContent = 'Copy All'; }, 2000);
+        });
+      });
+    </script>
+  </>
+)}
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add src/pages/\[slug\].astro
+git commit -m "feat: translate tool detail page with i18n"
+```
+
+---
+
+### Task 6: Modify blog pages
+
+**Files:**
+- Modify: `src/pages/blog/index.astro`
+- Modify: `src/pages/blog/[slug].astro`
+
+- [ ] **Step 1: Modify `src/pages/blog/index.astro`**
+
+Replace the file with:
+
+```astro
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdUnit from '../../components/AdUnit.astro';
+import { blogPosts } from '../../data/blog-posts';
+import { t, getLang } from '../../i18n';
+
+const lang = getLang(Astro);
+const title = t('blog.page_title', lang);
+const description = t('blog.subtitle', lang);
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-2">{t('blog.title', lang)}</h1>
+    <p class="text-sm text-gray-500 mb-6">{t('blog.subtitle', lang)}</p>
+    <div class="space-y-4">
+      {blogPosts.map(post => (
+        <a href={`/blog/${post.slug}`} class="block p-4 border border-gray-200 rounded-lg hover:border-red-300 hover:bg-red-50/50 transition-colors">
+          <h2 class="text-base font-semibold text-gray-900">{post.title}</h2>
+          <p class="text-sm text-gray-500 mt-1">{post.excerpt}</p>
+          <span class="text-xs text-red-600 mt-2 inline-block">{t('blog.read_more', lang)}</span>
+        </a>
+      ))}
+    </div>
+    <AdUnit slot="blog-mid" />
+  </main>
+  <Footer />
+</BaseLayout>
+```
+
+- [ ] **Step 2: Modify `src/pages/blog/[slug].astro`**
+
+Replace the file with:
+
+```astro
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import AdUnit from '../../components/AdUnit.astro';
+import { blogPosts } from '../../data/blog-posts';
+import { t, getLang } from '../../i18n';
+
+export function getStaticPaths() {
+  return blogPosts.map(post => ({ params: { slug: post.slug } }));
+}
+
+const { slug } = Astro.params;
+const post = blogPosts.find(p => p.slug === slug);
+if (!post) return Astro.redirect('/blog/');
+
+const lang = getLang(Astro);
+
+const metaTitle = `${post.title} — YouTube Creator Tools Blog`;
+const metaDescription = post.excerpt;
+---
+
+<BaseLayout title={metaTitle} description={metaDescription}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <nav class="text-xs text-gray-400 mb-4">
+      <a href="/" class="hover:text-red-600">{t('breadcrumb.home', lang)}</a>
+      <span class="mx-1">/</span>
+      <a href="/blog/" class="hover:text-red-600">{t('breadcrumb.blog', lang)}</a>
+      <span class="mx-1">/</span>
+      <span class="text-gray-600">{post.title}</span>
+    </nav>
+    <article>
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-4">{post.title}</h1>
+      <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
+        {post.content.split('\n').map(p => <p>{p}</p>)}
+      </div>
+    </article>
+    <AdUnit slot="blog-mid" />
+    <p class="mt-6">
+      <a href={`/${post.toolSlug}`} class="inline-block px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">
+        {t('blog.try_now', lang, { tool: post.toolName })}
+      </a>
+    </p>
+    <AdUnit slot="blog-end" />
+  </main>
+  <Footer />
+</BaseLayout>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/pages/blog/index.astro src/pages/blog/\[slug\].astro
+git commit -m "feat: translate blog pages with i18n"
+```
+
+---
+
+### Task 7: Modify about and contact pages
+
+**Files:**
+- Modify: `src/pages/about.astro`
+- Modify: `src/pages/contact.astro`
+
+- [ ] **Step 1: Modify `src/pages/about.astro`**
+
+Replace the file with:
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+const title = t('about.title', lang);
+const description = t('about.description', lang);
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-4">{t('about.h1', lang)}</h1>
+    <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
+      <p>{t('about.p1', lang)}</p>
+      <p>{t('about.p2', lang)}</p>
+      <p>{t('about.p3', lang)}</p>
+      <p>{t('about.p4', lang)}</p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
+```
+
+- [ ] **Step 2: Modify `src/pages/contact.astro`**
+
+Replace the file with:
+
+```astro
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+const title = t('contact.title', lang);
+const description = t('contact.description', lang);
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-4">{t('contact.h1', lang)}</h1>
+    <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
+      <p>{t('contact.p1', lang)}</p>
+      <p>{t('contact.p2', lang)} <a href="mailto:contact@youtubetools.com" class="text-red-600 hover:text-red-700">contact@youtubetools.com</a></p>
+      <p>{t('contact.p3', lang)}</p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/pages/about.astro src/pages/contact.astro
+git commit -m "feat: translate about and contact pages with i18n"
+```
+
+---
+
+### Task 8: Build and verify
+
+- [ ] **Step 1: Build the project**
+
+```bash
+cd "d:/E/独立站/youtube-tools" && npm run build
+```
+
+Expected: Build succeeds with no errors. All pages generate.
+
+- [ ] **Step 2: Check for type errors**
+
+There should be no TypeScript errors. The `getLang(Astro)` call uses the Astro global which provides `url: URL` and `cookies` objects matching our type signature.
+
+- [ ] **Step 3: Start dev server and manually verify**
+
+```bash
+npm run dev
+```
+
+Check:
+1. Open `http://localhost:4321/` — page loads in English (default)
+2. Open `http://localhost:4321/?lang=zh` — page loads in Chinese
+3. Click "中文" in header — redirects to `?lang=zh`, shows Chinese
+4. Navigate to another page — stays in Chinese (cookie)
+5. Click "English" — switches back to English
+6. Check a tool page (e.g. `/youtube-title-generator?lang=zh`) — tool title, description, inputs, FAQ all in Chinese
+
+- [ ] **Step 4: Commit any fixes if needed**
+
+```bash
+git add -A
+git commit -m "fix: address any i18n build/runtime issues"
+```

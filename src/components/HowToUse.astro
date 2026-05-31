@@ -6,14 +6,16 @@ export interface Props { steps: string[]; }
 const lang = getLang(Astro);
 ---
 
-<div class="mt-6">
-  <h2 class="text-lg font-bold mb-3">{t('how_to_use.title', lang)}</h2>
-  <ol class="space-y-2">
+<div class="mt-8">
+  <h2 class="text-lg font-bold text-gray-900 mb-4">{t('how_to_use.title', lang)}</h2>
+  <div class="space-y-3">
     {Astro.props.steps.map((step, i) => (
-      <li class="flex gap-3 text-sm text-gray-700">
-        <span class="font-bold text-red-600 shrink-0">{i + 1}.</span>
-        <span>{step}</span>
-      </li>
+      <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+        <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#FF0000] to-orange-400 rounded-lg flex items-center justify-center">
+          <span class="text-xs font-bold text-white">{i + 1}</span>
+        </div>
+        <span class="text-sm text-gray-600 leading-relaxed">{step}</span>
+      </div>
     ))}
-  </ol>
+  </div>
 </div>
