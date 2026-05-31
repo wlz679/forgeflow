@@ -7,35 +7,43 @@ import CategorySection from '../components/CategorySection.astro';
 import AdUnit from '../components/AdUnit.astro';
 import { categories } from '../data/categories';
 import { tools } from '../data/tools';
+import { t, getLang } from '../i18n';
 
-const title = 'Free YouTube Creator Tools — 30 Tools to Grow Your Channel';
-const description = 'Free tools for YouTube creators: title generator, tag generator, thumbnail ideas, CPM calculator, SEO tools, and more. No signup required.';
+const lang = getLang(Astro);
+const title = t('home.title', lang);
+const description = t('home.description', lang);
+
+const translatedTools = tools.map(tool => ({
+  ...tool,
+  title: t(`tools.${tool.slug}.title`, lang),
+  description: t(`tools.${tool.slug}.description`, lang),
+}));
 ---
 
 <BaseLayout title={title} description={description}>
   <Header />
   <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
     <div class="text-center mb-6">
-      <h1 class="text-2xl font-extrabold text-gray-900 sm:text-3xl">Free YouTube Creator Tools</h1>
-      <p class="text-sm text-gray-500 mt-2 max-w-lg mx-auto">30 free tools to help YouTube creators grow — titles, tags, thumbnails, ideas, SEO, and more. No signup, no fees.</p>
+      <h1 class="text-2xl font-extrabold text-gray-900 sm:text-3xl">{t('home.h1', lang)}</h1>
+      <p class="text-sm text-gray-500 mt-2 max-w-lg mx-auto">{t('home.subtitle', lang)}</p>
     </div>
     <SearchBar />
     <AdUnit slot="home-hero" />
     {categories.slice(0, 3).map(cat => (
       <CategorySection
         id={cat.slug}
-        name={`${cat.id}. ${cat.name}`}
-        description={cat.description}
-        tools={tools.filter(t => t.categoryId === cat.id)}
+        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        description={t(`category.${cat.id}.desc`, lang)}
+        tools={translatedTools.filter(t => t.categoryId === cat.id)}
       />
     ))}
     <AdUnit slot="home-mid" />
     {categories.slice(3).map(cat => (
       <CategorySection
         id={cat.slug}
-        name={`${cat.id}. ${cat.name}`}
-        description={cat.description}
-        tools={tools.filter(t => t.categoryId === cat.id)}
+        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        description={t(`category.${cat.id}.desc`, lang)}
+        tools={translatedTools.filter(t => t.categoryId === cat.id)}
       />
     ))}
     <AdUnit slot="home-footer" />

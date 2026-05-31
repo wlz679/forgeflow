@@ -4,22 +4,24 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import AdUnit from '../../components/AdUnit.astro';
 import { blogPosts } from '../../data/blog-posts';
+import { t, getLang } from '../../i18n';
 
-const title = 'YouTube Creator Tips & Tools Blog';
-const description = 'Tips, guides, and best practices for YouTube creators. Learn how to grow your channel with free tools.';
+const lang = getLang(Astro);
+const title = t('blog.page_title', lang);
+const description = t('blog.subtitle', lang);
 ---
 
 <BaseLayout title={title} description={description}>
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
-    <h1 class="text-2xl font-extrabold mb-2">YouTube Creator Blog</h1>
-    <p class="text-sm text-gray-500 mb-6">Tips, guides, and best practices to grow your YouTube channel.</p>
+    <h1 class="text-2xl font-extrabold mb-2">{t('blog.title', lang)}</h1>
+    <p class="text-sm text-gray-500 mb-6">{t('blog.subtitle', lang)}</p>
     <div class="space-y-4">
       {blogPosts.map(post => (
         <a href={`/blog/${post.slug}`} class="block p-4 border border-gray-200 rounded-lg hover:border-red-300 hover:bg-red-50/50 transition-colors">
           <h2 class="text-base font-semibold text-gray-900">{post.title}</h2>
           <p class="text-sm text-gray-500 mt-1">{post.excerpt}</p>
-          <span class="text-xs text-red-600 mt-2 inline-block">Read more →</span>
+          <span class="text-xs text-red-600 mt-2 inline-block">{t('blog.read_more', lang)}</span>
         </a>
       ))}
     </div>
