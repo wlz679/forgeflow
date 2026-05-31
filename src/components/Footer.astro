@@ -1,9 +1,13 @@
 ---
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+
 const legalLinks = [
-  { href: '/privacy-policy', label: 'Privacy Policy' },
-  { href: '/terms', label: 'Terms & Conditions' },
-  { href: '/contact', label: 'Contact' },
-  { href: '/about', label: 'About' },
+  { href: '/privacy-policy', key: 'footer.privacy' },
+  { href: '/terms', key: 'footer.terms' },
+  { href: '/contact', key: 'footer.contact' },
+  { href: '/about', key: 'footer.about' },
 ];
 ---
 
@@ -12,12 +16,12 @@ const legalLinks = [
     <div class="flex flex-wrap justify-center gap-4 text-sm mb-2">
       {legalLinks.map(link => (
         <a href={link.href} class="text-gray-500 hover:text-red-600 transition-colors">
-          {link.label}
+          {t(link.key, lang)}
         </a>
       ))}
     </div>
     <p class="text-center text-xs text-gray-400">
-      &copy; {new Date().getFullYear()} YouTube Creator Tools. Not affiliated with YouTube.
+      &copy; {new Date().getFullYear()} {t('site.name', lang)}. {t('footer.copyright', lang)}
     </p>
   </div>
 </footer>

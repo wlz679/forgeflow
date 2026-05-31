@@ -1,9 +1,13 @@
 ---
+import { t, getLang } from '../i18n';
+
 export interface Props { steps: string[]; }
+
+const lang = getLang(Astro);
 ---
 
 <div class="mt-6">
-  <h2 class="text-lg font-bold mb-3">How to Use This Tool</h2>
+  <h2 class="text-lg font-bold mb-3">{t('how_to_use.title', lang)}</h2>
   <ol class="space-y-2">
     {Astro.props.steps.map((step, i) => (
       <li class="flex gap-3 text-sm text-gray-700">

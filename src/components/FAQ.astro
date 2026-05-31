@@ -1,9 +1,13 @@
 ---
+import { t, getLang } from '../i18n';
+
 export interface Props { items: { q: string; a: string }[]; }
+
+const lang = getLang(Astro);
 ---
 
 <div class="mt-8">
-  <h2 class="text-lg font-bold mb-3">Frequently Asked Questions</h2>
+  <h2 class="text-lg font-bold mb-3">{t('faq.title', lang)}</h2>
   <div class="space-y-1">
     {Astro.props.items.map(item => (
       <details class="border border-gray-200 rounded-lg group">

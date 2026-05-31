@@ -1,9 +1,13 @@
 ---
+import { t, getLang } from '../i18n';
+
 export interface Props { tools: { slug: string; title: string }[]; }
+
+const lang = getLang(Astro);
 ---
 
 <div class="mt-6">
-  <h2 class="text-lg font-bold mb-3">Related Tools</h2>
+  <h2 class="text-lg font-bold mb-3">{t('related_tools.title', lang)}</h2>
   <div class="flex flex-wrap gap-2">
     {Astro.props.tools.map(tool => (
       <a href={`/${tool.slug}`} class="inline-block px-3 py-1.5 text-sm bg-gray-100 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors">
