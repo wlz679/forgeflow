@@ -4,10 +4,15 @@ on:
   schedule:
     - cron: '0 3 * * 1'
   workflow_dispatch:
+<<<<<<< HEAD
 
 permissions:
   contents: write
 
+=======
+permissions:
+  contents: write
+>>>>>>> 0cd509fcbb4233df16d43434e88d581946fd178c
 jobs:
   update:
     runs-on: ubuntu-latest
