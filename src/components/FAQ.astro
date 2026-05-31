@@ -1,0 +1,15 @@
+---
+export interface Props { items: { q: string; a: string }[]; }
+---
+
+<div class="mt-8">
+  <h2 class="text-lg font-bold mb-3">Frequently Asked Questions</h2>
+  <div class="space-y-1">
+    {Astro.props.items.map(item => (
+      <details class="border border-gray-200 rounded-lg group">
+        <summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 select-none">{item.q}</summary>
+        <p class="px-4 pb-3 text-sm text-gray-600 leading-relaxed">{item.a}</p>
+      </details>
+    ))}
+  </div>
+</div>

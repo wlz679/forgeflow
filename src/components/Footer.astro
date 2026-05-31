@@ -1,0 +1,23 @@
+---
+const legalLinks = [
+  { href: '/privacy-policy', label: 'Privacy Policy' },
+  { href: '/terms', label: 'Terms & Conditions' },
+  { href: '/contact', label: 'Contact' },
+  { href: '/about', label: 'About' },
+];
+---
+
+<footer class="border-t border-gray-200 mt-auto bg-gray-50">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="flex flex-wrap justify-center gap-4 text-sm mb-2">
+      {legalLinks.map(link => (
+        <a href={link.href} class="text-gray-500 hover:text-red-600 transition-colors">
+          {link.label}
+        </a>
+      ))}
+    </div>
+    <p class="text-center text-xs text-gray-400">
+      &copy; {new Date().getFullYear()} YouTube Creator Tools. Not affiliated with YouTube.
+    </p>
+  </div>
+</footer>

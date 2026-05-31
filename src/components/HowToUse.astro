@@ -1,0 +1,15 @@
+---
+export interface Props { steps: string[]; }
+---
+
+<div class="mt-6">
+  <h2 class="text-lg font-bold mb-3">How to Use This Tool</h2>
+  <ol class="space-y-2">
+    {Astro.props.steps.map((step, i) => (
+      <li class="flex gap-3 text-sm text-gray-700">
+        <span class="font-bold text-red-600 shrink-0">{i + 1}.</span>
+        <span>{step}</span>
+      </li>
+    ))}
+  </ol>
+</div>

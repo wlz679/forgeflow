@@ -1,0 +1,11 @@
+---
+export interface Props { slot: 'home-hero' | 'home-mid' | 'home-footer' | 'tool-result' | 'blog-mid' | 'blog-end' }
+const h: Record<string, string> = {
+  'home-hero': 'min-h-[90px]', 'home-mid': 'min-h-[90px]', 'home-footer': 'min-h-[90px]',
+  'tool-result': 'min-h-[250px]', 'blog-mid': 'min-h-[250px]', 'blog-end': 'min-h-[250px]',
+};
+---
+
+<div class={`my-6 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 ${h[Astro.props.slot]}`}>
+  <span class="text-xs text-gray-400">AdSense — {Astro.props.slot.replace('-', ' ')}</span>
+</div>
