@@ -121,7 +121,7 @@ const schema = JSON.stringify({
 
         <div id="dynamic-results" class="space-y-2 hidden"></div>
         <AdUnit slot="tool-result" />
-        <RelatedTools tools={related.map(t => ({ slug: t.slug, title: t(`tools.${t.slug}.title`, lang) }))} />
+        <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
       </div>
     </div>
   </main>
