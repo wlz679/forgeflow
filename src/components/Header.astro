@@ -1,21 +1,37 @@
 ---
+import { t, getLang } from '../i18n';
+
+const lang = getLang(Astro);
+const otherLang = lang === 'zh' ? 'en' : 'zh';
+
 const navItems = [
-  { href: '/blog/', label: 'Blog' },
-  { href: '/about', label: 'About' },
+  { href: '/blog/', key: 'nav.blog' },
+  { href: '/about', key: 'nav.about' },
 ];
 ---
 
 <header class="border-b border-gray-200 sticky top-0 bg-white z-50">
   <nav class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
     <a href="/" class="text-lg font-bold text-gray-900 hover:text-red-600 transition-colors">
-      YT Creator Tools
+      {t('site.name', lang)}
     </a>
     <div class="flex items-center gap-4 text-sm">
       {navItems.map(item => (
         <a href={item.href} class="text-gray-600 hover:text-red-600 transition-colors">
-          {item.label}
+          {t(item.key, lang)}
         </a>
       ))}
+      <a href={`?lang=${otherLang}`} class="text-xs text-gray-400 hover:text-red-600 transition-colors ml-2">
+        {t('lang.switch', lang)}
+      </a>
     </div>
   </nav>
 </header>
+
+<script>
+  // Set cookie when lang is in query param
+  const q = new URLSearchParams(window.location.search).get('lang');
+  if (q === 'zh' || q === 'en') {
+    document.cookie = 'yt-lang=' + q + '; path=/; max-age=2592000; SameSite=Lax';
+  }
+</script>

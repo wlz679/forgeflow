@@ -1,4 +1,7 @@
 ---
+import '../styles/global.css';
+import { getLang } from '../i18n';
+
 export interface Props {
   title: string;
   description: string;
@@ -6,10 +9,11 @@ export interface Props {
   schema?: string;
 }
 const { title, description, ogImage = '/og-default.png', schema } = Astro.props;
+const lang = getLang(Astro);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
