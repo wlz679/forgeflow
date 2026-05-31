@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "update-data": "tsx scripts/update-data.ts"
   },
   "keywords": [
     "youtube",
@@ -22,5 +23,9 @@
     "@astrojs/sitemap": "^3.5.0",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^4.13.2"
+  },
+  "devDependencies": {
+    "google-trends-api": "^4.9.2",
+    "tsx": "^4.22.3"
   }
 }
