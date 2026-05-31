@@ -1,0 +1,199 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import ResultCard from '../components/ResultCard.astro';
+import FAQ from '../components/FAQ.astro';
+import HowToUse from '../components/HowToUse.astro';
+import RelatedTools from '../components/RelatedTools.astro';
+import AdUnit from '../components/AdUnit.astro';
+import { getEngine } from '../engines/registry';
+import { relatedTools } from '../data/internal-links';
+import { tools } from '../data/tools';
+
+export function getStaticPaths() {
+  return tools.map(tool => ({ params: { slug: tool.slug } }));
+}
+
+const { slug } = Astro.params;
+const engine = getEngine(slug!);
+if (!engine) return Astro.redirect('/');
+
+const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
+const metaTitle = `${engine.title} — Free YouTube Creator Tool`;
+const isInteractive = engine.inputs.length > 0;
+const clientConfig = JSON.stringify(engine.clientConfig);
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'FAQPage',
+      mainEntity: engine.faq.map(item => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: engine.title,
+      applicationCategory: 'Multimedia',
+      operatingSystem: 'Web',
+      description: engine.description,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() || '/' },
+        { '@type': 'ListItem', position: 2, name: engine.title },
+      ],
+    },
+  ],
+});
+---
+
+<BaseLayout title={metaTitle} description={engine.description} schema={schema}>
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <nav class="text-xs text-gray-400 mb-4" aria-label="Breadcrumb">
+      <a href="/" class="hover:text-red-600">Home</a>
+      <span class="mx-1">/</span>
+      <span class="text-gray-600">{engine.title}</span>
+    </nav>
+
+    <div class="lg:grid lg:grid-cols-5 lg:gap-8">
+      <!-- Left Column: Input + FAQ -->
+      <div class="lg:col-span-2">
+        <h1 class="text-2xl font-extrabold text-gray-900">{engine.title}</h1>
+        <p class="text-sm text-gray-500 mt-1">{engine.description}</p>
+
+        {isInteractive && (
+          <form id="tool-form" class="mt-6 space-y-4">
+            {engine.inputs.map(input => (
+              input.type === 'select' ? (
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for={input.name}>{input.label}</label>
+                  <select id={input.name} name={input.name} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-white">
+                    <option value="">Select...</option>
+                    {input.options?.map(opt => <option value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1" for={input.name}>{input.label}</label>
+                  <input type={input.type} id={input.name} name={input.name} placeholder={input.placeholder} class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+                </div>
+              )
+            ))}
+            <button type="submit" class="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">
+              Generate
+            </button>
+          </form>
+        )}
+
+        <HowToUse steps={engine.howToUse} />
+        <FAQ items={engine.faq} />
+      </div>
+
+      <!-- Right Column: Results -->
+      <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-bold">Results</h2>
+          <span id="copy-all" class="text-xs text-blue-600 hover:text-blue-800 font-medium cursor-pointer select-none hidden">Copy All</span>
+        </div>
+
+        <!-- Static examples (SEO content, visible without JS) -->
+        <div id="static-results" class="space-y-2">
+          {engine.staticExamples.map((ex, i) => (
+            <ResultCard text={ex} index={i} />
+          ))}
+        </div>
+
+        <div id="dynamic-results" class="space-y-2 hidden"></div>
+        <AdUnit slot="tool-result" />
+        <RelatedTools tools={related.map(t => ({ slug: t.slug, title: t.title }))} />
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
+
+{isInteractive && (
+  <>
+    <script type="application/json" id="client-config">{clientConfig}</script>
+    <script>
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
+      function generateFromConfig(config, inputs) {
+        if (config.type === 'custom' && config.customFn) {
+          var fn = new Function('inputs', 'pick', 'fill', config.customFn);
+          return fn(inputs, pick, fill);
+        }
+        var count = 10;
+        var v = { topic: inputs.topic || inputs.niche || inputs.keyword || inputs.interest || inputs.title || 'your topic', niche: inputs.niche || inputs.topic || 'your niche', keyword: inputs.keyword || inputs.topic || 'your keyword' };
+        var results = [];
+        var seen = {};
+        var attempts = 0;
+        while (results.length < count && attempts < count * 15) {
+          attempts++;
+          for (var key in config.wordPools) v[key] = pick(config.wordPools[key]);
+          var result = '';
+          if (config.type === 'templates') result = fill(pick(config.templates), v).trim();
+          else if (config.type === 'combinations') result = pick(config.patterns)(v).trim();
+          if (result && !seen[result]) { seen[result] = true; results.push(result); }
+        }
+        return results;
+      }
+
+      var form = document.getElementById('tool-form');
+      var config = JSON.parse(document.getElementById('client-config').textContent);
+      var dynamicResults = document.getElementById('dynamic-results');
+      var staticResults = document.getElementById('static-results');
+      var copyAllBtn = document.getElementById('copy-all');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(form);
+        var inputs = {};
+        fd.forEach(function(v, k) { inputs[k] = v.toString(); });
+        var results = generateFromConfig(config, inputs);
+
+        var html = '';
+        for (var i = 0; i < results.length; i++) {
+          html += '<div class="flex items-start justify-between gap-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors bg-white">' +
+            '<span class="text-xs text-gray-400 font-mono shrink-0 pt-0.5">#' + (i+1) + '</span>' +
+            '<span class="text-sm text-gray-800 flex-1">' + results[i].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>' +
+            '<button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="' + results[i].replace(/"/g, '&quot;').replace(/&/g,'&amp;') + '">' +
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>' +
+            '<span class="copy-label">Copy</span></button></div>';
+        }
+        dynamicResults.innerHTML = html;
+        dynamicResults.classList.remove('hidden');
+        staticResults.classList.add('hidden');
+        copyAllBtn.classList.remove('hidden');
+
+        dynamicResults.querySelectorAll('.copy-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.dataset.copy).then(function() {
+              this.querySelector('.copy-label').textContent = 'Copied!';
+              var that = this;
+              setTimeout(function() { that.querySelector('.copy-label').textContent = 'Copy'; }, 2000);
+            }.bind(this));
+          });
+        });
+      });
+
+      copyAllBtn.addEventListener('click', function() {
+        var texts = Array.from(dynamicResults.querySelectorAll('span.text-gray-800')).map(function(s) { return s.textContent; });
+        if (texts.length === 0) {
+          texts = Array.from(staticResults.querySelectorAll('span.text-gray-800')).map(function(s) { return s.textContent; });
+        }
+        navigator.clipboard.writeText(texts.join('\n')).then(function() {
+          copyAllBtn.textContent = 'Copied!';
+          setTimeout(function() { copyAllBtn.textContent = 'Copy All'; }, 2000);
+        });
+      });
+    </script>
+  </>
+)}

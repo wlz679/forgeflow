@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'Contact — YouTube Creator Tools';
+const description = 'Get in touch with the YouTube Creator Tools team.';
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-4">Contact Us</h1>
+    <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
+      <p>Have a question, suggestion, or feedback? We'd love to hear from you.</p>
+      <p>Email us at: <a href="mailto:contact@youtubetools.com" class="text-red-600 hover:text-red-700">contact@youtubetools.com</a></p>
+      <p>We typically respond within 24-48 hours.</p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

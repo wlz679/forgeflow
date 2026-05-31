@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+const title = 'About — YouTube Creator Tools';
+const description = 'Free tools for YouTube creators. 30 tools to help you grow your channel. No signup, no fees.';
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-4">About YouTube Creator Tools</h1>
+    <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
+      <p>YouTube Creator Tools is a free collection of 30 tools designed to help YouTube creators at every stage of content creation — from brainstorming ideas to optimizing for search and growing your channel.</p>
+      <p>All tools are completely free. No signup, no fees, no hidden costs. Just useful tools when you need them.</p>
+      <p>Our tools cover six key areas: Content Ideas, Titles & SEO Copy, Shorts Growth, SEO Optimization, Thumbnail Optimization, and Channel Growth.</p>
+      <p>This site is independently operated and is not affiliated with YouTube or Google.</p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>

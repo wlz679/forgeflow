@@ -1,11 +1,58 @@
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YT Creator Tools</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-</head>
-<body>
-  <h1>Hello</h1>
-</body>
-</html>
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import SearchBar from '../components/SearchBar.astro';
+import CategorySection from '../components/CategorySection.astro';
+import AdUnit from '../components/AdUnit.astro';
+import { categories } from '../data/categories';
+import { tools } from '../data/tools';
+
+const title = 'Free YouTube Creator Tools — 30 Tools to Grow Your Channel';
+const description = 'Free tools for YouTube creators: title generator, tag generator, thumbnail ideas, CPM calculator, SEO tools, and more. No signup required.';
+---
+
+<BaseLayout title={title} description={description}>
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <div class="text-center mb-6">
+      <h1 class="text-2xl font-extrabold text-gray-900 sm:text-3xl">Free YouTube Creator Tools</h1>
+      <p class="text-sm text-gray-500 mt-2 max-w-lg mx-auto">30 free tools to help YouTube creators grow — titles, tags, thumbnails, ideas, SEO, and more. No signup, no fees.</p>
+    </div>
+    <SearchBar />
+    <AdUnit slot="home-hero" />
+    {categories.slice(0, 3).map(cat => (
+      <CategorySection
+        id={cat.slug}
+        name={`${cat.id}. ${cat.name}`}
+        description={cat.description}
+        tools={tools.filter(t => t.categoryId === cat.id)}
+      />
+    ))}
+    <AdUnit slot="home-mid" />
+    {categories.slice(3).map(cat => (
+      <CategorySection
+        id={cat.slug}
+        name={`${cat.id}. ${cat.name}`}
+        description={cat.description}
+        tools={tools.filter(t => t.categoryId === cat.id)}
+      />
+    ))}
+    <AdUnit slot="home-footer" />
+  </main>
+  <Footer />
+</BaseLayout>
+
+<script>
+  document.getElementById('tool-search')?.addEventListener('input', function(e) {
+    const query = (e.target as HTMLInputElement).value.toLowerCase();
+    document.querySelectorAll('section a[href]').forEach(card => {
+      const el = card as HTMLElement;
+      el.style.display = el.textContent?.toLowerCase().includes(query) ? '' : 'none';
+    });
+    document.querySelectorAll('section').forEach(section => {
+      const hasVisible = section.querySelectorAll('a:not([style*="display: none"])').length > 0;
+      (section as HTMLElement).style.display = hasVisible ? '' : 'none';
+    });
+  });
+</script>

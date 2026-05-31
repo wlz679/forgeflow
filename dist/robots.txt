@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://youtubetools.com/sitemap-index.xml

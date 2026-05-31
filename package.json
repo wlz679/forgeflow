@@ -10,12 +10,16 @@
     "build": "astro build",
     "preview": "astro preview"
   },
-  "keywords": ["youtube", "creator-tools", "seo"],
+  "keywords": [
+    "youtube",
+    "creator-tools",
+    "seo"
+  ],
   "author": "",
   "license": "ISC",
   "description": "Free YouTube Creator Tools - 30 tools to grow your channel",
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/sitemap": "^3.5.0",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^4.13.2"
   }
