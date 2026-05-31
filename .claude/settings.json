@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(gstack --version)",
+      "Bash(gstack -v)",
+      "Bash(gstack --help)",
+      "Bash(gstack-codex --version)",
+      "Bash(gstack-codex --help)",
+      "Bash(gstack-codex init *)"
+    ]
+  }
+}

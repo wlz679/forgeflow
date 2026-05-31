@@ -1,0 +1,70 @@
+<h2>Design Decisions — Summary (so far)</h2>
+<p class="subtitle">Everything confirmed. Quick review before we move on.</p>
+
+<div style="max-width:640px;margin:0 auto;">
+
+<div class="section">
+  <h3>🏗️ Tech Stack</h3>
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-weight:600;">Framework</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Astro (SSG — pure static HTML output)</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-weight:600;">Styling</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Tailwind CSS</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-weight:600;">Interactivity</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Vanilla JS (no heavy framework)</td></tr>
+    <tr><td style="padding:6px 8px;font-weight:600;">Deploy</td><td style="padding:6px 8px;">Cloudflare Pages or Vercel (free tier)</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>🧠 AI / Generation</h3>
+  <p style="font-size:13px;color:#6b7280;margin:0;">Pure frontend rule-engine — template databases + word libraries + logic. No AI API calls. Instant, free, reliable.</p>
+</div>
+
+<div class="section">
+  <h3>🌐 URL Structure</h3>
+  <p style="font-size:13px;"><code style="background:#f3f4f6;padding:2px 6px;border-radius:3px;">youtubetools.com/youtube-title-generator</code> — flat, short, keyword-in-URL</p>
+</div>
+
+<div class="section">
+  <h3>📄 Pages</h3>
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Homepage</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Search + 6 category blocks + 30 tool cards + 3 AdSense slots</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">30 Tool Pages</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Option B: 2-col desktop, 1-col mobile</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">30 Blog Posts</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Template-based, ~500 words each, 1 per tool</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Legal</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Privacy Policy, Terms, About, Contact</td></tr>
+    <tr><td style="padding:6px 8px;"><strong>Total</strong></td><td style="padding:6px 8px;"><strong>66 pages</strong></td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>🔗 Internal Linking</h3>
+  <p style="font-size:13px;color:#6b7280;margin:0;">Every tool page has "Related Tools" section — links to 4-5 sibling tools. Blog posts link to tool pages. Footer links to all legal pages.</p>
+</div>
+
+<div class="section">
+  <h3>🎨 Design</h3>
+  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-weight:600;">Style</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">Minimal SaaS, mobile-first</td></tr>
+    <tr><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-weight:600;">Color</td><td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;">White + Blue-gray dominant, red accents</td></tr>
+    <tr><td style="padding:6px 8px;font-weight:600;">Layout</td><td style="padding:6px 8px;">Desktop 2-col tool pages, mobile single stack</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>💰 Monetization</h3>
+  <p style="font-size:13px;color:#6b7280;margin:0;">Google AdSense — 3 slots on homepage (top, mid, bottom), 1 slot per tool page, 1 slot per blog post</p>
+</div>
+
+<div class="section">
+  <h3>📋 Tool Page Template</h3>
+  <ol style="font-size:13px;color:#6b7280;margin:0;padding-left:20px;">
+    <li>Tool Name + Short description</li>
+    <li>Input area (1-3 fields) + Generate button</li>
+    <li>Result cards with Copy button each + Copy All</li>
+    <li>How to Use section</li>
+    <li>FAQ section (accordion)</li>
+    <li>Related Tools (internal links)</li>
+  </ol>
+</div>
+
+</div>
+
+<p style="text-align:center;margin-top:16px;font-size:13px;color:#6b7280;">✅ All confirmed. Anything need changing?</p>
