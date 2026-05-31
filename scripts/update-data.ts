@@ -176,35 +176,45 @@ async function main() {
 
   // ===== Google Trends 数据 =====
   try {
-    const googleTrends = await import('google-trends-api');
-    const gt = (googleTrends as any).default || googleTrends;
+    // 用 Promise.race 防止无限等待
+    const trendsPromise = (async () => {
+      const googleTrends = await import('google-trends-api');
+      const gt = (googleTrends as any).default || googleTrends;
 
-    const NICHES = [
-      'fitness', 'cooking', 'tech reviews', 'gaming', 'beauty',
-      'personal finance', 'travel vlog', 'music', 'education', 'fashion',
-      'home decor', 'productivity',
-    ];
+      const NICHES = [
+        'fitness', 'cooking', 'tech reviews', 'gaming', 'beauty',
+        'personal finance', 'travel vlog', 'music', 'education', 'fashion',
+        'home decor', 'productivity',
+      ];
 
-    const risingQueries: { query: string; change: string }[] = [];
+      const risingQueries: { query: string; change: string }[] = [];
 
-    for (const niche of NICHES) {
-      try {
-        const result = await gt.relatedQueries({
-          keyword: niche,
-          startTime: new Date(Date.now() - 7 * 86400000),
-        });
-        const parsed = JSON.parse(result);
-        const rising = parsed?.default?.rankedList?.[1]?.rankedKeyword || [];
-        for (const item of rising.slice(0, 5)) {
-          risingQueries.push({
-            query: item.query,
-            change: item.value || 'rising',
+      for (const niche of NICHES) {
+        try {
+          const result = await gt.relatedQueries({
+            keyword: niche,
+            startTime: new Date(Date.now() - 7 * 86400000),
           });
+          const parsed = JSON.parse(result);
+          const rising = parsed?.default?.rankedList?.[1]?.rankedKeyword || [];
+          for (const item of rising.slice(0, 5)) {
+            risingQueries.push({
+              query: item.query,
+              change: item.value || 'rising',
+            });
+          }
+        } catch (e) {
+          // 单个 niche 失败不影响整体
         }
-      } catch (e) {
-        // 单个 niche 失败不影响整体
       }
-    }
+      return risingQueries;
+    })();
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Google Trends timeout after 30s')), 30000)
+    );
+
+    const risingQueries = await Promise.race([trendsPromise, timeoutPromise]);
 
     if (risingQueries.length > 0) {
       writeJSON('search-trends.json', {
