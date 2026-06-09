@@ -1,0 +1,1 @@
+import"./hoisted.CxNDD3ih.js";document.querySelectorAll(".copy-btn").forEach(e=>{e.addEventListener("click",()=>{const o=e.dataset.copy,c=e.dataset.copyLabel||"Copy",a=e.dataset.copiedLabel||"Copied!";navigator.clipboard.writeText(o).then(()=>{const t=e.querySelector(".copy-label");t.textContent=a,setTimeout(()=>{t.textContent=c},2e3)})})});

@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="zh"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>收入预测器 — Free Solopreneur Tool</title><meta name="description" content="预测6、12或24个月的MRR增长。对比不同增长率场景来规划你的财务未来。"><meta property="og:title" content="收入预测器 — Free Solopreneur Tool"><meta property="og:description" content="预测6、12或24个月的MRR增长。对比不同增长率场景来规划你的财务未来。"><meta property="og:image" content="/og-default.png"><meta property="og:type" content="website"><meta name="robots" content="index, follow"><link rel="sitemap" href="/sitemap-index.xml"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"SaaS月增长率多少算好？","acceptedAnswer":{"@type":"Answer","text":"早期SaaS月增长5-10%算不错，成熟产品2-3%是健康的。超过10%属于非常出色的表现。"}},{"@type":"Question","name":"如何提高月增长率？","acceptedAnswer":{"@type":"Answer","text":"关注三个杠杆：增加流量（SEO、内容、广告）、提高转化率（更好的落地页、免费试用）、降低流失率（用户引导、客户成功）。"}},{"@type":"Question","name":"线性增长还是指数增长更现实？","acceptedAnswer":{"@type":"Answer","text":"SaaS增长通常在早期是指数型的，随着市场饱和变为线性。本计算器模拟指数增长，更贴合大多数早期产品。"}},{"@type":"Question","name":"如果我的月增长率波动怎么办？","acceptedAnswer":{"@type":"Answer","text":"用3个月的平均值。如果你分别是8%、5%、3%，平均值约5.3%。做规划时保守估算更好。"}},{"@type":"Question","name":"什么时候增长率会放缓？","acceptedAnswer":{"@type":"Answer","text":"随着你占领初始市场，增长自然会放缓。MRR 1万时月增5%很优秀，MRR 10万时月增2-3%就很健康了。大数定律是普适的。"}}]},{"@type":"SoftwareApplication","name":"收入预测器","applicationCategory":"Multimedia","operatingSystem":"Web","description":"预测6、12或24个月的MRR增长。对比不同增长率场景来规划你的财务未来。"},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首页","item":"https://solopreneurtools.com/"},{"@type":"ListItem","position":2,"name":"收入预测器"}]}]}</script><link rel="stylesheet" href="/_astro/_slug_.CrvDSryl.css"><script type="module" src="/_astro/hoisted.DnNydAUp.js"></script></head> <body class="min-h-screen flex flex-col bg-white text-gray-900">  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"> <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"> <a href="/zh/" class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200"> <svg class="w-8 h-8 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> 独立开发者工具 </a> <div class="flex items-center gap-6 text-sm"> <a href="/zh/blog/" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> 博客 </a><a href="/zh/about" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> 关于 </a> <a href="/en/solopreneur-revenue-projector" class="px-3 py-1.5 text-xs font-medium bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full transition-all duration-200 ml-2"> English </a> </div> </nav> </header>  <main class="max-w-6xl mx-auto px-4 py-8 flex-1"> <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb"> <a href="/zh/" class="hover:text-[#7C3AED] transition-colors">首页</a> <span class="mx-2">/</span> <span class="text-gray-600">收入预测器</span> </nav> <div class="lg:grid lg:grid-cols-5 lg:gap-10"> <div class="lg:col-span-2"> <div class="mb-6"> <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">收入预测器</h1> <p class="text-sm text-gray-500 mt-2 leading-relaxed">预测6、12或24个月的MRR增长。对比不同增长率场景来规划你的财务未来。</p> </div> <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm"> <div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="currentMRR">当前MRR（$）</label> <input type="number" id="currentMRR" name="currentMRR" placeholder="例如：2000" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyGrowthRate">月增长率（%）</label> <input type="number" id="monthlyGrowthRate" name="monthlyGrowthRate" placeholder="例如：5" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="months">预测周期</label> <select id="months" name="months" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all"> <option value="">请选择...</option> <option value="6">6</option><option value="12">12</option><option value="24">24</option> </select> </div> <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm"> 生成 </button> </form> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">如何使用此工具</h2> <div class="space-y-3"> <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">1</span> </div> <span class="text-sm text-gray-600 leading-relaxed">输入你当前的月经常性收入（MRR）。</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">2</span> </div> <span class="text-sm text-gray-600 leading-relaxed">以百分比输入你的平均月增长率。</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">3</span> </div> <span class="text-sm text-gray-600 leading-relaxed">选择预测周期（6、12或24个月）。</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">4</span> </div> <span class="text-sm text-gray-600 leading-relaxed">查看逐月预测。</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">5</span> </div> <span class="text-sm text-gray-600 leading-relaxed">向下滚动对比9个不同增长率场景。</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">6</span> </div> <span class="text-sm text-gray-600 leading-relaxed">tools.solopreneur-revenue-projector.how_to_use.5</span> </div> </div> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">常见问题</h2> <div class="space-y-2"> <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>SaaS月增长率多少算好？</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">早期SaaS月增长5-10%算不错，成熟产品2-3%是健康的。超过10%属于非常出色的表现。</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>如何提高月增长率？</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">关注三个杠杆：增加流量（SEO、内容、广告）、提高转化率（更好的落地页、免费试用）、降低流失率（用户引导、客户成功）。</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>线性增长还是指数增长更现实？</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">SaaS增长通常在早期是指数型的，随着市场饱和变为线性。本计算器模拟指数增长，更贴合大多数早期产品。</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>如果我的月增长率波动怎么办？</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">用3个月的平均值。如果你分别是8%、5%、3%，平均值约5.3%。做规划时保守估算更好。</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>什么时候增长率会放缓？</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">随着你占领初始市场，增长自然会放缓。MRR 1万时月增5%很优秀，MRR 10万时月增2-3%就很健康了。大数定律是普适的。</p> </details> </div> </div> </div> <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section"> <div class="flex items-center justify-between mb-4"> <h2 class="text-lg font-bold text-gray-900">结果</h2> <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label="复制全部" data-copied-label="已复制！">复制全部</span> </div> <div id="static-results" class="space-y-3"> <div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:shadow-md hover:shadow-[#7C3AED]/5 transition-all duration-300"> <span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#1</span> <span class="text-sm text-gray-700 flex-1 leading-relaxed">📈 Revenue Projection (12 months at 5% monthly growth)
+
+Month 0  (Now):       $2,000/mo
+Month 1:  $2,100/mo
+Month 2:  $2,205/mo
+Month 3:  $2,315/mo ← Quarter 1
+Month 4:  $2,431/mo
+Month 5:  $2,553/mo
+Month 6:  $2,680/mo ← Quarter 2
+Month 7:  $2,814/mo
+Month 8:  $2,955/mo
+Month 9:  $3,103/mo ← Quarter 3
+Month 10:  $3,258/mo
+Month 11:  $3,421/mo
+Month 12:  $3,592/mo ← Quarter 4
+
+━━━━━━━━━━━━━━━━━━━━
+📊 Summary:
+• Starting MRR: $2,000
+• Ending MRR: $3,592
+• Total Revenue: $30,397
+• Growth Multiple: 1.8x
+
+🚀 Strong growth. Focus on sustaining this rate — churn is the biggest threat to compounding.
+
+💡 Compound growth is powerful: a 5% monthly improvement compounds to 80% annual growth. Small wins matter.</span> <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300"> <button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="📈 Revenue Projection (12 months at 5% monthly growth)
+
+Month 0  (Now):       $2,000/mo
+Month 1:  $2,100/mo
+Month 2:  $2,205/mo
+Month 3:  $2,315/mo ← Quarter 1
+Month 4:  $2,431/mo
+Month 5:  $2,553/mo
+Month 6:  $2,680/mo ← Quarter 2
+Month 7:  $2,814/mo
+Month 8:  $2,955/mo
+Month 9:  $3,103/mo ← Quarter 3
+Month 10:  $3,258/mo
+Month 11:  $3,421/mo
+Month 12:  $3,592/mo ← Quarter 4
+
+━━━━━━━━━━━━━━━━━━━━
+📊 Summary:
+• Starting MRR: $2,000
+• Ending MRR: $3,592
+• Total Revenue: $30,397
+• Growth Multiple: 1.8x
+
+🚀 Strong growth. Focus on sustaining this rate — churn is the biggest threat to compounding.
+
+💡 Compound growth is powerful: a 5% monthly improvement compounds to 80% annual growth. Small wins matter." data-copy-label="复制" data-copied-label="已复制！"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">复制</span> </button>  </div> </div><div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:shadow-md hover:shadow-[#7C3AED]/5 transition-all duration-300"> <span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#2</span> <span class="text-sm text-gray-700 flex-1 leading-relaxed">Conservative (1%/mo): $2,000 → $2,254 in 12 months (1%/mo)</span> <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300"> <button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="Conservative (1%/mo): $2,000 → $2,254 in 12 months (1%/mo)" data-copy-label="复制" data-copied-label="已复制！"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">复制</span> </button>  </div> </div><div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:shadow-md hover:shadow-[#7C3AED]/5 transition-all duration-300"> <span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#3</span> <span class="text-sm text-gray-700 flex-1 leading-relaxed">Moderate (3%/mo): $2,000 → $2,852 in 12 months (3%/mo)</span> <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300"> <button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="Moderate (3%/mo): $2,000 → $2,852 in 12 months (3%/mo)" data-copy-label="复制" data-copied-label="已复制！"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">复制</span> </button>  </div> </div><div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:shadow-md hover:shadow-[#7C3AED]/5 transition-all duration-300"> <span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#4</span> <span class="text-sm text-gray-700 flex-1 leading-relaxed">Good (5%/mo): $2,000 → $3,592 in 12 months (5%/mo)</span> <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300"> <button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="Good (5%/mo): $2,000 → $3,592 in 12 months (5%/mo)" data-copy-label="复制" data-copied-label="已复制！"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">复制</span> </button>  </div> </div><div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:shadow-md hover:shadow-[#7C3AED]/5 transition-all duration-300"> <span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#5</span> <span class="text-sm text-gray-700 flex-1 leading-relaxed">Strong (8%/mo): $2,000 → $5,036 in 12 months (8%/mo)</span> <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300"> <button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="Strong (8%/mo): $2,000 → $5,036 in 12 months (8%/mo)" data-copy-label="复制" data-copied-label="已复制！"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">复制</span> </button>  </div> </div> </div> <div id="dynamic-results" class="space-y-3 hidden"></div> <div class="my-6 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 min-h-[250px]"> <span class="text-xs text-gray-400">AdSense — tool result</span> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">相关工具</h2> <div class="flex flex-wrap gap-2"> <a href="/zh/solopreneur-affiliate-income-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> 联盟营销收入计算器 </a><a href="/zh/solopreneur-break-even-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> 盈亏平衡计算器 </a><a href="/zh/solopreneur-course-pricing-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> 课程定价计算器 </a><a href="/zh/solopreneur-email-list-revenue-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> 邮件列表收入计算器 </a> </div> </div> </div> </div> </main> <footer class="relative border-t border-gray-100 mt-auto bg-gray-50"> <div class="relative max-w-6xl mx-auto px-4 py-10"> <div class="flex items-center justify-center gap-2 mb-6"> <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> <span class="text-gray-600 text-sm">独立开发者工具</span> </div> <div class="flex flex-wrap justify-center gap-6 text-sm mb-6"> <a href="/zh/privacy-policy" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> 隐私政策 </a><a href="/zh/terms" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> 服务条款 </a><a href="/zh/contact" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> 联系我们 </a><a href="/zh/about" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> 关于 </a> </div> <p class="text-center text-xs text-gray-400">
+&copy; 2026 独立开发者工具. 独立开发者免费工具。无需注册。 </p> </div> </footer>  </body></html>  <script>(function(){const clientConfig = "{\"type\":\"custom\",\"wordPools\":{},\"customFn\":\"var mrr=parseFloat(inputs.currentMRR)||0;var gr=parseFloat(inputs.monthlyGrowthRate)||0;var months=parseInt(inputs.months)||12;var mr=gr/100;var p=mrr;var total=0;var proj='';function loc(n){return '$'+Math.round(n).toLocaleString()}proj+='\\\\uD83D\\\\uDCC8 Revenue Projection ('+months+' months at '+gr+'% monthly growth)\\\\n\\\\n';proj+='Month 0  (Now):       '+loc(p)+'/mo\\\\n';for(var m=1;m<=months;m++){p=p*(1+mr);total+=p;proj+='Month '+m+':  '+loc(p)+'/mo';if(m%3===0)proj+=' \\\\u2190 Quarter '+(m/3);proj+='\\\\n';}proj+='\\\\n\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\u2501\\\\n';proj+='\\\\uD83D\\\\uDCCA Summary:\\\\n';proj+='\\\\u2022 Starting MRR: '+loc(mrr)+'\\\\n';proj+='\\\\u2022 Ending MRR: '+loc(p)+'\\\\n';proj+='\\\\u2022 Total Revenue: '+loc(total)+'\\\\n';proj+='\\\\u2022 Growth Multiple: '+(p/mrr).toFixed(1)+'x\\\\n\\\\n';if(gr>=10)proj+='\\\\uD83D\\\\uDD25 Exceptional growth! At this rate you\\\\'ll hit $100K MRR in '+Math.ceil(Math.log(100000/mrr)/Math.log(1+mr))+' months.\\\\n';else if(gr>=5)proj+='\\\\uD83D\\\\uDE80 Strong growth. Focus on sustaining this rate \\\\u2014 churn is the biggest threat to compounding.\\\\n';else if(gr>=2)proj+='\\\\uD83D\\\\uDCC8 Steady growth. Small improvements in conversion can compound significantly over 12+ months.\\\\n';else proj+='\\\\uD83D\\\\uDCAA Slow and steady. At this rate, focus on reducing churn and increasing LTV rather than chasing growth hacks.\\\\n';proj+='\\\\n\\\\uD83D\\\\uDCA1 Compound growth is powerful: a 5% monthly improvement compounds to 80% annual growth. Small wins matter.';var results=[proj];var scs=[{r:1,l:'Conservative (1%/mo)'},{r:3,l:'Moderate (3%/mo)'},{r:5,l:'Good (5%/mo)'},{r:8,l:'Strong (8%/mo)'},{r:10,l:'Aggressive (10%/mo)'},{r:15,l:'Viral (15%/mo)'},{r:20,l:'Hyper-Growth (20%/mo)'},{r:2,l:'Side Hustle (2%/mo)'},{r:7,l:'Funded Startup (7%/mo)'}];for(var i=0;i<scs.length;i++){var s=mrr;for(var j=0;j<Math.min(months,12);j++){s=s*(1+scs[i].r/100);}results.push(scs[i].l+': $'+Math.round(mrr).toLocaleString()+' \\\\u2192 $'+Math.round(s).toLocaleString()+' in '+Math.min(months,12)+' months ('+scs[i].r+'%/mo)');}return results;\"}";
+
+      function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+      function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
+      function generateFromConfig(config, inputs) {
+        if (config.type === 'custom' && config.customFn) {
+          var fn = new Function('inputs', 'pick', 'fill', config.customFn);
+          return fn(inputs, pick, fill);
+        }
+        var count = 10;
+        var v = { topic: inputs.topic || inputs.niche || inputs.keyword || inputs.interest || inputs.title || 'your topic', niche: inputs.niche || inputs.topic || 'your niche', keyword: inputs.keyword || inputs.topic || 'your keyword' };
+        var results = [];
+        var seen = {};
+        var attempts = 0;
+        while (results.length < count && attempts < count * 15) {
+          attempts++;
+          for (var key in config.wordPools) v[key] = pick(config.wordPools[key]);
+          var result = '';
+          if (config.type === 'templates') result = fill(pick(config.templates), v).trim();
+          else if (config.type === 'combinations') result = pick(config.patterns)(v).trim();
+          if (result && !seen[result]) { seen[result] = true; results.push(result); }
+        }
+        return results;
+      }
+
+      function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
+var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Copy All';
+      var copiedLabel = document.getElementById('copy-all')?.dataset.copiedLabel || 'Copied!';
+
+      var form = document.getElementById('tool-form');
+      var config = JSON.parse(clientConfig);
+      var dynamicResults = document.getElementById('dynamic-results');
+      var staticResults = document.getElementById('static-results');
+      var copyAllBtn = document.getElementById('copy-all');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(form);
+        var inputs = {};
+        fd.forEach(function(v, k) { inputs[k] = v.toString(); });
+        var results = generateFromConfig(config, inputs);
+
+        var html = '';
+        for (var i = 0; i < results.length; i++) {
+          var r = results[i];
+          if (r.indexOf(' → ') > -1 && r.indexOf(' | ') > -1) {
+            var dims = r.split(' | ');
+            html += '<div class="analysis-card group p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 transition-all duration-300">';
+            html += '<div class="flex items-start justify-between gap-3 mb-2"><span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#' + (i+1) + '</span>';
+            html += '<div class="flex-1"><div class="text-sm text-gray-800 font-medium leading-relaxed">' + esc(dims[0]) + '</div></div>';
+            html += '<button type="button" class="expand-btn inline-flex items-center gap-1 text-xs text-[#7C3AED] font-medium px-2 py-1.5 rounded-lg hover:bg-[#7C3AED]/10 transition-all shrink-0"><span class="exp-label">查看详情</span><svg class="w-3 h-3 exp-icon transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button></div>';
+            html += '<div class="detail hidden mt-3 pt-3 border-t border-gray-100 space-y-2">';
+            for (var d = 1; d < dims.length; d++) { var kv = dims[d].split(' → '); html += '<div class="flex gap-2 text-sm"><span class="text-gray-400 shrink-0 font-medium">' + esc(kv[0]) + '</span><span class="text-gray-700">' + esc(kv.slice(1).join(' → ')) + '</span></div>'; }
+            html += '</div></div>';
+          } else {
+            html += '<div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 transition-all duration-300"><span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#' + (i+1) + '</span>';
+            html += '<span class="text-sm text-gray-700 flex-1 leading-relaxed">' + esc(r) + '</span>';
+            html += '<button type="button" class="copy-btn opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#7C3AED] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-copy="' + escAttr(r) + '"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button></div>';
+          }
+        }
+        dynamicResults.innerHTML = html;
+        dynamicResults.classList.remove('hidden');
+        staticResults.classList.add('hidden');
+        copyAllBtn.classList.remove('hidden');
+
+        dynamicResults.querySelectorAll('.expand-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var detail = this.closest('.analysis-card').querySelector('.detail');
+            var icon = this.querySelector('.exp-icon');
+            var label = this.querySelector('.exp-label');
+            var hidden = detail.classList.contains('hidden');
+            detail.classList.toggle('hidden');
+            icon.style.transform = hidden ? 'rotate(180deg)' : '';
+            label.textContent = hidden ? '收起' : '查看详情';
+          });
+        });
+        dynamicResults.querySelectorAll('.copy-btn').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            navigator.clipboard.writeText(this.dataset.copy).then(function() {
+              var t = this; t.style.color = '#059669';
+              setTimeout(function() { t.style.color = ''; }, 1500);
+            }.bind(this));
+          });
+        });
+      });
+
+      copyAllBtn.addEventListener('click', function() {
+        var cards = dynamicResults.querySelectorAll('.analysis-card,.group');
+        var texts = [];
+        cards.forEach(function(c) {
+          var d = c.querySelector('.detail');
+          if (d && !d.classList.contains('hidden')) {
+            d.querySelectorAll('div').forEach(function(div) { texts.push(div.textContent); });
+          } else {
+            var span = c.querySelector('.text-gray-700,.text-gray-800');
+            if (span) texts.push(span.textContent);
+          }
+        });
+        if (texts.length === 0) {
+          staticResults.querySelectorAll('.analysis-card,.group').forEach(function(c) {
+            var span = c.querySelector('.text-gray-700,.text-gray-800');
+            if (span) texts.push(span.textContent);
+          });
+        }
+        navigator.clipboard.writeText(texts.join('\n\n')).then(function() {
+          copyAllBtn.textContent = copiedLabel;
+          setTimeout(function() { copyAllBtn.textContent = copyLabel; }, 2000);
+        });
+      });
+    })();</script> 

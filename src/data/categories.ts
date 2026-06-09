@@ -6,10 +6,10 @@ export interface Category {
 }
 
 export const categories: Category[] = [
-  { id: 'A', name: 'Content Ideas', slug: 'content-ideas', description: 'Generate video topics, trending ideas, and niche suggestions for your channel.' },
-  { id: 'B', name: 'Titles & SEO Copy', slug: 'titles-seo-copy', description: 'Create click-worthy titles, descriptions, hooks, and scripts optimized for search.' },
-  { id: 'C', name: 'Shorts Growth', slug: 'shorts-growth', description: 'Tools specifically for YouTube Shorts — ideas, hooks, captions, and hashtags.' },
-  { id: 'D', name: 'SEO Optimization', slug: 'seo-optimization', description: 'Generate tags, keywords, hashtags, and audit your video SEO before publishing.' },
-  { id: 'E', name: 'Thumbnail Optimization', slug: 'thumbnail-optimization', description: 'Craft thumbnail text, design concepts, and optimize CTR for your thumbnails.' },
-  { id: 'F', name: 'Channel Growth', slug: 'channel-growth', description: 'Channel naming, descriptions, upload timing, revenue estimates, and growth scoring.' },
+  { id: 'A', name: 'SaaS Metrics', slug: 'saas-metrics', description: 'Calculate MRR, runway, burn rate, churn, revenue projections, and break-even for your SaaS business.' },
+  { id: 'B', name: 'AI Cost Tools', slug: 'ai-cost-tools', description: 'Estimate OpenAI, Claude, DeepSeek, Gemini API costs, GPU pricing, AI training expenses, and image generation costs.' },
+  { id: 'C', name: 'Valuation & Exit', slug: 'valuation-exit', description: 'Estimate SaaS valuation, customer LTV, CAC, equity dilution, and exit scenarios.' },
+  { id: 'D', name: 'Freelance Pricing', slug: 'freelance-pricing', description: 'Calculate freelance rates, project profitability, affiliate income, course pricing, and email list revenue.' },
+  { id: 'E', name: 'Cost & Efficiency', slug: 'cost-efficiency', description: 'Figure out meeting costs, employee costs, SaaS pricing, market size, and productivity scoring.' },
+  { id: 'F', name: 'Investment & ROI', slug: 'investment-roi', description: 'Calculate sponsorship rates, time value, freelance taxes, and equity dilution scenarios.' },
 ];

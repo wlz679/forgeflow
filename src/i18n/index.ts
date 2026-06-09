@@ -10,7 +10,7 @@ export function getLang(astro: { url: URL; params?: Record<string, string | unde
   const q = astro.url.searchParams.get('lang');
   if (q === 'zh' || q === 'en') return q;
   // 3. Cookie fallback
-  const c = astro.cookies?.get('yt-lang');
+  const c = astro.cookies?.get('lang');
   if (c && (c.value === 'zh' || c.value === 'en')) return c.value;
   return 'en';
 }

@@ -9,23 +9,25 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "update-data": "tsx scripts/update-data.ts"
+    "translate": "tsx scripts/translate-wordpools.ts"
   },
   "keywords": [
-    "youtube",
-    "creator-tools",
-    "seo"
+    "solopreneur",
+    "indie-maker",
+    "startup-tools"
   ],
   "author": "",
   "license": "ISC",
-  "description": "Free YouTube Creator Tools - 30 tools to grow your channel",
+  "description": "Free Solopreneur Tools - 30 tools to build & grow your business",
   "dependencies": {
     "@astrojs/sitemap": "^3.5.0",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^4.13.2"
   },
   "devDependencies": {
+    "@vitalets/google-translate-api": "^9.2.1",
     "google-trends-api": "^4.9.2",
-    "tsx": "^4.22.3"
+    "tsx": "^4.22.3",
+    "undici": "^7.27.1"
   }
 }

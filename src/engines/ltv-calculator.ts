@@ -1,0 +1,155 @@
+import type { ToolEngine } from '../core/engines/types';
+import { registerEngine } from '../core/engines/registry';
+
+function calculateLTV(inputs: Record<string, string>): string[] {
+  const monthlyRevenuePerUser = parseFloat(inputs.monthlyRevenuePerUser) || 0;
+  const grossMargin = parseFloat(inputs.grossMargin) || 80;
+  const monthlyChurn = parseFloat(inputs.monthlyChurn) || 0;
+  const cac = parseFloat(inputs.cac) || 0;
+  const results: string[] = [];
+
+  const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
+  const pct = (n: number) => n.toFixed(1) + '%';
+
+  const churnRate = monthlyChurn / 100;
+  const avgLifetimeMonths = churnRate > 0 ? 1 / churnRate : 120; // cap at 10 years if 0 churn
+  const grossProfitPerMonth = monthlyRevenuePerUser * (grossMargin / 100);
+  const ltv = grossProfitPerMonth * avgLifetimeMonths;
+  const ltvCacRatio = cac > 0 ? ltv / cac : 0;
+  const annualLtv = ltv;
+
+  let mainResult =
+    '\\uD83D\\uDC8E Customer Lifetime Value (LTV)\\n\\n' +
+    '\\u2022 Monthly Revenue per User: ' + fmt(monthlyRevenuePerUser) + '\\n' +
+    '\\u2022 Gross Margin: ' + pct(grossMargin) + '\\n' +
+    '\\u2022 Monthly Churn Rate: ' + pct(monthlyChurn) + '\\n' +
+    '\\u2022 Avg Customer Lifetime: ' + (churnRate > 0 ? avgLifetimeMonths.toFixed(1) + ' months' : '10+ years (very low churn)') + '\\n' +
+    '\\u2022 Gross Profit per User/Month: ' + fmt(grossProfitPerMonth) + '\\n\\n' +
+    '\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n' +
+    '\\uD83D\\uDCCA Key Results:\\n\\n' +
+    '\\u2022 Lifetime Value (LTV): ' + fmt(ltv) + '\\n';
+
+  if (cac > 0) {
+    mainResult += '\\u2022 Customer Acquisition Cost (CAC): ' + fmt(cac) + '\\n';
+    mainResult += '\\u2022 LTV:CAC Ratio: ' + ltvCacRatio.toFixed(1) + ':1\\n\\n';
+
+    if (ltvCacRatio >= 3) {
+      mainResult += '\\uD83D\\uDFE2 EXCELLENT: LTV:CAC of ' + ltvCacRatio.toFixed(1) + ':1 is above the 3:1 benchmark. You have strong unit economics. Consider investing more in growth.\\n';
+    } else if (ltvCacRatio >= 1) {
+      mainResult += '\\uD83D\\uDFE1 OK: LTV:CAC of ' + ltvCacRatio.toFixed(1) + ':1 is positive but below the 3:1 ideal. Work on increasing LTV or reducing CAC.\\n';
+    } else {
+      mainResult += '\\uD83D\\uDD34 PROBLEM: LTV:CAC of ' + ltvCacRatio.toFixed(1) + ':1 is below 1:1. You are losing money on every customer. Fix this immediately.\\n';
+    }
+
+    const paybackMonths = grossProfitPerMonth > 0 ? cac / grossProfitPerMonth : 0;
+    if (paybackMonths > 0) {
+      mainResult += '\\u2022 CAC Payback Period: ' + paybackMonths.toFixed(1) + ' months\\n';
+    }
+  } else {
+    mainResult += '\\n';
+  }
+
+  mainResult += '\\n\\uD83D\\uDCA1 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).';
+
+  results.push(mainResult);
+
+  // 5 comparison scenarios at different churn rates
+  const churnScenarios = [
+    { label: 'Excellent (1% churn)', churn: 1 },
+    { label: 'Good (2% churn)', churn: 2 },
+    { label: 'Average (3% churn)', churn: 3 },
+    { label: 'Below Avg (5% churn)', churn: 5 },
+    { label: 'Poor (8% churn)', churn: 8 },
+  ];
+
+  for (let i = 0; i < churnScenarios.length; i++) {
+    const cr = churnScenarios[i].churn / 100;
+    const lt = cr > 0 ? 1 / cr : 120;
+    const ltvScen = grossProfitPerMonth * lt;
+    const ratio = cac > 0 ? ltvScen / cac : 0;
+    results.push(
+      churnScenarios[i].label + ': Lifetime ' + lt.toFixed(1) + ' months, LTV ' + fmt(ltvScen) +
+      (cac > 0 ? ', LTV:CAC ' + ratio.toFixed(1) + ':1' : ''),
+    );
+  }
+
+  return results;
+}
+
+const customFn =
+  "var mru=parseFloat(inputs.monthlyRevenuePerUser)||0;" +
+  "var gm=parseFloat(inputs.grossMargin)||80;" +
+  "var mc=parseFloat(inputs.monthlyChurn)||0;" +
+  "var cacV=parseFloat(inputs.cac)||0;" +
+  "function fmt3(n){return '$'+Math.round(n).toLocaleString()}" +
+  "function pct3(n){return n.toFixed(1)+'%'}" +
+  "var cr3=mc/100;" +
+  "var alt=cr3>0?1/cr3:120;" +
+  "var gpm=mru*(gm/100);" +
+  "var ltv=gpm*alt;" +
+  "var lcr=cacV>0?ltv/cacV:0;" +
+  "var mr5='';" +
+  "mr5+='\\uD83D\\uDC8E Customer Lifetime Value (LTV)\\n\\n';" +
+  "mr5+='\\u2022 Monthly Revenue per User: '+fmt3(mru)+'\\n';" +
+  "mr5+='\\u2022 Gross Margin: '+pct3(gm)+'\\n';" +
+  "mr5+='\\u2022 Monthly Churn Rate: '+pct3(mc)+'\\n';" +
+  "mr5+='\\u2022 Avg Customer Lifetime: '+(cr3>0?alt.toFixed(1)+' months':'10+ years (very low churn)')+'\\n';" +
+  "mr5+='\\u2022 Gross Profit per User/Month: '+fmt3(gpm)+'\\n\\n';" +
+  "mr5+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  "mr5+='\\uD83D\\uDCCA Key Results:\\n\\n';" +
+  "mr5+='\\u2022 Lifetime Value (LTV): '+fmt3(ltv)+'\\n';" +
+  "if(cacV>0){mr5+='\\u2022 Customer Acquisition Cost (CAC): '+fmt3(cacV)+'\\n';mr5+='\\u2022 LTV:CAC Ratio: '+lcr.toFixed(1)+':1\\n\\n';" +
+  "if(lcr>=3)mr5+='\\uD83D\\uDFE2 EXCELLENT: LTV:CAC of '+lcr.toFixed(1)+':1 is above the 3:1 benchmark. You have strong unit economics. Consider investing more in growth.\\n';" +
+  "else if(lcr>=1)mr5+='\\uD83D\\uDFE1 OK: LTV:CAC of '+lcr.toFixed(1)+':1 is positive but below the 3:1 ideal. Work on increasing LTV or reducing CAC.\\n';" +
+  "else mr5+='\\uD83D\\uDD34 PROBLEM: LTV:CAC of '+lcr.toFixed(1)+':1 is below 1:1. You are losing money on every customer. Fix this immediately.\\n';" +
+  "var pm2=gpm>0?cacV/gpm:0;if(pm2>0)mr5+='\\u2022 CAC Payback Period: '+pm2.toFixed(1)+' months\\n';}" +
+  "mr5+='\\n\\uD83D\\uDCA1 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).';" +
+  "var results=[mr5];" +
+  "var cs5=[{l:'Excellent (1% churn)',c:1},{l:'Good (2% churn)',c:2},{l:'Average (3% churn)',c:3},{l:'Below Avg (5% churn)',c:5},{l:'Poor (8% churn)',c:8}];" +
+  "for(var i=0;i<cs5.length;i++){var crr=cs5[i].c/100;var ltt=crr>0?1/crr:120;var lts=gpm*ltt;var rt=cacV>0?lts/cacV:0;results.push(cs5[i].l+': Lifetime '+ltt.toFixed(1)+' months, LTV '+fmt3(lts)+(cacV>0?', LTV:CAC '+rt.toFixed(1)+':1':''));}" +
+  "return results;";
+
+const engine: ToolEngine = {
+  slug: 'solopreneur-ltv-calculator',
+  title: 'LTV Calculator',
+  description: 'Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.',
+  category: 'B',
+  inputs: [
+    { name: 'monthlyRevenuePerUser', label: 'Monthly Revenue per User ($)', placeholder: 'e.g. 50', type: 'number' },
+    { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },
+    { name: 'monthlyChurn', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+    { name: 'cac', label: 'Customer Acquisition Cost ($)', placeholder: 'e.g. 150', type: 'number' },
+  ],
+  clientConfig: {
+    type: 'custom',
+    wordPools: {},
+    customFn,
+  },
+  generate(inputs: Record<string, string>): string[] {
+    return calculateLTV(inputs);
+  },
+  staticExamples: [
+    '💎 Customer Lifetime Value (LTV)\n\n• Monthly Revenue per User: $50\n• Gross Margin: 80.0%\n• Monthly Churn Rate: 3.0%\n• Avg Customer Lifetime: 33.3 months\n• Gross Profit per User/Month: $40\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Results:\n\n• Lifetime Value (LTV): $1,333\n• Customer Acquisition Cost (CAC): $150\n• LTV:CAC Ratio: 8.9:1\n\n🟢 EXCELLENT: LTV:CAC of 8.9:1 is above the 3:1 benchmark. You have strong unit economics. Consider investing more in growth.\n• CAC Payback Period: 3.8 months\n\n💡 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).',
+    'Excellent (1% churn): Lifetime 100.0 months, LTV $4,000, LTV:CAC 26.7:1',
+    'Good (2% churn): Lifetime 50.0 months, LTV $2,000, LTV:CAC 13.3:1',
+    'Average (3% churn): Lifetime 33.3 months, LTV $1,333, LTV:CAC 8.9:1',
+    'Below Avg (5% churn): Lifetime 20.0 months, LTV $800, LTV:CAC 5.3:1',
+  ],
+  faq: [
+    { q: 'What is a good LTV:CAC ratio?', a: 'A 3:1 LTV:CAC ratio is the industry benchmark — meaning your customer lifetime value should be at least 3 times your acquisition cost. Below 3:1, you are spending too much to acquire customers relative to their value. Above 5:1, you may be under-investing in growth. The sweet spot is 3:1 to 5:1.' },
+    { q: 'How do I calculate LTV accurately?', a: 'LTV = (Average Monthly Revenue per User × Gross Margin %) / Monthly Churn Rate. For example: $50/month × 80% margin / 3% monthly churn = $1,333. Use actual data, not estimates. Segment by customer cohort (by acquisition month or channel) for the most accurate picture.' },
+    { q: 'What is a good payback period for CAC?', a: 'Aim for 12 months or less. The best SaaS companies recover CAC in 5-7 months. If your payback period exceeds 12 months, you are tying up too much cash in customer acquisition. This strains cash flow and slows your ability to reinvest in growth.' },
+    { q: 'Should I include support costs in gross margin?', a: 'Yes. Gross margin should account for all costs directly tied to serving the customer: hosting, support, third-party APIs, and payment processing fees. Many founders make the mistake of using 100% margin, which dramatically overstates LTV. 70-85% is typical for SaaS.' },
+    { q: 'How does churn affect LTV?', a: 'Churn is the denominator in the LTV formula, so small changes have huge impacts. Reducing monthly churn from 5% to 3% nearly doubles your LTV (from $800 to $1,333 in the example above). This is why churn reduction is almost always a better investment than acquisition optimization.' },
+  ],
+  howToUse: [
+    'Enter your average monthly revenue per user.',
+    'Enter your gross margin percentage (typically 70-85% for SaaS).',
+    'Enter your monthly churn rate as a percentage.',
+    'Optionally enter your CAC to see LTV:CAC ratio and payback period.',
+    'Review your LTV, customer lifetime, and unit economics health indicator.',
+    'Scroll down to compare 5 LTV scenarios at different churn rates.',
+  ],
+};
+
+registerEngine(engine);
