@@ -1,0 +1,862 @@
+# Revenue Projector v2 Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Upgrade Revenue Projector from 3 inputs + 4 sections (pure compound) to 7 inputs + 6 sections (churn-adjusted net growth + runway + breakeven + burn metrics + what-if).
+
+**Architecture:** Single-engine rewrite — same file structure as v1, but the `projectRevenue()` function and `customFn` string are fully rewritten. The engine plugs into the existing registry; no framework changes needed.
+
+**Tech Stack:** TypeScript (engine), JavaScript string literal (customFn for client-side execution), Astro SSG build.
+
+**Files affected (3):**
+- `src/engines/revenue-projector.ts` — full rewrite (engine function + customFn + metadata)
+- `src/data/tools.ts` — update inputs array (3→7), update description
+- `src/i18n/translations.ts` — add 4 new input keys, update howToUse (7→9 steps), update FAQ (5 items)
+
+---
+
+### Task 1: Update tools.ts — inputs + description
+
+**Files:**
+- Modify: `src/data/tools.ts:285-293`
+
+- [ ] **Step 1: Update the revenue projector entry in tools.ts**
+
+Replace lines 285-293:
+
+```typescript
+    slug: 'solopreneur-revenue-projector',
+    title: 'Revenue Projector',
+    description: 'Project your MRR growth over 6, 12, or 24 months. Compare different growth rate scenarios to plan your financial future.',
+    categoryId: 'A',
+    inputs: [
+      { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 2000', type: 'number' },
+      { name: 'monthlyGrowthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'months', label: 'Projection Period', placeholder: '', type: 'select', options: ['6', '12', '24'] },
+    ],
+```
+
+With:
+
+```typescript
+    slug: 'solopreneur-revenue-projector',
+    title: 'Revenue Projector',
+    description: 'Project MRR, runway, breakeven, and burn metrics. Churn-adjusted net growth with 5 scenarios, what-if analysis, and personalized action plan.',
+    categoryId: 'A',
+    inputs: [
+      { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'monthlyGrowthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 8', type: 'number' },
+      { name: 'monthlyChurnRate', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'monthlyExpenses', label: 'Monthly Expenses ($)', placeholder: 'e.g. 3000', type: 'number' },
+      { name: 'cashOnHand', label: 'Cash on Hand ($)', placeholder: 'e.g. 60000', type: 'number' },
+      { name: 'arpu', label: 'Avg Revenue Per User ($)', placeholder: 'e.g. 25', type: 'number' },
+      { name: 'months', label: 'Projection Period', placeholder: '', type: 'select', options: ['6', '12', '24'] },
+    ],
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+git add src/data/tools.ts
+git commit -m "feat: update Revenue Projector tools.ts — 7 inputs, new description"
+```
+
+---
+
+### Task 2: Rewrite engine — projectRevenue() function
+
+**Files:**
+- Modify: `src/engines/revenue-projector.ts` (replace entire file)
+
+- [ ] **Step 1: Write the full engine file**
+
+Replace the entire content of `src/engines/revenue-projector.ts` with:
+
+```typescript
+import type { ToolEngine } from "../core/engines/types";
+import { registerEngine } from "../core/engines/registry";
+
+function projectRevenue(inputs: Record<string, string>): string[] {
+  // --- Parse inputs ---
+  const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
+  const pct = (n: number) => n.toFixed(1) + "%";
+  const fmtM = (n: number) => {
+    if (Math.abs(n) >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
+    if (Math.abs(n) >= 1e3) return "$" + (n / 1e3).toFixed(1) + "K";
+    return "$" + Math.round(n).toLocaleString();
+  };
+
+  const currentMRR = parseFloat(inputs.currentMRR) || 0;
+  const grossGrowthRate = parseFloat(inputs.monthlyGrowthRate) || 0;
+  const churnRate = parseFloat(inputs.monthlyChurnRate) || 0;
+  const monthlyExpenses = parseFloat(inputs.monthlyExpenses) || 0;
+  const cashOnHand = parseFloat(inputs.cashOnHand) || 0;
+  const arpu = parseFloat(inputs.arpu) || 0;
+  const months = parseInt(inputs.months) || 12;
+
+  const netRate = (grossGrowthRate - churnRate) / 100;
+  const annualizedNetRate = (Math.pow(1 + netRate, 12) - 1) * 100;
+  const endMRR = currentMRR * Math.pow(1 + netRate, months);
+
+  let totalRevenue = 0;
+  for (let m = 1; m <= months; m++) totalRevenue += currentMRR * Math.pow(1 + netRate, m);
+
+  const growthMultiple = currentMRR > 0 ? endMRR / currentMRR : 0;
+
+  // Subscriber math
+  const subscriberCount = arpu > 0 ? Math.round(currentMRR / arpu) : 0;
+
+  // --- Profit / Loss ---
+  const monthlyNetIncome = currentMRR - monthlyExpenses;
+  const annualizedProfit = monthlyNetIncome * 12;
+  const profitMargin = currentMRR > 0 ? (monthlyNetIncome / currentMRR) * 100 : 0;
+  const isProfitable = monthlyNetIncome >= 0;
+
+  // --- Runway ---
+  const runwayZeroRevenue = monthlyExpenses > 0 ? cashOnHand / monthlyExpenses : null;
+  const monthlyBurn = monthlyExpenses - currentMRR; // positive = burning cash
+  const runwayCurrent = monthlyBurn > 0 ? cashOnHand / monthlyBurn : Infinity;
+
+  function runwayColor(m: number): string {
+    if (m === Infinity) return "🟢";
+    if (m >= 18) return "🟢";
+    if (m >= 6) return "🟡";
+    return "🔴";
+  }
+
+  // --- Breakeven ---
+  let breakevenMonths: number | null = null;
+  if (currentMRR >= monthlyExpenses && monthlyExpenses > 0) {
+    breakevenMonths = 0; // already there
+  } else if (currentMRR > 0 && netRate > 0 && monthlyExpenses > 0) {
+    breakevenMonths = Math.ceil(Math.log(monthlyExpenses / currentMRR) / Math.log(1 + netRate));
+  }
+
+  // --- Burn Multiple ---
+  const netNewMRRThisMonth = currentMRR * netRate; // net new MRR added this month (approximation)
+  const burnMultiple = monthlyBurn > 0 && netNewMRRThisMonth > 0 ? monthlyBurn / netNewMRRThisMonth : null;
+
+  function burnMultColor(bm: number): string {
+    if (bm < 1) return "🟢";
+    if (bm <= 2) return "🟡";
+    return "🔴";
+  }
+
+  // --- MRR / Expense Ratio ---
+  const mrrExpenseRatio = monthlyExpenses > 0 ? currentMRR / monthlyExpenses : null;
+
+  function ratioColor(r: number): string {
+    if (r >= 2) return "🟢";
+    if (r >= 1) return "🟡";
+    return "🔴";
+  }
+
+  // --- Rule of 40 ---
+  const ruleOf40Val = netRate * 100 + profitMargin;
+
+  function r40Color(v: number): string {
+    if (v >= 40) return "🟢";
+    if (v >= 20) return "🟡";
+    return "🔴";
+  }
+
+  // --- Milestones ---
+  function monthsToTarget(target: number): number | null {
+    if (currentMRR <= 0 || netRate <= 0) return null;
+    if (currentMRR >= target) return 0;
+    return Math.ceil(Math.log(target / currentMRR) / Math.log(1 + netRate));
+  }
+
+  // --- Net growth color ---
+  function netGrowthColor(r: number): string {
+    if (r >= 10) return "🟢 Exceptional";
+    if (r >= 5) return "🟡 Healthy";
+    if (r >= 0) return "🟠 Slow";
+    return "🔴 Shrinking";
+  }
+
+  // --- Phase label ---
+  function phaseLabel(mrr: number): string {
+    if (mrr < 1000) return "Validation (<$1K MRR)";
+    if (mrr < 10000) return "Early Traction ($1K–$10K MRR)";
+    if (mrr < 100000) return "Scaling ($10K–$100K MRR)";
+    return "Growth (>$100K MRR)";
+  }
+
+  let result = "";
+
+  // ========================
+  // 1. Revenue Snapshot
+  // ========================
+  result += "📊 Revenue Snapshot\n\n";
+  result += "• Starting MRR:           " + fmt(currentMRR) + "/mo\n";
+  result += "• Ending MRR:             " + fmt(endMRR) + "/mo  (after " + months + " months)\n";
+  result += "• ARR Equivalent:         " + fmt(endMRR * 12) + "/yr\n";
+  result += "• Total Revenue:          " + fmt(totalRevenue) + " over " + months + " months\n\n";
+  result += "• Gross Monthly Growth:   +" + pct(grossGrowthRate) + "  (new + expansion)\n";
+  result += "• Monthly Churn:          −" + pct(churnRate) + "  (lost revenue)\n";
+  result += "• Net Monthly Growth:     " + (netRate >= 0 ? "+" : "") + pct(netRate * 100) + "  (effective)  " + netGrowthColor(netRate * 100) + "\n";
+  result += "• Growth Multiple:        " + growthMultiple.toFixed(1) + "×   (" + months + "-month MRR expansion)\n";
+
+  // ========================
+  // 2. MRR Milestones
+  // ========================
+  result += "\n📈 MRR Milestones\n";
+  const maxQ = Math.min(Math.floor(months / 3), 8);
+  for (let q = 1; q <= maxQ; q++) {
+    const mo = q * 3;
+    const mrrAtQ = currentMRR * Math.pow(1 + netRate, mo);
+    result += "• Q" + q + " (Month " + mo + "):  " + fmt(mrrAtQ) + "/mo" + (q === maxQ ? "  ← target" : "") + "\n";
+  }
+
+  result += "\n🎯 Key Milestones\n";
+  const targets = [10000, 25000, 50000, 100000];
+  let anyMilestoneShown = false;
+  if (currentMRR > 0 && netRate > 0) {
+    for (const t of targets) {
+      if (t <= currentMRR) continue;
+      const mths = monthsToTarget(t);
+      if (mths !== null && mths > 0) {
+        anyMilestoneShown = true;
+        if (mths <= 60) {
+          result += "• $" + Math.round(t / 1000) + "K MRR:  " + mths + " months\n";
+        } else {
+          result += "• $" + Math.round(t / 1000) + "K MRR:  >5 years\n";
+        }
+      }
+    }
+  }
+  if (!anyMilestoneShown && currentMRR > 0) {
+    if (netRate <= 0) {
+      result += "With zero or negative net growth, no milestones can be projected.\n";
+    }
+  }
+
+  // ========================
+  // 3. Growth Scenarios
+  // ========================
+  result += "\n🔄 Growth Scenarios (" + months + "-Month Outlook)\n";
+  if (currentMRR > 0) {
+    const scenarioRates = [
+      { r: Math.max(1, Math.round(netRate * 100 * 0.5)), label: "🐢 Conservative" },
+      { r: Math.round(netRate * 100), label: "📈 Current Pace" },
+      { r: Math.max(1, Math.round(netRate * 100 * 1.5)), label: "🚀 Aggressive" },
+      { r: Math.min(50, Math.round(netRate * 100 * 2)), label: "🔥 Hyper-Growth" },
+    ];
+    const seen = new Set<number>();
+    for (const sc of scenarioRates) {
+      if (seen.has(sc.r) || sc.r <= 0) continue;
+      seen.add(sc.r);
+      const scEnd = currentMRR * Math.pow(1 + sc.r / 100, months);
+      const to10k = monthsToTarget(10000);
+      const scTo10k = currentMRR > 0 && sc.r > 0 ? Math.ceil(Math.log(10000 / currentMRR) / Math.log(1 + sc.r / 100)) : null;
+      result += "• " + sc.label;
+      result += " ".repeat(Math.max(1, 24 - sc.label.length));
+      result += "+" + pct(sc.r) + "/mo  →  " + fmt(scEnd) + "/mo";
+      if (scTo10k !== null && scTo10k > 0) result += "  |  $10K in " + scTo10k + " mo";
+      result += "\n";
+    }
+    // Custom scenario placeholder
+    result += "• 🎯 Custom (+__%/mo)    customize to see your target\n";
+  } else {
+    result += "Enter your current MRR to see growth scenarios.\n";
+  }
+
+  // ========================
+  // What-If Analysis
+  // ========================
+  result += "\n🔄 What-If Analysis\n";
+  if (currentMRR > 0) {
+    // Scenario A: Cut churn
+    if (churnRate > 0) {
+      const cutChurnRate = Math.max(0, churnRate - 1);
+      const cutNetRate = (grossGrowthRate - cutChurnRate) / 100;
+      const cutEndMRR = currentMRR * Math.pow(1 + cutNetRate, months);
+      result += "A) Cut churn " + pct(churnRate) + " → " + pct(cutChurnRate) + ":\n";
+      result += "   Net growth: +" + pct(netRate * 100) + " → +" + pct(cutNetRate * 100) + " | End MRR: " + fmt(endMRR) + " → " + fmt(cutEndMRR) + " (+" + fmt(cutEndMRR - endMRR) + ")\n\n";
+    } else {
+      result += "A) Churn is already 0% — no improvement needed here.\n\n";
+    }
+
+    // Scenario B: Boost growth by 20%
+    const boostGross = grossGrowthRate * 1.2;
+    const boostNetRate = (boostGross - churnRate) / 100;
+    const boostEndMRR = currentMRR * Math.pow(1 + boostNetRate, months);
+    result += "B) Boost gross growth +20%:\n";
+    result += "   Gross: +" + pct(grossGrowthRate) + " → +" + pct(boostGross) + " | End MRR: " + fmt(endMRR) + " → " + fmt(boostEndMRR) + " (+" + fmt(boostEndMRR - endMRR) + ")\n\n";
+
+    // Scenario C: Reduce expenses
+    if (monthlyExpenses > 0) {
+      const reducedExp = monthlyExpenses * 0.8;
+      const savings = monthlyExpenses - reducedExp;
+      if (isProfitable) {
+        result += "C) Cut expenses 20%:\n";
+        result += "   Expenses: " + fmt(monthlyExpenses) + "/mo → " + fmt(reducedExp) + "/mo | Monthly savings: +" + fmt(savings) + "/mo\n";
+        result += "   Profit increases: " + fmt(monthlyNetIncome) + "/mo → " + fmt(monthlyNetIncome + savings) + "/mo\n";
+      } else {
+        const newBurn = reducedExp - currentMRR;
+        const newRunway = newBurn > 0 ? cashOnHand / newBurn : Infinity;
+        result += "C) Cut expenses 20%:\n";
+        result += "   Expenses: " + fmt(monthlyExpenses) + "/mo → " + fmt(reducedExp) + "/mo\n";
+        result += "   Monthly burn: " + fmt(monthlyBurn) + "/mo → " + (newBurn > 0 ? fmt(newBurn) + "/mo" : "profitable") + "\n";
+        result += "   Runway: " + (runwayCurrent === Infinity ? "∞" : runwayCurrent.toFixed(1) + " mo") + " → " + (newRunway === Infinity ? "∞" : newRunway.toFixed(1) + " mo") + "\n";
+      }
+    } else {
+      result += "C) Enter monthly expenses to see cost-cutting impact.\n";
+    }
+  } else {
+    result += "Enter your current MRR to see what-if scenarios.\n";
+  }
+
+  // ========================
+  // 4. Runway & Breakeven
+  // ========================
+  result += "\n💰 Runway & Breakeven\n";
+  result += "• Cash on Hand:            " + fmt(cashOnHand) + "\n";
+  result += "• Monthly Expenses:        " + fmt(monthlyExpenses) + "/mo\n";
+  result += "• Monthly Net Revenue:     " + fmt(currentMRR) + "/mo  (MRR)\n\n";
+
+  if (isProfitable && monthlyExpenses > 0) {
+    // Already profitable
+    result += "• Monthly Profit:          +" + fmt(monthlyNetIncome) + "  🟢 Revenue covers expenses.\n";
+    result += "• Runway (zero-revenue):   " + (runwayZeroRevenue !== null ? runwayZeroRevenue.toFixed(1) + " months" : "—") + "\n";
+    result += "• Runway (current pace):   ∞ (profitable)\n";
+    result += "• Breakeven:               ✅ Already breakeven\n";
+    result += "• Annualized Profit:       +" + fmt(annualizedProfit) + "/yr\n";
+  } else if (monthlyExpenses > 0 && netRate > 0 && breakevenMonths !== null && breakevenMonths > 0) {
+    // On path to breakeven
+    const burn = monthlyBurn;
+    const rColor = runwayColor(runwayCurrent);
+    result += "• Monthly Burn:            −" + fmt(burn) + "/mo  " + rColor + "\n";
+    result += "• Runway (zero-revenue):   " + (runwayZeroRevenue !== null ? runwayZeroRevenue.toFixed(1) + " months" : "—") + "\n";
+    result += "• Runway (current pace):   " + runwayCurrent.toFixed(1) + " months  " + rColor + "\n";
+    result += "• Breakeven:               " + breakevenMonths + " months from now\n";
+    result += "  → MRR reaches " + fmt(monthlyExpenses) + "/mo covering all expenses.\n";
+  } else if (monthlyExpenses > 0) {
+    // Burning with no path
+    const burn = monthlyBurn;
+    const rColor = runwayColor(runwayCurrent);
+    result += "• Monthly Burn:            −" + fmt(burn) + "/mo  " + rColor + "\n";
+    result += "• Runway (zero-revenue):   " + (runwayZeroRevenue !== null ? runwayZeroRevenue.toFixed(1) + " months" : "—") + "\n";
+    result += "• Runway (current pace):   " + (runwayCurrent === Infinity ? "∞" : runwayCurrent.toFixed(1) + " months") + "  " + rColor + "\n";
+    if (breakevenMonths === null) {
+      result += "• Breakeven:               Not reachable at current growth rate.\n";
+      result += "  → Cut expenses or boost growth immediately.\n";
+    }
+  } else {
+    result += "Enter your monthly expenses to see runway and breakeven analysis.\n";
+  }
+
+  // ========================
+  // 5. Burn & Efficiency Metrics
+  // ========================
+  result += "\n🩺 Burn & Efficiency Metrics\n";
+  if (monthlyExpenses > 0) {
+    result += "• Gross Burn:              " + fmt(monthlyExpenses) + "/mo  (total expenses)\n";
+    result += "• Net Burn:                " + (monthlyBurn > 0 ? "−" + fmt(monthlyBurn) + "/mo" : "+" + fmt(-monthlyBurn) + "/mo (profit)") + "  " + (isProfitable ? "🟢" : "🔴") + "\n\n";
+
+    // Burn Multiple
+    if (burnMultiple !== null) {
+      result += "• Burn Multiple:           " + burnMultiple.toFixed(1) + "×  " + burnMultColor(burnMultiple) + "\n";
+      result += "  = net burn ÷ net new MRR | <1.0× 🟢 | 1.0–2.0× 🟡 | >2.0× 🔴\n\n";
+    } else if (isProfitable) {
+      result += "• Burn Multiple:           N/A (profitable)\n\n";
+    } else {
+      result += "• Burn Multiple:           N/A (no net new MRR)\n\n";
+    }
+
+    // Rule of 40
+    result += "• Rule of 40:              " + pct(ruleOf40Val) + "  " + r40Color(ruleOf40Val) + "\n";
+    result += "  = net growth " + pct(netRate * 100) + " + profit margin " + pct(profitMargin) + "\n";
+    result += "  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴\n\n";
+
+    // MRR / Expense Ratio
+    if (mrrExpenseRatio !== null) {
+      result += "• MRR / Expense Ratio:     " + mrrExpenseRatio.toFixed(2) + "×  " + ratioColor(mrrExpenseRatio) + "\n";
+      result += "  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n";
+    }
+  } else {
+    result += "Enter monthly expenses to see burn and efficiency metrics.\n\n";
+  }
+
+  // ARPU + Subscriber info
+  if (arpu > 0 && subscriberCount > 0) {
+    result += "• Monthly ARPU:            " + fmt(arpu) + "\n";
+    result += "• Subscribers:             " + subscriberCount + " (currentMRR ÷ ARPU)\n";
+  }
+
+  // ========================
+  // 6. Action Plan
+  // ========================
+  result += "\n🎯 Action Plan\n";
+  result += "• Stage: " + phaseLabel(currentMRR) + "\n";
+
+  // Burn assessment
+  if (isProfitable && monthlyExpenses > 0) {
+    result += "• Burn:  ✅ Profitable — reinvest 30% of profit into growth.\n";
+  } else if (monthlyExpenses > 0 && runwayCurrent >= 12) {
+    result += "• Burn:  🟡 Burning cash but healthy runway. Watch burn rate.\n";
+  } else if (monthlyExpenses > 0 && runwayCurrent < 12) {
+    result += "• Burn:  🔴 Critical runway — cut costs or accelerate revenue.\n";
+  } else {
+    result += "• Burn:  Enter expenses to assess burn.\n";
+  }
+
+  // Growth assessment
+  if (netRate >= 0.1) {
+    result += "• Growth: 🔥 Exceptional (+" + pct(netRate * 100) + " net) — sustain by staying close to customers.\n";
+  } else if (netRate >= 0.05) {
+    result += "• Growth: 🚀 Strong (+" + pct(netRate * 100) + " net) — compound is working for you.\n";
+  } else if (netRate > 0) {
+    result += "• Growth: 📈 Steady (+" + pct(netRate * 100) + " net) — small gains compound over time.\n";
+  } else if (currentMRR > 0) {
+    result += "• Growth: 🐢 Stalled (" + pct(netRate * 100) + " net) — add a second acquisition channel.\n";
+  }
+
+  // Risk assessment
+  if (isProfitable && netRate >= 0.03) {
+    result += "• Risk:  🟢 Low — profitable + growing. Focus on moat and scale.\n";
+  } else if (isProfitable && netRate > 0) {
+    result += "• Risk:  🟡 Moderate — profitable but slow growth. Boost marketing.\n";
+  } else if (!isProfitable && runwayCurrent >= 12) {
+    result += "• Risk:  🟡 Manageable — burning but decent runway. Plan breakeven path.\n";
+  } else if (!isProfitable && runwayCurrent < 12 && runwayCurrent >= 6) {
+    result += "• Risk:  🟠 Elevated — under 12 months runway. Prioritize revenue growth.\n";
+  } else if (!isProfitable && runwayCurrent < 6) {
+    result += "• Risk:  🔴 Urgent — under 6 months runway. Cut expenses now.\n";
+  }
+
+  // Top priorities
+  result += "\n🔥 Top Priorities:\n";
+  let priority = 1;
+  if (churnRate > 0 && currentMRR > 0) {
+    const cutEnd = currentMRR * Math.pow(1 + (grossGrowthRate - Math.max(0, churnRate - 1)) / 100, months);
+    const faster = monthsToTarget(10000);
+    result += "  " + priority + ". Cut churn from " + pct(churnRate) + " → " + pct(Math.max(0, churnRate - 1));
+    if (faster !== null) result += " → $10K MRR " + Math.max(0, faster - (monthsToTarget(10000) || 0)) + " months sooner.";
+    result += "\n";
+    priority++;
+  }
+  if (isProfitable && monthlyExpenses > 0) {
+    result += "  " + priority + ". With " + fmt(monthlyNetIncome) + "/mo profit, reinvest in ads or part-time help.\n";
+    priority++;
+  }
+  if (runwayCurrent < 12 && currentMRR > 0) {
+    result += "  " + priority + ". Runway under 12 months — build a breakeven plan this week.\n";
+    priority++;
+  }
+  if (netRate < 0.02 && currentMRR > 0) {
+    result += "  " + priority + ". Growth under 2%/mo — test one new acquisition channel.\n";
+    priority++;
+  }
+  if (priority === 1) {
+    result += "  1. Runway is healthy. Focus on product quality and customer retention.\n";
+  }
+
+  return [result];
+}
+
+// customFn mirrors the TypeScript function for client-side execution.
+// Emoji characters are represented as unicode escapes.
+const customFn =
+  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
+  "function pct(n){return n.toFixed(1)+'%'}" +
+  "var mr=parseFloat(inputs.currentMRR)||0;" +
+  "var gr=parseFloat(inputs.monthlyGrowthRate)||0;" +
+  "var cr=parseFloat(inputs.monthlyChurnRate)||0;" +
+  "var ex=parseFloat(inputs.monthlyExpenses)||0;" +
+  "var cash=parseFloat(inputs.cashOnHand)||0;" +
+  "var arpu=parseFloat(inputs.arpu)||0;" +
+  "var mo=parseInt(inputs.months)||12;" +
+  "var nr=(gr-cr)/100;" +
+  "var annRate=(Math.pow(1+nr,12)-1)*100;" +
+  "var end=mr*Math.pow(1+nr,mo);" +
+  "var total=0;for(var i=1;i<=mo;i++)total+=mr*Math.pow(1+nr,i);" +
+  "var mult=mr>0?end/mr:0;" +
+  "var subs=arpu>0?Math.round(mr/arpu):0;" +
+  "var netInc=mr-ex;" +
+  "var annProfit=netInc*12;" +
+  "var pMargin=mr>0?(netInc/mr)*100:0;" +
+  "var isProf=netInc>=0;" +
+  "var rZero=ex>0?cash/ex:null;" +
+  "var mBurn=ex-mr;" +
+  "var rCurr=mBurn>0?cash/mBurn:Infinity;" +
+  "function rColor(m){if(m===Infinity)return '\\uD83D\\uDFE2';if(m>=18)return '\\uD83D\\uDFE2';if(m>=6)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
+  "var beMonths=null;" +
+  "if(mr>=ex&&ex>0)beMonths=0;" +
+  "else if(mr>0&&nr>0&&ex>0)beMonths=Math.ceil(Math.log(ex/mr)/Math.log(1+nr));" +
+  "var netNew=mr*nr;" +
+  "var bm=mBurn>0&&netNew>0?mBurn/netNew:null;" +
+  "function bmColor(b){if(b<1)return '\\uD83D\\uDFE2';if(b<=2)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
+  "var mrrExp=ex>0?mr/ex:null;" +
+  "function r2Color(r){if(r>=2)return '\\uD83D\\uDFE2';if(r>=1)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
+  "var r40=nr*100+pMargin;" +
+  "function r40Color(v){if(v>=40)return '\\uD83D\\uDFE2';if(v>=20)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
+  "function mthsTo(t){if(mr<=0||nr<=0)return null;if(mr>=t)return 0;return Math.ceil(Math.log(t/mr)/Math.log(1+nr));}" +
+  "function ngColor(r){if(r>=10)return '\\uD83D\\uDFE2 Exceptional';if(r>=5)return '\\uD83D\\uDFE1 Healthy';if(r>=0)return '\\uD83D\\uDFE0 Slow';return '\\uD83D\\uDD34 Shrinking';}" +
+  "function phase(m){if(m<1000)return 'Validation (<$1K MRR)';if(m<10000)return 'Early Traction ($1K\\u2013$10K MRR)';if(m<100000)return 'Scaling ($10K\\u2013$100K MRR)';return 'Growth (>$100K MRR)';}" +
+
+  // Section 1: Revenue Snapshot
+  "var r='\\uD83D\\uDCCA Revenue Snapshot\\n\\n';" +
+  "r+='\\u2022 Starting MRR:           '+fmt(mr)+'/mo\\n';" +
+  "r+='\\u2022 Ending MRR:             '+fmt(end)+'/mo  (after '+mo+' months)\\n';" +
+  "r+='\\u2022 ARR Equivalent:         '+fmt(end*12)+'/yr\\n';" +
+  "r+='\\u2022 Total Revenue:          '+fmt(total)+' over '+mo+' months\\n\\n';" +
+  "r+='\\u2022 Gross Monthly Growth:   +'+pct(gr)+'  (new + expansion)\\n';" +
+  "r+='\\u2022 Monthly Churn:          \\u2212'+pct(cr)+'  (lost revenue)\\n';" +
+  "r+='\\u2022 Net Monthly Growth:     '+(nr>=0?'+':'')+pct(nr*100)+'  (effective)  '+ngColor(nr*100)+'\\n';" +
+  "r+='\\u2022 Growth Multiple:        '+mult.toFixed(1)+'\\u00d7   ('+mo+'-month MRR expansion)\\n';" +
+
+  // Section 2: MRR Milestones
+  "r+='\\n\\uD83D\\uDCC8 MRR Milestones\\n';" +
+  "var maxQ=Math.min(Math.floor(mo/3),8);" +
+  "for(var q=1;q<=maxQ;q++){var mth=q*3;var mAt=mr*Math.pow(1+nr,mth);r+='\\u2022 Q'+q+' (Month '+mth+'):  '+fmt(mAt)+'/mo'+(q===maxQ?'  \\u2190 target':'')+'\\n';}" +
+  "r+='\\n\\uD83C\\uDFAF Key Milestones\\n';" +
+  "var tgts=[10000,25000,50000,100000];var anyShown=false;" +
+  "if(mr>0&&nr>0){for(var ti=0;ti<tgts.length;ti++){var tg=tgts[ti];if(tg<=mr)continue;var mth2=mthsTo(tg);if(mth2!==null&&mth2>0){anyShown=true;if(mth2<=60){r+='\\u2022 $'+Math.round(tg/1000)+'K MRR:  '+mth2+' months\\n';}else{r+='\\u2022 $'+Math.round(tg/1000)+'K MRR:  >5 years\\n';}}}}" +
+  "if(!anyShown&&mr>0){if(nr<=0){r+='With zero or negative net growth, no milestones can be projected.\\n';}}" +
+
+  // Section 3: Growth Scenarios
+  "r+='\\n\\uD83D\\uDD04 Growth Scenarios ('+mo+'-Month Outlook)\\n';" +
+  "if(mr>0){" +
+  "var scRates=[{r:Math.max(1,Math.round(nr*100*0.5)),l:'\\uD83D\\uDC22 Conservative'},{r:Math.round(nr*100),l:'\\uD83D\\uDCC8 Current Pace'},{r:Math.max(1,Math.round(nr*100*1.5)),l:'\\uD83D\\uDE80 Aggressive'},{r:Math.min(50,Math.round(nr*100*2)),l:'\\uD83D\\uDD25 Hyper-Growth'}];" +
+  "var seen={};" +
+  "for(var si=0;si<scRates.length;si++){var sc=scRates[si];if(seen[sc.r]||sc.r<=0)continue;seen[sc.r]=true;" +
+  "var scEnd=mr*Math.pow(1+sc.r/100,mo);" +
+  "var sc10k=mr>0&&sc.r>0?Math.ceil(Math.log(10000/mr)/Math.log(1+sc.r/100)):null;" +
+  "r+='\\u2022 '+sc.l;for(var pad=sc.l.length;pad<24;pad++)r+=' ';" +
+  "r+='+'+pct(sc.r)+'/mo  \\u2192  '+fmt(scEnd)+'/mo';" +
+  "if(sc10k!==null&&sc10k>0)r+='  |  $10K in '+sc10k+' mo';" +
+  "r+='\\n';}" +
+  "r+='\\u2022 \\uD83C\\uDFAF Custom (+__%/mo)    customize to see your target\\n';" +
+  "}else{r+='Enter your current MRR to see growth scenarios.\\n';}" +
+
+  // What-If Analysis
+  "r+='\\n\\uD83D\\uDD04 What-If Analysis\\n';" +
+  "if(mr>0){" +
+  // Scenario A
+  "if(cr>0){" +
+  "var cutCR=Math.max(0,cr-1);" +
+  "var cutNR=(gr-cutCR)/100;" +
+  "var cutEnd=mr*Math.pow(1+cutNR,mo);" +
+  "r+='A) Cut churn '+pct(cr)+' \\u2192 '+pct(cutCR)+':\\n';" +
+  "r+='   Net growth: +'+pct(nr*100)+' \\u2192 +'+pct(cutNR*100)+' | End MRR: '+fmt(end)+' \\u2192 '+fmt(cutEnd)+' (+'+fmt(cutEnd-end)+')\\n\\n';" +
+  "}else{r+='A) Churn is already 0% \\u2014 no improvement needed here.\\n\\n';}" +
+  // Scenario B
+  "var boostG=gr*1.2;var boostNR=(boostG-cr)/100;var boostEnd=mr*Math.pow(1+boostNR,mo);" +
+  "r+='B) Boost gross growth +20%:\\n';" +
+  "r+='   Gross: +'+pct(gr)+' \\u2192 +'+pct(boostG)+' | End MRR: '+fmt(end)+' \\u2192 '+fmt(boostEnd)+' (+'+fmt(boostEnd-end)+')\\n\\n';" +
+  // Scenario C
+  "if(ex>0){" +
+  "var redEx=ex*0.8;var sav=ex-redEx;" +
+  "if(isProf){" +
+  "r+='C) Cut expenses 20%:\\n';" +
+  "r+='   Expenses: '+fmt(ex)+'/mo \\u2192 '+fmt(redEx)+'/mo | Monthly savings: +'+fmt(sav)+'/mo\\n';" +
+  "r+='   Profit increases: '+fmt(netInc)+'/mo \\u2192 '+fmt(netInc+sav)+'/mo\\n';" +
+  "}else{" +
+  "var newBurn=redEx-mr;var newRw=newBurn>0?cash/newBurn:Infinity;" +
+  "r+='C) Cut expenses 20%:\\n';" +
+  "r+='   Expenses: '+fmt(ex)+'/mo \\u2192 '+fmt(redEx)+'/mo\\n';" +
+  "r+='   Monthly burn: '+fmt(mBurn)+'/mo \\u2192 '+(newBurn>0?fmt(newBurn)+'/mo':'profitable')+'\\n';" +
+  "r+='   Runway: '+(rCurr===Infinity?'\\u221e':rCurr.toFixed(1)+' mo')+' \\u2192 '+(newRw===Infinity?'\\u221e':newRw.toFixed(1)+' mo')+'\\n';" +
+  "}" +
+  "}else{r+='C) Enter monthly expenses to see cost-cutting impact.\\n';}" +
+  "}else{r+='Enter your current MRR to see what-if scenarios.\\n';}" +
+
+  // Section 4: Runway & Breakeven
+  "r+='\\n\\uD83D\\uDCB0 Runway & Breakeven\\n';" +
+  "r+='\\u2022 Cash on Hand:            '+fmt(cash)+'\\n';" +
+  "r+='\\u2022 Monthly Expenses:        '+fmt(ex)+'/mo\\n';" +
+  "r+='\\u2022 Monthly Net Revenue:     '+fmt(mr)+'/mo  (MRR)\\n\\n';" +
+  "if(isProf&&ex>0){" +
+  "r+='\\u2022 Monthly Profit:          +'+fmt(netInc)+'  \\uD83D\\uDFE2 Revenue covers expenses.\\n';" +
+  "r+='\\u2022 Runway (zero-revenue):   '+(rZero!==null?rZero.toFixed(1)+' months':'\\u2014')+'\\n';" +
+  "r+='\\u2022 Runway (current pace):   \\u221e (profitable)\\n';" +
+  "r+='\\u2022 Breakeven:               \\u2705 Already breakeven\\n';" +
+  "r+='\\u2022 Annualized Profit:       +'+fmt(annProfit)+'/yr\\n';" +
+  "}else if(ex>0&&nr>0&&beMonths!==null&&beMonths>0){" +
+  "r+='\\u2022 Monthly Burn:            \\u2212'+fmt(mBurn)+'/mo  '+rColor(rCurr)+'\\n';" +
+  "r+='\\u2022 Runway (zero-revenue):   '+(rZero!==null?rZero.toFixed(1)+' months':'\\u2014')+'\\n';" +
+  "r+='\\u2022 Runway (current pace):   '+rCurr.toFixed(1)+' months  '+rColor(rCurr)+'\\n';" +
+  "r+='\\u2022 Breakeven:               '+beMonths+' months from now\\n';" +
+  "r+='  \\u2192 MRR reaches '+fmt(ex)+'/mo covering all expenses.\\n';" +
+  "}else if(ex>0){" +
+  "r+='\\u2022 Monthly Burn:            \\u2212'+fmt(mBurn)+'/mo  '+rColor(rCurr)+'\\n';" +
+  "r+='\\u2022 Runway (zero-revenue):   '+(rZero!==null?rZero.toFixed(1)+' months':'\\u2014')+'\\n';" +
+  "r+='\\u2022 Runway (current pace):   '+(rCurr===Infinity?'\\u221e':rCurr.toFixed(1)+' months')+'  '+rColor(rCurr)+'\\n';" +
+  "if(beMonths===null){" +
+  "r+='\\u2022 Breakeven:               Not reachable at current growth rate.\\n';" +
+  "r+='  \\u2192 Cut expenses or boost growth immediately.\\n';" +
+  "}" +
+  "}else{r+='Enter your monthly expenses to see runway and breakeven analysis.\\n';}" +
+
+  // Section 5: Burn & Efficiency Metrics
+  "r+='\\n\\uD83E\\uDE7A Burn & Efficiency Metrics\\n';" +
+  "if(ex>0){" +
+  "r+='\\u2022 Gross Burn:              '+fmt(ex)+'/mo  (total expenses)\\n';" +
+  "r+='\\u2022 Net Burn:                '+(mBurn>0?'\\u2212'+fmt(mBurn)+'/mo':'+'+fmt(-mBurn)+'/mo (profit)')+'  '+(isProf?'\\uD83D\\uDFE2':'\\uD83D\\uDD34')+'\\n\\n';" +
+  // Burn Multiple
+  "if(bm!==null){" +
+  "r+='\\u2022 Burn Multiple:           '+bm.toFixed(1)+'\\u00d7  '+bmColor(bm)+'\\n';" +
+  "r+='  = net burn \\u00f7 net new MRR | <1.0\\u00d7 \\uD83D\\uDFE2 | 1.0\\u20132.0\\u00d7 \\uD83D\\uDFE1 | >2.0\\u00d7 \\uD83D\\uDD34\\n\\n';" +
+  "}else if(isProf){" +
+  "r+='\\u2022 Burn Multiple:           N/A (profitable)\\n\\n';" +
+  "}else{" +
+  "r+='\\u2022 Burn Multiple:           N/A (no net new MRR)\\n\\n';" +
+  "}" +
+  // Rule of 40
+  "r+='\\u2022 Rule of 40:              '+pct(r40)+'  '+r40Color(r40)+'\\n';" +
+  "r+='  = net growth '+pct(nr*100)+' + profit margin '+pct(pMargin)+'\\n';" +
+  "r+='  | \\u226540% \\uD83D\\uDFE2 | 20-40% \\uD83D\\uDFE1 | <20% \\uD83D\\uDD34\\n\\n';" +
+  // MRR / Expense Ratio
+  "if(mrrExp!==null){" +
+  "r+='\\u2022 MRR / Expense Ratio:     '+mrrExp.toFixed(2)+'\\u00d7  '+r2Color(mrrExp)+'\\n';" +
+  "r+='  \\u22652.0 \\uD83D\\uDFE2 | 1.0-2.0 \\uD83D\\uDFE1 | <1.0 \\uD83D\\uDD34\\n\\n';" +
+  "}" +
+  "}else{r+='Enter monthly expenses to see burn and efficiency metrics.\\n\\n';}" +
+  // ARPU + Subscribers
+  "if(arpu>0&&subs>0){r+='\\u2022 Monthly ARPU:            '+fmt(arpu)+'\\n';r+='\\u2022 Subscribers:             '+subs+' (currentMRR \\u00f7 ARPU)\\n';}" +
+
+  // Section 6: Action Plan
+  "r+='\\n\\uD83C\\uDFAF Action Plan\\n';" +
+  "r+='\\u2022 Stage: '+phase(mr)+'\\n';" +
+  // Burn assessment
+  "if(isProf&&ex>0)r+='\\u2022 Burn:  \\u2705 Profitable \\u2014 reinvest 30% of profit into growth.\\n';" +
+  "else if(ex>0&&rCurr>=12)r+='\\u2022 Burn:  \\uD83D\\uDFE1 Burning cash but healthy runway. Watch burn rate.\\n';" +
+  "else if(ex>0&&rCurr<12)r+='\\u2022 Burn:  \\uD83D\\uDD34 Critical runway \\u2014 cut costs or accelerate revenue.\\n';" +
+  "else r+='\\u2022 Burn:  Enter expenses to assess burn.\\n';" +
+  // Growth assessment
+  "if(nr>=0.1)r+='\\u2022 Growth: \\uD83D\\uDD25 Exceptional (+'+pct(nr*100)+' net) \\u2014 sustain by staying close to customers.\\n';" +
+  "else if(nr>=0.05)r+='\\u2022 Growth: \\uD83D\\uDE80 Strong (+'+pct(nr*100)+' net) \\u2014 compound is working for you.\\n';" +
+  "else if(nr>0)r+='\\u2022 Growth: \\uD83D\\uDCC8 Steady (+'+pct(nr*100)+' net) \\u2014 small gains compound over time.\\n';" +
+  "else if(mr>0)r+='\\u2022 Growth: \\uD83D\\uDC22 Stalled ('+pct(nr*100)+' net) \\u2014 add a second acquisition channel.\\n';" +
+  // Risk
+  "if(isProf&&nr>=0.03)r+='\\u2022 Risk:  \\uD83D\\uDFE2 Low \\u2014 profitable + growing. Focus on moat and scale.\\n';" +
+  "else if(isProf&&nr>0)r+='\\u2022 Risk:  \\uD83D\\uDFE1 Moderate \\u2014 profitable but slow growth. Boost marketing.\\n';" +
+  "else if(!isProf&&rCurr>=12)r+='\\u2022 Risk:  \\uD83D\\uDFE1 Manageable \\u2014 burning but decent runway. Plan breakeven path.\\n';" +
+  "else if(!isProf&&rCurr<12&&rCurr>=6)r+='\\u2022 Risk:  \\uD83D\\uDFE0 Elevated \\u2014 under 12 months runway. Prioritize revenue growth.\\n';" +
+  "else if(!isProf&&rCurr<6)r+='\\u2022 Risk:  \\uD83D\\uDD34 Urgent \\u2014 under 6 months runway. Cut expenses now.\\n';" +
+  // Priorities
+  "var prio=1;r+='\\n\\uD83D\\uDD25 Top Priorities:\\n';" +
+  "if(cr>0&&mr>0){" +
+  "var fasterCut=Math.max(0,cr-1);" +
+  "r+='  '+prio+'. Cut churn from '+pct(cr)+' \\u2192 '+pct(fasterCut)+' \\u2192 $10K MRR sooner.\\n';" +
+  "prio++;}" +
+  "if(isProf&&ex>0){r+='  '+prio+'. With '+fmt(netInc)+'/mo profit, reinvest in ads or part-time help.\\n';prio++;}" +
+  "if(rCurr<12&&mr>0){r+='  '+prio+'. Runway under 12 months \\u2014 build a breakeven plan this week.\\n';prio++;}" +
+  "if(nr<0.02&&mr>0){r+='  '+prio+'. Growth under 2%/mo \\u2014 test one new acquisition channel.\\n';prio++;}" +
+  "if(prio===1){r+='  1. Runway is healthy. Focus on product quality and customer retention.\\n';}" +
+
+  "return [r];";
+
+const engine: ToolEngine = {
+  slug: "solopreneur-revenue-projector",
+  title: "Revenue Projector",
+  description: "Project MRR, runway, breakeven, and burn metrics. Churn-adjusted net growth with 5 scenarios, what-if analysis, and personalized action plan.",
+  category: "C",
+  inputs: [
+    { name: "currentMRR", label: "Current MRR ($)", placeholder: "e.g. 5000", type: "number" },
+    { name: "monthlyGrowthRate", label: "Monthly Growth Rate (%)", placeholder: "e.g. 8", type: "number" },
+    { name: "monthlyChurnRate", label: "Monthly Churn Rate (%)", placeholder: "e.g. 3", type: "number" },
+    { name: "monthlyExpenses", label: "Monthly Expenses ($)", placeholder: "e.g. 3000", type: "number" },
+    { name: "cashOnHand", label: "Cash on Hand ($)", placeholder: "e.g. 60000", type: "number" },
+    { name: "arpu", label: "Avg Revenue Per User ($)", placeholder: "e.g. 25", type: "number" },
+    { name: "months", label: "Projection Period", placeholder: "", type: "select", options: ["6", "12", "24"] },
+  ],
+  clientConfig: { type: "custom", wordPools: {}, customFn },
+  generate(inputs: Record<string, string>): string[] { return projectRevenue(inputs); },
+  staticExamples: [
+    "📊 Revenue Snapshot\n\n• Starting MRR:           $5,000/mo\n• Ending MRR:             $8,954/mo  (after 12 months)\n• ARR Equivalent:         $107,448/yr\n• Total Revenue:          $82,341 over 12 months\n\n• Gross Monthly Growth:   +8.0%  (new + expansion)\n• Monthly Churn:          −3.0%  (lost revenue)\n• Net Monthly Growth:     +5.0%  (effective)  🟡 Healthy\n• Growth Multiple:        1.8×   (12-month MRR expansion)\n\n📈 MRR Milestones\n• Q1 (Month 3):  $5,788/mo\n• Q2 (Month 6):  $6,702/mo\n• Q3 (Month 9):  $7,760/mo\n• Q4 (Month 12):  $8,954/mo  ← target\n\n🎯 Key Milestones\n• $10K MRR:  14 months\n• $25K MRR:  34 months\n• $50K MRR:  48 months\n• $100K MRR: 62 months\n\n🔄 Growth Scenarios (12-Month Outlook)\n• 🐢 Conservative       +2.5%/mo  →  $6,724/mo  |  $10K in 28 mo\n• 📈 Current Pace        +5.0%/mo  →  $8,954/mo  |  $10K in 14 mo\n• 🚀 Aggressive          +7.5%/mo  →  $11,905/mo  |  $10K in 10 mo\n• 🔥 Hyper-Growth       +10.0%/mo  →  $15,692/mo  |  $10K in 7 mo\n• 🎯 Custom (+__%/mo)    customize to see your target\n\n🔄 What-If Analysis\nA) Cut churn 3.0% → 2.0%:\n   Net growth: +5.0% → +6.0% | End MRR: $8,954 → $10,060 (+$1,107)\n\nB) Boost gross growth +20%:\n   Gross: +8.0% → +9.6% | End MRR: $8,954 → $11,710 (+$2,756)\n\nC) Cut expenses 20%:\n   Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo\n   Profit increases: $2,000/mo → $2,600/mo\n\n💰 Runway & Breakeven\n• Cash on Hand:            $60,000\n• Monthly Expenses:        $3,000/mo\n• Monthly Net Revenue:     $5,000/mo  (MRR)\n\n• Monthly Profit:          +$2,000  🟢 Revenue covers expenses.\n• Runway (zero-revenue):   20.0 months\n• Runway (current pace):   ∞ (profitable)\n• Breakeven:               ✅ Already breakeven\n• Annualized Profit:       +$24,000/yr\n\n🩺 Burn & Efficiency Metrics\n• Gross Burn:              $3,000/mo  (total expenses)\n• Net Burn:                +$2,000/mo (profit)  🟢\n\n• Burn Multiple:           N/A (profitable)\n\n• Rule of 40:              25.0%  🟡\n  = net growth +5.0% + profit margin +40.0%\n  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴\n\n• MRR / Expense Ratio:     1.67×  🟡\n  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n• Monthly ARPU:            $25.00\n• Subscribers:             200 (currentMRR ÷ ARPU)\n\n🎯 Action Plan\n• Stage: Early Traction ($1K–$10K MRR)\n• Burn:  ✅ Profitable — reinvest 30% of profit into growth.\n• Growth: 🚀 Strong (+5.0% net) — compound is working for you.\n• Risk:  🟢 Low — profitable + growing. Focus on moat and scale.\n\n🔥 Top Priorities:\n  1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.\n  2. With $2,000/mo profit, reinvest in ads or part-time help.\n",
+  ],
+  faq: [
+    { q: "What is a good monthly growth rate for a SaaS?", a: "For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally." },
+    { q: "What's the difference between gross growth and net growth?", a: "Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — you're growing but losing nearly half to churn. Net growth is what builds long-term revenue." },
+    { q: "How do I calculate my monthly expenses?", a: "Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don't include one-time purchases. If your expenses fluctuate, use the 3-month average." },
+    { q: "What's a healthy runway for a solopreneur?", a: "12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both 'zero-revenue' and 'current pace' runway." },
+    { q: "What is Burn Multiple and why does it matter?", a: "Burn Multiple = net burn ÷ net new MRR. It measures how much you're spending to generate each dollar of new recurring revenue. <1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, >2.0× means you're over-spending relative to growth. Profitable businesses have no burn multiple." },
+    { q: "How accurate are these projections?", a: "The projection is mathematically precise given your inputs, but real-world growth is lumpy. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with actual numbers." },
+  ],
+  howToUse: [
+    "Enter your current Monthly Recurring Revenue (MRR).",
+    "Enter your average monthly growth rate (gross, before churn).",
+    "Enter your monthly churn rate to see net growth — the real number.",
+    "Enter your total monthly expenses (hosting, tools, salary, etc.).",
+    "Enter your cash on hand to calculate runway and financial buffer.",
+    "Enter your ARPU (Average Revenue Per User) for subscriber counts.",
+    "Select your projection period (6, 12, or 24 months).",
+    "Review the Revenue Snapshot for your net growth and ending MRR.",
+    "Check Runway & Breakeven to know how long your cash will last.",
+    "Study the Burn & Efficiency Metrics — Rule of 40, Burn Multiple, ratios.",
+    "Explore What-If scenarios to see the impact of better churn or lower costs.",
+    "Read the Action Plan for prioritized next steps based on your data.",
+  ],
+};
+registerEngine(engine);
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+git add src/engines/revenue-projector.ts
+git commit -m "feat: rewrite Revenue Projector engine — 7 inputs, 6 sections, runway/breakeven/burn metrics"
+```
+
+---
+
+### Task 3: Update translations — input labels + placeholders
+
+**Files:**
+- Modify: `src/i18n/translations.ts` (add new keys after line 506)
+
+- [ ] **Step 1: Add 4 new input translation keys**
+
+Insert after line 506 (`'tools.solopreneur-revenue-projector.input.months.placeholder': ...`):
+
+```typescript
+  'tools.solopreneur-revenue-projector.input.monthlyChurnRate.label': { en: 'Monthly Churn Rate (%)', zh: '月流失率（%）' },
+  'tools.solopreneur-revenue-projector.input.monthlyChurnRate.placeholder': { en: 'e.g. 3', zh: '例如：3' },
+  'tools.solopreneur-revenue-projector.input.monthlyExpenses.label': { en: 'Monthly Expenses ($)', zh: '月支出（$）' },
+  'tools.solopreneur-revenue-projector.input.monthlyExpenses.placeholder': { en: 'e.g. 3000', zh: '例如：3000' },
+  'tools.solopreneur-revenue-projector.input.cashOnHand.label': { en: 'Cash on Hand ($)', zh: '现金储备（$）' },
+  'tools.solopreneur-revenue-projector.input.cashOnHand.placeholder': { en: 'e.g. 60000', zh: '例如：60000' },
+  'tools.solopreneur-revenue-projector.input.arpu.label': { en: 'Avg Revenue Per User ($)', zh: '每用户平均收入（$）' },
+  'tools.solopreneur-revenue-projector.input.arpu.placeholder': { en: 'e.g. 25', zh: '例如：25' },
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+git add src/i18n/translations.ts
+git commit -m "feat: add Revenue Projector v2 input translations — churnRate, expenses, cashOnHand, ARPU"
+```
+
+---
+
+### Task 4: Update translations — howToUse + FAQ
+
+**Files:**
+- Modify: `src/i18n/translations.ts` (lines 507-523, replace howToUse and FAQ entries)
+
+- [ ] **Step 1: Update howToUse entries (expand from 7 to 12 steps)**
+
+Replace the existing howToUse keys (lines 507-513) AND add new ones. Find the existing block:
+
+```typescript
+  'tools.solopreneur-revenue-projector.how_to_use.0': ...
+  ...through...
+  'tools.solopreneur-revenue-projector.how_to_use.6': ...
+```
+
+Replace all with:
+
+```typescript
+  'tools.solopreneur-revenue-projector.how_to_use.0': { en: 'Enter your current Monthly Recurring Revenue (MRR).', zh: '输入你当前的月经常性收入（MRR）。' },
+  'tools.solopreneur-revenue-projector.how_to_use.1': { en: 'Enter your average monthly growth rate (gross, before churn).', zh: '输入你的平均月增长率（毛增长，未扣除流失）。' },
+  'tools.solopreneur-revenue-projector.how_to_use.2': { en: 'Enter your monthly churn rate to see net growth — the real number.', zh: '输入月流失率，查看净增长——这才是真实数字。' },
+  'tools.solopreneur-revenue-projector.how_to_use.3': { en: 'Enter your total monthly expenses (hosting, tools, salary, etc.).', zh: '输入月总支出（服务器、工具、工资等）。' },
+  'tools.solopreneur-revenue-projector.how_to_use.4': { en: 'Enter your cash on hand to calculate runway and financial buffer.', zh: '输入现金储备，计算跑道和财务缓冲。' },
+  'tools.solopreneur-revenue-projector.how_to_use.5': { en: 'Enter your ARPU (Average Revenue Per User) for subscriber counts.', zh: '输入每用户平均收入（ARPU），计算订阅人数。' },
+  'tools.solopreneur-revenue-projector.how_to_use.6': { en: 'Select your projection period (6, 12, or 24 months).', zh: '选择预测周期（6、12或24个月）。' },
+  'tools.solopreneur-revenue-projector.how_to_use.7': { en: 'Review the Revenue Snapshot for your net growth and ending MRR.', zh: '查看收入快照中的净增长和终点MRR。' },
+  'tools.solopreneur-revenue-projector.how_to_use.8': { en: 'Check Runway & Breakeven to know how long your cash will last.', zh: '查看跑道与打平分析，了解现金能撑多久。' },
+  'tools.solopreneur-revenue-projector.how_to_use.9': { en: 'Study the Burn & Efficiency Metrics — Rule of 40, Burn Multiple, ratios.', zh: '研究效率指标——Rule of 40、烧钱倍数、比率。' },
+  'tools.solopreneur-revenue-projector.how_to_use.10': { en: 'Explore What-If scenarios to see the impact of better churn or lower costs.', zh: '探索假设情景，看看降低流失或成本的影响。' },
+  'tools.solopreneur-revenue-projector.how_to_use.11': { en: 'Read the Action Plan for prioritized next steps based on your data.', zh: '阅读行动计划，获取基于数据的优先级建议。' },
+```
+
+- [ ] **Step 2: Update FAQ entries (replace all 5)**
+
+Replace the existing FAQ keys (lines 514-523):
+
+```typescript
+  'tools.solopreneur-revenue-projector.faq.0.q': { en: 'What is a good monthly growth rate for a SaaS?', zh: 'SaaS月增长率多少算好？' },
+  'tools.solopreneur-revenue-projector.faq.0.a': { en: "For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios.", zh: '早期SaaS（MRR低于1万）：月净增长5-10%算不错。MRR 1万-10万：3-5%是健康的。MRR超过10万：2-3%是正常的。净增长 = 毛增长 − 流失 —— 两者同等重要。本计算器展示你的净增长并用五种场景向前推演。' },
+  'tools.solopreneur-revenue-projector.faq.1.q': { en: "What's the difference between gross growth and net growth?", zh: '毛增长和净增长有什么区别？' },
+  'tools.solopreneur-revenue-projector.faq.1.a': { en: 'Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue.', zh: '毛增长 = 新客收入 + 扩展收入（升级）。净增长 = 毛增长 − 流失（取消 + 降级）。如果你的毛增长是8%但流失是5%，净增长只有3%——在增长但近一半被流失吞噬。净增长才是构建长期收入的关键。' },
+  'tools.solopreneur-revenue-projector.faq.2.q': { en: 'How do I calculate my monthly expenses?', zh: '如何计算月支出？' },
+  'tools.solopreneur-revenue-projector.faq.2.a': { en: "Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don't include one-time purchases. If your expenses fluctuate, use the 3-month average.", zh: '包括所有月度经常性支出：服务器、SaaS工具、外包/虚拟助理费用、软件订阅、营销预算和你自己的工资/提款。不要包含一次性采购。如果支出波动，用3个月平均值。' },
+  'tools.solopreneur-revenue-projector.faq.3.q': { en: "What's a healthy runway for a solopreneur?", zh: '个体创业者多少跑道算健康？' },
+  'tools.solopreneur-revenue-projector.faq.3.a': { en: "12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both 'zero-revenue' and 'current pace' runway so you can plan for the worst case while tracking the realistic one.", zh: '当前烧钱速度下12个月以上跑道是舒适的。6-12个月可控但需要关注。不到6个月是危急的——你需要立即削减成本、提价或推出新收入来源。本计算器同时展示"零收入跑道"和"当前速度跑道"，让你为最坏情况做规划同时跟踪现实情况。' },
+  'tools.solopreneur-revenue-projector.faq.4.q': { en: 'What is Burn Multiple and why does it matter?', zh: '什么是烧钱倍数？为什么重要？' },
+  'tools.solopreneur-revenue-projector.faq.4.a': { en: 'Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. <1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, >2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign.', zh: '烧钱倍数 = 净烧钱 ÷ 净新增MRR。衡量你每产生1美元新经常性收入需要花多少钱。<1.0×优秀（高效增长），1.0-2.0×可接受，>2.0×意味着相对增长过度支出。已盈利企业没有烧钱倍数。每月跟踪它——倍数上升是早期预警信号。' },
+  'tools.solopreneur-revenue-projector.faq.5.q': { en: 'How accurate are these revenue projections?', zh: '这些收入预测有多准确？' },
+  'tools.solopreneur-revenue-projector.faq.5.a': { en: 'The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers.', zh: '基于你的输入，计算是精确的，但现实世界的增长是不均匀的——有些月涨12%，有些月持平。用保守和乐观场景观察可能结果的范围。预算方面始终用保守端做规划。每月回来更新实际数字。' },
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+git add src/i18n/translations.ts
+git commit -m "feat: update Revenue Projector v2 howToUse (7→12 steps) + FAQ (5→6 items)"
+```
+
+---
+
+### Task 5: Build and verify
+
+**Files:** None (verification only)
+
+- [ ] **Step 1: Run typecheck**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+pnpm typecheck
+```
+Expected: Zero errors.
+
+- [ ] **Step 2: Run build**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+pnpm build
+```
+Expected: Zero errors, build completes.
+
+- [ ] **Step 3: Verify output files**
+
+```bash
+ls dist/en/solopreneur-revenue-projector/index.html
+ls dist/zh/solopreneur-revenue-projector/index.html
+```
+Expected: Both files exist.
+
+- [ ] **Step 4: Quick content check — verify key v2 content appears in EN build**
+
+```bash
+grep -c "Runway" dist/en/solopreneur-revenue-projector/index.html
+grep -c "Breakeven" dist/en/solopreneur-revenue-projector/index.html
+grep -c "Burn Multiple" dist/en/solopreneur-revenue-projector/index.html
+grep -c "Rule of 40" dist/en/solopreneur-revenue-projector/index.html
+```
+Expected: Each returns >=1.
+
+- [ ] **Step 5: Check for no residual TODO/mock/placeholder**
+
+```bash
+grep -rn "TODO\|FIXME\|placeholder" src/engines/revenue-projector.ts
+```
+Expected: No output (clean).
+
+- [ ] **Step 6: Commit if all checks pass**
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+git add -A
+git commit -m "chore: build verification — Revenue Projector v2 passes all checks"
+```
+(Only if changes exist — otherwise skip)
+
+---
+
+### Task 6: Final commit squash (optional)
+
+If all tasks committed separately, the full feature is complete. Verify with:
+
+```bash
+cd "D:\E\独立站\youtube-tools"
+git log --oneline -5
+```
