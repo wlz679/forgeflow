@@ -11,6 +11,8 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   const monthlyExpenses = parseFloat(inputs.monthlyExpenses) || 0;
   const cashOnHand = parseFloat(inputs.cashOnHand) || 0;
   const arpu = parseFloat(inputs.arpu) || 0;
+  const customGrowthRate = parseFloat(inputs.customGrowthRate) || 0;
+  const cac = parseFloat(inputs.cac) || 0;
   const months = parseInt(inputs.months) || 12;
 
   const netRate = (grossGrowthRate - churnRate) / 100;
@@ -30,6 +32,19 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   const annualizedProfit = monthlyNetIncome * 12;
   const profitMargin = currentMRR > 0 ? (monthlyNetIncome / currentMRR) * 100 : 0;
   const isProfitable = monthlyNetIncome >= 0;
+
+  // --- Custom scenario ---
+  const customNetRate = customGrowthRate > 0 ? (customGrowthRate - churnRate) / 100 : 0;
+  const hasCustom = customGrowthRate > 0;
+
+  // --- CAC Metrics ---
+  const cacPaybackMonths = cac > 0 && arpu > 0 && churnRate > 0 && churnRate < 100
+    ? cac / (arpu * (1 - churnRate / 100))
+    : null;
+  function paybackColor(m: number): string { if (m <= 12) return "🟢"; if (m <= 24) return "🟡"; return "🔴"; }
+  const ltvForCAC = arpu > 0 && churnRate > 0 ? arpu / (churnRate / 100) : 0;
+  const ltvCacRatio = cac > 0 && ltvForCAC > 0 ? ltvForCAC / cac : null;
+  function ltvCacColor(r: number): string { if (r >= 3) return "🟢"; if (r >= 1) return "🟡"; return "🔴"; }
 
   // --- Runway ---
   const runwayZeroRevenue = monthlyExpenses > 0 ? cashOnHand / monthlyExpenses : null;
@@ -160,6 +175,22 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   }
 
   // ========================
+  // 2b. Monthly MRR Breakdown (12-month full table; 6/24 show first 6 rows)
+  // ========================
+  result += "\n📅 Monthly MRR Breakdown\n";
+  const showMonths = months === 12 ? 12 : Math.min(months, 6);
+  for (let m = 1; m <= showMonths; m++) {
+    const mrrAtM = currentMRR * Math.pow(1 + netRate, m);
+    const delta = mrrAtM - (currentMRR * Math.pow(1 + netRate, m - 1));
+    result += "Month " + String(m).padStart(2, " ") + ":  " + fmt(mrrAtM) + "/mo  (+" + fmt(delta) + ")" + (m % 3 === 0 ? "  ← Q" + (m / 3) : "") + "\n";
+  }
+  if (months > showMonths) {
+    const endM = currentMRR * Math.pow(1 + netRate, months);
+    const endD = endM - (currentMRR * Math.pow(1 + netRate, months - 1));
+    result += "  ...\nMonth " + months + ":  " + fmt(endM) + "/mo  (+" + fmt(endD) + ")  ← target\n";
+  }
+
+  // ========================
   // 3. Growth Scenarios & What-If
   // ========================
   result += "\n🔄 Growth Scenarios (" + months + "-Month Outlook)\n";
@@ -184,7 +215,17 @@ function projectRevenue(inputs: Record<string, string>): string[] {
       if (scTo10k !== null && scTo10k > 0) result += "  |  $10K in " + scTo10k + " mo";
       result += "\n";
     }
-    result += "• 🎯 Custom (+__%/mo)    customize to see your target\n";
+    if (hasCustom) {
+      const customEnd = currentMRR * Math.pow(1 + customNetRate, months);
+      const cTo10k = currentMRR > 0 && customNetRate > 0 ? Math.ceil(Math.log(10000 / currentMRR) / Math.log(1 + customNetRate)) : null;
+      result += "• 🎯 Custom (+" + pct(customGrowthRate) + "/mo)";
+      for (let pad = ("🎯 Custom (+" + pct(customGrowthRate) + "/mo)").length; pad < 24; pad++) result += " ";
+      result += "→  " + fmt(customEnd) + "/mo";
+      if (cTo10k !== null && cTo10k > 0) result += "  |  $10K in " + cTo10k + " mo";
+      result += "\n";
+    } else {
+      result += "• 🎯 Custom: enter a growth rate above to see your target\n";
+    }
   } else {
     result += "Enter your current MRR to see growth scenarios.\n";
   }
@@ -310,6 +351,22 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     result += "Enter monthly expenses to see burn and efficiency metrics.\n\n";
   }
 
+  // CAC Metrics (independent of expenses)
+  if (cac > 0) {
+    result += "• CAC (Customer Acq. Cost): " + fmt(cac) + "\n";
+    if (cacPaybackMonths !== null) {
+      result += "• CAC Payback Period:       " + cacPaybackMonths.toFixed(1) + " months  " + paybackColor(cacPaybackMonths) + "\n";
+      result += "  = CAC ÷ (ARPU × (1 − churn rate)) | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴\n";
+    } else if (arpu <= 0 || churnRate <= 0) {
+      result += "• CAC Payback Period:       — (enter ARPU and churn rate)\n";
+    }
+    if (ltvCacRatio !== null) {
+      result += "• LTV:CAC Ratio:            " + ltvCacRatio.toFixed(1) + "×  " + ltvCacColor(ltvCacRatio) + "\n";
+      result += "  = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴\n";
+    }
+    result += "\n";
+  }
+
   // ARPU + Subscriber info
   if (arpu > 0 && subscriberCount > 0) {
     result += "• Monthly ARPU:            " + fmt(arpu) + "\n";
@@ -394,6 +451,8 @@ const customFn =
   "var ex=parseFloat(inputs.monthlyExpenses)||0;" +
   "var cash=parseFloat(inputs.cashOnHand)||0;" +
   "var arpu=parseFloat(inputs.arpu)||0;" +
+  "var cgr=parseFloat(inputs.customGrowthRate)||0;" +
+  "var cac=parseFloat(inputs.cac)||0;" +
   "var mo=parseInt(inputs.months)||12;" +
   "var nr=(gr-cr)/100;" +
   "var annRate=(Math.pow(1+nr,12)-1)*100;" +
@@ -413,6 +472,12 @@ const customFn =
   "if(mr>=ex&&ex>0)beMonths=0;" +
   "else if(mr>0&&nr>0&&ex>0)beMonths=Math.ceil(Math.log(ex/mr)/Math.log(1+nr));" +
   "var netNew=mr*nr;" +
+  "var cNr=cgr>0?(cgr-cr)/100:0;var hasCustom=cgr>0;" +
+  "var cacPb=null;if(cac>0&&arpu>0&&cr>0&&cr<100)cacPb=cac/(arpu*(1-cr/100));" +
+  "function pbColor(m){if(m<=12)return '\\uD83D\\uDFE2';if(m<=24)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
+  "var ltvC=arpu>0&&cr>0?arpu/(cr/100):0;" +
+  "var ltvCRatio=cac>0&&ltvC>0?ltvC/cac:null;" +
+  "function lcColor(r){if(r>=3)return '\\uD83D\\uDFE2';if(r>=1)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
   "var bm=mBurn>0&&netNew>0?mBurn/netNew:null;" +
   "function bmColor(b){if(b<1)return '\\uD83D\\uDFE2';if(b<=2)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
   "var mrrExp=ex>0?mr/ex:null;" +
@@ -444,6 +509,12 @@ const customFn =
   "if(!anyShown&&mr>0){if(nr<=0){r+='With zero or negative net growth, no milestones can be projected.\\n';}}" +
   "if(anyShown){r+='  Range shows \\u00b12% net growth variation.\\n';}" +
 
+  // Section 2b: Monthly MRR Breakdown
+  "r+='\\n\\uD83D\\uDCC5 Monthly MRR Breakdown\\n';" +
+  "var showMo=mo===12?12:Math.min(mo,6);" +
+  "for(var im=1;im<=showMo;im++){var mAtM=mr*Math.pow(1+nr,im);var dlt=mAtM-(mr*Math.pow(1+nr,im-1));r+='Month '+(' '+im).slice(-2)+':  '+fmt(mAtM)+'/mo  (+'+fmt(dlt)+')'+(im%3===0?'  \\u2190 Q'+(im/3):'')+'\\n';}" +
+  "if(mo>showMo){var endM=mr*Math.pow(1+nr,mo);var endD=endM-(mr*Math.pow(1+nr,mo-1));r+='  ...\\nMonth '+mo+':  '+fmt(endM)+'/mo  (+'+fmt(endD)+')  \\u2190 target\\n';}" +
+
   // Section 3: Growth Scenarios
   "r+='\\n\\uD83D\\uDD04 Growth Scenarios ('+mo+'-Month Outlook)\\n';" +
   "if(mr>0){" +
@@ -456,7 +527,17 @@ const customFn =
   "r+='+'+pct(sc.r)+'/mo  \\u2192  '+fmt(scEnd)+'/mo';" +
   "if(sc10k!==null&&sc10k>0)r+='  |  $10K in '+sc10k+' mo';" +
   "r+='\\n';}" +
-  "r+='\\u2022 \\uD83C\\uDFAF Custom (+__%/mo)    customize to see your target\\n';" +
+  "if(hasCustom){" +
+  "var cuEnd=mr*Math.pow(1+cNr,mo);" +
+  "var cu10k=mr>0&&cNr>0?Math.ceil(Math.log(10000/mr)/Math.log(1+cNr)):null;" +
+  "var cuLabel='\\u2022 \\uD83C\\uDFAF Custom (+'+pct(cgr)+'/mo)';" +
+  "r+=cuLabel;for(var cp=cuLabel.length;cp<24;cp++)r+=' ';" +
+  "r+='\\u2192  '+fmt(cuEnd)+'/mo';" +
+  "if(cu10k!==null&&cu10k>0)r+='  |  $10K in '+cu10k+' mo';" +
+  "r+='\\n';" +
+  "}else{" +
+  "r+='\\u2022 \\uD83C\\uDFAF Custom: enter a growth rate above to see your target\\n';" +
+  "}" +
   "}else{r+='Enter your current MRR to see growth scenarios.\\n';}" +
 
   // What-If Analysis
@@ -551,6 +632,21 @@ const customFn =
   "r+='\\u2022 LTV (Customer Lifetime): \\u221e  (zero churn) \\uD83D\\uDFE2\\n\\n';" +
   "}" +
   "}else{r+='Enter monthly expenses to see burn and efficiency metrics.\\n\\n';}" +
+  // CAC Metrics (independent of expenses)
+  "if(cac>0){" +
+  "r+='\\u2022 CAC (Customer Acq. Cost): '+fmt(cac)+'\\n';" +
+  "if(cacPb!==null){" +
+  "r+='\\u2022 CAC Payback Period:       '+cacPb.toFixed(1)+' months  '+pbColor(cacPb)+'\\n';" +
+  "r+='  = CAC \\u00f7 (ARPU \\u00d7 (1 \\u2212 churn rate)) | <12mo \\uD83D\\uDFE2 | 12-24mo \\uD83D\\uDFE1 | >24mo \\uD83D\\uDD34\\n';" +
+  "}else if(arpu<=0||cr<=0){" +
+  "r+='\\u2022 CAC Payback Period:       \\u2014 (enter ARPU and churn rate)\\n';" +
+  "}" +
+  "if(ltvCRatio!==null){" +
+  "r+='\\u2022 LTV:CAC Ratio:            '+ltvCRatio.toFixed(1)+'\\u00d7  '+lcColor(ltvCRatio)+'\\n';" +
+  "r+='  = LTV \\u00f7 CAC | \\u22653\\u00d7 \\uD83D\\uDFE2 | 1-3\\u00d7 \\uD83D\\uDFE1 | <1\\u00d7 \\uD83D\\uDD34\\n';" +
+  "}" +
+  "r+='\\n';" +
+  "}" +
   // ARPU + Subscribers
   "if(arpu>0&&subs>0){r+='\\u2022 Monthly ARPU:            '+fmt(arpu)+'\\n';r+='\\u2022 Subscribers:             '+subs+' (currentMRR \\u00f7 ARPU)\\n';}" +
 
@@ -598,12 +694,14 @@ const engine: ToolEngine = {
     { name: "monthlyExpenses", label: "Monthly Expenses ($)", placeholder: "e.g. 3000", type: "number" },
     { name: "cashOnHand", label: "Cash on Hand ($)", placeholder: "e.g. 60000", type: "number" },
     { name: "arpu", label: "Avg Revenue Per User ($)", placeholder: "e.g. 25", type: "number" },
+    { name: "customGrowthRate", label: "Custom Growth Rate (%)", placeholder: "e.g. 7 (optional)", type: "number" },
+    { name: "cac", label: "CAC — Customer Acquisition Cost ($)", placeholder: "e.g. 200 (optional)", type: "number" },
     { name: "months", label: "Projection Period", placeholder: "", type: "select", options: ["6", "12", "24"] },
   ],
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return projectRevenue(inputs); },
   staticExamples: [
-    "📊 Revenue Snapshot\n\n• Starting MRR:           $5,000/mo\n• Ending MRR:             $8,954/mo  (after 12 months)\n• ARR Equivalent:         $107,448/yr\n• Total Revenue:          $82,341 over 12 months\n\n• Gross Monthly Growth:   +8.0%  (new + expansion)\n• Monthly Churn:          −3.0%  (lost revenue)\n• Net Monthly Growth:     +5.0%  (effective)  🟡 Healthy\n• Growth Multiple:        1.8×   (12-month MRR expansion)\n\n📈 MRR Milestones\n• Q1 (Month 3):  $5,788/mo\n• Q2 (Month 6):  $6,702/mo\n• Q3 (Month 9):  $7,760/mo\n• Q4 (Month 12):  $8,954/mo  ← target\n\n🎯 Key Milestones\n• $10K MRR:  14 months\n• $25K MRR:  34 months\n• $50K MRR:  48 months\n• $100K MRR: 62 months\n\n🔄 Growth Scenarios (12-Month Outlook)\n• 🐢 Conservative       +2.5%/mo  →  $6,724/mo  |  $10K in 28 mo\n• 📈 Current Pace        +5.0%/mo  →  $8,954/mo  |  $10K in 14 mo\n• 🚀 Aggressive          +7.5%/mo  →  $11,905/mo  |  $10K in 10 mo\n• 🔥 Hyper-Growth       +10.0%/mo  →  $15,692/mo  |  $10K in 7 mo\n• 🎯 Custom (+__%/mo)    customize to see your target\n\n🔄 What-If Analysis\nA) Cut churn 3.0% → 2.0%:\n   Net growth: +5.0% → +6.0% | End MRR: $8,954 → $10,060 (+$1,107)\n\nB) Boost gross growth +20%:\n   Gross: +8.0% → +9.6% | End MRR: $8,954 → $11,710 (+$2,756)\n\nC) Cut expenses 20%:\n   Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo\n   Profit increases: $2,000/mo → $2,600/mo\n\n💰 Runway & Breakeven\n• Cash on Hand:            $60,000\n• Monthly Expenses:        $3,000/mo\n• Monthly Net Revenue:     $5,000/mo  (MRR)\n\n• Monthly Profit:          +$2,000  🟢 Revenue covers expenses.\n• Runway (zero-revenue):   20.0 months\n• Runway (current pace):   ∞ (profitable)\n• Breakeven:               ✅ Already breakeven\n• Annualized Profit:       +$24,000/yr\n\n🩺 Burn & Efficiency Metrics\n• Gross Burn:              $3,000/mo  (total expenses)\n• Net Burn:                +$2,000/mo (profit)  🟢\n\n• Burn Multiple:           N/A (profitable)\n\n• Rule of 40:              25.0%  🟡\n  = net growth +5.0% + profit margin +40.0%\n  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴\n\n• MRR / Expense Ratio:     1.67×  🟡\n  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n• Monthly ARPU:            $25.00\n• Subscribers:             200 (currentMRR ÷ ARPU)\n\n🎯 Action Plan\n• Stage: Early Traction ($1K–$10K MRR)\n• Burn:  ✅ Profitable — reinvest 30% of profit into growth.\n• Growth: 🚀 Strong (+5.0% net) — compound is working for you.\n• Risk:  🟢 Low — profitable + growing. Focus on moat and scale.\n\n🔥 Top Priorities:\n  1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.\n  2. With $2,000/mo profit, reinvest in ads or part-time help.\n",
+    "📊 Revenue Snapshot\n\n• Starting MRR:           $5,000/mo\n• Ending MRR:             $8,954/mo  (after 12 months)\n• ARR Equivalent:         $107,448/yr\n• Total Revenue:          $82,341 over 12 months\n\n• Gross Monthly Growth:   +8.0%  (new + expansion)\n• Monthly Churn:          −3.0%  (lost revenue)\n• Net Monthly Growth:     +5.0%  (effective)  🟡 Healthy\n• Growth Multiple:        1.8×   (12-month MRR expansion)\n\n📈 MRR Milestones\n• Q1 (Month 3):  $5,788/mo\n• Q2 (Month 6):  $6,702/mo\n• Q3 (Month 9):  $7,760/mo\n• Q4 (Month 12):  $8,954/mo  ← target\n\n🎯 Key Milestones\n• $10K MRR:  14 months [12–17]\n• $25K MRR:  34 months [28–42]\n• $50K MRR:  48 months [40–61]\n• $100K MRR: 62 months [51–80]\n  Range shows ±2% net growth variation.\n\n📅 Monthly MRR Breakdown\nMonth  1:  $5,250/mo  (+$250)\nMonth  2:  $5,513/mo  (+$263)\nMonth  3:  $5,788/mo  (+$276)  ← Q1\nMonth  4:  $6,077/mo  (+$289)\nMonth  5:  $6,381/mo  (+$304)\nMonth  6:  $6,700/mo  (+$319)  ← Q2\nMonth  7:  $7,035/mo  (+$335)\nMonth  8:  $7,387/mo  (+$352)\nMonth  9:  $7,756/mo  (+$369)  ← Q3\nMonth 10:  $8,144/mo  (+$388)\nMonth 11:  $8,551/mo  (+$407)\nMonth 12:  $8,954/mo  (+$403)  ← Q4\n\n🔄 Growth Scenarios (12-Month Outlook)\n• 🐢 Conservative       +2.5%/mo  →  $6,724/mo  |  $10K in 28 mo\n• 📈 Current Pace        +5.0%/mo  →  $8,954/mo  |  $10K in 14 mo\n• 🚀 Aggressive          +7.5%/mo  →  $11,905/mo  |  $10K in 10 mo\n• 🔥 Hyper-Growth       +10.0%/mo  →  $15,692/mo  |  $10K in 7 mo\n• 🎯 Custom: enter a growth rate above to see your target\n\n🔄 What-If Analysis\nA) Cut churn 3.0% → 2.0%:\n   Net growth: +5.0% → +6.0% | End MRR: $8,954 → $10,060 (+$1,107)\n\nB) Boost gross growth +20%:\n   Gross: +8.0% → +9.6% | End MRR: $8,954 → $11,710 (+$2,756)\n\nC) Cut expenses 20%:\n   Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo\n   Profit increases: $2,000/mo → $2,600/mo\n\n💰 Runway & Breakeven\n• Cash on Hand:            $60,000\n• Monthly Expenses:        $3,000/mo\n• Monthly Net Revenue:     $5,000/mo  (MRR)\n\n• Monthly Profit:          +$2,000  🟢 Revenue covers expenses.\n• Runway (zero-revenue):   20.0 months\n• Runway (current pace):   ∞ (profitable)\n• Breakeven:               ✅ Already breakeven\n• Annualized Profit:       +$24,000/yr\n\n🩺 Burn & Efficiency Metrics\n• Gross Burn:              $3,000/mo  (total expenses)\n• Net Burn:                +$2,000/mo (profit)  🟢\n\n• Burn Multiple:           N/A (profitable)\n\n• Rule of 40:              25.0%  🟡\n  = net growth +5.0% + profit margin +40.0%\n  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴\n\n• MRR / Expense Ratio:     1.67×  🟡\n  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n• LTV (Customer Lifetime): $833  (33× ARPU)  🟡\n  = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴\n\n• CAC (Customer Acq. Cost): $200.00\n• CAC Payback Period:       8.0 months  🟢\n  = CAC ÷ (ARPU × (1 − churn rate)) | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴\n• LTV:CAC Ratio:            4.2×  🟢\n  = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴\n\n• Monthly ARPU:            $25.00\n• Subscribers:             200 (currentMRR ÷ ARPU)\n\n🎯 Action Plan\n• Stage: Early Traction ($1K–$10K MRR)\n• Burn:  ✅ Profitable — reinvest 30% of profit into growth.\n• Growth: 🚀 Strong (+5.0% net) — compound is working for you.\n• Risk:  🟢 Low — profitable + growing. Focus on moat and scale.\n\n🔥 Top Priorities:\n  1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.\n  2. With $2,000/mo profit, reinvest in ads or part-time help.\n",
   ],
   faq: [
     { q: "What is a good monthly growth rate for a SaaS?", a: "For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally." },
@@ -612,6 +710,7 @@ const engine: ToolEngine = {
     { q: "What's a healthy runway for a solopreneur?", a: "12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. This calculator shows both 'zero-revenue' and 'current pace' runway." },
     { q: "What is Burn Multiple and why does it matter?", a: "Burn Multiple = net burn ÷ net new MRR. It measures how much you're spending to generate each dollar of new recurring revenue. <1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, >2.0× means you're over-spending relative to growth. Profitable businesses have no burn multiple." },
     { q: "How accurate are these projections?", a: "The projection is mathematically precise given your inputs, but real-world growth is lumpy. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with actual numbers." },
+    { q: "What's a good LTV:CAC ratio?", a: "A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means you're losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy." },
   ],
   howToUse: [
     "Enter your current Monthly Recurring Revenue (MRR).",
@@ -620,8 +719,11 @@ const engine: ToolEngine = {
     "Enter your total monthly expenses (hosting, tools, salary, etc.).",
     "Enter your cash on hand to calculate runway and financial buffer.",
     "Enter your ARPU (Average Revenue Per User) for subscriber counts.",
+    "Optionally enter a custom growth rate to test your own scenario.",
+    "Optionally enter your CAC (Customer Acquisition Cost) for payback and LTV:CAC.",
     "Select your projection period (6, 12, or 24 months).",
     "Review the Revenue Snapshot for your net growth and ending MRR.",
+    "Scan the Monthly MRR Breakdown to see month-by-month progress.",
     "Check Runway & Breakeven to know how long your cash will last.",
     "Study the Burn & Efficiency Metrics — Rule of 40, Burn Multiple, ratios.",
     "Explore What-If scenarios to see the impact of better churn or lower costs.",

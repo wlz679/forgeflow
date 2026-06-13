@@ -293,6 +293,8 @@ export const tools: ToolMeta[] = [
       { name: 'monthlyExpenses', label: 'Monthly Expenses ($)', placeholder: 'e.g. 3000', type: 'number' },
       { name: 'cashOnHand', label: 'Cash on Hand ($)', placeholder: 'e.g. 60000', type: 'number' },
       { name: 'arpu', label: 'Avg Revenue Per User ($)', placeholder: 'e.g. 25', type: 'number' },
+      { name: 'customGrowthRate', label: 'Custom Growth Rate (%)', placeholder: 'e.g. 7 (optional)', type: 'number' },
+      { name: 'cac', label: 'CAC — Customer Acquisition Cost ($)', placeholder: 'e.g. 200 (optional)', type: 'number' },
       { name: 'months', label: 'Projection Period', placeholder: '', type: 'select', options: ['6', '12', '24'] },
     ],
   },
