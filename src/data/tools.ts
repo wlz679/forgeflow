@@ -283,8 +283,8 @@ export const tools: ToolMeta[] = [
   },
   {
     slug: 'solopreneur-revenue-projector',
-    title: 'Revenue Projector',
-    description: 'Project MRR, runway, breakeven, and burn metrics. Churn-adjusted net growth with 5 scenarios, what-if analysis, and personalized action plan.',
+    title: 'SaaS Financial Forecaster',
+    description: 'The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.',
     categoryId: 'A',
     inputs: [
       { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 5000', type: 'number' },

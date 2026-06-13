@@ -496,8 +496,8 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-freelance-rate-calculator.faq.4.a': { en: 'The calculator adjusts for regional markets. However, if you work remotely for US/EU clients, charge US/EU rates regardless of where you live.', zh: '计算器会根据区域市场调整。但如果你远程为美国/欧洲客户工作，不管你在哪里生活，都按美国/欧洲费率收。' },
 
   // --- C5: Revenue Projector ---
-  'tools.solopreneur-revenue-projector.title': { en: 'Revenue Projector', zh: '收入预测器' },
-  'tools.solopreneur-revenue-projector.description': { en: 'Project your MRR growth with quarterly milestones, compare growth scenarios, and see how long until your next revenue target.', zh: '预测MRR增长：季度里程碑、增长场景对比、到达下一收入目标的时间。' },
+  'tools.solopreneur-revenue-projector.title': { en: 'SaaS Financial Forecaster', zh: 'SaaS 财务预测器' },
+  'tools.solopreneur-revenue-projector.description': { en: 'The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.', zh: '完整的SaaS财务健康仪表盘：净增长预测、跑道、打平分析、烧钱指标、LTV、敏感性分析和假设情景。' },
   'tools.solopreneur-revenue-projector.input.currentMRR.label': { en: 'Current MRR ($)', zh: '当前MRR（$）' },
   'tools.solopreneur-revenue-projector.input.currentMRR.placeholder': { en: 'e.g. 2000', zh: '例如：2000' },
   'tools.solopreneur-revenue-projector.input.monthlyGrowthRate.label': { en: 'Monthly Growth Rate (%)', zh: '月增长率（%）' },

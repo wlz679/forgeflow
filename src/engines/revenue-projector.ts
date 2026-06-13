@@ -138,11 +138,19 @@ function projectRevenue(inputs: Record<string, string>): string[] {
       if (mths !== null && mths > 0) {
         anyMilestoneShown = true;
         if (mths <= 60) {
-          result += "• $" + Math.round(t / 1000) + "K MRR:  " + mths + " months\n";
+          // Sensitivity interval: ±2% net growth swing
+          const fastRate = netRate + 0.02;
+          const slowRate = Math.max(0.001, netRate - 0.02);
+          const fastMths = Math.ceil(Math.log(t / currentMRR) / Math.log(1 + fastRate));
+          const slowMths = Math.ceil(Math.log(t / currentMRR) / Math.log(1 + slowRate));
+          result += "• $" + Math.round(t / 1000) + "K MRR:  " + mths + " months [" + fastMths + "–" + slowMths + "]\n";
         } else {
           result += "• $" + Math.round(t / 1000) + "K MRR:  >5 years\n";
         }
       }
+    }
+    if (anyMilestoneShown) {
+      result += "  Range shows ±2% net growth variation.\n";
     }
   }
   if (!anyMilestoneShown && currentMRR > 0) {
@@ -288,6 +296,16 @@ function projectRevenue(inputs: Record<string, string>): string[] {
       result += "• MRR / Expense Ratio:     " + mrrExpenseRatio.toFixed(2) + "×  " + ratioColor(mrrExpenseRatio) + "\n";
       result += "  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n";
     }
+    // LTV (Customer Lifetime Value via ARPU ÷ churn)
+    if (arpu > 0 && churnRate > 0) {
+      const ltv = arpu / (churnRate / 100);
+      const ltvRatio = ltv / arpu;
+      function ltvColor(r: number): string { if (r >= 36) return "🟢"; if (r >= 12) return "🟡"; return "🔴"; }
+      result += "• LTV (Customer Lifetime): " + fmt(ltv) + "  (" + ltvRatio.toFixed(0) + "× ARPU)  " + ltvColor(ltvRatio) + "\n";
+      result += "  = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴\n\n";
+    } else if (arpu > 0 && churnRate === 0) {
+      result += "• LTV (Customer Lifetime): ∞  (zero churn) 🟢\n\n";
+    }
   } else {
     result += "Enter monthly expenses to see burn and efficiency metrics.\n\n";
   }
@@ -422,8 +440,9 @@ const customFn =
   "for(var q=1;q<=maxQ;q++){var mth=q*3;var mAt=mr*Math.pow(1+nr,mth);r+='\\u2022 Q'+q+' (Month '+mth+'):  '+fmt(mAt)+'/mo'+(q===maxQ?'  \\u2190 target':'')+'\\n';}" +
   "r+='\\n\\uD83C\\uDFAF Key Milestones\\n';" +
   "var tgts=[10000,25000,50000,100000];var anyShown=false;" +
-  "if(mr>0&&nr>0){for(var ti=0;ti<tgts.length;ti++){var tg=tgts[ti];if(tg<=mr)continue;var mth2=mthsTo(tg);if(mth2!==null&&mth2>0){anyShown=true;if(mth2<=60){r+='\\u2022 $'+Math.round(tg/1000)+'K MRR:  '+mth2+' months\\n';}else{r+='\\u2022 $'+Math.round(tg/1000)+'K MRR:  >5 years\\n';}}}}" +
+  "if(mr>0&&nr>0){for(var ti=0;ti<tgts.length;ti++){var tg=tgts[ti];if(tg<=mr)continue;var mth2=mthsTo(tg);if(mth2!==null&&mth2>0){anyShown=true;if(mth2<=60){var fastR=nr+0.02;var slowR=Math.max(0.001,nr-0.02);var fastM=Math.ceil(Math.log(tg/mr)/Math.log(1+fastR));var slowM=Math.ceil(Math.log(tg/mr)/Math.log(1+slowR));r+='\\u2022 $'+Math.round(tg/1000)+'K MRR:  '+mth2+' months ['+fastM+'\\u2013'+slowM+']\\n';}else{r+='\\u2022 $'+Math.round(tg/1000)+'K MRR:  >5 years\\n';}}}}" +
   "if(!anyShown&&mr>0){if(nr<=0){r+='With zero or negative net growth, no milestones can be projected.\\n';}}" +
+  "if(anyShown){r+='  Range shows \\u00b12% net growth variation.\\n';}" +
 
   // Section 3: Growth Scenarios
   "r+='\\n\\uD83D\\uDD04 Growth Scenarios ('+mo+'-Month Outlook)\\n';" +
@@ -522,6 +541,15 @@ const customFn =
   "r+='\\u2022 MRR / Expense Ratio:     '+mrrExp.toFixed(2)+'\\u00d7  '+r2Color(mrrExp)+'\\n';" +
   "r+='  \\u22652.0 \\uD83D\\uDFE2 | 1.0-2.0 \\uD83D\\uDFE1 | <1.0 \\uD83D\\uDD34\\n\\n';" +
   "}" +
+  // LTV
+  "if(arpu>0&&cr>0){" +
+  "var ltv=arpu/(cr/100);var ltvR=ltv/arpu;" +
+  "function ltvColor(r){if(r>=36)return '\\uD83D\\uDFE2';if(r>=12)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}" +
+  "r+='\\u2022 LTV (Customer Lifetime): '+fmt(ltv)+'  ('+ltvR.toFixed(0)+'\\u00d7 ARPU)  '+ltvColor(ltvR)+'\\n';" +
+  "r+='  = ARPU \\u00f7 monthly churn | \\u226536\\u00d7 \\uD83D\\uDFE2 | 12-36\\u00d7 \\uD83D\\uDFE1 | <12\\u00d7 \\uD83D\\uDD34\\n\\n';" +
+  "}else if(arpu>0&&cr===0){" +
+  "r+='\\u2022 LTV (Customer Lifetime): \\u221e  (zero churn) \\uD83D\\uDFE2\\n\\n';" +
+  "}" +
   "}else{r+='Enter monthly expenses to see burn and efficiency metrics.\\n\\n';}" +
   // ARPU + Subscribers
   "if(arpu>0&&subs>0){r+='\\u2022 Monthly ARPU:            '+fmt(arpu)+'\\n';r+='\\u2022 Subscribers:             '+subs+' (currentMRR \\u00f7 ARPU)\\n';}" +
@@ -560,8 +588,8 @@ const customFn =
 
 const engine: ToolEngine = {
   slug: "solopreneur-revenue-projector",
-  title: "Revenue Projector",
-  description: "Project MRR, runway, breakeven, and burn metrics. Churn-adjusted net growth with 5 scenarios, what-if analysis, and personalized action plan.",
+  title: "SaaS Financial Forecaster",
+  description: "The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.",
   category: "C",
   inputs: [
     { name: "currentMRR", label: "Current MRR ($)", placeholder: "e.g. 5000", type: "number" },
