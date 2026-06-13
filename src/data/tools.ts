@@ -53,13 +53,17 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-openai-token-calculator',
     title: 'OpenAI Token Calculator',
-    description: 'Estimate your OpenAI API costs based on model, token usage, and request volume.',
+    description: 'Compare OpenAI API costs across 14 models — GPT-5.5 to GPT-5 Nano, GPT-4.1 family, and o-series. Toggle batch pricing, prompt caching, and growth projections.',
     categoryId: 'B',
     inputs: [
-      { name: 'model', label: 'Model', placeholder: '', type: 'select', options: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo', 'gpt-4o-mini'] },
+      { name: 'models', label: 'Models (comma-separated)', placeholder: 'gpt-5-mini,gpt-5.5,gpt-4.1', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
       { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
       { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
+      { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
+      { name: 'cacheHitRate', label: 'Cache Hit Rate (%)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'projectionMonths', label: 'Projection Period (months)', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
   },
   {
