@@ -11,12 +11,16 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-burn-rate-calculator',
     title: 'Burn Rate Calculator',
-    description: 'Calculate your net monthly burn rate by comparing starting vs ending cash over a period. See how different cash levels affect your runway.',
+    description: 'Analyze monthly cash flow by cost category, calculate runway with exact run-out date, Burn Multiple, and Default Alive/Dead status.',
     categoryId: 'A',
     inputs: [
-      { name: 'startingCash', label: 'Starting Cash ($)', placeholder: 'e.g. 100000', type: 'number' },
-      { name: 'endingCash', label: 'Ending Cash ($)', placeholder: 'e.g. 70000', type: 'number' },
-      { name: 'months', label: 'Number of Months', placeholder: 'e.g. 6', type: 'number' },
+      { name: 'monthlyRevenue', label: 'Monthly Revenue ($)', placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'teamCost', label: 'Team Cost ($/mo)', placeholder: 'e.g. 8000', type: 'number' },
+      { name: 'infraCost', label: 'Infrastructure & SaaS ($/mo)', placeholder: 'e.g. 500', type: 'number' },
+      { name: 'marketingCost', label: 'Marketing & Ads ($/mo)', placeholder: 'e.g. 2000', type: 'number' },
+      { name: 'opsCost', label: 'Operations & Misc ($/mo)', placeholder: 'e.g. 1500', type: 'number' },
+      { name: 'currentCash', label: 'Current Cash Balance ($)', placeholder: 'e.g. 50000', type: 'number' },
+      { name: 'netNewRevenue', label: 'Net New Revenue Added ($/mo)', placeholder: 'e.g. 3000 (optional)', type: 'number' },
     ],
   },
   {

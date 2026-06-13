@@ -883,6 +883,8 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-burn-rate-calculator.input.opsCost.placeholder': { en: 'e.g. 1500', zh: '例如：1500' },
   'tools.solopreneur-burn-rate-calculator.input.currentCash.label': { en: 'Current Cash Balance ($)', zh: '当前现金余额（$）' },
   'tools.solopreneur-burn-rate-calculator.input.currentCash.placeholder': { en: 'e.g. 50000', zh: '例如：50000' },
+  'tools.solopreneur-burn-rate-calculator.input.netNewRevenue.label': { en: 'Net New Revenue Added ($/mo)', zh: '月净新增收入（$）' },
+  'tools.solopreneur-burn-rate-calculator.input.netNewRevenue.placeholder': { en: 'e.g. 3000 (optional)', zh: '例如：3000（可选）' },
   'tools.solopreneur-burn-rate-calculator.how_to_use.0': { en: 'Enter your average monthly revenue (leave at 0 if pre-revenue).', zh: '输入月均收入（没有收入就填0）。' },
   'tools.solopreneur-burn-rate-calculator.how_to_use.1': { en: 'Fill in your team costs — salaries, contractors, benefits.', zh: '填写团队成本——薪资、外包、福利。' },
   'tools.solopreneur-burn-rate-calculator.how_to_use.2': { en: 'Add up all SaaS subscriptions and cloud hosting as Infrastructure.', zh: '把所有SaaS订阅和云服务加起来填入基础设施。' },
