@@ -452,6 +452,17 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
       var staticResults = document.getElementById('static-results');
       var copyAllBtn = document.getElementById('copy-all');
 
+      // Beautify static example on page load
+      if (isOpenAI) {
+        var staticMono = staticResults.querySelector('.font-mono');
+        if (staticMono) {
+          var stext = staticMono.textContent || '';
+          staticMono.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+          staticMono.classList.add('space-y-5');
+          staticMono.innerHTML = beautifyOpenAI(stext);
+        }
+      }
+
       // --- Preset buttons ---
       var presetBtns = document.querySelectorAll('.preset-btn');
       presetBtns.forEach(function(btn) {
