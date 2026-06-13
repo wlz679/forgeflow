@@ -11,18 +11,18 @@ export interface BlogPost {
 
 export const blogPosts: BlogPost[] = tools.map(tool => ({
   slug: `best-${tool.slug}`,
-  title: `Best ${tool.title} for Solopreneurs (2026)`,
+  title: `Best ${tool.title} for Entrepreneurs (2026)`,
   toolSlug: tool.slug,
   toolName: tool.title,
   excerpt: `Discover the best ${tool.title.toLowerCase()} to grow your solo business. Free, no signup required. Learn how to use this tool effectively with our step-by-step guide.`,
   content: [
     `## What is the ${tool.title}?`,
     ``,
-    `The ${tool.title} is a free online tool designed to help solopreneurs and indie makers ${tool.description.toLowerCase()}. It's part of our suite of 30 free solopreneur tools, all built to help you build and grow your business without spending a dime.`,
+    `The ${tool.title} is a free online tool designed to help entrepreneurs and indie makers ${tool.description.toLowerCase()}. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.`,
     ``,
-    `## Why Solopreneurs Need This Tool`,
+    `## Why Entrepreneurs Need This Tool`,
     ``,
-    `Every successful solopreneur knows that the right tools make a huge difference. The ${tool.title} saves you time and helps you make better decisions by providing instant, actionable results based on proven startup and indie maker best practices.`,
+    `Every successful business owner knows that the right tools make a huge difference. The ${tool.title} saves you time and helps you make better decisions by providing instant, actionable results based on proven startup and indie maker best practices.`,
     ``,
     `Whether you're validating your first SaaS idea or scaling your existing business, this tool gives you professional-level assistance in seconds — no experience required.`,
     ``,
@@ -48,6 +48,6 @@ export const blogPosts: BlogPost[] = tools.map(tool => ({
     ``,
     `## Get Started Now`,
     ``,
-    `Ready to level up your solopreneur journey? Try the ${tool.title} now — it's completely free, requires no signup, and works instantly in your browser.`,
+    `Ready to level up your business journey? Try the ${tool.title} now — it's completely free, requires no signup, and works instantly in your browser.`,
   ].join('\n'),
 }));

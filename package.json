@@ -12,13 +12,14 @@
     "translate": "tsx scripts/translate-wordpools.ts"
   },
   "keywords": [
-    "solopreneur",
-    "indie-maker",
-    "startup-tools"
+    "business-calculator",
+    "saas-calculator",
+    "startup-tools",
+    "calckit"
   ],
-  "author": "",
+  "author": "CalcKit",
   "license": "ISC",
-  "description": "Free Solopreneur Tools - 30 tools to build & grow your business",
+  "description": "CalcKit — Free business calculators for smarter decisions",
   "dependencies": {
     "@astrojs/sitemap": "^3.5.0",
     "@tailwindcss/vite": "^4.3.0",
