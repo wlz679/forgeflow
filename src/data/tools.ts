@@ -284,11 +284,15 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-revenue-projector',
     title: 'Revenue Projector',
-    description: 'Project your MRR growth over 6, 12, or 24 months. Compare different growth rate scenarios to plan your financial future.',
+    description: 'Project MRR, runway, breakeven, and burn metrics. Churn-adjusted net growth with 5 scenarios, what-if analysis, and personalized action plan.',
     categoryId: 'A',
     inputs: [
-      { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 2000', type: 'number' },
-      { name: 'monthlyGrowthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'monthlyGrowthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 8', type: 'number' },
+      { name: 'monthlyChurnRate', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'monthlyExpenses', label: 'Monthly Expenses ($)', placeholder: 'e.g. 3000', type: 'number' },
+      { name: 'cashOnHand', label: 'Cash on Hand ($)', placeholder: 'e.g. 60000', type: 'number' },
+      { name: 'arpu', label: 'Avg Revenue Per User ($)', placeholder: 'e.g. 25', type: 'number' },
       { name: 'months', label: 'Projection Period', placeholder: '', type: 'select', options: ['6', '12', '24'] },
     ],
   },
