@@ -13,30 +13,31 @@ interface ModelInfo {
   contextWindow: string;
   batchInput: number;
   batchOutput: number;
+  order: number;
 }
 
 const MODELS: Record<string, ModelInfo> = {
   // GPT-5 Family
-  'gpt-5.5':       { input: 5.00, output: 30.00, name: 'GPT-5.5',       family: 'gpt5',     contextWindow: '1M',   batchInput: 2.50, batchOutput: 15.00 },
-  'gpt-5.2':       { input: 1.75, output: 14.00, name: 'GPT-5.2',       family: 'gpt5',     contextWindow: '400K', batchInput: 0.875, batchOutput: 7.00 },
-  'gpt-5':         { input: 1.25, output: 10.00, name: 'GPT-5',         family: 'gpt5',     contextWindow: '400K', batchInput: 0.625, batchOutput: 5.00 },
-  'gpt-5-mini':    { input: 0.25, output: 2.00,  name: 'GPT-5 Mini',    family: 'gpt5',     contextWindow: '400K', batchInput: 0.125, batchOutput: 1.00 },
-  'gpt-5-nano':    { input: 0.05, output: 0.40,  name: 'GPT-5 Nano',    family: 'gpt5',     contextWindow: '400K', batchInput: 0.025, batchOutput: 0.20 },
+  'gpt-5.5':       { input: 5.00, output: 30.00, name: 'GPT-5.5',       family: 'gpt5',     contextWindow: '1M',   batchInput: 2.50, batchOutput: 15.00, order: 1 },
+  'gpt-5.2':       { input: 1.75, output: 14.00, name: 'GPT-5.2',       family: 'gpt5',     contextWindow: '400K', batchInput: 0.875, batchOutput: 7.00, order: 2 },
+  'gpt-5':         { input: 1.25, output: 10.00, name: 'GPT-5',         family: 'gpt5',     contextWindow: '400K', batchInput: 0.625, batchOutput: 5.00, order: 3 },
+  'gpt-5-mini':    { input: 0.25, output: 2.00,  name: 'GPT-5 Mini',    family: 'gpt5',     contextWindow: '400K', batchInput: 0.125, batchOutput: 1.00, order: 4 },
+  'gpt-5-nano':    { input: 0.05, output: 0.40,  name: 'GPT-5 Nano',    family: 'gpt5',     contextWindow: '400K', batchInput: 0.025, batchOutput: 0.20, order: 5 },
 
   // GPT-4.1 Family
-  'gpt-4.1':       { input: 2.00, output: 8.00,  name: 'GPT-4.1',       family: 'gpt41',    contextWindow: '1M',   batchInput: 1.00, batchOutput: 4.00 },
-  'gpt-4.1-mini':  { input: 0.40, output: 1.60,  name: 'GPT-4.1 Mini',  family: 'gpt41',    contextWindow: '1M',   batchInput: 0.20, batchOutput: 0.80 },
-  'gpt-4.1-nano':  { input: 0.10, output: 0.40,  name: 'GPT-4.1 Nano',  family: 'gpt41',    contextWindow: '1M',   batchInput: 0.05, batchOutput: 0.20 },
+  'gpt-4.1':       { input: 2.00, output: 8.00,  name: 'GPT-4.1',       family: 'gpt41',    contextWindow: '1M',   batchInput: 1.00, batchOutput: 4.00, order: 6 },
+  'gpt-4.1-mini':  { input: 0.40, output: 1.60,  name: 'GPT-4.1 Mini',  family: 'gpt41',    contextWindow: '1M',   batchInput: 0.20, batchOutput: 0.80, order: 7 },
+  'gpt-4.1-nano':  { input: 0.10, output: 0.40,  name: 'GPT-4.1 Nano',  family: 'gpt41',    contextWindow: '1M',   batchInput: 0.05, batchOutput: 0.20, order: 8 },
 
   // o-series
-  'o3':            { input: 2.00, output: 8.00,  name: 'o3',            family: 'o-series', contextWindow: '200K', batchInput: 1.00, batchOutput: 4.00 },
-  'o4-mini':       { input: 1.10, output: 4.40,  name: 'o4 Mini',       family: 'o-series', contextWindow: '200K', batchInput: 0.55, batchOutput: 2.20 },
+  'o3':            { input: 2.00, output: 8.00,  name: 'o3',            family: 'o-series', contextWindow: '200K', batchInput: 1.00, batchOutput: 4.00, order: 9 },
+  'o4-mini':       { input: 1.10, output: 4.40,  name: 'o4 Mini',       family: 'o-series', contextWindow: '200K', batchInput: 0.55, batchOutput: 2.20, order: 10 },
 
   // Legacy
-  'gpt-4o':        { input: 2.50, output: 10.00, name: 'GPT-4o',        family: 'legacy',   contextWindow: '128K', batchInput: 1.25, batchOutput: 5.00 },
-  'gpt-4o-mini':   { input: 0.15, output: 0.60,  name: 'GPT-4o Mini',   family: 'legacy',   contextWindow: '128K', batchInput: 0.075, batchOutput: 0.30 },
-  'gpt-4-turbo':   { input: 10.00, output: 30.00, name: 'GPT-4 Turbo',  family: 'legacy',   contextWindow: '128K', batchInput: 5.00, batchOutput: 15.00 },
-  'gpt-3.5-turbo': { input: 0.50, output: 1.50,  name: 'GPT-3.5 Turbo', family: 'legacy',   contextWindow: '16K',  batchInput: 0.25, batchOutput: 0.75 },
+  'gpt-4o':        { input: 2.50, output: 10.00, name: 'GPT-4o',        family: 'legacy',   contextWindow: '128K', batchInput: 1.25, batchOutput: 5.00, order: 11 },
+  'gpt-4o-mini':   { input: 0.15, output: 0.60,  name: 'GPT-4o Mini',   family: 'legacy',   contextWindow: '128K', batchInput: 0.075, batchOutput: 0.30, order: 12 },
+  'gpt-4-turbo':   { input: 10.00, output: 30.00, name: 'GPT-4 Turbo',  family: 'legacy',   contextWindow: '128K', batchInput: 5.00, batchOutput: 15.00, order: 13 },
+  'gpt-3.5-turbo': { input: 0.50, output: 1.50,  name: 'GPT-3.5 Turbo', family: 'legacy',   contextWindow: '16K',  batchInput: 0.25, batchOutput: 0.75, order: 14 },
 };
 
 // Family labels with text — available for UI consumption (e.g. filter dropdowns, legend)
@@ -164,10 +165,11 @@ function calculate(inputs: Record<string, string>): string[] {
     allCosts.push({ key, info, inputPrice, outputPrice, costPerReq, monthlyCost });
   }
 
-  // Sort by monthly cost ascending
-  allCosts.sort((a, b) => a.monthlyCost - b.monthlyCost);
-  const cheapest = allCosts[0];
-  const maxCost = allCosts[allCosts.length - 1].monthlyCost;
+  // Sort by display order (newest model first)
+  allCosts.sort((a, b) => a.info.order - b.info.order);
+  // Cheapest is still determined by cost, not order
+  const cheapest = allCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
+  const maxCost = allCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max).monthlyCost;
 
   // Build a lookup for selected models
   const selectedCosts: CostEntry[] = [];
@@ -337,10 +339,10 @@ function calculate(inputs: Record<string, string>): string[] {
   // Cheapest overall
   out.push('\u{1F3C6} Cheapest: ' + cheapest.info.name + ' at ' + fmt(cheapest.monthlyCost) + '/mo');
 
-  // Best value (cheapest non-legacy, non-Nano)
-  const bestValue = allCosts.find(
-    (c) => c.info.family !== 'legacy' && !c.info.name.toLowerCase().includes('nano'),
-  );
+  // Best value (cheapest non-legacy, non-Nano by cost)
+  const bestValue = allCosts
+    .filter(c => c.info.family !== 'legacy' && !c.info.name.toLowerCase().includes('nano'))
+    .reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min, allCosts[0]);
   if (bestValue) {
     out.push('⭐ Best value (non-legacy, non-Nano): ' + bestValue.info.name + ' at ' + fmt(bestValue.monthlyCost) + '/mo');
   }
@@ -412,20 +414,20 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // Model data: full keys matching MODELS constant → {i,o,f,c,bi,bo,n}
   "var M={};" +
-  "M['gpt-5.5']={i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT-5.5'};" +
-  "M['gpt-5.2']={i:1.75,o:14,f:'g5',c:'400K',bi:0.875,bo:7,n:'GPT-5.2'};" +
-  "M['gpt-5']={i:1.25,o:10,f:'g5',c:'400K',bi:0.625,bo:5,n:'GPT-5'};" +
-  "M['gpt-5-mini']={i:0.25,o:2,f:'g5',c:'400K',bi:0.125,bo:1,n:'GPT-5 Mini'};" +
-  "M['gpt-5-nano']={i:0.05,o:0.4,f:'g5',c:'400K',bi:0.025,bo:0.2,n:'GPT-5 Nano'};" +
-  "M['gpt-4.1']={i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT-4.1'};" +
-  "M['gpt-4.1-mini']={i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT-4.1 Mini'};" +
-  "M['gpt-4.1-nano']={i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT-4.1 Nano'};" +
-  "M['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'o3'};" +
-  "M['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'o4 Mini'};" +
-  "M['gpt-4o']={i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT-4o'};" +
-  "M['gpt-4o-mini']={i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT-4o Mini'};" +
-  "M['gpt-4-turbo']={i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT-4 Turbo'};" +
-  "M['gpt-3.5-turbo']={i:0.5,o:1.5,f:'lg',c:'16K',bi:0.25,bo:0.75,n:'GPT-3.5 Turbo'};" +
+  "M['gpt-5.5']={i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT-5.5',od:1};" +
+  "M['gpt-5.2']={i:1.75,o:14,f:'g5',c:'400K',bi:0.875,bo:7,n:'GPT-5.2',od:2};" +
+  "M['gpt-5']={i:1.25,o:10,f:'g5',c:'400K',bi:0.625,bo:5,n:'GPT-5',od:3};" +
+  "M['gpt-5-mini']={i:0.25,o:2,f:'g5',c:'400K',bi:0.125,bo:1,n:'GPT-5 Mini',od:4};" +
+  "M['gpt-5-nano']={i:0.05,o:0.4,f:'g5',c:'400K',bi:0.025,bo:0.2,n:'GPT-5 Nano',od:5};" +
+  "M['gpt-4.1']={i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT-4.1',od:6};" +
+  "M['gpt-4.1-mini']={i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT-4.1 Mini',od:7};" +
+  "M['gpt-4.1-nano']={i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT-4.1 Nano',od:8};" +
+  "M['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'o3',od:9};" +
+  "M['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'o4 Mini',od:10};" +
+  "M['gpt-4o']={i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT-4o',od:11};" +
+  "M['gpt-4o-mini']={i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT-4o Mini',od:12};" +
+  "M['gpt-4-turbo']={i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT-4 Turbo',od:13};" +
+  "M['gpt-3.5-turbo']={i:0.5,o:1.5,f:'lg',c:'16K',bi:0.25,bo:0.75,n:'GPT-3.5 Turbo',od:14};" +
   // Family icons
   "var FI={g5:'\\uD83D\\uDD35',g41:'\\uD83D\\uDFE2',os:'\\uD83D\\uDFE0',lg:'\\u26AA'};" +
   // Default selected (full keys matching MODELS)
@@ -449,8 +451,9 @@ const customFn =
   "var ip=pm==='batch'?m.bi:m.i;var op=pm==='batch'?m.bo:m.o;" +
   "var cpr=(it/1e6)*ip+(ot/1e6)*op;var mc=cpr*rd*30;" +
   "AC.push({k:k,m:m,ip:ip,op:op,cpr:cpr,mc:mc});}" +
-  "AC.sort(function(a,b){return a.mc-b.mc});" +
-  "var ch=AC[0];var maxC=AC[AC.length-1].mc;" +
+  "AC.sort(function(a,b){return a.m.od-b.m.od});" +
+  "var ch=AC.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var maxC=AC.reduce(function(max,c){return c.mc>max.mc?c:max;}).mc;" +
   // Selected costs
   "var SC=[];for(var i=0;i<SK.length;i++){" +
   "var f=AC.find(function(c){return c.k===SK[i]});if(f)SC.push(f);}" +
@@ -529,7 +532,8 @@ const customFn =
   "r.push('\\uD83D\\uDCB0 Savings Insights');" +
   "r.push(Array(61).join('\\u2501'));" +
   "r.push('\\uD83C\\uDFC6 Cheapest: '+ch.m.n+' at '+fm(ch.mc)+'/mo');" +
-  "var bv=AC.find(function(c){return c.m.f!=='lg'&&c.m.n.toLowerCase().indexOf('nano')<0;});" +
+  "var flt=AC.filter(function(c){return c.m.f!=='lg'&&c.m.n.toLowerCase().indexOf('nano')<0;});" +
+  "var bv=flt.length>0?flt.reduce(function(mn,c){return c.mc<mn.mc?c:mn;}):null;" +
   "if(bv){r.push('\\u2B50 Best value (non-legacy, non-Nano): '+bv.m.n+' at '+fm(bv.mc)+'/mo');}" +
   "if(SC.length>=2){" +
   "var meS=SC.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
@@ -587,20 +591,20 @@ const engine: ToolEngine = {
 
 📊 Cost Comparison (14 Models)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔵 GPT-5 Nano          │ █ $0.75 🏆 cheapest
-🟢 GPT-4.1 Nano        │ █ $0.90
-⚪ GPT-4o Mini          │ █ $1.35
-🟢 GPT-4.1 Mini        │ ██ $3.60
-🔵 GPT-5 Mini          │ ██ $3.75
-⚪ GPT-3.5 Turbo        │ ██ $3.75
-🟠 o4 Mini             │ █████ $9.90
-🟢 GPT-4.1             │ ██████████ $18.00
-🟠 o3                  │ ██████████ $18.00
-🔵 GPT-5               │ ██████████ $18.75
-⚪ GPT-4o               │ ████████████ $22.50
-🔵 GPT-5.2             │ ██████████████ $26.25
 🔵 GPT-5.5             │ ████████████████████████████████ $60.00
+🔵 GPT-5.2             │ ██████████████ $26.25
+🔵 GPT-5               │ ██████████ $18.75
+🔵 GPT-5 Mini          │ ██ $3.75
+🔵 GPT-5 Nano          │ █ $0.75 🏆 cheapest
+🟢 GPT-4.1             │ ██████████ $18.00
+🟢 GPT-4.1 Mini        │ ██ $3.60
+🟢 GPT-4.1 Nano        │ █ $0.90
+🟠 o3                  │ ██████████ $18.00
+🟠 o4 Mini             │ █████ $9.90
+⚪ GPT-4o               │ ████████████ $22.50
+⚪ GPT-4o Mini          │ █ $1.35
 ⚪ GPT-4 Turbo          │ ████████████████████████████████████████ $75.00
+⚪ GPT-3.5 Turbo        │ ██ $3.75
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📋 Selected Model Details
