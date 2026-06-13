@@ -7,7 +7,7 @@ export interface ToolMeta {
 }
 
 export const tools: ToolMeta[] = [
-  // ===== Category A: Market Sizing =====
+  // ===== Category A: SaaS Metrics =====
   {
     slug: 'solopreneur-burn-rate-calculator',
     title: 'Burn Rate Calculator',
@@ -133,7 +133,7 @@ export const tools: ToolMeta[] = [
     ],
   },
 
-  // Unit Economics — per-customer profitability analysis
+  // ===== Category B: AI Cost Tools =====
   {
     slug: 'solopreneur-unit-economics-calculator',
     title: 'Unit Economics Calculator',
@@ -147,12 +147,12 @@ export const tools: ToolMeta[] = [
     ],
   },
 
-  // ===== Category B: Branding & Naming =====
+  // ===== Category C: Valuation & Exit =====
   {
     slug: 'solopreneur-cac-calculator',
     title: 'CAC Calculator',
     description: 'Calculate your Customer Acquisition Cost and payback period. Compare different spend scenarios to find your most efficient acquisition budget.',
-    categoryId: 'B',
+    categoryId: 'C',
     inputs: [
       { name: 'marketingSpend', label: 'Marketing Spend ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'salesSpend', label: 'Sales Spend ($)', placeholder: 'e.g. 3000', type: 'number' },
@@ -165,7 +165,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-ltv-calculator',
     title: 'LTV Calculator',
     description: 'Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.',
-    categoryId: 'B',
+    categoryId: 'C',
     inputs: [
       { name: 'monthlyRevenuePerUser', label: 'Monthly Revenue per User ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },
@@ -177,7 +177,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-saas-valuation-calculator',
     title: 'SaaS Valuation Calculator',
     description: 'Estimate your SaaS company valuation based on ARR, growth rate, and profit margin. See how different multiples and scenarios affect your exit value.',
-    categoryId: 'B',
+    categoryId: 'C',
     inputs: [
       { name: 'annualRevenue', label: 'Annual Revenue / ARR ($)', placeholder: 'e.g. 200000', type: 'number' },
       { name: 'growthRate', label: 'YoY Growth Rate (%)', placeholder: 'e.g. 50', type: 'number' },
@@ -185,12 +185,12 @@ export const tools: ToolMeta[] = [
     ],
   },
 
-  // ===== Category C: Pricing & Finance =====
+  // ===== Category D: Freelance Pricing =====
   {
     slug: 'solopreneur-affiliate-income-calculator',
     title: 'Affiliate Income Calculator',
     description: 'Estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission.',
-    categoryId: 'C',
+    categoryId: 'D',
     inputs: [
       { name: 'monthlyTraffic', label: 'Monthly Traffic (visitors)', placeholder: 'e.g. 50000', type: 'number' },
       { name: 'conversionRate', label: 'Conversion Rate (%)', placeholder: 'e.g. 2', type: 'number' },
@@ -212,7 +212,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-course-pricing-calculator',
     title: 'Course Pricing Calculator',
     description: 'Find the optimal course price to hit your income goals, factoring in platform fees. Compare revenue at different price points.',
-    categoryId: 'C',
+    categoryId: 'D',
     inputs: [
       { name: 'targetMonthlyIncome', label: 'Target Monthly Income ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'estimatedBuyersPerMonth', label: 'Est. Buyers Per Month', placeholder: 'e.g. 50', type: 'number' },
@@ -223,7 +223,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-email-list-revenue-calculator',
     title: 'Email List Revenue Calculator',
     description: 'Calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics.',
-    categoryId: 'C',
+    categoryId: 'D',
     inputs: [
       { name: 'subscriberCount', label: 'Number of Subscribers', placeholder: 'e.g. 10000', type: 'number' },
       { name: 'openRate', label: 'Open Rate (%)', placeholder: 'e.g. 25', type: 'number' },
@@ -236,7 +236,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-freelance-rate-calculator',
     title: 'Freelance Rate Calculator',
     description: 'Calculate your ideal hourly, daily, and monthly rate based on your skill, experience level, and market location.',
-    categoryId: 'C',
+    categoryId: 'D',
     inputs: [
       { name: 'skill', label: 'Your Skill', placeholder: '', type: 'select', options: ['developer', 'designer', 'writer', 'marketer', 'consultant'] },
       { name: 'experience', label: 'Experience Level', placeholder: '', type: 'select', options: ['junior', 'mid', 'senior', 'expert'] },
@@ -247,7 +247,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-hourly-vs-fixed-calculator',
     title: 'Hourly vs Fixed Rate Calculator',
     description: 'Calculate the hourly rate, monthly retainer, and project equivalents needed to reach your annual income goal.',
-    categoryId: 'C',
+    categoryId: 'D',
     inputs: [
       { name: 'annualIncomeGoal', label: 'Annual Income Goal ($)', placeholder: 'e.g. 100000', type: 'number' },
       { name: 'billableHoursPerWeek', label: 'Billable Hours Per Week', placeholder: 'e.g. 30', type: 'number' },
@@ -257,19 +257,23 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-mrr-calculator',
     title: 'MRR Calculator',
-    description: 'Calculate your Monthly Recurring Revenue from subscriber count and pricing. See how different subscriber levels and prices scale.',
-    categoryId: 'C',
+    description: 'Track your MRR health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.',
+    categoryId: 'A',
     inputs: [
-      { name: 'subscriberCount', label: 'Number of Subscribers', placeholder: 'e.g. 500', type: 'number' },
+      { name: 'subscriberCount', label: 'Current Subscribers', placeholder: 'e.g. 500', type: 'number' },
       { name: 'monthlyPrice', label: 'Monthly Price ($)', placeholder: 'e.g. 29', type: 'number' },
-      { name: 'annualDiscount', label: 'Annual Plan Discount', placeholder: '', type: 'select', options: ['0%', '10%', '20%', '30%'] },
+      { name: 'monthlyChurnRate', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'expansionMRR', label: 'Expansion MRR ($/mo)', placeholder: 'e.g. 800 (upgrades & add-ons)', type: 'number' },
+      { name: 'newSubsPerMonth', label: 'New Subscribers / Month', placeholder: 'e.g. 100', type: 'number' },
+      { name: 'contractionMRR', label: 'Contraction MRR ($/mo)', placeholder: 'e.g. 150 (downgrades & reductions)', type: 'number' },
+      { name: 'reactivationMRR', label: 'Reactivation MRR ($/mo)', placeholder: 'e.g. 100 (returned customers)', type: 'number' },
     ],
   },
   {
     slug: 'solopreneur-project-profitability-calculator',
     title: 'Project Profitability Calculator',
     description: 'Calculate profit, effective hourly rate, and profit margin for any freelance project. Compare outcomes at different cost rates.',
-    categoryId: 'C',
+    categoryId: 'D',
     inputs: [
       { name: 'projectRevenue', label: 'Project Revenue ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'hoursEstimated', label: 'Estimated Hours', placeholder: 'e.g. 40', type: 'number' },
@@ -281,7 +285,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-revenue-projector',
     title: 'Revenue Projector',
     description: 'Project your MRR growth over 6, 12, or 24 months. Compare different growth rate scenarios to plan your financial future.',
-    categoryId: 'C',
+    categoryId: 'A',
     inputs: [
       { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 2000', type: 'number' },
       { name: 'monthlyGrowthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
@@ -292,7 +296,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-saas-pricing-planner',
     title: 'SaaS Pricing Planner',
     description: 'Compare flat, tiered, usage-based, and freemium pricing models. Get personalized recommendations based on your product type, audience, and competitor prices.',
-    categoryId: 'C',
+    categoryId: 'E',
     inputs: [
       { name: 'productType', label: 'Product Type', placeholder: '', type: 'select', options: ['SaaS', 'ebook', 'course', 'template', 'newsletter'] },
       { name: 'targetCustomer', label: 'Target Customer', placeholder: '', type: 'select', options: ['b2b', 'b2c', 'developers', 'creators'] },
@@ -300,12 +304,12 @@ export const tools: ToolMeta[] = [
     ],
   },
 
-  // ===== Category D: Landing Page & Copy =====
+  // ===== Category E: Cost & Efficiency =====
   {
     slug: 'solopreneur-employee-cost-calculator',
     title: 'Employee Cost Calculator',
     description: 'Calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. Compare costs across salary levels and locations.',
-    categoryId: 'D',
+    categoryId: 'E',
     inputs: [
       { name: 'annualSalary', label: 'Annual Base Salary ($)', placeholder: 'e.g. 80000', type: 'number' },
       { name: 'benefitsPercentage', label: 'Benefits (% of salary)', placeholder: 'e.g. 30', type: 'number' },
@@ -316,7 +320,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-meeting-cost-calculator',
     title: 'Meeting Cost Calculator',
     description: 'Calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.',
-    categoryId: 'D',
+    categoryId: 'E',
     inputs: [
       { name: 'attendees', label: 'Number of Attendees', placeholder: 'e.g. 6', type: 'number' },
       { name: 'avgHourlyRate', label: 'Avg Hourly Rate ($)', placeholder: 'e.g. 75', type: 'number' },
@@ -325,12 +329,12 @@ export const tools: ToolMeta[] = [
     ],
   },
 
-  // ===== Category E: Launch & Growth =====
+  // ===== Category F: Investment & ROI =====
   {
     slug: 'solopreneur-equity-dilution-calculator',
     title: 'Equity Dilution Calculator',
     description: 'Model how investment rounds dilute founder equity. Calculate post-money valuation, investor ownership, and your remaining shares after funding.',
-    categoryId: 'E',
+    categoryId: 'C',
     inputs: [
       { name: 'companyValuation', label: 'Pre-Money Valuation ($)', placeholder: 'e.g. 5000000', type: 'number' },
       { name: 'investmentAmount', label: 'Investment Amount ($)', placeholder: 'e.g. 1000000', type: 'number' },
@@ -341,7 +345,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-freelance-tax-calculator',
     title: 'Freelance Tax Calculator',
     description: 'Estimate your freelance taxes across 5 countries. See your taxable income, quarterly payments, effective tax rate, and monthly take-home pay.',
-    categoryId: 'E',
+    categoryId: 'F',
     inputs: [
       { name: 'annualIncome', label: 'Annual Income ($)', placeholder: 'e.g. 100000', type: 'number' },
       { name: 'businessExpenses', label: 'Business Expenses ($)', placeholder: 'e.g. 15000', type: 'number' },
@@ -363,7 +367,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-sponsorship-rate-calculator',
     title: 'Sponsorship Rate Calculator',
     description: 'Estimate what brands will pay to sponsor your content. Calculate CPM-based rates for podcasts, newsletters, YouTube, and blogs.',
-    categoryId: 'E',
+    categoryId: 'F',
     inputs: [
       { name: 'monthlyDownloads', label: 'Monthly Downloads / Listens', placeholder: 'e.g. 10000', type: 'number' },
       { name: 'emailSubscribers', label: 'Email Subscribers', placeholder: 'e.g. 5000', type: 'number' },
@@ -375,7 +379,7 @@ export const tools: ToolMeta[] = [
     slug: 'solopreneur-time-value-calculator',
     title: 'Time Value Calculator',
     description: 'Discover what your time is really worth. Calculate your hourly rate and see the dollar cost of meetings, distractions, and daily time waste.',
-    categoryId: 'E',
+    categoryId: 'F',
     inputs: [
       { name: 'annualIncome', label: 'Annual Income ($)', placeholder: 'e.g. 100000', type: 'number' },
       { name: 'hoursPerWeek', label: 'Hours Worked Per Week', placeholder: 'e.g. 40', type: 'number' },
