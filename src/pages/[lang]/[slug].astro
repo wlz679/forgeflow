@@ -427,7 +427,7 @@ const schema = JSON.stringify({
                 var uFam = familyColors[uIcon] || familyColors['⚪'];
                 html += '<div class="flex items-center gap-2 text-xs py-1 px-2 rounded" style="background:' + uFam.bg + '">';
                 html += '<span class="font-semibold text-gray-800 w-24 shrink-0">' + uIcon + ' ' + esc(uName) + '</span>';
-                html += '<span class="text-gray-600">' + esc(uData.replace(/·/g, '<span class="text-gray-300 mx-1">·</span>')) + '</span>';
+                html += '<span class="text-gray-600">' + esc(uData).replace(/·/g, '<span class="text-gray-300 mx-1">·</span>') + '</span>';
                 html += '</div>';
               }
             }
