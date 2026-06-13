@@ -697,33 +697,23 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push("");
 
   // ================================================================
-  // Section 6: Usage Scenarios Table
+  // Section 6: Usage Scenarios — per-model rows
   // ================================================================
   out.push("\u{1F4C5} Usage Scenarios (monthly costs)");
   out.push(SEP.repeat(60));
 
-  // Header row
-  let usageHeader = pad("Reqs/Day", 10);
-  for (const item of selectedCosts) {
-    usageHeader += pad(item.info.name, 13);
-  }
-  out.push(usageHeader);
-
-  // Separator
-  let usageSep = DASH.repeat(8) + "  ";
-  for (let i = 0; i < selectedCosts.length; i++) {
-    usageSep += DASH.repeat(11) + "  ";
-  }
-  out.push(usageSep);
-
   const scenarioVolumes = [50, 100, 500, 1000, 5000, 10000];
-  for (const vol of scenarioVolumes) {
-    let row = pad(lc(vol), 10);
-    for (const item of selectedCosts) {
+  for (const item of selectedCosts) {
+    const icon = FAMILY_ICONS[item.info.family];
+    let line = icon + " " + item.info.name + ":  ";
+    const parts: string[] = [];
+    for (const vol of scenarioVolumes) {
       const mc = item.costPerReq * vol * 30;
-      row += pad(fmt(mc), 13);
+      const volLabel = vol >= 1000 ? (vol / 1000) + "K" : String(vol);
+      parts.push(volLabel + "→" + fmt(mc));
     }
-    out.push(row);
+    line += parts.join("  ·  ");
+    out.push(line);
   }
 
   return out;
@@ -879,14 +869,14 @@ const customFn =
   // Section 6: Usage Scenarios
   "r.push('\\uD83D\\uDCC5 Usage Scenarios (monthly costs)');" +
   "r.push(Array(61).join('\\u2501'));" +
-  "var uh=pd('Reqs/Day',10);for(var i=0;i<SC.length;i++){uh+=pd(SC[i].m.n,13);}r.push(uh);" +
-  "var us=Array(9).join('\\u2500')+'  ';" +
-  "for(var i=0;i<SC.length;i++){us+=Array(12).join('\\u2500')+'  ';}r.push(us);" +
   "var sv=[50,100,500,1000,5000,10000];" +
+  "for(var j=0;j<SC.length;j++){" +
+  "var itm2=SC[j];var ic2=FI[itm2.m.f];" +
+  "var line=ic2+' '+itm2.m.n+':  ';var pts=[];" +
   "for(var i=0;i<sv.length;i++){" +
-  "var v=sv[i];var row=pd(lc(v),10);" +
-  "for(var j=0;j<SC.length;j++){row+=pd(fm(SC[j].cpr*v*30),13);}" +
-  "r.push(row);}" +
+  "var v=sv[i];var vl=v>=1000?(v/1000)+'K':String(v);" +
+  "pts.push(vl+'\\u2192'+fm(itm2.cpr*v*30));}" +
+  "line+=pts.join('  \\u00b7  ');r.push(line);}" +
   "return r;";
 
 // ============================================================
@@ -1022,14 +1012,9 @@ Annual:         $216.00
 
 📅 Usage Scenarios (monthly costs)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Reqs/Day  GPT-5 Mini   GPT-5.5      GPT-4.1
-────────  ───────────  ───────────  ───────────
-50        $1.88        $30.00       $9.00
-100       $3.75        $60.00       $18.00
-500       $18.75       $300.00      $90.00
-1,000     $37.50       $600.00      $180.00
-5,000     $187.50      $3000.00     $900.00
-10,000    $375.00      $6000.00     $1800.00`,
+🔵 GPT-5 Mini:  50→$1.88  ·  100→$3.75  ·  500→$18.75  ·  1K→$37.50  ·  5K→$187.50  ·  10K→$375.00
+🔵 GPT-5.5:  50→$30.00  ·  100→$60.00  ·  500→$300.00  ·  1K→$600.00  ·  5K→$3,000.00  ·  10K→$6,000.00
+🟢 GPT-4.1:  50→$9.00  ·  100→$18.00  ·  500→$90.00  ·  1K→$180.00  ·  5K→$900.00  ·  10K→$1,800.00`,
   ],
   faq: [
     {
