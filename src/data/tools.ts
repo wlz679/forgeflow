@@ -39,10 +39,15 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-market-size-estimator',
     title: 'Market Size Estimator',
-    description: 'Get TAM, SAM, growth rate, and key driver estimates for any industry or product category.',
+    description: 'Bottom-up and top-down market sizing with configurable SAM, market stage, and 3-year projections. Industry-standard TAM/SAM/SOM framework.',
     categoryId: 'A',
     inputs: [
-      { name: 'topic', label: 'Industry or Product Category', placeholder: 'e.g. AI productivity tools, pet care', type: 'text' },
+      { name: 'targetMarket', label: 'Target Market', placeholder: 'e.g. US dental clinics', type: 'text' },
+      { name: 'totalAddressableCustomers', label: 'Total Addressable Customers', placeholder: 'e.g. 30000', type: 'number' },
+      { name: 'annualRevenuePerCustomer', label: 'Avg Annual Revenue per Customer ($)', placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'marketGrowthRate', label: 'Market Annual Growth Rate (%)', placeholder: 'e.g. 12', type: 'number' },
+      { name: 'samPercent', label: 'SAM — % of TAM You Can Reach', placeholder: 'e.g. 25', type: 'number' },
+      { name: 'marketStage', label: 'Market Stage', placeholder: '', type: 'select', options: ['Emerging', 'Growing', 'Mature', 'Declining'] },
     ],
   },
   {
