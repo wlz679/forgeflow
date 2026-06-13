@@ -39,6 +39,7 @@ const MODELS: Record<string, ModelInfo> = {
   'gpt-3.5-turbo': { input: 0.50, output: 1.50,  name: 'GPT-3.5 Turbo', family: 'legacy',   contextWindow: '16K',  batchInput: 0.25, batchOutput: 0.75 },
 };
 
+// Family labels with text — available for UI consumption (e.g. filter dropdowns, legend)
 const FAMILY_LABELS: Record<string, string> = {
   gpt5:     '\u{1F535} GPT-5',     // 🔵 GPT-5
   gpt41:    '\u{1F7E2} GPT-4.1',   // 🟢 GPT-4.1
@@ -61,6 +62,7 @@ interface Preset {
   reqPerDay: number;
 }
 
+// Scenario presets for one-click form fill — consumed by the UI layer (page template)
 const PRESETS: Preset[] = [
   { label: 'Customer Support Bot', emoji: '\u{1F3A7}', model: 'gpt-5-mini', inputTokens: 800,  outputTokens: 200,  reqPerDay: 500 },
   { label: 'RAG Q&A',              emoji: '\u{1F4DA}', model: 'gpt-4.1',    inputTokens: 3000, outputTokens: 400,  reqPerDay: 200 },
@@ -74,6 +76,8 @@ const PRESETS: Preset[] = [
 // Task 3: Token Estimator
 // ============================================================
 
+// Token estimator using heuristic CJK/English character ratios (±15% accuracy).
+// Reference implementation — consumed by the UI token-counter widget (page template).
 function estimateTokens(text: string): { inputTokens: number; detectedLang: string } {
   if (!text || !text.trim()) return { inputTokens: 0, detectedLang: 'empty' };
   let cjkChars = 0;
@@ -312,11 +316,7 @@ function calculate(inputs: Record<string, string>): string[] {
       const maxC = Math.max(...monthCosts);
 
       // Cumulative diff: running sum of (most_expensive - cheapest) each period
-      if (month === 1) {
-        cumDiff = maxC - minCost;
-      } else {
-        cumDiff += maxC - minCost;
-      }
+      cumDiff += maxC - minCost;
 
       let row = pad(String(month), 6);
       for (const mc of monthCosts) {
@@ -581,7 +581,82 @@ const engine: ToolEngine = {
     return calculate(inputs);
   },
   staticExamples: [
-    '\u{1F534} Real-time Pricing\n\n\u{1F4E5} Input: 1,000 tokens/req | \u{1F4E4} Output: 500 tokens/req | \u{1F504} 100 reqs/day\n\n\u{1F4CA} Cost Comparison (14 Models)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\u{1F535} GPT-5 Nano           │ █ $0.08 \u{1F3C6} cheapest\n\u{1F535} GPT-5 Mini           │ ██ $0.75\n\u{1F7E2} GPT-4.1 Nano         │ ██ $0.75\n⚪ GPT-4o Mini          │ ██ $0.90\n\u{1F535} GPT-5                │ ██████ $3.75\n⚪ GPT-3.5 Turbo        │ ██████ $3.75\n\u{1F7E2} GPT-4.1 Mini         │ ███████ $4.80\n\u{1F7E0} o4 Mini              │ ██████████ $6.60\n\u{1F535} GPT-5.2              │ ██████████ $7.35\n⚪ GPT-4o               │ █████████████ $10.50\n\u{1F7E2} GPT-4.1              │ ████████████████ $12.00\n\u{1F7E0} o3                   │ ████████████████ $12.00\n\u{1F535} GPT-5.5              │ ██████████████████████████████ $22.50\n⚪ GPT-4 Turbo          │ ██████████████████████████████████████████ $45.00\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n\u{1F4CB} Selected Model Details\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\u{1F535} GPT-5 Mini | Context: 400K tokens\n───────────────────────────────────────────\nInput:    1,000 tokens × $0.25/1M → $0.000250/req\nOutput:     500 tokens × $2.00/1M → $0.001000/req\n───────────────────────────────────────────\nPer request:    $0.0013\nDaily (100):    $0.13\nMonthly (30d):  $3.75\nAnnual:         $45.00\n───────────────────────────────────────────\n\u{1F4A1} Batch pricing: $0.0006/req ($1.88/mo) — save 50%\n\n\u{1F535} GPT-5.5 | Context: 1M tokens\n───────────────────────────────────────────\nInput:    1,000 tokens × $5.00/1M → $0.005000/req\nOutput:     500 tokens × $30.00/1M → $0.015000/req\n───────────────────────────────────────────\nPer request:    $0.0200\nDaily (100):    $2.00\nMonthly (30d):  $60.00\nAnnual:         $720.00\n───────────────────────────────────────────\n\u{1F4A1} Batch pricing: $0.0100/req ($30.00/mo) — save 50%\n\n\u{1F7E2} GPT-4.1 | Context: 1M tokens\n───────────────────────────────────────────\nInput:    1,000 tokens × $2.00/1M → $0.002000/req\nOutput:     500 tokens × $8.00/1M → $0.004000/req\n───────────────────────────────────────────\nPer request:    $0.0060\nDaily (100):    $0.60\nMonthly (30d):  $18.00\nAnnual:         $216.00\n───────────────────────────────────────────\n\u{1F4A1} Batch pricing: $0.0030/req ($9.00/mo) — save 50%\n\n\u{1F4B0} Savings Insights\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\u{1F3C6} Cheapest: GPT-5 Nano at $0.08/mo\n⭐ Best value (non-legacy, non-Nano): GPT-5 Mini at $0.75/mo\n\u{1F4B8} Switching from GPT-5.5 to GPT-5 Mini saves $56.25/mo ($675.00/yr)\n\n\u{1F4C5} Usage Scenarios (monthly costs)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n  Reqs/Day   GPT-5 Mini       GPT-5.5       GPT-4.1\n────────  ───────────  ───────────  ───────────\n        50          $1.88        $30.00         $9.00\n       100          $3.75        $60.00        $18.00\n       500         $18.75       $300.00        $90.00\n     1,000         $37.50       $600.00       $180.00\n     5,000        $187.50      $3000.00       $900.00\n    10,000        $375.00      $6000.00      $1800.00',
+    `🔴 Real-time Pricing
+
+📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day
+
+📊 Cost Comparison (14 Models)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔵 GPT-5 Nano          │ █ $0.75 🏆 cheapest
+🟢 GPT-4.1 Nano        │ █ $0.90
+⚪ GPT-4o Mini          │ █ $1.35
+🟢 GPT-4.1 Mini        │ ██ $3.60
+🔵 GPT-5 Mini          │ ██ $3.75
+⚪ GPT-3.5 Turbo        │ ██ $3.75
+🟠 o4 Mini             │ █████ $9.90
+🟢 GPT-4.1             │ ██████████ $18.00
+🟠 o3                  │ ██████████ $18.00
+🔵 GPT-5               │ ██████████ $18.75
+⚪ GPT-4o               │ ████████████ $22.50
+🔵 GPT-5.2             │ ██████████████ $26.25
+🔵 GPT-5.5             │ ████████████████████████████████ $60.00
+⚪ GPT-4 Turbo          │ ████████████████████████████████████████ $75.00
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 Selected Model Details
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔵 GPT-5 Mini | Context: 400K tokens
+────────────────────────────────────────────
+Input:  1,000   tokens × $0.25/1M → $0.0003/req
+Output: 500     tokens × $2.00/1M → $0.0010/req
+────────────────────────────────────────────
+Per request:    $0.0013
+Daily (100):    $0.13
+Monthly (30d):  $3.75
+Annual:         $45.00
+────────────────────────────────────────────
+💡 Batch pricing: $0.0006/req ($1.88/mo) — save 50%
+
+🔵 GPT-5.5 | Context: 1M tokens
+────────────────────────────────────────────
+Input:  1,000   tokens × $5.00/1M → $0.0050/req
+Output: 500     tokens × $30.00/1M → $0.0150/req
+────────────────────────────────────────────
+Per request:    $0.0200
+Daily (100):    $2.00
+Monthly (30d):  $60.00
+Annual:         $720.00
+────────────────────────────────────────────
+💡 Batch pricing: $0.0100/req ($30.00/mo) — save 50%
+
+🟢 GPT-4.1 | Context: 1M tokens
+────────────────────────────────────────────
+Input:  1,000   tokens × $2.00/1M → $0.0020/req
+Output: 500     tokens × $8.00/1M → $0.0040/req
+────────────────────────────────────────────
+Per request:    $0.0060
+Daily (100):    $0.60
+Monthly (30d):  $18.00
+Annual:         $216.00
+────────────────────────────────────────────
+💡 Batch pricing: $0.0030/req ($9.00/mo) — save 50%
+
+💰 Savings Insights
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏆 Cheapest: GPT-5 Nano at $0.75/mo
+⭐ Best value (non-legacy, non-Nano): GPT-4.1 Mini at $3.60/mo
+💸 Switching from GPT-5.5 to GPT-5 Mini saves $56.25/mo ($675.00/yr)
+
+📅 Usage Scenarios (monthly costs)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Reqs/Day  GPT-5 Mini   GPT-5.5      GPT-4.1
+────────  ───────────  ───────────  ───────────
+50        $1.88        $30.00       $9.00
+100       $3.75        $60.00       $18.00
+500       $18.75       $300.00      $90.00
+1,000     $37.50       $600.00      $180.00
+5,000     $187.50      $3000.00     $900.00
+10,000    $375.00      $6000.00     $1800.00`,
   ],
   faq: [
     {
