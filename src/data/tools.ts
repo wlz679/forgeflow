@@ -22,13 +22,14 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-churn-rate-calculator',
     title: 'Churn Rate Calculator',
-    description: 'Calculate your monthly and annual customer churn rate. See churn impact on revenue and compare different churn scenarios.',
+    description: 'Track logo churn vs revenue churn, NRR/GRR, and churn attribution. See how expansion revenue offsets churn and compare scenarios.',
     categoryId: 'A',
     inputs: [
       { name: 'customersStart', label: 'Customers at Start of Month', placeholder: 'e.g. 500', type: 'number' },
       { name: 'customersLost', label: 'Customers Lost This Month', placeholder: 'e.g. 15', type: 'number' },
       { name: 'newCustomers', label: 'New Customers This Month', placeholder: 'e.g. 25', type: 'number' },
       { name: 'avgRevenuePerCustomer', label: 'Avg Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'expansionRevenue', label: 'Expansion Revenue ($)', placeholder: 'e.g. 500', type: 'number' },
     ],
   },
   {
@@ -137,13 +138,15 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-unit-economics-calculator',
     title: 'Unit Economics Calculator',
-    description: 'Analyze per-customer profitability: gross margin, CAC payback, LTV, and how to optimize your unit economics.',
+    description: 'Analyze per-customer profitability with expansion revenue, scaling curves (1K/10K/100K), and ranked optimization levers.',
     categoryId: 'C',
     inputs: [
       { name: 'averageRevenuePerCustomer', label: 'Avg Monthly Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'costToServePerCustomer', label: 'Monthly Cost to Serve per Customer ($)', placeholder: 'e.g. 10', type: 'number' },
       { name: 'customerAcquisitionCost', label: 'Customer Acquisition Cost ($)', placeholder: 'e.g. 200', type: 'number' },
       { name: 'monthlyChurnRate', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'expansionRevenuePerCustomer', label: 'Expansion Revenue / Customer ($)', placeholder: 'e.g. 15 (optional)', type: 'number' },
+      { name: 'retentionMonths', label: 'Avg Customer Lifetime (months)', placeholder: 'e.g. 36 (optional)', type: 'number' },
     ],
   },
 

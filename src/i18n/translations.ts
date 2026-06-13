@@ -913,6 +913,8 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-churn-rate-calculator.input.newCustomers.placeholder': { en: 'e.g. 25', zh: '例如：25' },
   'tools.solopreneur-churn-rate-calculator.input.avgRevenuePerCustomer.label': { en: 'Avg Revenue per Customer ($)', zh: '客户平均收入（$）' },
   'tools.solopreneur-churn-rate-calculator.input.avgRevenuePerCustomer.placeholder': { en: 'e.g. 50', zh: '例如：50' },
+  'tools.solopreneur-churn-rate-calculator.input.expansionRevenue.label': { en: 'Expansion Revenue ($)', zh: '扩展收入（$）' },
+  'tools.solopreneur-churn-rate-calculator.input.expansionRevenue.placeholder': { en: 'e.g. 500', zh: '例如：500' },
   'tools.solopreneur-churn-rate-calculator.how_to_use.0': { en: 'Enter your customer count at the beginning of the month.', zh: '输入月初客户数。' },
   'tools.solopreneur-churn-rate-calculator.how_to_use.1': { en: 'Enter how many customers cancelled or failed to renew.', zh: '输入取消或未续费的客户数。' },
   'tools.solopreneur-churn-rate-calculator.how_to_use.2': { en: 'Enter how many new customers you acquired.', zh: '输入新增客户数。' },
