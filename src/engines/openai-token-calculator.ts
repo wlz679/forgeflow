@@ -114,6 +114,7 @@ const SEP = '\u{2501}'; // ━ (horizontal line)
 const DASH = '\u{2500}'; // ─ (thin horizontal line)
 
 function fmt(n: number): string {
+  if (n < 0.01 && n > 0) return '$' + n.toFixed(4);
   return '$' + n.toFixed(2);
 }
 
@@ -301,7 +302,6 @@ function calculate(inputs: Record<string, string>): string[] {
     out.push(sepRow);
 
     let cumDiff = 0;
-    let prevMostExpensive = 0;
 
     for (const month of monthList) {
       const growth = Math.pow(1 + growthRate / 100, month - 1);
@@ -314,15 +314,7 @@ function calculate(inputs: Record<string, string>): string[] {
       // Cumulative diff: running sum of (most_expensive - cheapest) each period
       if (month === 1) {
         cumDiff = maxC - minCost;
-        prevMostExpensive = maxC;
       } else {
-        // Find previous month's costs to compute the incremental diff
-        const prevGrowth = Math.pow(1 + growthRate / 100, monthList[monthList.indexOf(month) - 1] - 1);
-        const prevCosts = selectedCosts.map((item) => {
-          return item.costPerReq * reqPerDay * 30 * prevGrowth;
-        });
-        const prevMinCost = Math.min(...prevCosts);
-        const prevMaxC = Math.max(...prevCosts);
         cumDiff += maxC - minCost;
       }
 
@@ -418,27 +410,28 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============================================================
 
 const customFn =
-  // Model data: short keys → {i,o,f,c,bi,bo,n}
-  "var M={g55:{i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT-5.5'}," +
-  "g52:{i:1.75,o:14,f:'g5',c:'400K',bi:0.875,bo:7,n:'GPT-5.2'}," +
-  "g5:{i:1.25,o:10,f:'g5',c:'400K',bi:0.625,bo:5,n:'GPT-5'}," +
-  "g5m:{i:0.25,o:2,f:'g5',c:'400K',bi:0.125,bo:1,n:'GPT-5 Mini'}," +
-  "g5n:{i:0.05,o:0.4,f:'g5',c:'400K',bi:0.025,bo:0.2,n:'GPT-5 Nano'}," +
-  "g41:{i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT-4.1'}," +
-  "g41m:{i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT-4.1 Mini'}," +
-  "g41n:{i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT-4.1 Nano'}," +
-  "o3:{i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'o3'}," +
-  "o4m:{i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'o4 Mini'}," +
-  "g4o:{i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT-4o'}," +
-  "g4om:{i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT-4o Mini'}," +
-  "g4t:{i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT-4 Turbo'}," +
-  "g35:{i:0.5,o:1.5,f:'lg',c:'16K',bi:0.25,bo:0.75,n:'GPT-3.5 Turbo'}};" +
+  // Model data: full keys matching MODELS constant → {i,o,f,c,bi,bo,n}
+  "var M={};" +
+  "M['gpt-5.5']={i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT-5.5'};" +
+  "M['gpt-5.2']={i:1.75,o:14,f:'g5',c:'400K',bi:0.875,bo:7,n:'GPT-5.2'};" +
+  "M['gpt-5']={i:1.25,o:10,f:'g5',c:'400K',bi:0.625,bo:5,n:'GPT-5'};" +
+  "M['gpt-5-mini']={i:0.25,o:2,f:'g5',c:'400K',bi:0.125,bo:1,n:'GPT-5 Mini'};" +
+  "M['gpt-5-nano']={i:0.05,o:0.4,f:'g5',c:'400K',bi:0.025,bo:0.2,n:'GPT-5 Nano'};" +
+  "M['gpt-4.1']={i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT-4.1'};" +
+  "M['gpt-4.1-mini']={i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT-4.1 Mini'};" +
+  "M['gpt-4.1-nano']={i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT-4.1 Nano'};" +
+  "M['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'o3'};" +
+  "M['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'o4 Mini'};" +
+  "M['gpt-4o']={i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT-4o'};" +
+  "M['gpt-4o-mini']={i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT-4o Mini'};" +
+  "M['gpt-4-turbo']={i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT-4 Turbo'};" +
+  "M['gpt-3.5-turbo']={i:0.5,o:1.5,f:'lg',c:'16K',bi:0.25,bo:0.75,n:'GPT-3.5 Turbo'};" +
   // Family icons
   "var FI={g5:'\\uD83D\\uDD35',g41:'\\uD83D\\uDFE2',os:'\\uD83D\\uDFE0',lg:'\\u26AA'};" +
-  // Default selected
-  "var DS=['g5m','g55','g41'];" +
+  // Default selected (full keys matching MODELS)
+  "var DS=['gpt-5-mini','gpt-5.5','gpt-4.1'];" +
   // Helpers
-  "function fm(n){return '$'+n.toFixed(2)}" +
+  "function fm(n){return (n<0.01&&n>0?'$'+n.toFixed(4):'$'+n.toFixed(2))}" +
   "function lc(n){return n.toLocaleString()}" +
   "function pd(s,n){return s+Array(Math.max(0,n-s.length+1)).join(' ')}" +
   // Parse inputs
