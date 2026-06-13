@@ -129,7 +129,7 @@ const engine: ToolEngine = {
     return calculateLTV(inputs);
   },
   staticExamples: [
-    '💎 Customer Lifetime Value (LTV)\n\n• Monthly Revenue per User: $50\n• Gross Margin: 80.0%\n• Monthly Churn Rate: 3.0%\n• Avg Customer Lifetime: 33.3 months\n• Gross Profit per User/Month: $40\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Results:\n\n• Lifetime Value (LTV): $1,333\n• Customer Acquisition Cost (CAC): $150\n• LTV:CAC Ratio: 8.9:1\n\n🟢 EXCELLENT: LTV:CAC of 8.9:1 is above the 3:1 benchmark. You have strong unit economics. Consider investing more in growth.\n• CAC Payback Period: 3.8 months\n\n💡 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).',
+    '💎 Customer Lifetime Value (LTV)\n\n• Monthly Revenue per User: $50\n• Gross Margin: 80.0%\n• Monthly Churn Rate: 3.0%\n• Avg Customer Lifetime: 33.3 months\n• Gross Profit per User/Month: $40\n\n📊 Key Results:\n\n• Lifetime Value (LTV): $1,333\n• Customer Acquisition Cost (CAC): $150\n• LTV:CAC Ratio: 8.9:1\n\n🟢 EXCELLENT: LTV:CAC of 8.9:1 is above the 3:1 benchmark. You have strong unit economics. Consider investing more in growth.\n• CAC Payback Period: 3.8 months\n',
     'Excellent (1% churn): Lifetime 100.0 months, LTV $4,000, LTV:CAC 26.7:1',
     'Good (2% churn): Lifetime 50.0 months, LTV $2,000, LTV:CAC 13.3:1',
     'Average (3% churn): Lifetime 33.3 months, LTV $1,333, LTV:CAC 8.9:1',

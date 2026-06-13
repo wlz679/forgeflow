@@ -57,13 +57,13 @@ function calculateRate(inputs: Record<string, string>): string[] {
     '🧠 Skill: ' + skill.charAt(0).toUpperCase() + skill.slice(1) + '\n' +
     '📊 Experience: ' + expLabel[experience] + '\n' +
     '🌍 Market: ' + locLabel[location] + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '⏱️  Hourly Rate:   ' + loc(hourly) + '/hr\n' +
     '📅  Daily Rate:     ' + loc(daily) + '/day\n' +
     '📆  Weekly Rate:  ' + loc(weekly) + '/wk\n' +
     '📊  Monthly Rate: ' + loc(monthly) + '/mo\n' +
     '💰  Yearly Rate:   ' + loc(yearly) + '/yr\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💡 Pricing Tips:\n' +
     '• Charge by the project, not by the hour. Clients buy outcomes, not time.\n' +
     '• Double your hourly rate for rush jobs or weekend work.\n' +
@@ -162,7 +162,7 @@ const engine: ToolEngine = {
     return calculateRate(inputs);
   },
   staticExamples: [
-    '💰 Freelance Rate Breakdown\n\n🧠 Skill: Developer\n📊 Experience: Mid-Level (3-5 years)\n🌍 Market: US Market\n\n━━━━━━━━━━━━━━━━━━━━\n\n⏱️  Hourly Rate:   $75/hr\n📅  Daily Rate:     $600/day\n📆  Weekly Rate:  $3,000/wk\n📊  Monthly Rate: $12,990/mo\n💰  Yearly Rate:   $155,880/yr\n\n━━━━━━━━━━━━━━━━━━━━\n\n💡 Pricing Tips:\n• Charge by the project, not by the hour. Clients buy outcomes, not time.\n• Double your hourly rate for rush jobs or weekend work.\n• Offer retainer packages (10/20/40 hrs per month) for steady income.\n• Raise rates every 6 months as you gain testimonials and portfolio pieces.\n• Your effective hourly rate = (project fee) / (actual hours). Track this.\n\n📌 Formula: Base Rate ($75) × Experience (1x) × Location (1x)',
+    '💰 Freelance Rate Breakdown\n\n🧠 Skill: Developer\n📊 Experience: Mid-Level (3-5 years)\n🌍 Market: US Market\n\n⏱️  Hourly Rate:   $75/hr\n📅  Daily Rate:     $600/day\n📆  Weekly Rate:  $3,000/wk\n📊  Monthly Rate: $12,990/mo\n💰  Yearly Rate:   $155,880/yr\n\n💡 Pricing Tips:\n• Charge by the project, not by the hour. Clients buy outcomes, not time.\n• Double your hourly rate for rush jobs or weekend work.\n• Offer retainer packages (10/20/40 hrs per month) for steady income.\n• Raise rates every 6 months as you gain testimonials and portfolio pieces.\n• Your effective hourly rate = (project fee) / (actual hours). Track this.\n\n📌 Formula: Base Rate ($75) × Experience (1x) × Location (1x)',
     'Comparison: Designer (junior) → $39/hr | $312/day | $6,752/mo',
     'Comparison: Writer (mid) → $50/hr | $400/day | $8,660/mo',
     'Comparison: Marketer (senior) → $96/hr | $768/day | $16,627/mo',

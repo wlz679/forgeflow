@@ -132,7 +132,7 @@ const engine: ToolEngine = {
     return calculateValuation(inputs);
   },
   staticExamples: [
-    '💰 SaaS Valuation Estimate\n\n• Annual Revenue (ARR): $200,000\n• YoY Growth Rate: 50.0%\n• Profit Margin: 25.0%\n• Annual Profit: $50,000\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Valuation Range (Revenue Multiple):\n\n• Conservative (6.0x): $1,200,000\n• Base Case (8.0x): $1,600,000\n• Optimistic (12.0x): $2,400,000\n\n• Estimated Exit Value: $600,000\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n\n💡 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.',
+    '💰 SaaS Valuation Estimate\n\n• Annual Revenue (ARR): $200,000\n• YoY Growth Rate: 50.0%\n• Profit Margin: 25.0%\n• Annual Profit: $50,000\n\n📊 Valuation Range (Revenue Multiple):\n\n• Conservative (6.0x): $1,200,000\n• Base Case (8.0x): $1,600,000\n• Optimistic (12.0x): $2,400,000\n\n• Estimated Exit Value: $600,000\n\n🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n',
     'Distressed Sale (2x): $200,000 ARR × 2x = $400,000 valuation',
     'Flat Growth (4x): $200,000 ARR × 4x = $800,000 valuation',
     'Steady Growth (6x): $200,000 ARR × 6x = $1,200,000 valuation',

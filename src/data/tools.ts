@@ -133,15 +133,17 @@ export const tools: ToolMeta[] = [
     ],
   },
 
+  // Unit Economics — per-customer profitability analysis
   {
-    slug: 'solopreneur-runway-calculator',
-    title: 'Runway Calculator',
-    description: 'Calculate how many months your startup can survive at current burn rate. Compare scenarios by adjusting burn rates to extend your runway.',
-    categoryId: 'A',
+    slug: 'solopreneur-unit-economics-calculator',
+    title: 'Unit Economics Calculator',
+    description: 'Analyze per-customer profitability: gross margin, CAC payback, LTV, and how to optimize your unit economics.',
+    categoryId: 'C',
     inputs: [
-      { name: 'cashOnHand', label: 'Cash on Hand ($)', placeholder: 'e.g. 50000', type: 'number' },
-      { name: 'monthlyBurn', label: 'Monthly Burn Rate ($)', placeholder: 'e.g. 15000', type: 'number' },
-      { name: 'monthlyRevenue', label: 'Monthly Revenue ($)', placeholder: 'e.g. 3000', type: 'number' },
+      { name: 'averageRevenuePerCustomer', label: 'Avg Monthly Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'costToServePerCustomer', label: 'Monthly Cost to Serve per Customer ($)', placeholder: 'e.g. 10', type: 'number' },
+      { name: 'customerAcquisitionCost', label: 'Customer Acquisition Cost ($)', placeholder: 'e.g. 200', type: 'number' },
+      { name: 'monthlyChurnRate', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
     ],
   },
 

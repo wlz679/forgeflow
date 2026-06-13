@@ -1,131 +1,125 @@
-import type { ToolEngine } from '../core/engines/types';
-import { registerEngine } from '../core/engines/registry';
+import type { ToolEngine } from "../core/engines/types";
+import { registerEngine } from "../core/engines/registry";
+
+function bar(pct: number): string {
+  const w = Math.round(pct * 20);
+  return "█".repeat(w) + "░".repeat(20 - w);
+}
 
 function calculateBurnRate(inputs: Record<string, string>): string[] {
-  const startingCash = parseFloat(inputs.startingCash) || 0;
-  const endingCash = parseFloat(inputs.endingCash) || 0;
-  const months = parseInt(inputs.months) || 1;
-  const results: string[] = [];
+  const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
+  const pct = (n: number, total: number) => total > 0 ? ((n / total) * 100).toFixed(1) + "%" : "0.0%";
 
-  const totalCashSpent = startingCash - endingCash;
-  const netBurnPerMonth = months > 0 ? totalCashSpent / months : 0;
+  const monthlyRevenue = parseFloat(inputs.monthlyRevenue) || 0;
+  const teamCost = parseFloat(inputs.teamCost) || 0;
+  const infraCost = parseFloat(inputs.infraCost) || 0;
+  const marketingCost = parseFloat(inputs.marketingCost) || 0;
+  const opsCost = parseFloat(inputs.opsCost) || 0;
+  const currentCash = parseFloat(inputs.currentCash) || 0;
 
-  const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
-  const pct = (n: number) => (n * 100).toFixed(1) + '%';
+  const grossBurn = teamCost + infraCost + marketingCost + opsCost;
+  const netBurn = grossBurn - monthlyRevenue;
 
-  let mainResult =
-    '\\uD83D\\uDD25 Burn Rate Analysis\\n\\n' +
-    '\\u2022 Starting Cash: ' + fmt(startingCash) + '\\n' +
-    '\\u2022 Ending Cash: ' + fmt(endingCash) + '\\n' +
-    '\\u2022 Period: ' + months + ' month' + (months > 1 ? 's' : '') + '\\n' +
-    '\\u2022 Total Cash Spent: ' + fmt(totalCashSpent) + '\\n\\n' +
-    '\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';
+  let result = "🔥 Cash Flow Health Check\n\n";
 
-  if (netBurnPerMonth <= 0) {
-    mainResult += '\\uD83C\\uDF89 Your cash balance increased or stayed flat — you have no net burn!\\n\\n';
+  result += "💸 Burn Summary\n";
+  result += "• Gross Burn:    " + fmt(grossBurn) + "/mo\n• Net Burn:      " + fmt(netBurn) + "/mo";
+  if (monthlyRevenue > 0) result += "  (Gross − Revenue)\n"; else result += "  (no revenue yet)\n";
+  result += "• Annual Burn:   " + fmt(netBurn * 12) + "/yr\n";
+  if (netBurn > 0) result += "• To break even: Need +" + fmt(netBurn) + "/mo more revenue (or cut costs by same amount)\n";
+
+  result += "\n⏳ Runway\n";
+  result += "• Current Cash:      " + fmt(currentCash) + "\n";
+  if (netBurn <= 0) { result += "• Status:            ✅ Cash-flow positive! No burn concern.\n"; }
+  else if (currentCash <= 0) { result += "• Status:            ⚠️ No cash reserve — enter your balance to estimate runway.\n"; }
+  else {
+    const runwayMonths = currentCash / netBurn;
+    const today = new Date();
+    const runOut = new Date(today.getTime() + runwayMonths * 30.44 * 24 * 60 * 60 * 1000);
+    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const runOutLabel = monthNames[runOut.getMonth()] + " " + runOut.getFullYear();
+    result += "• Remaining Runway:  " + runwayMonths.toFixed(1) + " months\n• Est. Cash Run-out:   " + runOutLabel + "\n";
+    if (runwayMonths > 12) result += "• Assessment:        🟢 Healthy — over a year of runway.\n";
+    else if (runwayMonths > 6) result += "• Assessment:        🟡 Manageable — 6–12 months. Plan ahead.\n";
+    else if (runwayMonths > 3) result += "• Assessment:        🟠 Tight — 3–6 months. Cut costs or raise revenue now.\n";
+    else result += "• Assessment:        🔴 Critical — under 3 months. Immediate action required.\n";
   }
 
-  mainResult +=
-    '\\u2022 Net Burn Rate: ' + fmt(netBurnPerMonth) + '/month\\n' +
-    '\\u2022 Annualized Burn: ' + fmt(netBurnPerMonth * 12) + '/year\\n';
-
-  if (netBurnPerMonth > 0 && startingCash > 0) {
-    const runway = startingCash / netBurnPerMonth;
-    mainResult += '\\u2022 Estimated Runway: ' + runway.toFixed(1) + ' months\\n';
+  if (grossBurn > 0) {
+    result += "\n📊 Cost Structure\n";
+    const categories: [string, number][] = [["Team", teamCost], ["Marketing", marketingCost], ["Infrastructure", infraCost], ["Operations", opsCost]];
+    for (const [label, cost] of categories) {
+      if (cost > 0) { const share = cost / grossBurn; result += "• " + label.padEnd(14) + " " + pct(cost, grossBurn).padStart(6) + "  " + bar(share) + "\n"; }
+    }
   }
 
-  mainResult += '\\n';
-  if (startingCash > 0) {
-    const monthlyDecline = netBurnPerMonth > 0 ? pct(netBurnPerMonth / startingCash) : '0.0%';
-    mainResult += '\\u2022 Monthly Cash Decline: ' + monthlyDecline + '\\n';
+  if (netBurn > 0 && currentCash > 0) {
+    const cuts = [0.1, 0.2, 0.3];
+    const originalRunway = currentCash / netBurn;
+    result += "\n🔄 Cost-Cut Scenarios\n";
+    for (const cut of cuts) {
+      const savings = grossBurn * cut;
+      const reducedNetBurn = netBurn - savings;
+      const pctLabel = Math.round(cut * 100) + "%";
+      if (reducedNetBurn <= 0) { result += "• Cut " + pctLabel + ": Save " + fmt(savings) + "/mo — ✅ Cash-flow positive!\n"; }
+      else { const newRunway = currentCash / reducedNetBurn; const extra = newRunway - originalRunway; result += "• Cut " + pctLabel + ": Save " + fmt(savings) + "/mo — Net burn " + fmt(reducedNetBurn) + "/mo — Runway " + newRunway.toFixed(1) + " mo (+" + extra.toFixed(1) + " extra)\n"; }
+    }
   }
 
-  mainResult += '\\n\\uD83D\\uDCA1 Tip: Track both net burn (total cash outflow minus revenue) and gross burn (total cash outflow only). Net burn tells you how fast your bank account shrinks. Gross burn tells you your total spending before revenue kicks in.';
-
-  results.push(mainResult);
-
-  // 5 comparison scenarios at different cash levels
-  const cashLevels = [10000, 25000, 75000, 100000, 250000];
-  for (let i = 0; i < cashLevels.length; i++) {
-    const totalSpent = cashLevels[i] - endingCash;
-    const burnAtLevel = totalSpent / months;
-    const rwy = netBurnPerMonth > 0 ? cashLevels[i] / netBurnPerMonth : Infinity;
-    const rwyStr = netBurnPerMonth <= 0 ? 'Infinite' : (isFinite(rwy) ? rwy.toFixed(1) + ' months' : 'N/A');
-    results.push(
-      'Starting with ' + fmt(cashLevels[i]) + ': Burn ' + fmt(burnAtLevel) + '/mo \\u2192 ' + rwyStr + ' of runway',
-    );
-  }
-
-  return results;
+  return [result];
 }
 
 const customFn =
-  "var sc=parseFloat(inputs.startingCash)||0;" +
-  "var ec=parseFloat(inputs.endingCash)||0;" +
-  "var mo=parseInt(inputs.months)||1;" +
-  "var totalSpent=sc-ec;" +
-  "var nbm=mo>0?totalSpent/mo:0;" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function pct(n){return (n*100).toFixed(1)+'%'}" +
-  "var mr2='';" +
-  "mr2+='\\uD83D\\uDD25 Burn Rate Analysis\\n\\n';" +
-  "mr2+='\\u2022 Starting Cash: '+fmt(sc)+'\\n';" +
-  "mr2+='\\u2022 Ending Cash: '+fmt(ec)+'\\n';" +
-  "mr2+='\\u2022 Period: '+mo+' month'+(mo>1?'s':'')+'\\n';" +
-  "mr2+='\\u2022 Total Cash Spent: '+fmt(totalSpent)+'\\n\\n';" +
-  "mr2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "if(nbm<=0){mr2+='\\uD83C\\uDF89 Your cash balance increased or stayed flat \\u2014 you have no net burn!\\n\\n';}" +
-  "mr2+='\\u2022 Net Burn Rate: '+fmt(nbm)+'/month\\n';" +
-  "mr2+='\\u2022 Annualized Burn: '+fmt(nbm*12)+'/year\\n';" +
-  "if(nbm>0&&sc>0){var rwy=sc/nbm;mr2+='\\u2022 Estimated Runway: '+rwy.toFixed(1)+' months\\n';}" +
-  "mr2+='\\n';" +
-  "if(sc>0){var md=nbm>0?pct(nbm/sc):'0.0%';mr2+='\\u2022 Monthly Cash Decline: '+md+'\\n';}" +
-  "mr2+='\\n\\uD83D\\uDCA1 Tip: Track both net burn (total cash outflow minus revenue) and gross burn (total cash outflow only). Net burn tells you how fast your bank account shrinks. Gross burn tells you your total spending before revenue kicks in.';" +
-  "var results=[mr2];" +
-  "var cl=[10000,25000,75000,100000,250000];" +
-  "for(var i=0;i<cl.length;i++){var ts=cl[i]-ec;var bl=ts/mo;var rw=nbm>0?cl[i]/nbm:Infinity;var rs=nbm<=0?'Infinite':(isFinite(rw)?rw.toFixed(1)+' months':'N/A');results.push('Starting with '+fmt(cl[i])+': Burn '+fmt(bl)+'/mo \\u2192 '+rs+' of runway');}" +
-  "return results;";
+  "function bar(p){var w=Math.round(p*20);var r='';for(var i=0;i<20;i++)r+=i<w?'█':'░';return r}" +
+  "function fmt(n){return '$'+Math.round(n).toLocaleString()}function pct(n,t){return t>0?((n/t)*100).toFixed(1)+'%':'0.0%'}" +
+  "var mr=parseFloat(inputs.monthlyRevenue)||0;var tc=parseFloat(inputs.teamCost)||0;var ic=parseFloat(inputs.infraCost)||0;var mc=parseFloat(inputs.marketingCost)||0;var oc=parseFloat(inputs.opsCost)||0;var cc=parseFloat(inputs.currentCash)||0;" +
+  "var gb=tc+ic+mc+oc;var nb=gb-mr;" +
+  "var r='🔥 Cash Flow Health Check\\n\\n';" +
+  "r+='💸 Burn Summary\\n• Gross Burn:    '+fmt(gb)+'/mo\\n• Net Burn:      '+fmt(nb)+'/mo'+(mr>0?'  (Gross − Revenue)\\n':'  (no revenue yet)\\n')+'• Annual Burn:   '+fmt(nb*12)+'/yr\\n';" +
+  "if(nb>0)r+='• To break even: Need +'+fmt(nb)+'/mo more revenue (or cut costs by same amount)\\n';" +
+  "r+='\\n⏳ Runway\\n• Current Cash:      '+fmt(cc)+'\\n';" +
+  "if(nb<=0){r+='• Status:            ✅ Cash-flow positive! No burn concern.\\n';}" +
+  "else if(cc<=0){r+='• Status:            ⚠️ No cash reserve — enter your balance to estimate runway.\\n';}" +
+  "else{var rm=cc/nb;var now=new Date();var ro=new Date(now.getTime()+rm*30.44*86400000);var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var rol=mn[ro.getMonth()]+' '+ro.getFullYear();r+='• Remaining Runway:  '+rm.toFixed(1)+' months\\n• Est. Cash Run-out:   '+rol+'\\n';" +
+  "if(rm>12)r+='• Assessment:        🟢 Healthy — over a year of runway.\\n';else if(rm>6)r+='• Assessment:        🟡 Manageable — 6–12 months. Plan ahead.\\n';else if(rm>3)r+='• Assessment:        🟠 Tight — 3–6 months. Cut costs or raise revenue now.\\n';else r+='• Assessment:        🔴 Critical — under 3 months. Immediate action required.\\n';}" +
+  "if(gb>0){r+='\\n📊 Cost Structure\\n';var cats=[['Team',tc],['Marketing',mc],['Infrastructure',ic],['Operations',oc]];for(var i=0;i<cats.length;i++){var lb=cats[i][0];var ct=cats[i][1];if(ct>0){var sh=ct/gb;r+='• '+lb;for(var j=lb.length;j<16;j++)r+=' ';r+=' '+pct(ct,gb)+'  '+bar(sh)+'\\n';}}}" +
+  "if(nb>0&&cc>0){var cuts=[0.1,0.2,0.3];var orw=cc/nb;r+='\\n🔄 Cost-Cut Scenarios\\n';for(var ci=0;ci<cuts.length;ci++){var cut=cuts[ci];var sv=gb*cut;var rnb=nb-sv;var pl=Math.round(cut*100)+'%';if(rnb<=0){r+='• Cut '+pl+': Save '+fmt(sv)+'/mo — ✅ Cash-flow positive!\\n';}else{var nrw=cc/rnb;var ext=nrw-orw;r+='• Cut '+pl+': Save '+fmt(sv)+'/mo — Net burn '+fmt(rnb)+'/mo — Runway '+nrw.toFixed(1)+' mo (+'+ext.toFixed(1)+' extra)\\n';}}}" +
+  "return [r];";
 
 const engine: ToolEngine = {
-  slug: 'solopreneur-burn-rate-calculator',
-  title: 'Burn Rate Calculator',
-  description: 'Calculate your net monthly burn rate by comparing starting vs ending cash over a period. See how different cash levels affect your runway.',
-  category: 'A',
+  slug: "solopreneur-burn-rate-calculator",
+  title: "Burn Rate Calculator",
+  description: "Analyze your monthly cash flow: break down costs by category, calculate runway, and see how cost-cutting extends your survival time.",
+  category: "A",
   inputs: [
-    { name: 'startingCash', label: 'Starting Cash ($)', placeholder: 'e.g. 100000', type: 'number' },
-    { name: 'endingCash', label: 'Ending Cash ($)', placeholder: 'e.g. 70000', type: 'number' },
-    { name: 'months', label: 'Number of Months', placeholder: 'e.g. 6', type: 'number' },
+    { name: "monthlyRevenue", label: "Monthly Revenue ($)", placeholder: "e.g. 5000", type: "number" },
+    { name: "teamCost", label: "Team Cost ($/mo)", placeholder: "e.g. 8000", type: "number" },
+    { name: "infraCost", label: "Infrastructure & SaaS ($/mo)", placeholder: "e.g. 500", type: "number" },
+    { name: "marketingCost", label: "Marketing & Ads ($/mo)", placeholder: "e.g. 2000", type: "number" },
+    { name: "opsCost", label: "Operations & Misc ($/mo)", placeholder: "e.g. 1500", type: "number" },
+    { name: "currentCash", label: "Current Cash Balance ($)", placeholder: "e.g. 50000", type: "number" },
   ],
-  clientConfig: {
-    type: 'custom',
-    wordPools: {},
-    customFn,
-  },
-  generate(inputs: Record<string, string>): string[] {
-    return calculateBurnRate(inputs);
-  },
+  clientConfig: { type: "custom", wordPools: {}, customFn },
+  generate(inputs: Record<string, string>): string[] { return calculateBurnRate(inputs); },
   staticExamples: [
-    '🔥 Burn Rate Analysis\n\n• Starting Cash: $100,000\n• Ending Cash: $70,000\n• Period: 6 months\n• Total Cash Spent: $30,000\n\n━━━━━━━━━━━━━━━━━━━━\n\n• Net Burn Rate: $5,000/month\n• Annualized Burn: $60,000/year\n• Estimated Runway: 20.0 months\n\n• Monthly Cash Decline: 5.0%\n\n💡 Tip: Track both net burn (total cash outflow minus revenue) and gross burn (total cash outflow only). Net burn tells you how fast your bank account shrinks. Gross burn tells you your total spending before revenue kicks in.',
-    'Starting with $10,000: Burn $1,667/mo → 2.0 months of runway',
-    'Starting with $25,000: Burn $4,167/mo → 5.0 months of runway',
-    'Starting with $75,000: Burn $12,500/mo → 15.0 months of runway',
-    'Starting with $100,000: Burn $16,667/mo → 20.0 months of runway',
+    "🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $12,000/mo\n• Net Burn:      $7,000/mo  (Gross − Revenue)\n• Annual Burn:   $84,000/yr\n• To break even: Need +$7,000/mo more revenue (or cut costs by same amount)\n\n⏳ Runway\n• Current Cash:      $50,000\n• Remaining Runway:  7.1 months\n• Est. Cash Run-out:   Jan 2027\n• Assessment:        🟡 Manageable — 6–12 months. Plan ahead.\n\n📊 Cost Structure\n• Team              66.7%  █████████████░░░░░░░\n• Marketing         16.7%  ███░░░░░░░░░░░░░░░░░\n• Operations        12.5%  ██░░░░░░░░░░░░░░░░░░\n• Infrastructure     4.2%  █░░░░░░░░░░░░░░░░░░\n\n🔄 Cost-Cut Scenarios\n• Cut 10%: Save $1,200/mo — Net burn $5,800/mo — Runway 8.6 mo (+1.5 extra)\n• Cut 20%: Save $2,400/mo — Net burn $4,600/mo — Runway 10.9 mo (+3.7 extra)\n• Cut 30%: Save $3,600/mo — Net burn $3,400/mo — Runway 14.7 mo (+7.6 extra)",
   ],
   faq: [
-    { q: 'What is the difference between net burn and gross burn?', a: 'Gross burn is your total monthly operating expenses before any revenue. Net burn is gross burn minus monthly revenue. For example, if you spend $20K/month and earn $5K/month, your gross burn is $20K and net burn is $15K. Always track both — gross burn shows your spending discipline, net burn shows how fast your bank account shrinks.' },
-    { q: 'What is a healthy burn rate for a SaaS startup?', a: 'For early-stage SaaS, a net burn of $10K-$50K/month is common post-seed. The key metric is burn multiple: net burn divided by net new ARR per month. A burn multiple under 1.0x is excellent, meaning every dollar of burn generates more than a dollar of new ARR.' },
-    { q: 'How do I reduce my burn rate quickly?', a: 'Start with the biggest line items: people (consider contractors instead of full-time hires), office space (go remote), SaaS subscriptions (audit and cancel unused tools), and marketing (shift to organic channels like SEO and content). A 20% reduction in burn can double your runway.' },
-    { q: 'Should I include one-time expenses in burn rate?', a: 'No. Burn rate should reflect recurring operating expenses, not one-time costs like equipment purchases or legal fees for incorporation. Track one-time costs separately. This gives you a clearer picture of your ongoing cash needs.' },
-    { q: 'How often should I recalculate my burn rate?', a: 'Monthly, at minimum. Review your burn rate every time you close your books. Set up a simple spreadsheet or use accounting software to track it. If your burn rate is increasing month-over-month, investigate immediately — it is easy to let spending creep up without noticing.' },
+    { q: "What is the difference between gross burn and net burn?", a: "Gross burn is total monthly operating expenses before revenue. Net burn = gross burn − monthly revenue. For example, if you spend $12K/month and earn $5K/month, gross burn is $12K, net burn is $7K. Track both — gross burn shows spending discipline, net burn shows how fast your bank account actually shrinks." },
+    { q: "What is a healthy runway for an early-stage business?", a: "18-24 months is the gold standard after a fundraise. For bootstrapped entrepreneurs, 6-12 months is healthy. Under 3 months is critical — you need to act immediately on either cost-cutting or revenue generation." },
+    { q: "Which cost category typically matters most?", a: "Team/personnel costs are almost always the largest expense (50-70% of burn). If you need to cut quickly, headcount is the biggest lever. For SaaS tools, audit subscriptions quarterly — most people are paying for tools they stopped using months ago." },
+    { q: "How often should I recalculate my burn rate?", a: "Monthly, when you close your books. Set up a simple spreadsheet or use accounting software. If your net burn is trending up month-over-month, investigate immediately — cost creep is easy to miss." },
+    { q: "What if I have irregular revenue?", a: "Use the average of the last 3-6 months for the monthly revenue field. If you are pre-revenue, leave it at 0 to see your worst-case burn. Run a second scenario with your conservative revenue estimate to compare." },
   ],
   howToUse: [
-    'Enter your starting cash balance at the beginning of the period.',
-    'Enter your ending cash balance at the end of the period.',
-    'Enter the number of months in the period.',
-    'Review your net burn rate per month and annualized burn rate.',
-    'Check your estimated runway based on your current cash and burn rate.',
-    'Scroll down to see 5 comparison scenarios with different starting cash levels.',
+    "Enter your average monthly revenue (leave at 0 if pre-revenue).",
+    "Fill in your team costs — salaries, contractors, benefits.",
+    "Add up all SaaS subscriptions and cloud hosting as Infrastructure.",
+    "Include ad spend, content marketing, and tool subscriptions as Marketing.",
+    "Enter remaining costs (rent, legal, insurance, travel) as Operations.",
+    "Enter your current cash balance to calculate runway and run-out date.",
+    "Review the cost structure chart to see which category is eating the most cash.",
+    "Check the what-if scenario to see how cost-cutting extends your runway.",
   ],
 };
-
 registerEngine(engine);

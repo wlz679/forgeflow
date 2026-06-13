@@ -33,14 +33,14 @@ function calculateFreelanceTax(inputs: Record<string, string>): string[] {
     '💼 Annual Income: ' + loc(annualIncome) + '\n' +
     '🧾 Business Expenses: ' + loc(businessExpenses) + '\n' +
     '📊 Taxable Income: ' + loc(taxableIncome) + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💸 Estimated Tax Owed: ' + loc(estimatedTax) + ' (' + pct(taxInfo.rate * 100) + '% rate)\n' +
     '📉 Effective Tax Rate: ' + pct(effectiveTaxRate) + '% (after expenses)\n' +
     '📆 Quarterly Payment: ' + loc(quarterlyPayment) + '/quarter\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💰 After-Tax Income: ' + loc(afterTaxIncome) + '/yr\n' +
     '🏠 Monthly Take-Home: ' + loc(monthlyTakeHome) + '/mo\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💡 Set aside ' + pct(taxInfo.rate * 100) + '% of every invoice for taxes. ' +
     'Open a separate tax savings account and transfer quarterly payments automatically.\n\n' +
     '📌 Tax Savings Target (monthly): ' + loc(estimatedTax / 12),
@@ -125,7 +125,7 @@ const engine: ToolEngine = {
     return calculateFreelanceTax(inputs);
   },
   staticExamples: [
-    '🏛️ Freelance Tax Estimate\n\n🌍 Country: US (Self-Employed, approx)\n💼 Annual Income: $100,000.00\n🧾 Business Expenses: $15,000.00\n📊 Taxable Income: $85,000.00\n\n━━━━━━━━━━━━━━━━━━━━\n\n💸 Estimated Tax Owed: $25,500.00 (30.0% rate)\n📉 Effective Tax Rate: 25.5% (after expenses)\n📆 Quarterly Payment: $6,375.00/quarter\n\n━━━━━━━━━━━━━━━━━━━━\n\n💰 After-Tax Income: $74,500.00/yr\n🏠 Monthly Take-Home: $6,208.33/mo\n\n━━━━━━━━━━━━━━━━━━━━\n\n💡 Set aside 30.0% of every invoice for taxes. Open a separate tax savings account and transfer quarterly payments automatically.\n\n📌 Tax Savings Target (monthly): $2,125.00',
+    '🏛️ Freelance Tax Estimate\n\n🌍 Country: US (Self-Employed, approx)\n💼 Annual Income: $100,000.00\n🧾 Business Expenses: $15,000.00\n📊 Taxable Income: $85,000.00\n\n💸 Estimated Tax Owed: $25,500.00 (30.0% rate)\n📉 Effective Tax Rate: 25.5% (after expenses)\n📆 Quarterly Payment: $6,375.00/quarter\n\n💰 After-Tax Income: $74,500.00/yr\n🏠 Monthly Take-Home: $6,208.33/mo\n\n💡 Set aside 30.0% of every invoice for taxes. Open a separate tax savings account and transfer quarterly payments automatically.\n\n📌 Tax Savings Target (monthly): $2,125.00',
     'Comparison: $20,000.00/yr → Tax: $1,500.00 | Effective rate: 7.5% | Take-home: $1,541.67/mo',
     'Comparison: $40,000.00/yr → Tax: $7,500.00 | Effective rate: 18.8% | Take-home: $2,708.33/mo',
     'Comparison: $75,000.00/yr → Tax: $18,000.00 | Effective rate: 24.0% | Take-home: $4,750.00/mo',

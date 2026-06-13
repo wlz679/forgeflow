@@ -51,11 +51,11 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
     '🏥 Benefits (' + benefitsPct + '%): $' + loc(benefitsCost) + '/yr\n' +
     '🏛️ Employer Tax (' + (taxRate * 100).toFixed(1) + '%): $' + loc(employerTax) + '/yr\n' +
     '🏢 Overhead (' + (overheadRate * 100).toFixed(0) + '%): $' + loc(overhead) + '/yr\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💵 Total Annual Cost: $' + loc(totalAnnualCost) + '/yr\n' +
     '📅 Monthly Cost: $' + fmt(monthlyCost) + '/mo\n' +
     '📊 True Cost Multiplier: ' + (totalAnnualCost / annualSalary).toFixed(2) + 'x\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '📌 Breakdown:\n' +
     '• Base salary is ' + pct(annualSalary, totalAnnualCost) + ' of total cost\n' +
     '• Benefits add ' + pct(benefitsCost, totalAnnualCost) + '\n' +
@@ -152,7 +152,7 @@ const engine: ToolEngine = {
     return calculateEmployeeCost(inputs);
   },
   staticExamples: [
-    '💼 Employee Cost Breakdown\n\n📍 Location: United States\n💰 Base Salary: $80,000/yr\n🏥 Benefits (30%): $24,000/yr\n🏛️ Employer Tax (7.7%): $6,120/yr\n🏢 Overhead (25%): $20,000/yr\n\n━━━━━━━━━━━━━━━━━━━━\n\n💵 Total Annual Cost: $130,120/yr\n📅 Monthly Cost: $10,843.33/mo\n📊 True Cost Multiplier: 1.63x\n\n━━━━━━━━━━━━━━━━━━━━\n\n📌 Breakdown:\n• Base salary is 61.5% of total cost\n• Benefits add 18.4%\n• Employer taxes add 4.7%\n• Overhead adds 15.4%\n\n💡 Budget rule of thumb: total employee cost = base salary × 1.6',
+    '💼 Employee Cost Breakdown\n\n📍 Location: United States\n💰 Base Salary: $80,000/yr\n🏥 Benefits (30%): $24,000/yr\n🏛️ Employer Tax (7.7%): $6,120/yr\n🏢 Overhead (25%): $20,000/yr\n\n💵 Total Annual Cost: $130,120/yr\n📅 Monthly Cost: $10,843.33/mo\n📊 True Cost Multiplier: 1.63x\n\n📌 Breakdown:\n• Base salary is 61.5% of total cost\n• Benefits add 18.4%\n• Employer taxes add 4.7%\n• Overhead adds 15.4%\n\n💡 Budget rule of thumb: total employee cost = base salary × 1.6',
     'Comparison: $30,000 salary → Total $49,803/yr ($4,150.25/mo) | Multiplier 1.66x',
     'Comparison: $50,000 salary → Total $81,725/yr ($6,810.42/mo) | Multiplier 1.63x',
     'Comparison: $120,000 salary → Total $194,520/yr ($16,210.00/mo) | Multiplier 1.62x',

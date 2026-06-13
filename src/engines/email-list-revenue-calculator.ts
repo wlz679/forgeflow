@@ -36,23 +36,23 @@ function calculateEmailRevenue(inputs: Record<string, string>): string[] {
 
   results.push(
     '📧 Email List Revenue Calculator\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '📊 Funnel Metrics\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Subscribers:                   ' + loc(subscriberCount) + '\n' +
     '• Open Rate:                      ' + openRate + '% → ' + loc(Math.round(opens)) + ' opens\n' +
     '• Click Rate:                       ' + clickRate + '% → ' + loc(Math.round(clicks)) + ' clicks\n' +
     '• Conversion Rate:          ' + conversionRate + '% → ' + fmt(conversions) + ' conversions\n' +
     '• Avg Order Value:          $' + fmt(avgOrderValue) + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '💰 Revenue Estimates (4 emails/mo)\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Revenue Per Email Send: $' + fmt(revenuePerSend) + '\n' +
     '• Monthly Revenue:             $' + fmt(monthlyRevenue) + '\n' +
     '• Annual Revenue:                $' + fmt(annualRevenue) + '\n' +
     '• Revenue Per Subscriber:  $' + fmt(revenuePerSubscriber) + '/yr\n\n' +
     assessment + '\n\n' +
-    '💡 Tip: The industry benchmark is $1-$2 per subscriber per year. To beat this, segment your list by interest and past purchases, then send targeted offers. A segmented campaign can generate 760% more revenue than a broadcast to everyone.',
+    '',
   );
 
   const listSizes = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000];
@@ -149,7 +149,7 @@ const engine: ToolEngine = {
     return calculateEmailRevenue(inputs);
   },
   staticExamples: [
-    '📧 Email List Revenue Calculator\n\n━━━━━━━━━━━━━━━━━━━━\n📊 Funnel Metrics\n━━━━━━━━━━━━━━━━━━━━\n\n• Subscribers:                   10,000\n• Open Rate:                      25% → 2,500 opens\n• Click Rate:                       5% → 125 clicks\n• Conversion Rate:          2% → 2.50 conversions\n• Avg Order Value:          $50.00\n\n━━━━━━━━━━━━━━━━━━━━\n💰 Revenue Estimates (4 emails/mo)\n━━━━━━━━━━━━━━━━━━━━\n\n• Revenue Per Email Send: $125.00\n• Monthly Revenue:             $500.00\n• Annual Revenue:                $6,000.00\n• Revenue Per Subscriber:  $0.60/yr\n\n🌱 Room to grow. At $0.60/subscriber/year, you have room to improve open rates, click rates, or offer value.\n\n💡 Tip: The industry benchmark is $1-$2 per subscriber per year. To beat this, segment your list by interest and past purchases, then send targeted offers. A segmented campaign can generate 760% more revenue than a broadcast to everyone.',
+    '📧 Email List Revenue Calculator\n\n📊 Funnel Metrics\n\n• Subscribers:                   10,000\n• Open Rate:                      25% → 2,500 opens\n• Click Rate:                       5% → 125 clicks\n• Conversion Rate:          2% → 2.50 conversions\n• Avg Order Value:          $50.00\n\n💰 Revenue Estimates (4 emails/mo)\n\n• Revenue Per Email Send: $125.00\n• Monthly Revenue:             $500.00\n• Annual Revenue:                $6,000.00\n• Revenue Per Subscriber:  $0.60/yr\n\n🌱 Room to grow. At $0.60/subscriber/year, you have room to improve open rates, click rates, or offer value.\n',
     'Comparison: 500 subs → $25.00/mo | $300.00/yr | $0.60/sub/yr',
     'Comparison: 5,000 subs → $250.00/mo | $3,000.00/yr | $0.60/sub/yr',
     'Comparison: 25,000 subs → $1,250.00/mo | $15,000.00/yr | $0.60/sub/yr',

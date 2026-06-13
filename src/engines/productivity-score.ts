@@ -50,7 +50,7 @@ function calculateProductivity(inputs: Record<string, string>): string[] {
     '• Weekly Meetings: ' + meetings + ' meetings' + (meetings <= 2 ? ' ✅' : meetings <= 5 ? ' ⚡' : ' ❌') + '\n\n' +
     '✅ WINS:\n' + (wins.length > 0 ? wins.map(w => '• ' + w).join('\n') : '• No major wins yet — focus on the tips below.\n') + '\n' +
     '💡 ACTION ITEMS:\n' + tips.map(t => '• ' + t).join('\n') + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '🎯 Your #1 lever: ' + (deepWork < 10 ? 'Increase deep work hours. Block 2-3 hour morning sessions with zero distractions.' :
       meetings > 5 ? 'Cut meetings by 50%. Replace them with async video updates.' :
       tools > 5 ? 'Audit and reduce your tool stack. Fewer tools = less context switching.' :
@@ -138,7 +138,7 @@ const engine: ToolEngine = {
     return calculateProductivity(inputs);
   },
   staticExamples: [
-    '📈 Productivity Score: 75/100\nGrade: B — Solid Systems\n\n📊 Breakdown:\n• Weekly Deep Work: 15 hours ⚡\n• Tools in Stack: 5 tools ✅\n• Weekly Meetings: 3 meetings ⚡\n\n✅ WINS:\n• Perfect tool stack size. Enough to automate, not so many that you drown in subscriptions.\n\n💡 ACTION ITEMS:\n• Aim for 15-20 hours of deep work per week. Block 3-4 hour morning sessions.\n• Try to batch all meetings on one day (e.g., Thursday). This keeps the rest of the week meeting-free.\n\n━━━━━━━━━━━━━━━━━━━━\n🎯 Your #1 lever: You are on track. Protect your current systems and incrementally improve.\n\n📌 Score Formula: Base 50 + Deep Work (max +25) + Tool Stack (max +15) + Meeting Efficiency (max +20). Max: 100. Min: 10.',
+    '📈 Productivity Score: 75/100\nGrade: B — Solid Systems\n\n📊 Breakdown:\n• Weekly Deep Work: 15 hours ⚡\n• Tools in Stack: 5 tools ✅\n• Weekly Meetings: 3 meetings ⚡\n\n✅ WINS:\n• Perfect tool stack size. Enough to automate, not so many that you drown in subscriptions.\n\n💡 ACTION ITEMS:\n• Aim for 15-20 hours of deep work per week. Block 3-4 hour morning sessions.\n• Try to batch all meetings on one day (e.g., Thursday). This keeps the rest of the week meeting-free.\n\n🎯 Your #1 lever: You are on track. Protect your current systems and incrementally improve.\n\n📌 Score Formula: Base 50 + Deep Work (max +25) + Tool Stack (max +15) + Meeting Efficiency (max +20). Max: 100. Min: 10.',
     'Peak Performance: Score 100/100 — Deep Work: 40h | Tools: 4 | Meetings: 1/wk',
     'Ideal Solopreneur: Score 95/100 — Deep Work: 25h | Tools: 3 | Meetings: 2/wk',
     'Balanced Grinder: Score 75/100 — Deep Work: 15h | Tools: 5 | Meetings: 4/wk',

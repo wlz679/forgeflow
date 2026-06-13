@@ -32,22 +32,22 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
 
   results.push(
     '🎓 Course Pricing Calculator\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '🎯 Your Targets\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Target Monthly Income: $' + loc(targetMonthlyIncome) + '\n' +
     '• Est. Buyers Per Month:  ' + loc(estimatedBuyersPerMonth) + '\n' +
     '• Platform Fee:                     ' + platformFee + '%\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '💰 Pricing Results\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Optimal Course Price:   $' + fmt(optimalPrice) + '\n' +
     '• Breakeven Price:          $' + fmt(breakevenPrice) + ' (before fees)\n' +
     '• Gross Revenue:            $' + fmt(revenueAtOptimal) + '/mo\n' +
     '• Platform Takes:            $' + fmt(platformTake) + '/mo\n' +
     '• Net Revenue:                $' + fmt(netRevenue) + '/mo\n\n' +
     assessment + '\n\n' +
-    '💡 Tip: Many creators underprice their first course. Test a higher price with a launch discount rather than permanently setting a low price. You can always discount later, but raising prices is harder. Consider offering a payment plan at 2-3x the one-time price for higher total revenue per student.',
+    '',
   );
 
   const pricePoints = [29, 49, 97, 147, 197, 297, 497, 697, 997];
@@ -133,7 +133,7 @@ const engine: ToolEngine = {
     return calculateCoursePricing(inputs);
   },
   staticExamples: [
-    '🎓 Course Pricing Calculator\n\n━━━━━━━━━━━━━━━━━━━━\n🎯 Your Targets\n━━━━━━━━━━━━━━━━━━━━\n\n• Target Monthly Income: $5,000\n• Est. Buyers Per Month:  50\n• Platform Fee:                     10%\n\n━━━━━━━━━━━━━━━━━━━━\n💰 Pricing Results\n━━━━━━━━━━━━━━━━━━━━\n\n• Optimal Course Price:   $111.11\n• Breakeven Price:          $100.00 (before fees)\n• Gross Revenue:            $5,555.56/mo\n• Platform Takes:            $555.56/mo\n• Net Revenue:                $5,000.00/mo\n\n📊 Mid-range. $111.11 is the sweet spot for online courses. Buyers expect solid production quality and clear outcomes at this level.\n\n💡 Tip: Many creators underprice their first course. Test a higher price with a launch discount rather than permanently setting a low price. You can always discount later, but raising prices is harder. Consider offering a payment plan at 2-3x the one-time price for higher total revenue per student.',
+    '🎓 Course Pricing Calculator\n\n🎯 Your Targets\n\n• Target Monthly Income: $5,000\n• Est. Buyers Per Month:  50\n• Platform Fee:                     10%\n\n💰 Pricing Results\n\n• Optimal Course Price:   $111.11\n• Breakeven Price:          $100.00 (before fees)\n• Gross Revenue:            $5,555.56/mo\n• Platform Takes:            $555.56/mo\n• Net Revenue:                $5,000.00/mo\n\n📊 Mid-range. $111.11 is the sweet spot for online courses. Buyers expect solid production quality and clear outcomes at this level.\n',
     'Comparison: At $29 price → Gross: $1,450/mo | Net: $1,305/mo | Annual: $15,660/yr',
     'Comparison: At $97 price → Gross: $4,850/mo | Net: $4,365/mo | Annual: $52,380/yr',
     'Comparison: At $197 price → Gross: $9,850/mo | Net: $8,865/mo | Annual: $106,380/yr',

@@ -135,7 +135,7 @@ const engine: ToolEngine = {
     return calculateChurn(inputs);
   },
   staticExamples: [
-    '📉 Churn Rate Analysis\n\n• Customers at Start: 500\n• Customers Lost: 15\n• New Customers Added: 25\n• Customers at End: 510\n• Net Growth: +10 (2.0%)\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Metrics:\n\n• Monthly Churn Rate: 3.0%\n• Annual Churn Rate: 30.6%\n• Revenue Churn Impact: 3.0%\n• Monthly Revenue Lost to Churn: $750\n• Annual Revenue Lost to Churn: $9,000\n\n🟡 AVERAGE: 2-5% monthly churn is typical for SaaS. There is room for improvement.\n\n💡 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively — fix it first.',
+    '📉 Churn Rate Analysis\n\n• Customers at Start: 500\n• Customers Lost: 15\n• New Customers Added: 25\n• Customers at End: 510\n• Net Growth: +10 (2.0%)\n\n📊 Key Metrics:\n\n• Monthly Churn Rate: 3.0%\n• Annual Churn Rate: 30.6%\n• Revenue Churn Impact: 3.0%\n• Monthly Revenue Lost to Churn: $750\n• Annual Revenue Lost to Churn: $9,000\n\n🟡 AVERAGE: 2-5% monthly churn is typical for SaaS. There is room for improvement.\n',
     'Best Case (1% churn): Lose 5 cust/mo | Annual churn 11.4% | End with 520 customers | Lose $250/mo',
     'Good (2% churn): Lose 10 cust/mo | Annual churn 21.5% | End with 515 customers | Lose $500/mo',
     'Average (3% churn): Lose 15 cust/mo | Annual churn 30.6% | End with 510 customers | Lose $750/mo',

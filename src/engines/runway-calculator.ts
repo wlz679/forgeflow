@@ -136,7 +136,7 @@ const engine: ToolEngine = {
     return calculateRunway(inputs);
   },
   staticExamples: [
-    '🚀 Runway Analysis\n\n• Cash on Hand: $50,000\n• Monthly Burn: $15,000\n• Monthly Revenue: $3,000\n• Net Monthly Burn: $12,000\n• Burn Multiple: 4.00x\n\n━━━━━━━━━━━━━━━━━━━━\n\n• Months of Runway: 4.2 months\n• Cash Run-out Date: October 15, 2026\n\n🟡 WARNING: 3-6 months of runway. Start fundraising conversations now.\n\n💡 Tip: Aim for 18-24 months of runway after each fundraise. This gives you enough time to hit the next milestone before needing to raise again.',
+    '🚀 Runway Analysis\n\n• Cash on Hand: $50,000\n• Monthly Burn: $15,000\n• Monthly Revenue: $3,000\n• Net Monthly Burn: $12,000\n• Burn Multiple: 4.00x\n\n• Months of Runway: 4.2 months\n• Cash Run-out Date: October 15, 2026\n\n🟡 WARNING: 3-6 months of runway. Start fundraising conversations now.\n',
     'Reduce burn 10%: Burn $13,500/mo → 5.2 months of runway',
     'Reduce burn 25%: Burn $11,250/mo → 7.1 months of runway',
     'Reduce burn 50%: Burn $7,500/mo → 16.7 months of runway',

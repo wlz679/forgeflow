@@ -32,23 +32,23 @@ function calculateProfitability(inputs: Record<string, string>): string[] {
 
   results.push(
     '💰 Project Profitability Report\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '📋 Revenue & Costs\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Project Revenue:       $' + loc(projectRevenue) + '\n' +
     '• Hours Estimated:       ' + hoursEstimated + ' hrs\n' +
     '• Hourly Cost Rate:      $' + loc(hourlyCost) + '/hr\n' +
     '• Total Labor Cost:      $' + loc(totalLaborCost) + '\n' +
     '• Material Cost:           $' + loc(materialCost) + '\n' +
     '• Total Cost:                $' + loc(totalCost) + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '📈 Key Metrics\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Net Profit:                  $' + loc(profit) + '\n' +
     '• Profit Margin:            ' + profitMargin.toFixed(1) + '%\n' +
     '• Effective Hourly Rate: $' + fmt(effectiveHourly) + '/hr\n\n' +
     assessment + '\n\n' +
-    '💡 Tip: Track actual hours spent on every project. If you consistently exceed estimates, raise your prices or improve scoping. Your effective hourly rate tells the real story of whether a project was worth it.',
+    '',
   );
 
   const rates = [25, 40, 60, 80, 100, 120, 150, 200, 250];
@@ -137,7 +137,7 @@ const engine: ToolEngine = {
     return calculateProfitability(inputs);
   },
   staticExamples: [
-    '💰 Project Profitability Report\n\n━━━━━━━━━━━━━━━━━━━━\n📋 Revenue & Costs\n━━━━━━━━━━━━━━━━━━━━\n\n• Project Revenue:       $5,000\n• Hours Estimated:       40 hrs\n• Hourly Cost Rate:      $50/hr\n• Total Labor Cost:      $2,000\n• Material Cost:           $200\n• Total Cost:                $2,200\n\n━━━━━━━━━━━━━━━━━━━━\n📈 Key Metrics\n━━━━━━━━━━━━━━━━━━━━\n\n• Net Profit:                  $2,800\n• Profit Margin:            56.0%\n• Effective Hourly Rate: $125.00/hr\n\n🚀 Outstanding! A 56% margin means this project is highly profitable. You are pricing well above your costs.\n\n💡 Tip: Track actual hours spent on every project. If you consistently exceed estimates, raise your prices or improve scoping. Your effective hourly rate tells the real story of whether a project was worth it.',
+    '💰 Project Profitability Report\n\n📋 Revenue & Costs\n\n• Project Revenue:       $5,000\n• Hours Estimated:       40 hrs\n• Hourly Cost Rate:      $50/hr\n• Total Labor Cost:      $2,000\n• Material Cost:           $200\n• Total Cost:                $2,200\n\n📈 Key Metrics\n\n• Net Profit:                  $2,800\n• Profit Margin:            56.0%\n• Effective Hourly Rate: $125.00/hr\n\n🚀 Outstanding! A 56% margin means this project is highly profitable. You are pricing well above your costs.\n',
     'Comparison: At $25/hr cost → Cost: $1,200 | Profit: $3,800 | Margin: 76.0% | Effective: $125.00/hr',
     'Comparison: At $40/hr cost → Cost: $1,800 | Profit: $3,200 | Margin: 64.0% | Effective: $125.00/hr',
     'Comparison: At $100/hr cost → Cost: $4,200 | Profit: $800 | Margin: 16.0% | Effective: $125.00/hr',

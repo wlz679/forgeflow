@@ -24,13 +24,18 @@ export function getStaticPaths() {
 }
 
 const { slug, lang } = Astro.params;
+const redirects: Record<string, string> = {
+  'solopreneur-runway-calculator': 'solopreneur-burn-rate-calculator',
+};
+if (redirects[slug!]) return Astro.redirect(`/${lang}/${redirects[slug!]}`);
+
 const engine = getEngine(slug!);
 if (!engine) return Astro.redirect(`/${lang}/`);
 
 const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
-const metaTitle = `${toolTitle} — Free Solopreneur Tool`;
+const metaTitle = `${toolTitle} — CalcKit`;
 const isInteractive = engine.inputs.length > 0;
 const clientConfig = JSON.stringify(engine.clientConfig);
 
@@ -99,7 +104,10 @@ const schema = JSON.stringify({
               ) : (
                 <div class="mb-4">
                   <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
-                  <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                  <div class="relative">
+                    {input.type === 'number' && <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>}
+                    <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class={`w-full ${input.type === 'number' ? 'pl-8' : 'pl-4'} pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all`} />
+                  </div>
                 </div>
               )
             ))}
@@ -119,9 +127,13 @@ const schema = JSON.stringify({
           <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label={t('btn.copy_all', lang)} data-copied-label={t('btn.copied', lang)}>{t('btn.copy_all', lang)}</span>
         </div>
 
+        <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">{t('results.example', lang)}</span>
         <div id="static-results" class="space-y-3">
-          {engine.staticExamples.map((ex, i) => (
-            <ResultCard text={ex} index={i} />
+          {(engine.clientConfig.type === 'custom'
+            ? [engine.staticExamples[0]]
+            : engine.staticExamples
+          ).map((ex, i) => (
+            <ResultCard text={ex} index={i} hideIndex={engine.clientConfig.type === 'custom'} />
           ))}
         </div>
 
@@ -136,7 +148,7 @@ const schema = JSON.stringify({
 
 {isInteractive && (
   <>
-    <script define:vars={{ clientConfig }}>
+    <script define:vars={{ clientConfig, exportLabel: t('btn.export', lang) }}>
       function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
       function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
       function generateFromConfig(config, inputs) {
@@ -177,6 +189,8 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         var inputs = {};
         fd.forEach(function(v, k) { inputs[k] = v.toString(); });
         var results = generateFromConfig(config, inputs);
+        var exportResult = config.type === 'custom' ? results[0] : results.join('\n\n');
+        if (config.type === 'custom') { results = [results[0]]; }
 
         var html = '';
         for (var i = 0; i < results.length; i++) {
@@ -190,16 +204,34 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             html += '<div class="detail hidden mt-3 pt-3 border-t border-gray-100 space-y-2">';
             for (var d = 1; d < dims.length; d++) { var kv = dims[d].split(' → '); html += '<div class="flex gap-2 text-sm"><span class="text-gray-400 shrink-0 font-medium">' + esc(kv[0]) + '</span><span class="text-gray-700">' + esc(kv.slice(1).join(' → ')) + '</span></div>'; }
             html += '</div></div>';
+          } else if (config.type === 'custom' && results.length === 1) {
+            // Calculator single result — structured dashboard card, no index
+            var lines = r.split('\n').filter(function(l) { return l.indexOf('💡 Tip:') === -1; });
+            var titleLine = lines[0];
+            var restLines = lines.slice(1).join('\n');
+            var strippedR = lines.join('\n');
+            html += '<div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#7C3AED]/30 transition-all duration-300">';
+            html += '<div class="flex items-start justify-between gap-3 p-5 pb-3 border-b border-gray-50">';
+            html += '<h3 class="text-base font-bold text-gray-900">' + esc(titleLine) + '</h3>';
+            html += '<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">';
+            html += '<button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#7C3AED] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-copy="' + escAttr(strippedR) + '"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>';
+            html += '<button type="button" class="export-btn inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#059669] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>' + exportLabel + '</span></button>';
+            html += '</div></div>';
+            html += '<div class="p-5 bg-gray-50/50 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">' + esc(restLines) + '</div>';
+            html += '</div>';
           } else {
+            var strippedR2 = r.split('\n').filter(function(l) { return l.indexOf('💡 Tip:') === -1; }).join('\n');
             html += '<div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 transition-all duration-300"><span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#' + (i+1) + '</span>';
-            html += '<span class="text-sm text-gray-700 flex-1 leading-relaxed">' + esc(r) + '</span>';
-            html += '<button type="button" class="copy-btn opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#7C3AED] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-copy="' + escAttr(r) + '"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button></div>';
+            html += '<span class="text-sm text-gray-700 flex-1 leading-relaxed whitespace-pre-line">' + esc(strippedR2) + '</span>';
+            html += '<button type="button" class="copy-btn opacity-0 group-hover:opacity-100 inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#7C3AED] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-copy="' + escAttr(strippedR2) + '"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button></div>';
           }
         }
         dynamicResults.innerHTML = html;
         dynamicResults.classList.remove('hidden');
         staticResults.classList.add('hidden');
         copyAllBtn.classList.remove('hidden');
+        var badge = document.getElementById('example-badge');
+        if (badge) badge.classList.add('hidden');
 
         dynamicResults.querySelectorAll('.expand-btn').forEach(function(btn) {
           btn.addEventListener('click', function() {
@@ -220,6 +252,38 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             }.bind(this));
           });
         });
+        var exportBtns = dynamicResults.querySelectorAll('.export-btn');
+        if (exportBtns.length > 0) {
+          exportBtns.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var lines = [];
+              lines.push('CalcKit — ' + (document.querySelector('h1')?.textContent || 'Calculator'));
+              lines.push('Generated: ' + new Date().toLocaleString());
+              lines.push('');
+              lines.push('INPUTS');
+              lines.push('------');
+              var fields = form.querySelectorAll('input, select');
+              fields.forEach(function(f) {
+                var label = document.querySelector('label[for="' + f.id + '"]');
+                var labelText = label ? label.textContent.trim() : f.name;
+                lines.push(labelText + ': ' + (f.value || '(empty)'));
+              });
+              lines.push('');
+              lines.push('RESULTS');
+              lines.push('-------');
+              lines.push(exportResult);
+              var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+              var a = document.createElement('a');
+              a.href = URL.createObjectURL(blob);
+              a.download = 'calckit-result-' + new Date().toISOString().slice(0, 10) + '.txt';
+              a.click();
+              URL.revokeObjectURL(a.href);
+              var t = this;
+              t.style.color = '#059669';
+              setTimeout(function() { t.style.color = ''; }, 1500);
+            });
+          });
+        }
       });
 
       copyAllBtn.addEventListener('click', function() {

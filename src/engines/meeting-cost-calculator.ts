@@ -33,21 +33,21 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
 
   results.push(
     '⏰ Meeting Cost Calculator\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '📋 Meeting Setup\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Attendees:                       ' + attendees + ' people\n' +
     '• Avg Hourly Rate:           $' + loc(avgHourlyRate) + '/hr\n' +
     '• Meeting Length:             ' + meetingMinutes + ' min (' + fmt(hoursPerMeeting) + ' hrs)\n' +
     '• Meetings Per Week:      ' + meetingsPerWeek + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '💸 True Cost of Meetings\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Cost Per Meeting:          $' + fmt(costPerMeeting) + '\n' +
     '• Weekly Cost:                  $' + fmt(weeklyCost) + ' (' + fmt(weeklyHours) + ' person-hours)\n' +
     '• Annual Cost:                  $' + fmt(annualCost) + ' (' + loc(Math.round(annualHours)) + ' person-hours)\n\n' +
     assessment + '\n\n' +
-    '💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.',
+    '',
   );
 
   const meetingLengths = [5, 10, 15, 20, 30, 45, 60, 90, 120];
@@ -136,7 +136,7 @@ const engine: ToolEngine = {
     return calculateMeetingCost(inputs);
   },
   staticExamples: [
-    '⏰ Meeting Cost Calculator\n\n━━━━━━━━━━━━━━━━━━━━\n📋 Meeting Setup\n━━━━━━━━━━━━━━━━━━━━\n\n• Attendees:                       6 people\n• Avg Hourly Rate:           $75/hr\n• Meeting Length:             30 min (0.50 hrs)\n• Meetings Per Week:      1\n\n━━━━━━━━━━━━━━━━━━━━\n💸 True Cost of Meetings\n━━━━━━━━━━━━━━━━━━━━\n\n• Cost Per Meeting:          $225.00\n• Weekly Cost:                  $225.00 (3.00 person-hours)\n• Annual Cost:                  $10,800.00 (144 person-hours)\n\n📊 Moderate. $225/week on meetings is typical. Audit recurring meetings quarterly — are they all still necessary?\n\n💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.',
+    '⏰ Meeting Cost Calculator\n\n📋 Meeting Setup\n\n• Attendees:                       6 people\n• Avg Hourly Rate:           $75/hr\n• Meeting Length:             30 min (0.50 hrs)\n• Meetings Per Week:      1\n\n💸 True Cost of Meetings\n\n• Cost Per Meeting:          $225.00\n• Weekly Cost:                  $225.00 (3.00 person-hours)\n• Annual Cost:                  $10,800.00 (144 person-hours)\n\n📊 Moderate. $225/week on meetings is typical. Audit recurring meetings quarterly — are they all still necessary?\n',
     'Comparison: 5 min meeting → $37.50/meeting | $37.50/wk | $1,800/yr | 24 hrs/yr',
     'Comparison: 15 min meeting → $112.50/meeting | $112.50/wk | $5,400/yr | 72 hrs/yr',
     'Comparison: 30 min meeting → $225.00/meeting | $225.00/wk | $10,800/yr | 144 hrs/yr',

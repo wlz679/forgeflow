@@ -38,12 +38,12 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
     '💰 Sponsorship Rate Estimate\n\n' +
     '🎙️ Content Type: ' + typeLabel[contentType] + '\n' +
     '📊 CPM: $' + cpm + ' per 1,000 impressions\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '📈 Channel Breakdown:\n' +
     '• Downloads/Listens: $' + loc(podcastValue) + '/episode\n' +
     '• Email Subscribers: $' + loc(newsletterValue) + '/send\n' +
     '• Social Followers: $' + loc(socialValue) + '/post\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💵 Per Sponsorship Value: ' + loc(totalPerSponsorship) + '\n' +
     '📆 Monthly Value (4 placements): ' + loc(monthlyValue) + '\n' +
     '💰 Annual Sponsorship Revenue: ' + loc(annualValue) + '\n\n' +
@@ -140,7 +140,7 @@ const engine: ToolEngine = {
     return calculateSponsorship(inputs);
   },
   staticExamples: [
-    '💰 Sponsorship Rate Estimate\n\n🎙️ Content Type: Newsletter\n📊 CPM: $40 per 1,000 impressions\n\n━━━━━━━━━━━━━━━━━━━━\n\n📈 Channel Breakdown:\n• Downloads/Listens: $250/episode\n• Email Subscribers: $200/send\n• Social Followers: $300/post\n\n━━━━━━━━━━━━━━━━━━━━\n\n💵 Per Sponsorship Value: $550\n📆 Monthly Value (4 placements): $2,200\n💰 Annual Sponsorship Revenue: $26,400\n\n💡 Your audience size of 30,000 total reach puts you in the mid-tier category. Brands typically pay $40 CPM for this content type.',
+    '💰 Sponsorship Rate Estimate\n\n🎙️ Content Type: Newsletter\n📊 CPM: $40 per 1,000 impressions\n\n📈 Channel Breakdown:\n• Downloads/Listens: $250/episode\n• Email Subscribers: $200/send\n• Social Followers: $300/post\n\n💵 Per Sponsorship Value: $550\n📆 Monthly Value (4 placements): $2,200\n💰 Annual Sponsorship Revenue: $26,400\n\n💡 Your audience size of 30,000 total reach puts you in the mid-tier category. Brands typically pay $40 CPM for this content type.',
     'Comparison: 1,000 audience → $160/mo ($1,920/yr) as newsletter sponsor',
     'Comparison: 5,000 audience → $800/mo ($9,600/yr) as newsletter sponsor',
     'Comparison: 15,000 audience → $2,400/mo ($28,800/yr) as newsletter sponsor',

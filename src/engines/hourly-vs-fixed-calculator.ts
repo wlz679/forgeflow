@@ -30,23 +30,23 @@ function calculatePricingModel(inputs: Record<string, string>): string[] {
 
   results.push(
     '💼 Pricing Model Calculator\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '🎯 Your Income Target\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Annual Income Goal:     $' + loc(annualIncomeGoal) + '\n' +
     '• Billable Hours/Week:     ' + billableHoursPerWeek + ' hrs\n' +
     '• Weeks Off Per Year:      ' + weeksOffPerYear + ' wks\n' +
     '• Working Weeks:              ' + workingWeeks + ' wks\n' +
     '• Annual Billable Hours:    ' + annualBillableHours + ' hrs\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '💵 Required Pricing\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Required Hourly Rate: $' + fmt(requiredHourly) + '/hr\n' +
     '• Daily Rate (8 hrs):        $' + loc(Math.round(dailyRate)) + '/day\n' +
     '• Weekly Rate:                 $' + loc(Math.round(weeklyRate)) + '/wk\n' +
     '• Monthly Retainer:        $' + loc(Math.round(monthlyRetainer)) + '/mo\n\n' +
     assessment + '\n\n' +
-    '💡 Tip: Most freelancers bill only 60-70% of working hours. The rest goes to admin, marketing, and skill-building. For a safer estimate, multiply your required hourly rate by 1.4 to account for non-billable time.',
+    '',
   );
 
   const goals = [30000, 50000, 75000, 100000, 150000, 200000, 250000, 350000, 500000];
@@ -128,7 +128,7 @@ const engine: ToolEngine = {
     return calculatePricingModel(inputs);
   },
   staticExamples: [
-    '💼 Pricing Model Calculator\n\n━━━━━━━━━━━━━━━━━━━━\n🎯 Your Income Target\n━━━━━━━━━━━━━━━━━━━━\n\n• Annual Income Goal:     $100,000\n• Billable Hours/Week:     30 hrs\n• Weeks Off Per Year:      4 wks\n• Working Weeks:              48 wks\n• Annual Billable Hours:    1,440 hrs\n\n━━━━━━━━━━━━━━━━━━━━\n💵 Required Pricing\n━━━━━━━━━━━━━━━━━━━━\n\n• Required Hourly Rate: $69.44/hr\n• Daily Rate (8 hrs):        $556/day\n• Weekly Rate:                 $2,083/wk\n• Monthly Retainer:        $8,333/mo\n\n📈 Ambitious but realistic. $69.44/hr requires solid expertise and client trust. Specialize deeply to justify this rate.\n\n💡 Tip: Most freelancers bill only 60-70% of working hours. The rest goes to admin, marketing, and skill-building. For a safer estimate, multiply your required hourly rate by 1.4 to account for non-billable time.',
+    '💼 Pricing Model Calculator\n\n🎯 Your Income Target\n\n• Annual Income Goal:     $100,000\n• Billable Hours/Week:     30 hrs\n• Weeks Off Per Year:      4 wks\n• Working Weeks:              48 wks\n• Annual Billable Hours:    1,440 hrs\n\n💵 Required Pricing\n\n• Required Hourly Rate: $69.44/hr\n• Daily Rate (8 hrs):        $556/day\n• Weekly Rate:                 $2,083/wk\n• Monthly Retainer:        $8,333/mo\n\n📈 Ambitious but realistic. $69.44/hr requires solid expertise and client trust. Specialize deeply to justify this rate.\n',
     'Comparison: $30,000/yr goal → $20.83/hr | $2,500/mo retainer | $167/day',
     'Comparison: $50,000/yr goal → $34.72/hr | $4,167/mo retainer | $278/day',
     'Comparison: $150,000/yr goal → $104.17/hr | $12,500/mo retainer | $833/day',

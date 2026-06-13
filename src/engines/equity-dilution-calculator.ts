@@ -26,12 +26,12 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
     '💰 Investment Amount: ' + loc(investmentAmount) + '\n' +
     '🏗️ Founder Shares (initial): ' + founderShares.toLocaleString() + '\n' +
     '📈 Price Per Share: ' + fmt(pricePerShare) + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '🚀 Post-Money Valuation: ' + loc(postMoneyValuation) + '\n' +
     '🤝 Investor Ownership: ' + pct(investorOwnershipPct) + '% (' + investorShares.toLocaleString() + ' shares)\n' +
     '👤 Founder Ownership After: ' + pct(founderOwnershipAfter) + '% (' + founderSharesAfter.toLocaleString() + ' shares)\n' +
     '📉 Founder Dilution: ' + pct(dilutionPct) + '%\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '📊 Cap Table:\n' +
     '• Total Shares: ' + totalSharesAfter.toLocaleString() + '\n' +
     '• Founder: ' + founderSharesAfter.toLocaleString() + ' shares (' + pct(founderOwnershipAfter) + '%)\n' +
@@ -121,7 +121,7 @@ const engine: ToolEngine = {
     return calculateEquityDilution(inputs);
   },
   staticExamples: [
-    '📊 Equity Dilution Analysis\n\n🏢 Pre-Money Valuation: $5,000,000\n💰 Investment Amount: $1,000,000\n🏗️ Founder Shares (initial): 10,000,000\n📈 Price Per Share: $0.50\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚀 Post-Money Valuation: $6,000,000\n🤝 Investor Ownership: 16.67% (2,000,000 shares)\n👤 Founder Ownership After: 83.33% (10,000,000 shares)\n📉 Founder Dilution: 16.67%\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Cap Table:\n• Total Shares: 12,000,000\n• Founder: 10,000,000 shares (83.33%)\n• Investor: 2,000,000 shares (16.67%)\n\n💡 At $0.50/share, each additional 10,000,000 shares of employee option pool would dilute founders by an additional ~9.09%.',
+    '📊 Equity Dilution Analysis\n\n🏢 Pre-Money Valuation: $5,000,000\n💰 Investment Amount: $1,000,000\n🏗️ Founder Shares (initial): 10,000,000\n📈 Price Per Share: $0.50\n\n🚀 Post-Money Valuation: $6,000,000\n🤝 Investor Ownership: 16.67% (2,000,000 shares)\n👤 Founder Ownership After: 83.33% (10,000,000 shares)\n📉 Founder Dilution: 16.67%\n\n📊 Cap Table:\n• Total Shares: 12,000,000\n• Founder: 10,000,000 shares (83.33%)\n• Investor: 2,000,000 shares (16.67%)\n\n💡 At $0.50/share, each additional 10,000,000 shares of employee option pool would dilute founders by an additional ~9.09%.',
     'Comparison: Invest $50,000 at $5,000,000 val → Investor gets 0.99% | Founder keeps 99.01% | Dilution: 0.99%',
     'Comparison: Invest $250,000 at $5,000,000 val → Investor gets 4.76% | Founder keeps 95.24% | Dilution: 4.76%',
     'Comparison: Invest $500,000 at $5,000,000 val → Investor gets 9.09% | Founder keeps 90.91% | Dilution: 9.09%',

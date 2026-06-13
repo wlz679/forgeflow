@@ -30,21 +30,21 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
 
   results.push(
     '🔗 Affiliate Income Calculator\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '📊 Your Traffic & Conversions\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Monthly Traffic:              ' + loc(monthlyTraffic) + ' visitors\n' +
     '• Conversion Rate:           ' + conversionRate + '%\n' +
     '• Avg Commission:          $' + fmt(avgCommission) + '\n' +
     '• Monthly Conversions:  ' + loc(Math.round(monthlyConversions)) + ' sales\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n' +
+    '' +
     '💰 Revenue Projections\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '• Monthly Income:            $' + fmt(monthlyIncome) + '\n' +
     '• Annual Income:               $' + fmt(annualIncome) + '\n' +
     '• Income Per 1K Visitors: $' + fmt(incomePerThousand) + '\n\n' +
     assessment + '\n\n' +
-    '💡 Tip: The fastest way to grow affiliate income is improving conversion rate (write better reviews, add comparison tables, use clear CTAs) rather than just increasing traffic. A 1% conversion rate improvement at 50K visitors adds $' + loc(Math.round(50 * avgCommission)) + '/mo.',
+    loc(Math.round(50 * avgCommission)) + '/mo.',
   );
 
   const trafficLevels = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
@@ -125,7 +125,7 @@ const engine: ToolEngine = {
     return calculateAffiliateIncome(inputs);
   },
   staticExamples: [
-    '🔗 Affiliate Income Calculator\n\n━━━━━━━━━━━━━━━━━━━━\n📊 Your Traffic & Conversions\n━━━━━━━━━━━━━━━━━━━━\n\n• Monthly Traffic:              50,000 visitors\n• Conversion Rate:           2%\n• Avg Commission:          $50.00\n• Monthly Conversions:  1,000 sales\n\n━━━━━━━━━━━━━━━━━━━━\n💰 Revenue Projections\n━━━━━━━━━━━━━━━━━━━━\n\n• Monthly Income:            $50,000.00\n• Annual Income:               $600,000.00\n• Income Per 1K Visitors: $1,000.00\n\n🚀 Full-time affiliate income! $50,000/mo is a sustainable business. Diversify your traffic sources and affiliate programs to protect this income.\n\n💡 Tip: The fastest way to grow affiliate income is improving conversion rate (write better reviews, add comparison tables, use clear CTAs) rather than just increasing traffic. A 1% conversion rate improvement at 50K visitors adds $2,500/mo.',
+    '🔗 Affiliate Income Calculator\n\n📊 Your Traffic & Conversions\n\n• Monthly Traffic:              50,000 visitors\n• Conversion Rate:           2%\n• Avg Commission:          $50.00\n• Monthly Conversions:  1,000 sales\n\n💰 Revenue Projections\n\n• Monthly Income:            $50,000.00\n• Annual Income:               $600,000.00\n• Income Per 1K Visitors: $1,000.00\n\n🚀 Full-time affiliate income! $50,000/mo is a sustainable business. Diversify your traffic sources and affiliate programs to protect this income.\n',
     'Comparison: 1,000 visitors/mo → $1,000.00/mo | $12,000.00/yr | 20 sales/mo',
     'Comparison: 10,000 visitors/mo → $10,000.00/mo | $120,000.00/yr | 200 sales/mo',
     'Comparison: 100,000 visitors/mo → $100,000.00/mo | $1,200,000.00/yr | 2,000 sales/mo',

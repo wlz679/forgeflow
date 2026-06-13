@@ -148,7 +148,7 @@ const engine: ToolEngine = {
     return calculateCAC(inputs);
   },
   staticExamples: [
-    '🎯 Customer Acquisition Cost (CAC)\n\n• Marketing Spend: $5,000 (62.5% of total)\n• Sales Spend: $3,000 (37.5% of total)\n• Total Acquisition Spend: $8,000\n• New Customers Acquired: 40\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Results:\n\n• Customer Acquisition Cost (CAC): $200 per customer\n• Avg Revenue per Customer: $50/mo\n• Gross Profit per Customer: $40/mo\n• CAC Payback Period: 5.0 months\n\n• Est. First-Year Customer Value: $480\n• Target LTV (at 3:1 ratio): $600\n\n🟢 STRONG: CAC payback in 5.0 months is excellent. You recover acquisition costs quickly and can reinvest faster.\n\n💡 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.',
+    '🎯 Customer Acquisition Cost (CAC)\n\n• Marketing Spend: $5,000 (62.5% of total)\n• Sales Spend: $3,000 (37.5% of total)\n• Total Acquisition Spend: $8,000\n• New Customers Acquired: 40\n\n📊 Key Results:\n\n• Customer Acquisition Cost (CAC): $200 per customer\n• Avg Revenue per Customer: $50/mo\n• Gross Profit per Customer: $40/mo\n• CAC Payback Period: 5.0 months\n\n• Est. First-Year Customer Value: $480\n• Target LTV (at 3:1 ratio): $600\n\n🟢 STRONG: CAC payback in 5.0 months is excellent. You recover acquisition costs quickly and can reinvest faster.\n',
     'Cut spend 50%: $4,000 total spend, 20 customers, CAC $200, Payback 5.0 mo',
     'Cut spend 25%: $6,000 total spend, 30 customers, CAC $200, Payback 5.0 mo',
     'Current: $8,000 total spend, 40 customers, CAC $200, Payback 5.0 mo',

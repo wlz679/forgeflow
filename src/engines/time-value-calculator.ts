@@ -24,18 +24,18 @@ function calculateTimeValue(inputs: Record<string, string>): string[] {
     '⏱️ Time Value Analysis\n\n' +
     '💰 Annual Income: $' + annualIncome.toLocaleString() + '\n' +
     '🕐 Work Schedule: ' + hoursPerWeek + ' hrs/wk × ' + weeksPerYear + ' wks/yr = ' + totalHours + ' hrs/yr\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '⚡ Your Hourly Rate: ' + loc(hourlyRate) + '/hr\n' +
     '📅 Daily Rate (8 hrs): ' + loc(dailyRate) + '/day\n' +
     '📆 Monthly Value: ' + loc(monthlyValue) + '/mo\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💸 The Cost of Lost Time:\n' +
     '• 30-Minute Meeting: ' + loc(costOf30MinMeeting) + '\n' +
     '• 1-Hour Meeting: ' + loc(costOf1HrMeeting) + '\n' +
     '• Context Switch (30 min to refocus): ' + loc(contextSwitchCost) + '\n' +
     '• 2 Hrs/Day Wasted: $' + fmt(dailyTimeWaste2Hrs) + '/day\n' +
     '• Yearly Waste (2 hrs/day): ' + loc(yearlyTimeWaste) + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '💡 At your rate, every 15-minute interruption costs ' + loc(hourlyRate / 4) +
     '. Protect your focus time fiercely.\n\n' +
     '📌 If you cut 1 wasteful hour per day, you save ' + loc(hourlyRate * weeksPerYear * 5) + ' per year in lost productivity.',
@@ -117,7 +117,7 @@ const engine: ToolEngine = {
     return calculateTimeValue(inputs);
   },
   staticExamples: [
-    '⏱️ Time Value Analysis\n\n💰 Annual Income: $100,000\n🕐 Work Schedule: 40 hrs/wk × 48 wks/yr = 1,920 hrs/yr\n\n━━━━━━━━━━━━━━━━━━━━\n\n⚡ Your Hourly Rate: $52.08/hr\n📅 Daily Rate (8 hrs): $416.67/day\n📆 Monthly Value: $8,333.33/mo\n\n━━━━━━━━━━━━━━━━━━━━\n\n💸 The Cost of Lost Time:\n• 30-Minute Meeting: $26.04\n• 1-Hour Meeting: $52.08\n• Context Switch (30 min to refocus): $26.04\n• 2 Hrs/Day Wasted: $104.17/day\n• Yearly Waste (2 hrs/day): $25,000.00\n\n━━━━━━━━━━━━━━━━━━━━\n\n💡 At your rate, every 15-minute interruption costs $13.02. Protect your focus time fiercely.\n\n📌 If you cut 1 wasteful hour per day, you save $12,500.00 per year in lost productivity.',
+    '⏱️ Time Value Analysis\n\n💰 Annual Income: $100,000\n🕐 Work Schedule: 40 hrs/wk × 48 wks/yr = 1,920 hrs/yr\n\n⚡ Your Hourly Rate: $52.08/hr\n📅 Daily Rate (8 hrs): $416.67/day\n📆 Monthly Value: $8,333.33/mo\n\n💸 The Cost of Lost Time:\n• 30-Minute Meeting: $26.04\n• 1-Hour Meeting: $52.08\n• Context Switch (30 min to refocus): $26.04\n• 2 Hrs/Day Wasted: $104.17/day\n• Yearly Waste (2 hrs/day): $25,000.00\n\n💡 At your rate, every 15-minute interruption costs $13.02. Protect your focus time fiercely.\n\n📌 If you cut 1 wasteful hour per day, you save $12,500.00 per year in lost productivity.',
     'Comparison: $30,000/yr → $15.62/hr | 1hr meeting: $15.62 | Yearly waste @2hrs/day: $7,500.00',
     'Comparison: $50,000/yr → $26.04/hr | 1hr meeting: $26.04 | Yearly waste @2hrs/day: $12,500.00',
     'Comparison: $75,000/yr → $39.06/hr | 1hr meeting: $39.06 | Yearly waste @2hrs/day: $18,750.00',

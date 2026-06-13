@@ -66,7 +66,7 @@ function planPricing(inputs: Record<string, string>): string[] {
     '🎯 Pricing Recommendations for ' + productType + '\n\n' +
     '👤 Target: ' + targetCustomer + '\n' +
     '💰 Competitor Price: $' + (competitorPrice || 'N/A') + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '⭐ BEST FIT: ' + models[primaryRec].name + ' Pricing\n' +
     models[primaryRec].best + '\n\n' +
     'Suggested Price Points:\n' +
@@ -74,7 +74,7 @@ function planPricing(inputs: Record<string, string>): string[] {
     '• Pro (recommended): $' + models[primaryRec].mid + '/mo\n' +
     '• Max: $' + models[primaryRec].high + '/mo\n\n' +
     '💡 ' + models[primaryRec].tip + '\n\n' +
-    '━━━━━━━━━━━━━━━━━━\n\n' +
+    '\n' +
     '📊 All Models Compared:\n',
   );
 
@@ -152,7 +152,7 @@ const engine: ToolEngine = {
     return planPricing(inputs);
   },
   staticExamples: [
-    '🎯 Pricing Recommendations for SaaS\n\n👤 Target: b2b\n💰 Competitor Price: $29\n\n━━━━━━━━━━━━━━━━━━━━\n\n⭐ BEST FIT: Tiered Pricing\nProducts with power users who will pay more for advanced features.\n\nSuggested Price Points:\n• Starter: $15/mo\n• Pro (recommended): $29/mo\n• Max: $73/mo\n\n💡 3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing).\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 All Models Compared:',
+    '🎯 Pricing Recommendations for SaaS\n\n👤 Target: b2b\n💰 Competitor Price: $29\n\n⭐ BEST FIT: Tiered Pricing\nProducts with power users who will pay more for advanced features.\n\nSuggested Price Points:\n• Starter: $15/mo\n• Pro (recommended): $29/mo\n• Max: $73/mo\n\n💡 3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing).\n\n📊 All Models Compared:',
     '• Flat-Rate: $20 – $29 – $44/mo\n  Simple tools with one clear use case. Best for early-stage products.',
     '⭐ Tiered: $15 – $29 – $73/mo\n  Products with power users who will pay more for advanced features.',
     '• Usage-Based: $12 – $35 – $87/mo\n  API products, AI tools, or any product where value scales with usage.',
