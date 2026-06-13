@@ -14,6 +14,7 @@ interface ModelInfo {
   batchInput: number;
   batchOutput: number;
   order: number;
+  reasoningMultiplier?: number; // o-series ≈4, others default to 1
 }
 
 const MODELS: Record<string, ModelInfo> = {
@@ -111,6 +112,7 @@ const MODELS: Record<string, ModelInfo> = {
     batchInput: 1.0,
     batchOutput: 4.0,
     order: 9,
+    reasoningMultiplier: 4,
   },
   "o4-mini": {
     input: 1.1,
@@ -121,6 +123,7 @@ const MODELS: Record<string, ModelInfo> = {
     batchInput: 0.55,
     batchOutput: 2.2,
     order: 10,
+    reasoningMultiplier: 4,
   },
 
   // Legacy
@@ -340,9 +343,12 @@ function calculate(inputs: Record<string, string>): string[] {
     const inputPrice = pricingMode === "batch" ? info.batchInput : info.input;
     const outputPrice =
       pricingMode === "batch" ? info.batchOutput : info.output;
+    // o-series models generate hidden reasoning tokens billed as output (≈4× visible tokens)
+    const rm = info.reasoningMultiplier || 1;
+    const effectiveOut = outTokens * rm;
     const costPerReq =
       (inTokens / 1_000_000) * inputPrice +
-      (outTokens / 1_000_000) * outputPrice;
+      (effectiveOut / 1_000_000) * outputPrice;
     const monthlyCost = costPerReq * reqPerDay * 30;
     allCosts.push({
       key,
@@ -448,7 +454,9 @@ function calculate(inputs: Record<string, string>): string[] {
     out.push(DASH.repeat(44));
 
     const inputCostLine = (inTokens / 1_000_000) * item.inputPrice;
-    const outputCostLine = (outTokens / 1_000_000) * item.outputPrice;
+    const rm = item.info.reasoningMultiplier || 1;
+    const effectiveOut = outTokens * rm;
+    const outputCostLine = (effectiveOut / 1_000_000) * item.outputPrice;
     out.push(
       "Input:  " +
         pad(lc(inTokens), 7) +
@@ -461,12 +469,16 @@ function calculate(inputs: Record<string, string>): string[] {
     out.push(
       "Output: " +
         pad(lc(outTokens), 7) +
-        " tokens × " +
+        (rm > 1 ? " visible + ~" + lc(outTokens * (rm - 1)) + " reasoning" : " tokens") +
+        " × " +
         fmt(item.outputPrice) +
         "/1M → " +
         fmt(outputCostLine) +
         "/req",
     );
+    if (rm > 1) {
+      out.push("🧠 o-series: hidden reasoning tokens (≈×" + rm + " visible) billed at output rate");
+    }
     out.push(DASH.repeat(44));
     out.push("Per request:    " + fmt(item.costPerReq));
     out.push("Daily (" + reqPerDay + "):    " + fmt(dailyCost));
@@ -478,7 +490,7 @@ function calculate(inputs: Record<string, string>): string[] {
     if (pricingMode === "realtime") {
       const batchCPR =
         (inTokens / 1_000_000) * item.info.batchInput +
-        (outTokens / 1_000_000) * item.info.batchOutput;
+        (effectiveOut / 1_000_000) * item.info.batchOutput;
       const batchMonthly = batchCPR * reqPerDay * 30;
       out.push(
         "\u{1F4A1} Batch pricing: " +
@@ -490,7 +502,7 @@ function calculate(inputs: Record<string, string>): string[] {
     } else {
       const realtimeCPR =
         (inTokens / 1_000_000) * item.info.input +
-        (outTokens / 1_000_000) * item.info.output;
+        (effectiveOut / 1_000_000) * item.info.output;
       const realtimeMonthly = realtimeCPR * reqPerDay * 30;
       out.push(
         "\u{1F534} Real-time: " +
@@ -509,7 +521,7 @@ function calculate(inputs: Record<string, string>): string[] {
         item.inputPrice * 0.5 * (cacheHitRate / 100);
       const cachedCPR =
         (inTokens / 1_000_000) * effectiveInput +
-        (outTokens / 1_000_000) * item.outputPrice;
+        (effectiveOut / 1_000_000) * item.outputPrice;
       const cachedMonthly = cachedCPR * reqPerDay * 30;
       out.push(
         "\u{1F4BE} With " +
@@ -658,6 +670,30 @@ function calculate(inputs: Record<string, string>): string[] {
     );
   }
 
+  // Cross-provider comparison — cheapest competitors
+  // DeepSeek Chat: $0.14/$0.28, Gemini 2.0 Flash: $0.10/$0.40
+  const dsCost =
+    (inTokens / 1_000_000) * 0.14 + (outTokens / 1_000_000) * 0.28;
+  const dsMonthly = dsCost * reqPerDay * 30;
+  const gfCost =
+    (inTokens / 1_000_000) * 0.1 + (outTokens / 1_000_000) * 0.4;
+  const gfMonthly = gfCost * reqPerDay * 30;
+  const cheapestCompetitor = dsMonthly < gfMonthly ? "DeepSeek Chat" : "Gemini 2.0 Flash";
+  const cheapestCompCost = Math.min(dsMonthly, gfMonthly);
+  if (cheapest.monthlyCost > 0) {
+    out.push(
+      "\u{1F30D} Cross-provider: " +
+        cheapestCompetitor +
+        " @ " +
+        fmt(cheapestCompCost) +
+        "/mo — saves " +
+        fmt(cheapest.monthlyCost - cheapestCompCost) +
+        "/mo (" +
+        (cheapestCompCost > 0 ? ((1 - cheapestCompCost / cheapest.monthlyCost) * 100).toFixed(0) : "0") +
+        "% cheaper) vs cheapest OpenAI",
+    );
+  }
+
   out.push("");
 
   // ================================================================
@@ -708,8 +744,8 @@ const customFn =
   "M['gpt-4.1']={i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT-4.1',od:6};" +
   "M['gpt-4.1-mini']={i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT-4.1 Mini',od:7};" +
   "M['gpt-4.1-nano']={i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT-4.1 Nano',od:8};" +
-  "M['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'o3',od:9};" +
-  "M['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'o4 Mini',od:10};" +
+  "M['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'o3',od:9,rm:4};" +
+  "M['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'o4 Mini',od:10,rm:4};" +
   "M['gpt-4o']={i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT-4o',od:11};" +
   "M['gpt-4o-mini']={i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT-4o Mini',od:12};" +
   "M['gpt-4-turbo']={i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT-4 Turbo',od:13};" +
@@ -735,7 +771,8 @@ const customFn =
   "var AC=[];var ks=Object.keys(M);for(var i=0;i<ks.length;i++){" +
   "var k=ks[i];var m=M[k];" +
   "var ip=pm==='batch'?m.bi:m.i;var op=pm==='batch'?m.bo:m.o;" +
-  "var cpr=(it/1e6)*ip+(ot/1e6)*op;var mc=cpr*rd*30;" +
+  "var rmu=m.rm||1;var eot=ot*rmu;" +
+  "var cpr=(it/1e6)*ip+(eot/1e6)*op;var mc=cpr*rd*30;" +
   "AC.push({k:k,m:m,ip:ip,op:op,cpr:cpr,mc:mc});}" +
   "AC.sort(function(a,b){return a.m.od-b.m.od});" +
   "var ch=AC.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
@@ -772,9 +809,11 @@ const customFn =
   "var itm=SC[i];var ic=FI[itm.m.f];var dc=itm.cpr*rd;var am=itm.mc*12;" +
   "r.push(ic+' '+itm.m.n+' | Context: '+itm.m.c+' tokens');" +
   "r.push(Array(45).join('\\u2500'));" +
-  "var icl=(it/1e6)*itm.ip;var ocl=(ot/1e6)*itm.op;" +
+  "var icl=(it/1e6)*itm.ip;var rmu2=itm.m.rm||1;var eot2=ot*rmu2;var ocl=(eot2/1e6)*itm.op;" +
   "r.push('Input:  '+pd(lc(it),7)+' tokens \\u00d7 '+fm(itm.ip)+'/1M \\u2192 '+fm(icl)+'/req');" +
-  "r.push('Output: '+pd(lc(ot),7)+' tokens \\u00d7 '+fm(itm.op)+'/1M \\u2192 '+fm(ocl)+'/req');" +
+  "var oLine='Output: '+pd(lc(ot),7)+(rmu2>1?' visible + ~'+lc(ot*(rmu2-1))+' reasoning':' tokens')+' \\u00d7 '+fm(itm.op)+'/1M \\u2192 '+fm(ocl)+'/req';" +
+  "r.push(oLine);" +
+  "if(rmu2>1){r.push('\\uD83E\\uDDE0 o-series: hidden reasoning tokens (\\u2248\\u00d7'+rmu2+' visible) billed at output rate');}" +
   "r.push(Array(45).join('\\u2500'));" +
   "r.push('Per request:    '+fm(itm.cpr));" +
   "r.push('Daily ('+rd+'):    '+fm(dc));" +
@@ -783,15 +822,15 @@ const customFn =
   "r.push(Array(45).join('\\u2500'));" +
   // Alt pricing
   "if(pm==='realtime'){" +
-  "var bcpr=(it/1e6)*itm.m.bi+(ot/1e6)*itm.m.bo;var bm=bcpr*rd*30;" +
+  "var bcpr=(it/1e6)*itm.m.bi+(eot2/1e6)*itm.m.bo;var bm=bcpr*rd*30;" +
   "r.push('\\uD83D\\uDCA1 Batch pricing: '+fm(bcpr)+'/req ('+fm(bm)+'/mo) \\u2014 save 50%');}" +
   "else{" +
-  "var rcpr=(it/1e6)*itm.m.i+(ot/1e6)*itm.m.o;var rm=rcpr*rd*30;" +
+  "var rcpr=(it/1e6)*itm.m.i+(eot2/1e6)*itm.m.o;var rm=rcpr*rd*30;" +
   "r.push('\\uD83D\\uDD34 Real-time: '+fm(rcpr)+'/req ('+fm(rm)+'/mo)');}" +
   // Cache line
   "if(chr>0){" +
   "var ei=itm.ip*(1-chr/100)+itm.ip*0.5*(chr/100);" +
-  "var ccpr=(it/1e6)*ei+(ot/1e6)*itm.op;var cm=ccpr*rd*30;" +
+  "var ccpr=(it/1e6)*ei+(eot2/1e6)*itm.op;var cm=ccpr*rd*30;" +
   "r.push('\\uD83D\\uDCBE With '+chr+'% cache hit: '+fm(ccpr)+'/req ('+fm(cm)+'/mo)');}" +
   "r.push('');}" +
   // Section 4: Growth Projection
@@ -827,11 +866,15 @@ const customFn =
   "var df=meS.mc-chS.mc;" +
   "r.push('\\uD83D\\uDCB8 Switching from '+meS.m.n+' to '+chS.m.n+' saves '+fm(df)+'/mo ('+fm(df*12)+'/yr)');}" +
   "if(chr>0&&SC.length>0){" +
-  "var ref=SC[0];" +
+  "var ref=SC[0];var rmu3=ref.m.rm||1;var eot3=ot*rmu3;" +
   "var ei=ref.ip*(1-chr/100)+ref.ip*0.5*(chr/100);" +
-  "var ccpr=(it/1e6)*ei+(ot/1e6)*ref.op;var cm=ccpr*rd*30;" +
+  "var ccpr=(it/1e6)*ei+(eot3/1e6)*ref.op;var cm=ccpr*rd*30;" +
   "var cs2=ref.mc-cm;" +
   "r.push('\\uD83D\\uDCBE Prompt caching at '+chr+'% hit rate saves ~'+fm(cs2)+'/mo on '+ref.m.n);}" +
+  "var dsC=(it/1e6)*0.14+(ot/1e6)*0.28;var dsM=dsC*rd*30;" +
+  "var gfC=(it/1e6)*0.1+(ot/1e6)*0.4;var gfM=gfC*rd*30;" +
+  "var ccN=dsM<gfM?'DeepSeek Chat':'Gemini 2.0 Flash';var ccC=Math.min(dsM,gfM);" +
+  "if(ch.mc>0){r.push('\\uD83C\\uDF0D Cross-provider: '+ccN+' @ '+fm(ccC)+'/mo \\u2014 saves '+fm(ch.mc-ccC)+'/mo ('+(ccC>0?((1-ccC/ch.mc)*100).toFixed(0):'0')+'% cheaper) vs cheapest OpenAI');}" +
   "r.push('');" +
   // Section 6: Usage Scenarios
   "r.push('\\uD83D\\uDCC5 Usage Scenarios (monthly costs)');" +
