@@ -213,7 +213,7 @@ function calculate(inputs: Record<string, string>): string[] {
   for (const item of allCosts) {
     const icon = FAMILY_ICONS[item.info.family];
     const label = icon + ' ' + item.info.name;
-    const paddedLabel = pad(label, 22);
+    const paddedLabel = pad(label, 24);
     const barWidth = maxCost > 0 ? Math.max(1, Math.round((item.monthlyCost / maxCost) * 40)) : 0;
     const bar = '█'.repeat(barWidth); // █
     const isCheapest = item.key === cheapest.key;
@@ -474,7 +474,7 @@ const customFn =
   "r.push(Array(61).join('\\u2501'));" +
   "for(var i=0;i<AC.length;i++){" +
   "var itm=AC[i];var ic=FI[itm.m.f];var lb=ic+' '+itm.m.n;" +
-  "var pl=pd(lb,22);var bw=maxC>0?Math.max(1,Math.round((itm.mc/maxC)*40)):0;" +
+  "var pl=pd(lb,24);var bw=maxC>0?Math.max(1,Math.round((itm.mc/maxC)*40)):0;" +
   "var br=Array(bw+1).join('\\u2588');" +
   "var bd=itm.k===ch.k?' \\uD83C\\uDFC6 cheapest':'';" +
   "r.push(pl+' \\u2502 '+br+' '+fm(itm.mc)+bd);}" +
@@ -591,20 +591,20 @@ const engine: ToolEngine = {
 
 📊 Cost Comparison (14 Models)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔵 GPT-5.5             │ ████████████████████████████████ $60.00
-🔵 GPT-5.2             │ ██████████████ $26.25
-🔵 GPT-5               │ ██████████ $18.75
-🔵 GPT-5 Mini          │ ██ $3.75
-🔵 GPT-5 Nano          │ █ $0.75 🏆 cheapest
-🟢 GPT-4.1             │ ██████████ $18.00
-🟢 GPT-4.1 Mini        │ ██ $3.60
-🟢 GPT-4.1 Nano        │ █ $0.90
-🟠 o3                  │ ██████████ $18.00
-🟠 o4 Mini             │ █████ $9.90
-⚪ GPT-4o               │ ████████████ $22.50
-⚪ GPT-4o Mini          │ █ $1.35
-⚪ GPT-4 Turbo          │ ████████████████████████████████████████ $75.00
-⚪ GPT-3.5 Turbo        │ ██ $3.75
+🔵 GPT-5.5               │ ████████████████████████████████ $60.00
+🔵 GPT-5.2               │ ██████████████ $26.25
+🔵 GPT-5                 │ ██████████ $18.75
+🔵 GPT-5 Mini            │ ██ $3.75
+🔵 GPT-5 Nano            │ █ $0.75 🏆 cheapest
+🟢 GPT-4.1               │ ██████████ $18.00
+🟢 GPT-4.1 Mini          │ ██ $3.60
+🟢 GPT-4.1 Nano          │ █ $0.90
+🟠 o3                    │ ██████████ $18.00
+🟠 o4 Mini               │ █████ $9.90
+⚪ GPT-4o                 │ ████████████ $22.50
+⚪ GPT-4o Mini            │ █ $1.35
+⚪ GPT-4 Turbo            │ ████████████████████████████████████████ $75.00
+⚪ GPT-3.5 Turbo          │ ██ $3.75
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📋 Selected Model Details
