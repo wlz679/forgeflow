@@ -1429,7 +1429,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-deepseek-api-cost-calculator.description': { en: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.', zh: '计算 DeepSeek API 的 V4 Flash、V4 Pro 和旧版 R1 成本。包含自动缓存、增长预测和跨供应商节省对比。' },
   'tools.solopreneur-gemini-api-cost-calculator.description': { en: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.', zh: '计算 Google Gemini API 6 款模型的成本——Gemini 3.5 Flash、3.1 Pro、3 Flash 及旧版模型。包含上下文缓存、批量定价、增长预测和跨供应商对比。' },
   'tools.solopreneur-ai-image-cost-calculator.description': { en: 'Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, resolution tiers, bar chart comparison, and volume scenarios.', zh: '对比 7 款 AI 图像生成器的成本（DALL-E 4/3、Midjourney V7、SD 4、Ideogram 3、Flux Pro、Leonardo AI）。订阅制 vs 按张计费，分辨率层级，柱状图对比和用量场景。' },
-  'tools.solopreneur-ai-training-cost-estimator.description': { en: 'Estimate the cost of training AI models from 7B to 180B parameters.', zh: '估算从 7B 到 180B 参数的 AI 模型训练成本。' },
+  'tools.solopreneur-ai-training-cost-estimator.description': { en: 'Estimate AI model training costs from 7B to 405B parameters. LoRA/full fine-tuning modes, 5 GPU types (H200, H100, A100, L40S, RTX 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.', zh: '估算从 7B 到 405B 参数的 AI 模型训练成本。LoRA/全量微调模式，5 种 GPU 类型（H200、H100、A100、L40S、RTX 6000），云存储 + 数据处理成本，逐 epoch 追踪和多轮扩展。' },
   'tools.solopreneur-gpu-cloud-cost-calculator.description': { en: 'Compare GPU rental costs across AWS, GCP, Lambda Labs, and RunPod.', zh: '对比 AWS、GCP、Lambda Labs 和 RunPod 的 GPU 租赁成本。' },
   'tools.solopreneur-ai-api-cost-comparison.description': { en: 'Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.', zh: '跨供应商 AI API 成本对比，覆盖 OpenAI、Anthropic、Google 和 DeepSeek 的 15 款模型。找到最适合用量的最便宜模型——含柱状图、供应商摘要和用量场景规划。' },
 
@@ -1609,12 +1609,50 @@ export const translations: Record<string, { en: string; zh: string }> = {
 
   // AI Image Generation Cost Calculator — provider names
 
-  'tools.solopreneur-ai-training-cost-estimator.input.modelParams.label': { en: 'Model Size', zh: '模型大小' },
+  'tools.solopreneur-ai-training-cost-estimator.input.modelSize.label': { en: 'Model Size', zh: '模型大小' },
   'tools.solopreneur-ai-training-cost-estimator.input.gpuType.label': { en: 'GPU Type', zh: 'GPU 类型' },
   'tools.solopreneur-ai-training-cost-estimator.input.gpuCount.label': { en: 'GPU Count', zh: 'GPU 数量' },
-  'tools.solopreneur-ai-training-cost-estimator.input.gpuCount.placeholder': { en: 'e.g. 8', zh: '例如：8' },
-  'tools.solopreneur-ai-training-cost-estimator.input.hoursPerRun.label': { en: 'Hours per Run', zh: '每次运行小时数' },
-  'tools.solopreneur-ai-training-cost-estimator.input.hoursPerRun.placeholder': { en: 'e.g. 24', zh: '例如：24' },
+  'tools.solopreneur-ai-training-cost-estimator.input.gpuCount.placeholder': { en: 'e.g. 4', zh: '例如：4' },
+  'tools.solopreneur-ai-training-cost-estimator.input.trainingHours.label': { en: 'Hours per Epoch', zh: '每 Epoch 小时数' },
+  'tools.solopreneur-ai-training-cost-estimator.input.trainingHours.placeholder': { en: 'e.g. 24', zh: '例如：24' },
+  'tools.solopreneur-ai-training-cost-estimator.input.epochs.label': { en: 'Number of Epochs', zh: 'Epoch 数量' },
+  'tools.solopreneur-ai-training-cost-estimator.input.epochs.placeholder': { en: 'e.g. 3', zh: '例如：3' },
+  'tools.solopreneur-ai-training-cost-estimator.input.cloudStorage.label': { en: 'Cloud Storage (GB)', zh: '云存储 (GB)' },
+  'tools.solopreneur-ai-training-cost-estimator.input.cloudStorage.placeholder': { en: 'e.g. 200', zh: '例如：200' },
+  'tools.solopreneur-ai-training-cost-estimator.input.dataProcessCost.label': { en: 'Data Processing Cost ($)', zh: '数据处理成本 ($)' },
+  'tools.solopreneur-ai-training-cost-estimator.input.dataProcessCost.placeholder': { en: 'e.g. 100', zh: '例如：100' },
+
+  // AI Training Cost Estimator — FAQ
+  'tools.solopreneur-ai-training-cost-estimator.faq.0.q': { en: 'How much does it cost to train a 7B model in 2026?', zh: '2026 年训练一个 7B 模型需要多少钱？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.0.a': { en: 'LoRA fine-tuning a 7B model: $50-500 on 2-4 H100 GPUs (4-24 hrs). Full fine-tuning: $500-5,000. Pre-training from scratch: $5,000-50,000+. With H200 GPUs, a 7B LoRA can complete in 2-4 hours at $3.50/hr/GPU — under $30 for a quick fine-tune. Budget GPU (RTX 6000 at $0.50/hr) can do a 7B LoRA for under $10.', zh: '7B 模型的 LoRA 微调：2-4 块 H100 GPU 需 $50-500（4-24 小时）。全量微调：$500-5,000。从头预训练：$5,000-50,000+。使用 H200 GPU，7B LoRA 可在 2-4 小时内完成，每 GPU $3.50/小时——不到 $30 即可快速微调。预算 GPU（RTX 6000 $0.50/小时）可以做 7B LoRA 不到 $10。' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.1.q': { en: 'LoRA vs Full Fine-Tuning — which should I choose?', zh: 'LoRA 还是全量微调——应该选哪个？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.1.a': { en: 'LoRA (Low-Rank Adaptation) fine-tunes only ~1% of parameters, reducing GPU memory and cost by 60-80%. Best for: domain adaptation, style transfer, instruction following — most solopreneur use cases. Full fine-tuning updates all parameters and is needed for: teaching entirely new knowledge, major capability changes, or when LoRA underperforms. For 7B-13B models, LoRA is almost always the right first choice.', zh: 'LoRA（低秩适配）仅微调约 1% 参数，GPU 内存和成本降低 60-80%。适用于：领域适配、风格迁移、指令遵循——大多数独立创业者的用例。全量微调更新所有参数，适用于：教授全新知识、重大能力改变、或 LoRA 效果不佳时。对于 7B-13B 模型，LoRA 几乎总是正确的第一选择。' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.2.q': { en: 'Which GPU should I use for training?', zh: '应该用哪种 GPU 进行训练？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.2.a': { en: 'H200 141GB (latest): best for 70B+ models, $3.50/hr. H100 80GB: 2-3x faster than A100 for LLMs, $2.50/hr. A100 80GB: standard choice, $1.50/hr — good availability. L40S 48GB: good for 7B-13B LoRA, $0.80/hr. RTX 6000 Ada: budget option for 7B LoRA, $0.50/hr. For most solopreneurs: A100 for anything serious, H100 for speed, RTX 6000 for budget experiments.', zh: 'H200 141GB（最新）：最适合 70B+ 模型，$3.50/小时。H100 80GB：LLM 比 A100 快 2-3 倍，$2.50/小时。A100 80GB：标准选择，$1.50/小时——供应充足。L40S 48GB：适合 7B-13B LoRA，$0.80/小时。RTX 6000 Ada：7B LoRA 的预算选择，$0.50/小时。大多数独立创业者：重要项目用 A100，追求速度用 H100，预算实验用 RTX 6000。' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.3.q': { en: 'How much does cloud storage add to training costs?', zh: '云存储会增加多少训练成本？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.3.a': { en: 'At $0.10/GB/month, storage is usually a minor cost. Dataset storage: 100GB of training data = ~$10/month. Model checkpoints: ~10-100GB per checkpoint. For short training runs (under 1 week), storage is negligible. For long-running experiments, factor in model checkpointing costs. Total storage for most training jobs: $5-50.', zh: '以 $0.10/GB/月计算，存储通常是较小的成本。数据集存储：100GB 训练数据 ≈ $10/月。模型检查点：每个检查点约 10-100GB。短期训练（不到 1 周）存储可忽略不计。长期实验需考虑模型检查点成本。大多数训练任务的存储总费用：$5-50。' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.4.q': { en: 'Should I train my own model or use an API?', zh: '应该自己训练模型还是使用 API？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.4.a': { en: 'For 99% of solopreneurs: use an API (DeepSeek V4 Flash, GPT-5 Mini, Claude Haiku). Only train if you need: specialized domain knowledge not in base models, data privacy/air-gap requirements, lower inference costs at high volume (100K+ requests/day), or a unique capability not offered by APIs. Start with prompt engineering + RAG before considering training.', zh: '对 99% 的独立创业者：使用 API（DeepSeek V4 Flash、GPT-5 Mini、Claude Haiku）。仅在以下情况训练：需要基础模型没有的专业领域知识、数据隐私/隔离需求、高用量（10万+请求/天）下降低推理成本、或 API 无法提供的独特能力。考虑训练前先尝试提示工程 + RAG。' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.5.q': { en: 'How do I reduce training costs?', zh: '如何降低训练成本？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.5.a': { en: 'Six proven techniques: (1) LoRA instead of full fine-tuning saves 65%+. (2) Spot/preemptible instances save 40-60%. (3) Gradient checkpointing saves 30-50% GPU memory. (4) Mixed precision (FP16/BF16) doubles throughput. (5) FlashAttention reduces memory by 2-8x. (6) Efficient data loading prevents GPU idle time. Combined, these can reduce costs by 80-90% vs naive full fine-tuning.', zh: '六种经过验证的技术：(1) LoRA 代替全量微调节省 65%+。(2) Spot/抢占式实例节省 40-60%。(3) 梯度检查点节省 30-50% GPU 内存。(4) 混合精度（FP16/BF16）吞吐量翻倍。(5) FlashAttention 内存降低 2-8 倍。(6) 高效数据加载防止 GPU 空闲。综合使用可将成本降低 80-90%。' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.6.q': { en: 'What is the cost to train a 405B model?', zh: '训练 405B 模型需要多少成本？' },
+  'tools.solopreneur-ai-training-cost-estimator.faq.6.a': { en: 'Training a 405B model (e.g., Llama 4 scale) requires 128+ H200 GPUs running for weeks/months. Ballpark: 128 H200 GPUs × 720 hrs × $3.50/hr = ~$322K in GPU costs alone. With data processing, storage, and engineering overhead: $500K-$2M total. This is enterprise-only territory. Most solopreneurs should fine-tune existing 7B-70B open models instead.', zh: '训练 405B 模型（如 Llama 4 规模）需要 128+ 块 H200 GPU 运行数周/月。大致：128 块 H200 GPU × 720 小时 × $3.50/小时 = 仅 GPU 成本约 $322K。加上数据处理、存储和工程开销：总计 $500K-$2M。这是企业级领域。大多数独立创业者应微调现有的 7B-70B 开源模型。' },
+
+  // AI Training Cost Estimator — how to use
+  'tools.solopreneur-ai-training-cost-estimator.howToUse.0': { en: 'Select your target model size (7B to 405B) — LoRA for 7B/13B, full fine-tune for larger models.', zh: '选择目标模型大小（7B 到 405B）——7B/13B 用 LoRA，更大模型用全量微调。' },
+  'tools.solopreneur-ai-training-cost-estimator.howToUse.1': { en: 'Choose your GPU type — H200 for bleeding-edge speed, A100 for best availability, RTX 6000 for budget.', zh: '选择 GPU 类型——H200 追求最快速度，A100 供应最佳，RTX 6000 预算之选。' },
+  'tools.solopreneur-ai-training-cost-estimator.howToUse.2': { en: 'Enter the number of GPUs — more GPUs = faster but higher hourly cost.', zh: '输入 GPU 数量——更多 GPU = 更快但每小时成本更高。' },
+  'tools.solopreneur-ai-training-cost-estimator.howToUse.3': { en: 'Set training hours per epoch and total epochs — longer training captures more patterns but costs more.', zh: '设置每 epoch 训练小时数和总 epoch 数——更长训练能捕捉更多模式但成本更高。' },
+  'tools.solopreneur-ai-training-cost-estimator.howToUse.4': { en: 'Add cloud storage (dataset + checkpoints in GB) and data processing costs for a complete estimate.', zh: '添加云存储（数据集 + 检查点，以 GB 计）和数据处理成本，获得完整估算。' },
+  'tools.solopreneur-ai-training-cost-estimator.howToUse.5': { en: 'Review per-epoch costs, optimistic/pessimistic ranges, and multi-run scaling to plan your total training budget.', zh: '查看每 epoch 成本、乐观/悲观范围和多轮扩展，规划总训练预算。' },
+
+  // AI Training Cost Estimator — presets
+  'tools.solopreneur-ai-training-cost-estimator.preset.quick-lora': { en: '🚀 Quick LoRA 7B', zh: '🚀 快速 LoRA 7B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.mid-13b': { en: '📊 Mid-Scale 13B', zh: '📊 中等 13B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.full-70b': { en: '🖥️ Full 70B FT', zh: '🖥️ 全量 70B 微调' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.enterprise-180b': { en: '🏢 Enterprise 180B', zh: '🏢 企业 180B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.budget-7b': { en: '💰 Budget 7B', zh: '💰 预算 7B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.pro-405b': { en: '🏭 Pro 405B Full', zh: '🏭 专业 405B 全训' },
 
   'tools.solopreneur-gpu-cloud-cost-calculator.input.provider.label': { en: 'Cloud Provider', zh: '云服务商' },
   'tools.solopreneur-gpu-cloud-cost-calculator.input.gpuType.label': { en: 'GPU Type', zh: 'GPU 类型' },

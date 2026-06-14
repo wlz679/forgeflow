@@ -42,6 +42,7 @@ const isDeepSeek = slug === 'solopreneur-deepseek-api-cost-calculator';
 const isGemini = slug === 'solopreneur-gemini-api-cost-calculator';
 const isAiApiCostComparison = slug === 'solopreneur-ai-api-cost-comparison';
 const isImage = slug === 'solopreneur-ai-image-cost-calculator';
+const isTraining = slug === 'solopreneur-ai-training-cost-estimator';
 const clientConfig = JSON.stringify(engine.clientConfig);
 
 const translatedFaq = engine.faq.map((item, i) => ({
@@ -349,6 +350,35 @@ const schema = JSON.stringify({
                 </button>
               </div>
             )}
+            {isTraining && (
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-modelsize="7B" data-gputype="H100-80GB" data-gpucount="2" data-traininghours="8" data-epochs="3" data-cloudstorage="50" data-dataprocesscost="20">
+                  {t('tools.solopreneur-ai-training-cost-estimator.preset.quick-lora', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-modelsize="13B" data-gputype="A100-80GB" data-gpucount="8" data-traininghours="24" data-epochs="5" data-cloudstorage="200" data-dataprocesscost="100">
+                  {t('tools.solopreneur-ai-training-cost-estimator.preset.mid-13b', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-modelsize="70B" data-gputype="H200-141GB" data-gpucount="16" data-traininghours="48" data-epochs="3" data-cloudstorage="500" data-dataprocesscost="300">
+                  {t('tools.solopreneur-ai-training-cost-estimator.preset.full-70b', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-modelsize="180B" data-gputype="H200-141GB" data-gpucount="64" data-traininghours="168" data-epochs="2" data-cloudstorage="2000" data-dataprocesscost="1000">
+                  {t('tools.solopreneur-ai-training-cost-estimator.preset.enterprise-180b', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-modelsize="7B" data-gputype="RTX-6000" data-gpucount="4" data-traininghours="12" data-epochs="5" data-cloudstorage="30" data-dataprocesscost="10">
+                  {t('tools.solopreneur-ai-training-cost-estimator.preset.budget-7b', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-modelsize="405B" data-gputype="H200-141GB" data-gpucount="128" data-traininghours="720" data-epochs="1" data-cloudstorage="5000" data-dataprocesscost="2000">
+                  {t('tools.solopreneur-ai-training-cost-estimator.preset.pro-405b', lang)}
+                </button>
+              </div>
+            )}
             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm">
               {t('btn.generate', lang)}
             </button>
@@ -393,6 +423,7 @@ const schema = JSON.stringify({
       var isGemini = toolSlug === 'solopreneur-gemini-api-cost-calculator';
       var isAiApiCostComparison = toolSlug === 'solopreneur-ai-api-cost-comparison';
       var isImage = toolSlug === 'solopreneur-ai-image-cost-calculator';
+      var isTraining = toolSlug === 'solopreneur-ai-training-cost-estimator';
       function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
       function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
       function generateFromConfig(config, inputs) {
@@ -714,6 +745,21 @@ const schema = JSON.stringify({
         return html;
       }
 
+      // Beautify AI Training Cost Estimator text output into styled HTML sections
+      function beautifyTraining(text) {
+        var html = beautifyBars(esc(text));
+        // Section headers
+        html = html.replace(/^(\u{1F916}.*)$/gm, '<h4 class="text-base font-bold text-gray-900 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4B0}.*)$/gm, '<h4 class="text-sm font-bold text-emerald-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4CA}.*)$/gm, '<h4 class="text-sm font-bold text-blue-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4CB}.*)$/gm, '<h4 class="text-sm font-bold text-indigo-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4C8}.*)$/gm, '<h4 class="text-sm font-bold text-orange-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F504}.*)$/gm, '<h4 class="text-sm font-bold text-purple-600 mt-4 mb-2">$1</h4>');
+        // Separator lines
+        html = html.replace(/^(\u{2500}+)$/gm, '<hr class="border-gray-200 my-2">');
+        return html;
+      }
+
       // Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
       function beautifyBars(html) {
         // Pattern: • Label   XX%  ████░░░░░░ or • Label   $X  ██████
@@ -801,6 +847,16 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
           staticMonoImg.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
           staticMonoImg.classList.add('space-y-5');
           staticMonoImg.innerHTML = beautifyImage(stextImg);
+        }
+      }
+      // AI Training Cost Estimator: beautify static example
+      if (isTraining) {
+        var staticMonoTr = staticResults.querySelector('.font-mono');
+        if (staticMonoTr) {
+          var stextTr = staticMonoTr.textContent || '';
+          staticMonoTr.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+          staticMonoTr.classList.add('space-y-5');
+          staticMonoTr.innerHTML = beautifyTraining(stextTr);
         }
       }
       // Generic bar beautification for all calculators' static examples
@@ -984,6 +1040,17 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             monoDivImg.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
             monoDivImg.classList.add('space-y-5');
             monoDivImg.innerHTML = beautifyImage(textImg);
+          }
+        }
+
+        // --- AI Training Cost Estimator: full beautification ---
+        if (isTraining) {
+          var monoDivTr = dynamicResults.querySelector('.font-mono');
+          if (monoDivTr) {
+            var textTr = monoDivTr.textContent || '';
+            monoDivTr.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+            monoDivTr.classList.add('space-y-5');
+            monoDivTr.innerHTML = beautifyTraining(textTr);
           }
         }
 
