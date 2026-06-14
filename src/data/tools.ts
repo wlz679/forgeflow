@@ -87,13 +87,16 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-deepseek-api-cost-calculator',
     title: 'DeepSeek API Cost Calculator',
-    description: 'Calculate DeepSeek API costs and compare savings vs OpenAI.',
+    description: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.',
     categoryId: 'B',
     inputs: [
-      { name: 'model', label: 'Model', placeholder: '', type: 'select', options: ['deepseek-chat', 'deepseek-reasoner'] },
+      { name: 'models', label: 'Models', placeholder: 'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
       { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
       { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
+      { name: 'cacheHitRate', label: 'Auto-Cache Hit Rate (%)', placeholder: 'e.g. 60', type: 'number' },
+      { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
   },
   {
