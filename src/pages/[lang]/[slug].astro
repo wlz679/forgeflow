@@ -829,7 +829,7 @@ const schema = JSON.stringify({
         iconRegex: /[🖥]/,
         defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
       };
-Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
+      // Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
       function beautifyBars(html) {
         // Pattern: • Label   XX%  ████░░░░░░ or • Label   $X  ██████
         return html.replace(/• (.+?)( {2,})([\d.]+%|[\$]\S+)( {2,})([█░]+)/g, function(m, label, sp1, val, sp2, bars) {
