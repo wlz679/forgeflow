@@ -69,13 +69,19 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-claude-api-cost-calculator',
     title: 'Claude API Cost Calculator',
-    description: 'Calculate Claude API costs for Opus, Sonnet, and Haiku models.',
+    description: 'Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, and cross-provider comparison.',
     categoryId: 'B',
     inputs: [
-      { name: 'model', label: 'Model', placeholder: '', type: 'select', options: ['claude-opus', 'claude-sonnet', 'claude-haiku'] },
+      { name: 'models', label: 'Models', placeholder: 'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
       { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
       { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
+      { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
+      { name: 'cacheWriteTokens', label: 'Cache Write Tokens', placeholder: 'e.g. 1000', type: 'number' },
+      { name: 'cacheTTL', label: 'Cache TTL', placeholder: '', type: 'select', options: ['5min', '1hour'] },
+      { name: 'cacheReadHitRate', label: 'Cache Read Hit Rate (%)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
   },
   {
