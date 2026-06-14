@@ -131,13 +131,16 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-ai-training-cost-estimator',
     title: 'AI Training Cost Estimator',
-    description: 'Estimate the cost of training AI models from 7B to 180B parameters.',
+    description: 'Estimate AI model training costs from 7B to 405B parameters. LoRA/full fine-tuning modes, 5 GPU types (H200, H100, A100, L40S, RTX 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.',
     categoryId: 'B',
     inputs: [
-      { name: 'modelParams', label: 'Model Size', placeholder: '', type: 'select', options: ['7B', '13B', '70B', '180B'] },
-      { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['A100-80GB', 'H100-80GB', 'A6000'] },
-      { name: 'gpuCount', label: 'GPU Count', placeholder: 'e.g. 8', type: 'number' },
-      { name: 'hoursPerRun', label: 'Hours per Run', placeholder: 'e.g. 24', type: 'number' },
+      { name: 'modelSize', label: 'Model Size', placeholder: '', type: 'select', options: ['7B', '13B', '70B', '180B', '405B'] },
+      { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['H200-141GB', 'H100-80GB', 'A100-80GB', 'L40S-48GB', 'RTX-6000'] },
+      { name: 'gpuCount', label: 'GPU Count', placeholder: 'e.g. 4', type: 'number' },
+      { name: 'trainingHours', label: 'Hours per Epoch', placeholder: 'e.g. 24', type: 'number' },
+      { name: 'epochs', label: 'Number of Epochs', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'cloudStorage', label: 'Cloud Storage (GB)', placeholder: 'e.g. 200', type: 'number' },
+      { name: 'dataProcessCost', label: 'Data Processing Cost ($)', placeholder: 'e.g. 100', type: 'number' },
     ],
   },
   {
