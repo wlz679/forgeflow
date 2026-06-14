@@ -146,13 +146,15 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-gpu-cloud-cost-calculator',
     title: 'GPU Cloud Cost Calculator',
-    description: 'Compare GPU rental costs across AWS, GCP, Lambda Labs, and RunPod.',
+    description: 'Compare GPU rental costs across 6 cloud providers (RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure). Spot vs on-demand vs reserved pricing, multi-GPU scaling, storage/networking add-ons, and bar chart comparison.',
     categoryId: 'B',
     inputs: [
-      { name: 'provider', label: 'Cloud Provider', placeholder: '', type: 'select', options: ['aws', 'gcp', 'lambda', 'runpod'] },
-      { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['A100', 'H100', 'L40S', 'RTX4090'] },
+      { name: 'provider', label: 'Cloud Provider', placeholder: '', type: 'select', options: ['runpod', 'vastai', 'lambdalabs', 'aws', 'gcp', 'azure'] },
+      { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['H200', 'H100', 'A100', 'L40S', 'RTX4090', 'A6000'] },
       { name: 'gpuCount', label: 'GPU Count', placeholder: 'e.g. 1', type: 'number' },
       { name: 'hoursPerDay', label: 'Hours per Day', placeholder: 'e.g. 8', type: 'number' },
+      { name: 'pricingTier', label: 'Pricing Tier', placeholder: '', type: 'select', options: ['spot', 'on-demand', 'reserved'] },
+      { name: 'includeStorage', label: 'Include Storage/Network', placeholder: '', type: 'select', options: ['yes', 'no'] },
     ],
   },
   {
