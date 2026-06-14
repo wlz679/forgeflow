@@ -1487,6 +1487,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-deepseek-api-cost-calculator.faq.6.q': { en: 'Is DeepSeek safe for production use?', zh: 'DeepSeek 适合生产环境使用吗？' },
   'tools.solopreneur-deepseek-api-cost-calculator.faq.6.a': { en: 'DeepSeek hosts all models in US data centers with enterprise-grade security. For regulated industries, check data residency requirements. Many enterprises use DeepSeek for cost-sensitive workloads while keeping OpenAI/Claude for sensitive data. Always review the latest privacy policy for your use case.', zh: 'DeepSeek 所有模型托管在美国数据中心，采用企业级安全标准。受监管行业请检查数据驻留要求。许多企业将 DeepSeek 用于成本敏感的工作负载，同时保留 OpenAI/Claude 处理敏感数据。请务必查看最新的隐私政策。' },
 
+  // DeepSeek API Cost Calculator — model names
+  'tools.solopreneur-deepseek-api-cost-calculator.model.deepseek-v4-flash': { en: 'DeepSeek V4 Flash', zh: 'DeepSeek V4 Flash' },
+  'tools.solopreneur-deepseek-api-cost-calculator.model.deepseek-v4-pro': { en: 'DeepSeek V4 Pro', zh: 'DeepSeek V4 Pro' },
+  'tools.solopreneur-deepseek-api-cost-calculator.model.deepseek-v4-pro-promo': { en: 'V4 Pro (75% Promo)', zh: 'V4 Pro (75% 特惠)' },
+  'tools.solopreneur-deepseek-api-cost-calculator.model.deepseek-r1': { en: 'DeepSeek R1 (Legacy)', zh: 'DeepSeek R1 (旧版)' },
+
   // DeepSeek API Cost Calculator — presets
   'tools.solopreneur-deepseek-api-cost-calculator.preset.light': { en: 'Light Usage', zh: '轻度使用' },
   'tools.solopreneur-deepseek-api-cost-calculator.preset.mid': { en: 'Mid-Scale', zh: '中规模' },
