@@ -607,3 +607,83 @@ const customFn =
   "line+=pts.join(' \\u00b7 ');o.push(line);" +
   "}" +
   "return o;";
+
+const engine: ToolEngine = {
+  slug: 'solopreneur-claude-api-cost-calculator',
+  title: 'Claude API Cost Calculator',
+  description: 'Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, growth projections, and cross-provider comparison.',
+  category: 'B',
+  inputs: [
+    { name: 'models', label: 'Models', placeholder: 'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', type: 'text' },
+    { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
+    { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
+    { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
+    { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
+    { name: 'cacheWriteTokens', label: 'Cache Write Tokens', placeholder: 'e.g. 1000', type: 'number' },
+    { name: 'cacheTTL', label: 'Cache TTL', placeholder: '', type: 'select', options: ['5min', '1hour'] },
+    { name: 'cacheReadHitRate', label: 'Cache Read Hit Rate (%)', placeholder: 'e.g. 50', type: 'number' },
+    { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+    { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
+  ],
+  clientConfig: { type: 'custom', wordPools: {}, customFn },
+  generate(inputs) { return calculate(inputs); },
+  staticExamples: [
+    '🔴 Real-time Pricing\n' +
+    '\n' +
+    '📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n' +
+    '\n' +
+    'Cost Comparison (100 reqs/day)\n' +
+    '──────────────────────────────────────────────────────\n' +
+    '✦ Claude Fable 5           ███████████████████████████              $105.00\n' +
+    '▲ Claude Opus 4.8          █████████████                            $52.50\n' +
+    '▲ Claude Sonnet 4.6        ████████                                 $31.50\n' +
+    '▲ Claude Haiku 4.5         ███                                      $10.50\n' +
+    '◆ Claude Opus 4.1          ████████████████████████████████████████ $157.50\n' +
+    '◆ Claude Haiku 3.5         ██                                       $8.40\n' +
+    '◆ Claude Haiku 3           ░                                        $2.63\n',
+    '✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00',
+    '▲ Claude Opus 4.8 (Claude 4.x): 50→$26.25 · 100→$52.50 · 500→$262.50 · 1,000→$525.00 · 5,000→$2625.00 · 10,000→$5250.00',
+    '▲ Claude Sonnet 4.6 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00',
+    '▲ Claude Haiku 4.5 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00',
+  ],
+  faq: [
+    {
+      q: 'How does Claude pricing compare to GPT-4o?',
+      a: 'Claude Opus 4.8 at $5/$25 per 1M tokens is 2× more expensive than GPT-4o ($2.50/$10) but offers a 1M context window and stronger safety. Claude Haiku 4.5 at $1/$5 is competitive with GPT-4o Mini ($0.15/$0.60). Claude Fable 5 at $10/$50 is Anthropic\'s most capable model, comparable to o3-level reasoning.',
+    },
+    {
+      q: 'What is Prompt Caching and how much can it save?',
+      a: 'Claude\'s Prompt Caching lets you mark parts of your prompt as cacheable. Cache reads cost 10% of the standard input price (90% discount). Cache writes cost 1.25× (5-min TTL) or 2× (1-hour TTL). A 50K-token system prompt at 500 reqs/day can save ~$24,500/year. Break-even is just 2 cache reads for 5-min TTL.',
+    },
+    {
+      q: 'When should I use Batch API vs Real-time?',
+      a: 'Batch API gives 50% off all token costs across all models. Use it for async workloads that can tolerate up to 24-hour processing time — data labeling, bulk analysis, content generation. Real-time is for interactive use cases. You can mix both: batch for large offline jobs, real-time for user-facing requests.',
+    },
+    {
+      q: 'Is Claude Fable 5 worth the premium?',
+      a: 'Fable 5 at $10/$50 is 2× Opus 4.8 pricing but delivers Mythos-class performance (~95% on SWE-bench Verified). It\'s worth it for: frontier coding tasks, multi-day autonomous agent runs, complex research requiring deepest reasoning. For everyday tasks, Opus 4.8 or Sonnet 4.6 offer better value.',
+    },
+    {
+      q: 'How does Claude\'s tokenizer affect costs?',
+      a: 'Claude uses a different tokenizer from OpenAI. For English text, Claude produces roughly 1.3-1.5 tokens/word (vs OpenAI\'s ~1.3). Opus 4.7 introduced a new tokenizer that can produce up to 35% more tokens for the same text compared to Opus 4.6. Always compare token counts when switching models.',
+    },
+    {
+      q: 'Can I switch between Claude models easily?',
+      a: 'Yes, all Claude models share the same Messages API format. Switch by changing the model parameter. Use Haiku for cost-sensitive classification/routing, Sonnet for everyday tasks, Opus for complex analysis, and Fable 5 for frontier coding. Many teams implement model routing based on task complexity.',
+    },
+    {
+      q: 'How do I estimate token counts for Claude?',
+      a: 'As a rule of thumb: ~1.4 words/token for English prose, ~0.65 chars/token for CJK text. A typical 500-word English prompt uses ~350-400 tokens. Use the token estimator on this page for quick estimates, or Anthropic\'s token counting API for precise counts.',
+    },
+  ],
+  howToUse: [
+    'Select the Claude models you want to compare (Fable 5, Opus 4.8, Sonnet 4.6, etc.).',
+    'Enter your average input and output tokens per API call.',
+    'Choose pricing mode — Real-time for interactive use, Batch for 50% off async processing.',
+    'Configure Prompt Caching (write tokens, TTL, hit rate) to see potential savings from caching.',
+    'Set growth rate and projection period for long-term cost planning.',
+    'Review the cost comparison bar chart, caching breakdown, and cross-provider insights.',
+  ],
+};
+
+registerEngine(engine);
