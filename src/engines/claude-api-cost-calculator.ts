@@ -463,3 +463,147 @@ function calculate(inputs: Record<string, string>): string[] {
 
   return out;
 }
+
+const customFn =
+  // --- MODELS map (full keys, MUST match TS MODELS) ---
+  "var M={" +
+  "'claude-fable-5':{i:10,o:50,n:'Claude Fable 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:1}," +
+  "'claude-opus-4-8':{i:5,o:25,n:'Claude Opus 4.8',f:'claude4x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:2}," +
+  "'claude-sonnet-4-6':{i:3,o:15,n:'Claude Sonnet 4.6',f:'claude4x',cw:'1M',mo:'64K',bi:1.5,bo:7.5,od:3}," +
+  "'claude-haiku-4-5':{i:1,o:5,n:'Claude Haiku 4.5',f:'claude4x',cw:'200K',mo:'64K',bi:0.5,bo:2.5,od:4}," +
+  "'claude-opus-4-1':{i:15,o:75,n:'Claude Opus 4.1',f:'legacy',cw:'200K',mo:'32K',bi:7.5,bo:37.5,od:5}," +
+  "'claude-haiku-3-5':{i:0.8,o:4,n:'Claude Haiku 3.5',f:'legacy',cw:'200K',mo:'8K',bi:0.4,bo:2,od:6}," +
+  "'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'legacy',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:7}" +
+  "};" +
+  // Family icons
+  "var FI={mythos:'\\u2726',claude4x:'\\u25B2',legacy:'\\u25C6'};" +
+  "var FL={mythos:'Mythos',claude4x:'Claude 4.x',legacy:'Legacy'};" +
+  // Defaults
+  "var DEF=['claude-fable-5','claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5'];" +
+  // Caching constants
+  "var CWM={};CWM['5min']=1.25;CWM['1hour']=2;" +
+  "var CRM=0.1;" +
+  // Cross-provider
+  "var XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},deepseek:{i:0.14,o:0.28,n:'DeepSeek Chat'},gemini:{i:0.075,o:0.3,n:'Gemini 1.5 Flash'}};" +
+  // Helpers
+  "function fm(n){if(Math.abs(n)<0.01&&n!==0)return '$'+n.toFixed(4);return '$'+n.toFixed(2)}" +
+  "function lc(n){return n.toLocaleString()}" +
+  "function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
+  "var SEP='\\u2500';" +
+  // --- Parse inputs ---
+  "var rawModels=inputs.models||DEF.join(',');" +
+  "var sks=[];var seen={};rawModels.split(',').forEach(function(s){s=s.trim();if(s&&!seen[s]){seen[s]=true;sks.push(s);}});" +
+  "var iT=Math.max(1,Math.min(1e7,parseInt(inputs.inputTokens)||1000));" +
+  "var oT=Math.max(1,Math.min(1e7,parseInt(inputs.outputTokens)||500));" +
+  "var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));" +
+  "var pm=inputs.pricingMode||'realtime';" +
+  "var cwT=Math.max(0,Math.min(iT,parseInt(inputs.cacheWriteTokens)||0));" +
+  "var cTTL=inputs.cacheTTL==='1hour'?'1hour':'5min';" +
+  "var cHR=Math.max(0,Math.min(100,parseInt(inputs.cacheReadHitRate)||0));" +
+  "var gR=Math.max(0,Math.min(50,parseFloat(inputs.growthRate)||0));" +
+  "var pMraw=parseInt(inputs.projectionMonths);var pM=[3,6,12].indexOf(pMraw)>=0?pMraw:12;" +
+  "var cacheOn=cwT>0&&cHR>0;var wM=CWM[cTTL]||1.25;var hR=cHR/100;var rpm=rpd*30;" +
+  // --- Compute costs ---
+  "var all=[];" +
+  "for(var k in M){" +
+  "var mi=M[k];var ip=pm==='batch'?mi.bi:mi.i;var op=pm==='batch'?mi.bo:mi.o;" +
+  "var ncpr=(iT/1e6)*ip+(oT/1e6)*op;var ncm=ncpr*rpm;" +
+  "var cpr;" +
+  "if(cacheOn){" +
+  "var nci=((iT-cwT)/1e6)*ip;" +
+  "var cmc=(1-hR)*(cwT/1e6)*ip*wM;" +
+  "var chc=hR*(cwT/1e6)*ip*CRM;" +
+  "cpr=nci+cmc+chc+(oT/1e6)*op;" +
+  "}else{cpr=ncpr;}" +
+  "var mc=cpr*rpm;all.push({k:k,i:mi,ip:ip,op:op,cpr:cpr,mc:mc,ncpr:ncpr,ncm:ncm});" +
+  "}" +
+  // Sort and find cheapest/max
+  "all.sort(function(a,b){return a.i.od-b.i.od;});" +
+  "var ch=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var mx=all.reduce(function(max,c){return c.mc>max.mc?c:max;}).mc;" +
+  // Filter selected
+  "var sc=[];" +
+  "for(var i=0;i<sks.length;i++){var e=all.find(function(c){return c.k===sks[i];});if(e)sc.push(e);}" +
+  "if(sc.length===0){for(var j=0;j<DEF.length;j++){var e2=all.find(function(c){return c.k===DEF[j];});if(e2)sc.push(e2);}}" +
+  // --- Output ---
+  "var o=[];" +
+  // Section 1: Header
+  "var me=pm==='batch'?'\\u26A1':'\\u{1F534}';" +
+  "var ml=pm==='batch'?'Batch Pricing (50% off)':'Real-time Pricing';" +
+  "var hl=me+' '+ml;" +
+  "if(cacheOn){var tl=cTTL==='1hour'?'1-hour TTL':'5-min TTL';hl+=' | \\u{1F4BE} Cache: '+cHR+'% hit ('+tl+')';}" +
+  "o.push(hl);o.push('');" +
+  "o.push('\\u{1F4E5} Input: '+lc(iT)+' tokens/req | \\u{1F4E4} Output: '+lc(oT)+' tokens/req | \\u{1F504} '+lc(rpd)+' reqs/day');" +
+  "if(cacheOn){o.push('\\u{1F4BE} Cache Write: '+lc(cwT)+' tokens/req ('+(wM===1.25?'1.25\\u00D7':'2\\u00D7')+' write, 0.1\\u00D7 read)');}" +
+  "o.push('');" +
+  // Section 2: Bar Chart
+  "o.push('Cost Comparison ('+lc(rpd)+' reqs/day)');" +
+  "o.push(SEP.repeat(54));" +
+  "var BW=40;" +
+  "for(var i=0;i<all.length;i++){" +
+  "var c=all[i];var icon=FI[c.i.f];var label=icon+' '+c.i.n;" +
+  "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;" +
+  "var bc=c.k===ch.k?'\\u2591':'\\u2588';var bar=bc.repeat(bl);" +
+  "o.push(pd(label,26)+' '+pd(bar,BW)+' '+fm(c.mc));" +
+  "}" +
+  "o.push('');" +
+  // Section 3: Detail Cards
+  "for(var i=0;i<sc.length;i++){" +
+  "var c=sc[i];var icon=FI[c.i.f];var fl=FL[c.i.f];" +
+  "o.push(icon+' '+c.i.n+' ('+fl+')');" +
+  "o.push('  Context: '+c.i.cw+' | Max Output: '+c.i.mo);" +
+  "o.push('  Rate: '+fm(c.i.i)+'/'+fm(c.i.o)+' per 1M tokens');" +
+  "o.push('  Per Request: '+fm(c.cpr));" +
+  "o.push('  Monthly Cost ('+lc(rpd)+' reqs/day): '+fm(c.mc));" +
+  "if(cacheOn){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;var sg=sv>=0?'saved':'extra';o.push('  \\u{1F4BE} With caching: '+fm(c.mc)+' ('+ps+'% '+sg+')');}" +
+  "o.push('');" +
+  "}" +
+  // Section 4: Caching Breakdown
+  "if(cacheOn){" +
+  "var ref=ch;var ip=ref.ip;var tl2=cTTL==='1hour'?'1-hour TTL':'5-min TTL';var wl=wM===1.25?'1.25\\u00D7':'2\\u00D7';" +
+  "o.push('\\u{1F4BE} Prompt Caching Breakdown ('+tl2+' \\u00d7 '+wl+' write)');" +
+  "o.push(SEP.repeat(54));" +
+  "var ccw=(cwT/1e6)*ip*wM;var cmc2=(1-hR)*ccw;var chc2=hR*(cwT/1e6)*ip*CRM;" +
+  "var nci2=((iT-cwT)/1e6)*ip;var bi2=nci2+cmc2+chc2;var nci3=(iT/1e6)*ip;" +
+  "o.push('  Model: '+ref.i.n+' (cheapest)');" +
+  "o.push('  Cache Write (per miss): '+fm(ccw)+'/req');" +
+  "o.push('  Cache Miss Cost: '+fm(cmc2)+'/req ('+Math.round((1-hR)*100)+'% of requests)');" +
+  "o.push('  Cache Hit Cost: '+fm(chc2)+'/req ('+Math.round(hR*100)+'% of requests)');" +
+  "o.push('  Non-Cached Input: '+fm(nci2)+'/req');" +
+  "o.push('  Blended Input Cost: '+fm(bi2)+'/req');" +
+  "o.push('  vs without caching: '+fm(nci3)+'/req \\u2192 saves '+fm(nci3-bi2)+'/req');" +
+  "o.push('  Monthly Savings: '+fm((nci3-bi2)*rpm));" +
+  "o.push('  Break-even: ~2 cache reads (5-min) / ~2 reads (1-hour)');" +
+  "o.push('');" +
+  "}" +
+  // Section 5: Growth Projection
+  "if(gR>0){" +
+  "o.push('\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)');o.push('');" +
+  "var hdr='Month'.padEnd(8);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(14);o.push(hdr);" +
+  "var sl=''.padEnd(8,SEP);for(var i=0;i<sc.length;i++)sl+='-+-'.padEnd(15,SEP);o.push(sl);" +
+  "var gm=1+gR/100;" +
+  "for(var m=1;m<=pM;m++){var mult=Math.pow(gm,m-1);var row=String(m).padEnd(8);for(var i=0;i<sc.length;i++)row+=' | '+fm(sc[i].mc*mult).padEnd(14);o.push(row);}" +
+  "o.push(sl);" +
+  "var tr='Total'.padEnd(8);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(14);}o.push(tr);" +
+  "o.push('');" +
+  "}" +
+  // Section 6: Savings Insights
+  "o.push('\\u{1F4B0} Savings Insights');" +
+  "o.push(SEP.repeat(54));" +
+  "var cheapestC=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "for(var pk in XP){var pv=XP[pk];var pcpr=(iT/1e6)*pv.i+(oT/1e6)*pv.o;var pm2=pcpr*rpm;var d=cheapestC.mc-pm2;var pct=pm2>0?Math.abs(d)/pm2*100:0;" +
+  "if(d>0){o.push('  '+cheapestC.i.n+' vs '+pv.n+': Claude costs '+fm(d)+' more/month ('+Math.round(pct)+'% premium)');}" +
+  "else{o.push('  '+cheapestC.i.n+' vs '+pv.n+': Claude saves '+fm(Math.abs(d))+'/month ('+Math.round(pct)+'% cheaper)');}" +
+  "}" +
+  "o.push('\\u{1F4A1} Premium buys: 1M context, best-in-class safety, superior code generation');" +
+  "o.push('');" +
+  // Section 7: Usage Scenarios
+  "o.push('\\u{1F4CA} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');" +
+  "o.push('');" +
+  "var vols=[50,100,500,1000,5000,10000];" +
+  "for(var i=0;i<sc.length;i++){" +
+  "var c=sc[i];var icon=FI[c.i.f];var line=icon+' '+c.i.n+' ('+FL[c.i.f]+'): ';var pts=[];" +
+  "for(var j=0;j<vols.length;j++){pts.push(lc(vols[j])+'\\u2192'+fm(c.cpr*vols[j]*30));}" +
+  "line+=pts.join(' \\u00b7 ');o.push(line);" +
+  "}" +
+  "return o;";
