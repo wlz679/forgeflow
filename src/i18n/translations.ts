@@ -1427,7 +1427,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // === B: AI Cost Tools — descriptions ===
   'tools.solopreneur-claude-api-cost-calculator.description': { en: 'Calculate Claude API costs for Opus, Sonnet, and Haiku models.', zh: '计算 Claude API 的 Opus、Sonnet 和 Haiku 模型成本。' },
   'tools.solopreneur-deepseek-api-cost-calculator.description': { en: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.', zh: '计算 DeepSeek API 的 V4 Flash、V4 Pro 和旧版 R1 成本。包含自动缓存、增长预测和跨供应商节省对比。' },
-  'tools.solopreneur-gemini-api-cost-calculator.description': { en: 'Calculate Google Gemini API costs for 2.0 Flash, 1.5 Pro, and 1.5 Flash models.', zh: '计算 Google Gemini API 的 2.0 Flash、1.5 Pro 和 1.5 Flash 模型成本。' },
+  'tools.solopreneur-gemini-api-cost-calculator.description': { en: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.', zh: '计算 Google Gemini API 6 款模型的成本——Gemini 3.5 Flash、3.1 Pro、3 Flash 及旧版模型。包含上下文缓存、批量定价、增长预测和跨供应商对比。' },
   'tools.solopreneur-ai-image-cost-calculator.description': { en: 'Estimate costs for AI image generation across DALL-E 3, Midjourney, and Stable Diffusion.', zh: '估算 DALL-E 3、Midjourney 和 Stable Diffusion 的 AI 图像生成成本。' },
   'tools.solopreneur-ai-training-cost-estimator.description': { en: 'Estimate the cost of training AI models from 7B to 180B parameters.', zh: '估算从 7B 到 180B 参数的 AI 模型训练成本。' },
   'tools.solopreneur-gpu-cloud-cost-calculator.description': { en: 'Compare GPU rental costs across AWS, GCP, Lambda Labs, and RunPod.', zh: '对比 AWS、GCP、Lambda Labs 和 RunPod 的 GPU 租赁成本。' },
@@ -1509,13 +1509,63 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-deepseek-api-cost-calculator.howToUse.4': { en: 'Add a growth rate and projection period for long-term cost planning.', zh: '添加增长率和预测周期进行长期成本规划。' },
   'tools.solopreneur-deepseek-api-cost-calculator.howToUse.5': { en: 'Review the cost comparison and see how much you save vs OpenAI, Claude, and Gemini.', zh: '查看成本对比，了解与 OpenAI、Claude 和 Gemini 相比可节省多少。' },
 
-  'tools.solopreneur-gemini-api-cost-calculator.input.model.label': { en: 'Model', zh: '模型' },
+  // Gemini API Cost Calculator — input labels & placeholders
+  'tools.solopreneur-gemini-api-cost-calculator.input.models.label': { en: 'Models', zh: '模型' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.models.placeholder': { en: 'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', zh: 'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash' },
   'tools.solopreneur-gemini-api-cost-calculator.input.inputTokens.label': { en: 'Input Tokens per Request', zh: '每次请求输入 Token 数' },
   'tools.solopreneur-gemini-api-cost-calculator.input.inputTokens.placeholder': { en: 'e.g. 1000', zh: '例如：1000' },
   'tools.solopreneur-gemini-api-cost-calculator.input.outputTokens.label': { en: 'Output Tokens per Request', zh: '每次请求输出 Token 数' },
   'tools.solopreneur-gemini-api-cost-calculator.input.outputTokens.placeholder': { en: 'e.g. 500', zh: '例如：500' },
   'tools.solopreneur-gemini-api-cost-calculator.input.requestsPerDay.label': { en: 'Requests per Day', zh: '每日请求数' },
   'tools.solopreneur-gemini-api-cost-calculator.input.requestsPerDay.placeholder': { en: 'e.g. 100', zh: '例如：100' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.pricingMode.label': { en: 'Pricing Mode', zh: '定价模式' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.pricingMode.placeholder': { en: '', zh: '' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.cacheHitRate.label': { en: 'Context Cache Hit Rate (%)', zh: '上下文缓存命中率 (%)' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.cacheHitRate.placeholder': { en: 'e.g. 60', zh: '例如 60' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.growthRate.label': { en: 'Monthly Growth Rate (%)', zh: '月增长率 (%)' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.growthRate.placeholder': { en: 'e.g. 5', zh: '例如 5' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.projectionMonths.label': { en: 'Projection Period', zh: '预测周期' },
+  'tools.solopreneur-gemini-api-cost-calculator.input.projectionMonths.placeholder': { en: '', zh: '' },
+
+  // Gemini API Cost Calculator — FAQ
+  'tools.solopreneur-gemini-api-cost-calculator.faq.0.q': { en: 'How does Gemini pricing compare to OpenAI/Claude?', zh: 'Gemini 定价与 OpenAI/Claude 相比如何？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.0.a': { en: 'Gemini 3 Flash at $0.50/$3.00 per 1M tokens is 80-95% cheaper than GPT-4o ($2.50/$10) and 75% cheaper than Claude Haiku 3 ($0.25/$1.25 for output). Gemini 3.5 Flash at $1.50/$9.00 is still 40% cheaper than GPT-4o for input. The biggest advantage is Gemini\'s 2M token context window on Pro models.', zh: 'Gemini 3 Flash 定价 $0.50/$3.00 每百万 Token，比 GPT-4o ($2.50/$10) 便宜 80-95%，比 Claude Haiku 3（输出 $1.25/百万）便宜 75%。Gemini 3.5 Flash 定价 $1.50/$9.00，输入仍比 GPT-4o 便宜 40%。最大优势是 Pro 模型的 2M Token 上下文窗口。' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.1.q': { en: 'What is Gemini Context Caching and how much can it save?', zh: '什么是 Gemini 上下文缓存，能节省多少？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.1.a': { en: 'Gemini Context Caching stores your system instructions and repeated prefixes for 90% discount on cache reads. Cached tokens cost 0.1x the standard input price. It activates automatically for system instructions — no write cost. With 80% cache hit rate, you save ~72% on input costs. Available only on Gemini 3.5 Flash, 3.1 Pro, and 3 Flash.', zh: 'Gemini 上下文缓存存储系统指令和重复前缀，缓存读取享 90% 折扣。缓存 Token 仅需标准输入价格的 0.1 倍。系统指令自动激活——无需写入成本。80% 缓存命中率可节省约 72% 的输入成本。仅 Gemini 3.5 Flash、3.1 Pro 和 3 Flash 支持。' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.2.q': { en: 'When should I use Batch API vs Real-time?', zh: '何时使用批量 API vs 实时？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.2.a': { en: 'Batch API gives 50% discount with async processing (completed within 24 hours). Use for: bulk data processing, content generation pipelines, overnight analytics. Use Real-time for: chatbots, interactive apps, code assistants — anything needing sub-second responses. Batch is only available on the 3 newest Gemini models.', zh: '批量 API 享 50% 折扣，异步处理（24 小时内完成）。适用：批量数据处理、内容生成管道、隔夜分析。实时适用：聊天机器人、交互式应用、代码助手——任何需要亚秒级响应的场景。批量仅限最新的 3 款 Gemini 模型。' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.3.q': { en: 'Is Gemini 3.5 Flash worth it vs older Gemini models?', zh: 'Gemini 3.5 Flash 相比旧版 Gemini 模型值得吗？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.3.a': { en: 'Gemini 3.5 Flash ($1.50/$9.00) outperforms 2.5 Flash and 1.5 Pro on reasoning benchmarks at a fraction of 1.5 Pro\'s output price. For most production apps, 3 Flash ($0.50/$3.00) is the sweet spot — frontier quality at budget pricing. Only pay for 3.5 Flash if you need the strongest creative writing and complex reasoning.', zh: 'Gemini 3.5 Flash ($1.50/$9.00) 在推理基准上超越 2.5 Flash 和 1.5 Pro，输出价格仅为 1.5 Pro 的一小部分。对大多数生产应用，3 Flash ($0.50/$3.00) 是最佳选择——前沿品质、预算价格。仅在需要最强创意写作和复杂推理时选用 3.5 Flash。' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.4.q': { en: 'Gemini 3.5 Flash vs GPT-4o vs Claude Sonnet?', zh: 'Gemini 3.5 Flash vs GPT-4o vs Claude Sonnet？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.4.a': { en: 'Gemini 3.5 Flash ($1.50/$9.00) is 40% cheaper than GPT-4o ($2.50/$10) on input and 10% cheaper on output. Claude Sonnet 4.6 ($3/$15) is 2x more expensive than Gemini 3.5 Flash. For multimodal tasks (image+text), Gemini often outperforms at lower cost. For pure text reasoning, the margins are tighter — test your specific use case.', zh: 'Gemini 3.5 Flash ($1.50/$9.00) 输入比 GPT-4o ($2.50/$10) 便宜 40%，输出便宜 10%。Claude Sonnet 4.6 ($3/$15) 比 Gemini 3.5 Flash 贵 2 倍。多模态任务（图片+文字），Gemini 通常以更低成本表现更好。纯文本推理差距较小——请测试您的具体场景。' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.5.q': { en: 'How do I switch between Gemini models?', zh: '如何在 Gemini 模型之间切换？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.5.a': { en: 'Just change the model name in your API call: gemini-3.5-flash, gemini-3.1-pro, gemini-3-flash, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash. All models share the same API endpoint and auth. No code changes needed beyond the model parameter. Use Google AI Studio to test models before deploying.', zh: '只需在 API 调用中更改模型名称：gemini-3.5-flash、gemini-3.1-pro、gemini-3-flash、gemini-2.5-flash、gemini-1.5-pro、gemini-1.5-flash。所有模型共享相同的 API 端点和认证。只需更改模型参数，无需其他代码更改。部署前使用 Google AI Studio 测试模型。' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.6.q': { en: 'Which Gemini model should I use for my use case?', zh: '我的场景应该用哪个 Gemini 模型？' },
+  'tools.solopreneur-gemini-api-cost-calculator.faq.6.a': { en: 'Chatbots/RAG: Gemini 3 Flash ($0.50/$3.00) — cheapest frontier quality. Complex reasoning: Gemini 3.1 Pro ($2.50/$15.00) — strongest reasoning with 1M context. Bulk processing: Gemini 3 Flash in batch mode ($0.25/$1.50). Multimodal apps: Gemini 3.5 Flash ($1.50/$9.00) — best image+text performance. Budget/legacy: Gemini 1.5 Flash ($0.075/$0.30) — ultra-cheap, acceptable quality.', zh: '聊天机器人/RAG：Gemini 3 Flash ($0.50/$3.00)——最便宜的前沿品质。复杂推理：Gemini 3.1 Pro ($2.50/$15.00)——最强推理 + 1M 上下文。批量处理：Gemini 3 Flash 批量模式 ($0.25/$1.50)。多模态应用：Gemini 3.5 Flash ($1.50/$9.00)——最佳图文性能。预算/旧版：Gemini 1.5 Flash ($0.075/$0.30)——超低价、可接受质量。' },
+
+  // Gemini API Cost Calculator — model names
+  'tools.solopreneur-gemini-api-cost-calculator.model.gemini-3.5-flash': { en: 'Gemini 3.5 Flash', zh: 'Gemini 3.5 Flash' },
+  'tools.solopreneur-gemini-api-cost-calculator.model.gemini-3.1-pro': { en: 'Gemini 3.1 Pro', zh: 'Gemini 3.1 Pro' },
+  'tools.solopreneur-gemini-api-cost-calculator.model.gemini-3-flash': { en: 'Gemini 3 Flash', zh: 'Gemini 3 Flash' },
+  'tools.solopreneur-gemini-api-cost-calculator.model.gemini-2.5-flash': { en: 'Gemini 2.5 Flash', zh: 'Gemini 2.5 Flash' },
+  'tools.solopreneur-gemini-api-cost-calculator.model.gemini-1.5-pro': { en: 'Gemini 1.5 Pro', zh: 'Gemini 1.5 Pro' },
+  'tools.solopreneur-gemini-api-cost-calculator.model.gemini-1.5-flash': { en: 'Gemini 1.5 Flash', zh: 'Gemini 1.5 Flash' },
+
+  // Gemini API Cost Calculator — presets
+  'tools.solopreneur-gemini-api-cost-calculator.preset.light': { en: 'Light Usage', zh: '轻度使用' },
+  'tools.solopreneur-gemini-api-cost-calculator.preset.mid': { en: 'Mid-Scale', zh: '中规模' },
+  'tools.solopreneur-gemini-api-cost-calculator.preset.high': { en: 'High Volume', zh: '大流量' },
+  'tools.solopreneur-gemini-api-cost-calculator.preset.batch': { en: 'Batch Processing', zh: '批量处理' },
+  'tools.solopreneur-gemini-api-cost-calculator.preset.cache': { en: 'Heavy Cache', zh: '重度缓存' },
+  'tools.solopreneur-gemini-api-cost-calculator.preset.enterprise': { en: 'Enterprise', zh: '企业级' },
+
+  // Gemini API Cost Calculator — how to use
+  'tools.solopreneur-gemini-api-cost-calculator.howToUse.0': { en: 'Select the Gemini models you want to compare (3.5 Flash, 3.1 Pro, 3 Flash, etc.).', zh: '选择要对比的 Gemini 模型（3.5 Flash、3.1 Pro、3 Flash 等）。' },
+  'tools.solopreneur-gemini-api-cost-calculator.howToUse.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
+  'tools.solopreneur-gemini-api-cost-calculator.howToUse.2': { en: 'Enter your expected daily request volume.', zh: '输入预期的每日请求量。' },
+  'tools.solopreneur-gemini-api-cost-calculator.howToUse.3': { en: 'Choose real-time or batch pricing — batch gives 50% discount for async jobs.', zh: '选择实时或批量定价——批量为异步任务提供 50% 折扣。' },
+  'tools.solopreneur-gemini-api-cost-calculator.howToUse.4': { en: 'Set the context cache hit rate — Gemini caches system instructions automatically at 90% discount.', zh: '设置上下文缓存命中率——Gemini 自动缓存系统指令，享 90% 折扣。' },
+  'tools.solopreneur-gemini-api-cost-calculator.howToUse.5': { en: 'Add a growth rate and projection period for long-term cost planning, then review savings vs other providers.', zh: '添加增长率和预测周期进行长期成本规划，然后查看与其他供应商相比的节省情况。' },
 
   'tools.solopreneur-ai-image-cost-calculator.input.provider.label': { en: 'Provider', zh: '提供商' },
   'tools.solopreneur-ai-image-cost-calculator.input.imagesPerMonth.label': { en: 'Images per Month', zh: '每月图片数' },
