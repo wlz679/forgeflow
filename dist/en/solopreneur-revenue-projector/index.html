@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SaaS Financial Forecaster — CalcKit</title><meta name="description" content="The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."><meta property="og:title" content="SaaS Financial Forecaster — CalcKit"><meta property="og:description" content="The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."><meta property="og:image" content="/og-default.png"><meta property="og:type" content="website"><meta name="robots" content="index, follow"><link rel="sitemap" href="/sitemap-index.xml"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a good monthly growth rate for a SaaS?","acceptedAnswer":{"@type":"Answer","text":"For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios."}},{"@type":"Question","name":"What's the difference between gross growth and net growth?","acceptedAnswer":{"@type":"Answer","text":"Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue."}},{"@type":"Question","name":"How do I calculate my monthly expenses?","acceptedAnswer":{"@type":"Answer","text":"Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don't include one-time purchases. If your expenses fluctuate, use the 3-month average."}},{"@type":"Question","name":"What's a healthy runway for a solopreneur?","acceptedAnswer":{"@type":"Answer","text":"12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both 'zero-revenue' and 'current pace' runway so you can plan for the worst case while tracking the realistic one."}},{"@type":"Question","name":"What is Burn Multiple and why does it matter?","acceptedAnswer":{"@type":"Answer","text":"Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. <1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, >2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign."}},{"@type":"Question","name":"How accurate are these revenue projections?","acceptedAnswer":{"@type":"Answer","text":"The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers."}},{"@type":"Question","name":"What's a good LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy."}}]},{"@type":"SoftwareApplication","name":"SaaS Financial Forecaster","applicationCategory":"Multimedia","operatingSystem":"Web","description":"The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://calckit.com/"},{"@type":"ListItem","position":2,"name":"SaaS Financial Forecaster"}]}]}</script><link rel="stylesheet" href="/_astro/_slug_.D8j9ST5U.css"><script type="module" src="/_astro/hoisted.Dk0DUBIl.js"></script></head> <body class="min-h-screen flex flex-col bg-white text-gray-900">  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"> <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"> <a href="/en/" class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200"> <svg class="w-8 h-8 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> CalcKit </a> <div class="flex items-center gap-6 text-sm"> <a href="/en/blog/" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> Blog </a><a href="/en/about" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> About </a> <a href="/zh/solopreneur-revenue-projector" class="px-3 py-1.5 text-xs font-medium bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full transition-all duration-200 ml-2"> 中文 </a> </div> </nav> </header>  <main class="max-w-6xl mx-auto px-4 py-8 flex-1"> <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb"> <a href="/en/" class="hover:text-[#7C3AED] transition-colors">Home</a> <span class="mx-2">/</span> <span class="text-gray-600">SaaS Financial Forecaster</span> </nav> <div class="lg:grid lg:grid-cols-5 lg:gap-10"> <div class="lg:col-span-2"> <div class="mb-6"> <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">SaaS Financial Forecaster</h1> <p class="text-sm text-gray-500 mt-2 leading-relaxed">The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.</p> </div> <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">  <div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="currentMRR">Current MRR ($)</label> <input type="number" id="currentMRR" name="currentMRR" placeholder="e.g. 2000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyGrowthRate">Monthly Growth Rate (%)</label> <input type="number" id="monthlyGrowthRate" name="monthlyGrowthRate" placeholder="e.g. 5" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyChurnRate">Monthly Churn Rate (%)</label> <input type="number" id="monthlyChurnRate" name="monthlyChurnRate" placeholder="e.g. 3" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyExpenses">Monthly Expenses ($)</label> <input type="number" id="monthlyExpenses" name="monthlyExpenses" placeholder="e.g. 3000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="cashOnHand">Cash on Hand ($)</label> <input type="number" id="cashOnHand" name="cashOnHand" placeholder="e.g. 60000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="arpu">Avg Revenue Per User ($)</label> <input type="number" id="arpu" name="arpu" placeholder="e.g. 25" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="customGrowthRate">Custom Growth Rate (%)</label> <input type="number" id="customGrowthRate" name="customGrowthRate" placeholder="e.g. 7 (optional)" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="cac">CAC — Customer Acquisition Cost ($)</label> <input type="number" id="cac" name="cac" placeholder="e.g. 200 (optional)" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="months">Projection Period</label> <select id="months" name="months" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all"> <option value="">Select...</option> <option value="6">6</option><option value="12">12</option><option value="24">24</option> </select> </div> <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm"> Generate </button> </form> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">How to Use This Tool</h2> <div class="space-y-3"> <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">1</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your current Monthly Recurring Revenue (MRR).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">2</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average monthly growth rate (gross, before churn).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">3</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your monthly churn rate to see net growth — the real number.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">4</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your total monthly expenses (hosting, tools, salary, etc.).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">5</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your cash on hand to calculate runway and financial buffer.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">6</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your ARPU (Average Revenue Per User) for subscriber counts.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">7</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Optionally enter a custom growth rate to test your own scenario.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">8</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Optionally enter your CAC (Customer Acquisition Cost) for payback and LTV:CAC.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">9</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Select your projection period (6, 12, or 24 months).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">10</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Review the Revenue Snapshot for your net growth and ending MRR.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">11</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Scan the Monthly MRR Breakdown to see month-by-month progress.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">12</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Check Runway &amp; Breakeven to know how long your cash will last.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">13</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Study the Burn &amp; Efficiency Metrics — Rule of 40, Burn Multiple, LTV, CAC ratios.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">14</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Explore What-If scenarios to see the impact of better churn or lower costs.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">15</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Read the Action Plan for prioritized next steps based on your data.</span> </div> </div> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h2> <div class="space-y-2"> <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is a good monthly growth rate for a SaaS?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s the difference between gross growth and net growth?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How do I calculate my monthly expenses?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don&#39;t include one-time purchases. If your expenses fluctuate, use the 3-month average.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s a healthy runway for a solopreneur?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both &#39;zero-revenue&#39; and &#39;current pace&#39; runway so you can plan for the worst case while tracking the realistic one.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is Burn Multiple and why does it matter?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. &lt;1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, &gt;2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How accurate are these revenue projections?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s a good LTV:CAC ratio?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy.</p> </details> </div> </div> </div> <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section"> <div class="flex items-center justify-between mb-4"> <h2 class="text-lg font-bold text-gray-900">Results</h2> <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label="Copy All" data-copied-label="Copied!">Copy All</span> </div> <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">Example</span> <div id="static-results" class="space-y-3"> <div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#7C3AED]/30 transition-all duration-300"><div class="flex items-start justify-between gap-3 p-5 pb-3 border-b border-gray-50"><h3 class="text-base font-bold text-gray-900">📊 Revenue Snapshot</h3><div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"><button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="📊 Revenue Snapshot
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SaaS Financial Forecaster — CalcKit</title><meta name="description" content="The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."><meta property="og:title" content="SaaS Financial Forecaster — CalcKit"><meta property="og:description" content="The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."><meta property="og:image" content="/og-default.png"><meta property="og:type" content="website"><meta name="robots" content="index, follow"><link rel="sitemap" href="/sitemap-index.xml"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a good monthly growth rate for a SaaS?","acceptedAnswer":{"@type":"Answer","text":"For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios."}},{"@type":"Question","name":"What's the difference between gross growth and net growth?","acceptedAnswer":{"@type":"Answer","text":"Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue."}},{"@type":"Question","name":"How do I calculate my monthly expenses?","acceptedAnswer":{"@type":"Answer","text":"Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don't include one-time purchases. If your expenses fluctuate, use the 3-month average."}},{"@type":"Question","name":"What's a healthy runway for a solopreneur?","acceptedAnswer":{"@type":"Answer","text":"12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both 'zero-revenue' and 'current pace' runway so you can plan for the worst case while tracking the realistic one."}},{"@type":"Question","name":"What is Burn Multiple and why does it matter?","acceptedAnswer":{"@type":"Answer","text":"Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. <1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, >2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign."}},{"@type":"Question","name":"How accurate are these revenue projections?","acceptedAnswer":{"@type":"Answer","text":"The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers."}},{"@type":"Question","name":"What's a good LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy."}}]},{"@type":"SoftwareApplication","name":"SaaS Financial Forecaster","applicationCategory":"Multimedia","operatingSystem":"Web","description":"The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://calckit.com/"},{"@type":"ListItem","position":2,"name":"SaaS Financial Forecaster"}]}]}</script><link rel="stylesheet" href="/_astro/_slug_.mI1TXKdM.css"><script type="module" src="/_astro/hoisted.Dk0DUBIl.js"></script></head> <body class="min-h-screen flex flex-col bg-white text-gray-900">  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"> <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"> <a href="/en/" class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200"> <svg class="w-8 h-8 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> CalcKit </a> <div class="flex items-center gap-6 text-sm"> <a href="/en/blog/" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> Blog </a><a href="/en/about" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> About </a> <a href="/zh/solopreneur-revenue-projector" class="px-3 py-1.5 text-xs font-medium bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full transition-all duration-200 ml-2"> 中文 </a> </div> </nav> </header>  <main class="max-w-6xl mx-auto px-4 py-8 flex-1"> <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb"> <a href="/en/" class="hover:text-[#7C3AED] transition-colors">Home</a> <span class="mx-2">/</span> <span class="text-gray-600">SaaS Financial Forecaster</span> </nav> <div class="lg:grid lg:grid-cols-5 lg:gap-10"> <div class="lg:col-span-2"> <div class="mb-6"> <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">SaaS Financial Forecaster</h1> <p class="text-sm text-gray-500 mt-2 leading-relaxed">The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.</p> </div> <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">  <div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="currentMRR">Current MRR ($)</label> <input type="number" id="currentMRR" name="currentMRR" placeholder="e.g. 2000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyGrowthRate">Monthly Growth Rate (%)</label> <input type="number" id="monthlyGrowthRate" name="monthlyGrowthRate" placeholder="e.g. 5" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyChurnRate">Monthly Churn Rate (%)</label> <input type="number" id="monthlyChurnRate" name="monthlyChurnRate" placeholder="e.g. 3" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyExpenses">Monthly Expenses ($)</label> <input type="number" id="monthlyExpenses" name="monthlyExpenses" placeholder="e.g. 3000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="cashOnHand">Cash on Hand ($)</label> <input type="number" id="cashOnHand" name="cashOnHand" placeholder="e.g. 60000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="arpu">Avg Revenue Per User ($)</label> <input type="number" id="arpu" name="arpu" placeholder="e.g. 25" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="customGrowthRate">Custom Growth Rate (%)</label> <input type="number" id="customGrowthRate" name="customGrowthRate" placeholder="e.g. 7 (optional)" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="cac">CAC — Customer Acquisition Cost ($)</label> <input type="number" id="cac" name="cac" placeholder="e.g. 200 (optional)" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="months">Projection Period</label> <select id="months" name="months" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all"> <option value="">Select...</option> <option value="6">6</option><option value="12">12</option><option value="24">24</option> </select> </div>        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm"> Generate </button> </form> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">How to Use This Tool</h2> <div class="space-y-3"> <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">1</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your current Monthly Recurring Revenue (MRR).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">2</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average monthly growth rate (gross, before churn).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">3</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your monthly churn rate to see net growth — the real number.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">4</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your total monthly expenses (hosting, tools, salary, etc.).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">5</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your cash on hand to calculate runway and financial buffer.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">6</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your ARPU (Average Revenue Per User) for subscriber counts.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">7</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Optionally enter a custom growth rate to test your own scenario.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">8</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Optionally enter your CAC (Customer Acquisition Cost) for payback and LTV:CAC.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">9</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Select your projection period (6, 12, or 24 months).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">10</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Review the Revenue Snapshot for your net growth and ending MRR.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">11</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Scan the Monthly MRR Breakdown to see month-by-month progress.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">12</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Check Runway &amp; Breakeven to know how long your cash will last.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">13</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Study the Burn &amp; Efficiency Metrics — Rule of 40, Burn Multiple, LTV, CAC ratios.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">14</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Explore What-If scenarios to see the impact of better churn or lower costs.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">15</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Read the Action Plan for prioritized next steps based on your data.</span> </div> </div> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h2> <div class="space-y-2"> <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is a good monthly growth rate for a SaaS?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s the difference between gross growth and net growth?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How do I calculate my monthly expenses?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don&#39;t include one-time purchases. If your expenses fluctuate, use the 3-month average.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s a healthy runway for a solopreneur?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both &#39;zero-revenue&#39; and &#39;current pace&#39; runway so you can plan for the worst case while tracking the realistic one.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is Burn Multiple and why does it matter?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. &lt;1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, &gt;2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How accurate are these revenue projections?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s a good LTV:CAC ratio?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy.</p> </details> </div> </div> </div> <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section"> <div class="flex items-center justify-between mb-4"> <h2 class="text-lg font-bold text-gray-900">Results</h2> <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label="Copy All" data-copied-label="Copied!">Copy All</span> </div> <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">Example</span> <div id="static-results" class="space-y-3"> <div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#7C3AED]/30 transition-all duration-300"><div class="flex items-start justify-between gap-3 p-5 pb-3 border-b border-gray-50"><h3 class="text-base font-bold text-gray-900">📊 Revenue Snapshot</h3><div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"><button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="📊 Revenue Snapshot
 
 • Starting MRR:           $5,000/mo
 • Ending MRR:             $8,954/mo  (after 12 months)
@@ -309,6 +309,13 @@ const exportLabel = "Export";
 const toolSlug = "solopreneur-revenue-projector";
 
       var isOpenAI = toolSlug === 'solopreneur-openai-token-calculator';
+      var isClaude = toolSlug === 'solopreneur-claude-api-cost-calculator';
+      var isDeepSeek = toolSlug === 'solopreneur-deepseek-api-cost-calculator';
+      var isGemini = toolSlug === 'solopreneur-gemini-api-cost-calculator';
+      var isAiApiCostComparison = toolSlug === 'solopreneur-ai-api-cost-comparison';
+      var isImage = toolSlug === 'solopreneur-ai-image-cost-calculator';
+      var isTraining = toolSlug === 'solopreneur-ai-training-cost-estimator';
+      var isGpu = toolSlug === 'solopreneur-gpu-cloud-cost-calculator';
       function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
       function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
       function generateFromConfig(config, inputs) {
@@ -332,105 +339,119 @@ const toolSlug = "solopreneur-revenue-projector";
         return results;
       }
 
-      // Beautify OpenAI calculator text output into styled HTML sections
-      function beautifyOpenAI(text) {
-        var sections = text.split(/\n(?=[\u{1F4CA}\u{1F4CB}\u{1F4C8}\u{1F4B0}\u{1F4C5}\u{1F534}⚡])/u);
+      // ===== Unified beautification engine — handles ALL calculators =====
+      // Config-driven: beautifySections(text, CONFIG) replaces 8 individual functions
+      // renderCard() is a shared helper for detail-card rendering
+
+      function beautifySections(text, config) {
+        var rawSections = text.split(/\n\n(?=\S)/);
+        var sections = [];
+        for (var rsi = 0; rsi < rawSections.length; rsi++) {
+          var rs = rawSections[rsi].trim();
+          if (!rs) continue;
+          if (sections.length > 0 && rs.length < 60 && sections[sections.length - 1].indexOf('\n') < 0) {
+            sections[sections.length - 1] += '\n' + rs;
+          } else {
+            sections.push(rs);
+          }
+        }
+        if (sections.length <= 1) sections = [text];
+
         var html = '';
-        var familyColors = {
-          '\u{1F535}': { bg: '#eff6ff', bar: '#3b82f6', border: '#bfdbfe' },   // 🔵 GPT-5 blue
-          '\u{1F7E2}': { bg: '#f0fdf4', bar: '#22c55e', border: '#bbf7d0' },   // 🟢 GPT-4.1 green
-          '\u{1F7E0}': { bg: '#fff7ed', bar: '#f97316', border: '#fed7aa' },   // 🟠 o-series orange
-          '⚪':    { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },   // ⚪ legacy gray
-        };
+        var familyIcons = Object.keys(config.families).join('');
 
         for (var si = 0; si < sections.length; si++) {
           var s = sections[si].trim();
           if (!s) continue;
 
           // --- Bar Chart Section ---
-          if (s.indexOf('Cost Comparison') >= 0) {
+          if (s.indexOf('Cost Comparison') >= 0 || (s.indexOf('█') >= 0 && s.split('\n').length >= 3)) {
             var lines = s.split('\n');
-            // Find max cost for bar scaling
             var maxCost = 0;
             var bars = [];
+            var isBarSection = false;
+
             for (var li = 0; li < lines.length; li++) {
               var l = lines[li];
-              var famIcon = l.charAt(0) + (l.charAt(1) === '️' ? l.charAt(1) : '');
-              // Match: icon padded_name █blocks $cost [badge]
-              var m = l.match(/^([\u{1F535}\u{1F7E2}\u{1F7E0}⚪])\s+(.+?)\s+(█+)\s+(\$\S+)(.*)/u);
+              var m = l.match(/^(\S️?)\s+(.+?)\s{2,}([█░]+)\s+[\$](\S+)/u);
               if (m) {
-                var cost = parseFloat(m[4].replace('$','').replace(/,/g,''));
+                isBarSection = true;
+                var cost = parseFloat(m[4].replace(/,/g,''));
                 if (cost > maxCost) maxCost = cost;
-                bars.push({ icon: m[1], name: m[2].trim(), blocks: m[3].length, cost: m[4], badge: (m[5]||'').trim(), raw: l });
+                bars.push({ icon: m[1], name: m[2].trim(), blocks: m[3], cost: '$' + m[4], badge: '', raw: l });
               }
             }
-            // Also parse header line from raw text
-            var titleMatch = s.match(/([\u{1F4CA}])\s*(Cost Comparison.*)/u);
-            html += '<div class="mb-4">';
-            html += '<h4 class="text-sm font-bold text-gray-800 mb-3">' + esc(s.split('\n')[0]) + '</h4>';
-            for (var bi = 0; bi < bars.length; bi++) {
-              var b = bars[bi];
-              var fam = familyColors[b.icon] || familyColors['⚪'];
-              var pct = maxCost > 0 ? Math.round((parseFloat(b.cost.replace('$','').replace(/,/g,'')) / maxCost) * 100) : 0;
-              html += '<div class="flex items-center gap-2 mb-1.5 text-xs">';
-              html += '<span class="w-28 truncate text-gray-700">' + b.icon + ' ' + esc(b.name) + '</span>';
-              html += '<span class="flex-1 h-4 rounded-sm relative" style="background:#f3f4f6">';
-              html += '<span class="absolute inset-y-0 left-0 rounded-sm transition-all" style="width:' + Math.max(1, pct) + '%;background:' + fam.bar + '"></span>';
-              html += '</span>';
-              html += '<span class="w-16 text-right font-semibold text-gray-800">' + b.cost + '</span>';
-              if (b.badge) html += '<span class="text-xs text-amber-600 font-medium">' + esc(b.badge) + '</span>';
+
+            if (isBarSection && bars.length > 0) {
+              html += '<div class="mb-4">';
+              html += '<h4 class="text-sm font-bold text-gray-800 mb-3">' + esc(lines[0]) + '</h4>';
+              for (var bi = 0; bi < bars.length; bi++) {
+                var b = bars[bi];
+                var fam = config.families[b.icon] || config.defaultFamily;
+                var pct = maxCost > 0 ? Math.round((parseFloat(b.cost.replace('$','').replace(/,/g,'')) / maxCost) * 100) : 0;
+                html += '<div class="flex items-center gap-2 mb-1.5 text-xs">';
+                html += '<span class="w-32 shrink-0 truncate text-gray-700" style="color:' + (fam.text || fam.bar) + ';font-weight:600">' + esc(b.icon + ' ' + b.name) + '</span>';
+                html += '<span class="flex-1 h-4 rounded-sm relative" style="background:#f3f4f6">';
+                html += '<span class="absolute inset-y-0 left-0 rounded-sm transition-all" style="width:' + Math.max(1, pct) + '%;background:' + fam.bar + '"></span>';
+                html += '</span>';
+                html += '<span class="w-20 text-right font-semibold text-gray-800">' + b.cost + '</span>';
+                if (b.badge) html += '<span class="text-xs text-amber-600 font-medium">' + esc(b.badge) + '</span>';
+                html += '</div>';
+              }
               html += '</div>';
+              continue;
+            }
+          }
+
+          // --- Detail Cards Section ---
+          if (s.indexOf('Context:') >= 0 || s.indexOf('Rate:') >= 0 || s.indexOf('Per Request:') >= 0 || s.indexOf('Input:') >= 0 || s.indexOf('Selected Model Details') >= 0) {
+            var cardLines = s.split('\n');
+            var iconRx2 = config.iconRegex;
+
+            html += '<div class="space-y-3">';
+            if (cardLines[0] && !cardLines[0].match(iconRx2) && cardLines[0].trim().length < 120) {
+              html += '<h4 class="text-sm font-bold text-gray-800 mb-1">' + esc(cardLines[0].trim()) + '</h4>';
+            }
+
+            var currentCard = null;
+            var cardContent = [];
+
+            for (var cli = 0; cli < cardLines.length; cli++) {
+              var cl = cardLines[cli];
+              var cardMatch = cl.match(iconRx2);
+              var isCardHeader = cardMatch && (cl.indexOf('(') >= 0 || cl.indexOf('|') >= 0) && !cl.startsWith('  ');
+              if (isCardHeader) {
+                if (currentCard) {
+                  html += renderCard(currentCard, cardContent, config);
+                }
+                currentCard = { icon: cardMatch[1], raw: cl };
+                cardContent = [];
+              } else if (cl.trim()) {
+                cardContent.push(cl);
+              }
+            }
+            if (currentCard) {
+              html += renderCard(currentCard, cardContent, config);
             }
             html += '</div>';
             continue;
           }
 
-          // --- Detail Cards Section ---
-          if (s.indexOf('Selected Model Details') >= 0) {
-            var cardLines = s.split('\n');
-            html += '<h4 class="text-sm font-bold text-gray-800 mb-3">' + esc(cardLines[0]) + '</h4>';
-            // Parse individual cards: lines starting with family icon + model name
-            var cardStart = 2; // skip header + separator
-            while (cardStart < cardLines.length) {
-              var cl = cardLines[cardStart];
-              if (!cl || cl.indexOf('──') >= 0 || cl.indexOf('━━') >= 0) { cardStart++; continue; }
-              // Check if this line starts a new card: icon + model name + | Context:
-              var cardMatch = cl.match(/([\u{1F535}\u{1F7E2}\u{1F7E0}⚪])\s+(.+?)\s+\|\s+Context:\s+(.+)/u);
-              if (cardMatch) {
-                var cIcon = cardMatch[1];
-                var cName = cardMatch[2];
-                var cCtx = cardMatch[3];
-                var fam = familyColors[cIcon] || familyColors['⚪'];
-                var cardEnd = cardStart + 1;
-                // Find end of this card (next icon+name line or end of section)
-                while (cardEnd < cardLines.length) {
-                  var nl = cardLines[cardEnd];
-                  if (nl.match(/^[\u{1F535}\u{1F7E2}\u{1F7E0}⚪]\s+\S+\s+\|/u)) break;
-                  if (nl.indexOf('Savings Insights') >= 0 || nl.indexOf('Growth Projection') >= 0) break;
-                  cardEnd++;
-                }
-                // Collect card lines
-                var cardBody = cardLines.slice(cardStart + 2, cardEnd).filter(function(l){ return l && l.indexOf('──') < 0; });
-                html += '<div class="rounded-xl border p-4 mb-3" style="border-color:' + fam.border + ';background:' + fam.bg + '">';
-                html += '<div class="flex items-center gap-2 mb-2"><span>' + cIcon + '</span><span class="font-semibold text-sm text-gray-900">' + esc(cName) + '</span><span class="text-xs text-gray-400 ml-auto">' + esc(cCtx) + '</span></div>';
-                for (var cli = 0; cli < cardBody.length; cli++) {
-                  var bl = cardBody[cli];
-                  if (bl.indexOf('Input:') >= 0 || bl.indexOf('Output:') >= 0) {
-                    html += '<div class="text-xs text-gray-600 ml-5">' + esc(bl) + '</div>';
-                  } else if (bl.indexOf('Per request:') >= 0 || bl.indexOf('Daily') >= 0 || bl.indexOf('Monthly') >= 0 || bl.indexOf('Annual') >= 0) {
-                    html += '<div class="text-xs font-medium text-gray-800 ml-5">' + esc(bl) + '</div>';
-                  } else if (bl.indexOf('Batch') >= 0 || bl.indexOf('Real-time') >= 0 || bl.indexOf('cache') >= 0 || bl.indexOf('reasoning') >= 0 || bl.indexOf('\u{1F9E0}') >= 0 || bl.indexOf('🧠') >= 0) {
-                    html += '<div class="text-xs text-purple-700 ml-5 mt-1">' + esc(bl) + '</div>';
-                  } else if (bl.trim()) {
-                    html += '<div class="text-xs text-gray-500 ml-5">' + esc(bl) + '</div>';
-                  }
-                }
-                html += '</div>';
-                cardStart = cardEnd;
+          // --- Caching / Reasoning Breakdown Section ---
+          if (s.indexOf('Caching Breakdown') >= 0 || s.indexOf('Cache Breakdown') >= 0 || s.indexOf('🧠 Reasoning') >= 0) {
+            var blines = s.split('\n').filter(function(l){ return l.trim(); });
+            html += '<div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 mb-3">';
+            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">' + esc(blines[0]) + '</h4>';
+            for (var bli = 1; bli < blines.length; bli++) {
+              var bl = blines[bli].trim();
+              if (!bl) continue;
+              if (bl.indexOf('Break-even') >= 0 || bl.indexOf('Monthly') >= 0) {
+                html += '<div class="text-xs font-semibold text-emerald-700 mt-1">' + esc(bl) + '</div>';
               } else {
-                cardStart++;
+                html += '<div class="text-xs text-gray-600">' + esc(bl) + '</div>';
               }
             }
+            html += '</div>';
             continue;
           }
 
@@ -440,25 +461,28 @@ const toolSlug = "solopreneur-revenue-projector";
             html += '<div class="mb-4">';
             html += '<h4 class="text-sm font-bold text-gray-800 mb-2">' + esc(glines[0]) + '</h4>';
             html += '<div class="overflow-x-auto"><table class="w-full text-xs border-collapse"><thead><tr class="bg-gray-100">';
-            // Parse header row: "Month  │ ModelA      │ ModelB      │ Cum. Diff"
-            var hdrParts = glines[2] ? glines[2].split('│') : [];
+            var hdrLine = -1;
+            for (var hli = 1; hli < Math.min(glines.length, 5); hli++) {
+              if (glines[hli] && glines[hli].indexOf('│') >= 0) { hdrLine = hli; break; }
+            }
+            var hdrParts = hdrLine >= 0 ? glines[hdrLine].split('│') : [];
             for (var hi = 0; hi < hdrParts.length; hi++) {
               html += '<th class="px-2 py-1.5 text-left font-semibold text-gray-600">' + esc(hdrParts[hi].trim()) + '</th>';
             }
             html += '</tr></thead><tbody>';
-            // Data rows start after separator
-            for (var ri = 4; ri < glines.length; ri++) {
+            var dataStart = hdrLine + 2;
+            for (var ri = dataStart; ri < glines.length; ri++) {
               if (!glines[ri] || glines[ri].indexOf('💡') >= 0) break;
               var cells = glines[ri].split('│');
               if (cells.length < 2) continue;
-              html += '<tr class="border-t border-gray-100">';
+              var isTotal = glines[ri].trim().startsWith('Total') || glines[ri].trim().startsWith('Cumulative');
+              html += '<tr class="border-t border-gray-100' + (isTotal ? ' bg-gray-50 font-semibold' : '') + '">';
               for (var ci = 0; ci < cells.length; ci++) {
                 html += '<td class="px-2 py-1.5 text-gray-700">' + esc(cells[ci].trim()) + '</td>';
               }
               html += '</tr>';
             }
-            // Summary line
-            for (var ri2 = 4; ri2 < glines.length; ri2++) {
+            for (var ri2 = dataStart; ri2 < glines.length; ri2++) {
               if (glines[ri2] && glines[ri2].indexOf('💡') >= 0) {
                 html += '<tr><td colspan="' + hdrParts.length + '" class="px-2 py-1.5 text-xs text-purple-700 font-medium">' + esc(glines[ri2].trim()) + '</td></tr>';
               }
@@ -467,19 +491,20 @@ const toolSlug = "solopreneur-revenue-projector";
             continue;
           }
 
-          // --- Savings Insights Section ---
-          if (s.indexOf('Savings Insights') >= 0) {
-            var slines = s.split('\n').filter(function(l){ return l.trim() && l.indexOf('━━') < 0 && l.indexOf('Savings') < 0; });
+          // --- Savings Insights / Cross-provider Section ---
+          if (s.indexOf('Savings Insights') >= 0 || s.indexOf('Savings vs') >= 0) {
+            var slines = s.split('\n').filter(function(l){ return l.trim() && l.indexOf('───') < 0 && l.indexOf('━━') < 0; });
             html += '<div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-3">';
             html += '<h4 class="text-sm font-bold text-gray-800 mb-2">💰 Savings Insights</h4>';
             for (var sli = 0; sli < slines.length; sli++) {
               var sl = slines[sli].trim();
-              if (sl.indexOf('🏆') >= 0) {
+              if (!sl || sl.indexOf('Savings Insights') >= 0) continue;
+              if (sl.indexOf('🏆') >= 0 || sl.indexOf('saves') >= 0 || sl.indexOf('cheaper') >= 0) {
                 html += '<div class="text-xs font-semibold text-green-700">' + esc(sl) + '</div>';
-              } else if (sl.indexOf('⭐') >= 0) {
-                html += '<div class="text-xs font-medium text-blue-700">' + esc(sl) + '</div>';
-              } else if (sl.indexOf('💸') >= 0) {
-                html += '<div class="text-xs text-purple-700 mt-0.5">' + esc(sl) + '</div>';
+              } else if (sl.indexOf('⭐') >= 0 || sl.indexOf('costs') >= 0 || sl.indexOf('premium') >= 0) {
+                html += '<div class="text-xs font-medium text-amber-700">' + esc(sl) + '</div>';
+              } else if (sl.indexOf('💡') >= 0 || sl.indexOf('💸') >= 0) {
+                html += '<div class="text-xs text-purple-700 mt-1 font-medium">' + esc(sl) + '</div>';
               } else if (sl.indexOf('🌍') >= 0 || sl.indexOf('🌐') >= 0) {
                 html += '<div class="text-xs text-indigo-700 mt-0.5">' + esc(sl) + '</div>';
               } else if (sl.indexOf('💾') >= 0 || sl.indexOf('🗜️') >= 0) {
@@ -494,22 +519,21 @@ const toolSlug = "solopreneur-revenue-projector";
 
           // --- Usage Scenarios Section ---
           if (s.indexOf('Usage Scenarios') >= 0) {
-            var ulines = s.split('\n').filter(function(l){ return l.trim() && l.indexOf('━━') < 0 && l.indexOf('Usage') < 0; });
+            var ulines = s.split('\n').filter(function(l){ return l.trim() && l.indexOf('───') < 0 && l.indexOf('━━') < 0; });
             html += '<div class="mb-3">';
-            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">📅 Usage Scenarios (monthly costs)</h4>';
+            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">📊 Usage Scenarios (monthly costs)</h4>';
             html += '<div class="space-y-1">';
             for (var uli = 0; uli < ulines.length; uli++) {
               var ul = ulines[uli].trim();
-              if (!ul) continue;
-              // Split: icon Name: 50→$X  ·  100→$Y  ·  ...
-              var um = ul.match(/^([\u{1F535}\u{1F7E2}\u{1F7E0}⚪])\s+(.+?):\s+(.+)/u);
+              if (!ul || ul.indexOf('Usage Scenarios') >= 0) continue;
+              var um = ul.match(/^(\S)\s+(.+?):\s+(.+)/);
               if (um) {
                 var uIcon = um[1];
                 var uName = um[2];
                 var uData = um[3];
-                var uFam = familyColors[uIcon] || familyColors['⚪'];
-                html += '<div class="flex items-center gap-2 text-xs py-1 px-2 rounded" style="background:' + uFam.bg + '">';
-                html += '<span class="font-semibold text-gray-800 w-24 shrink-0">' + uIcon + ' ' + esc(uName) + '</span>';
+                var uFam = config.families[uIcon] || config.defaultFamily;
+                html += '<div class="flex items-center gap-2 text-xs py-1.5 px-2 rounded" style="background:' + uFam.bg + '">';
+                html += '<span class="font-semibold text-gray-800 w-36 shrink-0 truncate" style="color:' + (uFam.text || uFam.bar) + '">' + esc(uIcon + ' ' + uName) + '</span>';
                 html += '<span class="text-gray-600">' + esc(uData).replace(/·/g, '<span class="text-gray-300 mx-1">·</span>') + '</span>';
                 html += '</div>';
               }
@@ -518,16 +542,158 @@ const toolSlug = "solopreneur-revenue-projector";
             continue;
           }
 
+          // --- Header section (pricing mode, input summary, cache note) ---
+          if (s.indexOf('Input:') >= 0 || s.indexOf('📥') >= 0 || s.indexOf('📤') >= 0) {
+            var hlines = s.split('\n').filter(function(l){ return l.trim(); });
+            html += '<div class="rounded-lg bg-gradient-to-r from-gray-50 to-blue-50/30 border border-gray-200 p-3 mb-4">';
+            for (var hi2 = 0; hi2 < hlines.length; hi2++) {
+              var hl = hlines[hi2].trim();
+              if (hl.indexOf('📥') >= 0 || hl.indexOf('📤') >= 0) {
+                html += '<div class="text-xs font-medium text-gray-700">' + esc(hl) + '</div>';
+              } else if (hl.indexOf('💾') >= 0 || hl.indexOf('cache') >= 0) {
+                html += '<div class="text-xs text-emerald-700 font-medium mt-0.5">' + esc(hl) + '</div>';
+              } else {
+                html += '<div class="text-sm font-bold text-gray-800">' + esc(hl) + '</div>';
+              }
+            }
+            html += '</div>';
+            continue;
+          }
+
           // --- Fallback: render as text block ---
-          html += '<div class="text-xs text-gray-600 whitespace-pre-line">' + esc(s) + '</div>';
+          html += '<div class="text-xs text-gray-600 whitespace-pre-line bg-gray-50 rounded-lg p-3 mb-3">' + esc(s) + '</div>';
         }
         return html;
       }
 
+      // Helper: render a detail card for one model/provider
+      function renderCard(card, content, config) {
+        var fam = config.families[card.icon] || config.defaultFamily;
+        var nameMatch = card.raw.match(/^\S\s+(.+?)\s*[\(|]/);
+        var name = nameMatch ? nameMatch[1].trim() : card.raw;
+        var famMatch = card.raw.match(/\((.+?)\)/);
+        var famLabel = famMatch ? famMatch[1] : '';
+        var ctxMatch = card.raw.match(/\|\s*Context:\s*(.+)/);
+        var ctxLabel = ctxMatch ? ctxMatch[1] : '';
+
+        var h = '';
+        h += '<div class="rounded-xl border p-4" style="border-color:' + fam.border + ';background:' + fam.bg + '">';
+        h += '<div class="flex items-center gap-2 mb-2">';
+        h += '<span style="color:' + (fam.text || fam.bar) + ';font-weight:bold">' + esc(card.icon) + '</span>';
+        h += '<span class="font-semibold text-sm text-gray-900">' + esc(name) + '</span>';
+        if (famLabel || ctxLabel) {
+          h += '<span class="text-xs text-gray-400 ml-auto">' + esc(famLabel || ctxLabel) + '</span>';
+        }
+        h += '</div>';
+
+        for (var i = 0; i < content.length; i++) {
+          var l = content[i].trim();
+          if (!l) continue;
+          if (l.indexOf('Context:') >= 0 || l.indexOf('Rate:') >= 0) {
+            h += '<div class="text-xs text-gray-500 ml-5">' + esc(l) + '</div>';
+          } else if (l.indexOf('Per Request:') >= 0 || l.indexOf('Per request:') >= 0 || l.indexOf('Monthly Cost') >= 0 || l.indexOf('Monthly:') >= 0 || l.indexOf('Annual') >= 0 || l.indexOf('Daily') >= 0) {
+            h += '<div class="text-xs font-semibold text-gray-800 ml-5 mt-0.5">' + esc(l) + '</div>';
+          } else if (l.indexOf('💾') >= 0 || l.indexOf('cache') >= 0 || l.indexOf('With caching') >= 0) {
+            h += '<div class="text-xs text-emerald-700 ml-5 mt-0.5 font-medium">' + esc(l) + '</div>';
+          } else if (l.indexOf('Batch') >= 0 || l.indexOf('Real-time') >= 0 || l.indexOf('reasoning') >= 0 || l.indexOf('🧠') >= 0) {
+            h += '<div class="text-xs text-blue-700 ml-5 mt-0.5">' + esc(l) + '</div>';
+          } else if (l.trim()) {
+            h += '<div class="text-xs text-gray-600 ml-5">' + esc(l) + '</div>';
+          }
+        }
+        h += '</div>';
+        return h;
+      }
+
+      // ===== Calculator configs — 8 compact objects, one per calculator =====
+
+      // OpenAI family config
+      var OPENAI_CONFIG = {
+        families: {
+          '🔵': { bg: '#eff6ff', bar: '#3b82f6', border: '#bfdbfe', text: '#3b82f6' },
+          '🟢': { bg: '#f0fdf4', bar: '#22c55e', border: '#bbf7d0', text: '#22c55e' },
+          '🟠': { bg: '#fff7ed', bar: '#f97316', border: '#fed7aa', text: '#f97316' },
+          '⚪': { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb', text: '#9ca3af' },
+        },
+        iconRegex: /[🔵🟢🟠⚪]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
+
+      // Claude family config
+      var CLAUDE_CONFIG = {
+        families: {
+          '✦': { bg: '#f5f3ff', bar: '#7c3aed', border: '#ddd6fe', text: '#7c3aed' },
+          '▲': { bg: '#eff6ff', bar: '#2563eb', border: '#bfdbfe', text: '#2563eb' },
+          '◆': { bg: '#f9fafb', bar: '#6b7280', border: '#e5e7eb', text: '#6b7280' },
+        },
+        iconRegex: /[✦▲◆]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#6b7280', border: '#e5e7eb' },
+      };
+
+      // DeepSeek family config
+      var DEEPSEEK_CONFIG = {
+        families: {
+          '◆': { bg: '#f0fdf4', bar: '#16a34a', border: '#bbf7d0', text: '#16a34a' },
+          '◇': { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb', text: '#9ca3af' },
+        },
+        iconRegex: /[◆◇]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
+
+      // Gemini family config
+      var GEMINI_CONFIG = {
+        families: {
+          '●': { bg: '#f0fdf4', bar: '#22c55e', border: '#bbf7d0', text: '#22c55e' },
+          '▲': { bg: '#eff6ff', bar: '#3b82f6', border: '#bfdbfe', text: '#3b82f6' },
+          '◆': { bg: '#ecfeff', bar: '#14b8a6', border: '#a5f3fc', text: '#14b8a6' },
+          '◇': { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb', text: '#9ca3af' },
+        },
+        iconRegex: /[●▲◆◇]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
+
+      // AI API Comparison config (uses [O][A][G][D] provider initials)
+      var COMPARISON_CONFIG = {
+        families: {
+          'O': { bg: '#ecfdf5', bar: '#10b981', border: '#a7f3d0', text: '#10b981' },
+          'A': { bg: '#f5f3ff', bar: '#7c3aed', border: '#ddd6fe', text: '#7c3aed' },
+          'G': { bg: '#eff6ff', bar: '#3b82f6', border: '#bfdbfe', text: '#3b82f6' },
+          'D': { bg: '#fffbeb', bar: '#f59e0b', border: '#fde68a', text: '#f59e0b' },
+        },
+        iconRegex: /\[([OAGD])\]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
+
+      // Image Gen config
+      var IMAGE_CONFIG = {
+        families: {
+          '🎨': { bg: '#fdf2f8', bar: '#ec4899', border: '#fbcfe8', text: '#ec4899' },
+        },
+        iconRegex: /[🎨]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
+
+      // Training config
+      var TRAINING_CONFIG = {
+        families: {
+          '🔬': { bg: '#eff6ff', bar: '#3b82f6', border: '#bfdbfe', text: '#3b82f6' },
+        },
+        iconRegex: /[🔬]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
+
+      // GPU Cloud config
+      var GPU_CONFIG = {
+        families: {
+          '🖥': { bg: '#f0fdf4', bar: '#22c55e', border: '#bbf7d0', text: '#22c55e' },
+        },
+        iconRegex: /[🖥]/u,
+        defaultFamily: { bg: '#f9fafb', bar: '#9ca3af', border: '#e5e7eb' },
+      };
       // Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
       function beautifyBars(html) {
         // Pattern: • Label   XX%  ████░░░░░░ or • Label   $X  ██████
-        return html.replace(/• (.+?)( {2,})([\d.]+%|\$\S+)( {2,})([█░]+)/g, function(m, label, sp1, val, sp2, bars) {
+        return html.replace(/• (.+?)( {2,})([\d.]+%|[\$]\S+)( {2,})([█░]+)/gu, function(m, label, sp1, val, sp2, bars) {
           var filled = (bars.match(/█/g) || []).length;
           var total = bars.length;
           var pct = total > 0 ? Math.round((filled / total) * 100) : 0;
@@ -553,14 +719,24 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
       var staticResults = document.getElementById('static-results');
       var copyAllBtn = document.getElementById('copy-all');
 
-      // Beautify static example on page load
-      if (isOpenAI) {
+      // Beautify static example on page load (unified)
+      var calcConfig = null;
+      if (isOpenAI) calcConfig = OPENAI_CONFIG;
+      else if (isClaude) calcConfig = CLAUDE_CONFIG;
+      else if (isDeepSeek) calcConfig = DEEPSEEK_CONFIG;
+      else if (isGemini) calcConfig = GEMINI_CONFIG;
+      else if (isAiApiCostComparison) calcConfig = COMPARISON_CONFIG;
+      else if (isImage) calcConfig = IMAGE_CONFIG;
+      else if (isTraining) calcConfig = TRAINING_CONFIG;
+      else if (isGpu) calcConfig = GPU_CONFIG;
+
+      if (calcConfig) {
         var staticMono = staticResults.querySelector('.font-mono');
         if (staticMono) {
           var stext = staticMono.textContent || '';
           staticMono.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
           staticMono.classList.add('space-y-5');
-          staticMono.innerHTML = beautifyOpenAI(stext);
+          staticMono.innerHTML = beautifySections(stext, calcConfig);
         }
       }
       // Generic bar beautification for all calculators' static examples
@@ -569,7 +745,7 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         span.innerHTML = beautifyBars(span.innerHTML);
       });
 
-      // --- Preset buttons ---
+      // --- Preset buttons (OpenAI) ---
       var presetBtns = document.querySelectorAll('.preset-btn');
       presetBtns.forEach(function(btn) {
         btn.addEventListener('click', function() {
@@ -581,6 +757,30 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
           if (itEl) itEl.value = this.dataset.it;
           if (otEl) otEl.value = this.dataset.ot;
           if (rdEl) rdEl.value = this.dataset.rd;
+        });
+      });
+
+      // --- Preset chips (Claude) ---
+      var presetChips = document.querySelectorAll('.preset-chip');
+      presetChips.forEach(function(chip) {
+        chip.addEventListener('click', function() {
+          // Read all data-* attributes and populate form fields by matching ID
+          var ds = this.dataset;
+          for (var key in ds) {
+            if (ds.hasOwnProperty(key)) {
+              var el = document.getElementById(key);
+              if (el) {
+                // Convert camelCase dataset key to the actual element type handling
+                if (el.tagName === 'SELECT') {
+                  // For select elements, set value directly if option exists
+                  var opt = el.querySelector('option[value="' + ds[key] + '"]');
+                  if (opt) el.value = ds[key];
+                } else {
+                  el.value = ds[key];
+                }
+              }
+            }
+          }
         });
       });
 
@@ -657,14 +857,14 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
 
         dynamicResults.innerHTML = html;
 
-        // --- OpenAI Calculator: full beautification ---
-        if (isOpenAI) {
+        // --- Unified calculator beautification (dynamic results)
+        if (calcConfig) {
           var monoDiv = dynamicResults.querySelector('.font-mono');
           if (monoDiv) {
-            var text = monoDiv.textContent || '';
+            var textDyn = monoDiv.textContent || '';
             monoDiv.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
             monoDiv.classList.add('space-y-5');
-            monoDiv.innerHTML = beautifyOpenAI(text);
+            monoDiv.innerHTML = beautifySections(textDyn, calcConfig);
           }
         }
 
