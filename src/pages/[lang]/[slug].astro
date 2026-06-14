@@ -43,6 +43,7 @@ const isGemini = slug === 'solopreneur-gemini-api-cost-calculator';
 const isAiApiCostComparison = slug === 'solopreneur-ai-api-cost-comparison';
 const isImage = slug === 'solopreneur-ai-image-cost-calculator';
 const isTraining = slug === 'solopreneur-ai-training-cost-estimator';
+const isGpu = slug === 'solopreneur-gpu-cloud-cost-calculator';
 const clientConfig = JSON.stringify(engine.clientConfig);
 
 const translatedFaq = engine.faq.map((item, i) => ({
@@ -379,6 +380,35 @@ const schema = JSON.stringify({
                 </button>
               </div>
             )}
+            {isGpu && (
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="vastai" data-gputype="RTX4090" data-gpucount="1" data-hoursperday="12" data-pricingtier="spot" data-includestorage="yes">
+                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.budget-single', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="runpod" data-gputype="A100" data-gpucount="1" data-hoursperday="8" data-pricingtier="on-demand" data-includestorage="yes">
+                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.dev-box', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="lambdalabs" data-gputype="A100" data-gpucount="4" data-hoursperday="24" data-pricingtier="reserved" data-includestorage="yes">
+                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.training-rig', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="aws" data-gputype="H100" data-gpucount="8" data-hoursperday="24" data-pricingtier="reserved" data-includestorage="yes">
+                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.enterprise-h100', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="vastai" data-gputype="H200" data-gpucount="1" data-hoursperday="4" data-pricingtier="spot" data-includestorage="no">
+                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.cheapest-h200', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="runpod" data-gputype="H100" data-gpucount="8" data-hoursperday="24" data-pricingtier="on-demand" data-includestorage="yes">
+                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.pro-8h100', lang)}
+                </button>
+              </div>
+            )}
             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm">
               {t('btn.generate', lang)}
             </button>
@@ -424,6 +454,7 @@ const schema = JSON.stringify({
       var isAiApiCostComparison = toolSlug === 'solopreneur-ai-api-cost-comparison';
       var isImage = toolSlug === 'solopreneur-ai-image-cost-calculator';
       var isTraining = toolSlug === 'solopreneur-ai-training-cost-estimator';
+      var isGpu = toolSlug === 'solopreneur-gpu-cloud-cost-calculator';
       function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
       function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
       function generateFromConfig(config, inputs) {
@@ -760,6 +791,20 @@ const schema = JSON.stringify({
         return html;
       }
 
+      // Beautify GPU Cloud Cost Calculator text output into styled HTML sections
+      function beautifyGpu(text) {
+        var html = beautifyBars(esc(text));
+        // Section headers
+        html = html.replace(/^(\u{1F5A5}️.*)$/gm, '<h4 class="text-base font-bold text-gray-900 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4B0}.*)$/gm, '<h4 class="text-sm font-bold text-emerald-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4CA}.*)$/gm, '<h4 class="text-sm font-bold text-blue-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F504}.*)$/gm, '<h4 class="text-sm font-bold text-purple-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4BE}.*)$/gm, '<h4 class="text-sm font-bold text-orange-600 mt-4 mb-2">$1</h4>');
+        // Separator lines
+        html = html.replace(/^(\u{2500}+)$/gm, '<hr class="border-gray-200 my-2">');
+        return html;
+      }
+
       // Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
       function beautifyBars(html) {
         // Pattern: • Label   XX%  ████░░░░░░ or • Label   $X  ██████
@@ -857,6 +902,16 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
           staticMonoTr.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
           staticMonoTr.classList.add('space-y-5');
           staticMonoTr.innerHTML = beautifyTraining(stextTr);
+        }
+      }
+      // GPU Cloud Cost Calculator: beautify static example
+      if (isGpu) {
+        var staticMonoGpu = staticResults.querySelector('.font-mono');
+        if (staticMonoGpu) {
+          var stextGpu = staticMonoGpu.textContent || '';
+          staticMonoGpu.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+          staticMonoGpu.classList.add('space-y-5');
+          staticMonoGpu.innerHTML = beautifyGpu(stextGpu);
         }
       }
       // Generic bar beautification for all calculators' static examples
@@ -1051,6 +1106,17 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             monoDivTr.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
             monoDivTr.classList.add('space-y-5');
             monoDivTr.innerHTML = beautifyTraining(textTr);
+          }
+        }
+
+        // --- GPU Cloud Cost Calculator: full beautification ---
+        if (isGpu) {
+          var monoDivGpu = dynamicResults.querySelector('.font-mono');
+          if (monoDivGpu) {
+            var textGpu = monoDivGpu.textContent || '';
+            monoDivGpu.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+            monoDivGpu.classList.add('space-y-5');
+            monoDivGpu.innerHTML = beautifyGpu(textGpu);
           }
         }
 
