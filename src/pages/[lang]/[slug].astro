@@ -41,6 +41,7 @@ const isClaude = slug === 'solopreneur-claude-api-cost-calculator';
 const isDeepSeek = slug === 'solopreneur-deepseek-api-cost-calculator';
 const isGemini = slug === 'solopreneur-gemini-api-cost-calculator';
 const isAiApiCostComparison = slug === 'solopreneur-ai-api-cost-comparison';
+const isImage = slug === 'solopreneur-ai-image-cost-calculator';
 const clientConfig = JSON.stringify(engine.clientConfig);
 
 const translatedFaq = engine.faq.map((item, i) => ({
@@ -319,6 +320,35 @@ const schema = JSON.stringify({
                 </button>
               </div>
             )}
+            {isImage && (
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="dalle-3" data-imagespermonth="100" data-resolution="1024×1024" data-batchsize="1" data-advancedmode="standard">
+                  {t('tools.solopreneur-ai-image-cost-calculator.preset.solopreneur', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="midjourney-v7" data-imagespermonth="500" data-resolution="2048×2048" data-batchsize="4" data-advancedmode="standard">
+                  {t('tools.solopreneur-ai-image-cost-calculator.preset.creator', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="dalle-4" data-imagespermonth="1000" data-resolution="1024×1024" data-batchsize="4" data-advancedmode="hd">
+                  {t('tools.solopreneur-ai-image-cost-calculator.preset.agency', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="stable-diffusion-4" data-imagespermonth="5000" data-resolution="512×512" data-batchsize="8" data-advancedmode="standard">
+                  {t('tools.solopreneur-ai-image-cost-calculator.preset.budget', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="ideogram-3" data-imagespermonth="300" data-resolution="1024×1024" data-batchsize="2" data-advancedmode="standard">
+                  {t('tools.solopreneur-ai-image-cost-calculator.preset.logos', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-provider="flux-pro" data-imagespermonth="800" data-resolution="2048×2048" data-batchsize="2" data-advancedmode="hd">
+                  {t('tools.solopreneur-ai-image-cost-calculator.preset.artistic', lang)}
+                </button>
+              </div>
+            )}
             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm">
               {t('btn.generate', lang)}
             </button>
@@ -362,6 +392,7 @@ const schema = JSON.stringify({
       var isDeepSeek = toolSlug === 'solopreneur-deepseek-api-cost-calculator';
       var isGemini = toolSlug === 'solopreneur-gemini-api-cost-calculator';
       var isAiApiCostComparison = toolSlug === 'solopreneur-ai-api-cost-comparison';
+      var isImage = toolSlug === 'solopreneur-ai-image-cost-calculator';
       function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
       function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
       function generateFromConfig(config, inputs) {
@@ -665,6 +696,24 @@ const schema = JSON.stringify({
         return html;
       }
 
+      // Beautify AI Image Cost Calculator text output into styled HTML sections
+      function beautifyImage(text) {
+        var html = beautifyBars(esc(text));
+        // Section headers: emoji-driven
+        html = html.replace(/^(\u{1F3A8}.*)$/gm, '<h4 class="text-base font-bold text-gray-900 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4B0}.*)$/gm, '<h4 class="text-sm font-bold text-indigo-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4CA}.*)$/gm, '<h4 class="text-sm font-bold text-blue-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4CB}.*)$/gm, '<h4 class="text-sm font-bold text-emerald-600 mt-4 mb-2">$1</h4>');
+        html = html.replace(/^(\u{1F4C8}.*)$/gm, '<h4 class="text-sm font-bold text-orange-600 mt-4 mb-2">$1</h4>');
+        // Separator lines
+        html = html.replace(/^(\u{2500}+)$/gm, '<hr class="border-gray-200 my-2">');
+        // Bar chart lines
+        html = html.replace(/(█+|░+)(\s+\$\S+)/g, function(m, bars, cost) {
+          return '<span class="font-mono text-xs">' + bars + '</span><span class="text-xs font-semibold text-gray-700">' + cost + '</span>';
+        });
+        return html;
+      }
+
       // Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
       function beautifyBars(html) {
         // Pattern: • Label   XX%  ████░░░░░░ or • Label   $X  ██████
@@ -742,6 +791,16 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
           staticMonoAC.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
           staticMonoAC.classList.add('space-y-5');
           staticMonoAC.innerHTML = beautifyAiApiCostComparison(stextAC);
+        }
+      }
+      // AI Image Generation calculator: beautify static example
+      if (isImage) {
+        var staticMonoImg = staticResults.querySelector('.font-mono');
+        if (staticMonoImg) {
+          var stextImg = staticMonoImg.textContent || '';
+          staticMonoImg.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+          staticMonoImg.classList.add('space-y-5');
+          staticMonoImg.innerHTML = beautifyImage(stextImg);
         }
       }
       // Generic bar beautification for all calculators' static examples
@@ -914,6 +973,17 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             monoDivAC.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
             monoDivAC.classList.add('space-y-5');
             monoDivAC.innerHTML = beautifyAiApiCostComparison(textAC);
+          }
+        }
+
+        // --- AI Image Generation: full beautification ---
+        if (isImage) {
+          var monoDivImg = dynamicResults.querySelector('.font-mono');
+          if (monoDivImg) {
+            var textImg = monoDivImg.textContent || '';
+            monoDivImg.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+            monoDivImg.classList.add('space-y-5');
+            monoDivImg.innerHTML = beautifyImage(textImg);
           }
         }
 

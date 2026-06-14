@@ -1428,7 +1428,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-claude-api-cost-calculator.description': { en: 'Calculate Claude API costs for Opus, Sonnet, and Haiku models.', zh: '计算 Claude API 的 Opus、Sonnet 和 Haiku 模型成本。' },
   'tools.solopreneur-deepseek-api-cost-calculator.description': { en: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.', zh: '计算 DeepSeek API 的 V4 Flash、V4 Pro 和旧版 R1 成本。包含自动缓存、增长预测和跨供应商节省对比。' },
   'tools.solopreneur-gemini-api-cost-calculator.description': { en: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.', zh: '计算 Google Gemini API 6 款模型的成本——Gemini 3.5 Flash、3.1 Pro、3 Flash 及旧版模型。包含上下文缓存、批量定价、增长预测和跨供应商对比。' },
-  'tools.solopreneur-ai-image-cost-calculator.description': { en: 'Estimate costs for AI image generation across DALL-E 3, Midjourney, and Stable Diffusion.', zh: '估算 DALL-E 3、Midjourney 和 Stable Diffusion 的 AI 图像生成成本。' },
+  'tools.solopreneur-ai-image-cost-calculator.description': { en: 'Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, resolution tiers, bar chart comparison, and volume scenarios.', zh: '对比 7 款 AI 图像生成器的成本（DALL-E 4/3、Midjourney V7、SD 4、Ideogram 3、Flux Pro、Leonardo AI）。订阅制 vs 按张计费，分辨率层级，柱状图对比和用量场景。' },
   'tools.solopreneur-ai-training-cost-estimator.description': { en: 'Estimate the cost of training AI models from 7B to 180B parameters.', zh: '估算从 7B 到 180B 参数的 AI 模型训练成本。' },
   'tools.solopreneur-gpu-cloud-cost-calculator.description': { en: 'Compare GPU rental costs across AWS, GCP, Lambda Labs, and RunPod.', zh: '对比 AWS、GCP、Lambda Labs 和 RunPod 的 GPU 租赁成本。' },
   'tools.solopreneur-ai-api-cost-comparison.description': { en: 'Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.', zh: '跨供应商 AI API 成本对比，覆盖 OpenAI、Anthropic、Google 和 DeepSeek 的 15 款模型。找到最适合用量的最便宜模型——含柱状图、供应商摘要和用量场景规划。' },
@@ -1568,8 +1568,46 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-gemini-api-cost-calculator.howToUse.5': { en: 'Add a growth rate and projection period for long-term cost planning, then review savings vs other providers.', zh: '添加增长率和预测周期进行长期成本规划，然后查看与其他供应商相比的节省情况。' },
 
   'tools.solopreneur-ai-image-cost-calculator.input.provider.label': { en: 'Provider', zh: '提供商' },
-  'tools.solopreneur-ai-image-cost-calculator.input.imagesPerMonth.label': { en: 'Images per Month', zh: '每月图片数' },
+  'tools.solopreneur-ai-image-cost-calculator.input.imagesPerMonth.label': { en: 'Images per Month', zh: '每月生成图片数' },
   'tools.solopreneur-ai-image-cost-calculator.input.imagesPerMonth.placeholder': { en: 'e.g. 100', zh: '例如：100' },
+  'tools.solopreneur-ai-image-cost-calculator.input.resolution.label': { en: 'Resolution', zh: '分辨率' },
+  'tools.solopreneur-ai-image-cost-calculator.input.batchSize.label': { en: 'Batch Size (per Call)', zh: '批量大小（每次调用）' },
+  'tools.solopreneur-ai-image-cost-calculator.input.batchSize.placeholder': { en: 'e.g. 1', zh: '例如：1' },
+  'tools.solopreneur-ai-image-cost-calculator.input.advancedMode.label': { en: 'Quality Mode', zh: '画质模式' },
+
+  // AI Image Generation Cost Calculator — FAQ
+  'tools.solopreneur-ai-image-cost-calculator.faq.0.q': { en: 'Which AI image generator is cheapest in 2026?', zh: '2026 年哪个 AI 图像生成器最便宜？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.0.a': { en: 'Stable Diffusion 4 via API at $0.003/image is by far the cheapest — $3/mo for 1000 images. For subscription-based, Midjourney V7 at $10-120/mo and Leonardo AI at $12-49/mo become the cheapest at higher volumes (200+ images/month). DALL-E 3 ($0.08) and Ideogram 3 ($0.04) are the mid-range per-image options.', zh: 'SD 4 API 每张 $0.003 是最便宜的——1000 张仅 $3/月。订阅制中，Midjourney V7（$10-120/月）和 Leonardo AI（$12-49/月）在较高用量（200+ 张/月）时最便宜。DALL-E 3（$0.08）和 Ideogram 3（$0.04）是按张计费的中档选择。' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.1.q': { en: 'Should I pay per image or use a subscription?', zh: '应该按张付费还是订阅？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.1.a': { en: 'For under 100 images/month: pay-per-image (DALL-E 3 or SD 4) is cheapest. For 100-500/month: Midjourney Basic ($10/mo) or Ideogram 3. For 500-2000/month: Midjourney Pro ($30/mo) or Leonardo ($29/mo). For 5,000+/month: Midjourney Mega ($60-120/mo) or self-hosted SD 4. Subscriptions offer unlimited or high-volume relaxed generation.', zh: '100 张/月以下：按张付费（DALL-E 3 或 SD 4）最便宜。100-500 张/月：Midjourney 基础版（$10/月）或 Ideogram 3。500-2000 张/月：Midjourney 专业版（$30/月）或 Leonardo（$29/月）。5000+ 张/月：Midjourney Mega（$60-120/月）或自托管 SD 4。订阅制提供无限或高容量宽松生成。' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.2.q': { en: 'Which provider is best for text in images?', zh: '哪个提供商最适合图片中的文字？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.2.a': { en: 'Ideogram 3 is the undisputed leader for text rendering in images (logos, signs, UI mockups). Flux Pro is excellent for text. DALL-E 4 has significantly improved text accuracy. Midjourney V7 still struggles with longer text strings. For any image requiring readable text, choose Ideogram 3 first.', zh: 'Ideogram 3 在图片文字渲染（Logo、标牌、UI 原型）方面无争议领先。Flux Pro 文字效果极佳。DALL-E 4 文字准确性大幅提升。Midjourney V7 对较长文字仍有困难。任何需要可读文字的图片，首选 Ideogram 3。' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.3.q': { en: 'Can I use AI-generated images commercially?', zh: 'AI 生成的图片可以商用吗？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.3.a': { en: 'Yes, for all major platforms. DALL-E (OpenAI) and Midjourney grant full commercial rights to generated images. Stable Diffusion models vary by license — check the specific model. Leonardo AI grants commercial rights on paid plans. Always review the latest terms of service, especially for trademark use.', zh: '是的，所有主流平台均可商用。DALL-E（OpenAI）和 Midjourney 授予生成图片的完整商业权利。Stable Diffusion 模型因许可协议而异——请检查具体模型。Leonardo AI 在付费计划中授予商业权利。始终查看最新服务条款，尤其是商标使用。' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.4.q': { en: 'What resolution should I choose for my use case?', zh: '不同用途应该选什么分辨率？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.4.a': { en: 'For web/social media: 1024×1024 is sufficient. For print/magazines: 2048×2048 or higher. For widescreen/banners: 1792×1024 (DALL-E). For mobile stories: 1024×1792 (DALL-E). Note: DALL-E 3/4 charge the same for all resolutions, making HD the default choice if quality matters.', zh: '网页/社交媒体：1024×1024 足够。印刷/杂志：2048×2048 或更高。宽屏/横幅：1792×1024（DALL-E）。手机故事：1024×1792（DALL-E）。注意：DALL-E 3/4 所有分辨率价格相同，如果追求质量，HD 是默认选择。' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.5.q': { en: 'How does Midjourney V7 compare to DALL-E 4?', zh: 'Midjourney V7 与 DALL-E 4 相比如何？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.5.a': { en: 'Midjourney V7 produces more aesthetically pleasing, artistic images with superior lighting and composition — preferred by designers and artists. DALL-E 4 excels at following complex, multi-object prompts and renders text more accurately. For creative/artistic work, Midjourney wins. For precise, instruction-following commercial work, DALL-E 4 is better.', zh: 'Midjourney V7 生成的图片更具美感和艺术性，光影和构图更出色——是设计师和艺术家的首选。DALL-E 4 擅长遵循复杂的多对象提示词，文字渲染更准确。创意/艺术工作选 Midjourney，精准遵循指令的商业工作选 DALL-E 4。' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.6.q': { en: 'What is the best provider for solopreneurs on a budget?', zh: '预算有限的独立创业者最适合哪个提供商？' },
+  'tools.solopreneur-ai-image-cost-calculator.faq.6.a': { en: 'For absolute minimum cost: Stable Diffusion 4 API at $0.003/image (5000 images = $15/mo). For best quality/cost balance: Ideogram 3 at $0.04/image (500 images = $20/mo). For unlimited creative freedom: Midjourney V7 Basic at $10/mo. Most solopreneurs benefit from a combo: Midjourney for creative + Ideogram for text-heavy images.', zh: '极致低成本：SD 4 API 每张 $0.003（5000 张 = $15/月）。最佳性价比：Ideogram 3 每张 $0.04（500 张 = $20/月）。无限创作自由：Midjourney V7 基础版 $10/月。大多数独立创业者适合组合使用：Midjourney 做创意 + Ideogram 做文字密集图片。' },
+
+  // AI Image Generation Cost Calculator — how to use
+  'tools.solopreneur-ai-image-cost-calculator.howToUse.0': { en: 'Select your preferred AI image generation provider from the 7 options.', zh: '从 7 个选项中选出你偏好的 AI 图像生成提供商。' },
+  'tools.solopreneur-ai-image-cost-calculator.howToUse.1': { en: 'Enter your estimated monthly image generation volume.', zh: '输入你预估的每月图片生成量。' },
+  'tools.solopreneur-ai-image-cost-calculator.howToUse.2': { en: 'Choose your target resolution — higher resolutions may use more credits on some platforms.', zh: '选择目标分辨率——部分平台高清可能消耗更多额度。' },
+  'tools.solopreneur-ai-image-cost-calculator.howToUse.3': { en: 'Set the batch size (images per API call) to optimize generation throughput.', zh: '设置批量大小（每次调用生成的图片数），优化生成吞吐量。' },
+  'tools.solopreneur-ai-image-cost-calculator.howToUse.4': { en: 'Pick standard, HD, or ultra quality mode — higher quality multiplies cost by 1.3x-1.8x.', zh: '选择标准、HD 或 ultra 画质模式——更高画质会使成本乘以 1.3x-1.8x。' },
+  'tools.solopreneur-ai-image-cost-calculator.howToUse.5': { en: 'Review the bar chart to compare all 7 providers at your volume, and use the comparison table to find the best deal for your needs.', zh: '查看柱状图对比 7 家提供商在你的用量下的成本，使用对比表找出最适合你的方案。' },
+
+  // AI Image Generation Cost Calculator — presets
+  'tools.solopreneur-ai-image-cost-calculator.preset.solopreneur': { en: '🎒 Solopreneur', zh: '🎒 独立创业者' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.creator': { en: '📸 Content Creator', zh: '📸 内容创作者' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.agency': { en: '🏢 Design Agency', zh: '🏢 设计工作室' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.budget': { en: '💰 Budget Hacker', zh: '💰 极致省钱' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.logos': { en: '🔤 Text & Logos', zh: '🔤 文字 Logo' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.artistic': { en: '🎨 High-End Artistic', zh: '🎨 高端艺术' },
+
+  // AI Image Generation Cost Calculator — provider names
 
   'tools.solopreneur-ai-training-cost-estimator.input.modelParams.label': { en: 'Model Size', zh: '模型大小' },
   'tools.solopreneur-ai-training-cost-estimator.input.gpuType.label': { en: 'GPU Type', zh: 'GPU 类型' },
