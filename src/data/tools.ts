@@ -118,11 +118,14 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-ai-image-cost-calculator',
     title: 'AI Image Generation Cost Calculator',
-    description: 'Estimate costs for AI image generation across DALL-E 3, Midjourney, and Stable Diffusion.',
+    description: 'Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, resolution tiers, bar chart comparison, and volume scenarios.',
     categoryId: 'B',
     inputs: [
-      { name: 'provider', label: 'Provider', placeholder: '', type: 'select', options: ['dall-e-3', 'dall-e-2', 'midjourney', 'stable-diffusion'] },
+      { name: 'provider', label: 'Provider', placeholder: '', type: 'select', options: ['dalle-4', 'dalle-3', 'midjourney-v7', 'stable-diffusion-4', 'ideogram-3', 'flux-pro', 'leonardo'] },
       { name: 'imagesPerMonth', label: 'Images per Month', placeholder: 'e.g. 100', type: 'number' },
+      { name: 'resolution', label: 'Resolution', placeholder: '', type: 'select', options: ['1024×1024', '1792×1024', '1024×1792', '2048×2048', '512×512', '1280×720', '1536×1536'] },
+      { name: 'batchSize', label: 'Batch Size (per Call)', placeholder: 'e.g. 1', type: 'number' },
+      { name: 'advancedMode', label: 'Quality Mode', placeholder: '', type: 'select', options: ['standard', 'hd', 'ultra'] },
     ],
   },
   {
