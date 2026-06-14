@@ -1426,7 +1426,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
 
   // === B: AI Cost Tools — descriptions ===
   'tools.solopreneur-claude-api-cost-calculator.description': { en: 'Calculate Claude API costs for Opus, Sonnet, and Haiku models.', zh: '计算 Claude API 的 Opus、Sonnet 和 Haiku 模型成本。' },
-  'tools.solopreneur-deepseek-api-cost-calculator.description': { en: 'Calculate DeepSeek API costs and compare savings vs OpenAI.', zh: '计算 DeepSeek API 成本，并与 OpenAI 对比节省金额。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.description': { en: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.', zh: '计算 DeepSeek API 的 V4 Flash、V4 Pro 和旧版 R1 成本。包含自动缓存、增长预测和跨供应商节省对比。' },
   'tools.solopreneur-gemini-api-cost-calculator.description': { en: 'Calculate Google Gemini API costs for 2.0 Flash, 1.5 Pro, and 1.5 Flash models.', zh: '计算 Google Gemini API 的 2.0 Flash、1.5 Pro 和 1.5 Flash 模型成本。' },
   'tools.solopreneur-ai-image-cost-calculator.description': { en: 'Estimate costs for AI image generation across DALL-E 3, Midjourney, and Stable Diffusion.', zh: '估算 DALL-E 3、Midjourney 和 Stable Diffusion 的 AI 图像生成成本。' },
   'tools.solopreneur-ai-training-cost-estimator.description': { en: 'Estimate the cost of training AI models from 7B to 180B parameters.', zh: '估算从 7B 到 180B 参数的 AI 模型训练成本。' },
@@ -1456,13 +1456,52 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-claude-api-cost-calculator.input.projectionMonths.label': { en: 'Projection Period', zh: '预测周期' },
   'tools.solopreneur-claude-api-cost-calculator.input.projectionMonths.placeholder': { en: '', zh: '' },
 
-  'tools.solopreneur-deepseek-api-cost-calculator.input.model.label': { en: 'Model', zh: '模型' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.models.label': { en: 'Models', zh: '模型' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.models.placeholder': { en: 'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', zh: 'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1' },
   'tools.solopreneur-deepseek-api-cost-calculator.input.inputTokens.label': { en: 'Input Tokens per Request', zh: '每次请求输入 Token 数' },
   'tools.solopreneur-deepseek-api-cost-calculator.input.inputTokens.placeholder': { en: 'e.g. 1000', zh: '例如：1000' },
   'tools.solopreneur-deepseek-api-cost-calculator.input.outputTokens.label': { en: 'Output Tokens per Request', zh: '每次请求输出 Token 数' },
   'tools.solopreneur-deepseek-api-cost-calculator.input.outputTokens.placeholder': { en: 'e.g. 500', zh: '例如：500' },
   'tools.solopreneur-deepseek-api-cost-calculator.input.requestsPerDay.label': { en: 'Requests per Day', zh: '每日请求数' },
   'tools.solopreneur-deepseek-api-cost-calculator.input.requestsPerDay.placeholder': { en: 'e.g. 100', zh: '例如：100' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.cacheHitRate.label': { en: 'Auto-Cache Hit Rate (%)', zh: '自动缓存命中率 (%)' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.cacheHitRate.placeholder': { en: 'e.g. 60', zh: '例如 60' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.growthRate.label': { en: 'Monthly Growth Rate (%)', zh: '月增长率 (%)' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.growthRate.placeholder': { en: 'e.g. 5', zh: '例如 5' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.projectionMonths.label': { en: 'Projection Period', zh: '预测周期' },
+  'tools.solopreneur-deepseek-api-cost-calculator.input.projectionMonths.placeholder': { en: '', zh: '' },
+
+  // DeepSeek API Cost Calculator — FAQ
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.0.q': { en: 'How much cheaper is DeepSeek than OpenAI?', zh: 'DeepSeek 比 OpenAI 便宜多少？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.0.a': { en: 'DeepSeek V4 Flash at $0.14/$0.28 per 1M tokens is approximately 95-98% cheaper than GPT-4o ($2.50/$10). For a typical 1,000-token prompt at 100 reqs/day: DeepSeek costs ~$0.84/month vs $22.50/month for GPT-4o. V4 Pro at promo pricing is still 90% cheaper than GPT-4o.', zh: 'DeepSeek V4 Flash 定价 $0.14/$0.28 每百万 Token，比 GPT-4o ($2.50/$10) 便宜约 95-98%。典型场景：1,000 Token 输入，每天 100 次请求，DeepSeek 每月约 $0.84，GPT-4o 约 $22.50。V4 Pro 促销价仍比 GPT-4o 便宜约 90%。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.1.q': { en: 'What is DeepSeek Automatic Caching?', zh: '什么是 DeepSeek 自动缓存？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.1.a': { en: 'DeepSeek automatically caches repeated prefix tokens (system prompts, tool schemas) with no code changes needed. Cache reads get a 98% discount (0.02x input price). On V4 Flash, cached tokens cost just $0.0028/MTok instead of $0.14/MTok. This is fully automatic — no cache write configuration required.', zh: 'DeepSeek 自动缓存重复的前缀 Token（系统提示词、工具 Schema），无需任何代码更改。缓存读取享 98% 折扣（仅 0.02 倍输入价格）。V4 Flash 缓存 Token 仅需 $0.0028/百万 Token，而非 $0.14/百万 Token。全程自动，无需配置缓存写入。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.2.q': { en: 'Which DeepSeek model should I use?', zh: '我应该用哪个 DeepSeek 模型？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.2.a': { en: 'V4 Flash ($0.14/$0.28) for: general chat, RAG, code completion, classification. V4 Pro (promo $0.44/$0.87) for: complex reasoning, multi-step logic, competitive coding. V4 Flash handles 90% of use cases at the lowest price. Use Pro only when you need the strongest reasoning.', zh: 'V4 Flash ($0.14/$0.28) 适用：通用对话、RAG、代码补全、分类。V4 Pro（促销价 $0.44/$0.87）适用：复杂推理、多步骤逻辑、竞赛级编程。V4 Flash 以最低价格覆盖 90% 的使用场景。仅在需要最强推理能力时使用 Pro。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.3.q': { en: 'Is DeepSeek quality comparable to GPT-4o?', zh: 'DeepSeek 的质量与 GPT-4o 相当吗？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.3.a': { en: 'DeepSeek V4 Flash matches GPT-4o on most benchmarks at 1/18 the output price. V4 Pro competes with GPT-5.2/Opus 4.8 for reasoning tasks. The main gap is multimodal (image/vision) capabilities where OpenAI and Claude lead. For text-only tasks, DeepSeek is the most cost-effective by far.', zh: 'DeepSeek V4 Flash 在大多数基准测试中与 GPT-4o 持平，但输出价格仅为 1/18。V4 Pro 在推理任务上与 GPT-5.2/Opus 4.8 竞争。主要差距在于多模态（图像/视觉）能力，OpenAI 和 Claude 领先。纯文本任务，DeepSeek 是迄今为止性价比最高的选择。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.4.q': { en: 'How do I migrate from legacy R1/V3 to V4?', zh: '如何从旧版 R1/V3 迁移到 V4？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.4.a': { en: 'Change your model parameter: deepseek-chat → deepseek-v4-flash, deepseek-reasoner → deepseek-v4-pro. The legacy aliases will be retired July 24, 2026. Same base URL and API key — just update the model name. The API format is OpenAI-compatible.', zh: '更改模型参数：deepseek-chat → deepseek-v4-flash，deepseek-reasoner → deepseek-v4-pro。旧版别名将于 2026 年 7 月 24 日退役。同样的 Base URL 和 API Key——只需更新模型名称。API 格式兼容 OpenAI。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.5.q': { en: 'Does DeepSeek have rate limits?', zh: 'DeepSeek 有速率限制吗？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.5.a': { en: 'DeepSeek offers generous rate limits for pay-as-you-go users. During peak hours, free-tier users may experience longer queue times. Paid users get priority access. The API is OpenAI-compatible, making migration trivial from any OpenAI-based codebase.', zh: 'DeepSeek 为按量付费用户提供宽松的速率限制。高峰期，免费用户可能遇到较长的排队时间。付费用户享有优先访问权。API 兼容 OpenAI，从任何 OpenAI 代码库迁移都很简单。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.6.q': { en: 'Is DeepSeek safe for production use?', zh: 'DeepSeek 适合生产环境使用吗？' },
+  'tools.solopreneur-deepseek-api-cost-calculator.faq.6.a': { en: 'DeepSeek hosts all models in US data centers with enterprise-grade security. For regulated industries, check data residency requirements. Many enterprises use DeepSeek for cost-sensitive workloads while keeping OpenAI/Claude for sensitive data. Always review the latest privacy policy for your use case.', zh: 'DeepSeek 所有模型托管在美国数据中心，采用企业级安全标准。受监管行业请检查数据驻留要求。许多企业将 DeepSeek 用于成本敏感的工作负载，同时保留 OpenAI/Claude 处理敏感数据。请务必查看最新的隐私政策。' },
+
+  // DeepSeek API Cost Calculator — presets
+  'tools.solopreneur-deepseek-api-cost-calculator.preset.light': { en: 'Light Usage', zh: '轻度使用' },
+  'tools.solopreneur-deepseek-api-cost-calculator.preset.mid': { en: 'Mid-Scale', zh: '中规模' },
+  'tools.solopreneur-deepseek-api-cost-calculator.preset.high': { en: 'High Volume', zh: '大流量' },
+  'tools.solopreneur-deepseek-api-cost-calculator.preset.cache': { en: 'Heavy Cache', zh: '重度缓存' },
+  'tools.solopreneur-deepseek-api-cost-calculator.preset.growing': { en: 'Growing App', zh: '增长中App' },
+  'tools.solopreneur-deepseek-api-cost-calculator.preset.enterprise': { en: 'Enterprise', zh: '企业级' },
+
+  // DeepSeek API Cost Calculator — how to use
+  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.0': { en: 'Select the DeepSeek models you want to compare (V4 Flash, V4 Pro, etc.).', zh: '选择要对比的 DeepSeek 模型（V4 Flash、V4 Pro 等）。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.2': { en: 'Enter your expected daily request volume.', zh: '输入预期的每日请求量。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.3': { en: 'Set the auto-cache hit rate — DeepSeek automatically caches repeated prefixes.', zh: '设置自动缓存命中率——DeepSeek 自动缓存重复前缀。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.4': { en: 'Add a growth rate and projection period for long-term cost planning.', zh: '添加增长率和预测周期进行长期成本规划。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.5': { en: 'Review the cost comparison and see how much you save vs OpenAI, Claude, and Gemini.', zh: '查看成本对比，了解与 OpenAI、Claude 和 Gemini 相比可节省多少。' },
 
   'tools.solopreneur-gemini-api-cost-calculator.input.model.label': { en: 'Model', zh: '模型' },
   'tools.solopreneur-gemini-api-cost-calculator.input.inputTokens.label': { en: 'Input Tokens per Request', zh: '每次请求输入 Token 数' },
