@@ -158,9 +158,10 @@ function calculate(inputs: Record<string, string>): string[] {
     if (c.isSub) label += ' (sub)';
     const isCheapest = c === cheapest;
     const barChar = isCheapest ? '░' : '█';
+    const badge = isCheapest ? ' 🏆' : '';
     const barLen = Math.max(1, Math.round(ratio * BAR_WIDTH));
     const barStr = barChar.repeat(barLen) + ' '.repeat(Math.max(0, BAR_WIDTH - barLen + 2));
-    out.push(pad(label, 22) + ' ' + barStr + ' ' + fmt(c.cost) + (c.isSub ? '/mo' : ''));
+    out.push(pad(label, 22) + ' ' + barStr + ' ' + fmt(c.cost) + (c.isSub ? '/mo' : '') + badge);
   }
   out.push('');
 

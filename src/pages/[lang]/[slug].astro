@@ -176,6 +176,234 @@ const schema = JSON.stringify({
                   <span class="text-xs text-gray-400">{lang === 'zh' ? '可用模型：' : 'Available: '}gpt-5.5, gpt-5.2, gpt-5, gpt-5-mini, gpt-5-nano, gpt-4.1, gpt-4.1-mini, gpt-4.1-nano, o3, o4-mini, gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo</span>
                 </div>
               </>
+            ) : isClaude ? (
+              <>
+                {/* Preset buttons with emoji */}
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-claude">
+                    {[
+                      { emoji:'🚀', en:'Small Project', zh:'小型项目', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'500', ot:'1000', rd:'50', pm:'realtime', cw:'500', cttl:'5min', chr:'80', gr:'0', pj:'12' },
+                      { emoji:'📦', en:'Mid-Scale', zh:'中型规模', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'2000', ot:'1000', rd:'500', pm:'realtime', cw:'2000', cttl:'5min', chr:'60', gr:'0', pj:'12' },
+                      { emoji:'🏭', en:'High Volume', zh:'高流量', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'5000', ot:'2000', rd:'5000', pm:'realtime', cw:'5000', cttl:'1hour', chr:'40', gr:'0', pj:'12' },
+                      { emoji:'⚡', en:'Batch Processing', zh:'批量处理', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'3000', ot:'5000', rd:'10000', pm:'batch', cw:'0', cttl:'5min', chr:'0', gr:'0', pj:'12' },
+                      { emoji:'💾', en:'Heavy Caching', zh:'重度缓存', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'2000', ot:'800', rd:'2000', pm:'realtime', cw:'2000', cttl:'1hour', chr:'90', gr:'0', pj:'12' },
+                      { emoji:'🏢', en:'Enterprise', zh:'企业级', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'10000', ot:'5000', rd:'50000', pm:'batch', cw:'10000', cttl:'1hour', chr:'70', gr:'0', pj:'12' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn preset-btn-claude text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-it={p.it} data-ot={p.ot} data-rd={p.rd} data-pm={p.pm} data-cw={p.cw} data-cttl={p.cttl} data-chr={p.chr} data-gr={p.gr} data-pj={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Token estimator for Claude (~1.4 words/token English, ~0.65 chars/token CJK) */}
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '📝 Token 估算器' : '📝 Token Estimator'}</span>
+                  <textarea id="token-estimator" rows="3" placeholder={lang === 'zh' ? '粘贴你的提示文本...' : 'Paste your prompt text...'} class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all resize-none"></textarea>
+                  <div id="token-estimate-result" class="text-xs text-gray-400 mt-1.5 hidden">
+                    {lang === 'zh' ? '估算：输入 ~<span id="est-tokens">0</span> tokens (~1.4词/token 英文, ~0.65字/token CJK)' : 'Estimated: ~<span id="est-tokens">0</span> input tokens (~1.4 w/t EN, ~0.65 c/t CJK)'}
+                  </div>
+                </div>
+
+                {/* Core inputs: first 4 */}
+                {engine.inputs.slice(0, 4).map(input => (
+                  input.type === 'select' ? (
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                      <select id={input.name} name={input.name} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all">
+                        <option value="">{t('form.select', lang)}</option>
+                        {input.options?.map(opt => <option value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                      <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} value={input.name === 'models' ? 'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5' : ''} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                    </div>
+                  )
+                ))}
+
+                {/* Advanced options: collapsed */}
+                <details class="mb-4 group" id="advanced-options">
+                  <summary class="text-xs font-medium text-gray-400 cursor-pointer hover:text-[#7C3AED] transition-colors select-none py-1">
+                    {lang === 'zh' ? '⚙️ 高级选项（缓存、定价、增长预测）' : '⚙️ Advanced Options (Caching, Pricing, Growth)'}
+                  </summary>
+                  <div class="mt-3 pt-3 border-t border-gray-100 space-y-0">
+                    {engine.inputs.slice(4).map(input => (
+                      input.type === 'select' ? (
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                          <select id={input.name} name={input.name} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all">
+                            <option value="">{t('form.select', lang)}</option>
+                            {input.options?.map(opt => <option value={opt} selected={opt === 'realtime'}>{opt}</option>)}
+                          </select>
+                        </div>
+                      ) : (
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                          <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </details>
+
+                {/* Model hint */}
+                <div class="mb-4 -mt-2">
+                  <span class="text-xs text-gray-400">{lang === 'zh' ? '可用模型：' : 'Available: '}claude-fable-5, claude-opus-4-8, claude-sonnet-4-6, claude-haiku-4-5, claude-opus-4-1, claude-haiku-3-5, claude-haiku-3</span>
+                </div>
+              </>
+            ) : isDeepSeek ? (
+              <>
+                {/* Preset buttons with emoji */}
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-deepseek">
+                    {[
+                      { emoji:'🔹', en:'Light Usage', zh:'轻量使用', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'500', ot:'1000', rd:'50', chr:'80', gr:'0', pj:'12' },
+                      { emoji:'📦', en:'Mid-Scale', zh:'中型规模', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'2000', ot:'1000', rd:'500', chr:'60', gr:'0', pj:'12' },
+                      { emoji:'🏭', en:'High Volume', zh:'高流量', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'5000', ot:'2000', rd:'10000', chr:'50', gr:'0', pj:'12' },
+                      { emoji:'💾', en:'Heavy Cache', zh:'重度缓存', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'2000', ot:'800', rd:'5000', chr:'95', gr:'0', pj:'12' },
+                      { emoji:'📈', en:'Growing App', zh:'增长中', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'1000', ot:'800', rd:'200', chr:'70', gr:'10', pj:'12' },
+                      { emoji:'🏢', en:'Enterprise', zh:'企业级', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'8000', ot:'5000', rd:'100000', chr:'60', gr:'0', pj:'6' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn preset-btn-deepseek text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-it={p.it} data-ot={p.ot} data-rd={p.rd} data-chr={p.chr} data-gr={p.gr} data-pj={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Token estimator for DeepSeek (~1.3 words/token English, ~0.65 chars/token CJK) */}
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '📝 Token 估算器' : '📝 Token Estimator'}</span>
+                  <textarea id="token-estimator" rows="3" placeholder={lang === 'zh' ? '粘贴你的提示文本...' : 'Paste your prompt text...'} class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all resize-none"></textarea>
+                  <div id="token-estimate-result" class="text-xs text-gray-400 mt-1.5 hidden">
+                    {lang === 'zh' ? '估算：输入 ~<span id="est-tokens">0</span> tokens (~1.3词/token 英文, ~0.65字/token CJK)' : 'Estimated: ~<span id="est-tokens">0</span> input tokens (~1.3 w/t EN, ~0.65 c/t CJK)'}
+                  </div>
+                </div>
+
+                {/* Core inputs: first 4 */}
+                {engine.inputs.slice(0, 4).map(input => (
+                  input.type === 'select' ? (
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                      <select id={input.name} name={input.name} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all">
+                        <option value="">{t('form.select', lang)}</option>
+                        {input.options?.map(opt => <option value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                      <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} value={input.name === 'models' ? 'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1' : ''} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                    </div>
+                  )
+                ))}
+
+                {/* Advanced options: collapsed */}
+                <details class="mb-4 group" id="advanced-options">
+                  <summary class="text-xs font-medium text-gray-400 cursor-pointer hover:text-[#7C3AED] transition-colors select-none py-1">
+                    {lang === 'zh' ? '⚙️ 高级选项（缓存、增长预测）' : '⚙️ Advanced Options (Caching, Growth)'}
+                  </summary>
+                  <div class="mt-3 pt-3 border-t border-gray-100 space-y-0">
+                    {engine.inputs.slice(4).map(input => (
+                      input.type === 'select' ? (
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                          <select id={input.name} name={input.name} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all">
+                            <option value="">{t('form.select', lang)}</option>
+                            {input.options?.map(opt => <option value={opt}>{opt}</option>)}
+                          </select>
+                        </div>
+                      ) : (
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                          <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </details>
+
+                {/* Model hint */}
+                <div class="mb-4 -mt-2">
+                  <span class="text-xs text-gray-400">{lang === 'zh' ? '可用模型：' : 'Available: '}deepseek-v4-flash, deepseek-v4-pro-promo, deepseek-v4-pro, deepseek-r1</span>
+                </div>
+              </>
+            ) : isGemini ? (
+              <>
+                {/* Preset buttons with emoji */}
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-gemini">
+                    {[
+                      { emoji:'🔹', en:'Light Usage', zh:'轻量使用', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'500', ot:'1000', rd:'50', pm:'realtime', chr:'80', gr:'0', pj:'12' },
+                      { emoji:'📦', en:'Mid-Scale', zh:'中型规模', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'2000', ot:'1000', rd:'500', pm:'realtime', chr:'60', gr:'0', pj:'12' },
+                      { emoji:'🏭', en:'High Volume', zh:'高流量', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'5000', ot:'2000', rd:'10000', pm:'realtime', chr:'50', gr:'0', pj:'12' },
+                      { emoji:'⚡', en:'Batch Processing', zh:'批量处理', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'3000', ot:'5000', rd:'10000', pm:'batch', chr:'0', gr:'0', pj:'12' },
+                      { emoji:'💾', en:'Heavy Cache', zh:'重度缓存', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'2000', ot:'800', rd:'5000', pm:'realtime', chr:'95', gr:'0', pj:'12' },
+                      { emoji:'🏢', en:'Enterprise', zh:'企业级', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'8000', ot:'5000', rd:'100000', pm:'realtime', chr:'60', gr:'0', pj:'6' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn preset-btn-gemini text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-it={p.it} data-ot={p.ot} data-rd={p.rd} data-pm={p.pm} data-chr={p.chr} data-gr={p.gr} data-pj={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Token estimator */}
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '📝 Token 估算器' : '📝 Token Estimator'}</span>
+                  <textarea id="token-estimator" rows="3" placeholder={lang === 'zh' ? '粘贴你的提示文本...' : 'Paste your prompt text...'} class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all resize-none"></textarea>
+                  <div id="token-estimate-result" class="text-xs text-gray-400 mt-1.5 hidden">
+                    {lang === 'zh' ? '估算：输入 ~<span id="est-tokens">0</span> tokens (~1.3词/token 英文, ~0.65字/token CJK)' : 'Estimated: ~<span id="est-tokens">0</span> input tokens (~1.3 w/t EN, ~0.65 c/t CJK)'}
+                  </div>
+                </div>
+
+                {/* Core inputs: first 4 */}
+                {engine.inputs.slice(0, 4).map(input => (
+                  input.type === 'select' ? (
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                      <select id={input.name} name={input.name} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all">
+                        <option value="">{t('form.select', lang)}</option>
+                        {input.options?.map(opt => <option value={opt}>{opt}</option>)}
+                      </select>
+                    </div>
+                  ) : (
+                    <div class="mb-4">
+                      <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                      <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} value={input.name === 'models' ? 'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash' : ''} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                    </div>
+                  )
+                ))}
+
+                {/* Advanced options: collapsed */}
+                <details class="mb-4 group" id="advanced-options">
+                  <summary class="text-xs font-medium text-gray-400 cursor-pointer hover:text-[#7C3AED] transition-colors select-none py-1">
+                    {lang === 'zh' ? '⚙️ 高级选项（缓存、定价、增长预测）' : '⚙️ Advanced Options (Caching, Pricing, Growth)'}
+                  </summary>
+                  <div class="mt-3 pt-3 border-t border-gray-100 space-y-0">
+                    {engine.inputs.slice(4).map(input => (
+                      input.type === 'select' ? (
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                          <select id={input.name} name={input.name} class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all">
+                            <option value="">{t('form.select', lang)}</option>
+                            {input.options?.map(opt => <option value={opt} selected={opt === 'realtime'}>{opt}</option>)}
+                          </select>
+                        </div>
+                      ) : (
+                        <div class="mb-4">
+                          <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
+                          <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </details>
+
+                {/* Model hint */}
+                <div class="mb-4 -mt-2">
+                  <span class="text-xs text-gray-400">{lang === 'zh' ? '可用模型：' : 'Available: '}gemini-3.5-flash, gemini-3.1-pro, gemini-3-flash, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash</span>
+                </div>
+              </>
             ) : (
               engine.inputs.map(input => (
                 input.type === 'select' ? (
@@ -193,105 +421,6 @@ const schema = JSON.stringify({
                   </div>
                 )
               ))
-            )}
-            {isClaude && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{t('common.scenarios', lang)}:</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="500" data-outputtokens="1000" data-reqsperday="50"
-                  data-pricingmode="realtime" data-cachewritetokens="500" data-cachettl="5min" data-cachehitrate="80"
-                  data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-claude-api-cost-calculator.preset.small', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="2000" data-outputtokens="1000" data-reqsperday="500"
-                  data-pricingmode="realtime" data-cachewritetokens="2000" data-cachettl="5min" data-cachehitrate="60"
-                  data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-claude-api-cost-calculator.preset.mid', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="5000" data-outputtokens="2000" data-reqsperday="5000"
-                  data-pricingmode="realtime" data-cachewritetokens="5000" data-cachettl="1hour" data-cachehitrate="40"
-                  data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-claude-api-cost-calculator.preset.high', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="3000" data-outputtokens="5000" data-reqsperday="10000"
-                  data-pricingmode="batch" data-cachewritetokens="0" data-cachettl="5min" data-cachehitrate="0"
-                  data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-claude-api-cost-calculator.preset.batch', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="2000" data-outputtokens="800" data-reqsperday="2000"
-                  data-pricingmode="realtime" data-cachewritetokens="2000" data-cachettl="1hour" data-cachehitrate="90"
-                  data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-claude-api-cost-calculator.preset.cache', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="10000" data-outputtokens="5000" data-reqsperday="50000"
-                  data-pricingmode="batch" data-cachewritetokens="10000" data-cachettl="1hour" data-cachehitrate="70"
-                  data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-claude-api-cost-calculator.preset.enterprise', lang)}
-                </button>
-              </div>
-            )}
-            {isDeepSeek && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">Quick Scenarios:</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="500" data-outputtokens="1000" data-reqsperday="50" data-cachehitrate="80" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-deepseek-api-cost-calculator.preset.light', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="2000" data-outputtokens="1000" data-reqsperday="500" data-cachehitrate="60" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-deepseek-api-cost-calculator.preset.mid', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="5000" data-outputtokens="2000" data-reqsperday="10000" data-cachehitrate="50" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-deepseek-api-cost-calculator.preset.high', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="2000" data-outputtokens="800" data-reqsperday="5000" data-cachehitrate="95" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-deepseek-api-cost-calculator.preset.cache', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="1000" data-outputtokens="800" data-reqsperday="200" data-cachehitrate="70" data-growthrate="10" data-projectionmonths="12">
-                  {t('tools.solopreneur-deepseek-api-cost-calculator.preset.growing', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="8000" data-outputtokens="5000" data-reqsperday="100000" data-cachehitrate="60" data-growthrate="0" data-projectionmonths="6">
-                  {t('tools.solopreneur-deepseek-api-cost-calculator.preset.enterprise', lang)}
-                </button>
-              </div>
-            )}
-            {isGemini && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">Quick Scenarios:</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="500" data-outputtokens="1000" data-reqsperday="50" data-pricingmode="realtime" data-cachehitrate="80" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.light', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="2000" data-outputtokens="1000" data-reqsperday="500" data-pricingmode="realtime" data-cachehitrate="60" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.mid', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="5000" data-outputtokens="2000" data-reqsperday="10000" data-pricingmode="realtime" data-cachehitrate="50" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.high', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="3000" data-outputtokens="5000" data-reqsperday="10000" data-pricingmode="batch" data-cachehitrate="0" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.batch', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="2000" data-outputtokens="800" data-reqsperday="5000" data-pricingmode="realtime" data-cachehitrate="95" data-growthrate="0" data-projectionmonths="12">
-                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.cache', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="8000" data-outputtokens="5000" data-reqsperday="100000" data-pricingmode="realtime" data-cachehitrate="60" data-growthrate="0" data-projectionmonths="6">
-                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.enterprise', lang)}
-                </button>
-              </div>
             )}
             {isAiApiCostComparison && (
               <div class="flex flex-wrap gap-2 mt-3">
@@ -898,10 +1027,23 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
           var itEl = document.getElementById('inputTokens');
           var otEl = document.getElementById('outputTokens');
           var rdEl = document.getElementById('requestsPerDay');
-          if (modelsEl) modelsEl.value = this.dataset.models;
-          if (itEl) itEl.value = this.dataset.it;
-          if (otEl) otEl.value = this.dataset.ot;
-          if (rdEl) rdEl.value = this.dataset.rd;
+          if (modelsEl && this.dataset.models) modelsEl.value = this.dataset.models;
+          if (itEl && this.dataset.it) itEl.value = this.dataset.it;
+          if (otEl && this.dataset.ot) otEl.value = this.dataset.ot;
+          if (rdEl && this.dataset.rd) rdEl.value = this.dataset.rd;
+          // Claude + DeepSeek extended fields (handles different field name conventions)
+          var pmEl = document.getElementById('pricingMode');
+          var cwEl = document.getElementById('cacheWriteTokens');
+          var cttlEl = document.getElementById('cacheTTL');
+          var chrEl = document.getElementById('cacheReadHitRate') || document.getElementById('cacheHitRate');
+          var grEl = document.getElementById('growthRate');
+          var pjEl = document.getElementById('projectionMonths');
+          if (pmEl && this.dataset.pm) pmEl.value = this.dataset.pm;
+          if (cwEl && this.dataset.cw) cwEl.value = this.dataset.cw;
+          if (cttlEl && this.dataset.cttl) cttlEl.value = this.dataset.cttl;
+          if (chrEl && this.dataset.chr) chrEl.value = this.dataset.chr;
+          if (grEl && this.dataset.gr) grEl.value = this.dataset.gr;
+          if (pjEl && this.dataset.pj) pjEl.value = this.dataset.pj;
         });
       });
 
@@ -929,7 +1071,7 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         });
       });
 
-      // --- Token estimator ---
+      // --- Token estimator (formula adapts per calculator) ---
       var estimatorEl = document.getElementById('token-estimator');
       var estResultEl = document.getElementById('token-estimate-result');
       var estTokensEl = document.getElementById('est-tokens');
@@ -937,15 +1079,34 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         estimatorEl.addEventListener('input', function() {
           var text = this.value;
           if (!text.trim()) { estResultEl.classList.add('hidden'); return; }
-          var cjk = 0, other = 0;
-          for (var i = 0; i < text.length; i++) {
-            var code = text.charCodeAt(i);
-            if ((code >= 0x4e00 && code <= 0x9fff) || (code >= 0x3400 && code <= 0x4dbf) ||
-                (code >= 0x3040 && code <= 0x309f) || (code >= 0x30a0 && code <= 0x30ff) ||
-                (code >= 0xac00 && code <= 0xd7af)) { cjk++; }
-            else if (text[i].trim()) { other++; }
+          var tokens;
+          if (isClaude || isDeepSeek || isGemini) {
+            // Claude ~1.4, DeepSeek/Gemini ~1.3 words/token EN; all ~0.65 chars/token CJK
+            var cjk = 0;
+            for (var i = 0; i < text.length; i++) {
+              var code = text.charCodeAt(i);
+              if ((code >= 0x4e00 && code <= 0x9fff) || (code >= 0x3400 && code <= 0x4dbf) ||
+                  (code >= 0x3040 && code <= 0x309f) || (code >= 0x30a0 && code <= 0x30ff) ||
+                  (code >= 0xac00 && code <= 0xd7af)) { cjk++; }
+            }
+            if (cjk > text.length * 0.3) {
+              tokens = Math.round(text.length / 0.65);
+            } else {
+              var words = text.split(/\\s+/).length;
+              tokens = Math.round(words * (isDeepSeek ? 1.3 : 1.4));
+            }
+          } else {
+            // OpenAI tokenizer: ~4 chars/token EN, ~1.5 chars/token CJK
+            var cjk = 0, other = 0;
+            for (var i = 0; i < text.length; i++) {
+              var code = text.charCodeAt(i);
+              if ((code >= 0x4e00 && code <= 0x9fff) || (code >= 0x3400 && code <= 0x4dbf) ||
+                  (code >= 0x3040 && code <= 0x309f) || (code >= 0x30a0 && code <= 0x30ff) ||
+                  (code >= 0xac00 && code <= 0xd7af)) { cjk++; }
+              else if (text[i].trim()) { other++; }
+            }
+            tokens = Math.ceil(cjk / 1.5 + other / 4);
           }
-          var tokens = Math.ceil(cjk / 1.5 + other / 4);
           estTokensEl.textContent = tokens.toLocaleString();
           estResultEl.classList.remove('hidden');
           // Auto-fill inputTokens

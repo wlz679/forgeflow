@@ -191,7 +191,9 @@ function calculate(inputs: Record<string, string>): string[] {
     const barLen = maxCost > 0 ? Math.max(1, Math.round((c.monthlyCost / maxCost) * BAR_WIDTH)) : 1;
     const barChar = c.model.key === cheapest.model.key ? '░' : '█';
     const bar = barChar.repeat(barLen);
-    out.push(pad(label, 24) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost));
+    const isCheapest = c.model.key === cheapest.model.key;
+    const badge = isCheapest ? ' 🏆' : '';
+    out.push(pad(label, 24) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost) + badge);
   }
   out.push('');
 
@@ -321,8 +323,8 @@ const customFn =
   "for(var i=0;i<ac.length;i++){" +
   "var c=ac[i];var ini=PI[c.m.pr];var label='['+ini+'] '+c.m.n;" +
   "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;" +
-  "var bc=c.m.k===ch.m.k?'\\u2591':'\\u2588';var bar=bc.repeat(bl);" +
-  "o.push(pd(label,24)+' '+pd(bar,BW)+' '+fm(c.mc));" +
+  "var bc=c.m.k===ch.m.k?'\\u2591':'\\u2588';var bar=bc.repeat(bl);var bd=c.m.k===ch.m.k?' \\u{1F3C6}':'';" +
+  "o.push(pd(label,24)+' '+pd(bar,BW)+' '+fm(c.mc)+bd);" +
   "}" +
   "o.push('');" +
   // Section 4: Provider Summary

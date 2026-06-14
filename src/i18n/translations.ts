@@ -1409,12 +1409,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-claude-api-cost-calculator.preset.cache': { en: 'Heavy Caching', zh: '重度缓存' },
   'tools.solopreneur-claude-api-cost-calculator.preset.enterprise': { en: 'Enterprise', zh: '企业级' },
   // Claude API Cost Calculator — how to use
-  'tools.solopreneur-claude-api-cost-calculator.howToUse.0': { en: 'Select the Claude models you want to compare (Fable 5, Opus 4.8, Sonnet 4.6, etc.).', zh: '选择要对比的 Claude 模型（Fable 5、Opus 4.8、Sonnet 4.6 等）。' },
-  'tools.solopreneur-claude-api-cost-calculator.howToUse.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
-  'tools.solopreneur-claude-api-cost-calculator.howToUse.2': { en: 'Choose pricing mode — Real-time for interactive use, Batch for 50% off async processing.', zh: '选择定价模式——交互使用选实时，异步处理选 Batch 可享五折优惠。' },
-  'tools.solopreneur-claude-api-cost-calculator.howToUse.3': { en: 'Configure Prompt Caching (write tokens, TTL, hit rate) to see potential savings from caching.', zh: '配置 Prompt Caching（写入 Token、有效期、命中率）查看缓存节省潜力。' },
-  'tools.solopreneur-claude-api-cost-calculator.howToUse.4': { en: 'Set growth rate and projection period for long-term cost planning.', zh: '设置增长率和预测周期进行长期成本规划。' },
-  'tools.solopreneur-claude-api-cost-calculator.howToUse.5': { en: 'Review the cost comparison bar chart, caching breakdown, and cross-provider insights.', zh: '查看成本对比柱状图、缓存成本分解和跨供应商对比洞察。' },
+  'tools.solopreneur-claude-api-cost-calculator.how_to_use.0': { en: 'Select the Claude models you want to compare (Fable 5, Opus 4.8, Sonnet 4.6, etc.).', zh: '选择要对比的 Claude 模型（Fable 5、Opus 4.8、Sonnet 4.6 等）。' },
+  'tools.solopreneur-claude-api-cost-calculator.how_to_use.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
+  'tools.solopreneur-claude-api-cost-calculator.how_to_use.2': { en: 'Choose pricing mode — Real-time for interactive use, Batch for 50% off async processing.', zh: '选择定价模式——交互使用选实时，异步处理选 Batch 可享五折优惠。' },
+  'tools.solopreneur-claude-api-cost-calculator.how_to_use.3': { en: 'Configure Prompt Caching (write tokens, TTL, hit rate) to see potential savings from caching.', zh: '配置 Prompt Caching（写入 Token、有效期、命中率）查看缓存节省潜力。' },
+  'tools.solopreneur-claude-api-cost-calculator.how_to_use.4': { en: 'Set growth rate and projection period for long-term cost planning.', zh: '设置增长率和预测周期进行长期成本规划。' },
+  'tools.solopreneur-claude-api-cost-calculator.how_to_use.5': { en: 'Review the cost comparison bar chart, caching breakdown, and cross-provider insights.', zh: '查看成本对比柱状图、缓存成本分解和跨供应商对比洞察。' },
 
   'tools.solopreneur-claude-api-cost-calculator.title': { en: 'Claude API Cost Calculator', zh: 'Claude API 成本计算器' },
   'tools.solopreneur-deepseek-api-cost-calculator.title': { en: 'DeepSeek API Cost Calculator', zh: 'DeepSeek API 成本计算器' },
@@ -1425,7 +1425,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-api-cost-comparison.title': { en: 'AI API Cost Comparison', zh: 'AI API 成本对比' },
 
   // === B: AI Cost Tools — descriptions ===
-  'tools.solopreneur-claude-api-cost-calculator.description': { en: 'Calculate Claude API costs for Opus, Sonnet, and Haiku models.', zh: '计算 Claude API 的 Opus、Sonnet 和 Haiku 模型成本。' },
+  'tools.solopreneur-claude-api-cost-calculator.description': { en: 'Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, growth projections, and cross-provider comparison.', zh: '计算 Claude API 成本：Fable 5、Opus 4.8、Sonnet 4.6、Haiku 4.5 及旧版模型。含 Prompt Caching、批量定价、增长预测和跨供应商对比。' },
   'tools.solopreneur-deepseek-api-cost-calculator.description': { en: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.', zh: '计算 DeepSeek API 的 V4 Flash、V4 Pro 和旧版 R1 成本。包含自动缓存、增长预测和跨供应商节省对比。' },
   'tools.solopreneur-gemini-api-cost-calculator.description': { en: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.', zh: '计算 Google Gemini API 6 款模型的成本——Gemini 3.5 Flash、3.1 Pro、3 Flash 及旧版模型。包含上下文缓存、批量定价、增长预测和跨供应商对比。' },
   'tools.solopreneur-ai-image-cost-calculator.description': { en: 'Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, resolution tiers, bar chart comparison, and volume scenarios.', zh: '对比 7 款 AI 图像生成器的成本（DALL-E 4/3、Midjourney V7、SD 4、Ideogram 3、Flux Pro、Leonardo AI）。订阅制 vs 按张计费，分辨率层级，柱状图对比和用量场景。' },
@@ -1502,12 +1502,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-deepseek-api-cost-calculator.preset.enterprise': { en: 'Enterprise', zh: '企业级' },
 
   // DeepSeek API Cost Calculator — how to use
-  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.0': { en: 'Select the DeepSeek models you want to compare (V4 Flash, V4 Pro, etc.).', zh: '选择要对比的 DeepSeek 模型（V4 Flash、V4 Pro 等）。' },
-  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
-  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.2': { en: 'Enter your expected daily request volume.', zh: '输入预期的每日请求量。' },
-  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.3': { en: 'Set the auto-cache hit rate — DeepSeek automatically caches repeated prefixes.', zh: '设置自动缓存命中率——DeepSeek 自动缓存重复前缀。' },
-  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.4': { en: 'Add a growth rate and projection period for long-term cost planning.', zh: '添加增长率和预测周期进行长期成本规划。' },
-  'tools.solopreneur-deepseek-api-cost-calculator.howToUse.5': { en: 'Review the cost comparison and see how much you save vs OpenAI, Claude, and Gemini.', zh: '查看成本对比，了解与 OpenAI、Claude 和 Gemini 相比可节省多少。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.how_to_use.0': { en: 'Select the DeepSeek models you want to compare (V4 Flash, V4 Pro, etc.).', zh: '选择要对比的 DeepSeek 模型（V4 Flash、V4 Pro 等）。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.how_to_use.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.how_to_use.2': { en: 'Enter your expected daily request volume.', zh: '输入预期的每日请求量。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.how_to_use.3': { en: 'Set the auto-cache hit rate — DeepSeek automatically caches repeated prefixes.', zh: '设置自动缓存命中率——DeepSeek 自动缓存重复前缀。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.how_to_use.4': { en: 'Add a growth rate and projection period for long-term cost planning.', zh: '添加增长率和预测周期进行长期成本规划。' },
+  'tools.solopreneur-deepseek-api-cost-calculator.how_to_use.5': { en: 'Review the cost comparison and see how much you save vs OpenAI, Claude, and Gemini.', zh: '查看成本对比，了解与 OpenAI、Claude 和 Gemini 相比可节省多少。' },
 
   // Gemini API Cost Calculator — input labels & placeholders
   'tools.solopreneur-gemini-api-cost-calculator.input.models.label': { en: 'Models', zh: '模型' },
@@ -1560,12 +1560,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-gemini-api-cost-calculator.preset.enterprise': { en: 'Enterprise', zh: '企业级' },
 
   // Gemini API Cost Calculator — how to use
-  'tools.solopreneur-gemini-api-cost-calculator.howToUse.0': { en: 'Select the Gemini models you want to compare (3.5 Flash, 3.1 Pro, 3 Flash, etc.).', zh: '选择要对比的 Gemini 模型（3.5 Flash、3.1 Pro、3 Flash 等）。' },
-  'tools.solopreneur-gemini-api-cost-calculator.howToUse.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
-  'tools.solopreneur-gemini-api-cost-calculator.howToUse.2': { en: 'Enter your expected daily request volume.', zh: '输入预期的每日请求量。' },
-  'tools.solopreneur-gemini-api-cost-calculator.howToUse.3': { en: 'Choose real-time or batch pricing — batch gives 50% discount for async jobs.', zh: '选择实时或批量定价——批量为异步任务提供 50% 折扣。' },
-  'tools.solopreneur-gemini-api-cost-calculator.howToUse.4': { en: 'Set the context cache hit rate — Gemini caches system instructions automatically at 90% discount.', zh: '设置上下文缓存命中率——Gemini 自动缓存系统指令，享 90% 折扣。' },
-  'tools.solopreneur-gemini-api-cost-calculator.howToUse.5': { en: 'Add a growth rate and projection period for long-term cost planning, then review savings vs other providers.', zh: '添加增长率和预测周期进行长期成本规划，然后查看与其他供应商相比的节省情况。' },
+  'tools.solopreneur-gemini-api-cost-calculator.how_to_use.0': { en: 'Select the Gemini models you want to compare (3.5 Flash, 3.1 Pro, 3 Flash, etc.).', zh: '选择要对比的 Gemini 模型（3.5 Flash、3.1 Pro、3 Flash 等）。' },
+  'tools.solopreneur-gemini-api-cost-calculator.how_to_use.1': { en: 'Enter your average input and output tokens per API call.', zh: '输入每次 API 调用的平均输入和输出 Token 数。' },
+  'tools.solopreneur-gemini-api-cost-calculator.how_to_use.2': { en: 'Enter your expected daily request volume.', zh: '输入预期的每日请求量。' },
+  'tools.solopreneur-gemini-api-cost-calculator.how_to_use.3': { en: 'Choose real-time or batch pricing — batch gives 50% discount for async jobs.', zh: '选择实时或批量定价——批量为异步任务提供 50% 折扣。' },
+  'tools.solopreneur-gemini-api-cost-calculator.how_to_use.4': { en: 'Set the context cache hit rate — Gemini caches system instructions automatically at 90% discount.', zh: '设置上下文缓存命中率——Gemini 自动缓存系统指令，享 90% 折扣。' },
+  'tools.solopreneur-gemini-api-cost-calculator.how_to_use.5': { en: 'Add a growth rate and projection period for long-term cost planning, then review savings vs other providers.', zh: '添加增长率和预测周期进行长期成本规划，然后查看与其他供应商相比的节省情况。' },
 
   'tools.solopreneur-ai-image-cost-calculator.input.provider.label': { en: 'Provider', zh: '提供商' },
   'tools.solopreneur-ai-image-cost-calculator.input.imagesPerMonth.label': { en: 'Images per Month', zh: '每月生成图片数' },
@@ -1592,12 +1592,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-image-cost-calculator.faq.6.a': { en: 'For absolute minimum cost: Stable Diffusion 4 API at $0.003/image (5000 images = $15/mo). For best quality/cost balance: Ideogram 3 at $0.04/image (500 images = $20/mo). For unlimited creative freedom: Midjourney V7 Basic at $10/mo. Most solopreneurs benefit from a combo: Midjourney for creative + Ideogram for text-heavy images.', zh: '极致低成本：SD 4 API 每张 $0.003（5000 张 = $15/月）。最佳性价比：Ideogram 3 每张 $0.04（500 张 = $20/月）。无限创作自由：Midjourney V7 基础版 $10/月。大多数独立创业者适合组合使用：Midjourney 做创意 + Ideogram 做文字密集图片。' },
 
   // AI Image Generation Cost Calculator — how to use
-  'tools.solopreneur-ai-image-cost-calculator.howToUse.0': { en: 'Select your preferred AI image generation provider from the 7 options.', zh: '从 7 个选项中选出你偏好的 AI 图像生成提供商。' },
-  'tools.solopreneur-ai-image-cost-calculator.howToUse.1': { en: 'Enter your estimated monthly image generation volume.', zh: '输入你预估的每月图片生成量。' },
-  'tools.solopreneur-ai-image-cost-calculator.howToUse.2': { en: 'Choose your target resolution — higher resolutions may use more credits on some platforms.', zh: '选择目标分辨率——部分平台高清可能消耗更多额度。' },
-  'tools.solopreneur-ai-image-cost-calculator.howToUse.3': { en: 'Set the batch size (images per API call) to optimize generation throughput.', zh: '设置批量大小（每次调用生成的图片数），优化生成吞吐量。' },
-  'tools.solopreneur-ai-image-cost-calculator.howToUse.4': { en: 'Pick standard, HD, or ultra quality mode — higher quality multiplies cost by 1.3x-1.8x.', zh: '选择标准、HD 或 ultra 画质模式——更高画质会使成本乘以 1.3x-1.8x。' },
-  'tools.solopreneur-ai-image-cost-calculator.howToUse.5': { en: 'Review the bar chart to compare all 7 providers at your volume, and use the comparison table to find the best deal for your needs.', zh: '查看柱状图对比 7 家提供商在你的用量下的成本，使用对比表找出最适合你的方案。' },
+  'tools.solopreneur-ai-image-cost-calculator.how_to_use.0': { en: 'Select your preferred AI image generation provider from the 7 options.', zh: '从 7 个选项中选出你偏好的 AI 图像生成提供商。' },
+  'tools.solopreneur-ai-image-cost-calculator.how_to_use.1': { en: 'Enter your estimated monthly image generation volume.', zh: '输入你预估的每月图片生成量。' },
+  'tools.solopreneur-ai-image-cost-calculator.how_to_use.2': { en: 'Choose your target resolution — higher resolutions may use more credits on some platforms.', zh: '选择目标分辨率——部分平台高清可能消耗更多额度。' },
+  'tools.solopreneur-ai-image-cost-calculator.how_to_use.3': { en: 'Set the batch size (images per API call) to optimize generation throughput.', zh: '设置批量大小（每次调用生成的图片数），优化生成吞吐量。' },
+  'tools.solopreneur-ai-image-cost-calculator.how_to_use.4': { en: 'Pick standard, HD, or ultra quality mode — higher quality multiplies cost by 1.3x-1.8x.', zh: '选择标准、HD 或 ultra 画质模式——更高画质会使成本乘以 1.3x-1.8x。' },
+  'tools.solopreneur-ai-image-cost-calculator.how_to_use.5': { en: 'Review the bar chart to compare all 7 providers at your volume, and use the comparison table to find the best deal for your needs.', zh: '查看柱状图对比 7 家提供商在你的用量下的成本，使用对比表找出最适合你的方案。' },
 
   // AI Image Generation Cost Calculator — presets
   'tools.solopreneur-ai-image-cost-calculator.preset.solopreneur': { en: '🎒 Solopreneur', zh: '🎒 独立创业者' },
@@ -1639,12 +1639,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-training-cost-estimator.faq.6.a': { en: 'Training a 405B model (e.g., Llama 4 scale) requires 128+ H200 GPUs running for weeks/months. Ballpark: 128 H200 GPUs × 720 hrs × $3.50/hr = ~$322K in GPU costs alone. With data processing, storage, and engineering overhead: $500K-$2M total. This is enterprise-only territory. Most solopreneurs should fine-tune existing 7B-70B open models instead.', zh: '训练 405B 模型（如 Llama 4 规模）需要 128+ 块 H200 GPU 运行数周/月。大致：128 块 H200 GPU × 720 小时 × $3.50/小时 = 仅 GPU 成本约 $322K。加上数据处理、存储和工程开销：总计 $500K-$2M。这是企业级领域。大多数独立创业者应微调现有的 7B-70B 开源模型。' },
 
   // AI Training Cost Estimator — how to use
-  'tools.solopreneur-ai-training-cost-estimator.howToUse.0': { en: 'Select your target model size (7B to 405B) — LoRA for 7B/13B, full fine-tune for larger models.', zh: '选择目标模型大小（7B 到 405B）——7B/13B 用 LoRA，更大模型用全量微调。' },
-  'tools.solopreneur-ai-training-cost-estimator.howToUse.1': { en: 'Choose your GPU type — H200 for bleeding-edge speed, A100 for best availability, RTX 6000 for budget.', zh: '选择 GPU 类型——H200 追求最快速度，A100 供应最佳，RTX 6000 预算之选。' },
-  'tools.solopreneur-ai-training-cost-estimator.howToUse.2': { en: 'Enter the number of GPUs — more GPUs = faster but higher hourly cost.', zh: '输入 GPU 数量——更多 GPU = 更快但每小时成本更高。' },
-  'tools.solopreneur-ai-training-cost-estimator.howToUse.3': { en: 'Set training hours per epoch and total epochs — longer training captures more patterns but costs more.', zh: '设置每 epoch 训练小时数和总 epoch 数——更长训练能捕捉更多模式但成本更高。' },
-  'tools.solopreneur-ai-training-cost-estimator.howToUse.4': { en: 'Add cloud storage (dataset + checkpoints in GB) and data processing costs for a complete estimate.', zh: '添加云存储（数据集 + 检查点，以 GB 计）和数据处理成本，获得完整估算。' },
-  'tools.solopreneur-ai-training-cost-estimator.howToUse.5': { en: 'Review per-epoch costs, optimistic/pessimistic ranges, and multi-run scaling to plan your total training budget.', zh: '查看每 epoch 成本、乐观/悲观范围和多轮扩展，规划总训练预算。' },
+  'tools.solopreneur-ai-training-cost-estimator.how_to_use.0': { en: 'Select your target model size (7B to 405B) — LoRA for 7B/13B, full fine-tune for larger models.', zh: '选择目标模型大小（7B 到 405B）——7B/13B 用 LoRA，更大模型用全量微调。' },
+  'tools.solopreneur-ai-training-cost-estimator.how_to_use.1': { en: 'Choose your GPU type — H200 for bleeding-edge speed, A100 for best availability, RTX 6000 for budget.', zh: '选择 GPU 类型——H200 追求最快速度，A100 供应最佳，RTX 6000 预算之选。' },
+  'tools.solopreneur-ai-training-cost-estimator.how_to_use.2': { en: 'Enter the number of GPUs — more GPUs = faster but higher hourly cost.', zh: '输入 GPU 数量——更多 GPU = 更快但每小时成本更高。' },
+  'tools.solopreneur-ai-training-cost-estimator.how_to_use.3': { en: 'Set training hours per epoch and total epochs — longer training captures more patterns but costs more.', zh: '设置每 epoch 训练小时数和总 epoch 数——更长训练能捕捉更多模式但成本更高。' },
+  'tools.solopreneur-ai-training-cost-estimator.how_to_use.4': { en: 'Add cloud storage (dataset + checkpoints in GB) and data processing costs for a complete estimate.', zh: '添加云存储（数据集 + 检查点，以 GB 计）和数据处理成本，获得完整估算。' },
+  'tools.solopreneur-ai-training-cost-estimator.how_to_use.5': { en: 'Review per-epoch costs, optimistic/pessimistic ranges, and multi-run scaling to plan your total training budget.', zh: '查看每 epoch 成本、乐观/悲观范围和多轮扩展，规划总训练预算。' },
 
   // AI Training Cost Estimator — presets
   'tools.solopreneur-ai-training-cost-estimator.preset.quick-lora': { en: '🚀 Quick LoRA 7B', zh: '🚀 快速 LoRA 7B' },
@@ -1680,12 +1680,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-gpu-cloud-cost-calculator.faq.6.a': { en: 'Vast.ai: cheapest overall (P2P marketplace), most GPU variety, less reliable for long-running jobs. RunPod: slightly more expensive but more reliable, great serverless GPU option, good API. Lambda Labs: best reliability and support among budget providers, simplest onboarding, ideal for professional training jobs. For 24/7 production: Lambda Labs. For lowest cost experiments: Vast.ai. For best balance: RunPod.', zh: 'Vast.ai：总体最便宜（P2P 市场），GPU 种类最多，长时间任务可靠性较低。RunPod：稍贵但更可靠，出色的无服务器 GPU 选项，API 好用。Lambda Labs：预算服务商中可靠性和支持最好，上手最简单，专业训练任务首选。24/7 生产：Lambda Labs。最低成本实验：Vast.ai。最佳平衡：RunPod。' },
 
   // GPU Cloud Cost Calculator — how to use
-  'tools.solopreneur-gpu-cloud-cost-calculator.howToUse.0': { en: 'Select a cloud GPU provider from the 6 options (RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure).', zh: '从 6 个选项中选择云 GPU 服务商（RunPod、Vast.ai、Lambda Labs、AWS、GCP、Azure）。' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.howToUse.1': { en: 'Choose your GPU type — from budget RTX 4090 to enterprise H200.', zh: '选择 GPU 类型——从预算 RTX 4090 到企业级 H200。' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.howToUse.2': { en: 'Enter the number of GPUs and expected daily usage hours.', zh: '输入 GPU 数量和预期每日使用小时数。' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.howToUse.3': { en: 'Pick your pricing tier: spot (cheapest, interruptible), on-demand (flexible), or reserved (committed discount).', zh: '选择定价层级：spot（最便宜但可中断）、按需（灵活）或预留（承诺折扣）。' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.howToUse.4': { en: 'Toggle storage/networking to see add-on costs for SSD storage and data egress.', zh: '切换存储/网络开关，查看 SSD 存储和数据出站的附加费用。' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.howToUse.5': { en: 'Review the multi-provider bar chart, tier savings comparison, and multi-GPU scaling table to find the optimal configuration.', zh: '查看多服务商柱状图、层级节省对比和多 GPU 扩展表，找到最佳配置。' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.0': { en: 'Select a cloud GPU provider from the 6 options (RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure).', zh: '从 6 个选项中选择云 GPU 服务商（RunPod、Vast.ai、Lambda Labs、AWS、GCP、Azure）。' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.1': { en: 'Choose your GPU type — from budget RTX 4090 to enterprise H200.', zh: '选择 GPU 类型——从预算 RTX 4090 到企业级 H200。' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.2': { en: 'Enter the number of GPUs and expected daily usage hours.', zh: '输入 GPU 数量和预期每日使用小时数。' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.3': { en: 'Pick your pricing tier: spot (cheapest, interruptible), on-demand (flexible), or reserved (committed discount).', zh: '选择定价层级：spot（最便宜但可中断）、按需（灵活）或预留（承诺折扣）。' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.4': { en: 'Toggle storage/networking to see add-on costs for SSD storage and data egress.', zh: '切换存储/网络开关，查看 SSD 存储和数据出站的附加费用。' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.5': { en: 'Review the multi-provider bar chart, tier savings comparison, and multi-GPU scaling table to find the optimal configuration.', zh: '查看多服务商柱状图、层级节省对比和多 GPU 扩展表，找到最佳配置。' },
 
   // GPU Cloud Cost Calculator — presets
   'tools.solopreneur-gpu-cloud-cost-calculator.preset.budget-single': { en: '💻 Budget Single GPU', zh: '💻 预算单卡' },
@@ -1721,12 +1721,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-api-cost-comparison.faq.6.a': { en: 'Budget + good quality: DeepSeek V4 Flash. Best free tier: Gemini 1.5 Flash (Google AI Studio). Best safety: Anthropic Claude models. Best ecosystem/tools: OpenAI. Best multimodal: Gemini 3.5 Flash. Best for coding: Claude Sonnet 4.6 or GPT-5. For most solopreneurs, using DeepSeek V4 Flash for 90% of tasks + a premium model for the remaining 10% is the optimal cost-quality strategy.', zh: '预算+品质：DeepSeek V4 Flash。最佳免费额度：Gemini 1.5 Flash（Google AI Studio）。最佳安全性：Anthropic Claude 模型。最佳生态/工具：OpenAI。最佳多模态：Gemini 3.5 Flash。最佳编码：Claude Sonnet 4.6 或 GPT-5。对大多数独立创业者，90% 任务用 DeepSeek V4 Flash + 10% 用高端模型是最优的成本质量策略。' },
 
   // AI API Cost Comparison — how to use
-  'tools.solopreneur-ai-api-cost-comparison.howToUse.0': { en: 'Enter your average input tokens per API request.', zh: '输入每次 API 请求的平均输入 Token 数。' },
-  'tools.solopreneur-ai-api-cost-comparison.howToUse.1': { en: 'Enter your average output tokens per API request.', zh: '输入每次 API 请求的平均输出 Token 数。' },
-  'tools.solopreneur-ai-api-cost-comparison.howToUse.2': { en: 'Set your expected daily request volume.', zh: '设置预期的每日请求量。' },
-  'tools.solopreneur-ai-api-cost-comparison.howToUse.3': { en: 'Choose real-time or batch pricing (batch gives 50% off for async jobs).', zh: '选择实时或批量定价（批量为异步任务提供 50% 折扣）。' },
-  'tools.solopreneur-ai-api-cost-comparison.howToUse.4': { en: 'Review the bar chart to see all 15 models ranked by monthly cost.', zh: '查看柱状图，了解 15 款模型按月成本排名。' },
-  'tools.solopreneur-ai-api-cost-comparison.howToUse.5': { en: 'Check the Provider Summary to find the cheapest model from each provider, and use the Usage Scenarios table to plan costs at different volumes.', zh: '查看供应商摘要看每个供应商的最便宜模型，用用量场景表规划不同体量的成本。' },
+  'tools.solopreneur-ai-api-cost-comparison.how_to_use.0': { en: 'Enter your average input tokens per API request.', zh: '输入每次 API 请求的平均输入 Token 数。' },
+  'tools.solopreneur-ai-api-cost-comparison.how_to_use.1': { en: 'Enter your average output tokens per API request.', zh: '输入每次 API 请求的平均输出 Token 数。' },
+  'tools.solopreneur-ai-api-cost-comparison.how_to_use.2': { en: 'Set your expected daily request volume.', zh: '设置预期的每日请求量。' },
+  'tools.solopreneur-ai-api-cost-comparison.how_to_use.3': { en: 'Choose real-time or batch pricing (batch gives 50% off for async jobs).', zh: '选择实时或批量定价（批量为异步任务提供 50% 折扣）。' },
+  'tools.solopreneur-ai-api-cost-comparison.how_to_use.4': { en: 'Review the bar chart to see all 15 models ranked by monthly cost.', zh: '查看柱状图，了解 15 款模型按月成本排名。' },
+  'tools.solopreneur-ai-api-cost-comparison.how_to_use.5': { en: 'Check the Provider Summary to find the cheapest model from each provider, and use the Usage Scenarios table to plan costs at different volumes.', zh: '查看供应商摘要看每个供应商的最便宜模型，用用量场景表规划不同体量的成本。' },
 
   // AI API Cost Comparison — model names
   'tools.solopreneur-ai-api-cost-comparison.model.gpt-5-nano': { en: 'GPT-5 Nano', zh: 'GPT-5 Nano' },

@@ -180,7 +180,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // Section 2: Bar Chart
-  out.push('Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
+  out.push('📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
   out.push(SEP.repeat(54));
   const BAR_WIDTH = 40;
   for (const c of allCosts) {
@@ -189,23 +189,74 @@ function calculate(inputs: Record<string, string>): string[] {
     const barLen = maxCost > 0 ? Math.max(1, Math.round((c.monthlyCost / maxCost) * BAR_WIDTH)) : 1;
     const barChar = c.key === cheapest.key ? '░' : '█';
     const bar = barChar.repeat(barLen);
-    out.push(pad(label, 26) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost));
+    const isCheapest = c.key === cheapest.key;
+    const badge = isCheapest ? ' 🏆' : '';
+    out.push(pad(label, 26) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost) + badge);
   }
   out.push('');
+  out.push('');
 
-  // Section 3: Detail Cards
+  // Section 3: Detail Cards — selected models
+  out.push('📋 Selected Model Details');
+  out.push(SEP.repeat(60));
   for (const c of selectedCosts) {
     const icon = FAMILY_ICONS[c.info.family];
     const famLabel = FAMILY_LABELS[c.info.family];
-    out.push(icon + ' ' + c.info.name + ' (' + famLabel + ')');
-    out.push('  Context: ' + c.info.contextWindow + ' | Rate: ' + fmt(c.info.input) + '/' + fmt(c.info.output) + ' per 1M tokens');
-    out.push('  Per Request: ' + fmt(c.costPerReq));
-    out.push('  Monthly Cost (' + lc(reqPerDay) + ' reqs/day): ' + fmt(c.monthlyCost));
+    const dailyCost = c.costPerReq * reqPerDay;
+    const annualCost = c.monthlyCost * 12;
+
+    out.push(
+      icon + ' ' + c.info.name + ' (' + famLabel + ') | Context: ' + c.info.contextWindow,
+    );
+    out.push(SEP.repeat(44));
+
+    // Input cost per-request breakdown
+    const inputCostLine = (inTokens / 1_000_000) * c.info.input;
+    out.push(
+      'Input:  ' +
+        pad(lc(inTokens), 7) +
+        ' tokens × ' +
+        fmt(c.info.input) +
+        '/1M → ' +
+        fmt(inputCostLine) +
+        '/req',
+    );
+    // Output cost per-request breakdown
+    const outputCostLine = (outTokens / 1_000_000) * c.info.output;
+    out.push(
+      'Output: ' +
+        pad(lc(outTokens), 7) +
+        ' tokens × ' +
+        fmt(c.info.output) +
+        '/1M → ' +
+        fmt(outputCostLine) +
+        '/req',
+    );
+
+    out.push(SEP.repeat(44));
+    out.push('Per request:    ' + fmt(c.costPerReq));
+    out.push('Daily (' + reqPerDay + '):    ' + fmt(dailyCost));
+    out.push('Monthly (30d):  ' + fmt(c.monthlyCost));
+    out.push('Annual:         ' + fmt(annualCost));
+    out.push(SEP.repeat(44));
+
+    // Cache savings per model
     if (cachingActive) {
       const savings = c.noCacheMonthly - c.monthlyCost;
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
-      out.push('  \u{1F4BE} With auto-cache: ' + fmt(c.monthlyCost) + ' (saves ' + pctSaved + '%)');
+      out.push(
+        '💾 Auto-cache at ' +
+          cacheHitRate +
+          '% hit: ' +
+          fmt(c.monthlyCost) +
+          '/mo — saves ' +
+          fmt(savings) +
+          '/mo (' +
+          pctSaved +
+          '%)',
+      );
     }
+
     out.push('');
   }
 
@@ -240,20 +291,87 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   // Section 5: Savings Insights
-  out.push('\u{1F4B0} Savings vs Other Providers');
-  out.push(SEP.repeat(54));
+  out.push('💰 Savings Insights');
+  out.push(SEP.repeat(60));
+
+  // Cheapest overall
   const cheapestDS = allCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
+  out.push(
+    '🏆 Cheapest: ' + cheapestDS.info.name + ' at ' + fmt(cheapestDS.monthlyCost) + '/mo',
+  );
+
+  // Best value (V4 series, non-promo)
+  const bestValue = allCosts
+    .filter((c) => c.info.family === 'v4' && c.key !== 'deepseek-v4-pro-promo')
+    .reduce((min, c) => (c.monthlyCost < min.monthlyCost ? c : min), allCosts[0]);
+  if (bestValue && bestValue.key !== cheapestDS.key) {
+    out.push(
+      '⭐ Best value (V4 standard): ' +
+        bestValue.info.name +
+        ' at ' +
+        fmt(bestValue.monthlyCost) +
+        '/mo',
+    );
+  }
+
+  // Switching savings: most expensive selected vs cheapest selected
+  if (selectedCosts.length >= 2) {
+    const mostExpSelected = selectedCosts.reduce((max, c) =>
+      c.monthlyCost > max.monthlyCost ? c : max,
+    );
+    const cheapSelected = selectedCosts.reduce((min, c) =>
+      c.monthlyCost < min.monthlyCost ? c : min,
+    );
+    const diff = mostExpSelected.monthlyCost - cheapSelected.monthlyCost;
+    out.push(
+      '💸 Switching from ' +
+        mostExpSelected.info.name +
+        ' to ' +
+        cheapSelected.info.name +
+        ' saves ' +
+        fmt(diff) +
+        '/mo (' +
+        fmt(diff * 12) +
+        '/yr)',
+    );
+  }
+
+  // Caching tip
+  if (cachingActive && selectedCosts.length > 0) {
+    const ref = selectedCosts[0];
+    const savings = ref.noCacheMonthly - ref.monthlyCost;
+    out.push(
+      '💾 Auto-cache at ' +
+        cacheHitRate +
+        '% hit rate saves ~' +
+        fmt(savings) +
+        '/mo on ' +
+        ref.info.name,
+    );
+  }
+
+  // Cross-provider comparison
   for (const [provKey, prov] of Object.entries(CROSS_PROVIDER)) {
     const provMonthly = ((inTokens / 1_000_000) * prov.input + (outTokens / 1_000_000) * prov.output) * reqsPerMonth;
-    const savings = provMonthly - cheapestDS.monthlyCost;
-    const pct = provMonthly > 0 ? Math.round((savings / provMonthly) * 100) : 0;
-    out.push('  ' + cheapestDS.info.name + ' vs ' + prov.name + ': saves ' + fmt(savings) + '/month (' + pct + '% cheaper)');
+    const diff = provMonthly - cheapestDS.monthlyCost;
+    const pct = provMonthly > 0 ? Math.round((Math.abs(diff) / provMonthly) * 100) : 0;
+    if (diff > 0) {
+      out.push(
+        '🌍 ' + cheapestDS.info.name + ' vs ' + prov.name + ': saves ' +
+          fmt(diff) + '/month (' + pct + '% cheaper)',
+      );
+    } else {
+      out.push(
+        '🌍 ' + cheapestDS.info.name + ' vs ' + prov.name + ': costs ' +
+          fmt(-diff) + '/month more (' + pct + '% premium)',
+      );
+    }
   }
-  out.push('\u{1F4A1} DeepSeek V4 Flash is 20-100x cheaper than frontier models. Automatic caching saves 98% on repeated prompts.');
+  out.push('💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.');
   out.push('');
 
   // Section 6: Usage Scenarios
-  out.push('\u{1F4CA} Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)');
+  out.push('📅 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)');
   out.push('');
   const volumes = [50, 100, 500, 1000, 5000, 10000];
   for (const c of selectedCosts) {
@@ -307,16 +425,25 @@ const customFn =
   "var o=[];" +
   "var hl='\\u{1F534} DeepSeek API Cost';if(cacheOn){hl+=' | \\u{1F4BE} Auto-Cache: '+cHR+'% hit (98% discount)';}o.push(hl);o.push('');" +
   "o.push('\\u{1F4E5} Input: '+lc(iT)+' tokens/req | \\u{1F4E4} Output: '+lc(oT)+' tokens/req | \\u{1F504} '+lc(rpd)+' reqs/day');o.push('');" +
-  "o.push('Cost Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP2.repeat(54));" +
+  "o.push('\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP2.repeat(54));" +
   "var BW=40;for(var i=0;i<all.length;i++){var c=all[i];var icon=FI[c.i.f];var label=icon+' '+c.i.n;" +
-  "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.k===ch.k?'\\u2591':'\\u2588';" +
-  "o.push(pd(label,26)+' '+pd(bc.repeat(bl),BW)+' '+fm(c.mc));}o.push('');" +
-  "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];" +
-  "o.push(icon+' '+c.i.n+' ('+FL[c.i.f]+')');" +
-  "o.push('  Context: '+c.i.cw+' | Rate: '+fm(c.i.i)+'/'+fm(c.i.o)+' per 1M tokens');" +
-  "o.push('  Per Request: '+fm(c.cpr));" +
-  "o.push('  Monthly Cost ('+lc(rpd)+' reqs/day): '+fm(c.mc));" +
-  "if(cacheOn){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;o.push('  \\u{1F4BE} With auto-cache: '+fm(c.mc)+' (saves '+ps+'%)');}" +
+  "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.k===ch.k?'\\u2591':'\\u2588';var bd=c.k===ch.k?' \\u{1F3C6}':'';" +
+  "o.push(pd(label,26)+' '+pd(bc.repeat(bl),BW)+' '+fm(c.mc)+bd);}o.push('');o.push('');" +
+  "o.push('\\u{1F4CB} Selected Model Details');o.push(SEP2.repeat(60));" +
+  "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];var dc2=c.cpr*rpd;var ann=c.mc*12;" +
+  "o.push(icon+' '+c.i.n+' ('+FL[c.i.f]+') | Context: '+c.i.cw);" +
+  "o.push(SEP2.repeat(44));" +
+  "var icl=(iT/1e6)*c.i.i;var ocl=(oT/1e6)*c.i.o;" +
+  "o.push('Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(c.i.i)+'/1M \\u2192 '+fm(icl)+'/req');" +
+  "o.push('Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(c.i.o)+'/1M \\u2192 '+fm(ocl)+'/req');" +
+  "o.push(SEP2.repeat(44));" +
+  "o.push('Per request:    '+fm(c.cpr));" +
+  "o.push('Daily ('+rpd+'):    '+fm(dc2));" +
+  "o.push('Monthly (30d):  '+fm(c.mc));" +
+  "o.push('Annual:         '+fm(ann));" +
+  "o.push(SEP2.repeat(44));" +
+  "if(cacheOn){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;" +
+  "o.push('\\u{1F4BE} Auto-cache at '+cHR+'% hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)');}" +
   "o.push('');}" +
   "if(gR>0){" +
   "o.push('\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)');o.push('');" +
@@ -327,13 +454,27 @@ const customFn =
   "o.push(sl);" +
   "var tr='Total'.padEnd(8);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(16);}o.push(tr);" +
   "o.push('');}" +
-  "o.push('\\u{1F4B0} Savings vs Other Providers');o.push(SEP2.repeat(54));" +
+  "o.push('\\u{1F4B0} Savings Insights');o.push(SEP2.repeat(60));" +
   "var cheapestD=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
-  "for(var pk in XP){var pv=XP[pk];var pm2=((iT/1e6)*pv.i+(oT/1e6)*pv.o)*rpm;var sv2=pm2-cheapestD.mc;var pct=pm2>0?Math.round((sv2/pm2)*100):0;" +
-  "o.push('  '+cheapestD.i.n+' vs '+pv.n+': saves '+fm(sv2)+'/month ('+pct+'% cheaper)');}" +
-  "o.push('\\u{1F4A1} DeepSeek V4 Flash is 20-100x cheaper than frontier models. Automatic caching saves 98% on repeated prompts.');" +
+  "o.push('\\u{1F3C6} Cheapest: '+cheapestD.i.n+' at '+fm(cheapestD.mc)+'/mo');" +
+  "var flt2=all.filter(function(c){return c.i.f==='v4'&&c.k!=='deepseek-v4-pro-promo';});" +
+  "var bv=flt2.length>0?flt2.reduce(function(mn,c){return c.mc<mn.mc?c:mn;}):null;" +
+  "if(bv&&bv.k!==cheapestD.k){o.push('\\u2B50 Best value (V4 standard): '+bv.i.n+' at '+fm(bv.mc)+'/mo');}" +
+  "if(sc.length>=2){" +
+  "var meS=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
+  "var chS=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var df2=meS.mc-chS.mc;" +
+  "o.push('\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)');}" +
+  "if(cacheOn&&sc.length>0){" +
+  "var ref2=sc[0];var sv2=ref2.ncm-ref2.mc;" +
+  "o.push('\\u{1F4BE} Auto-cache at '+cHR+'% hit rate saves ~'+fm(sv2)+'/mo on '+ref2.i.n);}" +
+  "for(var pk in XP){var pv=XP[pk];var pm2=((iT/1e6)*pv.i+(oT/1e6)*pv.o)*rpm;var df=pm2-cheapestD.mc;var pct=pm2>0?Math.round((Math.abs(df)/pm2)*100):0;" +
+  "if(df>0){o.push('\\u{1F30D} '+cheapestD.i.n+' vs '+pv.n+': saves '+fm(df)+'/month ('+pct+'% cheaper)');}" +
+  "else{o.push('\\u{1F30D} '+cheapestD.i.n+' vs '+pv.n+': costs '+fm(-df)+'/month more ('+pct+'% premium)');}" +
+  "}" +
+  "o.push('\\u{1F4A1} DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.');" +
   "o.push('');" +
-  "o.push('\\u{1F4CA} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');o.push('');" +
+  "o.push('\\u{1F4C5} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');o.push('');" +
   "var vols=[50,100,500,1000,5000,10000];" +
   "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];var line=icon+' '+c.i.n+': ';var pts=[];" +
   "for(var j=0;j<vols.length;j++){pts.push(lc(vols[j])+'\\u2192'+fm(c.cpr*vols[j]*30));}" +
@@ -357,10 +498,68 @@ const engine: ToolEngine = {
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
-    '\u{1F534} DeepSeek API Cost\n\n\u{1F4E5} Input: 1,000 tokens/req | \u{1F4E4} Output: 500 tokens/req | \u{1F504} 100 reqs/day\n\nCost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n◆ DeepSeek V4 Flash       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ $0.84\n◆ V4 Pro (75% Promo)      ████████████████████████ $2.62\n◆ DeepSeek V4 Pro         █████████████████████████████████████████ $10.62\n◇ DeepSeek R1 (Legacy)    █████████████████ $4.65\n',
-    '◆ DeepSeek V4 Flash: 50→$0.42 · 100→$0.84 · 500→$4.20 · 1K→$8.40 · 5K→$42.00 · 10K→$84.00',
-    '◆ V4 Pro (75% Promo): 50→$1.31 · 100→$2.62 · 500→$13.09 · 1K→$26.18 · 5K→$130.88 · 10K→$261.75',
-    '◇ DeepSeek R1 (Legacy): 50→$2.33 · 100→$4.65 · 500→$23.25 · 1K→$46.50 · 5K→$232.50 · 10K→$465.00',
+    // Single comprehensive example covering all 6 sections
+    '🔴 DeepSeek API Cost\n' +
+    '\n' +
+    '📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n' +
+    '\n' +
+    '📊 Cost Comparison (100 reqs/day)\n' +
+    '──────────────────────────────────────────────────────\n' +
+    '◆ DeepSeek V4 Flash       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ $0.84 🏆\n' +
+    '◆ V4 Pro (75% Promo)      ████████████████████████ $2.61\n' +
+    '◆ DeepSeek V4 Pro         █████████████████████████████████████████ $10.44\n' +
+    '◇ DeepSeek R1 (Legacy)    █████████████████ $4.65\n' +
+    '\n' +
+    '📋 Selected Model Details\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '◆ DeepSeek V4 Flash (V4 Series) | Context: 1M\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $0.14/1M → $0.0001/req\n' +
+    'Output: 500      tokens × $0.28/1M → $0.0001/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0003\n' +
+    'Daily (100):    $0.03\n' +
+    'Monthly (30d):  $0.84\n' +
+    'Annual:         $10.08\n' +
+    '────────────────────────────────────────────\n' +
+    '\n' +
+    '◆ V4 Pro (75% Promo) (V4 Series) | Context: 1M\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $0.43/1M → $0.0004/req\n' +
+    'Output: 500      tokens × $0.87/1M → $0.0004/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0009\n' +
+    'Daily (100):    $0.09\n' +
+    'Monthly (30d):  $2.61\n' +
+    'Annual:         $31.32\n' +
+    '────────────────────────────────────────────\n' +
+    '\n' +
+    '◇ DeepSeek R1 (Legacy) (Legacy) | Context: 64K\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $0.55/1M → $0.0006/req\n' +
+    'Output: 500      tokens × $2.00/1M → $0.0010/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0016\n' +
+    'Daily (100):    $0.16\n' +
+    'Monthly (30d):  $4.65\n' +
+    'Annual:         $55.80\n' +
+    '────────────────────────────────────────────\n' +
+    '\n' +
+    '💰 Savings Insights\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '🏆 Cheapest: DeepSeek V4 Flash at $0.84/mo\n' +
+    '⭐ Best value (V4 standard): V4 Pro (75% Promo) at $2.62/mo\n' +
+    '💸 Switching from DeepSeek R1 (Legacy) to DeepSeek V4 Flash saves $3.81/mo ($45.72/yr)\n' +
+    '🌍 DeepSeek V4 Flash vs GPT-5 Nano: costs $0.09/month more (12% premium)\n' +
+    '🌍 DeepSeek V4 Flash vs Claude Haiku 3: saves $1.79/month (68% cheaper)\n' +
+    '🌍 DeepSeek V4 Flash vs Gemini 1.5 Flash: costs $0.17/month more (24% premium)\n' +
+    '💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.\n' +
+    '\n' +
+    '📅 Usage Scenarios (monthly cost at 100 reqs/day)\n' +
+    '\n' +
+    '◆ DeepSeek V4 Flash: 50→$0.42 · 100→$0.84 · 500→$4.20 · 1,000→$8.40 · 5,000→$42.00 · 10,000→$84.00\n' +
+    '◆ V4 Pro (75% Promo): 50→$1.31 · 100→$2.62 · 500→$13.09 · 1,000→$26.18 · 5,000→$130.88 · 10,000→$261.75\n' +
+    '◇ DeepSeek R1 (Legacy): 50→$2.33 · 100→$4.65 · 500→$23.25 · 1,000→$46.50 · 5,000→$232.50 · 10,000→$465.00',
   ],
   faq: [
     { q: 'How much cheaper is DeepSeek than OpenAI?', a: 'DeepSeek V4 Flash at $0.14/$0.28 per 1M tokens is approximately 95-98% cheaper than GPT-4o ($2.50/$10). For a typical 1,000-token prompt at 100 reqs/day: DeepSeek costs ~$0.84/month vs $22.50/month for GPT-4o. V4 Pro at promo pricing is still 90% cheaper than GPT-4o.' },

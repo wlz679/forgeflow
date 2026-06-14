@@ -307,7 +307,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 2: Bar Chart
   // ================================================================
-  out.push('Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
+  out.push('📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
   out.push(SEP.repeat(54));
   const BAR_WIDTH = 40;
   for (const c of allCosts) {
@@ -316,27 +316,103 @@ function calculate(inputs: Record<string, string>): string[] {
     const barLen = maxCost > 0 ? Math.max(1, Math.round((c.monthlyCost / maxCost) * BAR_WIDTH)) : 1;
     const barChar = c.key === cheapest.key ? '░' : '█';
     const bar = barChar.repeat(barLen);
-    out.push(pad(label, 26) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost));
+    const isCheapest = c.key === cheapest.key;
+    const badge = isCheapest ? ' 🏆' : '';
+    out.push(pad(label, 26) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost) + badge);
   }
   out.push('');
 
   // ================================================================
-  // Section 3: Detail Cards
+  // Section 3: Detail Cards — selected models
   // ================================================================
+  out.push('📋 Selected Model Details');
+  out.push(SEP.repeat(60));
   for (const c of selectedCosts) {
     const icon = FAMILY_ICONS[c.info.family];
     const famLabel = FAMILY_LABELS[c.info.family];
-    out.push(icon + ' ' + c.info.name + ' (' + famLabel + ')');
-    out.push('  Context: ' + c.info.contextWindow + ' | Max Output: ' + c.info.maxOutput);
-    out.push('  Rate: ' + fmt(c.info.input) + '/' + fmt(c.info.output) + ' per 1M tokens');
-    out.push('  Per Request: ' + fmt(c.costPerReq));
-    out.push('  Monthly Cost (' + lc(reqPerDay) + ' reqs/day): ' + fmt(c.monthlyCost));
+    const dailyCost = c.costPerReq * reqPerDay;
+    const annualCost = c.monthlyCost * 12;
+
+    out.push(
+      icon + ' ' + c.info.name + ' (' + famLabel + ') | Context: ' +
+        c.info.contextWindow + ' | Max Output: ' + c.info.maxOutput,
+    );
+    out.push(DASH.repeat(44));
+
+    // Input cost per-request breakdown
+    const inputCostLine = (inTokens / 1_000_000) * c.inputPrice;
+    out.push(
+      'Input:  ' +
+        pad(lc(inTokens), 7) +
+        ' tokens × ' +
+        fmt(c.inputPrice) +
+        '/1M → ' +
+        fmt(inputCostLine) +
+        '/req',
+    );
+    // Output cost per-request breakdown
+    const outputCostLine = (outTokens / 1_000_000) * c.outputPrice;
+    out.push(
+      'Output: ' +
+        pad(lc(outTokens), 7) +
+        ' tokens × ' +
+        fmt(c.outputPrice) +
+        '/1M → ' +
+        fmt(outputCostLine) +
+        '/req',
+    );
+
+    out.push(DASH.repeat(44));
+    out.push('Per request:    ' + fmt(c.costPerReq));
+    out.push('Daily (' + reqPerDay + '):    ' + fmt(dailyCost));
+    out.push('Monthly (30d):  ' + fmt(c.monthlyCost));
+    out.push('Annual:         ' + fmt(annualCost));
+    out.push(DASH.repeat(44));
+
+    // Alternative pricing line
+    if (pricingMode === 'realtime') {
+      const batchCPR =
+        (inTokens / 1_000_000) * c.info.batchInput +
+        (outTokens / 1_000_000) * c.info.batchOutput;
+      const batchMonthly = batchCPR * reqPerDay * 30;
+      out.push(
+        '💡 Batch pricing: ' +
+          fmt(batchCPR) +
+          '/req (' +
+          fmt(batchMonthly) +
+          '/mo) — save 50%',
+      );
+    } else {
+      const realtimeCPR =
+        (inTokens / 1_000_000) * c.info.input +
+        (outTokens / 1_000_000) * c.info.output;
+      const realtimeMonthly = realtimeCPR * reqPerDay * 30;
+      out.push(
+        '🔴 Real-time: ' +
+          fmt(realtimeCPR) +
+          '/req (' +
+          fmt(realtimeMonthly) +
+          '/mo)',
+      );
+    }
+
+    // Cache line per model
     if (cachingActive) {
       const savings = c.noCacheMonthly - c.monthlyCost;
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
-      const sign = savings >= 0 ? 'saved' : 'extra';
-      out.push('  💾 With caching: ' + fmt(c.monthlyCost) + ' (' + pctSaved + '% ' + sign + ')');
+      out.push(
+        '💾 With ' +
+          cacheReadHitRate +
+          '% cache hit: ' +
+          fmt(c.monthlyCost) +
+          '/mo — saves ' +
+          fmt(savings) +
+          '/mo (' +
+          pctSaved +
+          '%)',
+      );
     }
+
     out.push('');
   }
 
@@ -421,24 +497,89 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   // ================================================================
-  // Section 6: Savings Insights — Cross-provider
+  // Section 6: Savings Insights
   // ================================================================
   out.push('💰 Savings Insights');
-  out.push(SEP.repeat(54));
-  // Find cheapest Claude model
+  out.push(SEP.repeat(60));
+
+  // Cheapest overall
   const cheapestClaude = allCosts.reduce((min, c) =>
     c.monthlyCost < min.monthlyCost ? c : min,
   );
+  out.push(
+    '🏆 Cheapest: ' +
+      cheapestClaude.info.name +
+      ' at ' +
+      fmt(cheapestClaude.monthlyCost) +
+      '/mo',
+  );
 
+  // Best value (Claude 4.x family, excluding legacy)
+  const bestValue = allCosts
+    .filter((c) => c.info.family !== 'legacy')
+    .reduce((min, c) => (c.monthlyCost < min.monthlyCost ? c : min), allCosts[0]);
+  if (bestValue && bestValue.key !== cheapestClaude.key) {
+    out.push(
+      '⭐ Best value (current-gen): ' +
+        bestValue.info.name +
+        ' at ' +
+        fmt(bestValue.monthlyCost) +
+        '/mo',
+    );
+  }
+
+  // Switching savings: most expensive selected vs cheapest selected
+  if (selectedCosts.length >= 2) {
+    const mostExpSelected = selectedCosts.reduce((max, c) =>
+      c.monthlyCost > max.monthlyCost ? c : max,
+    );
+    const cheapSelected = selectedCosts.reduce((min, c) =>
+      c.monthlyCost < min.monthlyCost ? c : min,
+    );
+    const diff = mostExpSelected.monthlyCost - cheapSelected.monthlyCost;
+    out.push(
+      '💸 Switching from ' +
+        mostExpSelected.info.name +
+        ' to ' +
+        cheapSelected.info.name +
+        ' saves ' +
+        fmt(diff) +
+        '/mo (' +
+        fmt(diff * 12) +
+        '/yr)',
+    );
+  }
+
+  // Caching tip
+  if (cachingActive && selectedCosts.length > 0) {
+    const ref = selectedCosts[0];
+    const savings = ref.noCacheMonthly - ref.monthlyCost;
+    out.push(
+      '💾 Prompt caching at ' +
+        cacheReadHitRate +
+        '% hit rate saves ~' +
+        fmt(savings) +
+        '/mo on ' +
+        ref.info.name,
+    );
+  }
+
+  // Cross-provider comparison
   for (const [provKey, prov] of Object.entries(CROSS_PROVIDER)) {
     const provCostPerReq = (inTokens / 1_000_000) * prov.input + (outTokens / 1_000_000) * prov.output;
     const provMonthly = provCostPerReq * reqsPerMonth;
     const diff = cheapestClaude.monthlyCost - provMonthly;
     const pct = provMonthly > 0 ? Math.abs(diff) / provMonthly * 100 : 0;
     if (diff > 0) {
-      out.push('  ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude costs ' + fmt(diff) + ' more/month (' + Math.round(pct) + '% premium)');
+      out.push(
+        '🌍 ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude costs ' +
+          fmt(diff) + ' more/month (' + Math.round(pct) + '% premium)',
+      );
     } else {
-      out.push('  ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude saves ' + fmt(Math.abs(diff)) + '/month (' + Math.round(pct) + '% cheaper)');
+      out.push(
+        '🌍 ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude saves ' +
+          fmt(Math.abs(diff)) + '/month (' + Math.round(pct) + '% cheaper)',
+      );
     }
   }
   out.push('💡 Premium buys: 1M context, best-in-class safety, superior code generation');
@@ -537,25 +678,43 @@ const customFn =
   "if(cacheOn){o.push('\\u{1F4BE} Cache Write: '+lc(cwT)+' tokens/req ('+(wM===1.25?'1.25\\u00D7':'2\\u00D7')+' write, 0.1\\u00D7 read)');}" +
   "o.push('');" +
   // Section 2: Bar Chart
-  "o.push('Cost Comparison ('+lc(rpd)+' reqs/day)');" +
+  "o.push('\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)');" +
   "o.push(SEP.repeat(54));" +
   "var BW=40;" +
   "for(var i=0;i<all.length;i++){" +
   "var c=all[i];var icon=FI[c.i.f];var label=icon+' '+c.i.n;" +
   "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;" +
   "var bc=c.k===ch.k?'\\u2591':'\\u2588';var bar=bc.repeat(bl);" +
-  "o.push(pd(label,26)+' '+pd(bar,BW)+' '+fm(c.mc));" +
+  "var bd=c.k===ch.k?' \\u{1F3C6}':'';" +
+  "o.push(pd(label,26)+' '+pd(bar,BW)+' '+fm(c.mc)+bd);" +
   "}" +
   "o.push('');" +
   // Section 3: Detail Cards
+  "o.push('\\u{1F4CB} Selected Model Details');" +
+  "o.push(SEP.repeat(60));" +
   "for(var i=0;i<sc.length;i++){" +
   "var c=sc[i];var icon=FI[c.i.f];var fl=FL[c.i.f];" +
-  "o.push(icon+' '+c.i.n+' ('+fl+')');" +
-  "o.push('  Context: '+c.i.cw+' | Max Output: '+c.i.mo);" +
-  "o.push('  Rate: '+fm(c.i.i)+'/'+fm(c.i.o)+' per 1M tokens');" +
-  "o.push('  Per Request: '+fm(c.cpr));" +
-  "o.push('  Monthly Cost ('+lc(rpd)+' reqs/day): '+fm(c.mc));" +
-  "if(cacheOn){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;var sg=sv>=0?'saved':'extra';o.push('  \\u{1F4BE} With caching: '+fm(c.mc)+' ('+ps+'% '+sg+')');}" +
+  "var dc2=c.cpr*rpd;var ann=c.mc*12;" +
+  "o.push(icon+' '+c.i.n+' ('+fl+') | Context: '+c.i.cw+' | Max Output: '+c.i.mo);" +
+  "o.push(Array(45).join('\\u2500'));" +
+  "var icl=(iT/1e6)*c.ip;var ocl=(oT/1e6)*c.op;" +
+  "o.push('Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(c.ip)+'/1M \\u2192 '+fm(icl)+'/req');" +
+  "o.push('Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(c.op)+'/1M \\u2192 '+fm(ocl)+'/req');" +
+  "o.push(Array(45).join('\\u2500'));" +
+  "o.push('Per request:    '+fm(c.cpr));" +
+  "o.push('Daily ('+rpd+'):    '+fm(dc2));" +
+  "o.push('Monthly (30d):  '+fm(c.mc));" +
+  "o.push('Annual:         '+fm(ann));" +
+  "o.push(Array(45).join('\\u2500'));" +
+  "if(pm==='realtime'){" +
+  "var bcpr=(iT/1e6)*c.i.bi+(oT/1e6)*c.i.bo;var bm=bcpr*rpd*30;" +
+  "o.push('\\u{1F4A1} Batch pricing: '+fm(bcpr)+'/req ('+fm(bm)+'/mo) \\u2014 save 50%');}" +
+  "else{" +
+  "var rcpr=(iT/1e6)*c.i.i+(oT/1e6)*c.i.o;var rm2=rcpr*rpd*30;" +
+  "o.push('\\u{1F534} Real-time: '+fm(rcpr)+'/req ('+fm(rm2)+'/mo)');}" +
+  "if(cacheOn){" +
+  "var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;" +
+  "o.push('\\u{1F4BE} With '+cHR+'% cache hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)');}" +
   "o.push('');" +
   "}" +
   // Section 4: Caching Breakdown
@@ -589,11 +748,23 @@ const customFn =
   "}" +
   // Section 6: Savings Insights
   "o.push('\\u{1F4B0} Savings Insights');" +
-  "o.push(SEP.repeat(54));" +
+  "o.push(SEP.repeat(60));" +
   "var cheapestC=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "o.push('\\u{1F3C6} Cheapest: '+cheapestC.i.n+' at '+fm(cheapestC.mc)+'/mo');" +
+  "var flt2=all.filter(function(c){return c.i.f!=='legacy';});" +
+  "var bv=flt2.length>0?flt2.reduce(function(mn,c){return c.mc<mn.mc?c:mn;}):null;" +
+  "if(bv&&bv.k!==cheapestC.k){o.push('\\u2B50 Best value (current-gen): '+bv.i.n+' at '+fm(bv.mc)+'/mo');}" +
+  "if(sc.length>=2){" +
+  "var meS=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
+  "var chS=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var df2=meS.mc-chS.mc;" +
+  "o.push('\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)');}" +
+  "if(cacheOn&&sc.length>0){" +
+  "var ref2=sc[0];var sv2=ref2.ncm-ref2.mc;" +
+  "o.push('\\u{1F4BE} Prompt caching at '+cHR+'% hit rate saves ~'+fm(sv2)+'/mo on '+ref2.i.n);}" +
   "for(var pk in XP){var pv=XP[pk];var pcpr=(iT/1e6)*pv.i+(oT/1e6)*pv.o;var pm2=pcpr*rpm;var d=cheapestC.mc-pm2;var pct=pm2>0?Math.abs(d)/pm2*100:0;" +
-  "if(d>0){o.push('  '+cheapestC.i.n+' vs '+pv.n+': Claude costs '+fm(d)+' more/month ('+Math.round(pct)+'% premium)');}" +
-  "else{o.push('  '+cheapestC.i.n+' vs '+pv.n+': Claude saves '+fm(Math.abs(d))+'/month ('+Math.round(pct)+'% cheaper)');}" +
+  "if(d>0){o.push('\\u{1F30D} '+cheapestC.i.n+' vs '+pv.n+': Claude costs '+fm(d)+' more/month ('+Math.round(pct)+'% premium)');}" +
+  "else{o.push('\\u{1F30D} '+cheapestC.i.n+' vs '+pv.n+': Claude saves '+fm(Math.abs(d))+'/month ('+Math.round(pct)+'% cheaper)');}" +
   "}" +
   "o.push('\\u{1F4A1} Premium buys: 1M context, best-in-class safety, superior code generation');" +
   "o.push('');" +
@@ -628,23 +799,87 @@ const engine: ToolEngine = {
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
+    // Single comprehensive example covering all 7 sections (same structure as calculate() output)
     '🔴 Real-time Pricing\n' +
     '\n' +
     '📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n' +
     '\n' +
-    'Cost Comparison (100 reqs/day)\n' +
+    '📊 Cost Comparison (100 reqs/day)\n' +
     '──────────────────────────────────────────────────────\n' +
-    '✦ Claude Fable 5           ███████████████████████████              $105.00\n' +
+    '✦ Claude Fable 5           ████████████████████████████             $105.00\n' +
     '▲ Claude Opus 4.8          █████████████                            $52.50\n' +
     '▲ Claude Sonnet 4.6        ████████                                 $31.50\n' +
     '▲ Claude Haiku 4.5         ███                                      $10.50\n' +
     '◆ Claude Opus 4.1          ████████████████████████████████████████ $157.50\n' +
     '◆ Claude Haiku 3.5         ██                                       $8.40\n' +
-    '◆ Claude Haiku 3           ░                                        $2.63\n',
-    '✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00',
-    '▲ Claude Opus 4.8 (Claude 4.x): 50→$26.25 · 100→$52.50 · 500→$262.50 · 1,000→$525.00 · 5,000→$2625.00 · 10,000→$5250.00',
-    '▲ Claude Sonnet 4.6 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00',
-    '▲ Claude Haiku 4.5 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00',
+    '◆ Claude Haiku 3           ░                                        $2.63 🏆\n' +
+    '\n' +
+    '📋 Selected Model Details\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '✦ Claude Fable 5 (Mythos) | Context: 1M | Max Output: 128K\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $10.00/1M → $0.0100/req\n' +
+    'Output: 500      tokens × $50.00/1M → $0.0250/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0350\n' +
+    'Daily (100):    $3.50\n' +
+    'Monthly (30d):  $105.00\n' +
+    'Annual:         $1,260.00\n' +
+    '────────────────────────────────────────────\n' +
+    '💡 Batch pricing: $0.0175/req ($52.50/mo) — save 50%\n' +
+    '\n' +
+    '▲ Claude Opus 4.8 (Claude 4.x) | Context: 1M | Max Output: 128K\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $5.00/1M → $0.0050/req\n' +
+    'Output: 500      tokens × $25.00/1M → $0.0125/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0175\n' +
+    'Daily (100):    $1.75\n' +
+    'Monthly (30d):  $52.50\n' +
+    'Annual:         $630.00\n' +
+    '────────────────────────────────────────────\n' +
+    '💡 Batch pricing: $0.0088/req ($26.25/mo) — save 50%\n' +
+    '\n' +
+    '▲ Claude Sonnet 4.6 (Claude 4.x) | Context: 1M | Max Output: 64K\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $3.00/1M → $0.0030/req\n' +
+    'Output: 500      tokens × $15.00/1M → $0.0075/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0105\n' +
+    'Daily (100):    $1.05\n' +
+    'Monthly (30d):  $31.50\n' +
+    'Annual:         $378.00\n' +
+    '────────────────────────────────────────────\n' +
+    '💡 Batch pricing: $0.0053/req ($15.75/mo) — save 50%\n' +
+    '\n' +
+    '▲ Claude Haiku 4.5 (Claude 4.x) | Context: 200K | Max Output: 64K\n' +
+    '────────────────────────────────────────────\n' +
+    'Input:  1,000    tokens × $1.00/1M → $0.0010/req\n' +
+    'Output: 500      tokens × $5.00/1M → $0.0025/req\n' +
+    '────────────────────────────────────────────\n' +
+    'Per request:    $0.0035\n' +
+    'Daily (100):    $0.35\n' +
+    'Monthly (30d):  $10.50\n' +
+    'Annual:         $126.00\n' +
+    '────────────────────────────────────────────\n' +
+    '💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%\n' +
+    '\n' +
+    '💰 Savings Insights\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '🏆 Cheapest: Claude Haiku 3 at $2.63/mo\n' +
+    '⭐ Best value (current-gen): Claude Haiku 4.5 at $10.50/mo\n' +
+    '💸 Switching from Claude Fable 5 to Claude Haiku 4.5 saves $94.50/mo ($1,134.00/yr)\n' +
+    '🌍 Claude Haiku 3 vs GPT-5 Nano: Claude costs $1.88 more/month (250% premium)\n' +
+    '🌍 Claude Haiku 3 vs DeepSeek Chat: Claude costs $1.79 more/month (213% premium)\n' +
+    '🌍 Claude Haiku 3 vs Gemini 1.5 Flash: Claude costs $1.95 more/month (289% premium)\n' +
+    '💡 Premium buys: 1M context, best-in-class safety, superior code generation\n' +
+    '\n' +
+    '📊 Usage Scenarios (monthly cost at 100 reqs/day)\n' +
+    '\n' +
+    '✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1,050.00 · 5,000→$5,250.00 · 10,000→$10,500.00\n' +
+    '▲ Claude Opus 4.8 (Claude 4.x): 50→$26.25 · 100→$52.50 · 500→$262.50 · 1,000→$525.00 · 5,000→$2,625.00 · 10,000→$5,250.00\n' +
+    '▲ Claude Sonnet 4.6 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1,575.00 · 10,000→$3,150.00\n' +
+    '▲ Claude Haiku 4.5 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1,050.00',
   ],
   faq: [
     {
