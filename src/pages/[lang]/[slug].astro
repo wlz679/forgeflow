@@ -528,13 +528,10 @@ const schema = JSON.stringify({
                 var b = bars[bi];
                 var fam = config.families[b.icon] || config.defaultFamily;
                 var pct = maxCost > 0 ? Math.round((parseFloat(b.cost.replace('$','').replace(/,/g,'')) / maxCost) * 100) : 0;
-                var filledBlocks = (b.blocks.match(/█/g) || []).length;
-                var totalBlocks = b.blocks.length;
-                var subPct = totalBlocks > 0 ? Math.round((filledBlocks / totalBlocks) * 100) : 0;
                 html += '<div class="flex items-center gap-2 mb-1.5 text-xs">';
                 html += '<span class="w-32 shrink-0 truncate text-gray-700" style="color:' + (fam.text || fam.bar) + ';font-weight:600">' + esc(b.icon + ' ' + b.name) + '</span>';
                 html += '<span class="flex-1 h-4 rounded-sm relative" style="background:#f3f4f6">';
-                html += '<span class="absolute inset-y-0 left-0 rounded-sm transition-all" style="width:' + Math.max(1, subPct > 0 ? subPct : pct) + '%;background:' + fam.bar + '"></span>';
+                html += '<span class="absolute inset-y-0 left-0 rounded-sm transition-all" style="width:' + Math.max(1, pct) + '%;background:' + fam.bar + '"></span>';
                 html += '</span>';
                 html += '<span class="w-20 text-right font-semibold text-gray-800">' + b.cost + '</span>';
                 if (b.badge) html += '<span class="text-xs text-amber-600 font-medium">' + esc(b.badge) + '</span>';
