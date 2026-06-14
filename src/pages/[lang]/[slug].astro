@@ -39,6 +39,7 @@ const metaTitle = `${toolTitle} — CalcKit`;
 const isInteractive = engine.inputs.length > 0;
 const isClaude = slug === 'solopreneur-claude-api-cost-calculator';
 const isDeepSeek = slug === 'solopreneur-deepseek-api-cost-calculator';
+const isGemini = slug === 'solopreneur-gemini-api-cost-calculator';
 const clientConfig = JSON.stringify(engine.clientConfig);
 
 const translatedFaq = engine.faq.map((item, i) => ({
@@ -259,6 +260,35 @@ const schema = JSON.stringify({
                 </button>
               </div>
             )}
+            {isGemini && (
+              <div class="flex flex-wrap gap-2 mt-3">
+                <span class="text-sm text-gray-500 mr-1">Quick Scenarios:</span>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-inputtokens="500" data-outputtokens="1000" data-reqsperday="50" data-pricingmode="realtime" data-cachehitrate="80" data-growthrate="0" data-projectionmonths="12">
+                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.light', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-inputtokens="2000" data-outputtokens="1000" data-reqsperday="500" data-pricingmode="realtime" data-cachehitrate="60" data-growthrate="0" data-projectionmonths="12">
+                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.mid', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-inputtokens="5000" data-outputtokens="2000" data-reqsperday="10000" data-pricingmode="realtime" data-cachehitrate="50" data-growthrate="0" data-projectionmonths="12">
+                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.high', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-inputtokens="3000" data-outputtokens="5000" data-reqsperday="10000" data-pricingmode="batch" data-cachehitrate="0" data-growthrate="0" data-projectionmonths="12">
+                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.batch', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-inputtokens="2000" data-outputtokens="800" data-reqsperday="5000" data-pricingmode="realtime" data-cachehitrate="95" data-growthrate="0" data-projectionmonths="12">
+                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.cache', lang)}
+                </button>
+                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
+                  data-inputtokens="8000" data-outputtokens="5000" data-reqsperday="100000" data-pricingmode="realtime" data-cachehitrate="60" data-growthrate="0" data-projectionmonths="6">
+                  {t('tools.solopreneur-gemini-api-cost-calculator.preset.enterprise', lang)}
+                </button>
+              </div>
+            )}
             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm">
               {t('btn.generate', lang)}
             </button>
@@ -300,6 +330,7 @@ const schema = JSON.stringify({
       var isOpenAI = toolSlug === 'solopreneur-openai-token-calculator';
       var isClaude = toolSlug === 'solopreneur-claude-api-cost-calculator';
       var isDeepSeek = toolSlug === 'solopreneur-deepseek-api-cost-calculator';
+      var isGemini = toolSlug === 'solopreneur-gemini-api-cost-calculator';
       function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
       function fill(t, v) { return t.replace(/\{(\w+)\}/g, function(_, k) { return v[k] ?? '{' + k + '}'; }); }
       function generateFromConfig(config, inputs) {
@@ -556,6 +587,28 @@ const schema = JSON.stringify({
         return html;
       }
 
+      // Beautify Gemini calculator text output into styled HTML sections
+      function beautifyGemini(text) {
+        // Apply generic bar beautifier first
+        var html = beautifyBars(esc(text));
+
+        // Gemini family colors
+        var FAMILY_COLORS = {
+          '●': '#22c55e',  // flash35 green
+          '▲': '#3b82f6',   // pro blue
+          '◆': '#14b8a6',   // flash3 teal
+          '◇': '#9ca3af',   // legacy gray
+        };
+
+        // Color family icons
+        html = html.replace(/^(●|▲|◆|◇)/gm, function(match) {
+          var color = FAMILY_COLORS[match] || '#9ca3af';
+          return '<span style="color:' + color + ';font-weight:bold">' + esc(match) + '</span>';
+        });
+
+        return html;
+      }
+
       // Generic bar chart beautifier — converts █/░ text bars to CSS for any calculator
       function beautifyBars(html) {
         // Pattern: • Label   XX%  ████░░░░░░ or • Label   $X  ██████
@@ -613,6 +666,16 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
           staticMonoD.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
           staticMonoD.classList.add('space-y-5');
           staticMonoD.innerHTML = beautifyDeepSeek(stextD);
+        }
+      }
+      // Gemini calculator: beautify static example
+      if (isGemini) {
+        var staticMonoG = staticResults.querySelector('.font-mono');
+        if (staticMonoG) {
+          var stextG = staticMonoG.textContent || '';
+          staticMonoG.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+          staticMonoG.classList.add('space-y-5');
+          staticMonoG.innerHTML = beautifyGemini(stextG);
         }
       }
       // Generic bar beautification for all calculators' static examples
@@ -763,6 +826,17 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             monoDivD.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
             monoDivD.classList.add('space-y-5');
             monoDivD.innerHTML = beautifyDeepSeek(textD);
+          }
+        }
+
+        // --- Gemini Calculator: full beautification ---
+        if (isGemini) {
+          var monoDivG = dynamicResults.querySelector('.font-mono');
+          if (monoDivG) {
+            var textG = monoDivG.textContent || '';
+            monoDivG.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
+            monoDivG.classList.add('space-y-5');
+            monoDivG.innerHTML = beautifyGemini(textG);
           }
         }
 
