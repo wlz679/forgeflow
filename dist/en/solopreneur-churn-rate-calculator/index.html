@@ -167,12 +167,18 @@ const toolSlug = "solopreneur-churn-rate-calculator";
 
             for (var li = 0; li < lines.length; li++) {
               var l = lines[li];
-              var m = l.match(/^(\S️?)\s+(.+?)\s{2,}([█░]+)\s+[\$](\S+)/u);
+              // Match: [icon or prefix] label  spaces  █░bars  spaces  $cost[/unit]
+              var m = l.match(/^(.+?)\s{2,}([█░]+)\s+[\$](\S+)/u);
               if (m) {
                 isBarSection = true;
-                var cost = parseFloat(m[4].replace(/,/g,''));
+                var label = m[1];
+                var icon = '';
+                // Extract icon: single emoji/char, variation selector, or [X] prefix
+                var im = label.match(/^(\[[A-Z]\]|\S️?)\s/u);
+                if (im) { icon = im[1]; label = label.slice(im[0].length).trim(); }
+                var cost = parseFloat(m[3].replace(/,/g,''));
                 if (cost > maxCost) maxCost = cost;
-                bars.push({ icon: m[1], name: m[2].trim(), blocks: m[3], cost: '$' + m[4], badge: '', raw: l });
+                bars.push({ icon: icon, name: label, blocks: m[2], cost: '$' + m[3], badge: '', raw: l });
               }
             }
 
@@ -218,7 +224,7 @@ const toolSlug = "solopreneur-churn-rate-calculator";
                 if (currentCard) {
                   html += renderCard(currentCard, cardContent, config);
                 }
-                currentCard = { icon: cardMatch[1], raw: cl };
+                currentCard = { icon: cardMatch[1] || cardMatch[0], raw: cl };
                 cardContent = [];
               } else if (cl.trim()) {
                 cardContent.push(cl);
@@ -502,7 +508,7 @@ const toolSlug = "solopreneur-churn-rate-calculator";
         });
       }
 
-      function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function escAttr(s) { return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
 var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Copy All';
       var copiedLabel = document.getElementById('copy-all')?.dataset.copiedLabel || 'Copied!';
