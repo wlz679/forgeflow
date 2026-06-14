@@ -152,11 +152,13 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-ai-api-cost-comparison',
     title: 'AI API Cost Comparison',
-    description: 'Compare AI API costs across GPT-4o, Claude, Gemini, and DeepSeek side by side.',
+    description: 'Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.',
     categoryId: 'B',
     inputs: [
-      { name: 'monthlyInputTokens', label: 'Monthly Input Tokens', placeholder: 'e.g. 1000000', type: 'number' },
-      { name: 'monthlyOutputTokens', label: 'Monthly Output Tokens', placeholder: 'e.g. 500000', type: 'number' },
+      { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
+      { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
+      { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
+      { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
     ],
   },
 
