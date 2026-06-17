@@ -46,6 +46,26 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
     '• Cost Per Meeting:          $' + fmt(costPerMeeting) + '\n' +
     '• Weekly Cost:                  $' + fmt(weeklyCost) + ' (' + fmt(weeklyHours) + ' person-hours)\n' +
     '• Annual Cost:                  $' + fmt(annualCost) + ' (' + loc(Math.round(annualHours)) + ' person-hours)\n\n' +
+    '🩺 Meeting Health:\n' +
+    (weeklyCost <= 200
+      ? '• 🟢 Low cost — efficient use of meeting time.\n'
+      : weeklyCost <= 1000
+      ? '• 🟡 Moderate — review quarterly for necessity.\n'
+      : weeklyCost <= 3000
+      ? '• 🟠 Significant — try async or shorter formats.\n'
+      : weeklyCost <= 10000
+      ? '• 🔴 Heavy — organizational drag, audit urgently.\n'
+      : '• 🚨 Critical — slash meetings ruthlessly.\n') +
+    (annualHours >= 2000
+      ? '• ⚠️ ' + loc(Math.round(annualHours)) + ' person-hours/yr = 1+ FTE spent in meetings.\n'
+      : annualHours >= 500
+      ? '• ⚠️ ' + loc(Math.round(annualHours)) + ' person-hours/yr is significant (≈ 25% of 1 FTE).\n'
+      : '• ✅ ' + loc(Math.round(annualHours)) + ' person-hours/yr is manageable.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• Cut duration 50%:  Save $' + Math.round(weeklyCost * 0.5 * 48).toLocaleString() + '/yr  (and reduce context-switch cost)\n' +
+    '• Cut attendees 50%:  Save $' + Math.round(weeklyCost * 0.5 * 48).toLocaleString() + '/yr  (smaller core group + async updates for others)\n' +
+    '• Make it async:  Save $' + Math.round(weeklyCost * 48).toLocaleString() + '/yr  (Slack/Notion instead of meeting)\n' +
+    '• Cancel 1 of ' + meetingsPerWeek + ' meetings/wk:  Save $' + Math.round(weeklyCost / meetingsPerWeek * 48).toLocaleString() + '/yr\n\n' +
     assessment + '\n\n' +
     '',
   );

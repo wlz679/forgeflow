@@ -45,6 +45,23 @@ function calculatePricingModel(inputs: Record<string, string>): string[] {
     '• Daily Rate (8 hrs):        $' + loc(Math.round(dailyRate)) + '/day\n' +
     '• Weekly Rate:                 $' + loc(Math.round(weeklyRate)) + '/wk\n' +
     '• Monthly Retainer:        $' + loc(Math.round(monthlyRetainer)) + '/mo\n\n' +
+    '🩺 Rate Health:\n' +
+    (requiredHourly >= 150
+      ? '• 🟢 Premium rate — $' + Math.round(requiredHourly) + '/hr is top-tier for skilled work.\n'
+      : requiredHourly >= 75
+      ? '• 🟢 Strong — $' + Math.round(requiredHourly) + '/hr is competitive.\n'
+      : requiredHourly >= 40
+      ? '• 🟡 Mid-market — $' + Math.round(requiredHourly) + '/hr is workable.\n'
+      : '• 🟠 Entry — $' + Math.round(requiredHourly) + '/hr suggests raising rates or increasing volume.\n') +
+    (billableHoursPerWeek >= 30
+      ? '• ✅ ' + billableHoursPerWeek + ' billable hrs/wk is full-time sustainable.\n'
+      : billableHoursPerWeek >= 20
+      ? '• ⚠️ ' + billableHoursPerWeek + ' billable hrs/wk means 50-60% utilization — work on pipeline.\n'
+      : '• 🔴 ' + billableHoursPerWeek + ' billable hrs/wk is hard to make a full living — increase capacity or rates.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• Raise rate 20%:  Need only ' + Math.round(annualBillableHours * 0.83) + ' billable hrs/yr  (same income)\n' +
+    '• Add 5 billable hrs/wk:  Required rate drops to $' + Math.round(annualIncomeGoal / ((billableHoursPerWeek + 5) * workingWeeks)) + '/hr\n' +
+    '• 2 income sources:  $' + Math.round(annualIncomeGoal * 0.5).toLocaleString() + '/yr each, lower hourly pressure\n\n' +
     assessment + '\n\n' +
     '',
   );

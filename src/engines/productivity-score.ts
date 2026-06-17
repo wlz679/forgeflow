@@ -55,7 +55,26 @@ function calculateProductivity(inputs: Record<string, string>): string[] {
       meetings > 5 ? 'Cut meetings by 50%. Replace them with async video updates.' :
       tools > 5 ? 'Audit and reduce your tool stack. Fewer tools = less context switching.' :
       'You are on track. Protect your current systems and incrementally improve.') + '\n\n' +
-    '📌 Score Formula: Base 50 + Deep Work (max +25) + Tool Stack (max +15) + Meeting Efficiency (max +20). Max: 100. Min: 10.',
+    '📌 Score Formula: Base 50 + Deep Work (max +25) + Tool Stack (max +15) + Meeting Efficiency (max +20). Max: 100. Min: 10.\n\n' +
+    '🩺 Productivity Health:\n' +
+    (score >= 90
+      ? '• 🟢 Peak performer — protect what is working.\n'
+      : score >= 75
+      ? '• 🟢 Strong systems — keep iterating.\n'
+      : score >= 60
+      ? '• 🟡 Solid baseline — room to grow in weak area.\n'
+      : score >= 45
+      ? '• 🟠 Below average — focus on the #1 lever.\n'
+      : '• 🔴 Struggling — fundamental changes needed.\n') +
+    (deepWork >= 20
+      ? '• ✅ Deep work hours in top quartile (20+).\n'
+      : deepWork >= 10
+      ? '• ⚠️ Deep work hours OK but not exceptional.\n'
+      : '• 🔴 Deep work is too low — biggest improvement area.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• Add 5 deep work hrs/wk:  Score +' + Math.min(25, (deepWork + 5 >= 30 ? 25 : deepWork + 5 >= 20 ? 20 : deepWork + 5 >= 10 ? 10 : 5)) + ' pts (max +25)\n' +
+    '• Cut meetings to 2/wk:  Score +' + (meetings > 5 ? 20 : meetings > 2 ? 10 : 0) + ' pts\n' +
+    '• Trim tool stack to 3-5:  Score +' + (tools > 5 ? 10 : tools < 3 ? 7 : 0) + ' pts',
   );
 
   // 9 comparison scenarios

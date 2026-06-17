@@ -61,6 +61,24 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
     '• Benefits add ' + pct(benefitsCost, totalAnnualCost) + '\n' +
     '• Employer taxes add ' + pct(employerTax, totalAnnualCost) + '\n' +
     '• Overhead adds ' + pct(overhead, totalAnnualCost) + '\n\n' +
+    '🩺 Cost Health:\n' +
+    (totalAnnualCost / annualSalary <= 1.4
+      ? '• 🟢 Lean total cost multiplier (under 1.4x) — efficient operation.\n'
+      : totalAnnualCost / annualSalary <= 1.8
+      ? '• 🟢 Standard multiplier (1.4-1.8x) — typical for full-time staff.\n'
+      : totalAnnualCost / annualSalary <= 2.2
+      ? '• 🟠 High multiplier (1.8-2.2x) — review overhead/benefits ratio.\n'
+      : '• 🔴 Excessive multiplier (over 2.2x) — likely heavy overhead or benefits.\n') +
+    (annualSalary >= 150000
+      ? '• ✅ Senior hire at $' + Math.round(annualSalary).toLocaleString() + '/yr — clear ROI must be established.\n'
+      : annualSalary >= 80000
+      ? '• ⚠️ Mid-level hire at $' + Math.round(annualSalary).toLocaleString() + '/yr — standard team member.\n'
+      : '• ✅ Junior hire at $' + Math.round(annualSalary).toLocaleString() + '/yr — low-risk entry-level role.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• If you hired in Asia:  ~$' + Math.round(annualSalary * 0.4).toLocaleString() + '/yr  (40% of US cost)\n' +
+    '• Remote (anywhere):  ~$' + Math.round(annualSalary * 0.7).toLocaleString() + '/yr  (saves on-office overhead)\n' +
+    '• Contractor (1099):  ~$' + Math.round(annualSalary * 0.85).toLocaleString() + '/yr  (no benefits/tax overhead)\n' +
+    '• Total first-year cost (with onboarding):  $' + Math.round(totalAnnualCost * 1.15).toLocaleString() + '\n\n' +
     '💡 Budget rule of thumb: total employee cost = base salary × ' + (totalAnnualCost / annualSalary).toFixed(1),
   );
 

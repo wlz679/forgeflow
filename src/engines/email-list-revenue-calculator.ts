@@ -51,6 +51,27 @@ function calculateEmailRevenue(inputs: Record<string, string>): string[] {
     '• Monthly Revenue:             $' + fmt(monthlyRevenue) + '\n' +
     '• Annual Revenue:                $' + fmt(annualRevenue) + '\n' +
     '• Revenue Per Subscriber:  $' + fmt(revenuePerSubscriber) + '/yr\n\n' +
+    '🩺 List Health:\n' +
+    (openRate >= 30
+      ? '• 🟢 Open rate ' + openRate + '% is strong (industry avg 20-25%).\n'
+      : openRate >= 20
+      ? '• 🟡 Open rate ' + openRate + '% is on industry average.\n'
+      : '• 🔴 Open rate ' + openRate + '% is below average — review subject lines + sender reputation.\n') +
+    (clickRate >= 4
+      ? '• 🟢 Click rate ' + clickRate + '% is healthy.\n'
+      : clickRate >= 2
+      ? '• 🟡 Click rate ' + clickRate + '% is OK — test better CTAs.\n'
+      : '• 🔴 Click rate ' + clickRate + '% is weak — rewrite for relevance.\n') +
+    (revenuePerSubscriber >= 1.5
+      ? '• ✅ $' + revenuePerSubscriber + '/sub/yr is monetizing well.\n'
+      : revenuePerSubscriber >= 0.5
+      ? '• ⚠️ $' + revenuePerSubscriber + '/sub/yr is workable but improvable.\n'
+      : '• 🔴 $' + revenuePerSubscriber + '/sub/yr is low — test monetization paths.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• 2x open rate:  Annual $' + Math.round(annualRevenue * 2).toLocaleString() + '  (subject lines + send time)\n' +
+    '• 2x click rate:  Annual $' + Math.round(annualRevenue * 2).toLocaleString() + '  (CTA + content)\n' +
+    '• 2x subscribers:  Annual $' + Math.round(annualRevenue * 2).toLocaleString() + '  (list growth)\n' +
+    '• All combined:  Annual $' + Math.round(annualRevenue * 8).toLocaleString() + '  (max upside)\n\n' +
     assessment + '\n\n' +
     '',
   );

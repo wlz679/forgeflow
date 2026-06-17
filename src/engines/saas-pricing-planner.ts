@@ -73,6 +73,22 @@ function planPricing(inputs: Record<string, string>): string[] {
     '• Starter: $' + models[primaryRec].low + '/mo\n' +
     '• Pro (recommended): $' + models[primaryRec].mid + '/mo\n' +
     '• Max: $' + models[primaryRec].high + '/mo\n\n' +
+    '🩺 Pricing Health:\n' +
+    (competitorPrice > 0 && Math.abs(models[primaryRec].mid - competitorPrice) / competitorPrice <= 0.15
+      ? '• 🟢 Mid-tier $' + models[primaryRec].mid + ' is within 15% of competitor $' + competitorPrice + ' — competitive.\n'
+      : competitorPrice > 0 && models[primaryRec].mid > competitorPrice * 1.3
+      ? '• 🟠 Mid-tier is 30%+ above competitor — hard sell without strong differentiation.\n'
+      : competitorPrice > 0 && models[primaryRec].mid < competitorPrice * 0.7
+      ? '• 🟢 Mid-tier is well below competitor — could capture price-sensitive buyers.\n'
+      : '• ⚠️ Set competitor price to see positioning analysis.\n') +
+    (models[primaryRec].mid >= 30
+      ? '• ✅ Mid-tier $' + models[primaryRec].mid + '/mo is sustainable for SMB.\n'
+      : '• 🟡 Mid-tier under $30/mo — high volume needed for meaningful revenue.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• Raise all tiers 20%:  Pro $' + Math.round(models[primaryRec].mid * 1.2) + '/mo  (test willingness to pay)\n' +
+    '• Add annual discount (15% off):  $' + Math.round(models[primaryRec].mid * 12 * 0.85) + '/yr  vs $' + models[primaryRec].mid * 12 + '/yr monthly\n' +
+    '• Drop Starter to $0:  Funnel optimization — converts via Pro/Max\n' +
+    '• Add enterprise tier at $' + Math.round(models[primaryRec].high * 3) + '/mo\n\n' +
     '💡 ' + models[primaryRec].tip + '\n\n' +
     '\n' +
     '📊 All Models Compared:\n',

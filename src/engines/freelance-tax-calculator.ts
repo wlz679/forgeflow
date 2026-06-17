@@ -40,7 +40,22 @@ function calculateFreelanceTax(inputs: Record<string, string>): string[] {
     '\n' +
     '💰 After-Tax Income: ' + loc(afterTaxIncome) + '/yr\n' +
     '🏠 Monthly Take-Home: ' + loc(monthlyTakeHome) + '/mo\n\n' +
-    '\n' +
+    '🩺 Tax Burden Health:\n' +
+    (effectiveTaxRate <= 15
+      ? '• 🟢 Low tax burden — effective rate ' + pct(effectiveTaxRate) + '% is below 15% (great).\n'
+      : effectiveTaxRate <= 25
+      ? '• 🟡 Moderate — effective rate ' + pct(effectiveTaxRate) + '% is normal for ' + country + '.\n'
+      : effectiveTaxRate <= 35
+      ? '• 🟠 High — ' + pct(effectiveTaxRate) + '% effective rate is above average.\n'
+      : '• 🔴 Very high — ' + pct(effectiveTaxRate) + '% is in the top bracket.\n') +
+    (businessExpenses > 0
+      ? '• ✅ You deduct $' + Math.round(businessExpenses).toLocaleString() + ' in business expenses — reduces taxable income.\n'
+      : '• ⚠️ No business expenses tracked — add home office, software, equipment to reduce tax.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• If you expense +$5K/yr:  Save $' + Math.round(5000 * (estimatedTax / Math.max(taxableIncome, 1))).toLocaleString() + '/yr  (at ' + pct(taxInfo.rate * 100) + '% rate)\n' +
+    '• If you switch to ' + (country === 'us' ? 'Canada' : 'US') + ':  Effective rate changes substantially\n' +
+    '• Track mileage:  ~$0.67/mile can save $1-3K/yr for active freelancers\n' +
+    '• If you form an LLC/S-Corp:  Potential 15-20% self-employment tax savings\n\n' +
     '💡 Set aside ' + pct(taxInfo.rate * 100) + '% of every invoice for taxes. ' +
     'Open a separate tax savings account and transfer quarterly payments automatically.\n\n' +
     '📌 Tax Savings Target (monthly): ' + loc(estimatedTax / 12),

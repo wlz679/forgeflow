@@ -43,6 +43,24 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
     '• Monthly Income:            $' + fmt(monthlyIncome) + '\n' +
     '• Annual Income:               $' + fmt(annualIncome) + '\n' +
     '• Income Per 1K Visitors: $' + fmt(incomePerThousand) + '\n\n' +
+    '🩺 Income Health:\n' +
+    (monthlyIncome >= 10000
+      ? '• 🟢 Strong affiliate income — $' + Math.round(monthlyIncome).toLocaleString() + '/mo is a full-time replacement.\n'
+      : monthlyIncome >= 2000
+      ? '• 🟢 Solid — $' + Math.round(monthlyIncome).toLocaleString() + '/mo is meaningful side income.\n'
+      : monthlyIncome >= 500
+      ? '• 🟡 Modest — $' + Math.round(monthlyIncome).toLocaleString() + '/mo is a start; needs scaling.\n'
+      : '• 🟠 Minimal — under $500/mo, traffic or commission needs lift.\n') +
+    (incomePerThousand >= 50
+      ? '• ✅ Your traffic converts at $' + Math.round(incomePerThousand) + '/1K visitors — efficient funnel.\n'
+      : incomePerThousand >= 20
+      ? '• ⚠️ $' + Math.round(incomePerThousand) + '/1K is below industry median ($30-50).\n'
+      : '• 🔴 $' + Math.round(incomePerThousand) + '/1K is very low — review offer-market fit.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• 2x traffic:  $' + Math.round(monthlyIncome * 2).toLocaleString() + '/mo  (SEO + paid ads)\n' +
+    '• 2x conversion rate:  $' + Math.round(monthlyIncome * 2).toLocaleString() + '/mo  (better targeting + landing page)\n' +
+    '• Higher commission (+50%):  $' + Math.round(monthlyIncome * 1.5).toLocaleString() + '/mo  (recurring programs, premium offers)\n' +
+    '• All three combined:  $' + Math.round(monthlyIncome * 6).toLocaleString() + '/mo  (max upside)\n\n' +
     assessment + '\n\n' +
     loc(Math.round(50 * avgCommission)) + '/mo.',
   );
