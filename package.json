@@ -21,7 +21,7 @@
   "license": "ISC",
   "description": "CalcKit — Free business calculators for smarter decisions",
   "dependencies": {
-    "@astrojs/sitemap": "^3.5.0",
+    "@astrojs/sitemap": "3.2.1",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^4.13.2"
   },

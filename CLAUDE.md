@@ -120,18 +120,35 @@ At startup, `getPlatformConfig()` fetches `public/platform-config.json` and merg
 
 收到指令先分类，再动手。不要先问问题、先读代码、先解释——先分类，先调 Skill。
 
-**快速通道**：用户说"继续/可以/开始/改吧/好"，或改动明显是单文件小修 → 直接处理，不走 Skill。
+**默认走严格流程**（先看触发器）；快速通道是例外，需 6 条全部满足才放行。
 
-| 场景                                   | → Skill                                      |
-| -------------------------------------- | -------------------------------------------- |
-| 🐛 Bug/报错/测试失败                   | `superpowers:systematic-debugging`           |
-| 🆕 新功能/新页面/新模块                | `superpowers:brainstorming`                  |
-| 📐 重构/多步骤/跨多文件                | `superpowers:writing-plans`                  |
-| 📋 有 plan 文件 + "执行/继续"          | `superpowers:executing-plans`                |
-| 🔍 代码写完、commit 前（复杂改动可选） | `superpowers:requesting-code-review`         |
-| ✅ "完成/好了/做完了"                  | `superpowers:verification-before-completion` |
-| 🚀 "合并/PR/发布"                      | `superpowers:finishing-a-development-branch` |
-| ➖ 以上都不匹配                        | 直接处理                                     |
+### 强制自检 — 收到任务先对照触发器
+
+收到任何任务，先逐条对照，**命中任意一条即强制调 Skill**（包括用户在"继续/可以/开始"等快速通道词）：
+
+| 触发信号（命中任意一条）                                       | 必走 Skill                                   |
+| -------------------------------------------------------------- | -------------------------------------------- |
+| 涉及**字段命名/重命名/字典映射/接口字段对齐**                  | `superpowers:brainstorming`                  |
+| 用户说**"不显示/没生效/错了/失败/没出来/不对"** 等失败信号     | `superpowers:systematic-debugging`           |
+| **改动 ≥ 2 个文件** 或跨模块/跨层                              | `superpowers:writing-plans`                  |
+| 用户说**"做完/完成/好了/提交吧"**                              | `superpowers:verification-before-completion` |
+| 涉及**API/数据契约/字段含义** 变更                             | `superpowers:brainstorming`                  |
+| 已有 plan 文件 + 用户说"执行/继续"                             | `superpowers:executing-plans`                |
+| 写完复杂改动、commit 前                                        | `superpowers:requesting-code-review`         |
+| 涉及**合并/PR/发布/收尾**                                      | `superpowers:finishing-a-development-branch` |
+| **plan/设计/契约与现状不一致**（执行时发现现状已与文档脱节）   | 停止 + 报告差异，**不擅自继续**              |
+| 任务中发现自己**在做关键推断**（如"两个接口字段一样可以合并"） | 暂停 + 把推断说出来让用户确认                |
+
+### 快速通道（**仅**全部满足才能跳过 Skill）
+
+- 单文件改动
+- 用户已精确指定每个修改点（无歧义）
+- 不涉及接口、字段、状态、数据流、契约
+- 没有 bug 排查成分
+- 不是清理/重构动作
+- 没有命中上方触发器表的任何一行
+
+任意一条不满足 → 必须走对应 Skill。
 
 ### 推荐执行链
 
@@ -148,8 +165,28 @@ systematic-debugging → verification-before-completion
 writing-plans → executing-plans → requesting-code-review → verification-before-completion
 ```
 
+### 红线动作（违反即视为未走流程）
+
+- **绝不在调 Skill 前**输出任何"我来帮你xxx" / "我看看" / "让我先读一下" / "我先排查" — 调 Skill 必须是**第一条输出**
+- **绝不**用 Read/Grep 替代码逻辑推理 — 结构问题（"X 怎么调到 Y"、"X 是怎么实现的"）必须先 `codegraph_context` / `codegraph_trace`
+- **绝不**基于"看起来简单"跳过 Skill — 用户描述含"不显示/错了/没生效"等失败信号，**默认就是 bug**，必须走 `systematic-debugging`
+- **绝不**在 Skill 触发后跳过其内部步骤（即使是简单的"快速通道"，触发器命中就必须走完）
+
+### 反模式案例（不得重演）
+
+| 用户说             | 错误做法                                | 正确做法                                                                            |
+| ------------------ | --------------------------------------- | ----------------------------------------------------------------------------------- |
+| "总数柱没显示"     | 猜是 legend 状态问题，加 `selected: {}` | 走 `systematic-debugging`，**先看接口返回**——根因是字段名错读（`total` vs `count`） |
+| "红灯不亮"         | 直接改 hook.cjs，猜了两次原因           | 走 `systematic-debugging`，**先写最小复现 + 观察日志**                              |
+| "表格不显示"       | 直接看 template 找 undefined 风险       | 走 `systematic-debugging`，**先看接口返回 + 浏览器报错**                            |
+| "加交互式 label"   | 改了两次间距被退回                      | 走 `brainstorming`，**先确认交互行为**（点击切换 vs 跳转）                          |
+| "改成 XXX 字段名"  | 直接全局替换                            | 走 `brainstorming`，**先确认全部消费点 + 契约变更影响**                             |
+| "显示不对"         | 改模板、加 fallback                     | 走 `systematic-debugging`，**先验证数据契约**（后端实际返回什么）                   |
+| "两个接口字段一样" | 直接合并、删旧 API                      | 走 `systematic-debugging`，**先验证空数据/异常路径**——字段相同 ≠ 行为相同           |
+
 ### 强制规则（不可跳过）
 
+0. **Skill 调用必须可见** — 每次调 Skill 前**用一句话说明调用目的**（例："这是 bug 排查，调 `superpowers:systematic-debugging`"）。无理由的 Skill 调用 = 没调
 1. **先匹配，后说话** — 收到用户第一条消息，先对决策路由表（注意快速通道），命中即调 Skill，调完 Skill 再回复。不允许先说"我来帮你xxx"再调 Skill。**陈述假设、呈现权衡**——面临多种实现路径时，列出选项和利弊，不替用户做选择。有更简单的方案时主动提出
 2. **先读懂，再动手** — 改文件前必须先读文件，理解其职责、数据流和上下游关系。不确定时用 `codegraph_context` 或 `codegraph_trace` 摸清调用链。禁止在不理解代码意图的情况下修改
 3. **TDD 按场景** — 新写纯函数/工具函数/数据映射逻辑前先写测试。接入 API、替换 mock、简单 CRUD 等已有测试覆盖的场景不需要 TDD
@@ -163,7 +200,7 @@ writing-plans → executing-plans → requesting-code-review → verification-be
 6. **精准变更** — 只改必须改的代码，不动相邻代码。不重构没坏的东西，不顺手改格式/注释/import 排序。匹配现有代码风格，即使你更倾向另一种写法。发现无关死代码 → 提出来，但不要擅自删除。测试：每一行改动都必须能追溯到用户的请求
 7. **提交前过质量门禁** — 每次 commit 前必须 `pnpm check`（typecheck + test:run），零错误才能提交。复杂改动可额外调 `Skill("superpowers:requesting-code-review")`
 8. **冲突不妥协** — 合并冲突、架构冲突、需求与现状矛盾时，不走捷径、不掩盖、不强行合并。先理解双方意图，再决定保留/舍弃/重构，不确定时列出选项给用户决断
-9. **问题必报** — review 或 test 发现问题，列表给用户，由用户决断，不擅自改。遇到不确定、不理解、无法验证的情况，立即说明，绝不隐瞒
+9. **问题必报** — review 或 test 发现问题，列表给用户，由用户决断，不擅自改。遇到不确定、不理解、无法验证、推断依据不足的情况，**立即说出来 + 暂停 + 等用户确认**，绝不默默继续。这是触发器表"做关键推断要暂停"的执行细则
 10. **Skill 工具优先** — 用 `Skill` 工具调用技能，不要用 Read 读技能文件
 11. **代码注释** — 以下位置必须写注释，给新人看的：
     - **数据流/调用链** — 跨接口编排（如"柱状图+环形图数据来自 A 接口，表格数据来自 B 接口"）
