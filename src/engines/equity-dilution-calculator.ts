@@ -36,6 +36,24 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
     '• Total Shares: ' + totalSharesAfter.toLocaleString() + '\n' +
     '• Founder: ' + founderSharesAfter.toLocaleString() + ' shares (' + pct(founderOwnershipAfter) + '%)\n' +
     '• Investor: ' + investorShares.toLocaleString() + ' shares (' + pct(investorOwnershipPct) + '%)\n\n' +
+    '🩺 Round Health:\n' +
+    (dilutionPct <= 15
+      ? '• 🟢 Founder-friendly round — under 15% dilution is healthy.\n'
+      : dilutionPct <= 25
+      ? '• 🟡 Standard round — 15-25% dilution is typical for seed/Series A.\n'
+      : dilutionPct <= 40
+      ? '• 🟠 Aggressive round — over 25%. Negotiate or split the round.\n'
+      : '• 🔴 Excessive dilution — over 40% may mean loss of control.\n') +
+    (founderOwnershipAfter >= 70
+      ? '• ✅ You retain majority control.\n'
+      : founderOwnershipAfter >= 50
+      ? '• ⚠️ Plurality but not majority — investors may have blocking rights.\n'
+      : '• 🔴 Below 50% — investors have effective control.\n') +
+    '\n🔄 What-If Scenarios\n' +
+    '• With 10% option pool:  Founder ≈ ' + pct(founderOwnershipAfter * 0.9) + '%\n' +
+    '• With 20% option pool:  Founder ≈ ' + pct(founderOwnershipAfter * 0.8) + '%\n' +
+    '• Half investment ($' + Math.round(investmentAmount / 2).toLocaleString() + '):  Dilution ' + pct(dilutionPct / 2) + '%\n' +
+    '• Double valuation ($' + Math.round(preMoneyValuation * 2).toLocaleString() + ' pre):  Dilution ' + pct((investmentAmount / (preMoneyValuation * 2 + investmentAmount)) * 100) + '%\n\n' +
     '💡 At ' + fmt(pricePerShare) + '/share, each additional ' + founderShares.toLocaleString() + ' shares of employee option pool would dilute founders by an additional ~' + pct(100 - (founderShares / (totalSharesAfter + founderShares * 0.1)) * 100) + '%.',
   );
 

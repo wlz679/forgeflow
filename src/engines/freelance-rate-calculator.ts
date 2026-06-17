@@ -64,6 +64,23 @@ function calculateRate(inputs: Record<string, string>): string[] {
     '📊  Monthly Rate: ' + loc(monthly) + '/mo\n' +
     '💰  Yearly Rate:   ' + loc(yearly) + '/yr\n\n' +
     '\n' +
+    '🩺 Rate Health:\n' +
+    (hourly >= 150
+      ? '• 🟢 Premium tier — top 10% of ' + skill + ' market.\n'
+      : hourly >= 75
+      ? '• 🟢 Strong rate — competitive for ' + expLabel[experience] + '.\n'
+      : hourly >= 40
+      ? '• 🟡 Mid market — workable but room to grow.\n'
+      : '• 🟠 Entry rate — focus on building portfolio to raise rates.\n') +
+    (yearly >= 200000
+      ? '• ✅ Six-figure trajectory at $' + Math.round(yearly).toLocaleString() + '/yr.\n'
+      : yearly >= 100000
+      ? '• ⚠️ Just below six figures — consider raising rates 20-30%.\n'
+      : '• 🔴 Below $100K — review skill mix or target market.\n') +
+    '\n🔄 What-If Scenarios\n' +
+    '• If you move up one level:  ~$' + Math.round(hourly * (expMultiplier[experience] === 0.6 ? 1.67 : experience === 'mid' ? 1.6 : experience === 'senior' ? 1.5625 : 1)).toLocaleString() + '/hr  (Senior ' + (experience === 'expert' ? 'ceiling' : 'target') + ')\n' +
+    '• If you target US clients:  $' + Math.round(hourly * (location === 'us' ? 1 : 1 / locationAdj[location])).toLocaleString() + '/hr  (vs current ' + loc(hourly) + '/hr)\n' +
+    '• If you go to expert tier:  $' + Math.round((baseRates[skill] || 70) * 2.5 * (location === 'us' ? 1 : 1 / locationAdj[location])).toLocaleString() + '/hr  (top of market)\n\n' +
     '💡 Pricing Tips:\n' +
     '• Charge by the project, not by the hour. Clients buy outcomes, not time.\n' +
     '• Double your hourly rate for rush jobs or weekend work.\n' +

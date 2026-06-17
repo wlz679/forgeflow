@@ -47,6 +47,25 @@ function calculateProfitability(inputs: Record<string, string>): string[] {
     '• Net Profit:                  $' + loc(profit) + '\n' +
     '• Profit Margin:            ' + profitMargin.toFixed(1) + '%\n' +
     '• Effective Hourly Rate: $' + fmt(effectiveHourly) + '/hr\n\n' +
+    '🩺 Project Health:\n' +
+    (profitMargin >= 50
+      ? '• 🟢 Outstanding — 50%+ margin means highly profitable pricing.\n'
+      : profitMargin >= 30
+      ? '• 🟢 Strong — 30-50% is healthy for service work.\n'
+      : profitMargin >= 15
+      ? '• 🟡 OK — 15-30% margin is workable but tight.\n'
+      : profitMargin > 0
+      ? '• 🟠 Thin — under 15% leaves no room for scope creep.\n'
+      : '• 🔴 Loss — you are losing money on this project.\n') +
+    (effectiveHourly >= hourlyCost * 2
+      ? '• ✅ You earn ' + (effectiveHourly / hourlyCost).toFixed(1) + 'x your cost rate — sustainable.\n'
+      : effectiveHourly >= hourlyCost
+      ? '• ⚠️ You earn ' + (effectiveHourly / hourlyCost).toFixed(1) + 'x your cost rate — break-even territory.\n'
+      : '• 🔴 You earn less than your cost rate — subsidizing the client.\n') +
+    '\n🔄 What-If Scenarios\n' +
+    '• If hours grow 20%:  Profit $' + Math.round(profit - (hoursEstimated * 0.2) * hourlyCost).toLocaleString() + '  (margin ' + (((profit - (hoursEstimated * 0.2) * hourlyCost) / projectRevenue) * 100).toFixed(1) + '%)\n' +
+    '• If you raise price 15%:  Profit $' + Math.round(profit + projectRevenue * 0.15).toLocaleString() + '  (margin ' + (((profit + projectRevenue * 0.15) / (projectRevenue * 1.15)) * 100).toFixed(1) + '%)\n' +
+    '• For 50% margin:  Target price $' + Math.round(totalCost * 2).toLocaleString() + '  (current: $' + Math.round(projectRevenue).toLocaleString() + ')\n\n' +
     assessment + '\n\n' +
     '',
   );

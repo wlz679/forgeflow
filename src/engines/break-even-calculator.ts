@@ -56,6 +56,40 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
     }
   }
 
+  // 🔄 What-If Scenarios — cost reduction or price increase impact
+  if (monthlyRevenue > 0 && monthlyCosts > 0) {
+    result += "\n🔄 What-If Scenarios\n";
+    // Cut costs 20%
+    if (monthlyCosts > 0) {
+      const newCosts = monthlyCosts * 0.8;
+      const newProfit = monthlyRevenue - newCosts;
+      const newMonths = newProfit > 0 ? Math.ceil(initialInvestment / newProfit) : null;
+      result += "• Cut costs 20%:  Monthly profit $"
+        + Math.round(monthlyRevenue - monthlyCosts).toLocaleString()
+        + " → $" + Math.round(newProfit).toLocaleString();
+      if (newMonths !== null && flatMonths !== null) result += "  |  Break-even: " + flatMonths + " → " + newMonths + " mo (" + (flatMonths - newMonths) + " faster)\n";
+      else result += "\n";
+    }
+    // Raise price 20%
+    if (monthlyRevenue > 0) {
+      const newRev = monthlyRevenue * 1.2;
+      const newProfit2 = newRev - monthlyCosts;
+      const newMonths2 = newProfit2 > 0 ? Math.ceil(initialInvestment / newProfit2) : null;
+      result += "• Raise price 20%:  Revenue $" + Math.round(monthlyRevenue).toLocaleString() + " → $" + Math.round(newRev).toLocaleString();
+      if (newMonths2 !== null && flatMonths !== null) result += "  |  Break-even: " + flatMonths + " → " + newMonths2 + " mo\n";
+      else if (newMonths2 !== null) result += "  |  Break-even: " + newMonths2 + " mo\n";
+      else result += "\n";
+    }
+    // Combined
+    const comboRev = monthlyRevenue * 1.1;
+    const comboCosts = monthlyCosts * 0.9;
+    const comboProfit = comboRev - comboCosts;
+    if (comboProfit > 0) {
+      const comboMonths = Math.ceil(initialInvestment / comboProfit);
+      result += "• Combo (+10% price, −10% costs):  Break-even: " + comboMonths + " mo\n";
+    }
+  }
+
   return [result];
 }
 
@@ -69,6 +103,17 @@ const customFn =
   "if(gr>0&&gm!==null)r+='• With '+pct(gr)+' growth:  '+gm+' months'+(fm!==null?'  ('+(fm-gm)+' months faster)':'')+'\\n';else if(gr>0&&gm===null)r+='• With '+pct(gr)+' growth:  Not within 60 months.\\n';" +
   "if(gm!==null){if(gm<=6)r+='🟢 Excellent! Breaking even in under 6 months.\\n';else if(gm<=12)r+='🟡 Solid — breaking even within a year.\\n';else if(gm<=24)r+='🟠 Manageable but slow — 1-2 years.\\n';else r+='🔴 Long road — over 2 years.\\n';}" +
   "if(fp>0||gr>0){r+='\\n📈 Cumulative P&L Outlook\\n';var cps=[3,6,12,24];for(var ci=0;ci<cps.length;ci++){var mo=cps[ci];var cum=-ii;for(var m2=1;m2<=mo;m2++){var rv2=mr*Math.pow(gf,m2-1);cum+=rv2-mc;}r+='• Month '+mo+': '+(cum>=0?'+':'')+fmt(cum)+(cum>=0?' ✅\\n':'\\n');}}" +
+  "if(mr>0&&mc>0){" +
+  "r+='\\n🔄 What-If Scenarios\\n';" +
+  "var nc8=mc*0.8;var np8=mr-nc8;var nm8=np8>0?Math.ceil(ii/np8):null;" +
+  "r+='\\u2022 Cut costs 20%:  Monthly profit $'+Math.round(fp).toLocaleString()+' \\u2192 $'+Math.round(np8).toLocaleString();" +
+  "if(nm8!==null&&fm!==null)r+='  |  Break-even: '+fm+' \\u2192 '+nm8+' mo ('+(fm-nm8)+' faster)\\n';else r+='\\n';" +
+  "var nr9=mr*1.2;var np9=nr9-mc;var nm9=np9>0?Math.ceil(ii/np9):null;" +
+  "r+='\\u2022 Raise price 20%:  Revenue $'+Math.round(mr).toLocaleString()+' \\u2192 $'+Math.round(nr9).toLocaleString();" +
+  "if(nm9!==null&&fm!==null)r+='  |  Break-even: '+fm+' \\u2192 '+nm9+' mo\\n';else if(nm9!==null)r+='  |  Break-even: '+nm9+' mo\\n';else r+='\\n';" +
+  "var cr10=mr*1.1;var cc10=mc*0.9;var cp10=cr10-cc10;" +
+  "if(cp10>0){r+='\\u2022 Combo (+10% price, \\u221210% costs):  Break-even: '+Math.ceil(ii/cp10)+' mo\\n';}" +
+  "}" +
   "return [r];";
 
 const engine: ToolEngine = {
