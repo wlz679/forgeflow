@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../core/engines/types';
 import { registerEngine } from '../core/engines/registry';
+import PRICING from '../data/ai-pricing.json';
 
 interface GpuInfo {
   hourlyRate: number;
@@ -17,30 +18,18 @@ interface ModelInfo {
   order: number;
 }
 
-const GPU_TYPES: Record<string, GpuInfo> = {
-  'H200-141GB': { hourlyRate: 3.50, name: 'H200 141GB', order: 1 },
-  'H100-80GB': { hourlyRate: 2.50, name: 'H100 80GB', order: 2 },
-  'A100-80GB': { hourlyRate: 1.50, name: 'A100 80GB', order: 3 },
-  'L40S-48GB': { hourlyRate: 0.80, name: 'L40S 48GB', order: 4 },
-  'RTX-6000': { hourlyRate: 0.50, name: 'RTX 6000 Ada', order: 5 },
-};
+const GPU_TYPES: Record<string, GpuInfo> = PRICING.training.gpuTypes as any;
 
-const MODEL_SIZES: Record<string, ModelInfo> = {
-  '7B': { h200: 2, h100: 4, a100: 8, l40s: 16, name: '7B (LoRA fine-tune)', isLoRA: true, order: 1 },
-  '13B': { h200: 4, h100: 8, a100: 16, name: '13B (LoRA fine-tune)', isLoRA: true, order: 2 },
-  '70B': { h200: 16, h100: 32, a100: 64, name: '70B (full fine-tune)', isLoRA: false, order: 3 },
-  '180B': { h200: 64, h100: 128, name: '180B (full fine-tune)', isLoRA: false, order: 4 },
-  '405B': { h200: 128, h100: 256, name: '405B (full train)', isLoRA: false, order: 5 },
-};
+const MODEL_SIZES: Record<string, ModelInfo> = PRICING.training.modelSizes as any;
 
 // Storage cost per GB per month
-const STORAGE_COST_PER_GB = 0.10;
+const STORAGE_COST_PER_GB = PRICING.gpu.storagePerGB;
 
 // Data processing cost per GB
-const DATA_PROCESS_COST_PER_GB = 1.50;
+const DATA_PROCESS_COST_PER_GB = PRICING.training.dataProcessPerGB;
 
 // Epoch time multiplier — LoRA is faster per epoch
-const LORA_EPOCH_SPEEDUP = 0.35; // LoRA epoch takes 35% of full fine-tune time
+const LORA_EPOCH_SPEEDUP = PRICING.training.loraSpeedup; // LoRA epoch takes 35% of full fine-tune time
 
 const PRESETS: Record<string, Record<string, string>> = {
   'Quick LoRA 7B': {
@@ -95,6 +84,8 @@ function calculate(inputs: Record<string, string>): string[] {
   const totalCost = gpuCost + storageCost + dataProcessCost;
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // Section 1: Header
   let header = '\u{1F916} AI Training Cost Estimate';
@@ -297,6 +288,7 @@ const engine: ToolEngine = {
     'Add cloud storage (dataset + checkpoints in GB) and data processing costs for a complete estimate.',
     'Review per-epoch costs, optimistic/pessimistic ranges, and multi-run scaling to plan your total training budget.',
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../core/engines/types';
 import { registerEngine } from '../core/engines/registry';
+import PRICING from '../data/ai-pricing.json';
 
 interface ProviderInfo {
   name: string;
@@ -18,20 +19,13 @@ const GPU_NAMES: Record<string, string> = {
   'A6000': 'RTX A6000 48GB',
 };
 
-const PROVIDERS: Record<string, ProviderInfo> = {
-  'runpod': { name: 'RunPod', spotMult: 0.6, reservedMult: 0.85, rates: { H200: 2.49, H100: 1.99, A100: 0.79, L40S: 0.69, RTX4090: 0.49, A6000: 0.39 }, order: 1 },
-  'vastai': { name: 'Vast.ai', spotMult: 0.5, reservedMult: 0.8, rates: { H200: 2.20, H100: 1.69, A100: 0.69, L40S: 0.59, RTX4090: 0.44, A6000: 0.35 }, order: 2 },
-  'lambdalabs': { name: 'Lambda Labs', spotMult: 0.7, reservedMult: 0.9, rates: { H200: 2.80, H100: 2.49, A100: 1.10, L40S: 0.80, RTX4090: 0.55, A6000: 0.50 }, order: 3 },
-  'aws': { name: 'AWS', spotMult: 0.4, reservedMult: 0.7, rates: { H200: 5.00, H100: 4.00, A100: 3.50, L40S: 1.20, RTX4090: 0.80, A6000: 0.65 }, order: 4 },
-  'gcp': { name: 'GCP', spotMult: 0.45, reservedMult: 0.75, rates: { H200: 4.50, H100: 4.20, A100: 2.80, L40S: 1.00, RTX4090: 0.70, A6000: 0.60 }, order: 5 },
-  'azure': { name: 'Azure', spotMult: 0.5, reservedMult: 0.8, rates: { H200: 4.80, H100: 3.80, A100: 3.00, L40S: 1.10, RTX4090: 0.75, A6000: 0.62 }, order: 6 },
-};
+const PROVIDERS: Record<string, ProviderInfo> = PRICING.gpu.providers as any;
 
 // Storage cost per GB per month (attached SSD)
-const STORAGE_COST_PER_GB = 0.10;
+const STORAGE_COST_PER_GB = PRICING.gpu.storagePerGB;
 
 // Networking egress cost per GB
-const NETWORK_EGRESS_PER_GB = 0.08;
+const NETWORK_EGRESS_PER_GB = PRICING.gpu.egressPerGB;
 
 // Storage tiers (GB)
 const STORAGE_SIZES = [100, 500, 1000, 5000];
@@ -105,6 +99,8 @@ function calculate(inputs: Record<string, string>): string[] {
   const estimatedEgress = includeStorage ? 50 * NETWORK_EGRESS_PER_GB : 0;
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // Section 1: Header
   out.push('\u{1F5A5}️ ' + prov.name + ' GPU Cost — ' + TIER_LABELS[pricingTier] || pricingTier.toUpperCase());
@@ -336,6 +332,7 @@ const engine: ToolEngine = {
     'Toggle storage/networking to see add-on costs for SSD storage and data egress.',
     'Review the multi-provider bar chart, tier savings comparison, and multi-GPU scaling table to find the optimal configuration.',
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

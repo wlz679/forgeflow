@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../core/engines/types';
 import { registerEngine } from '../core/engines/registry';
+import PRICING from '../data/ai-pricing.json';
 
 // --- Provider & Model definitions ---
 interface ModelInfo {
@@ -11,43 +12,20 @@ interface ModelInfo {
   provider: string;
 }
 
-const PROVIDERS: Record<string, { name: string; models: { key: string; name: string; input: number; output: number; contextWindow: string }[] }> = {
-  openai: {
-    name: 'OpenAI',
-    models: [
-      { key: 'gpt-5-nano', name: 'GPT-5 Nano', input: 0.05, output: 0.40, contextWindow: '400K' },
-      { key: 'gpt-5-mini', name: 'GPT-5 Mini', input: 0.25, output: 2.00, contextWindow: '400K' },
-      { key: 'gpt-5', name: 'GPT-5', input: 1.25, output: 10.00, contextWindow: '400K' },
-      { key: 'gpt-5.5', name: 'GPT-5.5', input: 5.00, output: 30.00, contextWindow: '1M' },
-    ],
-  },
-  anthropic: {
-    name: 'Anthropic',
-    models: [
-      { key: 'claude-haiku-3', name: 'Claude Haiku 3', input: 0.25, output: 1.25, contextWindow: '200K' },
-      { key: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', input: 1.00, output: 5.00, contextWindow: '200K' },
-      { key: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', input: 3.00, output: 15.00, contextWindow: '1M' },
-      { key: 'claude-fable-5', name: 'Claude Fable 5', input: 10.00, output: 50.00, contextWindow: '1M' },
-    ],
-  },
-  google: {
-    name: 'Google',
-    models: [
-      { key: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', input: 0.075, output: 0.30, contextWindow: '1M' },
-      { key: 'gemini-3-flash', name: 'Gemini 3 Flash', input: 0.50, output: 3.00, contextWindow: '1M' },
-      { key: 'gemini-3.1-pro', name: 'Gemini 3.1 Pro', input: 2.50, output: 15.00, contextWindow: '1M' },
-      { key: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash', input: 1.50, output: 9.00, contextWindow: '1M' },
-    ],
-  },
-  deepseek: {
-    name: 'DeepSeek',
-    models: [
-      { key: 'deepseek-v4-flash', name: 'V4 Flash', input: 0.14, output: 0.28, contextWindow: '1M' },
-      { key: 'deepseek-v4-pro-promo', name: 'V4 Pro (Promo)', input: 0.435, output: 0.87, contextWindow: '1M' },
-      { key: 'deepseek-v4-pro', name: 'V4 Pro', input: 1.74, output: 3.48, contextWindow: '1M' },
-    ],
-  },
+// Build PROVIDERS from PRICING.llm (auto-syncs with src/data/ai-pricing.json)
+const _buildProviders = (): Record<string, { name: string; models: { key: string; name: string; input: number; output: number; contextWindow: string }[] }> => {
+  const out: Record<string, { name: string; models: { key: string; name: string; input: number; output: number; contextWindow: string }[] }> = {};
+  for (const [k, v] of Object.entries(PRICING.llm)) {
+    out[k] = {
+      name: v.name,
+      models: Object.entries(v.models)
+        .map(([mk, mv]) => ({ key: mk, name: mv.name, input: mv.input, output: mv.output, contextWindow: mv.contextWindow }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    };
+  }
+  return out;
 };
+const PROVIDERS = _buildProviders();
 
 // Provider initials + colors
 const PROVIDER_INITIAL: Record<string, string> = {
@@ -132,6 +110,8 @@ function calculate(inputs: Record<string, string>): string[] {
   const maxCost = mostExpensive.monthlyCost;
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // ================================================================
   // Section 1: Header
@@ -454,6 +434,7 @@ const engine: ToolEngine = {
     'Review the bar chart to see all 15 models ranked by monthly cost.',
     'Check the Provider Summary to find the cheapest model from each provider, and use the Usage Scenarios table to plan costs at different volumes.',
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

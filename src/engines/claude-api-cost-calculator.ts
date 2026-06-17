@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../core/engines/types';
 import { registerEngine } from '../core/engines/registry';
+import PRICING from '../data/ai-pricing.json';
 
 // --- Model definitions ---
 interface ModelInfo {
@@ -14,88 +15,7 @@ interface ModelInfo {
   order: number;
 }
 
-const MODELS: Record<string, ModelInfo> = {
-  // Mythos-class
-  'claude-fable-5': {
-    input: 10.0,
-    output: 50.0,
-    name: 'Claude Fable 5',
-    family: 'mythos',
-    contextWindow: '1M',
-    maxOutput: '128K',
-    batchInput: 5.0,
-    batchOutput: 25.0,
-    order: 1,
-  },
-  // Claude 4.x Current
-  'claude-opus-4-8': {
-    input: 5.0,
-    output: 25.0,
-    name: 'Claude Opus 4.8',
-    family: 'claude4x',
-    contextWindow: '1M',
-    maxOutput: '128K',
-    batchInput: 2.5,
-    batchOutput: 12.5,
-    order: 2,
-  },
-  'claude-sonnet-4-6': {
-    input: 3.0,
-    output: 15.0,
-    name: 'Claude Sonnet 4.6',
-    family: 'claude4x',
-    contextWindow: '1M',
-    maxOutput: '64K',
-    batchInput: 1.5,
-    batchOutput: 7.5,
-    order: 3,
-  },
-  'claude-haiku-4-5': {
-    input: 1.0,
-    output: 5.0,
-    name: 'Claude Haiku 4.5',
-    family: 'claude4x',
-    contextWindow: '200K',
-    maxOutput: '64K',
-    batchInput: 0.5,
-    batchOutput: 2.5,
-    order: 4,
-  },
-  // Legacy
-  'claude-opus-4-1': {
-    input: 15.0,
-    output: 75.0,
-    name: 'Claude Opus 4.1',
-    family: 'legacy',
-    contextWindow: '200K',
-    maxOutput: '32K',
-    batchInput: 7.5,
-    batchOutput: 37.5,
-    order: 5,
-  },
-  'claude-haiku-3-5': {
-    input: 0.80,
-    output: 4.0,
-    name: 'Claude Haiku 3.5',
-    family: 'legacy',
-    contextWindow: '200K',
-    maxOutput: '8K',
-    batchInput: 0.4,
-    batchOutput: 2.0,
-    order: 6,
-  },
-  'claude-haiku-3': {
-    input: 0.25,
-    output: 1.25,
-    name: 'Claude Haiku 3',
-    family: 'legacy',
-    contextWindow: '200K',
-    maxOutput: '4K',
-    batchInput: 0.125,
-    batchOutput: 0.625,
-    order: 7,
-  },
-};
+const MODELS: Record<string, ModelInfo> = PRICING.llm.anthropic.models as any;
 
 // Family display metadata
 const FAMILY_ICONS: Record<string, string> = {
@@ -278,6 +198,8 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // ================================================================
   // Section 1: Header
@@ -919,6 +841,7 @@ const engine: ToolEngine = {
     'Set growth rate and projection period for long-term cost planning.',
     'Review the cost comparison bar chart, caching breakdown, and cross-provider insights.',
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

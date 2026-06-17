@@ -1,0 +1,1889 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-06-17",
+  "source": "litellm+manual",
+  "llm": {
+    "openai": {
+      "name": "OpenAI",
+      "cacheReadMult": null,
+      "models": {
+        "gpt-5.5": {
+          "input": 5,
+          "output": 30,
+          "batchInput": 2.5,
+          "batchOutput": 15,
+          "name": "GPT 5.5",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 1
+        },
+        "gpt-5.2": {
+          "input": 1.75,
+          "output": 14,
+          "batchInput": 0.875,
+          "batchOutput": 7,
+          "name": "GPT 5.2",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 2
+        },
+        "gpt-5": {
+          "input": 1.25,
+          "output": 10,
+          "batchInput": 0.625,
+          "batchOutput": 5,
+          "name": "GPT 5",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 3
+        },
+        "gpt-5-mini": {
+          "input": 0.25,
+          "output": 2,
+          "batchInput": 0.125,
+          "batchOutput": 1,
+          "name": "GPT 5Mini",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 4
+        },
+        "gpt-5-nano": {
+          "input": 0.049999999999999996,
+          "output": 0.39999999999999997,
+          "batchInput": 0.025,
+          "batchOutput": 0.2,
+          "name": "GPT 5Nano",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 5
+        },
+        "gpt-4.1": {
+          "input": 2,
+          "output": 8,
+          "batchInput": 1,
+          "batchOutput": 4,
+          "name": "GPT 4.1",
+          "family": "gpt41",
+          "contextWindow": "1M",
+          "order": 6
+        },
+        "gpt-4.1-mini": {
+          "input": 0.39999999999999997,
+          "output": 1.5999999999999999,
+          "batchInput": 0.2,
+          "batchOutput": 0.8,
+          "name": "GPT 4.1Mini",
+          "family": "gpt41",
+          "contextWindow": "1M",
+          "order": 7
+        },
+        "gpt-4.1-nano": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "batchInput": 0.05,
+          "batchOutput": 0.2,
+          "name": "GPT 4.1Nano",
+          "family": "gpt41",
+          "contextWindow": "1M",
+          "order": 8
+        },
+        "o3": {
+          "input": 2,
+          "output": 8,
+          "batchInput": 1,
+          "batchOutput": 4,
+          "name": "O3",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 9,
+          "reasoningMultiplier": 4
+        },
+        "o4-mini": {
+          "input": 1.1,
+          "output": 4.4,
+          "batchInput": 0.55,
+          "batchOutput": 2.2,
+          "name": "O4Mini",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 10,
+          "reasoningMultiplier": 4
+        },
+        "gpt-4o": {
+          "input": 2.5,
+          "output": 10,
+          "batchInput": 1.25,
+          "batchOutput": 5,
+          "name": "GPT 4o",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 11
+        },
+        "gpt-4o-mini": {
+          "input": 0.15,
+          "output": 0.6,
+          "batchInput": 0.075,
+          "batchOutput": 0.3,
+          "name": "GPT 4o Mini",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 12
+        },
+        "gpt-4-turbo": {
+          "input": 10,
+          "output": 30,
+          "batchInput": 5,
+          "batchOutput": 15,
+          "name": "GPT 4Turbo",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 13
+        },
+        "gpt-3.5-turbo": {
+          "input": 0.5,
+          "output": 1.5,
+          "batchInput": 0.25,
+          "batchOutput": 0.75,
+          "name": "GPT 3.5Turbo",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 14
+        },
+        "gpt-4o-transcribe-diarize": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Transcribe Diarize",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 15
+        },
+        "gpt-3.5-turbo-0125": {
+          "input": 0.5,
+          "output": 1.5,
+          "name": "GPT 3.5Turbo 0125",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 16
+        },
+        "gpt-3.5-turbo-1106": {
+          "input": 1,
+          "output": 2,
+          "name": "GPT 3.5Turbo 1106",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 17
+        },
+        "gpt-3.5-turbo-16k": {
+          "input": 3,
+          "output": 4,
+          "name": "GPT 3.5Turbo 16k",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 18
+        },
+        "gpt-3.5-turbo-instruct": {
+          "input": 1.5,
+          "output": 2,
+          "name": "GPT 3.5Turbo Instruct",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 19
+        },
+        "gpt-3.5-turbo-instruct-0914": {
+          "input": 1.5,
+          "output": 2,
+          "name": "GPT 3.5Turbo Instruct 0914",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 20
+        },
+        "gpt-4": {
+          "input": 30,
+          "output": 60,
+          "name": "GPT 4",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 21
+        },
+        "gpt-4-0125-preview": {
+          "input": 10,
+          "output": 30,
+          "name": "GPT 40125Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 22
+        },
+        "gpt-4-0314": {
+          "input": 30,
+          "output": 60,
+          "name": "GPT 40314",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 23
+        },
+        "gpt-4-0613": {
+          "input": 30,
+          "output": 60,
+          "name": "GPT 40613",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 24
+        },
+        "gpt-4-1106-preview": {
+          "input": 10,
+          "output": 30,
+          "name": "GPT 41106Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 25
+        },
+        "gpt-4-turbo-2024-04-09": {
+          "input": 10,
+          "output": 30,
+          "name": "GPT 4Turbo 20240409",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 26
+        },
+        "gpt-4-turbo-preview": {
+          "input": 10,
+          "output": 30,
+          "name": "GPT 4Turbo Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 27
+        },
+        "gpt-4.1-2025-04-14": {
+          "input": 2,
+          "output": 8,
+          "name": "GPT 4.120250414",
+          "family": "gpt41",
+          "contextWindow": "1M",
+          "order": 28
+        },
+        "gpt-4.1-mini-2025-04-14": {
+          "input": 0.39999999999999997,
+          "output": 1.5999999999999999,
+          "name": "GPT 4.1Mini 20250414",
+          "family": "gpt41",
+          "contextWindow": "1M",
+          "order": 29
+        },
+        "gpt-4.1-nano-2025-04-14": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "GPT 4.1Nano 20250414",
+          "family": "gpt41",
+          "contextWindow": "1M",
+          "order": 30
+        },
+        "gpt-4o-2024-05-13": {
+          "input": 5,
+          "output": 15,
+          "name": "GPT 4o 20240513",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 31
+        },
+        "gpt-4o-2024-08-06": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o 20240806",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 32
+        },
+        "gpt-4o-2024-11-20": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o 20241120",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 33
+        },
+        "gpt-4o-audio-preview": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Audio Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 34
+        },
+        "gpt-4o-audio-preview-2024-12-17": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Audio Preview 20241217",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 35
+        },
+        "gpt-4o-audio-preview-2025-06-03": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Audio Preview 20250603",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 36
+        },
+        "gpt-audio": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT Audio",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 37
+        },
+        "gpt-audio-1.5": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT Audio 1.5",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 38
+        },
+        "gpt-audio-2025-08-28": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT Audio 20250828",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 39
+        },
+        "gpt-audio-mini": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Audio Mini",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 40
+        },
+        "gpt-audio-mini-2025-10-06": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Audio Mini 20251006",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 41
+        },
+        "gpt-audio-mini-2025-12-15": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Audio Mini 20251215",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 42
+        },
+        "gpt-4o-mini-2024-07-18": {
+          "input": 0.15,
+          "output": 0.6,
+          "name": "GPT 4o Mini 20240718",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 43
+        },
+        "gpt-4o-mini-audio-preview": {
+          "input": 0.15,
+          "output": 0.6,
+          "name": "GPT 4o Mini Audio Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 44
+        },
+        "gpt-4o-mini-audio-preview-2024-12-17": {
+          "input": 0.15,
+          "output": 0.6,
+          "name": "GPT 4o Mini Audio Preview 20241217",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 45
+        },
+        "gpt-4o-mini-realtime-preview": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT 4o Mini Realtime Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 46
+        },
+        "gpt-4o-mini-realtime-preview-2024-12-17": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT 4o Mini Realtime Preview 20241217",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 47
+        },
+        "gpt-4o-mini-search-preview": {
+          "input": 0.15,
+          "output": 0.6,
+          "name": "GPT 4o Mini Search Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 48
+        },
+        "gpt-4o-mini-search-preview-2025-03-11": {
+          "input": 0.15,
+          "output": 0.6,
+          "name": "GPT 4o Mini Search Preview 20250311",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 49
+        },
+        "gpt-4o-mini-transcribe": {
+          "input": 1.25,
+          "output": 5,
+          "name": "GPT 4o Mini Transcribe",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 50
+        },
+        "gpt-4o-mini-tts": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Mini Tts",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 51
+        },
+        "gpt-4o-realtime-preview": {
+          "input": 5,
+          "output": 20,
+          "name": "GPT 4o Realtime Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 52
+        },
+        "gpt-4o-realtime-preview-2024-12-17": {
+          "input": 5,
+          "output": 20,
+          "name": "GPT 4o Realtime Preview 20241217",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 53
+        },
+        "gpt-4o-realtime-preview-2025-06-03": {
+          "input": 5,
+          "output": 20,
+          "name": "GPT 4o Realtime Preview 20250603",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 54
+        },
+        "gpt-4o-search-preview": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Search Preview",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 55
+        },
+        "gpt-4o-search-preview-2025-03-11": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Search Preview 20250311",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 56
+        },
+        "gpt-4o-transcribe": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Transcribe",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 57
+        },
+        "gpt-image-1.5": {
+          "input": 5,
+          "output": 10,
+          "name": "GPT Image 1.5",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 58
+        },
+        "gpt-image-1.5-2025-12-16": {
+          "input": 5,
+          "output": 10,
+          "name": "GPT Image 1.520251216",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 59
+        },
+        "gpt-image-2": {
+          "input": 5,
+          "output": 10,
+          "name": "GPT Image 2",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 60
+        },
+        "gpt-image-2-2026-04-21": {
+          "input": 5,
+          "output": 10,
+          "name": "GPT Image 220260421",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 61
+        },
+        "gpt-5.1": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5.1",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 62
+        },
+        "gpt-5.1-2025-11-13": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5.120251113",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 63
+        },
+        "gpt-5.1-chat-latest": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5.1Chat Latest",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 64
+        },
+        "gpt-5.2-2025-12-11": {
+          "input": 1.75,
+          "output": 14,
+          "name": "GPT 5.220251211",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 65
+        },
+        "gpt-5.2-chat-latest": {
+          "input": 1.75,
+          "output": 14,
+          "name": "GPT 5.2Chat Latest",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 66
+        },
+        "gpt-5.3-chat-latest": {
+          "input": 1.75,
+          "output": 14,
+          "name": "GPT 5.3Chat Latest",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 67
+        },
+        "gpt-5.2-pro": {
+          "input": 21,
+          "output": 168,
+          "name": "GPT 5.2Pro",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 68
+        },
+        "gpt-5.2-pro-2025-12-11": {
+          "input": 21,
+          "output": 168,
+          "name": "GPT 5.2Pro 20251211",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 69
+        },
+        "gpt-5.5-2026-04-23": {
+          "input": 5,
+          "output": 30,
+          "name": "GPT 5.520260423",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 70
+        },
+        "gpt-5.5-pro": {
+          "input": 30,
+          "output": 180,
+          "name": "GPT 5.5Pro",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 71
+        },
+        "gpt-5.5-pro-2026-04-23": {
+          "input": 30,
+          "output": 180,
+          "name": "GPT 5.5Pro 20260423",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 72
+        },
+        "gpt-5.4": {
+          "input": 2.5,
+          "output": 15,
+          "name": "GPT 5.4",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 73
+        },
+        "gpt-5.4-2026-03-05": {
+          "input": 2.5,
+          "output": 15,
+          "name": "GPT 5.420260305",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 74
+        },
+        "gpt-5.4-pro": {
+          "input": 30,
+          "output": 180,
+          "name": "GPT 5.4Pro",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 75
+        },
+        "gpt-5.4-pro-2026-03-05": {
+          "input": 30,
+          "output": 180,
+          "name": "GPT 5.4Pro 20260305",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 76
+        },
+        "gpt-5.4-mini": {
+          "input": 0.75,
+          "output": 4.5,
+          "name": "GPT 5.4Mini",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 77
+        },
+        "gpt-5.4-mini-2026-03-17": {
+          "input": 0.75,
+          "output": 4.5,
+          "name": "GPT 5.4Mini 20260317",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 78
+        },
+        "gpt-5.4-nano": {
+          "input": 0.19999999999999998,
+          "output": 1.25,
+          "name": "GPT 5.4Nano",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 79
+        },
+        "gpt-5.4-nano-2026-03-17": {
+          "input": 0.19999999999999998,
+          "output": 1.25,
+          "name": "GPT 5.4Nano 20260317",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 80
+        },
+        "gpt-5-pro": {
+          "input": 15,
+          "output": 120,
+          "name": "GPT 5Pro",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 81
+        },
+        "gpt-5-pro-2025-10-06": {
+          "input": 15,
+          "output": 120,
+          "name": "GPT 5Pro 20251006",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 82
+        },
+        "gpt-5-2025-08-07": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 520250807",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 83
+        },
+        "gpt-5-chat": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5Chat",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 84
+        },
+        "gpt-5-chat-latest": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5Chat Latest",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 85
+        },
+        "gpt-5-codex": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5Codex",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 86
+        },
+        "gpt-5.1-codex": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5.1Codex",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 87
+        },
+        "gpt-5.1-codex-max": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5.1Codex Max",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 88
+        },
+        "gpt-5.1-codex-mini": {
+          "input": 0.25,
+          "output": 2,
+          "name": "GPT 5.1Codex Mini",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 89
+        },
+        "gpt-5.2-codex": {
+          "input": 1.75,
+          "output": 14,
+          "name": "GPT 5.2Codex",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 90
+        },
+        "gpt-5.3-codex": {
+          "input": 1.75,
+          "output": 14,
+          "name": "GPT 5.3Codex",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 91
+        },
+        "gpt-5-mini-2025-08-07": {
+          "input": 0.25,
+          "output": 2,
+          "name": "GPT 5Mini 20250807",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 92
+        },
+        "gpt-5-nano-2025-08-07": {
+          "input": 0.049999999999999996,
+          "output": 0.39999999999999997,
+          "name": "GPT 5Nano 20250807",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 93
+        },
+        "gpt-realtime": {
+          "input": 4,
+          "output": 16,
+          "name": "GPT Realtime",
+          "family": "legacy",
+          "contextWindow": "32K",
+          "order": 94
+        },
+        "gpt-realtime-1.5": {
+          "input": 4,
+          "output": 16,
+          "name": "GPT Realtime 1.5",
+          "family": "legacy",
+          "contextWindow": "32K",
+          "order": 95
+        },
+        "gpt-realtime-2": {
+          "input": 4,
+          "output": 16,
+          "name": "GPT Realtime 2",
+          "family": "legacy",
+          "contextWindow": "32K",
+          "order": 96
+        },
+        "gpt-realtime-mini": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Realtime Mini",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 97
+        },
+        "gpt-realtime-2025-08-28": {
+          "input": 4,
+          "output": 16,
+          "name": "GPT Realtime 20250828",
+          "family": "legacy",
+          "contextWindow": "32K",
+          "order": 98
+        },
+        "o1": {
+          "input": 15,
+          "output": 60,
+          "name": "O1",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 99
+        },
+        "o1-2024-12-17": {
+          "input": 15,
+          "output": 60,
+          "name": "O120241217",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 100
+        },
+        "o1-pro": {
+          "input": 150,
+          "output": 600,
+          "name": "O1Pro",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 101
+        },
+        "o1-pro-2025-03-19": {
+          "input": 150,
+          "output": 600,
+          "name": "O1Pro 20250319",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 102
+        },
+        "o3-2025-04-16": {
+          "input": 2,
+          "output": 8,
+          "name": "O320250416",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 103
+        },
+        "o3-deep-research": {
+          "input": 10,
+          "output": 40,
+          "name": "O3Deep Research",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 104
+        },
+        "o3-deep-research-2025-06-26": {
+          "input": 10,
+          "output": 40,
+          "name": "O3Deep Research 20250626",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 105
+        },
+        "o3-mini": {
+          "input": 1.1,
+          "output": 4.4,
+          "name": "O3Mini",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 106
+        },
+        "o3-mini-2025-01-31": {
+          "input": 1.1,
+          "output": 4.4,
+          "name": "O3Mini 20250131",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 107
+        },
+        "o3-pro": {
+          "input": 20,
+          "output": 80,
+          "name": "O3Pro",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 108
+        },
+        "o3-pro-2025-06-10": {
+          "input": 20,
+          "output": 80,
+          "name": "O3Pro 20250610",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 109
+        },
+        "o4-mini-2025-04-16": {
+          "input": 1.1,
+          "output": 4.4,
+          "name": "O4Mini 20250416",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 110
+        },
+        "o4-mini-deep-research": {
+          "input": 2,
+          "output": 8,
+          "name": "O4Mini Deep Research",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 111
+        },
+        "o4-mini-deep-research-2025-06-26": {
+          "input": 2,
+          "output": 8,
+          "name": "O4Mini Deep Research 20250626",
+          "family": "o-series",
+          "contextWindow": "200K",
+          "order": 112
+        },
+        "gpt-4o-mini-tts-2025-03-20": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Mini Tts 20250320",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 113
+        },
+        "gpt-4o-mini-tts-2025-12-15": {
+          "input": 2.5,
+          "output": 10,
+          "name": "GPT 4o Mini Tts 20251215",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 114
+        },
+        "gpt-4o-mini-transcribe-2025-03-20": {
+          "input": 1.25,
+          "output": 5,
+          "name": "GPT 4o Mini Transcribe 20250320",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 115
+        },
+        "gpt-4o-mini-transcribe-2025-12-15": {
+          "input": 1.25,
+          "output": 5,
+          "name": "GPT 4o Mini Transcribe 20251215",
+          "family": "legacy",
+          "contextWindow": "16K",
+          "order": 116
+        },
+        "gpt-5-search-api": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5Search Api",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 117
+        },
+        "gpt-5-search-api-2025-10-14": {
+          "input": 1.25,
+          "output": 10,
+          "name": "GPT 5Search Api 20251014",
+          "family": "gpt5",
+          "contextWindow": "272K",
+          "order": 118
+        },
+        "gpt-realtime-mini-2025-10-06": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Realtime Mini 20251006",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 119
+        },
+        "gpt-realtime-mini-2025-12-15": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Realtime Mini 20251215",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 120
+        }
+      }
+    },
+    "anthropic": {
+      "name": "Anthropic",
+      "cacheReadMult": 0.1,
+      "cacheWriteMult5m": 1.25,
+      "cacheWriteMult1h": 2,
+      "models": {
+        "claude-fable-5": {
+          "input": 10,
+          "output": 50,
+          "batchInput": 5,
+          "batchOutput": 25,
+          "name": "Claude Fable 5",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "maxOutput": "128K",
+          "order": 1
+        },
+        "claude-opus-4-8": {
+          "input": 5,
+          "output": 25,
+          "batchInput": 2.5,
+          "batchOutput": 12.5,
+          "name": "Claude Opus 48",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "maxOutput": "128K",
+          "order": 2
+        },
+        "claude-sonnet-4-6": {
+          "input": 3,
+          "output": 15,
+          "batchInput": 1.5,
+          "batchOutput": 7.5,
+          "name": "Claude Sonnet 46",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "maxOutput": "64K",
+          "order": 3
+        },
+        "claude-haiku-4-5": {
+          "input": 1,
+          "output": 5,
+          "batchInput": 0.5,
+          "batchOutput": 2.5,
+          "name": "Claude Haiku 45",
+          "family": "claude4x",
+          "contextWindow": "200K",
+          "maxOutput": "64K",
+          "order": 4
+        },
+        "claude-opus-4-1": {
+          "input": 15,
+          "output": 75,
+          "batchInput": 7.5,
+          "batchOutput": 37.5,
+          "name": "Claude Opus 41",
+          "family": "claude4x",
+          "contextWindow": "200K",
+          "maxOutput": "32K",
+          "order": 5
+        },
+        "claude-haiku-3-5": {
+          "input": 0.8,
+          "output": 4,
+          "batchInput": 0.4,
+          "batchOutput": 2,
+          "name": "Claude Haiku 3.5",
+          "family": "legacy",
+          "contextWindow": "200K",
+          "maxOutput": "8K",
+          "order": 6
+        },
+        "claude-haiku-3": {
+          "input": 0.25,
+          "output": 1.25,
+          "batchInput": 0.125,
+          "batchOutput": 0.625,
+          "name": "Claude Haiku 3",
+          "family": "legacy",
+          "contextWindow": "200K",
+          "maxOutput": "4K",
+          "order": 7
+        },
+        "claude-3-7-sonnet": {
+          "input": 3,
+          "output": 15,
+          "name": "Claude 37 Sonnet",
+          "family": "legacy",
+          "contextWindow": "200K",
+          "order": 8
+        },
+        "claude-3-haiku": {
+          "input": 0.25,
+          "output": 1.25,
+          "name": "Claude 3Haiku",
+          "family": "legacy",
+          "contextWindow": "200K",
+          "order": 9
+        },
+        "claude-3-opus": {
+          "input": 15,
+          "output": 75,
+          "name": "Claude 3Opus",
+          "family": "legacy",
+          "contextWindow": "200K",
+          "order": 10
+        },
+        "claude-4-opus": {
+          "input": 15,
+          "output": 75,
+          "name": "Claude 4Opus",
+          "family": "legacy",
+          "contextWindow": "200K",
+          "order": 11
+        },
+        "claude-4-sonnet": {
+          "input": 3,
+          "output": 15,
+          "name": "Claude 4Sonnet",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 12
+        },
+        "claude-sonnet-4-5": {
+          "input": 3,
+          "output": 15,
+          "name": "Claude Sonnet 45",
+          "family": "claude4x",
+          "contextWindow": "200K",
+          "order": 13
+        },
+        "claude-sonnet-4-5-20250929-v1:0": {
+          "input": 3,
+          "output": 15,
+          "name": "Claude Sonnet 45 20250929V1:0",
+          "family": "claude4x",
+          "contextWindow": "200K",
+          "order": 14
+        },
+        "claude-opus-4": {
+          "input": 15,
+          "output": 75,
+          "name": "Claude Opus 4",
+          "family": "claude4x",
+          "contextWindow": "200K",
+          "order": 15
+        },
+        "claude-opus-4-5": {
+          "input": 5,
+          "output": 25,
+          "name": "Claude Opus 45",
+          "family": "claude4x",
+          "contextWindow": "200K",
+          "order": 16
+        },
+        "claude-opus-4-6": {
+          "input": 5,
+          "output": 25,
+          "name": "Claude Opus 46",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "order": 17
+        },
+        "claude-opus-4-7": {
+          "input": 5,
+          "output": 25,
+          "name": "Claude Opus 47",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "order": 18
+        },
+        "claude-sonnet-4": {
+          "input": 3,
+          "output": 15,
+          "name": "Claude Sonnet 4",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "order": 19
+        }
+      }
+    },
+    "google": {
+      "name": "Google",
+      "cacheReadMult": 0.1,
+      "models": {
+        "gemini-3.5-flash": {
+          "input": 1.5,
+          "output": 9,
+          "batchInput": 0.75,
+          "batchOutput": 4.5,
+          "name": "Gemini 3.5Flash",
+          "family": "flash35",
+          "contextWindow": "1M",
+          "order": 1,
+          "icon": "●",
+          "supportsCache": true,
+          "supportsBatch": true
+        },
+        "gemini-3.1-pro": {
+          "input": 2.5,
+          "output": 15,
+          "batchInput": 1.25,
+          "batchOutput": 7.5,
+          "name": "Gemini 3.1 Pro",
+          "family": "pro",
+          "contextWindow": "1M",
+          "order": 2,
+          "icon": "▲",
+          "supportsCache": true,
+          "supportsBatch": true
+        },
+        "gemini-3-flash": {
+          "input": 0.5,
+          "output": 3,
+          "batchInput": 0.25,
+          "batchOutput": 1.5,
+          "name": "Gemini 3 Flash",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 3,
+          "icon": "◆",
+          "supportsCache": true,
+          "supportsBatch": true
+        },
+        "gemini-2.5-flash": {
+          "input": 0.3,
+          "output": 2.5,
+          "batchInput": 0,
+          "batchOutput": 0,
+          "name": "Gemini 2.5Flash",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 4,
+          "icon": "◇",
+          "supportsCache": false,
+          "supportsBatch": false
+        },
+        "gemini-1.5-pro": {
+          "input": 3.5,
+          "output": 10.5,
+          "batchInput": 0,
+          "batchOutput": 0,
+          "name": "Gemini 1.5 Pro",
+          "family": "legacy",
+          "contextWindow": "2M",
+          "order": 5,
+          "icon": "◇",
+          "supportsCache": false,
+          "supportsBatch": false
+        },
+        "gemini-1.5-flash": {
+          "input": 0.075,
+          "output": 0.3,
+          "batchInput": 0,
+          "batchOutput": 0,
+          "name": "Gemini 1.5 Flash",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 6,
+          "icon": "◇",
+          "supportsCache": false,
+          "supportsBatch": false
+        },
+        "gemini-2.0-flash": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "Gemini 2.0Flash",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 7
+        },
+        "gemini-2.0-flash-001": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "Gemini 2.0Flash 001",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 8
+        },
+        "gemini-2.0-flash-lite": {
+          "input": 0.075,
+          "output": 0.3,
+          "name": "Gemini 2.0Flash Lite",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 9
+        },
+        "gemini-2.0-flash-lite-001": {
+          "input": 0.075,
+          "output": 0.3,
+          "name": "Gemini 2.0Flash Lite 001",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 10
+        },
+        "gemini-2.5-flash-image": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 2.5Flash Image",
+          "family": "legacy",
+          "contextWindow": "33K",
+          "order": 11
+        },
+        "gemini-3-pro-image-preview": {
+          "input": 2,
+          "output": 12,
+          "name": "Gemini 3Pro Image Preview",
+          "family": "flash3",
+          "contextWindow": "66K",
+          "order": 12
+        },
+        "gemini-3.1-flash-image-preview": {
+          "input": 0.25,
+          "output": 1.5,
+          "name": "Gemini 3.1Flash Image Preview",
+          "family": "flash3",
+          "contextWindow": "66K",
+          "order": 13
+        },
+        "gemini-3.1-flash-lite-preview": {
+          "input": 0.25,
+          "output": 1.5,
+          "name": "Gemini 3.1Flash Lite Preview",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 14
+        },
+        "gemini-3.1-flash-lite": {
+          "input": 0.25,
+          "output": 1.5,
+          "name": "Gemini 3.1Flash Lite",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 15
+        },
+        "gemini-2.5-flash-lite": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "Gemini 2.5Flash Lite",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 16
+        },
+        "gemini-2.5-flash-lite-preview-09-2025": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "Gemini 2.5Flash Lite Preview 092025",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 17
+        },
+        "gemini-2.5-flash-preview-09-2025": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 2.5Flash Preview 092025",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 18
+        },
+        "gemini-live-2.5-flash-preview-native-audio-09-2025": {
+          "input": 0.3,
+          "output": 2,
+          "name": "Gemini Live 2.5Flash Preview Native Audio 092025",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 19
+        },
+        "gemini-2.5-flash-lite-preview-06-17": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "Gemini 2.5Flash Lite Preview 0617",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 20
+        },
+        "gemini-2.5-pro": {
+          "input": 1.25,
+          "output": 10,
+          "name": "Gemini 2.5Pro",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 21
+        },
+        "gemini-3-pro-preview": {
+          "input": 2,
+          "output": 12,
+          "name": "Gemini 3Pro Preview",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 22
+        },
+        "gemini-3.1-pro-preview": {
+          "input": 2,
+          "output": 12,
+          "name": "Gemini 3.1Pro Preview",
+          "family": "pro",
+          "contextWindow": "1M",
+          "order": 23
+        },
+        "gemini-3.1-pro-preview-customtools": {
+          "input": 2,
+          "output": 12,
+          "name": "Gemini 3.1Pro Preview Customtools",
+          "family": "pro",
+          "contextWindow": "1M",
+          "order": 24
+        },
+        "gemini-2.5-pro-preview-tts": {
+          "input": 1.25,
+          "output": 10,
+          "name": "Gemini 2.5Pro Preview Tts",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 25
+        },
+        "gemini-robotics-er-1.5-preview": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini Robotics Er 1.5Preview",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 26
+        },
+        "gemini-2.5-computer-use-preview-10-2025": {
+          "input": 1.25,
+          "output": 10,
+          "name": "Gemini 2.5Computer Use Preview 102025",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 27
+        },
+        "deep-research-pro-preview-12-2025": {
+          "input": 2,
+          "output": 12,
+          "name": "Deep Research Pro Preview 122025",
+          "family": "legacy",
+          "contextWindow": "66K",
+          "order": 28
+        },
+        "gemini-flash-latest": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini Flash Latest",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 29
+        },
+        "gemini-flash-lite-latest": {
+          "input": 0.09999999999999999,
+          "output": 0.39999999999999997,
+          "name": "Gemini Flash Lite Latest",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 30
+        },
+        "gemini-2.5-flash-preview-tts": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 2.5Flash Preview Tts",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 31
+        },
+        "gemini-3-flash-preview": {
+          "input": 0.5,
+          "output": 3,
+          "name": "Gemini 3Flash Preview",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 32
+        },
+        "gemini-gemma-2-27b-it": {
+          "input": 0.35,
+          "output": 1.0499999999999998,
+          "name": "Gemini Gemma 227b It",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 33
+        },
+        "gemini-gemma-2-9b-it": {
+          "input": 0.35,
+          "output": 1.0499999999999998,
+          "name": "Gemini Gemma 29b It",
+          "family": "legacy",
+          "contextWindow": "8K",
+          "order": 34
+        },
+        "gemini-2.5-flash-native-audio-latest": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 2.5Flash Native Audio Latest",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 35
+        },
+        "gemini-2.5-flash-native-audio-preview-09-2025": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 2.5Flash Native Audio Preview 092025",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 36
+        },
+        "gemini-2.5-flash-native-audio-preview-12-2025": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 2.5Flash Native Audio Preview 122025",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 37
+        },
+        "gemini-3.1-flash-live-preview": {
+          "input": 0.75,
+          "output": 4.5,
+          "name": "Gemini 3.1Flash Live Preview",
+          "family": "flash3",
+          "contextWindow": "131K",
+          "order": 38
+        },
+        "gemini-pro-latest": {
+          "input": 1.25,
+          "output": 10,
+          "name": "Gemini Pro Latest",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 39
+        },
+        "gemini-exp-1206": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini Exp 1206",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 40
+        }
+      }
+    },
+    "deepseek": {
+      "name": "DeepSeek",
+      "cacheReadMult": 0.02,
+      "models": {
+        "deepseek-v4-flash": {
+          "input": 0.14,
+          "output": 0.28,
+          "name": "DeepSeek V4 Flash",
+          "family": "v4",
+          "contextWindow": "1M",
+          "order": 1
+        },
+        "deepseek-v4-pro": {
+          "input": 1.74,
+          "output": 3.48,
+          "name": "DeepSeek V4 Pro",
+          "family": "v4",
+          "contextWindow": "1M",
+          "order": 2
+        },
+        "deepseek-v4-pro-promo": {
+          "input": 0.435,
+          "output": 0.87,
+          "name": "V4 Pro (75% Promo)",
+          "family": "v4",
+          "contextWindow": "1M",
+          "order": 3
+        },
+        "deepseek-r1": {
+          "input": 0.55,
+          "output": 2.1900000000000004,
+          "name": "Deepseek R1",
+          "family": "legacy",
+          "contextWindow": "66K",
+          "order": 4
+        },
+        "deepseek-chat": {
+          "input": 0.28,
+          "output": 0.42,
+          "name": "Deepseek Chat",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 5
+        },
+        "deepseek-reasoner": {
+          "input": 0.28,
+          "output": 0.42,
+          "name": "Deepseek Reasoner",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 6
+        },
+        "deepseek-coder": {
+          "input": 0.14,
+          "output": 0.28,
+          "name": "Deepseek Coder",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 7
+        },
+        "deepseek-v3": {
+          "input": 0.27,
+          "output": 1.1,
+          "name": "Deepseek V3",
+          "family": "legacy",
+          "contextWindow": "66K",
+          "order": 8
+        },
+        "deepseek-v3.2": {
+          "input": 0.28,
+          "output": 0.39999999999999997,
+          "name": "Deepseek V3.2",
+          "family": "legacy",
+          "contextWindow": "164K",
+          "order": 9
+        }
+      }
+    }
+  },
+  "image": {
+    "providers": {
+      "dalle-4": {
+        "name": "DALL-E 4",
+        "perImage": 0.12,
+        "isSubscription": false,
+        "subRange": "",
+        "quality": "Highest",
+        "resolutions": [
+          "1024×1024",
+          "1792×1024",
+          "1024×1792"
+        ],
+        "order": 1
+      },
+      "dalle-3": {
+        "name": "DALL-E 3",
+        "perImage": 0.08,
+        "isSubscription": false,
+        "subRange": "",
+        "quality": "Very High",
+        "resolutions": [
+          "1024×1024",
+          "1792×1024",
+          "1024×1792"
+        ],
+        "order": 2
+      },
+      "midjourney-v7": {
+        "name": "Midjourney V7",
+        "perImage": 0,
+        "isSubscription": true,
+        "subRange": "$10-$120/mo",
+        "quality": "Best Artistic",
+        "resolutions": [
+          "1024×1024",
+          "2048×2048"
+        ],
+        "order": 3
+      },
+      "stable-diffusion-4": {
+        "name": "SD 4 (API)",
+        "perImage": 0.003,
+        "isSubscription": false,
+        "subRange": "",
+        "quality": "Good+",
+        "resolutions": [
+          "512×512",
+          "1024×1024",
+          "2048×2048"
+        ],
+        "order": 4
+      },
+      "ideogram-3": {
+        "name": "Ideogram 3",
+        "perImage": 0.04,
+        "isSubscription": false,
+        "subRange": "",
+        "quality": "Best Text",
+        "resolutions": [
+          "1024×1024",
+          "1280×720"
+        ],
+        "order": 5
+      },
+      "flux-pro": {
+        "name": "Flux Pro",
+        "perImage": 0.05,
+        "isSubscription": false,
+        "subRange": "",
+        "quality": "Excellent",
+        "resolutions": [
+          "1024×1024",
+          "2048×2048"
+        ],
+        "order": 6
+      },
+      "leonardo": {
+        "name": "Leonardo AI",
+        "perImage": 0,
+        "isSubscription": true,
+        "subRange": "$12-$49/mo",
+        "quality": "Very Good",
+        "resolutions": [
+          "1024×1024",
+          "1536×1536"
+        ],
+        "order": 7
+      }
+    },
+    "subTiers": {
+      "midjourney-v7": [
+        10,
+        30,
+        60,
+        120
+      ],
+      "leonardo": [
+        12,
+        29,
+        49
+      ]
+    },
+    "advancedMult": {
+      "standard": 1,
+      "hd": 1.3,
+      "ultra": 1.8
+    }
+  },
+  "gpu": {
+    "providers": {
+      "runpod": {
+        "name": "RunPod",
+        "spotMult": 0.6,
+        "reservedMult": 0.85,
+        "rates": {
+          "H200": 2.49,
+          "H100": 1.99,
+          "A100": 0.79,
+          "L40S": 0.69,
+          "RTX4090": 0.49,
+          "A6000": 0.39
+        },
+        "order": 1
+      },
+      "vastai": {
+        "name": "Vast.ai",
+        "spotMult": 0.5,
+        "reservedMult": 0.8,
+        "rates": {
+          "H200": 2.2,
+          "H100": 1.69,
+          "A100": 0.69,
+          "L40S": 0.59,
+          "RTX4090": 0.44,
+          "A6000": 0.35
+        },
+        "order": 2
+      },
+      "lambdalabs": {
+        "name": "Lambda Labs",
+        "spotMult": 0.7,
+        "reservedMult": 0.9,
+        "rates": {
+          "H200": 2.8,
+          "H100": 2.49,
+          "A100": 1.1,
+          "L40S": 0.8,
+          "RTX4090": 0.55,
+          "A6000": 0.5
+        },
+        "order": 3
+      },
+      "aws": {
+        "name": "AWS",
+        "spotMult": 0.4,
+        "reservedMult": 0.7,
+        "rates": {
+          "H200": 5,
+          "H100": 4,
+          "A100": 3.5,
+          "L40S": 1.2,
+          "RTX4090": 0.8,
+          "A6000": 0.65
+        },
+        "order": 4
+      },
+      "gcp": {
+        "name": "GCP",
+        "spotMult": 0.45,
+        "reservedMult": 0.75,
+        "rates": {
+          "H200": 4.5,
+          "H100": 4.2,
+          "A100": 2.8,
+          "L40S": 1,
+          "RTX4090": 0.7,
+          "A6000": 0.6
+        },
+        "order": 5
+      },
+      "azure": {
+        "name": "Azure",
+        "spotMult": 0.5,
+        "reservedMult": 0.8,
+        "rates": {
+          "H200": 4.8,
+          "H100": 3.8,
+          "A100": 3,
+          "L40S": 1.1,
+          "RTX4090": 0.75,
+          "A6000": 0.62
+        },
+        "order": 6
+      }
+    },
+    "storagePerGB": 0.1,
+    "egressPerGB": 0.08
+  },
+  "training": {
+    "gpuTypes": {
+      "H200-141GB": {
+        "hourlyRate": 3.5,
+        "name": "H200 141GB",
+        "order": 1
+      },
+      "H100-80GB": {
+        "hourlyRate": 2.5,
+        "name": "H100 80GB",
+        "order": 2
+      },
+      "A100-80GB": {
+        "hourlyRate": 1.5,
+        "name": "A100 80GB",
+        "order": 3
+      },
+      "L40S-48GB": {
+        "hourlyRate": 0.8,
+        "name": "L40S 48GB",
+        "order": 4
+      },
+      "RTX-6000": {
+        "hourlyRate": 0.5,
+        "name": "RTX 6000 Ada",
+        "order": 5
+      }
+    },
+    "modelSizes": {
+      "7B": {
+        "h200": 2,
+        "h100": 4,
+        "a100": 8,
+        "l40s": 16,
+        "name": "7B (LoRA fine-tune)",
+        "isLoRA": true,
+        "order": 1
+      },
+      "13B": {
+        "h200": 4,
+        "h100": 8,
+        "a100": 16,
+        "name": "13B (LoRA fine-tune)",
+        "isLoRA": true,
+        "order": 2
+      },
+      "70B": {
+        "h200": 16,
+        "h100": 32,
+        "a100": 64,
+        "name": "70B (full fine-tune)",
+        "isLoRA": false,
+        "order": 3
+      },
+      "180B": {
+        "h200": 64,
+        "h100": 128,
+        "name": "180B (full fine-tune)",
+        "isLoRA": false,
+        "order": 4
+      },
+      "405B": {
+        "h200": 128,
+        "h100": 256,
+        "name": "405B (full train)",
+        "isLoRA": false,
+        "order": 5
+      }
+    },
+    "loraSpeedup": 0.35,
+    "dataProcessPerGB": 1.5
+  }
+}

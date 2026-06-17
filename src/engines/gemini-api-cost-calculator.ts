@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../core/engines/types';
 import { registerEngine } from '../core/engines/registry';
+import PRICING from '../data/ai-pricing.json';
 
 interface ModelInfo {
   input: number;
@@ -15,44 +16,7 @@ interface ModelInfo {
   supportsBatch: boolean;
 }
 
-const MODELS: Record<string, ModelInfo> = {
-  'gemini-3.5-flash': {
-    input: 1.50, output: 9.00, batchInput: 0.75, batchOutput: 4.50,
-    name: 'Gemini 3.5 Flash',
-    family: 'flash35', icon: '●', contextWindow: '1M', order: 1,
-    supportsCache: true, supportsBatch: true,
-  },
-  'gemini-3.1-pro': {
-    input: 2.50, output: 15.00, batchInput: 1.25, batchOutput: 7.50,
-    name: 'Gemini 3.1 Pro',
-    family: 'pro', icon: '▲', contextWindow: '1M', order: 2,
-    supportsCache: true, supportsBatch: true,
-  },
-  'gemini-3-flash': {
-    input: 0.50, output: 3.00, batchInput: 0.25, batchOutput: 1.50,
-    name: 'Gemini 3 Flash',
-    family: 'flash3', icon: '◆', contextWindow: '1M', order: 3,
-    supportsCache: true, supportsBatch: true,
-  },
-  'gemini-2.5-flash': {
-    input: 0.30, output: 2.50, batchInput: 0, batchOutput: 0,
-    name: 'Gemini 2.5 Flash',
-    family: 'legacy', icon: '◇', contextWindow: '1M', order: 4,
-    supportsCache: false, supportsBatch: false,
-  },
-  'gemini-1.5-pro': {
-    input: 3.50, output: 10.50, batchInput: 0, batchOutput: 0,
-    name: 'Gemini 1.5 Pro',
-    family: 'legacy', icon: '◇', contextWindow: '2M', order: 5,
-    supportsCache: false, supportsBatch: false,
-  },
-  'gemini-1.5-flash': {
-    input: 0.075, output: 0.30, batchInput: 0, batchOutput: 0,
-    name: 'Gemini 1.5 Flash',
-    family: 'legacy', icon: '◇', contextWindow: '1M', order: 6,
-    supportsCache: false, supportsBatch: false,
-  },
-};
+const MODELS: Record<string, ModelInfo> = PRICING.llm.google.models as any;
 
 const FAMILY_LABELS: Record<string, string> = {
   flash35: 'Gemini 3.5 Flash',
@@ -193,6 +157,8 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // Section 1: Header
   let headerLine = '\u{1F916} Gemini API Cost';
@@ -593,6 +559,7 @@ const engine: ToolEngine = {
     'Set the context cache hit rate — Gemini caches system instructions automatically at 90% discount.',
     'Add a growth rate and projection period for long-term cost planning, then review savings vs other providers.',
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

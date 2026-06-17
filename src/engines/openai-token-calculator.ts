@@ -1,5 +1,6 @@
 import type { ToolEngine } from "../core/engines/types";
 import { registerEngine } from "../core/engines/registry";
+import PRICING from "../data/ai-pricing.json";
 
 // ============================================================
 // Task 1: Updated Model Catalog (14 models, 4 families, June 2026 pricing)
@@ -17,157 +18,7 @@ interface ModelInfo {
   reasoningMultiplier?: number; // o-series ≈4, others default to 1
 }
 
-const MODELS: Record<string, ModelInfo> = {
-  // GPT-5 Family
-  "gpt-5.5": {
-    input: 5.0,
-    output: 30.0,
-    name: "GPT-5.5",
-    family: "gpt5",
-    contextWindow: "1M",
-    batchInput: 2.5,
-    batchOutput: 15.0,
-    order: 1,
-  },
-  "gpt-5.2": {
-    input: 1.75,
-    output: 14.0,
-    name: "GPT-5.2",
-    family: "gpt5",
-    contextWindow: "400K",
-    batchInput: 0.875,
-    batchOutput: 7.0,
-    order: 2,
-  },
-  "gpt-5": {
-    input: 1.25,
-    output: 10.0,
-    name: "GPT-5",
-    family: "gpt5",
-    contextWindow: "400K",
-    batchInput: 0.625,
-    batchOutput: 5.0,
-    order: 3,
-  },
-  "gpt-5-mini": {
-    input: 0.25,
-    output: 2.0,
-    name: "GPT-5 Mini",
-    family: "gpt5",
-    contextWindow: "400K",
-    batchInput: 0.125,
-    batchOutput: 1.0,
-    order: 4,
-  },
-  "gpt-5-nano": {
-    input: 0.05,
-    output: 0.4,
-    name: "GPT-5 Nano",
-    family: "gpt5",
-    contextWindow: "400K",
-    batchInput: 0.025,
-    batchOutput: 0.2,
-    order: 5,
-  },
-
-  // GPT-4.1 Family
-  "gpt-4.1": {
-    input: 2.0,
-    output: 8.0,
-    name: "GPT-4.1",
-    family: "gpt41",
-    contextWindow: "1M",
-    batchInput: 1.0,
-    batchOutput: 4.0,
-    order: 6,
-  },
-  "gpt-4.1-mini": {
-    input: 0.4,
-    output: 1.6,
-    name: "GPT-4.1 Mini",
-    family: "gpt41",
-    contextWindow: "1M",
-    batchInput: 0.2,
-    batchOutput: 0.8,
-    order: 7,
-  },
-  "gpt-4.1-nano": {
-    input: 0.1,
-    output: 0.4,
-    name: "GPT-4.1 Nano",
-    family: "gpt41",
-    contextWindow: "1M",
-    batchInput: 0.05,
-    batchOutput: 0.2,
-    order: 8,
-  },
-
-  // o-series
-  o3: {
-    input: 2.0,
-    output: 8.0,
-    name: "o3",
-    family: "o-series",
-    contextWindow: "200K",
-    batchInput: 1.0,
-    batchOutput: 4.0,
-    order: 9,
-    reasoningMultiplier: 4,
-  },
-  "o4-mini": {
-    input: 1.1,
-    output: 4.4,
-    name: "o4 Mini",
-    family: "o-series",
-    contextWindow: "200K",
-    batchInput: 0.55,
-    batchOutput: 2.2,
-    order: 10,
-    reasoningMultiplier: 4,
-  },
-
-  // Legacy
-  "gpt-4o": {
-    input: 2.5,
-    output: 10.0,
-    name: "GPT-4o",
-    family: "legacy",
-    contextWindow: "128K",
-    batchInput: 1.25,
-    batchOutput: 5.0,
-    order: 11,
-  },
-  "gpt-4o-mini": {
-    input: 0.15,
-    output: 0.6,
-    name: "GPT-4o Mini",
-    family: "legacy",
-    contextWindow: "128K",
-    batchInput: 0.075,
-    batchOutput: 0.3,
-    order: 12,
-  },
-  "gpt-4-turbo": {
-    input: 10.0,
-    output: 30.0,
-    name: "GPT-4 Turbo",
-    family: "legacy",
-    contextWindow: "128K",
-    batchInput: 5.0,
-    batchOutput: 15.0,
-    order: 13,
-  },
-  "gpt-3.5-turbo": {
-    input: 0.5,
-    output: 1.5,
-    name: "GPT-3.5 Turbo",
-    family: "legacy",
-    contextWindow: "16K",
-    batchInput: 0.25,
-    batchOutput: 0.75,
-    order: 14,
-  },
-};
+const MODELS: Record<string, ModelInfo> = PRICING.llm.openai.models as any;
 
 // Family labels with text — available for UI consumption (e.g. filter dropdowns, legend)
 const FAMILY_LABELS: Record<string, string> = {
@@ -385,6 +236,8 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // ================================================================
   // Section 1: Header
@@ -1054,6 +907,7 @@ Annual:         $216.00
     "Review the detail cards for each selected model — compare per-request, daily, monthly, and annual costs at a glance.",
     "Use the Usage Scenarios table to see how costs scale from 50 to 10,000 requests/day, and check Savings Insights for the cheapest and best-value recommendations.",
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../core/engines/types';
 import { registerEngine } from '../core/engines/registry';
+import PRICING from '../data/ai-pricing.json';
 
 interface ModelInfo {
   input: number;
@@ -10,24 +11,7 @@ interface ModelInfo {
   order: number;
 }
 
-const MODELS: Record<string, ModelInfo> = {
-  'deepseek-v4-flash': {
-    input: 0.14, output: 0.28, name: 'DeepSeek V4 Flash',
-    family: 'v4', contextWindow: '1M', order: 1,
-  },
-  'deepseek-v4-pro': {
-    input: 1.74, output: 3.48, name: 'DeepSeek V4 Pro',
-    family: 'v4', contextWindow: '1M', order: 2,
-  },
-  'deepseek-v4-pro-promo': {
-    input: 0.435, output: 0.87, name: 'V4 Pro (75% Promo)',
-    family: 'v4', contextWindow: '1M', order: 3,
-  },
-  'deepseek-r1': {
-    input: 0.55, output: 2.00, name: 'DeepSeek R1 (Legacy)',
-    family: 'legacy', contextWindow: '64K', order: 4,
-  },
-};
+const MODELS: Record<string, ModelInfo> = PRICING.llm.deepseek.models as any;
 
 const FAMILY_ICONS: Record<string, string> = {
   v4: '◆',
@@ -164,6 +148,8 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
+  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  out.push('');
 
   // Section 1: Header
   let headerLine = '\u{1F534} DeepSeek API Cost';
@@ -578,6 +564,7 @@ const engine: ToolEngine = {
     'Add a growth rate and projection period for long-term cost planning.',
     'Review the cost comparison and see how much you save vs OpenAI, Claude, and Gemini.',
   ],
+  dataLastUpdated: PRICING.lastUpdated,
 };
 
 registerEngine(engine);

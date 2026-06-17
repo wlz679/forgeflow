@@ -848,6 +848,9 @@ const schema = JSON.stringify({
         </div>
 
         <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">{t('results.example', lang)}</span>
+        {engine.dataLastUpdated && (
+          <span class="inline-block text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full mb-3 ml-2" title="Pricing data synced weekly via GitHub Actions">📅 Data updated: {engine.dataLastUpdated}</span>
+        )}
         <div id="static-results" class="space-y-3">
           {(engine.clientConfig.type === 'custom'
             ? [engine.staticExamples[0]]

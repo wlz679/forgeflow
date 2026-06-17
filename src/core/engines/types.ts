@@ -25,4 +25,5 @@ export interface ToolEngine {
   staticExamples: string[];
   faq: { q: string; a: string }[];
   howToUse: string[];
+  dataLastUpdated?: string; // ISO date (YYYY-MM-DD) — shown as a "pricing data" badge for dynamic calculators
 }
