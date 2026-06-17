@@ -60,6 +60,18 @@ function calculateCAC(inputs: Record<string, string>): string[] {
 
   mainResult += '\\n\\uD83D\\uDCA1 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.';
 
+  // 🔄 What-If Scenarios
+  if (newCustomers > 0 && cac > 0) {
+    const halfSpendCac = totalSpend * 0.5 / newCustomers;
+    const doubleSpendCac = totalSpend * 2 / (newCustomers * 2);
+    const targetPayback = grossProfitPerCustomer * 12;
+    const maxCac = grossProfitPerCustomer * 12;
+    mainResult += '\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';
+    mainResult += '\\u2022 Cut spend 50%:  CAC $' + Math.round(cac).toLocaleString() + ' \\u2192 $' + Math.round(halfSpendCac).toLocaleString() + '  (assumes linear)\\n';
+    mainResult += '\\u2022 Double spend:  CAC $' + Math.round(cac).toLocaleString() + ' \\u2192 $' + Math.round(doubleSpendCac).toLocaleString() + '  (if 2\\u00d7 customers)\\n';
+    mainResult += '\\u2022 For 12mo payback:  max CAC = $' + Math.round(maxCac).toLocaleString() + '  (current: $' + Math.round(cac).toLocaleString() + ')\\n';
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different spend levels
@@ -122,6 +134,13 @@ const customFn =
   "else if(pbm<=18)mr6+='\\uD83D\\uDFE1 WARNING: '+pbm.toFixed(1)+' months payback is above the 12-month ideal. Review your acquisition channels for efficiency.\\n';" +
   "else mr6+='\\uD83D\\uDD34 CRITICAL: '+pbm.toFixed(1)+' months payback is too long. Your cash flow is strained. Cut underperforming channels immediately.\\n';}" +
   "mr6+='\\n\\uD83D\\uDCA1 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.';" +
+  "if(nc2>0&&cac2>0){" +
+  "var hsc=ts*0.5/nc2;var dsc=ts*2/(nc2*2);var maxC=gpc*12;" +
+  "mr6+='\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';" +
+  "mr6+='\\u2022 Cut spend 50%:  CAC $'+Math.round(cac2).toLocaleString()+' \\u2192 $'+Math.round(hsc).toLocaleString()+'  (assumes linear)\\n';" +
+  "mr6+='\\u2022 Double spend:  CAC $'+Math.round(cac2).toLocaleString()+' \\u2192 $'+Math.round(dsc).toLocaleString()+'  (if 2\\u00d7 customers)\\n';" +
+  "mr6+='\\u2022 For 12mo payback:  max CAC = $'+Math.round(maxC).toLocaleString()+'  (current: $'+Math.round(cac2).toLocaleString()+')\\n';" +
+  "}" +
   "var results=[mr6];" +
   "var ss5=[{l:'Cut spend 50%',mk:ms*0.5,sk:ss*0.5},{l:'Cut spend 25%',mk:ms*0.75,sk:ss*0.75},{l:'Current',mk:ms,sk:ss},{l:'Increase spend 25%',mk:ms*1.25,sk:ss*1.25},{l:'Double spend',mk:ms*2,sk:ss*2}];" +
   "for(var i=0;i<ss5.length;i++){var st=ss5[i].mk+ss5[i].sk;var sc2=nc2>0&&ts>0?Math.round(nc2*(st/ts)):nc2;var cacS=sc2>0?st/sc2:0;var pbS=gpc>0?cacS/gpc:0;results.push(ss5[i].l+': $'+Math.round(st).toLocaleString()+' total spend, '+sc2+' customers, CAC '+fmt4(cacS)+(arc>0?', Payback '+pbS.toFixed(1)+' mo':''));}" +

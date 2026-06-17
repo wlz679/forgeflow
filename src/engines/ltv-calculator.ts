@@ -51,6 +51,19 @@ function calculateLTV(inputs: Record<string, string>): string[] {
 
   mainResult += '\\n\\uD83D\\uDCA1 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).';
 
+  // 🔄 What-If Scenarios (actionable levers)
+  if (cac > 0 && ltvCacRatio > 0) {
+    const raisePriceLtv = grossProfitPerMonth * 1.2 * avgLifetimeMonths;
+    const raisePriceRatio = raisePriceLtv / cac;
+    const lowerChurnLT = churnRate > 0.5 ? 1 / (churnRate / 2) : 120;
+    const lowerChurnLtv = grossProfitPerMonth * lowerChurnLT;
+    mainResult += '\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';
+    mainResult += '\\u2022 If price +20%:  LTV $' + Math.round(raisePriceLtv).toLocaleString() + '  |  LTV:CAC ' + raisePriceRatio.toFixed(1) + ':1\\n';
+    mainResult += '\\u2022 If churn halves:  LTV $' + Math.round(lowerChurnLtv).toLocaleString() + '  (lifetime ' + lowerChurnLT.toFixed(1) + ' mo)\\n';
+    const targetCac = ltv / 3;
+    mainResult += '\\u2022 For 3:1 ratio:  target CAC = $' + Math.round(targetCac).toLocaleString() + '  (current: $' + Math.round(cac).toLocaleString() + ')\\n';
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different churn rates
@@ -104,6 +117,15 @@ const customFn =
   "else mr5+='\\uD83D\\uDD34 PROBLEM: LTV:CAC of '+lcr.toFixed(1)+':1 is below 1:1. You are losing money on every customer. Fix this immediately.\\n';" +
   "var pm2=gpm>0?cacV/gpm:0;if(pm2>0)mr5+='\\u2022 CAC Payback Period: '+pm2.toFixed(1)+' months\\n';}" +
   "mr5+='\\n\\uD83D\\uDCA1 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).';" +
+  "if(cacV>0&&lcr>0){" +
+  "var rpLtv=gpm*1.2*alt;var rpRatio=rpLtv/cacV;" +
+  "var lcLT=cr3>0.5?1/(cr3/2):120;var lcLtv=gpm*lcLT;" +
+  "var tCac=ltv/3;" +
+  "mr5+='\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';" +
+  "mr5+='\\u2022 If price +20%:  LTV $'+Math.round(rpLtv).toLocaleString()+'  |  LTV:CAC '+rpRatio.toFixed(1)+':1\\n';" +
+  "mr5+='\\u2022 If churn halves:  LTV $'+Math.round(lcLtv).toLocaleString()+'  (lifetime '+lcLT.toFixed(1)+' mo)\\n';" +
+  "mr5+='\\u2022 For 3:1 ratio:  target CAC = $'+Math.round(tCac).toLocaleString()+'  (current: $'+Math.round(cacV).toLocaleString()+')\\n';" +
+  "}" +
   "var results=[mr5];" +
   "var cs5=[{l:'Excellent (1% churn)',c:1},{l:'Good (2% churn)',c:2},{l:'Average (3% churn)',c:3},{l:'Below Avg (5% churn)',c:5},{l:'Poor (8% churn)',c:8}];" +
   "for(var i=0;i<cs5.length;i++){var crr=cs5[i].c/100;var ltt=crr>0?1/crr:120;var lts=gpm*ltt;var rt=cacV>0?lts/cacV:0;results.push(cs5[i].l+': Lifetime '+ltt.toFixed(1)+' months, LTV '+fmt3(lts)+(cacV>0?', LTV:CAC '+rt.toFixed(1)+':1':''));}" +

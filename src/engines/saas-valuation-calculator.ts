@@ -53,6 +53,20 @@ function calculateValuation(inputs: Record<string, string>): string[] {
 
   mainResult += '\\uD83D\\uDCA1 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.';
 
+  // 🔄 What-If Scenarios
+  if (annualRevenue > 0) {
+    const raisedGrowth = Math.min(150, growthRate + 30);
+    const raisedMult = raisedGrowth >= 100 ? 10 : raisedGrowth >= 50 ? 8 : raisedGrowth >= 30 ? 7 : 5.5;
+    const raisedVal = annualRevenue * raisedMult;
+    const raisedProfit = profitMargin + 10;
+    const profitMult = baseMultiple + (raisedProfit >= 30 ? 0.5 : 0);
+    const profitVal = annualRevenue * profitMult;
+    mainResult += '\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';
+    mainResult += '\\u2022 If growth \\u2192 ' + raisedGrowth.toFixed(0) + '% YoY:  multiple ' + raisedMult.toFixed(1) + 'x  \\u2192 $' + Math.round(raisedVal).toLocaleString() + ' (vs $' + Math.round(valuationBase).toLocaleString() + ')\\n';
+    mainResult += '\\u2022 If margin \\u2192 ' + raisedProfit.toFixed(0) + '%:  multiple ' + profitMult.toFixed(1) + 'x  \\u2192 $' + Math.round(profitVal).toLocaleString() + '\\n';
+    mainResult += '\\u2022 Distress floor (2x):  $' + Math.round(annualRevenue * 2).toLocaleString() + '  (asset-only sale)\\n';
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different multiples
@@ -108,6 +122,16 @@ const customFn =
   "else if(gr2>=20)mr4+='\\uD83D\\uDCC8 Solid growth trajectory. Improving your growth rate from '+pct2(gr2)+' to 30%+ could increase your valuation multiple by 2-3x.\\n\\n';" +
   "else mr4+='\\uD83D\\uDCAA Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.\\n\\n';" +
   "mr4+='\\uD83D\\uDCA1 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too \\u2014 profitable SaaS companies get 1-3x premium.';" +
+  "if(ar2>0){" +
+  "var rg=Math.min(150,gr2+30);" +
+  "var rm=rg>=100?10:rg>=50?8:rg>=30?7:5.5;" +
+  "var rv=ar2*rm;" +
+  "var rp=pm+10;var pm2=bm2+(rp>=30?0.5:0);var pv=ar2*pm2;" +
+  "mr4+='\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';" +
+  "mr4+='\\u2022 If growth \\u2192 '+rg.toFixed(0)+'% YoY:  multiple '+rm.toFixed(1)+'x  \\u2192 $'+Math.round(rv).toLocaleString()+' (vs $'+Math.round(valuationBase).toLocaleString()+')\\n';" +
+  "mr4+='\\u2022 If margin \\u2192 '+rp.toFixed(0)+'%:  multiple '+pm2.toFixed(1)+'x  \\u2192 $'+Math.round(pv).toLocaleString()+'\\n';" +
+  "mr4+='\\u2022 Distress floor (2x):  $'+Math.round(ar2*2).toLocaleString()+'  (asset-only sale)\\n';" +
+  "}" +
   "var results=[mr4];" +
   "var ms=[{l:'Distressed Sale (2x)',m:2},{l:'Flat Growth (4x)',m:4},{l:'Steady Growth (6x)',m:6},{l:'High Growth (10x)',m:10},{l:'Hyper-Growth (15x)',m:15}];" +
   "for(var i=0;i<ms.length;i++){var val=ar2*ms[i].m;results.push(ms[i].l+': '+fmt2(ar2)+' ARR \\u00d7 '+ms[i].m+'x = '+fmt2(val)+' valuation');}" +
