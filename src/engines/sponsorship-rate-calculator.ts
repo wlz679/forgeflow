@@ -47,6 +47,21 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
     '💵 Per Sponsorship Value: ' + loc(totalPerSponsorship) + '\n' +
     '📆 Monthly Value (4 placements): ' + loc(monthlyValue) + '\n' +
     '💰 Annual Sponsorship Revenue: ' + loc(annualValue) + '\n\n' +
+    '🩺 Audience Tier:\n' +
+    (downloads + subscribers + followers >= 100000
+      ? '• 🟢 Large creator tier — $' + cpm + ' CPM, multiple sponsor slots/yr.\n'
+      : downloads + subscribers + followers >= 25000
+      ? '• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.\n'
+      : '• 🟠 Micro-influencer — building toward monetization threshold.\n') +
+    (cpm >= 30
+      ? '• ✅ Premium CPM ($' + cpm + ') — high-value audience.\n'
+      : cpm >= 20
+      ? '• ⚠️ Standard CPM ($' + cpm + ') — typical for content type.\n'
+      : '• 🔴 Low CPM ($' + cpm + ') — limited monetization potential.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• Double audience:  Annual $' + Math.round(annualValue * 2).toLocaleString() + '  (from $' + Math.round(annualValue).toLocaleString() + ')\n' +
+    '• +25% CPM negotiation:  Annual $' + Math.round(annualValue * 1.25).toLocaleString() + '  (raise your rate)\n' +
+    '• 3 placements/month (vs 4 default):  Annual $' + Math.round(annualValue * 0.75).toLocaleString() + '  (sustainability > maxing out)\n\n' +
     '💡 Your audience size of ' + loc(downloads + subscribers + followers) + ' total reach puts you in the ' +
     ((downloads + subscribers + followers) > 100000 ? 'large creator' : (downloads + subscribers + followers) > 25000 ? 'mid-tier' : 'micro-influencer') +
     ' category. Brands typically pay ' + cpm + 'x CPM for this content type.',

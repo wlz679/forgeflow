@@ -38,6 +38,27 @@ function calculateTimeValue(inputs: Record<string, string>): string[] {
     '\n' +
     '💡 At your rate, every 15-minute interruption costs ' + loc(hourlyRate / 4) +
     '. Protect your focus time fiercely.\n\n' +
+    '🩺 Time Wealth Health:\n' +
+    (hourlyRate >= 100
+      ? '• 🟢 Top 10% time value — every hour is worth $' + Math.round(hourlyRate) + '+.\n'
+      : hourlyRate >= 50
+      ? '• 🟢 Above average — $' + Math.round(hourlyRate) + '/hr is solid for skilled work.\n'
+      : hourlyRate >= 25
+      ? '• 🟡 Average — $' + Math.round(hourlyRate) + '/hr is the median for full-time work.\n'
+      : '• 🟠 Below median — focus on raising rate or productivity per hour.\n') +
+    (weeksPerYear >= 48
+      ? '• ✅ You work ' + weeksPerYear + ' weeks/yr — standard full-time.\n'
+      : weeksPerYear >= 44
+      ? '• ⚠️ ' + weeksPerYear + ' weeks/yr — some rest, but not enough for long-term sustainability.\n'
+      : '• 🔴 ' + weeksPerYear + ' weeks/yr — burnout risk. Add vacation weeks.\n') +
+    '\n🎯 Time Wealth Targets:\n' +
+    '• At $100/hr:  Need ' + Math.round(100 * totalHours).toLocaleString() + '/yr income  (currently $' + annualIncome.toLocaleString() + ')\n' +
+    '• At $200/hr:  Need $' + (200 * totalHours).toLocaleString() + '/yr\n' +
+    '• To earn $200K/yr:  Need $' + Math.round(200000 / totalHours) + '/hr at current hours\n\n' +
+    '🔄 What-If Scenarios:\n' +
+    '• Cut 1hr/day wasted:  Save $' + Math.round(hourlyRate * weeksPerYear * 5).toLocaleString() + '/yr in productivity\n' +
+    '• Cut all meetings (5/wk):  Save $' + Math.round(hourlyRate * 5 * weeksPerYear).toLocaleString() + '/yr\n' +
+    '• 4-day work week:  Same income in ' + Math.round(weeksPerYear * 4 / 5) + ' weeks\n\n' +
     '📌 If you cut 1 wasteful hour per day, you save ' + loc(hourlyRate * weeksPerYear * 5) + ' per year in lost productivity.',
   );
 

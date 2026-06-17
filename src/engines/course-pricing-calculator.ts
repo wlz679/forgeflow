@@ -46,6 +46,23 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
     '• Gross Revenue:            $' + fmt(revenueAtOptimal) + '/mo\n' +
     '• Platform Takes:            $' + fmt(platformTake) + '/mo\n' +
     '• Net Revenue:                $' + fmt(netRevenue) + '/mo\n\n' +
+    '🩺 Pricing Tier:\n' +
+    (optimalPrice >= 500
+      ? '• 🟢 Premium tier — high-touch, requires strong proof + transformation story.\n'
+      : optimalPrice >= 100
+      ? '• 🟢 Mid-tier — sweet spot for online courses with clear outcomes.\n'
+      : optimalPrice >= 30
+      ? '• 🟡 Entry tier — accessible pricing, need higher volume to hit income goal.\n'
+      : '• 🟠 Budget tier — need 100s of buyers/mo; consider upsell path.\n') +
+    (estimatedBuyersPerMonth >= 50
+      ? '• ✅ ' + estimatedBuyersPerMonth + ' buyers/mo is a solid funnel size.\n'
+      : estimatedBuyersPerMonth >= 20
+      ? '• ⚠️ ' + estimatedBuyersPerMonth + ' buyers/mo is workable but tight.\n'
+      : '• 🔴 Under 20 buyers/mo — review channel strategy.\n') +
+    '\n🔄 What-If Scenarios:\n' +
+    '• Raise price 30%:  $' + fmt(optimalPrice * 1.3) + '/course  (Net $' + fmt(optimalPrice * 1.3 * estimatedBuyersPerMonth * (1 - platformFee / 100)) + '/mo at same volume)\n' +
+    '• 2x buyers:  Net $' + fmt(netRevenue * 2) + '/mo  (requires 2x marketing reach)\n' +
+    '• Lower platform fee (e.g. self-hosted, 0%):  $' + fmt(optimalPrice * estimatedBuyersPerMonth) + '/mo gross  (vs $' + fmt(netRevenue) + ' net)\n\n' +
     assessment + '\n\n' +
     '',
   );
