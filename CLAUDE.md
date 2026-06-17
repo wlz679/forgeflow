@@ -4,113 +4,138 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **"入河排口智能监控系统"** (River Outlet Intelligent Monitoring System) — a Vue 3 admin SPA built on top of [pure-admin-thin](https://github.com/pure-admin/pure-admin-thin). It manages river drainage outlets, video/water-quality monitoring, alarms, maintenance work orders, and statistical analysis for environmental monitoring in Chengdu.
+This is **CalcKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 32+ calculators live at the site root, each rendered as its own page.
+
+Calculator categories:
+- **B (Business)** — LTV, CAC, MRR, churn, break-even, valuation, equity dilution, etc.
+- **C (Pricing)** — Hourly-vs-fixed, freelance rate, sponsorship rate, course pricing, SaaS pricing
+- **D (HR/Cost)** — Employee cost, meeting cost
+- **E (Personal)** — Freelance tax, productivity score
+- **AI cost** (data-driven, see "Data-Driven Engines" below) — OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen cost (7 providers), GPU cloud cost, AI training cost estimator, cross-provider API comparison
+
+Goal: every calculator should match **world-leading / industry-leading** quality (v3 standard: 6+ emoji-sectioned output, 🩺 Health, 🔄 What-If, ⚖️ Break-even, 🎯 Use-case, 📅 Pricing data badge where applicable).
 
 ## Commands
 
 ```bash
-pnpm dev                # Dev server (development mode, port 10086)
-pnpm dev:test           # Dev server (test mode)
-pnpm dev:gk             # Dev server (gk mode)
-pnpm build              # Production build
-pnpm build:staging      # Staging build
-pnpm build:lib          # Library-mode build (BUILD_MODE=lib)
+pnpm dev                # Dev server (Astro, port 4321 default)
+pnpm build              # Production build (141 static pages)
 pnpm preview            # Preview built app
-pnpm lint               # Run all linters (eslint + prettier + stylelint)
-pnpm lint:eslint        # ESLint only
-pnpm lint:prettier      # Prettier only
-pnpm lint:stylelint     # Stylelint only
-pnpm typecheck          # TypeScript + vue-tsc type check (no emit)
-pnpm report             # Build with rollup-plugin-visualizer
-pnpm clean:cache        # Nuke node_modules, lockfile, cache and reinstall
+pnpm sync               # Update AI pricing from LiteLLM + regen engine data tables
+pnpm translate          # Translate wordpools (translate-wordpools.ts)
 ```
 
 **Requires pnpm** — enforced via `preinstall` script. Node `^20.19.0 || >=22.13.0`.
 
 ## Tech Stack
 
-- **Vue 3.5** + **TypeScript 5.9** + **Vite 7**
-- **Element Plus 2.11** (UI framework, full import, Chinese locale)
-- **Pinia 3** (state management)
+- **Astro 4.16.19** (static site generation, no SSR) + **TypeScript 5.6** (strict)
+- **`@astrojs/sitemap` 3.2.1** for sitemap generation
 - **Tailwind CSS 4** (via `@tailwindcss/vite`)
-- **ECharts 6** (charts)
-- **Axios** with custom wrapper at `src/utils/http/`
-- **Casdoor** (`casdoor-vue-sdk`) for SSO authentication
-- **AMap** (高德地图) for map features
-- **video.js** + **flv.js** + **hls.js** for video playback
+- **No Vue / React / Pinia** — project is pure Astro pages + custom engine runtime
+- **Self-hosted engines** — `src/engines/*.ts` register themselves via `registerEngine()` at import time. Each engine has:
+  - `calculate(inputs)` — server-side, called by Astro pages to render static examples
+  - `customFn` — minified JS string that runs in the browser for live interactions
+  - `staticExamples` — pre-baked output strings, used as the initial page render
+  - `dataLastUpdated` (optional) — shown as a `📅 Data updated: YYYY-MM-DD` badge
 
 ## Architecture
 
-### Build System (`build/`)
+### Pages (`src/pages/[lang]/`)
 
-`vite.config.ts` delegates to `build/plugins.ts`, `build/optimize.ts`, and `build/utils.ts`. The build system supports both **app mode** and **library mode** (`BUILD_MODE=lib`). CDN externalization is controlled by `VITE_CDN` env var.
+- `[lang]/[slug].astro` — the main calculator page. Auto-imports all engines from `src/engines/`.
+- `[lang]/index.astro` — landing page
+- `[lang]/blog/` — blog posts
+- `[lang]/about.astro`, `contact.astro`, `privacy-policy.astro`, `terms.astro` — static content
 
-### Router (`src/router/`)
+i18n: English (`en`) and Chinese (`zh`). Translations in `src/i18n/translations.ts`.
 
-Routes are **auto-imported** from `src/router/modules/**/*.ts` (excluding `remaining.ts`) via Vite's `import.meta.glob`. Each route module exports a `RouteRecordRaw[]`. Route components at `/src/views/**/*.{vue,tsx}` are also auto-globbed — the router resolves component strings to actual modules in `router/utils.ts`.
+### Engines (`src/engines/`)
 
-Route rank ordering: menu items are sorted by `meta.rank`. Home must be rank 0. See `src/router/enums.ts` for rank constants organized by business module.
+Each engine is a single self-contained `.ts` file. The registry pattern (`src/core/engines/registry.ts`) is called via `registerEngine(engine)` at module import.
 
-Auth guards in `router/index.ts` check tokens and dynamically fetch menus via `menuRoleApi`.
+**Pattern for a new engine:**
+```ts
+import type { ToolEngine } from '../core/engines/types';
+import { registerEngine } from '../core/engines/registry';
 
-### Store (`src/store/`)
+const engine: ToolEngine = {
+  slug: 'solopreneur-my-calc',
+  title: 'My Calculator',
+  description: '...',
+  category: 'B',
+  inputs: [{ name: 'foo', label: 'Foo', type: 'number' }],
+  clientConfig: { type: 'custom', wordPools: {}, customFn: '...' },
+  generate(inputs) { /* returns string[] */ },
+  staticExamples: ['...'],
+  faq: [{ q: '...', a: '...' }],
+  howToUse: ['...'],
+};
+registerEngine(engine);
+```
 
-Pinia with modules: `app` (sidebar/layout state), `epTheme`, `multiTags` (tab management), `permission` (route permissions), `settings`, `user` (roles/permissions/profile).
+### Data-Driven Engines (8 of 32)
 
-### HTTP Client (`src/utils/http/`)
+These engines read from `src/data/ai-pricing.json` (single source of truth):
 
-Custom `PureHttp` class wrapping Axios with:
+| Engine | PRICING key | Notes |
+|---|---|---|
+| `openai-token-calculator` | `llm.openai.models` | 14 GPT models |
+| `claude-api-cost-calculator` | `llm.anthropic.models` | 7 Claude models |
+| `gemini-api-cost-calculator` | `llm.google.models` | 6 Gemini models |
+| `deepseek-api-cost-calculator` | `llm.deepseek.models` | 4 DeepSeek models |
+| `ai-api-cost-comparison` | `llm.*` (all 4 providers) | Cross-provider view |
+| `ai-image-generation-cost-calculator` | `image.providers` | 7 image gen providers |
+| `gpu-cloud-cost-calculator` | `gpu.providers` | 6 GPU cloud providers |
+| `ai-training-cost-estimator` | `training.gpuTypes` + `training.modelSizes` | Training cost calculator |
 
-- Automatic Bearer token injection
-- 401 handling with token refresh queue (prevents concurrent refresh)
-- Response error routing to login page
+PRICING.json schema:
+```json
+{
+  "version": 1,
+  "lastUpdated": "YYYY-MM-DD",
+  "source": "litellm+manual",
+  "llm": { "openai": { "name": "...", "models": { "gpt-5": {...} } } },
+  "image": { "providers": {...}, "subTiers": {...}, "advancedMult": {...} },
+  "gpu": { "providers": {...}, "storagePerGB": 0.10, "egressPerGB": 0.08 },
+  "training": { "gpuTypes": {...}, "modelSizes": {...}, "loraSpeedup": 0.35, "dataProcessPerGB": 1.50 }
+}
+```
 
-### Auth Flow
+### Automation Scripts (`scripts/`)
 
-Casdoor SDK handles the SSO login flow. On success, tokens are stored in localStorage under key `user-info`. Auth guards check token existence and call `menuRoleApi` to fetch dynamic menus. Route permissions are filtered by returned roles.
+- `sync-pricing.mjs` — Fetches `https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json` and updates `src/data/ai-pricing.json`. Runs weekly via GitHub Action.
+- `codegen-customfn.mjs` — Reads `PRICING.json` and regenerates the **data table** section of each engine's `customFn` minified JS string. Keeps client-side data in sync with PRICING. Field name mapping per engine (e.g. JSON `input` → customFn `i`).
 
-### Config System (`src/config/`)
+**Run order:** `sync-pricing.mjs` → `codegen-customfn.mjs` → `pnpm build`.
 
-At startup, `getPlatformConfig()` fetches `public/platform-config.json` and merges it into `app.config.globalProperties.$config`. Env files (`.env`, `.env.development`, `.env.test`, `.env.gk`, `.env.production`, `.env.staging`) configure API base URLs, CDN mode, and Casdoor environment selection.
+The two scripts together implement a `pnpm sync` convenience script.
 
-### Directory Conventions
+### GitHub Actions (`.github/workflows/`)
 
-| Directory         | Purpose                                                                             |
-| ----------------- | ----------------------------------------------------------------------------------- |
-| `src/views/`      | Page components, organized by business domain                                       |
-| `src/components/` | Shared/reusable components (Re-prefixed: ReDialog, ReAuth, ReUpload, etc.)          |
-| `src/api/`        | API endpoint functions, one file per domain                                         |
-| `src/utils/`      | Utilities: `auth.ts`, `dict.ts` (business enums/maps), `district.ts`, `function.ts` |
-| `src/layout/`     | Admin shell: sidebar, navbar, tags view, frame/redirect pages                       |
-| `src/directives/` | Custom Vue directives                                                               |
-| `src/style/`      | SCSS + Tailwind entry points                                                        |
-| `types/`          | Global TypeScript declarations                                                      |
-| `mock/`           | Mock API handlers (vite-plugin-fake-server)                                         |
+- `sync-pricing.yml` — Monday 06:00 UTC cron. Runs `pnpm sync` and commits changes if any. Workflow also runs on push to `sync-pricing.mjs`, `codegen-customfn.mjs`, `ai-pricing.json`, or the workflow file itself.
 
-### Business Domain Views
+## Directory Conventions
 
-- `pkManagement` — 排口管理 (outlet management)
-- `alarmCenter` — 告警中心 (alarm/alert processing)
-- `monitorCenter` — 监控中心 (video monitoring, online/offline status)
-- `waterQualityMonitor` — 水质监测 (water quality monitoring + statistics)
-- `maintenanceManage` — 运维管理 (work orders, maintenance)
-- `analysis` — 统计分析 (statistical analysis dashboards)
-- `processCenter` — 流程中心 (approval workflows)
-- `dashboardManage` — 数据看板 (overview dashboard)
-- `system` — 系统管理 (system settings, user/role/dept management)
-- `recordManage` — 记录管理 (records/audit logs)
+| Directory | Purpose |
+| --- | --- |
+| `src/engines/` | One engine per `.ts` file. Self-registering. |
+| `src/core/engines/` | Engine framework: `types.ts`, `registry.ts`, `helpers.ts` |
+| `src/data/` | Static data files (PRICING.json etc.) |
+| `src/pages/[lang]/` | Astro pages, one per locale |
+| `src/i18n/` | Translation strings |
+| `src/scripts/` | Legacy utility scripts |
+| `src/components/` | Shared Astro components (if any) |
+| `scripts/` | Build-time automation (sync, codegen) |
+| `.github/workflows/` | CI/CD |
 
-### Utility Files of Note
+## Notes for Future Sessions
 
-- `src/utils/dict.ts` — Central dictionary of all business enums (drainage types, work order statuses, device types, etc.) mapped to select options
-- `src/utils/function.ts` — Shared helper functions including `mapToOptions`, error handling, etc.
-- `src/utils/district.ts` — Chengdu district data for cascading selectors
-- `src/utils/auth.ts` — Token management (`getToken`, `setToken`, `removeToken`, `hasPerms`)
-
-## Git Hooks
-
-- **pre-commit**: Runs `lint-staged` (ESLint + Prettier + Stylelint on staged files per `.lintstagedrc`)
-- **commit-msg**: `commitlint` enforcing conventional commits (feat, fix, perf, style, etc.)
+- **CLAUDE.md is THE source of truth** for future AI sessions. Keep it accurate.
+- **Engine pattern is strict** — `staticExamples` is hand-baked (codegen for it is TODO). `customFn` is minified; codegen only updates the data table portion, not the logic.
+- **PRICING.json is the source of truth** for 8 engines. To add a new model, edit JSON and run `pnpm sync`.
+- **Visual diagrams** preferred over text for page/UI discussions.
+- **Don't over-engineer** — match existing style; avoid speculative abstractions.
 
 ## Communication Style
 
