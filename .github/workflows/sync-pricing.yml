@@ -1,8 +1,8 @@
 name: Sync AI Pricing
 
 # Weekly cron + manual trigger
-# Pulls latest LLM pricing from LiteLLM and updates src/data/ai-pricing.json
-# If changes are detected, commits and pushes to the current branch.
+# Pulls latest LLM pricing from LiteLLM, regenerates engine customFn data tables,
+# and commits/pushes if anything changed.
 
 on:
   schedule:
@@ -12,6 +12,7 @@ on:
     paths:
       - 'src/data/ai-pricing.json'
       - 'scripts/sync-pricing.mjs'
+      - 'scripts/codegen-customfn.mjs'
       - '.github/workflows/sync-pricing.yml'
 
 jobs:
@@ -42,13 +43,16 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
-      - name: Run sync
+      - name: Sync pricing from LiteLLM
         run: node scripts/sync-pricing.mjs
+
+      - name: Regenerate engine customFn data
+        run: node scripts/codegen-customfn.mjs
 
       - name: Check for changes
         id: diff
         run: |
-          if git diff --quiet src/data/ai-pricing.json; then
+          if git diff --quiet src/data/ai-pricing.json src/engines/; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -59,6 +63,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add src/data/ai-pricing.json
-          git commit -m "chore(pricing): sync from LiteLLM ($(date -u +%Y-%m-%d))"
+          git add src/data/ai-pricing.json src/engines/
+          git commit -m "chore(pricing): sync from LiteLLM + regen customFn ($(date -u +%Y-%m-%d))"
           git push
