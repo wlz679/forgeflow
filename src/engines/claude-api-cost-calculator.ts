@@ -524,6 +524,60 @@ function calculate(inputs: Record<string, string>): string[] {
     out.push(line);
   }
 
+  // 🩺 Cost Health (v3)
+  out.push('');
+  out.push('🩺 Cost Health:');
+  out.push(SEP.repeat(60));
+  const totalSelectedMonthly = selectedCosts.reduce((s, c) => s + c.monthlyCost, 0);
+  const cheapestSelected = selectedCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
+  const expensiveSelected = selectedCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max);
+  if (selectedCosts.length >= 2) {
+    const ratio = expensiveSelected.monthlyCost / Math.max(cheapestSelected.monthlyCost, 0.01);
+    if (ratio >= 50) out.push('• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.');
+    else if (ratio >= 10) out.push('• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.');
+    else out.push('• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.');
+  }
+  if (cheapestSelected) {
+    const tier = cheapestSelected.monthlyCost < 5 ? '🟢 Micro-tier (under $5/mo)' : cheapestSelected.monthlyCost < 50 ? '🟢 Low-volume tier' : cheapestSelected.monthlyCost < 500 ? '🟡 Mid-volume tier' : '🟠 High-volume tier';
+    out.push('• ' + tier + ' — ' + cheapestSelected.info.name + ' at ' + fmt(cheapestSelected.monthlyCost) + '/mo.');
+  }
+  if (cacheReadHitRate === 0) {
+    out.push('• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.');
+  } else if (cacheReadHitRate < 30) {
+    out.push('• 🟡 Low cache hit rate (' + cacheReadHitRate + '%) — review if your prompt has stable system instructions.');
+  } else {
+    out.push('• 🟢 Healthy cache rate (' + cacheReadHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.');
+  }
+  if (writeMult > 1) {
+    out.push('• 💡 Cache write multiplier is ' + writeMult + 'x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).');
+  }
+  out.push('');
+
+  // 🔄 What-If Scenarios (v3)
+  out.push('🔄 What-If Scenarios:');
+  out.push(SEP.repeat(60));
+  // Switch to cheapest popular model
+  const popularCheapest = allCosts
+    .reduce((min, c) => (c.info.input + c.info.output) < (min.info.input + min.info.output) ? c : min, allCosts[0]);
+  if (popularCheapest && popularCheapest.key !== cheapestSelected?.info.key) {
+    const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
+    const newMonthly = cpr * reqPerDay * 30;
+    const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
+    if (savings > 0) out.push('• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)');
+  }
+  // Double volume
+  out.push('• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo');
+  // Halve volume
+  out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo');
+  // 50% cache
+  if (cacheReadHitRate < 50) {
+    const cacheFactor = 0.5 + 0.5 * (1 - 0.5 * 0.9); // ~50% of input is cacheable, 90% discount
+    const cachedMonthly = totalSelectedMonthly * cacheFactor;
+    const cacheSavings = totalSelectedMonthly - cachedMonthly;
+    out.push('• Boost cache hit rate to 50%:  save ~' + fmt(cacheSavings) + '/mo  (' + fmt(totalSelectedMonthly) + ' → ' + fmt(cachedMonthly) + ')');
+  }
+  out.push('');
+
   return out;
 }
 
@@ -726,7 +780,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // Single comprehensive example covering all 7 sections (same structure as calculate() output)
-    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n✦ Claude Fable 5           ███████████████████████████              $105.00\n▲ Claude Opus 48           █████████████                            $52.50\n▲ Claude Sonnet 46         ████████                                 $31.50\n▲ Claude Haiku 45          ███                                      $10.50\n▲ Claude Opus 41           ████████████████████████████████████████ $157.50\n◆ Claude Haiku 3.5         ██                                       $8.40\n◆ Claude Haiku 3           ░                                        $2.63 🏆\n◆ Claude 37 Sonnet         ████████                                 $31.50\n◆ Claude 3Haiku            █                                        $2.63\n◆ Claude 3Opus             ████████████████████████████████████████ $157.50\n◆ Claude 4Opus             ████████████████████████████████████████ $157.50\n◆ Claude 4Sonnet           ████████                                 $31.50\n▲ Claude Sonnet 45         ████████                                 $31.50\n▲ Claude Sonnet 45 20250929V1:0 ████████                                 $31.50\n▲ Claude Opus 4            ████████████████████████████████████████ $157.50\n▲ Claude Opus 45           █████████████                            $52.50\n▲ Claude Opus 46           █████████████                            $52.50\n▲ Claude Opus 47           █████████████                            $52.50\n▲ Claude Sonnet 4          ████████                                 $31.50\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n▲ Claude Sonnet 46 (Claude 4.x) | Context: 1M | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $3.00/1M → $0.0030/req\nOutput: 500     tokens × $15.00/1M → $0.0075/req\n————————————————————————————————————————————\nPer request:    $0.01\nDaily (100):    $1.05\nMonthly (30d):  $31.50\nAnnual:         $378.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0052/req ($15.75/mo) — save 50%\n\n▲ Claude Haiku 45 (Claude 4.x) | Context: 200K | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $1.00/1M → $0.0010/req\nOutput: 500     tokens × $5.00/1M → $0.0025/req\n————————————————————————————————————————————\nPer request:    $0.0035\nDaily (100):    $0.35\nMonthly (30d):  $10.50\nAnnual:         $126.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%\n\n✦ Claude Fable 5 (Mythos) | Context: 1M | Max Output: 128K\n————————————————————————————————————————————\nInput:  1,000   tokens × $10.00/1M → $0.01/req\nOutput: 500     tokens × $50.00/1M → $0.03/req\n————————————————————————————————————————————\nPer request:    $0.04\nDaily (100):    $3.50\nMonthly (30d):  $105.00\nAnnual:         $1260.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.02/req ($52.50/mo) — save 50%\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Claude Haiku 3 at $2.63/mo\n⭐ Best value (current-gen): Claude Haiku 45 at $10.50/mo\n💸 Switching from Claude Fable 5 to Claude Haiku 45 saves $94.50/mo ($1134.00/yr)\n🌍 Claude Haiku 3 vs GPT-5 Nano: Claude costs $1.88 more/month (250% premium)\n🌍 Claude Haiku 3 vs DeepSeek Chat: Claude costs $1.78 more/month (212% premium)\n🌍 Claude Haiku 3 vs Gemini 1.5 Flash: Claude costs $1.95 more/month (289% premium)\n💡 Premium buys: 1M context, best-in-class safety, superior code generation\n\n📊 Usage Scenarios (monthly cost at 100 reqs/day)\n\n▲ Claude Sonnet 46 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00\n▲ Claude Haiku 45 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00\n✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00',
+    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n✦ Claude Fable 5           ███████████████████████████              $105.00\n▲ Claude Opus 48           █████████████                            $52.50\n▲ Claude Sonnet 46         ████████                                 $31.50\n▲ Claude Haiku 45          ███                                      $10.50\n▲ Claude Opus 41           ████████████████████████████████████████ $157.50\n◆ Claude Haiku 3.5         ██                                       $8.40\n◆ Claude Haiku 3           ░                                        $2.63 🏆\n◆ Claude 37 Sonnet         ████████                                 $31.50\n◆ Claude 3Haiku            █                                        $2.63\n◆ Claude 3Opus             ████████████████████████████████████████ $157.50\n◆ Claude 4Opus             ████████████████████████████████████████ $157.50\n◆ Claude 4Sonnet           ████████                                 $31.50\n▲ Claude Sonnet 45         ████████                                 $31.50\n▲ Claude Sonnet 45 20250929V1:0 ████████                                 $31.50\n▲ Claude Opus 4            ████████████████████████████████████████ $157.50\n▲ Claude Opus 45           █████████████                            $52.50\n▲ Claude Opus 46           █████████████                            $52.50\n▲ Claude Opus 47           █████████████                            $52.50\n▲ Claude Sonnet 4          ████████                                 $31.50\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n▲ Claude Sonnet 46 (Claude 4.x) | Context: 1M | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $3.00/1M → $0.0030/req\nOutput: 500     tokens × $15.00/1M → $0.0075/req\n————————————————————————————————————————————\nPer request:    $0.01\nDaily (100):    $1.05\nMonthly (30d):  $31.50\nAnnual:         $378.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0052/req ($15.75/mo) — save 50%\n\n▲ Claude Haiku 45 (Claude 4.x) | Context: 200K | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $1.00/1M → $0.0010/req\nOutput: 500     tokens × $5.00/1M → $0.0025/req\n————————————————————————————————————————————\nPer request:    $0.0035\nDaily (100):    $0.35\nMonthly (30d):  $10.50\nAnnual:         $126.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%\n\n✦ Claude Fable 5 (Mythos) | Context: 1M | Max Output: 128K\n————————————————————————————————————————————\nInput:  1,000   tokens × $10.00/1M → $0.01/req\nOutput: 500     tokens × $50.00/1M → $0.03/req\n————————————————————————————————————————————\nPer request:    $0.04\nDaily (100):    $3.50\nMonthly (30d):  $105.00\nAnnual:         $1260.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.02/req ($52.50/mo) — save 50%\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Claude Haiku 3 at $2.63/mo\n⭐ Best value (current-gen): Claude Haiku 45 at $10.50/mo\n💸 Switching from Claude Fable 5 to Claude Haiku 45 saves $94.50/mo ($1134.00/yr)\n🌍 Claude Haiku 3 vs GPT-5 Nano: Claude costs $1.88 more/month (250% premium)\n🌍 Claude Haiku 3 vs DeepSeek Chat: Claude costs $1.78 more/month (212% premium)\n🌍 Claude Haiku 3 vs Gemini 1.5 Flash: Claude costs $1.95 more/month (289% premium)\n💡 Premium buys: 1M context, best-in-class safety, superior code generation\n\n📊 Usage Scenarios (monthly cost at 100 reqs/day)\n\n▲ Claude Sonnet 46 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00\n▲ Claude Haiku 45 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00\n✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟠 10x cost spread across selected models — review if every model needs to be premium.\n• 🟢 Low-volume tier — Claude Haiku 45 at $10.50/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Cache write multiplier is 1.25x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Claude Haiku 3:  save $7.88/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $294.00/mo\n• Halve volume to 50 reqs/day:  $73.50/mo\n• Boost cache hit rate to 50%:  save ~$33.08/mo  ($147.00 → $113.92)\n',
   ],
   faq: [
     {

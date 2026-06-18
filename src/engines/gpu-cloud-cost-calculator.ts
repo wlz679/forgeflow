@@ -226,6 +226,46 @@ function calculate(inputs: Record<string, string>): string[] {
   // Tip
   out.push('\u{1F4A1} ' + prov.name + ' spot instances save ' + Math.round((1 - prov.spotMult) * 100) + '% but can be interrupted. Reserved instances save ' + Math.round((1 - prov.reservedMult) * 100) + '% with 1-year commitment. Cheapest provider for ' + GPU_NAMES[gpuKey] + ': ' + cheapest.name + ' at ' + fmt(cheapest.cost) + '/mo.');
 
+  // 🩺 Cost Health (v3)
+  out.push('');
+  out.push('🩺 Cost Health:');
+  out.push(SEP.repeat(60));
+  const totalHourly = prov.rates[gpuKey] || 0;
+  const totalMonthlyGpu = totalHourly * hoursPerDay * 30 * gpuCount;
+  const totalMonthlyAll = totalMonthlyGpu + (includeStorage ? (100 * STORAGE_COST_PER_GB + 50 * NETWORK_EGRESS_PER_GB) : 0);
+  if (totalHourly < 1) out.push('• 🟢 Micro-tier — under $1/hr. Perfect for inference, small training jobs.');
+  else if (totalHourly < 3) out.push('• 🟢 Low-tier — $1-3/hr. Most training and inference workloads.');
+  else if (totalHourly < 8) out.push('• 🟡 Mid-tier — $3-8/hr. Larger training jobs, multi-GPU setups.');
+  else out.push('• 🟠 High-tier — $' + totalHourly.toFixed(2) + '/hr. Premium GPUs for cutting-edge training.');
+  if (includeStorage) {
+    const storageTotal = (100 * STORAGE_COST_PER_GB + 50 * NETWORK_EGRESS_PER_GB);
+    const storagePct = storageTotal / Math.max(totalMonthlyAll, 0.01) * 100;
+    if (storagePct > 30) out.push('• ⚠️ Storage + egress is ' + Math.round(storagePct) + '% of total — review whether you need all that data online.');
+    else out.push('• 🟢 Storage + egress is only ' + Math.round(storagePct) + '% of total — well-optimized.');
+  }
+  if (gpuCount >= 8) {
+    out.push('• 💡 At ' + gpuCount + ' GPUs, consider reserved instances: save ' + Math.round((1 - prov.reservedMult) * 100) + '% with 1-year commitment.');
+  }
+  out.push('');
+
+  // 🔄 What-If Scenarios (v3)
+  out.push('🔄 What-If Scenarios:');
+  out.push(SEP.repeat(60));
+  const cheapestProv = sortedProviders[0];
+  if (cheapestProv.key !== prov.key) {
+    const savings = (totalHourly - cheapestProv.rates[gpuKey]) * hoursPerDay * 30 * gpuCount;
+    if (savings > 0) out.push('• Switch to ' + cheapestProv.name + ':  save ' + fmt(savings) + '/mo  (cheapest for ' + GPU_NAMES[gpuKey] + ')');
+  } else {
+    out.push("• You're already on the cheapest provider for " + GPU_NAMES[gpuKey] + '!');
+  }
+  const spotSavings = totalMonthlyAll * (1 - prov.spotMult);
+  out.push('• Switch to spot instances:  save ~' + fmt(spotSavings) + '/mo  (' + Math.round((1 - prov.spotMult) * 100) + '% off, but interruptible)');
+  const reservedSavings = totalMonthlyAll * (1 - prov.reservedMult);
+  out.push('• 1-year reserved:  save ~' + fmt(reservedSavings) + '/mo  (guaranteed capacity)');
+  out.push('• Halve hours:  ' + fmt(totalMonthlyAll / 2) + '/mo  (workload at off-peak?)');
+  out.push('• Double hours:  ' + fmt(totalMonthlyAll * 2) + '/mo');
+  out.push('');
+
   return out;
 }
 
@@ -313,7 +353,7 @@ const engine: ToolEngine = {
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
-    '\n🖥️ RunPod GPU Cost — On-Demand\n\nGPU: 1× A100 80GB | Base Rate: $0.79/hr\nUsage: 8 hrs/day → 8 GPU-hrs/day\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nDaily GPU Cost (8 hrs):   $6.32\nMonthly GPU Cost (30 days): $189.60\nAnnual GPU Cost:            $2275.20\n\nStorage + Networking:\n  Storage (500GB SSD): $50.00/mo\n  Est. Egress (50GB):   $4.00/mo\n  Total Monthly:        $243.60\n\n📊 Multi-Provider Comparison — 1× A100 80GB\n──────────────────────────────────────────────────\nRunPod             ████████                              $189.60/mo\nVast.ai            ░░░░░░░                               $165.60/mo\nLambda Labs        ███████████                           $264.00/mo\nAWS                ███████████████████████████████████   $840.00/mo\nGCP                ████████████████████████████          $672.00/mo\nAzure              ██████████████████████████████        $720.00/mo\n\n📊 Pricing Tier Comparison for RunPod\n──────────────────────────────────────────────────\nTier                   | Monthly     | Annual        | Savings vs On-Demand\n───────────────────────────────────────────────────────────────────────────\nSpot (save 40%)        | $113.76        | $1365.12         | Save $75.84/mo (40%)\nOn-Demand              | $189.60        | $2275.20         | —\nReserved 1yr (save 15%) | $161.16        | $1933.92         | Save $28.44/mo (15%)\n\n🔄 Multi-GPU Scaling (RunPod, A100 80GB)\n──────────────────────────────────────────────────\nGPUs     | 1×               | 2×               | 4×               | 8×               | 16×              | 32×              | 64×             \n─────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼───────────────\nMonthly  | $189.60          | $379.20          | $758.40          | $1516.80         | $3033.60         | $6067.20         | $12134.40       \n\n💾 Storage & Networking Add-Ons\n──────────────────────────────────────────────────\nStorage (SSD): $0.10/GB/month\nNetwork Egress: $0.08/GB\n\nStorage        | Cost/Mo   | With GPU Total/Mo\n──────────────────────────────────────────────\n100 GB         | $10.00       | $203.60\n500 GB         | $50.00       | $243.60\n1,000 GB       | $100.00      | $293.60\n5,000 GB       | $500.00      | $693.60\n\n💡 RunPod spot instances save 40% but can be interrupted. Reserved instances save 15% with 1-year commitment. Cheapest provider for A100 80GB: Vast.ai at $165.60/mo.',
+    '\n🖥️ RunPod GPU Cost — On-Demand\n\nGPU: 1× A100 80GB | Base Rate: $0.79/hr\nUsage: 8 hrs/day → 8 GPU-hrs/day\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nDaily GPU Cost (8 hrs):   $6.32\nMonthly GPU Cost (30 days): $189.60\nAnnual GPU Cost:            $2275.20\n\nStorage + Networking:\n  Storage (500GB SSD): $50.00/mo\n  Est. Egress (50GB):   $4.00/mo\n  Total Monthly:        $243.60\n\n📊 Multi-Provider Comparison — 1× A100 80GB\n──────────────────────────────────────────────────\nRunPod             ████████                              $189.60/mo\nVast.ai            ░░░░░░░                               $165.60/mo\nLambda Labs        ███████████                           $264.00/mo\nAWS                ███████████████████████████████████   $840.00/mo\nGCP                ████████████████████████████          $672.00/mo\nAzure              ██████████████████████████████        $720.00/mo\n\n📊 Pricing Tier Comparison for RunPod\n──────────────────────────────────────────────────\nTier                   | Monthly     | Annual        | Savings vs On-Demand\n───────────────────────────────────────────────────────────────────────────\nSpot (save 40%)        | $113.76        | $1365.12         | Save $75.84/mo (40%)\nOn-Demand              | $189.60        | $2275.20         | —\nReserved 1yr (save 15%) | $161.16        | $1933.92         | Save $28.44/mo (15%)\n\n🔄 Multi-GPU Scaling (RunPod, A100 80GB)\n──────────────────────────────────────────────────\nGPUs     | 1×               | 2×               | 4×               | 8×               | 16×              | 32×              | 64×             \n─────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼───────────────\nMonthly  | $189.60          | $379.20          | $758.40          | $1516.80         | $3033.60         | $6067.20         | $12134.40       \n\n💾 Storage & Networking Add-Ons\n──────────────────────────────────────────────────\nStorage (SSD): $0.10/GB/month\nNetwork Egress: $0.08/GB\n\nStorage        | Cost/Mo   | With GPU Total/Mo\n──────────────────────────────────────────────\n100 GB         | $10.00       | $203.60\n500 GB         | $50.00       | $243.60\n1,000 GB       | $100.00      | $293.60\n5,000 GB       | $500.00      | $693.60\n\n💡 RunPod spot instances save 40% but can be interrupted. Reserved instances save 15% with 1-year commitment. Cheapest provider for A100 80GB: Vast.ai at $165.60/mo.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Micro-tier — under $1/hr. Perfect for inference, small training jobs.\n• 🟢 Storage + egress is only 7% of total — well-optimized.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• You\'re already on the cheapest provider for A100 80GB!\n• Switch to spot instances:  save ~$81.44/mo  (40% off, but interruptible)\n• 1-year reserved:  save ~$30.54/mo  (guaranteed capacity)\n• Halve hours:  $101.80/mo  (workload at off-peak?)\n• Double hours:  $407.20/mo\n',
   ],
   faq: [
     { q: 'Which cloud provider is cheapest for GPUs in 2026?', a: 'Vast.ai offers the lowest prices ($0.35-2.20/hr) through a peer-to-peer marketplace, followed by RunPod ($0.39-2.49/hr). Lambda Labs ($0.50-2.80/hr) is competitive with better reliability. AWS/GCP/Azure are 3-5x more expensive but offer enterprise SLAs, global networking, and reserved/committed-use discounts that can bring costs down 30-60%.' },

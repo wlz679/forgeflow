@@ -1,142 +1,712 @@
-<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AI API Cost Comparison — CalcKit</title><meta name="description" content="Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning."><meta property="og:title" content="AI API Cost Comparison — CalcKit"><meta property="og:description" content="Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning."><meta property="og:image" content="/og-default.png"><meta property="og:type" content="website"><meta name="robots" content="index, follow"><link rel="sitemap" href="/sitemap-index.xml"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Which AI API is the absolute cheapest in 2026?","acceptedAnswer":{"@type":"Answer","text":"DeepSeek V4 Flash at $0.14/$0.28 per 1M input/output tokens is the cheapest frontier-quality model. OpenAI GPT-5 Nano ($0.05/$0.40) is slightly cheaper on input but more expensive on output. Gemini 1.5 Flash ($0.075/$0.30) is very close. At scale (millions of requests), DeepSeek V4 Flash saves 95-99% vs GPT-5.5 or Claude Fable 5."}},{"@type":"Question","name":"Should I always use the cheapest model?","acceptedAnswer":{"@type":"Answer","text":"Not necessarily. Match the model to the task: use ultra-cheap models (GPT-5 Nano, V4 Flash, Haiku 3) for classification, routing, simple Q&A. Use mid-tier (GPT-5 Mini, V4 Pro Promo, Gemini 3 Flash) for general-purpose chat and content. Reserve premium models (GPT-5.5, Claude Fable 5, Sonnet 4.6) only for complex reasoning, code generation, and safety-critical applications."}},{"@type":"Question","name":"How does batch pricing affect costs?","acceptedAnswer":{"@type":"Answer","text":"Batch pricing cuts costs by 50% across all providers with async processing (typically within 24 hours). OpenAI, Anthropic, and Google all offer batch APIs. Use batch for: bulk data processing, overnight analytics, content pipelines, data labeling. Real-time is for: chatbots, interactive apps, code assistants. DeepSeek does not offer batch pricing — but it is already the cheapest option."}},{"@type":"Question","name":"What is the cost difference at enterprise scale?","acceptedAnswer":{"@type":"Answer","text":"At 10,000 reqs/day with 1K input + 500 output tokens: DeepSeek V4 Flash costs ~$37/month. OpenAI GPT-5 Nano costs ~$45/month. Gemini 1.5 Flash costs ~$45/month. Claude Haiku 3 costs ~$113/month. GPT-5.5 costs ~$2,850/month. Claude Fable 5 costs ~$2,500/month. The 50-75x gap between cheapest and premium models is why enterprise teams use a tiered routing strategy."}},{"@type":"Question","name":"How do I switch between AI providers easily?","acceptedAnswer":{"@type":"Answer","text":"Use an AI gateway like LiteLLM, Portkey, or OpenRouter that provides a unified OpenAI-compatible API. Deploy with tiered routing: cheapest model first (V4 Flash/GPT-5 Nano), fallback to mid-tier on failure, premium only for flagged high-complexity requests. This \"model tiering\" strategy typically reduces total costs by 80-90% vs using a single premium model."}},{"@type":"Question","name":"Do these providers offer free tiers?","acceptedAnswer":{"@type":"Answer","text":"OpenAI: free ChatGPT usage (not API). Google: free tier via AI Studio (1,500 reqs/day on select models). Anthropic: free claude.ai usage only. DeepSeek: pay-as-you-go only but ultra-low prices with generous initial credits. All major providers offer startup credits ($5K-$25K) through partner programs like AWS Activate, Google Cloud for Startups, etc."}},{"@type":"Question","name":"Which provider is best for my use case?","acceptedAnswer":{"@type":"Answer","text":"Budget + good quality: DeepSeek V4 Flash. Best free tier: Gemini 1.5 Flash (Google AI Studio). Best safety: Anthropic Claude models. Best ecosystem/tools: OpenAI. Best multimodal: Gemini 3.5 Flash. Best for coding: Claude Sonnet 4.6 or GPT-5. For most solopreneurs, using DeepSeek V4 Flash for 90% of tasks + a premium model for the remaining 10% is the optimal cost-quality strategy."}}]},{"@type":"SoftwareApplication","name":"AI API Cost Comparison","applicationCategory":"Multimedia","operatingSystem":"Web","description":"Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://calckit.com/"},{"@type":"ListItem","position":2,"name":"AI API Cost Comparison"}]}]}</script><link rel="stylesheet" href="/_astro/_slug_.D-gQEzXm.css"><script type="module" src="/_astro/hoisted.Dk0DUBIl.js"></script></head> <body class="min-h-screen flex flex-col bg-white text-gray-900">  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"> <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"> <a href="/en/" class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200"> <svg class="w-8 h-8 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> CalcKit </a> <div class="flex items-center gap-6 text-sm"> <a href="/en/blog/" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> Blog </a><a href="/en/about" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> About </a> <a href="/zh/solopreneur-ai-api-cost-comparison" class="px-3 py-1.5 text-xs font-medium bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full transition-all duration-200 ml-2"> 中文 </a> </div> </nav> </header>  <main class="max-w-6xl mx-auto px-4 py-8 flex-1"> <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb"> <a href="/en/" class="hover:text-[#7C3AED] transition-colors">Home</a> <span class="mx-2">/</span> <span class="text-gray-600">AI API Cost Comparison</span> </nav> <div class="lg:grid lg:grid-cols-5 lg:gap-10"> <div class="lg:col-span-2"> <div class="mb-6"> <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">AI API Cost Comparison</h1> <p class="text-sm text-gray-500 mt-2 leading-relaxed">Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.</p> </div> <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">  <div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="inputTokens">Input Tokens per Request</label> <input type="number" id="inputTokens" name="inputTokens" placeholder="e.g. 1000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="outputTokens">Output Tokens per Request</label> <input type="number" id="outputTokens" name="outputTokens" placeholder="e.g. 500" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="requestsPerDay">Requests per Day</label> <input type="number" id="requestsPerDay" name="requestsPerDay" placeholder="e.g. 100" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="pricingMode">Pricing Mode</label> <select id="pricingMode" name="pricingMode" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all"> <option value="">Select...</option> <option value="realtime">realtime</option><option value="batch">batch</option> </select> </div> <div class="flex flex-wrap gap-2 mt-3"> <span class="text-sm text-gray-500 mr-1">Scenarios:</span> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="800" data-outputtokens="200" data-requestsperday="500" data-pricingmode="realtime"> Support Bot </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="3000" data-outputtokens="400" data-requestsperday="200" data-pricingmode="realtime"> RAG Q&amp;A </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="5000" data-outputtokens="800" data-requestsperday="50" data-pricingmode="realtime"> Code Review </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="500" data-outputtokens="2000" data-requestsperday="100" data-pricingmode="realtime"> Content Gen </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="4000" data-outputtokens="3000" data-requestsperday="30" data-pricingmode="realtime"> Data Analysis </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="3000" data-outputtokens="5000" data-requestsperday="10000" data-pricingmode="batch"> Batch Processing </button> </div>                             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm"> Generate </button> </form> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">How to Use This Tool</h2> <div class="space-y-3"> <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">1</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average input tokens per API request.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">2</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average output tokens per API request.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">3</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Set your expected daily request volume.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">4</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Choose real-time or batch pricing (batch gives 50% off for async jobs).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">5</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Review the bar chart to see all 15 models ranked by monthly cost.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">6</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Check the Provider Summary to find the cheapest model from each provider, and use the Usage Scenarios table to plan costs at different volumes.</span> </div> </div> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h2> <div class="space-y-2"> <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Which AI API is the absolute cheapest in 2026?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">DeepSeek V4 Flash at $0.14/$0.28 per 1M input/output tokens is the cheapest frontier-quality model. OpenAI GPT-5 Nano ($0.05/$0.40) is slightly cheaper on input but more expensive on output. Gemini 1.5 Flash ($0.075/$0.30) is very close. At scale (millions of requests), DeepSeek V4 Flash saves 95-99% vs GPT-5.5 or Claude Fable 5.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Should I always use the cheapest model?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Not necessarily. Match the model to the task: use ultra-cheap models (GPT-5 Nano, V4 Flash, Haiku 3) for classification, routing, simple Q&amp;A. Use mid-tier (GPT-5 Mini, V4 Pro Promo, Gemini 3 Flash) for general-purpose chat and content. Reserve premium models (GPT-5.5, Claude Fable 5, Sonnet 4.6) only for complex reasoning, code generation, and safety-critical applications.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How does batch pricing affect costs?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Batch pricing cuts costs by 50% across all providers with async processing (typically within 24 hours). OpenAI, Anthropic, and Google all offer batch APIs. Use batch for: bulk data processing, overnight analytics, content pipelines, data labeling. Real-time is for: chatbots, interactive apps, code assistants. DeepSeek does not offer batch pricing — but it is already the cheapest option.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is the cost difference at enterprise scale?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">At 10,000 reqs/day with 1K input + 500 output tokens: DeepSeek V4 Flash costs ~$37/month. OpenAI GPT-5 Nano costs ~$45/month. Gemini 1.5 Flash costs ~$45/month. Claude Haiku 3 costs ~$113/month. GPT-5.5 costs ~$2,850/month. Claude Fable 5 costs ~$2,500/month. The 50-75x gap between cheapest and premium models is why enterprise teams use a tiered routing strategy.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How do I switch between AI providers easily?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Use an AI gateway like LiteLLM, Portkey, or OpenRouter that provides a unified OpenAI-compatible API. Deploy with tiered routing: cheapest model first (V4 Flash/GPT-5 Nano), fallback to mid-tier on failure, premium only for flagged high-complexity requests. This &quot;model tiering&quot; strategy typically reduces total costs by 80-90% vs using a single premium model.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Do these providers offer free tiers?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">OpenAI: free ChatGPT usage (not API). Google: free tier via AI Studio (1,500 reqs/day on select models). Anthropic: free claude.ai usage only. DeepSeek: pay-as-you-go only but ultra-low prices with generous initial credits. All major providers offer startup credits ($5K-$25K) through partner programs like AWS Activate, Google Cloud for Startups, etc.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Which provider is best for my use case?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Budget + good quality: DeepSeek V4 Flash. Best free tier: Gemini 1.5 Flash (Google AI Studio). Best safety: Anthropic Claude models. Best ecosystem/tools: OpenAI. Best multimodal: Gemini 3.5 Flash. Best for coding: Claude Sonnet 4.6 or GPT-5. For most solopreneurs, using DeepSeek V4 Flash for 90% of tasks + a premium model for the remaining 10% is the optimal cost-quality strategy.</p> </details> </div> </div> </div> <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section"> <div class="flex items-center justify-between mb-4"> <h2 class="text-lg font-bold text-gray-900">Results</h2> <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label="Copy All" data-copied-label="Copied!">Copy All</span> </div> <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">Example</span> <span class="inline-block text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full mb-3 ml-2" title="Pricing data synced weekly via GitHub Actions">📅 Data updated: 2026-06-17</span> <div id="static-results" class="space-y-3"> <div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#7C3AED]/30 transition-all duration-300"><div class="flex items-start justify-between gap-3 p-5 pb-3 border-b border-gray-50"><h3 class="text-base font-bold text-gray-900">🔴 Real-time Pricing</h3><div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"><button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="🔴 Real-time Pricing
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AI API Cost Comparison — CalcKit</title><meta name="description" content="Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning."><meta property="og:title" content="AI API Cost Comparison — CalcKit"><meta property="og:description" content="Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning."><meta property="og:image" content="/og-default.png"><meta property="og:type" content="website"><meta name="robots" content="index, follow"><link rel="sitemap" href="/sitemap-index.xml"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Which AI API is the absolute cheapest in 2026?","acceptedAnswer":{"@type":"Answer","text":"DeepSeek V4 Flash at $0.14/$0.28 per 1M input/output tokens is the cheapest frontier-quality model. OpenAI GPT-5 Nano ($0.05/$0.40) is slightly cheaper on input but more expensive on output. Gemini 1.5 Flash ($0.075/$0.30) is very close. At scale (millions of requests), DeepSeek V4 Flash saves 95-99% vs GPT-5.5 or Claude Fable 5."}},{"@type":"Question","name":"Should I always use the cheapest model?","acceptedAnswer":{"@type":"Answer","text":"Not necessarily. Match the model to the task: use ultra-cheap models (GPT-5 Nano, V4 Flash, Haiku 3) for classification, routing, simple Q&A. Use mid-tier (GPT-5 Mini, V4 Pro Promo, Gemini 3 Flash) for general-purpose chat and content. Reserve premium models (GPT-5.5, Claude Fable 5, Sonnet 4.6) only for complex reasoning, code generation, and safety-critical applications."}},{"@type":"Question","name":"How does batch pricing affect costs?","acceptedAnswer":{"@type":"Answer","text":"Batch pricing cuts costs by 50% across all providers with async processing (typically within 24 hours). OpenAI, Anthropic, and Google all offer batch APIs. Use batch for: bulk data processing, overnight analytics, content pipelines, data labeling. Real-time is for: chatbots, interactive apps, code assistants. DeepSeek does not offer batch pricing — but it is already the cheapest option."}},{"@type":"Question","name":"What is the cost difference at enterprise scale?","acceptedAnswer":{"@type":"Answer","text":"At 10,000 reqs/day with 1K input + 500 output tokens: DeepSeek V4 Flash costs ~$37/month. OpenAI GPT-5 Nano costs ~$45/month. Gemini 1.5 Flash costs ~$45/month. Claude Haiku 3 costs ~$113/month. GPT-5.5 costs ~$2,850/month. Claude Fable 5 costs ~$2,500/month. The 50-75x gap between cheapest and premium models is why enterprise teams use a tiered routing strategy."}},{"@type":"Question","name":"How do I switch between AI providers easily?","acceptedAnswer":{"@type":"Answer","text":"Use an AI gateway like LiteLLM, Portkey, or OpenRouter that provides a unified OpenAI-compatible API. Deploy with tiered routing: cheapest model first (V4 Flash/GPT-5 Nano), fallback to mid-tier on failure, premium only for flagged high-complexity requests. This \"model tiering\" strategy typically reduces total costs by 80-90% vs using a single premium model."}},{"@type":"Question","name":"Do these providers offer free tiers?","acceptedAnswer":{"@type":"Answer","text":"OpenAI: free ChatGPT usage (not API). Google: free tier via AI Studio (1,500 reqs/day on select models). Anthropic: free claude.ai usage only. DeepSeek: pay-as-you-go only but ultra-low prices with generous initial credits. All major providers offer startup credits ($5K-$25K) through partner programs like AWS Activate, Google Cloud for Startups, etc."}},{"@type":"Question","name":"Which provider is best for my use case?","acceptedAnswer":{"@type":"Answer","text":"Budget + good quality: DeepSeek V4 Flash. Best free tier: Gemini 1.5 Flash (Google AI Studio). Best safety: Anthropic Claude models. Best ecosystem/tools: OpenAI. Best multimodal: Gemini 3.5 Flash. Best for coding: Claude Sonnet 4.6 or GPT-5. For most solopreneurs, using DeepSeek V4 Flash for 90% of tasks + a premium model for the remaining 10% is the optimal cost-quality strategy."}}]},{"@type":"SoftwareApplication","name":"AI API Cost Comparison","applicationCategory":"Multimedia","operatingSystem":"Web","description":"Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://calckit.com/"},{"@type":"ListItem","position":2,"name":"AI API Cost Comparison"}]}]}</script><link rel="stylesheet" href="/_astro/_slug_.D-gQEzXm.css"><script type="module" src="/_astro/hoisted.Dk0DUBIl.js"></script></head> <body class="min-h-screen flex flex-col bg-white text-gray-900">  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"> <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"> <a href="/en/" class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200"> <svg class="w-8 h-8 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> CalcKit </a> <div class="flex items-center gap-6 text-sm"> <a href="/en/blog/" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> Blog </a><a href="/en/about" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> About </a> <a href="/zh/solopreneur-ai-api-cost-comparison" class="px-3 py-1.5 text-xs font-medium bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full transition-all duration-200 ml-2"> 中文 </a> </div> </nav> </header>  <main class="max-w-6xl mx-auto px-4 py-8 flex-1"> <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb"> <a href="/en/" class="hover:text-[#7C3AED] transition-colors">Home</a> <span class="mx-2">/</span> <span class="text-gray-600">AI API Cost Comparison</span> </nav> <div class="lg:grid lg:grid-cols-5 lg:gap-10"> <div class="lg:col-span-2"> <div class="mb-6"> <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">AI API Cost Comparison</h1> <p class="text-sm text-gray-500 mt-2 leading-relaxed">Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.</p> </div> <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">  <div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="inputTokens">Input Tokens per Request</label> <input type="number" id="inputTokens" name="inputTokens" placeholder="e.g. 1000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="outputTokens">Output Tokens per Request</label> <input type="number" id="outputTokens" name="outputTokens" placeholder="e.g. 500" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="requestsPerDay">Requests per Day</label> <input type="number" id="requestsPerDay" name="requestsPerDay" placeholder="e.g. 100" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="pricingMode">Pricing Mode</label> <select id="pricingMode" name="pricingMode" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all"> <option value="">Select...</option> <option value="realtime">realtime</option><option value="batch">batch</option> </select> </div> <div class="flex flex-wrap gap-2 mt-3"> <span class="text-sm text-gray-500 mr-1">Scenarios:</span> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="800" data-outputtokens="200" data-requestsperday="500" data-pricingmode="realtime"> Support Bot </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="3000" data-outputtokens="400" data-requestsperday="200" data-pricingmode="realtime"> RAG Q&amp;A </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="5000" data-outputtokens="800" data-requestsperday="50" data-pricingmode="realtime"> Code Review </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="500" data-outputtokens="2000" data-requestsperday="100" data-pricingmode="realtime"> Content Gen </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="4000" data-outputtokens="3000" data-requestsperday="30" data-pricingmode="realtime"> Data Analysis </button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-inputtokens="3000" data-outputtokens="5000" data-requestsperday="10000" data-pricingmode="batch"> Batch Processing </button> </div>                             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm"> Generate </button> </form> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">How to Use This Tool</h2> <div class="space-y-3"> <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">1</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average input tokens per API request.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">2</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average output tokens per API request.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">3</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Set your expected daily request volume.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">4</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Choose real-time or batch pricing (batch gives 50% off for async jobs).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">5</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Review the bar chart to see all 15 models ranked by monthly cost.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">6</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Check the Provider Summary to find the cheapest model from each provider, and use the Usage Scenarios table to plan costs at different volumes.</span> </div> </div> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h2> <div class="space-y-2"> <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Which AI API is the absolute cheapest in 2026?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">DeepSeek V4 Flash at $0.14/$0.28 per 1M input/output tokens is the cheapest frontier-quality model. OpenAI GPT-5 Nano ($0.05/$0.40) is slightly cheaper on input but more expensive on output. Gemini 1.5 Flash ($0.075/$0.30) is very close. At scale (millions of requests), DeepSeek V4 Flash saves 95-99% vs GPT-5.5 or Claude Fable 5.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Should I always use the cheapest model?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Not necessarily. Match the model to the task: use ultra-cheap models (GPT-5 Nano, V4 Flash, Haiku 3) for classification, routing, simple Q&amp;A. Use mid-tier (GPT-5 Mini, V4 Pro Promo, Gemini 3 Flash) for general-purpose chat and content. Reserve premium models (GPT-5.5, Claude Fable 5, Sonnet 4.6) only for complex reasoning, code generation, and safety-critical applications.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How does batch pricing affect costs?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Batch pricing cuts costs by 50% across all providers with async processing (typically within 24 hours). OpenAI, Anthropic, and Google all offer batch APIs. Use batch for: bulk data processing, overnight analytics, content pipelines, data labeling. Real-time is for: chatbots, interactive apps, code assistants. DeepSeek does not offer batch pricing — but it is already the cheapest option.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is the cost difference at enterprise scale?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">At 10,000 reqs/day with 1K input + 500 output tokens: DeepSeek V4 Flash costs ~$37/month. OpenAI GPT-5 Nano costs ~$45/month. Gemini 1.5 Flash costs ~$45/month. Claude Haiku 3 costs ~$113/month. GPT-5.5 costs ~$2,850/month. Claude Fable 5 costs ~$2,500/month. The 50-75x gap between cheapest and premium models is why enterprise teams use a tiered routing strategy.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How do I switch between AI providers easily?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Use an AI gateway like LiteLLM, Portkey, or OpenRouter that provides a unified OpenAI-compatible API. Deploy with tiered routing: cheapest model first (V4 Flash/GPT-5 Nano), fallback to mid-tier on failure, premium only for flagged high-complexity requests. This &quot;model tiering&quot; strategy typically reduces total costs by 80-90% vs using a single premium model.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Do these providers offer free tiers?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">OpenAI: free ChatGPT usage (not API). Google: free tier via AI Studio (1,500 reqs/day on select models). Anthropic: free claude.ai usage only. DeepSeek: pay-as-you-go only but ultra-low prices with generous initial credits. All major providers offer startup credits ($5K-$25K) through partner programs like AWS Activate, Google Cloud for Startups, etc.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>Which provider is best for my use case?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Budget + good quality: DeepSeek V4 Flash. Best free tier: Gemini 1.5 Flash (Google AI Studio). Best safety: Anthropic Claude models. Best ecosystem/tools: OpenAI. Best multimodal: Gemini 3.5 Flash. Best for coding: Claude Sonnet 4.6 or GPT-5. For most solopreneurs, using DeepSeek V4 Flash for 90% of tasks + a premium model for the remaining 10% is the optimal cost-quality strategy.</p> </details> </div> </div> </div> <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section"> <div class="flex items-center justify-between mb-4"> <h2 class="text-lg font-bold text-gray-900">Results</h2> <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label="Copy All" data-copied-label="Copied!">Copy All</span> </div> <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">Example</span> <span class="inline-block text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full mb-3 ml-2" title="Pricing data synced weekly via GitHub Actions">📅 Data updated: 2026-06-17</span> <div id="static-results" class="space-y-3"> <div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#7C3AED]/30 transition-all duration-300"><div class="flex items-start justify-between gap-3 p-5 pb-3 border-b border-gray-50"><h3 class="text-base font-bold text-gray-900"></h3><div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"><button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="
+🔴 Real-time Pricing
 
 Input: 1,000 tokens/req | Output: 500 tokens/req | Volume: 100 reqs/day (3,000 reqs/month)
-Comparing 15 models across 4 providers
+Comparing 188 models across 4 providers
 
 🏆 Cheapest Model Overall
 ──────────────────────────────────────────────────
-  [D] V4 Flash (DeepSeek) — $0.37/month
-  Rate: $0.14/$0.28 per 1M tokens | Context: 1M
-  Per request: $0.00041 | Daily: $0.01 | Monthly: $0.37
-  Savings vs Claude Fable 5: $24.63/month (99% cheaper)
+  [G] Gemini 1.5 Flash (Google) — $0.67/month
+  Rate: $0.07/$0.30 per 1M tokens | Context: 1M
+  Per request: $0.0002 | Daily: $0.02 | Monthly: $0.67
+  Savings vs O1Pro 20250319: $1349.32/month (100% cheaper)
 
 📊 Full Model Comparison (100 reqs/day)
 ──────────────────────────────────────────────────────
-[D] V4 Flash               ░                                       $0.37
-[O] GPT-5 Nano             █                                       $0.45
-[G] Gemini 1.5 Flash       █                                       $0.45
-[D] V4 Pro (Promo)         █                                       $1.12
-[A] Claude Haiku 3         █                                       $1.12
-[G] Gemini 3 Flash         ██                                      $1.80
-[O] GPT-5 Mini             ██                                      $2.25
-[D] V4 Pro                 ████                                    $4.54
-[A] Claude Haiku 4.5       ████                                    $4.50
-[G] Gemini 3.5 Flash       ███████                                 $7.50
-[G] Gemini 3.1 Pro         ████████████                             $13.50
-[O] GPT-5                  ███████████                              $12.75
-[A] Claude Sonnet 4.6      ██████████████                           $15.75
-[O] GPT-5.5                ██████████████████████████               $28.50
-[A] Claude Fable 5         ████████████████████████████████████████ $25.00
+[G] Gemini 1.5 Flash     ░                                    $0.67 🏆
+[G] Gemini 2.0Flash Lite █                                    $0.67
+[G] Gemini 2.0Flash Lite 001 █                                    $0.67
+[O] GPT 5Nano            █                                    $0.75
+[O] GPT 5Nano 20250807   █                                    $0.75
+[D] Deepseek Coder       █                                    $0.84
+[D] DeepSeek V4 Flash    █                                    $0.84
+[O] GPT 4.1Nano          █                                    $0.90
+[O] GPT 4.1Nano 20250414 █                                    $0.90
+[G] Gemini 2.0Flash      █                                    $0.90
+[G] Gemini 2.0Flash 001  █                                    $0.90
+[G] Gemini 2.5Flash Lite █                                    $0.90
+[G] Gemini 2.5Flash Lite Preview 0617 █                                    $0.90
+[G] Gemini 2.5Flash Lite Preview 092025 █                                    $0.90
+[G] Gemini Flash Lite Latest █                                    $0.90
+[O] GPT 4o Mini          █                                    $1.35
+[O] GPT 4o Mini 20240718 █                                    $1.35
+[O] GPT 4o Mini Audio Preview █                                    $1.35
+[O] GPT 4o Mini Audio Preview 20241217 █                                    $1.35
+[O] GPT 4o Mini Search Preview █                                    $1.35
+[O] GPT 4o Mini Search Preview 20250311 █                                    $1.35
+[D] Deepseek V3.2        █                                    $1.44
+[D] Deepseek Chat        █                                    $1.47
+[D] Deepseek Reasoner    █                                    $1.47
+[D] Deepseek V3          █                                    $2.46
+[O] GPT 5.4Nano          █                                    $2.48
+[O] GPT 5.4Nano 20260317 █                                    $2.48
+[D] V4 Pro (75% Promo)   █                                    $2.61
+[G] Gemini Gemma 227b It █                                    $2.62
+[G] Gemini Gemma 29b It  █                                    $2.62
+[A] Claude 3Haiku        █                                    $2.63
+[A] Claude Haiku 3       █                                    $2.63
+[G] Gemini 3.1Flash Image Preview █                                    $3.00
+[G] Gemini 3.1Flash Lite █                                    $3.00
+[G] Gemini 3.1Flash Lite Preview █                                    $3.00
+[O] GPT 4.1Mini          █                                    $3.60
+[O] GPT 4.1Mini 20250414 █                                    $3.60
+[O] GPT 3.5Turbo         █                                    $3.75
+[O] GPT 3.5Turbo 0125    █                                    $3.75
+[O] GPT 5.1Codex Mini    █                                    $3.75
+[O] GPT 5Mini            █                                    $3.75
+[O] GPT 5Mini 20250807   █                                    $3.75
+[G] Gemini Live 2.5Flash Preview Native Audio 092025 █                                    $3.90
+[G] Gemini 2.5Flash      █                                    $4.65
+[G] Gemini 2.5Flash Image █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Latest █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Preview 092025 █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Preview 122025 █                                    $4.65
+[G] Gemini 2.5Flash Preview 092025 █                                    $4.65
+[G] Gemini 2.5Flash Preview Tts █                                    $4.65
+[G] Gemini Exp 1206      █                                    $4.65
+[G] Gemini Flash Latest  █                                    $4.65
+[G] Gemini Robotics Er 1.5Preview █                                    $4.65
+[D] Deepseek R1          █                                    $4.94
+[O] GPT 4o Mini Realtime Preview █                                    $5.40
+[O] GPT 4o Mini Realtime Preview 20241217 █                                    $5.40
+[O] GPT Audio Mini       █                                    $5.40
+[O] GPT Audio Mini 20251006 █                                    $5.40
+[O] GPT Audio Mini 20251215 █                                    $5.40
+[O] GPT Realtime Mini    █                                    $5.40
+[O] GPT Realtime Mini 20251006 █                                    $5.40
+[O] GPT Realtime Mini 20251215 █                                    $5.40
+[O] GPT 3.5Turbo 1106    █                                    $6.00
+[G] Gemini 3 Flash       █                                    $6.00
+[G] Gemini 3Flash Preview █                                    $6.00
+[O] GPT 3.5Turbo Instruct █                                    $7.50
+[O] GPT 3.5Turbo Instruct 0914 █                                    $7.50
+[A] Claude Haiku 3.5     █                                    $8.40
+[O] GPT 5.4Mini          █                                    $9.00
+[O] GPT 5.4Mini 20260317 █                                    $9.00
+[G] Gemini 3.1Flash Live Preview █                                    $9.00
+[O] O3Mini               █                                    $9.90
+[O] O3Mini 20250131      █                                    $9.90
+[O] O4Mini               █                                    $9.90
+[O] O4Mini 20250416      █                                    $9.90
+[D] DeepSeek V4 Pro      █                                    $10.44
+[A] Claude Haiku 45      █                                    $10.50
+[O] GPT 4o Mini Transcribe █                                    $11.25
+[O] GPT 4o Mini Transcribe 20250320 █                                    $11.25
+[O] GPT 4o Mini Transcribe 20251215 █                                    $11.25
+[O] GPT 3.5Turbo 16k     █                                    $15.00
+[O] GPT 4.1              █                                    $18.00
+[O] GPT 4.120250414      █                                    $18.00
+[O] O3                   █                                    $18.00
+[O] O320250416           █                                    $18.00
+[O] O4Mini Deep Research █                                    $18.00
+[O] O4Mini Deep Research 20250626 █                                    $18.00
+[G] Gemini 3.5Flash      █                                    $18.00
+[O] GPT 5                █                                    $18.75
+[O] GPT 5.1              █                                    $18.75
+[O] GPT 5.120251113      █                                    $18.75
+[O] GPT 5.1Chat Latest   █                                    $18.75
+[O] GPT 5.1Codex         █                                    $18.75
+[O] GPT 5.1Codex Max     █                                    $18.75
+[O] GPT 520250807        █                                    $18.75
+[O] GPT 5Chat            █                                    $18.75
+[O] GPT 5Chat Latest     █                                    $18.75
+[O] GPT 5Codex           █                                    $18.75
+[O] GPT 5Search Api      █                                    $18.75
+[O] GPT 5Search Api 20251014 █                                    $18.75
+[G] Gemini 2.5Computer Use Preview 102025 █                                    $18.75
+[G] Gemini 2.5Pro        █                                    $18.75
+[G] Gemini 2.5Pro Preview Tts █                                    $18.75
+[G] Gemini Pro Latest    █                                    $18.75
+[O] GPT 4o               █                                    $22.50
+[O] GPT 4o 20240806      █                                    $22.50
+[O] GPT 4o 20241120      █                                    $22.50
+[O] GPT 4o Audio Preview █                                    $22.50
+[O] GPT 4o Audio Preview 20241217 █                                    $22.50
+[O] GPT 4o Audio Preview 20250603 █                                    $22.50
+[O] GPT 4o Mini Tts      █                                    $22.50
+[O] GPT 4o Mini Tts 20250320 █                                    $22.50
+[O] GPT 4o Mini Tts 20251215 █                                    $22.50
+[O] GPT 4o Search Preview █                                    $22.50
+[O] GPT 4o Search Preview 20250311 █                                    $22.50
+[O] GPT 4o Transcribe    █                                    $22.50
+[O] GPT 4o Transcribe Diarize █                                    $22.50
+[O] GPT Audio            █                                    $22.50
+[O] GPT Audio 1.5        █                                    $22.50
+[O] GPT Audio 20250828   █                                    $22.50
+[G] Deep Research Pro Preview 122025 █                                    $24.00
+[G] Gemini 3.1Pro Preview █                                    $24.00
+[G] Gemini 3.1Pro Preview Customtools █                                    $24.00
+[G] Gemini 3Pro Image Preview █                                    $24.00
+[G] Gemini 3Pro Preview  █                                    $24.00
+[O] GPT 5.2              █                                    $26.25
+[O] GPT 5.220251211      █                                    $26.25
+[O] GPT 5.2Chat Latest   █                                    $26.25
+[O] GPT 5.2Codex         █                                    $26.25
+[O] GPT 5.3Chat Latest   █                                    $26.25
+[O] GPT 5.3Codex         █                                    $26.25
+[G] Gemini 1.5 Pro       █                                    $26.25
+[O] GPT 5.4              █                                    $30.00
+[O] GPT 5.420260305      █                                    $30.00
+[O] GPT Image 1.5        █                                    $30.00
+[O] GPT Image 1.520251216 █                                    $30.00
+[O] GPT Image 2          █                                    $30.00
+[O] GPT Image 220260421  █                                    $30.00
+[G] Gemini 3.1 Pro       █                                    $30.00
+[A] Claude 37 Sonnet     █                                    $31.50
+[A] Claude 4Sonnet       █                                    $31.50
+[A] Claude Sonnet 4      █                                    $31.50
+[A] Claude Sonnet 45     █                                    $31.50
+[A] Claude Sonnet 45 20250929V1:0 █                                    $31.50
+[A] Claude Sonnet 46     █                                    $31.50
+[O] GPT Realtime         █                                    $36.00
+[O] GPT Realtime 1.5     █                                    $36.00
+[O] GPT Realtime 2       █                                    $36.00
+[O] GPT Realtime 20250828 █                                    $36.00
+[O] GPT 4o 20240513      █                                    $37.50
+[O] GPT 4o Realtime Preview █                                    $45.00
+[O] GPT 4o Realtime Preview 20241217 █                                    $45.00
+[O] GPT 4o Realtime Preview 20250603 █                                    $45.00
+[A] Claude Opus 45       █                                    $52.50
+[A] Claude Opus 46       █                                    $52.50
+[A] Claude Opus 47       █                                    $52.50
+[A] Claude Opus 48       █                                    $52.50
+[O] GPT 5.5              ██                                   $60.00
+[O] GPT 5.520260423      ██                                   $60.00
+[O] GPT 40125Preview     ██                                   $75.00
+[O] GPT 41106Preview     ██                                   $75.00
+[O] GPT 4Turbo           ██                                   $75.00
+[O] GPT 4Turbo 20240409  ██                                   $75.00
+[O] GPT 4Turbo Preview   ██                                   $75.00
+[O] O3Deep Research      ██                                   $90.00
+[O] O3Deep Research 20250626 ██                                   $90.00
+[A] Claude Fable 5       ███                                  $105.00
+[O] O1                   ████                                 $135.00
+[O] O120241217           ████                                 $135.00
+[A] Claude 3Opus         ████                                 $157.50
+[A] Claude 4Opus         ████                                 $157.50
+[A] Claude Opus 4        ████                                 $157.50
+[A] Claude Opus 41       ████                                 $157.50
+[O] GPT 4                █████                                $180.00
+[O] GPT 40314            █████                                $180.00
+[O] GPT 40613            █████                                $180.00
+[O] O3Pro                █████                                $180.00
+[O] O3Pro 20250610       █████                                $180.00
+[O] GPT 5Pro             ██████                               $225.00
+[O] GPT 5Pro 20251006    ██████                               $225.00
+[O] GPT 5.2Pro           ████████                             $315.00
+[O] GPT 5.2Pro 20251211  ████████                             $315.00
+[O] GPT 5.4Pro           ██████████                           $360.00
+[O] GPT 5.4Pro 20260305  ██████████                           $360.00
+[O] GPT 5.5Pro           ██████████                           $360.00
+[O] GPT 5.5Pro 20260423  ██████████                           $360.00
+[O] O1Pro                ████████████████████████████████████ $1350.00
+[O] O1Pro 20250319       ████████████████████████████████████ $1350.00
 
 🔍 Provider Summary
 ──────────────────────────────────────────────────
-  [O] OpenAI: GPT-5 Nano (cheapest) at $0.45/month | Range: $0.45 – $28.50/month
-  [A] Anthropic: Claude Haiku 3 (cheapest) at $1.12/month | Range: $1.12 – $25.00/month
-  [G] Google: Gemini 1.5 Flash (cheapest) at $0.45/month | Range: $0.45 – $13.50/month
-  [D] DeepSeek: V4 Flash (cheapest) at $0.37/month | Range: $0.37 – $4.54/month
+  [O] OpenAI: GPT 5Nano (cheapest) at $0.75/month | Range: $0.75 – $1350.00/month
+  [A] Anthropic: Claude 3Haiku (cheapest) at $2.63/month | Range: $2.63 – $157.50/month
+  [G] Google: Gemini 1.5 Flash (cheapest) at $0.67/month | Range: $0.67 – $30.00/month
+  [D] DeepSeek: Deepseek Coder (cheapest) at $0.84/month | Range: $0.84 – $10.44/month
 
 📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes
 
-Model                  | 50 reqs/day   | 100 reqs/day  | 500 reqs/day  | 1,000 reqs/day | 5,000 reqs/day | 10,000 reqs/day
-──────────────────────-+-──────────────-+-──────────────-+-──────────────-+-───────────────-+-───────────────-+-────────────────
-[D] V4 Flash           | $0.18         | $0.37         | $1.84         | $3.68          | $18.45         | $36.90         
-[O] GPT-5 Nano         | $0.23         | $0.45         | $2.25         | $4.50          | $22.50         | $45.00         
-[G] Gemini 1.5 Flash   | $0.22         | $0.45         | $2.25         | $4.50          | $22.50         | $45.00         
-[D] V4 Pro (Promo)     | $0.56         | $1.12         | $5.64         | $11.28         | $56.42         | $112.84        
-[A] Claude Haiku 3     | $0.56         | $1.12         | $5.62         | $11.25         | $56.25         | $112.50        
-" data-copy-label="Copy" data-copied-label="Copied!"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">Copy</span> </button> <button type="button" class="export-btn inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#059669] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-export="🔴 Real-time Pricing
+Model                  | 50 reqs/day      | 100 reqs/day      | 500 reqs/day      | 1,000 reqs/day      | 5,000 reqs/day      | 10,000 reqs/day     
+──────────────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────
+[G] Gemini 1.5 Flash   | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[G] Gemini 2.0Flash Lite | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[G] Gemini 2.0Flash Lite 001 | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[O] GPT 5Nano          | $0.38          | $0.75          | $3.75          | $7.50          | $37.50         | $75.00        
+[O] GPT 5Nano 20250807 | $0.38          | $0.75          | $3.75          | $7.50          | $37.50         | $75.00        
+
+Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek
+
+🩺 Cost Health:
+────────────────────────────────────────────────────────────
+• 🏆 Cheapest overall: Gemini 1.5 Flash at $0.67/mo (google)
+• 💸 Most expensive in this comparison: O1Pro 20250319 at $1350.00/mo
+• 🔴 2000x cost spread — O1Pro 20250319 is 50x+ the cheapest. For most workloads, the cheapest model will suffice.
+• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don't pick purely on price.
+
+🔄 What-If Scenarios:
+────────────────────────────────────────────────────────────
+• Switch all workloads to cheapest:  save vs current $0.67/mo (already optimal)
+• Double volume to 200 reqs/day:  cheapest becomes $1.35/mo
+• Halve volume to 50 reqs/day:  save proportionally
+• If you only need cheap inference: pick Gemini 1.5 Flash (cheapest) and route 80% of traffic there
+" data-copy-label="Copy" data-copied-label="Copied!"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">Copy</span> </button> <button type="button" class="export-btn inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#059669] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-export="
+🔴 Real-time Pricing
 
 Input: 1,000 tokens/req | Output: 500 tokens/req | Volume: 100 reqs/day (3,000 reqs/month)
-Comparing 15 models across 4 providers
+Comparing 188 models across 4 providers
 
 🏆 Cheapest Model Overall
 ──────────────────────────────────────────────────
-  [D] V4 Flash (DeepSeek) — $0.37/month
-  Rate: $0.14/$0.28 per 1M tokens | Context: 1M
-  Per request: $0.00041 | Daily: $0.01 | Monthly: $0.37
-  Savings vs Claude Fable 5: $24.63/month (99% cheaper)
+  [G] Gemini 1.5 Flash (Google) — $0.67/month
+  Rate: $0.07/$0.30 per 1M tokens | Context: 1M
+  Per request: $0.0002 | Daily: $0.02 | Monthly: $0.67
+  Savings vs O1Pro 20250319: $1349.32/month (100% cheaper)
 
 📊 Full Model Comparison (100 reqs/day)
 ──────────────────────────────────────────────────────
-[D] V4 Flash               ░                                       $0.37
-[O] GPT-5 Nano             █                                       $0.45
-[G] Gemini 1.5 Flash       █                                       $0.45
-[D] V4 Pro (Promo)         █                                       $1.12
-[A] Claude Haiku 3         █                                       $1.12
-[G] Gemini 3 Flash         ██                                      $1.80
-[O] GPT-5 Mini             ██                                      $2.25
-[D] V4 Pro                 ████                                    $4.54
-[A] Claude Haiku 4.5       ████                                    $4.50
-[G] Gemini 3.5 Flash       ███████                                 $7.50
-[G] Gemini 3.1 Pro         ████████████                             $13.50
-[O] GPT-5                  ███████████                              $12.75
-[A] Claude Sonnet 4.6      ██████████████                           $15.75
-[O] GPT-5.5                ██████████████████████████               $28.50
-[A] Claude Fable 5         ████████████████████████████████████████ $25.00
+[G] Gemini 1.5 Flash     ░                                    $0.67 🏆
+[G] Gemini 2.0Flash Lite █                                    $0.67
+[G] Gemini 2.0Flash Lite 001 █                                    $0.67
+[O] GPT 5Nano            █                                    $0.75
+[O] GPT 5Nano 20250807   █                                    $0.75
+[D] Deepseek Coder       █                                    $0.84
+[D] DeepSeek V4 Flash    █                                    $0.84
+[O] GPT 4.1Nano          █                                    $0.90
+[O] GPT 4.1Nano 20250414 █                                    $0.90
+[G] Gemini 2.0Flash      █                                    $0.90
+[G] Gemini 2.0Flash 001  █                                    $0.90
+[G] Gemini 2.5Flash Lite █                                    $0.90
+[G] Gemini 2.5Flash Lite Preview 0617 █                                    $0.90
+[G] Gemini 2.5Flash Lite Preview 092025 █                                    $0.90
+[G] Gemini Flash Lite Latest █                                    $0.90
+[O] GPT 4o Mini          █                                    $1.35
+[O] GPT 4o Mini 20240718 █                                    $1.35
+[O] GPT 4o Mini Audio Preview █                                    $1.35
+[O] GPT 4o Mini Audio Preview 20241217 █                                    $1.35
+[O] GPT 4o Mini Search Preview █                                    $1.35
+[O] GPT 4o Mini Search Preview 20250311 █                                    $1.35
+[D] Deepseek V3.2        █                                    $1.44
+[D] Deepseek Chat        █                                    $1.47
+[D] Deepseek Reasoner    █                                    $1.47
+[D] Deepseek V3          █                                    $2.46
+[O] GPT 5.4Nano          █                                    $2.48
+[O] GPT 5.4Nano 20260317 █                                    $2.48
+[D] V4 Pro (75% Promo)   █                                    $2.61
+[G] Gemini Gemma 227b It █                                    $2.62
+[G] Gemini Gemma 29b It  █                                    $2.62
+[A] Claude 3Haiku        █                                    $2.63
+[A] Claude Haiku 3       █                                    $2.63
+[G] Gemini 3.1Flash Image Preview █                                    $3.00
+[G] Gemini 3.1Flash Lite █                                    $3.00
+[G] Gemini 3.1Flash Lite Preview █                                    $3.00
+[O] GPT 4.1Mini          █                                    $3.60
+[O] GPT 4.1Mini 20250414 █                                    $3.60
+[O] GPT 3.5Turbo         █                                    $3.75
+[O] GPT 3.5Turbo 0125    █                                    $3.75
+[O] GPT 5.1Codex Mini    █                                    $3.75
+[O] GPT 5Mini            █                                    $3.75
+[O] GPT 5Mini 20250807   █                                    $3.75
+[G] Gemini Live 2.5Flash Preview Native Audio 092025 █                                    $3.90
+[G] Gemini 2.5Flash      █                                    $4.65
+[G] Gemini 2.5Flash Image █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Latest █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Preview 092025 █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Preview 122025 █                                    $4.65
+[G] Gemini 2.5Flash Preview 092025 █                                    $4.65
+[G] Gemini 2.5Flash Preview Tts █                                    $4.65
+[G] Gemini Exp 1206      █                                    $4.65
+[G] Gemini Flash Latest  █                                    $4.65
+[G] Gemini Robotics Er 1.5Preview █                                    $4.65
+[D] Deepseek R1          █                                    $4.94
+[O] GPT 4o Mini Realtime Preview █                                    $5.40
+[O] GPT 4o Mini Realtime Preview 20241217 █                                    $5.40
+[O] GPT Audio Mini       █                                    $5.40
+[O] GPT Audio Mini 20251006 █                                    $5.40
+[O] GPT Audio Mini 20251215 █                                    $5.40
+[O] GPT Realtime Mini    █                                    $5.40
+[O] GPT Realtime Mini 20251006 █                                    $5.40
+[O] GPT Realtime Mini 20251215 █                                    $5.40
+[O] GPT 3.5Turbo 1106    █                                    $6.00
+[G] Gemini 3 Flash       █                                    $6.00
+[G] Gemini 3Flash Preview █                                    $6.00
+[O] GPT 3.5Turbo Instruct █                                    $7.50
+[O] GPT 3.5Turbo Instruct 0914 █                                    $7.50
+[A] Claude Haiku 3.5     █                                    $8.40
+[O] GPT 5.4Mini          █                                    $9.00
+[O] GPT 5.4Mini 20260317 █                                    $9.00
+[G] Gemini 3.1Flash Live Preview █                                    $9.00
+[O] O3Mini               █                                    $9.90
+[O] O3Mini 20250131      █                                    $9.90
+[O] O4Mini               █                                    $9.90
+[O] O4Mini 20250416      █                                    $9.90
+[D] DeepSeek V4 Pro      █                                    $10.44
+[A] Claude Haiku 45      █                                    $10.50
+[O] GPT 4o Mini Transcribe █                                    $11.25
+[O] GPT 4o Mini Transcribe 20250320 █                                    $11.25
+[O] GPT 4o Mini Transcribe 20251215 █                                    $11.25
+[O] GPT 3.5Turbo 16k     █                                    $15.00
+[O] GPT 4.1              █                                    $18.00
+[O] GPT 4.120250414      █                                    $18.00
+[O] O3                   █                                    $18.00
+[O] O320250416           █                                    $18.00
+[O] O4Mini Deep Research █                                    $18.00
+[O] O4Mini Deep Research 20250626 █                                    $18.00
+[G] Gemini 3.5Flash      █                                    $18.00
+[O] GPT 5                █                                    $18.75
+[O] GPT 5.1              █                                    $18.75
+[O] GPT 5.120251113      █                                    $18.75
+[O] GPT 5.1Chat Latest   █                                    $18.75
+[O] GPT 5.1Codex         █                                    $18.75
+[O] GPT 5.1Codex Max     █                                    $18.75
+[O] GPT 520250807        █                                    $18.75
+[O] GPT 5Chat            █                                    $18.75
+[O] GPT 5Chat Latest     █                                    $18.75
+[O] GPT 5Codex           █                                    $18.75
+[O] GPT 5Search Api      █                                    $18.75
+[O] GPT 5Search Api 20251014 █                                    $18.75
+[G] Gemini 2.5Computer Use Preview 102025 █                                    $18.75
+[G] Gemini 2.5Pro        █                                    $18.75
+[G] Gemini 2.5Pro Preview Tts █                                    $18.75
+[G] Gemini Pro Latest    █                                    $18.75
+[O] GPT 4o               █                                    $22.50
+[O] GPT 4o 20240806      █                                    $22.50
+[O] GPT 4o 20241120      █                                    $22.50
+[O] GPT 4o Audio Preview █                                    $22.50
+[O] GPT 4o Audio Preview 20241217 █                                    $22.50
+[O] GPT 4o Audio Preview 20250603 █                                    $22.50
+[O] GPT 4o Mini Tts      █                                    $22.50
+[O] GPT 4o Mini Tts 20250320 █                                    $22.50
+[O] GPT 4o Mini Tts 20251215 █                                    $22.50
+[O] GPT 4o Search Preview █                                    $22.50
+[O] GPT 4o Search Preview 20250311 █                                    $22.50
+[O] GPT 4o Transcribe    █                                    $22.50
+[O] GPT 4o Transcribe Diarize █                                    $22.50
+[O] GPT Audio            █                                    $22.50
+[O] GPT Audio 1.5        █                                    $22.50
+[O] GPT Audio 20250828   █                                    $22.50
+[G] Deep Research Pro Preview 122025 █                                    $24.00
+[G] Gemini 3.1Pro Preview █                                    $24.00
+[G] Gemini 3.1Pro Preview Customtools █                                    $24.00
+[G] Gemini 3Pro Image Preview █                                    $24.00
+[G] Gemini 3Pro Preview  █                                    $24.00
+[O] GPT 5.2              █                                    $26.25
+[O] GPT 5.220251211      █                                    $26.25
+[O] GPT 5.2Chat Latest   █                                    $26.25
+[O] GPT 5.2Codex         █                                    $26.25
+[O] GPT 5.3Chat Latest   █                                    $26.25
+[O] GPT 5.3Codex         █                                    $26.25
+[G] Gemini 1.5 Pro       █                                    $26.25
+[O] GPT 5.4              █                                    $30.00
+[O] GPT 5.420260305      █                                    $30.00
+[O] GPT Image 1.5        █                                    $30.00
+[O] GPT Image 1.520251216 █                                    $30.00
+[O] GPT Image 2          █                                    $30.00
+[O] GPT Image 220260421  █                                    $30.00
+[G] Gemini 3.1 Pro       █                                    $30.00
+[A] Claude 37 Sonnet     █                                    $31.50
+[A] Claude 4Sonnet       █                                    $31.50
+[A] Claude Sonnet 4      █                                    $31.50
+[A] Claude Sonnet 45     █                                    $31.50
+[A] Claude Sonnet 45 20250929V1:0 █                                    $31.50
+[A] Claude Sonnet 46     █                                    $31.50
+[O] GPT Realtime         █                                    $36.00
+[O] GPT Realtime 1.5     █                                    $36.00
+[O] GPT Realtime 2       █                                    $36.00
+[O] GPT Realtime 20250828 █                                    $36.00
+[O] GPT 4o 20240513      █                                    $37.50
+[O] GPT 4o Realtime Preview █                                    $45.00
+[O] GPT 4o Realtime Preview 20241217 █                                    $45.00
+[O] GPT 4o Realtime Preview 20250603 █                                    $45.00
+[A] Claude Opus 45       █                                    $52.50
+[A] Claude Opus 46       █                                    $52.50
+[A] Claude Opus 47       █                                    $52.50
+[A] Claude Opus 48       █                                    $52.50
+[O] GPT 5.5              ██                                   $60.00
+[O] GPT 5.520260423      ██                                   $60.00
+[O] GPT 40125Preview     ██                                   $75.00
+[O] GPT 41106Preview     ██                                   $75.00
+[O] GPT 4Turbo           ██                                   $75.00
+[O] GPT 4Turbo 20240409  ██                                   $75.00
+[O] GPT 4Turbo Preview   ██                                   $75.00
+[O] O3Deep Research      ██                                   $90.00
+[O] O3Deep Research 20250626 ██                                   $90.00
+[A] Claude Fable 5       ███                                  $105.00
+[O] O1                   ████                                 $135.00
+[O] O120241217           ████                                 $135.00
+[A] Claude 3Opus         ████                                 $157.50
+[A] Claude 4Opus         ████                                 $157.50
+[A] Claude Opus 4        ████                                 $157.50
+[A] Claude Opus 41       ████                                 $157.50
+[O] GPT 4                █████                                $180.00
+[O] GPT 40314            █████                                $180.00
+[O] GPT 40613            █████                                $180.00
+[O] O3Pro                █████                                $180.00
+[O] O3Pro 20250610       █████                                $180.00
+[O] GPT 5Pro             ██████                               $225.00
+[O] GPT 5Pro 20251006    ██████                               $225.00
+[O] GPT 5.2Pro           ████████                             $315.00
+[O] GPT 5.2Pro 20251211  ████████                             $315.00
+[O] GPT 5.4Pro           ██████████                           $360.00
+[O] GPT 5.4Pro 20260305  ██████████                           $360.00
+[O] GPT 5.5Pro           ██████████                           $360.00
+[O] GPT 5.5Pro 20260423  ██████████                           $360.00
+[O] O1Pro                ████████████████████████████████████ $1350.00
+[O] O1Pro 20250319       ████████████████████████████████████ $1350.00
 
 🔍 Provider Summary
 ──────────────────────────────────────────────────
-  [O] OpenAI: GPT-5 Nano (cheapest) at $0.45/month | Range: $0.45 – $28.50/month
-  [A] Anthropic: Claude Haiku 3 (cheapest) at $1.12/month | Range: $1.12 – $25.00/month
-  [G] Google: Gemini 1.5 Flash (cheapest) at $0.45/month | Range: $0.45 – $13.50/month
-  [D] DeepSeek: V4 Flash (cheapest) at $0.37/month | Range: $0.37 – $4.54/month
+  [O] OpenAI: GPT 5Nano (cheapest) at $0.75/month | Range: $0.75 – $1350.00/month
+  [A] Anthropic: Claude 3Haiku (cheapest) at $2.63/month | Range: $2.63 – $157.50/month
+  [G] Google: Gemini 1.5 Flash (cheapest) at $0.67/month | Range: $0.67 – $30.00/month
+  [D] DeepSeek: Deepseek Coder (cheapest) at $0.84/month | Range: $0.84 – $10.44/month
 
 📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes
 
-Model                  | 50 reqs/day   | 100 reqs/day  | 500 reqs/day  | 1,000 reqs/day | 5,000 reqs/day | 10,000 reqs/day
-──────────────────────-+-──────────────-+-──────────────-+-──────────────-+-───────────────-+-───────────────-+-────────────────
-[D] V4 Flash           | $0.18         | $0.37         | $1.84         | $3.68          | $18.45         | $36.90         
-[O] GPT-5 Nano         | $0.23         | $0.45         | $2.25         | $4.50          | $22.50         | $45.00         
-[G] Gemini 1.5 Flash   | $0.22         | $0.45         | $2.25         | $4.50          | $22.50         | $45.00         
-[D] V4 Pro (Promo)     | $0.56         | $1.12         | $5.64         | $11.28         | $56.42         | $112.84        
-[A] Claude Haiku 3     | $0.56         | $1.12         | $5.62         | $11.25         | $56.25         | $112.50        
-"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span>Export</span></button></div></div><div class="p-5 bg-gray-50/50 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">
+Model                  | 50 reqs/day      | 100 reqs/day      | 500 reqs/day      | 1,000 reqs/day      | 5,000 reqs/day      | 10,000 reqs/day     
+──────────────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────
+[G] Gemini 1.5 Flash   | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[G] Gemini 2.0Flash Lite | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[G] Gemini 2.0Flash Lite 001 | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[O] GPT 5Nano          | $0.38          | $0.75          | $3.75          | $7.50          | $37.50         | $75.00        
+[O] GPT 5Nano 20250807 | $0.38          | $0.75          | $3.75          | $7.50          | $37.50         | $75.00        
+
+Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek
+
+🩺 Cost Health:
+────────────────────────────────────────────────────────────
+• 🏆 Cheapest overall: Gemini 1.5 Flash at $0.67/mo (google)
+• 💸 Most expensive in this comparison: O1Pro 20250319 at $1350.00/mo
+• 🔴 2000x cost spread — O1Pro 20250319 is 50x+ the cheapest. For most workloads, the cheapest model will suffice.
+• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don't pick purely on price.
+
+🔄 What-If Scenarios:
+────────────────────────────────────────────────────────────
+• Switch all workloads to cheapest:  save vs current $0.67/mo (already optimal)
+• Double volume to 200 reqs/day:  cheapest becomes $1.35/mo
+• Halve volume to 50 reqs/day:  save proportionally
+• If you only need cheap inference: pick Gemini 1.5 Flash (cheapest) and route 80% of traffic there
+"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span>Export</span></button></div></div><div class="p-5 bg-gray-50/50 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">🔴 Real-time Pricing
+
 Input: 1,000 tokens/req | Output: 500 tokens/req | Volume: 100 reqs/day (3,000 reqs/month)
-Comparing 15 models across 4 providers
+Comparing 188 models across 4 providers
 
 🏆 Cheapest Model Overall
 ──────────────────────────────────────────────────
-  [D] V4 Flash (DeepSeek) — $0.37/month
-  Rate: $0.14/$0.28 per 1M tokens | Context: 1M
-  Per request: $0.00041 | Daily: $0.01 | Monthly: $0.37
-  Savings vs Claude Fable 5: $24.63/month (99% cheaper)
+  [G] Gemini 1.5 Flash (Google) — $0.67/month
+  Rate: $0.07/$0.30 per 1M tokens | Context: 1M
+  Per request: $0.0002 | Daily: $0.02 | Monthly: $0.67
+  Savings vs O1Pro 20250319: $1349.32/month (100% cheaper)
 
 📊 Full Model Comparison (100 reqs/day)
 ──────────────────────────────────────────────────────
-[D] V4 Flash               ░                                       $0.37
-[O] GPT-5 Nano             █                                       $0.45
-[G] Gemini 1.5 Flash       █                                       $0.45
-[D] V4 Pro (Promo)         █                                       $1.12
-[A] Claude Haiku 3         █                                       $1.12
-[G] Gemini 3 Flash         ██                                      $1.80
-[O] GPT-5 Mini             ██                                      $2.25
-[D] V4 Pro                 ████                                    $4.54
-[A] Claude Haiku 4.5       ████                                    $4.50
-[G] Gemini 3.5 Flash       ███████                                 $7.50
-[G] Gemini 3.1 Pro         ████████████                             $13.50
-[O] GPT-5                  ███████████                              $12.75
-[A] Claude Sonnet 4.6      ██████████████                           $15.75
-[O] GPT-5.5                ██████████████████████████               $28.50
-[A] Claude Fable 5         ████████████████████████████████████████ $25.00
+[G] Gemini 1.5 Flash     ░                                    $0.67 🏆
+[G] Gemini 2.0Flash Lite █                                    $0.67
+[G] Gemini 2.0Flash Lite 001 █                                    $0.67
+[O] GPT 5Nano            █                                    $0.75
+[O] GPT 5Nano 20250807   █                                    $0.75
+[D] Deepseek Coder       █                                    $0.84
+[D] DeepSeek V4 Flash    █                                    $0.84
+[O] GPT 4.1Nano          █                                    $0.90
+[O] GPT 4.1Nano 20250414 █                                    $0.90
+[G] Gemini 2.0Flash      █                                    $0.90
+[G] Gemini 2.0Flash 001  █                                    $0.90
+[G] Gemini 2.5Flash Lite █                                    $0.90
+[G] Gemini 2.5Flash Lite Preview 0617 █                                    $0.90
+[G] Gemini 2.5Flash Lite Preview 092025 █                                    $0.90
+[G] Gemini Flash Lite Latest █                                    $0.90
+[O] GPT 4o Mini          █                                    $1.35
+[O] GPT 4o Mini 20240718 █                                    $1.35
+[O] GPT 4o Mini Audio Preview █                                    $1.35
+[O] GPT 4o Mini Audio Preview 20241217 █                                    $1.35
+[O] GPT 4o Mini Search Preview █                                    $1.35
+[O] GPT 4o Mini Search Preview 20250311 █                                    $1.35
+[D] Deepseek V3.2        █                                    $1.44
+[D] Deepseek Chat        █                                    $1.47
+[D] Deepseek Reasoner    █                                    $1.47
+[D] Deepseek V3          █                                    $2.46
+[O] GPT 5.4Nano          █                                    $2.48
+[O] GPT 5.4Nano 20260317 █                                    $2.48
+[D] V4 Pro (75% Promo)   █                                    $2.61
+[G] Gemini Gemma 227b It █                                    $2.62
+[G] Gemini Gemma 29b It  █                                    $2.62
+[A] Claude 3Haiku        █                                    $2.63
+[A] Claude Haiku 3       █                                    $2.63
+[G] Gemini 3.1Flash Image Preview █                                    $3.00
+[G] Gemini 3.1Flash Lite █                                    $3.00
+[G] Gemini 3.1Flash Lite Preview █                                    $3.00
+[O] GPT 4.1Mini          █                                    $3.60
+[O] GPT 4.1Mini 20250414 █                                    $3.60
+[O] GPT 3.5Turbo         █                                    $3.75
+[O] GPT 3.5Turbo 0125    █                                    $3.75
+[O] GPT 5.1Codex Mini    █                                    $3.75
+[O] GPT 5Mini            █                                    $3.75
+[O] GPT 5Mini 20250807   █                                    $3.75
+[G] Gemini Live 2.5Flash Preview Native Audio 092025 █                                    $3.90
+[G] Gemini 2.5Flash      █                                    $4.65
+[G] Gemini 2.5Flash Image █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Latest █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Preview 092025 █                                    $4.65
+[G] Gemini 2.5Flash Native Audio Preview 122025 █                                    $4.65
+[G] Gemini 2.5Flash Preview 092025 █                                    $4.65
+[G] Gemini 2.5Flash Preview Tts █                                    $4.65
+[G] Gemini Exp 1206      █                                    $4.65
+[G] Gemini Flash Latest  █                                    $4.65
+[G] Gemini Robotics Er 1.5Preview █                                    $4.65
+[D] Deepseek R1          █                                    $4.94
+[O] GPT 4o Mini Realtime Preview █                                    $5.40
+[O] GPT 4o Mini Realtime Preview 20241217 █                                    $5.40
+[O] GPT Audio Mini       █                                    $5.40
+[O] GPT Audio Mini 20251006 █                                    $5.40
+[O] GPT Audio Mini 20251215 █                                    $5.40
+[O] GPT Realtime Mini    █                                    $5.40
+[O] GPT Realtime Mini 20251006 █                                    $5.40
+[O] GPT Realtime Mini 20251215 █                                    $5.40
+[O] GPT 3.5Turbo 1106    █                                    $6.00
+[G] Gemini 3 Flash       █                                    $6.00
+[G] Gemini 3Flash Preview █                                    $6.00
+[O] GPT 3.5Turbo Instruct █                                    $7.50
+[O] GPT 3.5Turbo Instruct 0914 █                                    $7.50
+[A] Claude Haiku 3.5     █                                    $8.40
+[O] GPT 5.4Mini          █                                    $9.00
+[O] GPT 5.4Mini 20260317 █                                    $9.00
+[G] Gemini 3.1Flash Live Preview █                                    $9.00
+[O] O3Mini               █                                    $9.90
+[O] O3Mini 20250131      █                                    $9.90
+[O] O4Mini               █                                    $9.90
+[O] O4Mini 20250416      █                                    $9.90
+[D] DeepSeek V4 Pro      █                                    $10.44
+[A] Claude Haiku 45      █                                    $10.50
+[O] GPT 4o Mini Transcribe █                                    $11.25
+[O] GPT 4o Mini Transcribe 20250320 █                                    $11.25
+[O] GPT 4o Mini Transcribe 20251215 █                                    $11.25
+[O] GPT 3.5Turbo 16k     █                                    $15.00
+[O] GPT 4.1              █                                    $18.00
+[O] GPT 4.120250414      █                                    $18.00
+[O] O3                   █                                    $18.00
+[O] O320250416           █                                    $18.00
+[O] O4Mini Deep Research █                                    $18.00
+[O] O4Mini Deep Research 20250626 █                                    $18.00
+[G] Gemini 3.5Flash      █                                    $18.00
+[O] GPT 5                █                                    $18.75
+[O] GPT 5.1              █                                    $18.75
+[O] GPT 5.120251113      █                                    $18.75
+[O] GPT 5.1Chat Latest   █                                    $18.75
+[O] GPT 5.1Codex         █                                    $18.75
+[O] GPT 5.1Codex Max     █                                    $18.75
+[O] GPT 520250807        █                                    $18.75
+[O] GPT 5Chat            █                                    $18.75
+[O] GPT 5Chat Latest     █                                    $18.75
+[O] GPT 5Codex           █                                    $18.75
+[O] GPT 5Search Api      █                                    $18.75
+[O] GPT 5Search Api 20251014 █                                    $18.75
+[G] Gemini 2.5Computer Use Preview 102025 █                                    $18.75
+[G] Gemini 2.5Pro        █                                    $18.75
+[G] Gemini 2.5Pro Preview Tts █                                    $18.75
+[G] Gemini Pro Latest    █                                    $18.75
+[O] GPT 4o               █                                    $22.50
+[O] GPT 4o 20240806      █                                    $22.50
+[O] GPT 4o 20241120      █                                    $22.50
+[O] GPT 4o Audio Preview █                                    $22.50
+[O] GPT 4o Audio Preview 20241217 █                                    $22.50
+[O] GPT 4o Audio Preview 20250603 █                                    $22.50
+[O] GPT 4o Mini Tts      █                                    $22.50
+[O] GPT 4o Mini Tts 20250320 █                                    $22.50
+[O] GPT 4o Mini Tts 20251215 █                                    $22.50
+[O] GPT 4o Search Preview █                                    $22.50
+[O] GPT 4o Search Preview 20250311 █                                    $22.50
+[O] GPT 4o Transcribe    █                                    $22.50
+[O] GPT 4o Transcribe Diarize █                                    $22.50
+[O] GPT Audio            █                                    $22.50
+[O] GPT Audio 1.5        █                                    $22.50
+[O] GPT Audio 20250828   █                                    $22.50
+[G] Deep Research Pro Preview 122025 █                                    $24.00
+[G] Gemini 3.1Pro Preview █                                    $24.00
+[G] Gemini 3.1Pro Preview Customtools █                                    $24.00
+[G] Gemini 3Pro Image Preview █                                    $24.00
+[G] Gemini 3Pro Preview  █                                    $24.00
+[O] GPT 5.2              █                                    $26.25
+[O] GPT 5.220251211      █                                    $26.25
+[O] GPT 5.2Chat Latest   █                                    $26.25
+[O] GPT 5.2Codex         █                                    $26.25
+[O] GPT 5.3Chat Latest   █                                    $26.25
+[O] GPT 5.3Codex         █                                    $26.25
+[G] Gemini 1.5 Pro       █                                    $26.25
+[O] GPT 5.4              █                                    $30.00
+[O] GPT 5.420260305      █                                    $30.00
+[O] GPT Image 1.5        █                                    $30.00
+[O] GPT Image 1.520251216 █                                    $30.00
+[O] GPT Image 2          █                                    $30.00
+[O] GPT Image 220260421  █                                    $30.00
+[G] Gemini 3.1 Pro       █                                    $30.00
+[A] Claude 37 Sonnet     █                                    $31.50
+[A] Claude 4Sonnet       █                                    $31.50
+[A] Claude Sonnet 4      █                                    $31.50
+[A] Claude Sonnet 45     █                                    $31.50
+[A] Claude Sonnet 45 20250929V1:0 █                                    $31.50
+[A] Claude Sonnet 46     █                                    $31.50
+[O] GPT Realtime         █                                    $36.00
+[O] GPT Realtime 1.5     █                                    $36.00
+[O] GPT Realtime 2       █                                    $36.00
+[O] GPT Realtime 20250828 █                                    $36.00
+[O] GPT 4o 20240513      █                                    $37.50
+[O] GPT 4o Realtime Preview █                                    $45.00
+[O] GPT 4o Realtime Preview 20241217 █                                    $45.00
+[O] GPT 4o Realtime Preview 20250603 █                                    $45.00
+[A] Claude Opus 45       █                                    $52.50
+[A] Claude Opus 46       █                                    $52.50
+[A] Claude Opus 47       █                                    $52.50
+[A] Claude Opus 48       █                                    $52.50
+[O] GPT 5.5              ██                                   $60.00
+[O] GPT 5.520260423      ██                                   $60.00
+[O] GPT 40125Preview     ██                                   $75.00
+[O] GPT 41106Preview     ██                                   $75.00
+[O] GPT 4Turbo           ██                                   $75.00
+[O] GPT 4Turbo 20240409  ██                                   $75.00
+[O] GPT 4Turbo Preview   ██                                   $75.00
+[O] O3Deep Research      ██                                   $90.00
+[O] O3Deep Research 20250626 ██                                   $90.00
+[A] Claude Fable 5       ███                                  $105.00
+[O] O1                   ████                                 $135.00
+[O] O120241217           ████                                 $135.00
+[A] Claude 3Opus         ████                                 $157.50
+[A] Claude 4Opus         ████                                 $157.50
+[A] Claude Opus 4        ████                                 $157.50
+[A] Claude Opus 41       ████                                 $157.50
+[O] GPT 4                █████                                $180.00
+[O] GPT 40314            █████                                $180.00
+[O] GPT 40613            █████                                $180.00
+[O] O3Pro                █████                                $180.00
+[O] O3Pro 20250610       █████                                $180.00
+[O] GPT 5Pro             ██████                               $225.00
+[O] GPT 5Pro 20251006    ██████                               $225.00
+[O] GPT 5.2Pro           ████████                             $315.00
+[O] GPT 5.2Pro 20251211  ████████                             $315.00
+[O] GPT 5.4Pro           ██████████                           $360.00
+[O] GPT 5.4Pro 20260305  ██████████                           $360.00
+[O] GPT 5.5Pro           ██████████                           $360.00
+[O] GPT 5.5Pro 20260423  ██████████                           $360.00
+[O] O1Pro                ████████████████████████████████████ $1350.00
+[O] O1Pro 20250319       ████████████████████████████████████ $1350.00
 
 🔍 Provider Summary
 ──────────────────────────────────────────────────
-  [O] OpenAI: GPT-5 Nano (cheapest) at $0.45/month | Range: $0.45 – $28.50/month
-  [A] Anthropic: Claude Haiku 3 (cheapest) at $1.12/month | Range: $1.12 – $25.00/month
-  [G] Google: Gemini 1.5 Flash (cheapest) at $0.45/month | Range: $0.45 – $13.50/month
-  [D] DeepSeek: V4 Flash (cheapest) at $0.37/month | Range: $0.37 – $4.54/month
+  [O] OpenAI: GPT 5Nano (cheapest) at $0.75/month | Range: $0.75 – $1350.00/month
+  [A] Anthropic: Claude 3Haiku (cheapest) at $2.63/month | Range: $2.63 – $157.50/month
+  [G] Google: Gemini 1.5 Flash (cheapest) at $0.67/month | Range: $0.67 – $30.00/month
+  [D] DeepSeek: Deepseek Coder (cheapest) at $0.84/month | Range: $0.84 – $10.44/month
 
 📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes
 
-Model                  | 50 reqs/day   | 100 reqs/day  | 500 reqs/day  | 1,000 reqs/day | 5,000 reqs/day | 10,000 reqs/day
-──────────────────────-+-──────────────-+-──────────────-+-──────────────-+-───────────────-+-───────────────-+-────────────────
-[D] V4 Flash           | $0.18         | $0.37         | $1.84         | $3.68          | $18.45         | $36.90         
-[O] GPT-5 Nano         | $0.23         | $0.45         | $2.25         | $4.50          | $22.50         | $45.00         
-[G] Gemini 1.5 Flash   | $0.22         | $0.45         | $2.25         | $4.50          | $22.50         | $45.00         
-[D] V4 Pro (Promo)     | $0.56         | $1.12         | $5.64         | $11.28         | $56.42         | $112.84        
-[A] Claude Haiku 3     | $0.56         | $1.12         | $5.62         | $11.25         | $56.25         | $112.50        
+Model                  | 50 reqs/day      | 100 reqs/day      | 500 reqs/day      | 1,000 reqs/day      | 5,000 reqs/day      | 10,000 reqs/day     
+──────────────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────
+[G] Gemini 1.5 Flash   | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[G] Gemini 2.0Flash Lite | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[G] Gemini 2.0Flash Lite 001 | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        
+[O] GPT 5Nano          | $0.38          | $0.75          | $3.75          | $7.50          | $37.50         | $75.00        
+[O] GPT 5Nano 20250807 | $0.38          | $0.75          | $3.75          | $7.50          | $37.50         | $75.00        
+
+Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek
+
+🩺 Cost Health:
+────────────────────────────────────────────────────────────
+• 🏆 Cheapest overall: Gemini 1.5 Flash at $0.67/mo (google)
+• 💸 Most expensive in this comparison: O1Pro 20250319 at $1350.00/mo
+• 🔴 2000x cost spread — O1Pro 20250319 is 50x+ the cheapest. For most workloads, the cheapest model will suffice.
+• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don&#39;t pick purely on price.
+
+🔄 What-If Scenarios:
+────────────────────────────────────────────────────────────
+• Switch all workloads to cheapest:  save vs current $0.67/mo (already optimal)
+• Double volume to 200 reqs/day:  cheapest becomes $1.35/mo
+• Halve volume to 50 reqs/day:  save proportionally
+• If you only need cheap inference: pick Gemini 1.5 Flash (cheapest) and route 80% of traffic there
 </div></div> </div> <div id="dynamic-results" class="space-y-3 hidden"></div> <div class="my-6 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 min-h-[250px]"> <span class="text-xs text-gray-400">AdSense — tool result</span> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Related Tools</h2> <div class="flex flex-wrap gap-2"> <a href="/en/solopreneur-openai-token-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> OpenAI Token Calculator </a><a href="/en/solopreneur-claude-api-cost-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> Claude API Cost Calculator </a><a href="/en/solopreneur-deepseek-api-cost-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> DeepSeek API Cost Calculator </a><a href="/en/solopreneur-gemini-api-cost-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> Gemini API Cost Calculator </a> </div> </div> </div> </div> </main> <footer class="relative border-t border-gray-100 mt-auto bg-gray-50"> <div class="relative max-w-6xl mx-auto px-4 py-10"> <div class="flex items-center justify-center gap-2 mb-6"> <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> <span class="text-gray-600 text-sm">CalcKit</span> </div> <div class="flex flex-wrap justify-center gap-6 text-sm mb-6"> <a href="/en/privacy-policy" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> Privacy Policy </a><a href="/en/terms" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> Terms &amp; Conditions </a><a href="/en/contact" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> Contact </a><a href="/en/about" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> About </a> </div> <p class="text-center text-xs text-gray-400">
-&copy; 2026 CalcKit. Free tools for entrepreneurs. No signup required. </p> </div> </footer>  </body></html>  <script>(function(){const clientConfig = "{\"type\":\"custom\",\"wordPools\":{},\"customFn\":\"var P={openai:{n:'OpenAI',m:[{k:'gpt-5.5',n:'GPT 5.5',i:5,o:30,cw:'1M'},{k:'gpt-5.2',n:'GPT 5.2',i:1.75,o:14,cw:'272K'},{k:'gpt-5',n:'GPT 5',i:1.25,o:10,cw:'272K'},{k:'gpt-5-mini',n:'GPT 5Mini',i:0.25,o:2,cw:'272K'},{k:'gpt-5-nano',n:'GPT 5Nano',i:0.05,o:0.4,cw:'272K'},{k:'gpt-4.1',n:'GPT 4.1',i:2,o:8,cw:'1M'},{k:'gpt-4.1-mini',n:'GPT 4.1Mini',i:0.4,o:1.6,cw:'1M'},{k:'gpt-4.1-nano',n:'GPT 4.1Nano',i:0.1,o:0.4,cw:'1M'},{k:'o3',n:'O3',i:2,o:8,cw:'200K'},{k:'o4-mini',n:'O4Mini',i:1.1,o:4.4,cw:'200K'},{k:'gpt-4o',n:'GPT 4o',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-mini',n:'GPT 4o Mini',i:0.15,o:0.6,cw:'128K'},{k:'gpt-4-turbo',n:'GPT 4Turbo',i:10,o:30,cw:'128K'},{k:'gpt-3.5-turbo',n:'GPT 3.5Turbo',i:0.5,o:1.5,cw:'16K'},{k:'gpt-4o-transcribe-diarize',n:'GPT 4o Transcribe Diarize',i:2.5,o:10,cw:'16K'},{k:'gpt-3.5-turbo-0125',n:'GPT 3.5Turbo 0125',i:0.5,o:1.5,cw:'16K'},{k:'gpt-3.5-turbo-1106',n:'GPT 3.5Turbo 1106',i:1,o:2,cw:'16K'},{k:'gpt-3.5-turbo-16k',n:'GPT 3.5Turbo 16k',i:3,o:4,cw:'16K'},{k:'gpt-3.5-turbo-instruct',n:'GPT 3.5Turbo Instruct',i:1.5,o:2,cw:'8K'},{k:'gpt-3.5-turbo-instruct-0914',n:'GPT 3.5Turbo Instruct 0914',i:1.5,o:2,cw:'8K'},{k:'gpt-4',n:'GPT 4',i:30,o:60,cw:'8K'},{k:'gpt-4-0125-preview',n:'GPT 40125Preview',i:10,o:30,cw:'128K'},{k:'gpt-4-0314',n:'GPT 40314',i:30,o:60,cw:'8K'},{k:'gpt-4-0613',n:'GPT 40613',i:30,o:60,cw:'8K'},{k:'gpt-4-1106-preview',n:'GPT 41106Preview',i:10,o:30,cw:'128K'},{k:'gpt-4-turbo-2024-04-09',n:'GPT 4Turbo 20240409',i:10,o:30,cw:'128K'},{k:'gpt-4-turbo-preview',n:'GPT 4Turbo Preview',i:10,o:30,cw:'128K'},{k:'gpt-4.1-2025-04-14',n:'GPT 4.120250414',i:2,o:8,cw:'1M'},{k:'gpt-4.1-mini-2025-04-14',n:'GPT 4.1Mini 20250414',i:0.4,o:1.6,cw:'1M'},{k:'gpt-4.1-nano-2025-04-14',n:'GPT 4.1Nano 20250414',i:0.1,o:0.4,cw:'1M'},{k:'gpt-4o-2024-05-13',n:'GPT 4o 20240513',i:5,o:15,cw:'128K'},{k:'gpt-4o-2024-08-06',n:'GPT 4o 20240806',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-2024-11-20',n:'GPT 4o 20241120',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-audio-preview',n:'GPT 4o Audio Preview',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-audio-preview-2024-12-17',n:'GPT 4o Audio Preview 20241217',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-audio-preview-2025-06-03',n:'GPT 4o Audio Preview 20250603',i:2.5,o:10,cw:'128K'},{k:'gpt-audio',n:'GPT Audio',i:2.5,o:10,cw:'128K'},{k:'gpt-audio-1.5',n:'GPT Audio 1.5',i:2.5,o:10,cw:'128K'},{k:'gpt-audio-2025-08-28',n:'GPT Audio 20250828',i:2.5,o:10,cw:'128K'},{k:'gpt-audio-mini',n:'GPT Audio Mini',i:0.6,o:2.4,cw:'128K'},{k:'gpt-audio-mini-2025-10-06',n:'GPT Audio Mini 20251006',i:0.6,o:2.4,cw:'128K'},{k:'gpt-audio-mini-2025-12-15',n:'GPT Audio Mini 20251215',i:0.6,o:2.4,cw:'128K'},{k:'gpt-4o-mini-2024-07-18',n:'GPT 4o Mini 20240718',i:0.15,o:0.6,cw:'128K'},{k:'gpt-4o-mini-audio-preview',n:'GPT 4o Mini Audio Preview',i:0.15,o:0.6,cw:'128K'},{k:'gpt-4o-mini-audio-preview-2024-12-17',n:'GPT 4o Mini Audio Preview 20241217',i:0.15,o:0.6,cw:'128K'},{k:'gpt-4o-mini-realtime-preview',n:'GPT 4o Mini Realtime Preview',i:0.6,o:2.4,cw:'128K'},{k:'gpt-4o-mini-realtime-preview-2024-12-17',n:'GPT 4o Mini Realtime Preview 20241217',i:0.6,o:2.4,cw:'128K'},{k:'gpt-4o-mini-search-preview',n:'GPT 4o Mini Search Preview',i:0.15,o:0.6,cw:'128K'},{k:'gpt-4o-mini-search-preview-2025-03-11',n:'GPT 4o Mini Search Preview 20250311',i:0.15,o:0.6,cw:'128K'},{k:'gpt-4o-mini-transcribe',n:'GPT 4o Mini Transcribe',i:1.25,o:5,cw:'16K'},{k:'gpt-4o-mini-tts',n:'GPT 4o Mini Tts',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-realtime-preview',n:'GPT 4o Realtime Preview',i:5,o:20,cw:'128K'},{k:'gpt-4o-realtime-preview-2024-12-17',n:'GPT 4o Realtime Preview 20241217',i:5,o:20,cw:'128K'},{k:'gpt-4o-realtime-preview-2025-06-03',n:'GPT 4o Realtime Preview 20250603',i:5,o:20,cw:'128K'},{k:'gpt-4o-search-preview',n:'GPT 4o Search Preview',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-search-preview-2025-03-11',n:'GPT 4o Search Preview 20250311',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-transcribe',n:'GPT 4o Transcribe',i:2.5,o:10,cw:'16K'},{k:'gpt-image-1.5',n:'GPT Image 1.5',i:5,o:10,cw:'128K'},{k:'gpt-image-1.5-2025-12-16',n:'GPT Image 1.520251216',i:5,o:10,cw:'128K'},{k:'gpt-image-2',n:'GPT Image 2',i:5,o:10,cw:'128K'},{k:'gpt-image-2-2026-04-21',n:'GPT Image 220260421',i:5,o:10,cw:'128K'},{k:'gpt-5.1',n:'GPT 5.1',i:1.25,o:10,cw:'272K'},{k:'gpt-5.1-2025-11-13',n:'GPT 5.120251113',i:1.25,o:10,cw:'272K'},{k:'gpt-5.1-chat-latest',n:'GPT 5.1Chat Latest',i:1.25,o:10,cw:'128K'},{k:'gpt-5.2-2025-12-11',n:'GPT 5.220251211',i:1.75,o:14,cw:'272K'},{k:'gpt-5.2-chat-latest',n:'GPT 5.2Chat Latest',i:1.75,o:14,cw:'128K'},{k:'gpt-5.3-chat-latest',n:'GPT 5.3Chat Latest',i:1.75,o:14,cw:'128K'},{k:'gpt-5.2-pro',n:'GPT 5.2Pro',i:21,o:168,cw:'272K'},{k:'gpt-5.2-pro-2025-12-11',n:'GPT 5.2Pro 20251211',i:21,o:168,cw:'272K'},{k:'gpt-5.5-2026-04-23',n:'GPT 5.520260423',i:5,o:30,cw:'1M'},{k:'gpt-5.5-pro',n:'GPT 5.5Pro',i:30,o:180,cw:'1M'},{k:'gpt-5.5-pro-2026-04-23',n:'GPT 5.5Pro 20260423',i:30,o:180,cw:'1M'},{k:'gpt-5.4',n:'GPT 5.4',i:2.5,o:15,cw:'1M'},{k:'gpt-5.4-2026-03-05',n:'GPT 5.420260305',i:2.5,o:15,cw:'1M'},{k:'gpt-5.4-pro',n:'GPT 5.4Pro',i:30,o:180,cw:'1M'},{k:'gpt-5.4-pro-2026-03-05',n:'GPT 5.4Pro 20260305',i:30,o:180,cw:'1M'},{k:'gpt-5.4-mini',n:'GPT 5.4Mini',i:0.75,o:4.5,cw:'272K'},{k:'gpt-5.4-mini-2026-03-17',n:'GPT 5.4Mini 20260317',i:0.75,o:4.5,cw:'272K'},{k:'gpt-5.4-nano',n:'GPT 5.4Nano',i:0.2,o:1.25,cw:'272K'},{k:'gpt-5.4-nano-2026-03-17',n:'GPT 5.4Nano 20260317',i:0.2,o:1.25,cw:'272K'},{k:'gpt-5-pro',n:'GPT 5Pro',i:15,o:120,cw:'128K'},{k:'gpt-5-pro-2025-10-06',n:'GPT 5Pro 20251006',i:15,o:120,cw:'128K'},{k:'gpt-5-2025-08-07',n:'GPT 520250807',i:1.25,o:10,cw:'272K'},{k:'gpt-5-chat',n:'GPT 5Chat',i:1.25,o:10,cw:'128K'},{k:'gpt-5-chat-latest',n:'GPT 5Chat Latest',i:1.25,o:10,cw:'128K'},{k:'gpt-5-codex',n:'GPT 5Codex',i:1.25,o:10,cw:'272K'},{k:'gpt-5.1-codex',n:'GPT 5.1Codex',i:1.25,o:10,cw:'272K'},{k:'gpt-5.1-codex-max',n:'GPT 5.1Codex Max',i:1.25,o:10,cw:'272K'},{k:'gpt-5.1-codex-mini',n:'GPT 5.1Codex Mini',i:0.25,o:2,cw:'272K'},{k:'gpt-5.2-codex',n:'GPT 5.2Codex',i:1.75,o:14,cw:'272K'},{k:'gpt-5.3-codex',n:'GPT 5.3Codex',i:1.75,o:14,cw:'272K'},{k:'gpt-5-mini-2025-08-07',n:'GPT 5Mini 20250807',i:0.25,o:2,cw:'272K'},{k:'gpt-5-nano-2025-08-07',n:'GPT 5Nano 20250807',i:0.05,o:0.4,cw:'272K'},{k:'gpt-realtime',n:'GPT Realtime',i:4,o:16,cw:'32K'},{k:'gpt-realtime-1.5',n:'GPT Realtime 1.5',i:4,o:16,cw:'32K'},{k:'gpt-realtime-2',n:'GPT Realtime 2',i:4,o:16,cw:'32K'},{k:'gpt-realtime-mini',n:'GPT Realtime Mini',i:0.6,o:2.4,cw:'128K'},{k:'gpt-realtime-2025-08-28',n:'GPT Realtime 20250828',i:4,o:16,cw:'32K'},{k:'o1',n:'O1',i:15,o:60,cw:'200K'},{k:'o1-2024-12-17',n:'O120241217',i:15,o:60,cw:'200K'},{k:'o1-pro',n:'O1Pro',i:150,o:600,cw:'200K'},{k:'o1-pro-2025-03-19',n:'O1Pro 20250319',i:150,o:600,cw:'200K'},{k:'o3-2025-04-16',n:'O320250416',i:2,o:8,cw:'200K'},{k:'o3-deep-research',n:'O3Deep Research',i:10,o:40,cw:'200K'},{k:'o3-deep-research-2025-06-26',n:'O3Deep Research 20250626',i:10,o:40,cw:'200K'},{k:'o3-mini',n:'O3Mini',i:1.1,o:4.4,cw:'200K'},{k:'o3-mini-2025-01-31',n:'O3Mini 20250131',i:1.1,o:4.4,cw:'200K'},{k:'o3-pro',n:'O3Pro',i:20,o:80,cw:'200K'},{k:'o3-pro-2025-06-10',n:'O3Pro 20250610',i:20,o:80,cw:'200K'},{k:'o4-mini-2025-04-16',n:'O4Mini 20250416',i:1.1,o:4.4,cw:'200K'},{k:'o4-mini-deep-research',n:'O4Mini Deep Research',i:2,o:8,cw:'200K'},{k:'o4-mini-deep-research-2025-06-26',n:'O4Mini Deep Research 20250626',i:2,o:8,cw:'200K'},{k:'gpt-4o-mini-tts-2025-03-20',n:'GPT 4o Mini Tts 20250320',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-mini-tts-2025-12-15',n:'GPT 4o Mini Tts 20251215',i:2.5,o:10,cw:'128K'},{k:'gpt-4o-mini-transcribe-2025-03-20',n:'GPT 4o Mini Transcribe 20250320',i:1.25,o:5,cw:'16K'},{k:'gpt-4o-mini-transcribe-2025-12-15',n:'GPT 4o Mini Transcribe 20251215',i:1.25,o:5,cw:'16K'},{k:'gpt-5-search-api',n:'GPT 5Search Api',i:1.25,o:10,cw:'272K'},{k:'gpt-5-search-api-2025-10-14',n:'GPT 5Search Api 20251014',i:1.25,o:10,cw:'272K'},{k:'gpt-realtime-mini-2025-10-06',n:'GPT Realtime Mini 20251006',i:0.6,o:2.4,cw:'128K'},{k:'gpt-realtime-mini-2025-12-15',n:'GPT Realtime Mini 20251215',i:0.6,o:2.4,cw:'128K'}]},anthropic:{n:'Anthropic',m:[{k:'claude-fable-5',n:'Claude Fable 5',i:10,o:50,cw:'1M'},{k:'claude-opus-4-8',n:'Claude Opus 48',i:5,o:25,cw:'1M'},{k:'claude-sonnet-4-6',n:'Claude Sonnet 46',i:3,o:15,cw:'1M'},{k:'claude-haiku-4-5',n:'Claude Haiku 45',i:1,o:5,cw:'200K'},{k:'claude-opus-4-1',n:'Claude Opus 41',i:15,o:75,cw:'200K'},{k:'claude-haiku-3-5',n:'Claude Haiku 3.5',i:0.8,o:4,cw:'200K'},{k:'claude-haiku-3',n:'Claude Haiku 3',i:0.25,o:1.25,cw:'200K'},{k:'claude-3-7-sonnet',n:'Claude 37 Sonnet',i:3,o:15,cw:'200K'},{k:'claude-3-haiku',n:'Claude 3Haiku',i:0.25,o:1.25,cw:'200K'},{k:'claude-3-opus',n:'Claude 3Opus',i:15,o:75,cw:'200K'},{k:'claude-4-opus',n:'Claude 4Opus',i:15,o:75,cw:'200K'},{k:'claude-4-sonnet',n:'Claude 4Sonnet',i:3,o:15,cw:'1M'},{k:'claude-sonnet-4-5',n:'Claude Sonnet 45',i:3,o:15,cw:'200K'},{k:'claude-sonnet-4-5-20250929-v1:0',n:'Claude Sonnet 45 20250929V1:0',i:3,o:15,cw:'200K'},{k:'claude-opus-4',n:'Claude Opus 4',i:15,o:75,cw:'200K'},{k:'claude-opus-4-5',n:'Claude Opus 45',i:5,o:25,cw:'200K'},{k:'claude-opus-4-6',n:'Claude Opus 46',i:5,o:25,cw:'1M'},{k:'claude-opus-4-7',n:'Claude Opus 47',i:5,o:25,cw:'1M'},{k:'claude-sonnet-4',n:'Claude Sonnet 4',i:3,o:15,cw:'1M'}]},google:{n:'Google',m:[{k:'gemini-3.5-flash',n:'Gemini 3.5Flash',i:1.5,o:9,cw:'1M'},{k:'gemini-3.1-pro',n:'Gemini 3.1 Pro',i:2.5,o:15,cw:'1M'},{k:'gemini-3-flash',n:'Gemini 3 Flash',i:0.5,o:3,cw:'1M'},{k:'gemini-2.5-flash',n:'Gemini 2.5Flash',i:0.3,o:2.5,cw:'1M'},{k:'gemini-1.5-pro',n:'Gemini 1.5 Pro',i:3.5,o:10.5,cw:'2M'},{k:'gemini-1.5-flash',n:'Gemini 1.5 Flash',i:0.075,o:0.3,cw:'1M'},{k:'gemini-2.0-flash',n:'Gemini 2.0Flash',i:0.1,o:0.4,cw:'1M'},{k:'gemini-2.0-flash-001',n:'Gemini 2.0Flash 001',i:0.1,o:0.4,cw:'1M'},{k:'gemini-2.0-flash-lite',n:'Gemini 2.0Flash Lite',i:0.075,o:0.3,cw:'1M'},{k:'gemini-2.0-flash-lite-001',n:'Gemini 2.0Flash Lite 001',i:0.075,o:0.3,cw:'1M'},{k:'gemini-2.5-flash-image',n:'Gemini 2.5Flash Image',i:0.3,o:2.5,cw:'33K'},{k:'gemini-3-pro-image-preview',n:'Gemini 3Pro Image Preview',i:2,o:12,cw:'66K'},{k:'gemini-3.1-flash-image-preview',n:'Gemini 3.1Flash Image Preview',i:0.25,o:1.5,cw:'66K'},{k:'gemini-3.1-flash-lite-preview',n:'Gemini 3.1Flash Lite Preview',i:0.25,o:1.5,cw:'1M'},{k:'gemini-3.1-flash-lite',n:'Gemini 3.1Flash Lite',i:0.25,o:1.5,cw:'1M'},{k:'gemini-2.5-flash-lite',n:'Gemini 2.5Flash Lite',i:0.1,o:0.4,cw:'1M'},{k:'gemini-2.5-flash-lite-preview-09-2025',n:'Gemini 2.5Flash Lite Preview 092025',i:0.1,o:0.4,cw:'1M'},{k:'gemini-2.5-flash-preview-09-2025',n:'Gemini 2.5Flash Preview 092025',i:0.3,o:2.5,cw:'1M'},{k:'gemini-live-2.5-flash-preview-native-audio-09-2025',n:'Gemini Live 2.5Flash Preview Native Audio 092025',i:0.3,o:2,cw:'1M'},{k:'gemini-2.5-flash-lite-preview-06-17',n:'Gemini 2.5Flash Lite Preview 0617',i:0.1,o:0.4,cw:'1M'},{k:'gemini-2.5-pro',n:'Gemini 2.5Pro',i:1.25,o:10,cw:'1M'},{k:'gemini-3-pro-preview',n:'Gemini 3Pro Preview',i:2,o:12,cw:'1M'},{k:'gemini-3.1-pro-preview',n:'Gemini 3.1Pro Preview',i:2,o:12,cw:'1M'},{k:'gemini-3.1-pro-preview-customtools',n:'Gemini 3.1Pro Preview Customtools',i:2,o:12,cw:'1M'},{k:'gemini-2.5-pro-preview-tts',n:'Gemini 2.5Pro Preview Tts',i:1.25,o:10,cw:'1M'},{k:'gemini-robotics-er-1.5-preview',n:'Gemini Robotics Er 1.5Preview',i:0.3,o:2.5,cw:'1M'},{k:'gemini-2.5-computer-use-preview-10-2025',n:'Gemini 2.5Computer Use Preview 102025',i:1.25,o:10,cw:'128K'},{k:'deep-research-pro-preview-12-2025',n:'Deep Research Pro Preview 122025',i:2,o:12,cw:'66K'},{k:'gemini-flash-latest',n:'Gemini Flash Latest',i:0.3,o:2.5,cw:'1M'},{k:'gemini-flash-lite-latest',n:'Gemini Flash Lite Latest',i:0.1,o:0.4,cw:'1M'},{k:'gemini-2.5-flash-preview-tts',n:'Gemini 2.5Flash Preview Tts',i:0.3,o:2.5,cw:'128K'},{k:'gemini-3-flash-preview',n:'Gemini 3Flash Preview',i:0.5,o:3,cw:'1M'},{k:'gemini-gemma-2-27b-it',n:'Gemini Gemma 227b It',i:0.35,o:1.05,cw:'8K'},{k:'gemini-gemma-2-9b-it',n:'Gemini Gemma 29b It',i:0.35,o:1.05,cw:'8K'},{k:'gemini-2.5-flash-native-audio-latest',n:'Gemini 2.5Flash Native Audio Latest',i:0.3,o:2.5,cw:'1M'},{k:'gemini-2.5-flash-native-audio-preview-09-2025',n:'Gemini 2.5Flash Native Audio Preview 092025',i:0.3,o:2.5,cw:'1M'},{k:'gemini-2.5-flash-native-audio-preview-12-2025',n:'Gemini 2.5Flash Native Audio Preview 122025',i:0.3,o:2.5,cw:'1M'},{k:'gemini-3.1-flash-live-preview',n:'Gemini 3.1Flash Live Preview',i:0.75,o:4.5,cw:'131K'},{k:'gemini-pro-latest',n:'Gemini Pro Latest',i:1.25,o:10,cw:'1M'},{k:'gemini-exp-1206',n:'Gemini Exp 1206',i:0.3,o:2.5,cw:'1M'}]},deepseek:{n:'DeepSeek',m:[{k:'deepseek-v4-flash',n:'DeepSeek V4 Flash',i:0.14,o:0.28,cw:'1M'},{k:'deepseek-v4-pro',n:'DeepSeek V4 Pro',i:1.74,o:3.48,cw:'1M'},{k:'deepseek-v4-pro-promo',n:'V4 Pro (75% Promo)',i:0.435,o:0.87,cw:'1M'},{k:'deepseek-r1',n:'Deepseek R1',i:0.55,o:2.19,cw:'66K'},{k:'deepseek-chat',n:'Deepseek Chat',i:0.28,o:0.42,cw:'131K'},{k:'deepseek-reasoner',n:'Deepseek Reasoner',i:0.28,o:0.42,cw:'131K'},{k:'deepseek-coder',n:'Deepseek Coder',i:0.14,o:0.28,cw:'128K'},{k:'deepseek-v3',n:'Deepseek V3',i:0.27,o:1.1,cw:'66K'},{k:'deepseek-v3.2',n:'Deepseek V3.2',i:0.28,o:0.4,cw:'164K'}]}};var PI={openai:'O',anthropic:'A',google:'G',deepseek:'D'};var AM=[];for(var pk in P){var pv=P[pk];for(var i=0;i<pv.m.length;i++){var m=pv.m[i];AM.push({k:m.k,n:m.n,i:m.i,o:m.o,cw:m.cw,pr:pk});}}function fm(n){if(Math.abs(n)<0.01&&n!==0)return '$'+n.toFixed(4);return '$'+n.toFixed(2)}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}var SEP='\\\\u2500';var iT=Math.max(1,Math.min(1e7,parseInt(inputs.inputTokens)||1000));var oT=Math.max(1,Math.min(1e7,parseInt(inputs.outputTokens)||500));var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));var pm=inputs.pricingMode||'realtime';var bm=pm==='batch'?0.5:1;var rpm=rpd*30;var ac=[];for(var i=0;i<AM.length;i++){var m=AM[i];var cpr=(iT/1e6)*m.i*bm+(oT/1e6)*m.o*bm;ac.push({m:m,cpr:cpr,mc:cpr*rpm});}ac.sort(function(a,b){return a.mc-b.mc;});var ch=ac[0];var me=ac[ac.length-1];var mx=me.mc;var o=[];var mem=pm==='batch'?'\\\\u26A1':'\\\\u{1F534}';var ml=pm==='batch'?'Batch Pricing (50% off)':'Real-time Pricing';o.push(mem+' '+ml);o.push('');o.push('Input: '+lc(iT)+' tokens/req | Output: '+lc(oT)+' tokens/req | Volume: '+lc(rpd)+' reqs/day ('+lc(rpm)+' reqs/month)');var pkCount=0;for(var k in P)pkCount++;o.push('Comparing '+AM.length+' models across '+pkCount+' providers');o.push('');var chpn=P[ch.m.pr].n;var chi=PI[ch.m.pr];o.push('\\\\u{1F3C6} Cheapest Model Overall');o.push(SEP.repeat(50));o.push('  ['+chi+'] '+ch.m.n+' ('+chpn+') \\\\u2014 '+fm(ch.mc)+'/month');o.push('  Rate: '+fm(ch.m.i)+'/'+fm(ch.m.o)+' per 1M tokens | Context: '+ch.m.cw);o.push('  Per request: '+fm(ch.cpr)+' | Daily: '+fm(ch.cpr*rpd)+' | Monthly: '+fm(ch.mc));var sv=me.mc-ch.mc;var ps=me.mc>0?Math.round((sv/me.mc)*100):0;o.push('  Savings vs '+me.m.n+': '+fm(sv)+'/month ('+ps+'% cheaper)');o.push('');o.push('\\\\u{1F4CA} Full Model Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP.repeat(54));var BW=36;for(var i=0;i<ac.length;i++){var c=ac[i];var ini=PI[c.m.pr];var label='['+ini+'] '+c.m.n;var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.m.k===ch.m.k?'\\\\u2591':'\\\\u2588';var bar=bc.repeat(bl);var bd=c.m.k===ch.m.k?' \\\\u{1F3C6}':'';o.push(pd(label,24)+' '+pd(bar,BW)+' '+fm(c.mc)+bd);}o.push('');o.push('\\\\u{1F50D} Provider Summary');o.push(SEP.repeat(50));for(var pk2 in P){var prov=P[pk2];var pcs=ac.filter(function(c){return c.m.pr===pk2;});var pcch=pcs[0];var pcme=pcs[pcs.length-1];var ini2=PI[pk2];o.push('  ['+ini2+'] '+prov.n+': '+pcch.m.n+' (cheapest) at '+fm(pcch.mc)+'/month | Range: '+fm(pcch.mc)+' \\\\u2013 '+fm(pcme.mc)+'/month');}o.push('');o.push('\\\\u{1F4C5} Usage Scenarios \\\\u2014 Top 5 Cheapest Models at Different Volumes');o.push('');var top5=ac.slice(0,5);var tiers=[50,100,500,1000,5000,10000];var hr='Model'.padEnd(22);for(var i=0;i<tiers.length;i++)hr+=' | '+lc(tiers[i])+' reqs/day'.padEnd(14);o.push(hr);var sr=''.padEnd(22,SEP);for(var i=0;i<tiers.length;i++)sr+='-+-'.padEnd(15,SEP);o.push(sr);for(var i=0;i<top5.length;i++){var e=top5[i];var ini3=PI[e.m.pr];var lab='['+ini3+'] '+e.m.n;var row=pd(lab,22);for(var j=0;j<tiers.length;j++){var cat=e.cpr*tiers[j]*30;row+=' | '+fm(cat).padEnd(14);}o.push(row);}o.push('');o.push('Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek');return o;\"}";
+&copy; 2026 CalcKit. Free tools for entrepreneurs. No signup required. </p> </div> </footer>  </body></html>  <script>(function(){const clientConfig = "{\"type\":\"custom\",\"wordPools\":{},\"customFn\":\"var P={openai:{n:'OpenAI',m:[{k:'gpt-5-mini',n:'GPT 5Mini',i:0.25,o:2,cw:'272K'}]},anthropic:{n:'Anthropic',m:[{k:'claude-haiku-3',n:'Claude Haiku 3',i:0.25,o:1.25,cw:'200K'}]},google:{n:'Google',m:[{k:'gemini-1.5-flash',n:'Gemini 1.5 Flash',i:0.075,o:0.3,cw:'1M'}]},deepseek:{n:'DeepSeek',m:[{k:'deepseek-v4-flash',n:'DeepSeek V4 Flash',i:0.14,o:0.28,cw:'1M'}]}};var PI={openai:'O',anthropic:'A',google:'G',deepseek:'D'};var AM=[];for(var pk in P){var pv=P[pk];for(var i=0;i<pv.m.length;i++){var m=pv.m[i];AM.push({k:m.k,n:m.n,i:m.i,o:m.o,cw:m.cw,pr:pk});}}function fm(n){if(Math.abs(n)<0.01&&n!==0)return '$'+n.toFixed(4);return '$'+n.toFixed(2)}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}var SEP='\\\\u2500';var iT=Math.max(1,Math.min(1e7,parseInt(inputs.inputTokens)||1000));var oT=Math.max(1,Math.min(1e7,parseInt(inputs.outputTokens)||500));var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));var pm=inputs.pricingMode||'realtime';var bm=pm==='batch'?0.5:1;var rpm=rpd*30;var ac=[];for(var i=0;i<AM.length;i++){var m=AM[i];var cpr=(iT/1e6)*m.i*bm+(oT/1e6)*m.o*bm;ac.push({m:m,cpr:cpr,mc:cpr*rpm});}ac.sort(function(a,b){return a.mc-b.mc;});var ch=ac[0];var me=ac[ac.length-1];var mx=me.mc;var o=[];var mem=pm==='batch'?'\\\\u26A1':'\\\\u{1F534}';var ml=pm==='batch'?'Batch Pricing (50% off)':'Real-time Pricing';o.push(mem+' '+ml);o.push('');o.push('Input: '+lc(iT)+' tokens/req | Output: '+lc(oT)+' tokens/req | Volume: '+lc(rpd)+' reqs/day ('+lc(rpm)+' reqs/month)');var pkCount=0;for(var k in P)pkCount++;o.push('Comparing '+AM.length+' models across '+pkCount+' providers');o.push('');var chpn=P[ch.m.pr].n;var chi=PI[ch.m.pr];o.push('\\\\u{1F3C6} Cheapest Model Overall');o.push(SEP.repeat(50));o.push('  ['+chi+'] '+ch.m.n+' ('+chpn+') \\\\u2014 '+fm(ch.mc)+'/month');o.push('  Rate: '+fm(ch.m.i)+'/'+fm(ch.m.o)+' per 1M tokens | Context: '+ch.m.cw);o.push('  Per request: '+fm(ch.cpr)+' | Daily: '+fm(ch.cpr*rpd)+' | Monthly: '+fm(ch.mc));var sv=me.mc-ch.mc;var ps=me.mc>0?Math.round((sv/me.mc)*100):0;o.push('  Savings vs '+me.m.n+': '+fm(sv)+'/month ('+ps+'% cheaper)');o.push('');o.push('\\\\u{1F4CA} Full Model Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP.repeat(54));var BW=36;for(var i=0;i<ac.length;i++){var c=ac[i];var ini=PI[c.m.pr];var label='['+ini+'] '+c.m.n;var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.m.k===ch.m.k?'\\\\u2591':'\\\\u2588';var bar=bc.repeat(bl);var bd=c.m.k===ch.m.k?' \\\\u{1F3C6}':'';o.push(pd(label,24)+' '+pd(bar,BW)+' '+fm(c.mc)+bd);}o.push('');o.push('\\\\u{1F50D} Provider Summary');o.push(SEP.repeat(50));for(var pk2 in P){var prov=P[pk2];var pcs=ac.filter(function(c){return c.m.pr===pk2;});var pcch=pcs[0];var pcme=pcs[pcs.length-1];var ini2=PI[pk2];o.push('  ['+ini2+'] '+prov.n+': '+pcch.m.n+' (cheapest) at '+fm(pcch.mc)+'/month | Range: '+fm(pcch.mc)+' \\\\u2013 '+fm(pcme.mc)+'/month');}o.push('');o.push('\\\\u{1F4C5} Usage Scenarios \\\\u2014 Top 5 Cheapest Models at Different Volumes');o.push('');var top5=ac.slice(0,5);var tiers=[50,100,500,1000,5000,10000];var hr='Model'.padEnd(22);for(var i=0;i<tiers.length;i++)hr+=' | '+lc(tiers[i])+' reqs/day'.padEnd(14);o.push(hr);var sr=''.padEnd(22,SEP);for(var i=0;i<tiers.length;i++)sr+='-+-'.padEnd(15,SEP);o.push(sr);for(var i=0;i<top5.length;i++){var e=top5[i];var ini3=PI[e.m.pr];var lab='['+ini3+'] '+e.m.n;var row=pd(lab,22);for(var j=0;j<tiers.length;j++){var cat=e.cpr*tiers[j]*30;row+=' | '+fm(cat).padEnd(14);}o.push(row);}o.push('');o.push('Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek');return o;\"}";
 const exportLabel = "Export";
 const toolSlug = "solopreneur-ai-api-cost-comparison";
 

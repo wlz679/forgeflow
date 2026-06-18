@@ -177,6 +177,38 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('\u{1F4A1} ' + lc(totalGpuHours) + ' GPU-hours ≈ ' + lc(cpuEquiv) + ' CPU-core-hours equivalent.');
   out.push('\u{1F4A1} LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.');
 
+  // 🩺 Cost Health (v3)
+  out.push('');
+  out.push('🩺 Cost Health:');
+  out.push(SEP.repeat(60));
+  if (model.isLoRA) {
+    out.push('• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.');
+  } else {
+    out.push('• 🟠 Full fine-tune — training all model weights. Most expensive option. Consider LoRA unless you have a specific need.');
+  }
+  if (epochs > 5) {
+    out.push('• 🟡 ' + epochs + ' epochs is aggressive — most models converge in 2-4. Diminishing returns past epoch 5 unless you have a specific reason.');
+  }
+  if (cloudStorageGB > 1000) {
+    out.push('• 💡 ' + lc(cloudStorageGB) + 'GB storage is significant — consider S3 cold storage or dataset compression.');
+  }
+  out.push('');
+
+  // 🔄 What-If Scenarios (v3)
+  out.push('🔄 What-If Scenarios:');
+  out.push(SEP.repeat(60));
+  if (model.isLoRA) {
+    const fullCost = totalCost * 3;
+    out.push('• Switch to full fine-tune:  ' + fmt(fullCost) + '  (3x cost, but better quality)');
+  } else {
+    const loraCost = totalCost / 3;
+    out.push('• Switch to LoRA fine-tuning:  ' + fmt(loraCost) + '  (1/3 cost, similar quality for most tasks)');
+  }
+  out.push('• Halve epochs to ' + Math.max(1, Math.floor(epochs / 2)) + ':  ' + fmt(totalCost / 2) + '  (may need more data to compensate)');
+  out.push('• Double epochs to ' + (epochs * 2) + ':  ' + fmt(totalCost * 2) + '  (diminishing returns past 5)');
+  out.push('• Switch to cheaper GPU in same tier:  check RunPod/Vast.ai for 40-50% savings');
+  out.push('');
+
   return out;
 }
 
@@ -269,7 +301,7 @@ const engine: ToolEngine = {
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
-    '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 4× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  4× A100 80GB @ $1.50/hr × 25.2 hrs           $151.20\nCloud Storage: 0 GB @ $0.10/GB/mo × 0.1 mo                  $0.00\nData Processing: $$0.00                                      $0.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $151.20\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $50.40\nPer Epoch Total:    $50.40\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $50.40         | $50.40          \n2        | $100.80        | $100.80         \n3        | $151.20        | $151.20         \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $151.20        (100%)  ████████████████████\nStorage: $0.00          (0%)  \n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $105.84\nExpected:                                      $151.20\nPessimistic (on-demand + overhead):            $226.80\n\nWith Spot/Reserved Discount (40% off):          $90.72\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $151.20      | $453.60      | $756.00      | $1512.00     | $3780.00     | $7560.00    \n\n💡 25.2 GPU-hours ≈ 10,080 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.',
+    '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 4× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  4× A100 80GB @ $1.50/hr × 25.2 hrs           $151.20\nCloud Storage: 0 GB @ $0.10/GB/mo × 0.1 mo                  $0.00\nData Processing: $$0.00                                      $0.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $151.20\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $50.40\nPer Epoch Total:    $50.40\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $50.40         | $50.40          \n2        | $100.80        | $100.80         \n3        | $151.20        | $151.20         \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $151.20        (100%)  ████████████████████\nStorage: $0.00          (0%)  \n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $105.84\nExpected:                                      $151.20\nPessimistic (on-demand + overhead):            $226.80\n\nWith Spot/Reserved Discount (40% off):          $90.72\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $151.20      | $453.60      | $756.00      | $1512.00     | $3780.00     | $7560.00    \n\n💡 25.2 GPU-hours ≈ 10,080 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch to full fine-tune:  $453.60  (3x cost, but better quality)\n• Halve epochs to 1:  $75.60  (may need more data to compensate)\n• Double epochs to 6:  $302.40  (diminishing returns past 5)\n• Switch to cheaper GPU in same tier:  check RunPod/Vast.ai for 40-50% savings\n',
   ],
   faq: [
     { q: 'How much does it cost to train a 7B model in 2026?', a: 'LoRA fine-tuning a 7B model: $50-500 on 2-4 H100 GPUs (4-24 hrs). Full fine-tuning: $500-5,000. Pre-training from scratch: $5,000-50,000+. With H200 GPUs, a 7B LoRA can complete in 2-4 hours at $3.50/hr/GPU — under $30 for a quick fine-tune. Budget GPU (RTX 6000 at $0.50/hr) can do a 7B LoRA for under $10.' },
