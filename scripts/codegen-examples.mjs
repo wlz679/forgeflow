@@ -31,7 +31,7 @@ const ENGINES = [
   { file: 'ai-training-cost-estimator.ts',      slug: 'solopreneur-ai-training-cost-estimator',      defaultInputs: { gpuType: 'A100-80GB', modelSize: '7B', gpuCount: '8', trainingHours: '24', epochs: '3', cloudStorage: '500', dataProcessCost: '1000' } },
   { file: 'unit-economics-calculator.ts',       slug: 'solopreneur-unit-economics-calculator',       defaultInputs: { averageRevenuePerCustomer: '100', expansionRevenuePerCustomer: '30', costToServePerCustomer: '30', customerAcquisitionCost: '300', monthlyChurnRate: '5', retentionMonths: '0' } },
   { file: 'churn-rate-calculator.ts',          slug: 'solopreneur-churn-rate-calculator',          defaultInputs: { startCustomers: '1000', endCustomers: '920', months: '12' } },
-  { file: 'ltv-calculator.ts',                 slug: 'solopreneur-ltv-calculator',                 defaultInputs: { avgMonthlyRevenue: '100', grossMargin: '70', monthlyChurn: '5', customerAcquisitionCost: '300' } },
+  { file: 'ltv-calculator.ts',                 slug: 'solopreneur-ltv-calculator',                 defaultInputs: { monthlyRevenuePerUser: '100', grossMargin: '70', monthlyChurn: '5', customerAcquisitionCost: '300' } },
   { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
   { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',           defaultInputs: { currentCash: '500000', monthlyRevenue: '20000', monthlyExpenses: '60000' } },
   { file: 'break-even-calculator.ts',          slug: 'solopreneur-break-even-calculator',          defaultInputs: { fixedCosts: '10000', pricePerUnit: '50', variableCostPerUnit: '20' } },
