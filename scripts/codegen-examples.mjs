@@ -42,6 +42,7 @@ const ENGINES = [
   { file: 'employee-cost-calculator.ts',       slug: 'solopreneur-employee-cost-calculator',        defaultInputs: { annualSalary: '80000', benefitsPercentage: '30', location: 'us' } },
   { file: 'meeting-cost-calculator.ts',        slug: 'solopreneur-meeting-cost-calculator',         defaultInputs: { attendees: '6', avgHourlyRate: '75', meetingMinutes: '30', meetingsPerWeek: '1' } },
   { file: 'time-value-calculator.ts',          slug: 'solopreneur-time-value-calculator',           defaultInputs: { annualIncome: '100000', hoursPerWeek: '40', weeksPerYear: '48' } },
+  { file: 'freelance-rate-calculator.ts',      slug: 'solopreneur-freelance-rate-calculator',       defaultInputs: { annualIncome: '80000', expenses: '10000', billableHrs: '1200', profit: '20000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
