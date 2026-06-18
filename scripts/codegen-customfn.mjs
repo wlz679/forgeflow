@@ -40,6 +40,10 @@ const ENGINES = [
   {
     file: 'openai-token-calculator.ts',
     provider: 'openai',
+    // Only include these models in customFn (default-selected + first preset).
+    // Full list (120+ models) stays in PRICING.json but isn't bundled.
+    // When user selects an unlisted model, customFn returns 0/no data (graceful degrade).
+    popularKeys: ['gpt-5.5', 'gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
     tableStart: '"var M={};" +',
     tableEndMarker: 'Family icons',
     fieldMap: (m) => {
@@ -60,6 +64,7 @@ const ENGINES = [
   {
     file: 'claude-api-cost-calculator.ts',
     provider: 'anthropic',
+    popularKeys: ['claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-opus-4-1', 'claude-haiku-3-5', 'claude-haiku-3'],
     tableStart: '"var M={" +',
     tableEndMarker: 'Family icons',
     fieldMap: (m) => {
@@ -80,6 +85,7 @@ const ENGINES = [
   {
     file: 'gemini-api-cost-calculator.ts',
     provider: 'google',
+    popularKeys: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
     tableStart: '"var M={" +',
     tableEndMarker: 'var FL=',
     fieldMap: (m) => {
@@ -102,6 +108,7 @@ const ENGINES = [
   {
     file: 'deepseek-api-cost-calculator.ts',
     provider: 'deepseek',
+    popularKeys: ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo', 'deepseek-r1'],
     tableStart: '"var M={" +',
     tableEndMarker: 'var FI=',
     fieldMap: (m) => {
@@ -122,6 +129,16 @@ const ENGINES = [
     tableEndMarker: 'Provider initials + colors',
     custom: true, // skip generic generator
     provider: 'all', // use all providers
+    // Bundle filter: 1 model per provider (cheapest flagship) keeps cross-provider
+    // comparison useful without bundling all 188 models. The 4 flagship models are
+    // the canonical "cheapest in each family" — users comparing providers usually
+    // want to see this side-by-side.
+    popularKeys: {
+      openai: ['gpt-5-mini'],
+      anthropic: ['claude-haiku-3'],
+      google: ['gemini-1.5-flash'],
+      deepseek: ['deepseek-v4-flash'],
+    },
   },
   // Non-LLM engines
   {
@@ -210,12 +227,22 @@ function generateComparisonTable() {
 function replaceComparisonTable(filePath) {
   let c = fs.readFileSync(filePath, 'utf8');
 
+  // Find the comparison engine config (has popularKeys per-provider)
+  const compEngine = ENGINES.find((e) => e.file === 'ai-api-cost-comparison.ts');
+  const popularKeys = compEngine?.popularKeys;
+
   // Generate new provider data, with `var P={` opening line
   const providerKeys = Object.keys(PRICING.llm);
   const providerLines = ['  "var P={" +'];
   providerKeys.forEach((pk, idx) => {
     const pv = PRICING.llm[pk];
-    const sorted = Object.entries(pv.models).sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
+    let modelEntries = Object.entries(pv.models);
+    // Apply popularKeys filter for the comparison engine
+    if (popularKeys && popularKeys[pk]) {
+      const keep = new Set(popularKeys[pk]);
+      modelEntries = modelEntries.filter(([k]) => keep.has(k));
+    }
+    const sorted = modelEntries.sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
     const modelParts = sorted.map(([mk, mv]) => `{k:'${mk}',n:'${mv.name.replace(/'/g, "\\'")}',i:${fmt(mv.input)},o:${fmt(mv.output)},cw:'${mv.contextWindow}'}`);
     const modelStr = modelParts.join(',');
     const isLast = idx === providerKeys.length - 1;
@@ -224,15 +251,14 @@ function replaceComparisonTable(filePath) {
   });
   const newBlock = providerLines.join('\n');
 
-  // Find the first provider line. Two patterns to handle:
-  //   1. "var P={openai:{...}}" + (inline, all on one line)
-  //   2. "openai:{...}" + (one provider per line)
+  // Find the first provider line OR the "var P={" opening line (idempotent).
+  // The original has `"var P={" +` on its own line; earlier codegen runs may
+  // have added duplicates, so we look for the EARLIEST match and ensure we
+  // only emit ONE "var P={" + in the output.
   const lines = c.split('\n');
   const startIdx = lines.findIndex((l) =>
-    /^\s*"(var P=\{openai:|(openai|anthropic|google|deepseek|azure|aws):\{)/.test(l)
+    /^\s*"(var P=\{|(openai|anthropic|google|deepseek|azure|aws):\{)/.test(l)
   );
-  // endIdx must be AFTER startIdx — the file has a `// Provider initials + colors` comment
-  // at the top (outside customFn) AND inside customFn. We want the second one.
   const endIdx = lines.findIndex((l, i) => i > startIdx && l.includes('Provider initials + colors'));
 
   if (startIdx < 0 || endIdx < 0) {
@@ -266,6 +292,12 @@ function generateTable(engine) {
   else if (engine.isTrainingGpu) entries = Object.entries(PRICING.training.gpuTypes);
   else if (engine.isTrainingModel) entries = Object.entries(PRICING.training.modelSizes);
   else entries = Object.entries(PRICING.llm[engine.provider].models);
+
+  // Apply popularKeys filter (bundle-size optimization)
+  if (engine.popularKeys && Array.isArray(engine.popularKeys)) {
+    const keep = new Set(engine.popularKeys);
+    entries = entries.filter(([k]) => keep.has(k));
+  }
 
   const sorted = entries.sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
 
@@ -351,18 +383,26 @@ for (const engine of ENGINES) {
   if (engine.custom && engine.file === 'ai-api-cost-comparison.ts') {
     if (replaceComparisonTable(fp)) {
       const totalModels = Object.values(PRICING.llm).reduce((s, p) => s + Object.keys(p.models).length, 0);
-      console.log(`  ✓ ${engine.file} (${totalModels} models across ${Object.keys(PRICING.llm).length} providers)`);
+      const filtered = engine.popularKeys
+        ? Object.values(engine.popularKeys).reduce((s, arr) => s + arr.length, 0)
+        : totalModels;
+      const tag = engine.popularKeys ? ` (${filtered}/${totalModels} popular)` : ` (${totalModels} models)`;
+      console.log(`  ✓ ${engine.file}${tag}`);
       totalUpdated++;
     }
   } else if (replaceTable(fp, engine)) {
-    // Count entries based on which data source
+    // Count entries after filter
     let count;
     if (engine.isImage) count = Object.keys(PRICING.image.providers).length;
     else if (engine.isGpu) count = Object.keys(PRICING.gpu.providers).length;
     else if (engine.isTrainingGpu) count = Object.keys(PRICING.training.gpuTypes).length;
     else if (engine.isTrainingModel) count = Object.keys(PRICING.training.modelSizes).length;
     else count = Object.keys(PRICING.llm[engine.provider].models).length;
-    console.log(`  ✓ ${engine.file} (${count} entries)`);
+    const filtered = engine.popularKeys && Array.isArray(engine.popularKeys)
+      ? engine.popularKeys.length
+      : count;
+    const tag = engine.popularKeys ? ` (${filtered}/${count} popular)` : ` (${count})`;
+    console.log(`  ✓ ${engine.file}${tag}`);
     totalUpdated++;
   }
 }

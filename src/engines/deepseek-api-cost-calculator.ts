@@ -384,12 +384,7 @@ const customFn =
   "'deepseek-v4-flash':{i:0.14,o:0.28,n:'DeepSeek V4 Flash',f:'v4',cw:'1M',od:1}," +
   "'deepseek-v4-pro':{i:1.74,o:3.48,n:'DeepSeek V4 Pro',f:'v4',cw:'1M',od:2}," +
   "'deepseek-v4-pro-promo':{i:0.435,o:0.87,n:'V4 Pro (75% Promo)',f:'v4',cw:'1M',od:3}," +
-  "'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:4}," +
-  "'deepseek-chat':{i:0.28,o:0.42,n:'Deepseek Chat',f:'legacy',cw:'131K',od:5}," +
-  "'deepseek-reasoner':{i:0.28,o:0.42,n:'Deepseek Reasoner',f:'legacy',cw:'131K',od:6}," +
-  "'deepseek-coder':{i:0.14,o:0.28,n:'Deepseek Coder',f:'legacy',cw:'128K',od:7}," +
-  "'deepseek-v3':{i:0.27,o:1.1,n:'Deepseek V3',f:'legacy',cw:'66K',od:8}," +
-  "'deepseek-v3.2':{i:0.28,o:0.4,n:'Deepseek V3.2',f:'legacy',cw:'164K',od:9}" +
+  "'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:4}" +
 
   "var FI={v4:'\\u25C6',legacy:'\\u25C7'};" +
   "var FL={v4:'V4 Series',legacy:'Legacy'};" +

@@ -378,44 +378,20 @@ const customFn =
   "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
   "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
   "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
+  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
+  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
+  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
+  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
+  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
+  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
+  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
+  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
+  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
+  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
   "'gemini-3-flash':{i:0.5,o:3,bi:0.25,bo:1.5,n:'Gemini 3 Flash',f:'flash3',ic:'◆',cw:'1M',od:3,sc:true,sb:true}," +
   "'gemini-2.5-flash':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash',f:'legacy',ic:'◇',cw:'1M',od:4,sc:false,sb:false}," +
   "'gemini-1.5-pro':{i:3.5,o:10.5,bi:0,bo:0,n:'Gemini 1.5 Pro',f:'legacy',ic:'◇',cw:'2M',od:5,sc:false,sb:false}," +
-  "'gemini-1.5-flash':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 1.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:6,sc:false,sb:false}," +
-  "'gemini-2.0-flash':{i:0.1,o:0.4,bi:0,bo:0,n:'Gemini 2.0Flash',f:'legacy',ic:'◇',cw:'1M',od:7,sc:false,sb:false}," +
-  "'gemini-2.0-flash-001':{i:0.1,o:0.4,bi:0,bo:0,n:'Gemini 2.0Flash 001',f:'legacy',ic:'◇',cw:'1M',od:8,sc:false,sb:false}," +
-  "'gemini-2.0-flash-lite':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 2.0Flash Lite',f:'legacy',ic:'◇',cw:'1M',od:9,sc:false,sb:false}," +
-  "'gemini-2.0-flash-lite-001':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 2.0Flash Lite 001',f:'legacy',ic:'◇',cw:'1M',od:10,sc:false,sb:false}," +
-  "'gemini-2.5-flash-image':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash Image',f:'legacy',ic:'◇',cw:'33K',od:11,sc:false,sb:false}," +
-  "'gemini-3-pro-image-preview':{i:2,o:12,bi:0,bo:0,n:'Gemini 3Pro Image Preview',f:'flash3',ic:'◆',cw:'66K',od:12,sc:false,sb:false}," +
-  "'gemini-3.1-flash-image-preview':{i:0.25,o:1.5,bi:0,bo:0,n:'Gemini 3.1Flash Image Preview',f:'flash3',ic:'◆',cw:'66K',od:13,sc:false,sb:false}," +
-  "'gemini-3.1-flash-lite-preview':{i:0.25,o:1.5,bi:0,bo:0,n:'Gemini 3.1Flash Lite Preview',f:'flash3',ic:'◆',cw:'1M',od:14,sc:false,sb:false}," +
-  "'gemini-3.1-flash-lite':{i:0.25,o:1.5,bi:0,bo:0,n:'Gemini 3.1Flash Lite',f:'flash3',ic:'◆',cw:'1M',od:15,sc:false,sb:false}," +
-  "'gemini-2.5-flash-lite':{i:0.1,o:0.4,bi:0,bo:0,n:'Gemini 2.5Flash Lite',f:'legacy',ic:'◇',cw:'1M',od:16,sc:false,sb:false}," +
-  "'gemini-2.5-flash-lite-preview-09-2025':{i:0.1,o:0.4,bi:0,bo:0,n:'Gemini 2.5Flash Lite Preview 092025',f:'legacy',ic:'◇',cw:'1M',od:17,sc:false,sb:false}," +
-  "'gemini-2.5-flash-preview-09-2025':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash Preview 092025',f:'legacy',ic:'◇',cw:'1M',od:18,sc:false,sb:false}," +
-  "'gemini-live-2.5-flash-preview-native-audio-09-2025':{i:0.3,o:2,bi:0,bo:0,n:'Gemini Live 2.5Flash Preview Native Audio 092025',f:'legacy',ic:'◇',cw:'1M',od:19,sc:false,sb:false}," +
-  "'gemini-2.5-flash-lite-preview-06-17':{i:0.1,o:0.4,bi:0,bo:0,n:'Gemini 2.5Flash Lite Preview 0617',f:'legacy',ic:'◇',cw:'1M',od:20,sc:false,sb:false}," +
-  "'gemini-2.5-pro':{i:1.25,o:10,bi:0,bo:0,n:'Gemini 2.5Pro',f:'legacy',ic:'◇',cw:'1M',od:21,sc:false,sb:false}," +
-  "'gemini-3-pro-preview':{i:2,o:12,bi:0,bo:0,n:'Gemini 3Pro Preview',f:'flash3',ic:'◆',cw:'1M',od:22,sc:false,sb:false}," +
-  "'gemini-3.1-pro-preview':{i:2,o:12,bi:0,bo:0,n:'Gemini 3.1Pro Preview',f:'pro',ic:'▲',cw:'1M',od:23,sc:false,sb:false}," +
-  "'gemini-3.1-pro-preview-customtools':{i:2,o:12,bi:0,bo:0,n:'Gemini 3.1Pro Preview Customtools',f:'pro',ic:'▲',cw:'1M',od:24,sc:false,sb:false}," +
-  "'gemini-2.5-pro-preview-tts':{i:1.25,o:10,bi:0,bo:0,n:'Gemini 2.5Pro Preview Tts',f:'legacy',ic:'◇',cw:'1M',od:25,sc:false,sb:false}," +
-  "'gemini-robotics-er-1.5-preview':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini Robotics Er 1.5Preview',f:'legacy',ic:'◇',cw:'1M',od:26,sc:false,sb:false}," +
-  "'gemini-2.5-computer-use-preview-10-2025':{i:1.25,o:10,bi:0,bo:0,n:'Gemini 2.5Computer Use Preview 102025',f:'legacy',ic:'◇',cw:'128K',od:27,sc:false,sb:false}," +
-  "'deep-research-pro-preview-12-2025':{i:2,o:12,bi:0,bo:0,n:'Deep Research Pro Preview 122025',f:'legacy',ic:'◇',cw:'66K',od:28,sc:false,sb:false}," +
-  "'gemini-flash-latest':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini Flash Latest',f:'legacy',ic:'◇',cw:'1M',od:29,sc:false,sb:false}," +
-  "'gemini-flash-lite-latest':{i:0.1,o:0.4,bi:0,bo:0,n:'Gemini Flash Lite Latest',f:'legacy',ic:'◇',cw:'1M',od:30,sc:false,sb:false}," +
-  "'gemini-2.5-flash-preview-tts':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash Preview Tts',f:'legacy',ic:'◇',cw:'128K',od:31,sc:false,sb:false}," +
-  "'gemini-3-flash-preview':{i:0.5,o:3,bi:0,bo:0,n:'Gemini 3Flash Preview',f:'flash3',ic:'◆',cw:'1M',od:32,sc:false,sb:false}," +
-  "'gemini-gemma-2-27b-it':{i:0.35,o:1.05,bi:0,bo:0,n:'Gemini Gemma 227b It',f:'legacy',ic:'◇',cw:'8K',od:33,sc:false,sb:false}," +
-  "'gemini-gemma-2-9b-it':{i:0.35,o:1.05,bi:0,bo:0,n:'Gemini Gemma 29b It',f:'legacy',ic:'◇',cw:'8K',od:34,sc:false,sb:false}," +
-  "'gemini-2.5-flash-native-audio-latest':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash Native Audio Latest',f:'legacy',ic:'◇',cw:'1M',od:35,sc:false,sb:false}," +
-  "'gemini-2.5-flash-native-audio-preview-09-2025':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash Native Audio Preview 092025',f:'legacy',ic:'◇',cw:'1M',od:36,sc:false,sb:false}," +
-  "'gemini-2.5-flash-native-audio-preview-12-2025':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5Flash Native Audio Preview 122025',f:'legacy',ic:'◇',cw:'1M',od:37,sc:false,sb:false}," +
-  "'gemini-3.1-flash-live-preview':{i:0.75,o:4.5,bi:0,bo:0,n:'Gemini 3.1Flash Live Preview',f:'flash3',ic:'◆',cw:'131K',od:38,sc:false,sb:false}," +
-  "'gemini-pro-latest':{i:1.25,o:10,bi:0,bo:0,n:'Gemini Pro Latest',f:'legacy',ic:'◇',cw:'1M',od:39,sc:false,sb:false}," +
-  "'gemini-exp-1206':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini Exp 1206',f:'legacy',ic:'◇',cw:'1M',od:40,sc:false,sb:false}" +
+  "'gemini-1.5-flash':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 1.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:6,sc:false,sb:false}" +
 
   "var FL={flash35:'Gemini 3.5 Flash',pro:'Gemini 3.1 Pro',flash3:'Gemini 3 Flash',legacy:'Legacy'};" +
   "var DEF=['gemini-3.5-flash','gemini-3.1-pro','gemini-3-flash','gemini-1.5-flash'];" +
