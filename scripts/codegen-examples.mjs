@@ -45,6 +45,10 @@ const ENGINES = [
   { file: 'freelance-rate-calculator.ts',      slug: 'solopreneur-freelance-rate-calculator',       defaultInputs: { annualIncome: '80000', expenses: '10000', billableHrs: '1200', profit: '20000' } },
   { file: 'sponsorship-rate-calculator.ts',    slug: 'solopreneur-sponsorship-rate-calculator',     defaultInputs: { monthlyDownloads: '10000', emailSubscribers: '5000', socialFollowers: '15000', contentType: 'newsletter' } },
   { file: 'course-pricing-calculator.ts',      slug: 'solopreneur-course-pricing-calculator',       defaultInputs: { targetMonthlyIncome: '5000', estimatedBuyersPerMonth: '50', platformFee: '10' } },
+  { file: 'equity-dilution-calculator.ts',     slug: 'solopreneur-equity-dilution-calculator',      defaultInputs: { companyValuation: '5000000', investmentAmount: '1000000', founderShares: '10000000' } },
+  { file: 'project-profitability-calculator.ts', slug: 'solopreneur-project-profitability-calculator', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
+  { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',     defaultInputs: { monthlyTraffic: '50000', conversionRate: '2', avgCommission: '50', monthlyCost: '200' } },
+  { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',   defaultInputs: { subscriberCount: '10000', openRate: '25', clickRate: '5', conversionRate: '2', avgOrderValue: '50', emailsPerMonth: '4', unsubscribeRate: '0.5' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
