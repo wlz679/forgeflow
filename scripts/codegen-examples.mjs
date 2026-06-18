@@ -37,6 +37,10 @@ const ENGINES = [
   { file: 'break-even-calculator.ts',          slug: 'solopreneur-break-even-calculator',          defaultInputs: { fixedCosts: '10000', pricePerUnit: '50', variableCostPerUnit: '20' } },
   { file: 'market-size-estimator.ts',          slug: 'solopreneur-market-size-estimator',          defaultInputs: { totalPopulation: '10000000', targetPercentage: '10', penetrationRate: '5', avgRevenuePerCustomer: '100' } },
   { file: 'saas-valuation-calculator.ts',      slug: 'solopreneur-saas-valuation-calculator',      defaultInputs: { arr: '1000000', growthRate: '100', grossMargin: '80', multiple: '10' } },
+  { file: 'freelance-tax-calculator.ts',       slug: 'solopreneur-freelance-tax-calculator',        defaultInputs: { annualIncome: '100000', businessExpenses: '15000', retirementContribution: '10000', filingStatus: 'single', stateTaxRate: '5', country: 'us' } },
+  { file: 'saas-pricing-planner.ts',           slug: 'solopreneur-saas-pricing-planner',            defaultInputs: { productType: 'SaaS', targetCustomer: 'b2b', competitorPrice: '29' } },
+  { file: 'employee-cost-calculator.ts',       slug: 'solopreneur-employee-cost-calculator',        defaultInputs: { annualSalary: '80000', benefitsPercentage: '30', location: 'us' } },
+  { file: 'meeting-cost-calculator.ts',        slug: 'solopreneur-meeting-cost-calculator',         defaultInputs: { attendees: '6', avgHourlyRate: '75', meetingMinutes: '30', meetingsPerWeek: '1' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
