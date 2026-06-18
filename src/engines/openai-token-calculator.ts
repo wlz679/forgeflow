@@ -818,75 +818,7 @@ const engine: ToolEngine = {
     return calculate(inputs);
   },
   staticExamples: [
-    `🔴 Real-time Pricing
-
-📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day
-
-📊 Cost Comparison (14 Models)
-🔵 GPT-5.5         ████████████████████████ $60.00
-🔵 GPT-5.2         ████████████ $26.25
-🔵 GPT-5           █████████ $18.75
-🔵 GPT-5 Mini      ██ $3.75
-🔵 GPT-5 Nano      █ $0.75 🏆
-🟢 GPT-4.1         █████████ $18.00
-🟢 GPT-4.1 Mini    ██ $3.60
-🟢 GPT-4.1 Nano    █ $0.90
-🟠 o3              █████████ $18.00
-🟠 o4 Mini         █████ $9.90
-⚪ GPT-4o           ████████████ $22.50
-⚪ GPT-4o Mini      █ $1.35
-⚪ GPT-4 Turbo      ████████████████████████████████ $75.00
-⚪ GPT-3.5 Turbo    ██ $3.75
-
-📋 Selected Model Details
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔵 GPT-5 Mini | Context: 400K tokens
-────────────────────────────────────────────
-Input:  1,000   tokens × $0.25/1M → $0.0003/req
-Output: 500     tokens × $2.00/1M → $0.0010/req
-────────────────────────────────────────────
-Per request:    $0.0013
-Daily (100):    $0.13
-Monthly (30d):  $3.75
-Annual:         $45.00
-────────────────────────────────────────────
-💡 Batch pricing: $0.0006/req ($1.88/mo) — save 50%
-
-🔵 GPT-5.5 | Context: 1M tokens
-────────────────────────────────────────────
-Input:  1,000   tokens × $5.00/1M → $0.0050/req
-Output: 500     tokens × $30.00/1M → $0.0150/req
-────────────────────────────────────────────
-Per request:    $0.0200
-Daily (100):    $2.00
-Monthly (30d):  $60.00
-Annual:         $720.00
-────────────────────────────────────────────
-💡 Batch pricing: $0.0100/req ($30.00/mo) — save 50%
-
-🟢 GPT-4.1 | Context: 1M tokens
-────────────────────────────────────────────
-Input:  1,000   tokens × $2.00/1M → $0.0020/req
-Output: 500     tokens × $8.00/1M → $0.0040/req
-────────────────────────────────────────────
-Per request:    $0.0060
-Daily (100):    $0.60
-Monthly (30d):  $18.00
-Annual:         $216.00
-────────────────────────────────────────────
-💡 Batch pricing: $0.0030/req ($9.00/mo) — save 50%
-
-💰 Savings Insights
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏆 Cheapest: GPT-5 Nano at $0.75/mo
-⭐ Best value (non-legacy, non-Nano): GPT-4.1 Mini at $3.60/mo
-💸 Switching from GPT-5.5 to GPT-5 Mini saves $56.25/mo ($675.00/yr)
-
-📅 Usage Scenarios (monthly costs)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔵 GPT-5 Mini:  50→$1.88  ·  100→$3.75  ·  500→$18.75  ·  1K→$37.50  ·  5K→$187.50  ·  10K→$375.00
-🔵 GPT-5.5:  50→$30.00  ·  100→$60.00  ·  500→$300.00  ·  1K→$600.00  ·  5K→$3,000.00  ·  10K→$6,000.00
-🟢 GPT-4.1:  50→$9.00  ·  100→$18.00  ·  500→$90.00  ·  1K→$180.00  ·  5K→$900.00  ·  10K→$1,800.00`,
+    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (14 Models)\n\n🔵 GPT 5.5            █ $60.00\n🔵 GPT 5.2            █ $26.25\n🔵 GPT 5              █ $18.75\n🔵 GPT 5Mini          █ $3.75\n🔵 GPT 5Nano          █ $0.75 🏆\n🟢 GPT 4.1            █ $18.00\n🟢 GPT 4.1Mini        █ $3.60\n🟢 GPT 4.1Nano        █ $0.90\n🟠 O3                 █ $54.00\n🟠 O4Mini             █ $29.70\n⚪ GPT 4o              █ $22.50\n⚪ GPT 4o Mini         █ $1.35\n⚪ GPT 4Turbo          ██ $75.00\n⚪ GPT 3.5Turbo        █ $3.75\n⚪ GPT 4o Transcribe Diarize█ $22.50\n⚪ GPT 3.5Turbo 0125   █ $3.75\n⚪ GPT 3.5Turbo 1106   █ $6.00\n⚪ GPT 3.5Turbo 16k    █ $15.00\n⚪ GPT 3.5Turbo Instruct█ $7.50\n⚪ GPT 3.5Turbo Instruct 0914█ $7.50\n⚪ GPT 4               ████ $180.00\n⚪ GPT 40125Preview    ██ $75.00\n⚪ GPT 40314           ████ $180.00\n⚪ GPT 40613           ████ $180.00\n⚪ GPT 41106Preview    ██ $75.00\n⚪ GPT 4Turbo 20240409 ██ $75.00\n⚪ GPT 4Turbo Preview  ██ $75.00\n🟢 GPT 4.120250414    █ $18.00\n🟢 GPT 4.1Mini 20250414█ $3.60\n🟢 GPT 4.1Nano 20250414█ $0.90\n⚪ GPT 4o 20240513     █ $37.50\n⚪ GPT 4o 20240806     █ $22.50\n⚪ GPT 4o 20241120     █ $22.50\n⚪ GPT 4o Audio Preview█ $22.50\n⚪ GPT 4o Audio Preview 20241217█ $22.50\n⚪ GPT 4o Audio Preview 20250603█ $22.50\n⚪ GPT Audio           █ $22.50\n⚪ GPT Audio 1.5       █ $22.50\n⚪ GPT Audio 20250828  █ $22.50\n⚪ GPT Audio Mini      █ $5.40\n⚪ GPT Audio Mini 20251006█ $5.40\n⚪ GPT Audio Mini 20251215█ $5.40\n⚪ GPT 4o Mini 20240718█ $1.35\n⚪ GPT 4o Mini Audio Preview█ $1.35\n⚪ GPT 4o Mini Audio Preview 20241217█ $1.35\n⚪ GPT 4o Mini Realtime Preview█ $5.40\n⚪ GPT 4o Mini Realtime Preview 20241217█ $5.40\n⚪ GPT 4o Mini Search Preview█ $1.35\n⚪ GPT 4o Mini Search Preview 20250311█ $1.35\n⚪ GPT 4o Mini Transcribe█ $11.25\n⚪ GPT 4o Mini Tts     █ $22.50\n⚪ GPT 4o Realtime Preview█ $45.00\n⚪ GPT 4o Realtime Preview 20241217█ $45.00\n⚪ GPT 4o Realtime Preview 20250603█ $45.00\n⚪ GPT 4o Search Preview█ $22.50\n⚪ GPT 4o Search Preview 20250311█ $22.50\n⚪ GPT 4o Transcribe   █ $22.50\n⚪ GPT Image 1.5       █ $30.00\n⚪ GPT Image 1.520251216█ $30.00\n⚪ GPT Image 2         █ $30.00\n⚪ GPT Image 220260421 █ $30.00\n🔵 GPT 5.1            █ $18.75\n🔵 GPT 5.120251113    █ $18.75\n🔵 GPT 5.1Chat Latest █ $18.75\n🔵 GPT 5.220251211    █ $26.25\n🔵 GPT 5.2Chat Latest █ $26.25\n🔵 GPT 5.3Chat Latest █ $26.25\n🔵 GPT 5.2Pro         ███████ $315.00\n🔵 GPT 5.2Pro 20251211███████ $315.00\n🔵 GPT 5.520260423    █ $60.00\n🔵 GPT 5.5Pro         █████████ $360.00\n🔵 GPT 5.5Pro 20260423█████████ $360.00\n🔵 GPT 5.4            █ $30.00\n🔵 GPT 5.420260305    █ $30.00\n🔵 GPT 5.4Pro         █████████ $360.00\n🔵 GPT 5.4Pro 20260305█████████ $360.00\n🔵 GPT 5.4Mini        █ $9.00\n🔵 GPT 5.4Mini 20260317█ $9.00\n🔵 GPT 5.4Nano        █ $2.48\n🔵 GPT 5.4Nano 20260317█ $2.48\n🔵 GPT 5Pro           █████ $225.00\n🔵 GPT 5Pro 20251006  █████ $225.00\n🔵 GPT 520250807      █ $18.75\n🔵 GPT 5Chat          █ $18.75\n🔵 GPT 5Chat Latest   █ $18.75\n🔵 GPT 5Codex         █ $18.75\n🔵 GPT 5.1Codex       █ $18.75\n🔵 GPT 5.1Codex Max   █ $18.75\n🔵 GPT 5.1Codex Mini  █ $3.75\n🔵 GPT 5.2Codex       █ $26.25\n🔵 GPT 5.3Codex       █ $26.25\n🔵 GPT 5Mini 20250807 █ $3.75\n🔵 GPT 5Nano 20250807 █ $0.75\n⚪ GPT Realtime        █ $36.00\n⚪ GPT Realtime 1.5    █ $36.00\n⚪ GPT Realtime 2      █ $36.00\n⚪ GPT Realtime Mini   █ $5.40\n⚪ GPT Realtime 20250828█ $36.00\n🟠 O1                 ███ $135.00\n🟠 O120241217         ███ $135.00\n🟠 O1Pro              ████████████████████████████████ $1350.00\n🟠 O1Pro 20250319     ████████████████████████████████ $1350.00\n🟠 O320250416         █ $18.00\n🟠 O3Deep Research    ██ $90.00\n🟠 O3Deep Research 20250626██ $90.00\n🟠 O3Mini             █ $9.90\n🟠 O3Mini 20250131    █ $9.90\n🟠 O3Pro              ████ $180.00\n🟠 O3Pro 20250610     ████ $180.00\n🟠 O4Mini 20250416    █ $9.90\n🟠 O4Mini Deep Research█ $18.00\n🟠 O4Mini Deep Research 20250626█ $18.00\n⚪ GPT 4o Mini Tts 20250320█ $22.50\n⚪ GPT 4o Mini Tts 20251215█ $22.50\n⚪ GPT 4o Mini Transcribe 20250320█ $11.25\n⚪ GPT 4o Mini Transcribe 20251215█ $11.25\n🔵 GPT 5Search Api    █ $18.75\n🔵 GPT 5Search Api 20251014█ $18.75\n⚪ GPT Realtime Mini 20251006█ $5.40\n⚪ GPT Realtime Mini 20251215█ $5.40\n\n\n📋 Selected Model Details\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔵 GPT 5Mini | Context: 272K tokens\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.25/1M → $0.0003/req\nOutput: 500     tokens × $2.00/1M → $0.0010/req\n────────────────────────────────────────────\nPer request:    $0.0013\nDaily (100):    $0.13\nMonthly (30d):  $3.75\nAnnual:         $45.00\n────────────────────────────────────────────\n💡 Batch pricing: $0.0006/req ($1.88/mo) — save 50%\n\n🔵 GPT 5.5 | Context: 1M tokens\n────────────────────────────────────────────\nInput:  1,000   tokens × $5.00/1M → $0.0050/req\nOutput: 500     tokens × $30.00/1M → $0.01/req\n────────────────────────────────────────────\nPer request:    $0.02\nDaily (100):    $2.00\nMonthly (30d):  $60.00\nAnnual:         $720.00\n────────────────────────────────────────────\n💡 Batch pricing: $0.01/req ($30.00/mo) — save 50%\n\n🟢 GPT 4.1 | Context: 1M tokens\n────────────────────────────────────────────\nInput:  1,000   tokens × $2.00/1M → $0.0020/req\nOutput: 500     tokens × $8.00/1M → $0.0040/req\n────────────────────────────────────────────\nPer request:    $0.0060\nDaily (100):    $0.60\nMonthly (30d):  $18.00\nAnnual:         $216.00\n────────────────────────────────────────────\n💡 Batch pricing: $0.0030/req ($9.00/mo) — save 50%\n\n💰 Savings Insights\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 Cheapest: GPT 5Nano at $0.75/mo\n⭐ Best value (non-legacy, non-Nano): GPT 4.1Mini at $3.60/mo\n💸 Switching from GPT 5.5 to GPT 5Mini saves $56.25/mo ($675.00/yr)\n🌍 Cross-provider: DeepSeek Chat @ $0.84/mo — saves $-0.09/mo (-12% cheaper) vs cheapest OpenAI\n\n📅 Usage Scenarios (monthly costs)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔵 GPT 5Mini:  50→$1.88  ·  100→$3.75  ·  500→$18.75  ·  1K→$37.50  ·  5K→$187.50  ·  10K→$375.00\n🔵 GPT 5.5:  50→$30.00  ·  100→$60.00  ·  500→$300.00  ·  1K→$600.00  ·  5K→$3000.00  ·  10K→$6000.00\n🟢 GPT 4.1:  50→$9.00  ·  100→$18.00  ·  500→$90.00  ·  1K→$180.00  ·  5K→$900.00  ·  10K→$1800.00',
   ],
   faq: [
     {
