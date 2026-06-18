@@ -218,7 +218,7 @@ const customFn =
   "var r='';" +
   "r+='\\uD83C\\uDFAF SaaS Pricing Planner\\n\\n';" +
   "r+='\\uD83D\\uDCE6 Product: '+pt+'  |  \\uD83D\\uDC64 Target: '+tc+'  |  \\uD83D\\uDCB0 Competitor: '+(cp?'$'+cp+'/mo':'N/A')+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r+='\\uD83D\\uDCB0 Tier Snapshot:\\n';" +
   "r+='\\u2022 Starter:      '+fmt(tout[0].m)+'/mo  \\u00d7 '+tout[0].c+' customers = '+fmt(tout[0].mr)+' MRR\\n';" +
   "r+='\\u2022 Pro:            '+fmt(tout[1].m)+'/mo  \\u00d7 '+tout[1].c+' customers = '+fmt(tout[1].mr)+' MRR\\n';" +
@@ -227,40 +227,40 @@ const customFn =
   "r+='\\u2022 Total MRR:                  '+fmt(tmr)+'\\n';" +
   "r+='\\u2022 Total Customers:       '+tc2.toLocaleString()+'\\n';" +
   "r+='\\u2022 ARPU:                            '+fmt(arpu)+'/mo\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r+='\\uD83D\\uDCD0 Key Metrics:\\n';" +
   "r+='\\u2022 Weighted Gross Margin:    '+pct(wm*100)+'  (blended across tiers)\\n';" +
   "r+='\\u2022 Target Margin:                    '+pct(tm*100)+'  (industry benchmark: 70-80%)\\n';" +
   "r+='\\u2022 ARPU by Tier:                     $'+tiers[0].m+' / $'+tiers[1].m+' / $'+tiers[2].m+' / $'+tiers[3].m+'\\n';" +
   "r+='\\u2022 Margin by Tier:                '+pct(tiers[0].mg*100)+' / '+pct(tiers[1].mg*100)+' / '+pct(tiers[2].mg*100)+' / '+pct(tiers[3].mg*100)+'\\n';" +
   "r+='\\u2022 Enterprise % of MRR:        '+pct((tout[3].mr/Math.max(tmr,1))*100)+'  (high = strong moat)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDCA7 Pricing Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  "r+='\\uD83E\\uDE7A Pricing Health:\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "var ut=tiers.filter(function(t){return t.mg<0.5});" +
   "if(ut.length===0){r+='\\u2022 \\uD83D\\uDFE2 All tiers above 50% margin \\u2014 healthy pricing structure.\\n';}else{r+='\\u2022 \\uD83D\\uDD34 '+ut.length+' tier(s) below 50% margin: '+ut.map(function(t){return t.n}).join(', ')+' \\u2014 review feature costs.\\n';}" +
   "if(tout[3].mr/tmr>0.25){r+='\\u2022 \\uD83D\\uDFE2 Enterprise = '+pct((tout[3].mr/tmr)*100)+' of MRR \\u2014 strong enterprise traction.\\n';}else if(tout[3].mr/tmr>0.10){r+='\\u2022 \\uD83D\\uDFE1 Enterprise = '+pct((tout[3].mr/tmr)*100)+' of MRR \\u2014 healthy mix.\\n';}else{r+='\\u2022 \\uD83D\\uDFE0 Enterprise = only '+pct((tout[3].mr/Math.max(tmr,1))*100)+' of MRR \\u2014 opportunity to expand upmarket.\\n';}" +
   "if(wm>=tm){r+='\\u2022 \\uD83D\\uDFE2 Blended margin ('+pct(wm*100)+') hits target.\\n';}else{r+='\\u2022 \\uD83D\\uDFE1 Blended margin ('+pct(wm*100)+') below target \\u2014 raise prices or cut costs.\\n';}" +
   "if(cp>0&&tiers[1].m<cp*0.7){r+='\\u2022 \\uD83D\\uDFE2 Pro tier well below competitor \\u2014 could raise 20-30% without losing deals.\\n';}else if(cp>0&&tiers[1].m>cp*1.3){r+='\\u2022 \\uD83D\\uDFE0 Pro tier 30%+ above competitor \\u2014 risk of price objection.\\n';}" +
   "r+='\\n\\uD83C\\uDFAF LTV by Tier:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r+='\\u2022 Starter:           $'+Math.round(tout[0].ltv).toLocaleString()+'  ('+pct(tiers[0].mg*100)+' margin, '+pct(ac*100)+' monthly churn)\\n';" +
   "r+='\\u2022 Pro:                  $'+Math.round(tout[1].ltv).toLocaleString()+'  ('+pct(tiers[1].mg*100)+' margin)\\n';" +
   "r+='\\u2022 Max:                  $'+Math.round(tout[2].ltv).toLocaleString()+'  ('+pct(tiers[2].mg*100)+' margin)\\n';" +
   "r+='\\u2022 Enterprise:    $'+Math.round(tout[3].ltv).toLocaleString()+'  ('+pct(tiers[3].mg*100)+' margin)\\n';" +
   "r+='\\u2022 Average LTV:      $'+Math.round(tout.reduce(function(s,t){return s+t.ltv*t.c},0)/Math.max(tc2,1)).toLocaleString()+'\\n';" +
   "r+='\\u2022 LTV Formula:      (Price \\u00d7 Margin) / Monthly Churn\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r+='\\u2696\\uFE0F Break-Even Customers per Tier:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r+='\\u2022 Starter:           ~'+tout[0].be+' customers  to break even on $2K/mo costs\\n';" +
   "r+='\\u2022 Pro:                  ~'+tout[1].be+' customers  to break even on $2K/mo costs\\n';" +
   "r+='\\u2022 Max:                  ~'+tout[2].be+' customers  to break even on $2K/mo costs\\n';" +
   "r+='\\u2022 Enterprise:    ~'+tout[3].be+' customers  to break even on $2K/mo costs\\n';" +
   "r+='\\u2022 (Assumes $2K/mo fixed costs per tier \\u2014 adjust based on actual overhead)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r+='\\u2022 Raise all tiers 20%:   Pro becomes $'+Math.round(tiers[1].m*1.2)+'/mo, MRR \\u2192 '+fmt(tmr*1.2)+'  (test willingness to pay)\\n';" +
   "r+='\\u2022 Cut Starter by 50%:    Convert funnel to Pro \\u2014 gain $'+Math.round(tiers[1].m*0.3*tiers[0].c)+'/mo\\n';" +
   "r+='\\u2022 Add annual discount (15% off):   $'+Math.round(tiers[1].m*12*0.85)+'/yr  vs $'+(tiers[1].m*12)+'/yr monthly\\n';" +
