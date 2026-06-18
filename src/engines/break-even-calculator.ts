@@ -90,6 +90,38 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
     }
   }
 
+  // 🩺 Break-Even Health (v3)
+  if (flatMonthlyProfit <= 0) {
+    result += "\\n\\n🩺 Break-Even Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.";
+  } else if (initialInvestment <= 0) {
+    result += "\\n\\n🩺 Break-Even Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 No upfront investment. Every month is profit. Focus on scaling.";
+  } else if (flatMonths !== null) {
+    const verdict = flatMonths < 6 ? "🟢 Fast payback — under 6 months. Healthy." :
+                    flatMonths < 12 ? "🟡 Moderate payback — 6-12 months. Standard for SaaS." :
+                    flatMonths < 24 ? "🟠 Slow payback — 1-2 years. Tighten unit economics." :
+                    "🔴 Very slow — over 2 years. Reconsider pricing or costs.";
+    result += "\\n\\n🩺 Break-Even Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• " + verdict + "\\n• Payback: " + flatMonths + " months | ~" + (flatMonths / 12).toFixed(1) + " years";
+  } else {
+    result += "\\n\\n🩺 Break-Even Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟡 Default alive — no payback needed.";
+  }
+
+  // 🔄 What-If Scenarios (v3)
+  result += "\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+  if (flatMonthlyProfit > 0 && initialInvestment > 0 && flatMonths !== null) {
+    const rev10 = (monthlyRevenue * 1.1) - monthlyCosts;
+    const inv10 = Math.ceil(initialInvestment / rev10);
+    const cost10 = monthlyRevenue - (monthlyCosts * 0.9);
+    const invCost10 = Math.ceil(initialInvestment / cost10);
+    const combo = (monthlyRevenue * 1.1) - (monthlyCosts * 0.9);
+    const invCombo = Math.ceil(initialInvestment / combo);
+    result += "\\n• Raise price 10%:  Payback " + flatMonths + " → " + inv10 + " mo";
+    result += "\\n• Cut costs 10%:  Payback " + flatMonths + " → " + invCost10 + " mo";
+    result += "\\n• Combo (+10% price, -10% costs):  Payback " + flatMonths + " → " + invCombo + " mo";
+    result += "\\n• At current rate:  Save $" + Math.round(flatMonthlyProfit * 12).toLocaleString() + "/yr after initial investment";
+  } else {
+    result += "\\n• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.";
+  }
+
   return [result];
 }
 
@@ -130,7 +162,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateBreakEven(inputs); },
   staticExamples: [
-    "📊 Break-Even Analysis\n\n⏱️ Break-Even Timeline\n• Initial Investment:  $5,000\n• Monthly Costs:       $500/mo\n• Monthly Revenue:     $1,000/mo\n• Flat revenue:        10 months\n• With 10.0% growth:  7 months  (3 months faster)\n🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.\n\n📈 Cumulative P&L Outlook\n• Month 3: −$1,690\n• Month 6: +$2,716 ✅\n• Month 12: +$21,384 ✅\n• Month 24: +$89,497 ✅",
+    '📊 Break-Even Analysis\n\n⏱️ Break-Even Timeline\n• Initial Investment:  $0\n• Monthly Costs:       $0/mo\n• Monthly Revenue:     $0/mo\n• Flat revenue:        Never — monthly costs exceed revenue. You need growth or lower costs.\n🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.\n\\n\\n🩺 Break-Even Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.',
   ],
   faq: [
     { q: "What is a break-even point?", a: "The break-even point is when your cumulative revenue equals your total costs (including initial investment). After this point, every dollar of revenue becomes profit. For solopreneurs, break-even is the first major validation milestone." },

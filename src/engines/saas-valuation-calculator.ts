@@ -67,6 +67,40 @@ function calculateValuation(inputs: Record<string, string>): string[] {
     mainResult += '\\u2022 Distress floor (2x):  $' + Math.round(annualRevenue * 2).toLocaleString() + '  (asset-only sale)\\n';
   }
 
+  // 🩺 Valuation Health (v3)
+  if (annualRevenue <= 0) {
+    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.';
+  } else if (valuationBase <= 0) {
+    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Multiple is 0 or negative. No reasonable valuation can be derived.';
+  } else if (annualRevenue < 100000) {
+    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟡 Pre-revenue / seed stage. Most investors won\'t use revenue multiple. Focus on traction, growth, and team before valuation conversations.';
+  } else if (annualRevenue < 1000000) {
+    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟠 Early revenue ($' + (annualRevenue / 1000).toFixed(0) + 'K ARR). Typical seed-to-Series A range. Multiple: 5-15x depending on growth rate.';
+  } else if (annualRevenue < 10000000) {
+    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Mid-stage ($' + (annualRevenue / 1000000).toFixed(1) + 'M ARR). Series A-B range. Multiple: 8-20x. Growth rate is the #1 multiple driver.';
+  } else {
+    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Late-stage ($' + (annualRevenue / 1000000).toFixed(1) + 'M ARR). Series C+ range. Multiple: 10-30x. Profitability and net dollar retention matter more.';
+  }
+
+  // 🔄 What-If Scenarios (v3)
+  mainResult += '\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  if (annualRevenue > 0 && baseMultiple > 0) {
+    const doubleRev = annualRevenue * 2;
+    const valAtDouble = doubleRev * baseMultiple;
+    const valAtHigherMult = annualRevenue * (baseMultiple * 1.5);
+    const valAtProfitable = annualRevenue * baseMultiple * 1.3;
+    mainResult += '\\n• Double ARR (next 12 months at 100% growth):  $' + fmt(annualRevenue) + ' → $' + fmt(doubleRev) + '  | Valuation $' + fmt(valAtDouble);
+    mainResult += '\\n• Boost multiple 50% (better growth/profitability story):  Valuation $' + fmt(valAtHigherMult) + '  (no ARR change)';
+    mainResult += '\\n• Reach profitability (typically +30% multiple):  Valuation $' + fmt(valAtProfitable);
+    if (growthRate > 0) {
+      const t2Growth = annualRevenue * Math.pow(1 + growthRate / 100, 2);
+      const valAtT2 = t2Growth * baseMultiple;
+      mainResult += '\\n• At current growth (' + growthRate + '% YoY) in 2 years:  ARR $' + fmt(t2Growth) + '  | Valuation $' + fmt(valAtT2) + '  (+$' + fmt(valAtT2 - valuationBase) + ')';
+    }
+  } else {
+    mainResult += '\\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.';
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different multiples
@@ -156,7 +190,7 @@ const engine: ToolEngine = {
     return calculateValuation(inputs);
   },
   staticExamples: [
-    '💰 SaaS Valuation Estimate\n\n• Annual Revenue (ARR): $200,000\n• YoY Growth Rate: 50.0%\n• Profit Margin: 25.0%\n• Annual Profit: $50,000\n\n📊 Valuation Range (Revenue Multiple):\n\n• Conservative (6.0x): $1,200,000\n• Base Case (8.0x): $1,600,000\n• Optimistic (12.0x): $2,400,000\n\n• Estimated Exit Value: $600,000\n\n🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n',
+    '\\uD83D\\uDCB0 SaaS Valuation Estimate\\n\\n\\u2022 Annual Revenue (ARR): $0\\n\\u2022 YoY Growth Rate: 100.0%\\n\\u2022 Profit Margin: 0.0%\\n\\u2022 Annual Profit: $0\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDCCA Valuation Range (Revenue Multiple):\\n\\n\\u2022 Conservative (8.0x): $0\\n\\u2022 Base Case (10.0x): $0\\n\\u2022 Optimistic (15.0x): $0\\n\\n\\u2022 Estimated Exit Value: $0\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDE80 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\\n\\n\\uD83D\\uDCA1 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.\nDistressed Sale (2x): $0 ARR \\u00d7 2x = $0 valuation\nFlat Growth (4x): $0 ARR \\u00d7 4x = $0 valuation\nSteady Growth (6x): $0 ARR \\u00d7 6x = $0 valuation\nHigh Growth (10x): $0 ARR \\u00d7 10x = $0 valuation\nHyper-Growth (15x): $0 ARR \\u00d7 15x = $0 valuation',
     'Distressed Sale (2x): $200,000 ARR × 2x = $400,000 valuation',
     'Flat Growth (4x): $200,000 ARR × 4x = $800,000 valuation',
     'Steady Growth (6x): $200,000 ARR × 6x = $1,200,000 valuation',

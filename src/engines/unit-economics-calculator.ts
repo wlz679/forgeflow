@@ -22,140 +22,195 @@ function calculateUnitEconomics(inputs: Record<string, string>): string[] {
   const paybackMonths = netContribution > 0 ? cac / netContribution : Infinity;
   const annualProfitPerCust = netContribution * 12;
 
-  let result = "📦 Unit Economics\n\n";
+  const out: string[] = [];
+  out.push("📦 Unit Economics");
+  out.push("");
 
-  // Module 1: Unit Economics Snapshot
-  result += "📋 Per-Customer Snapshot\n";
-  result += "• Revenue / Customer:   " + fmt(revPerCust) + "/mo\n";
-  if (expansionRev > 0) result += "• Expansion Revenue:    " + fmt(expansionRev) + "/mo\n";
-  result += "• Cost to Serve:        " + fmt(costServe) + "/mo\n";
-  result += "• Net Contribution:     " + fmt(netContribution) + "/mo  (" + pct(netMargin) + " margin)\n";
-  result += "• Monthly Churn:        " + pct(churnRate) + "\n";
+  // Section 1: Per-Customer Snapshot
+  out.push("📋 Per-Customer Snapshot");
+  out.push("• Revenue / Customer:   " + fmt(revPerCust) + "/mo");
+  if (expansionRev > 0) out.push("• Expansion Revenue:    " + fmt(expansionRev) + "/mo");
+  out.push("• Cost to Serve:        " + fmt(costServe) + "/mo");
+  out.push("• Net Contribution:     " + fmt(netContribution) + "/mo  (" + pct(netMargin) + " margin)");
+  out.push("• Monthly Churn:        " + pct(churnRate));
   if (isFinite(avgLifetime)) {
-    result += "• Avg Customer Lifetime: " + avgLifetime.toFixed(0) + " months";
-    if (retentionMonths > 0) result += " (manual)";
-    result += "\n";
+    out.push("• Avg Customer Lifetime: " + avgLifetime.toFixed(0) + " months" + (retentionMonths > 0 ? " (manual)" : ""));
   } else {
-    result += "• Avg Customer Lifetime: ∞  (zero churn — great!)\n";
+    out.push("• Avg Customer Lifetime: ∞  (zero churn — great!)");
   }
-  if (isFinite(ltv) && ltv > 0) result += "• Customer LTV:         " + fmt(ltv) + "\n";
+  if (isFinite(ltv) && ltv > 0) out.push("• Customer LTV:         " + fmt(ltv));
+  out.push("");
 
-  // Module 2: CAC Payback
+  // Section 2: CAC Payback
   if (cac > 0 && netContribution > 0) {
-    result += "\n⏱️ CAC Payback\n";
-    result += "• Cost to Acquire:      " + fmt(cac) + "\n";
-    result += "• Monthly Net Contribution: " + fmt(netContribution) + "/mo\n";
-    result += "• Payback Period:       " + paybackMonths.toFixed(1) + " months\n";
-    result += "• Annual Profit:        " + fmt(annualProfitPerCust) + " per customer\n";
-    if (paybackMonths <= 3) result += "• ✅ Excellent — you recover CAC in under 3 months. Invest more in growth!\n";
-    else if (paybackMonths <= 6) result += "• 🟢 Good — payback under 6 months. Healthy unit economics.\n";
-    else if (paybackMonths <= 12) result += "• 🟡 OK — payback within a year. Room to optimize either CAC or pricing.\n";
-    else if (isFinite(paybackMonths)) result += "• 🔴 Slow — over 12 months to recover CAC. Raise prices or reduce acquisition cost.\n";
+    out.push("⏱️ CAC Payback");
+    out.push("• Cost to Acquire:      " + fmt(cac));
+    out.push("• Monthly Net Contribution: " + fmt(netContribution) + "/mo");
+    out.push("• Payback Period:       " + paybackMonths.toFixed(1) + " months");
+    out.push("• Annual Profit:        " + fmt(annualProfitPerCust) + " per customer");
+    if (paybackMonths <= 3) out.push("• ✅ Excellent — you recover CAC in under 3 months. Invest more in growth!");
+    else if (paybackMonths <= 6) out.push("• 🟢 Good — payback under 6 months. Healthy unit economics.");
+    else if (paybackMonths <= 12) out.push("• 🟡 OK — payback within a year. Room to optimize either CAC or pricing.");
+    else if (isFinite(paybackMonths)) out.push("• 🔴 Slow — over 12 months to recover CAC. Raise prices or reduce acquisition cost.");
+    out.push("");
   } else if (cac === 0 && netContribution > 0) {
-    result += "\n⏱️ CAC Payback\n• No acquisition cost — all revenue is pure growth.\n";
+    out.push("⏱️ CAC Payback");
+    out.push("• No acquisition cost — all revenue is pure growth.");
+    out.push("");
   }
 
-  // Module 3: Scaling Economics (1K / 10K / 100K with 10% cost reduction per 10× scale)
+  // Section 3: Scaling Economics
   if (netContribution > 0) {
-    result += "\n📊 Scaling Economics\n";
+    out.push("📊 Scaling Economics");
     const scales = [1000, 10000, 100000];
     for (let i = 0; i < scales.length; i++) {
       const n = scales[i];
-      const costReduction = 1 - (i * 0.1); // 1.0, 0.9, 0.8 — 10% cost reduction per 10× scale
+      const costReduction = 1 - (i * 0.1);
       const scaledCost = costServe * costReduction;
       const scaledNC = totalRev - scaledCost;
       const monthlyProfit = scaledNC * n;
       const churnOffset = Math.round(n * monthlyChurn);
       const totalCAC = cac * (n + churnOffset);
-      result += "• " + n.toLocaleString() + " customers: " + fmt(monthlyProfit) + "/mo net  →  " + fmt(monthlyProfit * 12) + "/yr";
-      if (i > 0) result += "  (cost -" + (i * 10) + "%)";
-      if (cac > 0 && isFinite(totalCAC)) result += "  (acquire: " + fmt(totalCAC) + ")";
-      result += "\n";
+      let line = "• " + n.toLocaleString() + " customers: " + fmt(monthlyProfit) + "/mo net  →  " + fmt(monthlyProfit * 12) + "/yr";
+      if (i > 0) line += "  (cost -" + (i * 10) + "%)";
+      if (cac > 0 && isFinite(totalCAC)) line += "  (acquire: " + fmt(totalCAC) + ")";
+      out.push(line);
     }
-    result += "  ^ Economies of scale: 10% cost reduction per 10× customers\n";
+    out.push("  ^ Economies of scale: 10% cost reduction per 10× customers");
+    out.push("");
   }
 
-  // Module 4: Optimization Levers
+  // Section 4: Optimization Levers
   if (netContribution > 0) {
-    result += "\n🎯 Optimization Levers\n";
-
-    // Reduce churn by 25%
+    out.push("🎯 Optimization Levers");
     if (monthlyChurn > 0 && isFinite(ltv) && retentionMonths === 0) {
       const improvedChurn = monthlyChurn * 0.75;
       const improvedLTV = netContribution / improvedChurn;
-      result += "• Reduce churn 25%:  LTV " + fmt(ltv) + " → " + fmt(improvedLTV) + "  (+" + fmt(improvedLTV - ltv) + ")\n";
+      out.push("• Reduce churn 25%:  LTV " + fmt(ltv) + " → " + fmt(improvedLTV) + "  (+" + fmt(improvedLTV - ltv) + ")");
     }
-
-    // Increase price by 20%
     const increasedRev = revPerCust * 1.2;
     const increasedTotal = increasedRev + expansionRev;
     const increasedProfit = increasedTotal - costServe;
     if (increasedProfit > netContribution) {
-      result += "• Raise price 20%:   Net " + fmt(netContribution) + "/mo → " + fmt(increasedProfit) + "/mo";
+      let line = "• Raise price 20%:   Net " + fmt(netContribution) + "/mo → " + fmt(increasedProfit) + "/mo";
       if (cac > 0 && netContribution > 0) {
         const newPayback = cac / increasedProfit;
-        result += "  |  Payback " + paybackMonths.toFixed(0) + " → " + newPayback.toFixed(0) + " mo";
+        line += "  |  Payback " + paybackMonths.toFixed(0) + " → " + newPayback.toFixed(0) + " mo";
       }
-      result += "\n";
+      out.push(line);
     }
-
-    // Reduce CAC by 30%
     if (cac > 0 && netContribution > 0) {
       const reducedCAC = cac * 0.7;
       const newPayback = reducedCAC / netContribution;
-      result += "• Reduce CAC 30%:    Payback " + paybackMonths.toFixed(0) + " → " + newPayback.toFixed(0) + " mo  (CAC: " + fmt(cac) + " → " + fmt(reducedCAC) + ")\n";
+      out.push("• Reduce CAC 30%:    Payback " + paybackMonths.toFixed(0) + " → " + newPayback.toFixed(0) + " mo  (CAC: " + fmt(cac) + " → " + fmt(reducedCAC) + ")");
     }
-
-    // Combined scenario
     if (monthlyChurn > 0 && isFinite(ltv) && retentionMonths === 0) {
       const improvedLTV = netContribution / (monthlyChurn * 0.75);
       const newCAC = cac * 0.7;
-      result += "• 🚀 Best case (lower churn + lower CAC):  LTV " + fmt(improvedLTV) + "  |  Payback ";
-      if (netContribution > 0) result += (newCAC / netContribution).toFixed(0) + " mo\n";
-      else result += "N/A\n";
+      let line = "• 🚀 Best case (lower churn + lower CAC):  LTV " + fmt(improvedLTV) + "  |  Payback ";
+      if (netContribution > 0) line += (newCAC / netContribution).toFixed(0) + " mo";
+      else line += "N/A";
+      out.push(line);
     }
+    out.push("");
   }
 
-  // Module 5: Lever Impact Ranking
+  // Section 5: Lever Impact Ranking
   if (netContribution > 0 && isFinite(ltv)) {
-    result += "\n🏆 Lever Impact Ranking\n";
-
+    out.push("🏆 Lever Impact Ranking");
     let churnImpact = 0;
     let expImpact = 0;
-
-    // Impact of reducing churn by 1% absolute
     if (monthlyChurn > 0.01 && retentionMonths === 0) {
       const improvedChurn = monthlyChurn - 0.01;
       const improvedLifetime = 1 / improvedChurn;
       const improvedLTV = netContribution * improvedLifetime;
       churnImpact = improvedLTV - ltv;
-      result += "• Reduce churn 1%:     LTV " + fmt(ltv) + " → " + fmt(improvedLTV) + "  (+" + fmt(churnImpact) + ")\n";
+      out.push("• Reduce churn 1%:     LTV " + fmt(ltv) + " → " + fmt(improvedLTV) + "  (+" + fmt(churnImpact) + ")");
     } else if (retentionMonths > 0) {
-      result += "• Reduce churn 1%:     N/A (using manual lifetime override)\n";
+      out.push("• Reduce churn 1%:     N/A (using manual lifetime override)");
     }
-
-    // Impact of increasing expansion by 10%
     if (expansionRev > 0) {
       const improvedExp = expansionRev * 1.1;
       const improvedNC = revPerCust + improvedExp - costServe;
       const improvedLTV = improvedNC * avgLifetime;
       expImpact = improvedLTV - ltv;
-      result += "• +10% Expansion:      LTV " + fmt(ltv) + " → " + fmt(improvedLTV) + "  (+" + fmt(expImpact) + ")\n";
+      out.push("• +10% Expansion:      LTV " + fmt(ltv) + " → " + fmt(improvedLTV) + "  (+" + fmt(expImpact) + ")");
     } else {
-      result += "• +10% Expansion:      N/A (no expansion revenue set)\n";
+      out.push("• +10% Expansion:      N/A (no expansion revenue set)");
     }
-
-    // Ranking verdict
     if (churnImpact > expImpact && churnImpact > 0) {
-      result += "\n🥇 Top Lever: Reduce Churn (+" + fmt(churnImpact) + " LTV vs +" + fmt(expImpact) + " from expansion)\n";
+      out.push("🥇 Top Lever: Reduce Churn (+" + fmt(churnImpact) + " LTV vs +" + fmt(expImpact) + " from expansion)");
     } else if (expImpact > churnImpact && expImpact > 0) {
-      result += "\n🥇 Top Lever: Grow Expansion (+" + fmt(expImpact) + " LTV vs +" + fmt(churnImpact) + " from churn)\n";
+      out.push("🥇 Top Lever: Grow Expansion (+" + fmt(expImpact) + " LTV vs +" + fmt(churnImpact) + " from churn)");
     } else if (churnImpact > 0 || expImpact > 0) {
-      result += "\n🥇 Both levers have equal impact (+" + fmt(churnImpact) + ")\n";
+      out.push("🥇 Both levers have equal impact (+" + fmt(churnImpact) + ")");
     }
+    out.push("");
   }
 
-  return [result];
+  // 🩺 Unit Economics Health (v3)
+  out.push("🩺 Unit Economics Health:");
+  out.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  if (netContribution <= 0) {
+    out.push("• 🔴 Negative net contribution — you're losing money on every customer. Either raise price or cut cost-to-serve.");
+  } else if (netMargin < 30) {
+    out.push("• 🟡 Net margin " + pct(netMargin) + " is below 30% SaaS benchmark. Aim for 70-80% gross margin.");
+  } else if (netMargin < 60) {
+    out.push("• 🟢 Healthy margin " + pct(netMargin) + ". Most SaaS targets 70-80% — room to grow.");
+  } else {
+    out.push("• 🟢 Excellent margin " + pct(netMargin) + ". Top-quartile SaaS efficiency.");
+  }
+  if (cac > 0) {
+    if (isFinite(paybackMonths) && paybackMonths <= 12) {
+      out.push("• 🟢 CAC payback " + paybackMonths.toFixed(1) + " months — under 1 year. Efficient growth.");
+    } else if (isFinite(paybackMonths)) {
+      out.push("• 🔴 CAC payback " + paybackMonths.toFixed(1) + " months — over 1 year. LTV/CAC ratio unhealthy.");
+    }
+  } else {
+    out.push("• ℹ️ No CAC set — assuming organic/word-of-mouth growth.");
+  }
+  if (monthlyChurn > 0.05) {
+    out.push("• 🔴 Monthly churn " + pct(churnRate) + " is high. Industry target: <3% for SMB SaaS, <1% for enterprise.");
+  } else if (monthlyChurn > 0.03) {
+    out.push("• 🟡 Monthly churn " + pct(churnRate) + " is above target. Aim for 2-3%.");
+  } else {
+    out.push("• 🟢 Monthly churn " + pct(churnRate) + " is healthy.");
+  }
+  if (isFinite(ltv) && cac > 0) {
+    const ltvCacRatio = ltv / cac;
+    if (ltvCacRatio >= 3) out.push("• 🟢 LTV:CAC ratio " + ltvCacRatio.toFixed(1) + ":1 — healthy (target 3:1+).");
+    else if (ltvCacRatio >= 1) out.push("• 🟡 LTV:CAC ratio " + ltvCacRatio.toFixed(1) + ":1 — below target (3:1+). Improve before scaling spend.");
+    else out.push("• 🔴 LTV:CAC ratio " + ltvCacRatio.toFixed(1) + ":1 — losing money per customer. Stop scaling spend.");
+  }
+  out.push("");
+
+  // 🔄 What-If Scenarios (v3)
+  out.push("🔄 What-If Scenarios:");
+  out.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  if (netContribution > 0) {
+    if (monthlyChurn > 0.01 && retentionMonths === 0) {
+      const halveChurn = monthlyChurn * 0.5;
+      const halveLTV = netContribution / halveChurn;
+      out.push("• Cut churn in half (" + pct(churnRate) + " → " + pct(churnRate / 2) + "):  LTV " + fmt(ltv) + " → " + fmt(halveLTV) + "  (+" + fmt(halveLTV - ltv) + ")");
+    }
+    if (cac > 0) {
+      const reduceCAC30 = cac * 0.7;
+      const newPayback = reduceCAC30 / netContribution;
+      out.push("• Reduce CAC by 30%:  Payback " + paybackMonths.toFixed(1) + " → " + newPayback.toFixed(1) + " mo  (CAC: " + fmt(cac) + " → " + fmt(reduceCAC30) + ")");
+    }
+    const raisePrice = revPerCust * 1.2 + expansionRev - costServe;
+    out.push("• Raise price 20%:  Net contribution " + fmt(netContribution) + " → " + fmt(raisePrice) + "  (+" + fmt(raisePrice - netContribution) + "/mo)");
+    if (expansionRev > 0) {
+      const moreExp = revPerCust + expansionRev * 1.25 - costServe;
+      out.push("• Grow expansion 25%:  Net " + fmt(netContribution) + " → " + fmt(moreExp) + "  (focus on upsells)");
+    }
+    out.push("• Double customers to " + Math.round(revPerCust * 2).toLocaleString() + " in MRR via same funnel: see Scaling Economics above");
+  } else {
+    out.push("• ⚠️ Cannot model — net contribution is negative. Raise price or cut cost-to-serve first.");
+  }
+  out.push("");
+
+  return out;
 }
 
 const customFn =
@@ -200,7 +255,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateUnitEconomics(inputs); },
   staticExamples: [
-    "📦 Unit Economics\n\n📋 Per-Customer Snapshot\n• Revenue / Customer:   $50/mo\n• Expansion Revenue:    $15/mo\n• Cost to Serve:        $10/mo\n• Net Contribution:     $55/mo  (84.6% margin)\n• Monthly Churn:        3.0%\n• Avg Customer Lifetime: 33 months\n• Customer LTV:         $1,833\n\n⏱️ CAC Payback\n• Cost to Acquire:      $200\n• Monthly Net Contribution: $55/mo\n• Payback Period:       3.6 months\n• Annual Profit:        $660 per customer\n• 🟢 Good — payback under 6 months. Healthy unit economics.\n\n📊 Scaling Economics\n• 1,000 customers: $55,000/mo net  →  $660,000/yr  (acquire: $206,000)\n• 10,000 customers: $560,000/mo net  →  $6,720,000/yr  (cost -10%)  (acquire: $2,060,000)\n• 100,000 customers: $5,700,000/mo net  →  $68,400,000/yr  (cost -20%)  (acquire: $20,600,000)\n  ^ Economies of scale: 10% cost reduction per 10× customers\n\n🎯 Optimization Levers\n• Reduce churn 25%:  LTV $1,833 → $2,444  (+$611)\n• Raise price 20%:   Net $55/mo → $65/mo  |  Payback 4 → 3 mo\n• Reduce CAC 30%:    Payback 4 → 3 mo  (CAC: $200 → $140)\n• 🚀 Best case (lower churn + lower CAC):  LTV $2,444  |  Payback 3 mo\n\n🏆 Lever Impact Ranking\n• Reduce churn 1%:     LTV $1,833 → $2,750  (+$917)\n• +10% Expansion:      LTV $1,833 → $1,883  (+$50)\n\n🥇 Top Lever: Reduce Churn (+$917 LTV vs +$50 from expansion)",
+    '📦 Unit Economics\n\n📋 Per-Customer Snapshot\n• Revenue / Customer:   $100/mo\n• Expansion Revenue:    $30/mo\n• Cost to Serve:        $30/mo\n• Net Contribution:     $100/mo  (76.9% margin)\n• Monthly Churn:        5.0%\n• Avg Customer Lifetime: 20 months\n• Customer LTV:         $2,000\n\n⏱️ CAC Payback\n• Cost to Acquire:      $300\n• Monthly Net Contribution: $100/mo\n• Payback Period:       3.0 months\n• Annual Profit:        $1,200 per customer\n• ✅ Excellent — you recover CAC in under 3 months. Invest more in growth!\n\n📊 Scaling Economics\n• 1,000 customers: $100,000/mo net  →  $1,200,000/yr  (acquire: $315,000)\n• 10,000 customers: $1,030,000/mo net  →  $12,360,000/yr  (cost -10%)  (acquire: $3,150,000)\n• 100,000 customers: $10,600,000/mo net  →  $127,200,000/yr  (cost -20%)  (acquire: $31,500,000)\n  ^ Economies of scale: 10% cost reduction per 10× customers\n\n🎯 Optimization Levers\n• Reduce churn 25%:  LTV $2,000 → $2,667  (+$667)\n• Raise price 20%:   Net $100/mo → $120/mo  |  Payback 3 → 3 mo\n• Reduce CAC 30%:    Payback 3 → 2 mo  (CAC: $300 → $210)\n• 🚀 Best case (lower churn + lower CAC):  LTV $2,667  |  Payback 2 mo\n\n🏆 Lever Impact Ranking\n• Reduce churn 1%:     LTV $2,000 → $2,500  (+$500)\n• +10% Expansion:      LTV $2,000 → $2,060  (+$60)\n🥇 Top Lever: Reduce Churn (+$500 LTV vs +$60 from expansion)\n\n🩺 Unit Economics Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent margin 76.9%. Top-quartile SaaS efficiency.\n• 🟢 CAC payback 3.0 months — under 1 year. Efficient growth.\n• 🟡 Monthly churn 5.0% is above target. Aim for 2-3%.\n• 🟢 LTV:CAC ratio 6.7:1 — healthy (target 3:1+).\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut churn in half (5.0% → 2.5%):  LTV $2,000 → $4,000  (+$2,000)\n• Reduce CAC by 30%:  Payback 3.0 → 2.1 mo  (CAC: $300 → $210)\n• Raise price 20%:  Net contribution $100 → $120  (+$20/mo)\n• Grow expansion 25%:  Net $100 → $108  (focus on upsells)\n• Double customers to 200 in MRR via same funnel: see Scaling Economics above\n',
   ],
   faq: [
     { q: "What is unit economics?", a: "Unit economics breaks down your business to the per-customer level: how much revenue each customer generates (including expansion upsells), what it costs to serve them, and how much you spend to acquire them. Positive unit economics means each customer is profitable on their own — the foundation of a sustainable business." },

@@ -90,9 +90,9 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
     }
   }
 
+  const originalRunway = (netBurn > 0 && currentCash > 0) ? currentCash / netBurn : Infinity;
   if (netBurn > 0 && currentCash > 0) {
     const cuts = [0.1, 0.2, 0.3];
-    const originalRunway = currentCash / netBurn;
     result += "\n🔄 Cost-Cut Scenarios\n";
     for (const cut of cuts) {
       const savings = grossBurn * cut;
@@ -101,6 +101,40 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
       if (reducedNetBurn <= 0) { result += "• Cut " + pctLabel + ": Save " + fmt(savings) + "/mo — ✅ Cash-flow positive!\n"; }
       else { const newRunway = currentCash / reducedNetBurn; const extra = newRunway - originalRunway; result += "• Cut " + pctLabel + ": Save " + fmt(savings) + "/mo — Net burn " + fmt(reducedNetBurn) + "/mo — Runway " + newRunway.toFixed(1) + " mo (+" + extra.toFixed(1) + " extra)\n"; }
     }
+  }
+
+  // 🩺 Burn Health (v3)
+  if (netBurn <= 0) {
+    result += "\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.";
+  } else if (currentCash <= 0) {
+    result += "\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No cash. Cannot compute runway. Bootstrap, raise, or shut down.";
+  } else if (isFinite(originalRunway) && originalRunway < 3) {
+    result += "\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Runway " + originalRunway.toFixed(1) + " months — critical. Raise capital NOW or cut burn 50%+ this month.";
+  } else if (isFinite(originalRunway) && originalRunway < 6) {
+    result += "\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟠 Runway " + originalRunway.toFixed(1) + " months — warning zone. Start raising or cut burn in next 2 months.";
+  } else if (isFinite(originalRunway) && originalRunway < 12) {
+    result += "\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟡 Runway " + originalRunway.toFixed(1) + " months — adequate for now. Plan Series A or accelerate revenue.";
+  } else {
+    result += "\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Runway " + originalRunway.toFixed(1) + " months — comfortable. Default dead is years away. Focus on growth.";
+  }
+
+  // 🔄 What-If Scenarios (v3)
+  result += "\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+  if (isFinite(originalRunway) && netBurn > 0) {
+    const raiseRev20 = currentCash / (netBurn - monthlyRevenue * 0.2);
+    const cutExp20 = currentCash / (netBurn * 0.8);
+    const raise1M = currentCash + 1_000_000;
+    const newRunwayAfterRaise = raise1M / netBurn;
+    result += "\\n• Raise revenue 20%:  Runway " + originalRunway.toFixed(1) + " → " + raiseRev20.toFixed(1) + " mo";
+    result += "\\n• Cut expenses 20%:  Runway " + originalRunway.toFixed(1) + " → " + cutExp20.toFixed(1) + " mo";
+    result += "\\n• Raise $1M (6-month runway extension at current burn):  " + (newRunwayAfterRaise).toFixed(1) + " mo";
+    result += "\\n• Hit default alive (revenue = expenses):  ∞ runway (focus on growth)";
+    if (monthlyRevenue > 0) {
+      const growthNeeded = ((monthlyExpenses - monthlyRevenue) / monthlyRevenue) * 100;
+      result += "\\n• Growth needed monthly to break even:  +" + growthNeeded.toFixed(1) + "% revenue";
+    }
+  } else {
+    result += "\\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.";
   }
 
   return [result];
@@ -142,7 +176,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateBurnRate(inputs); },
   staticExamples: [
-    "🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $12,000/mo\n• Net Burn:      $7,000/mo  (Gross − Revenue)\n• Annual Burn:   $84,000/yr\n• To break even: Need +$7,000/mo more revenue (or cut costs by same amount)\n\n⏳ Runway\n• Current Cash:      $50,000\n• Remaining Runway:  7.1 months\n• Est. Cash Run-out:   Jan 2027\n• Assessment:        🟡 Manageable — 6–12 months. Plan ahead.\n\n📈 Burn Multiple\n• Net New Revenue:  $3,000/mo\n• Burn Multiple:    2.3× 🔴\n• Insight:          Burning much faster than you're adding revenue. Need to improve efficiency.\n\n💀 Default Alive/Dead Status\n• Status:  🔴 Default Dead: under 12 months — need growth or funding to survive\n\n📊 Cost Structure\n• Team              66.7%  █████████████░░░░░░░\n• Marketing         16.7%  ███░░░░░░░░░░░░░░░░░\n• Operations        12.5%  ██░░░░░░░░░░░░░░░░░░\n• Infrastructure     4.2%  █░░░░░░░░░░░░░░░░░░\n\n🔄 Cost-Cut Scenarios\n• Cut 10%: Save $1,200/mo — Net burn $5,800/mo — Runway 8.6 mo (+1.5 extra)\n• Cut 20%: Save $2,400/mo — Net burn $4,600/mo — Runway 10.9 mo (+3.7 extra)\n• Cut 30%: Save $3,600/mo — Net burn $3,400/mo — Runway 14.7 mo (+7.6 extra)",
+    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.',
   ],
   faq: [
     { q: "What is the difference between gross burn and net burn?", a: "Gross burn is total monthly operating expenses before revenue. Net burn = gross burn − monthly revenue. For example, if you spend $12K/month and earn $5K/month, gross burn is $12K, net burn is $7K. Track both — gross burn shows spending discipline, net burn shows how fast your bank account actually shrinks." },

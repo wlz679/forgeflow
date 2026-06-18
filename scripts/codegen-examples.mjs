@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // scripts/codegen-examples.mjs
-// Regenerate staticExamples[0] for the 8 data-driven AI engines by calling
-// their calculate() function with default inputs.
+// Regenerate staticExamples[0] for the 16 engines (8 AI cost + 8 business)
+// by calling their calculate() function with default inputs.
 //
 // Run after codegen-customfn.mjs (which is run after sync-pricing.mjs).
 // The full chain: pnpm sync = sync-pricing → codegen-customfn → codegen-examples → build.
+// Manual run for business-engine updates: `node scripts/codegen-examples.mjs` (no prereq).
 //
 // Uses tsx to load TypeScript engines at codegen time.
 
@@ -26,8 +27,16 @@ const ENGINES = [
   { file: 'deepseek-api-cost-calculator.ts',    slug: 'solopreneur-deepseek-api-cost-calculator',    defaultInputs: { models: 'deepseek-v4-flash,deepseek-v4-pro-promo', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
   { file: 'ai-api-cost-comparison.ts',          slug: 'solopreneur-ai-api-cost-comparison',          defaultInputs: { models: 'gpt-5-mini,claude-sonnet-4-6,gemini-3.5-flash,deepseek-v4-flash', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100' } },
   { file: 'ai-image-generation-cost-calculator.ts', slug: 'solopreneur-ai-image-cost-calculator', defaultInputs: { provider: 'dalle-3', imagesPerMonth: '100', resolution: '1024×1024', batchSize: '1', advancedMode: 'standard' } },
-  { file: 'gpu-cloud-cost-calculator.ts',       slug: 'solopreneur-gpu-cloud-cost-calculator',       defaultInputs: { provider: 'runpod', gpu: 'A100', hoursPerMonth: '100', storageGB: '100', egressGB: '50' } },
-  { file: 'ai-training-cost-estimator.ts',      slug: 'solopreneur-ai-training-cost-estimator',      defaultInputs: { gpuType: 'A100-80GB', modelSize: '7B', numGpus: '8', trainingHours: '24', epochs: '3', storageGB: '500', dataProcessGB: '1000' } },
+  { file: 'gpu-cloud-cost-calculator.ts',       slug: 'solopreneur-gpu-cloud-cost-calculator',       defaultInputs: { provider: 'runpod', gpuType: 'A100', gpuCount: '1', hoursPerDay: '8', pricingTier: 'on-demand', includeStorage: 'yes' } },
+  { file: 'ai-training-cost-estimator.ts',      slug: 'solopreneur-ai-training-cost-estimator',      defaultInputs: { gpuType: 'A100-80GB', modelSize: '7B', gpuCount: '8', trainingHours: '24', epochs: '3', cloudStorage: '500', dataProcessCost: '1000' } },
+  { file: 'unit-economics-calculator.ts',       slug: 'solopreneur-unit-economics-calculator',       defaultInputs: { averageRevenuePerCustomer: '100', expansionRevenuePerCustomer: '30', costToServePerCustomer: '30', customerAcquisitionCost: '300', monthlyChurnRate: '5', retentionMonths: '0' } },
+  { file: 'churn-rate-calculator.ts',          slug: 'solopreneur-churn-rate-calculator',          defaultInputs: { startCustomers: '1000', endCustomers: '920', months: '12' } },
+  { file: 'ltv-calculator.ts',                 slug: 'solopreneur-ltv-calculator',                 defaultInputs: { avgMonthlyRevenue: '100', grossMargin: '70', monthlyChurn: '5', customerAcquisitionCost: '300' } },
+  { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
+  { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',           defaultInputs: { currentCash: '500000', monthlyRevenue: '20000', monthlyExpenses: '60000' } },
+  { file: 'break-even-calculator.ts',          slug: 'solopreneur-break-even-calculator',          defaultInputs: { fixedCosts: '10000', pricePerUnit: '50', variableCostPerUnit: '20' } },
+  { file: 'market-size-estimator.ts',          slug: 'solopreneur-market-size-estimator',          defaultInputs: { totalPopulation: '10000000', targetPercentage: '10', penetrationRate: '5', avgRevenuePerCustomer: '100' } },
+  { file: 'saas-valuation-calculator.ts',      slug: 'solopreneur-saas-valuation-calculator',      defaultInputs: { arr: '1000000', growthRate: '100', grossMargin: '80', multiple: '10' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

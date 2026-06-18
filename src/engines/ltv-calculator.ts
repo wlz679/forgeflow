@@ -64,6 +64,35 @@ function calculateLTV(inputs: Record<string, string>): string[] {
     mainResult += '\\u2022 For 3:1 ratio:  target CAC = $' + Math.round(targetCac).toLocaleString() + '  (current: $' + Math.round(cac).toLocaleString() + ')\\n';
   }
 
+  // 🩺 LTV Health (v3)
+  if (ltv <= 0) {
+    mainResult += '\\n\\n🩺 LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 LTV is zero or negative. Check inputs: revenue > 0 and churn < 100%.';
+  } else if (cac > 0) {
+    const ratio = ltv / cac;
+    if (ratio >= 3) mainResult += '\\n\\n🩺 LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 LTV:CAC = ' + ratio.toFixed(1) + ':1 — healthy. Above 3:1 = invest more in growth.\\n• Industry benchmark: 3:1 (SaaS), 4:1+ (premium).';
+    else if (ratio >= 1) mainResult += '\\n\\n🩺 LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟡 LTV:CAC = ' + ratio.toFixed(1) + ':1 — below target. Improve before scaling.\\n• Target: 3:1+ (Sae healthy benchmark). Focus on either raising LTV or cutting CAC.';
+    else mainResult += '\\n\\n🩺 LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 LTV:CAC = ' + ratio.toFixed(1) + ':1 — losing money per customer. Stop scaling spend.\\n• Need to either reduce CAC (better targeting, organic, referrals) or raise LTV (pricing, retention).';
+  } else {
+    mainResult += '\\n\\n🩺 LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 LTV = $' + Math.round(ltv).toLocaleString() + '. Enter CAC to see LTV:CAC ratio.\\n• ℹ️ Industry benchmark: 3:1 LTV:CAC.';
+  }
+
+  // 🔄 What-If Scenarios (v3)
+  mainResult += '\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  if (monthlyChurn > 0 && ltv > 0) {
+    const halfChurnLtv = (monthlyRevenue * (grossMargin / 100)) / (monthlyChurn / 2 / 100);
+    mainResult += '\\n• Cut churn in half:  LTV $' + Math.round(ltv).toLocaleString() + ' → $' + Math.round(halfChurnLtv).toLocaleString() + '  (+' + Math.round(halfChurnLtv - ltv).toLocaleString() + ')';
+    const incRevLtv = (monthlyRevenue * 1.2 * (grossMargin / 100)) / (monthlyChurn / 100);
+    mainResult += '\\n• Raise price 20%:  LTV $' + Math.round(ltv).toLocaleString() + ' → $' + Math.round(incRevLtv).toLocaleString() + '  (+' + Math.round(incRevLtv - ltv).toLocaleString() + ')';
+    if (cac > 0) {
+      const targetCac = halfChurnLtv / 3;
+      mainResult += '\\n• Cut churn 50% + target 3:1 ratio:  Max CAC = $' + Math.round(targetCac).toLocaleString() + '  (was $' + Math.round(cac).toLocaleString() + ')';
+    }
+    const incMarginLtv = (monthlyRevenue * (grossMargin + 10) / 100) / (monthlyChurn / 100);
+    mainResult += '\\n• Boost gross margin +10pp:  LTV $' + Math.round(ltv).toLocaleString() + ' → $' + Math.round(incMarginLtv).toLocaleString() + '  (focus on cost-to-serve)';
+  } else {
+    mainResult += '\\n• ⚠️ Cannot model — ensure revenue > 0 and churn > 0.';
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different churn rates
@@ -151,7 +180,7 @@ const engine: ToolEngine = {
     return calculateLTV(inputs);
   },
   staticExamples: [
-    '💎 Customer Lifetime Value (LTV)\n\n• Monthly Revenue per User: $50\n• Gross Margin: 80.0%\n• Monthly Churn Rate: 3.0%\n• Avg Customer Lifetime: 33.3 months\n• Gross Profit per User/Month: $40\n\n📊 Key Results:\n\n• Lifetime Value (LTV): $1,333\n• Customer Acquisition Cost (CAC): $150\n• LTV:CAC Ratio: 8.9:1\n\n🟢 EXCELLENT: LTV:CAC of 8.9:1 is above the 3:1 benchmark. You have strong unit economics. Consider investing more in growth.\n• CAC Payback Period: 3.8 months\n',
+    '\\uD83D\\uDC8E Customer Lifetime Value (LTV)\\n\\n\\u2022 Monthly Revenue per User: $0\\n\\u2022 Gross Margin: 70.0%\\n\\u2022 Monthly Churn Rate: 5.0%\\n\\u2022 Avg Customer Lifetime: 20.0 months\\n\\u2022 Gross Profit per User/Month: $0\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDCCA Key Results:\\n\\n\\u2022 Lifetime Value (LTV): $0\\n\\n\\n\\uD83D\\uDCA1 Tip: The 3:1 LTV:CAC ratio is the golden benchmark. If your LTV is $900 and CAC is $300, you are at 3:1. Below 3:1, focus on either increasing LTV (raise prices, reduce churn, upsell) or decreasing CAC (better targeting, organic channels, referrals).\\n\\n🩺 LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 LTV is zero or negative. Check inputs: revenue > 0 and churn < 100%.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — ensure revenue > 0 and churn > 0.\nExcellent (1% churn): Lifetime 100.0 months, LTV $0\nGood (2% churn): Lifetime 50.0 months, LTV $0\nAverage (3% churn): Lifetime 33.3 months, LTV $0\nBelow Avg (5% churn): Lifetime 20.0 months, LTV $0\nPoor (8% churn): Lifetime 12.5 months, LTV $0',
     'Excellent (1% churn): Lifetime 100.0 months, LTV $4,000, LTV:CAC 26.7:1',
     'Good (2% churn): Lifetime 50.0 months, LTV $2,000, LTV:CAC 13.3:1',
     'Average (3% churn): Lifetime 33.3 months, LTV $1,333, LTV:CAC 8.9:1',

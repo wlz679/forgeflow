@@ -104,6 +104,33 @@ function calculateChurn(inputs: Record<string, string>): string[] {
   // ---- Tip ----
   mainResult += '\\uD83D\\uDCA1 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively \\u2014 fix it first.';
 
+  // 🩺 Churn Health (v3)
+  const annualChurnPct = Math.round((1 - Math.pow(1 - monthlyLogoChurn, 12)) * 100);
+  if (monthlyLogoChurn <= 0.02) {
+    mainResult += '\\n\\n🩺 Churn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 HEALTHY: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.';
+  } else if (monthlyLogoChurn <= 0.05) {
+    mainResult += '\\n\\n🩺 Churn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟡 AVERAGE: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% is typical for SaaS but has room. Annualized: ~' + annualChurnPct + '% loss/year.\\n• Common wins: better onboarding, customer success calls at day 30/60/90.';
+  } else {
+    mainResult += '\\n\\n🩺 Churn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 HIGH: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% means ~' + annualChurnPct + '% customer loss/year. Address urgently.\\n• Common causes: poor onboarding, weak value prop, pricing issues, support gaps.';
+  }
+
+  // 🔄 What-If Scenarios (v3)
+  mainResult += '\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  if (customersStart > 0 && avgRevenue > 0) {
+    const halfChurnCust = Math.round(customersStart * (monthlyLogoChurn / 2));
+    const halfChurnRev = halfChurnCust * avgRevenue;
+    mainResult += '\\n• Cut churn in half:  Save ' + halfChurnCust + ' cust/mo | $' + Math.round(halfChurnRev).toLocaleString() + '/mo in retained revenue';
+    const doubledAcq = newCustomers * 2;
+    mainResult += '\\n• Double acquisition:  From ' + newCustomers + ' to ' + doubledAcq + ' new/mo (assumes linear growth)';
+    const savedCust = Math.round(customersStart * (monthlyLogoChurn / 2));
+    mainResult += '\\n• Combined:  Cut churn 50% + add 50% more:  net +' + savedCust + ' cust/mo';
+    const onePctLoss = Math.round(customersStart * 0.01);
+    const onePctRev = onePctLoss * avgRevenue;
+    mainResult += '\\n• Industry best (1% monthly):  Lose only ' + onePctLoss + ' cust/mo (vs current ' + Math.round(customersStart * monthlyLogoChurn) + ')  | $' + Math.round(onePctRev).toLocaleString() + '/mo';
+  } else {
+    mainResult += '\\n• ⚠️ Cannot model — enter start customer count and monthly revenue to see scenarios.';
+  }
+
   results.push(mainResult);
 
   // ---- 5 comparison scenarios ----
@@ -209,7 +236,7 @@ const engine: ToolEngine = {
     return calculateChurn(inputs);
   },
   staticExamples: [
-    '📉 Logo & Revenue Churn Analysis\n\n• Customers at Start: 500\n• New Customers Added: 25\n• Customers Lost: 15\n• Customers at End: 510\n• Net Growth: +10 (2.0%)\n\n━━━━━━━━━━━━━━━━━━━━\n\n👥 Logo Churn (Customer Headcount)\n• Monthly Logo Churn: 3.0%\n• Annual Logo Churn: 30.6%\n\n💰 Revenue Churn\n• Gross Revenue Churn (before expansion): 3.0%\n• Net Revenue Churn (after expansion): -0.2%\n• Monthly Revenue Lost to Churn: $750\n• Annual Revenue Lost to Churn: $9,000\n\n📈 GRR / NRR\n• GRR = 97.0% — 🟢 Healthy\n• NRR = 100.2% — 🟡 Positive\n\n━━━━━━━━━━━━━━━━━━━━\n\n🟡 AVERAGE: 2-5% monthly logo churn is typical for SaaS. There is room for improvement.\n\n━━━━━━━━━━━━━━━━━━━━\n\n🔍 Churn Attribution (15 customers lost)\n• Voluntary (~60%): ~9 customers — fix with better onboarding\n• Involuntary (~40%): ~6 customers — fix with dunning emails\n\n💡 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively — fix it first.',
+    '\\uD83D\\uDCC9 Logo & Revenue Churn Analysis\\n\\n\\u2022 Customers at Start: 0\\n\\u2022 New Customers Added: 0\\n\\u2022 Customers Lost: 0\\n\\u2022 Customers at End: 0\\n\\u2022 Net Growth: +0 (0.0%)\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDC65 Logo Churn (Customer Headcount)\\n\\u2022 Monthly Logo Churn: 0.0%\\n\\u2022 Annual Logo Churn: 0.0%\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDFE2 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDCA1 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively \\u2014 fix it first.\\n\\n🩺 Churn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 HEALTHY: Monthly logo churn 0.0% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter start customer count and monthly revenue to see scenarios.\nBest Case (1% churn): Lose 0 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 0 customers\nGood (2% churn): Lose 0 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 0 customers\nAverage (3% churn): Lose 0 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 0 customers\nWarning (5% churn): Lose 0 cust/mo | Annual churn 46.0% | GRR 95.0% | End with 0 customers\nCritical (8% churn): Lose 0 cust/mo | Annual churn 63.2% | GRR 92.0% | End with 0 customers',
     'Best Case (1% churn): Lose 5 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 520 customers | Lose $250/mo',
     'Good (2% churn): Lose 10 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 515 customers | Lose $500/mo',
     'Average (3% churn): Lose 15 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 510 customers | Lose $750/mo',

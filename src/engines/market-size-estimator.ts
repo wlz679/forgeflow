@@ -93,6 +93,34 @@ function calculateMarketSize(inputs: Record<string, string>): string[] {
     else if (totalCustomers < 5000 && p100k > 5) result += "• ⚠️ This market has few customers — you'll need to capture " + pct(p100k) + " to hit $100K.\n";
     else if (p100k > 10) result += "• ⚠️ You need over 10% market share to reach $100K. Either the market is very small or your pricing is too low — adjust one of them.\n";
   }
+
+  // 🩺 Market Health (v3)
+  if (totalCustomers <= 0) {
+    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0";
+  } else if (totalCustomers < 10000) {
+    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟠 Niche market (" + totalCustomers.toLocaleString() + " addressable). High focus needed.\\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\\n• Pricing matters a lot — small market × high ARPU works.";
+  } else if (totalCustomers < 1000000) {
+    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Mid-sized market (" + totalCustomers.toLocaleString() + " addressable). Standard SaaS opportunity.\\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\\n• Achievable with focused go-to-market.";
+  } else {
+    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Large market (" + totalCustomers.toLocaleString() + " addressable). Big upside.\\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\\n• Capture even 0.1% for major revenue.";
+  }
+
+  // 🔄 What-If Scenarios (v3)
+  result += "\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+  if (totalCustomers > 0 && annualRevPerCustomer > 0) {
+    const doublePenetration = totalCustomers * (penetrationRate * 2 / 100);
+    const revAtDouble = doublePenetration * annualRevPerCustomer;
+    const revAtHalfPrice = reachable * (annualRevPerCustomer / 2);
+    const doubleCustomers = totalCustomers * 2;
+    const revAtDoubleMarket = (doubleCustomers * penetrationRate / 100) * annualRevPerCustomer;
+    result += "\\n• Double penetration rate:  " + reachable.toLocaleString() + " → " + doublePenetration.toLocaleString() + " customers | $" + fmt(revAtDouble) + "/yr";
+    result += "\\n• Cut price 50%:  Customers double (price-sensitive market) | $" + fmt(revAtHalfPrice) + "/yr";
+    result += "\\n• Double target %:  " + totalCustomers.toLocaleString() + " → " + doubleCustomers.toLocaleString() + " addressable | $" + fmt(revAtDoubleMarket) + "/yr at " + pct(penetrationRate);
+    result += "\\n• Triple pricing (premium):  $" + fmt(reachable * annualRevPerCustomer * 3) + "/yr at same reach (only works for unique value)";
+  } else {
+    result += "\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.";
+  }
+
   return [result];
 }
 
@@ -127,7 +155,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateMarketSize(inputs); },
   staticExamples: [
-    "📊 Market Size: US dental clinics\n\n📋 Market Overview\n• Market:            US dental clinics\n• Market Stage:      Growing\n• Addressable Customers: 30,000\n• Avg Revenue / Customer: $5,000/yr\n• TAM (Total Addressable Market): $150.0M/yr\n• SAM (Serviceable): $37.5M/yr  (~25.0% of TAM)\n• Annual Growth Rate: 12.0%\n• Market in 3 Years:  $210.7M/yr (compounded)\n• Market in 5 Years:  $264.4M/yr (compounded)\n\n💰 Bottom-Up Revenue Potential\n• 0.2% share  →  60 customers  →  $300.0K/yr  🟢 Solopreneur\n• 1.0% share  →  300 customers  →  $1.5M/yr  🟢 Solopreneur\n• 2.0% share  →  600 customers  →  $3.0M/yr  🟡 Small team\n• 5.0% share  →  1,500 customers  →  $7.5M/yr  🔴 VC-backed\n\n🔄 Top-Down Cross-Check\n• 0.1% of TAM  →  $150.0K/yr\n• 0.5% of TAM  →  $750.0K/yr\n• 1.0% of TAM  →  $1.5M/yr\n• 3.0% of TAM  →  $4.5M/yr\n\n📈 3-Year Growth Projection\n• Year 1: Market $168.0M  →  Your 1.0%  =  $1.7M/yr\n• Year 2: Market $188.2M  →  Your 2.0%  =  $3.8M/yr\n• Year 3: Market $210.7M  →  Your 4.0%  =  $8.4M/yr\n\n🎯 Reality Check\n• Solid market size — focus on dominating a specific niche within it.\n• Growing market: sweet spot for entry. Ride the tailwind.\n• Strong price point — high-value customers mean you need fewer of them.\n• To reach $100K/yr: Need 20 customers (0.1% penetration). ✅ Very achievable.",
+    '📊 Market Size: your market\n\n📋 Market Overview\n• Market:            your market\n• Market Stage:      Growing\n• Addressable Customers: 0\n• Avg Revenue / Customer: $0/yr\n• TAM (Total Addressable Market): $0/yr\n• Annual Growth Rate: 0.0%\n\n🎯 Reality Check\n• Growing market: sweet spot for entry. Ride the tailwind.\n\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.',
   ],
   faq: [
     { q: "What methodology does this calculator use?", a: "Both bottom-up (customers × revenue per customer) and top-down (market share of TAM). Industry best practice is to use both methods and see if they converge — if they don't, one of your assumptions is off." },
