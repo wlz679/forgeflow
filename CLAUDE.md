@@ -15,6 +15,8 @@ Calculator categories:
 
 Goal: every calculator should match **world-leading / industry-leading** quality (v3 standard: 6+ emoji-sectioned output, 🩺 Health, 🔄 What-If, ⚖️ Break-even, 🎯 Use-case, 📅 Pricing data badge where applicable).
 
+**v3 status (2026-06-18):** All 8 AI cost engines + 8 business engines (cac, ltv, churn, burn-rate, break-even, market-size, saas-valuation, unit-economics) at v3 standard. Remaining: 16 lower-traffic business engines in Group B/C (affiliate-income, email-list-revenue, hourly-vs-fixed, meeting-cost, employee-cost, productivity-score, saas-pricing-planner, freelance-tax, time-value, sponsorship-rate, equity-dilution, freelance-rate, course-pricing, project-profitability, mrr, revenue-projector) — tracked in 2026-06-17-batch-2-business-calculators-v3.md and 2026-06-18-finish-v3-upgrade-business-engines.md.
+
 ## Commands
 
 ```bash
