@@ -121,6 +121,58 @@ function calculateMarketSize(inputs: Record<string, string>): string[] {
     result += "\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.";
   }
 
+  // ⚖️ Break-Even (v3)
+  if (tam > 0 && annualRevPerCustomer > 0) {
+    result += "\n\n⚖️ Break-Even\n" + "─".repeat(54);
+    const penetrationFor100K = (100000 / tam) * 100; // % of TAM needed for $100K/yr
+    const penetrationFor1M = (1000000 / tam) * 100;
+    if (penetrationFor100K < 0.1) {
+      result += "\n• 🟢 To reach $100K/yr:  need " + penetrationFor100K.toFixed(3) + "% of TAM  (very achievable)";
+    } else if (penetrationFor100K < 1) {
+      result += "\n• 🟡 To reach $100K/yr:  need " + penetrationFor100K.toFixed(2) + "% of TAM  (achievable for focused GTM)";
+    } else if (penetrationFor100K < 5) {
+      result += "\n• 🟠 To reach $100K/yr:  need " + penetrationFor100K.toFixed(1) + "% of TAM  (ambitious — strong positioning needed)";
+    } else {
+      result += "\n• 🔴 To reach $100K/yr:  need " + penetrationFor100K.toFixed(1) + "% of TAM  (very high — consider higher pricing or larger market)";
+    }
+    if (penetrationFor1M < 10) {
+      result += "\n• For $1M/yr:  need " + penetrationFor1M.toFixed(2) + "% of TAM  (" + Math.round(penetrationFor1M / 100 * totalCustomers).toLocaleString() + " customers)";
+    } else {
+      result += "\n• For $1M/yr:  need " + Math.round(penetrationFor1M).toLocaleString() + "% of TAM  (often unrealistic — likely needs VC scale)";
+    }
+  }
+
+  // 🎯 Revenue Milestones (v3)
+  if (tam > 0 && annualRevPerCustomer > 0 && growthRate > 0) {
+    result += "\n\n🎯 Revenue Milestones\n" + "─".repeat(54);
+    const targetRevenues = [100000, 1000000, 10000000];
+    const labels = ["$100K ARR", "$1M ARR", "$10M ARR"];
+    for (let i = 0; i < targetRevenues.length; i++) {
+      const target = targetRevenues[i];
+      if (tam < target) {
+        result += "\n• " + labels[i] + ":  🔴 unreachable — TAM $" + (tam / 1e6).toFixed(1) + "M is smaller than target";
+      } else {
+        const yearsToReach = Math.log(target / tam) / Math.log(growthFactor);
+        if (isFinite(yearsToReach) && yearsToReach > 0 && yearsToReach < 20) {
+          result += "\n• " + labels[i] + ":  " + yearsToReach.toFixed(1) + " years  (at " + growthRate.toFixed(0) + "% market CAGR)";
+        } else {
+          result += "\n• " + labels[i] + ":  long horizon or zero growth";
+        }
+      }
+    }
+  }
+
+  // 💡 Tip (v3)
+  if (tam >= 1e9 && marketStage === "Growing") {
+    result += "\n\n💡 Tip: Large + growing market is the ideal entry point. Don't try to serve everyone — pick a wedge (specific industry, geography, or use case) and dominate it. Expansion from a wedge is 10× easier than building a horizontal product from day one.";
+  } else if (tam < 100e6 && annualRevPerCustomer < 1000) {
+    result += "\n\n💡 Tip: Small market with low pricing is a tough combo. Either raise price (premium positioning) or expand the addressable market (move upmarket or downmarket). The current numbers suggest you'll struggle to reach $1M ARR.";
+  } else if (marketStage === "Declining") {
+    result += "\n\n💡 Tip: Declining markets punish new entrants. Unless you have a structural advantage (10× better cost structure, captive distribution), pivot to an adjacent growing segment. The market size will keep shrinking under you.";
+  } else {
+    result += "\n\n💡 Tip: Always cross-check bottom-up (customers × price) against top-down (TAM × market share). If the two methods diverge by 3× or more, one of your assumptions is wrong — go back to primary research.";
+  }
+
   return [result];
 }
 
@@ -138,7 +190,11 @@ const customFn =
   "if(ms==='Emerging')r+='\\u2022 Emerging market: high risk, high reward. First-mover advantage possible.\\n';else if(ms==='Growing')r+='\\u2022 Growing market: sweet spot for entry. Ride the tailwind.\\n';else if(ms==='Mature')r+='\\u2022 Mature market: differentiate or compete on price. Harder to stand out.\\n';else r+='\\u2022 Declining market: pivot to a growing adjacent segment or premium niche.\\n';" +
   "if(ar>0&&ar<500)r+='\\u2022 Low price point \\u2014 consider upselling, annual plans, or raising prices.\\n';else if(ar>=500&&ar<5000)r+='\\u2022 Moderate price point \\u2014 solid. Experiment with premium tiers or annual billing.\\n';else if(ar>=5000)r+='\\u2022 Strong price point \\u2014 high-value customers mean you need fewer of them.\\n';" +
   "if(tc>0&&ar>0){var c4=Math.ceil(100000/ar);var p4=tc>0?(c4/tc)*100:0;r+='\\u2022 To reach $100K/yr: Need '+c4+' customers ('+pct(p4)+' penetration).';if(p4<0.5)r+=' \\u2705 Very achievable.\\n';else if(p4<2)r+=' \\uD83D\\uDFE1 A solid target.\\n';else r+=' \\uD83D\\uDD34 Ambitious \\u2014 validate demand first.\\n';" +
-  "if(tc<5000&&ar<2000)r+='\\u2022 \\u26A0\\uFE0F Small pool + low pricing: reaching meaningful revenue will be hard.\\n';else if(tc<5000&&p4>5)r+='\\u2022 \\u26A0\\uFE0F This market has few customers \\u2014 you\\'ll need to capture '+pct(p4)+' to hit $100K.\\n';else if(p4>10)r+='\\u2022 \\u26A0\\uFE0F You need over 10% market share to reach $100K. Either the market is very small or your pricing is too low.\\n';}return [r];";
+  "if(tc<5000&&ar<2000)r+='\\u2022 \\u26A0\\uFE0F Small pool + low pricing: reaching meaningful revenue will be hard.\\n';else if(tc<5000&&p4>5)r+='\\u2022 \\u26A0\\uFE0F This market has few customers \\u2014 you\\'ll need to capture '+pct(p4)+' to hit $100K.\\n';else if(p4>10)r+='\\u2022 \\u26A0\\uFE0F You need over 10% market share to reach $100K. Either the market is very small or your pricing is too low.\\n';}" +
+  "if(tam>0&&ar>0){r+='\\n\\n⚖️ Break-Even\\n──────────────────────────────────────────────────────';var pf100=(1e5/tam)*100;var pf1m=(1e6/tam)*100;if(pf100<0.1)r+='\\n• 🟢 To reach $100K/yr:  need '+pf100.toFixed(3)+'% of TAM  (very achievable)';else if(pf100<1)r+='\\n• 🟡 To reach $100K/yr:  need '+pf100.toFixed(2)+'% of TAM  (achievable for focused GTM)';else if(pf100<5)r+='\\n• 🟠 To reach $100K/yr:  need '+pf100.toFixed(1)+'% of TAM  (ambitious — strong positioning needed)';else r+='\\n• 🔴 To reach $100K/yr:  need '+pf100.toFixed(1)+'% of TAM  (very high — consider higher pricing or larger market)';if(pf1m<10)r+='\\n• For $1M/yr:  need '+pf1m.toFixed(2)+'% of TAM  ('+Math.round(pf1m/100*tc).toLocaleString()+' customers)';else r+='\\n• For $1M/yr:  need '+Math.round(pf1m).toLocaleString()+'% of TAM  (often unrealistic — likely needs VC scale)';}" +
+  "if(tam>0&&ar>0&&gr>0){r+='\\n\\n🎯 Revenue Milestones\\n──────────────────────────────────────────────────────';var trs=[1e5,1e6,1e7];var tls=['$100K ARR','$1M ARR','$10M ARR'];for(var ri=0;ri<trs.length;ri++){var tgt=trs[ri];if(tam<tgt)r+='\\n• '+tls[ri]+':  🔴 unreachable — TAM $'+(tam/1e6).toFixed(1)+'M is smaller than target';else{var y2=Math.log(tgt/tam)/Math.log(gf);if(isFinite(y2)&&y2>0&&y2<20)r+='\\n• '+tls[ri]+':  '+y2.toFixed(1)+' years  (at '+gr.toFixed(0)+'% market CAGR)';else r+='\\n• '+tls[ri]+':  long horizon or zero growth';}}}" +
+  "if(tam>=1e9&&ms==='Growing')r+='\\n\\n💡 Tip: Large + growing market is the ideal entry point. Don\\'t try to serve everyone — pick a wedge (specific industry, geography, or use case) and dominate it. Expansion from a wedge is 10× easier than building a horizontal product from day one.';else if(tam<1e8&&ar<1000)r+='\\n\\n💡 Tip: Small market with low pricing is a tough combo. Either raise price (premium positioning) or expand the addressable market (move upmarket or downmarket). The current numbers suggest you\\'ll struggle to reach $1M ARR.';else if(ms==='Declining')r+='\\n\\n💡 Tip: Declining markets punish new entrants. Unless you have a structural advantage (10× better cost structure, captive distribution), pivot to an adjacent growing segment. The market size will keep shrinking under you.';else r+='\\n\\n💡 Tip: Always cross-check bottom-up (customers × price) against top-down (TAM × market share). If the two methods diverge by 3× or more, one of your assumptions is wrong — go back to primary research.';" +
+  "return [r];";
 
 const engine: ToolEngine = {
   slug: "solopreneur-market-size-estimator", title: "Market Size Estimator",
@@ -155,7 +211,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateMarketSize(inputs); },
   staticExamples: [
-    '📊 Market Size: your market\n\n📋 Market Overview\n• Market:            your market\n• Market Stage:      Growing\n• Addressable Customers: 0\n• Avg Revenue / Customer: $0/yr\n• TAM (Total Addressable Market): $0/yr\n• Annual Growth Rate: 0.0%\n\n🎯 Reality Check\n• Growing market: sweet spot for entry. Ride the tailwind.\n\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.',
+    '📊 Market Size: your market\n\n📋 Market Overview\n• Market:            your market\n• Market Stage:      Growing\n• Addressable Customers: 0\n• Avg Revenue / Customer: $0/yr\n• TAM (Total Addressable Market): $0/yr\n• Annual Growth Rate: 0.0%\n\n🎯 Reality Check\n• Growing market: sweet spot for entry. Ride the tailwind.\n\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.\n\n💡 Tip: Small market with low pricing is a tough combo. Either raise price (premium positioning) or expand the addressable market (move upmarket or downmarket). The current numbers suggest you\'ll struggle to reach $1M ARR.',
   ],
   faq: [
     { q: "What methodology does this calculator use?", a: "Both bottom-up (customers × revenue per customer) and top-down (market share of TAM). Industry best practice is to use both methods and see if they converge — if they don't, one of your assumptions is off." },
