@@ -101,6 +101,47 @@ function calculateValuation(inputs: Record<string, string>): string[] {
     mainResult += '\\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.';
   }
 
+  // ⚖️ Break-Even Multiple (v3)
+  if (annualRevenue > 0) {
+    mainResult += '\\n\\n⚖️ Break-Even Multiple\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    if (baseMultiple < 3) {
+      mainResult += '\\n• 🔴 Current multiple ' + baseMultiple.toFixed(1) + 'x is below 3x SaaS floor — investors won\'t bite.';
+      mainResult += '\\n• To reach 3x floor:  need growth ' + Math.max(10, growthRate).toFixed(0) + '%+  AND  margin ' + Math.max(20, profitMargin).toFixed(0) + '%+';
+    } else if (baseMultiple < 5) {
+      mainResult += '\\n• 🟡 Current multiple ' + baseMultiple.toFixed(1) + 'x is at SaaS floor. Below market median (5-8x).';
+      mainResult += '\\n• To reach 5x (median):  grow 30%+ YoY, OR push margin above 20%';
+    } else if (baseMultiple < 10) {
+      mainResult += '\\n• 🟢 Current multiple ' + baseMultiple.toFixed(1) + 'x is at market median. Strong position.';
+      mainResult += '\\n• To reach 10x+ (premium):  sustain 50%+ growth OR reach profitability';
+    } else {
+      mainResult += '\\n• 🟢 Premium multiple ' + baseMultiple.toFixed(1) + 'x. Maintain growth and margin to justify.';
+    }
+  }
+
+  // 🎯 Valuation Milestones (v3)
+  if (annualRevenue > 0) {
+    mainResult += '\\n\\n🎯 Valuation Milestones\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    const milestones = [
+      { arr: 1e6, label: '$1M ARR' },
+      { arr: 1e7, label: '$10M ARR' },
+      { arr: 1e8, label: '$100M ARR' },
+    ];
+    for (const m of milestones) {
+      if (annualRevenue >= m.arr) {
+        mainResult += '\\n• ' + m.label + ':  ✅ reached  (current: $' + (annualRevenue / 1e6).toFixed(1) + 'M)';
+      } else if (growthRate > 0) {
+        const yearsToReach = Math.log(m.arr / annualRevenue) / Math.log(1 + growthRate / 100);
+        if (isFinite(yearsToReach) && yearsToReach < 20) {
+          mainResult += '\\n• ' + m.label + ':  ' + yearsToReach.toFixed(1) + ' years  (at ' + growthRate.toFixed(0) + '% YoY growth)';
+        } else {
+          mainResult += '\\n• ' + m.label + ':  unrealistic at current growth — accelerate or accept smaller scale';
+        }
+      } else {
+        mainResult += '\\n• ' + m.label + ':  zero growth — not reachable without acceleration';
+      }
+    }
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different multiples
@@ -169,6 +210,8 @@ const customFn =
   "var results=[mr4];" +
   "var ms=[{l:'Distressed Sale (2x)',m:2},{l:'Flat Growth (4x)',m:4},{l:'Steady Growth (6x)',m:6},{l:'High Growth (10x)',m:10},{l:'Hyper-Growth (15x)',m:15}];" +
   "for(var i=0;i<ms.length;i++){var val=ar2*ms[i].m;results.push(ms[i].l+': '+fmt2(ar2)+' ARR \\u00d7 '+ms[i].m+'x = '+fmt2(val)+' valuation');}" +
+  "if(ar2>0){mr4+='\\n\\n\\u2696\\uFE0F Break-Even Multiple\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';if(bm<3){mr4+='\\n\\u2022 \\uD83D\\uDD34 Current multiple '+bm.toFixed(1)+'x is below 3x SaaS floor \\u2014 investors won\\'t bite.\\n\\u2022 To reach 3x floor:  need growth '+Math.max(10,gr2).toFixed(0)+'%+  AND  margin '+Math.max(20,pm).toFixed(0)+'%+';}else if(bm<5){mr4+='\\n\\u2022 \\uD83D\\uDFE1 Current multiple '+bm.toFixed(1)+'x is at SaaS floor. Below market median (5-8x).\\n\\u2022 To reach 5x (median):  grow 30%+ YoY, OR push margin above 20%';}else if(bm<10){mr4+='\\n\\u2022 \\uD83D\\uDFE2 Current multiple '+bm.toFixed(1)+'x is at market median. Strong position.\\n\\u2022 To reach 10x+ (premium):  sustain 50%+ growth OR reach profitability';}else mr4+='\\n\\u2022 \\uD83D\\uDFE2 Premium multiple '+bm.toFixed(1)+'x. Maintain growth and margin to justify.';}}" +
+  "if(ar2>0){mr4+='\\n\\n\\uD83C\\uDFAF Valuation Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var vms=[{a:1e6,l:'$1M ARR'},{a:1e7,l:'$10M ARR'},{a:1e8,l:'$100M ARR'}];for(var vi=0;vi<vms.length;vi++){var vm=vms[vi];if(ar2>=vm.a)mr4+='\\n\\u2022 '+vm.l+':  \\u2705 reached  (current: $'+(ar2/1e6).toFixed(1)+'M)';else if(gr2>0){var ytr=Math.log(vm.a/ar2)/Math.log(1+gr2/100);if(isFinite(ytr)&&ytr<20)mr4+='\\n\\u2022 '+vm.l+':  '+ytr.toFixed(1)+' years  (at '+gr2.toFixed(0)+'% YoY growth)';else mr4+='\\n\\u2022 '+vm.l+':  unrealistic at current growth \\u2014 accelerate or accept smaller scale';}else mr4+='\\n\\u2022 '+vm.l+':  zero growth \\u2014 not reachable without acceleration';}}" +
   "return results;";
 
 const engine: ToolEngine = {
