@@ -13,9 +13,18 @@ Calculator categories:
 - **E (Personal)** — Freelance tax, productivity score
 - **AI cost** (data-driven, see "Data-Driven Engines" below) — OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen cost (7 providers), GPU cloud cost, AI training cost estimator, cross-provider API comparison
 
-Goal: every calculator should match **world-leading / industry-leading** quality (v3 standard: 6+ emoji-sectioned output, 🩺 Health, 🔄 What-If, ⚖️ Break-even, 🎯 Use-case, 📅 Pricing data badge where applicable).
+Goal: every calculator should match **world-leading / industry-leading** quality. The v3 standard has two variants — see "v3 standard — two variants" section below.
 
-**v3 status (2026-06-22):** ✅ All 30 engines at v3 standard (8 AI cost + 22 business). Every engine has 6+ emoji-sectioned output with 🩺 Health (🟢🟡🟠🔴 tier coding), 🔄 What-If Scenarios, ⚖️ Break-even, 🎯 Milestones/Projections, and 💡 Tip. UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (16 × 6 preset keys per remaining engine) were already complete before this batch. Plan: `docs/superpowers/plans/2026-06-19-batch-3-remaining-business-calculators-v3.md`.
+**v3 standard — two variants:**
+
+| Variant | Mandatory sections | Applies to |
+| --- | --- | --- |
+| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip | B / C / D / E category engines (24) |
+| **AI Cost v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · 💡 Tip · 📊 Cost Breakdown · 🏆 Provider Comparison · 📅 Data updated badge | AI cost engines driven by `src/data/ai-pricing.json` (8) |
+
+Why two variants: `Break-Even` and `Milestone` are business-domain concepts. Forcing them onto a token-pricing calculator is anti-semantic — the result is emoji-fluff, not analysis. The AI Cost variant substitutes domain-natural sections (cost decomposition, provider comparison) that match what users actually want.
+
+**v3 status (2026-06-22):** All 32 engines at the v3 standard. 8 AI cost engines meet the AI Cost v3 variant; 24 business engines meet the Business v3 variant (7 of which were brought up in this batch — see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md`). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (16 × 6 preset keys per engine) were already complete. Plan: this file + the 2026-06-19 batch-3 plan.
 
 ## Commands
 
