@@ -131,6 +131,36 @@ function calculateChurn(inputs: Record<string, string>): string[] {
     mainResult += '\\n• ⚠️ Cannot model — enter start customer count and monthly revenue to see scenarios.';
   }
 
+  // ⚖️ Break-Even (v3)
+  if (customersStart > 0) {
+    mainResult += '\\n\\n⚖️ Break-Even\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    const breakEvenNew = Math.round(customersStart * monthlyLogoChurn);
+    if (newCustomers >= breakEvenNew) {
+      mainResult += '\\n• 🟢 Break-even new customers/mo:  ' + breakEvenNew + '  — you\\\'re adding enough to grow (current: ' + newCustomers + ').';
+    } else if (newCustomers > 0) {
+      mainResult += '\\n• 🟡 Break-even new customers/mo:  ' + breakEvenNew + '  — you\\\'re adding ' + newCustomers + ', short by ' + (breakEvenNew - newCustomers) + '. Customer base is shrinking.';
+    } else {
+      mainResult += '\\n• 🔴 Break-even new customers/mo:  ' + breakEvenNew + '  — you\\\'re adding 0. Base erodes by ' + breakEvenNew + ' customers/mo.';
+    }
+    if (monthlyLogoChurn > 0 && newCustomers > 0) {
+      const newCustomerChurnPct = customersStart > 0 ? (newCustomers / customersStart) * 100 : 0;
+      mainResult += '\\n• Your acquisition rate:  ' + newCustomerChurnPct.toFixed(1) + '%/mo  vs churn:  ' + (monthlyLogoChurn * 100).toFixed(1) + '%/mo';
+    }
+  }
+
+  // 🎯 Churn Milestones (v3)
+  if (customersStart > 0) {
+    mainResult += '\\n\\n🎯 Churn Milestones\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    const targetChurns = [0.01, 0.02, 0.03, 0.05];
+    const labels = ['Best-in-class (1%)', 'Strong (2%)', 'Healthy (3%)', 'Warning (5%)'];
+    for (let i = 0; i < targetChurns.length; i++) {
+      const annual = 1 - Math.pow(1 - targetChurns[i], 12);
+      const monthlyLost = Math.round(customersStart * targetChurns[i]);
+      const threeYearRetained = Math.pow(1 - targetChurns[i], 36) * 100;
+      mainResult += '\\n• ' + labels[i] + ' monthly:  lose ' + monthlyLost + ' cust/mo  |  annual ' + (annual * 100).toFixed(1) + '%  |  3-yr retention ' + threeYearRetained.toFixed(0) + '%';
+    }
+  }
+
   results.push(mainResult);
 
   // ---- 5 comparison scenarios ----
@@ -213,6 +243,8 @@ const customFn =
   "var results=[mr3];" +
   "var chs=[{l:'Best Case (1% churn)',cr:0.01},{l:'Good (2% churn)',cr:0.02},{l:'Average (3% churn)',cr:0.03},{l:'Warning (5% churn)',cr:0.05},{l:'Critical (8% churn)',cr:0.08}];" +
   "for(var i=0;i<chs.length;i++){var lost=Math.round(cs*chs[i].cr);var end=cs-lost+nc;var ann=1-Math.pow(1-chs[i].cr,12);var revLost=lost*ar;var sgrr=((1-chs[i].cr)*100).toFixed(1);var line=chs[i].l+': Lose '+lost+' cust/mo | Annual churn '+pctn(ann)+' | GRR '+sgrr+'% | End with '+end+' customers';if(ar>0)line+=' | Lose '+fmtn(revLost)+'/mo';results.push(line);}" +
+  "if(cs>0){mr3+='\\n\\n\\u2696\\uFE0F Break-Even\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var ben=Math.round(cs*mlc);if(nc>=ben)mr3+='\\n\\u2022 \\uD83D\\uDFE2 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding enough to grow (current: '+nc+').';else if(nc>0)mr3+='\\n\\u2022 \\uD83D\\uDFE1 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding '+nc+', short by '+(ben-nc)+'. Customer base is shrinking.';else mr3+='\\n\\u2022 \\uD83D\\uDD34 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding 0. Base erodes by '+ben+' customers/mo.';if(mlc>0&&nc>0){var ncr=cs>0?(nc/cs)*100:0;mr3+='\\n\\u2022 Your acquisition rate:  '+ncr.toFixed(1)+'%/mo  vs churn:  '+(mlc*100).toFixed(1)+'%/mo';}}" +
+  "if(cs>0){mr3+='\\n\\n\\uD83C\\uDFAF Churn Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var tcs=[0.01,0.02,0.03,0.05];var tls=['Best-in-class (1%)','Strong (2%)','Healthy (3%)','Warning (5%)'];for(var ti=0;ti<tcs.length;ti++){var an=1-Math.pow(1-tcs[ti],12);var ml=Math.round(cs*tcs[ti]);var tr=Math.pow(1-tcs[ti],36)*100;mr3+='\\n\\u2022 '+tls[ti]+' monthly:  lose '+ml+' cust/mo  |  annual '+(an*100).toFixed(1)+'%  |  3-yr retention '+tr.toFixed(0)+'%';}}" +
   "return results;";
 
 const engine: ToolEngine = {
