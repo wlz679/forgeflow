@@ -137,6 +137,52 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
     result += "\\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.";
   }
 
+  // ⚖️ Break-Even (v3)
+  if (netBurn > 0 && currentCash > 0) {
+    result += "\\n\\n⚖️ Break-Even\\n" + "─".repeat(54);
+    const breakEvenRevenue = monthlyRevenue + netBurn; // revenue needed to hit $0 net burn
+    const growthPct = monthlyRevenue > 0 ? ((netBurn / monthlyRevenue) * 100) : 0;
+    if (growthPct > 0) {
+      result += "\\n• 🟡 Need +" + fmt(netBurn) + "/mo revenue (" + growthPct.toFixed(0) + "% growth) to hit break-even";
+    } else {
+      result += "\\n• 🟡 Need +" + fmt(netBurn) + "/mo revenue (no revenue baseline)";
+    }
+    result += "\\n• Or cut costs by " + fmt(netBurn) + "/mo (e.g., " + Math.round((netBurn / grossBurn) * 100) + "% of current gross burn)";
+    result += "\\n• Break-even runway: ∞ (no burn = no runway concern)";
+  } else if (netBurn <= 0) {
+    result += "\\n\\n⚖️ Break-Even\\n" + "─".repeat(54);
+    result += "\\n• 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.";
+  }
+
+  // 🎯 Burn Milestones (v3)
+  if (netBurn > 0 && currentCash > 0) {
+    result += "\\n\\n🎯 Runway Milestones\\n" + "─".repeat(54);
+    const milestoneMonths = [6, 12, 18, 24];
+    for (const mo of milestoneMonths) {
+      const cashNeeded = mo * netBurn;
+      let status: string;
+      if (currentCash >= cashNeeded) {
+        status = "🟢";
+      } else if (currentCash >= cashNeeded * 0.7) {
+        status = "🟡";
+      } else if (currentCash >= cashNeeded * 0.4) {
+        status = "🟠";
+      } else {
+        status = "🔴";
+      }
+      result += "\\n• " + mo + "-month runway:  need $" + Math.round(cashNeeded).toLocaleString() + " cash  (you have: " + fmt(currentCash) + ")  " + status;
+    }
+  }
+
+  // 💡 Tip (v3)
+  if (netBurn > 5) {
+    result += "\\n\\n💡 Tip: Team costs are typically 50-70% of gross burn. If you need to extend runway fast, headcount is the biggest lever — but also the slowest to undo. Try cutting SaaS subscriptions and contractor hours first for immediate savings without firing.";
+  } else if (netBurn > 0) {
+    result += "\\n\\n💡 Tip: Burn multiple below 1.0× means you're growing revenue faster than you burn. Below 0.5× is best-in-class — investors reward capital efficiency. Track it monthly.";
+  } else {
+    result += "\\n\\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.";
+  }
+
   return [result];
 }
 
@@ -157,6 +203,9 @@ const customFn =
   "r+='\\n\\uD83D\\uDC80 Default Alive/Dead Status\\n';if(nb<=0){r+='• Status:  \\u2705 Default Alive: cash-flow positive\\n';}else if(cc>0){if(rm>24)r+='• Status:  \\uD83D\\uDFE2 Default Alive: 24+ months runway\\n';else if(rm>12)r+='• Status:  \\uD83D\\uDFE1 Default Alive: 12-24 months\\n';else r+='• Status:  \\uD83D\\uDD34 Default Dead: under 12 months — need growth or funding to survive\\n';}else{r+='• Status:  \\uD83D\\uDD34 Default Dead: under 12 months — need growth or funding to survive\\n';}" +
   "if(gb>0){r+='\\n\\uD83D\\uDCCA Cost Structure\\n';var cats=[['Team',tc],['Marketing',mc],['Infrastructure',ic],['Operations',oc]];for(var i=0;i<cats.length;i++){var lb=cats[i][0];var ct=cats[i][1];if(ct>0){var sh=ct/gb;r+='• '+lb;for(var j=lb.length;j<16;j++)r+=' ';r+=' '+pct(ct,gb)+'  '+bar(sh)+'\\n';}}}" +
   "if(nb>0&&cc>0){var cuts=[0.1,0.2,0.3];var orw=cc/nb;r+='\\n\\uD83D\\uDD04 Cost-Cut Scenarios\\n';for(var ci=0;ci<cuts.length;ci++){var cut=cuts[ci];var sv=gb*cut;var rnb=nb-sv;var pl=Math.round(cut*100)+'%';if(rnb<=0){r+='• Cut '+pl+': Save '+fmt(sv)+'/mo — \\u2705 Cash-flow positive!\\n';}else{var nrw=cc/rnb;var ext=nrw-orw;r+='• Cut '+pl+': Save '+fmt(sv)+'/mo — Net burn '+fmt(rnb)+'/mo — Runway '+nrw.toFixed(1)+' mo (+'+ext.toFixed(1)+' extra)\\n';}}}" +
+  "if(nb>0&&cc>0){r+='\\n\\n\\u2696\\uFE0F Break-Even\\n──────────────────────────────────────────────────────';var ber=mr+nb;var gp=mr>0?((nb/mr)*100):0;if(gp>0)r+='\\n• \\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue ('+gp.toFixed(0)+'% growth) to hit break-even';else r+='\\n• \\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue (no revenue baseline)';r+='\\n• Or cut costs by '+fmt(nb)+'/mo (e.g., '+Math.round((nb/gb)*100)+'% of current gross burn)';r+='\\n• Break-even runway: \\u221E (no burn = no runway concern)';}else if(nb<=0){r+='\\n\\n\\u2696\\uFE0F Break-Even\\n──────────────────────────────────────────────────────';r+='\\n• \\uD83D\\uDFE2 Already at break-even — revenue ≥ expenses. Focus on reinvestment.';}" +
+  "if(nb>0&&cc>0){r+='\\n\\n\\uD83C\\uDFAF Runway Milestones\\n──────────────────────────────────────────────────────';var mms=[6,12,18,24];for(var mi=0;mi<mms.length;mi++){var cn=mms[mi]*nb;var st;if(cc>=cn)st='\\uD83D\\uDFE2';else if(cc>=cn*0.7)st='\\uD83D\\uDFE1';else if(cc>=cn*0.4)st='\\uD83D\\uDFE0';else st='\\uD83D\\uDD34';r+='\\n• '+mms[mi]+'-month runway:  need $'+Math.round(cn).toLocaleString()+' cash  (you have: '+fmt(cc)+')  '+st;}}" +
+  "if(nb>5)r+='\\n\\n\\uD83D\\uDCA1 Tip: Team costs are typically 50-70% of gross burn. If you need to extend runway fast, headcount is the biggest lever — but also the slowest to undo. Try cutting SaaS subscriptions and contractor hours first for immediate savings without firing.';else if(nb>0)r+='\\n\\n\\uD83D\\uDCA1 Tip: Burn multiple below 1.0\\u00D7 means you\\'re growing revenue faster than you burn. Below 0.5\\u00D7 is best-in-class — investors reward capital efficiency. Track it monthly.';else r+='\\n\\n\\uD83D\\uDCA1 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.';" +
   "return [r];";
 
 const engine: ToolEngine = {
@@ -176,7 +225,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateBurnRate(inputs); },
   staticExamples: [
-    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.',
+    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\\n\\n🩺 Burn Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.\\n\\n⚖️ Break-Even\\n──────────────────────────────────────────────────────\\n• 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.\\n\\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.',
   ],
   faq: [
     { q: "What is the difference between gross burn and net burn?", a: "Gross burn is total monthly operating expenses before revenue. Net burn = gross burn − monthly revenue. For example, if you spend $12K/month and earn $5K/month, gross burn is $12K, net burn is $7K. Track both — gross burn shows spending discipline, net burn shows how fast your bank account actually shrinks." },
