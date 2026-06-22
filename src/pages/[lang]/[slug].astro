@@ -433,7 +433,59 @@ const schema = JSON.stringify({
                 </div>
               </>
             ) : (
-              engine.inputs.map(input => (
+              <>{/* PRESET_BLOCKS_TOP: 24 calculators insert here */}
+              {slug === 'solopreneur-burn-rate-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-burn-rate">
+                    {[
+                      { emoji:'🌱', key:'pre-seed', monthlyrevenue:'5000', teamcost:'8000', infracost:'500', marketingcost:'2000', opscost:'1500', currentcash:'50000', netnewrevenue:'0' },
+                      { emoji:'🌿', key:'seed', monthlyrevenue:'15000', teamcost:'25000', infracost:'2000', marketingcost:'8000', opscost:'3000', currentcash:'300000', netnewrevenue:'3000' },
+                      { emoji:'🌳', key:'series-a', monthlyrevenue:'50000', teamcost:'80000', infracost:'5000', marketingcost:'20000', opscost:'8000', currentcash:'1000000', netnewrevenue:'5000' },
+                      { emoji:'💰', key:'profitable', monthlyrevenue:'200000', teamcost:'150000', infracost:'10000', marketingcost:'30000', opscost:'10000', currentcash:'2000000', netnewrevenue:'15000' },
+                      { emoji:'💡', key:'idea-stage', monthlyrevenue:'0', teamcost:'15000', infracost:'1000', marketingcost:'3000', opscost:'2000', currentcash:'80000', netnewrevenue:'0' },
+                      { emoji:'⚠️', key:'bloated', monthlyrevenue:'10000', teamcost:'50000', infracost:'3000', marketingcost:'15000', opscost:'5000', currentcash:'200000', netnewrevenue:'2000' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthlyrevenue={p.monthlyrevenue} data-teamcost={p.teamcost} data-infracost={p.infracost} data-marketingcost={p.marketingcost} data-opscost={p.opscost} data-currentcash={p.currentcash} data-netnewrevenue={p.netnewrevenue}>{p.emoji} {t(`tools.solopreneur-burn-rate-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-mrr-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-mrr">
+                    {[
+                      { emoji:'🌱', key:'early-stage', subscribercount:'500', monthlyprice:'29', monthlychurnrate:'3', expansionmrr:'500', newsubspermonth:'50', contractionmrr:'100', reactivationmrr:'50' },
+                      { emoji:'📈', key:'growing', subscribercount:'2000', monthlyprice:'49', monthlychurnrate:'2', expansionmrr:'2000', newsubspermonth:'200', contractionmrr:'300', reactivationmrr:'150' },
+                      { emoji:'🏢', key:'scale', subscribercount:'10000', monthlyprice:'99', monthlychurnrate:'1.5', expansionmrr:'15000', newsubspermonth:'800', contractionmrr:'1500', reactivationmrr:'500' },
+                      { emoji:'⚠️', key:'high-churn', subscribercount:'1000', monthlyprice:'29', monthlychurnrate:'8', expansionmrr:'200', newsubspermonth:'50', contractionmrr:'300', reactivationmrr:'50' },
+                      { emoji:'📊', key:'flat', subscribercount:'500', monthlyprice:'29', monthlychurnrate:'3', expansionmrr:'500', newsubspermonth:'0', contractionmrr:'200', reactivationmrr:'50' },
+                      { emoji:'📈', key:'expansion-heavy', subscribercount:'5000', monthlyprice:'49', monthlychurnrate:'1', expansionmrr:'5000', newsubspermonth:'300', contractionmrr:'400', reactivationmrr:'200' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-subscribercount={p.subscribercount} data-monthlyprice={p.monthlyprice} data-monthlychurnrate={p.monthlychurnrate} data-expansionmrr={p.expansionmrr} data-newsubspermonth={p.newsubspermonth} data-contractionmrr={p.contractionmrr} data-reactivationmrr={p.reactivationmrr}>{p.emoji} {t(`tools.solopreneur-mrr-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-churn-rate-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-churn-rate">
+                    {[
+                      { emoji:'✅', key:'healthy', customersstart:'500', customerslost:'15', newcustomers:'25', avgrevenuepercustomer:'50', expansionrevenue:'500' },
+                      { emoji:'🚀', key:'hyper-growth', customersstart:'1000', customerslost:'10', newcustomers:'200', avgrevenuepercustomer:'99', expansionrevenue:'5000' },
+                      { emoji:'⚠️', key:'high-churn', customersstart:'200', customerslost:'20', newcustomers:'10', avgrevenuepercustomer:'49', expansionrevenue:'100' },
+                      { emoji:'📈', key:'expansion-heavy', customersstart:'5000', customerslost:'25', newcustomers:'300', avgrevenuepercustomer:'199', expansionrevenue:'20000' },
+                      { emoji:'🌱', key:'startup', customersstart:'100', customerslost:'0', newcustomers:'50', avgrevenuepercustomer:'29', expansionrevenue:'0' },
+                      { emoji:'⏸️', key:'stagnant', customersstart:'300', customerslost:'15', newcustomers:'5', avgrevenuepercustomer:'79', expansionrevenue:'200' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-customersstart={p.customersstart} data-customerslost={p.customerslost} data-newcustomers={p.newcustomers} data-avgrevenuepercustomer={p.avgrevenuepercustomer} data-expansionrevenue={p.expansionrevenue}>{p.emoji} {t(`tools.solopreneur-churn-rate-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {engine.inputs.map(input => (
                 input.type === 'select' ? (
                   <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2" for={input.name}>{t(`tools.${slug}.input.${input.name}.label`, lang)}</label>
@@ -448,7 +500,8 @@ const schema = JSON.stringify({
                     <input type={input.type} id={input.name} name={input.name} placeholder={t(`tools.${slug}.input.${input.name}.placeholder`, lang)} class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all" />
                   </div>
                 )
-              ))
+              ))}
+              </>
             )}
             {isAiApiCostComparison && (
               <div class="flex flex-wrap gap-2 mt-3">
@@ -567,39 +620,6 @@ const schema = JSON.stringify({
               </div>
             )}
             {/* ===== 24 Business Calculator Presets ===== */}
-            {slug === 'solopreneur-mrr-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-subscribercount="500" data-monthlyprice="29" data-monthlychurnrate="3" data-expansionmrr="500" data-newsubspermonth="50" data-contractionmrr="100" data-reactivationmrr="50">{t('tools.solopreneur-mrr-calculator.preset.early-stage', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-subscribercount="2000" data-monthlyprice="49" data-monthlychurnrate="2" data-expansionmrr="2000" data-newsubspermonth="200" data-contractionmrr="300" data-reactivationmrr="150">{t('tools.solopreneur-mrr-calculator.preset.growing', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-subscribercount="10000" data-monthlyprice="99" data-monthlychurnrate="1.5" data-expansionmrr="15000" data-newsubspermonth="800" data-contractionmrr="1500" data-reactivationmrr="500">{t('tools.solopreneur-mrr-calculator.preset.scale', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-subscribercount="1000" data-monthlyprice="29" data-monthlychurnrate="8" data-expansionmrr="200" data-newsubspermonth="50" data-contractionmrr="300" data-reactivationmrr="50">{t('tools.solopreneur-mrr-calculator.preset.high-churn', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-subscribercount="500" data-monthlyprice="29" data-monthlychurnrate="3" data-expansionmrr="500" data-newsubspermonth="0" data-contractionmrr="200" data-reactivationmrr="50">{t('tools.solopreneur-mrr-calculator.preset.flat', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-subscribercount="5000" data-monthlyprice="49" data-monthlychurnrate="1" data-expansionmrr="5000" data-newsubspermonth="300" data-contractionmrr="400" data-reactivationmrr="200">{t('tools.solopreneur-mrr-calculator.preset.expansion-heavy', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-burn-rate-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlyrevenue="5000" data-teamcost="8000" data-infracost="500" data-marketingcost="2000" data-opscost="1500" data-currentcash="50000" data-netnewrevenue="0">{t('tools.solopreneur-burn-rate-calculator.preset.pre-seed', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlyrevenue="15000" data-teamcost="25000" data-infracost="2000" data-marketingcost="8000" data-opscost="3000" data-currentcash="300000" data-netnewrevenue="3000">{t('tools.solopreneur-burn-rate-calculator.preset.seed', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlyrevenue="50000" data-teamcost="80000" data-infracost="5000" data-marketingcost="20000" data-opscost="8000" data-currentcash="1000000" data-netnewrevenue="5000">{t('tools.solopreneur-burn-rate-calculator.preset.series-a', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlyrevenue="200000" data-teamcost="150000" data-infracost="10000" data-marketingcost="30000" data-opscost="10000" data-currentcash="2000000" data-netnewrevenue="15000">{t('tools.solopreneur-burn-rate-calculator.preset.profitable', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlyrevenue="0" data-teamcost="15000" data-infracost="1000" data-marketingcost="3000" data-opscost="2000" data-currentcash="80000" data-netnewrevenue="0">{t('tools.solopreneur-burn-rate-calculator.preset.idea-stage', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlyrevenue="10000" data-teamcost="50000" data-infracost="3000" data-marketingcost="15000" data-opscost="5000" data-currentcash="200000" data-netnewrevenue="2000">{t('tools.solopreneur-burn-rate-calculator.preset.bloated', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-churn-rate-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-customersstart="500" data-customerslost="15" data-newcustomers="25" data-avgrevenuepercustomer="50" data-expansionrevenue="500">{t('tools.solopreneur-churn-rate-calculator.preset.healthy', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-customersstart="1000" data-customerslost="10" data-newcustomers="200" data-avgrevenuepercustomer="99" data-expansionrevenue="5000">{t('tools.solopreneur-churn-rate-calculator.preset.hyper-growth', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-customersstart="200" data-customerslost="20" data-newcustomers="10" data-avgrevenuepercustomer="49" data-expansionrevenue="100">{t('tools.solopreneur-churn-rate-calculator.preset.high-churn', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-customersstart="5000" data-customerslost="25" data-newcustomers="300" data-avgrevenuepercustomer="199" data-expansionrevenue="20000">{t('tools.solopreneur-churn-rate-calculator.preset.expansion-heavy', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-customersstart="100" data-customerslost="0" data-newcustomers="50" data-avgrevenuepercustomer="29" data-expansionrevenue="0">{t('tools.solopreneur-churn-rate-calculator.preset.startup', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-customersstart="300" data-customerslost="15" data-newcustomers="5" data-avgrevenuepercustomer="79" data-expansionrevenue="200">{t('tools.solopreneur-churn-rate-calculator.preset.stagnant', lang)}</button>
-              </div>
-            )}
             {slug === 'solopreneur-market-size-estimator' && (
               <div class="flex flex-wrap gap-2 mt-3">
                 <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
