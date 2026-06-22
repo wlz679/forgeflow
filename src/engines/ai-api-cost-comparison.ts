@@ -258,6 +258,16 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('• If you only need cheap inference: pick ' + top3[0].model.name + ' (cheapest) and route 80% of traffic there');
   out.push('');
 
+  // 💡 Tip (v3)
+  if (ratio >= 10) {
+    out.push('💡 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.');
+  } else if (ratio >= 3) {
+    out.push('💡 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.');
+  } else {
+    out.push('💡 Tip: Costs are similar across providers — pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.');
+  }
+  out.push('');
+
   return out;
 }
 
@@ -343,6 +353,7 @@ const customFn =
   "}" +
   "o.push('');" +
   "o.push('Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek');" +
+  "if(ratio>=10)o.push('\\uD83D\\uDCA1 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.');else if(ratio>=3)o.push('\\uD83D\\uDCA1 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.');else o.push('\\uD83D\\uDCA1 Tip: Costs are similar across providers \\u2014 pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.');" +
   "return o;";
 
 const engine: ToolEngine = {

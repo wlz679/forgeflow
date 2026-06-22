@@ -122,6 +122,15 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
     result += "\\n• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.";
   }
 
+  // 💡 Tip (v3)
+  if (flatMonthlyProfit > 0 && gm !== null && gm <= 12) {
+    result += "\\n\\n\\uD83D\\uDCA1 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.";
+  } else if (flatMonthlyProfit <= 0) {
+    result += "\\n\\n\\uD83D\\uDCA1 Tip: Negative monthly profit means you're burning cash every month. Either raise prices, cut costs, or accept that you'll need more runway to reach break-even. The longer you delay, the harder it gets.";
+  } else {
+    result += "\\n\\n\\uD83D\\uDCA1 Tip: Break-even is the floor, not the goal. Aim for a 3-month safety buffer by default — one bad month shouldn't wipe out your margin. Pre-revenue? Cut costs aggressively until you hit $1k MRR, then re-evaluate.";
+  }
+
   return [result];
 }
 
@@ -146,6 +155,7 @@ const customFn =
   "var cr10=mr*1.1;var cc10=mc*0.9;var cp10=cr10-cc10;" +
   "if(cp10>0){r+='\\u2022 Combo (+10% price, \\u221210% costs):  Break-even: '+Math.ceil(ii/cp10)+' mo\\n';}" +
   "}" +
+  "if(fp>0&&gm!==null&&gm<=12)r+='\\n\\n\\uD83D\\uDCA1 Tip: Sub-12-month break-even is the sweet spot \\u2014 you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.';else if(fp<=0)r+='\\n\\n\\uD83D\\uDCA1 Tip: Negative monthly profit means you\\'re burning cash every month. Either raise prices, cut costs, or accept that you\\'ll need more runway to reach break-even. The longer you delay, the harder it gets.';else r+='\\n\\n\\uD83D\\uDCA1 Tip: Break-even is the floor, not the goal. Aim for a 3-month safety buffer by default \\u2014 one bad month shouldn\\'t wipe out your margin. Pre-revenue? Cut costs aggressively until you hit $1k MRR, then re-evaluate.';" +
   "return [r];";
 
 const engine: ToolEngine = {
