@@ -1,0 +1,5 @@
+# www → apex (301 permanent)
+https://www.calckit.com/* https://calckit.com/:splat 301
+
+# Force HTTPS (Cloudflare Pages usually does this automatically; explicit is safer)
+/http://* https://calckit.com/:splat 301
