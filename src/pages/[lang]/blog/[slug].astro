@@ -20,7 +20,7 @@ const { slug, lang } = Astro.params;
 const post = blogPosts.find(p => p.slug === slug);
 if (!post) return Astro.redirect(`/${lang}/blog/`);
 
-const metaTitle = `${post.title} — CalcKit Blog`;
+const metaTitle = `${post.title} — ForgeFlowKit Blog`;
 const metaDescription = post.excerpt;
 ---
 

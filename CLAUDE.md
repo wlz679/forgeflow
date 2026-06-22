@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **CalcKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 32+ calculators live at the site root, each rendered as its own page.
+This is **ForgeFlowKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 32+ calculators live at the site root, each rendered as its own page.
 
 Calculator categories:
 - **B (Business)** — LTV, CAC, MRR, churn, break-even, valuation, equity dilution, etc.

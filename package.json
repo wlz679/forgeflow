@@ -1,5 +1,5 @@
 {
-  "name": "youtube-tools",
+  "name": "forgeflowkit",
   "version": "1.0.0",
   "main": "index.js",
   "directories": {
@@ -16,11 +16,11 @@
     "business-calculator",
     "saas-calculator",
     "startup-tools",
-    "calckit"
+    "forgeflowkit"
   ],
-  "author": "CalcKit",
+  "author": "ForgeFlowKit",
   "license": "ISC",
-  "description": "CalcKit — Free business calculators for smarter decisions",
+  "description": "ForgeFlowKit — Free business calculators and tools for smarter decisions",
   "dependencies": {
     "@astrojs/sitemap": "3.2.1",
     "@tailwindcss/vite": "^4.3.0",

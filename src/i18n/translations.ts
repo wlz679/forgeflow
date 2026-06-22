@@ -1,6 +1,6 @@
 export const translations: Record<string, { en: string; zh: string }> = {
   // ===== Site-wide UI =====
-  'site.name': { en: 'CalcKit', zh: 'CalcKit' },
+  'site.name': { en: 'ForgeFlowKit', zh: 'ForgeFlowKit' },
   'nav.blog': { en: 'Blog', zh: '博客' },
   'nav.about': { en: 'About', zh: '关于' },
   'search.placeholder': { en: 'Search tools... (e.g. "MRR calculator")', zh: '搜索工具...（如"MRR 计算器"）' },
@@ -20,39 +20,39 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'footer.terms': { en: 'Terms & Conditions', zh: '服务条款' },
   'footer.contact': { en: 'Contact', zh: '联系我们' },
   'footer.about': { en: 'About', zh: '关于' },
-  'footer.copyright': { en: 'Free tools for entrepreneurs. No signup required.', zh: 'CalcKit 免费工具。无需注册。' },
+  'footer.copyright': { en: 'Free tools for entrepreneurs. No signup required.', zh: 'ForgeFlowKit 免费工具。无需注册。' },
   'lang.switch': { en: '中文', zh: 'English' },
-  'blog.title': { en: 'CalcKit Blog', zh: 'CalcKit 博客' },
+  'blog.title': { en: 'ForgeFlowKit Blog', zh: 'ForgeFlowKit 博客' },
   'blog.subtitle': { en: 'Tips, guides, and best practices for entrepreneurs and business owners.', zh: '创业者和商业人士的技巧、指南和最佳实践。' },
   'blog.read_more': { en: 'Read more →', zh: '阅读更多 →' },
   'blog.try_now': { en: 'Try {tool} Now →', zh: '立即试用 {tool} →' },
   'adsense.placeholder': { en: 'Ad', zh: '广告' },
 
   // ===== Home page =====
-  'home.title': { en: 'CalcKit — Free Business Calculators to Make Smarter Decisions', zh: 'CalcKit — 32 款免费商业计算器，助你做出更聪明的商业决策' },
-  'home.description': { en: 'Free tools for entrepreneurs: MRR calculator, brand name generator, idea validator, pricing planner, and more. No signup required.', zh: 'CalcKit 免费工具：MRR 计算器、品牌名生成器、创意验证器、定价策略工具等。无需注册。' },
-  'home.h1': { en: 'CalcKit', zh: 'CalcKit' },
+  'home.title': { en: 'ForgeFlowKit — Free Business Calculators to Make Smarter Decisions', zh: 'ForgeFlowKit — 32 款免费商业计算器，助你做出更聪明的商业决策' },
+  'home.description': { en: 'Free tools for entrepreneurs: MRR calculator, brand name generator, idea validator, pricing planner, and more. No signup required.', zh: 'ForgeFlowKit 免费工具：MRR 计算器、品牌名生成器、创意验证器、定价策略工具等。无需注册。' },
+  'home.h1': { en: 'ForgeFlowKit', zh: 'ForgeFlowKit' },
   'home.subtitle': { en: '32 free tools to help entrepreneurs and business owners build, launch, and grow. No signup, no fees.', zh: '32 款免费工具，助力创业者和商业人士构建、发布和增长。无需注册，完全免费。' },
 
   // ===== About page =====
-  'about.title': { en: 'About — CalcKit', zh: '关于 — CalcKit' },
-  'about.description': { en: 'Free tools for entrepreneurs and business owners. 32 tools to help you build and grow. No signup, no fees.', zh: 'CalcKit — 免费工具。32 款工具助你构建和增长，无需注册，完全免费。' },
-  'about.h1': { en: 'About CalcKit', zh: '关于 CalcKit' },
-  'about.p1': { en: 'CalcKit is a free collection of 32 tools designed to help business owners and entrepreneurs at every stage — from validating ideas and naming your business to pricing, launching, and growing.', zh: 'CalcKit 是一个免费的工具集合，包含 32 款工具，帮助创业者在每个阶段 — 从验证创意、命名品牌到定价、发布和增长。' },
+  'about.title': { en: 'About — ForgeFlowKit', zh: '关于 — ForgeFlowKit' },
+  'about.description': { en: 'Free tools for entrepreneurs and business owners. 32 tools to help you build and grow. No signup, no fees.', zh: 'ForgeFlowKit — 免费工具。32 款工具助你构建和增长，无需注册，完全免费。' },
+  'about.h1': { en: 'About ForgeFlowKit', zh: '关于 ForgeFlowKit' },
+  'about.p1': { en: 'ForgeFlowKit is a free collection of 32 tools designed to help business owners and entrepreneurs at every stage — from validating ideas and naming your business to pricing, launching, and growing.', zh: 'ForgeFlowKit 是一个免费的工具集合，包含 32 款工具，帮助创业者在每个阶段 — 从验证创意、命名品牌到定价、发布和增长。' },
   'about.p2': { en: 'All tools are completely free. No signup, no fees, no hidden costs. Just useful tools when you need them.', zh: '所有工具完全免费。无需注册，无任何费用，无隐藏成本。在你需要时，随时提供有用的工具。' },
   'about.p3': { en: 'Our tools cover six key areas: Idea Validation, Branding & Naming, Pricing & Finance, Landing Page & Copy, Launch & Growth, and Productivity.', zh: '我们的工具涵盖六大关键领域：创意验证、品牌与命名、定价与财务、落地页与文案、发布与增长、以及效率工具。' },
   'about.p4': { en: 'Built for entrepreneurs, by entrepreneurs.', zh: '由创业者为你打造。' },
 
   // ===== Contact page =====
-  'contact.title': { en: 'Contact — CalcKit', zh: '联系我们 — CalcKit' },
-  'contact.description': { en: 'Get in touch with the CalcKit team.', zh: '与 CalcKit 团队取得联系。' },
+  'contact.title': { en: 'Contact — ForgeFlowKit', zh: '联系我们 — ForgeFlowKit' },
+  'contact.description': { en: 'Get in touch with the ForgeFlowKit team.', zh: '与 ForgeFlowKit 团队取得联系。' },
   'contact.h1': { en: 'Contact Us', zh: '联系我们' },
   'contact.p1': { en: "Have a question, suggestion, or feedback? We'd love to hear from you.", zh: '有问题、建议或反馈？我们很乐意听取你的意见。' },
   'contact.p2': { en: 'Email us at:', zh: '发送邮件至：' },
   'contact.p3': { en: 'We typically respond within 24-48 hours.', zh: '我们通常在 24-48 小时内回复。' },
 
   // ===== Blog list page =====
-  'blog.page_title': { en: 'CalcKit Tips & Tools Blog', zh: 'CalcKit 技巧与工具博客' },
+  'blog.page_title': { en: 'ForgeFlowKit Tips & Tools Blog', zh: 'ForgeFlowKit 技巧与工具博客' },
 
   // ===== Categories =====
   'category.A.name': { en: 'SaaS Metrics', zh: 'SaaS 指标' },
