@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Pre-commit hook: detect staticExamples drift across the 32 engines.
+#
+# Install once after cloning:  git config core.hooksPath .githooks
+# Bypass for one commit (when intentional):  git commit --no-verify
+#
+# Drift means calculate() in some engine changed but staticExamples[0] was
+# not regenerated. Fix: `node scripts/codegen-examples.mjs` then re-commit.
+
+set -e
+
+# Only run if a tracked engine file or the codegen script is staged.
+if git diff --cached --name-only | grep -qE '^(src/engines/.*\.ts|scripts/codegen-examples\.mjs)$'; then
+  echo "[pre-commit] Running scripts/codegen-examples.mjs --check..."
+  if ! node scripts/codegen-examples.mjs --check; then
+    echo ""
+    echo "[pre-commit] BLOCKED: staticExamples drift detected."
+    echo "  Fix: run \`node scripts/codegen-examples.mjs\` and amend the commit."
+    echo "  Bypass (not recommended): \`git commit --no-verify\`"
+    exit 1
+  fi
+fi

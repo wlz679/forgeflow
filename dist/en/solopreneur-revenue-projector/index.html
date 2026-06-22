@@ -1,9 +1,9 @@
 <!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SaaS Financial Forecaster — CalcKit</title><meta name="description" content="The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."><meta property="og:title" content="SaaS Financial Forecaster — CalcKit"><meta property="og:description" content="The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."><meta property="og:image" content="/og-default.png"><meta property="og:type" content="website"><meta name="robots" content="index, follow"><link rel="sitemap" href="/sitemap-index.xml"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a good monthly growth rate for a SaaS?","acceptedAnswer":{"@type":"Answer","text":"For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios."}},{"@type":"Question","name":"What's the difference between gross growth and net growth?","acceptedAnswer":{"@type":"Answer","text":"Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue."}},{"@type":"Question","name":"How do I calculate my monthly expenses?","acceptedAnswer":{"@type":"Answer","text":"Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don't include one-time purchases. If your expenses fluctuate, use the 3-month average."}},{"@type":"Question","name":"What's a healthy runway for a solopreneur?","acceptedAnswer":{"@type":"Answer","text":"12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both 'zero-revenue' and 'current pace' runway so you can plan for the worst case while tracking the realistic one."}},{"@type":"Question","name":"What is Burn Multiple and why does it matter?","acceptedAnswer":{"@type":"Answer","text":"Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. <1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, >2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign."}},{"@type":"Question","name":"How accurate are these revenue projections?","acceptedAnswer":{"@type":"Answer","text":"The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers."}},{"@type":"Question","name":"What's a good LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy."}}]},{"@type":"SoftwareApplication","name":"SaaS Financial Forecaster","applicationCategory":"Multimedia","operatingSystem":"Web","description":"The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios."},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://calckit.com/"},{"@type":"ListItem","position":2,"name":"SaaS Financial Forecaster"}]}]}</script><link rel="stylesheet" href="/_astro/_slug_.D-gQEzXm.css"><script type="module" src="/_astro/hoisted.Dk0DUBIl.js"></script></head> <body class="min-h-screen flex flex-col bg-white text-gray-900">  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm"> <nav class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between"> <a href="/en/" class="flex items-center gap-2 text-xl font-bold text-gray-900 hover:scale-105 transition-transform duration-200"> <svg class="w-8 h-8 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> CalcKit </a> <div class="flex items-center gap-6 text-sm"> <a href="/en/blog/" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> Blog </a><a href="/en/about" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200"> About </a> <a href="/zh/solopreneur-revenue-projector" class="px-3 py-1.5 text-xs font-medium bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-full transition-all duration-200 ml-2"> 中文 </a> </div> </nav> </header>  <main class="max-w-6xl mx-auto px-4 py-8 flex-1"> <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb"> <a href="/en/" class="hover:text-[#7C3AED] transition-colors">Home</a> <span class="mx-2">/</span> <span class="text-gray-600">SaaS Financial Forecaster</span> </nav> <div class="lg:grid lg:grid-cols-5 lg:gap-10"> <div class="lg:col-span-2"> <div class="mb-6"> <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">SaaS Financial Forecaster</h1> <p class="text-sm text-gray-500 mt-2 leading-relaxed">The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.</p> </div> <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">  <div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="currentMRR">Current MRR ($)</label> <input type="number" id="currentMRR" name="currentMRR" placeholder="e.g. 2000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyGrowthRate">Monthly Growth Rate (%)</label> <input type="number" id="monthlyGrowthRate" name="monthlyGrowthRate" placeholder="e.g. 5" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyChurnRate">Monthly Churn Rate (%)</label> <input type="number" id="monthlyChurnRate" name="monthlyChurnRate" placeholder="e.g. 3" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="monthlyExpenses">Monthly Expenses ($)</label> <input type="number" id="monthlyExpenses" name="monthlyExpenses" placeholder="e.g. 3000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="cashOnHand">Cash on Hand ($)</label> <input type="number" id="cashOnHand" name="cashOnHand" placeholder="e.g. 60000" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="arpu">Avg Revenue Per User ($)</label> <input type="number" id="arpu" name="arpu" placeholder="e.g. 25" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="customGrowthRate">Custom Growth Rate (%)</label> <input type="number" id="customGrowthRate" name="customGrowthRate" placeholder="e.g. 7 (optional)" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="cac">CAC — Customer Acquisition Cost ($)</label> <input type="number" id="cac" name="cac" placeholder="e.g. 200 (optional)" class="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 transition-all"> </div><div class="mb-4"> <label class="block text-sm font-medium text-gray-700 mb-2" for="months">Projection Period</label> <select id="months" name="months" class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#7C3AED] focus:ring-2 focus:ring-[#7C3AED]/20 bg-white transition-all"> <option value="">Select...</option> <option value="6">6</option><option value="12">12</option><option value="24">24</option> </select> </div>          <div class="flex flex-wrap gap-2 mt-3"> <span class="text-sm text-gray-500 mr-1">Scenarios:</span> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-currentmrr="5000" data-monthlygrowthrate="8" data-monthlychurnrate="3" data-monthlyexpenses="3000" data-cashonhand="60000" data-arpu="25" data-customgrowthrate="0" data-cac="200" data-months="12">Early Stage</button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-currentmrr="30000" data-monthlygrowthrate="12" data-monthlychurnrate="2" data-monthlyexpenses="20000" data-cashonhand="500000" data-arpu="99" data-customgrowthrate="0" data-cac="500" data-months="12">Growing</button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-currentmrr="200000" data-monthlygrowthrate="5" data-monthlychurnrate="1" data-monthlyexpenses="120000" data-cashonhand="3000000" data-arpu="299" data-customgrowthrate="0" data-cac="1000" data-months="12">Scale</button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-currentmrr="15000" data-monthlygrowthrate="15" data-monthlychurnrate="5" data-monthlyexpenses="10000" data-cashonhand="200000" data-arpu="49" data-customgrowthrate="0" data-cac="300" data-months="24">High Growth</button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-currentmrr="5000" data-monthlygrowthrate="3" data-monthlychurnrate="2" data-monthlyexpenses="8000" data-cashonhand="100000" data-arpu="29" data-customgrowthrate="0" data-cac="150" data-months="12">Profitability</button> <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-currentmrr="1000" data-monthlygrowthrate="0" data-monthlychurnrate="10" data-monthlyexpenses="5000" data-cashonhand="30000" data-arpu="19" data-customgrowthrate="0" data-cac="100" data-months="12">Distressed</button> </div>                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm"> Generate </button> </form> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">How to Use This Tool</h2> <div class="space-y-3"> <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">1</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your current Monthly Recurring Revenue (MRR).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">2</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your average monthly growth rate (gross, before churn).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">3</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your monthly churn rate to see net growth — the real number.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">4</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your total monthly expenses (hosting, tools, salary, etc.).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">5</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your cash on hand to calculate runway and financial buffer.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">6</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Enter your ARPU (Average Revenue Per User) for subscriber counts.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">7</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Optionally enter a custom growth rate to test your own scenario.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">8</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Optionally enter your CAC (Customer Acquisition Cost) for payback and LTV:CAC.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">9</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Select your projection period (6, 12, or 24 months).</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">10</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Review the Revenue Snapshot for your net growth and ending MRR.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">11</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Scan the Monthly MRR Breakdown to see month-by-month progress.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">12</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Check Runway &amp; Breakeven to know how long your cash will last.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">13</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Study the Burn &amp; Efficiency Metrics — Rule of 40, Burn Multiple, LTV, CAC ratios.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">14</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Explore What-If scenarios to see the impact of better churn or lower costs.</span> </div><div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl"> <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center"> <span class="text-xs font-bold text-white">15</span> </div> <span class="text-sm text-gray-600 leading-relaxed">Read the Action Plan for prioritized next steps based on your data.</span> </div> </div> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Frequently Asked Questions</h2> <div class="space-y-2"> <details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is a good monthly growth rate for a SaaS?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally. This calculator shows you your net growth and projects it forward with five growth scenarios.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s the difference between gross growth and net growth?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Gross growth = new customer revenue + expansion revenue (upgrades). Net growth = gross growth − churn (cancellations + downgrades). If your gross growth is 8% but churn is 5%, your net is only 3% — growing but losing nearly half to churn. Net growth is what builds long-term revenue.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How do I calculate my monthly expenses?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Include everything that recurs monthly: hosting, SaaS tools, contractor/VA costs, software subscriptions, marketing budget, and your own salary/withdrawal. Don&#39;t include one-time purchases. If your expenses fluctuate, use the 3-month average.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s a healthy runway for a solopreneur?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">12+ months of runway at current burn rate is comfortable. 6-12 months is manageable but requires attention. Under 6 months is critical — you need to cut costs, raise prices, or launch new revenue streams immediately. The calculator shows both &#39;zero-revenue&#39; and &#39;current pace&#39; runway so you can plan for the worst case while tracking the realistic one.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What is Burn Multiple and why does it matter?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">Burn Multiple = net burn ÷ net new MRR. It measures how much you spend to generate each dollar of new recurring revenue. &lt;1.0× is excellent (efficient growth), 1.0-2.0× is acceptable, &gt;2.0× means over-spending relative to growth. Profitable businesses have no burn multiple. Track this monthly — a rising burn multiple is an early warning sign.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>How accurate are these revenue projections?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">The projection is mathematically precise given your inputs, but real-world growth is lumpy — some months up 12%, some flat. Use the conservative and aggressive scenarios to see the range of possible outcomes. For budgeting, always plan with the conservative end. Revisit this calculator monthly to update with your actual numbers.</p> </details><details class="bg-white border border-gray-100 rounded-xl overflow-hidden transition-all duration-300"> <summary class="px-5 py-4 cursor-pointer text-sm font-medium text-gray-700 hover:text-[#7C3AED] hover:bg-gray-50 select-none flex items-center justify-between"> <span>What&#39;s a good LTV:CAC ratio?</span> <span class="w-5 h-5 flex items-center justify-center text-gray-400 transition-transform"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path> </svg> </span> </summary> <p class="px-5 pb-4 text-sm text-gray-600 leading-relaxed bg-gray-50/50">A 3:1 LTV:CAC ratio is the SaaS industry benchmark — your customer lifetime value should be at least 3× your cost to acquire them. 5:1 or higher is excellent (you can afford to spend more on acquisition). Below 1:1 means losing money on every customer. Track CAC Payback alongside: under 12 months to recover your acquisition cost is healthy.</p> </details> </div> </div> </div> <div class="lg:col-span-3 mt-8 lg:mt-0" id="results-section"> <div class="flex items-center justify-between mb-4"> <h2 class="text-lg font-bold text-gray-900">Results</h2> <span id="copy-all" class="text-xs font-medium cursor-pointer select-none hidden px-3 py-1.5 bg-gray-100 hover:bg-[#7C3AED] hover:text-white rounded-full transition-all" data-copy-all-label="Copy All" data-copied-label="Copied!">Copy All</span> </div> <span class="inline-block text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-3" id="example-badge">Example</span>  <div id="static-results" class="space-y-3"> <div class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:border-[#7C3AED]/30 transition-all duration-300"><div class="flex items-start justify-between gap-3 p-5 pb-3 border-b border-gray-50"><h3 class="text-base font-bold text-gray-900">📊 Revenue Snapshot</h3><div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"><button type="button" class="copy-btn inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors" data-copy="📊 Revenue Snapshot
 
 • Starting MRR:           $5,000/mo
-• Ending MRR:             $8,954/mo  (after 12 months)
-• ARR Equivalent:         $107,448/yr
-• Total Revenue:          $82,341 over 12 months
+• Ending MRR:             $8,979/mo  (after 12 months)
+• ARR Equivalent:         $107,751/yr
+• Total Revenue:          $83,565 over 12 months
 
 • Gross Monthly Growth:   +8.0%  (new + expansion)
 • Monthly Churn:          −3.0%  (lost revenue)
@@ -12,44 +12,44 @@
 
 📈 MRR Milestones
 • Q1 (Month 3):  $5,788/mo
-• Q2 (Month 6):  $6,702/mo
-• Q3 (Month 9):  $7,760/mo
-• Q4 (Month 12):  $8,954/mo  ← target
+• Q2 (Month 6):  $6,700/mo
+• Q3 (Month 9):  $7,757/mo
+• Q4 (Month 12):  $8,979/mo  ← target
 
 🎯 Key Milestones
-• $10K MRR:  14 months [12–17]
-• $25K MRR:  34 months [28–42]
-• $50K MRR:  48 months [40–61]
-• $100K MRR: 62 months [51–80]
+• $10K MRR:  15 months [11–24]
+• $25K MRR:  33 months [24–55]
+• $50K MRR:  48 months [35–78]
+• $100K MRR:  >5 years
   Range shows ±2% net growth variation.
 
 📅 Monthly MRR Breakdown
 Month  1:  $5,250/mo  (+$250)
 Month  2:  $5,513/mo  (+$263)
 Month  3:  $5,788/mo  (+$276)  ← Q1
-Month  4:  $6,077/mo  (+$289)
+Month  4:  $6,078/mo  (+$289)
 Month  5:  $6,381/mo  (+$304)
 Month  6:  $6,700/mo  (+$319)  ← Q2
-Month  7:  $7,035/mo  (+$335)
+Month  7:  $7,036/mo  (+$335)
 Month  8:  $7,387/mo  (+$352)
-Month  9:  $7,756/mo  (+$369)  ← Q3
+Month  9:  $7,757/mo  (+$369)  ← Q3
 Month 10:  $8,144/mo  (+$388)
-Month 11:  $8,551/mo  (+$407)
-Month 12:  $8,954/mo  (+$403)  ← Q4
+Month 11:  $8,552/mo  (+$407)
+Month 12:  $8,979/mo  (+$428)  ← Q4
 
 🔄 Growth Scenarios (12-Month Outlook)
-• 🐢 Conservative       +2.5%/mo  →  $6,724/mo  |  $10K in 28 mo
-• 📈 Current Pace        +5.0%/mo  →  $8,954/mo  |  $10K in 14 mo
-• 🚀 Aggressive          +7.5%/mo  →  $11,905/mo  |  $10K in 10 mo
-• 🔥 Hyper-Growth       +10.0%/mo  →  $15,692/mo  |  $10K in 7 mo
+• 🐢 Conservative         +3.0%/mo  →  $7,129/mo  |  $10K in 24 mo
+• 📈 Current Pace         +5.0%/mo  →  $8,979/mo  |  $10K in 15 mo
+• 🚀 Aggressive           +8.0%/mo  →  $12,591/mo  |  $10K in 10 mo
+• 🔥 Hyper-Growth         +10.0%/mo  →  $15,692/mo  |  $10K in 8 mo
 • 🎯 Custom: enter a growth rate above to see your target
 
 🔄 What-If Analysis
 A) Cut churn 3.0% → 2.0%:
-   Net growth: +5.0% → +6.0% | End MRR: $8,954 → $10,060 (+$1,107)
+   Net growth: +5.0% → +6.0% | End MRR: $8,979 → $10,061 (+$1,082)
 
 B) Boost gross growth +20%:
-   Gross: +8.0% → +9.6% | End MRR: $8,954 → $11,710 (+$2,756)
+   Gross: +8.0% → +9.6% | End MRR: $8,979 → $10,766 (+$1,787)
 
 C) Cut expenses 20%:
    Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo
@@ -72,8 +72,8 @@ C) Cut expenses 20%:
 
 • Burn Multiple:           N/A (profitable)
 
-• Rule of 40:              25.0%  🟡
-  = net growth +5.0% + profit margin +40.0%
+• Rule of 40:              45.0%  🟢
+  = net growth 5.0% + profit margin 40.0%
   | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴
 
 • MRR / Expense Ratio:     1.67×  🟡
@@ -82,13 +82,13 @@ C) Cut expenses 20%:
 • LTV (Customer Lifetime): $833  (33× ARPU)  🟡
   = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴
 
-• CAC (Customer Acq. Cost): $200.00
-• CAC Payback Period:       8.0 months  🟢
+• CAC (Customer Acq. Cost): $200
+• CAC Payback Period:       8.2 months  🟢
   = CAC ÷ (ARPU × (1 − churn rate)) | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴
 • LTV:CAC Ratio:            4.2×  🟢
   = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴
 
-• Monthly ARPU:            $25.00
+• Monthly ARPU:            $25
 • Subscribers:             200 (currentMRR ÷ ARPU)
 
 🎯 Action Plan
@@ -100,12 +100,17 @@ C) Cut expenses 20%:
 🔥 Top Priorities:
   1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.
   2. With $2,000/mo profit, reinvest in ads or part-time help.
+
+⚖️ Break-Even Revenue
+• 🟢 Break-even MRR: $3,000/mo (covers monthly expenses)
+• Current MRR $5,000 is above break-even by $2,000/mo.
+
 " data-copy-label="Copy" data-copied-label="Copied!"> <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> <span class="copy-label">Copy</span> </button> <button type="button" class="export-btn inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#059669] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-all shrink-0" data-export="📊 Revenue Snapshot
 
 • Starting MRR:           $5,000/mo
-• Ending MRR:             $8,954/mo  (after 12 months)
-• ARR Equivalent:         $107,448/yr
-• Total Revenue:          $82,341 over 12 months
+• Ending MRR:             $8,979/mo  (after 12 months)
+• ARR Equivalent:         $107,751/yr
+• Total Revenue:          $83,565 over 12 months
 
 • Gross Monthly Growth:   +8.0%  (new + expansion)
 • Monthly Churn:          −3.0%  (lost revenue)
@@ -114,44 +119,44 @@ C) Cut expenses 20%:
 
 📈 MRR Milestones
 • Q1 (Month 3):  $5,788/mo
-• Q2 (Month 6):  $6,702/mo
-• Q3 (Month 9):  $7,760/mo
-• Q4 (Month 12):  $8,954/mo  ← target
+• Q2 (Month 6):  $6,700/mo
+• Q3 (Month 9):  $7,757/mo
+• Q4 (Month 12):  $8,979/mo  ← target
 
 🎯 Key Milestones
-• $10K MRR:  14 months [12–17]
-• $25K MRR:  34 months [28–42]
-• $50K MRR:  48 months [40–61]
-• $100K MRR: 62 months [51–80]
+• $10K MRR:  15 months [11–24]
+• $25K MRR:  33 months [24–55]
+• $50K MRR:  48 months [35–78]
+• $100K MRR:  >5 years
   Range shows ±2% net growth variation.
 
 📅 Monthly MRR Breakdown
 Month  1:  $5,250/mo  (+$250)
 Month  2:  $5,513/mo  (+$263)
 Month  3:  $5,788/mo  (+$276)  ← Q1
-Month  4:  $6,077/mo  (+$289)
+Month  4:  $6,078/mo  (+$289)
 Month  5:  $6,381/mo  (+$304)
 Month  6:  $6,700/mo  (+$319)  ← Q2
-Month  7:  $7,035/mo  (+$335)
+Month  7:  $7,036/mo  (+$335)
 Month  8:  $7,387/mo  (+$352)
-Month  9:  $7,756/mo  (+$369)  ← Q3
+Month  9:  $7,757/mo  (+$369)  ← Q3
 Month 10:  $8,144/mo  (+$388)
-Month 11:  $8,551/mo  (+$407)
-Month 12:  $8,954/mo  (+$403)  ← Q4
+Month 11:  $8,552/mo  (+$407)
+Month 12:  $8,979/mo  (+$428)  ← Q4
 
 🔄 Growth Scenarios (12-Month Outlook)
-• 🐢 Conservative       +2.5%/mo  →  $6,724/mo  |  $10K in 28 mo
-• 📈 Current Pace        +5.0%/mo  →  $8,954/mo  |  $10K in 14 mo
-• 🚀 Aggressive          +7.5%/mo  →  $11,905/mo  |  $10K in 10 mo
-• 🔥 Hyper-Growth       +10.0%/mo  →  $15,692/mo  |  $10K in 7 mo
+• 🐢 Conservative         +3.0%/mo  →  $7,129/mo  |  $10K in 24 mo
+• 📈 Current Pace         +5.0%/mo  →  $8,979/mo  |  $10K in 15 mo
+• 🚀 Aggressive           +8.0%/mo  →  $12,591/mo  |  $10K in 10 mo
+• 🔥 Hyper-Growth         +10.0%/mo  →  $15,692/mo  |  $10K in 8 mo
 • 🎯 Custom: enter a growth rate above to see your target
 
 🔄 What-If Analysis
 A) Cut churn 3.0% → 2.0%:
-   Net growth: +5.0% → +6.0% | End MRR: $8,954 → $10,060 (+$1,107)
+   Net growth: +5.0% → +6.0% | End MRR: $8,979 → $10,061 (+$1,082)
 
 B) Boost gross growth +20%:
-   Gross: +8.0% → +9.6% | End MRR: $8,954 → $11,710 (+$2,756)
+   Gross: +8.0% → +9.6% | End MRR: $8,979 → $10,766 (+$1,787)
 
 C) Cut expenses 20%:
    Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo
@@ -174,8 +179,8 @@ C) Cut expenses 20%:
 
 • Burn Multiple:           N/A (profitable)
 
-• Rule of 40:              25.0%  🟡
-  = net growth +5.0% + profit margin +40.0%
+• Rule of 40:              45.0%  🟢
+  = net growth 5.0% + profit margin 40.0%
   | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴
 
 • MRR / Expense Ratio:     1.67×  🟡
@@ -184,13 +189,13 @@ C) Cut expenses 20%:
 • LTV (Customer Lifetime): $833  (33× ARPU)  🟡
   = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴
 
-• CAC (Customer Acq. Cost): $200.00
-• CAC Payback Period:       8.0 months  🟢
+• CAC (Customer Acq. Cost): $200
+• CAC Payback Period:       8.2 months  🟢
   = CAC ÷ (ARPU × (1 − churn rate)) | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴
 • LTV:CAC Ratio:            4.2×  🟢
   = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴
 
-• Monthly ARPU:            $25.00
+• Monthly ARPU:            $25
 • Subscribers:             200 (currentMRR ÷ ARPU)
 
 🎯 Action Plan
@@ -202,11 +207,17 @@ C) Cut expenses 20%:
 🔥 Top Priorities:
   1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.
   2. With $2,000/mo profit, reinvest in ads or part-time help.
+
+⚖️ Break-Even Revenue
+• 🟢 Break-even MRR: $3,000/mo (covers monthly expenses)
+• Current MRR $5,000 is above break-even by $2,000/mo.
+
+💡 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) — not conservative hoarding.
 "><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span>Export</span></button></div></div><div class="p-5 bg-gray-50/50 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">
 • Starting MRR:           $5,000/mo
-• Ending MRR:             $8,954/mo  (after 12 months)
-• ARR Equivalent:         $107,448/yr
-• Total Revenue:          $82,341 over 12 months
+• Ending MRR:             $8,979/mo  (after 12 months)
+• ARR Equivalent:         $107,751/yr
+• Total Revenue:          $83,565 over 12 months
 
 • Gross Monthly Growth:   +8.0%  (new + expansion)
 • Monthly Churn:          −3.0%  (lost revenue)
@@ -215,44 +226,44 @@ C) Cut expenses 20%:
 
 📈 MRR Milestones
 • Q1 (Month 3):  $5,788/mo
-• Q2 (Month 6):  $6,702/mo
-• Q3 (Month 9):  $7,760/mo
-• Q4 (Month 12):  $8,954/mo  ← target
+• Q2 (Month 6):  $6,700/mo
+• Q3 (Month 9):  $7,757/mo
+• Q4 (Month 12):  $8,979/mo  ← target
 
 🎯 Key Milestones
-• $10K MRR:  14 months [12–17]
-• $25K MRR:  34 months [28–42]
-• $50K MRR:  48 months [40–61]
-• $100K MRR: 62 months [51–80]
+• $10K MRR:  15 months [11–24]
+• $25K MRR:  33 months [24–55]
+• $50K MRR:  48 months [35–78]
+• $100K MRR:  &gt;5 years
   Range shows ±2% net growth variation.
 
 📅 Monthly MRR Breakdown
 Month  1:  $5,250/mo  (+$250)
 Month  2:  $5,513/mo  (+$263)
 Month  3:  $5,788/mo  (+$276)  ← Q1
-Month  4:  $6,077/mo  (+$289)
+Month  4:  $6,078/mo  (+$289)
 Month  5:  $6,381/mo  (+$304)
 Month  6:  $6,700/mo  (+$319)  ← Q2
-Month  7:  $7,035/mo  (+$335)
+Month  7:  $7,036/mo  (+$335)
 Month  8:  $7,387/mo  (+$352)
-Month  9:  $7,756/mo  (+$369)  ← Q3
+Month  9:  $7,757/mo  (+$369)  ← Q3
 Month 10:  $8,144/mo  (+$388)
-Month 11:  $8,551/mo  (+$407)
-Month 12:  $8,954/mo  (+$403)  ← Q4
+Month 11:  $8,552/mo  (+$407)
+Month 12:  $8,979/mo  (+$428)  ← Q4
 
 🔄 Growth Scenarios (12-Month Outlook)
-• 🐢 Conservative       +2.5%/mo  →  $6,724/mo  |  $10K in 28 mo
-• 📈 Current Pace        +5.0%/mo  →  $8,954/mo  |  $10K in 14 mo
-• 🚀 Aggressive          +7.5%/mo  →  $11,905/mo  |  $10K in 10 mo
-• 🔥 Hyper-Growth       +10.0%/mo  →  $15,692/mo  |  $10K in 7 mo
+• 🐢 Conservative         +3.0%/mo  →  $7,129/mo  |  $10K in 24 mo
+• 📈 Current Pace         +5.0%/mo  →  $8,979/mo  |  $10K in 15 mo
+• 🚀 Aggressive           +8.0%/mo  →  $12,591/mo  |  $10K in 10 mo
+• 🔥 Hyper-Growth         +10.0%/mo  →  $15,692/mo  |  $10K in 8 mo
 • 🎯 Custom: enter a growth rate above to see your target
 
 🔄 What-If Analysis
 A) Cut churn 3.0% → 2.0%:
-   Net growth: +5.0% → +6.0% | End MRR: $8,954 → $10,060 (+$1,107)
+   Net growth: +5.0% → +6.0% | End MRR: $8,979 → $10,061 (+$1,082)
 
 B) Boost gross growth +20%:
-   Gross: +8.0% → +9.6% | End MRR: $8,954 → $11,710 (+$2,756)
+   Gross: +8.0% → +9.6% | End MRR: $8,979 → $10,766 (+$1,787)
 
 C) Cut expenses 20%:
    Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo
@@ -275,8 +286,8 @@ C) Cut expenses 20%:
 
 • Burn Multiple:           N/A (profitable)
 
-• Rule of 40:              25.0%  🟡
-  = net growth +5.0% + profit margin +40.0%
+• Rule of 40:              45.0%  🟢
+  = net growth 5.0% + profit margin 40.0%
   | ≥40% 🟢 | 20-40% 🟡 | &lt;20% 🔴
 
 • MRR / Expense Ratio:     1.67×  🟡
@@ -285,13 +296,13 @@ C) Cut expenses 20%:
 • LTV (Customer Lifetime): $833  (33× ARPU)  🟡
   = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | &lt;12× 🔴
 
-• CAC (Customer Acq. Cost): $200.00
-• CAC Payback Period:       8.0 months  🟢
+• CAC (Customer Acq. Cost): $200
+• CAC Payback Period:       8.2 months  🟢
   = CAC ÷ (ARPU × (1 − churn rate)) | &lt;12mo 🟢 | 12-24mo 🟡 | &gt;24mo 🔴
 • LTV:CAC Ratio:            4.2×  🟢
   = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | &lt;1× 🔴
 
-• Monthly ARPU:            $25.00
+• Monthly ARPU:            $25
 • Subscribers:             200 (currentMRR ÷ ARPU)
 
 🎯 Action Plan
@@ -303,6 +314,11 @@ C) Cut expenses 20%:
 🔥 Top Priorities:
   1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.
   2. With $2,000/mo profit, reinvest in ads or part-time help.
+
+⚖️ Break-Even Revenue
+• 🟢 Break-even MRR: $3,000/mo (covers monthly expenses)
+• Current MRR $5,000 is above break-even by $2,000/mo.
+
 </div></div> </div> <div id="dynamic-results" class="space-y-3 hidden"></div> <div class="my-6 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed border-gray-300 min-h-[250px]"> <span class="text-xs text-gray-400">AdSense — tool result</span> </div> <div class="mt-8"> <h2 class="text-lg font-bold text-gray-900 mb-4">Related Tools</h2> <div class="flex flex-wrap gap-2"> <a href="/en/solopreneur-burn-rate-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> Burn Rate Calculator </a><a href="/en/solopreneur-churn-rate-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> Churn Rate Calculator </a><a href="/en/solopreneur-market-size-estimator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> Market Size Estimator </a><a href="/en/solopreneur-mrr-calculator" class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-gray-50 border border-gray-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300"> <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"> <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path> </svg> MRR Calculator </a> </div> </div> </div> </div> </main> <footer class="relative border-t border-gray-100 mt-auto bg-gray-50"> <div class="relative max-w-6xl mx-auto px-4 py-10"> <div class="flex items-center justify-center gap-2 mb-6"> <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"> <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path> </svg> <span class="text-gray-600 text-sm">CalcKit</span> </div> <div class="flex flex-wrap justify-center gap-6 text-sm mb-6"> <a href="/en/privacy-policy" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> Privacy Policy </a><a href="/en/terms" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> Terms &amp; Conditions </a><a href="/en/contact" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> Contact </a><a href="/en/about" class="text-gray-500 hover:text-[#7C3AED] transition-colors duration-200"> About </a> </div> <p class="text-center text-xs text-gray-400">
 &copy; 2026 CalcKit. Free tools for entrepreneurs. No signup required. </p> </div> </footer>  </body></html>  <script>(function(){const clientConfig = "{\"type\":\"custom\",\"wordPools\":{},\"customFn\":\"function fmt(n){return '$'+Math.round(n).toLocaleString()}function pct(n){return n.toFixed(1)+'%'}var mr=parseFloat(inputs.currentMRR)||0;var gr=parseFloat(inputs.monthlyGrowthRate)||0;var cr=parseFloat(inputs.monthlyChurnRate)||0;var ex=parseFloat(inputs.monthlyExpenses)||0;var cash=parseFloat(inputs.cashOnHand)||0;var arpu=parseFloat(inputs.arpu)||0;var cgr=parseFloat(inputs.customGrowthRate)||0;var cac=parseFloat(inputs.cac)||0;var mo=parseInt(inputs.months)||12;var nr=(gr-cr)/100;var annRate=(Math.pow(1+nr,12)-1)*100;var end=mr*Math.pow(1+nr,mo);var total=0;for(var i=1;i<=mo;i++)total+=mr*Math.pow(1+nr,i);var mult=mr>0?end/mr:0;var subs=arpu>0?Math.round(mr/arpu):0;var netInc=mr-ex;var annProfit=netInc*12;var pMargin=mr>0?(netInc/mr)*100:0;var isProf=netInc>=0;var rZero=ex>0?cash/ex:null;var mBurn=ex-mr;var rCurr=mBurn>0?cash/mBurn:Infinity;function rColor(m){if(m===Infinity)return '\\\\uD83D\\\\uDFE2';if(m>=18)return '\\\\uD83D\\\\uDFE2';if(m>=6)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}var beMonths=null;if(mr>=ex&&ex>0)beMonths=0;else if(mr>0&&nr>0&&ex>0)beMonths=Math.ceil(Math.log(ex/mr)/Math.log(1+nr));var netNew=mr*nr;var cNr=cgr>0?(cgr-cr)/100:0;var hasCustom=cgr>0;var cacPb=null;if(cac>0&&arpu>0&&cr>0&&cr<100)cacPb=cac/(arpu*(1-cr/100));function pbColor(m){if(m<=12)return '\\\\uD83D\\\\uDFE2';if(m<=24)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}var ltvC=arpu>0&&cr>0?arpu/(cr/100):0;var ltvCRatio=cac>0&&ltvC>0?ltvC/cac:null;function lcColor(r){if(r>=3)return '\\\\uD83D\\\\uDFE2';if(r>=1)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}var bm=mBurn>0&&netNew>0?mBurn/netNew:null;function bmColor(b){if(b<1)return '\\\\uD83D\\\\uDFE2';if(b<=2)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}var mrrExp=ex>0?mr/ex:null;function r2Color(r){if(r>=2)return '\\\\uD83D\\\\uDFE2';if(r>=1)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}var r40=nr*100+pMargin;function r40Color(v){if(v>=40)return '\\\\uD83D\\\\uDFE2';if(v>=20)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}function mthsTo(t){if(mr<=0||nr<=0)return null;if(mr>=t)return 0;return Math.ceil(Math.log(t/mr)/Math.log(1+nr));}function ngColor(r){if(r>=10)return '\\\\uD83D\\\\uDFE2 Exceptional';if(r>=5)return '\\\\uD83D\\\\uDFE1 Healthy';if(r>=0)return '\\\\uD83D\\\\uDFE0 Slow';return '\\\\uD83D\\\\uDD34 Shrinking';}function phase(m){if(m<1000)return 'Validation (<$1K MRR)';if(m<10000)return 'Early Traction ($1K\\\\u2013$10K MRR)';if(m<100000)return 'Scaling ($10K\\\\u2013$100K MRR)';return 'Growth (>$100K MRR)';}var r='\\\\uD83D\\\\uDCCA Revenue Snapshot\\\\n\\\\n';r+='\\\\u2022 Starting MRR:           '+fmt(mr)+'/mo\\\\n';r+='\\\\u2022 Ending MRR:             '+fmt(end)+'/mo  (after '+mo+' months)\\\\n';r+='\\\\u2022 ARR Equivalent:         '+fmt(end*12)+'/yr\\\\n';r+='\\\\u2022 Total Revenue:          '+fmt(total)+' over '+mo+' months\\\\n\\\\n';r+='\\\\u2022 Gross Monthly Growth:   +'+pct(gr)+'  (new + expansion)\\\\n';r+='\\\\u2022 Monthly Churn:          \\\\u2212'+pct(cr)+'  (lost revenue)\\\\n';r+='\\\\u2022 Net Monthly Growth:     '+(nr>=0?'+':'')+pct(nr*100)+'  (effective)  '+ngColor(nr*100)+'\\\\n';r+='\\\\u2022 Growth Multiple:        '+mult.toFixed(1)+'\\\\u00d7   ('+mo+'-month MRR expansion)\\\\n';r+='\\\\n\\\\uD83D\\\\uDCC8 MRR Milestones\\\\n';var maxQ=Math.min(Math.floor(mo/3),8);for(var q=1;q<=maxQ;q++){var mth=q*3;var mAt=mr*Math.pow(1+nr,mth);r+='\\\\u2022 Q'+q+' (Month '+mth+'):  '+fmt(mAt)+'/mo'+(q===maxQ?'  \\\\u2190 target':'')+'\\\\n';}r+='\\\\n\\\\uD83C\\\\uDFAF Key Milestones\\\\n';var tgts=[10000,25000,50000,100000];var anyShown=false;if(mr>0&&nr>0){for(var ti=0;ti<tgts.length;ti++){var tg=tgts[ti];if(tg<=mr)continue;var mth2=mthsTo(tg);if(mth2!==null&&mth2>0){anyShown=true;if(mth2<=60){var fastR=nr+0.02;var slowR=Math.max(0.001,nr-0.02);var fastM=Math.ceil(Math.log(tg/mr)/Math.log(1+fastR));var slowM=Math.ceil(Math.log(tg/mr)/Math.log(1+slowR));r+='\\\\u2022 $'+Math.round(tg/1000)+'K MRR:  '+mth2+' months ['+fastM+'\\\\u2013'+slowM+']\\\\n';}else{r+='\\\\u2022 $'+Math.round(tg/1000)+'K MRR:  >5 years\\\\n';}}}}if(!anyShown&&mr>0){if(nr<=0){r+='With zero or negative net growth, no milestones can be projected.\\\\n';}}if(anyShown){r+='  Range shows \\\\u00b12% net growth variation.\\\\n';}r+='\\\\n\\\\uD83D\\\\uDCC5 Monthly MRR Breakdown\\\\n';var showMo=mo===12?12:Math.min(mo,6);for(var im=1;im<=showMo;im++){var mAtM=mr*Math.pow(1+nr,im);var dlt=mAtM-(mr*Math.pow(1+nr,im-1));r+='Month '+(' '+im).slice(-2)+':  '+fmt(mAtM)+'/mo  (+'+fmt(dlt)+')'+(im%3===0?'  \\\\u2190 Q'+(im/3):'')+'\\\\n';}if(mo>showMo){var endM=mr*Math.pow(1+nr,mo);var endD=endM-(mr*Math.pow(1+nr,mo-1));r+='  ...\\\\nMonth '+mo+':  '+fmt(endM)+'/mo  (+'+fmt(endD)+')  \\\\u2190 target\\\\n';}r+='\\\\n\\\\uD83D\\\\uDD04 Growth Scenarios ('+mo+'-Month Outlook)\\\\n';if(mr>0){var scRates=[{r:Math.max(1,Math.round(nr*100*0.5)),l:'\\\\uD83D\\\\uDC22 Conservative'},{r:Math.round(nr*100),l:'\\\\uD83D\\\\uDCC8 Current Pace'},{r:Math.max(1,Math.round(nr*100*1.5)),l:'\\\\uD83D\\\\uDE80 Aggressive'},{r:Math.min(50,Math.round(nr*100*2)),l:'\\\\uD83D\\\\uDD25 Hyper-Growth'}];var seen={};for(var si=0;si<scRates.length;si++){var sc=scRates[si];if(seen[sc.r]||sc.r<=0)continue;seen[sc.r]=true;var scEnd=mr*Math.pow(1+sc.r/100,mo);var sc10k=mr>0&&sc.r>0?Math.ceil(Math.log(10000/mr)/Math.log(1+sc.r/100)):null;r+='\\\\u2022 '+sc.l;for(var pad=sc.l.length;pad<24;pad++)r+=' ';r+='+'+pct(sc.r)+'/mo  \\\\u2192  '+fmt(scEnd)+'/mo';if(sc10k!==null&&sc10k>0)r+='  |  $10K in '+sc10k+' mo';r+='\\\\n';}if(hasCustom){var cuEnd=mr*Math.pow(1+cNr,mo);var cu10k=mr>0&&cNr>0?Math.ceil(Math.log(10000/mr)/Math.log(1+cNr)):null;var cuLabel='\\\\u2022 \\\\uD83C\\\\uDFAF Custom (+'+pct(cgr)+'/mo)';r+=cuLabel;for(var cp=cuLabel.length;cp<24;cp++)r+=' ';r+='\\\\u2192  '+fmt(cuEnd)+'/mo';if(cu10k!==null&&cu10k>0)r+='  |  $10K in '+cu10k+' mo';r+='\\\\n';}else{r+='\\\\u2022 \\\\uD83C\\\\uDFAF Custom: enter a growth rate above to see your target\\\\n';}}else{r+='Enter your current MRR to see growth scenarios.\\\\n';}r+='\\\\n\\\\uD83D\\\\uDD04 What-If Analysis\\\\n';if(mr>0){if(cr>0){var cutCR=Math.max(0,cr-1);var cutNR=(gr-cutCR)/100;var cutEnd=mr*Math.pow(1+cutNR,mo);r+='A) Cut churn '+pct(cr)+' \\\\u2192 '+pct(cutCR)+':\\\\n';r+='   Net growth: +'+pct(nr*100)+' \\\\u2192 +'+pct(cutNR*100)+' | End MRR: '+fmt(end)+' \\\\u2192 '+fmt(cutEnd)+' (+'+fmt(cutEnd-end)+')\\\\n\\\\n';}else{r+='A) Churn is already 0% \\\\u2014 no improvement needed here.\\\\n\\\\n';}var boostG=gr*1.2;var boostNR=(boostG-cr)/100;var boostEnd=mr*Math.pow(1+boostNR,mo);r+='B) Boost gross growth +20%:\\\\n';r+='   Gross: +'+pct(gr)+' \\\\u2192 +'+pct(boostG)+' | End MRR: '+fmt(end)+' \\\\u2192 '+fmt(boostEnd)+' (+'+fmt(boostEnd-end)+')\\\\n\\\\n';if(ex>0){var redEx=ex*0.8;var sav=ex-redEx;if(isProf){r+='C) Cut expenses 20%:\\\\n';r+='   Expenses: '+fmt(ex)+'/mo \\\\u2192 '+fmt(redEx)+'/mo | Monthly savings: +'+fmt(sav)+'/mo\\\\n';r+='   Profit increases: '+fmt(netInc)+'/mo \\\\u2192 '+fmt(netInc+sav)+'/mo\\\\n';}else{var newBurn=redEx-mr;var newRw=newBurn>0?cash/newBurn:Infinity;r+='C) Cut expenses 20%:\\\\n';r+='   Expenses: '+fmt(ex)+'/mo \\\\u2192 '+fmt(redEx)+'/mo\\\\n';r+='   Monthly burn: '+fmt(mBurn)+'/mo \\\\u2192 '+(newBurn>0?fmt(newBurn)+'/mo':'profitable')+'\\\\n';r+='   Runway: '+(rCurr===Infinity?'\\\\u221e':rCurr.toFixed(1)+' mo')+' \\\\u2192 '+(newRw===Infinity?'\\\\u221e':newRw.toFixed(1)+' mo')+'\\\\n';}}else{r+='C) Enter monthly expenses to see cost-cutting impact.\\\\n';}}else{r+='Enter your current MRR to see what-if scenarios.\\\\n';}r+='\\\\n\\\\uD83D\\\\uDCB0 Runway & Breakeven\\\\n';r+='\\\\u2022 Cash on Hand:            '+fmt(cash)+'\\\\n';r+='\\\\u2022 Monthly Expenses:        '+fmt(ex)+'/mo\\\\n';r+='\\\\u2022 Monthly Net Revenue:     '+fmt(mr)+'/mo  (MRR)\\\\n\\\\n';if(isProf&&ex>0){r+='\\\\u2022 Monthly Profit:          +'+fmt(netInc)+'  \\\\uD83D\\\\uDFE2 Revenue covers expenses.\\\\n';r+='\\\\u2022 Runway (zero-revenue):   '+(rZero!==null?rZero.toFixed(1)+' months':'\\\\u2014')+'\\\\n';r+='\\\\u2022 Runway (current pace):   \\\\u221e (profitable)\\\\n';r+='\\\\u2022 Breakeven:               \\\\u2705 Already breakeven\\\\n';r+='\\\\u2022 Annualized Profit:       +'+fmt(annProfit)+'/yr\\\\n';}else if(ex>0&&nr>0&&beMonths!==null&&beMonths>0){r+='\\\\u2022 Monthly Burn:            \\\\u2212'+fmt(mBurn)+'/mo  '+rColor(rCurr)+'\\\\n';r+='\\\\u2022 Runway (zero-revenue):   '+(rZero!==null?rZero.toFixed(1)+' months':'\\\\u2014')+'\\\\n';r+='\\\\u2022 Runway (current pace):   '+rCurr.toFixed(1)+' months  '+rColor(rCurr)+'\\\\n';r+='\\\\u2022 Breakeven:               '+beMonths+' months from now\\\\n';r+='  \\\\u2192 MRR reaches '+fmt(ex)+'/mo covering all expenses.\\\\n';}else if(ex>0){r+='\\\\u2022 Monthly Burn:            \\\\u2212'+fmt(mBurn)+'/mo  '+rColor(rCurr)+'\\\\n';r+='\\\\u2022 Runway (zero-revenue):   '+(rZero!==null?rZero.toFixed(1)+' months':'\\\\u2014')+'\\\\n';r+='\\\\u2022 Runway (current pace):   '+(rCurr===Infinity?'\\\\u221e':rCurr.toFixed(1)+' months')+'  '+rColor(rCurr)+'\\\\n';if(beMonths===null){r+='\\\\u2022 Breakeven:               Not reachable at current growth rate.\\\\n';r+='  \\\\u2192 Cut expenses or boost growth immediately.\\\\n';}}else{r+='Enter your monthly expenses to see runway and breakeven analysis.\\\\n';}r+='\\\\n\\\\uD83E\\\\uDE7A Burn & Efficiency Metrics\\\\n';if(ex>0){r+='\\\\u2022 Gross Burn:              '+fmt(ex)+'/mo  (total expenses)\\\\n';r+='\\\\u2022 Net Burn:                '+(mBurn>0?'\\\\u2212'+fmt(mBurn)+'/mo':'+'+fmt(-mBurn)+'/mo (profit)')+'  '+(isProf?'\\\\uD83D\\\\uDFE2':'\\\\uD83D\\\\uDD34')+'\\\\n\\\\n';if(bm!==null){r+='\\\\u2022 Burn Multiple:           '+bm.toFixed(1)+'\\\\u00d7  '+bmColor(bm)+'\\\\n';r+='  = net burn \\\\u00f7 net new MRR | <1.0\\\\u00d7 \\\\uD83D\\\\uDFE2 | 1.0\\\\u20132.0\\\\u00d7 \\\\uD83D\\\\uDFE1 | >2.0\\\\u00d7 \\\\uD83D\\\\uDD34\\\\n\\\\n';}else if(isProf){r+='\\\\u2022 Burn Multiple:           N/A (profitable)\\\\n\\\\n';}else{r+='\\\\u2022 Burn Multiple:           N/A (no net new MRR)\\\\n\\\\n';}r+='\\\\u2022 Rule of 40:              '+pct(r40)+'  '+r40Color(r40)+'\\\\n';r+='  = net growth '+pct(nr*100)+' + profit margin '+pct(pMargin)+'\\\\n';r+='  | \\\\u226540% \\\\uD83D\\\\uDFE2 | 20-40% \\\\uD83D\\\\uDFE1 | <20% \\\\uD83D\\\\uDD34\\\\n\\\\n';if(mrrExp!==null){r+='\\\\u2022 MRR / Expense Ratio:     '+mrrExp.toFixed(2)+'\\\\u00d7  '+r2Color(mrrExp)+'\\\\n';r+='  \\\\u22652.0 \\\\uD83D\\\\uDFE2 | 1.0-2.0 \\\\uD83D\\\\uDFE1 | <1.0 \\\\uD83D\\\\uDD34\\\\n\\\\n';}if(arpu>0&&cr>0){var ltv=arpu/(cr/100);var ltvR=ltv/arpu;function ltvColor(r){if(r>=36)return '\\\\uD83D\\\\uDFE2';if(r>=12)return '\\\\uD83D\\\\uDFE1';return '\\\\uD83D\\\\uDD34';}r+='\\\\u2022 LTV (Customer Lifetime): '+fmt(ltv)+'  ('+ltvR.toFixed(0)+'\\\\u00d7 ARPU)  '+ltvColor(ltvR)+'\\\\n';r+='  = ARPU \\\\u00f7 monthly churn | \\\\u226536\\\\u00d7 \\\\uD83D\\\\uDFE2 | 12-36\\\\u00d7 \\\\uD83D\\\\uDFE1 | <12\\\\u00d7 \\\\uD83D\\\\uDD34\\\\n\\\\n';}else if(arpu>0&&cr===0){r+='\\\\u2022 LTV (Customer Lifetime): \\\\u221e  (zero churn) \\\\uD83D\\\\uDFE2\\\\n\\\\n';}}else{r+='Enter monthly expenses to see burn and efficiency metrics.\\\\n\\\\n';}if(cac>0){r+='\\\\u2022 CAC (Customer Acq. Cost): '+fmt(cac)+'\\\\n';if(cacPb!==null){r+='\\\\u2022 CAC Payback Period:       '+cacPb.toFixed(1)+' months  '+pbColor(cacPb)+'\\\\n';r+='  = CAC \\\\u00f7 (ARPU \\\\u00d7 (1 \\\\u2212 churn rate)) | <12mo \\\\uD83D\\\\uDFE2 | 12-24mo \\\\uD83D\\\\uDFE1 | >24mo \\\\uD83D\\\\uDD34\\\\n';}else if(arpu<=0||cr<=0){r+='\\\\u2022 CAC Payback Period:       \\\\u2014 (enter ARPU and churn rate)\\\\n';}if(ltvCRatio!==null){r+='\\\\u2022 LTV:CAC Ratio:            '+ltvCRatio.toFixed(1)+'\\\\u00d7  '+lcColor(ltvCRatio)+'\\\\n';r+='  = LTV \\\\u00f7 CAC | \\\\u22653\\\\u00d7 \\\\uD83D\\\\uDFE2 | 1-3\\\\u00d7 \\\\uD83D\\\\uDFE1 | <1\\\\u00d7 \\\\uD83D\\\\uDD34\\\\n';}r+='\\\\n';}if(arpu>0&&subs>0){r+='\\\\u2022 Monthly ARPU:            '+fmt(arpu)+'\\\\n';r+='\\\\u2022 Subscribers:             '+subs+' (currentMRR \\\\u00f7 ARPU)\\\\n';}r+='\\\\n\\\\uD83C\\\\uDFAF Action Plan\\\\n';r+='\\\\u2022 Stage: '+phase(mr)+'\\\\n';if(isProf&&ex>0)r+='\\\\u2022 Burn:  \\\\u2705 Profitable \\\\u2014 reinvest 30% of profit into growth.\\\\n';else if(ex>0&&rCurr>=12)r+='\\\\u2022 Burn:  \\\\uD83D\\\\uDFE1 Burning cash but healthy runway. Watch burn rate.\\\\n';else if(ex>0&&rCurr<12)r+='\\\\u2022 Burn:  \\\\uD83D\\\\uDD34 Critical runway \\\\u2014 cut costs or accelerate revenue.\\\\n';else r+='\\\\u2022 Burn:  Enter expenses to assess burn.\\\\n';if(nr>=0.1)r+='\\\\u2022 Growth: \\\\uD83D\\\\uDD25 Exceptional (+'+pct(nr*100)+' net) \\\\u2014 sustain by staying close to customers.\\\\n';else if(nr>=0.05)r+='\\\\u2022 Growth: \\\\uD83D\\\\uDE80 Strong (+'+pct(nr*100)+' net) \\\\u2014 compound is working for you.\\\\n';else if(nr>0)r+='\\\\u2022 Growth: \\\\uD83D\\\\uDCC8 Steady (+'+pct(nr*100)+' net) \\\\u2014 small gains compound over time.\\\\n';else if(mr>0)r+='\\\\u2022 Growth: \\\\uD83D\\\\uDC22 Stalled ('+pct(nr*100)+' net) \\\\u2014 add a second acquisition channel.\\\\n';if(isProf&&nr>=0.03)r+='\\\\u2022 Risk:  \\\\uD83D\\\\uDFE2 Low \\\\u2014 profitable + growing. Focus on moat and scale.\\\\n';else if(isProf&&nr>0)r+='\\\\u2022 Risk:  \\\\uD83D\\\\uDFE1 Moderate \\\\u2014 profitable but slow growth. Boost marketing.\\\\n';else if(!isProf&&rCurr>=12)r+='\\\\u2022 Risk:  \\\\uD83D\\\\uDFE1 Manageable \\\\u2014 burning but decent runway. Plan breakeven path.\\\\n';else if(!isProf&&rCurr<12&&rCurr>=6)r+='\\\\u2022 Risk:  \\\\uD83D\\\\uDFE0 Elevated \\\\u2014 under 12 months runway. Prioritize revenue growth.\\\\n';else if(!isProf&&rCurr<6)r+='\\\\u2022 Risk:  \\\\uD83D\\\\uDD34 Urgent \\\\u2014 under 6 months runway. Cut expenses now.\\\\n';var prio=1;r+='\\\\n\\\\uD83D\\\\uDD25 Top Priorities:\\\\n';if(cr>0&&mr>0){var fasterCut=Math.max(0,cr-1);r+='  '+prio+'. Cut churn from '+pct(cr)+' \\\\u2192 '+pct(fasterCut)+' \\\\u2192 $10K MRR sooner.\\\\n';prio++;}if(isProf&&ex>0){r+='  '+prio+'. With '+fmt(netInc)+'/mo profit, reinvest in ads or part-time help.\\\\n';prio++;}if(rCurr<12&&mr>0){r+='  '+prio+'. Runway under 12 months \\\\u2014 build a breakeven plan this week.\\\\n';prio++;}if(nr<0.02&&mr>0){r+='  '+prio+'. Growth under 2%/mo \\\\u2014 test one new acquisition channel.\\\\n';prio++;}if(prio===1){r+='  1. Runway is healthy. Focus on product quality and customer retention.\\\\n';}if(mr>0||ex>0){var beMRR2=ex;var beLab=mr>=beMRR2?'\\\\uD83D\\\\uDFE2':'\\\\uD83D\\\\uDD34';r+='\\\\n\\\\u2696\\\\uFE0F Break-Even Revenue\\\\n';r+='\\\\u2022 '+beLab+' Break-even MRR: '+fmt(ex)+'/mo (covers monthly expenses)\\\\n';if(mr>=beMRR2){r+='\\\\u2022 Current MRR '+fmt(mr)+' is above break-even by '+fmt(mr-beMRR2)+'/mo.\\\\n';}else{var gap2=beMRR2-mr;r+='\\\\u2022 Gap to break-even: '+fmt(gap2)+'/mo. Closing this puts you at default-alive.\\\\n';}}var tipStr;if(cash>0&&rCurr>18){tipStr='\\\\uD83D\\\\uDCA1 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) \\\\u2014 not conservative hoarding.';}else if(rCurr>0&&rCurr<=6){tipStr='\\\\uD83D\\\\uDCA1 Tip: Sub-6-month runway means raise now or cut hard. Delaying 30 days = raising from a weaker position. Cut discretionary spend first.';}else if(mBurn>0&&mr>0&&mr/ex<0.3){tipStr='\\\\uD83D\\\\uDCA1 Tip: Your revenue covers under 30% of expenses. Focus 80% of effort on the 1-2 channels with highest ROI, not on cost-cutting.';}else{tipStr='\\\\uD83D\\\\uDCA1 Tip: Re-project monthly. Inputs change (churn, hiring, ad costs). The plan that got you here won\\\\'t get you there.';}r+='\\\\n'+tipStr+'\\\\n';return [r];\"}";
 const exportLabel = "Export";

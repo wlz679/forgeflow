@@ -143,7 +143,8 @@ The two scripts together implement a `pnpm sync` convenience script.
 ## Notes for Future Sessions
 
 - **CLAUDE.md is THE source of truth** for future AI sessions. Keep it accurate.
-- **Engine pattern is strict** — `staticExamples` is hand-baked (codegen for it is TODO). `customFn` is minified; codegen only updates the data table portion, not the logic.
+- **Engine pattern is strict** — `calculate()` is the source of truth; `staticExamples[0]` is auto-regenerated from it by `scripts/codegen-examples.mjs`. **After editing `calculate()` in any engine, run `node scripts/codegen-examples.mjs` before committing** — `staticExamples[0]` will drift otherwise (the v3 bug found in commit 1385725 was caused by skipping this step). Use `node scripts/codegen-examples.mjs --check` in CI / pre-commit to detect drift; exit 1 means someone forgot to regen. `customFn` is minified; `codegen-customfn.mjs` only auto-updates the data-table portion (PRICING.json-driven), the logic is hand-minified.
+- **Pre-commit hook** (`.githooks/pre-commit`) runs `codegen-examples.mjs --check` automatically. Enable once after clone: `git config core.hooksPath .githooks`. Bypass with `git commit --no-verify` (only when intentional).
 - **PRICING.json is the source of truth** for 8 engines. To add a new model, edit JSON and run `pnpm sync`.
 - **Visual diagrams** preferred over text for page/UI discussions.
 - **Don't over-engineer** — match existing style; avoid speculative abstractions.

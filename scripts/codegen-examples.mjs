@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 // scripts/codegen-examples.mjs
-// Regenerate staticExamples[0] for the 16 engines (8 AI cost + 8 business)
+// Regenerate staticExamples[0] for the 32 engines (8 AI cost + 24 business)
 // by calling their calculate() function with default inputs.
 //
 // Run after codegen-customfn.mjs (which is run after sync-pricing.mjs).
 // The full chain: pnpm sync = sync-pricing → codegen-customfn → codegen-examples → build.
 // Manual run for business-engine updates: `node scripts/codegen-examples.mjs` (no prereq).
+//
+// --check mode: run codegen and compare against existing staticExamples[0].
+// Exits 1 if any engine has drift, 0 if all match. Use in CI / pre-commit
+// to catch "calculate() changed but staticExamples not regenerated" bugs.
 //
 // Uses tsx to load TypeScript engines at codegen time.
 
@@ -13,6 +17,8 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+const CHECK_MODE = process.argv.includes('--check');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -51,6 +57,8 @@ const ENGINES = [
   { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',   defaultInputs: { subscriberCount: '10000', openRate: '25', clickRate: '5', conversionRate: '2', avgOrderValue: '50', emailsPerMonth: '4', unsubscribeRate: '0.5' } },
   { file: 'hourly-vs-fixed-calculator.ts',     slug: 'solopreneur-hourly-vs-fixed-calculator',      defaultInputs: { annualIncomeGoal: '100000', billableHoursPerWeek: '30', weeksOffPerYear: '4', annualExpenses: '5000' } },
   { file: 'productivity-score.ts',             slug: 'solopreneur-productivity-score',              defaultInputs: { weeklyDeepWorkHours: '15', toolsUsed: '5', meetingsPerWeek: '3' } },
+  { file: 'mrr-calculator.ts',                  slug: 'solopreneur-mrr-calculator',                  defaultInputs: { subscriberCount: '500', monthlyPrice: '29', monthlyChurnRate: '3', expansionMRR: '800', newSubsPerMonth: '100', contractionMRR: '150', reactivationMRR: '100' } },
+  { file: 'revenue-projector.ts',              slug: 'solopreneur-revenue-projector',              defaultInputs: { currentMRR: '5000', monthlyGrowthRate: '8', monthlyChurnRate: '3', monthlyExpenses: '3000', cashOnHand: '60000', arpu: '25', customGrowthRate: '0', cac: '200', months: '12' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
@@ -104,6 +112,7 @@ console.log(`[codegen-examples] Got results for ${Object.keys(results).length} e
 
 // Update each engine's staticExamples[0]
 let totalUpdated = 0;
+const driftedFiles = [];
 for (const { file, slug } of ENGINES) {
   const fp = path.join(ROOT, 'src', 'engines', file);
   let c = fs.readFileSync(fp, 'utf8');
@@ -188,10 +197,37 @@ for (const { file, slug } of ENGINES) {
 
   // Serialize the new first example as a JS string literal
   const newStr = firstLine.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-  c = c.slice(0, i) + "'" + newStr + "'" + c.slice(j + 1);
-  fs.writeFileSync(fp, c);
-  console.log(`  ✓ ${file} (${firstLine.length} chars, ${newExample.length} lines)`);
-  totalUpdated++;
+  const currentStr = c.slice(i + 1, j);
+
+  if (CHECK_MODE) {
+    // --check mode: compare current vs. regenerated; report drift, exit 1 if any.
+    if (currentStr === newStr) {
+      console.log(`  ✓ ${file}: in sync`);
+    } else {
+      console.error(`  ✗ ${file}: DRIFT detected (${currentStr.length} chars current vs ${newStr.length} chars regenerated)`);
+      console.error(`    Run: node scripts/codegen-examples.mjs (without --check) to fix`);
+      driftedFiles.push(file);
+    }
+  } else {
+    c = c.slice(0, i) + "'" + newStr + "'" + c.slice(j + 1);
+    fs.writeFileSync(fp, c);
+    console.log(`  ✓ ${file} (${firstLine.length} chars, ${newExample.length} lines)`);
+    totalUpdated++;
+  }
+}
+
+// --check mode: exit 1 if any drift was detected, so CI / pre-commit can catch it.
+if (CHECK_MODE) {
+  try { fs.unlinkSync(runnerPath); } catch {} // cleanup before exit
+  if (driftedFiles.length > 0) {
+    console.error(`\n[codegen-examples] --check FAILED: ${driftedFiles.length} engine(s) have drifted staticExamples[0]:`);
+    for (const f of driftedFiles) console.error(`  - ${f}`);
+    console.error(`\nFix: run \`node scripts/codegen-examples.mjs\` to regenerate, then commit.`);
+    process.exit(1);
+  } else {
+    console.log(`\n[codegen-examples] --check PASSED: all ${ENGINES.length} engines in sync.`);
+    process.exit(0);
+  }
 }
 
 // Clean up runner script
