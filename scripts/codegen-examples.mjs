@@ -49,6 +49,8 @@ const ENGINES = [
   { file: 'project-profitability-calculator.ts', slug: 'solopreneur-project-profitability-calculator', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
   { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',     defaultInputs: { monthlyTraffic: '50000', conversionRate: '2', avgCommission: '50', monthlyCost: '200' } },
   { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',   defaultInputs: { subscriberCount: '10000', openRate: '25', clickRate: '5', conversionRate: '2', avgOrderValue: '50', emailsPerMonth: '4', unsubscribeRate: '0.5' } },
+  { file: 'hourly-vs-fixed-calculator.ts',     slug: 'solopreneur-hourly-vs-fixed-calculator',      defaultInputs: { annualIncomeGoal: '100000', billableHoursPerWeek: '30', weeksOffPerYear: '4', annualExpenses: '5000' } },
+  { file: 'productivity-score.ts',             slug: 'solopreneur-productivity-score',              defaultInputs: { weeklyDeepWorkHours: '15', toolsUsed: '5', meetingsPerWeek: '3' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
