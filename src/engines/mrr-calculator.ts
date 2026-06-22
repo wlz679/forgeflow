@@ -231,6 +231,30 @@ function calculateMRR(inputs: Record<string, string>): string[] {
     }
   }
 
+  // ═══ 7. Break-Even Growth ═══
+  if (startingMRR > 0 && price > 0) {
+    const breakEvenSubs = Math.ceil((churnedMRR + contractionMRR - expansionMRR - reactivationMRR) / price);
+    const breakEvenNote = breakEvenSubs < 0
+      ? "• 🟢 Break-even below 0 — your expansion + reactivation already outpaces losses."
+      : newSubs >= breakEvenSubs
+        ? "• 🟢 Break-even new subs/mo: " + breakEvenSubs + "  — you're growing above break-even (" + newSubs + " actual)."
+        : "• 🔴 Break-even new subs/mo: " + breakEvenSubs + "  — you're below break-even (" + newSubs + " actual). MRR is shrinking.";
+    result += "\n⚖️ Break-Even Growth\n" + breakEvenNote + "\n";
+  }
+
+  // ═══ 8. Tip ═══
+  let tip: string;
+  if (nrr !== null && nrr >= 110) {
+    tip = "💡 Tip: Best-in-class NRR — protect the expansion motion that drives it. Don't fix what isn't broken.";
+  } else if (churnRate < 2 && churnRate > 0) {
+    tip = "💡 Tip: Sub-2% churn is your unfair advantage. Don't raise prices until you've maxed expansion revenue per account.";
+  } else if (churnRate >= 5) {
+    tip = "💡 Tip: Lowering churn from " + churnRate.toFixed(1) + "% to 3% roughly doubles customer lifetime. Retention is your #1 lever right now.";
+  } else {
+    tip = "💡 Tip: Track your Quick Ratio weekly — above 4 means growth is efficient. Below 2 means you're scaling losses faster than gains.";
+  }
+  result += "\n" + tip + "\n";
+
   return [result];
 }
 
@@ -371,6 +395,13 @@ const customFn =
   "if(nrr!==null&&newNRR2!==null){r+='  NRR improves: '+pct(nrr)+' \\u2192 '+pct(newNRR2)+'\\n';}" +
   "}" +
   "}" +
+  "if(startingMRR>0&&price>0){var beSubs=Math.ceil((churnedMRR+contractionMRR-expansionMRR-reactivationMRR)/price);var beNote=beSubs<0?'\\u2022 \\uD83D\\uDFE2 Break-even below 0 \\u2014 your expansion + reactivation already outpaces losses.':newSubs>=beSubs?'\\u2022 \\uD83D\\uDFE2 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re growing above break-even ('+newSubs+' actual).':'\\u2022 \\uD83D\\uDD34 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re below break-even ('+newSubs+' actual). MRR is shrinking.';r+='\\n\\u2696\\uFE0F Break-Even Growth\\n'+beNote+'\\n';}" +
+  "var tipStr;" +
+  "if(nrr!==null&&nrr>=110){tipStr='\\uD83D\\uDCA1 Tip: Best-in-class NRR \\u2014 protect the expansion motion that drives it. Don\\'t fix what isn\\'t broken.';}" +
+  "else if(churnRate<2&&churnRate>0){tipStr='\\uD83D\\uDCA1 Tip: Sub-2% churn is your unfair advantage. Don\\'t raise prices until you\\'ve maxed expansion revenue per account.';}" +
+  "else if(churnRate>=5){tipStr='\\uD83D\\uDCA1 Tip: Lowering churn from '+churnRate.toFixed(1)+'% to 3% roughly doubles customer lifetime. Retention is your #1 lever right now.';}" +
+  "else{tipStr='\\uD83D\\uDCA1 Tip: Track your Quick Ratio weekly \\u2014 above 4 means growth is efficient. Below 2 means you\\'re scaling losses faster than gains.';}" +
+  "r+='\\n'+tipStr+'\\n';" +
   "return [r];";
 
 const engine: ToolEngine = {

@@ -437,6 +437,33 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     result += "  1. Runway is healthy. Focus on product quality and customer retention.\n";
   }
 
+  // ═══ Break-Even Revenue ═══
+  if (currentMRR > 0 || monthlyExpenses > 0) {
+    const breakEvenMRR = monthlyExpenses;
+    const beLabel = currentMRR >= breakEvenMRR ? "🟢" : "🔴";
+    result += "\n⚖️ Break-Even Revenue\n";
+    result += "• " + beLabel + " Break-even MRR: " + fmt(monthlyExpenses) + "/mo (covers monthly expenses)\n";
+    if (currentMRR >= breakEvenMRR) {
+      result += "• Current MRR " + fmt(currentMRR) + " is above break-even by " + fmt(currentMRR - breakEvenMRR) + "/mo.\n";
+    } else {
+      const gap = breakEvenMRR - currentMRR;
+      result += "• Gap to break-even: " + fmt(gap) + "/mo. Closing this puts you at default-alive.\n";
+    }
+  }
+
+  // ═══ Tip ═══
+  let tip: string;
+  if (cashOnHand > 0 && runwayCurrent > 18) {
+    tip = "💡 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) — not conservative hoarding.";
+  } else if (runwayCurrent > 0 && runwayCurrent <= 6) {
+    tip = "💡 Tip: Sub-6-month runway means raise now or cut hard. Delaying 30 days = raising from a weaker position. Cut discretionary spend first.";
+  } else if (monthlyBurn > 0 && currentMRR > 0 && currentMRR / monthlyExpenses < 0.3) {
+    tip = "💡 Tip: Your revenue covers under 30% of expenses. Focus 80% of effort on the 1-2 channels with highest ROI, not on cost-cutting.";
+  } else {
+    tip = "💡 Tip: Re-project monthly. Inputs change (churn, hiring, ad costs). The plan that got you here won't get you there.";
+  }
+  result += "\n" + tip + "\n";
+
   return [result];
 }
 
@@ -679,6 +706,13 @@ const customFn =
   "if(rCurr<12&&mr>0){r+='  '+prio+'. Runway under 12 months \\u2014 build a breakeven plan this week.\\n';prio++;}" +
   "if(nr<0.02&&mr>0){r+='  '+prio+'. Growth under 2%/mo \\u2014 test one new acquisition channel.\\n';prio++;}" +
   "if(prio===1){r+='  1. Runway is healthy. Focus on product quality and customer retention.\\n';}" +
+  "if(mr>0||ex>0){var beMRR2=ex;var beLab=mr>=beMRR2?'\\uD83D\\uDFE2':'\\uD83D\\uDD34';r+='\\n\\u2696\\uFE0F Break-Even Revenue\\n';r+='\\u2022 '+beLab+' Break-even MRR: '+fmt(ex)+'/mo (covers monthly expenses)\\n';if(mr>=beMRR2){r+='\\u2022 Current MRR '+fmt(mr)+' is above break-even by '+fmt(mr-beMRR2)+'/mo.\\n';}else{var gap2=beMRR2-mr;r+='\\u2022 Gap to break-even: '+fmt(gap2)+'/mo. Closing this puts you at default-alive.\\n';}}" +
+  "var tipStr;" +
+  "if(cash>0&&rCurr>18){tipStr='\\uD83D\\uDCA1 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) \\u2014 not conservative hoarding.';}" +
+  "else if(rCurr>0&&rCurr<=6){tipStr='\\uD83D\\uDCA1 Tip: Sub-6-month runway means raise now or cut hard. Delaying 30 days = raising from a weaker position. Cut discretionary spend first.';}" +
+  "else if(mBurn>0&&mr>0&&mr/ex<0.3){tipStr='\\uD83D\\uDCA1 Tip: Your revenue covers under 30% of expenses. Focus 80% of effort on the 1-2 channels with highest ROI, not on cost-cutting.';}" +
+  "else{tipStr='\\uD83D\\uDCA1 Tip: Re-project monthly. Inputs change (churn, hiring, ad costs). The plan that got you here won\\'t get you there.';}" +
+  "r+='\\n'+tipStr+'\\n';" +
 
   "return [r];";
 
