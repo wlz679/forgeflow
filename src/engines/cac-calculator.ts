@@ -85,6 +85,39 @@ function calculateCAC(inputs: Record<string, string>): string[] {
     mainResult += '\\n• ⚠️ Cannot model — enter marketing spend, sales spend, and new customers to see scenarios.';
   }
 
+  // ⚖️ Break-Even (v3)
+  if (avgRevenuePerCustomer > 0 && cac > 0) {
+    const targetLtv = cac * 3; // 3:1 LTV:CAC benchmark
+    const ltvNow = grossProfitPerCustomer * 12; // conservative 12-month LTV at current GR
+    const ltvCacNow = ltvNow / cac;
+    let beLine = '\\n\\n⚖️ Break-Even\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    if (ltvCacNow >= 3) {
+      beLine += '\\n• 🟢 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — already above the 3:1 break-even. Healthy to scale spend.';
+    } else if (ltvCacNow >= 1) {
+      beLine += '\\n• 🟡 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — above 1:1 (not losing money) but below 3:1 ideal.';
+      beLine += '\\n• To reach 3:1 at current 12-mo LTV ($' + Math.round(ltvNow).toLocaleString() + '):  target CAC = $' + Math.round(targetLtv).toLocaleString();
+    } else {
+      beLine += '\\n• 🔴 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — losing money per customer. Stop scaling spend until ratio ≥ 1:1.';
+    }
+    if (paybackMonths > 0) {
+      beLine += '\\n• Payback break-even:  ≤ 12 months. Your payback = ' + paybackMonths.toFixed(1) + ' mo.';
+    }
+    mainResult += beLine;
+  }
+
+  // 🎯 CAC Milestones (v3)
+  if (cac > 0 && grossProfitPerCustomer > 0) {
+    mainResult += '\\n\\n🎯 CAC Milestones\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    mainResult += '\\n• ≤ 6 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 6).toLocaleString();
+    mainResult += '\\n• ≤ 12 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 12).toLocaleString();
+    mainResult += '\\n• ≤ 18 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 18).toLocaleString();
+    if (newCustomers > 0 && totalSpend > 0) {
+      const targetCac = grossProfitPerCustomer * 12;
+      const budgetFor100 = Math.round(targetCac * 100); // 100 customers at 12-mo payback
+      mainResult += '\\n• To acquire 100 customers at 12-mo payback:  budget $' + budgetFor100.toLocaleString();
+    }
+  }
+
   results.push(mainResult);
 
   // 5 comparison scenarios at different spend levels
@@ -149,6 +182,8 @@ const customFn =
   "mr6+='\\n\\uD83D\\uDCA1 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.';var results=[mr6];" +
   "var ss5=[{l:'Cut spend 50%',mk:ms*0.5,sk:ss*0.5},{l:'Cut spend 25%',mk:ms*0.75,sk:ss*0.75},{l:'Current',mk:ms,sk:ss},{l:'Increase spend 25%',mk:ms*1.25,sk:ss*1.25},{l:'Double spend',mk:ms*2,sk:ss*2}];" +
   "for(var i=0;i<ss5.length;i++){var st=ss5[i].mk+ss5[i].sk;var sc2=nc2>0&&ts>0?Math.round(nc2*(st/ts)):nc2;var cacS=sc2>0?st/sc2:0;var pbS=gpc>0?cacS/gpc:0;results.push(ss5[i].l+': $'+Math.round(st).toLocaleString()+' total spend, '+sc2+' customers, CAC '+fmt4(cacS)+(arc>0?', Payback '+pbS.toFixed(1)+' mo':''));}" +
+  "if(arc>0&&cac2>0){var tl2=cac2*3;var ln2=gpc*12;var lcn2=ln2/cac2;var bl2='\\n\\n\\u2696\\uFE0F Break-Even\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';if(lcn2>=3)bl2+='\\n\\u2022 \\uD83D\\uDFE2 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 already above the 3:1 break-even. Healthy to scale spend.';else if(lcn2>=1){bl2+='\\n\\u2022 \\uD83D\\uDFE1 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 above 1:1 (not losing money) but below 3:1 ideal.\\n\\u2022 To reach 3:1 at current 12-mo LTV ($'+Math.round(ln2).toLocaleString()+'):  target CAC = $'+Math.round(tl2).toLocaleString();}else bl2+='\\n\\u2022 \\uD83D\\uDD34 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 losing money per customer. Stop scaling spend until ratio \\u2265 1:1.';if(pbm>0)bl2+='\\n\\u2022 Payback break-even:  \\u2264 12 months. Your payback = '+pbm.toFixed(1)+' mo.';mr6+=bl2;}" +
+  "if(cac2>0&&gpc>0){mr6+='\\n\\n\\uD83C\\uDFAF CAC Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';mr6+='\\n\\u2022 \\u2264 6 months payback:  CAC \\u2264 $'+Math.round(gpc*6).toLocaleString();mr6+='\\n\\u2022 \\u2264 12 months payback:  CAC \\u2264 $'+Math.round(gpc*12).toLocaleString();mr6+='\\n\\u2022 \\u2264 18 months payback:  CAC \\u2264 $'+Math.round(gpc*18).toLocaleString();if(nc2>0&&ts>0){var tc3=gpc*12;var b4=Math.round(tc3*100);mr6+='\\n\\u2022 To acquire 100 customers at 12-mo payback:  budget $'+b4.toLocaleString();}}" +
   "return results;";
 
 const engine: ToolEngine = {
@@ -172,7 +207,7 @@ const engine: ToolEngine = {
     return calculateCAC(inputs);
   },
   staticExamples: [
-    '\\uD83C\\uDFAF Customer Acquisition Cost (CAC)\\n\\n\\u2022 Marketing Spend: $5,000 (62.5% of total)\\n\\u2022 Sales Spend: $3,000 (37.5% of total)\\n\\u2022 Total Acquisition Spend: $8,000\\n\\u2022 New Customers Acquired: 100\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDCCA Key Results:\\n\\n\\u2022 Customer Acquisition Cost (CAC): $80 per customer\\n\\n\\n\\uD83D\\uDCA1 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.\\n\\n🩺 CAC Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 CAC $80 is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• Cut CAC in half:  $40  (assumes same spend, better conversion)\\n• Double acquisition:  100 → 200 customers at $40/customer\\n• Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+\\n• Reduce spend 20%:  Same customers → $64 CAC (if conversion maintained)\nCut spend 50%: $4,000 total spend, 50 customers, CAC $80\nCut spend 25%: $6,000 total spend, 75 customers, CAC $80\nCurrent: $8,000 total spend, 100 customers, CAC $80\nIncrease spend 25%: $10,000 total spend, 125 customers, CAC $80\nDouble spend: $16,000 total spend, 200 customers, CAC $80',
+    '\\uD83C\\uDFAF Customer Acquisition Cost (CAC)\\n\\n\\u2022 Marketing Spend: $5,000 (62.5% of total)\\n\\u2022 Sales Spend: $3,000 (37.5% of total)\\n\\u2022 Total Acquisition Spend: $8,000\\n\\u2022 New Customers Acquired: 100\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDCCA Key Results:\\n\\n\\u2022 Customer Acquisition Cost (CAC): $80 per customer\\n\\n\\n\\uD83D\\uDCA1 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.\\n\\n🩺 CAC Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 CAC $80 is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• Cut CAC in half:  $40  (assumes same spend, better conversion)\\n• Double acquisition:  100 → 200 customers at $40/customer\\n• Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+\\n• Reduce spend 20%:  Same customers → $64 CAC (if conversion maintained)\nCut spend 50%: $4,000 total spend, 50 customers, CAC $80\nCut spend 25%: $6,000 total spend, 75 customers, CAC $80\nCurrent: $8,000 total spend, 100 customers, CAC $80\nIncrease spend 25%: $10,000 total spend, 125 customers, CAC $80\nDouble spend: $16,000 total spend, 200 customers, CAC $80\\n\\n⚖️ Break-Even\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 LTV:CAC = 6.0:1 — already above the 3:1 break-even. Healthy to scale spend.\\n• Payback break-even:  ≤ 12 months. Your payback = 2.0 mo.\\n\\n🎯 CAC Milestones\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ≤ 6 months payback:  CAC ≤ $240\\n• ≤ 12 months payback:  CAC ≤ $480\\n• ≤ 18 months payback:  CAC ≤ $720\\n• To acquire 100 customers at 12-mo payback:  budget $48,000',
     'Cut spend 50%: $4,000 total spend, 20 customers, CAC $200, Payback 5.0 mo',
     'Cut spend 25%: $6,000 total spend, 30 customers, CAC $200, Payback 5.0 mo',
     'Current: $8,000 total spend, 40 customers, CAC $200, Payback 5.0 mo',
