@@ -94,6 +94,11 @@ function calculateMarketSize(inputs: Record<string, string>): string[] {
     else if (p100k > 10) result += "• ⚠️ You need over 10% market share to reach $100K. Either the market is very small or your pricing is too low — adjust one of them.\n";
   }
 
+  // Penetration/reach metrics — referenced by 🩺 Health and 🔄 What-If below
+  // (was previously undefined; fix 2026-06-22)
+  const penetrationRate = 1; // assume 1% reachable at "Small team" tier
+  const reachable = totalCustomers * (penetrationRate / 100);
+
   // 🩺 Market Health (v3)
   if (totalCustomers <= 0) {
     result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0";
