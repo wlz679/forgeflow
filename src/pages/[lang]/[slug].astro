@@ -740,6 +740,108 @@ const schema = JSON.stringify({
                   </div>
                 </div>
               )}
+              {slug === 'solopreneur-hourly-vs-fixed-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-hourly-vs-fixed">
+                    {[
+                      { emoji:'🏃', key:'freelancer', annualincomegoal:'80000', billablehoursperweek:'30', weeksoffperyear:'4', annualexpenses:'5000' },
+                      { emoji:'🎯', key:'specialist', annualincomegoal:'150000', billablehoursperweek:'25', weeksoffperyear:'6', annualexpenses:'8000' },
+                      { emoji:'⏰', key:'part-time', annualincomegoal:'30000', billablehoursperweek:'15', weeksoffperyear:'4', annualexpenses:'2000' },
+                      { emoji:'🎓', key:'consultant', annualincomegoal:'200000', billablehoursperweek:'20', weeksoffperyear:'8', annualexpenses:'12000' },
+                      { emoji:'🌐', key:'remote-stable', annualincomegoal:'95000', billablehoursperweek:'32', weeksoffperyear:'6', annualexpenses:'6000' },
+                      { emoji:'🏢', key:'agency', annualincomegoal:'500000', billablehoursperweek:'40', weeksoffperyear:'4', annualexpenses:'80000' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualincomegoal={p.annualincomegoal} data-billablehoursperweek={p.billablehoursperweek} data-weeksoffperyear={p.weeksoffperyear} data-annualexpenses={p.annualexpenses}>{p.emoji} {t(`tools.solopreneur-hourly-vs-fixed-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-meeting-cost-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-meeting-cost">
+                    {[
+                      { emoji:'🏃', key:'standup', attendees:'6', avghourlyrate:'75', meetingminutes:'15', meetingsperweek:'5' },
+                      { emoji:'📅', key:'weekly', attendees:'8', avghourlyrate:'80', meetingminutes:'60', meetingsperweek:'1' },
+                      { emoji:'👀', key:'review', attendees:'5', avghourlyrate:'90', meetingminutes:'90', meetingsperweek:'2' },
+                      { emoji:'🙌', key:'all-hands', attendees:'40', avghourlyrate:'70', meetingminutes:'60', meetingsperweek:'0.2' },
+                      { emoji:'🤝', key:'1on1', attendees:'2', avghourlyrate:'80', meetingminutes:'30', meetingsperweek:'1' },
+                      { emoji:'🏛️', key:'board', attendees:'7', avghourlyrate:'250', meetingminutes:'120', meetingsperweek:'0.25' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-attendees={p.attendees} data-avghourlyrate={p.avghourlyrate} data-meetingminutes={p.meetingminutes} data-meetingsperweek={p.meetingsperweek}>{p.emoji} {t(`tools.solopreneur-meeting-cost-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-employee-cost-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-employee-cost">
+                    {[
+                      { emoji:'👶', key:'junior', annualsalary:'55000', benefitspercentage:'25', location:'us' },
+                      { emoji:'👨', key:'mid', annualsalary:'90000', benefitspercentage:'30', location:'us' },
+                      { emoji:'👴', key:'senior', annualsalary:'140000', benefitspercentage:'35', location:'us' },
+                      { emoji:'🇪🇺', key:'europe', annualsalary:'70000', benefitspercentage:'40', location:'europe' },
+                      { emoji:'🌏', key:'asia', annualsalary:'35000', benefitspercentage:'20', location:'asia' },
+                      { emoji:'🌐', key:'remote', annualsalary:'80000', benefitspercentage:'15', location:'remote' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualsalary={p.annualsalary} data-benefitspercentage={p.benefitspercentage} data-location={p.location}>{p.emoji} {t(`tools.solopreneur-employee-cost-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-productivity-score' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-productivity-score">
+                    {[
+                      { emoji:'🏔️', key:'peak', weeklydeepworkhours:'25', toolsused:'3', meetingsperweek:'1' },
+                      { emoji:'⚖️', key:'balanced', weeklydeepworkhours:'15', toolsused:'6', meetingsperweek:'3' },
+                      { emoji:'🌪️', key:'chaotic', weeklydeepworkhours:'5', toolsused:'15', meetingsperweek:'12' },
+                      { emoji:'⬜', key:'minimalist', weeklydeepworkhours:'18', toolsused:'2', meetingsperweek:'0' },
+                      { emoji:'🧠', key:'deep-work', weeklydeepworkhours:'30', toolsused:'4', meetingsperweek:'0' },
+                      { emoji:'🗣️', key:'meeting-heavy', weeklydeepworkhours:'6', toolsused:'12', meetingsperweek:'10' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-weeklydeepworkhours={p.weeklydeepworkhours} data-toolsused={p.toolsused} data-meetingsperweek={p.meetingsperweek}>{p.emoji} {t(`tools.solopreneur-productivity-score.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-saas-pricing-planner' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-saas-pricing-planner">
+                    {[
+                      { emoji:'🏢', key:'b2b-mid', producttype:'SaaS', targetcustomer:'b2b', competitorprice:'49' },
+                      { emoji:'🛠️', key:'devtools', producttype:'SaaS', targetcustomer:'developers', competitorprice:'19' },
+                      { emoji:'💎', key:'premium-course', producttype:'course', targetcustomer:'creators', competitorprice:'199' },
+                      { emoji:'📕', key:'ebook', producttype:'ebook', targetcustomer:'b2c', competitorprice:'9' },
+                      { emoji:'📧', key:'newsletter', producttype:'newsletter', targetcustomer:'b2c', competitorprice:'7' },
+                      { emoji:'📄', key:'template', producttype:'template', targetcustomer:'creators', competitorprice:'29' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-producttype={p.producttype} data-targetcustomer={p.targetcustomer} data-competitorprice={p.competitorprice}>{p.emoji} {t(`tools.solopreneur-saas-pricing-planner.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-freelance-tax-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-freelance-tax">
+                    {[
+                      { emoji:'🇺🇸', key:'us-mid', annualincome:'80000', businessexpenses:'5000', country:'us' },
+                      { emoji:'🇺🇸', key:'us-high', annualincome:'150000', businessexpenses:'15000', country:'us' },
+                      { emoji:'🇬🇧', key:'uk', annualincome:'60000', businessexpenses:'3000', country:'uk' },
+                      { emoji:'🇨🇦', key:'canada', annualincome:'70000', businessexpenses:'5000', country:'canada' },
+                      { emoji:'🇦🇺', key:'australia', annualincome:'90000', businessexpenses:'10000', country:'australia' },
+                      { emoji:'🇩🇪', key:'germany', annualincome:'50000', businessexpenses:'2000', country:'germany' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualincome={p.annualincome} data-businessexpenses={p.businessexpenses} data-country={p.country}>{p.emoji} {t(`tools.solopreneur-freelance-tax-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {engine.inputs.map(input => (
                 input.type === 'select' ? (
                   <div class="mb-4">
@@ -872,74 +974,6 @@ const schema = JSON.stringify({
                   data-provider="runpod" data-gputype="H100" data-gpucount="8" data-hoursperday="24" data-pricingtier="on-demand" data-includestorage="yes">
                   {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.pro-8h100', lang)}
                 </button>
-              </div>
-            )}
-            {/* ===== 24 Business Calculator Presets ===== */}
-            {/* removed-by-task-5: freelance-rate + course-pricing + time-value + sponsorship-rate */}
-            {slug === 'solopreneur-hourly-vs-fixed-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincomegoal="100000" data-billablehoursperweek="30" data-weeksoffperyear="4">{t('tools.solopreneur-hourly-vs-fixed-calculator.preset.freelancer', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincomegoal="200000" data-billablehoursperweek="35" data-weeksoffperyear="6">{t('tools.solopreneur-hourly-vs-fixed-calculator.preset.specialist', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincomegoal="50000" data-billablehoursperweek="20" data-weeksoffperyear="8">{t('tools.solopreneur-hourly-vs-fixed-calculator.preset.part-time', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincomegoal="300000" data-billablehoursperweek="40" data-weeksoffperyear="4">{t('tools.solopreneur-hourly-vs-fixed-calculator.preset.consultant', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincomegoal="80000" data-billablehoursperweek="25" data-weeksoffperyear="10">{t('tools.solopreneur-hourly-vs-fixed-calculator.preset.remote-stable', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincomegoal="150000" data-billablehoursperweek="30" data-weeksoffperyear="8">{t('tools.solopreneur-hourly-vs-fixed-calculator.preset.agency', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-meeting-cost-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-attendees="4" data-avghourlyrate="75" data-meetingminutes="30" data-meetingsperweek="3">{t('tools.solopreneur-meeting-cost-calculator.preset.standup', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-attendees="6" data-avghourlyrate="100" data-meetingminutes="60" data-meetingsperweek="5">{t('tools.solopreneur-meeting-cost-calculator.preset.weekly', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-attendees="10" data-avghourlyrate="150" data-meetingminutes="60" data-meetingsperweek="2">{t('tools.solopreneur-meeting-cost-calculator.preset.review', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-attendees="15" data-avghourlyrate="200" data-meetingminutes="120" data-meetingsperweek="1">{t('tools.solopreneur-meeting-cost-calculator.preset.all-hands', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-attendees="3" data-avghourlyrate="50" data-meetingminutes="15" data-meetingsperweek="10">{t('tools.solopreneur-meeting-cost-calculator.preset.1on1', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-attendees="20" data-avghourlyrate="250" data-meetingminutes="180" data-meetingsperweek="1">{t('tools.solopreneur-meeting-cost-calculator.preset.board', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-employee-cost-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualsalary="50000" data-benefitspercentage="30" data-location="us">{t('tools.solopreneur-employee-cost-calculator.preset.junior', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualsalary="80000" data-benefitspercentage="30" data-location="us">{t('tools.solopreneur-employee-cost-calculator.preset.mid', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualsalary="150000" data-benefitspercentage="35" data-location="us">{t('tools.solopreneur-employee-cost-calculator.preset.senior', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualsalary="100000" data-benefitspercentage="25" data-location="europe">{t('tools.solopreneur-employee-cost-calculator.preset.europe', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualsalary="30000" data-benefitspercentage="20" data-location="asia">{t('tools.solopreneur-employee-cost-calculator.preset.asia', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualsalary="120000" data-benefitspercentage="30" data-location="remote">{t('tools.solopreneur-employee-cost-calculator.preset.remote', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-productivity-score' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-weeklydeepworkhours="20" data-toolsused="5" data-meetingsperweek="2">{t('tools.solopreneur-productivity-score.preset.peak', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-weeklydeepworkhours="12" data-toolsused="8" data-meetingsperweek="5">{t('tools.solopreneur-productivity-score.preset.balanced', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-weeklydeepworkhours="5" data-toolsused="12" data-meetingsperweek="10">{t('tools.solopreneur-productivity-score.preset.chaotic', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-weeklydeepworkhours="15" data-toolsused="3" data-meetingsperweek="1">{t('tools.solopreneur-productivity-score.preset.minimalist', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-weeklydeepworkhours="30" data-toolsused="6" data-meetingsperweek="0">{t('tools.solopreneur-productivity-score.preset.deep-work', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-weeklydeepworkhours="8" data-toolsused="15" data-meetingsperweek="8">{t('tools.solopreneur-productivity-score.preset.meeting-heavy', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-saas-pricing-planner' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-producttype="SaaS" data-targetcustomer="b2b" data-competitorprice="49">{t('tools.solopreneur-saas-pricing-planner.preset.b2b-mid', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-producttype="SaaS" data-targetcustomer="developers" data-competitorprice="19">{t('tools.solopreneur-saas-pricing-planner.preset.devtools', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-producttype="course" data-targetcustomer="creators" data-competitorprice="199">{t('tools.solopreneur-saas-pricing-planner.preset.premium-course', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-producttype="ebook" data-targetcustomer="b2c" data-competitorprice="9">{t('tools.solopreneur-saas-pricing-planner.preset.ebook', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-producttype="newsletter" data-targetcustomer="b2c" data-competitorprice="7">{t('tools.solopreneur-saas-pricing-planner.preset.newsletter', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-producttype="template" data-targetcustomer="creators" data-competitorprice="29">{t('tools.solopreneur-saas-pricing-planner.preset.template', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-freelance-tax-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincome="80000" data-businessexpenses="5000" data-country="us">{t('tools.solopreneur-freelance-tax-calculator.preset.us-mid', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincome="150000" data-businessexpenses="15000" data-country="us">{t('tools.solopreneur-freelance-tax-calculator.preset.us-high', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincome="60000" data-businessexpenses="3000" data-country="uk">{t('tools.solopreneur-freelance-tax-calculator.preset.uk', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincome="70000" data-businessexpenses="5000" data-country="canada">{t('tools.solopreneur-freelance-tax-calculator.preset.canada', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincome="90000" data-businessexpenses="10000" data-country="australia">{t('tools.solopreneur-freelance-tax-calculator.preset.australia', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualincome="50000" data-businessexpenses="2000" data-country="germany">{t('tools.solopreneur-freelance-tax-calculator.preset.germany', lang)}</button>
               </div>
             )}
             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm">
