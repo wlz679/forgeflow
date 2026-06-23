@@ -37,6 +37,36 @@ These must **NOT** be included in deploy commits. The deploy code work affects `
 
 ---
 
+## Implementation Status (2026-06-23) — Tasks 1-3 already done on master
+
+**Pre-flight verification on 2026-06-23 reveals Tasks 1-3 were already implemented on master BEFORE this amended plan was created.** The original plan-v1 (`2026-06-22-deploy-forgeflowkit.md`) was written *after* the code was committed, and listed these as "to do" — a documentation/reality drift that future agents could otherwise re-execute and duplicate.
+
+| Task | Status | Commit on master |
+|---|---|---|
+| 1. Plausible in BaseLayout | ✅ **DONE** | `53a01ea feat(analytics): add Plausible script to BaseLayout (deferred, 1KB, GDPR-friendly)` (2026-06-22 16:33) |
+| 2. `public/_headers` (Cloudflare Pages) | ✅ **DONE** | `bdbc19b feat(deploy): add Cloudflare Pages _headers (security + cache)` |
+| 3. `public/_redirects` (www→apex 301) | ✅ **DONE** | `838035b feat(deploy): add www→apex 301 redirect via Cloudflare Pages _redirects` |
+
+Verification (run from repo root on master):
+
+```bash
+# BaseLayout has Plausible with correct data-domain
+grep 'plausible.io' src/layouts/BaseLayout.astro
+
+# _headers and _redirects exist in public/
+ls public/_headers public/_redirects
+
+# Plausible is in the built dist output (140 of 141 pages — 1 page
+# likely uses a different layout or is a non-HTML asset like robots.txt)
+grep -lr 'plausible.io' dist/ | wc -l   # expect: 140
+```
+
+**When executing this plan, skip Tasks 1-3 entirely.** The sections below are retained as historical reference (what was done) and as the canonical specification if anything ever needs to be re-verified or re-applied. Do **not** re-add Plausible / `_headers` / `_redirects` — they already exist.
+
+**The only remaining work is Tasks 4-9** — all user-action (4-8) plus post-launch verification (9). The amended Task 4 and Task 7 below adapt the user-action steps for the **Tencent registrar + Cloudflare DNS-only** strategy.
+
+---
+
 ## Task 1: Add Plausible analytics to BaseLayout
 
 **Files:**
