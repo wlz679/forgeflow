@@ -570,6 +570,57 @@ const schema = JSON.stringify({
                   </div>
                 </div>
               )}
+              {slug === 'solopreneur-saas-valuation-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-saas-valuation">
+                    {[
+                      { emoji:'🚀', key:'early-traction', arr:'500000', growthrate:'100', grossmargin:'70', multiple:'8' },
+                      { emoji:'🚀', key:'high-growth', arr:'3000000', growthrate:'80', grossmargin:'75', multiple:'12' },
+                      { emoji:'🚀', key:'hyper-growth', arr:'10000000', growthrate:'120', grossmargin:'78', multiple:'18' },
+                      { emoji:'💰', key:'profitable', arr:'5000000', growthrate:'40', grossmargin:'80', multiple:'8' },
+                      { emoji:'📊', key:'flat', arr:'2000000', growthrate:'10', grossmargin:'65', multiple:'5' },
+                      { emoji:'🏢', key:'series-b', arr:'15000000', growthrate:'60', grossmargin:'75', multiple:'14' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-arr={p.arr} data-growthrate={p.growthrate} data-grossmargin={p.grossmargin} data-multiple={p.multiple}>{p.emoji} {t(`tools.solopreneur-saas-valuation-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-equity-dilution-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-equity-dilution">
+                    {[
+                      { emoji:'🌿', key:'seed', companyvaluation:'5000000', investmentamount:'500000', foundershares:'10000000' },
+                      { emoji:'🌳', key:'series-a', companyvaluation:'15000000', investmentamount:'3000000', foundershares:'10000000' },
+                      { emoji:'🏢', key:'series-b', companyvaluation:'50000000', investmentamount:'10000000', foundershares:'10000000' },
+                      { emoji:'🏙️', key:'series-c', companyvaluation:'150000000', investmentamount:'30000000', foundershares:'10000000' },
+                      { emoji:'🌱', key:'pre-seed', companyvaluation:'2000000', investmentamount:'200000', foundershares:'10000000' },
+                      { emoji:'🏛️', key:'late-stage', companyvaluation:'500000000', investmentamount:'50000000', foundershares:'10000000' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-companyvaluation={p.companyvaluation} data-investmentamount={p.investmentamount} data-foundershares={p.foundershares}>{p.emoji} {t(`tools.solopreneur-equity-dilution-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {slug === 'solopreneur-break-even-calculator' && (
+                <div class="mb-5">
+                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
+                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-break-even">
+                    {[
+                      { emoji:'🎨', key:'side-project', fixedcosts:'500', priceperunit:'50', variablecostperunit:'15' },
+                      { emoji:'🏪', key:'small-biz', fixedcosts:'5000', priceperunit:'100', variablecostperunit:'40' },
+                      { emoji:'🏪', key:'smb', fixedcosts:'20000', priceperunit:'500', variablecostperunit:'200' },
+                      { emoji:'🩸', key:'startup-loss', fixedcosts:'50000', priceperunit:'200', variablecostperunit:'80' },
+                      { emoji:'🛒', key:'ecom', fixedcosts:'3000', priceperunit:'30', variablecostperunit:'12' },
+                      { emoji:'🤏', key:'tight', fixedcosts:'8000', priceperunit:'25', variablecostperunit:'18' },
+                    ].map(p => (
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-fixedcosts={p.fixedcosts} data-priceperunit={p.priceperunit} data-variablecostperunit={p.variablecostperunit}>{p.emoji} {t(`tools.solopreneur-break-even-calculator.preset.${p.key}`, lang)}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {engine.inputs.map(input => (
                 input.type === 'select' ? (
                   <div class="mb-4">
@@ -705,39 +756,7 @@ const schema = JSON.stringify({
               </div>
             )}
             {/* ===== 24 Business Calculator Presets ===== */}
-            {slug === 'solopreneur-saas-valuation-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualrevenue="200000" data-growthrate="50" data-profitmargin="25">{t('tools.solopreneur-saas-valuation-calculator.preset.early-traction', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualrevenue="1000000" data-growthrate="80" data-profitmargin="20">{t('tools.solopreneur-saas-valuation-calculator.preset.high-growth', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualrevenue="5000000" data-growthrate="120" data-profitmargin="10">{t('tools.solopreneur-saas-valuation-calculator.preset.hyper-growth', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualrevenue="3000000" data-growthrate="30" data-profitmargin="40">{t('tools.solopreneur-saas-valuation-calculator.preset.profitable', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualrevenue="500000" data-growthrate="15" data-profitmargin="5">{t('tools.solopreneur-saas-valuation-calculator.preset.flat', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-annualrevenue="10000000" data-growthrate="60" data-profitmargin="30">{t('tools.solopreneur-saas-valuation-calculator.preset.series-b', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-equity-dilution-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-companyvaluation="5000000" data-investmentamount="1000000" data-foundershares="10000000">{t('tools.solopreneur-equity-dilution-calculator.preset.seed', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-companyvaluation="20000000" data-investmentamount="5000000" data-foundershares="10000000">{t('tools.solopreneur-equity-dilution-calculator.preset.series-a', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-companyvaluation="80000000" data-investmentamount="20000000" data-foundershares="10000000">{t('tools.solopreneur-equity-dilution-calculator.preset.series-b', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-companyvaluation="200000000" data-investmentamount="50000000" data-foundershares="10000000">{t('tools.solopreneur-equity-dilution-calculator.preset.series-c', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-companyvaluation="2000000" data-investmentamount="500000" data-foundershares="8000000">{t('tools.solopreneur-equity-dilution-calculator.preset.pre-seed', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-companyvaluation="1000000000" data-investmentamount="100000000" data-foundershares="10000000">{t('tools.solopreneur-equity-dilution-calculator.preset.late-stage', lang)}</button>
-              </div>
-            )}
-            {slug === 'solopreneur-break-even-calculator' && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlycosts="500" data-monthlyrevenue="1000" data-initialinvestment="5000">{t('tools.solopreneur-break-even-calculator.preset.side-project', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlycosts="3000" data-monthlyrevenue="5000" data-initialinvestment="20000">{t('tools.solopreneur-break-even-calculator.preset.small-biz', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlycosts="15000" data-monthlyrevenue="20000" data-initialinvestment="100000">{t('tools.solopreneur-break-even-calculator.preset.smb', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlycosts="50000" data-monthlyrevenue="30000" data-initialinvestment="500000">{t('tools.solopreneur-break-even-calculator.preset.startup-loss', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlycosts="200" data-monthlyrevenue="3000" data-initialinvestment="1000">{t('tools.solopreneur-break-even-calculator.preset.ecom', lang)}</button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-monthlycosts="10000" data-monthlyrevenue="12000" data-initialinvestment="50000">{t('tools.solopreneur-break-even-calculator.preset.tight', lang)}</button>
-              </div>
-            )}
+            {/* removed-by-task-4: saas-valuation + equity-dilution + break-even */}
             {slug === 'solopreneur-freelance-rate-calculator' && (
               <div class="flex flex-wrap gap-2 mt-3">
                 <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
