@@ -14,13 +14,15 @@ const en = {};
 const zh = {};
 
 // Match: 'some.key': { en: '...', zh: '...' },
-// Single-quoted strings; values may contain escaped quotes.
-const entryRe = /'([^']+)':\s*\{\s*en:\s*'((?:[^'\\]|\\.)*)',\s*zh:\s*'((?:[^'\\]|\\.)*)'\s*,?\s*\}/g;
+// Accepts both single- and double-quoted values (apostrophe-bearing English strings
+// use double quotes for `en` so the apostrophe doesn't need escaping).
+// Backreferences \2 and \4 capture the opening quote of en/zh values respectively.
+const entryRe = /'([^']+)':\s*\{\s*en:\s*(['"])((?:(?!\2)[^\\]|\\.)*)\2\s*,\s*zh:\s*(['"])((?:(?!\4)[^\\]|\\.)*)\4\s*,?\s*\}/g;
 
 let m;
 let count = 0;
 while ((m = entryRe.exec(content)) !== null) {
-  const [, key, enVal, zhVal] = m;
+  const [, key, , enVal, , zhVal] = m;
   en[key] = unescape(enVal);
   zh[key] = unescape(zhVal);
   count++;
