@@ -321,7 +321,6 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — minified JS port of calculate(). Variables: bt=bestTier, pic=perImageCost, mc=monthlyCost.
 const customFn =
-  "var PS={" +
   "'dalle-4':{n:'DALL-E 4',pi:0.12,is:false,sr:'',q:'Highest',rs:['1024×1024','1792×1024','1024×1792'],od:1}," +
   "'dalle-3':{n:'DALL-E 3',pi:0.08,is:false,sr:'',q:'Very High',rs:['1024×1024','1792×1024','1024×1792'],od:2}," +
   "'midjourney-v7':{n:'Midjourney V7',pi:0,is:true,sr:'$10-$120/mo',q:'Best Artistic',rs:['1024×1024','2048×2048'],od:3}," +
