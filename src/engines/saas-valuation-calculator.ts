@@ -30,28 +30,28 @@ function calculateValuation(inputs: Record<string, string>): string[] {
   const exitValue = profit > 0 ? profit * baseMultiple * 1.5 : valuationBase;
 
   let mainResult =
-    '\\uD83D\\uDCB0 SaaS Valuation Estimate\\n\\n' +
-    '\\u2022 Annual Revenue (ARR): ' + fmt(annualRevenue) + '\\n' +
-    '\\u2022 YoY Growth Rate: ' + pct(growthRate) + '\\n' +
-    '\\u2022 Profit Margin: ' + pct(profitMargin) + '\\n' +
-    '\\u2022 Annual Profit: ' + fmt(profit) + '\\n\\n' +
-    '\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n' +
-    '\\uD83D\\uDCCA Valuation Range (Revenue Multiple):\\n\\n' +
-    '\\u2022 Conservative (' + lowMultiple.toFixed(1) + 'x): ' + fmt(valuationLow) + '\\n' +
-    '\\u2022 Base Case (' + baseMultiple.toFixed(1) + 'x): ' + fmt(valuationBase) + '\\n' +
-    '\\u2022 Optimistic (' + highMultiple.toFixed(1) + 'x): ' + fmt(valuationHigh) + '\\n\\n' +
-    '\\u2022 Estimated Exit Value: ' + fmt(exitValue) + '\\n\\n' +
-    '\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';
+    '💰 SaaS Valuation Estimate\n\n' +
+    '• Annual Revenue (ARR): ' + fmt(annualRevenue) + '\n' +
+    '• YoY Growth Rate: ' + pct(growthRate) + '\n' +
+    '• Profit Margin: ' + pct(profitMargin) + '\n' +
+    '• Annual Profit: ' + fmt(profit) + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '📊 Valuation Range (Revenue Multiple):\n\n' +
+    '• Conservative (' + lowMultiple.toFixed(1) + 'x): ' + fmt(valuationLow) + '\n' +
+    '• Base Case (' + baseMultiple.toFixed(1) + 'x): ' + fmt(valuationBase) + '\n' +
+    '• Optimistic (' + highMultiple.toFixed(1) + 'x): ' + fmt(valuationHigh) + '\n\n' +
+    '• Estimated Exit Value: ' + fmt(exitValue) + '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━\n\n';
 
   if (growthRate >= 50) {
-    mainResult += '\\uD83D\\uDE80 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\\n\\n';
+    mainResult += '🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n\n';
   } else if (growthRate >= 20) {
-    mainResult += '\\uD83D\\uDCC8 Solid growth trajectory. Improving your growth rate from ' + pct(growthRate) + ' to 30%+ could increase your valuation multiple by 2-3x.\\n\\n';
+    mainResult += '📈 Solid growth trajectory. Improving your growth rate from ' + pct(growthRate) + ' to 30%+ could increase your valuation multiple by 2-3x.\n\n';
   } else {
-    mainResult += '\\uD83D\\uDCAA Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.\\n\\n';
+    mainResult += '💪 Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.\n\n';
   }
 
-  mainResult += '\\uD83D\\uDCA1 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.';
+  mainResult += '💡 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.';
 
   // 🔄 What-If Scenarios
   if (annualRevenue > 0) {
@@ -61,66 +61,66 @@ function calculateValuation(inputs: Record<string, string>): string[] {
     const raisedProfit = profitMargin + 10;
     const profitMult = baseMultiple + (raisedProfit >= 30 ? 0.5 : 0);
     const profitVal = annualRevenue * profitMult;
-    mainResult += '\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';
-    mainResult += '\\u2022 If growth \\u2192 ' + raisedGrowth.toFixed(0) + '% YoY:  multiple ' + raisedMult.toFixed(1) + 'x  \\u2192 $' + Math.round(raisedVal).toLocaleString() + ' (vs $' + Math.round(valuationBase).toLocaleString() + ')\\n';
-    mainResult += '\\u2022 If margin \\u2192 ' + raisedProfit.toFixed(0) + '%:  multiple ' + profitMult.toFixed(1) + 'x  \\u2192 $' + Math.round(profitVal).toLocaleString() + '\\n';
-    mainResult += '\\u2022 Distress floor (2x):  $' + Math.round(annualRevenue * 2).toLocaleString() + '  (asset-only sale)\\n';
+    mainResult += '\n\n🔄 What-If Scenarios\n';
+    mainResult += '• If growth → ' + raisedGrowth.toFixed(0) + '% YoY:  multiple ' + raisedMult.toFixed(1) + 'x  → $' + Math.round(raisedVal).toLocaleString() + ' (vs $' + Math.round(valuationBase).toLocaleString() + ')\n';
+    mainResult += '• If margin → ' + raisedProfit.toFixed(0) + '%:  multiple ' + profitMult.toFixed(1) + 'x  → $' + Math.round(profitVal).toLocaleString() + '\n';
+    mainResult += '• Distress floor (2x):  $' + Math.round(annualRevenue * 2).toLocaleString() + '  (asset-only sale)\n';
   }
 
   // 🩺 Valuation Health (v3)
   if (annualRevenue <= 0) {
-    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.';
+    mainResult += '\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.';
   } else if (valuationBase <= 0) {
-    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Multiple is 0 or negative. No reasonable valuation can be derived.';
+    mainResult += '\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Multiple is 0 or negative. No reasonable valuation can be derived.';
   } else if (annualRevenue < 100000) {
-    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟡 Pre-revenue / seed stage. Most investors won\'t use revenue multiple. Focus on traction, growth, and team before valuation conversations.';
+    mainResult += '\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Pre-revenue / seed stage. Most investors won\'t use revenue multiple. Focus on traction, growth, and team before valuation conversations.';
   } else if (annualRevenue < 1000000) {
-    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟠 Early revenue ($' + (annualRevenue / 1000).toFixed(0) + 'K ARR). Typical seed-to-Series A range. Multiple: 5-15x depending on growth rate.';
+    mainResult += '\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟠 Early revenue ($' + (annualRevenue / 1000).toFixed(0) + 'K ARR). Typical seed-to-Series A range. Multiple: 5-15x depending on growth rate.';
   } else if (annualRevenue < 10000000) {
-    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Mid-stage ($' + (annualRevenue / 1000000).toFixed(1) + 'M ARR). Series A-B range. Multiple: 8-20x. Growth rate is the #1 multiple driver.';
+    mainResult += '\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Mid-stage ($' + (annualRevenue / 1000000).toFixed(1) + 'M ARR). Series A-B range. Multiple: 8-20x. Growth rate is the #1 multiple driver.';
   } else {
-    mainResult += '\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Late-stage ($' + (annualRevenue / 1000000).toFixed(1) + 'M ARR). Series C+ range. Multiple: 10-30x. Profitability and net dollar retention matter more.';
+    mainResult += '\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Late-stage ($' + (annualRevenue / 1000000).toFixed(1) + 'M ARR). Series C+ range. Multiple: 10-30x. Profitability and net dollar retention matter more.';
   }
 
   // 🔄 What-If Scenarios (v3)
-  mainResult += '\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  mainResult += '\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
   if (annualRevenue > 0 && baseMultiple > 0) {
     const doubleRev = annualRevenue * 2;
     const valAtDouble = doubleRev * baseMultiple;
     const valAtHigherMult = annualRevenue * (baseMultiple * 1.5);
     const valAtProfitable = annualRevenue * baseMultiple * 1.3;
-    mainResult += '\\n• Double ARR (next 12 months at 100% growth):  $' + fmt(annualRevenue) + ' → $' + fmt(doubleRev) + '  | Valuation $' + fmt(valAtDouble);
-    mainResult += '\\n• Boost multiple 50% (better growth/profitability story):  Valuation $' + fmt(valAtHigherMult) + '  (no ARR change)';
-    mainResult += '\\n• Reach profitability (typically +30% multiple):  Valuation $' + fmt(valAtProfitable);
+    mainResult += '\n• Double ARR (next 12 months at 100% growth):  $' + fmt(annualRevenue) + ' → $' + fmt(doubleRev) + '  | Valuation $' + fmt(valAtDouble);
+    mainResult += '\n• Boost multiple 50% (better growth/profitability story):  Valuation $' + fmt(valAtHigherMult) + '  (no ARR change)';
+    mainResult += '\n• Reach profitability (typically +30% multiple):  Valuation $' + fmt(valAtProfitable);
     if (growthRate > 0) {
       const t2Growth = annualRevenue * Math.pow(1 + growthRate / 100, 2);
       const valAtT2 = t2Growth * baseMultiple;
-      mainResult += '\\n• At current growth (' + growthRate + '% YoY) in 2 years:  ARR $' + fmt(t2Growth) + '  | Valuation $' + fmt(valAtT2) + '  (+$' + fmt(valAtT2 - valuationBase) + ')';
+      mainResult += '\n• At current growth (' + growthRate + '% YoY) in 2 years:  ARR $' + fmt(t2Growth) + '  | Valuation $' + fmt(valAtT2) + '  (+$' + fmt(valAtT2 - valuationBase) + ')';
     }
   } else {
-    mainResult += '\\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.';
+    mainResult += '\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.';
   }
 
   // ⚖️ Break-Even Multiple (v3)
   if (annualRevenue > 0) {
-    mainResult += '\\n\\n⚖️ Break-Even Multiple\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    mainResult += '\n\n⚖️ Break-Even Multiple\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     if (baseMultiple < 3) {
-      mainResult += '\\n• 🔴 Current multiple ' + baseMultiple.toFixed(1) + 'x is below 3x SaaS floor — investors won\'t bite.';
-      mainResult += '\\n• To reach 3x floor:  need growth ' + Math.max(10, growthRate).toFixed(0) + '%+  AND  margin ' + Math.max(20, profitMargin).toFixed(0) + '%+';
+      mainResult += '\n• 🔴 Current multiple ' + baseMultiple.toFixed(1) + 'x is below 3x SaaS floor — investors won\'t bite.';
+      mainResult += '\n• To reach 3x floor:  need growth ' + Math.max(10, growthRate).toFixed(0) + '%+  AND  margin ' + Math.max(20, profitMargin).toFixed(0) + '%+';
     } else if (baseMultiple < 5) {
-      mainResult += '\\n• 🟡 Current multiple ' + baseMultiple.toFixed(1) + 'x is at SaaS floor. Below market median (5-8x).';
-      mainResult += '\\n• To reach 5x (median):  grow 30%+ YoY, OR push margin above 20%';
+      mainResult += '\n• 🟡 Current multiple ' + baseMultiple.toFixed(1) + 'x is at SaaS floor. Below market median (5-8x).';
+      mainResult += '\n• To reach 5x (median):  grow 30%+ YoY, OR push margin above 20%';
     } else if (baseMultiple < 10) {
-      mainResult += '\\n• 🟢 Current multiple ' + baseMultiple.toFixed(1) + 'x is at market median. Strong position.';
-      mainResult += '\\n• To reach 10x+ (premium):  sustain 50%+ growth OR reach profitability';
+      mainResult += '\n• 🟢 Current multiple ' + baseMultiple.toFixed(1) + 'x is at market median. Strong position.';
+      mainResult += '\n• To reach 10x+ (premium):  sustain 50%+ growth OR reach profitability';
     } else {
-      mainResult += '\\n• 🟢 Premium multiple ' + baseMultiple.toFixed(1) + 'x. Maintain growth and margin to justify.';
+      mainResult += '\n• 🟢 Premium multiple ' + baseMultiple.toFixed(1) + 'x. Maintain growth and margin to justify.';
     }
   }
 
   // 🎯 Valuation Milestones (v3)
   if (annualRevenue > 0) {
-    mainResult += '\\n\\n🎯 Valuation Milestones\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    mainResult += '\n\n🎯 Valuation Milestones\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     const milestones = [
       { arr: 1e6, label: '$1M ARR' },
       { arr: 1e7, label: '$10M ARR' },
@@ -128,16 +128,16 @@ function calculateValuation(inputs: Record<string, string>): string[] {
     ];
     for (const m of milestones) {
       if (annualRevenue >= m.arr) {
-        mainResult += '\\n• ' + m.label + ':  ✅ reached  (current: $' + (annualRevenue / 1e6).toFixed(1) + 'M)';
+        mainResult += '\n• ' + m.label + ':  ✅ reached  (current: $' + (annualRevenue / 1e6).toFixed(1) + 'M)';
       } else if (growthRate > 0) {
         const yearsToReach = Math.log(m.arr / annualRevenue) / Math.log(1 + growthRate / 100);
         if (isFinite(yearsToReach) && yearsToReach < 20) {
-          mainResult += '\\n• ' + m.label + ':  ' + yearsToReach.toFixed(1) + ' years  (at ' + growthRate.toFixed(0) + '% YoY growth)';
+          mainResult += '\n• ' + m.label + ':  ' + yearsToReach.toFixed(1) + ' years  (at ' + growthRate.toFixed(0) + '% YoY growth)';
         } else {
-          mainResult += '\\n• ' + m.label + ':  unrealistic at current growth — accelerate or accept smaller scale';
+          mainResult += '\n• ' + m.label + ':  unrealistic at current growth — accelerate or accept smaller scale';
         }
       } else {
-        mainResult += '\\n• ' + m.label + ':  zero growth — not reachable without acceleration';
+        mainResult += '\n• ' + m.label + ':  zero growth — not reachable without acceleration';
       }
     }
   }
@@ -156,7 +156,7 @@ function calculateValuation(inputs: Record<string, string>): string[] {
   for (let i = 0; i < multipleScenarios.length; i++) {
     const val = annualRevenue * multipleScenarios[i].multiple;
     results.push(
-      multipleScenarios[i].label + ': ' + fmt(annualRevenue) + ' ARR \\u00d7 ' +
+      multipleScenarios[i].label + ': ' + fmt(annualRevenue) + ' ARR × ' +
       multipleScenarios[i].multiple + 'x = ' + fmt(val) + ' valuation',
     );
   }
@@ -201,7 +201,7 @@ const customFn =
   "var rg=Math.min(150,gr2+30);" +
   "var rm=rg>=100?10:rg>=50?8:rg>=30?7:5.5;" +
   "var rv=ar2*rm;" +
-  "var rp=pm+10;var pm2=bm2+(rp>=30?0.5:0);var pv=ar2*pm2;" +
+  "var rp=pm+10;var pm2=bm+(rp>=30?0.5:0);var pv=ar2*pm2;" +
   "mr4+='\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';" +
   "mr4+='\\u2022 If growth \\u2192 '+rg.toFixed(0)+'% YoY:  multiple '+rm.toFixed(1)+'x  \\u2192 $'+Math.round(rv).toLocaleString()+' (vs $'+Math.round(valuationBase).toLocaleString()+')\\n';" +
   "mr4+='\\u2022 If margin \\u2192 '+rp.toFixed(0)+'%:  multiple '+pm2.toFixed(1)+'x  \\u2192 $'+Math.round(pv).toLocaleString()+'\\n';" +
@@ -233,7 +233,7 @@ const engine: ToolEngine = {
     return calculateValuation(inputs);
   },
   staticExamples: [
-    '\\uD83D\\uDCB0 SaaS Valuation Estimate\\n\\n\\u2022 Annual Revenue (ARR): $0\\n\\u2022 YoY Growth Rate: 100.0%\\n\\u2022 Profit Margin: 0.0%\\n\\u2022 Annual Profit: $0\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDCCA Valuation Range (Revenue Multiple):\\n\\n\\u2022 Conservative (8.0x): $0\\n\\u2022 Base Case (10.0x): $0\\n\\u2022 Optimistic (15.0x): $0\\n\\n\\u2022 Estimated Exit Value: $0\\n\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n\\uD83D\\uDE80 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\\n\\n\\uD83D\\uDCA1 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.\\n\\n🩺 Valuation Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.\nDistressed Sale (2x): $0 ARR \\u00d7 2x = $0 valuation\nFlat Growth (4x): $0 ARR \\u00d7 4x = $0 valuation\nSteady Growth (6x): $0 ARR \\u00d7 6x = $0 valuation\nHigh Growth (10x): $0 ARR \\u00d7 10x = $0 valuation\nHyper-Growth (15x): $0 ARR \\u00d7 15x = $0 valuation',
+    '💰 SaaS Valuation Estimate\n\n• Annual Revenue (ARR): $0\n• YoY Growth Rate: 100.0%\n• Profit Margin: 0.0%\n• Annual Profit: $0\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Valuation Range (Revenue Multiple):\n\n• Conservative (8.0x): $0\n• Base Case (10.0x): $0\n• Optimistic (15.0x): $0\n\n• Estimated Exit Value: $0\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n\n💡 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.\nDistressed Sale (2x): $0 ARR × 2x = $0 valuation\nFlat Growth (4x): $0 ARR × 4x = $0 valuation\nSteady Growth (6x): $0 ARR × 6x = $0 valuation\nHigh Growth (10x): $0 ARR × 10x = $0 valuation\nHyper-Growth (15x): $0 ARR × 15x = $0 valuation',
     'Distressed Sale (2x): $200,000 ARR × 2x = $400,000 valuation',
     'Flat Growth (4x): $200,000 ARR × 4x = $800,000 valuation',
     'Steady Growth (6x): $200,000 ARR × 6x = $1,200,000 valuation',

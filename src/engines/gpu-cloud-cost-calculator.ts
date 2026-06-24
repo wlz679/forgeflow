@@ -103,7 +103,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // Section 1: Header
-  out.push('\u{1F5A5}️ ' + prov.name + ' GPU Cost — ' + TIER_LABELS[pricingTier] || pricingTier.toUpperCase());
+  out.push(('\u{1F5A5}️ ' + prov.name + ' GPU Cost — ' + TIER_LABELS[pricingTier]) || pricingTier.toUpperCase());
   out.push('');
   out.push('GPU: ' + gpuCount + '× ' + GPU_NAMES[gpuKey] + ' | Base Rate: ' + fmt(baseRate) + '/hr');
   if (pricingTier !== 'on-demand') {
@@ -272,7 +272,6 @@ function calculate(inputs: Record<string, string>): string[] {
 // customFn — exact sync with calculate()
 const customFn =
   "var GN={H200:'H200 141GB',H100:'H100 80GB',A100:'A100 80GB',L40S:'L40S 48GB',RTX4090:'RTX 4090 24GB',A6000:'RTX A6000 48GB'};" +
-  "var PS2={" +
   "'runpod':{n:'RunPod',sm:0.6,rm:0.85,r:{H200:2.49,H100:1.99,A100:0.79,L40S:0.69,RTX4090:0.49,A6000:0.39},od:1}," +
   "'vastai':{n:'Vast.ai',sm:0.5,rm:0.8,r:{H200:2.2,H100:1.69,A100:0.69,L40S:0.59,RTX4090:0.44,A6000:0.35},od:2}," +
   "'lambdalabs':{n:'Lambda Labs',sm:0.7,rm:0.9,r:{H200:2.8,H100:2.49,A100:1.1,L40S:0.8,RTX4090:0.55,A6000:0.5},od:3}," +

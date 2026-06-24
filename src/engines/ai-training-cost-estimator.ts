@@ -214,14 +214,12 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
-  "var GT={" +
   "'H200-141GB':{hr:3.5,n:'H200 141GB',od:1}," +
   "'H100-80GB':{hr:2.5,n:'H100 80GB',od:2}," +
   "'A100-80GB':{hr:1.5,n:'A100 80GB',od:3}," +
   "'L40S-48GB':{hr:0.8,n:'L40S 48GB',od:4}," +
   "'RTX-6000':{hr:0.5,n:'RTX 6000 Ada',od:5}" +
 
-  "var MS={" +
   "'7B':{h200:2,h100:4,a100:8,l40s:16,n:'7B (LoRA fine-tune)',isL:true,od:1}," +
   "'13B':{h200:4,h100:8,a100:16,n:'13B (LoRA fine-tune)',isL:true,od:2}," +
   "'70B':{h200:16,h100:32,a100:64,n:'70B (full fine-tune)',isL:false,od:3}," +
