@@ -590,7 +590,7 @@ const customFn =
   "'claude-haiku-4-5':{i:1,o:5,n:'Claude Haiku 45',f:'claude4x',cw:'200K',mo:'64K',bi:0.5,bo:2.5,od:4}," +
   "'claude-opus-4-1':{i:15,o:75,n:'Claude Opus 41',f:'claude4x',cw:'200K',mo:'32K',bi:7.5,bo:37.5,od:5}," +
   "'claude-haiku-3-5':{i:0.8,o:4,n:'Claude Haiku 3.5',f:'lg',cw:'200K',mo:'8K',bi:0.4,bo:2,od:6}," +
-  "'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:7}}" +
+  "'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:7}};" +
 
   // Family icons
   "var FI={mythos:'\\u2726',claude4x:'\\u25B2',legacy:'\\u25C6'};" +

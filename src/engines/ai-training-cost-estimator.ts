@@ -214,7 +214,8 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
-  "var GT={'H200-141GB':{hr:3.5,n:'H200 141GB',od:1}," +
+  "var GT={" +
+  "'H200-141GB':{hr:3.5,n:'H200 141GB',od:1}," +
   "'H100-80GB':{hr:2.5,n:'H100 80GB',od:2}," +
   "'A100-80GB':{hr:1.5,n:'A100 80GB',od:3}," +
   "'L40S-48GB':{hr:0.8,n:'L40S 48GB',od:4}," +
@@ -225,7 +226,7 @@ const customFn =
   "'13B':{h200:4,h100:8,a100:16,n:'13B (LoRA fine-tune)',isL:true,od:2}," +
   "'70B':{h200:16,h100:32,a100:64,n:'70B (full fine-tune)',isL:false,od:3}," +
   "'180B':{h200:64,h100:128,n:'180B (full fine-tune)',isL:false,od:4}," +
-  "'405B':{h200:128,h100:256,n:'405B (full train)',isL:false,od:5}}" +
+  "'405B':{h200:128,h100:256,n:'405B (full train)',isL:false,od:5}};" +
 
   "var SCG=0.1;var DPCG=1.5;var LES=0.35;" +
   "function fm2(n){return '$'+n.toFixed(2)}function lc2(n){return n.toLocaleString()}function pd2(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
