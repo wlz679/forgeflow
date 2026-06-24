@@ -252,7 +252,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('🔄 What-If Scenarios:');
   out.push(SEP.repeat(60));
   const cheapestProv = sortedProviders[0];
-  if (cheapestProv.key !== prov.key) {
+  if (prov !== cheapestProv) {
     const savings = (totalHourly - cheapestProv.rates[gpuKey]) * hoursPerDay * 30 * gpuCount;
     if (savings > 0) out.push('• Switch to ' + cheapestProv.name + ':  save ' + fmt(savings) + '/mo  (cheapest for ' + GPU_NAMES[gpuKey] + ')');
   } else {
