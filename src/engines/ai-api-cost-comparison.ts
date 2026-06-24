@@ -278,7 +278,7 @@ const customFn =
   "openai:{n:'OpenAI',m:[{k:'gpt-5-mini',n:'GPT 5Mini',i:0.25,o:2,cw:'272K'}]}," +
   "anthropic:{n:'Anthropic',m:[{k:'claude-haiku-3',n:'Claude Haiku 3',i:0.25,o:1.25,cw:'200K'}]}," +
   "google:{n:'Google',m:[{k:'gemini-1.5-flash',n:'Gemini 1.5 Flash',i:0.075,o:0.3,cw:'1M'}]}," +
-  "deepseek:{n:'DeepSeek',m:[{k:'deepseek-v4-flash',n:'DeepSeek V4 Flash',i:0.14,o:0.28,cw:'1M'}]}};" +
+  "deepseek:{n:'DeepSeek',m:[{k:'deepseek-v4-flash',n:'Deepseek V4Flash',i:0.14,o:0.28,cw:'1M'}]}};" +
   // Provider initials + colors
   "var PI={openai:'O',anthropic:'A',google:'G',deepseek:'D'};" +
   // Build flat list
