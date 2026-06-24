@@ -320,8 +320,10 @@ function generateTable(engine) {
   } else {
     const lines = sorted.map(([k, m], i) => {
       // Last entry closes the object literal: drop trailing comma, add '};'
+      // so the resulting runtime is `var M={...}};var FI=...;` (semicolon
+      // between `}` and next statement is required by ASI).
       const isLast = i === sorted.length - 1;
-      const sep = isLast ? '}' : ',';
+      const sep = isLast ? '};' : ',';
       return `  "'${k}':{${engine.fieldMap(m, k)}}${sep}" +`;
     }).join('\n');
     // Prepend tableStart (e.g. "var M={" +). If tableStart already ends with
