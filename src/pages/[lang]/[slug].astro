@@ -1428,30 +1428,6 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         });
       });
 
-      // --- Preset chips (Claude) ---
-      var presetChips = document.querySelectorAll('.preset-chip');
-      presetChips.forEach(function(chip) {
-        chip.addEventListener('click', function() {
-          // Read all data-* attributes and populate form fields by matching ID
-          var ds = this.dataset;
-          for (var key in ds) {
-            if (ds.hasOwnProperty(key)) {
-              var el = document.getElementById(key);
-              if (el) {
-                // Convert camelCase dataset key to the actual element type handling
-                if (el.tagName === 'SELECT') {
-                  // For select elements, set value directly if option exists
-                  var opt = el.querySelector('option[value="' + ds[key] + '"]');
-                  if (opt) el.value = ds[key];
-                } else {
-                  el.value = ds[key];
-                }
-              }
-            }
-          }
-        });
-      });
-
       // --- Token estimator (formula adapts per calculator) ---
       var estimatorEl = document.getElementById('token-estimator');
       var estResultEl = document.getElementById('token-estimate-result');
