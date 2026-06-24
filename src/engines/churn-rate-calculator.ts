@@ -136,11 +136,11 @@ function calculateChurn(inputs: Record<string, string>): string[] {
     mainResult += '\n\n⚖️ Break-Even\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     const breakEvenNew = Math.round(customersStart * monthlyLogoChurn);
     if (newCustomers >= breakEvenNew) {
-      mainResult += '\n• 🟢 Break-even new customers/mo:  ' + breakEvenNew + '  — you\\\'re adding enough to grow (current: ' + newCustomers + ').';
+      mainResult += '\n• 🟢 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding enough to grow (current: ' + newCustomers + ').';
     } else if (newCustomers > 0) {
-      mainResult += '\n• 🟡 Break-even new customers/mo:  ' + breakEvenNew + '  — you\\\'re adding ' + newCustomers + ', short by ' + (breakEvenNew - newCustomers) + '. Customer base is shrinking.';
+      mainResult += '\n• 🟡 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding ' + newCustomers + ', short by ' + (breakEvenNew - newCustomers) + '. Customer base is shrinking.';
     } else {
-      mainResult += '\n• 🔴 Break-even new customers/mo:  ' + breakEvenNew + '  — you\\\'re adding 0. Base erodes by ' + breakEvenNew + ' customers/mo.';
+      mainResult += '\n• 🔴 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding 0. Base erodes by ' + breakEvenNew + ' customers/mo.';
     }
     if (monthlyLogoChurn > 0 && newCustomers > 0) {
       const newCustomerChurnPct = customersStart > 0 ? (newCustomers / customersStart) * 100 : 0;
