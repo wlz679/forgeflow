@@ -5,6 +5,7 @@ import Footer from '../../components/Footer.astro';
 import ResultCard from '../../components/ResultCard.astro';
 import FAQ from '../../components/FAQ.astro';
 import HowToUse from '../../components/HowToUse.astro';
+import PresetChips from '../../components/PresetChips.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import AdUnit from '../../components/AdUnit.astro';
 import '../../engines';
@@ -127,6 +128,9 @@ const schema = JSON.stringify({
 
         {isInteractive && (
           <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
+            {engine.presets && engine.presets.length > 0 && (
+              <PresetChips presets={engine.presets} slug={slug} lang={lang} />
+            )}
             {/* OpenAI calculator: presets + token estimator + advanced collapse */}
             {slug === 'solopreneur-openai-token-calculator' ? (
               <>
@@ -859,122 +863,6 @@ const schema = JSON.stringify({
                 )
               ))}
               </>
-            )}
-            {isAiApiCostComparison && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="800" data-outputtokens="200" data-requestsperday="500" data-pricingmode="realtime">
-                  {t('tools.solopreneur-ai-api-cost-comparison.preset.support-bot', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="3000" data-outputtokens="400" data-requestsperday="200" data-pricingmode="realtime">
-                  {t('tools.solopreneur-ai-api-cost-comparison.preset.rag-qa', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="5000" data-outputtokens="800" data-requestsperday="50" data-pricingmode="realtime">
-                  {t('tools.solopreneur-ai-api-cost-comparison.preset.code-review', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="500" data-outputtokens="2000" data-requestsperday="100" data-pricingmode="realtime">
-                  {t('tools.solopreneur-ai-api-cost-comparison.preset.content-gen', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="4000" data-outputtokens="3000" data-requestsperday="30" data-pricingmode="realtime">
-                  {t('tools.solopreneur-ai-api-cost-comparison.preset.data-analysis', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-inputtokens="3000" data-outputtokens="5000" data-requestsperday="10000" data-pricingmode="batch">
-                  {t('tools.solopreneur-ai-api-cost-comparison.preset.batch', lang)}
-                </button>
-              </div>
-            )}
-            {isImage && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="dalle-3" data-imagespermonth="100" data-resolution="1024×1024" data-batchsize="1" data-advancedmode="standard">
-                  {t('tools.solopreneur-ai-image-cost-calculator.preset.solopreneur', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="midjourney-v7" data-imagespermonth="500" data-resolution="2048×2048" data-batchsize="4" data-advancedmode="standard">
-                  {t('tools.solopreneur-ai-image-cost-calculator.preset.creator', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="dalle-4" data-imagespermonth="1000" data-resolution="1024×1024" data-batchsize="4" data-advancedmode="hd">
-                  {t('tools.solopreneur-ai-image-cost-calculator.preset.agency', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="stable-diffusion-4" data-imagespermonth="5000" data-resolution="512×512" data-batchsize="8" data-advancedmode="standard">
-                  {t('tools.solopreneur-ai-image-cost-calculator.preset.budget', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="ideogram-3" data-imagespermonth="300" data-resolution="1024×1024" data-batchsize="2" data-advancedmode="standard">
-                  {t('tools.solopreneur-ai-image-cost-calculator.preset.logos', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="flux-pro" data-imagespermonth="800" data-resolution="2048×2048" data-batchsize="2" data-advancedmode="hd">
-                  {t('tools.solopreneur-ai-image-cost-calculator.preset.artistic', lang)}
-                </button>
-              </div>
-            )}
-            {isTraining && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-modelsize="7B" data-gputype="H100-80GB" data-gpucount="2" data-traininghours="8" data-epochs="3" data-cloudstorage="50" data-dataprocesscost="20">
-                  {t('tools.solopreneur-ai-training-cost-estimator.preset.quick-lora', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-modelsize="13B" data-gputype="A100-80GB" data-gpucount="8" data-traininghours="24" data-epochs="5" data-cloudstorage="200" data-dataprocesscost="100">
-                  {t('tools.solopreneur-ai-training-cost-estimator.preset.mid-13b', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-modelsize="70B" data-gputype="H200-141GB" data-gpucount="16" data-traininghours="48" data-epochs="3" data-cloudstorage="500" data-dataprocesscost="300">
-                  {t('tools.solopreneur-ai-training-cost-estimator.preset.full-70b', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-modelsize="180B" data-gputype="H200-141GB" data-gpucount="64" data-traininghours="168" data-epochs="2" data-cloudstorage="2000" data-dataprocesscost="1000">
-                  {t('tools.solopreneur-ai-training-cost-estimator.preset.enterprise-180b', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-modelsize="7B" data-gputype="RTX-6000" data-gpucount="4" data-traininghours="12" data-epochs="5" data-cloudstorage="30" data-dataprocesscost="10">
-                  {t('tools.solopreneur-ai-training-cost-estimator.preset.budget-7b', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-modelsize="405B" data-gputype="H200-141GB" data-gpucount="128" data-traininghours="720" data-epochs="1" data-cloudstorage="5000" data-dataprocesscost="2000">
-                  {t('tools.solopreneur-ai-training-cost-estimator.preset.pro-405b', lang)}
-                </button>
-              </div>
-            )}
-            {isGpu && (
-              <div class="flex flex-wrap gap-2 mt-3">
-                <span class="text-sm text-gray-500 mr-1">{lang === 'zh' ? '场景预设：' : 'Scenarios:'}</span>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="vastai" data-gputype="RTX4090" data-gpucount="1" data-hoursperday="12" data-pricingtier="spot" data-includestorage="yes">
-                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.budget-single', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="runpod" data-gputype="A100" data-gpucount="1" data-hoursperday="8" data-pricingtier="on-demand" data-includestorage="yes">
-                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.dev-box', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="lambdalabs" data-gputype="A100" data-gpucount="4" data-hoursperday="24" data-pricingtier="reserved" data-includestorage="yes">
-                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.training-rig', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="aws" data-gputype="H100" data-gpucount="8" data-hoursperday="24" data-pricingtier="reserved" data-includestorage="yes">
-                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.enterprise-h100', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="vastai" data-gputype="H200" data-gpucount="1" data-hoursperday="4" data-pricingtier="spot" data-includestorage="no">
-                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.cheapest-h200', lang)}
-                </button>
-                <button type="button" class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition"
-                  data-provider="runpod" data-gputype="H100" data-gpucount="8" data-hoursperday="24" data-pricingtier="on-demand" data-includestorage="yes">
-                  {t('tools.solopreneur-gpu-cloud-cost-calculator.preset.pro-8h100', lang)}
-                </button>
-              </div>
             )}
             <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#6D28D9] text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-[#7C3AED]/25 transition-all text-sm">
               {t('btn.generate', lang)}
