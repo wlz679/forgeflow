@@ -298,21 +298,12 @@ if (CHECK_MODE) {
     }
   }
   if (brokenCustomFn.length > 0) {
-    // Allow engines listed as KNOWN_BROKEN_CUSTOMFN to fail without blocking CI.
-    // These have structural bugs that need deeper refactor than a 1-line fix.
-    // Use KNOWN_BROKEN_CUSTOMFN only as a temporary measure — track in plan doc.
-    const KNOWN_BROKEN_CUSTOMFN = new Set([
-      // Engines whose customFn source has accumulated structural bugs (extra/missing
-      // braces from copy-paste drift, bare-label data tables). Page still renders via
-      // staticExamples fallback; only custom-mode interaction is broken. Track in
-      // a follow-up batch — these need careful subagent review rather than sed.
-      'ai-image-generation-cost-calculator',
-      'gpu-cloud-cost-calculator',
-      'ai-training-cost-estimator',
-      'claude-api-cost-calculator',
-      'deepseek-api-cost-calculator',
-      'gemini-api-cost-calculator',
-    ]);
+    // KNOWN_BROKEN_CUSTOMFN: empty set as of 2026-06-24. All 6 previously-broken
+    // engines were fixed by the codegen-customfn.mjs idempotence fix (data-table
+    // wrap now adds the required `;` separator between `}` and the next statement).
+    // Keep the carve-out mechanism — if a customFn parse regression slips in,
+    // list it here temporarily and create a follow-up plan doc.
+    const KNOWN_BROKEN_CUSTOMFN = new Set([]);
     const newBroken = brokenCustomFn.filter(({ file }) => !KNOWN_BROKEN_CUSTOMFN.has(file.replace(/\.ts$/, '')));
     const knownBroken = brokenCustomFn.filter(({ file }) => KNOWN_BROKEN_CUSTOMFN.has(file.replace(/\.ts$/, '')));
 
