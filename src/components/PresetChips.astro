@@ -1,0 +1,33 @@
+---
+import type { Preset } from '../core/engines/types';
+import { t } from '../i18n';
+
+interface Props {
+  presets: Preset[];
+  slug: string;
+  lang: string;
+}
+const { presets, slug, lang } = Astro.props;
+const slugKey = slug.replace('solopreneur-', '');
+---
+<div class="mb-5">
+  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
+    {lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}
+  </span>
+  <div class="flex flex-wrap gap-1.5" id={`preset-buttons-${slugKey}`}>
+    {presets.map(p => (
+      <button
+        type="button"
+        class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all"
+        {...Object.fromEntries(
+          Object.entries(p.fields).map(([k, v]) => [
+            `data-${k.replace(/([A-Z])/g, '-$1').toLowerCase()}`,
+            String(v),
+          ])
+        )}
+      >
+        {p.emoji} {t(`tools.${slug}.preset.${p.key}`, lang)}
+      </button>
+    ))}
+  </div>
+</div>
