@@ -203,7 +203,7 @@ const customFn =
   "var rv=ar2*rm;" +
   "var rp=pm+10;var pm2=bm+(rp>=30?0.5:0);var pv=ar2*pm2;" +
   "mr4+='\\n\\n\\uD83D\\uDD04 What-If Scenarios\\n';" +
-  "mr4+='\\u2022 If growth \\u2192 '+rg.toFixed(0)+'% YoY:  multiple '+rm.toFixed(1)+'x  \\u2192 $'+Math.round(rv).toLocaleString()+' (vs $'+Math.round(valuationBase).toLocaleString()+')\\n';" +
+  "mr4+='\\u2022 If growth \\u2192 '+rg.toFixed(0)+'% YoY:  multiple '+rm.toFixed(1)+'x  \\u2192 $'+Math.round(rv).toLocaleString()+' (vs $'+Math.round(vb).toLocaleString()+')\\n';" +
   "mr4+='\\u2022 If margin \\u2192 '+rp.toFixed(0)+'%:  multiple '+pm2.toFixed(1)+'x  \\u2192 $'+Math.round(pv).toLocaleString()+'\\n';" +
   "mr4+='\\u2022 Distress floor (2x):  $'+Math.round(ar2*2).toLocaleString()+'  (asset-only sale)\\n';" +
   "}" +
