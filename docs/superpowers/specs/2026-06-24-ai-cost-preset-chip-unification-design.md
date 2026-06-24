@@ -4,6 +4,7 @@
 **Status:** Approved (brainstorming complete)
 **Scope:** 4 AI Cost v3 calculators
 **Out of scope:** 4 LLM token calculators, 24 Business v3 calculators
+**Bonus:** 顺手修复 4 个 AI Cost 计算器点击 preset chip 无反应的 bug（数据 attr 名 vs input id 大小写不匹配）
 
 ## 1. Problem
 
@@ -80,7 +81,12 @@ const slugKey = slug.replace('solopreneur-', '');
       <button
         type="button"
         class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all"
-        {...Object.fromEntries(Object.entries(p.fields).map(([k, v]) => [`data-${k}`, String(v)]))}
+        {...Object.fromEntries(
+          Object.entries(p.fields).map(([k, v]) => [
+            `data-${k.replace(/([A-Z])/g, '-$1').toLowerCase()}`,
+            String(v),
+          ])
+        )}
       >
         {p.emoji} {t(`tools.${slug}.preset.${p.key}`, lang)}
       </button>
@@ -90,6 +96,10 @@ const slugKey = slug.replace('solopreneur-', '');
 ```
 
 **为什么抽组件**：4 个 AI Cost 用同构 schema 后渲染逻辑通用；[slug].astro 已 1754 行；未来新增 preset 改组件比改 page 干净。
+
+**camelCase → kebab-case 转换（关键）**：HTML attribute 会被浏览器自动 lowercase，所以 `data-imagesPerMonth` 写出来就变成 `data-imagespermonth`，dataset 访问变成 `imagespermonth`，再 `getElementById` 找不到实际 `id="imagesPerMonth"` 的 input。kebab-case（`data-images-per-month`）是 HTML data-attr 的标准约定，浏览器 DOM 会自动把 `data-images-per-month` 转成 `dataset.imagesPerMonth`，现有 handler 用 `getElementById('imagesPerMonth')` 就能命中。
+
+**附带 bug 修复**：当前 AI Cost 4 个计算器的 inline chip 写的是 `data-imagespermonth`（非 kebab），点击 chip 完全没反应——这是一个**线上已存在的 bug**。统一化改造后，C1 schema + 转换逻辑会**顺手修掉它**，这也算统一化的额外收益。
 
 ### 4.3 页面改动（`src/pages/[lang]/[slug].astro`）
 
@@ -124,7 +134,9 @@ import PresetChips from '../../components/PresetChips.astro';
 | GPU Cloud | `src/engines/gpu-cloud-cost-calculator.ts` |
 | AI API Comparison | `src/engines/ai-api-cost-comparison.ts` |
 
-**关键约束**：preset `fields` 的 key 必须等于该 calc 的 `engine.inputs[].name`。实施前先读每个引擎的 `inputs[]` 拿到准确 name 列表（推测为 camelCase 形式：provider / imagesPerMonth / resolution / batchSize / advancedMode 等，以读到的实际为准）。
+**关键约束**：preset `fields` 的 key 必须等于该 calc 的 `engine.inputs[].name`（camelCase 形式）。组件会自动转 kebab-case 渲染到 HTML data-attr，浏览器 DOM 再转回 camelCase 给 JS handler 用——只要字段名跟 engine inputs 对齐，链路就成立。
+
+实施前先读每个引擎的 `inputs[]` 拿到准确 name 列表（推测为：provider / imagesPerMonth / resolution / batchSize / advancedMode / modelSize / gpuType / gpuCount / trainingHours / epochs / cloudStorage / dataProcessCost / pricingMode / inputTokens / outputTokens / requestsPerDay / cacheReadHitRate / cacheTTL / growthRate / projectionMonths 等，以读到的实际为准）。
 
 ### 4.5 i18n（`src/i18n/translations.ts`）
 
@@ -156,6 +168,7 @@ import PresetChips from '../../components/PresetChips.astro';
 - [ ] 访问 4 个 AI Cost calc 的 en/zh 页面：顶部出现 6 个 chip + "Scenario Presets" / "场景预设" 标签 + emoji 前缀
 - [ ] 点击任一 chip：对应 input 被正确填充
 - [ ] 视觉对比：AI Cost 4 个页面 chip 区域与 Business v3 24 个一致
+- [ ] **附带 bug 修复**：4 个 AI Cost 计算器原本点 chip 无反应的 bug 已修（点击 chip 现在能正确填入所有 input）
 - [ ] `ai-image-generation-cost-calculator.ts` 里未使用的 `PRESETS` 常量已删除
 - [ ] LLM token 4 个 + Business v3 24 个完全未改动
 - [ ] `git diff src/pages/[lang]/[slug].astro` 净减少 ~116 行
@@ -164,7 +177,8 @@ import PresetChips from '../../components/PresetChips.astro';
 
 | 风险 | 缓解 |
 |---|---|
-| preset `fields` 字段名跟 `engine.inputs[].name` 不一致 → chip 点击不生效 | 实施前先读每个引擎 `inputs[]` 拿真实 name 列表 |
+| preset `fields` 字段名跟 `engine.inputs[].name` 不一致 → chip 点击不生效 | 实施前先读每个引擎 `inputs[]` 拿真实 name 列表（camelCase 形式：imagesPerMonth / batchSize / modelSize 等） |
+| HTML data-attr 自动 lowercase 与 input id 的 camelCase 不匹配 | 组件用 camelCase → kebab-case 转换（`imagesPerMonth` → `data-images-per-month`），浏览器 DOM 自动转回 camelCase，handler 直接命中现有 id |
 | 删 [slug].astro inline 块误删相邻代码 | Edit 用唯一 old_string 精确匹配；删前后 git diff 校验 |
 | 组件 `id` 命名跟 Business v3 重名冲突 | 用 `slugKey`（去掉 `solopreneur-` 前缀）做 id 后缀 |
 | translations.ts 缺 key 导致 chip 显示空白 | 实施前 grep 校验，缺啥补啥 |
