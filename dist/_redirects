@@ -1,5 +1,0 @@
-# www → apex (301 permanent)
-https://www.forgeflowkit.com/* https://forgeflowkit.com/:splat 301
-
-# Force HTTPS (Cloudflare Pages usually does this automatically; explicit is safer)
-/http://* https://forgeflowkit.com/:splat 301
