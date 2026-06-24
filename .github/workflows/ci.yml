@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
     branches: [master, main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.superpowers/**'
 
 jobs:
   build:
