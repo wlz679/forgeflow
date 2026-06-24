@@ -6,6 +6,9 @@
 //
 // Note: this only regenerates the data table. The customFn's logic (the
 // part AFTER the data table) is left untouched.
+//
+// --check mode: regenerate in memory and diff against disk. Exit 1 if any drift.
+// Useful for CI: catch out-of-sync customFn tables without mutating files.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,6 +19,7 @@ const ROOT = path.join(__dirname, '..');
 const PRICING_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing.json');
 
 const PRICING = JSON.parse(fs.readFileSync(PRICING_PATH, 'utf8'));
+const CHECK_MODE = process.argv.includes('--check');
 
 // ============================================================
 // Per-engine config: how to render the data table for customFn
@@ -224,8 +228,12 @@ function generateComparisonTable() {
   return providerLines.join('\n');
 }
 
-function replaceComparisonTable(filePath) {
-  let c = fs.readFileSync(filePath, 'utf8');
+/**
+ * Returns the new full file content with the comparison table replaced.
+ * Returns null if markers are not found.
+ */
+function buildComparisonTableContent(filePath) {
+  const c = fs.readFileSync(filePath, 'utf8');
 
   // Find the comparison engine config (has popularKeys per-provider)
   const compEngine = ENGINES.find((e) => e.file === 'ai-api-cost-comparison.ts');
@@ -261,10 +269,7 @@ function replaceComparisonTable(filePath) {
   );
   const endIdx = lines.findIndex((l, i) => i > startIdx && l.includes('Provider initials + colors'));
 
-  if (startIdx < 0 || endIdx < 0) {
-    console.log(`  ⚠ ai-api-cost-comparison.ts: markers not found (start=${startIdx}, end=${endIdx})`);
-    return false;
-  }
+  if (startIdx < 0 || endIdx < 0) return null;
 
   // Replace lines [startIdx, endIdx) with the new block (no trailing blank line —
   // the next string in the customFn concat is on the very next line)
@@ -273,9 +278,7 @@ function replaceComparisonTable(filePath) {
     newBlock,
     ...lines.slice(endIdx),
   ];
-  c = newLines.join('\n');
-  fs.writeFileSync(filePath, c);
-  return true;
+  return newLines.join('\n');
 }
 
 function fmt(n) {
@@ -318,52 +321,49 @@ function generateTable(engine) {
   }
 }
 
-function replaceTable(filePath, engine) {
-  let c = fs.readFileSync(filePath, 'utf8');
+/**
+ * Returns the new full file content with the data table replaced.
+ * Returns null if markers are not found.
+ */
+function buildTableContent(filePath, engine) {
+  const c = fs.readFileSync(filePath, 'utf8');
   const newTable = generateTable(engine);
 
-  // Find any line that's a model data line OR the declaration line. Replace the
-  // entire data block with the new generated content.
-  // The block starts at the declaration line (or the first model line if missing)
-  // and ends just before the tableEndMarker (or "// Family icons" / "var FL=" / "var FI=").
   const lines = c.split('\n');
 
   // Find end marker
-  let endIdx = lines.findIndex((l) => l.includes(engine.tableEndMarker));
-  if (endIdx < 0) {
-    console.log(`  ⚠ ${engine.file}: end marker not found (${engine.tableEndMarker})`);
-    return false;
-  }
+  const endIdx = lines.findIndex((l) => l.includes(engine.tableEndMarker));
+  if (endIdx < 0) return null;
 
-  // Find start: the declaration line, or if not found, the first model data line.
-  // For LLM engines: lines have 'i:' and 'o:' fields.
-  // For image engine: lines have 'pi:' and 'n:'.
-  // For gpu engine: lines have 'sm:' and 'rm:'.
-  // For training gpu: lines have 'hr:' and 'n:'.
-  // For training model: lines have 'h200:' or 'h100:' etc.
-  let startIdx;
-  if (engine.file === 'openai-token-calculator.ts') {
-    startIdx = lines.findIndex((l) => l.includes("M['") && l.includes('i:') && l.includes('o:'));
-  } else if (engine.isImage) {
-    // 'dalle-4':{n:...,pi:...,is:...,...}
-    startIdx = lines.findIndex((l) => /'[\w-]+':\{n:/.test(l) && l.includes('pi:'));
-  } else if (engine.isGpu) {
-    // 'runpod':{n:...,sm:...,rm:...,...}
-    startIdx = lines.findIndex((l) => /'[\w-]+':\{n:/.test(l) && l.includes('sm:'));
-  } else if (engine.isTrainingGpu) {
-    // 'H200-141GB':{hr:...,n:...,...}
-    startIdx = lines.findIndex((l) => /'[\w-]+':\{hr:/.test(l) && l.includes('n:'));
-  } else if (engine.isTrainingModel) {
-    // '7B':{h200:...,h100:...,...}
-    startIdx = lines.findIndex((l) => /'[\w-]+':\{(h200|h100|a100):/.test(l));
-  } else {
-    // Standard LLM (claude/gemini/deepseek)
-    startIdx = lines.findIndex((l) => /'[\w-]+':\{i:/.test(l) && l.includes('o:'));
+  // Find start: prefer the tableStart marker (the declaration line emitted
+  // by the codegen, e.g. `"var M={" +`). Falling back to first data line
+  // makes regen non-idempotent when the marker exists but the data block
+  // has additional lines before it (legacy content from older regen runs).
+  let startIdx = -1;
+  if (engine.tableStart) {
+    startIdx = lines.findIndex((l) => l.includes(engine.tableStart));
   }
   if (startIdx < 0) {
-    console.log(`  ⚠ ${engine.file}: could not find model data start`);
-    return false;
+    // No tableStart marker found (or engine without one). Fall back to
+    // first data line matching the engine's data shape.
+    // Note: model names can contain `.` (e.g. gemini-3.5-flash), so the
+    // key char class is [\w.-]+ not just [\w-]+.
+    if (engine.file === 'openai-token-calculator.ts') {
+      startIdx = lines.findIndex((l) => l.includes("M['") && l.includes('i:') && l.includes('o:'));
+    } else if (engine.isImage) {
+      startIdx = lines.findIndex((l) => /'[\w.-]+':\{n:/.test(l) && l.includes('pi:'));
+    } else if (engine.isGpu) {
+      startIdx = lines.findIndex((l) => /'[\w.-]+':\{n:/.test(l) && l.includes('sm:'));
+    } else if (engine.isTrainingGpu) {
+      startIdx = lines.findIndex((l) => /'[\w.-]+':\{hr:/.test(l) && l.includes('n:'));
+    } else if (engine.isTrainingModel) {
+      startIdx = lines.findIndex((l) => /'[\w.-]+':\{(h200|h100|a100):/.test(l));
+    } else {
+      // Standard LLM (claude/gemini/deepseek)
+      startIdx = lines.findIndex((l) => /'[\w.-]+':\{i:/.test(l) && l.includes('o:'));
+    }
   }
+  if (startIdx < 0) return null;
 
   const newLines = [
     ...lines.slice(0, startIdx),
@@ -371,39 +371,74 @@ function replaceTable(filePath, engine) {
     '',
     ...lines.slice(endIdx),
   ];
-  c = newLines.join('\n');
-  fs.writeFileSync(filePath, c);
-  return true;
+  return newLines.join('\n');
 }
 
-console.log('[codegen-customfn] Regenerating customFn data tables from PRICING...');
-let totalUpdated = 0;
+// ============================================================
+// Main
+// ============================================================
+console.log('[codegen-customfn] ' + (CHECK_MODE ? 'Checking' : 'Regenerating') + ' customFn data tables from PRICING...');
+
+let driftCount = 0;
+let writeCount = 0;
+
 for (const engine of ENGINES) {
   const fp = path.join(ROOT, 'src', 'engines', engine.file);
-  if (engine.custom && engine.file === 'ai-api-cost-comparison.ts') {
-    if (replaceComparisonTable(fp)) {
-      const totalModels = Object.values(PRICING.llm).reduce((s, p) => s + Object.keys(p.models).length, 0);
-      const filtered = engine.popularKeys
-        ? Object.values(engine.popularKeys).reduce((s, arr) => s + arr.length, 0)
-        : totalModels;
-      const tag = engine.popularKeys ? ` (${filtered}/${totalModels} popular)` : ` (${totalModels} models)`;
-      console.log(`  ✓ ${engine.file}${tag}`);
-      totalUpdated++;
+  const newContent = engine.custom
+    ? buildComparisonTableContent(fp)
+    : buildTableContent(fp, engine);
+
+  if (newContent == null) {
+    console.log(`  ⚠ ${engine.file}: markers not found (skipped)`);
+    continue;
+  }
+
+  const current = fs.readFileSync(fp, 'utf8');
+  const hasDrift = current !== newContent;
+
+  if (CHECK_MODE) {
+    if (hasDrift) {
+      console.error(`  ✗ ${engine.file}: drift detected`);
+      driftCount++;
+    } else {
+      console.log(`  ✓ ${engine.file}`);
     }
-  } else if (replaceTable(fp, engine)) {
-    // Count entries after filter
+  } else {
+    if (hasDrift) {
+      fs.writeFileSync(fp, newContent);
+      writeCount++;
+    }
+    // Count for the tag
     let count;
     if (engine.isImage) count = Object.keys(PRICING.image.providers).length;
     else if (engine.isGpu) count = Object.keys(PRICING.gpu.providers).length;
     else if (engine.isTrainingGpu) count = Object.keys(PRICING.training.gpuTypes).length;
     else if (engine.isTrainingModel) count = Object.keys(PRICING.training.modelSizes).length;
-    else count = Object.keys(PRICING.llm[engine.provider].models).length;
+    else if (engine.custom) {
+      const totalModels = Object.values(PRICING.llm).reduce((s, p) => s + Object.keys(p.models).length, 0);
+      const filtered = engine.popularKeys
+        ? Object.values(engine.popularKeys).reduce((s, arr) => s + arr.length, 0)
+        : totalModels;
+      console.log(`  ✓ ${engine.file} (${filtered}/${totalModels} popular)`);
+      continue;
+    } else count = Object.keys(PRICING.llm[engine.provider].models).length;
     const filtered = engine.popularKeys && Array.isArray(engine.popularKeys)
       ? engine.popularKeys.length
       : count;
     const tag = engine.popularKeys ? ` (${filtered}/${count} popular)` : ` (${count})`;
-    console.log(`  ✓ ${engine.file}${tag}`);
-    totalUpdated++;
+    console.log(`  ${hasDrift ? '✓' : ' '} ${engine.file}${tag}`);
   }
 }
-console.log(`[codegen-customfn] Done. ${totalUpdated} engines updated.`);
+
+if (CHECK_MODE) {
+  if (driftCount > 0) {
+    console.error(`\n[codegen-customfn] ✗ ${driftCount} engine(s) have drift. Re-run without --check to update.`);
+    process.exit(1);
+  } else {
+    console.log(`\n[codegen-customfn] ✓ No drift detected.`);
+    process.exit(0);
+  }
+} else {
+  console.log(`\n[codegen-customfn] Done. ${writeCount} engine(s) updated.`);
+  process.exit(0);
+}

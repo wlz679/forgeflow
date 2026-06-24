@@ -559,7 +559,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // Switch to cheapest popular model
   const popularCheapest = allCosts
     .reduce((min, c) => (c.info.input + c.info.output) < (min.info.input + min.info.output) ? c : min, allCosts[0]);
-  if (popularCheapest && popularCheapest.key !== cheapestSelected?.info.key) {
+  if (popularCheapest && popularCheapest.key !== cheapestSelected?.key) {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
@@ -584,17 +584,13 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // --- MODELS map (full keys, MUST match TS MODELS) ---
   "var M={" +
-  "var M={" +
-  "var M={" +
-  "var M={" +
-  "var M={" +
   "'claude-fable-5':{i:10,o:50,n:'Claude Fable 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:1}," +
   "'claude-opus-4-8':{i:5,o:25,n:'Claude Opus 48',f:'claude4x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:2}," +
   "'claude-sonnet-4-6':{i:3,o:15,n:'Claude Sonnet 46',f:'claude4x',cw:'1M',mo:'64K',bi:1.5,bo:7.5,od:3}," +
   "'claude-haiku-4-5':{i:1,o:5,n:'Claude Haiku 45',f:'claude4x',cw:'200K',mo:'64K',bi:0.5,bo:2.5,od:4}," +
   "'claude-opus-4-1':{i:15,o:75,n:'Claude Opus 41',f:'claude4x',cw:'200K',mo:'32K',bi:7.5,bo:37.5,od:5}," +
   "'claude-haiku-3-5':{i:0.8,o:4,n:'Claude Haiku 3.5',f:'lg',cw:'200K',mo:'8K',bi:0.4,bo:2,od:6}," +
-  "'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:7}" +
+  "'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:7}};" +
 
   // Family icons
   "var FI={mythos:'\\u2726',claude4x:'\\u25B2',legacy:'\\u25C6'};" +

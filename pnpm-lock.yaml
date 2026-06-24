@@ -21,9 +21,6 @@ importers:
       '@vitalets/google-translate-api':
         specifier: ^9.2.1
         version: 9.2.1
-      google-trends-api:
-        specifier: ^4.9.2
-        version: 4.9.2
       tsx:
         specifier: ^4.22.3
         version: 4.22.4
@@ -1201,9 +1198,6 @@ packages:
   glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
-
-  google-trends-api@4.9.2:
-    resolution: {integrity: sha512-gjVSHCM8B7LyAAUpXb4B0/TfnmpwQ2z1w/mQ2bL0AKpr2j3gLS1j2YOnifpfsGJRxAGXB/NoC+nGwC5qSnZIiA==}
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
@@ -3101,8 +3095,6 @@ snapshots:
   glob-parent@5.1.2:
     dependencies:
       is-glob: 4.0.3
-
-  google-trends-api@4.9.2: {}
 
   graceful-fs@4.2.11: {}
 

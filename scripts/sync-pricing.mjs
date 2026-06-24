@@ -144,8 +144,22 @@ async function main() {
   data.lastUpdated = new Date().toISOString().slice(0, 10);
   data.source = 'litellm+manual';
 
+  // Round numeric artifacts to 8 decimals to avoid IEEE-754 display cruft
+  // (e.g. LiteLLM sometimes returns 0.049999999999999996 instead of 0.05).
+  function roundDeep(obj) {
+    if (typeof obj === 'number') return Math.round(obj * 1e8) / 1e8;
+    if (Array.isArray(obj)) return obj.map(roundDeep);
+    if (obj && typeof obj === 'object') {
+      const out = {};
+      for (const k of Object.keys(obj)) out[k] = roundDeep(obj[k]);
+      return out;
+    }
+    return obj;
+  }
+  const cleaned = roundDeep(data);
+
   // Write back, preserving 2-space indent
-  fs.writeFileSync(JSON_PATH, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  fs.writeFileSync(JSON_PATH, JSON.stringify(cleaned, null, 2) + '\n', 'utf8');
   log(`Updated: ${updated}, Added: ${added}, Skipped: ${skipped}`);
   log(`New lastUpdated: ${data.lastUpdated}`);
   log(`Wrote ${JSON_PATH}`);

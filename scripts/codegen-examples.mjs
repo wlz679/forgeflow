@@ -92,7 +92,8 @@ const runnerPath = path.join(ROOT, 'scripts', '_runner-codegen-examples.ts');
 fs.writeFileSync(runnerPath, buildRunnerScript(), 'utf8');
 
 console.log('[codegen-examples] Running calculate() for 8 engines via tsx...');
-const result = spawnSync('npx.cmd', ['tsx', runnerPath], {
+const tsxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const result = spawnSync(tsxBin, ['tsx', runnerPath], {
   cwd: ROOT,
   encoding: 'utf8',
   maxBuffer: 50 * 1024 * 1024, // 50MB — output can be large
@@ -104,6 +105,7 @@ if (result.status !== 0) {
   console.error('stdout:', result.stdout);
   console.error('stderr:', result.stderr);
   console.error('error:', result.error);
+  try { fs.unlinkSync(runnerPath); } catch {}
   process.exit(1);
 }
 
@@ -224,10 +226,91 @@ if (CHECK_MODE) {
     for (const f of driftedFiles) console.error(`  - ${f}`);
     console.error(`\nFix: run \`node scripts/codegen-examples.mjs\` to regenerate, then commit.`);
     process.exit(1);
-  } else {
-    console.log(`\n[codegen-examples] --check PASSED: all ${ENGINES.length} engines in sync.`);
-    process.exit(0);
   }
+
+  // Sanity check: regenerated output should not contain literal escape sequences
+  // that should have been decoded. This catches bugs where generate() emits
+  // e.g. "you\\'re" (literal backslash + apostrophe) instead of "you're", or
+  // emits \\uXXXX instead of the actual unicode character. Both sides of the
+  // drift check could otherwise agree on a broken escape chain.
+  const LITERAL_ESCAPE_RE = /\\\\'|\\u[0-9a-fA-F]{4}/;
+  const corruptedFiles = [];
+  for (const { file, slug } of ENGINES) {
+    const out = results[slug] || [];
+    const joined = out.join('\n');
+    if (LITERAL_ESCAPE_RE.test(joined)) {
+      const match = joined.match(LITERAL_ESCAPE_RE);
+      corruptedFiles.push({ file, slug, sample: match ? match[0] : '' });
+    }
+  }
+  if (corruptedFiles.length > 0) {
+    console.error(`\n[codegen-examples] --check FAILED: ${corruptedFiles.length} engine(s) emit literal escape sequences (likely unescaped apostrophes or unicode):`);
+    for (const { file, slug, sample } of corruptedFiles) {
+      console.error(`  - ${file} (${slug}): found "${sample}" in output`);
+    }
+    console.error(`\nFix: in each affected engine, replace literal \\' or \\uXXXX with their decoded characters in generate().`);
+    process.exit(1);
+  }
+
+  // Sanity check: each engine's customFn must parse as valid JS, because
+  // [slug].astro calls `new Function('inputs','pick','fill', config.customFn)`
+  // at page-load. If customFn is malformed, the page's custom-mode interaction
+  // (fill inputs → Generate) silently fails (page still renders staticExamples[0]
+  // server-side but the dynamic result never computes).
+  //
+  // Extract the customFn body the same way as tests/scripts/test-customFn.mjs,
+  // then try to construct the function. Surface any parse failures.
+  function extractCustomFnBody(src) {
+    const start = src.indexOf('const customFn');
+    if (start < 0) return null;
+    let i = src.indexOf('"', start);
+    if (i < 0) return null;
+    const parts = [];
+    while (i < src.length && src[i] === '"') {
+      let j = i + 1;
+      let cur = '';
+      while (j < src.length && src[j] !== '"') {
+        if (src[j] === '\\' && j + 1 < src.length) {
+          const c = src[j + 1];
+          if (c === 'u' && j + 5 < src.length) {
+            cur += String.fromCharCode(parseInt(src.slice(j + 2, j + 6), 16));
+            j += 6;
+          } else { cur += c; j += 2; }
+        } else { cur += src[j]; j++; }
+      }
+      parts.push(cur);
+      i = j + 1;
+      while (i < src.length && /[\s+]/.test(src[i])) i++;
+      if (src[i] === ';') break;
+    }
+    return parts.join('');
+  }
+  const brokenCustomFn = [];
+  for (const { file } of ENGINES) {
+    const fp = path.join(ROOT, 'src', 'engines', file);
+    const src = fs.readFileSync(fp, 'utf8');
+    const body = extractCustomFnBody(src);
+    if (body === null) continue; // No customFn — e.g. wordpool engines
+    try {
+      new Function('inputs', 'pick', 'fill', body);
+    } catch (e) {
+      brokenCustomFn.push({ file, error: e.message });
+    }
+  }
+  if (brokenCustomFn.length > 0) {
+    console.error(`\n[codegen-examples] --check FAILED: ${brokenCustomFn.length} engine(s) have customFn that fails to parse as valid JS:`);
+    for (const { file, error } of brokenCustomFn) {
+      console.error(`  - ${file}: ${error}`);
+    }
+    console.error(`\nFix: in each affected engine, the customFn source must be valid JS (parseable by \`new Function\`).`);
+    console.error(`Common cause: string-literal labels (e.g. 'model-name':{...}) — JS labels must be identifiers.`);
+    console.error(`Wrap data tables in \`var T={...};\` or \`({...})()\` instead.`);
+    console.error(`For local debugging: \`node tests/scripts/test-customFn.mjs <slug>\``);
+    process.exit(1);
+  }
+
+  console.log(`\n[codegen-examples] --check PASSED: all ${ENGINES.length} engines in sync and clean.`);
+  process.exit(0);
 }
 
 // Clean up runner script

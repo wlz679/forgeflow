@@ -613,7 +613,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // Switch to cheapest popular model
   const popularCheapest = allCosts
     .reduce((min, c) => (c.info.input + c.info.output) < (min.info.input + min.info.output) ? c : min, allCosts[0]);
-  if (popularCheapest && popularCheapest.key !== cheapestSelected?.info.key) {
+  if (popularCheapest && popularCheapest.key !== cheapestSelected?.key) {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
@@ -644,24 +644,6 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   // Model data: full keys matching MODELS constant → {i,o,f,c,bi,bo,n}
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
-  "var M={};" +
   "var M={};" +
   "M['gpt-5.5']={i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT 5.5',od:1};" +
   "M['gpt-5.2']={i:1.75,o:14,f:'g5',c:'272K',bi:0.875,bo:7,n:'GPT 5.2',od:2};" +

@@ -10,7 +10,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "sync": "node scripts/sync-pricing.mjs && node scripts/codegen-customfn.mjs && node scripts/codegen-examples.mjs",
-    "translate": "tsx scripts/translate-wordpools.ts"
+    "translate": "tsx scripts/translate-wordpools.ts",
+    "check": "node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check",
+    "check:examples": "node scripts/codegen-examples.mjs --check",
+    "check:customfn": "node scripts/codegen-customfn.mjs --check"
   },
   "keywords": [
     "business-calculator",
@@ -28,7 +31,6 @@
   },
   "devDependencies": {
     "@vitalets/google-translate-api": "^9.2.1",
-    "google-trends-api": "^4.9.2",
     "tsx": "^4.22.3",
     "typescript": "^5.6.3",
     "undici": "^7.27.1"

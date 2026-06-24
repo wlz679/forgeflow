@@ -321,14 +321,13 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — minified JS port of calculate(). Variables: bt=bestTier, pic=perImageCost, mc=monthlyCost.
 const customFn =
-  "var PS={" +
-  "'dalle-4':{n:'DALL-E 4',pi:0.12,is:false,sr:'',q:'Highest',rs:['1024×1024','1792×1024','1024×1792'],od:1}," +
+  "var PS={'dalle-4':{n:'DALL-E 4',pi:0.12,is:false,sr:'',q:'Highest',rs:['1024×1024','1792×1024','1024×1792'],od:1}," +
   "'dalle-3':{n:'DALL-E 3',pi:0.08,is:false,sr:'',q:'Very High',rs:['1024×1024','1792×1024','1024×1792'],od:2}," +
   "'midjourney-v7':{n:'Midjourney V7',pi:0,is:true,sr:'$10-$120/mo',q:'Best Artistic',rs:['1024×1024','2048×2048'],od:3}," +
   "'stable-diffusion-4':{n:'SD 4 (API)',pi:0.003,is:false,sr:'',q:'Good+',rs:['512×512','1024×1024','2048×2048'],od:4}," +
   "'ideogram-3':{n:'Ideogram 3',pi:0.04,is:false,sr:'',q:'Best Text',rs:['1024×1024','1280×720'],od:5}," +
   "'flux-pro':{n:'Flux Pro',pi:0.05,is:false,sr:'',q:'Excellent',rs:['1024×1024','2048×2048'],od:6}," +
-  "'leonardo':{n:'Leonardo AI',pi:0,is:true,sr:'$12-$49/mo',q:'Very Good',rs:['1024×1024','1536×1536'],od:7}" +
+  "'leonardo':{n:'Leonardo AI',pi:0,is:true,sr:'$12-$49/mo',q:'Very Good',rs:['1024×1024','1536×1536'],od:7}};" +
 
   "var ST={mj:[10,30,60,120],leo:[12,29,49]};" +
   "var AM={standard:1,hd:1.3,ultra:1.8};" +
@@ -364,8 +363,8 @@ const customFn =
   "var ac=[];for(var i=0;i<sp.length;i++){" +
   "var pr=sp[i];var cst=0;var pk2=Object.keys(PS).find(function(kk){return PS[kk]===pr;})||'';" +
   "if(pr.is){var st2=pk2.indexOf('midjourney')>=0?ST.mj:pk2.indexOf('leo')>=0?ST.leo:null;" +
-  "if(st2){cst=im<=200?st2[0]:im<=1000?(st2[1]||st2[0]):st2[st2.length-1]||st2[0];}else{cst=20;}}" +
-  "else{cst=im*pr.pi;}" +
+  "if(st2){cst=im<=200?st2[0]:im<=1000?(st2[1]||st2[0]):st2[st2.length-1]||st2[0];}else{cst=20;}" +
+  "}else{cst=im*pr.pi;}" +
   "ac.push({n:pr.n,c:cst,is:pr.is});}" +
   "var mx=ac.reduce(function(max,c){return c.c>max.c?c:max;}).c;mx=Math.max(mx,1);" +
   "var BW=35;var ch=ac.reduce(function(min,c){return c.c<min.c?c:min;});" +
@@ -414,7 +413,7 @@ const customFn =
   "for(var ai=0;ai<pap.length;ai++){var api=pap[ai];" +
   "var be3=Math.ceil(sb/api.pi);if(be3>0&&be3<100000){" +
   "o.push('  '+api.n+' → '+sub.n+' ($'+sb+'/mo): '+lc(be3)+' imgs/mo break-even');" +
-  "}}}" +
+  "}}" +
   "}" +
   "o.push('');" +
   "o.push('📈 Volume Scenarios at Different Batch Sizes');o.push(SEP3.repeat(50));" +
@@ -437,7 +436,7 @@ const customFn =
   "if(sa2){var sak2=Object.keys(PS).find(function(kk){return PS[kk]===sa2;})||'';" +
   "var ismj3=sak2.indexOf('midjourney')>=0;var sb2=ismj3?ST.mj[0]:ST.leo[0];" +
   "if(sb2<mc){o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): saves $'+fm(mc-sb2)+'/mo');}" +
-  "else{o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): +$'+fm(sb2-mc)+'/mo vs pay-per-image');}}" +
+  "else{o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): +$'+fm(sb2-mc)+'/mo vs pay-per-image');}" +
   "}else{" +
   "var cap=sp.filter(function(x){return !x.is;}).sort(function(a,b){return a.pi-b.pi;})[0];" +
   "if(cap){var ac2=im*cap.pi;o.push('• Drop subscription, go per-image ('+cap.n+'): $'+fm(ac2)+'/mo  (vs $'+bt+'/mo)');}}" +
