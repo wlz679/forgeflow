@@ -31,27 +31,6 @@ const DATA_PROCESS_COST_PER_GB = PRICING.training.dataProcessPerGB;
 // Epoch time multiplier — LoRA is faster per epoch
 const LORA_EPOCH_SPEEDUP = PRICING.training.loraSpeedup; // LoRA epoch takes 35% of full fine-tune time
 
-const PRESETS: Record<string, Record<string, string>> = {
-  'Quick LoRA 7B': {
-    modelSize: '7B', gpuType: 'H100-80GB', gpuCount: '2', trainingHours: '8', epochs: '3', cloudStorage: '50', dataProcessCost: '20',
-  },
-  'Mid-Scale 13B': {
-    modelSize: '13B', gpuType: 'A100-80GB', gpuCount: '8', trainingHours: '24', epochs: '5', cloudStorage: '200', dataProcessCost: '100',
-  },
-  'Full 70B Fine-Tune': {
-    modelSize: '70B', gpuType: 'H200-141GB', gpuCount: '16', trainingHours: '48', epochs: '3', cloudStorage: '500', dataProcessCost: '300',
-  },
-  'Enterprise 180B': {
-    modelSize: '180B', gpuType: 'H200-141GB', gpuCount: '64', trainingHours: '168', epochs: '2', cloudStorage: '2000', dataProcessCost: '1000',
-  },
-  'Budget 7B': {
-    modelSize: '7B', gpuType: 'RTX-6000', gpuCount: '4', trainingHours: '12', epochs: '5', cloudStorage: '30', dataProcessCost: '10',
-  },
-  'Pro 405B Full Train': {
-    modelSize: '405B', gpuType: 'H200-141GB', gpuCount: '128', trainingHours: '720', epochs: '1', cloudStorage: '5000', dataProcessCost: '2000',
-  },
-};
-
 function fmt(n: number): string { return '$' + n.toFixed(2); }
 function lc(n: number): string { return n.toLocaleString(); }
 function pad(s: string, len: number): string { return s + ' '.repeat(Math.max(0, len - s.length)); }
@@ -300,6 +279,14 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   generate(inputs) { return calculate(inputs); },
+  presets: [
+    { key: 'quick-lora',      emoji: '🚀', fields: { modelSize: '7B',   gpuType: 'H100-80GB',  gpuCount: '2',   trainingHours: '8',   epochs: '3', cloudStorage: '50',   dataProcessCost: '20' } },
+    { key: 'mid-13b',         emoji: '📦', fields: { modelSize: '13B',  gpuType: 'A100-80GB',  gpuCount: '8',   trainingHours: '24',  epochs: '5', cloudStorage: '200',  dataProcessCost: '100' } },
+    { key: 'full-70b',        emoji: '🏭', fields: { modelSize: '70B',  gpuType: 'H200-141GB', gpuCount: '16',  trainingHours: '48',  epochs: '3', cloudStorage: '500',  dataProcessCost: '300' } },
+    { key: 'enterprise-180b', emoji: '🏢', fields: { modelSize: '180B', gpuType: 'H200-141GB', gpuCount: '64',  trainingHours: '168', epochs: '2', cloudStorage: '2000', dataProcessCost: '1000' } },
+    { key: 'budget-7b',       emoji: '💰', fields: { modelSize: '7B',   gpuType: 'RTX-6000',   gpuCount: '4',   trainingHours: '12',  epochs: '5', cloudStorage: '30',   dataProcessCost: '10' } },
+    { key: 'pro-405b',        emoji: '🏆', fields: { modelSize: '405B', gpuType: 'H200-141GB', gpuCount: '128', trainingHours: '720', epochs: '1', cloudStorage: '5000', dataProcessCost: '2000' } },
+  ],
   staticExamples: [
     '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 8× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  8× A100 80GB @ $1.50/hr × 25.2 hrs           $302.40\nCloud Storage: 500 GB @ $0.10/GB/mo × 0.1 mo                $5.00\nData Processing: $$1000.00                                   $1000.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $1307.40\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $100.80\nPer Epoch Total:    $101.38\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $100.80        | $1101.38        \n2        | $201.60        | $1202.77        \n3        | $302.40        | $1304.15        \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $302.40        (23%)  █████\nStorage: $5.00          (0%)  \nData:    $1000.00       (76%)  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $915.18\nExpected:                                      $1307.40\nPessimistic (on-demand + overhead):            $1961.10\n\nWith Spot/Reserved Discount (40% off):          $784.44\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $1307.40     | $3922.20     | $6537.00     | $13074.00    | $32685.00    | $65370.00   \n\n💡 25.2 GPU-hours ≈ 20,160 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch to full fine-tune:  $3922.20  (3x cost, but better quality)\n• Halve epochs to 1:  $653.70  (may need more data to compensate)\n• Double epochs to 6:  $2614.80  (diminishing returns past 5)\n• Switch to cheaper GPU in same tier:  check RunPod/Vast.ai for 40-50% savings\n',
   ],
