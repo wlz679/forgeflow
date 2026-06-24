@@ -1082,12 +1082,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-image-cost-calculator.how_to_use.5': { en: 'Review the bar chart to compare all 7 providers at your volume, and use the comparison table to find the best deal for your needs.', zh: '查看柱状图对比 7 家提供商在你的用量下的成本，使用对比表找出最适合你的方案。' },
 
   // AI Image Generation Cost Calculator — presets
-  'tools.solopreneur-ai-image-cost-calculator.preset.solopreneur': { en: '🎒 Solopreneur', zh: '🎒 Solopreneur' },
-  'tools.solopreneur-ai-image-cost-calculator.preset.creator': { en: '📸 Content Creator', zh: '📸 Content Creator' },
-  'tools.solopreneur-ai-image-cost-calculator.preset.agency': { en: '🏢 Design Agency', zh: '🏢 Design Agency' },
-  'tools.solopreneur-ai-image-cost-calculator.preset.budget': { en: '💰 Budget Hacker', zh: '💰 Budget Hacker' },
-  'tools.solopreneur-ai-image-cost-calculator.preset.logos': { en: '🔤 Text & Logos', zh: '🔤 Text & Logos' },
-  'tools.solopreneur-ai-image-cost-calculator.preset.artistic': { en: '🎨 High-End Artistic', zh: '🎨 High-End Artistic' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.solopreneur': { en: 'Solopreneur', zh: 'Solopreneur' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.creator': { en: 'Content Creator', zh: 'Content Creator' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.agency': { en: 'Design Agency', zh: 'Design Agency' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.budget': { en: 'Budget Hacker', zh: 'Budget Hacker' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.logos': { en: 'Text & Logos', zh: 'Text & Logos' },
+  'tools.solopreneur-ai-image-cost-calculator.preset.artistic': { en: 'High-End Artistic', zh: 'High-End Artistic' },
 
   // AI Image Generation Cost Calculator — provider names
 
@@ -1129,12 +1129,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-training-cost-estimator.how_to_use.5': { en: 'Review per-epoch costs, optimistic/pessimistic ranges, and multi-run scaling to plan your total training budget.', zh: '查看每 epoch 成本、乐观/悲观范围和多轮扩展，规划总训练预算。' },
 
   // AI Training Cost Estimator — presets
-  'tools.solopreneur-ai-training-cost-estimator.preset.quick-lora': { en: '🚀 Quick LoRA 7B', zh: '🚀 Quick LoRA 7B' },
-  'tools.solopreneur-ai-training-cost-estimator.preset.mid-13b': { en: '📊 Mid-Scale 13B', zh: '📊 Mid-Scale 13B' },
-  'tools.solopreneur-ai-training-cost-estimator.preset.full-70b': { en: '🖥️ Full 70B FT', zh: '🖥️ Full 70B FT' },
-  'tools.solopreneur-ai-training-cost-estimator.preset.enterprise-180b': { en: '🏢 Enterprise 180B', zh: '🏢 Enterprise 180B' },
-  'tools.solopreneur-ai-training-cost-estimator.preset.budget-7b': { en: '💰 Budget 7B', zh: '💰 Budget 7B' },
-  'tools.solopreneur-ai-training-cost-estimator.preset.pro-405b': { en: '🏭 Pro 405B Full', zh: '🏭 Pro 405B Full' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.quick-lora': { en: 'Quick LoRA 7B', zh: 'Quick LoRA 7B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.mid-13b': { en: 'Mid-Scale 13B', zh: 'Mid-Scale 13B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.full-70b': { en: 'Full 70B FT', zh: 'Full 70B FT' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.enterprise-180b': { en: 'Enterprise 180B', zh: 'Enterprise 180B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.budget-7b': { en: 'Budget 7B', zh: 'Budget 7B' },
+  'tools.solopreneur-ai-training-cost-estimator.preset.pro-405b': { en: 'Pro 405B Full', zh: 'Pro 405B Full' },
 
   'tools.solopreneur-gpu-cloud-cost-calculator.input.provider.label': { en: 'Cloud Provider', zh: '云服务商' },
   'tools.solopreneur-gpu-cloud-cost-calculator.input.gpuType.label': { en: 'GPU Type', zh: 'GPU 类型' },
@@ -1170,12 +1170,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-gpu-cloud-cost-calculator.how_to_use.5': { en: 'Review the multi-provider bar chart, tier savings comparison, and multi-GPU scaling table to find the optimal configuration.', zh: '查看多服务商柱状图、层级节省对比和多 GPU 扩展表，找到最佳配置。' },
 
   // GPU Cloud Cost Calculator — presets
-  'tools.solopreneur-gpu-cloud-cost-calculator.preset.budget-single': { en: '💻 Budget Single GPU', zh: '💻 Budget Single GPU' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.preset.dev-box': { en: '🖥️ Standard Dev Box', zh: '🖥️ Standard Dev Box' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.preset.training-rig': { en: '🔬 Training Rig 4×A100', zh: '🔬 Training Rig 4×A100' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.preset.enterprise-h100': { en: '🏢 Enterprise H100 Cluster', zh: '🏢 Enterprise H100 Cluster' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.preset.cheapest-h200': { en: '🧪 Cheapest H200 Test', zh: '🧪 Cheapest H200 Test' },
-  'tools.solopreneur-gpu-cloud-cost-calculator.preset.pro-8h100': { en: '⚡ Pro 8×H100', zh: '⚡ Pro 8×H100' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.preset.budget-single': { en: 'Budget Single GPU', zh: 'Budget Single GPU' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.preset.dev-box': { en: 'Standard Dev Box', zh: 'Standard Dev Box' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.preset.training-rig': { en: 'Training Rig 4×A100', zh: 'Training Rig 4×A100' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.preset.enterprise-h100': { en: 'Enterprise H100 Cluster', zh: 'Enterprise H100 Cluster' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.preset.cheapest-h200': { en: 'Cheapest H200 Test', zh: 'Cheapest H200 Test' },
+  'tools.solopreneur-gpu-cloud-cost-calculator.preset.pro-8h100': { en: 'Pro 8×H100', zh: 'Pro 8×H100' },
 
   'tools.solopreneur-ai-api-cost-comparison.input.inputTokens.label': { en: 'Input Tokens per Request', zh: '每次请求输入 Token 数' },
   'tools.solopreneur-ai-api-cost-comparison.input.inputTokens.placeholder': { en: 'e.g. 1000', zh: '例如：1000' },
