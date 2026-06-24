@@ -395,47 +395,6 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
-  "var M={" +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5 Flash',f:'flash35',ic:'\\u25CF',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'\\u25B2',cw:'1M',od:2,sc:true,sb:true}," +
-  "var M={" +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "var M={" +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "var M={" +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "var M={" +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
-  "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
-  "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
   "'gemini-3.5-flash':{i:1.5,o:9,bi:0.75,bo:4.5,n:'Gemini 3.5Flash',f:'flash35',ic:'●',cw:'1M',od:1,sc:true,sb:true}," +
   "'gemini-3.1-pro':{i:2.5,o:15,bi:1.25,bo:7.5,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:2,sc:true,sb:true}," +
   "'gemini-3-flash':{i:0.5,o:3,bi:0.25,bo:1.5,n:'Gemini 3 Flash',f:'flash3',ic:'◆',cw:'1M',od:3,sc:true,sb:true}," +

@@ -101,29 +101,29 @@ function calculateMarketSize(inputs: Record<string, string>): string[] {
 
   // 🩺 Market Health (v3)
   if (totalCustomers <= 0) {
-    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0";
+    result += "\n\n🩺 Market Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 No addressable customers. Re-check population and target %.\n• Total addressable: 0 | Reachable: 0";
   } else if (totalCustomers < 10000) {
-    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟠 Niche market (" + totalCustomers.toLocaleString() + " addressable). High focus needed.\\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\\n• Pricing matters a lot — small market × high ARPU works.";
+    result += "\n\n🩺 Market Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟠 Niche market (" + totalCustomers.toLocaleString() + " addressable). High focus needed.\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\n• Pricing matters a lot — small market × high ARPU works.";
   } else if (totalCustomers < 1000000) {
-    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Mid-sized market (" + totalCustomers.toLocaleString() + " addressable). Standard SaaS opportunity.\\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\\n• Achievable with focused go-to-market.";
+    result += "\n\n🩺 Market Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Mid-sized market (" + totalCustomers.toLocaleString() + " addressable). Standard SaaS opportunity.\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\n• Achievable with focused go-to-market.";
   } else {
-    result += "\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🟢 Large market (" + totalCustomers.toLocaleString() + " addressable). Big upside.\\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\\n• Capture even 0.1% for major revenue.";
+    result += "\n\n🩺 Market Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Large market (" + totalCustomers.toLocaleString() + " addressable). Big upside.\n• Reachable at " + pct(penetrationRate) + ": " + reachable.toLocaleString() + " customers.\n• Capture even 0.1% for major revenue.";
   }
 
   // 🔄 What-If Scenarios (v3)
-  result += "\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+  result += "\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
   if (totalCustomers > 0 && annualRevPerCustomer > 0) {
     const doublePenetration = totalCustomers * (penetrationRate * 2 / 100);
     const revAtDouble = doublePenetration * annualRevPerCustomer;
     const revAtHalfPrice = reachable * (annualRevPerCustomer / 2);
     const doubleCustomers = totalCustomers * 2;
     const revAtDoubleMarket = (doubleCustomers * penetrationRate / 100) * annualRevPerCustomer;
-    result += "\\n• Double penetration rate:  " + reachable.toLocaleString() + " → " + doublePenetration.toLocaleString() + " customers | $" + fmt(revAtDouble) + "/yr";
-    result += "\\n• Cut price 50%:  Customers double (price-sensitive market) | $" + fmt(revAtHalfPrice) + "/yr";
-    result += "\\n• Double target %:  " + totalCustomers.toLocaleString() + " → " + doubleCustomers.toLocaleString() + " addressable | $" + fmt(revAtDoubleMarket) + "/yr at " + pct(penetrationRate);
-    result += "\\n• Triple pricing (premium):  $" + fmt(reachable * annualRevPerCustomer * 3) + "/yr at same reach (only works for unique value)";
+    result += "\n• Double penetration rate:  " + reachable.toLocaleString() + " → " + doublePenetration.toLocaleString() + " customers | $" + fmt(revAtDouble) + "/yr";
+    result += "\n• Cut price 50%:  Customers double (price-sensitive market) | $" + fmt(revAtHalfPrice) + "/yr";
+    result += "\n• Double target %:  " + totalCustomers.toLocaleString() + " → " + doubleCustomers.toLocaleString() + " addressable | $" + fmt(revAtDoubleMarket) + "/yr at " + pct(penetrationRate);
+    result += "\n• Triple pricing (premium):  $" + fmt(reachable * annualRevPerCustomer * 3) + "/yr at same reach (only works for unique value)";
   } else {
-    result += "\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.";
+    result += "\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.";
   }
 
   // ⚖️ Break-Even (v3)
@@ -216,7 +216,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateMarketSize(inputs); },
   staticExamples: [
-    '📊 Market Size: your market\n\n📋 Market Overview\n• Market:            your market\n• Market Stage:      Growing\n• Addressable Customers: 0\n• Avg Revenue / Customer: $0/yr\n• TAM (Total Addressable Market): $0/yr\n• Annual Growth Rate: 0.0%\n\n🎯 Reality Check\n• Growing market: sweet spot for entry. Ride the tailwind.\n\\n\\n🩺 Market Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🔴 No addressable customers. Re-check population and target %.\\n• Total addressable: 0 | Reachable: 0\\n\\n🔄 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.\n\n💡 Tip: Small market with low pricing is a tough combo. Either raise price (premium positioning) or expand the addressable market (move upmarket or downmarket). The current numbers suggest you\'ll struggle to reach $1M ARR.',
+    '📊 Market Size: your market\n\n📋 Market Overview\n• Market:            your market\n• Market Stage:      Growing\n• Addressable Customers: 0\n• Avg Revenue / Customer: $0/yr\n• TAM (Total Addressable Market): $0/yr\n• Annual Growth Rate: 0.0%\n\n🎯 Reality Check\n• Growing market: sweet spot for entry. Ride the tailwind.\n\n\n🩺 Market Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 No addressable customers. Re-check population and target %.\n• Total addressable: 0 | Reachable: 0\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — enter total population, target %, and pricing to see scenarios.\n\n💡 Tip: Small market with low pricing is a tough combo. Either raise price (premium positioning) or expand the addressable market (move upmarket or downmarket). The current numbers suggest you\'ll struggle to reach $1M ARR.',
   ],
   faq: [
     { q: "What methodology does this calculator use?", a: "Both bottom-up (customers × revenue per customer) and top-down (market share of TAM). Industry best practice is to use both methods and see if they converge — if they don't, one of your assumptions is off." },

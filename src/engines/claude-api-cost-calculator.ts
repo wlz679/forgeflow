@@ -583,11 +583,6 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   // --- MODELS map (full keys, MUST match TS MODELS) ---
-  "var M={" +
-  "var M={" +
-  "var M={" +
-  "var M={" +
-  "var M={" +
   "'claude-fable-5':{i:10,o:50,n:'Claude Fable 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:1}," +
   "'claude-opus-4-8':{i:5,o:25,n:'Claude Opus 48',f:'claude4x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:2}," +
   "'claude-sonnet-4-6':{i:3,o:15,n:'Claude Sonnet 46',f:'claude4x',cw:'1M',mo:'64K',bi:1.5,bo:7.5,od:3}," +
