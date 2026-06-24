@@ -92,7 +92,8 @@ const runnerPath = path.join(ROOT, 'scripts', '_runner-codegen-examples.ts');
 fs.writeFileSync(runnerPath, buildRunnerScript(), 'utf8');
 
 console.log('[codegen-examples] Running calculate() for 8 engines via tsx...');
-const result = spawnSync('npx.cmd', ['tsx', runnerPath], {
+const tsxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+const result = spawnSync(tsxBin, ['tsx', runnerPath], {
   cwd: ROOT,
   encoding: 'utf8',
   maxBuffer: 50 * 1024 * 1024, // 50MB — output can be large
@@ -104,6 +105,7 @@ if (result.status !== 0) {
   console.error('stdout:', result.stdout);
   console.error('stderr:', result.stderr);
   console.error('error:', result.error);
+  try { fs.unlinkSync(runnerPath); } catch {}
   process.exit(1);
 }
 
