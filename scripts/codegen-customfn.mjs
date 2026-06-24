@@ -306,18 +306,28 @@ function generateTable(engine) {
 
   // Openai format: M['key']={...};
   // Other format: 'key':{...},
-  // Only openai needs the declaration prepended (it uses var M={}; inline);
-  // Others have separate declaration lines that we preserve.
+  // Each engine has a tableStart (the declaration line emitted by the codegen,
+  // e.g. "var M={" +). The previous version only prepended the declaration
+  // for openai-token-calculator and relied on the existing declaration line
+  // being preserved for other engines — but that's fragile: any future edit
+  // that moves/regenerates the table without preserving the wrapping line
+  // (e.g. a stale GitHub Action sync-pricing run after a manual fix) would
+  // silently drop the declaration. Always prepend the wrapping AND close
+  // the last entry with `};` for idempotence.
   if (engine.file === 'openai-token-calculator.ts') {
     const lines = sorted.map(([k, m]) => `  "M['${k}']={${engine.fieldMap(m, k)}};" +`).join('\n');
-    return '  "var M={};" +\n' + lines;
+    return (engine.tableStart ? `  ${engine.tableStart}\n` : '  "var M={};" +\n') + lines;
   } else {
-    // All other engines: just the data lines, no declaration
     const lines = sorted.map(([k, m], i) => {
-      const sep = i === sorted.length - 1 ? '' : ',';
+      // Last entry closes the object literal: drop trailing comma, add '};'
+      const isLast = i === sorted.length - 1;
+      const sep = isLast ? '}' : ',';
       return `  "'${k}':{${engine.fieldMap(m, k)}}${sep}" +`;
     }).join('\n');
-    return lines;
+    // Prepend tableStart (e.g. "var M={" +). If tableStart already ends with
+    // "{" we don't add another; if it ends with "{...}" (like openai's
+    // "var M={};" +), we use it as-is.
+    return (engine.tableStart ? `  ${engine.tableStart}\n` : '') + lines;
   }
 }
 
