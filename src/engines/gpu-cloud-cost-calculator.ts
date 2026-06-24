@@ -272,12 +272,12 @@ function calculate(inputs: Record<string, string>): string[] {
 // customFn — exact sync with calculate()
 const customFn =
   "var GN={H200:'H200 141GB',H100:'H100 80GB',A100:'A100 80GB',L40S:'L40S 48GB',RTX4090:'RTX 4090 24GB',A6000:'RTX A6000 48GB'};" +
-  "'runpod':{n:'RunPod',sm:0.6,rm:0.85,r:{H200:2.49,H100:1.99,A100:0.79,L40S:0.69,RTX4090:0.49,A6000:0.39},od:1}," +
+  "var PS2={'runpod':{n:'RunPod',sm:0.6,rm:0.85,r:{H200:2.49,H100:1.99,A100:0.79,L40S:0.69,RTX4090:0.49,A6000:0.39},od:1}," +
   "'vastai':{n:'Vast.ai',sm:0.5,rm:0.8,r:{H200:2.2,H100:1.69,A100:0.69,L40S:0.59,RTX4090:0.44,A6000:0.35},od:2}," +
   "'lambdalabs':{n:'Lambda Labs',sm:0.7,rm:0.9,r:{H200:2.8,H100:2.49,A100:1.1,L40S:0.8,RTX4090:0.55,A6000:0.5},od:3}," +
   "'aws':{n:'AWS',sm:0.4,rm:0.7,r:{H200:5,H100:4,A100:3.5,L40S:1.2,RTX4090:0.8,A6000:0.65},od:4}," +
   "'gcp':{n:'GCP',sm:0.45,rm:0.75,r:{H200:4.5,H100:4.2,A100:2.8,L40S:1,RTX4090:0.7,A6000:0.6},od:5}," +
-  "'azure':{n:'Azure',sm:0.5,rm:0.8,r:{H200:4.8,H100:3.8,A100:3,L40S:1.1,RTX4090:0.75,A6000:0.62},od:6}" +
+  "'azure':{n:'Azure',sm:0.5,rm:0.8,r:{H200:4.8,H100:3.8,A100:3,L40S:1.1,RTX4090:0.75,A6000:0.62},od:6}};" +
 
   "var SCPG2=0.1;var NEG2=0.08;var SS2=[100,500,1000,5000];" +
   "function fm3(n){return '$'+n.toFixed(2)}function lc3(n){return n.toLocaleString()}function pd3(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +

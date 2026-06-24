@@ -302,7 +302,6 @@ if (CHECK_MODE) {
     // These have structural bugs that need deeper refactor than a 1-line fix.
     // Use KNOWN_BROKEN_CUSTOMFN only as a temporary measure — track in plan doc.
     const KNOWN_BROKEN_CUSTOMFN = new Set([
-      'gpu-cloud-cost-calculator',            // bare-label provider table (pre-existing)
       'ai-training-cost-estimator',           // two bare-label tables (GPU + model sizes)
     ]);
     const newBroken = brokenCustomFn.filter(({ file }) => !KNOWN_BROKEN_CUSTOMFN.has(file.replace(/\.ts$/, '')));
