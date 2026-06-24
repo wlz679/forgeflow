@@ -224,10 +224,34 @@ if (CHECK_MODE) {
     for (const f of driftedFiles) console.error(`  - ${f}`);
     console.error(`\nFix: run \`node scripts/codegen-examples.mjs\` to regenerate, then commit.`);
     process.exit(1);
-  } else {
-    console.log(`\n[codegen-examples] --check PASSED: all ${ENGINES.length} engines in sync.`);
-    process.exit(0);
   }
+
+  // Sanity check: regenerated output should not contain literal escape sequences
+  // that should have been decoded. This catches bugs where generate() emits
+  // e.g. "you\\'re" (literal backslash + apostrophe) instead of "you're", or
+  // emits \\uXXXX instead of the actual unicode character. Both sides of the
+  // drift check could otherwise agree on a broken escape chain.
+  const LITERAL_ESCAPE_RE = /\\\\'|\\u[0-9a-fA-F]{4}/;
+  const corruptedFiles = [];
+  for (const { file, slug } of ENGINES) {
+    const out = results[slug] || [];
+    const joined = out.join('\n');
+    if (LITERAL_ESCAPE_RE.test(joined)) {
+      const match = joined.match(LITERAL_ESCAPE_RE);
+      corruptedFiles.push({ file, slug, sample: match ? match[0] : '' });
+    }
+  }
+  if (corruptedFiles.length > 0) {
+    console.error(`\n[codegen-examples] --check FAILED: ${corruptedFiles.length} engine(s) emit literal escape sequences (likely unescaped apostrophes or unicode):`);
+    for (const { file, slug, sample } of corruptedFiles) {
+      console.error(`  - ${file} (${slug}): found "${sample}" in output`);
+    }
+    console.error(`\nFix: in each affected engine, replace literal \\' or \\uXXXX with their decoded characters in generate().`);
+    process.exit(1);
+  }
+
+  console.log(`\n[codegen-examples] --check PASSED: all ${ENGINES.length} engines in sync and clean.`);
+  process.exit(0);
 }
 
 // Clean up runner script
