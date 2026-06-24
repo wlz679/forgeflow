@@ -399,7 +399,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push(SEP.repeat(60));
   const popularCheapest = allCosts
     .reduce((min, c) => (c.info.input + c.info.output) < (min.info.input + min.info.output) ? c : min, allCosts[0]);
-  if (popularCheapest && popularCheapest.key !== cheapestSelected?.info.key) {
+  if (popularCheapest && popularCheapest.key !== cheapestSelected?.key) {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;

@@ -123,7 +123,7 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
   }
 
   // 💡 Tip (v3)
-  if (flatMonthlyProfit > 0 && gm !== null && gm <= 12) {
+  if (flatMonthlyProfit > 0 && flatMonths !== null && flatMonths <= 12) {
     result += "\n\n💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.";
   } else if (flatMonthlyProfit <= 0) {
     result += "\n\n💡 Tip: Negative monthly profit means you're burning cash every month. Either raise prices, cut costs, or accept that you'll need more runway to reach break-even. The longer you delay, the harder it gets.";
