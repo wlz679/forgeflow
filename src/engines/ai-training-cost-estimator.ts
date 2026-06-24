@@ -31,27 +31,6 @@ const DATA_PROCESS_COST_PER_GB = PRICING.training.dataProcessPerGB;
 // Epoch time multiplier — LoRA is faster per epoch
 const LORA_EPOCH_SPEEDUP = PRICING.training.loraSpeedup; // LoRA epoch takes 35% of full fine-tune time
 
-const PRESETS: Record<string, Record<string, string>> = {
-  'Quick LoRA 7B': {
-    modelSize: '7B', gpuType: 'H100-80GB', gpuCount: '2', trainingHours: '8', epochs: '3', cloudStorage: '50', dataProcessCost: '20',
-  },
-  'Mid-Scale 13B': {
-    modelSize: '13B', gpuType: 'A100-80GB', gpuCount: '8', trainingHours: '24', epochs: '5', cloudStorage: '200', dataProcessCost: '100',
-  },
-  'Full 70B Fine-Tune': {
-    modelSize: '70B', gpuType: 'H200-141GB', gpuCount: '16', trainingHours: '48', epochs: '3', cloudStorage: '500', dataProcessCost: '300',
-  },
-  'Enterprise 180B': {
-    modelSize: '180B', gpuType: 'H200-141GB', gpuCount: '64', trainingHours: '168', epochs: '2', cloudStorage: '2000', dataProcessCost: '1000',
-  },
-  'Budget 7B': {
-    modelSize: '7B', gpuType: 'RTX-6000', gpuCount: '4', trainingHours: '12', epochs: '5', cloudStorage: '30', dataProcessCost: '10',
-  },
-  'Pro 405B Full Train': {
-    modelSize: '405B', gpuType: 'H200-141GB', gpuCount: '128', trainingHours: '720', epochs: '1', cloudStorage: '5000', dataProcessCost: '2000',
-  },
-};
-
 function fmt(n: number): string { return '$' + n.toFixed(2); }
 function lc(n: number): string { return n.toLocaleString(); }
 function pad(s: string, len: number): string { return s + ' '.repeat(Math.max(0, len - s.length)); }
