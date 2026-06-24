@@ -19,7 +19,7 @@ const GPU_NAMES: Record<string, string> = {
   'A6000': 'RTX A6000 48GB',
 };
 
-const PROVIDERS: Record<string, ProviderInfo> = PRICING.gpu.providers as any;
+const PROVIDERS: Record<string, ProviderInfo> = PRICING.gpu.providers as unknown as Record<string, ProviderInfo>;
 
 // Storage cost per GB per month (attached SSD)
 const STORAGE_COST_PER_GB = PRICING.gpu.storagePerGB;
