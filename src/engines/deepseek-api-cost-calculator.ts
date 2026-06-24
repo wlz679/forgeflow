@@ -414,10 +414,11 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
+  "var M={" +
   "'deepseek-v4-flash':{i:0.14,o:0.28,n:'DeepSeek V4 Flash',f:'v4',cw:'1M',od:1}," +
   "'deepseek-v4-pro':{i:1.74,o:3.48,n:'DeepSeek V4 Pro',f:'v4',cw:'1M',od:2}," +
   "'deepseek-v4-pro-promo':{i:0.435,o:0.87,n:'V4 Pro (75% Promo)',f:'v4',cw:'1M',od:3}," +
-  "'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:4}" +
+  "'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:4}};" +
 
   "var FI={v4:'\\u25C6',legacy:'\\u25C7'};" +
   "var FL={v4:'V4 Series',legacy:'Legacy'};" +
