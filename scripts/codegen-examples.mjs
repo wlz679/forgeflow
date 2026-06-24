@@ -298,33 +298,15 @@ if (CHECK_MODE) {
     }
   }
   if (brokenCustomFn.length > 0) {
-    // Allow engines listed as KNOWN_BROKEN_CUSTOMFN to fail without blocking CI.
-    // These have structural bugs that need deeper refactor than a 1-line fix.
-    // Use KNOWN_BROKEN_CUSTOMFN only as a temporary measure — track in plan doc.
-    const KNOWN_BROKEN_CUSTOMFN = new Set([
-      'ai-training-cost-estimator',           // two bare-label tables (GPU + model sizes)
-    ]);
-    const newBroken = brokenCustomFn.filter(({ file }) => !KNOWN_BROKEN_CUSTOMFN.has(file.replace(/\.ts$/, '')));
-    const knownBroken = brokenCustomFn.filter(({ file }) => KNOWN_BROKEN_CUSTOMFN.has(file.replace(/\.ts$/, '')));
-
-    if (knownBroken.length > 0) {
-      console.warn(`\n[codegen-examples] --check WARN: ${knownBroken.length} engine(s) have known-broken customFn (not blocking CI):`);
-      for (const { file, error } of knownBroken) {
-        console.warn(`  - ${file}: ${error}`);
-      }
+    console.error(`\n[codegen-examples] --check FAILED: ${brokenCustomFn.length} engine(s) have customFn that fails to parse as valid JS:`);
+    for (const { file, error } of brokenCustomFn) {
+      console.error(`  - ${file}: ${error}`);
     }
-
-    if (newBroken.length > 0) {
-      console.error(`\n[codegen-examples] --check FAILED: ${newBroken.length} engine(s) have customFn that fails to parse as valid JS:`);
-      for (const { file, error } of newBroken) {
-        console.error(`  - ${file}: ${error}`);
-      }
-      console.error(`\nFix: in each affected engine, the customFn source must be valid JS (parseable by \`new Function\`).`);
-      console.error(`Common cause: string-literal labels (e.g. 'model-name':{...}) — JS labels must be identifiers.`);
-      console.error(`Wrap data tables in \`var T={...};\` or \`({...})()\` instead.`);
-      console.error(`For local debugging: \`node tests/scripts/test-customFn.mjs <slug>\``);
-      process.exit(1);
-    }
+    console.error(`\nFix: in each affected engine, the customFn source must be valid JS (parseable by \`new Function\`).`);
+    console.error(`Common cause: string-literal labels (e.g. 'model-name':{...}) — JS labels must be identifiers.`);
+    console.error(`Wrap data tables in \`var T={...};\` or \`({...})()\` instead.`);
+    console.error(`For local debugging: \`node tests/scripts/test-customFn.mjs <slug>\``);
+    process.exit(1);
   }
 
   console.log(`\n[codegen-examples] --check PASSED: all ${ENGINES.length} engines in sync and clean.`);
