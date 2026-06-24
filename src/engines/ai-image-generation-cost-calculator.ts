@@ -321,13 +321,14 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — minified JS port of calculate(). Variables: bt=bestTier, pic=perImageCost, mc=monthlyCost.
 const customFn =
+  "var PS={" +
   "'dalle-4':{n:'DALL-E 4',pi:0.12,is:false,sr:'',q:'Highest',rs:['1024×1024','1792×1024','1024×1792'],od:1}," +
   "'dalle-3':{n:'DALL-E 3',pi:0.08,is:false,sr:'',q:'Very High',rs:['1024×1024','1792×1024','1024×1792'],od:2}," +
   "'midjourney-v7':{n:'Midjourney V7',pi:0,is:true,sr:'$10-$120/mo',q:'Best Artistic',rs:['1024×1024','2048×2048'],od:3}," +
   "'stable-diffusion-4':{n:'SD 4 (API)',pi:0.003,is:false,sr:'',q:'Good+',rs:['512×512','1024×1024','2048×2048'],od:4}," +
   "'ideogram-3':{n:'Ideogram 3',pi:0.04,is:false,sr:'',q:'Best Text',rs:['1024×1024','1280×720'],od:5}," +
   "'flux-pro':{n:'Flux Pro',pi:0.05,is:false,sr:'',q:'Excellent',rs:['1024×1024','2048×2048'],od:6}," +
-  "'leonardo':{n:'Leonardo AI',pi:0,is:true,sr:'$12-$49/mo',q:'Very Good',rs:['1024×1024','1536×1536'],od:7}" +
+  "'leonardo':{n:'Leonardo AI',pi:0,is:true,sr:'$12-$49/mo',q:'Very Good',rs:['1024×1024','1536×1536'],od:7}}" +
 
   "var ST={mj:[10,30,60,120],leo:[12,29,49]};" +
   "var AM={standard:1,hd:1.3,ultra:1.8};" +
