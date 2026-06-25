@@ -6,6 +6,10 @@
     "doc": "docs"
   },
   "scripts": {
+    "prebuild": "tsx scripts/build-og-images.ts",
+    "predev": "tsx scripts/build-og-images.ts --dev",
+    "build:og": "tsx scripts/build-og-images.ts",
+    "check:og": "tsx scripts/build-og-images.ts --check",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
