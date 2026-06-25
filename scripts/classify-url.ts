@@ -1,0 +1,36 @@
+// Pure URL classifier for sitemap serialization.
+// Exported separately from astro.config.mjs so it's testable.
+
+export type PageKind = 'home' | 'tool' | 'blog' | 'static';
+export interface Classification {
+  kind: PageKind;
+  priority: number;
+  changefreq: 'daily' | 'weekly' | 'monthly';
+}
+
+const STATIC_SLUGS = new Set(['about', 'contact', 'privacy-policy', 'terms']);
+
+export function classifyUrl(url: string): Classification {
+  // strip origin
+  const path = url.replace(/^https?:\/\/[^/]+/, '');
+  // path is like '/en/foo/' or '/en/blog/foo/'
+
+  // Home: /en/ or /zh/ exactly (with optional trailing slash)
+  if (/^\/(en|zh)\/?$/.test(path)) {
+    return { kind: 'home', priority: 1.0, changefreq: 'daily' };
+  }
+
+  // Blog: /<lang>/blog/ or /<lang>/blog/<post>/
+  if (/^\/(en|zh)\/blog(\/|$)/.test(path)) {
+    return { kind: 'blog', priority: 0.7, changefreq: 'weekly' };
+  }
+
+  // Static: /<lang>/<static-slug>/
+  const staticMatch = path.match(/^\/(en|zh)\/([^/]+)\/?$/);
+  if (staticMatch && STATIC_SLUGS.has(staticMatch[2])) {
+    return { kind: 'static', priority: 0.5, changefreq: 'monthly' };
+  }
+
+  // Default: tool
+  return { kind: 'tool', priority: 0.9, changefreq: 'monthly' };
+}
