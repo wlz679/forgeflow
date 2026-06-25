@@ -49,7 +49,7 @@ const articleSchema = JSON.stringify({
 });
 ---
 
-<BaseLayout title={metaTitle} description={metaDescription} schema={articleSchema} pageType="article">
+<BaseLayout title={metaTitle} description={metaDescription} schema={articleSchema} pageType="article" ogImage={`/og/${post.toolSlug}-${lang}.png`}>
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
     <nav class="text-xs text-gray-400 mb-4">
