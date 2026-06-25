@@ -9,9 +9,25 @@ export function getStaticPaths() {
 
 const title = 'Terms & Conditions — ForgeFlowKit';
 const description = 'Terms and conditions for using ForgeFlowKit.';
+const lang = 'en';
+const SITE_URL = 'https://forgeflowkit.com';
+const termsSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/${lang}/terms/#webpage`,
+      url: `${SITE_URL}/${lang}/terms/`,
+      name: title,
+      description,
+      dateModified: '2026-01-01',
+      inLanguage: lang,
+    },
+  ],
+});
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} schema={termsSchema} pageType="static">
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
     <h1 class="text-2xl font-extrabold mb-4">Terms & Conditions</h1>

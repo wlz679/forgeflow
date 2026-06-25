@@ -11,9 +11,24 @@ export function getStaticPaths() {
 const lang = getLang(Astro);
 const title = t('about.title', lang);
 const description = t('about.description', lang);
+const SITE_URL = 'https://forgeflowkit.com';
+const aboutSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'AboutPage',
+      '@id': `${SITE_URL}/${lang}/about/#webpage`,
+      url: `${SITE_URL}/${lang}/about/`,
+      name: title,
+      description,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      inLanguage: lang,
+    },
+  ],
+});
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} schema={aboutSchema} pageType="static">
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
     <h1 class="text-2xl font-extrabold mb-4">{t('about.h1', lang)}</h1>
