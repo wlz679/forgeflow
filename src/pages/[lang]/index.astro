@@ -22,9 +22,26 @@ const translatedTools = tools.map(tool => ({
   title: t(`tools.${tool.slug}.title`, lang),
   description: t(`tools.${tool.slug}.description`, lang),
 }));
+
+const SITE_URL = 'https://forgeflowkit.com';
+const homeSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'ItemList',
+      name: 'ForgeFlowKit Business Calculators',
+      itemListElement: translatedTools.map((tool, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        name: tool.title,
+        url: `${SITE_URL}/${lang}/${tool.slug}/`,
+      })),
+    },
+  ],
+});
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} schema={homeSchema} pageType="home">
   <Header />
   <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
     <div class="relative text-center mb-10 p-10 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 overflow-hidden">
