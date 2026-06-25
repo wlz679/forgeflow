@@ -80,6 +80,10 @@ const translatedFaq = engine.faq.map((item, i) => ({
 }));
 const translatedHowToUse = engine.howToUse.map((_, i) => t(`tools.${slug}.how_to_use.${i}`, lang));
 
+const toolMeta = tools.find(t => t.slug === slug)!;
+const featureList = translatedHowToUse.slice(0, 3);
+const url = `https://forgeflowkit.com/${lang}/${slug}/`;
+
 const schema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -93,10 +97,22 @@ const schema = JSON.stringify({
     },
     {
       '@type': 'SoftwareApplication',
+      '@id': `${url}#app`,
       name: toolTitle,
-      applicationCategory: 'Multimedia',
+      applicationCategory: toolMeta.applicationCategory,
       operatingSystem: 'Web',
       description: toolDescription,
+      url,
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        availability: 'https://schema.org/InStock',
+      },
+      featureList,
+      isAccessibleForFree: true,
+      inLanguage: lang,
+      provider: { '@id': 'https://forgeflowkit.com/#org' },
     },
     {
       '@type': 'BreadcrumbList',
@@ -109,7 +125,7 @@ const schema = JSON.stringify({
 });
 ---
 
-<BaseLayout title={metaTitle} description={toolDescription} schema={schema}>
+<BaseLayout title={metaTitle} description={toolDescription} schema={schema} pageType="tool">
   <Header />
   <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
     <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb">
