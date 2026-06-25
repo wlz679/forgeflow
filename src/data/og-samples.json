@@ -1,0 +1,174 @@
+{
+  "solopreneur-mrr-calculator": {
+    "headline": { "en": "$73,500", "zh": "$73,500" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Monthly Recurring Revenue", "zh": "月度经常性收入" },
+    "trend": { "en": "▲ +12% MoM", "zh": "▲ 月环比 +12%" }
+  },
+  "solopreneur-burn-rate-calculator": {
+    "headline": { "en": "$42,500", "zh": "$42,500" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Monthly Burn Rate", "zh": "月度烧钱速度" },
+    "trend": { "en": "⚠️ 14mo runway", "zh": "⚠️ 14 个月跑道" }
+  },
+  "solopreneur-churn-rate-calculator": {
+    "headline": { "en": "3.2%", "zh": "3.2%" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Monthly Churn Rate", "zh": "月度流失率" }
+  },
+  "solopreneur-market-size-estimator": {
+    "headline": { "en": "$1.5B", "zh": "$15亿" },
+    "headlineUnit": { "en": "TAM", "zh": "TAM" },
+    "headlineLabel": { "en": "Total Addressable Market", "zh": "可触达市场总量" },
+    "trend": { "en": "▲ 12% CAGR", "zh": "▲ 年复合增长 12%" }
+  },
+  "solopreneur-revenue-projector": {
+    "headline": { "en": "$156K", "zh": "$156K" },
+    "headlineUnit": { "en": "in 12mo", "zh": "12 个月内" },
+    "headlineLabel": { "en": "Projected MRR", "zh": "预测 MRR" },
+    "trend": { "en": "▲ from $5K", "zh": "▲ 从 $5K 起步" }
+  },
+  "solopreneur-cac-calculator": {
+    "headline": { "en": "$215", "zh": "$215" },
+    "headlineUnit": { "en": "/customer", "zh": "/客户" },
+    "headlineLabel": { "en": "Customer Acquisition Cost", "zh": "获客成本" }
+  },
+  "solopreneur-ltv-calculator": {
+    "headline": { "en": "$2,400", "zh": "$2,400" },
+    "headlineUnit": { "en": "LTV", "zh": "LTV" },
+    "headlineLabel": { "en": "Customer Lifetime Value", "zh": "用户终身价值" },
+    "trend": { "en": "▲ LTV:CAC 11x", "zh": "▲ LTV:CAC 11 倍" }
+  },
+  "solopreneur-unit-economics-calculator": {
+    "headline": { "en": "$48", "zh": "$48" },
+    "headlineUnit": { "en": "/customer", "zh": "/客户" },
+    "headlineLabel": { "en": "Avg Margin per Customer", "zh": "单客户平均利润" },
+    "trend": { "en": "✅ healthy", "zh": "✅ 健康" }
+  },
+  "solopreneur-saas-valuation-calculator": {
+    "headline": { "en": "$24M", "zh": "$2400万" },
+    "headlineUnit": { "en": "valuation", "zh": "估值" },
+    "headlineLabel": { "en": "Estimated SaaS Valuation", "zh": "SaaS 公司估值" },
+    "trend": { "en": "▲ 12x multiple", "zh": "▲ 12 倍倍数" }
+  },
+  "solopreneur-equity-dilution-calculator": {
+    "headline": { "en": "18.5%", "zh": "18.5%" },
+    "headlineUnit": { "en": "dilution", "zh": "稀释" },
+    "headlineLabel": { "en": "Founder Dilution", "zh": "创始人股权稀释" }
+  },
+  "solopreneur-break-even-calculator": {
+    "headline": { "en": "8", "zh": "8" },
+    "headlineUnit": { "en": "months", "zh": "个月" },
+    "headlineLabel": { "en": "Time to Break-Even", "zh": "回本周期" }
+  },
+  "solopreneur-freelance-rate-calculator": {
+    "headline": { "en": "$95", "zh": "$95" },
+    "headlineUnit": { "en": "/hour", "zh": "/小时" },
+    "headlineLabel": { "en": "Recommended Hourly Rate", "zh": "推荐时薪" }
+  },
+  "solopreneur-course-pricing-calculator": {
+    "headline": { "en": "$199", "zh": "$199" },
+    "headlineUnit": { "en": "/course", "zh": "/课程" },
+    "headlineLabel": { "en": "Optimal Course Price", "zh": "课程定价" }
+  },
+  "solopreneur-time-value-calculator": {
+    "headline": { "en": "$48", "zh": "$48" },
+    "headlineUnit": { "en": "/hour", "zh": "/小时" },
+    "headlineLabel": { "en": "Time Value", "zh": "时间价值" }
+  },
+  "solopreneur-sponsorship-rate-calculator": {
+    "headline": { "en": "$3,500", "zh": "$3,500" },
+    "headlineUnit": { "en": "/episode", "zh": "/单期" },
+    "headlineLabel": { "en": "Sponsorship Rate", "zh": "赞助费率" }
+  },
+  "solopreneur-affiliate-income-calculator": {
+    "headline": { "en": "$4,200", "zh": "$4,200" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Monthly Affiliate Income", "zh": "月度联盟营销收入" },
+    "trend": { "en": "▲ +20% growth", "zh": "▲ 增长 20%" }
+  },
+  "solopreneur-email-list-revenue-calculator": {
+    "headline": { "en": "$12K", "zh": "$12K" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Email List Revenue", "zh": "邮件列表营收" }
+  },
+  "solopreneur-hourly-vs-fixed-calculator": {
+    "headline": { "en": "$105", "zh": "$105" },
+    "headlineUnit": { "en": "/hour", "zh": "/小时" },
+    "headlineLabel": { "en": "Break-Even Hourly Rate", "zh": "平衡时薪" }
+  },
+  "solopreneur-project-profitability-calculator": {
+    "headline": { "en": "$2,400", "zh": "$2,400" },
+    "headlineUnit": { "en": "profit", "zh": "利润" },
+    "headlineLabel": { "en": "Project Profit", "zh": "项目利润" },
+    "trend": { "en": "▲ 48% margin", "zh": "▲ 利润率 48%" }
+  },
+  "solopreneur-employee-cost-calculator": {
+    "headline": { "en": "$104K", "zh": "$104K" },
+    "headlineUnit": { "en": "/year", "zh": "/年" },
+    "headlineLabel": { "en": "True Employee Cost", "zh": "真实员工成本" }
+  },
+  "solopreneur-meeting-cost-calculator": {
+    "headline": { "en": "$1,125", "zh": "$1,125" },
+    "headlineUnit": { "en": "/week", "zh": "/周" },
+    "headlineLabel": { "en": "Weekly Meeting Cost", "zh": "周会议成本" }
+  },
+  "solopreneur-productivity-score": {
+    "headline": { "en": "78", "zh": "78" },
+    "headlineUnit": { "en": "/100", "zh": "/100" },
+    "headlineLabel": { "en": "Productivity Score", "zh": "生产力分数" },
+    "trend": { "en": "✅ strong", "zh": "✅ 优秀" }
+  },
+  "solopreneur-saas-pricing-planner": {
+    "headline": { "en": "$49", "zh": "$49" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Recommended Price Point", "zh": "推荐定价点" }
+  },
+  "solopreneur-freelance-tax-calculator": {
+    "headline": { "en": "$31,500", "zh": "$31,500" },
+    "headlineUnit": { "en": "/year", "zh": "/年" },
+    "headlineLabel": { "en": "Estimated Tax Owed", "zh": "应缴税款" }
+  },
+  "solopreneur-openai-token-calculator": {
+    "headline": { "en": "$42", "zh": "$42" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "OpenAI API Cost", "zh": "OpenAI API 成本" }
+  },
+  "solopreneur-claude-api-cost-calculator": {
+    "headline": { "en": "$58", "zh": "$58" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Claude API Cost", "zh": "Claude API 成本" }
+  },
+  "solopreneur-deepseek-api-cost-calculator": {
+    "headline": { "en": "$7", "zh": "$7" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "DeepSeek API Cost", "zh": "DeepSeek API 成本" },
+    "trend": { "en": "▲ 8x cheaper", "zh": "▲ 便宜 8 倍" }
+  },
+  "solopreneur-gemini-api-cost-calculator": {
+    "headline": { "en": "$35", "zh": "$35" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Gemini API Cost", "zh": "Gemini API 成本" }
+  },
+  "solopreneur-ai-image-cost-calculator": {
+    "headline": { "en": "$120", "zh": "$120" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Image Generation Cost", "zh": "AI 图像生成成本" }
+  },
+  "solopreneur-ai-training-cost-estimator": {
+    "headline": { "en": "$48K", "zh": "$48K" },
+    "headlineUnit": { "en": "training", "zh": "训练" },
+    "headlineLabel": { "en": "70B Model Training Cost", "zh": "70B 模型训练成本" }
+  },
+  "solopreneur-gpu-cloud-cost-calculator": {
+    "headline": { "en": "$2.40", "zh": "$2.40" },
+    "headlineUnit": { "en": "/hour", "zh": "/小时" },
+    "headlineLabel": { "en": "H100 Cloud Cost", "zh": "H100 云端时租" }
+  },
+  "solopreneur-ai-api-cost-comparison": {
+    "headline": { "en": "$42", "zh": "$42" },
+    "headlineUnit": { "en": "saved/mo", "zh": "/月节省" },
+    "headlineLabel": { "en": "Cheapest Provider Found", "zh": "最便宜厂商" },
+    "trend": { "en": "▲ vs $58 baseline", "zh": "▲ 对比 $58 基线" }
+  }
+}
