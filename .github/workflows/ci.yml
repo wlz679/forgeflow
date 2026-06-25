@@ -35,5 +35,8 @@ jobs:
       - name: Drift check (customFn data tables)
         run: pnpm check:customfn
 
+      - name: Unit tests
+        run: pnpm test:unit
+
       - name: Build
         run: pnpm build

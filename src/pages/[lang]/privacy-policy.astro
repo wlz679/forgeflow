@@ -9,7 +9,7 @@ export function getStaticPaths() {
 
 const title = 'Privacy Policy — ForgeFlowKit';
 const description = 'Privacy policy for ForgeFlowKit. Learn how we handle your data.';
-const lang = 'en';
+const { lang } = Astro.params;
 const SITE_URL = 'https://forgeflowkit.com';
 const privacySchema = JSON.stringify({
   '@context': 'https://schema.org',

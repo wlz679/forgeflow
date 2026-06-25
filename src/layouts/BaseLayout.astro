@@ -65,7 +65,7 @@ const orgSchema = JSON.stringify({
   <link rel="alternate" hreflang="x-default" href={`https://forgeflowkit.com/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
-  <meta property="og:image" content={ogImage} />
+  <meta property="og:image" content={`${SITE_URL}${ogImage}`} />
   <meta property="og:type" content={ogType} />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />

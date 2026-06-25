@@ -9,7 +9,7 @@ export function getStaticPaths() {
 
 const title = 'Terms & Conditions — ForgeFlowKit';
 const description = 'Terms and conditions for using ForgeFlowKit.';
-const lang = 'en';
+const { lang } = Astro.params;
 const SITE_URL = 'https://forgeflowkit.com';
 const termsSchema = JSON.stringify({
   '@context': 'https://schema.org',
