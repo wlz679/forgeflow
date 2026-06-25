@@ -3,7 +3,8 @@
 **Date:** 2026-06-25
 **Status:** Approved (brainstorming complete)
 **Scope:** ForgeFlowKit 全站 32 计算器 × 2 语言 + 静态页 + 站点级
-**Out of scope:** 博客实装、外链建设、页面速度优化、AI 爬虫屏蔽、IndexNow
+**Out of scope:** 外链建设、页面速度优化、AI 爬虫屏蔽、IndexNow
+**Scope note:** 博客实装 — page rendering 已存在（`src/pages/[lang]/blog/`）；本次仅扩 Article + Blog schema（user-confirmed in pre-flight 2026-06-25）
 **Bonus:** 顺手把 og:type 从 `website` 改按页类型分（product/article/website）
 
 ## 1. Problem
@@ -39,9 +40,22 @@ ForgeFlowKit 当前 SEO 基础设施处于"半搭好"状态。摸底后实际缺
 8. **零引擎业务逻辑改动**：`calculate()` / `customFn` / `staticExamples` 完全不动
 9. **两阶段独立 ship**：Phase 1（schema）和 Phase 2（og:image）解耦，任一阶段出问题不影响另一阶段
 
+## 1.1 Pre-flight drift (2026-06-25)
+
+During plan writing, pre-flight discovered:
+- `src/pages/[lang]/blog/[slug].astro` and `src/pages/[lang]/blog/index.astro` already exist (53-line BlogPost generator in `src/data/blog-posts.ts`).
+- Design doc said "blog doesn't exist" — incorrect.
+
+User confirmed (via AskUserQuestion): expand scope to include Article + Blog schema for blog pages.
+
+Implications:
+- Plan A grew from "32 tool pages + 8 static + 2 home" to include "64 blog pages + 2 blog index".
+- Plan B unchanged (blogs reuse tool og:image — 1:1 mapping via `blog-posts.ts: tools.map(...)`).
+- Total pages now: 141 (vs design's original 138 estimate).
+
 ## 3. Non-Goals
 
-- **博客实装**：`src/pages/blog/` 目录不存在，blog 数据在 `src/data/blog-posts.ts` 但无渲染页面。超出 SEO 范畴
+- **博客实装**：page rendering 已存在（`src/pages/[lang]/blog/`）；本次仅扩 Article + Blog schema（user-confirmed in pre-flight 2026-06-25）
 - **外链建设 / 内容营销**：off-page SEO，非代码改造
 - **页面速度优化**：Astro 静态 + Tailwind + Plausible（轻量），Core Web Vitals 已合格
 - **AI 爬虫屏蔽**：当前流量阶段，开放反而可能有引用收益
@@ -487,7 +501,7 @@ public/og/
 
 - `src/engines/*.ts`（32 个）：**零改动**（业务逻辑冻结）
 - `src/i18n/translations.ts`：本次不需新增 key（og-samples.json 自带双语）
-- `src/pages/[lang]/blog/`：**不存在**，本次不实装
+- `src/pages/[lang]/blog/`：page rendering 已存在，本次**扩展** Article + Blog schema；blog 数量 64 篇 + 1 个 index（详情见 §1.1）
 - 原 `[slug].astro:83-109` 的 FAQPage + BreadcrumbList 块：**保持不动**
 
 ## 6. Acceptance Criteria
@@ -569,6 +583,6 @@ public/og/
 ## 11. Notes
 
 - 本次设计阶段明确**不对 engines 目录做改动**（业务逻辑冻结）
-- 本次设计阶段**不实装博客**（`src/pages/blog/` 不存在，blog 数据沉淀但无渲染）
+- 本次设计阶段**不实装新博客页**（page rendering 已存在）；仅扩 Article + Blog schema 注入（pre-flight 2026-06-25 决定）
 - 后续如需博客实装，应作为独立 spec 处理；本 spec 预留 blog schema helper 但不写代码
 - 字体文件大小（~6MB）增加仓库体积，但带来 CI 可复现性，权衡可接受
