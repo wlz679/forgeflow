@@ -13,7 +13,8 @@
     "translate": "tsx scripts/translate-wordpools.ts",
     "check": "node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check",
     "check:examples": "node scripts/codegen-examples.mjs --check",
-    "check:customfn": "node scripts/codegen-customfn.mjs --check"
+    "check:customfn": "node scripts/codegen-customfn.mjs --check",
+    "test:unit": "node tests/run.mjs"
   },
   "keywords": [
     "business-calculator",
