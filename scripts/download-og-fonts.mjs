@@ -10,7 +10,11 @@
 //     The raw github.com endpoint is heavily rate-limited in CI, so the release
 //     asset path (which goes through objects.githubusercontent.com) is much
 //     more reliable.
-//   - Noto Color Emoji (googlefonts/noto-emoji): direct TTF from main branch.
+//
+// Noto Color Emoji is intentionally NOT in the FONTS list — satori 0.26 cannot
+// load COLR/CBDT color fonts (NotoColorEmoji.ttf is a COLRv1 file), and we
+// substitute Twemoji PNGs via satori's `graphemeImages` option at build time
+// instead. See the header comment in scripts/build-og-images.ts for details.
 //
 // Re-runs are no-ops: any font file already in scripts/fonts/ is left untouched.
 
@@ -31,9 +35,6 @@ const INTER_WEIGHTS = ['Regular', 'Bold', 'Black']; // extracted from extras/otf
 
 const NOTO_SC_RELEASE_URL = 'https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/18_NotoSansSC.zip';
 const NOTO_SC_FILE = 'NotoSansSC-Regular.otf'; // extracted from top-level
-
-// Emoji: raw main-branch path works (no per-file release asset published).
-const NOTO_EMOJI_URL = 'https://github.com/googlefonts/noto-emoji/raw/main/fonts/NotoColorEmoji.ttf';
 
 function downloadToFile(url, dest) {
   return new Promise((resolve, reject) => {
@@ -145,16 +146,6 @@ async function main() {
     }
   } else {
     console.log(`✓ ${NOTO_SC_FILE} already exists, skipping`);
-  }
-
-  // Noto Color Emoji: direct TTF download.
-  const emojiPath = join(FONTS_DIR, 'NotoColorEmoji.ttf');
-  if (!existsSync(emojiPath)) {
-    console.log(`↓ Downloading NotoColorEmoji.ttf...`);
-    await downloadToFile(NOTO_EMOJI_URL, emojiPath);
-    console.log(`✓ NotoColorEmoji.ttf`);
-  } else {
-    console.log(`✓ NotoColorEmoji.ttf already exists, skipping`);
   }
 
   console.log('\nAll fonts ready in scripts/fonts/.');

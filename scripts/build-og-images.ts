@@ -2,12 +2,14 @@
 // Run via `pnpm build:og` (manual) or `prebuild`/`predev` (automatic).
 //
 // Deviation from spec: satori 0.26's bundled opentype.js cannot parse COLR/CBDT
-// color-emoji fonts (NotoColorEmoji.ttf fails with "Font doesn't contain
-// TrueType or CFF outlines"). The spec listed Noto Color Emoji in the fonts
-// array, but it would fail at load time. Instead we use satori's documented
-// `graphemeImages` option to substitute Twemoji PNGs for the 9 emoji used
-// in og-card.tsx / og-samples.json. CJK glyphs are still covered by
-// NotoSansSC-Regular.otf.
+// color-emoji fonts (NotoColorEmoji.ttf is COLRv1 and fails with "Font doesn't
+// contain TrueType or CFF outlines"). The spec listed Noto Color Emoji in the
+// fonts array, but it would fail at load time, so:
+//   - It is NOT in the `fonts:` array below (no Inter/Noto-Sans-SC equivalent).
+//   - It is NOT downloaded by scripts/download-og-fonts.mjs (saves ~10 MB).
+// Instead we use satori's documented `graphemeImages` option to substitute
+// Twemoji PNGs for the 9 emoji used in og-card.tsx / og-samples.json. CJK
+// glyphs are still covered by NotoSansSC-Regular.otf.
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -83,14 +85,28 @@ function assertEmojiSet(): void {
 
 // Cache Twemoji PNGs as data URIs keyed by emoji codepoint (hex).
 // Fetched from jsDelivr CDN (Twemoji CC-BY 4.0).
+async function fetchWithRetry(url: string, attempts = 3): Promise<Response> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return res;
+      if (i === attempts - 1) throw new Error(`HTTP ${res.status} for ${url}`);
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      // exponential backoff: 500ms, 1500ms, 4500ms
+      await new Promise(r => setTimeout(r, 500 * Math.pow(3, i)));
+    }
+  }
+  throw new Error(`Failed to fetch ${url} after ${attempts} attempts`);
+}
+
 async function buildGraphemeImages(): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
   await Promise.all([...EMOJI_SET].map(async (emoji) => {
     const cps = [...emoji].map(c => c.codePointAt(0)!.toString(16)).filter(c => c !== 'fe0f');
     const filename = cps.join('-');
     const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${filename}.png`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to fetch Twemoji ${emoji} (${url}): HTTP ${res.status}`);
+    const res = await fetchWithRetry(url);
     const buf = Buffer.from(await res.arrayBuffer());
     out[emoji] = `data:image/png;base64,${buf.toString('base64')}`;
   }));
