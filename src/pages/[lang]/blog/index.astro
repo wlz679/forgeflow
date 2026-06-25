@@ -13,9 +13,30 @@ export function getStaticPaths() {
 const lang = getLang(Astro);
 const title = t('blog.page_title', lang);
 const description = t('blog.subtitle', lang);
+
+const SITE_URL = 'https://forgeflowkit.com';
+const blogIndexSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Blog',
+      '@id': `${SITE_URL}/${lang}/blog/#blog`,
+      url: `${SITE_URL}/${lang}/blog/`,
+      name: title,
+      description,
+      inLanguage: lang,
+      publisher: { '@id': `${SITE_URL}/#org` },
+      blogPost: blogPosts.map(p => ({
+        '@type': 'BlogPosting',
+        headline: p.title,
+        url: `${SITE_URL}/${lang}/blog/${p.slug}/`,
+      })),
+    },
+  ],
+});
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} schema={blogIndexSchema} pageType="static">
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
     <h1 class="text-2xl font-extrabold mb-2">{t('blog.title', lang)}</h1>
