@@ -3,6 +3,7 @@ export interface ToolMeta {
   title: string;
   description: string;
   categoryId: string;
+  applicationCategory: string;
   inputs: { name: string; label: string; placeholder: string; type: 'text' | 'select' | 'number'; options?: string[] }[];
 }
 
@@ -13,6 +14,7 @@ export const tools: ToolMeta[] = [
     title: 'Burn Rate Calculator',
     description: 'Analyze monthly cash flow by cost category, calculate runway with exact run-out date, Burn Multiple, and Default Alive/Dead status.',
     categoryId: 'A',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'monthlyRevenue', label: 'Monthly Revenue ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'teamCost', label: 'Team Cost ($/mo)', placeholder: 'e.g. 8000', type: 'number' },
@@ -28,6 +30,7 @@ export const tools: ToolMeta[] = [
     title: 'Churn Rate Calculator',
     description: 'Track logo churn vs revenue churn, NRR/GRR, and churn attribution. See how expansion revenue offsets churn and compare scenarios.',
     categoryId: 'A',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'customersStart', label: 'Customers at Start of Month', placeholder: 'e.g. 500', type: 'number' },
       { name: 'customersLost', label: 'Customers Lost This Month', placeholder: 'e.g. 15', type: 'number' },
@@ -41,6 +44,7 @@ export const tools: ToolMeta[] = [
     title: 'Market Size Estimator',
     description: 'Bottom-up and top-down market sizing with configurable SAM, market stage, and 3-year projections. Industry-standard TAM/SAM/SOM framework.',
     categoryId: 'A',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'targetMarket', label: 'Target Market', placeholder: 'e.g. US dental clinics', type: 'text' },
       { name: 'totalAddressableCustomers', label: 'Total Addressable Customers', placeholder: 'e.g. 30000', type: 'number' },
@@ -55,6 +59,7 @@ export const tools: ToolMeta[] = [
     title: 'OpenAI Token Calculator',
     description: 'Compare OpenAI API costs across 14 models — GPT-5.5 to GPT-5 Nano, GPT-4.1 family, and o-series. Toggle batch pricing, prompt caching, and growth projections.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'models', label: 'Models (comma-separated)', placeholder: 'gpt-5-mini,gpt-5.5,gpt-4.1', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
@@ -71,6 +76,7 @@ export const tools: ToolMeta[] = [
     title: 'Claude API Cost Calculator',
     description: 'Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, and cross-provider comparison.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'models', label: 'Models', placeholder: 'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
@@ -89,6 +95,7 @@ export const tools: ToolMeta[] = [
     title: 'DeepSeek API Cost Calculator',
     description: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'models', label: 'Models', placeholder: 'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
@@ -104,6 +111,7 @@ export const tools: ToolMeta[] = [
     title: 'Gemini API Cost Calculator',
     description: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'models', label: 'Models', placeholder: 'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', type: 'text' },
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
@@ -120,6 +128,7 @@ export const tools: ToolMeta[] = [
     title: 'AI Image Generation Cost Calculator',
     description: 'Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, resolution tiers, bar chart comparison, and volume scenarios.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'provider', label: 'Provider', placeholder: '', type: 'select', options: ['dalle-4', 'dalle-3', 'midjourney-v7', 'stable-diffusion-4', 'ideogram-3', 'flux-pro', 'leonardo'] },
       { name: 'imagesPerMonth', label: 'Images per Month', placeholder: 'e.g. 100', type: 'number' },
@@ -133,6 +142,7 @@ export const tools: ToolMeta[] = [
     title: 'AI Training Cost Estimator',
     description: 'Estimate AI model training costs from 7B to 405B parameters. LoRA/full fine-tuning modes, 5 GPU types (H200, H100, A100, L40S, RTX 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'modelSize', label: 'Model Size', placeholder: '', type: 'select', options: ['7B', '13B', '70B', '180B', '405B'] },
       { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['H200-141GB', 'H100-80GB', 'A100-80GB', 'L40S-48GB', 'RTX-6000'] },
@@ -148,6 +158,7 @@ export const tools: ToolMeta[] = [
     title: 'GPU Cloud Cost Calculator',
     description: 'Compare GPU rental costs across 6 cloud providers (RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure). Spot vs on-demand vs reserved pricing, multi-GPU scaling, storage/networking add-ons, and bar chart comparison.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'provider', label: 'Cloud Provider', placeholder: '', type: 'select', options: ['runpod', 'vastai', 'lambdalabs', 'aws', 'gcp', 'azure'] },
       { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['H200', 'H100', 'A100', 'L40S', 'RTX4090', 'A6000'] },
@@ -162,6 +173,7 @@ export const tools: ToolMeta[] = [
     title: 'AI API Cost Comparison',
     description: 'Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.',
     categoryId: 'B',
+    applicationCategory: 'DeveloperApplication',
     inputs: [
       { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
       { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
@@ -176,6 +188,7 @@ export const tools: ToolMeta[] = [
     title: 'Unit Economics Calculator',
     description: 'Analyze per-customer profitability with expansion revenue, scaling curves (1K/10K/100K), and ranked optimization levers.',
     categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'averageRevenuePerCustomer', label: 'Avg Monthly Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'costToServePerCustomer', label: 'Monthly Cost to Serve per Customer ($)', placeholder: 'e.g. 10', type: 'number' },
@@ -192,6 +205,7 @@ export const tools: ToolMeta[] = [
     title: 'CAC Calculator',
     description: 'Calculate your Customer Acquisition Cost and payback period. Compare different spend scenarios to find your most efficient acquisition budget.',
     categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'marketingSpend', label: 'Marketing Spend ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'salesSpend', label: 'Sales Spend ($)', placeholder: 'e.g. 3000', type: 'number' },
@@ -205,6 +219,7 @@ export const tools: ToolMeta[] = [
     title: 'LTV Calculator',
     description: 'Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.',
     categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'monthlyRevenuePerUser', label: 'Monthly Revenue per User ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },
@@ -217,6 +232,7 @@ export const tools: ToolMeta[] = [
     title: 'SaaS Valuation Calculator',
     description: 'Estimate your SaaS company valuation based on ARR, growth rate, and profit margin. See how different multiples and scenarios affect your exit value.',
     categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'annualRevenue', label: 'Annual Revenue / ARR ($)', placeholder: 'e.g. 200000', type: 'number' },
       { name: 'growthRate', label: 'YoY Growth Rate (%)', placeholder: 'e.g. 50', type: 'number' },
@@ -230,6 +246,7 @@ export const tools: ToolMeta[] = [
     title: 'Affiliate Income Calculator',
     description: 'Estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission.',
     categoryId: 'D',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'monthlyTraffic', label: 'Monthly Traffic (visitors)', placeholder: 'e.g. 50000', type: 'number' },
       { name: 'conversionRate', label: 'Conversion Rate (%)', placeholder: 'e.g. 2', type: 'number' },
@@ -241,6 +258,7 @@ export const tools: ToolMeta[] = [
     title: 'Break-Even Calculator',
     description: 'Calculate how many months until you break even on your initial investment. Model different cost and revenue scenarios.',
     categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'monthlyCosts', label: 'Monthly Costs ($)', placeholder: 'e.g. 500', type: 'number' },
       { name: 'monthlyRevenue', label: 'Monthly Revenue ($)', placeholder: 'e.g. 1000', type: 'number' },
@@ -252,6 +270,7 @@ export const tools: ToolMeta[] = [
     title: 'Course Pricing Calculator',
     description: 'Find the optimal course price to hit your income goals, factoring in platform fees. Compare revenue at different price points.',
     categoryId: 'D',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'targetMonthlyIncome', label: 'Target Monthly Income ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'estimatedBuyersPerMonth', label: 'Est. Buyers Per Month', placeholder: 'e.g. 50', type: 'number' },
@@ -263,6 +282,7 @@ export const tools: ToolMeta[] = [
     title: 'Email List Revenue Calculator',
     description: 'Calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics.',
     categoryId: 'D',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'subscriberCount', label: 'Number of Subscribers', placeholder: 'e.g. 10000', type: 'number' },
       { name: 'openRate', label: 'Open Rate (%)', placeholder: 'e.g. 25', type: 'number' },
@@ -276,6 +296,7 @@ export const tools: ToolMeta[] = [
     title: 'Freelance Rate Calculator',
     description: 'Calculate your ideal hourly, daily, and monthly rate based on your skill, experience level, and market location.',
     categoryId: 'D',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'skill', label: 'Your Skill', placeholder: '', type: 'select', options: ['developer', 'designer', 'writer', 'marketer', 'consultant'] },
       { name: 'experience', label: 'Experience Level', placeholder: '', type: 'select', options: ['junior', 'mid', 'senior', 'expert'] },
@@ -287,6 +308,7 @@ export const tools: ToolMeta[] = [
     title: 'Hourly vs Fixed Rate Calculator',
     description: 'Calculate the hourly rate, monthly retainer, and project equivalents needed to reach your annual income goal.',
     categoryId: 'D',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'annualIncomeGoal', label: 'Annual Income Goal ($)', placeholder: 'e.g. 100000', type: 'number' },
       { name: 'billableHoursPerWeek', label: 'Billable Hours Per Week', placeholder: 'e.g. 30', type: 'number' },
@@ -298,6 +320,7 @@ export const tools: ToolMeta[] = [
     title: 'MRR Calculator',
     description: 'Track your MRR health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.',
     categoryId: 'A',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'subscriberCount', label: 'Current Subscribers', placeholder: 'e.g. 500', type: 'number' },
       { name: 'monthlyPrice', label: 'Monthly Price ($)', placeholder: 'e.g. 29', type: 'number' },
@@ -313,6 +336,7 @@ export const tools: ToolMeta[] = [
     title: 'Project Profitability Calculator',
     description: 'Calculate profit, effective hourly rate, and profit margin for any freelance project. Compare outcomes at different cost rates.',
     categoryId: 'D',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'projectRevenue', label: 'Project Revenue ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'hoursEstimated', label: 'Estimated Hours', placeholder: 'e.g. 40', type: 'number' },
@@ -325,6 +349,7 @@ export const tools: ToolMeta[] = [
     title: 'SaaS Financial Forecaster',
     description: 'The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.',
     categoryId: 'A',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'currentMRR', label: 'Current MRR ($)', placeholder: 'e.g. 5000', type: 'number' },
       { name: 'monthlyGrowthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 8', type: 'number' },
@@ -342,6 +367,7 @@ export const tools: ToolMeta[] = [
     title: 'SaaS Pricing Planner',
     description: 'Compare flat, tiered, usage-based, and freemium pricing models. Get personalized recommendations based on your product type, audience, and competitor prices.',
     categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'productType', label: 'Product Type', placeholder: '', type: 'select', options: ['SaaS', 'ebook', 'course', 'template', 'newsletter'] },
       { name: 'targetCustomer', label: 'Target Customer', placeholder: '', type: 'select', options: ['b2b', 'b2c', 'developers', 'creators'] },
@@ -355,6 +381,7 @@ export const tools: ToolMeta[] = [
     title: 'Employee Cost Calculator',
     description: 'Calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. Compare costs across salary levels and locations.',
     categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'annualSalary', label: 'Annual Base Salary ($)', placeholder: 'e.g. 80000', type: 'number' },
       { name: 'benefitsPercentage', label: 'Benefits (% of salary)', placeholder: 'e.g. 30', type: 'number' },
@@ -366,6 +393,7 @@ export const tools: ToolMeta[] = [
     title: 'Meeting Cost Calculator',
     description: 'Calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.',
     categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'attendees', label: 'Number of Attendees', placeholder: 'e.g. 6', type: 'number' },
       { name: 'avgHourlyRate', label: 'Avg Hourly Rate ($)', placeholder: 'e.g. 75', type: 'number' },
@@ -380,6 +408,7 @@ export const tools: ToolMeta[] = [
     title: 'Equity Dilution Calculator',
     description: 'Model how investment rounds dilute founder equity. Calculate post-money valuation, investor ownership, and your remaining shares after funding.',
     categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'companyValuation', label: 'Pre-Money Valuation ($)', placeholder: 'e.g. 5000000', type: 'number' },
       { name: 'investmentAmount', label: 'Investment Amount ($)', placeholder: 'e.g. 1000000', type: 'number' },
@@ -391,6 +420,7 @@ export const tools: ToolMeta[] = [
     title: 'Freelance Tax Calculator',
     description: 'Estimate your freelance taxes across 5 countries. See your taxable income, quarterly payments, effective tax rate, and monthly take-home pay.',
     categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'annualIncome', label: 'Annual Income ($)', placeholder: 'e.g. 100000', type: 'number' },
       { name: 'businessExpenses', label: 'Business Expenses ($)', placeholder: 'e.g. 15000', type: 'number' },
@@ -402,6 +432,7 @@ export const tools: ToolMeta[] = [
     title: 'Productivity Score Calculator',
     description: 'Rate your solopreneur productivity with a scored assessment. Get actionable tips based on your deep work hours, tool stack, and meeting load.',
     categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
     inputs: [
       { name: 'weeklyDeepWorkHours', label: 'Weekly Deep Work Hours', placeholder: 'e.g. 15', type: 'number' },
       { name: 'toolsUsed', label: 'Tools / Apps Used Weekly', placeholder: 'e.g. 5', type: 'number' },
@@ -413,6 +444,7 @@ export const tools: ToolMeta[] = [
     title: 'Sponsorship Rate Calculator',
     description: 'Estimate what brands will pay to sponsor your content. Calculate CPM-based rates for podcasts, newsletters, YouTube, and blogs.',
     categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'monthlyDownloads', label: 'Monthly Downloads / Listens', placeholder: 'e.g. 10000', type: 'number' },
       { name: 'emailSubscribers', label: 'Email Subscribers', placeholder: 'e.g. 5000', type: 'number' },
@@ -425,6 +457,7 @@ export const tools: ToolMeta[] = [
     title: 'Time Value Calculator',
     description: 'Discover what your time is really worth. Calculate your hourly rate and see the dollar cost of meetings, distractions, and daily time waste.',
     categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
     inputs: [
       { name: 'annualIncome', label: 'Annual Income ($)', placeholder: 'e.g. 100000', type: 'number' },
       { name: 'hoursPerWeek', label: 'Hours Worked Per Week', placeholder: 'e.g. 40', type: 'number' },
