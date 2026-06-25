@@ -11,7 +11,11 @@ if (!tests.length) {
   process.exit(1);
 }
 const tsxBin = resolve(root, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-const r = spawnSync(tsxBin, ['--test', ...tests], {
+// shell: true on win32: Node refuses direct spawn of .cmd shims (EINVAL),
+// so cmd.exe must resolve the batch file.
+// Pass user argv BEFORE the test files so node flag-like args (e.g.
+// --test-name-pattern) are not mistaken for test file paths by the runner.
+const r = spawnSync(tsxBin, ['--test', ...process.argv.slice(2), ...tests], {
   cwd: root,
   stdio: 'inherit',
   shell: process.platform === 'win32',
