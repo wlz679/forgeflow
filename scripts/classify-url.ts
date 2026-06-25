@@ -15,8 +15,8 @@ export function classifyUrl(url: string): Classification {
   const path = url.replace(/^https?:\/\/[^/]+/, '');
   // path is like '/en/foo/' or '/en/blog/foo/'
 
-  // Home: /en/ or /zh/ exactly (with optional trailing slash)
-  if (/^\/(en|zh)\/?$/.test(path)) {
+  // Home: /, /en/, /zh/ (with or without trailing slash, no further segments)
+  if (/^\/(en|zh)?\/?$/.test(path)) {
     return { kind: 'home', priority: 1.0, changefreq: 'daily' };
   }
 

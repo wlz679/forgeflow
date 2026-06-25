@@ -11,6 +11,13 @@ test('home page (en) gets priority 1.0 daily', () => {
   assert.equal(c.changefreq, 'daily');
 });
 
+test('bare site root gets priority 1.0 daily', () => {
+  const c = classifyUrl(`${SITE}/`);
+  assert.equal(c.kind, 'home');
+  assert.equal(c.priority, 1.0);
+  assert.equal(c.changefreq, 'daily');
+});
+
 test('home page (zh) gets priority 1.0 daily', () => {
   const c = classifyUrl(`${SITE}/zh/`);
   assert.equal(c.kind, 'home');
