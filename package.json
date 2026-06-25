@@ -27,10 +27,16 @@
   "description": "ForgeFlowKit — Free business calculators and tools for smarter decisions",
   "dependencies": {
     "@astrojs/sitemap": "3.2.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.0",
-    "astro": "^4.13.2"
+    "astro": "^4.13.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "satori": "^0.26.0"
   },
   "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "@vitalets/google-translate-api": "^9.2.1",
     "tsx": "^4.22.3",
     "typescript": "^5.6.3",
