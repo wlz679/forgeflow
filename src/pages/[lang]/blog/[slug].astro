@@ -22,9 +22,34 @@ if (!post) return Astro.redirect(`/${lang}/blog/`);
 
 const metaTitle = `${post.title} — ForgeFlowKit Blog`;
 const metaDescription = post.excerpt;
+
+const SITE_URL = 'https://forgeflowkit.com';
+// Blog posts are generated from tools.map(); assign synthetic dates so JSON-LD
+// datePublished is present. Real publication dates are not tracked in blog-posts.ts.
+const postIndex = blogPosts.findIndex(p => p.slug === post.slug);
+const baseDate = new Date('2026-06-01');
+const datePublished = new Date(baseDate.getTime() + postIndex * 86400000).toISOString().slice(0, 10);
+
+const articleSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': `${SITE_URL}/${lang}/blog/${post.slug}/#article`,
+      headline: post.title,
+      description: post.excerpt,
+      url: `${SITE_URL}/${lang}/blog/${post.slug}/`,
+      datePublished,
+      inLanguage: lang,
+      author: { '@type': 'Organization', name: 'ForgeFlowKit' },
+      publisher: { '@id': `${SITE_URL}/#org` },
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+    },
+  ],
+});
 ---
 
-<BaseLayout title={metaTitle} description={metaDescription}>
+<BaseLayout title={metaTitle} description={metaDescription} schema={articleSchema} pageType="article">
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
     <nav class="text-xs text-gray-400 mb-4">
