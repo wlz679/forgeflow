@@ -1531,7 +1531,9 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
       // --- Unified preset chip handler (replaces both old preset-btn hardcoded + preset-chip generic) ---
       // All 32 chips use class="preset-btn" + data-* attrs in kebab-case.
       // Browser DOM auto-converts data-images-per-month → dataset.imagesPerMonth, which matches input id.
-      var presetBtns = document.querySelectorAll('.preset-btn');
+      // Include both .preset-btn (28 chips: LLM token 4 + Business v3 24) and .preset-chip (4 chips: AI Cost)
+      // Task 6 will rename .preset-chip → .preset-btn; this selector covers both during transition.
+      var presetBtns = document.querySelectorAll('.preset-btn, .preset-chip');
       presetBtns.forEach(function(btn) {
         btn.addEventListener('click', function() {
           var ds = this.dataset;
