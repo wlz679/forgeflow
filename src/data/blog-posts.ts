@@ -7,6 +7,7 @@ export interface BlogPost {
   toolName: string;
   excerpt: string;
   content: string;
+  ogImage: string; // OG image base slug; renders to /og/{ogImage}-{lang}.png
 }
 
 export const blogPosts: BlogPost[] = tools.map(tool => ({
@@ -15,6 +16,7 @@ export const blogPosts: BlogPost[] = tools.map(tool => ({
   toolSlug: tool.slug,
   toolName: tool.title,
   excerpt: `Discover the best ${tool.title.toLowerCase()} to grow your solo business. Free, no signup required. Learn how to use this tool effectively with our step-by-step guide.`,
+  ogImage: tool.slug,
   content: [
     `## What is the ${tool.title}?`,
     ``,
