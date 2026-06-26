@@ -341,7 +341,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-gpu-cloud-cost-calculator',
   title: 'GPU Cloud Cost Calculator',
   description: 'Compare GPU rental costs across 6 cloud providers (RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure). Spot vs on-demand vs reserved pricing, multi-GPU scaling, storage/networking add-ons, and bar chart comparison.',
-  category: 'B',
   inputs: [
     { name: 'provider', label: 'Cloud Provider', placeholder: '', type: 'select', options: ['runpod', 'vastai', 'lambdalabs', 'aws', 'gcp', 'azure'] },
     { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['H200', 'H100', 'A100', 'L40S', 'RTX4090', 'A6000'] },

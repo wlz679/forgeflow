@@ -244,7 +244,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-hourly-vs-fixed-calculator',
   title: 'Hourly vs Fixed Rate Calculator',
   description: 'Calculate the hourly rate, monthly retainer, and fixed-project pricing needed to reach your annual income goal. Includes expense coverage, utilization, and hourly-vs-fixed break-even.',
-  category: 'C',
   inputs: [
     { name: 'annualIncomeGoal', label: 'Annual Income Goal ($)', placeholder: 'e.g. 100000', type: 'number' },
     { name: 'billableHoursPerWeek', label: 'Billable Hours Per Week', placeholder: 'e.g. 30', type: 'number' },

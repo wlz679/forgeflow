@@ -218,7 +218,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-sponsorship-rate-calculator',
   title: 'Sponsorship Rate Calculator',
   description: 'Estimate what brands will pay to sponsor your content. Calculate CPM-based rates for podcasts, newsletters, YouTube, and blogs with rate ladders and scale projections.',
-  category: 'E',
   inputs: [
     { name: 'monthlyDownloads', label: 'Monthly Downloads / Listens', placeholder: 'e.g. 10000', type: 'number' },
     { name: 'emailSubscribers', label: 'Email Subscribers', placeholder: 'e.g. 5000', type: 'number' },

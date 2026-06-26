@@ -228,7 +228,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-employee-cost-calculator',
   title: 'Employee Cost Calculator',
   description: 'Calculate the true loaded cost of hiring — base salary, benefits, employer taxes, overhead — with break-even vs contractor and 5-year projections.',
-  category: 'D',
   inputs: [
     { name: 'annualSalary', label: 'Annual Base Salary ($)', placeholder: 'e.g. 80000', type: 'number' },
     { name: 'benefitsPercentage', label: 'Benefits (% of salary)', placeholder: 'e.g. 30', type: 'number' },

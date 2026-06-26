@@ -360,7 +360,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-ai-api-cost-comparison',
   title: 'AI API Cost Comparison',
   description: 'Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.',
-  category: 'B',
   inputs: [
     { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
     { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },

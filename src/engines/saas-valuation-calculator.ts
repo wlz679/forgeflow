@@ -218,7 +218,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-saas-valuation-calculator',
   title: 'SaaS Valuation Calculator',
   description: 'Estimate your SaaS company valuation based on ARR, growth rate, and profit margin. See how different multiples and scenarios affect your exit value.',
-  category: 'B',
   inputs: [
     { name: 'annualRevenue', label: 'Annual Revenue / ARR ($)', placeholder: 'e.g. 200000', type: 'number' },
     { name: 'growthRate', label: 'YoY Growth Rate (%)', placeholder: 'e.g. 50', type: 'number' },

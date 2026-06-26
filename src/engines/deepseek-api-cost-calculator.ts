@@ -509,7 +509,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-deepseek-api-cost-calculator',
   title: 'DeepSeek API Cost Calculator',
   description: 'Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.',
-  category: 'B',
   inputs: [
     { name: 'models', label: 'Models', placeholder: 'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', type: 'text' },
     { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },

@@ -277,7 +277,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-saas-pricing-planner',
   title: 'SaaS Pricing Planner',
   description: 'Plan your SaaS pricing tiers with margin analysis, LTV by tier, break-even customers, and pricing health diagnostics.',
-  category: 'C',
   inputs: [
     { name: 'productType', label: 'Product Type', placeholder: '', type: 'select', options: ['SaaS', 'ebook', 'course', 'template', 'newsletter'] },
     { name: 'targetCustomer', label: 'Target Customer', placeholder: '', type: 'select', options: ['b2b', 'b2c', 'developers', 'creators'] },

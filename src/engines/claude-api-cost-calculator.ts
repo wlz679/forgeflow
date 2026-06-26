@@ -759,7 +759,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-claude-api-cost-calculator',
   title: 'Claude API Cost Calculator',
   description: 'Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, growth projections, and cross-provider comparison.',
-  category: 'B',
   inputs: [
     { name: 'models', label: 'Models', placeholder: 'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', type: 'text' },
     { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },

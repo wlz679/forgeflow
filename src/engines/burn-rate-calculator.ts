@@ -212,7 +212,6 @@ const engine: ToolEngine = {
   slug: "solopreneur-burn-rate-calculator",
   title: "Burn Rate Calculator",
   description: "Analyze your monthly cash flow: break down costs by category, calculate runway, and see how cost-cutting extends your survival time.",
-  category: "A",
   inputs: [
     { name: "monthlyRevenue", label: "Monthly Revenue ($)", placeholder: "e.g. 5000", type: "number" },
     { name: "netNewRevenue", label: "Net New Revenue Added ($/mo)", placeholder: "e.g. 3000 (optional)", type: "number" },

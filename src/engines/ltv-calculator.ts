@@ -199,7 +199,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-ltv-calculator',
   title: 'LTV Calculator',
   description: 'Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.',
-  category: 'B',
   inputs: [
     { name: 'monthlyRevenuePerUser', label: 'Monthly Revenue per User ($)', placeholder: 'e.g. 50', type: 'number' },
     { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },

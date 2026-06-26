@@ -190,7 +190,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-cac-calculator',
   title: 'CAC Calculator',
   description: 'Calculate your Customer Acquisition Cost and payback period. Compare different spend scenarios to find your most efficient acquisition budget.',
-  category: 'B',
   inputs: [
     { name: 'marketingSpend', label: 'Marketing Spend ($)', placeholder: 'e.g. 5000', type: 'number' },
     { name: 'salesSpend', label: 'Sales Spend ($)', placeholder: 'e.g. 3000', type: 'number' },

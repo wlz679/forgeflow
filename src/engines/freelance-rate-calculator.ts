@@ -233,7 +233,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-freelance-rate-calculator',
   title: 'Freelance Rate Calculator',
   description: 'Calculate the hourly rate you need to hit your income goals. See how market multipliers (skilled, premium, expert) affect what you should charge.',
-  category: 'C',
   inputs: [
     { name: 'annualIncome', label: 'Target Annual Net Income ($)', placeholder: 'e.g. 100000', type: 'number' },
     { name: 'expenses', label: 'Annual Business Expenses ($)', placeholder: 'e.g. 10000', type: 'number' },

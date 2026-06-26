@@ -227,7 +227,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-course-pricing-calculator',
   title: 'Course Pricing Calculator',
   description: 'Find the optimal course price to hit your income goals, factoring in platform fees and creation effort. Includes $/hour-of-effort analysis and self-study vs cohort break-even.',
-  category: 'C',
   inputs: [
     { name: 'targetMonthlyIncome', label: 'Target Monthly Income ($)', placeholder: 'e.g. 5000', type: 'number' },
     { name: 'estimatedBuyersPerMonth', label: 'Est. Buyers Per Month', placeholder: 'e.g. 50', type: 'number' },

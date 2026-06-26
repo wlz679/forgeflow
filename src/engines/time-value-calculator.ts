@@ -209,7 +209,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-time-value-calculator',
   title: 'Time Value Calculator',
   description: 'Discover what your time is really worth. Calculate your effective $/hour, $/minute, and $/second — and see the dollar cost of meetings, distractions, and daily time waste.',
-  category: 'E',
   inputs: [
     { name: 'annualIncome', label: 'Annual Income ($)', placeholder: 'e.g. 100000', type: 'number' },
     { name: 'hoursPerWeek', label: 'Hours Worked Per Week', placeholder: 'e.g. 40', type: 'number' },

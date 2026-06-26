@@ -246,7 +246,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-email-list-revenue-calculator',
   title: 'Email List Revenue Calculator',
   description: 'Calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics, with growth projections and break-even sub counts.',
-  category: 'C',
   inputs: [
     { name: 'subscriberCount', label: 'Number of Subscribers', placeholder: 'e.g. 10000', type: 'number' },
     { name: 'openRate', label: 'Open Rate (%)', placeholder: 'e.g. 25', type: 'number' },

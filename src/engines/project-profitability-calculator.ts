@@ -215,7 +215,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-project-profitability-calculator',
   title: 'Project Profitability Calculator',
   description: 'Calculate profit, effective hourly rate, margin, and break-even hourly rate for any freelance project. Compare outcomes at 9 different hourly cost rates.',
-  category: 'C',
   inputs: [
     { name: 'projectRevenue', label: 'Project Revenue ($)', placeholder: 'e.g. 5000', type: 'number' },
     { name: 'hoursEstimated', label: 'Estimated Hours', placeholder: 'e.g. 40', type: 'number' },

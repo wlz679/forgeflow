@@ -497,7 +497,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-gemini-api-cost-calculator',
   title: 'Gemini API Cost Calculator',
   description: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.',
-  category: 'B',
   inputs: [
     { name: 'models', label: 'Models', placeholder: 'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', type: 'text' },
     { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },

@@ -234,7 +234,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-productivity-score',
   title: 'Productivity Score Calculator',
   description: 'Score your solopreneur productivity across deep work, tool stack, and meeting load. Get a tiered health assessment and a 30-day improvement projection.',
-  category: 'E',
   inputs: [
     { name: 'weeklyDeepWorkHours', label: 'Weekly Deep Work Hours', placeholder: 'e.g. 15', type: 'number' },
     { name: 'toolsUsed', label: 'Tools / Apps Used Weekly', placeholder: 'e.g. 5', type: 'number' },

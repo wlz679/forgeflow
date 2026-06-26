@@ -463,7 +463,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-ai-image-cost-calculator',
   title: 'AI Image Generation Cost Calculator',
   description: 'Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, break-even analysis, what-if scenarios, and use-case recommendations.',
-  category: 'B',
   inputs: [
     { name: 'provider', label: 'Provider', placeholder: '', type: 'select', options: ['dalle-4', 'dalle-3', 'midjourney-v7', 'stable-diffusion-4', 'ideogram-3', 'flux-pro', 'leonardo'] },
     { name: 'imagesPerMonth', label: 'Images per Month', placeholder: 'e.g. 100', type: 'number' },

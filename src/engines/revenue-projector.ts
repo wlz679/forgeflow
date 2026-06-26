@@ -720,7 +720,6 @@ const engine: ToolEngine = {
   slug: "solopreneur-revenue-projector",
   title: "SaaS Financial Forecaster",
   description: "The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.",
-  category: "C",
   inputs: [
     { name: "currentMrr", label: "Current MRR ($)", placeholder: "e.g. 5000", type: "number" },
     { name: "monthlyGrowthRate", label: "Monthly Growth Rate (%)", placeholder: "e.g. 8", type: "number" },

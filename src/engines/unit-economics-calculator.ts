@@ -272,7 +272,6 @@ const engine: ToolEngine = {
   slug: "solopreneur-unit-economics-calculator",
   title: "Unit Economics Calculator",
   description: "Analyze per-customer profitability: net contribution, CAC payback, LTV, scaling economics, and optimization lever ranking.",
-  category: "C",
   inputs: [
     { name: "averageRevenuePerCustomer", label: "Avg Monthly Revenue per Customer ($)", placeholder: "e.g. 50", type: "number" },
     { name: "costToServePerCustomer", label: "Monthly Cost to Serve per Customer ($)", placeholder: "e.g. 10", type: "number" },

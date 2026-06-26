@@ -234,7 +234,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-freelance-tax-calculator',
   title: 'Freelance Tax Calculator',
   description: 'Estimate your freelance taxes across 5 countries with retirement, state, and self-employment tax breakdowns. Quarterly payment plan and W-2 break-even included.',
-  category: 'E',
   inputs: [
     { name: 'annualIncome', label: 'Annual Income ($)', placeholder: 'e.g. 100000', type: 'number' },
     { name: 'businessExpenses', label: 'Business Expenses ($)', placeholder: 'e.g. 15000', type: 'number' },

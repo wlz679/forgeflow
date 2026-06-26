@@ -204,7 +204,6 @@ const customFn =
 const engine: ToolEngine = {
   slug: "solopreneur-market-size-estimator", title: "Market Size Estimator",
   description: "Bottom-up and top-down market sizing with configurable SAM, market stage, and 3-year revenue projection. Industry-standard TAM/SAM/SOM framework.",
-  category: "A",
   inputs: [
     { name: "targetMarket", label: "Target Market", placeholder: "e.g. US dental clinics", type: "text" },
     { name: "totalAddressableCustomers", label: "Total Addressable Customers", placeholder: "e.g. 30000", type: "number" },

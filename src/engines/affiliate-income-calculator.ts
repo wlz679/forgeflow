@@ -224,7 +224,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-affiliate-income-calculator',
   title: 'Affiliate Income Calculator',
   description: 'Estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission. Includes CTR/EPC funnel, break-even traffic, and scale projections.',
-  category: 'C',
   inputs: [
     { name: 'monthlyTraffic', label: 'Monthly Traffic (visitors)', placeholder: 'e.g. 50000', type: 'number' },
     { name: 'conversionRate', label: 'Conversion Rate (%)', placeholder: 'e.g. 2', type: 'number' },

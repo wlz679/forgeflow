@@ -408,7 +408,6 @@ const engine: ToolEngine = {
   slug: "solopreneur-mrr-calculator",
   title: "MRR Calculator",
   description: "Track your MRR health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.",
-  category: "A",
   inputs: [
     { name: "subscriberCount", label: "Current Subscribers", placeholder: "e.g. 500", type: "number" },
     { name: "monthlyPrice", label: "Monthly Price ($)", placeholder: "e.g. 29", type: "number" },

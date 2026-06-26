@@ -218,7 +218,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-meeting-cost-calculator',
   title: 'Meeting Cost Calculator',
   description: 'Calculate the true dollar and person-hour cost of meetings. See quarterly/annual projection, async vs sync break-even, and 5 ways to cut meeting cost.',
-  category: 'D',
   inputs: [
     { name: 'attendees', label: 'Number of Attendees', placeholder: 'e.g. 6', type: 'number' },
     { name: 'avgHourlyRate', label: 'Avg Hourly Rate ($)', placeholder: 'e.g. 75', type: 'number' },

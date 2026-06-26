@@ -288,7 +288,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-ai-training-cost-estimator',
   title: 'AI Training Cost Estimator',
   description: 'Estimate AI model training costs from 7B to 405B parameters. LoRA/full fine-tuning modes, 5 GPU types (H200, H100, A100, L40S, RTX 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.',
-  category: 'B',
   inputs: [
     { name: 'modelSize', label: 'Model Size', placeholder: '', type: 'select', options: ['7B', '13B', '70B', '180B', '405B'] },
     { name: 'gpuType', label: 'GPU Type', placeholder: '', type: 'select', options: ['H200-141GB', 'H100-80GB', 'A100-80GB', 'L40S-48GB', 'RTX-6000'] },

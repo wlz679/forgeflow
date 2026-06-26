@@ -208,7 +208,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-equity-dilution-calculator',
   title: 'Equity Dilution Calculator',
   description: 'Model how investment rounds dilute founder equity. Calculate post-money valuation, investor ownership, founder control, and exit scenarios at different valuations.',
-  category: 'E',
   inputs: [
     { name: 'companyValuation', label: 'Pre-Money Valuation ($)', placeholder: 'e.g. 5000000', type: 'number' },
     { name: 'investmentAmount', label: 'Investment Amount ($)', placeholder: 'e.g. 1000000', type: 'number' },

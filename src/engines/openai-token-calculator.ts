@@ -808,7 +808,6 @@ const engine: ToolEngine = {
   title: "OpenAI Token Calculator",
   description:
     "Compare OpenAI API costs across 14 models — GPT-5.5 to GPT-5 Nano, GPT-4.1 family, and o-series. Toggle batch pricing, prompt caching, and growth projections.",
-  category: "B",
   inputs: [
     {
       name: "models",

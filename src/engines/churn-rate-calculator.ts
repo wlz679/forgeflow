@@ -251,7 +251,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-churn-rate-calculator',
   title: 'Churn Rate Calculator',
   description: 'Calculate logo churn, revenue churn, GRR/NRR retention metrics, and churn attribution. Compare churn scenarios and see revenue impact.',
-  category: 'A',
   inputs: [
     { name: 'customersStart', label: 'Customers at Start of Month', placeholder: 'e.g. 500', type: 'number' },
     { name: 'customersLost', label: 'Customers Lost This Month', placeholder: 'e.g. 15', type: 'number' },

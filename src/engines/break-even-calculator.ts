@@ -162,7 +162,6 @@ const engine: ToolEngine = {
   slug: "solopreneur-break-even-calculator",
   title: "Break-Even Calculator",
   description: "Calculate when you will break even — with and without monthly revenue growth. See cumulative P&L at 3, 6, 12, and 24 months.",
-  category: "A",
   inputs: [
     { name: "monthlyCosts", label: "Monthly Costs ($)", placeholder: "e.g. 500", type: "number" },
     { name: "monthlyRevenue", label: "Monthly Revenue ($)", placeholder: "e.g. 1000", type: "number" },
