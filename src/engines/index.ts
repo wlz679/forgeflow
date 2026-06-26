@@ -1,32 +1,4 @@
-import './affiliate-income-calculator';
-import './ai-api-cost-comparison';
-import './ai-image-generation-cost-calculator';
-import './ai-training-cost-estimator';
-import './break-even-calculator';
-import './burn-rate-calculator';
-import './cac-calculator';
-import './churn-rate-calculator';
-import './claude-api-cost-calculator';
-import './course-pricing-calculator';
-import './deepseek-api-cost-calculator';
-import './email-list-revenue-calculator';
-import './employee-cost-calculator';
-import './equity-dilution-calculator';
-import './freelance-rate-calculator';
-import './freelance-tax-calculator';
-import './gemini-api-cost-calculator';
-import './gpu-cloud-cost-calculator';
-import './hourly-vs-fixed-calculator';
-import './ltv-calculator';
-import './market-size-estimator';
-import './meeting-cost-calculator';
-import './mrr-calculator';
-import './openai-token-calculator';
-import './productivity-score';
-import './project-profitability-calculator';
-import './revenue-projector';
-import './saas-pricing-planner';
-import './saas-valuation-calculator';
-import './sponsorship-rate-calculator';
-import './time-value-calculator';
-import './unit-economics-calculator';
+// Auto-aggregate all engines from subdirectories.
+// import.meta.glob is Vite/Astro-native: zero maintenance, zero runtime cost.
+// Side effects (registerEngine) run on import; the return value is intentionally unused.
+import.meta.glob<unknown>('./*/*.ts', { eager: true });
