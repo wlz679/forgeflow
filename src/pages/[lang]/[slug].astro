@@ -158,7 +158,7 @@ const schema = JSON.stringify({
                       { emoji:'✍️', en:'Content Gen', zh:'内容生成', m:'gpt-5.2', it:'500', ot:'2000', rd:'100' },
                       { emoji:'📊', en:'Data Analysis', zh:'数据分析', m:'o3', it:'4000', ot:'3000', rd:'30' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.m} data-it={p.it} data-ot={p.ot} data-rd={p.rd}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.m} data-input-tokens={p.it} data-output-tokens={p.ot} data-requests-per-day={p.rd}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
                     ))}
                   </div>
                 </div>
@@ -234,7 +234,7 @@ const schema = JSON.stringify({
                       { emoji:'💾', en:'Heavy Caching', zh:'重度缓存', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'2000', ot:'800', rd:'2000', pm:'realtime', cw:'2000', cttl:'1hour', chr:'90', gr:'0', pj:'12' },
                       { emoji:'🏢', en:'Enterprise', zh:'企业级', models:'claude-fable-5,claude-opus-4-8,claude-sonnet-4-6,claude-haiku-4-5', it:'10000', ot:'5000', rd:'50000', pm:'batch', cw:'10000', cttl:'1hour', chr:'70', gr:'0', pj:'12' },
                     ].map(p => (
-                      <button type="button" class="preset-btn preset-btn-claude text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-it={p.it} data-ot={p.ot} data-rd={p.rd} data-pm={p.pm} data-cw={p.cw} data-cttl={p.cttl} data-chr={p.chr} data-gr={p.gr} data-pj={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                      <button type="button" class="preset-btn preset-btn-claude text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-input-tokens={p.it} data-output-tokens={p.ot} data-requests-per-day={p.rd} data-pricing-mode={p.pm} data-cache-write-tokens={p.cw} data-cache-ttl={p.cttl} data-cache-read-hit-rate={p.chr} data-growth-rate={p.gr} data-projection-months={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
                     ))}
                   </div>
                 </div>
@@ -310,7 +310,7 @@ const schema = JSON.stringify({
                       { emoji:'📈', en:'Growing App', zh:'增长中', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'1000', ot:'800', rd:'200', chr:'70', gr:'10', pj:'12' },
                       { emoji:'🏢', en:'Enterprise', zh:'企业级', models:'deepseek-v4-flash,deepseek-v4-pro-promo,deepseek-r1', it:'8000', ot:'5000', rd:'100000', chr:'60', gr:'0', pj:'6' },
                     ].map(p => (
-                      <button type="button" class="preset-btn preset-btn-deepseek text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-it={p.it} data-ot={p.ot} data-rd={p.rd} data-chr={p.chr} data-gr={p.gr} data-pj={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                      <button type="button" class="preset-btn preset-btn-deepseek text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-input-tokens={p.it} data-output-tokens={p.ot} data-requests-per-day={p.rd} data-cache-read-hit-rate={p.chr} data-growth-rate={p.gr} data-projection-months={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
                     ))}
                   </div>
                 </div>
@@ -386,7 +386,7 @@ const schema = JSON.stringify({
                       { emoji:'💾', en:'Heavy Cache', zh:'重度缓存', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'2000', ot:'800', rd:'5000', pm:'realtime', chr:'95', gr:'0', pj:'12' },
                       { emoji:'🏢', en:'Enterprise', zh:'企业级', models:'gemini-3.5-flash,gemini-3.1-pro,gemini-3-flash,gemini-1.5-flash', it:'8000', ot:'5000', rd:'100000', pm:'realtime', chr:'60', gr:'0', pj:'6' },
                     ].map(p => (
-                      <button type="button" class="preset-btn preset-btn-gemini text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-it={p.it} data-ot={p.ot} data-rd={p.rd} data-pm={p.pm} data-chr={p.chr} data-gr={p.gr} data-pj={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
+                      <button type="button" class="preset-btn preset-btn-gemini text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-models={p.models} data-input-tokens={p.it} data-output-tokens={p.ot} data-requests-per-day={p.rd} data-pricing-mode={p.pm} data-cache-read-hit-rate={p.chr} data-growth-rate={p.gr} data-projection-months={p.pj}>{p.emoji} {lang === 'zh' ? p.zh : p.en}</button>
                     ))}
                   </div>
                 </div>
