@@ -40,27 +40,27 @@ const CROSS_PROVIDER: Record<string, { input: number; output: number; name: stri
 const PRESETS: Record<string, Record<string, string>> = {
   'Light Usage': {
     inputTokens: '500', outputTokens: '1000', requestsPerDay: '50',
-    pricingMode: 'realtime', cacheHitRate: '80', growthRate: '0', projectionMonths: '12',
+    pricingMode: 'realtime', cacheReadHitRate: '80', growthRate: '0', projectionMonths: '12',
   },
   'Mid-Scale': {
     inputTokens: '2000', outputTokens: '1000', requestsPerDay: '500',
-    pricingMode: 'realtime', cacheHitRate: '60', growthRate: '0', projectionMonths: '12',
+    pricingMode: 'realtime', cacheReadHitRate: '60', growthRate: '0', projectionMonths: '12',
   },
   'High Volume': {
     inputTokens: '5000', outputTokens: '2000', requestsPerDay: '10000',
-    pricingMode: 'realtime', cacheHitRate: '50', growthRate: '0', projectionMonths: '12',
+    pricingMode: 'realtime', cacheReadHitRate: '50', growthRate: '0', projectionMonths: '12',
   },
   'Batch Processing': {
     inputTokens: '3000', outputTokens: '5000', requestsPerDay: '10000',
-    pricingMode: 'batch', cacheHitRate: '0', growthRate: '0', projectionMonths: '12',
+    pricingMode: 'batch', cacheReadHitRate: '0', growthRate: '0', projectionMonths: '12',
   },
   'Heavy Cache': {
     inputTokens: '2000', outputTokens: '800', requestsPerDay: '5000',
-    pricingMode: 'realtime', cacheHitRate: '95', growthRate: '0', projectionMonths: '12',
+    pricingMode: 'realtime', cacheReadHitRate: '95', growthRate: '0', projectionMonths: '12',
   },
   'Enterprise': {
     inputTokens: '8000', outputTokens: '5000', requestsPerDay: '100000',
-    pricingMode: 'realtime', cacheHitRate: '60', growthRate: '0', projectionMonths: '6',
+    pricingMode: 'realtime', cacheReadHitRate: '60', growthRate: '0', projectionMonths: '6',
   },
 };
 
@@ -95,14 +95,14 @@ function calculate(inputs: Record<string, string>): string[] {
   const outTokens = Math.max(1, Math.min(10_000_000, parseInt(inputs.outputTokens) || 500));
   const reqPerDay = Math.max(0, Math.min(1_000_000, parseInt(inputs.requestsPerDay) || 100));
   const pricingMode = (inputs.pricingMode === 'batch') ? 'batch' : 'realtime';
-  const cacheHitRate = Math.max(0, Math.min(100, parseInt(inputs.cacheHitRate) || 0));
+  const cacheReadHitRate = Math.max(0, Math.min(100, parseInt(inputs.cacheReadHitRate) || 0));
   const growthRate = Math.max(0, Math.min(50, parseFloat(inputs.growthRate) || 0));
   const projMonthsRaw = parseInt(inputs.projectionMonths);
   const projMonths = [3, 6, 12].includes(projMonthsRaw) ? projMonthsRaw : 12;
 
   const isBatch = pricingMode === 'batch';
-  const cachingActive = !isBatch && cacheHitRate > 0;
-  const hitRate = cacheHitRate / 100;
+  const cachingActive = !isBatch && cacheReadHitRate > 0;
+  const hitRate = cacheReadHitRate / 100;
   const reqsPerMonth = reqPerDay * 30;
 
   // --- Compute costs ---
@@ -166,7 +166,7 @@ function calculate(inputs: Record<string, string>): string[] {
     headerLine += ' | \u{1F4E6} Batch Mode (50% discount)';
   }
   if (cachingActive) {
-    headerLine += ' | \u{1F4BE} Context Caching: ' + cacheHitRate + '% hit (90% discount)';
+    headerLine += ' | \u{1F4BE} Context Caching: ' + cacheReadHitRate + '% hit (90% discount)';
   }
   out.push(headerLine);
   out.push('');
@@ -242,7 +242,7 @@ function calculate(inputs: Record<string, string>): string[] {
       const savings = c.noCacheMonthly - c.monthlyCost;
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
       out.push(
-        '💾 Context cache at ' + cacheHitRate + '% hit: ' + fmt(c.monthlyCost) +
+        '💾 Context cache at ' + cacheReadHitRate + '% hit: ' + fmt(c.monthlyCost) +
           '/mo — saves ' + fmt(savings) + '/mo (' + pctSaved + '%)',
       );
     } else if (cachingActive && !c.info.supportsCache) {
@@ -310,7 +310,7 @@ function calculate(inputs: Record<string, string>): string[] {
   if (cachingActive && selectedCosts.length > 0) {
     const ref = selectedCosts[0];
     const savings = ref.noCacheMonthly - ref.monthlyCost;
-    out.push('💾 Context cache at ' + cacheHitRate + '% hit rate saves ~' + fmt(savings) + '/mo on ' + ref.info.name);
+    out.push('💾 Context cache at ' + cacheReadHitRate + '% hit rate saves ~' + fmt(savings) + '/mo on ' + ref.info.name);
   }
 
   // Cross-provider comparison
@@ -357,12 +357,12 @@ function calculate(inputs: Record<string, string>): string[] {
     const tier = cheapestSelected.monthlyCost < 5 ? '🟢 Micro-tier (under $5/mo)' : cheapestSelected.monthlyCost < 50 ? '🟢 Low-volume tier' : cheapestSelected.monthlyCost < 500 ? '🟡 Mid-volume tier' : '🟠 High-volume tier';
     out.push('• ' + tier + ' — ' + cheapestSelected.info.name + ' at ' + fmt(cheapestSelected.monthlyCost) + '/mo.');
   }
-  if (cacheHitRate === 0) {
+  if (cacheReadHitRate === 0) {
     out.push('• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.');
-  } else if (cacheHitRate < 30) {
-    out.push('• 🟡 Low cache hit rate (' + cacheHitRate + '%) — review if your prompt has stable system instructions.');
+  } else if (cacheReadHitRate < 30) {
+    out.push('• 🟡 Low cache hit rate (' + cacheReadHitRate + '%) — review if your prompt has stable system instructions.');
   } else {
-    out.push('• 🟢 Healthy cache rate (' + cacheHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.');
+    out.push('• 🟢 Healthy cache rate (' + cacheReadHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.');
   }
   if (pricingMode === 'realtime') {
     const batchSavings = totalSelectedMonthly * 0.5;
@@ -383,7 +383,7 @@ function calculate(inputs: Record<string, string>): string[] {
   }
   out.push('• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo');
   out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo');
-  if (cacheHitRate < 50) {
+  if (cacheReadHitRate < 50) {
     const cacheFactor = 0.5 + 0.5 * (1 - 0.5 * 0.9);
     const cachedMonthly = totalSelectedMonthly * cacheFactor;
     const cacheSavings = totalSelectedMonthly - cachedMonthly;
@@ -416,7 +416,7 @@ const customFn =
   "var oT=Math.max(1,Math.min(1e7,parseInt(inputs.outputTokens)||500));" +
   "var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));" +
   "var pMode=inputs.pricingMode==='batch'?'batch':'realtime';" +
-  "var cHR=Math.max(0,Math.min(100,parseInt(inputs.cacheHitRate)||0));" +
+  "var cHR=Math.max(0,Math.min(100,parseInt(inputs.cacheReadHitRate)||0));" +
   "var gR=Math.max(0,Math.min(50,parseFloat(inputs.growthRate)||0));" +
   "var pMraw=parseInt(inputs.projectionMonths);var pM=[3,6,12].indexOf(pMraw)>=0?pMraw:12;" +
   "var isBatch=pMode==='batch';var cacheOn=!isBatch&&cHR>0;var hR=cHR/100;var rpm=rpd*30;" +
@@ -504,7 +504,7 @@ const engine: ToolEngine = {
     { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
     { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
     { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
-    { name: 'cacheHitRate', label: 'Context Cache Hit Rate (%)', placeholder: 'e.g. 60', type: 'number' },
+    { name: 'cacheReadHitRate', label: 'Context Cache Hit Rate (%)', placeholder: 'e.g. 60', type: 'number' },
     { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
     { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
   ],

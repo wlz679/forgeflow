@@ -37,27 +37,27 @@ const CROSS_PROVIDER: Record<string, { input: number; output: number; name: stri
 const PRESETS: Record<string, Record<string, string>> = {
   'Light Usage': {
     inputTokens: '500', outputTokens: '1000', requestsPerDay: '50',
-    cacheHitRate: '80', growthRate: '0', projectionMonths: '12',
+    cacheReadHitRate: '80', growthRate: '0', projectionMonths: '12',
   },
   'Mid-Scale': {
     inputTokens: '2000', outputTokens: '1000', requestsPerDay: '500',
-    cacheHitRate: '60', growthRate: '0', projectionMonths: '12',
+    cacheReadHitRate: '60', growthRate: '0', projectionMonths: '12',
   },
   'High Volume': {
     inputTokens: '5000', outputTokens: '2000', requestsPerDay: '10000',
-    cacheHitRate: '50', growthRate: '0', projectionMonths: '12',
+    cacheReadHitRate: '50', growthRate: '0', projectionMonths: '12',
   },
   'Heavy Cache': {
     inputTokens: '2000', outputTokens: '800', requestsPerDay: '5000',
-    cacheHitRate: '95', growthRate: '0', projectionMonths: '12',
+    cacheReadHitRate: '95', growthRate: '0', projectionMonths: '12',
   },
   'Growing App': {
     inputTokens: '1000', outputTokens: '800', requestsPerDay: '200',
-    cacheHitRate: '70', growthRate: '10', projectionMonths: '12',
+    cacheReadHitRate: '70', growthRate: '10', projectionMonths: '12',
   },
   'Enterprise': {
     inputTokens: '8000', outputTokens: '5000', requestsPerDay: '100000',
-    cacheHitRate: '60', growthRate: '0', projectionMonths: '6',
+    cacheReadHitRate: '60', growthRate: '0', projectionMonths: '6',
   },
 };
 
@@ -91,13 +91,13 @@ function calculate(inputs: Record<string, string>): string[] {
   const inTokens = Math.max(1, Math.min(10_000_000, parseInt(inputs.inputTokens) || 1000));
   const outTokens = Math.max(1, Math.min(10_000_000, parseInt(inputs.outputTokens) || 500));
   const reqPerDay = Math.max(0, Math.min(1_000_000, parseInt(inputs.requestsPerDay) || 100));
-  const cacheHitRate = Math.max(0, Math.min(100, parseInt(inputs.cacheHitRate) || 0));
+  const cacheReadHitRate = Math.max(0, Math.min(100, parseInt(inputs.cacheReadHitRate) || 0));
   const growthRate = Math.max(0, Math.min(50, parseFloat(inputs.growthRate) || 0));
   const projMonthsRaw = parseInt(inputs.projectionMonths);
   const projMonths = [3, 6, 12].includes(projMonthsRaw) ? projMonthsRaw : 12;
 
-  const cachingActive = cacheHitRate > 0;
-  const hitRate = cacheHitRate / 100;
+  const cachingActive = cacheReadHitRate > 0;
+  const hitRate = cacheReadHitRate / 100;
   const reqsPerMonth = reqPerDay * 30;
 
   // --- Compute costs ---
@@ -154,7 +154,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // Section 1: Header
   let headerLine = '\u{1F534} DeepSeek API Cost';
   if (cachingActive) {
-    headerLine += ' | \u{1F4BE} Auto-Cache: ' + cacheHitRate + '% hit (98% discount)';
+    headerLine += ' | \u{1F4BE} Auto-Cache: ' + cacheReadHitRate + '% hit (98% discount)';
   }
   out.push(headerLine);
   out.push('');
@@ -232,7 +232,7 @@ function calculate(inputs: Record<string, string>): string[] {
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
       out.push(
         '💾 Auto-cache at ' +
-          cacheHitRate +
+          cacheReadHitRate +
           '% hit: ' +
           fmt(c.monthlyCost) +
           '/mo — saves ' +
@@ -328,7 +328,7 @@ function calculate(inputs: Record<string, string>): string[] {
     const savings = ref.noCacheMonthly - ref.monthlyCost;
     out.push(
       '💾 Auto-cache at ' +
-        cacheHitRate +
+        cacheReadHitRate +
         '% hit rate saves ~' +
         fmt(savings) +
         '/mo on ' +
@@ -433,7 +433,7 @@ const customFn =
   "var iT=Math.max(1,Math.min(1e7,parseInt(inputs.inputTokens)||1000));" +
   "var oT=Math.max(1,Math.min(1e7,parseInt(inputs.outputTokens)||500));" +
   "var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));" +
-  "var cHR=Math.max(0,Math.min(100,parseInt(inputs.cacheHitRate)||0));" +
+  "var cHR=Math.max(0,Math.min(100,parseInt(inputs.cacheReadHitRate)||0));" +
   "var gR=Math.max(0,Math.min(50,parseFloat(inputs.growthRate)||0));" +
   "var pMraw=parseInt(inputs.projectionMonths);var pM=[3,6,12].indexOf(pMraw)>=0?pMraw:12;" +
   "var cacheOn=cHR>0;var hR=cHR/100;var rpm=rpd*30;" +
@@ -515,7 +515,7 @@ const engine: ToolEngine = {
     { name: 'inputTokens', label: 'Input Tokens per Request', placeholder: 'e.g. 1000', type: 'number' },
     { name: 'outputTokens', label: 'Output Tokens per Request', placeholder: 'e.g. 500', type: 'number' },
     { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
-    { name: 'cacheHitRate', label: 'Auto-Cache Hit Rate (%)', placeholder: 'e.g. 60', type: 'number' },
+    { name: 'cacheReadHitRate', label: 'Auto-Cache Hit Rate (%)', placeholder: 'e.g. 60', type: 'number' },
     { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
     { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
   ],

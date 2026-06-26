@@ -45,32 +45,32 @@ const DEFAULT_SELECTED = [
 const PRESETS: Record<string, Record<string, string>> = {
   'Small Project': {
     inputTokens: '500', outputTokens: '1000', requestsPerDay: '50',
-    pricingMode: 'realtime', cacheWriteTokens: '500', cacheTTL: '5min', cacheReadHitRate: '80',
+    pricingMode: 'realtime', cacheWriteTokens: '500', cacheTtl: '5min', cacheReadHitRate: '80',
     growthRate: '0', projectionMonths: '12',
   },
   'Mid-Scale': {
     inputTokens: '2000', outputTokens: '1000', requestsPerDay: '500',
-    pricingMode: 'realtime', cacheWriteTokens: '2000', cacheTTL: '5min', cacheReadHitRate: '60',
+    pricingMode: 'realtime', cacheWriteTokens: '2000', cacheTtl: '5min', cacheReadHitRate: '60',
     growthRate: '0', projectionMonths: '12',
   },
   'High Volume': {
     inputTokens: '5000', outputTokens: '2000', requestsPerDay: '5000',
-    pricingMode: 'realtime', cacheWriteTokens: '5000', cacheTTL: '1hour', cacheReadHitRate: '40',
+    pricingMode: 'realtime', cacheWriteTokens: '5000', cacheTtl: '1hour', cacheReadHitRate: '40',
     growthRate: '0', projectionMonths: '12',
   },
   'Batch Processing': {
     inputTokens: '3000', outputTokens: '5000', requestsPerDay: '10000',
-    pricingMode: 'batch', cacheWriteTokens: '0', cacheTTL: '5min', cacheReadHitRate: '0',
+    pricingMode: 'batch', cacheWriteTokens: '0', cacheTtl: '5min', cacheReadHitRate: '0',
     growthRate: '0', projectionMonths: '12',
   },
   'Heavy Caching': {
     inputTokens: '2000', outputTokens: '800', requestsPerDay: '2000',
-    pricingMode: 'realtime', cacheWriteTokens: '2000', cacheTTL: '1hour', cacheReadHitRate: '90',
+    pricingMode: 'realtime', cacheWriteTokens: '2000', cacheTtl: '1hour', cacheReadHitRate: '90',
     growthRate: '0', projectionMonths: '12',
   },
   Enterprise: {
     inputTokens: '10000', outputTokens: '5000', requestsPerDay: '50000',
-    pricingMode: 'batch', cacheWriteTokens: '10000', cacheTTL: '1hour', cacheReadHitRate: '70',
+    pricingMode: 'batch', cacheWriteTokens: '10000', cacheTtl: '1hour', cacheReadHitRate: '70',
     growthRate: '0', projectionMonths: '12',
   },
 };
@@ -120,14 +120,14 @@ function calculate(inputs: Record<string, string>): string[] {
   const reqPerDay = Math.max(0, Math.min(1_000_000, parseInt(inputs.requestsPerDay) || 100));
   const pricingMode = inputs.pricingMode === 'batch' ? 'batch' : 'realtime';
   const cacheWriteTokens = Math.max(0, Math.min(inTokens, parseInt(inputs.cacheWriteTokens) || 0));
-  const cacheTTL = inputs.cacheTTL === '1hour' ? '1hour' : '5min';
+  const cacheTtl = inputs.cacheTtl === '1hour' ? '1hour' : '5min';
   const cacheReadHitRate = Math.max(0, Math.min(100, parseInt(inputs.cacheReadHitRate) || 0));
   const growthRate = Math.max(0, Math.min(50, parseFloat(inputs.growthRate) || 0));
   const projMonthsRaw = parseInt(inputs.projectionMonths);
   const projMonths = [3, 6, 12].includes(projMonthsRaw) ? projMonthsRaw : 12;
 
   const cachingActive = cacheWriteTokens > 0 && cacheReadHitRate > 0;
-  const writeMult = CACHE_WRITE_MULT[cacheTTL] || 1.25;
+  const writeMult = CACHE_WRITE_MULT[cacheTtl] || 1.25;
   const hitRate = cacheReadHitRate / 100;
   const reqsPerMonth = reqPerDay * 30;
 
@@ -208,7 +208,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const modeLabel = pricingMode === 'batch' ? 'Batch Pricing (50% off)' : 'Real-time Pricing';
   let headerLine = modeEmoji + ' ' + modeLabel;
   if (cachingActive) {
-    const ttlLabel = cacheTTL === '1hour' ? '1-hour TTL' : '5-min TTL';
+    const ttlLabel = cacheTtl === '1hour' ? '1-hour TTL' : '5-min TTL';
     headerLine += ' | 💾 Cache: ' + cacheReadHitRate + '% hit (' + ttlLabel + ')';
   }
   out.push(headerLine);
@@ -344,7 +344,7 @@ function calculate(inputs: Record<string, string>): string[] {
   if (cachingActive) {
     const ref = cheapest;
     const ip = ref.inputPrice;
-    const ttlLabel = cacheTTL === '1hour' ? '1-hour TTL' : '5-min TTL';
+    const ttlLabel = cacheTtl === '1hour' ? '1-hour TTL' : '5-min TTL';
     const wmLabel = writeMult === 1.25 ? '1.25×' : '2×';
     out.push('💾 Prompt Caching Breakdown (' + ttlLabel + ' × ' + wmLabel + ' write)');
     out.push(SEP.repeat(54));
@@ -615,7 +615,7 @@ const customFn =
   "var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));" +
   "var pm=inputs.pricingMode||'realtime';" +
   "var cwT=Math.max(0,Math.min(iT,parseInt(inputs.cacheWriteTokens)||0));" +
-  "var cTTL=inputs.cacheTTL==='1hour'?'1hour':'5min';" +
+  "var cTTL=inputs.cacheTtl==='1hour'?'1hour':'5min';" +
   "var cHR=Math.max(0,Math.min(100,parseInt(inputs.cacheReadHitRate)||0));" +
   "var gR=Math.max(0,Math.min(50,parseFloat(inputs.growthRate)||0));" +
   "var pMraw=parseInt(inputs.projectionMonths);var pM=[3,6,12].indexOf(pMraw)>=0?pMraw:12;" +
@@ -767,7 +767,7 @@ const engine: ToolEngine = {
     { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
     { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
     { name: 'cacheWriteTokens', label: 'Cache Write Tokens', placeholder: 'e.g. 1000', type: 'number' },
-    { name: 'cacheTTL', label: 'Cache TTL', placeholder: '', type: 'select', options: ['5min', '1hour'] },
+    { name: 'cacheTtl', label: 'Cache TTL', placeholder: '', type: 'select', options: ['5min', '1hour'] },
     { name: 'cacheReadHitRate', label: 'Cache Read Hit Rate (%)', placeholder: 'e.g. 50', type: 'number' },
     { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
     { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },

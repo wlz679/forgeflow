@@ -5,10 +5,10 @@ function calculateMRR(inputs: Record<string, string>): string[] {
   const subs = parseInt(inputs.subscriberCount) || 0;
   const price = parseFloat(inputs.monthlyPrice) || 0;
   const churnRate = parseFloat(inputs.monthlyChurnRate) || 0;
-  const expansionMRR = parseFloat(inputs.expansionMRR) || 0;
+  const expansionMrr = parseFloat(inputs.expansionMrr) || 0;
   const newSubs = parseInt(inputs.newSubsPerMonth) || 0;
-  const contractionMRR = parseFloat(inputs.contractionMRR) || 0;
-  const reactivationMRR = parseFloat(inputs.reactivationMRR) || 0;
+  const contractionMrr = parseFloat(inputs.contractionMrr) || 0;
+  const reactivationMrr = parseFloat(inputs.reactivationMrr) || 0;
 
   const fmt = (n: number) => "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const pct = (n: number) => n.toFixed(1) + "%";
@@ -17,19 +17,19 @@ function calculateMRR(inputs: Record<string, string>): string[] {
   const startingMRR = subs * price;
   const newMRR = newSubs * price;
   const churnedMRR = subs * (churnRate / 100) * price;
-  const endingMRR = startingMRR + newMRR + expansionMRR + reactivationMRR - contractionMRR - churnedMRR;
+  const endingMRR = startingMRR + newMRR + expansionMrr + reactivationMrr - contractionMrr - churnedMRR;
   const netChange = endingMRR - startingMRR;
   const growthRate = startingMRR > 0 ? (netChange / startingMRR) * 100 : 0;
 
   // Key metrics
-  const nrr = startingMRR > 0 ? (startingMRR + expansionMRR - contractionMRR - churnedMRR) / startingMRR * 100 : null;
-  const grr = startingMRR > 0 ? (startingMRR - contractionMRR - churnedMRR) / startingMRR * 100 : null;
-  const lossesTotal = contractionMRR + churnedMRR;
-  const quickRatio = lossesTotal > 0 ? (newMRR + expansionMRR + reactivationMRR) / lossesTotal : null;
+  const nrr = startingMRR > 0 ? (startingMRR + expansionMrr - contractionMrr - churnedMRR) / startingMRR * 100 : null;
+  const grr = startingMRR > 0 ? (startingMRR - contractionMrr - churnedMRR) / startingMRR * 100 : null;
+  const lossesTotal = contractionMrr + churnedMRR;
+  const quickRatio = lossesTotal > 0 ? (newMRR + expansionMrr + reactivationMrr) / lossesTotal : null;
   const maxMRR = churnRate > 0 ? newMRR / (churnRate / 100) : null;
 
   // Contraction health
-  const cteRatio = expansionMRR > 0 ? contractionMRR / expansionMRR * 100 : null;
+  const cteRatio = expansionMrr > 0 ? contractionMrr / expansionMrr * 100 : null;
 
   // Date helpers
   const today = new Date();
@@ -55,9 +55,9 @@ function calculateMRR(inputs: Record<string, string>): string[] {
   result += "\n📈 MRR Waterfall\n";
   result += "  Starting MRR:       " + fmt(startingMRR).padStart(10) + "\n";
   result += "  + New MRR:         +" + fmt(newMRR).padStart(9) + "  (" + newSubs + " new subs × " + fmt(price) + ")\n";
-  result += "  + Expansion MRR:   +" + fmt(expansionMRR).padStart(9) + "  (upgrades & add-ons)\n";
-  result += "  + Reactivation:    +" + fmt(reactivationMRR).padStart(9) + "  (returned customers)\n";
-  result += "  − Contraction:     −" + fmt(contractionMRR).padStart(9) + "  (downgrades)\n";
+  result += "  + Expansion MRR:   +" + fmt(expansionMrr).padStart(9) + "  (upgrades & add-ons)\n";
+  result += "  + Reactivation:    +" + fmt(reactivationMrr).padStart(9) + "  (returned customers)\n";
+  result += "  − Contraction:     −" + fmt(contractionMrr).padStart(9) + "  (downgrades)\n";
   result += "  − Churn:           −" + fmt(churnedMRR).padStart(9) + "  (" + pct(churnRate) + " of " + subs.toLocaleString() + " subs)\n";
   result += "  = Ending MRR:       " + fmt(endingMRR).padStart(10) + "\n";
   result += "  Net Change:         " + maybeNeg(netChange).padStart(10) + "  (" + (growthRate >= 0 ? "+" : "") + pct(growthRate) + " MoM)\n";
@@ -138,9 +138,9 @@ function calculateMRR(inputs: Record<string, string>): string[] {
     result += "• Annual Retention:  " + annualRetention.toFixed(1) + "% (after 12 months of churn)\n";
   }
   // Contraction part
-  if (contractionMRR > 0) {
-    result += "• Contraction MRR:   " + fmt(contractionMRR) + "\n";
-    if (expansionMRR <= 0) {
+  if (contractionMrr > 0) {
+    result += "• Contraction MRR:   " + fmt(contractionMrr) + "\n";
+    if (expansionMrr <= 0) {
       result += "  → 🔴 Contraction with no expansion — investigate immediately.\n";
     } else if (cteRatio !== null && cteRatio > 100) {
       result += "  → 🔴 Contraction exceeds expansion — value delivery problem.\n";
@@ -198,12 +198,12 @@ function calculateMRR(inputs: Record<string, string>): string[] {
     // Scenario B: Boost expansion to 25% of new MRR
     const targetExpansion = newMRR * 0.25;
     if (newMRR > 0) {
-      if (expansionMRR >= targetExpansion) {
-        const currentPct = newMRR > 0 ? (expansionMRR / newMRR * 100).toFixed(0) : "—";
+      if (expansionMrr >= targetExpansion) {
+        const currentPct = newMRR > 0 ? (expansionMrr / newMRR * 100).toFixed(0) : "—";
         result += "• Expansion at " + currentPct + "% of new MRR — ✅ already exceeding 25% target.\n";
       } else {
-        const gap = targetExpansion - expansionMRR;
-        const newNRR = nrr !== null ? (startingMRR + targetExpansion - contractionMRR - churnedMRR) / startingMRR * 100 : null;
+        const gap = targetExpansion - expansionMrr;
+        const newNRR = nrr !== null ? (startingMRR + targetExpansion - contractionMrr - churnedMRR) / startingMRR * 100 : null;
         result += "• If expansion grows to 25% of new MRR:\n";
         result += "  Target Expansion: " + fmt(targetExpansion) + "/mo (+" + fmt(gap) + " needed)\n";
         if (nrr !== null && newNRR !== null) {
@@ -213,10 +213,10 @@ function calculateMRR(inputs: Record<string, string>): string[] {
     }
 
     // Scenario C: Halve contraction
-    if (contractionMRR > 0) {
-      const savings = contractionMRR / 2;
+    if (contractionMrr > 0) {
+      const savings = contractionMrr / 2;
       const newNetChange = netChange + savings;
-      const newNRR = nrr !== null ? (startingMRR + expansionMRR - savings - churnedMRR) / startingMRR * 100 : null;
+      const newNRR = nrr !== null ? (startingMRR + expansionMrr - savings - churnedMRR) / startingMRR * 100 : null;
       result += "• If contraction is cut by 50%:\n";
       result += "  Savings: +" + fmt(savings) + "/mo\n";
       result += "  Net Change improves: " + maybeNeg(netChange) + " → " + maybeNeg(newNetChange) + "/mo";
@@ -233,7 +233,7 @@ function calculateMRR(inputs: Record<string, string>): string[] {
 
   // ═══ 7. Break-Even Growth ═══
   if (startingMRR > 0 && price > 0) {
-    const breakEvenSubs = Math.ceil((churnedMRR + contractionMRR - expansionMRR - reactivationMRR) / price);
+    const breakEvenSubs = Math.ceil((churnedMRR + contractionMrr - expansionMrr - reactivationMrr) / price);
     const breakEvenNote = breakEvenSubs < 0
       ? "• 🟢 Break-even below 0 — your expansion + reactivation already outpaces losses."
       : newSubs >= breakEvenSubs
@@ -263,25 +263,25 @@ const customFn =
   "var subs=parseInt(inputs.subscriberCount)||0;" +
   "var price=parseFloat(inputs.monthlyPrice)||0;" +
   "var churnRate=parseFloat(inputs.monthlyChurnRate)||0;" +
-  "var expansionMRR=parseFloat(inputs.expansionMRR)||0;" +
+  "var expansionMrr=parseFloat(inputs.expansionMrr)||0;" +
   "var newSubs=parseInt(inputs.newSubsPerMonth)||0;" +
-  "var contractionMRR=parseFloat(inputs.contractionMRR)||0;" +
-  "var reactivationMRR=parseFloat(inputs.reactivationMRR)||0;" +
+  "var contractionMrr=parseFloat(inputs.contractionMrr)||0;" +
+  "var reactivationMrr=parseFloat(inputs.reactivationMrr)||0;" +
   "function fmt(n){return '$'+n.toLocaleString(void 0,{minimumFractionDigits:2,maximumFractionDigits:2})}" +
   "function pct(n){return n.toFixed(1)+'%'}" +
   "function mn(n){return n>=0?'+'+fmt(n):fmt(n)}" +
   "var startingMRR=subs*price;" +
   "var newMRR=newSubs*price;" +
   "var churnedMRR=subs*(churnRate/100)*price;" +
-  "var endingMRR=startingMRR+newMRR+expansionMRR+reactivationMRR-contractionMRR-churnedMRR;" +
+  "var endingMRR=startingMRR+newMRR+expansionMrr+reactivationMrr-contractionMrr-churnedMRR;" +
   "var netChange=endingMRR-startingMRR;" +
   "var growthRate=startingMRR>0?(netChange/startingMRR)*100:0;" +
-  "var nrr=startingMRR>0?(startingMRR+expansionMRR-contractionMRR-churnedMRR)/startingMRR*100:null;" +
-  "var grr=startingMRR>0?(startingMRR-contractionMRR-churnedMRR)/startingMRR*100:null;" +
-  "var lossesTotal=contractionMRR+churnedMRR;" +
-  "var quickRatio=lossesTotal>0?(newMRR+expansionMRR+reactivationMRR)/lossesTotal:null;" +
+  "var nrr=startingMRR>0?(startingMRR+expansionMrr-contractionMrr-churnedMRR)/startingMRR*100:null;" +
+  "var grr=startingMRR>0?(startingMRR-contractionMrr-churnedMRR)/startingMRR*100:null;" +
+  "var lossesTotal=contractionMrr+churnedMRR;" +
+  "var quickRatio=lossesTotal>0?(newMRR+expansionMrr+reactivationMrr)/lossesTotal:null;" +
   "var maxMRR=churnRate>0?newMRR/(churnRate/100):null;" +
-  "var cteRatio=expansionMRR>0?contractionMRR/expansionMRR*100:null;" +
+  "var cteRatio=expansionMrr>0?contractionMrr/expansionMrr*100:null;" +
   "var today=new Date();var mnths=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];" +
   "function dl(m){var d=new Date(today.getTime()+m*30.44*86400000);return mnths[d.getMonth()]+' '+d.getFullYear()}" +
   "var r='\\uD83D\\uDCCA MRR Health Dashboard\\n\\n';" +
@@ -296,9 +296,9 @@ const customFn =
   "r+='\\n\\uD83D\\uDCC8 MRR Waterfall\\n';" +
   "r+='  Starting MRR:       '+('          '+fmt(startingMRR)).slice(-10)+'\\n';" +
   "r+='  + New MRR:         +'+('         '+fmt(newMRR)).slice(-9)+'  ('+newSubs+' new subs \\u00d7 '+fmt(price)+')\\n';" +
-  "r+='  + Expansion MRR:   +'+('         '+fmt(expansionMRR)).slice(-9)+'  (upgrades & add-ons)\\n';" +
-  "r+='  + Reactivation:    +'+('         '+fmt(reactivationMRR)).slice(-9)+'  (returned customers)\\n';" +
-  "r+='  \\u2212 Contraction:     \\u2212'+('         '+fmt(contractionMRR)).slice(-9)+'  (downgrades)\\n';" +
+  "r+='  + Expansion MRR:   +'+('         '+fmt(expansionMrr)).slice(-9)+'  (upgrades & add-ons)\\n';" +
+  "r+='  + Reactivation:    +'+('         '+fmt(reactivationMrr)).slice(-9)+'  (returned customers)\\n';" +
+  "r+='  \\u2212 Contraction:     \\u2212'+('         '+fmt(contractionMrr)).slice(-9)+'  (downgrades)\\n';" +
   "r+='  \\u2212 Churn:           \\u2212'+('         '+fmt(churnedMRR)).slice(-9)+'  ('+pct(churnRate)+' of '+subs.toLocaleString()+' subs)\\n';" +
   "r+='  = Ending MRR:       '+('          '+fmt(endingMRR)).slice(-10)+'\\n';" +
   "r+='  Net Change:         '+('          '+mn(netChange)).slice(-10)+'  ('+(growthRate>=0?'+':'')+pct(growthRate)+' MoM)\\n';" +
@@ -341,9 +341,9 @@ const customFn =
   "else if(churnRate>5){r+='\\u2022 Monthly Churn:     '+pct(churnRate)+' \\u2014 \\uD83D\\uDD34 Critical. Retention is your #1 problem.\\n';}" +
   "else{r+='\\u2022 Monthly Churn:     '+pct(churnRate)+'\\n';}" +
   "if(churnRate>0&&subs>0){var cc=Math.round(subs*churnRate/100);var ar=Math.pow(1-churnRate/100,12)*100;r+='\\u2022 Subs Lost/Mo:      ~'+cc+' of '+subs.toLocaleString()+'\\n';r+='\\u2022 Annual Retention:  '+ar.toFixed(1)+'% (after 12 months of churn)\\n';}" +
-  "if(contractionMRR>0){" +
-  "r+='\\u2022 Contraction MRR:   '+fmt(contractionMRR)+'\\n';" +
-  "if(expansionMRR<=0){r+='  \\u2192 \\uD83D\\uDD34 Contraction with no expansion \\u2014 investigate immediately.\\n';}" +
+  "if(contractionMrr>0){" +
+  "r+='\\u2022 Contraction MRR:   '+fmt(contractionMrr)+'\\n';" +
+  "if(expansionMrr<=0){r+='  \\u2192 \\uD83D\\uDD34 Contraction with no expansion \\u2014 investigate immediately.\\n';}" +
   "else if(cteRatio!==null&&cteRatio>100){r+='  \\u2192 \\uD83D\\uDD34 Contraction exceeds expansion \\u2014 value delivery problem.\\n';}" +
   "else if(cteRatio!==null&&cteRatio>50){r+='  \\u2192 \\uD83D\\uDFE0 Contraction eats '+cteRatio.toFixed(0)+'% of expansion \\u2014 watch closely.\\n';}" +
   "else{r+='  \\u2192 \\uD83D\\uDFE2 Contraction at '+(cteRatio!==null?cteRatio.toFixed(0):'\\u2014')+'% of expansion \\u2014 well-managed.\\n';}" +
@@ -375,19 +375,19 @@ const customFn =
   // Scenario B: expansion to 25%
   "var targetExpansion=newMRR*0.25;" +
   "if(newMRR>0){" +
-  "if(expansionMRR>=targetExpansion){" +
-  "var cpct=newMRR>0?(expansionMRR/newMRR*100).toFixed(0):'\\u2014';" +
+  "if(expansionMrr>=targetExpansion){" +
+  "var cpct=newMRR>0?(expansionMrr/newMRR*100).toFixed(0):'\\u2014';" +
   "r+='\\u2022 Expansion at '+cpct+'% of new MRR \\u2014 \\u2705 already exceeding 25% target.\\n';" +
   "}else{" +
-  "var gap=targetExpansion-expansionMRR;var newNRR=nrr!==null?(startingMRR+targetExpansion-contractionMRR-churnedMRR)/startingMRR*100:null;" +
+  "var gap=targetExpansion-expansionMrr;var newNRR=nrr!==null?(startingMRR+targetExpansion-contractionMrr-churnedMRR)/startingMRR*100:null;" +
   "r+='\\u2022 If expansion grows to 25% of new MRR:\\n';" +
   "r+='  Target Expansion: '+fmt(targetExpansion)+'/mo (+'+fmt(gap)+' needed)\\n';" +
   "if(nrr!==null&&newNRR!==null){r+='  NRR would rise: '+pct(nrr)+' \\u2192 '+pct(newNRR)+'\\n';}" +
   "}}" +
   // Scenario C: halve contraction
-  "if(contractionMRR>0){" +
-  "var savings=contractionMRR/2;var newNetChange=netChange+savings;" +
-  "var newNRR2=nrr!==null?(startingMRR+expansionMRR-savings-churnedMRR)/startingMRR*100:null;" +
+  "if(contractionMrr>0){" +
+  "var savings=contractionMrr/2;var newNetChange=netChange+savings;" +
+  "var newNRR2=nrr!==null?(startingMRR+expansionMrr-savings-churnedMRR)/startingMRR*100:null;" +
   "r+='\\u2022 If contraction is cut by 50%:\\n';" +
   "r+='  Savings: +'+fmt(savings)+'/mo\\n';" +
   "r+='  Net Change improves: '+mn(netChange)+' \\u2192 '+mn(newNetChange)+'/mo';" +
@@ -395,7 +395,7 @@ const customFn =
   "if(nrr!==null&&newNRR2!==null){r+='  NRR improves: '+pct(nrr)+' \\u2192 '+pct(newNRR2)+'\\n';}" +
   "}" +
   "}" +
-  "if(startingMRR>0&&price>0){var beSubs=Math.ceil((churnedMRR+contractionMRR-expansionMRR-reactivationMRR)/price);var beNote=beSubs<0?'\\u2022 \\uD83D\\uDFE2 Break-even below 0 \\u2014 your expansion + reactivation already outpaces losses.':newSubs>=beSubs?'\\u2022 \\uD83D\\uDFE2 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re growing above break-even ('+newSubs+' actual).':'\\u2022 \\uD83D\\uDD34 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re below break-even ('+newSubs+' actual). MRR is shrinking.';r+='\\n\\u2696\\uFE0F Break-Even Growth\\n'+beNote+'\\n';}" +
+  "if(startingMRR>0&&price>0){var beSubs=Math.ceil((churnedMRR+contractionMrr-expansionMrr-reactivationMrr)/price);var beNote=beSubs<0?'\\u2022 \\uD83D\\uDFE2 Break-even below 0 \\u2014 your expansion + reactivation already outpaces losses.':newSubs>=beSubs?'\\u2022 \\uD83D\\uDFE2 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re growing above break-even ('+newSubs+' actual).':'\\u2022 \\uD83D\\uDD34 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re below break-even ('+newSubs+' actual). MRR is shrinking.';r+='\\n\\u2696\\uFE0F Break-Even Growth\\n'+beNote+'\\n';}" +
   "var tipStr;" +
   "if(nrr!==null&&nrr>=110){tipStr='\\uD83D\\uDCA1 Tip: Best-in-class NRR \\u2014 protect the expansion motion that drives it. Don\\'t fix what isn\\'t broken.';}" +
   "else if(churnRate<2&&churnRate>0){tipStr='\\uD83D\\uDCA1 Tip: Sub-2% churn is your unfair advantage. Don\\'t raise prices until you\\'ve maxed expansion revenue per account.';}" +
@@ -413,15 +413,15 @@ const engine: ToolEngine = {
     { name: "subscriberCount", label: "Current Subscribers", placeholder: "e.g. 500", type: "number" },
     { name: "monthlyPrice", label: "Monthly Price ($)", placeholder: "e.g. 29", type: "number" },
     { name: "monthlyChurnRate", label: "Monthly Churn Rate (%)", placeholder: "e.g. 3", type: "number" },
-    { name: "expansionMRR", label: "Expansion MRR ($/mo)", placeholder: "e.g. 800 (upgrades & add-ons)", type: "number" },
+    { name: "expansionMrr", label: "Expansion MRR ($/mo)", placeholder: "e.g. 800 (upgrades & add-ons)", type: "number" },
     { name: "newSubsPerMonth", label: "New Subscribers / Month", placeholder: "e.g. 100", type: "number" },
-    { name: "contractionMRR", label: "Contraction MRR ($/mo)", placeholder: "e.g. 150 (downgrades & reductions)", type: "number" },
-    { name: "reactivationMRR", label: "Reactivation MRR ($/mo)", placeholder: "e.g. 100 (returned customers)", type: "number" },
+    { name: "contractionMrr", label: "Contraction MRR ($/mo)", placeholder: "e.g. 150 (downgrades & reductions)", type: "number" },
+    { name: "reactivationMrr", label: "Reactivation MRR ($/mo)", placeholder: "e.g. 100 (returned customers)", type: "number" },
   ],
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateMRR(inputs); },
   staticExamples: [
-    '📊 MRR Health Dashboard\n\n💰 MRR Snapshot\n• Starting MRR:      $14,500.00\n• Ending MRR:        $17,715.00  (after 1 month)\n• ARR (×12):         $174,000.00\n• Subscribers:       500  @ $29.00/mo\n• Monthly Growth:    +22.2%\n\n📈 MRR Waterfall\n  Starting MRR:       $14,500.00\n  + New MRR:         +$2,900.00  (100 new subs × $29.00)\n  + Expansion MRR:   +  $800.00  (upgrades & add-ons)\n  + Reactivation:    +  $100.00  (returned customers)\n  − Contraction:     −  $150.00  (downgrades)\n  − Churn:           −  $435.00  (3.0% of 500 subs)\n  = Ending MRR:       $17,715.00\n  Net Change:         +$3,215.00  (+22.2% MoM)\n  Assessment:         🟢 Excellent — 10%+ MoM growth is top-tier.\n\n📐 Key SaaS Metrics\n• NRR (Net Revenue Retention):  101.5%  🟡 Positive — existing base growing slightly\n• GRR (Gross Revenue Retention): 96.0%  🟢 >90% is healthy\n• SaaS Quick Ratio:              6.5x  🟢 >4 is highly efficient\n• Growth Ceiling (Max MRR):      $96,666.67/mo  at 3.0% churn\n  → Halving churn to 1.5% would lift ceiling to $193,333.33/mo\n\n🩺 Churn & Contraction Health\n• Monthly Churn:     3.0% — 🟡 Good for SMB SaaS. Aim for under 2%.\n• Subs Lost/Mo:      ~15 of 500\n• Annual Retention:  69.4% (after 12 months of churn)\n• Contraction MRR:   $150.00\n  → 🟢 Contraction at 19% of expansion — well-managed.\n\n🎯 MRR Milestone Projections\n   (assuming constant net change of +$3,215.00/mo)\n• $20,000.00 MRR:  1.7 months  (~Aug 2026)\n• $50,000.00 MRR:  11.0 months  (~May 2027)\n• $100,000.00 MRR:  26.6 months  (~Sep 2028)\n\n🔄 What-If Scenarios\n• If churn drops 3.0% → 1.0%:\n  Max MRR: $96,666.67 → $290,000.00 (+$193,333.33)\n  Annual revenue potential: +$2,320,000.00\n• Expansion at 28% of new MRR — ✅ already exceeding 25% target.\n• If contraction is cut by 50%:\n  Savings: +$75.00/mo\n  Net Change improves: +$3,215.00 → +$3,290.00/mo (+2%)\n  NRR improves: 101.5% → 102.0%\n\n⚖️ Break-Even Growth\n• 🟢 Break-even below 0 — your expansion + reactivation already outpaces losses.\n\n💡 Tip: Track your Quick Ratio weekly — above 4 means growth is efficient. Below 2 means you\'re scaling losses faster than gains.\n',
+    '📊 MRR Health Dashboard\n\n💰 MRR Snapshot\n• Starting MRR:      $14,500.00\n• Ending MRR:        $16,965.00  (after 1 month)\n• ARR (×12):         $174,000.00\n• Subscribers:       500  @ $29.00/mo\n• Monthly Growth:    +17.0%\n\n📈 MRR Waterfall\n  Starting MRR:       $14,500.00\n  + New MRR:         +$2,900.00  (100 new subs × $29.00)\n  + Expansion MRR:   +    $0.00  (upgrades & add-ons)\n  + Reactivation:    +    $0.00  (returned customers)\n  − Contraction:     −    $0.00  (downgrades)\n  − Churn:           −  $435.00  (3.0% of 500 subs)\n  = Ending MRR:       $16,965.00\n  Net Change:         +$2,465.00  (+17.0% MoM)\n  Assessment:         🟢 Excellent — 10%+ MoM growth is top-tier.\n\n📐 Key SaaS Metrics\n• NRR (Net Revenue Retention):  97.0%  🟠 Shrinking — losing revenue from existing customers\n• GRR (Gross Revenue Retention): 97.0%  🟢 >90% is healthy\n• SaaS Quick Ratio:              6.7x  🟢 >4 is highly efficient\n• Growth Ceiling (Max MRR):      $96,666.67/mo  at 3.0% churn\n  → Halving churn to 1.5% would lift ceiling to $193,333.33/mo\n\n🩺 Churn & Contraction Health\n• Monthly Churn:     3.0% — 🟡 Good for SMB SaaS. Aim for under 2%.\n• Subs Lost/Mo:      ~15 of 500\n• Annual Retention:  69.4% (after 12 months of churn)\n• Contraction MRR:   $0.00 — ✅ No contraction. All revenue losses are from full churn.\n\n🎯 MRR Milestone Projections\n   (assuming constant net change of +$2,465.00/mo)\n• $20,000.00 MRR:  2.2 months  (~Sep 2026)\n• $50,000.00 MRR:  14.4 months  (~Sep 2027)\n• $100,000.00 MRR:  34.7 months  (~May 2029)\n\n🔄 What-If Scenarios\n• If churn drops 3.0% → 1.0%:\n  Max MRR: $96,666.67 → $290,000.00 (+$193,333.33)\n  Annual revenue potential: +$2,320,000.00\n• If expansion grows to 25% of new MRR:\n  Target Expansion: $725.00/mo (+$725.00 needed)\n  NRR would rise: 97.0% → 102.0%\n\n⚖️ Break-Even Growth\n• 🟢 Break-even new subs/mo: 15  — you\'re growing above break-even (100 actual).\n\n💡 Tip: Track your Quick Ratio weekly — above 4 means growth is efficient. Below 2 means you\'re scaling losses faster than gains.\n',
     "+$3,215/mo net change → $20K MRR in <2 months",
     "NRR at 101.5% means existing base is growing — churn is well-covered by expansion",
     "Quick Ratio of 6.5x: for every $1 lost, $6.50 in new revenue comes in",

@@ -5,7 +5,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   // --- Parse inputs ---
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
   const pct = (n: number) => n.toFixed(1) + "%";
-  const currentMRR = parseFloat(inputs.currentMRR) || 0;
+  const currentMrr = parseFloat(inputs.currentMrr) || 0;
   const grossGrowthRate = parseFloat(inputs.monthlyGrowthRate) || 0;
   const churnRate = parseFloat(inputs.monthlyChurnRate) || 0;
   const monthlyExpenses = parseFloat(inputs.monthlyExpenses) || 0;
@@ -17,20 +17,20 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 
   const netRate = (grossGrowthRate - churnRate) / 100;
   const annualizedNetRate = (Math.pow(1 + netRate, 12) - 1) * 100;
-  const endMRR = currentMRR * Math.pow(1 + netRate, months);
+  const endMRR = currentMrr * Math.pow(1 + netRate, months);
 
   let totalRevenue = 0;
-  for (let m = 1; m <= months; m++) totalRevenue += currentMRR * Math.pow(1 + netRate, m);
+  for (let m = 1; m <= months; m++) totalRevenue += currentMrr * Math.pow(1 + netRate, m);
 
-  const growthMultiple = currentMRR > 0 ? endMRR / currentMRR : 0;
+  const growthMultiple = currentMrr > 0 ? endMRR / currentMrr : 0;
 
   // Subscriber math: derive from ARPU
-  const subscriberCount = arpu > 0 ? Math.round(currentMRR / arpu) : 0;
+  const subscriberCount = arpu > 0 ? Math.round(currentMrr / arpu) : 0;
 
   // --- Profit / Loss ---
-  const monthlyNetIncome = currentMRR - monthlyExpenses;
+  const monthlyNetIncome = currentMrr - monthlyExpenses;
   const annualizedProfit = monthlyNetIncome * 12;
-  const profitMargin = currentMRR > 0 ? (monthlyNetIncome / currentMRR) * 100 : 0;
+  const profitMargin = currentMrr > 0 ? (monthlyNetIncome / currentMrr) * 100 : 0;
   const isProfitable = monthlyNetIncome >= 0;
 
   // --- Custom scenario ---
@@ -48,7 +48,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 
   // --- Runway ---
   const runwayZeroRevenue = monthlyExpenses > 0 ? cashOnHand / monthlyExpenses : null;
-  const monthlyBurn = monthlyExpenses - currentMRR; // positive = burning cash
+  const monthlyBurn = monthlyExpenses - currentMrr; // positive = burning cash
   const runwayCurrent = monthlyBurn > 0 ? cashOnHand / monthlyBurn : Infinity;
 
   function runwayColor(m: number): string {
@@ -60,14 +60,14 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 
   // --- Breakeven ---
   let breakevenMonths: number | null = null;
-  if (currentMRR >= monthlyExpenses && monthlyExpenses > 0) {
+  if (currentMrr >= monthlyExpenses && monthlyExpenses > 0) {
     breakevenMonths = 0; // already there
-  } else if (currentMRR > 0 && netRate > 0 && monthlyExpenses > 0) {
-    breakevenMonths = Math.ceil(Math.log(monthlyExpenses / currentMRR) / Math.log(1 + netRate));
+  } else if (currentMrr > 0 && netRate > 0 && monthlyExpenses > 0) {
+    breakevenMonths = Math.ceil(Math.log(monthlyExpenses / currentMrr) / Math.log(1 + netRate));
   }
 
   // --- Burn Multiple ---
-  const netNewMRRThisMonth = currentMRR * netRate; // net new MRR added this month
+  const netNewMRRThisMonth = currentMrr * netRate; // net new MRR added this month
   const burnMultiple = monthlyBurn > 0 && netNewMRRThisMonth > 0 ? monthlyBurn / netNewMRRThisMonth : null;
 
   function burnMultColor(bm: number): string {
@@ -77,7 +77,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   }
 
   // --- MRR / Expense Ratio ---
-  const mrrExpenseRatio = monthlyExpenses > 0 ? currentMRR / monthlyExpenses : null;
+  const mrrExpenseRatio = monthlyExpenses > 0 ? currentMrr / monthlyExpenses : null;
 
   function ratioColor(r: number): string {
     if (r >= 2) return "🟢";
@@ -96,9 +96,9 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 
   // --- Milestones ---
   function monthsToTarget(target: number): number | null {
-    if (currentMRR <= 0 || netRate <= 0) return null;
-    if (currentMRR >= target) return 0;
-    return Math.ceil(Math.log(target / currentMRR) / Math.log(1 + netRate));
+    if (currentMrr <= 0 || netRate <= 0) return null;
+    if (currentMrr >= target) return 0;
+    return Math.ceil(Math.log(target / currentMrr) / Math.log(1 + netRate));
   }
 
   // --- Net growth color ---
@@ -123,7 +123,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   // 1. Revenue Snapshot
   // ========================
   result += "📊 Revenue Snapshot\n\n";
-  result += "• Starting MRR:           " + fmt(currentMRR) + "/mo\n";
+  result += "• Starting MRR:           " + fmt(currentMrr) + "/mo\n";
   result += "• Ending MRR:             " + fmt(endMRR) + "/mo  (after " + months + " months)\n";
   result += "• ARR Equivalent:         " + fmt(endMRR * 12) + "/yr\n";
   result += "• Total Revenue:          " + fmt(totalRevenue) + " over " + months + " months\n\n";
@@ -139,16 +139,16 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   const maxQ = Math.min(Math.floor(months / 3), 8);
   for (let q = 1; q <= maxQ; q++) {
     const mo = q * 3;
-    const mrrAtQ = currentMRR * Math.pow(1 + netRate, mo);
+    const mrrAtQ = currentMrr * Math.pow(1 + netRate, mo);
     result += "• Q" + q + " (Month " + mo + "):  " + fmt(mrrAtQ) + "/mo" + (q === maxQ ? "  ← target" : "") + "\n";
   }
 
   result += "\n🎯 Key Milestones\n";
   const targets = [10000, 25000, 50000, 100000];
   let anyMilestoneShown = false;
-  if (currentMRR > 0 && netRate > 0) {
+  if (currentMrr > 0 && netRate > 0) {
     for (const t of targets) {
-      if (t <= currentMRR) continue;
+      if (t <= currentMrr) continue;
       const mths = monthsToTarget(t);
       if (mths !== null && mths > 0) {
         anyMilestoneShown = true;
@@ -156,8 +156,8 @@ function projectRevenue(inputs: Record<string, string>): string[] {
           // Sensitivity interval: ±2% net growth swing
           const fastRate = netRate + 0.02;
           const slowRate = Math.max(0.001, netRate - 0.02);
-          const fastMths = Math.ceil(Math.log(t / currentMRR) / Math.log(1 + fastRate));
-          const slowMths = Math.ceil(Math.log(t / currentMRR) / Math.log(1 + slowRate));
+          const fastMths = Math.ceil(Math.log(t / currentMrr) / Math.log(1 + fastRate));
+          const slowMths = Math.ceil(Math.log(t / currentMrr) / Math.log(1 + slowRate));
           result += "• $" + Math.round(t / 1000) + "K MRR:  " + mths + " months [" + fastMths + "–" + slowMths + "]\n";
         } else {
           result += "• $" + Math.round(t / 1000) + "K MRR:  >5 years\n";
@@ -168,7 +168,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
       result += "  Range shows ±2% net growth variation.\n";
     }
   }
-  if (!anyMilestoneShown && currentMRR > 0) {
+  if (!anyMilestoneShown && currentMrr > 0) {
     if (netRate <= 0) {
       result += "With zero or negative net growth, no milestones can be projected.\n";
     }
@@ -180,13 +180,13 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   result += "\n📅 Monthly MRR Breakdown\n";
   const showMonths = months === 12 ? 12 : Math.min(months, 6);
   for (let m = 1; m <= showMonths; m++) {
-    const mrrAtM = currentMRR * Math.pow(1 + netRate, m);
-    const delta = mrrAtM - (currentMRR * Math.pow(1 + netRate, m - 1));
+    const mrrAtM = currentMrr * Math.pow(1 + netRate, m);
+    const delta = mrrAtM - (currentMrr * Math.pow(1 + netRate, m - 1));
     result += "Month " + String(m).padStart(2, " ") + ":  " + fmt(mrrAtM) + "/mo  (+" + fmt(delta) + ")" + (m % 3 === 0 ? "  ← Q" + (m / 3) : "") + "\n";
   }
   if (months > showMonths) {
-    const endM = currentMRR * Math.pow(1 + netRate, months);
-    const endD = endM - (currentMRR * Math.pow(1 + netRate, months - 1));
+    const endM = currentMrr * Math.pow(1 + netRate, months);
+    const endD = endM - (currentMrr * Math.pow(1 + netRate, months - 1));
     result += "  ...\nMonth " + months + ":  " + fmt(endM) + "/mo  (+" + fmt(endD) + ")  ← target\n";
   }
 
@@ -194,7 +194,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   // 3. Growth Scenarios & What-If
   // ========================
   result += "\n🔄 Growth Scenarios (" + months + "-Month Outlook)\n";
-  if (currentMRR > 0) {
+  if (currentMrr > 0) {
     const scenarioRates = [
       { r: Math.max(1, Math.round(netRate * 100 * 0.5)), label: "🐢 Conservative" },
       { r: Math.round(netRate * 100), label: "📈 Current Pace" },
@@ -205,9 +205,9 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     for (const sc of scenarioRates) {
       if (seen.has(sc.r) || sc.r <= 0) continue;
       seen.add(sc.r);
-      const scEnd = currentMRR * Math.pow(1 + sc.r / 100, months);
-      const scTo10k = currentMRR > 0 && sc.r > 0
-        ? Math.ceil(Math.log(10000 / currentMRR) / Math.log(1 + sc.r / 100))
+      const scEnd = currentMrr * Math.pow(1 + sc.r / 100, months);
+      const scTo10k = currentMrr > 0 && sc.r > 0
+        ? Math.ceil(Math.log(10000 / currentMrr) / Math.log(1 + sc.r / 100))
         : null;
       result += "• " + sc.label;
       result += " ".repeat(Math.max(1, 24 - sc.label.length));
@@ -216,8 +216,8 @@ function projectRevenue(inputs: Record<string, string>): string[] {
       result += "\n";
     }
     if (hasCustom) {
-      const customEnd = currentMRR * Math.pow(1 + customNetRate, months);
-      const cTo10k = currentMRR > 0 && customNetRate > 0 ? Math.ceil(Math.log(10000 / currentMRR) / Math.log(1 + customNetRate)) : null;
+      const customEnd = currentMrr * Math.pow(1 + customNetRate, months);
+      const cTo10k = currentMrr > 0 && customNetRate > 0 ? Math.ceil(Math.log(10000 / currentMrr) / Math.log(1 + customNetRate)) : null;
       result += "• 🎯 Custom (+" + pct(customGrowthRate) + "/mo)";
       for (let pad = ("🎯 Custom (+" + pct(customGrowthRate) + "/mo)").length; pad < 24; pad++) result += " ";
       result += "→  " + fmt(customEnd) + "/mo";
@@ -232,12 +232,12 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 
   // What-If Analysis
   result += "\n🔄 What-If Analysis\n";
-  if (currentMRR > 0) {
+  if (currentMrr > 0) {
     // Scenario A: Cut churn by 1pp
     if (churnRate > 0) {
       const cutChurnRate = Math.max(0, churnRate - 1);
       const cutNetRate = (grossGrowthRate - cutChurnRate) / 100;
-      const cutEndMRR = currentMRR * Math.pow(1 + cutNetRate, months);
+      const cutEndMRR = currentMrr * Math.pow(1 + cutNetRate, months);
       result += "A) Cut churn " + pct(churnRate) + " → " + pct(cutChurnRate) + ":\n";
       result += "   Net growth: +" + pct(netRate * 100) + " → +" + pct(cutNetRate * 100) + " | End MRR: " + fmt(endMRR) + " → " + fmt(cutEndMRR) + " (+" + fmt(cutEndMRR - endMRR) + ")\n\n";
     } else {
@@ -247,7 +247,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     // Scenario B: Boost gross growth by 20%
     const boostGross = grossGrowthRate * 1.2;
     const boostNetRate = (boostGross - churnRate) / 100;
-    const boostEndMRR = currentMRR * Math.pow(1 + boostNetRate, months);
+    const boostEndMRR = currentMrr * Math.pow(1 + boostNetRate, months);
     result += "B) Boost gross growth +20%:\n";
     result += "   Gross: +" + pct(grossGrowthRate) + " → +" + pct(boostGross) + " | End MRR: " + fmt(endMRR) + " → " + fmt(boostEndMRR) + " (+" + fmt(boostEndMRR - endMRR) + ")\n\n";
 
@@ -260,7 +260,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
         result += "   Expenses: " + fmt(monthlyExpenses) + "/mo → " + fmt(reducedExp) + "/mo | Monthly savings: +" + fmt(savings) + "/mo\n";
         result += "   Profit increases: " + fmt(monthlyNetIncome) + "/mo → " + fmt(monthlyNetIncome + savings) + "/mo\n";
       } else {
-        const newBurn = reducedExp - currentMRR;
+        const newBurn = reducedExp - currentMrr;
         const newRunway = newBurn > 0 ? cashOnHand / newBurn : Infinity;
         result += "C) Cut expenses 20%:\n";
         result += "   Expenses: " + fmt(monthlyExpenses) + "/mo → " + fmt(reducedExp) + "/mo\n";
@@ -280,7 +280,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   result += "\n💰 Runway & Breakeven\n";
   result += "• Cash on Hand:            " + fmt(cashOnHand) + "\n";
   result += "• Monthly Expenses:        " + fmt(monthlyExpenses) + "/mo\n";
-  result += "• Monthly Net Revenue:     " + fmt(currentMRR) + "/mo  (MRR)\n\n";
+  result += "• Monthly Net Revenue:     " + fmt(currentMrr) + "/mo  (MRR)\n\n";
 
   if (isProfitable && monthlyExpenses > 0) {
     // Case A: Already profitable
@@ -370,14 +370,14 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   // ARPU + Subscriber info
   if (arpu > 0 && subscriberCount > 0) {
     result += "• Monthly ARPU:            " + fmt(arpu) + "\n";
-    result += "• Subscribers:             " + subscriberCount + " (currentMRR ÷ ARPU)\n";
+    result += "• Subscribers:             " + subscriberCount + " (currentMrr ÷ ARPU)\n";
   }
 
   // ========================
   // 6. Action Plan
   // ========================
   result += "\n🎯 Action Plan\n";
-  result += "• Stage: " + phaseLabel(currentMRR) + "\n";
+  result += "• Stage: " + phaseLabel(currentMrr) + "\n";
 
   // Burn assessment
   if (isProfitable && monthlyExpenses > 0) {
@@ -397,7 +397,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     result += "• Growth: 🚀 Strong (+" + pct(netRate * 100) + " net) — compound is working for you.\n";
   } else if (netRate > 0) {
     result += "• Growth: 📈 Steady (+" + pct(netRate * 100) + " net) — small gains compound over time.\n";
-  } else if (currentMRR > 0) {
+  } else if (currentMrr > 0) {
     result += "• Growth: 🐢 Stalled (" + pct(netRate * 100) + " net) — add a second acquisition channel.\n";
   }
 
@@ -417,7 +417,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   // Top priorities
   result += "\n🔥 Top Priorities:\n";
   let priority = 1;
-  if (churnRate > 0 && currentMRR > 0) {
+  if (churnRate > 0 && currentMrr > 0) {
     result += "  " + priority + ". Cut churn from " + pct(churnRate) + " → " + pct(Math.max(0, churnRate - 1)) + " → $10K MRR sooner.\n";
     priority++;
   }
@@ -425,11 +425,11 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     result += "  " + priority + ". With " + fmt(monthlyNetIncome) + "/mo profit, reinvest in ads or part-time help.\n";
     priority++;
   }
-  if (runwayCurrent < 12 && currentMRR > 0) {
+  if (runwayCurrent < 12 && currentMrr > 0) {
     result += "  " + priority + ". Runway under 12 months — build a breakeven plan this week.\n";
     priority++;
   }
-  if (netRate < 0.02 && currentMRR > 0) {
+  if (netRate < 0.02 && currentMrr > 0) {
     result += "  " + priority + ". Growth under 2%/mo — test one new acquisition channel.\n";
     priority++;
   }
@@ -438,15 +438,15 @@ function projectRevenue(inputs: Record<string, string>): string[] {
   }
 
   // ═══ Break-Even Revenue ═══
-  if (currentMRR > 0 || monthlyExpenses > 0) {
+  if (currentMrr > 0 || monthlyExpenses > 0) {
     const breakEvenMRR = monthlyExpenses;
-    const beLabel = currentMRR >= breakEvenMRR ? "🟢" : "🔴";
+    const beLabel = currentMrr >= breakEvenMRR ? "🟢" : "🔴";
     result += "\n⚖️ Break-Even Revenue\n";
     result += "• " + beLabel + " Break-even MRR: " + fmt(monthlyExpenses) + "/mo (covers monthly expenses)\n";
-    if (currentMRR >= breakEvenMRR) {
-      result += "• Current MRR " + fmt(currentMRR) + " is above break-even by " + fmt(currentMRR - breakEvenMRR) + "/mo.\n";
+    if (currentMrr >= breakEvenMRR) {
+      result += "• Current MRR " + fmt(currentMrr) + " is above break-even by " + fmt(currentMrr - breakEvenMRR) + "/mo.\n";
     } else {
-      const gap = breakEvenMRR - currentMRR;
+      const gap = breakEvenMRR - currentMrr;
       result += "• Gap to break-even: " + fmt(gap) + "/mo. Closing this puts you at default-alive.\n";
     }
   }
@@ -457,7 +457,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
     tip = "💡 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) — not conservative hoarding.";
   } else if (runwayCurrent > 0 && runwayCurrent <= 6) {
     tip = "💡 Tip: Sub-6-month runway means raise now or cut hard. Delaying 30 days = raising from a weaker position. Cut discretionary spend first.";
-  } else if (monthlyBurn > 0 && currentMRR > 0 && currentMRR / monthlyExpenses < 0.3) {
+  } else if (monthlyBurn > 0 && currentMrr > 0 && currentMrr / monthlyExpenses < 0.3) {
     tip = "💡 Tip: Your revenue covers under 30% of expenses. Focus 80% of effort on the 1-2 channels with highest ROI, not on cost-cutting.";
   } else {
     tip = "💡 Tip: Re-project monthly. Inputs change (churn, hiring, ad costs). The plan that got you here won't get you there.";
@@ -472,7 +472,7 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 const customFn =
   "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
   "function pct(n){return n.toFixed(1)+'%'}" +
-  "var mr=parseFloat(inputs.currentMRR)||0;" +
+  "var mr=parseFloat(inputs.currentMrr)||0;" +
   "var gr=parseFloat(inputs.monthlyGrowthRate)||0;" +
   "var cr=parseFloat(inputs.monthlyChurnRate)||0;" +
   "var ex=parseFloat(inputs.monthlyExpenses)||0;" +
@@ -675,7 +675,7 @@ const customFn =
   "r+='\\n';" +
   "}" +
   // ARPU + Subscribers
-  "if(arpu>0&&subs>0){r+='\\u2022 Monthly ARPU:            '+fmt(arpu)+'\\n';r+='\\u2022 Subscribers:             '+subs+' (currentMRR \\u00f7 ARPU)\\n';}" +
+  "if(arpu>0&&subs>0){r+='\\u2022 Monthly ARPU:            '+fmt(arpu)+'\\n';r+='\\u2022 Subscribers:             '+subs+' (currentMrr \\u00f7 ARPU)\\n';}" +
 
   // Section 6: Action Plan
   "r+='\\n\\uD83C\\uDFAF Action Plan\\n';" +
@@ -722,7 +722,7 @@ const engine: ToolEngine = {
   description: "The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.",
   category: "C",
   inputs: [
-    { name: "currentMRR", label: "Current MRR ($)", placeholder: "e.g. 5000", type: "number" },
+    { name: "currentMrr", label: "Current MRR ($)", placeholder: "e.g. 5000", type: "number" },
     { name: "monthlyGrowthRate", label: "Monthly Growth Rate (%)", placeholder: "e.g. 8", type: "number" },
     { name: "monthlyChurnRate", label: "Monthly Churn Rate (%)", placeholder: "e.g. 3", type: "number" },
     { name: "monthlyExpenses", label: "Monthly Expenses ($)", placeholder: "e.g. 3000", type: "number" },
@@ -735,7 +735,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return projectRevenue(inputs); },
   staticExamples: [
-    '📊 Revenue Snapshot\n\n• Starting MRR:           $5,000/mo\n• Ending MRR:             $8,979/mo  (after 12 months)\n• ARR Equivalent:         $107,751/yr\n• Total Revenue:          $83,565 over 12 months\n\n• Gross Monthly Growth:   +8.0%  (new + expansion)\n• Monthly Churn:          −3.0%  (lost revenue)\n• Net Monthly Growth:     +5.0%  (effective)  🟡 Healthy\n• Growth Multiple:        1.8×   (12-month MRR expansion)\n\n📈 MRR Milestones\n• Q1 (Month 3):  $5,788/mo\n• Q2 (Month 6):  $6,700/mo\n• Q3 (Month 9):  $7,757/mo\n• Q4 (Month 12):  $8,979/mo  ← target\n\n🎯 Key Milestones\n• $10K MRR:  15 months [11–24]\n• $25K MRR:  33 months [24–55]\n• $50K MRR:  48 months [35–78]\n• $100K MRR:  >5 years\n  Range shows ±2% net growth variation.\n\n📅 Monthly MRR Breakdown\nMonth  1:  $5,250/mo  (+$250)\nMonth  2:  $5,513/mo  (+$263)\nMonth  3:  $5,788/mo  (+$276)  ← Q1\nMonth  4:  $6,078/mo  (+$289)\nMonth  5:  $6,381/mo  (+$304)\nMonth  6:  $6,700/mo  (+$319)  ← Q2\nMonth  7:  $7,036/mo  (+$335)\nMonth  8:  $7,387/mo  (+$352)\nMonth  9:  $7,757/mo  (+$369)  ← Q3\nMonth 10:  $8,144/mo  (+$388)\nMonth 11:  $8,552/mo  (+$407)\nMonth 12:  $8,979/mo  (+$428)  ← Q4\n\n🔄 Growth Scenarios (12-Month Outlook)\n• 🐢 Conservative         +3.0%/mo  →  $7,129/mo  |  $10K in 24 mo\n• 📈 Current Pace         +5.0%/mo  →  $8,979/mo  |  $10K in 15 mo\n• 🚀 Aggressive           +8.0%/mo  →  $12,591/mo  |  $10K in 10 mo\n• 🔥 Hyper-Growth         +10.0%/mo  →  $15,692/mo  |  $10K in 8 mo\n• 🎯 Custom: enter a growth rate above to see your target\n\n🔄 What-If Analysis\nA) Cut churn 3.0% → 2.0%:\n   Net growth: +5.0% → +6.0% | End MRR: $8,979 → $10,061 (+$1,082)\n\nB) Boost gross growth +20%:\n   Gross: +8.0% → +9.6% | End MRR: $8,979 → $10,766 (+$1,787)\n\nC) Cut expenses 20%:\n   Expenses: $3,000/mo → $2,400/mo | Monthly savings: +$600/mo\n   Profit increases: $2,000/mo → $2,600/mo\n\n💰 Runway & Breakeven\n• Cash on Hand:            $60,000\n• Monthly Expenses:        $3,000/mo\n• Monthly Net Revenue:     $5,000/mo  (MRR)\n\n• Monthly Profit:          +$2,000  🟢 Revenue covers expenses.\n• Runway (zero-revenue):   20.0 months\n• Runway (current pace):   ∞ (profitable)\n• Breakeven:               ✅ Already breakeven\n• Annualized Profit:       +$24,000/yr\n\n🩺 Burn & Efficiency Metrics\n• Gross Burn:              $3,000/mo  (total expenses)\n• Net Burn:                +$2,000/mo (profit)  🟢\n\n• Burn Multiple:           N/A (profitable)\n\n• Rule of 40:              45.0%  🟢\n  = net growth 5.0% + profit margin 40.0%\n  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴\n\n• MRR / Expense Ratio:     1.67×  🟡\n  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n• LTV (Customer Lifetime): $833  (33× ARPU)  🟡\n  = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴\n\n• CAC (Customer Acq. Cost): $200\n• CAC Payback Period:       8.2 months  🟢\n  = CAC ÷ (ARPU × (1 − churn rate)) | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴\n• LTV:CAC Ratio:            4.2×  🟢\n  = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴\n\n• Monthly ARPU:            $25\n• Subscribers:             200 (currentMRR ÷ ARPU)\n\n🎯 Action Plan\n• Stage: Early Traction ($1K–$10K MRR)\n• Burn:  ✅ Profitable — reinvest 30% of profit into growth.\n• Growth: 🚀 Strong (+5.0% net) — compound is working for you.\n• Risk:  🟢 Low — profitable + growing. Focus on moat and scale.\n\n🔥 Top Priorities:\n  1. Cut churn from 3.0% → 2.0% → $10K MRR sooner.\n  2. With $2,000/mo profit, reinvest in ads or part-time help.\n\n⚖️ Break-Even Revenue\n• 🟢 Break-even MRR: $3,000/mo (covers monthly expenses)\n• Current MRR $5,000 is above break-even by $2,000/mo.\n\n💡 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) — not conservative hoarding.\n',
+    '📊 Revenue Snapshot\n\n• Starting MRR:           $0/mo\n• Ending MRR:             $0/mo  (after 12 months)\n• ARR Equivalent:         $0/yr\n• Total Revenue:          $0 over 12 months\n\n• Gross Monthly Growth:   +8.0%  (new + expansion)\n• Monthly Churn:          −3.0%  (lost revenue)\n• Net Monthly Growth:     +5.0%  (effective)  🟡 Healthy\n• Growth Multiple:        0.0×   (12-month MRR expansion)\n\n📈 MRR Milestones\n• Q1 (Month 3):  $0/mo\n• Q2 (Month 6):  $0/mo\n• Q3 (Month 9):  $0/mo\n• Q4 (Month 12):  $0/mo  ← target\n\n🎯 Key Milestones\n\n📅 Monthly MRR Breakdown\nMonth  1:  $0/mo  (+$0)\nMonth  2:  $0/mo  (+$0)\nMonth  3:  $0/mo  (+$0)  ← Q1\nMonth  4:  $0/mo  (+$0)\nMonth  5:  $0/mo  (+$0)\nMonth  6:  $0/mo  (+$0)  ← Q2\nMonth  7:  $0/mo  (+$0)\nMonth  8:  $0/mo  (+$0)\nMonth  9:  $0/mo  (+$0)  ← Q3\nMonth 10:  $0/mo  (+$0)\nMonth 11:  $0/mo  (+$0)\nMonth 12:  $0/mo  (+$0)  ← Q4\n\n🔄 Growth Scenarios (12-Month Outlook)\nEnter your current MRR to see growth scenarios.\n\n🔄 What-If Analysis\nEnter your current MRR to see what-if scenarios.\n\n💰 Runway & Breakeven\n• Cash on Hand:            $60,000\n• Monthly Expenses:        $3,000/mo\n• Monthly Net Revenue:     $0/mo  (MRR)\n\n• Monthly Burn:            −$3,000/mo  🟢\n• Runway (zero-revenue):   20.0 months\n• Runway (current pace):   20.0 months  🟢\n• Breakeven:               Not reachable at current growth rate.\n  → Cut expenses or boost growth immediately.\n\n🩺 Burn & Efficiency Metrics\n• Gross Burn:              $3,000/mo  (total expenses)\n• Net Burn:                −$3,000/mo  🔴\n\n• Burn Multiple:           N/A (no net new MRR)\n\n• Rule of 40:              5.0%  🔴\n  = net growth 5.0% + profit margin 0.0%\n  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴\n\n• MRR / Expense Ratio:     0.00×  🔴\n  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴\n\n• LTV (Customer Lifetime): $833  (33× ARPU)  🟡\n  = ARPU ÷ monthly churn | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴\n\n• CAC (Customer Acq. Cost): $200\n• CAC Payback Period:       8.2 months  🟢\n  = CAC ÷ (ARPU × (1 − churn rate)) | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴\n• LTV:CAC Ratio:            4.2×  🟢\n  = LTV ÷ CAC | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴\n\n\n🎯 Action Plan\n• Stage: Validation (<$1K MRR)\n• Burn:  🟡 Burning cash but healthy runway. Watch burn rate.\n• Growth: 🚀 Strong (+5.0% net) — compound is working for you.\n• Risk:  🟡 Manageable — burning but decent runway. Plan breakeven path.\n\n🔥 Top Priorities:\n  1. Runway is healthy. Focus on product quality and customer retention.\n\n⚖️ Break-Even Revenue\n• 🔴 Break-even MRR: $3,000/mo (covers monthly expenses)\n• Gap to break-even: $3,000/mo. Closing this puts you at default-alive.\n\n💡 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) — not conservative hoarding.\n',
   ],
   faq: [
     { q: "What is a good monthly growth rate for a SaaS?", a: "For early-stage SaaS (under $10K MRR), 5-10% monthly net growth is good. At $10K-$100K MRR, 3-5% is healthy. Above $100K MRR, 2-3% is normal. Net growth = gross growth − churn — both matter equally." },
