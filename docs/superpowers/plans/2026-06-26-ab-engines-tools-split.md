@@ -228,7 +228,16 @@ import('./src/engines/index.ts').then(async () => {
 
 Expected output: `Registered engines: 32` then `OK`. If not 32, one or more engine files were not picked up by the glob — list `getAllEngines().map(e => e.slug)` to see which is missing.
 
-- [ ] **Step 9: Commit the moves + index rewrite**
+- [ ] **Step 9: Commit the moves + index rewrite + import path fix**
+
+**Important:** the plan originally only covered file moves + index rewrite. At execution time, a critical missing step was discovered: 32 engine files contain relative imports like `from '../core/engines/types'` which work when the file is in `src/engines/` but break when the file is in `src/engines/<subdir>/`. All 72 import references must be updated to add an extra `..` (e.g. `from '../core/engines/types'` → `from '../../core/engines/types'`; `from '../data/ai-pricing.json'` → `from '../../data/ai-pricing.json'` for the 8 ai-cost engines).
+
+Use a one-shot Node script (or equivalent batch edit) to:
+1. Find all engine files: `find src/engines -mindepth 2 -name '*.ts'`
+2. For each file, replace `'../core/engines/...'` → `'../../core/engines/...'` and `'../data/ai-pricing.json'` → `'../../data/ai-pricing.json'`
+3. Delete the script after use
+
+Verify: `grep -r "from '\.\./core\|from '\.\./data" src/engines/*/*.ts` returns no output (no old-style imports remain).
 
 Run:
 ```bash
@@ -238,7 +247,10 @@ git -c user.email=dev@local -c user.name=Developer commit -m "chore(engines): mo
 - 32 engines redistributed to subdirs by categoryId (5/8/9/3/3/4):
   saas/ ai-cost/ valuation/ freelance/ cost/ investment/
 - engines/index.ts: 32 hand-written imports → 1-line import.meta.glob
-- File history preserved via git mv (no content changes to engines)
+- Import paths in each engine updated: '../core/...' → '../../core/...',
+  '../data/ai-pricing.json' → '../../data/ai-pricing.json' (where applicable)
+- File history preserved via git mv (no content changes to engines
+  beyond import path adjustments required by the new locations)
 - All 32 engines still register via side-effect imports
 
 Verifies zero behavior change: pnpm typecheck exit 0, 32 engines
@@ -652,9 +664,15 @@ Expected: 30/30 pass (21 prior + 9 new). If any fail, fix before proceeding.
 - [ ] **Step 4: Run `pnpm check` (codegen + tests)**
 
 Run: `pnpm check`
-Expected: exit 0. Confirms codegen-examples and codegen-customfn scripts still pass against the moved engine files (they reference `src/engines/*.ts` which now matches the subdir files via glob — verify if codegen scripts use literal paths or globs).
+Expected: exit 0. Confirms codegen-examples and codegen-customfn scripts still pass against the moved engine files.
 
-If codegen fails, check `scripts/codegen-examples.mjs` and `scripts/codegen-customfn.mjs` for hard-coded `src/engines/*.ts` paths that don't recurse into subdirs. Update to use `src/engines/**/*.ts` if needed.
+**Important (added during execution):** Both `scripts/codegen-examples.mjs` and `scripts/codegen-customfn.mjs` hard-code engine paths via an `ENGINES` array (32 entries + 9 entries respectively, each with a `file` field). After the engines/ subdir move, these arrays need a `subdir` field added to each entry, AND the `path.join(ROOT, 'src', 'engines', file)` references need to be updated to `path.join(ROOT, 'src', 'engines', subdir, file)`. This was missed in the original plan and required a follow-up commit.
+
+If `pnpm check` fails after the move, the failure is most likely the codegen scripts' hard-coded paths. Fix using a one-shot script:
+- For each engine file in the ENGINES array, add `subdir: '<saas|ai-cost|valuation|freelance|cost|investment>'` field
+- Update the `path.join` reference to use `engine.subdir` (or destructured `subdir`)
+
+CRLF note: both scripts use CRLF line endings — any regex-based fix must use `\s+` instead of `\n` to match.
 
 - [ ] **Step 5: Run production build**
 
