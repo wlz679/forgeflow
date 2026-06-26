@@ -462,7 +462,7 @@ const schema = JSON.stringify({
                       { emoji:'💡', key:'idea-stage', monthlyrevenue:'0', teamcost:'15000', infracost:'1000', marketingcost:'3000', opscost:'2000', currentcash:'80000', netnewrevenue:'0' },
                       { emoji:'⚠️', key:'bloated', monthlyrevenue:'10000', teamcost:'50000', infracost:'3000', marketingcost:'15000', opscost:'5000', currentcash:'200000', netnewrevenue:'2000' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthlyrevenue={p.monthlyrevenue} data-teamcost={p.teamcost} data-infracost={p.infracost} data-marketingcost={p.marketingcost} data-opscost={p.opscost} data-currentcash={p.currentcash} data-netnewrevenue={p.netnewrevenue}>{p.emoji} {t(`tools.solopreneur-burn-rate-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthly-revenue={p.monthlyrevenue} data-team-cost={p.teamcost} data-infra-cost={p.infracost} data-marketing-cost={p.marketingcost} data-ops-cost={p.opscost} data-current-cash={p.currentcash} data-net-new-revenue={p.netnewrevenue}>{p.emoji} {t(`tools.solopreneur-burn-rate-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -479,7 +479,7 @@ const schema = JSON.stringify({
                       { emoji:'📊', key:'flat', subscribercount:'500', monthlyprice:'29', monthlychurnrate:'3', expansionmrr:'500', newsubspermonth:'0', contractionmrr:'200', reactivationmrr:'50' },
                       { emoji:'📈', key:'expansion-heavy', subscribercount:'5000', monthlyprice:'49', monthlychurnrate:'1', expansionmrr:'5000', newsubspermonth:'300', contractionmrr:'400', reactivationmrr:'200' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-subscribercount={p.subscribercount} data-monthlyprice={p.monthlyprice} data-monthlychurnrate={p.monthlychurnrate} data-expansionmrr={p.expansionmrr} data-newsubspermonth={p.newsubspermonth} data-contractionmrr={p.contractionmrr} data-reactivationmrr={p.reactivationmrr}>{p.emoji} {t(`tools.solopreneur-mrr-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-subscriber-count={p.subscribercount} data-monthly-price={p.monthlyprice} data-monthly-churn-rate={p.monthlychurnrate} data-expansion-mrr={p.expansionmrr} data-new-subs-per-month={p.newsubspermonth} data-contraction-mrr={p.contractionmrr} data-reactivation-mrr={p.reactivationmrr}>{p.emoji} {t(`tools.solopreneur-mrr-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -496,7 +496,7 @@ const schema = JSON.stringify({
                       { emoji:'🌱', key:'startup', customersstart:'100', customerslost:'0', newcustomers:'50', avgrevenuepercustomer:'29', expansionrevenue:'0' },
                       { emoji:'⏸️', key:'stagnant', customersstart:'300', customerslost:'15', newcustomers:'5', avgrevenuepercustomer:'79', expansionrevenue:'200' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-customersstart={p.customersstart} data-customerslost={p.customerslost} data-newcustomers={p.newcustomers} data-avgrevenuepercustomer={p.avgrevenuepercustomer} data-expansionrevenue={p.expansionrevenue}>{p.emoji} {t(`tools.solopreneur-churn-rate-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-customers-start={p.customersstart} data-customers-lost={p.customerslost} data-new-customers={p.newcustomers} data-avg-revenue-per-customer={p.avgrevenuepercustomer} data-expansion-revenue={p.expansionrevenue}>{p.emoji} {t(`tools.solopreneur-churn-rate-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -513,7 +513,7 @@ const schema = JSON.stringify({
                       { emoji:'📍', key:'local-service', targetmarket:'local restaurants', totaladdressablecustomers:'500', annualrevenuepercustomer:'8000', marketgrowthrate:'2', sampercent:'40', marketstage:'Stable' },
                       { emoji:'📉', key:'declining', targetmarket:'print newspapers', totaladdressablecustomers:'1000000', annualrevenuepercustomer:'50', marketgrowthrate:'-5', sampercent:'20', marketstage:'Declining' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-targetmarket={p.targetmarket} data-totaladdressablecustomers={p.totaladdressablecustomers} data-annualrevenuepercustomer={p.annualrevenuepercustomer} data-marketgrowthrate={p.marketgrowthrate} data-sampercent={p.sampercent} data-marketstage={p.marketstage}>{p.emoji} {t(`tools.solopreneur-market-size-estimator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-target-market={p.targetmarket} data-total-addressable-customers={p.totaladdressablecustomers} data-annual-revenue-per-customer={p.annualrevenuepercustomer} data-market-growth-rate={p.marketgrowthrate} data-sam-percent={p.sampercent} data-market-stage={p.marketstage}>{p.emoji} {t(`tools.solopreneur-market-size-estimator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -530,7 +530,7 @@ const schema = JSON.stringify({
                       { emoji:'💰', key:'profitability', currentmrr:'50000', monthlygrowthrate:'3', monthlychurnrate:'2', monthlyexpenses:'40000', cashonhand:'500000', arpu:'79', customgrowthrate:'0', cac:'180', months:'12' },
                       { emoji:'🆘', key:'distressed', currentmrr:'10000', monthlygrowthrate:'-5', monthlychurnrate:'8', monthlyexpenses:'15000', cashonhand:'30000', arpu:'35', customgrowthrate:'0', cac:'300', months:'12' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-currentmrr={p.currentmrr} data-monthlygrowthrate={p.monthlygrowthrate} data-monthlychurnrate={p.monthlychurnrate} data-monthlyexpenses={p.monthlyexpenses} data-cashonhand={p.cashonhand} data-arpu={p.arpu} data-customgrowthrate={p.customgrowthrate} data-cac={p.cac} data-months={p.months}>{p.emoji} {t(`tools.solopreneur-revenue-projector.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-current-mrr={p.currentmrr} data-monthly-growth-rate={p.monthlygrowthrate} data-monthly-churn-rate={p.monthlychurnrate} data-monthly-expenses={p.monthlyexpenses} data-cash-on-hand={p.cashonhand} data-arpu={p.arpu} data-custom-growth-rate={p.customgrowthrate} data-cac={p.cac} data-months={p.months}>{p.emoji} {t(`tools.solopreneur-revenue-projector.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -547,7 +547,7 @@ const schema = JSON.stringify({
                       { emoji:'💎', key:'high-retention', monthlyrevenueperuser:'50', grossmargin:'75', monthlychurn:'1.5', customeracquisitioncost:'150' },
                       { emoji:'🆘', key:'churn-crisis', monthlyrevenueperuser:'40', grossmargin:'40', monthlychurn:'15', customeracquisitioncost:'200' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthlyrevenueperuser={p.monthlyrevenueperuser} data-grossmargin={p.grossmargin} data-monthlychurn={p.monthlychurn} data-customeracquisitioncost={p.customeracquisitioncost}>{p.emoji} {t(`tools.solopreneur-ltv-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthly-revenue-per-user={p.monthlyrevenueperuser} data-gross-margin={p.grossmargin} data-monthly-churn={p.monthlychurn} data-customer-acquisition-cost={p.customeracquisitioncost}>{p.emoji} {t(`tools.solopreneur-ltv-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -564,7 +564,7 @@ const schema = JSON.stringify({
                       { emoji:'🩸', key:'bleeding', marketingspend:'30000', salesspend:'15000', newcustomers:'100' },
                       { emoji:'🏪', key:'smba', marketingspend:'8000', salesspend:'4000', newcustomers:'200' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-marketingspend={p.marketingspend} data-salesspend={p.salesspend} data-newcustomers={p.newcustomers}>{p.emoji} {t(`tools.solopreneur-cac-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-marketing-spend={p.marketingspend} data-sales-spend={p.salesspend} data-new-customers={p.newcustomers}>{p.emoji} {t(`tools.solopreneur-cac-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -581,7 +581,7 @@ const schema = JSON.stringify({
                       { emoji:'💔', key:'broken', averagerevenuepercustomer:'50', expansionrevenuepercustomer:'0', costtoservepercustomer:'60', customeracquisitioncost:'400', monthlychurnrate:'12', retentionmonths:'0' },
                       { emoji:'🏆', key:'best-in-class', averagerevenuepercustomer:'150', expansionrevenuepercustomer:'40', costtoservepercustomer:'25', customeracquisitioncost:'200', monthlychurnrate:'2', retentionmonths:'0' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-averagerevenuepercustomer={p.averagerevenuepercustomer} data-expansionrevenuepercustomer={p.expansionrevenuepercustomer} data-costtoservepercustomer={p.costtoservepercustomer} data-customeracquisitioncost={p.customeracquisitioncost} data-monthlychurnrate={p.monthlychurnrate} data-retentionmonths={p.retentionmonths}>{p.emoji} {t(`tools.solopreneur-unit-economics-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-average-revenue-per-customer={p.averagerevenuepercustomer} data-expansion-revenue-per-customer={p.expansionrevenuepercustomer} data-cost-to-serve-per-customer={p.costtoservepercustomer} data-customer-acquisition-cost={p.customeracquisitioncost} data-monthly-churn-rate={p.monthlychurnrate} data-retention-months={p.retentionmonths}>{p.emoji} {t(`tools.solopreneur-unit-economics-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -598,7 +598,7 @@ const schema = JSON.stringify({
                       { emoji:'📊', key:'flat', arr:'2000000', growthrate:'10', grossmargin:'65', multiple:'5' },
                       { emoji:'🏢', key:'series-b', arr:'15000000', growthrate:'60', grossmargin:'75', multiple:'14' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-arr={p.arr} data-growthrate={p.growthrate} data-grossmargin={p.grossmargin} data-multiple={p.multiple}>{p.emoji} {t(`tools.solopreneur-saas-valuation-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-arr={p.arr} data-growth-rate={p.growthrate} data-gross-margin={p.grossmargin} data-multiple={p.multiple}>{p.emoji} {t(`tools.solopreneur-saas-valuation-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -615,7 +615,7 @@ const schema = JSON.stringify({
                       { emoji:'🌱', key:'pre-seed', companyvaluation:'2000000', investmentamount:'200000', foundershares:'10000000' },
                       { emoji:'🏛️', key:'late-stage', companyvaluation:'500000000', investmentamount:'50000000', foundershares:'10000000' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-companyvaluation={p.companyvaluation} data-investmentamount={p.investmentamount} data-foundershares={p.foundershares}>{p.emoji} {t(`tools.solopreneur-equity-dilution-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-company-valuation={p.companyvaluation} data-investment-amount={p.investmentamount} data-founder-shares={p.foundershares}>{p.emoji} {t(`tools.solopreneur-equity-dilution-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -632,7 +632,7 @@ const schema = JSON.stringify({
                       { emoji:'🛒', key:'ecom', fixedcosts:'3000', priceperunit:'30', variablecostperunit:'12' },
                       { emoji:'🤏', key:'tight', fixedcosts:'8000', priceperunit:'25', variablecostperunit:'18' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-fixedcosts={p.fixedcosts} data-priceperunit={p.priceperunit} data-variablecostperunit={p.variablecostperunit}>{p.emoji} {t(`tools.solopreneur-break-even-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-fixed-costs={p.fixedcosts} data-price-per-unit={p.priceperunit} data-variable-cost-per-unit={p.variablecostperunit}>{p.emoji} {t(`tools.solopreneur-break-even-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -649,7 +649,7 @@ const schema = JSON.stringify({
                       { emoji:'✍️', key:'writer-eu', annualincome:'50000', expenses:'3000', billablehrs:'1000', profit:'10000' },
                       { emoji:'📣', key:'marketer-remote', annualincome:'85000', expenses:'6000', billablehrs:'1100', profit:'20000' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualincome={p.annualincome} data-expenses={p.expenses} data-billablehrs={p.billablehrs} data-profit={p.profit}>{p.emoji} {t(`tools.solopreneur-freelance-rate-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annual-income={p.annualincome} data-expenses={p.expenses} data-billable-hrs={p.billablehrs} data-profit={p.profit}>{p.emoji} {t(`tools.solopreneur-freelance-rate-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -666,7 +666,7 @@ const schema = JSON.stringify({
                       { emoji:'🎯', key:'niche-expert', targetmonthlyincome:'20000', estimatedbuyerspermonth:'15', platformfee:'10' },
                       { emoji:'🚢', key:'flag-ship', targetmonthlyincome:'50000', estimatedbuyerspermonth:'25', platformfee:'5' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-targetmonthlyincome={p.targetmonthlyincome} data-estimatedbuyerspermonth={p.estimatedbuyerspermonth} data-platformfee={p.platformfee}>{p.emoji} {t(`tools.solopreneur-course-pricing-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-target-monthly-income={p.targetmonthlyincome} data-estimated-buyers-per-month={p.estimatedbuyerspermonth} data-platform-fee={p.platformfee}>{p.emoji} {t(`tools.solopreneur-course-pricing-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -683,7 +683,7 @@ const schema = JSON.stringify({
                       { emoji:'⏰', key:'part-time', annualincome:'35000', hoursperweek:'25', weeksperyear:'48' },
                       { emoji:'📅', key:'four-day', annualincome:'90000', hoursperweek:'32', weeksperyear:'48' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualincome={p.annualincome} data-hoursperweek={p.hoursperweek} data-weeksperyear={p.weeksperyear}>{p.emoji} {t(`tools.solopreneur-time-value-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annual-income={p.annualincome} data-hours-per-week={p.hoursperweek} data-weeks-per-year={p.weeksperyear}>{p.emoji} {t(`tools.solopreneur-time-value-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -700,7 +700,7 @@ const schema = JSON.stringify({
                       { emoji:'📝', key:'blog', monthlydownloads:'50000', emailsubscribers:'1000', socialfollowers:'8000', contenttype:'blog' },
                       { emoji:'🏆', key:'top-tier', monthlydownloads:'100000', emailsubscribers:'50000', socialfollowers:'200000', contenttype:'youtube' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthlydownloads={p.monthlydownloads} data-emailsubscribers={p.emailsubscribers} data-socialfollowers={p.socialfollowers} data-contenttype={p.contenttype}>{p.emoji} {t(`tools.solopreneur-sponsorship-rate-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthly-downloads={p.monthlydownloads} data-email-subscribers={p.emailsubscribers} data-social-followers={p.socialfollowers} data-content-type={p.contenttype}>{p.emoji} {t(`tools.solopreneur-sponsorship-rate-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -717,7 +717,7 @@ const schema = JSON.stringify({
                       { emoji:'🐜', key:'micro', projectrevenue:'500', hoursestimated:'10', hourlycost:'30', materialcost:'50' },
                       { emoji:'⏰', key:'overrun', projectrevenue:'8000', hoursestimated:'80', hourlycost:'50', materialcost:'600' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-projectrevenue={p.projectrevenue} data-hoursestimated={p.hoursestimated} data-hourlycost={p.hourlycost} data-materialcost={p.materialcost}>{p.emoji} {t(`tools.solopreneur-project-profitability-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-project-revenue={p.projectrevenue} data-hours-estimated={p.hoursestimated} data-hourly-cost={p.hourlycost} data-material-cost={p.materialcost}>{p.emoji} {t(`tools.solopreneur-project-profitability-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -734,7 +734,7 @@ const schema = JSON.stringify({
                       { emoji:'📝', key:'side-blog', monthlytraffic:'5000', conversionrate:'1', avgcommission:'40', monthlycost:'50' },
                       { emoji:'🌊', key:'mass-traffic', monthlytraffic:'500000', conversionrate:'1.5', avgcommission:'35', monthlycost:'800' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthlytraffic={p.monthlytraffic} data-conversionrate={p.conversionrate} data-avgcommission={p.avgcommission} data-monthlycost={p.monthlycost}>{p.emoji} {t(`tools.solopreneur-affiliate-income-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-monthly-traffic={p.monthlytraffic} data-conversion-rate={p.conversionrate} data-avg-commission={p.avgcommission} data-monthly-cost={p.monthlycost}>{p.emoji} {t(`tools.solopreneur-affiliate-income-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -751,7 +751,7 @@ const schema = JSON.stringify({
                       { emoji:'🚀', key:'starting', subscribercount:'500', openrate:'30', clickrate:'4', conversionrate:'1.5', avgordervalue:'45', emailspermonth:'2', unsubscriberate:'0.4' },
                       { emoji:'🔥', key:'engaged', subscribercount:'5000', openrate:'45', clickrate:'10', conversionrate:'5', avgordervalue:'55', emailspermonth:'5', unsubscriberate:'0.2' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-subscribercount={p.subscribercount} data-openrate={p.openrate} data-clickrate={p.clickrate} data-conversionrate={p.conversionrate} data-avgordervalue={p.avgordervalue} data-emailspermonth={p.emailspermonth} data-unsubscriberate={p.unsubscriberate}>{p.emoji} {t(`tools.solopreneur-email-list-revenue-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-subscriber-count={p.subscribercount} data-open-rate={p.openrate} data-click-rate={p.clickrate} data-conversion-rate={p.conversionrate} data-avg-order-value={p.avgordervalue} data-emails-per-month={p.emailspermonth} data-unsubscribe-rate={p.unsubscriberate}>{p.emoji} {t(`tools.solopreneur-email-list-revenue-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -768,7 +768,7 @@ const schema = JSON.stringify({
                       { emoji:'🌐', key:'remote-stable', annualincomegoal:'95000', billablehoursperweek:'32', weeksoffperyear:'6', annualexpenses:'6000' },
                       { emoji:'🏢', key:'agency', annualincomegoal:'500000', billablehoursperweek:'40', weeksoffperyear:'4', annualexpenses:'80000' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualincomegoal={p.annualincomegoal} data-billablehoursperweek={p.billablehoursperweek} data-weeksoffperyear={p.weeksoffperyear} data-annualexpenses={p.annualexpenses}>{p.emoji} {t(`tools.solopreneur-hourly-vs-fixed-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annual-income-goal={p.annualincomegoal} data-billable-hours-per-week={p.billablehoursperweek} data-weeks-off-per-year={p.weeksoffperyear} data-annual-expenses={p.annualexpenses}>{p.emoji} {t(`tools.solopreneur-hourly-vs-fixed-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -785,7 +785,7 @@ const schema = JSON.stringify({
                       { emoji:'🤝', key:'1on1', attendees:'2', avghourlyrate:'80', meetingminutes:'30', meetingsperweek:'1' },
                       { emoji:'🏛️', key:'board', attendees:'7', avghourlyrate:'250', meetingminutes:'120', meetingsperweek:'0.25' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-attendees={p.attendees} data-avghourlyrate={p.avghourlyrate} data-meetingminutes={p.meetingminutes} data-meetingsperweek={p.meetingsperweek}>{p.emoji} {t(`tools.solopreneur-meeting-cost-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-attendees={p.attendees} data-avg-hourly-rate={p.avghourlyrate} data-meeting-minutes={p.meetingminutes} data-meetings-per-week={p.meetingsperweek}>{p.emoji} {t(`tools.solopreneur-meeting-cost-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -802,7 +802,7 @@ const schema = JSON.stringify({
                       { emoji:'🌏', key:'asia', annualsalary:'35000', benefitspercentage:'20', location:'asia' },
                       { emoji:'🌐', key:'remote', annualsalary:'80000', benefitspercentage:'15', location:'remote' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualsalary={p.annualsalary} data-benefitspercentage={p.benefitspercentage} data-location={p.location}>{p.emoji} {t(`tools.solopreneur-employee-cost-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annual-salary={p.annualsalary} data-benefits-percentage={p.benefitspercentage} data-location={p.location}>{p.emoji} {t(`tools.solopreneur-employee-cost-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -819,7 +819,7 @@ const schema = JSON.stringify({
                       { emoji:'🧠', key:'deep-work', weeklydeepworkhours:'30', toolsused:'4', meetingsperweek:'0' },
                       { emoji:'🗣️', key:'meeting-heavy', weeklydeepworkhours:'6', toolsused:'12', meetingsperweek:'10' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-weeklydeepworkhours={p.weeklydeepworkhours} data-toolsused={p.toolsused} data-meetingsperweek={p.meetingsperweek}>{p.emoji} {t(`tools.solopreneur-productivity-score.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-weekly-deep-work-hours={p.weeklydeepworkhours} data-tools-used={p.toolsused} data-meetings-per-week={p.meetingsperweek}>{p.emoji} {t(`tools.solopreneur-productivity-score.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -836,7 +836,7 @@ const schema = JSON.stringify({
                       { emoji:'📧', key:'newsletter', producttype:'newsletter', targetcustomer:'b2c', competitorprice:'7' },
                       { emoji:'📄', key:'template', producttype:'template', targetcustomer:'creators', competitorprice:'29' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-producttype={p.producttype} data-targetcustomer={p.targetcustomer} data-competitorprice={p.competitorprice}>{p.emoji} {t(`tools.solopreneur-saas-pricing-planner.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-product-type={p.producttype} data-target-customer={p.targetcustomer} data-competitor-price={p.competitorprice}>{p.emoji} {t(`tools.solopreneur-saas-pricing-planner.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
@@ -853,7 +853,7 @@ const schema = JSON.stringify({
                       { emoji:'🇦🇺', key:'australia', annualincome:'90000', businessexpenses:'10000', country:'australia' },
                       { emoji:'🇩🇪', key:'germany', annualincome:'50000', businessexpenses:'2000', country:'germany' },
                     ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annualincome={p.annualincome} data-businessexpenses={p.businessexpenses} data-country={p.country}>{p.emoji} {t(`tools.solopreneur-freelance-tax-calculator.preset.${p.key}`, lang)}</button>
+                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-annual-income={p.annualincome} data-business-expenses={p.businessexpenses} data-country={p.country}>{p.emoji} {t(`tools.solopreneur-freelance-tax-calculator.preset.${p.key}`, lang)}</button>
                     ))}
                   </div>
                 </div>
