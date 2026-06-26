@@ -4,7 +4,11 @@
 
 **Goal:** Remove the dead `category` field from `ToolEngine` type and all 32 engine files so `src/data/tools.ts` `categoryId` becomes the sole source of truth for tool category.
 
-**Architecture:** Mechanical deletion in 34 places (1 type field + 32 engine literals + 1 CLAUDE.md example). No new files (one throwaway script for the batch delete, deleted after run). No public API change. **Important ordering constraint**: TypeScript's excess-property-check fires on object literals assigned to `const engine: ToolEngine`, so the 32 literal producers must be deleted in **Task 2** BEFORE removing the type field in **Task 4**. Reversing the order produces 32 `TS2353` errors between commits and blocks the safe commit-by-commit execution.
+**Architecture:** Mechanical deletion in 34 places (1 type field + 32 engine literals + 1 CLAUDE.md example). No new files (one throwaway script for the batch delete, deleted after run). No public API change. **Important ordering constraint**: TypeScript's strict type-checking makes the literal-and-type-field split impossible across two commits. `category: string;` is a **required** field on `ToolEngine`, so:
+- Removing literals first while keeping the type field → 32 × **TS2741** "Property 'category' is missing" errors
+- Removing the type field first while keeping literals → 32 × **TS2353** "Object literal may only specify known properties" errors
+
+Both directions break `pnpm typecheck`. The implementation MUST delete all 33 sites atomically in a single commit (Task 2 below does this). Task 4 in this plan was originally a separate types.ts-only commit, but at execution time it was discovered to be impossible and merged into Task 2's commit `db616a8`. Task 4 below is retained for historical reference but its work is **already complete** — do NOT re-execute it.
 
 **Tech Stack:** Astro 4 + TypeScript, Node.js (one-shot script), no new dependencies.
 
@@ -233,14 +237,16 @@ Expected: 1 file changed, small insertion/deletion delta.
 
 ---
 
-## Task 4: Remove `category` field from `ToolEngine` interface [MECHANICAL]
+## Task 4: ~~Remove `category` field from `ToolEngine` interface~~ [MERGED INTO TASK 2] — DO NOT RE-EXECUTE
 
 **Files:**
 - Modify: `src/core/engines/types.ts:21`
 
-**Why this comes AFTER Task 2**: The 32 engine literal producers are already gone, so removing the type field now produces no typecheck errors. TypeScript's strict excess-property-check means the two operations cannot be combined into one commit while keeping `pnpm typecheck` green between them — but they can be sequenced safely.
+**Status**: Already completed in commit `db616a8` along with Task 2's 32 literal deletions. The work below is retained for historical reference and audit purposes only — **do not re-execute these steps**. Skip to Task 3.
 
-- [ ] **Step 1: Read `src/core/engines/types.ts` to confirm exact content**
+**Why this comes AFTER Task 2**: The 32 engine literal producers are already gone, so removing the type field now produces no typecheck errors. TypeScript's strict type-checking means the two operations cannot be sequenced across separate commits while keeping `pnpm typecheck` green between them — but they can be combined atomically. This task was originally planned as a separate commit, but at execution time the requirement was discovered and both Tasks 2 + 4 were merged into a single atomic commit.
+
+- [ ] ~~**Step 1: Read `src/core/engines/types.ts` to confirm exact content**~~
 
 Run: `Read src/core/engines/types.ts`
 Expected: The interface `ToolEngine` is visible. Line 21 reads `  category: string;` (or whatever line number Task 1 confirmed).
