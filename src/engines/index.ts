@@ -1,4 +1,11 @@
-// Auto-aggregate all engines from subdirectories.
-// import.meta.glob is Vite/Astro-native: zero maintenance, zero runtime cost.
-// Side effects (registerEngine) run on import; the return value is intentionally unused.
-import.meta.glob<unknown>('./*/*.ts', { eager: true });
+// Aggregate all engines from 6 subdirectories.
+// Explicit imports (vs import.meta.glob) chosen for tsx compatibility:
+// the test runner (tests/run.mjs) and prebuild script (scripts/build-og-images.ts)
+// both run under tsx, which does not implement import.meta.glob. Astro pages
+// also work fine with static imports.
+import './saas';
+import './ai-cost';
+import './valuation';
+import './freelance';
+import './cost';
+import './investment';

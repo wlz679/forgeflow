@@ -1,13 +1,17 @@
 import type { ToolMeta } from './types';
 
-// Auto-aggregate all ToolMeta entries from sibling category files.
-// import.meta.glob is Vite/Astro-native: zero maintenance, zero runtime cost.
-// Side effect of each sibling file is a top-level `export const tools: ToolMeta[] = [...]`.
-// `index.ts` itself doesn't export `tools` named, so it is naturally filtered out.
-const modules = import.meta.glob<{ tools?: ToolMeta[] }>('./*.ts', { eager: true });
+// Aggregate all ToolMeta entries from sibling category files.
+// Explicit imports (vs import.meta.glob) chosen for tsx compatibility:
+// the test runner and prebuild script both run under tsx, which does
+// not implement import.meta.glob. Consumers (blog-posts, internal-links,
+// [lang]/index.astro, [slug].astro) continue to work unchanged.
+import { tools as saas } from './saas';
+import { tools as aiCost } from './ai-cost';
+import { tools as valuation } from './valuation';
+import { tools as freelance } from './freelance';
+import { tools as cost } from './cost';
+import { tools as investment } from './investment';
 
-export const tools: ToolMeta[] = Object.values(modules)
-  .filter((m): m is { tools: ToolMeta[] } => Array.isArray(m.tools))
-  .flatMap(m => m.tools);
+export const tools: ToolMeta[] = [...saas, ...aiCost, ...valuation, ...freelance, ...cost, ...investment];
 
 export type { ToolMeta };
