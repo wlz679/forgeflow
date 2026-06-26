@@ -2,9 +2,20 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Reorganize `src/engines/` (32 flat files → 6 subdirectories) and split `src/data/tools.ts` (467 lines → 6 category files + index.ts + types.ts), using `import.meta.glob` for zero-maintenance auto-aggregation. Zero public API change, zero consumer migration, zero data drift.
+**Goal:** Reorganize `src/engines/` (32 flat files → 6 subdirectories) and split `src/data/tools.ts` (467 lines → 6 category files + index.ts + types.ts). Zero public API change, zero consumer migration, zero data drift.
 
-**Architecture:** Mechanical refactor driven by `categoryId` (the single source of truth post-drift-fix). All 32 engines move to one of 6 subdirs (`saas/`, `ai-cost/`, `valuation/`, `freelance/`, `cost/`, `investment/`) preserving filenames and content. `engines/index.ts` collapses 32 hand-written imports to one `import.meta.glob`. `src/data/tools.ts` deletes and is replaced by `src/data/tools/{types,saas,ai-cost,valuation,freelance,cost,investment,index}.ts` (8 files). 4 consumer import paths unchanged — TS resolves `tools.ts` → `tools/index.ts` automatically.
+**Architecture:** Mechanical refactor driven by `categoryId` (the single source of truth post-drift-fix). All 32 engines move to one of 6 subdirs (`saas/`, `ai-cost/`, `valuation/`, `freelance/`, `cost/`, `investment/`) preserving filenames and content. Each subdir gets a tiny `index.ts` (5-9 side-effect imports) so the parent `engines/index.ts` can aggregate by subdir. `src/data/tools.ts` deletes and is replaced by `src/data/tools/{types,saas,ai-cost,valuation,freelance,cost,investment,index}.ts` (8 files). 4 consumer import paths unchanged — TS resolves `tools.ts` → `tools/index.ts` automatically.
+
+**Important — use EXPLICIT static imports, NOT `import.meta.glob`:**
+
+`import.meta.glob` is a Vite/Astro-only primitive. The project's `tests/run.mjs` (test runner) and `scripts/build-og-images.ts` (prebuild hook) both run under `tsx`, which does not implement `import.meta.glob`. Original plan used glob; this caused 3 test failures and a build crash. The fix in commit `0dbf970` switched to explicit static imports and added 6 subdir `index.ts` files to keep the directory layout useful.
+
+**Trade-off:** adding a new category file now requires:
+1. Create the new file under `src/data/tools/`
+2. Add a 1-line import to `src/data/tools/index.ts`
+3. Create the corresponding `engines/<subdir>/index.ts` if a new subdir is added
+
+This is one extra file vs. the zero-maintenance glob, but it's the only way to keep the tsx-using toolchain working without a Vite/tsx shim layer.
 
 **Tech Stack:** Astro 4 + TypeScript, Vite's `import.meta.glob` (Astro native, no new deps), `git mv` for history preservation, Node.js for any helper scripts.
 
@@ -184,17 +195,83 @@ investment: 4
 
 If any number is off, identify the file and `git mv` to the correct subdir. **Do not** create new files or copy — only move.
 
-- [ ] **Step 5: Rewrite `engines/index.ts` using `import.meta.glob`**
+- [ ] **Step 5: Create 6 subdir `index.ts` files (one per subdir)**
+
+Each subdir's `index.ts` re-triggers the side-effect imports for that category's engines (so `registerEngine()` runs when `engines/index.ts` imports the subdir). One file per subdir:
+
+`src/engines/saas/index.ts`:
+```ts
+import './burn-rate-calculator';
+import './churn-rate-calculator';
+import './market-size-estimator';
+import './mrr-calculator';
+import './revenue-projector';
+```
+
+`src/engines/ai-cost/index.ts`:
+```ts
+import './openai-token-calculator';
+import './claude-api-cost-calculator';
+import './deepseek-api-cost-calculator';
+import './gemini-api-cost-calculator';
+import './ai-image-generation-cost-calculator';
+import './ai-training-cost-estimator';
+import './gpu-cloud-cost-calculator';
+import './ai-api-cost-comparison';
+```
+
+`src/engines/valuation/index.ts`:
+```ts
+import './unit-economics-calculator';
+import './cac-calculator';
+import './ltv-calculator';
+import './saas-valuation-calculator';
+import './break-even-calculator';
+import './course-pricing-calculator';
+import './email-list-revenue-calculator';
+import './project-profitability-calculator';
+import './saas-pricing-planner';
+```
+
+`src/engines/freelance/index.ts`:
+```ts
+import './affiliate-income-calculator';
+import './freelance-rate-calculator';
+import './hourly-vs-fixed-calculator';
+```
+
+`src/engines/cost/index.ts`:
+```ts
+import './employee-cost-calculator';
+import './meeting-cost-calculator';
+import './productivity-score';
+```
+
+`src/engines/investment/index.ts`:
+```ts
+import './equity-dilution-calculator';
+import './freelance-tax-calculator';
+import './sponsorship-rate-calculator';
+import './time-value-calculator';
+```
+
+- [ ] **Step 6: Rewrite `engines/index.ts` to use explicit subdir imports**
 
 Use the Edit tool:
 - `file_path`: `src/engines/index.ts`
 - `old_string`: the entire current 33-line content (32 imports + trailing newline)
 - `new_string`:
 ```ts
-// Auto-aggregate all engines from subdirectories.
-// import.meta.glob is Vite/Astro-native: zero maintenance, zero runtime cost.
-// Side effects (registerEngine) run on import; the return value is intentionally unused.
-import.meta.glob<unknown>('./*/*.ts', { eager: true });
+// Aggregate all engines from 6 subdirectories.
+// Explicit imports (vs import.meta.glob) chosen for tsx compatibility:
+// the test runner (tests/run.mjs) and prebuild script (scripts/build-og-images.ts)
+// both run under tsx, which does not implement import.meta.glob.
+import './saas';
+import './ai-cost';
+import './valuation';
+import './freelance';
+import './cost';
+import './investment';
 ```
 - `replace_all`: `false`
 
@@ -422,22 +499,28 @@ This is the same content as the old `src/data/tools.ts:1-8`. The category files 
 Run: `pnpm typecheck`
 Expected: exit 0. All 6 category files now resolve `ToolMeta` via `./types`.
 
-- [ ] **Step 8: Create `src/data/tools/index.ts` aggregator**
+- [ ] **Step 8: Create `src/data/tools/index.ts` aggregator (EXPLICIT imports)**
+
+**Important:** use explicit `import { tools as X }` + `[...x, ...y]` spread — NOT `import.meta.glob`. See the architecture note at the top of this plan.
 
 Write file `src/data/tools/index.ts`:
 
 ```ts
 import type { ToolMeta } from './types';
 
-// Auto-aggregate all ToolMeta entries from sibling category files.
-// import.meta.glob is Vite/Astro-native: zero maintenance, zero runtime cost.
-// Side effect of each sibling file is a top-level `export const tools: ToolMeta[] = [...]`.
-// `index.ts` itself doesn't export `tools` named, so it is naturally filtered out.
-const modules = import.meta.glob<{ tools?: ToolMeta[] }>('./*.ts', { eager: true });
+// Aggregate all ToolMeta entries from sibling category files.
+// Explicit imports (vs import.meta.glob) chosen for tsx compatibility:
+// the test runner and prebuild script both run under tsx, which does
+// not implement import.meta.glob. Consumers (blog-posts, internal-links,
+// [lang]/index.astro, [slug].astro) continue to work unchanged.
+import { tools as saas } from './saas';
+import { tools as aiCost } from './ai-cost';
+import { tools as valuation } from './valuation';
+import { tools as freelance } from './freelance';
+import { tools as cost } from './cost';
+import { tools as investment } from './investment';
 
-export const tools: ToolMeta[] = Object.values(modules)
-  .filter((m): m is { tools: ToolMeta[] } => Array.isArray(m.tools))
-  .flatMap(m => m.tools);
+export const tools: ToolMeta[] = [...saas, ...aiCost, ...valuation, ...freelance, ...cost, ...investment];
 
 export type { ToolMeta };
 ```
