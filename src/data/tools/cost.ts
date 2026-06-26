@@ -1,0 +1,53 @@
+import type { ToolMeta } from './types';
+
+export const tools: ToolMeta[] = [
+  {
+    slug: 'solopreneur-saas-pricing-planner',
+    title: 'SaaS Pricing Planner',
+    description: 'Compare flat, tiered, usage-based, and freemium pricing models. Get personalized recommendations based on your product type, audience, and competitor prices.',
+    categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'productType', label: 'Product Type', placeholder: '', type: 'select', options: ['SaaS', 'ebook', 'course', 'template', 'newsletter'] },
+      { name: 'targetCustomer', label: 'Target Customer', placeholder: '', type: 'select', options: ['b2b', 'b2c', 'developers', 'creators'] },
+      { name: 'competitorPrice', label: 'Competitor Average Price ($)', placeholder: 'e.g. 29', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-employee-cost-calculator',
+    title: 'Employee Cost Calculator',
+    description: 'Calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. Compare costs across salary levels and locations.',
+    categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'annualSalary', label: 'Annual Base Salary ($)', placeholder: 'e.g. 80000', type: 'number' },
+      { name: 'benefitsPercentage', label: 'Benefits (% of salary)', placeholder: 'e.g. 30', type: 'number' },
+      { name: 'location', label: 'Hiring Location', placeholder: '', type: 'select', options: ['us', 'uk', 'europe', 'asia', 'remote'] },
+    ],
+  },
+  {
+    slug: 'solopreneur-meeting-cost-calculator',
+    title: 'Meeting Cost Calculator',
+    description: 'Calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.',
+    categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'attendees', label: 'Number of Attendees', placeholder: 'e.g. 6', type: 'number' },
+      { name: 'avgHourlyRate', label: 'Avg Hourly Rate ($)', placeholder: 'e.g. 75', type: 'number' },
+      { name: 'meetingMinutes', label: 'Meeting Length (minutes)', placeholder: 'e.g. 30', type: 'number' },
+      { name: 'meetingsPerWeek', label: 'Meetings Per Week', placeholder: 'e.g. 1', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-productivity-score',
+    title: 'Productivity Score Calculator',
+    description: 'Rate your solopreneur productivity with a scored assessment. Get actionable tips based on your deep work hours, tool stack, and meeting load.',
+    categoryId: 'E',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'weeklyDeepWorkHours', label: 'Weekly Deep Work Hours', placeholder: 'e.g. 15', type: 'number' },
+      { name: 'toolsUsed', label: 'Tools / Apps Used Weekly', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'meetingsPerWeek', label: 'Meetings Per Week', placeholder: 'e.g. 3', type: 'number' },
+    ],
+  }
+];

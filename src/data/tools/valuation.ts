@@ -1,0 +1,82 @@
+import type { ToolMeta } from './types';
+
+export const tools: ToolMeta[] = [
+  {
+    slug: 'solopreneur-unit-economics-calculator',
+    title: 'Unit Economics Calculator',
+    description: 'Analyze per-customer profitability with expansion revenue, scaling curves (1K/10K/100K), and ranked optimization levers.',
+    categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'averageRevenuePerCustomer', label: 'Avg Monthly Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'costToServePerCustomer', label: 'Monthly Cost to Serve per Customer ($)', placeholder: 'e.g. 10', type: 'number' },
+      { name: 'customerAcquisitionCost', label: 'Customer Acquisition Cost ($)', placeholder: 'e.g. 200', type: 'number' },
+      { name: 'monthlyChurnRate', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'expansionRevenuePerCustomer', label: 'Expansion Revenue / Customer ($)', placeholder: 'e.g. 15 (optional)', type: 'number' },
+      { name: 'retentionMonths', label: 'Avg Customer Lifetime (months)', placeholder: 'e.g. 36 (optional)', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-cac-calculator',
+    title: 'CAC Calculator',
+    description: 'Calculate your Customer Acquisition Cost and payback period. Compare different spend scenarios to find your most efficient acquisition budget.',
+    categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'marketingSpend', label: 'Marketing Spend ($)', placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'salesSpend', label: 'Sales Spend ($)', placeholder: 'e.g. 3000', type: 'number' },
+      { name: 'newCustomers', label: 'New Customers Acquired', placeholder: 'e.g. 40', type: 'number' },
+      { name: 'avgRevenuePerCustomer', label: 'Avg Monthly Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-ltv-calculator',
+    title: 'LTV Calculator',
+    description: 'Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.',
+    categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'monthlyRevenuePerUser', label: 'Monthly Revenue per User ($)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },
+      { name: 'monthlyChurn', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'cac', label: 'Customer Acquisition Cost ($)', placeholder: 'e.g. 150', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-saas-valuation-calculator',
+    title: 'SaaS Valuation Calculator',
+    description: 'Estimate your SaaS company valuation based on ARR, growth rate, and profit margin. See how different multiples and scenarios affect your exit value.',
+    categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'annualRevenue', label: 'Annual Revenue / ARR ($)', placeholder: 'e.g. 200000', type: 'number' },
+      { name: 'growthRate', label: 'YoY Growth Rate (%)', placeholder: 'e.g. 50', type: 'number' },
+      { name: 'profitMargin', label: 'Profit Margin (%)', placeholder: 'e.g. 25', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-break-even-calculator',
+    title: 'Break-Even Calculator',
+    description: 'Calculate how many months until you break even on your initial investment. Model different cost and revenue scenarios.',
+    categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'monthlyCosts', label: 'Monthly Costs ($)', placeholder: 'e.g. 500', type: 'number' },
+      { name: 'monthlyRevenue', label: 'Monthly Revenue ($)', placeholder: 'e.g. 1000', type: 'number' },
+      { name: 'initialInvestment', label: 'Initial Investment ($)', placeholder: 'e.g. 5000', type: 'number' },
+    ],
+  },
+  {
+    slug: 'solopreneur-equity-dilution-calculator',
+    title: 'Equity Dilution Calculator',
+    description: 'Model how investment rounds dilute founder equity. Calculate post-money valuation, investor ownership, and your remaining shares after funding.',
+    categoryId: 'C',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'companyValuation', label: 'Pre-Money Valuation ($)', placeholder: 'e.g. 5000000', type: 'number' },
+      { name: 'investmentAmount', label: 'Investment Amount ($)', placeholder: 'e.g. 1000000', type: 'number' },
+      { name: 'founderShares', label: 'Founder Shares Issued', placeholder: 'e.g. 10000000', type: 'number' },
+    ],
+  }
+];
