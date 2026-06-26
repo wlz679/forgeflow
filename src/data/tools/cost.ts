@@ -12,6 +12,8 @@ export const tools: ToolMeta[] = [
       { name: 'targetCustomer', label: 'Target Customer', placeholder: '', type: 'select', options: ['b2b', 'b2c', 'developers', 'creators'] },
       { name: 'competitorPrice', label: 'Competitor Average Price ($)', placeholder: 'e.g. 29', type: 'number' },
     ],
+    keywords: ['pricing', 'saas pricing', 'pricing strategy', 'tier pricing', 'freemium', 'monetization'],
+    tags: ['pricing', 'saas', 'monetization'],
   },
   {
     slug: 'solopreneur-employee-cost-calculator',
@@ -24,6 +26,8 @@ export const tools: ToolMeta[] = [
       { name: 'benefitsPercentage', label: 'Benefits (% of salary)', placeholder: 'e.g. 30', type: 'number' },
       { name: 'location', label: 'Hiring Location', placeholder: '', type: 'select', options: ['us', 'uk', 'europe', 'asia', 'remote'] },
     ],
+    keywords: ['employee cost', 'hiring cost', 'salary', 'benefits', 'overhead', 'freelance'],
+    tags: ['hr', 'hiring', 'cost'],
   },
   {
     slug: 'solopreneur-meeting-cost-calculator',
@@ -37,6 +41,8 @@ export const tools: ToolMeta[] = [
       { name: 'meetingMinutes', label: 'Meeting Length (minutes)', placeholder: 'e.g. 30', type: 'number' },
       { name: 'meetingsPerWeek', label: 'Meetings Per Week', placeholder: 'e.g. 1', type: 'number' },
     ],
+    keywords: ['meeting cost', 'productivity', 'time waste', 'hourly rate', 'team cost'],
+    tags: ['meeting', 'productivity', 'cost'],
   },
   {
     slug: 'solopreneur-productivity-score',
@@ -49,5 +55,7 @@ export const tools: ToolMeta[] = [
       { name: 'toolsUsed', label: 'Tools / Apps Used Weekly', placeholder: 'e.g. 5', type: 'number' },
       { name: 'meetingsPerWeek', label: 'Meetings Per Week', placeholder: 'e.g. 3', type: 'number' },
     ],
+    keywords: ['productivity', 'deep work', 'solopreneur', 'time management', 'tools stack'],
+    tags: ['productivity', 'focus', 'solopreneur'],
   }
 ];

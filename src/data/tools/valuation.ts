@@ -15,6 +15,8 @@ export const tools: ToolMeta[] = [
       { name: 'expansionRevenuePerCustomer', label: 'Expansion Revenue / Customer ($)', placeholder: 'e.g. 15 (optional)', type: 'number' },
       { name: 'retentionMonths', label: 'Avg Customer Lifetime (months)', placeholder: 'e.g. 36 (optional)', type: 'number' },
     ],
+    keywords: ['unit economics', 'ltv', 'cac', 'saas metrics', 'customer profitability', 'startup finance'],
+    tags: ['unit economics', 'ltv', 'cac'],
   },
   {
     slug: 'solopreneur-cac-calculator',
@@ -29,6 +31,8 @@ export const tools: ToolMeta[] = [
       { name: 'avgRevenuePerCustomer', label: 'Avg Monthly Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 80', type: 'number' },
     ],
+    keywords: ['cac', 'customer acquisition cost', 'marketing', 'unit economics', 'saas metrics', 'payback period'],
+    tags: ['cac', 'marketing', 'saas'],
   },
   {
     slug: 'solopreneur-ltv-calculator',
@@ -42,6 +46,8 @@ export const tools: ToolMeta[] = [
       { name: 'monthlyChurn', label: 'Monthly Churn Rate (%)', placeholder: 'e.g. 3', type: 'number' },
       { name: 'cac', label: 'Customer Acquisition Cost ($)', placeholder: 'e.g. 150', type: 'number' },
     ],
+    keywords: ['ltv', 'lifetime value', 'unit economics', 'saas metrics', 'retention', 'churn'],
+    tags: ['ltv', 'retention', 'saas'],
   },
   {
     slug: 'solopreneur-saas-valuation-calculator',
@@ -54,6 +60,8 @@ export const tools: ToolMeta[] = [
       { name: 'growthRate', label: 'YoY Growth Rate (%)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'profitMargin', label: 'Profit Margin (%)', placeholder: 'e.g. 25', type: 'number' },
     ],
+    keywords: ['saas valuation', 'arr multiple', 'startup valuation', 'exit value', 'startup finance'],
+    tags: ['valuation', 'saas', 'exit'],
   },
   {
     slug: 'solopreneur-break-even-calculator',
@@ -66,6 +74,8 @@ export const tools: ToolMeta[] = [
       { name: 'monthlyRevenue', label: 'Monthly Revenue ($)', placeholder: 'e.g. 1000', type: 'number' },
       { name: 'initialInvestment', label: 'Initial Investment ($)', placeholder: 'e.g. 5000', type: 'number' },
     ],
+    keywords: ['break-even', 'breakeven', 'startup finance', 'monthly costs', 'revenue target', 'runway'],
+    tags: ['break-even', 'finance', 'costs'],
   },
   {
     slug: 'solopreneur-equity-dilution-calculator',
@@ -78,5 +88,7 @@ export const tools: ToolMeta[] = [
       { name: 'investmentAmount', label: 'Investment Amount ($)', placeholder: 'e.g. 1000000', type: 'number' },
       { name: 'founderShares', label: 'Founder Shares Issued', placeholder: 'e.g. 10000000', type: 'number' },
     ],
+    keywords: ['equity dilution', 'funding round', 'pre-money', 'post-money', 'founder equity', 'startup finance'],
+    tags: ['equity', 'funding', 'startup'],
   }
 ];

@@ -16,6 +16,8 @@ export const tools: ToolMeta[] = [
       { name: 'currentCash', label: 'Current Cash Balance ($)', placeholder: 'e.g. 50000', type: 'number' },
       { name: 'netNewRevenue', label: 'Net New Revenue Added ($/mo)', placeholder: 'e.g. 3000 (optional)', type: 'number' },
     ],
+    keywords: ['cash flow', 'runway', 'burn rate', 'saas metrics', 'startup finance', 'operating cost'],
+    tags: ['saas', 'finance', 'runway'],
   },
   {
     slug: 'solopreneur-churn-rate-calculator',
@@ -30,6 +32,8 @@ export const tools: ToolMeta[] = [
       { name: 'avgRevenuePerCustomer', label: 'Avg Revenue per Customer ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'expansionRevenue', label: 'Expansion Revenue ($)', placeholder: 'e.g. 500', type: 'number' },
     ],
+    keywords: ['churn', 'retention', 'saas metrics', 'revenue churn', 'logo churn', 'startup finance'],
+    tags: ['saas', 'churn', 'retention'],
   },
   {
     slug: 'solopreneur-market-size-estimator',
@@ -45,6 +49,8 @@ export const tools: ToolMeta[] = [
       { name: 'samPercent', label: 'SAM — % of TAM You Can Reach', placeholder: 'e.g. 25', type: 'number' },
       { name: 'marketStage', label: 'Market Stage', placeholder: '', type: 'select', options: ['Emerging', 'Growing', 'Mature', 'Declining'] },
     ],
+    keywords: ['market size', 'tam', 'sam', 'som', 'market research', 'startup finance'],
+    tags: ['market', 'research', 'tam'],
   },
   {
     slug: 'solopreneur-mrr-calculator',
@@ -61,6 +67,8 @@ export const tools: ToolMeta[] = [
       { name: 'contractionMrr', label: 'Contraction MRR ($/mo)', placeholder: 'e.g. 150 (downgrades & reductions)', type: 'number' },
       { name: 'reactivationMrr', label: 'Reactivation MRR ($/mo)', placeholder: 'e.g. 100 (returned customers)', type: 'number' },
     ],
+    keywords: ['mrr', 'recurring revenue', 'saas metrics', 'subscription', 'startup finance', 'revenue growth'],
+    tags: ['saas', 'mrr', 'subscription'],
   },
   {
     slug: 'solopreneur-revenue-projector',
@@ -79,5 +87,7 @@ export const tools: ToolMeta[] = [
       { name: 'cac', label: 'CAC — Customer Acquisition Cost ($)', placeholder: 'e.g. 200 (optional)', type: 'number' },
       { name: 'months', label: 'Projection Period', placeholder: '', type: 'select', options: ['6', '12', '24'] },
     ],
+    keywords: ['revenue forecast', 'saas metrics', 'unit economics', 'runway', 'startup finance', 'breakeven'],
+    tags: ['saas', 'forecast', 'finance'],
   }
 ];

@@ -17,6 +17,8 @@ export const tools: ToolMeta[] = [
       { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
       { name: 'projectionMonths', label: 'Projection Period (months)', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
+    keywords: ['openai', 'gpt', 'token pricing', 'api cost', 'llm cost', 'prompt caching'],
+    tags: ['openai', 'llm', 'tokens'],
   },
   {
     slug: 'solopreneur-claude-api-cost-calculator',
@@ -36,6 +38,8 @@ export const tools: ToolMeta[] = [
       { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
       { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
+    keywords: ['claude', 'anthropic', 'token pricing', 'api cost', 'llm cost', 'prompt caching'],
+    tags: ['claude', 'llm', 'tokens'],
   },
   {
     slug: 'solopreneur-deepseek-api-cost-calculator',
@@ -52,6 +56,8 @@ export const tools: ToolMeta[] = [
       { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
       { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
+    keywords: ['deepseek', 'token pricing', 'api cost', 'llm cost', 'auto cache'],
+    tags: ['deepseek', 'llm', 'tokens'],
   },
   {
     slug: 'solopreneur-gemini-api-cost-calculator',
@@ -69,6 +75,8 @@ export const tools: ToolMeta[] = [
       { name: 'growthRate', label: 'Monthly Growth Rate (%)', placeholder: 'e.g. 5', type: 'number' },
       { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
     ],
+    keywords: ['gemini', 'google', 'token pricing', 'api cost', 'llm cost', 'context caching'],
+    tags: ['gemini', 'llm', 'tokens'],
   },
   {
     slug: 'solopreneur-ai-image-cost-calculator',
@@ -83,6 +91,8 @@ export const tools: ToolMeta[] = [
       { name: 'batchSize', label: 'Batch Size (per Call)', placeholder: 'e.g. 1', type: 'number' },
       { name: 'advancedMode', label: 'Quality Mode', placeholder: '', type: 'select', options: ['standard', 'hd', 'ultra'] },
     ],
+    keywords: ['image generation', 'dall-e', 'midjourney', 'stable diffusion', 'ai art cost', 'api cost'],
+    tags: ['image', 'ai art', 'cost'],
   },
   {
     slug: 'solopreneur-ai-training-cost-estimator',
@@ -99,6 +109,8 @@ export const tools: ToolMeta[] = [
       { name: 'cloudStorage', label: 'Cloud Storage (GB)', placeholder: 'e.g. 200', type: 'number' },
       { name: 'dataProcessCost', label: 'Data Processing Cost ($)', placeholder: 'e.g. 100', type: 'number' },
     ],
+    keywords: ['ai training', 'model training', 'gpu cost', 'lora', 'fine-tuning', 'training compute'],
+    tags: ['training', 'gpu', 'ai'],
   },
   {
     slug: 'solopreneur-gpu-cloud-cost-calculator',
@@ -114,6 +126,8 @@ export const tools: ToolMeta[] = [
       { name: 'pricingTier', label: 'Pricing Tier', placeholder: '', type: 'select', options: ['spot', 'on-demand', 'reserved'] },
       { name: 'includeStorage', label: 'Include Storage/Network', placeholder: '', type: 'select', options: ['yes', 'no'] },
     ],
+    keywords: ['gpu rental', 'cloud gpu', 'h100', 'a100', 'training compute', 'gpu cost'],
+    tags: ['gpu', 'cloud', 'compute'],
   },
   {
     slug: 'solopreneur-ai-api-cost-comparison',
@@ -127,5 +141,7 @@ export const tools: ToolMeta[] = [
       { name: 'requestsPerDay', label: 'Requests per Day', placeholder: 'e.g. 100', type: 'number' },
       { name: 'pricingMode', label: 'Pricing Mode', placeholder: '', type: 'select', options: ['realtime', 'batch'] },
     ],
+    keywords: ['api cost', 'llm cost', 'token pricing', 'cross-provider', 'model comparison', 'openai', 'claude'],
+    tags: ['comparison', 'llm', 'cost'],
   }
 ];

@@ -12,6 +12,8 @@ export const tools: ToolMeta[] = [
       { name: 'businessExpenses', label: 'Business Expenses ($)', placeholder: 'e.g. 15000', type: 'number' },
       { name: 'country', label: 'Country', placeholder: '', type: 'select', options: ['us', 'uk', 'canada', 'australia', 'germany'] },
     ],
+    keywords: ['freelance tax', 'tax', 'self-employment', 'quarterly tax', 'taxable income', 'freelance'],
+    tags: ['tax', 'freelance', 'finance'],
   },
   {
     slug: 'solopreneur-sponsorship-rate-calculator',
@@ -25,6 +27,8 @@ export const tools: ToolMeta[] = [
       { name: 'socialFollowers', label: 'Social Media Followers', placeholder: 'e.g. 15000', type: 'number' },
       { name: 'contentType', label: 'Content Type', placeholder: '', type: 'select', options: ['podcast', 'newsletter', 'youtube', 'blog'] },
     ],
+    keywords: ['sponsorship', 'cpm', 'creator', 'podcast', 'newsletter', 'pricing'],
+    tags: ['sponsorship', 'creator', 'pricing'],
   },
   {
     slug: 'solopreneur-time-value-calculator',
@@ -37,5 +41,7 @@ export const tools: ToolMeta[] = [
       { name: 'hoursPerWeek', label: 'Hours Worked Per Week', placeholder: 'e.g. 40', type: 'number' },
       { name: 'weeksPerYear', label: 'Weeks Worked Per Year', placeholder: 'e.g. 48', type: 'number' },
     ],
+    keywords: ['time value', 'hourly rate', 'productivity', 'freelance', 'time waste', 'annual income'],
+    tags: ['time', 'productivity', 'rate'],
   }
 ];

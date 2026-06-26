@@ -5,4 +5,6 @@ export interface ToolMeta {
   categoryId: string;
   applicationCategory: string;
   inputs: { name: string; label: string; placeholder: string; type: 'text' | 'select' | 'number'; options?: string[] }[];
+  keywords: string[];   // 5-10 per tool; drives recommendation algorithm (shared keyword count = similarity score)
+  tags: string[];       // 3-5 per tool; reserved for future UI / Schema.org reuse
 }

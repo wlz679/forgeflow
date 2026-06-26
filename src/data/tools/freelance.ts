@@ -12,6 +12,8 @@ export const tools: ToolMeta[] = [
       { name: 'conversionRate', label: 'Conversion Rate (%)', placeholder: 'e.g. 2', type: 'number' },
       { name: 'avgCommission', label: 'Average Commission ($)', placeholder: 'e.g. 50', type: 'number' },
     ],
+    keywords: ['affiliate', 'passive income', 'commission', 'conversion rate', 'traffic', 'online business'],
+    tags: ['affiliate', 'passive income', 'online'],
   },
   {
     slug: 'solopreneur-course-pricing-calculator',
@@ -24,6 +26,8 @@ export const tools: ToolMeta[] = [
       { name: 'estimatedBuyersPerMonth', label: 'Est. Buyers Per Month', placeholder: 'e.g. 50', type: 'number' },
       { name: 'platformFee', label: 'Platform Fee (%)', placeholder: 'e.g. 10', type: 'number' },
     ],
+    keywords: ['course pricing', 'pricing', 'online course', 'platform fee', 'digital product', 'passive income'],
+    tags: ['course', 'pricing', 'creator'],
   },
   {
     slug: 'solopreneur-email-list-revenue-calculator',
@@ -38,6 +42,8 @@ export const tools: ToolMeta[] = [
       { name: 'conversionRate', label: 'Conversion Rate (% of clicks)', placeholder: 'e.g. 2', type: 'number' },
       { name: 'avgOrderValue', label: 'Avg Order Value ($)', placeholder: 'e.g. 50', type: 'number' },
     ],
+    keywords: ['email marketing', 'newsletter revenue', 'list monetization', 'conversion rate', 'passive income', 'creator'],
+    tags: ['email', 'newsletter', 'creator'],
   },
   {
     slug: 'solopreneur-freelance-rate-calculator',
@@ -50,6 +56,8 @@ export const tools: ToolMeta[] = [
       { name: 'experience', label: 'Experience Level', placeholder: '', type: 'select', options: ['junior', 'mid', 'senior', 'expert'] },
       { name: 'location', label: 'Target Market', placeholder: '', type: 'select', options: ['us', 'europe', 'asia', 'remote'] },
     ],
+    keywords: ['freelance rate', 'hourly rate', 'pricing', 'freelance', 'consulting', 'remote work'],
+    tags: ['freelance', 'pricing', 'rate'],
   },
   {
     slug: 'solopreneur-hourly-vs-fixed-calculator',
@@ -62,6 +70,8 @@ export const tools: ToolMeta[] = [
       { name: 'billableHoursPerWeek', label: 'Billable Hours Per Week', placeholder: 'e.g. 30', type: 'number' },
       { name: 'weeksOffPerYear', label: 'Weeks Off Per Year', placeholder: 'e.g. 4', type: 'number' },
     ],
+    keywords: ['hourly rate', 'fixed rate', 'retainer', 'freelance', 'annual income', 'pricing'],
+    tags: ['freelance', 'pricing', 'rate'],
   },
   {
     slug: 'solopreneur-project-profitability-calculator',
@@ -75,5 +85,7 @@ export const tools: ToolMeta[] = [
       { name: 'hourlyCost', label: 'Your Hourly Cost ($)', placeholder: 'e.g. 50', type: 'number' },
       { name: 'materialCost', label: 'Material/Tool Costs ($)', placeholder: 'e.g. 200', type: 'number' },
     ],
+    keywords: ['project profit', 'freelance', 'hourly cost', 'profit margin', 'effective rate', 'pricing'],
+    tags: ['freelance', 'profit', 'pricing'],
   }
 ];
