@@ -43,6 +43,7 @@ const ICON = {
 const ENGINES = [
   {
     file: 'openai-token-calculator.ts',
+        subdir: 'ai-cost',
     provider: 'openai',
     // Only include these models in customFn (default-selected + first preset).
     // Full list (120+ models) stays in PRICING.json but isn't bundled.
@@ -67,6 +68,7 @@ const ENGINES = [
   },
   {
     file: 'claude-api-cost-calculator.ts',
+        subdir: 'ai-cost',
     provider: 'anthropic',
     popularKeys: ['claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-opus-4-1', 'claude-haiku-3-5', 'claude-haiku-3'],
     tableStart: '"var M={" +',
@@ -88,6 +90,7 @@ const ENGINES = [
   },
   {
     file: 'gemini-api-cost-calculator.ts',
+        subdir: 'ai-cost',
     provider: 'google',
     popularKeys: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
     tableStart: '"var M={" +',
@@ -111,6 +114,7 @@ const ENGINES = [
   },
   {
     file: 'deepseek-api-cost-calculator.ts',
+        subdir: 'ai-cost',
     provider: 'deepseek',
     popularKeys: ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo', 'deepseek-r1'],
     tableStart: '"var M={" +',
@@ -129,6 +133,7 @@ const ENGINES = [
   // Special: ai-api-cost-comparison has nested P = { provider: {n, m: [...] } }
   {
     file: 'ai-api-cost-comparison.ts',
+        subdir: 'ai-cost',
     tableStart: '"var P={',
     tableEndMarker: 'Provider initials + colors',
     custom: true, // skip generic generator
@@ -147,6 +152,7 @@ const ENGINES = [
   // Non-LLM engines
   {
     file: 'ai-image-generation-cost-calculator.ts',
+        subdir: 'ai-cost',
     tableStart: '"var PS={" +',
     tableEndMarker: 'var ST=',
     fieldMap: (m) => {
@@ -165,6 +171,7 @@ const ENGINES = [
   },
   {
     file: 'gpu-cloud-cost-calculator.ts',
+        subdir: 'ai-cost',
     tableStart: '"var PS2={" +',
     tableEndMarker: 'var SCPG2=',
     fieldMap: (m, key) => {
@@ -181,6 +188,7 @@ const ENGINES = [
   },
   {
     file: 'ai-training-cost-estimator.ts',
+        subdir: 'ai-cost',
     tableStart: '"var GT={" +',
     tableEndMarker: '"var MS={" +',
     fieldMap: (m) => {
@@ -194,6 +202,7 @@ const ENGINES = [
   },
   {
     file: 'ai-training-cost-estimator.ts',
+        subdir: 'ai-cost',
     tableStart: '"var MS={" +',
     tableEndMarker: 'var SCG=',
     fieldMap: (m) => {
@@ -395,7 +404,7 @@ let driftCount = 0;
 let writeCount = 0;
 
 for (const engine of ENGINES) {
-  const fp = path.join(ROOT, 'src', 'engines', engine.file);
+  const fp = path.join(ROOT, 'src', 'engines', engine.subdir, engine.file);
   const newContent = engine.custom
     ? buildComparisonTableContent(fp)
     : buildTableContent(fp, engine);

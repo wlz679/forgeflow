@@ -27,38 +27,70 @@ const ROOT = path.join(__dirname, '..');
 // open the page with no interaction). These were chosen to be representative
 // of typical use — a single preset worth of data.
 const ENGINES = [
-  { file: 'openai-token-calculator.ts',         slug: 'solopreneur-openai-token-calculator',         defaultInputs: { models: 'gpt-5-mini,gpt-5.5,gpt-4.1', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
-  { file: 'claude-api-cost-calculator.ts',      slug: 'solopreneur-claude-api-cost-calculator',      defaultInputs: { models: 'claude-sonnet-4-6,claude-haiku-4-5,claude-fable-5', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
-  { file: 'gemini-api-cost-calculator.ts',      slug: 'solopreneur-gemini-api-cost-calculator',      defaultInputs: { models: 'gemini-3.5-flash,gemini-3.1-pro', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
-  { file: 'deepseek-api-cost-calculator.ts',    slug: 'solopreneur-deepseek-api-cost-calculator',    defaultInputs: { models: 'deepseek-v4-flash,deepseek-v4-pro-promo', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
-  { file: 'ai-api-cost-comparison.ts',          slug: 'solopreneur-ai-api-cost-comparison',          defaultInputs: { models: 'gpt-5-mini,claude-sonnet-4-6,gemini-3.5-flash,deepseek-v4-flash', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100' } },
-  { file: 'ai-image-generation-cost-calculator.ts', slug: 'solopreneur-ai-image-cost-calculator', defaultInputs: { provider: 'dalle-3', imagesPerMonth: '100', resolution: '1024×1024', batchSize: '1', advancedMode: 'standard' } },
-  { file: 'gpu-cloud-cost-calculator.ts',       slug: 'solopreneur-gpu-cloud-cost-calculator',       defaultInputs: { provider: 'runpod', gpuType: 'A100', gpuCount: '1', hoursPerDay: '8', pricingTier: 'on-demand', includeStorage: 'yes' } },
-  { file: 'ai-training-cost-estimator.ts',      slug: 'solopreneur-ai-training-cost-estimator',      defaultInputs: { gpuType: 'A100-80GB', modelSize: '7B', gpuCount: '8', trainingHours: '24', epochs: '3', cloudStorage: '500', dataProcessCost: '1000' } },
-  { file: 'unit-economics-calculator.ts',       slug: 'solopreneur-unit-economics-calculator',       defaultInputs: { averageRevenuePerCustomer: '100', expansionRevenuePerCustomer: '30', costToServePerCustomer: '30', customerAcquisitionCost: '300', monthlyChurnRate: '5', retentionMonths: '0' } },
-  { file: 'churn-rate-calculator.ts',          slug: 'solopreneur-churn-rate-calculator',          defaultInputs: { startCustomers: '1000', endCustomers: '920', months: '12' } },
-  { file: 'ltv-calculator.ts',                 slug: 'solopreneur-ltv-calculator',                 defaultInputs: { monthlyRevenuePerUser: '100', grossMargin: '70', monthlyChurn: '5', customerAcquisitionCost: '300' } },
-  { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
-  { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',           defaultInputs: { currentCash: '500000', monthlyRevenue: '20000', monthlyExpenses: '60000' } },
-  { file: 'break-even-calculator.ts',          slug: 'solopreneur-break-even-calculator',          defaultInputs: { fixedCosts: '10000', pricePerUnit: '50', variableCostPerUnit: '20' } },
-  { file: 'market-size-estimator.ts',          slug: 'solopreneur-market-size-estimator',          defaultInputs: { totalPopulation: '10000000', targetPercentage: '10', penetrationRate: '5', avgRevenuePerCustomer: '100' } },
-  { file: 'saas-valuation-calculator.ts',      slug: 'solopreneur-saas-valuation-calculator',      defaultInputs: { arr: '1000000', growthRate: '100', grossMargin: '80', multiple: '10' } },
-  { file: 'freelance-tax-calculator.ts',       slug: 'solopreneur-freelance-tax-calculator',        defaultInputs: { annualIncome: '100000', businessExpenses: '15000', retirementContribution: '10000', filingStatus: 'single', stateTaxRate: '5', country: 'us' } },
-  { file: 'saas-pricing-planner.ts',           slug: 'solopreneur-saas-pricing-planner',            defaultInputs: { productType: 'SaaS', targetCustomer: 'b2b', competitorPrice: '29' } },
-  { file: 'employee-cost-calculator.ts',       slug: 'solopreneur-employee-cost-calculator',        defaultInputs: { annualSalary: '80000', benefitsPercentage: '30', location: 'us' } },
-  { file: 'meeting-cost-calculator.ts',        slug: 'solopreneur-meeting-cost-calculator',         defaultInputs: { attendees: '6', avgHourlyRate: '75', meetingMinutes: '30', meetingsPerWeek: '1' } },
-  { file: 'time-value-calculator.ts',          slug: 'solopreneur-time-value-calculator',           defaultInputs: { annualIncome: '100000', hoursPerWeek: '40', weeksPerYear: '48' } },
-  { file: 'freelance-rate-calculator.ts',      slug: 'solopreneur-freelance-rate-calculator',       defaultInputs: { annualIncome: '80000', expenses: '10000', billableHrs: '1200', profit: '20000' } },
-  { file: 'sponsorship-rate-calculator.ts',    slug: 'solopreneur-sponsorship-rate-calculator',     defaultInputs: { monthlyDownloads: '10000', emailSubscribers: '5000', socialFollowers: '15000', contentType: 'newsletter' } },
-  { file: 'course-pricing-calculator.ts',      slug: 'solopreneur-course-pricing-calculator',       defaultInputs: { targetMonthlyIncome: '5000', estimatedBuyersPerMonth: '50', platformFee: '10' } },
-  { file: 'equity-dilution-calculator.ts',     slug: 'solopreneur-equity-dilution-calculator',      defaultInputs: { companyValuation: '5000000', investmentAmount: '1000000', founderShares: '10000000' } },
-  { file: 'project-profitability-calculator.ts', slug: 'solopreneur-project-profitability-calculator', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
-  { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',     defaultInputs: { monthlyTraffic: '50000', conversionRate: '2', avgCommission: '50', monthlyCost: '200' } },
-  { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',   defaultInputs: { subscriberCount: '10000', openRate: '25', clickRate: '5', conversionRate: '2', avgOrderValue: '50', emailsPerMonth: '4', unsubscribeRate: '0.5' } },
-  { file: 'hourly-vs-fixed-calculator.ts',     slug: 'solopreneur-hourly-vs-fixed-calculator',      defaultInputs: { annualIncomeGoal: '100000', billableHoursPerWeek: '30', weeksOffPerYear: '4', annualExpenses: '5000' } },
-  { file: 'productivity-score.ts',             slug: 'solopreneur-productivity-score',              defaultInputs: { weeklyDeepWorkHours: '15', toolsUsed: '5', meetingsPerWeek: '3' } },
-  { file: 'mrr-calculator.ts',                  slug: 'solopreneur-mrr-calculator',                  defaultInputs: { subscriberCount: '500', monthlyPrice: '29', monthlyChurnRate: '3', expansionMRR: '800', newSubsPerMonth: '100', contractionMRR: '150', reactivationMRR: '100' } },
-  { file: 'revenue-projector.ts',              slug: 'solopreneur-revenue-projector',              defaultInputs: { currentMRR: '5000', monthlyGrowthRate: '8', monthlyChurnRate: '3', monthlyExpenses: '3000', cashOnHand: '60000', arpu: '25', customGrowthRate: '0', cac: '200', months: '12' } },
+  { file: 'openai-token-calculator.ts',         slug: 'solopreneur-openai-token-calculator',
+    subdir: 'ai-cost',         defaultInputs: { models: 'gpt-5-mini,gpt-5.5,gpt-4.1', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
+  { file: 'claude-api-cost-calculator.ts',      slug: 'solopreneur-claude-api-cost-calculator',
+    subdir: 'ai-cost',      defaultInputs: { models: 'claude-sonnet-4-6,claude-haiku-4-5,claude-fable-5', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
+  { file: 'gemini-api-cost-calculator.ts',      slug: 'solopreneur-gemini-api-cost-calculator',
+    subdir: 'ai-cost',      defaultInputs: { models: 'gemini-3.5-flash,gemini-3.1-pro', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
+  { file: 'deepseek-api-cost-calculator.ts',    slug: 'solopreneur-deepseek-api-cost-calculator',
+    subdir: 'ai-cost',    defaultInputs: { models: 'deepseek-v4-flash,deepseek-v4-pro-promo', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
+  { file: 'ai-api-cost-comparison.ts',          slug: 'solopreneur-ai-api-cost-comparison',
+    subdir: 'ai-cost',          defaultInputs: { models: 'gpt-5-mini,claude-sonnet-4-6,gemini-3.5-flash,deepseek-v4-flash', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100' } },
+  { file: 'ai-image-generation-cost-calculator.ts', slug: 'solopreneur-ai-image-cost-calculator',
+    subdir: 'ai-cost', defaultInputs: { provider: 'dalle-3', imagesPerMonth: '100', resolution: '1024×1024', batchSize: '1', advancedMode: 'standard' } },
+  { file: 'gpu-cloud-cost-calculator.ts',       slug: 'solopreneur-gpu-cloud-cost-calculator',
+    subdir: 'ai-cost',       defaultInputs: { provider: 'runpod', gpuType: 'A100', gpuCount: '1', hoursPerDay: '8', pricingTier: 'on-demand', includeStorage: 'yes' } },
+  { file: 'ai-training-cost-estimator.ts',      slug: 'solopreneur-ai-training-cost-estimator',
+    subdir: 'ai-cost',      defaultInputs: { gpuType: 'A100-80GB', modelSize: '7B', gpuCount: '8', trainingHours: '24', epochs: '3', cloudStorage: '500', dataProcessCost: '1000' } },
+  { file: 'unit-economics-calculator.ts',       slug: 'solopreneur-unit-economics-calculator',
+    subdir: 'valuation',       defaultInputs: { averageRevenuePerCustomer: '100', expansionRevenuePerCustomer: '30', costToServePerCustomer: '30', customerAcquisitionCost: '300', monthlyChurnRate: '5', retentionMonths: '0' } },
+  { file: 'churn-rate-calculator.ts',          slug: 'solopreneur-churn-rate-calculator',
+    subdir: 'saas',          defaultInputs: { startCustomers: '1000', endCustomers: '920', months: '12' } },
+  { file: 'ltv-calculator.ts',                 slug: 'solopreneur-ltv-calculator',
+    subdir: 'valuation',                 defaultInputs: { monthlyRevenuePerUser: '100', grossMargin: '70', monthlyChurn: '5', customerAcquisitionCost: '300' } },
+  { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',
+    subdir: 'valuation',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
+  { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',
+    subdir: 'saas',           defaultInputs: { currentCash: '500000', monthlyRevenue: '20000', monthlyExpenses: '60000' } },
+  { file: 'break-even-calculator.ts',          slug: 'solopreneur-break-even-calculator',
+    subdir: 'valuation',          defaultInputs: { fixedCosts: '10000', pricePerUnit: '50', variableCostPerUnit: '20' } },
+  { file: 'market-size-estimator.ts',          slug: 'solopreneur-market-size-estimator',
+    subdir: 'saas',          defaultInputs: { totalPopulation: '10000000', targetPercentage: '10', penetrationRate: '5', avgRevenuePerCustomer: '100' } },
+  { file: 'saas-valuation-calculator.ts',      slug: 'solopreneur-saas-valuation-calculator',
+    subdir: 'valuation',      defaultInputs: { arr: '1000000', growthRate: '100', grossMargin: '80', multiple: '10' } },
+  { file: 'freelance-tax-calculator.ts',       slug: 'solopreneur-freelance-tax-calculator',
+    subdir: 'investment',        defaultInputs: { annualIncome: '100000', businessExpenses: '15000', retirementContribution: '10000', filingStatus: 'single', stateTaxRate: '5', country: 'us' } },
+  { file: 'saas-pricing-planner.ts',           slug: 'solopreneur-saas-pricing-planner',
+    subdir: 'valuation',            defaultInputs: { productType: 'SaaS', targetCustomer: 'b2b', competitorPrice: '29' } },
+  { file: 'employee-cost-calculator.ts',       slug: 'solopreneur-employee-cost-calculator',
+    subdir: 'cost',        defaultInputs: { annualSalary: '80000', benefitsPercentage: '30', location: 'us' } },
+  { file: 'meeting-cost-calculator.ts',        slug: 'solopreneur-meeting-cost-calculator',
+    subdir: 'cost',         defaultInputs: { attendees: '6', avgHourlyRate: '75', meetingMinutes: '30', meetingsPerWeek: '1' } },
+  { file: 'time-value-calculator.ts',          slug: 'solopreneur-time-value-calculator',
+    subdir: 'investment',           defaultInputs: { annualIncome: '100000', hoursPerWeek: '40', weeksPerYear: '48' } },
+  { file: 'freelance-rate-calculator.ts',      slug: 'solopreneur-freelance-rate-calculator',
+    subdir: 'freelance',       defaultInputs: { annualIncome: '80000', expenses: '10000', billableHrs: '1200', profit: '20000' } },
+  { file: 'sponsorship-rate-calculator.ts',    slug: 'solopreneur-sponsorship-rate-calculator',
+    subdir: 'investment',     defaultInputs: { monthlyDownloads: '10000', emailSubscribers: '5000', socialFollowers: '15000', contentType: 'newsletter' } },
+  { file: 'course-pricing-calculator.ts',      slug: 'solopreneur-course-pricing-calculator',
+    subdir: 'valuation',       defaultInputs: { targetMonthlyIncome: '5000', estimatedBuyersPerMonth: '50', platformFee: '10' } },
+  { file: 'equity-dilution-calculator.ts',     slug: 'solopreneur-equity-dilution-calculator',
+    subdir: 'investment',      defaultInputs: { companyValuation: '5000000', investmentAmount: '1000000', founderShares: '10000000' } },
+  { file: 'project-profitability-calculator.ts', slug: 'solopreneur-project-profitability-calculator',
+    subdir: 'valuation', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
+  { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',
+    subdir: 'freelance',     defaultInputs: { monthlyTraffic: '50000', conversionRate: '2', avgCommission: '50', monthlyCost: '200' } },
+  { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',
+    subdir: 'valuation',   defaultInputs: { subscriberCount: '10000', openRate: '25', clickRate: '5', conversionRate: '2', avgOrderValue: '50', emailsPerMonth: '4', unsubscribeRate: '0.5' } },
+  { file: 'hourly-vs-fixed-calculator.ts',     slug: 'solopreneur-hourly-vs-fixed-calculator',
+    subdir: 'freelance',      defaultInputs: { annualIncomeGoal: '100000', billableHoursPerWeek: '30', weeksOffPerYear: '4', annualExpenses: '5000' } },
+  { file: 'productivity-score.ts',             slug: 'solopreneur-productivity-score',
+    subdir: 'cost',              defaultInputs: { weeklyDeepWorkHours: '15', toolsUsed: '5', meetingsPerWeek: '3' } },
+  { file: 'mrr-calculator.ts',                  slug: 'solopreneur-mrr-calculator',
+    subdir: 'saas',                  defaultInputs: { subscriberCount: '500', monthlyPrice: '29', monthlyChurnRate: '3', expansionMRR: '800', newSubsPerMonth: '100', contractionMRR: '150', reactivationMRR: '100' } },
+  { file: 'revenue-projector.ts',              slug: 'solopreneur-revenue-projector',
+    subdir: 'saas',              defaultInputs: { currentMRR: '5000', monthlyGrowthRate: '8', monthlyChurnRate: '3', monthlyExpenses: '3000', cashOnHand: '60000', arpu: '25', customGrowthRate: '0', cac: '200', months: '12' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
@@ -72,9 +104,9 @@ function buildRunnerScript() {
     "  const results: Record<string, string[]> = {};",
     "",
   ];
-  for (const { file, slug, defaultInputs } of ENGINES) {
+  for (const { file, slug, subdir, defaultInputs } of ENGINES) {
     lines.push(`  // ${file}`);
-    lines.push(`  await import('../src/engines/${file.replace(/\.ts$/, '.ts')}');`);
+    lines.push(`  await import('../src/engines/${subdir}/${file.replace(/\.ts$/, '.ts')}');`);
     lines.push(`  {`);
     lines.push(`    const engine = getEngine('${slug}');`);
     lines.push(`    if (!engine) { console.error('No engine registered for ${slug}'); process.exit(1); }`);
@@ -115,8 +147,8 @@ console.log(`[codegen-examples] Got results for ${Object.keys(results).length} e
 // Update each engine's staticExamples[0]
 let totalUpdated = 0;
 const driftedFiles = [];
-for (const { file, slug } of ENGINES) {
-  const fp = path.join(ROOT, 'src', 'engines', file);
+for (const { file, slug, subdir } of ENGINES) {
+  const fp = path.join(ROOT, 'src', 'engines', subdir, file);
   let c = fs.readFileSync(fp, 'utf8');
   const newExample = results[slug];
   if (!newExample || newExample.length === 0) {
@@ -286,8 +318,8 @@ if (CHECK_MODE) {
     return parts.join('');
   }
   const brokenCustomFn = [];
-  for (const { file } of ENGINES) {
-    const fp = path.join(ROOT, 'src', 'engines', file);
+  for (const { file, subdir } of ENGINES) {
+    const fp = path.join(ROOT, 'src', 'engines', subdir, file);
     const src = fs.readFileSync(fp, 'utf8');
     const body = extractCustomFnBody(src);
     if (body === null) continue; // No customFn — e.g. wordpool engines
