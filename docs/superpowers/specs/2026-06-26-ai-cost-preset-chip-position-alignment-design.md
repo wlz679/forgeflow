@@ -1,204 +1,278 @@
-# AI Cost v3 — Preset Chip 位置与样式对齐设计
+# AI Cost v3 — Preset Chip 位置与样式对齐设计（含全 32 个 chip 数据 attr 升级）
 
 **Date:** 2026-06-26
-**Status:** Brainstormed (user-approved approach B)
-**Scope:** 4 AI Cost v3 calculators (ai-image-cost / ai-training-cost / gpu-cloud-cost / ai-api-cost-comparison)
-**Out of scope:** 4 LLM token calculators (already aligned), 24 Business v3 calculators (already aligned), any engine `calculate()`/`customFn`/`staticExamples` logic change, new component abstraction.
+**Status:** Brainstormed (user-approved approach Y — full unification + click bug fix)
+**Scope:**
+- 4 AI Cost v3 计算器（ai-image-cost / ai-training-cost / gpu-cloud-cost / ai-api-cost-comparison）：搬位置 + 升级样式
+- 4 LLM token 计算器：data-attr 升级为 kebab-case
+- 24 Business v3 计算器：data-attr 升级为 kebab-case
+- JS handler：合并 `.preset-btn` 硬编码 + `.preset-chip` 通用 handler 为统一通用 handler
+
+**Out of scope:**
+- 引擎 `calculate()` / `customFn` / `staticExamples` 任何业务逻辑
+- 新组件（`<PresetChips />` 不建，inline blocks 架构保留）
+- `engine.presets` 字段、`Preset` 类型
+- ai-image engine 第 21-28 行未使用的 `PRESETS` 常量（死代码不在本次 scope）
+- `BIZ_CONFIG_MAP` / `BIZ_*_CONFIG` 重构
+- form 之外的其他元素（inputs、submit、advanced collapse）
 
 ## 1. Problem
 
+### 1.1 用户可见问题
+
 用户截图（`forgeflowkit.com/zh/solopreneur-ai-image-cost-calculator/`）显示 6 个场景预设 chip **仍在 form 底部**，紧贴「生成」按钮上方——与其他 28 个有 chip 的计算器视觉不一致。
 
-```
-现状（grep src/pages/[lang]/[slug].astro 实测）:
+### 1.2 隐藏 bug（用户没报，但本次解决）
 
-┌─────────────────────────────────────────────────────┐
-│ 类别          │ 数量 │ 位置        │ 样式          │
-├─────────────────────────────────────────────────────┤
-│ LLM token     │  4   │ form 顶部 ✓ │ 新样式 ✓      │
-│ Business v3   │ 24   │ form 顶部 ✓ │ 新样式 ✓      │
-│ AI Cost v3    │  4   │ form 底部 ✗ │ 旧样式 ✗      │
-└─────────────────────────────────────────────────────┘
+JS 端有两个独立 handler：
+
+```js
+// Line 1532 — 硬编码，仅支持 LLM token 字段
+var presetBtns = document.querySelectorAll('.preset-btn');
+presetBtns.forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var modelsEl = document.getElementById('models');
+    var itEl = document.getElementById('inputTokens');
+    var otEl = document.getElementById('outputTokens');
+    var rdEl = document.getElementById('requestsPerDay');
+    if (modelsEl && this.dataset.models) modelsEl.value = this.dataset.models;
+    if (itEl && this.dataset.it) itEl.value = this.dataset.it;  // 缩短别名!
+    // ... 硬编码字段
+  });
+});
+
+// Line 1560 — 通用 handler
+var presetChips = document.querySelectorAll('.preset-chip');
+presetChips.forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    var ds = this.dataset;
+    for (var key in ds) {
+      var el = document.getElementById(key);
+      if (el) el.value = ds[key];
+    }
+  });
+});
 ```
 
-**新样式（LLM token / Business v3 用的）**：
-```html
-<span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
-  🎭 场景预设
-</span>
-<div class="flex flex-wrap gap-1.5" id="preset-buttons-{slugKey}">
-  <button class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200
-                 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all"
-          data-xxx="...">{emoji} {t('tools.{slug}.preset.{key}', lang)}</button>
-  ...
-</div>
-```
+input id = `input.name`（来自 engine `inputs[].name`，全部 camelCase，如 `imagesPerMonth`），但 chip HTML 中 data-attr 是 **lowercase**（`data-imagespermonth`）—— HTML 浏览器自动 lowercase 后 `dataset.imagespermonth` 与 input id `imagesPerMonth` 不匹配，**handler 找不到 input → click 无反应**。
 
-**旧样式（AI Cost 4 个当前在用的）**：
-```html
-<span class="text-sm text-gray-500 mr-1">场景预设：</span>
-<button class="preset-chip rounded-full ..." data-xxx="...">{p.zh}</button>
-...
-```
+**影响范围**：
+- AI Cost 4 个：chip click 完全无反应（用 `.preset-chip` 通用 handler + lowercase data-attr）
+- Business v3 24 个：chip click 也无反应（用 `.preset-btn` 硬编码 handler，business 字段不在硬编码列表里）
+- LLM token 4 个：chip click 能工作（用缩短别名 `data-it` / `data-ot` / `data-rd` + handler 硬编码映射）
 
-差异点：
-- 位置：顶部 ↔ 底部
-- 标签：emoji + uppercase tracking-wide ↔ 纯文本 "场景预设："
-- 按钮形状：`rounded-lg` 圆角矩形 ↔ `rounded-full` 胶囊
-- 按钮前缀：无 emoji ↔ 有 emoji
-- class 名：`preset-btn` ↔ `preset-chip`
+### 1.3 现状表格
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│ 类别        │ 数量 │ 位置      │ 样式       │ click 是否工作  │
+├───────────────────────────────────────────────────────────────┤
+│ LLM token   │  4   │ 顶部 ✓   │ 新样式 ✓  │ ✓ (短别名 + 硬编)│
+│ Business v3 │ 24   │ 顶部 ✓   │ 新样式 ✓  │ ✗ (lowercase)    │
+│ AI Cost v3  │  4   │ 底部 ✗   │ 旧样式 ✗  │ ✗ (lowercase)    │
+└───────────────────────────────────────────────────────────────┘
+```
 
 ## 2. Goals
 
-1. **位置对齐**：4 个 AI Cost 的 chip 区从 form 底部搬到 form 顶部，与 LLM token 4 个 / Business v3 24 个同位置
-2. **样式对齐**：用 [slug].astro 现已存在的「新样式」HTML 模板（line 145-165 是 LLM token 的参考实现）替换 AI Cost 4 个的「旧样式」
-3. **i18n 校验**：确认 AI Cost 4 个 × 6 preset key × 2 lang = 48 条 `t('tools.{slug}.preset.{key}', lang)` 翻译全部存在；缺啥补啥
-4. **0 引擎改动**：4 个 AI Cost engine 文件不动；数据仍归 [slug].astro inline blocks
-5. **0 架构变更**：不抽 PresetChips 组件、不加 engine.presets 字段——inline blocks 是 32 个计算器的现状架构，本次只做视觉对齐
+1. **位置对齐**：4 个 AI Cost chip 区从 form 底部搬到 form 顶部，与 LLM token 4 个 / Business v3 24 个同位置
+2. **样式对齐**：4 个 AI Cost 块用新样式（label emoji + uppercase tracking-wide + rounded-lg + 按钮 emoji + `.preset-btn` class）
+3. **handler 统一**：合并 `.preset-btn` 硬编码 handler + `.preset-chip` 通用 handler 为**一个统一的通用 handler**（`.preset-btn`，通过 `dataset` 遍历 + `getElementById` 自动匹配）
+4. **data-attr kebab-case**：所有 32 个 chip 的 data-attr 从 camelCase/lowercase 改为 **kebab-case**（如 `data-imagesPerMonth` → `data-images-per-month`），浏览器 DOM 自动转 `dataset.imagesPerMonth` → `getElementById('imagesPerMonth')` 命中
+5. **修复 click bug**：32 个 chip click 全部能正确填入 input（包括 LLM token 4 个——它们的缩短别名展开为完整 kebab-case 后，沿用同一通用 handler）
+6. **0 引擎改动**：4 个 AI Cost + 24 个 Business v3 + 4 个 LLM token engine 文件不动
 
 ## 3. Non-Goals
 
-- LLM token 4 个 / Business v3 24 个任何改动（已对齐）
-- 抽 `<PresetChips />` 组件（与本次 scope 无关，audit-polish 已明确 24 个 Business v3 preset 数据异构无法 DRY，单为 4 个 AI Cost 抽组件会破坏一致性）
-- 加 `Preset` 类型 + `engine.presets` 字段（同上）
-- 改 chip 之外的 form 元素（inputs、submit、advanced collapse）
-- 改引擎 `calculate()` / `customFn` / `staticExamples` 任何业务逻辑
-- 删除 ai-image engine 第 21-28 行未使用的 `PRESETS` 常量（死代码，但不在本次 scope）
+- 引擎 `calculate()` / `customFn` / `staticExamples` 任何业务逻辑
+- 新组件（`<PresetChips />` 不建）
+- `Preset` 类型 / `engine.presets` 字段
+- ai-image engine 第 21-28 行未使用的 `PRESETS` 常量
 - `BIZ_CONFIG_MAP` / `BIZ_*_CONFIG` 重构
-- `pnpm check` / `pnpm build` 之外的 CI 改动
+- form 之外的其他元素（inputs、submit、advanced collapse、result 区域）
 
 ## 4. Design
 
-### 4.1 页面改动（`src/pages/[lang]/[slug].astro`，唯一改动文件）
+### 4.1 页面改动 — AI Cost 4 个块搬迁 + 升级（`src/pages/[lang]/[slug].astro`）
 
-**改动 1**：把 4 个 AI Cost inline chip 块（当前在 line 879-995）**整体搬迁**到 form 顶部，紧跟 `<form>` 开始标签（line 145），与 LLM token 4 个（line 151 起）和 Business v3 24 个（line 455-856）的位置同构。
+**改动 1**：搬位置
+- 把 line 879-995 的 4 个 AI Cost inline 块（`isAiApiCostComparison` / `isImage` / `isTraining` / `isGpu`）**整体搬到 line 146 后**，紧跟 `<form>` 开始
+- 位置排序（明确无歧义）：
+  ```
+  line 145: <form id="tool-form">
+  line 146: {slug === 'solopreneur-openai-token-calculator' ? ( ... )}
+           ... 其他 3 个 LLM token ...
+  line 155: {isAiApiCostComparison && ( ... )}   ← AI Cost 4 个块插这里
+           {isImage && ( ... )}
+           {isTraining && ( ... )}
+           {isGpu && ( ... )}
+  line 175: {isMr && ( ... )}                    ← Business v3 24 个块从这开始
+           ... 其他 23 个 ...
+  ```
 
-**位置排序**（明确无歧义）：
-```
-line 145: <form id="tool-form">
-line 146: {slug === 'solopreneur-openai-token-calculator' && ( ... )}
-         ... 其他 3 个 LLM token ...
-line 155: {isAiApiCostComparison && ( ... )}     ← AI Cost 4 个块插在这里
-         {isImage && ( ... )}
-         {isTraining && ( ... )}
-         {isGpu && ( ... )}
-line 175: {isMr && ( ... )}                     ← Business v3 24 个块从这开始
-         ... 其他 23 个 ...
-```
+**改动 2**：HTML 模板升级
+- 旧 `<div class="flex flex-wrap gap-2 mt-3">` → 新 `<div class="mb-5">`
+- 旧 `<span class="text-sm text-gray-500 mr-1">场景预设：</span>` → 新 `<span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">🎭 场景预设</span>`（英文版 "🎭 Scenario Presets"）
+- 旧 `<button class="preset-chip text-xs px-3 py-1.5 rounded-full border hover:bg-gray-100 transition" data-lowercase="...">{t(...)}</button>`
+- 新 `<button class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-kebab-case="...">{emoji} {t(\`tools.{slug}.preset.{key}\`, lang)}</button>`
+- 按钮容器 id：`<div id={\`preset-buttons-${slug.replace('solopreneur-', '')}\`}>`（如 `preset-buttons-ai-image-cost-calculator`）
 
-理由：AI Cost 与 LLM token 都属 AI 类，逻辑上挨着更自然；同时不打断 Business v3 的 if/else 长链。
-
-涉及块（每个约 28-30 行）：
-- `{isAiApiCostComparison && (...)}` — 当前 line 879-908
-- `{isImage && (...)}` — 当前 line 910-937
-- `{isTraining && (...)}` — 当前 line 939-966
-- `{isGpu && (...)}` — 当前 line 968-995
-
-**改动 2**：HTML 模板升级——4 个块内部 markup 从「旧样式」改为「新样式」（详见 §1 对比）。具体替换：
-
-```diff
-- <div class="flex flex-wrap gap-2 mt-3">
--   <span class="text-sm text-gray-500 mr-1">场景预设：</span>
--   <button class="preset-chip ..." data-xxx="...">{p.zh}</button>
-+ <div class="mb-5">
-+   <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">
-+     🎭 场景预设
-+   </span>
-+   <div class="flex flex-wrap gap-1.5" id={`preset-buttons-{slugKey}`}>
-+     <button class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200
-+                    bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all"
-+             data-xxx="...">{p.emoji} {t(`tools.{slug}.preset.{p.key}`, lang)}</button>
-+   </div>
-+ </div>
-```
-
-(英文版把 "场景预设" 换成 "Scenario Presets"，并加 🎭 emoji 前缀)
-
-**改动 3**：emoji 前缀——4 个 AI Cost 当前 inline blocks 没存 emoji，需要补。Emoji 按 v3 风格（与 Business v3 24 个 + LLM token 4 个一致）：
+**改动 3**：emoji 前缀（每个 preset 一个）：
 - AI image: 💼 Solopreneur / 🎨 Creator / 🏢 Agency / 💰 Budget / 🔤 Logos / 🖼️ Artistic
 - AI training: 🚀 Quick LoRA / 📦 13B Mid / 🏭 Full 70B / 🏢 180B Enterprise / 💰 Budget 7B / 🏆 Pro 405B
 - GPU cloud: 💰 Budget Single / 💻 Dev Box / 🏋️ Training Rig / 🏢 Enterprise H100 / 🏷️ Cheapest H200 / 🏆 Pro 8×H100
 - AI API comparison: 🤖 Support Bot / 📚 RAG QA / 💻 Code Review / ✍️ Content Gen / 📊 Data Analysis / ⚡ Batch
 
-**改动 4**：JS handler 兼容——line 1532 的 `var presetBtns = document.querySelectorAll('.preset-btn');` 已存在，点击 handler 通过遍历 `data-*` attr 设 input 值。当前 AI Cost 块用 `preset-chip` class，本次升级为 `preset-btn`，自动纳入同一 handler，无需改 JS。
+### 4.2 页面改动 — Business v3 24 个 chip data-attr kebab-case 升级（同一文件）
 
-### 4.2 数据保留（不动引擎）
+24 个 Business v3 chip 块（line 455-856）位置不动，仅修改每个 `<button>` 的 data-attr 名：
+- camelCase 字段：`data-monthlyrevenue` → `data-monthly-revenue`
+- 其他字段同理（实施前 grep 拿全字段名清单）
 
-4 个 AI Cost engine 文件本次**完全不动**：
-- `src/engines/ai-image-generation-cost-calculator.ts`（含未使用的 `PRESETS` 常量，本次保留）
-- `src/engines/ai-training-cost-estimator.ts`
-- `src/engines/gpu-cloud-cost-calculator.ts`
-- `src/engines/ai-api-cost-comparison.ts`
+按钮 class / emoji / label 全部不变。
 
-preset 数据保留在 [slug].astro 的 4 个 inline 块（与 LLM token 4 个 / Business v3 24 个同架构）。
+### 4.3 页面改动 — LLM token 4 个 chip data-attr 升级 + 简化别名展开（同一文件）
 
-### 4.3 i18n 校验（`src/i18n/translations.ts`，只读 + 必要时补）
+4 个 LLM token chip 块（line 147-451）位置不动，但 data-attr **从缩短别名展开为完整 kebab-case**：
+- `data-m` → `data-models`
+- `data-it` → `data-input-tokens`
+- `data-ot` → `data-output-tokens`
+- `data-rd` → `data-requests-per-day`
+- `data-pm` → `data-pricing-mode`
+- `data-cw` → `data-cache-write-tokens`
+- `data-cttl` → `data-cache-ttl`
+- `data-chr` → `data-cache-read-hit-rate`
+- `data-gr` → `data-growth-rate`
+- `data-pj` → `data-projection-months`
 
-实施前 grep 校验 48 条 key 全部存在：
+按钮 class / emoji / label 全部不变。LLM token 4 个的 `data-models` 是特殊的（多选 select，handler 特殊处理）——保留并适配通用 handler。
 
+### 4.4 JS handler 统一（同一文件 line 1532-1581）
+
+**删除** line 1532-1581 的两个 handler（`.preset-btn` 硬编码 + `.preset-chip` 通用）。
+
+**新增**统一通用 handler：
+
+```js
+// --- Unified preset chip handler (replaces both old handlers) ---
+var presetBtns = document.querySelectorAll('.preset-btn');
+presetBtns.forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var ds = this.dataset;
+    for (var key in ds) {
+      if (ds.hasOwnProperty(key)) {
+        var el = document.getElementById(key);
+        if (el) {
+          if (el.tagName === 'SELECT' && el.multiple) {
+            // Multi-select: split comma-separated values
+            var values = String(ds[key]).split(',');
+            Array.from(el.options).forEach(function(opt) {
+              opt.selected = values.indexOf(opt.value) !== -1;
+            });
+          } else if (el.tagName === 'SELECT') {
+            // Single-select: set value if option exists
+            var opt = el.querySelector('option[value="' + ds[key] + '"]');
+            if (opt) el.value = ds[key];
+          } else {
+            el.value = ds[key];
+          }
+        }
+      }
+    }
+  });
+});
+```
+
+**为什么这样能 work**：
+- HTML `data-images-per-month="100"` → 浏览器保留 kebab-case
+- JS `btn.dataset.imagesPerMonth` → DOM 自动 kebab → camelCase
+- `getElementById('imagesPerMonth')` → 命中 `id={input.name}` 渲染的 input
+- 32 个 chip 全用同一份逻辑，包括 LLM token 多选 `data-models`
+
+### 4.5 i18n 校验（`src/i18n/translations.ts`，只读 + 必要时补）
+
+实施前 grep 校验 48 条 key 存在性（4 AI Cost × 6 preset × 2 lang）：
 ```bash
 grep -nE "solopreneur-(ai-image-cost|ai-training-cost|gpu-cloud-cost|ai-api-cost-comparison)\.preset\." \
   src/i18n/translations.ts
 ```
 
-期望：每 calc × 6 preset key × 2 lang = 48 行（en + zh 各 24 行）。
+缺哪条补哪条。**不动 Business v3 / LLM token 的 i18n key**（它们已存在）。
 
-缺哪条补哪条（en 用短语，zh 用中文短语，沿用 LLM token / Business v3 key 命名风格）。
+### 4.6 实施顺序
 
-### 4.4 实施顺序
-
-1. **read**：[slug].astro line 145-165（LLM token 参考实现）+ line 455-465（Business v3 参考实现）+ line 879-995（AI Cost 旧实现）
-2. **grep**：i18n 校验 48 条 key 存在性，缺啥先补
-3. **edit**：4 个 AI Cost 块搬到 line 146 之后（紧跟 form 开始），HTML 模板升级，emoji 加
-4. **verify**：`pnpm build` 0 错误；`curl /zh/solopreneur-ai-image-cost-calculator/ | grep 场景预设` 应在 form 顶部
-5. **commit**：1 个 commit，message 描述 4 个 AI Cost preset chip 视觉对齐
+1. **read**：line 147-451（LLM token 4 块）+ line 453-468（Business v3 参考模板）+ line 875-995（AI Cost 旧 4 块）+ line 1532-1581（两个旧 handler）
+2. **grep i18n**：48 条 key 校验，缺啥先补
+3. **edit handler**：合并两个 handler 为统一通用 handler（line 1532-1581）
+4. **edit LLM token**：4 个块 data-attr 简化别名 → 完整 kebab-case（位置不动）
+5. **edit Business v3**：24 个块 data-attr kebab-case 升级（位置不动）
+6. **edit AI Cost**：4 个块搬位置 + 模板升级 + emoji + kebab-case data-attr
+7. **verify**：`pnpm build` 0 错误；浏览器手测 4 个 AI Cost chip click 能填 input
+8. **commit**：1 个 commit，message 描述完整范围
 
 ## 5. Files Touched
 
 | 文件 | 操作 | 改动量估算 |
 |---|---|---|
-| `src/pages/[lang]/[slug].astro` | Modify（搬 4 块 + 模板升级 + emoji） | ~120 行净移动（删除 116 行旧模板 + 重写 4 块新模板） |
-| `src/i18n/translations.ts` | Modify（仅缺 key 时） | 0-48 行（按实际缺口） |
+| `src/pages/[lang]/[slug].astro` | Modify（AI Cost 4 块搬位置 + 模板升级 + 24 Business + 4 LLM data-attr 改 kebab + 合并 handler） | ~250 行净变化（删除 ~50 行旧 handler + 重写 50 行新 handler；改 ~144 个 button 的 data-attr 名） |
+| `src/i18n/translations.ts` | Modify（仅缺 key 时） | 0-48 行 |
 
-**完全不动**：4 个 AI Cost engine / 24 个 Business v3 engine / 4 个 LLM token engine / `src/core/engines/types.ts` / 任何新组件文件 / 任何 CI / 任何 docs（除本 spec）
+**完全不动**：32 个 engine / `src/core/engines/types.ts` / 任何新组件 / CI / 任何其他 docs
 
 ## 6. Acceptance Criteria
 
 - [ ] `pnpm build` 0 错误，138+ 页面生成
 - [ ] `pnpm check`（typecheck + test:run）0 错误
-- [ ] 访问 `/zh/solopreneur-ai-image-cost-calculator/`：preset chip 在 form **顶部**，标签 "🎭 场景预设"，6 个按钮带 emoji，圆角矩形（非胶囊）
-- [ ] 访问 `/en/solopreneur-ai-image-cost-calculator/`：标签 "🎭 Scenario Presets"，其他同上
-- [ ] 4 个 AI Cost 页面（image / training / gpu / ai-api-comparison）× 2 langs = 8 个页面全部验证
-- [ ] 视觉对比：AI Cost 4 个的 chip 区与 Business v3 24 个不可区分（除 emoji 字符）
-- [ ] **回归保护**：4 个 LLM token 计算器 + 24 个 Business v3 计算器**完全无改动**
-- [ ] **点击行为**：点 chip → 对应 input 被正确填充（沿用现有 `.preset-btn` handler）
-- [ ] `git diff src/pages/[lang]/[slug].astro` 净减少约 116 行（旧模板 4 块）+ 4 块新模板约 130 行 ≈ +14 行净变化（来自模板升级和 emoji）
+- [ ] 访问 `/zh/solopreneur-ai-image-cost-calculator/`：preset chip 在 form **顶部**，标签 "🎭 场景预设"，6 个按钮带 emoji，圆角矩形
+- [ ] 访问 `/en/solopreneur-ai-image-cost-calculator/`：标签 "🎭 Scenario Presets"
+- [ ] **click 测试 1**：点 AI image "💼 Solopreneur" chip → provider 选 DALL-E 4、imagesPerMonth=100、resolution=1024×1024、batchSize=1、advancedMode=standard
+- [ ] **click 测试 2**：点 AI training "🚀 Quick LoRA" → modelSize=7B、gpuType=H100-80GB、gpuCount=2、trainingHours=8、epochs=3
+- [ ] **click 测试 3**：点 GPU cloud "💻 Dev Box" → provider=runpod、gpuType=A100、gpuCount=1、hoursPerDay=8、pricingTier=on-demand
+- [ ] **click 测试 4**：点 AI API comparison "🤖 Support Bot" → inputTokens=800、outputTokens=200、requestsPerDay=500、pricingMode=realtime
+- [ ] **回归 click 测试**：4 个 LLM token chip click 仍能工作（kebab-case attr 后通用 handler 命中）
+- [ ] **回归 click 测试（bonus）**：24 个 Business v3 chip click 也能工作（kebab-case attr 后通用 handler 命中——pre-existing bug 修复）
+- [ ] 视觉对比：AI Cost 4 个 chip 区与 Business v3 24 个 / LLM token 4 个不可区分（除 emoji 字符和数据字段）
+- [ ] 验证 HTML：grep AI Cost chip 页面 `<button class="preset-btn"` 在 form 顶部；grep `preset-chip` 全仓无残留
 - [ ] `git status` 显示 `src/engines/*` 无变更
 
 ## 7. Risks & Mitigations
 
 | 风险 | 缓解 |
 |---|---|
-| Edit `old_string` 误匹配相邻代码 | 用唯一标识（`isAiApiCostComparison &&` / `isImage &&` / `isTraining &&` / `isGpu &&`）+ 前后空行作为 old_string 边界 |
-| 4 个块顺序错了——AI Cost 块跑到 Business v3 块中间 | 搬位置时按 line 145 form 开始后的顺序：LLM token (line 151) → Business v3 (line 455) → AI Cost (本次新增，在 LLM token 之后或 Business v3 之前——按 v3 规范 AI Cost 应紧跟 LLM token） |
-| 升级模板后样式跟兄弟不一致 | 对照 line 151 / 455 的 LLM token / Business v3 模板逐行复制，只换 `data-*` attr 名和 emoji |
-| i18n 缺 key 导致 chip 空白 | 实施前 grep 校验，缺啥补啥；翻译用最简短形式（1-3 词） |
-| 旧 `preset-chip` class 在 JS handler 还有引用 | grep `preset-chip` 全仓验证无残留；当前唯一引用是 4 个 AI Cost 块 |
-| 搬位置后 line number 偏移导致后续 step 错位 | 用 `grep -n "isImage &&"` 等关键标识找新行号，不要假设数字 |
-| `pnpm build` 报错 | 阻塞，按错误逐个修（最可能是 TS 类型 + JSX 引号） |
+| AI Cost chip data-attr 改名遗漏某个字段 → click 缺填 | 实施前 grep 当前块的全部 data-attr；按字段名清单逐一改 |
+| Business v3 字段名异构（24 个 calc × ~5-8 字段 = 144 个 attr）手工改易漏 | 用 sed 或 Edit `replace_all` 按字段名 pattern 替换；改完 grep 验证 |
+| LLM token 缩短别名展开后 handler 找不到 input | 实施前先列 input.name 全清单，对应 kebab-case attr 名 |
+| 多选 select（LLM token `models`）通用 handler 不工作 | handler 单独 case：检测 `el.multiple` 时按 comma-split 设置 options |
+| 合并 handler 后 LLM token 现有 click 行为退化 | click 测试强制跑 4 个 LLM token 页面；失败则回退 |
+| 改 28 个兄弟块过程中 Edit 误匹配 | 用 `data-camelcase=` 作为唯一 old_string 锚点；改完 git diff 校验 |
+| `pnpm build` 报错（TS / JSX 引号 / 模板语法） | 阻塞，逐个修；最常见是 JSX 单引号转义 |
+| i18n 缺 key 导致 chip label 空白 | 实施前 grep 校验；补 key 时按已有命名风格 |
 
 ## 8. Out-of-Scope Reminder（避免 scope creep）
 
-实施时如发现以下情况，**停下来 + 报告用户**，不擅自扩展：
+实施时如发现以下情况，**停下来 + 报告用户**：
 
-1. ai-image engine 第 21-28 行的 `PRESETS` 死代码——不删，本次不动 engine
-2. 任何 Business v3 preset 块的样式微调——不动
-3. 任何 LLM token preset 块的样式微调——不动
-4. 抽 PresetChips 组件的诱惑——克制，与本次 scope 无关
-5. chip 点击 handler 通用化——已有 `.preset-btn` handler 够用
+1. ai-image engine 第 21-28 行 `PRESETS` 死代码——不删
+2. 任何 chip 之外 form 元素（inputs、submit、advanced、result 卡片）——不动
+3. 引擎文件任何字段（即使发现不一致）——不动
+4. 新建 `<PresetChips />` 组件——克制，与 scope 无关
+5. `BIZ_CONFIG_MAP` / `BIZ_*_CONFIG` 重构——克制
+6. LLM token 缩短别名在 4 个块里的不一致（有的用 `data-m`，有的用 `data-models`）——本次统一展开为 `data-models`，不改其他
 
-## 9. Lessons From Predecessors
+## 9. Predecessor & Lessons
 
-**前车之鉴**：`docs/superpowers/specs/2026-06-24-ai-cost-preset-chip-unification-design.md`（本次设计的「C 方案」前身）已被 scoped down + skipped（见 `docs/superpowers/plans/2026-06-24-audit-polish.md` Final State）——原因：抽组件 + 改 engine 风险 > 收益。
+`docs/superpowers/specs/2026-06-24-ai-cost-preset-chip-unification-design.md`（前身 C 方案）已被 scoped down + skipped，原因：抽组件 + 改 engine 风险 > 收益。
 
-本次设计**主动避开**了 C 方案的所有失败点：不动 engine、不动 types.ts、不抽组件、不加新字段。**视觉对齐 = 改 1 个文件的 4 个块**。
+本次设计**主动选择 Y 方案（彻底统一）**——因为：
+1. 用户已明确接受扩展 scope
+2. 32 个 chip 的 click bug 是 pre-existing 隐患，**统一实现顺手修掉**比留作技术债价值高
+3. 改动集中在 1 个文件，影响面可控（无新文件、无新依赖）
+4. handler 合并是**减法**——从 ~50 行两套逻辑合并为 ~30 行一套，比之前更易维护
+
+### Predecessor Mistakes Avoided
+
+- ❌ C 方案的 `engine.presets` 字段 → 不加
+- ❌ C 方案的 `<PresetChips />` 组件 → 不建
+- ❌ C 方案的 `Preset` 类型 → 不加
+- ✅ 单一文件改动，inline blocks 架构保留
+- ✅ 减法逻辑（合并 handler）替代加法（新组件）
