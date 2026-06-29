@@ -10,6 +10,7 @@
     "predev": "tsx scripts/build-og-images.ts --dev",
     "build:og": "tsx scripts/build-og-images.ts",
     "check:og": "tsx scripts/build-og-images.ts --check",
+    "gen:blog": "node --import tsx scripts/generate-blog-posts.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
