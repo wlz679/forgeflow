@@ -23,7 +23,6 @@ export function getStaticPaths() {
 const lang = getLang(Astro);
 const CATEGORY_ID = 'C';
 const CATEGORY_SLUG = 'valuation-exit';
-const category = categories.find(c => c.id === CATEGORY_ID)!;
 const translatedName = t(`category.${CATEGORY_ID}.name`, lang);
 const translatedDesc = t(`category.${CATEGORY_ID}.desc`, lang);
 

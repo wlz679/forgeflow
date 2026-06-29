@@ -1,7 +1,7 @@
 // Pure URL classifier for sitemap serialization.
 // Exported separately from astro.config.mjs so it's testable.
 
-export type PageKind = 'home' | 'tool' | 'blog' | 'static';
+export type PageKind = 'home' | 'tool' | 'blog' | 'static' | 'category';
 export interface Classification {
   kind: PageKind;
   priority: number;
@@ -9,6 +9,7 @@ export interface Classification {
 }
 
 const STATIC_SLUGS = new Set(['about', 'contact', 'privacy-policy', 'terms']);
+const CATEGORY_SLUGS = new Set(['saas-metrics', 'ai-cost-tools', 'valuation-exit', 'freelance-pricing', 'cost-efficiency', 'investment-roi']);
 
 export function classifyUrl(url: string): Classification {
   // strip origin
@@ -29,6 +30,11 @@ export function classifyUrl(url: string): Classification {
   const staticMatch = path.match(/^\/(en|zh)\/([^/]+)\/?$/);
   if (staticMatch && STATIC_SLUGS.has(staticMatch[2])) {
     return { kind: 'static', priority: 0.5, changefreq: 'monthly' };
+  }
+
+  // Category: /<lang>/<category-slug>/
+  if (staticMatch && CATEGORY_SLUGS.has(staticMatch[2])) {
+    return { kind: 'category', priority: 0.8, changefreq: 'weekly' };
   }
 
   // Default: tool

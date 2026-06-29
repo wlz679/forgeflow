@@ -23,7 +23,6 @@ export function getStaticPaths() {
 const lang = getLang(Astro);
 const CATEGORY_ID = 'D';
 const CATEGORY_SLUG = 'freelance-pricing';
-const category = categories.find(c => c.id === CATEGORY_ID)!;
 const translatedName = t(`category.${CATEGORY_ID}.name`, lang);
 const translatedDesc = t(`category.${CATEGORY_ID}.desc`, lang);
 

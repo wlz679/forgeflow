@@ -42,3 +42,34 @@ test('EEAT — author is uniform ForgeFlowKit across 32 tools', { skip: !existsS
     assert.ok(Array.isArray(tool.sources) && tool.sources.length >= 2, `${tool.slug}: sources must be array of 2+ items`);
   }
 });
+
+test('CATEGORY — all 6 category pages emit CollectionPage with ItemList', { skip: !existsSync(distDir) }, () => {
+  const categorySlugs = ['saas-metrics','ai-cost-tools','valuation-exit','freelance-pricing','cost-efficiency','investment-roi'];
+  for (const slug of categorySlugs) {
+    const path = resolve(distDir, 'en', slug, 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    const blocks = extractJsonLd(html);
+    const graph = blocks.flatMap(b => b['@graph'] ?? [b]);
+    const cp = graph.find(b => b['@type'] === 'CollectionPage');
+    assert.ok(cp, `${slug}: no CollectionPage schema`);
+    assert.ok(cp.hasPart, `${slug}: CollectionPage missing hasPart`);
+    assert.equal(cp.hasPart['@type'], 'ItemList', `${slug}: hasPart should be ItemList`);
+    assert.ok(Array.isArray(cp.hasPart.itemListElement) && cp.hasPart.itemListElement.length > 0, `${slug}: ItemList should have 1+ items`);
+  }
+});
+
+test('BREADCRUMB — every tool page breadcrumb has 3 items (Home > Category > Tool)', { skip: !existsSync(distDir) }, () => {
+  for (const tool of tools) {
+    const path = resolve(distDir, 'en', tool.slug, 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    const blocks = extractJsonLd(html);
+    const graph = blocks.flatMap(b => b['@graph'] ?? [b]);
+    const bc = graph.find(b => b['@type'] === 'BreadcrumbList');
+    assert.ok(bc, `${tool.slug}: no BreadcrumbList schema`);
+    assert.equal(bc.itemListElement.length, 3, `${tool.slug}: breadcrumb should have 3 items, has ${bc.itemListElement.length}`);
+    assert.equal(bc.itemListElement[0].position, 1, `${tool.slug}: position 1 should be Home`);
+    assert.equal(bc.itemListElement[2].position, 3, `${tool.slug}: position 3 should be Tool`);
+  }
+});
