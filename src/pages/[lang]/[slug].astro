@@ -143,6 +143,10 @@ const schema = JSON.stringify({
     <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb">
       <a href={`/${lang}/`} class="hover:text-[#7C3AED] transition-colors">{t('breadcrumb.home', lang)}</a>
       <span class="mx-2">/</span>
+      <a href={`/${lang}/${categories.find(c => c.id === toolMeta.categoryId)?.slug}/`} class="hover:text-[#7C3AED] transition-colors">
+        {t(`category.${toolMeta.categoryId}.name`, lang)}
+      </a>
+      <span class="mx-2">/</span>
       <span class="text-gray-600">{toolTitle}</span>
     </nav>
 
