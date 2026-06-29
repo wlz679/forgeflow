@@ -19,6 +19,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['openai', 'gpt', 'token pricing', 'api cost', 'llm cost', 'prompt caching'],
     tags: ['openai', 'llm', 'tokens'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-claude-api-cost-calculator',
@@ -40,6 +44,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['claude', 'anthropic', 'token pricing', 'api cost', 'llm cost', 'prompt caching'],
     tags: ['claude', 'llm', 'tokens'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-deepseek-api-cost-calculator',
@@ -58,6 +66,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['deepseek', 'token pricing', 'api cost', 'llm cost', 'auto cache'],
     tags: ['deepseek', 'llm', 'tokens'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-gemini-api-cost-calculator',
@@ -77,6 +89,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['gemini', 'google', 'token pricing', 'api cost', 'llm cost', 'context caching'],
     tags: ['gemini', 'llm', 'tokens'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-ai-image-cost-calculator',
@@ -93,6 +109,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['image generation', 'dall-e', 'midjourney', 'stable diffusion', 'ai art cost', 'api cost'],
     tags: ['image', 'ai art', 'cost'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-ai-training-cost-estimator',
@@ -111,6 +131,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['ai training', 'model training', 'gpu cost', 'lora', 'fine-tuning', 'training compute'],
     tags: ['training', 'gpu', 'ai'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-gpu-cloud-cost-calculator',
@@ -128,6 +152,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['gpu rental', 'cloud gpu', 'h100', 'a100', 'training compute', 'gpu cost'],
     tags: ['gpu', 'cloud', 'compute'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-ai-api-cost-comparison',
@@ -143,5 +171,9 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['api cost', 'llm cost', 'token pricing', 'cross-provider', 'model comparison', 'openai', 'claude'],
     tags: ['comparison', 'llm', 'cost'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   }
 ];

@@ -14,6 +14,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['affiliate', 'passive income', 'commission', 'conversion rate', 'traffic', 'online business'],
     tags: ['affiliate', 'passive income', 'online'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Glassdoor Salary Data', 'Upwork Rate Insights', 'Contena Freelance Reports'],
   },
   {
     slug: 'solopreneur-course-pricing-calculator',
@@ -28,6 +32,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['course pricing', 'pricing', 'online course', 'platform fee', 'digital product', 'passive income'],
     tags: ['course', 'pricing', 'creator'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Glassdoor Salary Data', 'Upwork Rate Insights', 'Contena Freelance Reports'],
   },
   {
     slug: 'solopreneur-email-list-revenue-calculator',
@@ -44,6 +52,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['email marketing', 'newsletter revenue', 'list monetization', 'conversion rate', 'passive income', 'creator'],
     tags: ['email', 'newsletter', 'creator'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Glassdoor Salary Data', 'Upwork Rate Insights', 'Contena Freelance Reports'],
   },
   {
     slug: 'solopreneur-freelance-rate-calculator',
@@ -58,6 +70,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['freelance rate', 'hourly rate', 'pricing', 'freelance', 'consulting', 'remote work'],
     tags: ['freelance', 'pricing', 'rate'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Glassdoor Salary Data', 'Upwork Rate Insights', 'Contena Freelance Reports'],
   },
   {
     slug: 'solopreneur-hourly-vs-fixed-calculator',
@@ -72,6 +88,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['hourly rate', 'fixed rate', 'retainer', 'freelance', 'annual income', 'pricing'],
     tags: ['freelance', 'pricing', 'rate'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Glassdoor Salary Data', 'Upwork Rate Insights', 'Contena Freelance Reports'],
   },
   {
     slug: 'solopreneur-project-profitability-calculator',
@@ -87,5 +107,9 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['project profit', 'freelance', 'hourly cost', 'profit margin', 'effective rate', 'pricing'],
     tags: ['freelance', 'profit', 'pricing'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Glassdoor Salary Data', 'Upwork Rate Insights', 'Contena Freelance Reports'],
   }
 ];

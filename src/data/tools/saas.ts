@@ -18,6 +18,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['cash flow', 'runway', 'burn rate', 'saas metrics', 'startup finance', 'operating cost'],
     tags: ['saas', 'finance', 'runway'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Stripe Documentation', 'HubSpot Marketing Benchmarks', 'OpenView SaaS Benchmarks 2026'],
   },
   {
     slug: 'solopreneur-churn-rate-calculator',
@@ -34,6 +38,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['churn', 'retention', 'saas metrics', 'revenue churn', 'logo churn', 'startup finance'],
     tags: ['saas', 'churn', 'retention'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Stripe Documentation', 'HubSpot Marketing Benchmarks', 'OpenView SaaS Benchmarks 2026'],
   },
   {
     slug: 'solopreneur-market-size-estimator',
@@ -51,6 +59,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['market size', 'tam', 'sam', 'som', 'market research', 'startup finance'],
     tags: ['market', 'research', 'tam'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Stripe Documentation', 'HubSpot Marketing Benchmarks', 'OpenView SaaS Benchmarks 2026'],
   },
   {
     slug: 'solopreneur-mrr-calculator',
@@ -69,6 +81,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['mrr', 'recurring revenue', 'saas metrics', 'subscription', 'startup finance', 'revenue growth'],
     tags: ['saas', 'mrr', 'subscription'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Stripe Documentation', 'HubSpot Marketing Benchmarks', 'OpenView SaaS Benchmarks 2026'],
   },
   {
     slug: 'solopreneur-revenue-projector',
@@ -89,5 +105,9 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['revenue forecast', 'saas metrics', 'unit economics', 'runway', 'startup finance', 'breakeven'],
     tags: ['saas', 'forecast', 'finance'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['Stripe Documentation', 'HubSpot Marketing Benchmarks', 'OpenView SaaS Benchmarks 2026'],
   }
 ];

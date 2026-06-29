@@ -17,6 +17,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['unit economics', 'ltv', 'cac', 'saas metrics', 'customer profitability', 'startup finance'],
     tags: ['unit economics', 'ltv', 'cac'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['SaaS Capital Benchmarks', 'Equidam Valuation Method', 'Visible.vc Reports'],
   },
   {
     slug: 'solopreneur-cac-calculator',
@@ -33,6 +37,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['cac', 'customer acquisition cost', 'marketing', 'unit economics', 'saas metrics', 'payback period'],
     tags: ['cac', 'marketing', 'saas'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['SaaS Capital Benchmarks', 'Equidam Valuation Method', 'Visible.vc Reports'],
   },
   {
     slug: 'solopreneur-ltv-calculator',
@@ -48,6 +56,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['ltv', 'lifetime value', 'unit economics', 'saas metrics', 'retention', 'churn'],
     tags: ['ltv', 'retention', 'saas'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['SaaS Capital Benchmarks', 'Equidam Valuation Method', 'Visible.vc Reports'],
   },
   {
     slug: 'solopreneur-saas-valuation-calculator',
@@ -62,6 +74,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['saas valuation', 'arr multiple', 'startup valuation', 'exit value', 'startup finance'],
     tags: ['valuation', 'saas', 'exit'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['SaaS Capital Benchmarks', 'Equidam Valuation Method', 'Visible.vc Reports'],
   },
   {
     slug: 'solopreneur-break-even-calculator',
@@ -76,6 +92,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['break-even', 'breakeven', 'startup finance', 'monthly costs', 'revenue target', 'runway'],
     tags: ['break-even', 'finance', 'costs'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['SaaS Capital Benchmarks', 'Equidam Valuation Method', 'Visible.vc Reports'],
   },
   {
     slug: 'solopreneur-equity-dilution-calculator',
@@ -90,5 +110,9 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['equity dilution', 'funding round', 'pre-money', 'post-money', 'founder equity', 'startup finance'],
     tags: ['equity', 'funding', 'startup'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['SaaS Capital Benchmarks', 'Equidam Valuation Method', 'Visible.vc Reports'],
   }
 ];

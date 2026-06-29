@@ -14,6 +14,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['freelance tax', 'tax', 'self-employment', 'quarterly tax', 'taxable income', 'freelance'],
     tags: ['tax', 'freelance', 'finance'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['IRS Tax Statistics', 'Klear Influencer Sponsorship Rates', 'Indeed Salary Benchmarks'],
   },
   {
     slug: 'solopreneur-sponsorship-rate-calculator',
@@ -29,6 +33,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['sponsorship', 'cpm', 'creator', 'podcast', 'newsletter', 'pricing'],
     tags: ['sponsorship', 'creator', 'pricing'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['IRS Tax Statistics', 'Klear Influencer Sponsorship Rates', 'Indeed Salary Benchmarks'],
   },
   {
     slug: 'solopreneur-time-value-calculator',
@@ -43,5 +51,9 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['time value', 'hourly rate', 'productivity', 'freelance', 'time waste', 'annual income'],
     tags: ['time', 'productivity', 'rate'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['IRS Tax Statistics', 'Klear Influencer Sponsorship Rates', 'Indeed Salary Benchmarks'],
   }
 ];

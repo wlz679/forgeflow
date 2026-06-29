@@ -14,6 +14,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['pricing', 'saas pricing', 'pricing strategy', 'tier pricing', 'freemium', 'monetization'],
     tags: ['pricing', 'saas', 'monetization'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['BLS Employer Costs for Employee Compensation', 'Harvard Business Review', 'ZipRecruiter Salary Data'],
   },
   {
     slug: 'solopreneur-employee-cost-calculator',
@@ -28,6 +32,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['employee cost', 'hiring cost', 'salary', 'benefits', 'overhead', 'freelance'],
     tags: ['hr', 'hiring', 'cost'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['BLS Employer Costs for Employee Compensation', 'Harvard Business Review', 'ZipRecruiter Salary Data'],
   },
   {
     slug: 'solopreneur-meeting-cost-calculator',
@@ -43,6 +51,10 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['meeting cost', 'productivity', 'time waste', 'hourly rate', 'team cost'],
     tags: ['meeting', 'productivity', 'cost'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['BLS Employer Costs for Employee Compensation', 'Harvard Business Review', 'ZipRecruiter Salary Data'],
   },
   {
     slug: 'solopreneur-productivity-score',
@@ -57,5 +69,9 @@ export const tools: ToolMeta[] = [
     ],
     keywords: ['productivity', 'deep work', 'solopreneur', 'time management', 'tools stack'],
     tags: ['productivity', 'focus', 'solopreneur'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-06-22',
+    sources: ['BLS Employer Costs for Employee Compensation', 'Harvard Business Review', 'ZipRecruiter Salary Data'],
   }
 ];
