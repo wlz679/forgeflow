@@ -20,26 +20,26 @@ const contactEmail = t('eeat.contact_email', lang);
   </div>
   <dl class="space-y-2 text-sm text-gray-700">
     <div class="flex gap-2">
-      <dt class="font-semibold min-w-[110px]">{t('eeat.reviewed_by', lang)}:</dt>
+      <dt class="font-semibold sm:min-w-[110px]">{t('eeat.reviewed_by', lang)}:</dt>
       <dd>{reviewedBy || t('eeat.team', lang)}</dd>
     </div>
     <div class="flex gap-2">
-      <dt class="font-semibold min-w-[110px]">{t('eeat.author_label', lang)}:</dt>
+      <dt class="font-semibold sm:min-w-[110px]">{t('eeat.author_label', lang)}:</dt>
       <dd>{author || 'ForgeFlowKit'}</dd>
     </div>
     <div class="flex gap-2">
-      <dt class="font-semibold min-w-[110px]">{t('eeat.publisher_label', lang)}:</dt>
+      <dt class="font-semibold sm:min-w-[110px]">{t('eeat.publisher_label', lang)}:</dt>
       <dd>ForgeFlowKit</dd>
     </div>
     {dataReviewedAt && (
       <div class="flex gap-2">
-        <dt class="font-semibold min-w-[110px]">{t('eeat.last_reviewed', lang)}:</dt>
+        <dt class="font-semibold sm:min-w-[110px]">{t('eeat.last_reviewed', lang)}:</dt>
         <dd>{dataReviewedAt}</dd>
       </div>
     )}
     {sources.length > 0 && (
       <div class="flex gap-2">
-        <dt class="font-semibold min-w-[110px]">{t('eeat.sources', lang)}:</dt>
+        <dt class="font-semibold sm:min-w-[110px]">{t('eeat.sources', lang)}:</dt>
         <dd>{sources.join(', ')}</dd>
       </div>
     )}
