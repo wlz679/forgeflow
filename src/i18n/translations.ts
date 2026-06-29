@@ -51,6 +51,18 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'contact.p2': { en: 'Email us at:', zh: '发送邮件至：' },
   'contact.p3': { en: 'We typically respond within 24-48 hours.', zh: '我们通常在 24-48 小时内回复。' },
 
+  // ===== EEAT trust block =====
+  'eeat.title': { en: 'Editorial Standards', zh: '编辑标准' },
+  'eeat.reviewed_by': { en: 'Reviewed by', zh: '审核人' },
+  'eeat.last_reviewed': { en: 'Last reviewed', zh: '最后审核' },
+  'eeat.sources': { en: 'Data sources', zh: '数据来源' },
+  'eeat.suggest_improvement': { en: 'Suggest an improvement', zh: '提交改进建议' },
+  'eeat.suggest_body': { en: 'Found inaccurate data or have a question? We respond within 48 hours.', zh: '发现数据不准或有疑问？我们 48 小时内回复。' },
+  'eeat.team': { en: 'ForgeFlowKit Team', zh: 'ForgeFlowKit 团队' },
+  'eeat.author_label': { en: 'Author', zh: '作者' },
+  'eeat.publisher_label': { en: 'Publisher', zh: '发布者' },
+  'eeat.contact_email': { en: 'hello@forgeflowkit.com', zh: 'hello@forgeflowkit.com' },
+
   // ===== Blog list page =====
   'blog.page_title': { en: 'ForgeFlowKit Tips & Tools Blog', zh: 'ForgeFlowKit 技巧与工具博客' },
 
