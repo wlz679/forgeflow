@@ -26,7 +26,7 @@ test('EEAT — every tool page HTML has SoftwareApplication with author/dateModi
     const sa = graph.find(b => b['@type'] === 'SoftwareApplication');
     assert.ok(sa, `${tool.slug}: no SoftwareApplication schema`);
     assert.ok(sa.author, `${tool.slug}: missing author`);
-    assert.equal(sa.author['@type'], 'Organization', `${tool.slug}: author should be Organization`);
+    assert.equal(sa.author['@id'], 'https://forgeflowkit.com/#org', `${tool.slug}: author should be canonical @id reference`);
     assert.ok(sa.dateModified, `${tool.slug}: missing dateModified`);
     assert.match(sa.dateModified, /^\d{4}-\d{2}-\d{2}$/, `${tool.slug}: dateModified must be YYYY-MM-DD`);
     assert.ok(sa.reviewedBy, `${tool.slug}: missing reviewedBy`);
