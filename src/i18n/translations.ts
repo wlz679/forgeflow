@@ -209,6 +209,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
 
   // Header
   'header.categories': { en: 'Categories', zh: '分类' },
+  'header.category_prefix': { en: 'Category', zh: '分类' },
   'category.A.name': { en: 'SaaS Metrics', zh: 'SaaS 指标' },
   'category.A.desc': { en: 'Calculate MRR, burn rate, churn, revenue projections, break-even, and market sizing.', zh: '计算 MRR、烧钱率、流失率、收入预测、盈亏平衡和市场规模。' },
   'category.B.name': { en: 'AI Cost Tools', zh: 'AI 成本工具' },

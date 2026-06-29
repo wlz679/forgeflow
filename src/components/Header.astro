@@ -41,7 +41,7 @@ const categoriesWithTranslated = categories.map(c => ({
           {categoriesWithTranslated.map(c => (
             <li>
               <a href={c.href} class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0">
-                <div class="text-xs font-semibold text-[#7C3AED]">Category {c.id}</div>
+                <div class="text-xs font-semibold text-[#7C3AED]">{t('header.category_prefix', lang)} {c.id}</div>
                 <div class="text-sm font-bold text-gray-900">{c.name}</div>
                 <div class="text-xs text-gray-500 mt-1 line-clamp-1">{c.desc}</div>
               </a>

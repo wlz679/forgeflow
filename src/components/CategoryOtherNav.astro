@@ -17,7 +17,7 @@ const others = categories.filter(c => c.id !== currentCategoryId);
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
     {others.map((c) => (
       <a href={`/${lang}/${c.slug}/`} class="p-4 bg-white border border-gray-200 rounded-xl hover:border-[#7C3AED] hover:shadow-md transition-all">
-        <div class="text-xs font-semibold text-[#7C3AED] mb-1">Category {c.id}</div>
+        <div class="text-xs font-semibold text-[#7C3AED] mb-1">{t('header.category_prefix', lang)} {c.id}</div>
         <div class="text-sm font-bold text-gray-900">{t(`category.${c.id}.name`, lang)}</div>
       </a>
     ))}

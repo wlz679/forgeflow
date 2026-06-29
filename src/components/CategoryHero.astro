@@ -13,7 +13,7 @@ const lang = getLang(Astro);
 ---
 
 <section class="mb-10 p-8 bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl">
-  <div class="text-xs font-semibold text-[#7C3AED] mb-2">Category {categoryId}</div>
+  <div class="text-xs font-semibold text-[#7C3AED] mb-2">{t('header.category_prefix', lang)} {categoryId}</div>
   <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">{categoryName}</h1>
   <p class="text-sm text-gray-600 leading-relaxed max-w-2xl mb-4">{categoryDesc}</p>
   <div class="flex gap-4 text-xs text-gray-500">
