@@ -5,7 +5,8 @@
  * Exits 1 if any required key is missing.
  *
  * Plan 1 (EEAT): validates eeat.* keys.
- * Plan 2 (About) and Plan 3 (Category) extend REQUIRED_KEYS with their own keys.
+ * Plan 2 (About): validates about.* keys.
+ * Plan 3 (Category): validates category.* + header.* keys.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -42,7 +43,23 @@ const REQUIRED_KEYS = {
     'about.roadmap.h1',
     'about.roadmap.body',
   ],
-  // Plan 3 will add: category.{A-F}.intro.{1-3}, ...faq.q{1-5}, ...guide.{1-3}, header.categories
+  category: (() => {
+    const keys = [];
+    for (const id of ['A','B','C','D','E','F']) {
+      keys.push(`category.${id}.intro.h2`);
+      keys.push(`category.${id}.intro.1`, `category.${id}.intro.2`, `category.${id}.intro.3`);
+      for (let n = 1; n <= 5; n++) {
+        keys.push(`category.${id}.faq.q${n}.q`, `category.${id}.faq.q${n}.a`);
+      }
+      for (let n = 1; n <= 3; n++) {
+        keys.push(`category.${id}.guide.${n}.title`, `category.${id}.guide.${n}.desc`);
+      }
+    }
+    return keys;
+  })(),
+  header: [
+    'header.categories',
+  ],
 };
 
 const src = readFileSync(translationsPath, 'utf-8');
