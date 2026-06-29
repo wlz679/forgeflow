@@ -7,6 +7,7 @@ import FAQ from '../../components/FAQ.astro';
 import HowToUse from '../../components/HowToUse.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import AdUnit from '../../components/AdUnit.astro';
+import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
 import { relatedTools } from '../../data/internal-links';
@@ -113,6 +114,10 @@ const schema = JSON.stringify({
       isAccessibleForFree: true,
       inLanguage: lang,
       provider: { '@id': 'https://forgeflowkit.com/#org' },
+      author: { '@type': 'Organization', name: toolMeta.author, url: 'https://forgeflowkit.com/' },
+      dateModified: toolMeta.dataReviewedAt,
+      reviewedBy: { '@type': 'Organization', name: toolMeta.reviewedBy },
+      publisher: { '@id': 'https://forgeflowkit.com/#org' },
     },
     {
       '@type': 'BreadcrumbList',
@@ -977,6 +982,12 @@ const schema = JSON.stringify({
         <div id="dynamic-results" class="space-y-3 hidden"></div>
         <AdUnit slot="tool-result" />
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
+        <EeatTrustBlock
+          reviewedBy={toolMeta.reviewedBy}
+          author={toolMeta.author}
+          dataReviewedAt={toolMeta.dataReviewedAt}
+          sources={toolMeta.sources}
+        />
       </div>
     </div>
   </main>

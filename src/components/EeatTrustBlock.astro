@@ -1,0 +1,51 @@
+---
+import { t, getLang } from '../i18n';
+
+export interface Props {
+  reviewedBy: string;
+  dataReviewedAt: string;
+  sources: string[];
+  author: string;
+}
+
+const { reviewedBy, dataReviewedAt, sources, author } = Astro.props;
+const lang = getLang(Astro);
+const contactEmail = t('eeat.contact_email', lang);
+---
+
+<aside class="mt-12 p-6 bg-gray-50 border border-gray-200 rounded-2xl" aria-label={t('eeat.title', lang)}>
+  <div class="flex items-center gap-2 mb-3">
+    <span class="text-green-600 text-lg">✓</span>
+    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('eeat.title', lang)}</h3>
+  </div>
+  <dl class="space-y-2 text-sm text-gray-700">
+    <div class="flex gap-2">
+      <dt class="font-semibold min-w-[110px]">{t('eeat.reviewed_by', lang)}:</dt>
+      <dd>{reviewedBy || t('eeat.team', lang)}</dd>
+    </div>
+    <div class="flex gap-2">
+      <dt class="font-semibold min-w-[110px]">{t('eeat.author_label', lang)}:</dt>
+      <dd>{author || 'ForgeFlowKit'}</dd>
+    </div>
+    <div class="flex gap-2">
+      <dt class="font-semibold min-w-[110px]">{t('eeat.publisher_label', lang)}:</dt>
+      <dd>ForgeFlowKit</dd>
+    </div>
+    {dataReviewedAt && (
+      <div class="flex gap-2">
+        <dt class="font-semibold min-w-[110px]">{t('eeat.last_reviewed', lang)}:</dt>
+        <dd>{dataReviewedAt}</dd>
+      </div>
+    )}
+    {sources.length > 0 && (
+      <div class="flex gap-2">
+        <dt class="font-semibold min-w-[110px]">{t('eeat.sources', lang)}:</dt>
+        <dd>{sources.join(', ')}</dd>
+      </div>
+    )}
+  </dl>
+  <p class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+    📧 <a href={`mailto:${contactEmail}`} class="text-[#7C3AED] hover:underline font-medium">{t('eeat.suggest_improvement', lang)}</a>
+    <span class="block mt-1 text-xs text-gray-500">{t('eeat.suggest_body', lang)}</span>
+  </p>
+</aside>
