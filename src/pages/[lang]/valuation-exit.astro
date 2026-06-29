@@ -9,7 +9,8 @@ import CategoryGuides from '../../components/CategoryGuides.astro';
 import CategoryOtherNav from '../../components/CategoryOtherNav.astro';
 import { categories } from '../../data/categories';
 import { tools } from '../../data/tools';
-import { blogPosts } from '../../data/blog-posts';
+import { getBlogPostsByToolSlug } from '../../lib/blog';
+import type { BlogPost } from '../../lib/blog';
 import { t, getLang } from '../../i18n';
 import { createCollectionPage, createBreadcrumb3 } from '../../lib/seo-factory';
 
@@ -52,7 +53,10 @@ const manualGuides = [1,2,3].map(n => ({
 }));
 
 const toolSlugsInCategory = new Set(translatedTools.map(t => t.slug));
-const relatedBlogPosts = blogPosts.filter(p => toolSlugsInCategory.has(p.toolSlug));
+const relatedBlogPosts: BlogPost[] = [];
+for (const slug of toolSlugsInCategory) {
+  relatedBlogPosts.push(...await getBlogPostsByToolSlug(slug));
+}
 
 const schema = JSON.stringify({
   '@context': 'https://schema.org',
