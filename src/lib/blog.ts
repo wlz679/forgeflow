@@ -23,6 +23,11 @@ export interface BlogPost {
 
 type BlogEntry = CollectionEntry<'blog'>;
 
+// Maps toolSlug → its index in the original tools[] array. Used to preserve
+// the pre-migration post order so blog post indexes (and therefore the
+// synthetic JSON-LD datePublished in [slug].astro:30) stay byte-equivalent.
+const toolIndex = new Map(tools.map((t, i) => [t.slug, i]));
+
 function toBlogPost(entry: BlogEntry): BlogPost {
   const toolSlug = entry.data.toolSlug;
   const tool = tools.find(t => t.slug === toolSlug);
@@ -39,7 +44,9 @@ function toBlogPost(entry: BlogEntry): BlogPost {
 
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
   const entries = await getCollection('blog');
-  return entries.map(toBlogPost).sort((a, b) => a.slug.localeCompare(b.slug));
+  return entries.map(toBlogPost).sort(
+    (a, b) => (toolIndex.get(a.toolSlug) ?? 0) - (toolIndex.get(b.toolSlug) ?? 0)
+  );
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
