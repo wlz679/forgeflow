@@ -14,6 +14,7 @@ import { relatedTools } from '../../data/internal-links';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
 import { t, getLang } from '../../i18n';
+import { createSoftwareApplication, createToolFAQPage, createToolBreadcrumbList } from '../../lib/seo-factory';
 
 export function getStaticPaths() {
   const paths: { params: { lang: string; slug: string } }[] = [];
@@ -86,53 +87,34 @@ const toolMeta = tools.find(t => t.slug === slug)!;
 const featureList = translatedHowToUse.slice(0, 3);
 const url = `https://forgeflowkit.com/${lang}/${slug}/`;
 
+const categoryName = t(`category.${toolMeta.categoryId}.name`, lang);
+const categorySlug = categories.find(c => c.id === toolMeta.categoryId)?.slug ?? '';
+const homeItem = Astro.site?.toString() || '/';
+
 const schema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'FAQPage',
-      mainEntity: translatedFaq.map(item => ({
-        '@type': 'Question',
-        name: item.q,
-        acceptedAnswer: { '@type': 'Answer', text: item.a },
-      })),
-    },
-    {
-      '@type': 'SoftwareApplication',
-      '@id': `${url}#app`,
-      name: toolTitle,
+    createToolFAQPage({ faqItems: translatedFaq }),
+    createSoftwareApplication({
+      lang,
+      toolTitle,
+      toolDescription,
+      toolSlug: slug,
       applicationCategory: toolMeta.applicationCategory,
-      operatingSystem: 'Web',
-      description: toolDescription,
-      url,
-      offers: {
-        '@type': 'Offer',
-        price: '0',
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
-      },
       featureList,
-      isAccessibleForFree: true,
-      inLanguage: lang,
-      provider: { '@id': 'https://forgeflowkit.com/#org' },
-      author: { '@id': 'https://forgeflowkit.com/#org' },
-      dateModified: toolMeta.dataReviewedAt,
-      reviewedBy: { '@type': 'Organization', name: toolMeta.reviewedBy },
-      publisher: { '@id': 'https://forgeflowkit.com/#org' },
-    },
-    {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: t('breadcrumb.home', lang), item: Astro.site?.toString() || '/' },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: t(`category.${toolMeta.categoryId}.name`, lang),
-          item: `https://forgeflowkit.com/${lang}/${categories.find(c => c.id === toolMeta.categoryId)?.slug}/`,
-        },
-        { '@type': 'ListItem', position: 3, name: toolTitle, item: url },
-      ],
-    },
+      author: toolMeta.author,
+      reviewedBy: toolMeta.reviewedBy,
+      dataReviewedAt: toolMeta.dataReviewedAt,
+    }),
+    createToolBreadcrumbList({
+      lang,
+      homeItem,
+      homeLabel: t('breadcrumb.home', lang),
+      categoryName,
+      categorySlug,
+      toolTitle,
+      toolSlug: slug,
+    }),
   ],
 });
 ---
