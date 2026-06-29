@@ -23,6 +23,7 @@ const aboutSchema = JSON.stringify({
       description,
       isPartOf: { '@id': `${SITE_URL}/#website` },
       inLanguage: lang,
+      dateModified: '2026-06-22',
     },
   ],
 });
@@ -32,11 +33,41 @@ const aboutSchema = JSON.stringify({
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
     <h1 class="text-2xl font-extrabold mb-4">{t('about.h1', lang)}</h1>
-    <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
-      <p>{t('about.p1', lang)}</p>
-      <p>{t('about.p2', lang)}</p>
-      <p>{t('about.p3', lang)}</p>
-      <p>{t('about.p4', lang)}</p>
+    <div class="max-w-none text-gray-700 leading-relaxed space-y-10">
+      <section>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.mission.h1', lang)}</h2>
+        <p class="text-sm">{t('about.mission.body', lang)}</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.data_sources.h1', lang)}</h2>
+        <p class="text-sm whitespace-pre-line">{t('about.data_sources.body', lang)}</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.update_policy.h1', lang)}</h2>
+        <p class="text-sm">{t('about.update_policy.body', lang)}</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.editorial_policy.h1', lang)}</h2>
+        <p class="text-sm">{t('about.editorial_policy.body', lang)}</p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.contact.h1', lang)}</h2>
+        <p class="text-sm">{t('about.contact.body', lang)}</p>
+        <p class="text-sm mt-2">
+          <a href={`mailto:${t('eeat.contact_email', lang)}`} class="text-[#7C3AED] hover:underline font-medium">
+            {t('eeat.contact_email', lang)}
+          </a>
+        </p>
+      </section>
+
+      <section>
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.roadmap.h1', lang)}</h2>
+        <p class="text-sm">{t('about.roadmap.body', lang)}</p>
+      </section>
     </div>
   </main>
   <Footer />
