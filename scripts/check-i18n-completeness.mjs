@@ -28,7 +28,20 @@ const REQUIRED_KEYS = {
     'eeat.publisher_label',
     'eeat.contact_email',
   ],
-  // Plan 2 will add: about.mission.h1, about.mission.body, ... × 6 sections
+  about: [
+    'about.mission.h1',
+    'about.mission.body',
+    'about.data_sources.h1',
+    'about.data_sources.body',
+    'about.update_policy.h1',
+    'about.update_policy.body',
+    'about.editorial_policy.h1',
+    'about.editorial_policy.body',
+    'about.contact.h1',
+    'about.contact.body',
+    'about.roadmap.h1',
+    'about.roadmap.body',
+  ],
   // Plan 3 will add: category.{A-F}.intro.{1-3}, ...faq.q{1-5}, ...guide.{1-3}, header.categories
 };
 
