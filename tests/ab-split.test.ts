@@ -61,7 +61,7 @@ test('aggregated tools array has 32 entries', async () => {
 
 test('4 consumer import paths are unchanged', () => {
   const consumers = [
-    ['src/data/blog-posts.ts', `from './tools'`],
+    ['src/lib/blog.ts', `from '../data/tools'`],
     ['src/data/internal-links.ts', `from './tools'`],
     ['src/pages/[lang]/index.astro', `from '../../data/tools'`],
     ['src/pages/[lang]/[slug].astro', `from '../../data/tools'`],
