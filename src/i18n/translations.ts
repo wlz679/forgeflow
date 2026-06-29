@@ -62,7 +62,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // ===== EEAT trust block =====
   'eeat.title': { en: 'Editorial Standards', zh: '编辑标准' },
   'eeat.reviewed_by': { en: 'Reviewed by', zh: '审核人' },
-  'eeat.last_reviewed': { en: 'Last reviewed', zh: '最后审核' },
+  'eeat.last_reviewed': { en: 'Last reviewed', zh: '最近审核' },
   'eeat.sources': { en: 'Data sources', zh: '数据来源' },
   'eeat.suggest_improvement': { en: 'Suggest an improvement', zh: '提交改进建议' },
   'eeat.suggest_body': { en: 'Found inaccurate data or have a question? We respond within 48 hours.', zh: '发现数据不准或有疑问？我们 48 小时内回复。' },
