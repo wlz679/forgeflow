@@ -37,7 +37,7 @@ const contactEmail = t('eeat.contact_email', lang);
         <dd>{dataReviewedAt}</dd>
       </div>
     )}
-    {sources.length > 0 && (
+    {sources.length >= 3 && (
       <div class="flex gap-2">
         <dt class="font-semibold sm:min-w-[110px]">{t('eeat.sources', lang)}:</dt>
         <dd>{sources.join(', ')}</dd>
