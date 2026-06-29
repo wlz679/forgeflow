@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-06-26",
+  "lastUpdated": "2026-06-29",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -650,7 +650,7 @@
           "output": 4.5,
           "name": "GPT 5.4Mini",
           "family": "gpt5",
-          "contextWindow": "272K",
+          "contextWindow": "1M",
           "order": 77
         },
         "gpt-5.4-mini-2026-03-17": {
@@ -658,7 +658,7 @@
           "output": 4.5,
           "name": "GPT 5.4Mini 20260317",
           "family": "gpt5",
-          "contextWindow": "272K",
+          "contextWindow": "1M",
           "order": 78
         },
         "gpt-5.4-nano": {
@@ -666,7 +666,7 @@
           "output": 1.25,
           "name": "GPT 5.4Nano",
           "family": "gpt5",
-          "contextWindow": "272K",
+          "contextWindow": "1M",
           "order": 79
         },
         "gpt-5.4-nano-2026-03-17": {
@@ -674,7 +674,7 @@
           "output": 1.25,
           "name": "GPT 5.4Nano 20260317",
           "family": "gpt5",
-          "contextWindow": "272K",
+          "contextWindow": "1M",
           "order": 80
         },
         "gpt-5-pro": {
@@ -682,7 +682,7 @@
           "output": 120,
           "name": "GPT 5Pro",
           "family": "gpt5",
-          "contextWindow": "128K",
+          "contextWindow": "400K",
           "order": 81
         },
         "gpt-5-pro-2025-10-06": {
@@ -690,7 +690,7 @@
           "output": 120,
           "name": "GPT 5Pro 20251006",
           "family": "gpt5",
-          "contextWindow": "128K",
+          "contextWindow": "400K",
           "order": 82
         },
         "gpt-5-2025-08-07": {
@@ -1533,6 +1533,22 @@
           "family": "legacy",
           "contextWindow": "1M",
           "order": 40
+        },
+        "gemini-3-pro-image": {
+          "input": 2,
+          "output": 12,
+          "name": "Gemini 3Pro Image",
+          "family": "flash3",
+          "contextWindow": "66K",
+          "order": 41
+        },
+        "gemini-3.1-flash-image": {
+          "input": 0.25,
+          "output": 1.5,
+          "name": "Gemini 3.1Flash Image",
+          "family": "flash3",
+          "contextWindow": "66K",
+          "order": 42
         }
       }
     },
