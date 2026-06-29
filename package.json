@@ -15,9 +15,11 @@
     "preview": "astro preview",
     "sync": "node scripts/sync-pricing.mjs && node scripts/codegen-customfn.mjs && node scripts/codegen-examples.mjs",
     "translate": "tsx scripts/translate-wordpools.ts",
-    "check": "node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check",
+    "check": "node scripts/check-i18n-completeness.mjs && node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check",
+    "check:i18n": "node scripts/check-i18n-completeness.mjs",
     "check:examples": "node scripts/codegen-examples.mjs --check",
     "check:customfn": "node scripts/codegen-customfn.mjs --check",
+    "test:schemas": "node --import tsx tests/seo-schemas.test.ts",
     "test:unit": "node tests/run.mjs"
   },
   "keywords": [
