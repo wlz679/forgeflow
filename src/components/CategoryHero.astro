@@ -1,0 +1,23 @@
+---
+import { t, getLang } from '../i18n';
+
+export interface Props {
+  categoryId: string;       // 'A'
+  categoryName: string;     // 'SaaS Metrics' (translated)
+  categoryDesc: string;     // translated
+  toolCount: number;
+}
+
+const { categoryId, categoryName, categoryDesc, toolCount } = Astro.props;
+const lang = getLang(Astro);
+---
+
+<section class="mb-10 p-8 bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl">
+  <div class="text-xs font-semibold text-[#7C3AED] mb-2">Category {categoryId}</div>
+  <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">{categoryName}</h1>
+  <p class="text-sm text-gray-600 leading-relaxed max-w-2xl mb-4">{categoryDesc}</p>
+  <div class="flex gap-4 text-xs text-gray-500">
+    <span>🧮 {toolCount} {toolCount === 1 ? 'tool' : 'tools'}</span>
+    <span>📅 {t('eeat.last_reviewed', lang)}: 2026-06-22</span>
+  </div>
+</section>

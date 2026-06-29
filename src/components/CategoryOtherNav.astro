@@ -1,0 +1,25 @@
+---
+import { t, getLang } from '../i18n';
+import type { Category } from '../data/categories';
+
+export interface Props {
+  currentCategoryId: string;
+  categories: Category[];  // all 6; will filter out current
+}
+
+const { currentCategoryId, categories } = Astro.props;
+const lang = getLang(Astro);
+const others = categories.filter(c => c.id !== currentCategoryId);
+---
+
+<section class="mt-12 pt-10 border-t border-gray-200">
+  <h2 class="text-xl font-bold text-gray-900 mb-5">Explore Other Categories</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+    {others.map((c) => (
+      <a href={`/${lang}/${c.slug}/`} class="p-4 bg-white border border-gray-200 rounded-xl hover:border-[#7C3AED] hover:shadow-md transition-all">
+        <div class="text-xs font-semibold text-[#7C3AED] mb-1">Category {c.id}</div>
+        <div class="text-sm font-bold text-gray-900">{t(`category.${c.id}.name`, lang)}</div>
+      </a>
+    ))}
+  </div>
+</section>
