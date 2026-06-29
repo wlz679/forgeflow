@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import CategoryHero from '../../components/CategoryHero.astro';
+import CategoryFaq from '../../components/CategoryFaq.astro';
+import CategoryGuides from '../../components/CategoryGuides.astro';
+import CategoryOtherNav from '../../components/CategoryOtherNav.astro';
+import { categories } from '../../data/categories';
+import { tools } from '../../data/tools';
+import { getBlogPostsByToolSlug } from '../../lib/blog';
+import type { BlogPost } from '../../lib/blog';
+import { t, getLang } from '../../i18n';
+import { createCollectionPage, createBreadcrumb3 } from '../../lib/seo-factory';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'zh' } },
+  ];
+}
+
+const lang = getLang(Astro);
+const CATEGORY_ID = 'A';
+const CATEGORY_SLUG = 'saas-metrics';
+const translatedName = t(`category.${CATEGORY_ID}.name`, lang);
+const translatedDesc = t(`category.${CATEGORY_ID}.desc`, lang);
+
+const translatedTools = tools
+  .filter(tool => tool.categoryId === CATEGORY_ID)
+  .map(tool => ({
+    ...tool,
+    title: tool.title,           // ToolMeta.title is English; translation lives in i18n
+    translatedTitle: t(`tools.${tool.slug}.title`, lang),
+  }));
+
+// Override with translated titles for display
+const displayTools = translatedTools.map(tool => ({
+  slug: tool.slug,
+  title: tool.translatedTitle,
+  description: tool.description,  // English fallback
+}));
+
+const faqItems = [1,2,3,4,5].map(n => ({
+  q: t(`category.${CATEGORY_ID}.faq.q${n}.q`, lang),
+  a: t(`category.${CATEGORY_ID}.faq.q${n}.a`, lang),
+}));
+
+const manualGuides = [1,2,3].map(n => ({
+  title: t(`category.${CATEGORY_ID}.guide.${n}.title`, lang),
+  desc: t(`category.${CATEGORY_ID}.guide.${n}.desc`, lang),
+}));
+
+const toolSlugsInCategory = new Set(translatedTools.map(t => t.slug));
+const relatedBlogPosts: BlogPost[] = [];
+for (const slug of toolSlugsInCategory) {
+  relatedBlogPosts.push(...await getBlogPostsByToolSlug(slug));
+}
+
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    createCollectionPage({
+      lang,
+      categorySlug: CATEGORY_SLUG,
+      categoryId: CATEGORY_ID,
+      categoryName: translatedName,
+      categoryDescription: translatedDesc,
+      tools: displayTools.map(t => ({ slug: t.slug, title: t.title })),
+    }),
+    createBreadcrumb3({
+      lang,
+      homeLabel: t('breadcrumb.home', lang),
+      categoryName: translatedName,
+      categorySlug: CATEGORY_SLUG,
+      currentPageName: translatedName,
+      currentPageSlug: CATEGORY_SLUG,
+    }),
+  ],
+});
+---
+
+<BaseLayout
+  title={`${translatedName} — ForgeFlowKit`}
+  description={translatedDesc}
+  schema={schema}
+  pageType="static"
+>
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <CategoryHero
+      categoryId={CATEGORY_ID}
+      categoryName={translatedName}
+      categoryDesc={translatedDesc}
+      toolCount={displayTools.length}
+    />
+
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-900 mb-3">{t(`category.${CATEGORY_ID}.intro.h2`, lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">{t(`category.${CATEGORY_ID}.intro.1`, lang)}</p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">{t(`category.${CATEGORY_ID}.intro.2`, lang)}</p>
+      <p class="text-sm text-gray-700 leading-relaxed">{t(`category.${CATEGORY_ID}.intro.3`, lang)}</p>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">All {displayTools.length} {translatedName} Tools</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {displayTools.map(t => <ToolCard slug={t.slug} title={t.title} description={t.description} />)}
+      </div>
+    </section>
+
+    <CategoryFaq categoryId={CATEGORY_ID} faqItems={faqItems} />
+    <CategoryGuides categoryId={CATEGORY_ID} manualGuides={manualGuides} blogPosts={relatedBlogPosts} />
+    <CategoryOtherNav currentCategoryId={CATEGORY_ID} categories={categories} />
+  </main>
+  <Footer />
+</BaseLayout>

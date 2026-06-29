@@ -74,7 +74,6 @@ const engine: ToolEngine = {
   slug: 'solopreneur-my-calc',
   title: 'My Calculator',
   description: '...',
-  category: 'B',
   inputs: [{ name: 'foo', label: 'Foo', type: 'number' }],
   clientConfig: { type: 'custom', wordPools: {}, customFn: '...' },
   generate(inputs) { /* returns string[] */ },

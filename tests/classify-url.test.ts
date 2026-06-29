@@ -66,3 +66,16 @@ test('terms is static', () => {
   const c = classifyUrl(`${SITE}/en/terms/`);
   assert.equal(c.kind, 'static');
 });
+
+test('category page (saas-metrics) gets priority 0.8 weekly', () => {
+  const c = classifyUrl(`${SITE}/en/saas-metrics/`);
+  assert.equal(c.kind, 'category');
+  assert.equal(c.priority, 0.8);
+  assert.equal(c.changefreq, 'weekly');
+});
+
+test('category page (zh ai-cost-tools) gets priority 0.8 weekly', () => {
+  const c = classifyUrl(`${SITE}/zh/ai-cost-tools/`);
+  assert.equal(c.kind, 'category');
+  assert.equal(c.priority, 0.8);
+});

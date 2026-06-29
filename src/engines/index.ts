@@ -1,32 +1,11 @@
-import './affiliate-income-calculator';
-import './ai-api-cost-comparison';
-import './ai-image-generation-cost-calculator';
-import './ai-training-cost-estimator';
-import './break-even-calculator';
-import './burn-rate-calculator';
-import './cac-calculator';
-import './churn-rate-calculator';
-import './claude-api-cost-calculator';
-import './course-pricing-calculator';
-import './deepseek-api-cost-calculator';
-import './email-list-revenue-calculator';
-import './employee-cost-calculator';
-import './equity-dilution-calculator';
-import './freelance-rate-calculator';
-import './freelance-tax-calculator';
-import './gemini-api-cost-calculator';
-import './gpu-cloud-cost-calculator';
-import './hourly-vs-fixed-calculator';
-import './ltv-calculator';
-import './market-size-estimator';
-import './meeting-cost-calculator';
-import './mrr-calculator';
-import './openai-token-calculator';
-import './productivity-score';
-import './project-profitability-calculator';
-import './revenue-projector';
-import './saas-pricing-planner';
-import './saas-valuation-calculator';
-import './sponsorship-rate-calculator';
-import './time-value-calculator';
-import './unit-economics-calculator';
+// Aggregate all engines from 6 subdirectories.
+// Explicit imports (vs import.meta.glob) chosen for tsx compatibility:
+// the test runner (tests/run.mjs) and prebuild script (scripts/build-og-images.ts)
+// both run under tsx, which does not implement import.meta.glob. Astro pages
+// also work fine with static imports.
+import './saas';
+import './ai-cost';
+import './valuation';
+import './freelance';
+import './cost';
+import './investment';

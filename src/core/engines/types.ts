@@ -18,7 +18,6 @@ export interface ToolEngine {
   slug: string;
   title: string;
   description: string;
-  category: string;
   inputs: ToolInput[];
   clientConfig: ClientConfig;
   generate(inputs: Record<string, string>): string[];

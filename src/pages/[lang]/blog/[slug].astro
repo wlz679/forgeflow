@@ -3,13 +3,14 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import AdUnit from '../../../components/AdUnit.astro';
-import { blogPosts } from '../../../data/blog-posts';
+import { getAllBlogPosts, getBlogPostBySlug } from '../../../lib/blog';
 import { t, getLang } from '../../../i18n';
 
-export function getStaticPaths() {
+export async function getStaticPaths() {
+  const posts = await getAllBlogPosts();
   const paths: { params: { lang: string; slug: string } }[] = [];
   for (const lang of ['en', 'zh']) {
-    for (const post of blogPosts) {
+    for (const post of posts) {
       paths.push({ params: { lang, slug: post.slug } });
     }
   }
@@ -17,7 +18,7 @@ export function getStaticPaths() {
 }
 
 const { slug, lang } = Astro.params;
-const post = blogPosts.find(p => p.slug === slug);
+const post = await getBlogPostBySlug(slug!);
 if (!post) return Astro.redirect(`/${lang}/blog/`);
 
 const metaTitle = `${post.title} — ForgeFlowKit Blog`;
@@ -26,7 +27,8 @@ const metaDescription = post.excerpt;
 const SITE_URL = 'https://forgeflowkit.com';
 // Blog posts are generated from tools.map(); assign synthetic dates so JSON-LD
 // datePublished is present. Real publication dates are not tracked in blog-posts.ts.
-const postIndex = blogPosts.findIndex(p => p.slug === post.slug);
+const allPosts = await getAllBlogPosts();
+const postIndex = allPosts.findIndex(p => p.slug === post.slug);
 const baseDate = new Date('2026-06-01');
 const datePublished = new Date(baseDate.getTime() + postIndex * 86400000).toISOString().slice(0, 10);
 
@@ -60,6 +62,14 @@ const articleSchema = JSON.stringify({
       <span class="text-gray-600">{post.title}</span>
     </nav>
     <article>
+      <img
+        src={`/og/${post.ogImage}-${lang}.png`}
+        alt={post.title}
+        width="1200"
+        height="630"
+        class="w-full aspect-[16/9] object-cover rounded-lg mb-6"
+        loading="lazy"
+      />
       <h1 class="text-2xl font-extrabold text-gray-900 mb-4">{post.title}</h1>
       <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
         {post.content.split('\n').map(p => <p>{p}</p>)}
