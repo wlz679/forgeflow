@@ -85,7 +85,6 @@ const translatedHowToUse = engine.howToUse.map((_, i) => t(`tools.${slug}.how_to
 
 const toolMeta = tools.find(t => t.slug === slug)!;
 const featureList = translatedHowToUse.slice(0, 3);
-const url = `https://forgeflowkit.com/${lang}/${slug}/`;
 
 const categoryName = t(`category.${toolMeta.categoryId}.name`, lang);
 const categorySlug = categories.find(c => c.id === toolMeta.categoryId)?.slug ?? '';
