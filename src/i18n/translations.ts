@@ -1554,4 +1554,17 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'favorites.toast.unavailable': { en: 'Favorites unavailable in this browser.', zh: '此浏览器不支持收藏功能。' },
   'favorites.aria.add': { en: 'Add to favorites', zh: '加入收藏' },
   'favorites.aria.remove': { en: 'Remove from favorites', zh: '取消收藏' },
+
+  // ===== P2b Recent =====
+  'recent.title': { en: 'Recently Viewed', zh: '最近浏览' },
+  'recent.subtitle': { en: '{count} tools visited', zh: '已浏览 {count} 个工具' },
+  'recent.empty.title': { en: 'No recent yet', zh: '暂无最近浏览' },
+  'recent.empty.body': { en: 'Tools you visit will appear here.', zh: '您访问过的工具将显示在此。' },
+  'recent.empty.browse': { en: 'Browse all tools', zh: '浏览全部工具' },
+  'recent.header_label': { en: 'Recent', zh: '最近浏览' },
+  'recent.dropdown.view_all': { en: 'View all ({count}) →', zh: '查看全部 ({count}) →' },
+  'recent.dropdown.empty': { en: 'No recent yet', zh: '暂无最近浏览' },
+  'recent.time.just_now': { en: 'Just now', zh: '刚刚' },
+  'recent.time.hours_ago': { en: '{count}h ago', zh: '{count} 小时前' },
+  'recent.time.days_ago': { en: '{count}d ago', zh: '{count} 天前' },
 };

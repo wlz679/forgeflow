@@ -8,6 +8,7 @@
  * Plan 2 (About): validates about.* keys.
  * Plan 3 (Category): validates category.* + header.* keys.
  * P2a (Favorites): validates favorites.* keys.
+ * P2b (Recent): validates recent.* keys.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -75,6 +76,19 @@ const REQUIRED_KEYS = {
     'favorites.toast.unavailable',
     'favorites.aria.add',
     'favorites.aria.remove',
+  ],
+  recent: [
+    'recent.title',
+    'recent.subtitle',
+    'recent.empty.title',
+    'recent.empty.body',
+    'recent.empty.browse',
+    'recent.header_label',
+    'recent.dropdown.view_all',
+    'recent.dropdown.empty',
+    'recent.time.just_now',
+    'recent.time.hours_ago',
+    'recent.time.days_ago',
   ],
 };
 
