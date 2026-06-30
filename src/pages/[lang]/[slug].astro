@@ -8,6 +8,7 @@ import HowToUse from '../../components/HowToUse.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import AdUnit from '../../components/AdUnit.astro';
 import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
+import RecentViewed from '../../components/RecentViewed.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
 import { relatedTools } from '../../data/internal-links';
@@ -982,6 +983,7 @@ const schema = JSON.stringify({
         />
       </div>
     </div>
+    <RecentViewed lang={lang} />
   </main>
   <Footer />
 </BaseLayout>

@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import { getLang } from '../i18n';
+import { getLang, t } from '../i18n';
 import { SITE_URL } from '../lib/site-config';
 
 export interface Props {
@@ -14,6 +14,36 @@ const { title, description, ogImage = '/og-default.png', schema, pageType = 'sta
 const lang = getLang(Astro);
 
 const ogType = { home: 'website', tool: 'product', article: 'article', static: 'website' }[pageType];
+
+const recentI18n = {
+  en: {
+    'recent.title': t('recent.title', 'en'),
+    'recent.subtitle': t('recent.subtitle', 'en'),
+    'recent.empty.title': t('recent.empty.title', 'en'),
+    'recent.empty.body': t('recent.empty.body', 'en'),
+    'recent.empty.browse': t('recent.empty.browse', 'en'),
+    'recent.header_label': t('recent.header_label', 'en'),
+    'recent.dropdown.view_all': t('recent.dropdown.view_all', 'en'),
+    'recent.dropdown.empty': t('recent.dropdown.empty', 'en'),
+    'recent.time.just_now': t('recent.time.just_now', 'en'),
+    'recent.time.hours_ago': t('recent.time.hours_ago', 'en'),
+    'recent.time.days_ago': t('recent.time.days_ago', 'en'),
+  },
+  zh: {
+    'recent.title': t('recent.title', 'zh'),
+    'recent.subtitle': t('recent.subtitle', 'zh'),
+    'recent.empty.title': t('recent.empty.title', 'zh'),
+    'recent.empty.body': t('recent.empty.body', 'zh'),
+    'recent.empty.browse': t('recent.empty.browse', 'zh'),
+    'recent.header_label': t('recent.header_label', 'zh'),
+    'recent.dropdown.view_all': t('recent.dropdown.view_all', 'zh'),
+    'recent.dropdown.empty': t('recent.dropdown.empty', 'zh'),
+    'recent.time.just_now': t('recent.time.just_now', 'zh'),
+    'recent.time.hours_ago': t('recent.time.hours_ago', 'zh'),
+    'recent.time.days_ago': t('recent.time.days_ago', 'zh'),
+  },
+};
+const recentI18nJson = JSON.stringify(recentI18n);
 
 const siteSchema = JSON.stringify({
   '@context': 'https://schema.org',
@@ -79,6 +109,10 @@ const orgSchema = JSON.stringify({
   <script>
     import '../scripts/favorites-init.client.ts';
   </script>
+  <script>
+    import '../scripts/recent-init.client.ts';
+  </script>
+  <script is:inline set:html={`window.__i18n_recent__ = ${recentI18nJson};`}></script>
   <script type="application/ld+json" set:html={siteSchema} />
   {pageType === 'home' && <script type="application/ld+json" set:html={orgSchema} />}
   {schema && <script type="application/ld+json" set:html={schema} />}
