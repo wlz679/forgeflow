@@ -54,7 +54,10 @@ class StubCustomEvent extends StubEvent { constructor(t, i = {}) { super(t, i); 
 class StubElement {
   constructor(tag, attrs = {}, dataset = {}) { this.tagName = tag.toUpperCase(); this.children = []; this.parent = null;
     this.attrs = { ...attrs }; this.dataset = { ...dataset }; this.style = { display: '' }; this.title = '';
-    this._text = ''; this._innerHTML = ''; this._isAnchor = false; this._listeners = []; }
+    this._text = ''; this._innerHTML = ''; this._isAnchor = false; this._listeners = []; this.id = attrs.id || ''; }
+  get firstChild() { return this.children[0] ?? null; }
+  appendChild(child) { this.children.push(child); child.parent = this; return child; }
+  removeChild(child) { const i = this.children.indexOf(child); if (i >= 0) { this.children.splice(i, 1); child.parent = null; } return child; }
   get textContent() {
     const parts = [];
     if (this._text) parts.push(this._text);
@@ -133,12 +136,23 @@ class StubElement {
 
 const body = new StubElement('body');
 const windowEl = new StubElement('window');
+windowEl.location = { pathname: '/en/' };
 const doc = {
   readyState: 'complete',
   body,
   addEventListener(t, fn) { windowEl.addEventListener(t, fn); },
   removeEventListener(t, fn) { windowEl.removeEventListener(t, fn); },
-  querySelectorAll(sel) { return body.querySelectorAll(sel); }
+  querySelectorAll(sel) { return body.querySelectorAll(sel); },
+  createElement(tag) { return new StubElement(tag); },
+  getElementById(id) {
+    const stack = [...body.children];
+    while (stack.length) {
+      const n = stack.shift();
+      if (n.id === id) return n;
+      for (const c of n.children) stack.push(c);
+    }
+    return null;
+  }
 };
 function makeShim(initial = {}) {
   const store = new Map(Object.entries(initial));
@@ -376,7 +390,7 @@ test('Storage event: same-tab write does NOT trigger via storage event (use Cust
 
 // ---------- Render modes ----------
 
-test('Render preview mode: shows top 3 + View all (N) link when > 3 favorites', () => {
+test('Render preview mode: shows top 3 + absolute lang-prefixed URLs + i18n "View all (N) →"', () => {
   const result = spawnScenario('render-preview', `
 (async () => {
   globalThis.Event = StubEvent; globalThis.CustomEvent = StubCustomEvent;
@@ -387,28 +401,92 @@ test('Render preview mode: shows top 3 + View all (N) link when > 3 favorites', 
   body.children.push(c);
   const mod = await import(INIT_MOD_URL);
   mod.init();
-  const html = c.innerHTML;
+  // Walk the rendered tree (DOM API — no innerHTML) to find links
+  const allLinks = body.querySelectorAll('a');
+  const hrefs = allLinks.map(a => a.attrs.href);
+  const texts = allLinks.map(a => a._text);
   console.log(JSON.stringify({
-    hasLtv: /href="\\.\\/ltv\\/"/.test(html),
-    hasMrr: /href="\\.\\/mrr\\/"/.test(html),
-    hasValuation: /valuation/.test(html),
-    hasViewAll: /View all \\(5\\)/.test(html),
+    hasLtv: hrefs.includes('/en/ltv/'),
+    hasMrr: hrefs.includes('/en/mrr/'),
+    hasFavoritesHref: hrefs.includes('/en/favorites/'),
+    hasValuationSlug: texts.includes('valuation'),
+    hasViewAll: texts.some(t => /View all \\(5\\)/.test(t || '')),
+    noRelativeHrefs: hrefs.every(h => h && h.startsWith('/')),
   }));
 })().catch(e => { console.error(e); process.exit(1); });
 `);
   assert.equal(result.hasLtv, true);
   assert.equal(result.hasMrr, true);
-  assert.equal(result.hasValuation, false);
+  assert.equal(result.hasFavoritesHref, true);
+  assert.equal(result.hasValuationSlug, false);
   assert.equal(result.hasViewAll, true);
+  assert.equal(result.noRelativeHrefs, true);
 });
 
-test('Render full mode: renders all slugs into [data-favorites-grid]', () => {
+test('Render preview mode: empty state shows i18n "No favorites yet" copy', () => {
+  const result = spawnScenario('render-preview-empty', `
+(async () => {
+  globalThis.Event = StubEvent; globalThis.CustomEvent = StubCustomEvent;
+  globalThis.document = doc; globalThis.window = windowEl; globalThis.HTMLElement = StubElement;
+  globalThis.localStorage = makeShim();
+  const c = new StubElement('div', {}, { favoritesContainer: '', mode: 'preview' });
+  body.children.push(c);
+  const mod = await import(INIT_MOD_URL);
+  mod.init();
+  const lis = body.querySelectorAll('li');
+  const texts = lis.map(l => l._text);
+  console.log(JSON.stringify({
+    hasEmptyText: texts.some(t => t === 'No favorites yet'),
+    noFavoritesHref: !body.querySelectorAll('a').some(a => a.attrs.href === '/en/favorites/'),
+  }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.hasEmptyText, true);
+  assert.equal(result.noFavoritesHref, true);
+});
+
+test('Render preview mode: zh path renders Chinese i18n strings', () => {
+  const result = spawnScenario('render-preview-zh', `
+(async () => {
+  globalThis.Event = StubEvent; globalThis.CustomEvent = StubCustomEvent;
+  globalThis.document = doc; globalThis.window = windowEl; globalThis.HTMLElement = StubElement;
+  // Override pathname to Chinese
+  globalThis.window = Object.assign(new StubElement('window'), { location: { pathname: '/zh/' } });
+  const seed = { '${LS_KEY}': JSON.stringify({ version: 1, slugs: ['ltv', 'cac', 'mrr', 'churn', 'valuation'], lastUpdated: 'x' }) };
+  globalThis.localStorage = makeShim(seed);
+  const c = new StubElement('div', {}, { favoritesContainer: '', mode: 'preview' });
+  body.children.push(c);
+  const mod = await import(INIT_MOD_URL);
+  mod.init();
+  const allLinks = body.querySelectorAll('a');
+  const hrefs = allLinks.map(a => a.attrs.href);
+  const texts = allLinks.map(a => a._text);
+  console.log(JSON.stringify({
+    hrefs: hrefs,
+    hasZhViewAll: texts.some(t => /查看全部/.test(t || '')),
+    hasZhHref: hrefs.includes('/zh/ltv/'),
+  }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.hasZhHref, true);
+  assert.equal(result.hasZhViewAll, true);
+});
+
+test('Render full mode: renders all slugs as cards with absolute lang-prefixed URLs', () => {
   const result = spawnScenario('render-full', `
 (async () => {
   globalThis.Event = StubEvent; globalThis.CustomEvent = StubCustomEvent;
   globalThis.document = doc; globalThis.window = windowEl; globalThis.HTMLElement = StubElement;
   const seed = { '${LS_KEY}': JSON.stringify({ version: 1, slugs: ['a', 'b', 'c'], lastUpdated: 'x' }) };
   globalThis.localStorage = makeShim(seed);
+  // Embed tools-data JSON for proper card rendering
+  const toolsDataEl = new StubElement('script', { id: 'tools-data', type: 'application/json' });
+  toolsDataEl._text = JSON.stringify({
+    a: { title: 'Tool A', description: 'desc a' },
+    b: { title: 'Tool B', description: 'desc b' },
+    c: { title: 'Tool C', description: 'desc c' },
+  });
+  body.children.push(toolsDataEl);
   const c = new StubElement('div', {}, { favoritesContainer: '', mode: 'full' });
   const grid = new StubElement('div', {}, { favoritesGrid: '' });
   const empty = new StubElement('div', {}, { favoritesEmpty: '' });
@@ -416,24 +494,25 @@ test('Render full mode: renders all slugs into [data-favorites-grid]', () => {
   body.children.push(c);
   const mod = await import(INIT_MOD_URL);
   mod.init();
-  const html = grid.innerHTML;
+  const gridChildren = grid.children;
   console.log(JSON.stringify({
-    a: /href="\\.\\/a\\/"[\\s\\S]*class="[^"]*fav-card/.test(html),
-    b: /href="\\.\\/b\\/"[\\s\\S]*class="[^"]*fav-card/.test(html),
-    c: /href="\\.\\/c\\/"[\\s\\S]*class="[^"]*fav-card/.test(html),
+    count: gridChildren.length,
+    aHref: gridChildren[0]?.attrs.href,
+    aText: gridChildren[0]?.textContent,
     emptyDisplay: empty.style.display,
     gridDisplay: grid.style.display,
   }));
 })().catch(e => { console.error(e); process.exit(1); });
 `);
-  assert.equal(result.a, true);
-  assert.equal(result.b, true);
-  assert.equal(result.c, true);
+  assert.equal(result.count, 3);
+  assert.equal(result.aHref, '/en/a/');
+  assert.match(result.aText, /Tool A/, 'card should contain title "Tool A"');
+  assert.match(result.aText, /desc a/, 'card should contain description');
   assert.equal(result.emptyDisplay, 'none');
   assert.equal(result.gridDisplay, '');
 });
 
-test('Render full mode: empty state shows appropriate copy when slugs is empty', () => {
+test('Render full mode: empty state hides grid and shows empty placeholder', () => {
   const result = spawnScenario('render-full-empty', `
 (async () => {
   globalThis.Event = StubEvent; globalThis.CustomEvent = StubCustomEvent;
@@ -449,13 +528,36 @@ test('Render full mode: empty state shows appropriate copy when slugs is empty',
   console.log(JSON.stringify({
     emptyDisplay: empty.style.display,
     gridDisplay: grid.style.display,
-    gridHtml: grid.innerHTML,
+    gridChildren: grid.children.length,
   }));
 })().catch(e => { console.error(e); process.exit(1); });
 `);
   assert.equal(result.emptyDisplay, '');
   assert.equal(result.gridDisplay, 'none');
-  assert.equal(result.gridHtml, '');
+  assert.equal(result.gridChildren, 0);
+});
+
+test('Star button aria-label flips on toggle (add → remove → add)', () => {
+  const result = spawnScenario('aria-flip', `
+(async () => {
+  globalThis.Event = StubEvent; globalThis.CustomEvent = StubCustomEvent;
+  globalThis.document = doc; globalThis.window = windowEl; globalThis.HTMLElement = StubElement;
+  globalThis.localStorage = makeShim();
+  const btn = new StubElement('button', {}, { favoriteToggle: '', favoriteSlug: 'mrr' });
+  body.children.push(btn);
+  const mod = await import(INIT_MOD_URL);
+  mod.init();
+  const before = btn.getAttribute('aria-label');
+  btn.dispatchEvent(new StubEvent('click'));
+  const afterAdd = btn.getAttribute('aria-label');
+  btn.dispatchEvent(new StubEvent('click'));
+  const afterRemove = btn.getAttribute('aria-label');
+  console.log(JSON.stringify({ before, afterAdd, afterRemove }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.before, 'Add to favorites');
+  assert.equal(result.afterAdd, 'Remove from favorites');
+  assert.equal(result.afterRemove, 'Add to favorites');
 });
 
 test('Render count mode: renders just the slug count as text', () => {

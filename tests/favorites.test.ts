@@ -157,14 +157,14 @@ test('toggle is idempotent: adding same slug twice yields single entry', () => {
   });
 });
 
-test('toggle rejects when at MAX_ITEMS and adding new slug', () => {
+test('toggle throws QuotaExceededError when at MAX_ITEMS and adding new slug', () => {
   const full = Array.from({ length: 50 }, (_, i) => `slug-${i}`);
   withLS(makeShim({ [FAVORITES_STORAGE_KEY]: JSON.stringify({
     version: 1, slugs: full, lastUpdated: 'x',
   })}), () => {
-    const r = toggle('new-slug');
-    assert.equal(r.added, false);
-    assert.deepEqual(r.slugs, full);
+    assert.throws(() => toggle('new-slug'), QuotaExceededError);
+    // Storage must be unchanged after a rejected add
+    assert.deepEqual(read(), full);
   });
 });
 

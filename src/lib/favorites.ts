@@ -109,9 +109,11 @@ export function toggle(slug: string): { added: boolean; slugs: string[] } {
     write(next);
     return { added: false, slugs: next };
   }
-  // Not present: add at head, but enforce MAX_ITEMS
+  // Not present: add at head, but enforce MAX_ITEMS.
+  // Throwing QuotaExceededError (vs silently returning {added:false}) lets the
+  // init layer show a translated tooltip + visual feedback to the user.
   if (current.length >= FAVORITES_MAX_ITEMS) {
-    return { added: false, slugs: current };
+    throw new QuotaExceededError(`Maximum of ${FAVORITES_MAX_ITEMS} favorites reached`);
   }
   const next = [slug, ...current];
   write(next);

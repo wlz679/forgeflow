@@ -15,3 +15,13 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
 }
+
+/* Favorite star — pressed state visual feedback.
+   The init layer (src/scripts/favorites-init.client.ts) toggles
+   data-favorite-active on the <button>; this rule styles the SVG
+   inside so sighted users see the favorite was saved. */
+[data-favorite-toggle][data-favorite-active="true"] svg {
+  color: #7C3AED;
+  fill: #7C3AED;
+}
+
