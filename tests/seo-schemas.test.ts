@@ -73,3 +73,63 @@ test('BREADCRUMB — every tool page breadcrumb has 3 items (Home > Category > T
     assert.equal(bc.itemListElement[2].position, 3, `${tool.slug}: position 3 should be Tool`);
   }
 });
+
+test('P2a — favorites page is WebPage without user data', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'favorites', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    const blocks = extractJsonLd(html);
+    const graph = blocks.flatMap(b => b['@graph'] ?? [b]);
+    const wp = graph.find(b => b['@type'] === 'WebPage');
+    assert.ok(wp, `${lang}/favorites: no WebPage schema`);
+    assert.match(wp.name, /Favorites|收藏/);
+    // User data must NOT leak into SSG
+    assert.ok(!html.includes('forgeflowkit:favorites:v1'), `${lang}/favorites: LS key leaked into SSG`);
+    assert.ok(!html.includes('data-favorite-toggle'), `${lang}/favorites: no per-tool toggle should be present (page is the favorites list itself)`);
+    // Must contain hydration hook — data-favorites-grid is an empty placeholder populated by JS at runtime, NOT user data
+    assert.ok(html.includes('data-favorites-container'), `${lang}/favorites: missing data-favorites-container hook`);
+    assert.ok(html.includes('data-favorites-grid'), `${lang}/favorites: missing data-favorites-grid placeholder`);
+  }
+});
+
+test('P2a — privacy policy discloses browser storage', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'privacy-policy', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    const headingRe = lang === 'zh' ? /浏览器存储/ : /Browser Storage/;
+    assert.ok(headingRe.test(html), `${lang}/privacy-policy: missing Browser Storage heading`);
+    assert.ok(html.includes('localStorage'), `${lang}/privacy-policy: missing localStorage mention`);
+  }
+});
+
+test('P2a — every ToolCard on listing pages has data-favorite-toggle with correct slug', { skip: !existsSync(distDir) }, () => {
+  // ToolCard (with data-favorite-toggle) renders on listing pages: 6 category pages + 2 landing pages.
+  // Individual tool detail pages use RelatedTools (pills without toggle), so they are excluded.
+  const listingPages = ['saas-metrics', 'freelance-pricing', 'cost-efficiency', 'investment-roi', 'valuation-exit', 'ai-cost-tools'];
+  for (const lang of ['en', 'zh']) {
+    for (const slug of listingPages) {
+      const path = resolve(distDir, lang, slug, 'index.html');
+      assert.ok(existsSync(path), `dist missing: ${path}`);
+      const html = readFileSync(path, 'utf-8');
+      assert.ok(html.includes('data-favorite-toggle'), `${lang}/${slug}: missing data-favorite-toggle on listing page`);
+      assert.ok(html.includes('data-favorite-slug='), `${lang}/${slug}: missing data-favorite-slug attribute`);
+    }
+  }
+  // Every tool slug must appear as data-favorite-slug on at least one listing page (i.e. every tool has a favorite toggle rendered somewhere in the site)
+  for (const tool of tools) {
+    let found = false;
+    for (const lang of ['en', 'zh']) {
+      for (const slug of listingPages) {
+        const path = resolve(distDir, lang, slug, 'index.html');
+        if (existsSync(path) && readFileSync(path, 'utf-8').includes(`data-favorite-slug="${tool.slug}"`)) {
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    assert.ok(found, `${tool.slug}: no listing page renders its data-favorite-slug`);
+  }
+});
