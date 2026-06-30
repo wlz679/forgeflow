@@ -77,6 +77,19 @@ function createPill(href: string, text: string, parent: Element): void {
 function renderPreview(container: Element, entries: RecentEntry[], lang: Lang): void {
   // Clear children
   while (container.firstChild) container.removeChild(container.firstChild);
+  // Update the Header badge `[data-recent-count]` in the parent <summary>.
+  // The badge lives OUTSIDE the dropdown body (in <summary>), so we must walk
+  // up to the parent and look for the sibling badge.
+  const badge = container.parentElement?.querySelector('[data-recent-count]');
+  if (badge) {
+    if (entries.length > 0) {
+      badge.textContent = `(${entries.length})`;
+      badge.removeAttribute('style');
+    } else {
+      badge.textContent = '(0)';
+      badge.setAttribute('style', 'display: none;');
+    }
+  }
   const top = entries.slice(0, 5);
   if (top.length === 0) {
     const div = document.createElement('div');

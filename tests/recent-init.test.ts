@@ -58,9 +58,10 @@ class StubNode {
   set textContent(v) { this._textContent = String(v); }
   get innerHTML() { return this._innerHTML; }
   set innerHTML(v) { this._innerHTML = String(v); }
-  appendChild(c) { this.children.push(c); return c; }
-  removeChild(c) { this.children = this.children.filter(x => x !== c); return c; }
+  appendChild(c) { c.parent = this; this.children.push(c); return c; }
+  removeChild(c) { c.parent = null; this.children = this.children.filter(x => x !== c); return c; }
   get firstChild() { return this.children[0] ?? null; }
+  get parentElement() { return this.parent ?? null; }
   setAttribute(k, v) { this.attributes[k] = String(v); }
   removeAttribute(k) { delete this.attributes[k]; }
   getAttribute(k) { return this.attributes[k] ?? null; }
@@ -68,10 +69,16 @@ class StubNode {
   addEventListener() {}
   removeEventListener() {}
   querySelector(sel) {
-    for (const c of this.children) if (c._selectorMatch && c._selectorMatch(sel)) return c;
+    for (const c of this._allDescendants()) if (c._selectorMatch && c._selectorMatch(sel)) return c;
     return null;
   }
-  querySelectorAll(sel) { return this.children.filter(c => c._selectorMatch && c._selectorMatch(sel)); }
+  querySelectorAll(sel) { return this._allDescendants().filter(c => c._selectorMatch && c._selectorMatch(sel)); }
+  _allDescendants() {
+    const out = [];
+    const walk = (n) => { for (const c of n.children) { out.push(c); walk(c); } };
+    walk(this);
+    return out;
+  }
   get className() { return this.attributes.class ?? ''; }
   set className(v) { this.attributes.class = v; }
 }
@@ -111,8 +118,16 @@ class StubDocument {
   }
   createTextNode(t) { const n = new StubNode(); n._textContent = t; return n; }
   querySelectorAll(sel) {
-    const all = [this.body, this.head, ...this.body.children, ...this.head.children];
+    const all = [this.body, this.head];
+    const walk = (n) => { for (const c of n.children) { all.push(c); walk(c); } };
+    walk(this.body); walk(this.head);
     return all.filter(n => n._selectorMatch && n._selectorMatch(sel));
+  }
+  querySelector(sel) {
+    const all = [this.body, this.head];
+    const walk = (n) => { for (const c of n.children) { all.push(c); walk(c); } };
+    walk(this.body); walk(this.head);
+    return all.find(n => n._selectorMatch && n._selectorMatch(sel)) ?? null;
   }
   getElementById(id) {
     function walk(n) {
@@ -199,11 +214,22 @@ globalThis.Storage = class {};
 // === Pre-populate document with scenarios ===
 
 // (Scenario 1: auto-record on tool detail page)
+// Wrap the Header dropdown in <details> > <summary> + <div data-recent-container>
+// so we can verify the badge [data-recent-count] in the parent <summary>.
+const sharedDetails = document.createElement('details');
+document.body.appendChild(sharedDetails);
+const sharedSummary = document.createElement('summary');
+sharedDetails.appendChild(sharedSummary);
+const sharedHeaderBadge = document.createElement('span');
+sharedHeaderBadge.setAttribute('data-recent-count', '');
+sharedHeaderBadge.setAttribute('style', 'display: none;');
+sharedHeaderBadge._textContent = '(0)';
+sharedSummary.appendChild(sharedHeaderBadge);
 const sharedHeader = document.createElement('div');
 sharedHeader.setAttribute('data-recent-container', '');
 sharedHeader.setAttribute('data-mode', 'preview');
 sharedHeader.id = 'header-recent';
-document.body.appendChild(sharedHeader);
+sharedDetails.appendChild(sharedHeader);
 
 const sharedInline = document.createElement('div');
 sharedInline.setAttribute('data-recent-container', '');
@@ -561,5 +587,33 @@ test('init: error path — when LS unavailable, init returns early without crash
   // actually fired (vs. silently rendering empty-state UI from a non-throwing LS).
   `;
   const r = runChild(scenario, { pathname: '/en/solopreneur-mrr-calculator/', lsThrows: true });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: preview mode updates Header [data-recent-count] badge in parent <summary>', () => {
+  // The badge lives OUTSIDE the dropdown body (in <summary>), so renderPreview
+  // must walk up to container.parentElement and find the sibling badge there.
+  // Spec: badge shows "(N)" when entries > 0, hidden when 0.
+  const scenario = `
+  const badge = document.querySelector('[data-recent-count]');
+  check('badge exists in document', badge !== null);
+  check('badge text updated to (3)', badge._textContent === '(3)', 'got "' + badge._textContent + '"');
+  check('badge style attribute removed (now visible)', badge.attributes.style === undefined,
+    'style attr still: "' + (badge.attributes.style ?? '') + '"');
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/',
+    lsStore: {
+      'forgeflowkit:recent:v1': JSON.stringify({
+        version: 1,
+        entries: [
+          { slug: 'solopreneur-mrr-calculator', visitedAt: new Date().toISOString() },
+          { slug: 'solopreneur-ltv-calculator', visitedAt: new Date(Date.now() - 3600_000).toISOString() },
+          { slug: 'solopreneur-cac-calculator', visitedAt: new Date(Date.now() - 7200_000).toISOString() },
+        ],
+        lastUpdated: new Date().toISOString(),
+      }),
+    },
+  });
   assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
 });
