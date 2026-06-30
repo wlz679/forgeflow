@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { t, getLang } from '../../i18n';
+import { SITE_URL } from '../../lib/site-config';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -11,7 +12,6 @@ export function getStaticPaths() {
 const lang = getLang(Astro);
 const title = t('about.title', lang);
 const description = t('about.description', lang);
-const SITE_URL = 'https://forgeflowkit.com';
 const aboutSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [

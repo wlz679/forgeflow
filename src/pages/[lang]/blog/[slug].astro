@@ -5,6 +5,7 @@ import Footer from '../../../components/Footer.astro';
 import AdUnit from '../../../components/AdUnit.astro';
 import { getAllBlogPosts, getBlogPostBySlug } from '../../../lib/blog';
 import { t, getLang } from '../../../i18n';
+import { SITE_URL } from '../../../lib/site-config';
 
 export async function getStaticPaths() {
   const posts = await getAllBlogPosts();
@@ -24,7 +25,6 @@ if (!post) return Astro.redirect(`/${lang}/blog/`);
 const metaTitle = `${post.title} — ForgeFlowKit Blog`;
 const metaDescription = post.excerpt;
 
-const SITE_URL = 'https://forgeflowkit.com';
 // Blog posts are generated from tools.map(); assign synthetic dates so JSON-LD
 // datePublished is present. Real publication dates are not tracked in blog-posts.ts.
 const allPosts = await getAllBlogPosts();

@@ -8,6 +8,7 @@ import AdUnit from '../../components/AdUnit.astro';
 import { categories } from '../../data/categories';
 import { tools } from '../../data/tools';
 import { t, getLang } from '../../i18n';
+import { SITE_URL } from '../../lib/site-config';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -23,7 +24,6 @@ const translatedTools = tools.map(tool => ({
   description: t(`tools.${tool.slug}.description`, lang),
 }));
 
-const SITE_URL = 'https://forgeflowkit.com';
 const homeSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [

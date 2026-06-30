@@ -5,6 +5,7 @@ import Footer from '../../../components/Footer.astro';
 import AdUnit from '../../../components/AdUnit.astro';
 import { getAllBlogPosts } from '../../../lib/blog';
 import { t, getLang } from '../../../i18n';
+import { SITE_URL } from '../../../lib/site-config';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -14,7 +15,6 @@ const lang = getLang(Astro);
 const title = t('blog.page_title', lang);
 const description = t('blog.subtitle', lang);
 
-const SITE_URL = 'https://forgeflowkit.com';
 const blogIndexSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [

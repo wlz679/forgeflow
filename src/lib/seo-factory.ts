@@ -6,7 +6,7 @@
  * See spec: docs/superpowers/specs/2026-06-27-content-depth-pages-design.md §6.3
  */
 
-const SITE_URL = 'https://forgeflowkit.com';
+import { SITE_URL } from './site-config';
 
 export interface CollectionPageInput {
   lang: 'en' | 'zh';

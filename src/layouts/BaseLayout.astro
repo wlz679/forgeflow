@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getLang } from '../i18n';
+import { SITE_URL } from '../lib/site-config';
 
 export interface Props {
   title: string;
@@ -14,7 +15,6 @@ const lang = getLang(Astro);
 
 const ogType = { home: 'website', tool: 'product', article: 'article', static: 'website' }[pageType];
 
-const SITE_URL = 'https://forgeflowkit.com';
 const siteSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -59,10 +59,10 @@ const orgSchema = JSON.stringify({
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title}</title>
   <meta name="description" content={description} />
-  <link rel="canonical" href={`https://forgeflowkit.com${Astro.url.pathname}`} />
-  <link rel="alternate" hreflang="en" href={`https://forgeflowkit.com/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
-  <link rel="alternate" hreflang="zh" href={`https://forgeflowkit.com/zh${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
-  <link rel="alternate" hreflang="x-default" href={`https://forgeflowkit.com/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
+  <link rel="canonical" href={`${SITE_URL}${Astro.url.pathname}`} />
+  <link rel="alternate" hreflang="en" href={`${SITE_URL}/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
+  <link rel="alternate" hreflang="zh" href={`${SITE_URL}/zh${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
+  <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:image" content={`${SITE_URL}${ogImage}`} />
@@ -70,7 +70,7 @@ const orgSchema = JSON.stringify({
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
-  <meta name="twitter:image" content={`https://forgeflowkit.com${ogImage}`} />
+  <meta name="twitter:image" content={`${SITE_URL}${ogImage}`} />
   <meta name="robots" content="index, follow" />
   <link rel="sitemap" href="/sitemap-index.xml" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
