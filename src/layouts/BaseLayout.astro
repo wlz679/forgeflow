@@ -76,6 +76,9 @@ const orgSchema = JSON.stringify({
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3420554170441272" crossorigin="anonymous"></script>
   <script defer data-domain="forgeflowkit.com" src="https://plausible.io/js/script.js"></script>
+  <script>
+    import '../scripts/favorites-init.client.ts';
+  </script>
   <script type="application/ld+json" set:html={siteSchema} />
   {pageType === 'home' && <script type="application/ld+json" set:html={orgSchema} />}
   {schema && <script type="application/ld+json" set:html={schema} />}

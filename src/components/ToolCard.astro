@@ -1,11 +1,21 @@
 ---
-import { getLang } from '../i18n';
+import { getLang, t } from '../i18n';
 export interface Props { slug: string; title: string; description: string; }
 
 const lang = getLang(Astro);
 ---
 
 <a href={`/${lang}/${Astro.props.slug}`} class="group relative flex flex-col p-5 bg-gray-50 border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:bg-white hover:shadow-lg hover:shadow-[#7C3AED]/5 transition-all duration-300 hover:-translate-y-1">
+  <!-- Favorite toggle (declarative hook — init layer handles events) -->
+  <button type="button"
+          class="favorite-star absolute top-3 right-3 p-1.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 hover:border-[#7C3AED]/40 transition-all duration-200 hover:scale-110 z-10"
+          data-favorite-toggle
+          data-favorite-slug={Astro.props.slug}
+          aria-label={t('favorites.aria.add', lang)}>
+    <svg class="w-4 h-4 text-gray-400 hover:text-[#7C3AED] transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.922-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.371 2.448c-.784.57-1.838-.196-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.07 8.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+    </svg>
+  </button>
   <div class="flex items-start justify-between mb-3">
     <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-100 shadow-sm">
       <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
