@@ -104,6 +104,81 @@ test('P2a — privacy policy discloses browser storage', { skip: !existsSync(dis
   }
 });
 
+// =============================================================================
+// P2b — Recent Viewed fixtures (Task 6, branch master, 2026-06-30)
+// =============================================================================
+
+test('P2b — recent page schema is WebPage without user data', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'recent', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    const blocks = extractJsonLd(html);
+    const graph = blocks.flatMap(b => b['@graph'] ?? [b]);
+    const wp = graph.find(b => b['@type'] === 'WebPage');
+    assert.ok(wp, `${lang}/recent: no WebPage schema`);
+    assert.match(wp.name, /Recently Viewed|最近浏览/);
+    // User data must NOT leak into SSG — the LS key name must not appear anywhere on disk
+    assert.ok(!html.includes('forgeflowkit:recent:v1'), `${lang}/recent: LS key leaked into SSG`);
+    // Hydration hook must be present so the client-side init layer can populate at runtime
+    assert.ok(html.includes('data-recent-container'), `${lang}/recent: missing data-recent-container hook`);
+  }
+});
+
+test('P2b — recent header dropdown + tool detail page inline container coexist on every tool page', { skip: !existsSync(distDir) }, () => {
+  // Pick one tool page (MRR is a representative tool detail page) and verify:
+  // (1) the page body has an inline-mode recent container (RecentViewed.astro rendered into [slug].astro)
+  // (2) the header has a preview-mode recent container (Header.astro dropdown)
+  const path = resolve(distDir, 'en', 'solopreneur-mrr-calculator', 'index.html');
+  assert.ok(existsSync(path), `dist missing: ${path}`);
+  const html = readFileSync(path, 'utf-8');
+  assert.ok(html.includes('data-recent-container'), 'tool page: data-recent-container hook present');
+  assert.ok(/data-recent-container[^>]*data-mode="inline"/.test(html), 'tool page: inline-mode recent container present');
+  assert.ok(/data-recent-container[^>]*data-mode="preview"/.test(html), 'tool page: header preview-mode recent container present');
+});
+
+test('P2b — privacy policy mentions Recently Viewed', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'privacy-policy', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    if (lang === 'en') {
+      assert.ok(html.includes('Recently Viewed'), 'en privacy: "Recently Viewed" heading present');
+    } else {
+      assert.ok(html.includes('最近访问'), 'zh privacy: "最近访问" heading present');
+    }
+  }
+});
+
+test('P2b — every tool detail page mounts RecentViewed inline container', { skip: !existsSync(distDir) }, () => {
+  // Sample 3 representative tool slugs from the 32-tool registry. These are also the
+  // most-linked MRR/LTV/CAC trio — if any of them drifts, the homepage internal-links
+  // surface will look broken. Inline container is required on every tool detail page
+  // so a returning user lands on a page that already shows their recent activity.
+  const slugs = ['solopreneur-mrr-calculator', 'solopreneur-ltv-calculator', 'solopreneur-cac-calculator'];
+  for (const lang of ['en', 'zh']) {
+    for (const slug of slugs) {
+      const path = resolve(distDir, lang, slug, 'index.html');
+      assert.ok(existsSync(path), `dist missing: ${path}`);
+      const html = readFileSync(path, 'utf-8');
+      assert.ok(html.includes('data-recent-container'), `${lang}/${slug}: recent container missing`);
+      assert.ok(/data-recent-container[^>]*data-mode="inline"/.test(html), `${lang}/${slug}: inline mode missing`);
+    }
+  }
+});
+
+test('P2b — no /recent/ page contains raw user data', { skip: !existsSync(distDir) }, () => {
+  // Belt-and-braces: even if a tool slug sneaks into SSG via partial render or a future
+  // build pipeline change, the LS key name must NEVER appear on disk. The /recent/ page
+  // shell is statically generated; the actual list is rendered at runtime from LS.
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'recent', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    assert.ok(!html.includes('forgeflowkit:recent:v1'), `${lang}/recent: LS key leaked into SSG`);
+  }
+});
+
 test('P2a — every ToolCard on listing pages has data-favorite-toggle with correct slug', { skip: !existsSync(distDir) }, () => {
   // ToolCard (with data-favorite-toggle) renders on listing pages: 6 category pages + 2 landing pages.
   // Individual tool detail pages use RelatedTools (pills without toggle), so they are excluded.
