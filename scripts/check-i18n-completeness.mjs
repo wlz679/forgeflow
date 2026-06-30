@@ -7,6 +7,7 @@
  * Plan 1 (EEAT): validates eeat.* keys.
  * Plan 2 (About): validates about.* keys.
  * Plan 3 (Category): validates category.* + header.* keys.
+ * P2a (Favorites): validates favorites.* keys.
  */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -59,6 +60,21 @@ const REQUIRED_KEYS = {
   })(),
   header: [
     'header.categories',
+  ],
+  favorites: [
+    'favorites.title',
+    'favorites.subtitle',
+    'favorites.saved_count',
+    'favorites.empty.title',
+    'favorites.empty.body',
+    'favorites.empty.browse',
+    'favorites.header_label',
+    'favorites.dropdown.view_all',
+    'favorites.dropdown.empty',
+    'favorites.toast.quota',
+    'favorites.toast.unavailable',
+    'favorites.aria.add',
+    'favorites.aria.remove',
   ],
 };
 

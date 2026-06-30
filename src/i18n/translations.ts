@@ -1539,4 +1539,19 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-freelance-tax-calculator.preset.canada': { en: 'Canada', zh: '加拿大' },
   'tools.solopreneur-freelance-tax-calculator.preset.australia': { en: 'Australia', zh: '澳大利亚' },
   'tools.solopreneur-freelance-tax-calculator.preset.germany': { en: 'Germany', zh: '德国' },
+
+  // ===== P2a Favorites =====
+  'favorites.title': { en: 'Your Favorites', zh: '你的收藏' },
+  'favorites.subtitle': { en: 'Tools you have bookmarked for quick access.', zh: '你已收藏的工具，方便快速访问。' },
+  'favorites.saved_count': { en: '{n} saved', zh: '已收藏 {n} 个' },
+  'favorites.empty.title': { en: 'No favorites yet', zh: '还没有收藏' },
+  'favorites.empty.body': { en: 'Click the star on any tool card to save it here.', zh: '点击任意工具卡片上的星标即可收藏。' },
+  'favorites.empty.browse': { en: 'Browse all tools', zh: '浏览所有工具' },
+  'favorites.header_label': { en: 'Favorites', zh: '收藏' },
+  'favorites.dropdown.view_all': { en: 'View all ({n}) →', zh: '查看全部 ({n}) →' },
+  'favorites.dropdown.empty': { en: 'No favorites yet', zh: '暂无收藏' },
+  'favorites.toast.quota': { en: 'Storage limit reached. Remove some favorites and try again.', zh: '已达存储上限。请移除部分收藏后重试。' },
+  'favorites.toast.unavailable': { en: 'Favorites unavailable in this browser.', zh: '此浏览器不支持收藏功能。' },
+  'favorites.aria.add': { en: 'Add to favorites', zh: '加入收藏' },
+  'favorites.aria.remove': { en: 'Remove from favorites', zh: '取消收藏' },
 };
