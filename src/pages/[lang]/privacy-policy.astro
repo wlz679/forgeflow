@@ -39,6 +39,37 @@ const privacySchema = JSON.stringify({
       <p>We use Google AdSense to display advertisements. Google may use cookies to serve ads based on your prior visits to this website or other websites. You may opt out of personalized advertising by visiting Google's Ads Settings.</p>
       <h2>Third-Party Services</h2>
       <p>This website uses Google AdSense, a third-party advertising service. Google's use of advertising cookies enables it and its partners to serve ads based on your visit to this site and/or other sites on the Internet.</p>
+      {lang === 'zh' ? (
+        <>
+          <h2>浏览器存储（Browser Storage）</h2>
+          <p>我们在你的浏览器中使用 localStorage 存储以下数据：</p>
+          <ul>
+            <li>你收藏的工具列表（最多 50 个）</li>
+          </ul>
+          <p>这些数据：</p>
+          <ul>
+            <li>仅存储在你的设备上（不发送至我们的服务器，不跨设备同步）</li>
+            <li>可随时在浏览器设置中清除（站点数据 → 删除）</li>
+            <li>不包含任何可识别个人身份的信息（仅工具 slug）</li>
+          </ul>
+          <p>如果你不希望使用此功能，可使用浏览器的隐私模式或禁用站点数据。</p>
+        </>
+      ) : (
+        <>
+          <h2>Browser Storage</h2>
+          <p>We use your browser's localStorage to save the following data:</p>
+          <ul>
+            <li>Your list of favorited tools (up to 50 entries)</li>
+          </ul>
+          <p>This data:</p>
+          <ul>
+            <li>Stays on your device only — never sent to our servers, never synced across devices</li>
+            <li>Can be cleared at any time via your browser's site data settings</li>
+            <li>Contains no personally identifiable information — only tool slug strings</li>
+          </ul>
+          <p>If you prefer not to use this feature, you can browse in private mode or disable site data for our domain.</p>
+        </>
+      )}
       <h2>Contact</h2>
       <p>If you have any questions about this Privacy Policy, please contact us at hello@forgeflowkit.com.</p>
     </div>

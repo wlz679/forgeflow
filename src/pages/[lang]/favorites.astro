@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { t, getLang } from '../../i18n';
+import { SITE_URL } from '../../lib/site-config';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
+}
+
+const lang = getLang(Astro);
+const title = t('favorites.title', lang);
+const description = t('favorites.subtitle', lang);
+
+const favoritesSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/${lang}/favorites/#webpage`,
+      url: `${SITE_URL}/${lang}/favorites/`,
+      name: title,
+      description,
+      dateModified: '2026-06-30',
+      inLanguage: lang,
+    },
+  ],
+});
+---
+
+<BaseLayout title={title} description={description} schema={favoritesSchema} pageType="static">
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-2">{t('favorites.title', lang)}</h1>
+      <p class="text-sm text-gray-600">{t('favorites.subtitle', lang)}</p>
+    </div>
+
+    <div data-favorites-container data-mode="full">
+      <!-- JS-hydrated grid: populated by favorites-init.client.ts -->
+      <div data-favorites-grid class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Filled at runtime -->
+      </div>
+
+      <!-- Empty state: shown when no favorites saved -->
+      <div data-favorites-empty class="text-center py-16" style="display: none;">
+        <div class="inline-flex w-20 h-20 rounded-full bg-gray-50 items-center justify-center mb-4">
+          <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.922-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.371 2.448c-.784.57-1.838-.196-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.07 8.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">{t('favorites.empty.title', lang)}</h2>
+        <p class="text-sm text-gray-600 mb-6">{t('favorites.empty.body', lang)}</p>
+        <a href={`/${lang}/`} class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white text-sm font-semibold rounded-full transition-colors duration-200">
+          {t('favorites.empty.browse', lang)} →
+        </a>
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
