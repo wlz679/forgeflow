@@ -53,6 +53,18 @@ const privacySchema = JSON.stringify({
             <li>不包含任何可识别个人身份的信息（仅工具 slug）</li>
           </ul>
           <p>如果你不希望使用此功能，可使用浏览器的隐私模式或禁用站点数据。</p>
+          <h2>最近访问（Recently Viewed）</h2>
+          <p>我们在你的浏览器中使用 localStorage 存储以下数据：</p>
+          <ul>
+            <li>你最近访问过的工具列表（最多 20 个）及访问时间戳</li>
+          </ul>
+          <p>这些数据：</p>
+          <ul>
+            <li>仅存储在你的设备上（不发送至我们的服务器，不跨设备同步）</li>
+            <li>可随时在浏览器设置中清除（站点数据 → 删除）</li>
+            <li>不包含任何可识别个人身份的信息（仅工具 slug + 时间戳）</li>
+          </ul>
+          <p>如果你不希望使用此功能，可使用浏览器的隐私模式或禁用站点数据。</p>
         </>
       ) : (
         <>
@@ -68,6 +80,18 @@ const privacySchema = JSON.stringify({
             <li>Contains no personally identifiable information — only tool slug strings</li>
           </ul>
           <p>If you prefer not to use this feature, you can browse in private mode or disable site data for our domain.</p>
+          <h2>Recently Viewed</h2>
+          <p>We use localStorage in your browser to store the following data:</p>
+          <ul>
+            <li>The list of tools you've recently visited (up to 20) and their visit timestamps</li>
+          </ul>
+          <p>This data:</p>
+          <ul>
+            <li>Is stored only on your device (not sent to our servers, no cross-device sync)</li>
+            <li>Can be cleared at any time in your browser settings (Site data → Clear)</li>
+            <li>Contains no personally identifiable information (only tool slugs + timestamps)</li>
+          </ul>
+          <p>If you prefer not to use this feature, you can use your browser's private/incognito mode or disable site data.</p>
         </>
       )}
       <h2>Contact</h2>

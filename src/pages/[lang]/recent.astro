@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { t, getLang } from '../../i18n';
+import { SITE_URL } from '../../lib/site-config';
+import { tools } from '../../data/tools';
+
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
+}
+
+const lang = getLang(Astro);
+const title = t('recent.title', lang);
+const description = t('recent.subtitle', lang, { count: 0 });
+
+// Tools data map embedded as inline JSON for client-side hydration.
+// The init layer (recent-init.client.ts) reads this to map slugs → titles
+// on the /recent/ page (not just raw slugs).
+const toolsData = Object.fromEntries(
+  tools.map(tool => [tool.slug, { title: tool.title, description: tool.description, categoryId: tool.categoryId }])
+);
+const toolsDataJson = JSON.stringify(toolsData);
+
+const recentSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': `${SITE_URL}/${lang}/recent/#webpage`,
+      url: `${SITE_URL}/${lang}/recent/`,
+      name: title,
+      description,
+      // Build-time date so each build produces a stable modified date.
+      dateModified: new Date().toISOString().slice(0, 10),
+      inLanguage: lang,
+    },
+  ],
+});
+---
+
+<BaseLayout title={`${title} — ForgeFlowKit`} description={description} schema={recentSchema} pageType="static">
+  <Header />
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <div class="mb-8">
+      <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+        <span aria-hidden="true" class="mr-2">👁</span>{title}
+      </h1>
+      <p class="text-sm text-gray-600" data-recent-subtitle>{description}</p>
+    </div>
+
+    <!-- Tools metadata for client-side card rendering (consumed by recent-init.client.ts) -->
+    <script id="recent-tools-data" type="application/json" set:html={toolsDataJson}></script>
+
+    <div data-recent-container data-mode="full" data-recent-grid-host>
+      <!-- JS-hydrated grid: populated by recent-init.client.ts renderFull() -->
+      <div data-recent-grid class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Filled at runtime -->
+      </div>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
