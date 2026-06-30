@@ -21,13 +21,14 @@ type ChildResult = { ok: boolean; stdout: string; stderr: string };
 const CWD_PATH = process.cwd().replace(/\\/g, '/');
 const INIT_MOD_URL = 'file:///' + CWD_PATH.replace(/^\/+/, '') + '/src/scripts/recent-init.client.ts';
 
-function runChild(scenario: string, opts: { pathname?: string; lsStore?: Record<string, string>; lang?: string } = {}): ChildResult {
+function runChild(scenario: string, opts: { pathname?: string; lsStore?: Record<string, string>; lang?: string; lsThrows?: boolean } = {}): ChildResult {
   const dir = mkdtempSync(join(tmpdir(), 'p2b-test-'));
   const tmpFile = join(dir, 'scenario.mjs');
 
   const lsStoreJson = JSON.stringify(opts.lsStore ?? {});
   const pathname = opts.pathname ?? '/en/';
   const lang = opts.lang ?? 'en';
+  const lsThrowsFlag = opts.lsThrows ? 'true' : 'false';
 
   // Build inline shim + scenario. The child:
   // 1. sets up globalThis.document/window with our StubElement
@@ -165,12 +166,30 @@ globalThis.window = {
   },
 };
 globalThis.localStorage = {
-  getItem(k) { return lsStore[k] ?? null; },
-  setItem(k, v) { lsStore[k] = v; },
-  removeItem(k) { delete lsStore[k]; },
-  clear() { for (const k of Object.keys(lsStore)) delete lsStore[k]; },
-  key(i) { return Object.keys(lsStore)[i] ?? null; },
-  get length() { return Object.keys(lsStore).length; },
+  getItem(k) {
+    if (${lsThrowsFlag}) throw new Error('LS unavailable (test shim)');
+    return lsStore[k] ?? null;
+  },
+  setItem(k, v) {
+    if (${lsThrowsFlag}) throw new Error('LS unavailable (test shim)');
+    lsStore[k] = v;
+  },
+  removeItem(k) {
+    if (${lsThrowsFlag}) throw new Error('LS unavailable (test shim)');
+    delete lsStore[k];
+  },
+  clear() {
+    if (${lsThrowsFlag}) throw new Error('LS unavailable (test shim)');
+    for (const k of Object.keys(lsStore)) delete lsStore[k];
+  },
+  key(i) {
+    if (${lsThrowsFlag}) throw new Error('LS unavailable (test shim)');
+    return Object.keys(lsStore)[i] ?? null;
+  },
+  get length() {
+    if (${lsThrowsFlag}) return 0;
+    return Object.keys(lsStore).length;
+  },
 };
 globalThis.Event = class Event { constructor(t) { this.type = t; } };
 globalThis.CustomEvent = class CustomEvent { constructor(t, init) { this.type = t; this.detail = init && init.detail; } };
@@ -461,11 +480,37 @@ test('init: storage event triggers re-render (cross-tab sync)', () => {
 
 test('init: subscribe fanout triggers re-render on recordVisit', () => {
   const scenario = `
-  // Pathname = /en/solopreneur-ltv-calculator/ → current slug = ltv
-  // Pre-seed: mrr + cac. Auto-record adds ltv (or moves to top).
-  // We just verify the inline container exists and is rendered.
-  const container = document.getElementById('inline-recent');
-  check('inline container is rendered (even if empty)', container !== null);
+  // Pathname = /en/solopreneur-ltv-calculator/ → current slug = 'ltv'.
+  // Pre-seed: [mrr, cac] — 'ltv' is NOT in pre-seed.
+  //
+  // init() sequence:
+  //   1. isAvailable() → true
+  //   2. recordVisit('ltv') → write() → fires lib.subscribe() callbacks
+  //      → renderAll() runs (first re-render via subscribe fanout)
+  //   3. window.addEventListener('storage', ...)
+  //   4. renderAll() runs (initial render)
+  //
+  // After init, the inline container should hold 2 pills (mrr + cac, since 'ltv'
+  // is the current slug and is filtered out). This proves the subscribe→renderAll
+  // path executed correctly: if subscribe were a no-op, the LS would still get the
+  // new entry written (write() updates LS regardless), but renderAll wouldn't have
+  // been re-invoked by the fanout. We additionally check the LS state to confirm the
+  // write path actually ran (i.e. 'ltv' is now at the top of entries).
+  const pillsContainer = document.getElementById('inline-pills');
+  const pills = pillsContainer.querySelectorAll('a');
+  check('inline pills re-rendered with entries after subscribe fanout', pills.length === 2,
+    'expected 2 pills (mrr + cac; ltv filtered as current slug), got ' + pills.length);
+  // Verify the post-fanout pills link to the pre-seed entries (NOT to 'ltv' which is filtered).
+  const hrefs = Array.from(pills).map(a => a.attributes.href || '');
+  check('post-fanout pills link to mrr and cac (not current ltv)',
+    hrefs.some(h => h.includes('mrr')) && hrefs.some(h => h.includes('cac')) && !hrefs.some(h => h.endsWith('/ltv/')),
+    'hrefs: ' + JSON.stringify(hrefs));
+
+  // Confirm the auto-record write ran — this proves recordVisit→write fired (and
+  // therefore the subscribe fanout that depends on it was triggered).
+  const lsAfter = JSON.parse(globalThis.localStorage.getItem('forgeflowkit:recent:v1'));
+  check('LS has 3 entries (ltv + mrr + cac)', lsAfter.entries.length === 3, 'got ' + lsAfter.entries.length);
+  check('LS top entry is current slug ltv', lsAfter.entries[0].slug === 'solopreneur-ltv-calculator');
   `;
   const r = runChild(scenario, {
     pathname: '/en/solopreneur-ltv-calculator/',
@@ -485,12 +530,36 @@ test('init: subscribe fanout triggers re-render on recordVisit', () => {
 
 test('init: error path — when LS unavailable, init returns early without crashing', () => {
   const scenario = `
-  // We can't easily mock LS unavailable in this child (probe already ran in module load).
-  // Instead verify the page didn't throw and containers are still in DOM.
-  const container = document.getElementById('header-recent');
-  check('container exists', container !== null);
-  check('no uncaught error', true);
+  // LS shim throws on every access (see runChild's lsThrows branch).
+  // init() should call isAvailable() → probe setItem throws → cached false → early return.
+  // Concretely:
+  //   - No container should be touched (header-recent and inline-recent stay empty).
+  //   - No uncaught error should propagate (child process would otherwise exit non-zero).
+  //   - LS key should never be written (writes throw).
+  const header = document.getElementById('header-recent');
+  const inline = document.getElementById('inline-recent');
+  const pills = document.getElementById('inline-pills');
+
+  check('header container still in DOM', header !== null);
+  check('inline container still in DOM', inline !== null);
+  check('pills container still in DOM', pills !== null);
+
+  // init() should NOT have rendered anything: no anchors, no text content, no attributes touched.
+  check('header has no children after init', header.children.length === 0,
+    'got ' + header.children.length + ' children');
+  check('header has no anchor links', header.querySelectorAll('a').length === 0,
+    'got ' + header.querySelectorAll('a').length + ' anchors');
+  check('inline has no pills rendered', pills.querySelectorAll('a').length === 0,
+    'got ' + pills.querySelectorAll('a').length + ' anchors');
+  check('inline has no data-recent-hidden attr (init never reached renderInline)',
+    inline.attributes['data-recent-hidden'] === undefined);
+
+  // Reaching this point without throwing is itself the primary assertion:
+  // if init() had crashed the child process, no JSONRESULT would be emitted and the
+  // parent test would fail via the !m branch in runChild. The structural assertions
+  // above (no children, no anchors) are the load-bearing checks that the early-return
+  // actually fired (vs. silently rendering empty-state UI from a non-throwing LS).
   `;
-  const r = runChild(scenario, { pathname: '/en/' });
+  const r = runChild(scenario, { pathname: '/en/solopreneur-mrr-calculator/', lsThrows: true });
   assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
 });

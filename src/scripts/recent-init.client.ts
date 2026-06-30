@@ -155,6 +155,18 @@ function renderFull(container: Element, entries: RecentEntry[], lang: Lang): voi
   }
 }
 
+/**
+ * Re-render every `[data-recent-container]` element on the page from current LS state.
+ * Called by `init()` at startup, by the same-tab `subscribe()` fanout, and by the
+ * cross-tab `storage` event listener.
+ *
+ * @internal Test seam only — not for production consumers.
+ * The brief does not expose `renderAll` as public API; it is exported solely so the
+ * component tests (which run under tsx, where module caching breaks the brief's
+ * `?t=` cache-buster re-import approach) can force a re-render in a single import.
+ * Do not call this from production code — `init()` already wires storage events
+ * and the same-tab subscriber to it.
+ */
 function renderAll(): void {
   const lang = getLang();
   const entries = read();
