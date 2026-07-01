@@ -28,13 +28,20 @@ const restLines = stripped.split('\n').slice(1).join('\n');
           </button>
         </div>
       </div>
-      <div class="p-5 bg-gray-50/50 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono">{restLines}</div>
+      <div class="p-5 bg-gray-50/50 text-sm text-gray-700 leading-relaxed whitespace-pre-line font-mono" data-history-result>{restLines}</div>
     </div>
   ) : (
     <div class="group flex items-start justify-between gap-4 p-4 bg-white border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:shadow-md hover:shadow-[#7C3AED]/5 transition-all duration-300">
       <span class="text-xs font-bold text-gray-400 shrink-0 pt-0.5 w-5">#{index + 1}</span>
-      <span class="text-sm text-gray-700 flex-1 leading-relaxed whitespace-pre-line">{stripped}</span>
-      <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+      <span class="text-sm text-gray-700 flex-1 leading-relaxed whitespace-pre-line" data-history-result>{stripped}</span>
+      <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-0.5">
+        <button type="button"
+                class="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-[#7C3AED] font-medium px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
+                data-history-save
+                aria-label={t('history.btn.save', lang)}>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+          <span>{t('history.btn.save', lang)}</span>
+        </button>
         <CopyButton text={stripped} />
       </div>
     </div>

@@ -73,10 +73,11 @@ function readFormInputs(): Record<string, string> {
 }
 
 function readResultText(): string {
-  // Try to find result text in the result card
-  const card = document.getElementById('result-card') ?? document.querySelector('[data-history-save]')?.parentElement;
-  if (!card) return '';
-  return card.textContent?.trim() ?? '';
+  // Read the result body element marked with [data-history-result] (set by
+  // ResultCard.astro on the actual calculation-output div). Fallback to '' if
+  // absent (e.g. save was triggered before the page rendered a result).
+  const el = document.querySelector('[data-history-result]');
+  return el?.textContent?.trim() ?? '';
 }
 
 function handleSave(btn: HTMLElement): void {
@@ -210,6 +211,13 @@ function renderEntry(e: HistoryEntry, lang: Lang): HTMLElement {
 
 function renderFull(container: Element, entries: HistoryEntry[], lang: Lang): void {
   while (container.firstChild) container.removeChild(container.firstChild);
+  // Update the H1 count badge (sibling of container, inside parent section).
+  // Mirrors renderPreview's pattern but for the /history/ page where the badge
+  // lives in <h1> (<span data-history-count>) alongside the container.
+  const countEl = container.parentElement?.querySelector('[data-history-count]');
+  if (countEl) {
+    countEl.textContent = String(entries.length);
+  }
   if (entries.length === 0) {
     const wrap = document.createElement('div');
     wrap.setAttribute('class', 'text-center py-16');
@@ -325,10 +333,15 @@ function handlePrefillFromURL(): void {
   const url = new URL(window.location.href);
   url.searchParams.delete('prefill');
   window.history.replaceState({}, '', url.toString());
-  // Trigger form submit to re-run calculate
+  // Trigger form submit to re-run calculate. Use dispatchEvent('submit') instead
+  // of native form.submit() — the latter bypasses JS event listeners (including
+  // the page's custom calculate handler). Bubbling/cancelable so any registered
+  // submit handler can intercept.
   const form = document.getElementById('tool-form') as HTMLFormElement | null;
   if (form) {
-    setTimeout(() => form.submit(), 100);
+    setTimeout(() => {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }, 100);
   }
 }
 

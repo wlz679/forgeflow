@@ -169,9 +169,12 @@ export function subscribe(cb: () => void): () => void {
 
 export function encodePrefill(inputs: Record<string, string>): string {
   const json = JSON.stringify(inputs);
-  // btoa is available in browsers and Node 16+
+  // Use unescape(encodeURIComponent(...)) trick to handle Unicode safely —
+  // btoa() throws InvalidCharacterError on non-ASCII bytes (e.g. Chinese chars,
+  // currency symbols). The trick: encodeURIComponent → UTF-8 byte string (each
+  // byte becomes %XX), then unescape → raw UTF-8 bytes, then btoa accepts them.
   return (globalThis as { btoa?: (s: string) => string }).btoa
-    ? (globalThis as { btoa: (s: string) => string }).btoa(json)
+    ? (globalThis as { btoa: (s: string) => string }).btoa(unescape(encodeURIComponent(json)))
     : Buffer.from(json, 'utf-8').toString('base64');
 }
 
@@ -180,7 +183,9 @@ export function decodePrefill(encoded: string): Record<string, string> | null {
     const json = (globalThis as { atob?: (s: string) => string }).atob
       ? (globalThis as { atob: (s: string) => string }).atob(encoded)
       : Buffer.from(encoded, 'base64').toString('utf-8');
-    const parsed = JSON.parse(json);
+    // Reverse of encodeURIComponent(unescape(...)) trick: decodeURIComponent(escape(...))
+    // reinterprets raw UTF-8 bytes as %XX escape sequences.
+    const parsed = JSON.parse(decodeURIComponent(escape(json)));
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
     return parsed as Record<string, string>;
   } catch {

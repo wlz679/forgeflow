@@ -85,7 +85,15 @@ class StubElement extends StubNode {
   constructor() { super(); this._isElement = true; this.tagName = 'DIV'; this.id = ''; }
   get value() { return this.attributes.value ?? ''; }
   set value(v) { this.attributes.value = String(v); }
-  submit() { /* fire submit event */ if (this._onsubmit) this._onsubmit(); }
+  submit() { /* fire submit event */ this._submitCalled = true; if (this._onsubmit) this._onsubmit(); }
+  dispatchEvent(ev) {
+    this._dispatchCalled = true;
+    this._dispatchedEvents = this._dispatchedEvents || [];
+    this._dispatchedEvents.push(ev.type);
+    const cbs = (this._listeners && this._listeners[ev.type]) || [];
+    for (const cb of cbs) cb(ev);
+    return true;
+  }
   click() {
     /* fire click event */
     if (this._onclick) this._onclick();
@@ -675,5 +683,134 @@ test('init: preview mode updates Header [data-history-count] badge in parent <su
       }),
     },
   });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+// === Holistic-review fix-wave tests (5 new scenarios) ===
+
+test('init: save reads result from [data-history-result], not from button row (Finding 1)', () => {
+  // Spec: result text lives in the element marked with [data-history-result]
+  // (the actual calculation-output div), not in the parent of the save button
+  // (which contains [Save] / Copy / Export labels).
+  const scenario = `
+  // Add the result-output div as the calculation body. Distinguish from button text.
+  const resultOutput = document.createElement('div');
+  resultOutput.setAttribute('data-history-result', '');
+  resultOutput._textContent = 'MRR: $5,000\\nCustomers: 100\\n💡 Tip: Q3 forecast = $15k';
+  resultCard.appendChild(resultOutput);
+
+  // Pre-populate form so save has something to capture
+  const form = document.createElement('form');
+  form.id = 'tool-form';
+  const input = document.createElement('input');
+  input.setAttribute('name', 'subscriberCount');
+  input.setAttribute('id', 'subscriberCount');
+  input.value = '100';
+  form.appendChild(input);
+  document.body.appendChild(form);
+
+  saveBtn.click();
+  await new Promise(r => setImmediate(r));
+
+  const ls = JSON.parse(globalThis.localStorage.getItem('forgeflowkit:history:v1'));
+  const saved = ls?.entries?.[0];
+  check('LS has 1 entry', ls?.entries?.length === 1, 'got: ' + ls?.entries?.length);
+  check('result field reads from [data-history-result]',
+    saved?.result === 'MRR: $5,000\\nCustomers: 100\\n💡 Tip: Q3 forecast = $15k',
+    'got: ' + JSON.stringify(saved?.result));
+  check('result does NOT include button text "Save"',
+    saved && !saved.result.includes('Save'),
+    'got: ' + JSON.stringify(saved?.result));
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/solopreneur-mrr-calculator/',
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: prefill submits via dispatchEvent, not form.submit() (Finding 4)', () => {
+  // Spec: native form.submit() bypasses JS event listeners, so the page's custom
+  // calculate handler never fires. We must use dispatchEvent('submit', {bubbles,
+  // cancelable}) so registered handlers receive the event.
+  const scenario = `
+  const form = document.createElement('form');
+  form.id = 'tool-form';
+  const input = document.createElement('input');
+  input.setAttribute('name', 'subscriberCount');
+  input.setAttribute('id', 'subscriberCount');
+  form.appendChild(input);
+  document.body.appendChild(form);
+  // Set IDs on stub instance fields (getElementById walks n.id, not attribute map).
+  form.id = 'tool-form';
+  input.id = 'subscriberCount';
+
+  globalThis.window.history.replaceState = () => {};
+
+  // Re-stamp prefill param
+  const prefillParam = '?prefill=' + Buffer.from(JSON.stringify({ subscriberCount: '999' }), 'utf-8').toString('base64');
+  globalThis.window.location.search = prefillParam;
+  globalThis.window.location.href = 'http://localhost/en/solopreneur-mrr-calculator/' + prefillParam;
+  initMod.handlePrefillFromURL();
+
+  // Wait the 100ms setTimeout inside handlePrefillFromURL
+  await new Promise(r => setTimeout(r, 150));
+
+  check('form.dispatchEvent was called (not form.submit)',
+    form._dispatchCalled === true,
+    '_dispatchCalled: ' + form._dispatchCalled);
+  check('form.submit() was NOT called',
+    form._submitCalled !== true,
+    '_submitCalled: ' + form._submitCalled);
+  check('dispatched event type was "submit"',
+    Array.isArray(form._dispatchedEvents) && form._dispatchedEvents.includes('submit'),
+    'dispatched events: ' + JSON.stringify(form._dispatchedEvents));
+  check('form field was filled from prefill',
+    input.value === '999', 'got: ' + input.value);
+  `;
+  const inputs = { subscriberCount: '999' };
+  const encoded = Buffer.from(JSON.stringify(inputs), 'utf-8').toString('base64');
+  const r = runChild(scenario, {
+    pathname: '/en/solopreneur-mrr-calculator/',
+    search: `?prefill=${encoded}`,
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: full mode updates H1 [data-history-count] badge (Finding 5)', () => {
+  // The /history/ page has: <section><h1>... (<span data-history-count>0</span>)</h1>
+  // <div data-history-container data-mode="full">...</div></section>.
+  // renderFull must update the sibling span's text to match entries.length.
+  const scenario = `
+  // Build the /history/ structure: section > (h1 with count span, full container)
+  const section = document.createElement('section');
+  document.body.appendChild(section);
+  const h1 = document.createElement('h1');
+  section.appendChild(h1);
+  const countSpan = document.createElement('span');
+  countSpan.setAttribute('data-history-count', '');
+  countSpan._textContent = '0';
+  h1.appendChild(countSpan);
+  const fullContainer = document.createElement('div');
+  fullContainer.setAttribute('data-history-container', '');
+  fullContainer.setAttribute('data-mode', 'full');
+  fullContainer.id = 'full-history';
+  section.appendChild(fullContainer);
+  initMod.renderAll();
+  await new Promise(r => setImmediate(r));
+  check('count badge updated to "3"', countSpan._textContent === '3', 'got: ' + countSpan._textContent);
+  check('full container has 3 entries rendered', fullContainer.children.length === 3, 'got: ' + fullContainer.children.length);
+  `;
+  const lsStore: Record<string, string> = {
+    'forgeflowkit:history:v1': JSON.stringify({
+      version: 1,
+      entries: [
+        { id: 'a', slug: 'mrr', inputs: {x: '1'}, result: 'r1', savedAt: '2026-07-01T10:00:00Z', accessedAt: '2026-07-01T10:00:00Z' },
+        { id: 'b', slug: 'cac', inputs: {x: '2'}, result: 'r2', savedAt: '2026-07-01T10:00:00Z', accessedAt: '2026-07-01T10:00:00Z' },
+        { id: 'c', slug: 'ltv', inputs: {x: '3'}, result: 'r3', savedAt: '2026-07-01T10:00:00Z', accessedAt: '2026-07-01T10:00:00Z' },
+      ],
+      lastUpdated: '2026-07-01T10:00:00Z',
+    }),
+  };
+  const r = runChild(scenario, { pathname: '/en/history/', lsStore });
   assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
 });

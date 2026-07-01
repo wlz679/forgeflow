@@ -381,6 +381,27 @@ test('encodePrefill/decodePrefill: handles special characters', async () => {
   } finally { restore(); }
 });
 
+test('encodePrefill/decodePrefill: Unicode round-trip (Chinese / emoji / currency)', async () => {
+  // btoa() throws InvalidCharacterError on non-ASCII bytes. The
+  // unescape(encodeURIComponent(...)) trick must keep it safe for arbitrary
+  // Unicode in form inputs (e.g. Chinese notes, currency symbols, emoji).
+  const ls: LS = { store: new Map() };
+  const restore = installShim(ls);
+  try {
+    const m = await freshImport();
+    const inputs = {
+      name: '中文测试',
+      currency: '¥$€₹',
+      emoji: '💾🚀📊',
+      mixed: 'Q3 baseline — 100 customers × $5/mo',
+    };
+    const encoded = m.encodePrefill(inputs);
+    assert.ok(typeof encoded === 'string' && encoded.length > 0);
+    const decoded = m.decodePrefill(encoded);
+    assert.deepEqual(decoded, inputs);
+  } finally { restore(); }
+});
+
 test('decodePrefill: returns null on invalid base64 / JSON', async () => {
   const ls: LS = { store: new Map() };
   const restore = installShim(ls);
