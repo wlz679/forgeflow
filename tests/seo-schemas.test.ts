@@ -208,3 +208,77 @@ test('P2a — every ToolCard on listing pages has data-favorite-toggle with corr
     assert.ok(found, `${tool.slug}: no listing page renders its data-favorite-slug`);
   }
 });
+
+// =============================================================================
+// P2c — History Snapshots fixtures (Task 6, branch master, 2026-07-01)
+// =============================================================================
+
+test('P2c — history page schema is WebPage without user data', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'history', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    const blocks = extractJsonLd(html);
+    const graph = blocks.flatMap(b => b['@graph'] ?? [b]);
+    const wp = graph.find(b => b['@type'] === 'WebPage');
+    assert.ok(wp, `${lang}/history: no WebPage schema`);
+    assert.match(wp.name, /History|历史快照/);
+    // User data must NOT leak into SSG — the LS key name must not appear anywhere on disk
+    assert.ok(!html.includes('forgeflowkit:history:v1'), `${lang}/history: LS key leaked into SSG`);
+    // Hydration hook must be present so the client-side init layer can populate at runtime
+    assert.ok(html.includes('data-history-container'), `${lang}/history: missing data-history-container hook`);
+  }
+});
+
+test('P2c — history page has data-history-clear-all button', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'history', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    assert.ok(html.includes('data-history-clear-all'), `${lang}/history: clear-all button present`);
+  }
+});
+
+test('P2c — privacy policy mentions History Snapshots', { skip: !existsSync(distDir) }, () => {
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'privacy-policy', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    if (lang === 'en') {
+      assert.ok(html.includes('History Snapshots'), 'en privacy: "History Snapshots" heading present');
+    } else {
+      assert.ok(html.includes('历史快照'), 'zh privacy: "历史快照" heading present');
+    }
+  }
+});
+
+test('P2c — every tool detail page has [data-history-save] button', { skip: !existsSync(distDir) }, () => {
+  // Sample 3 representative tool slugs from the 32-tool registry (MRR/LTV/CAC trio).
+  // The [💾 保存] button is wired in ResultCard.astro and is the user-facing entry point
+  // to save a calculation snapshot — if it's missing, save flow is broken on that page.
+  const slugs = ['solopreneur-mrr-calculator', 'solopreneur-ltv-calculator', 'solopreneur-cac-calculator'];
+  for (const lang of ['en', 'zh']) {
+    for (const slug of slugs) {
+      const path = resolve(distDir, lang, slug, 'index.html');
+      assert.ok(existsSync(path), `dist missing: ${path}`);
+      const html = readFileSync(path, 'utf-8');
+      assert.ok(html.includes('data-history-save'), `${lang}/${slug}: [data-history-save] button missing`);
+    }
+  }
+});
+
+test('P2c — every page has [data-history-container] preview dropdown', { skip: !existsSync(distDir) }, () => {
+  // The header is shared across every page (BaseLayout wraps all routes), so the history
+  // preview-mode container must appear on the landing page, listing pages, tool pages,
+  // favorites, recent, history, and about. If any of these pages miss the hook, the
+  // header dropdown cannot render that page's history state.
+  const slugs = ['', 'solopreneur-mrr-calculator', 'about', 'favorites', 'recent', 'history'];
+  for (const lang of ['en']) {
+    for (const slug of slugs) {
+      const path = resolve(distDir, slug ? `${lang}/${slug}/index.html` : `${lang}/index.html`);
+      assert.ok(existsSync(path), `dist missing: ${path}`);
+      const html = readFileSync(path, 'utf-8');
+      assert.ok(html.includes('data-history-container'), `${path}: [data-history-container] preview missing`);
+    }
+  }
+});
