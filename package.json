@@ -35,6 +35,7 @@
   "description": "ForgeFlowKit — Free business calculators and tools for smarter decisions",
   "dependencies": {
     "@astrojs/sitemap": "3.2.1",
+    "@clerk/clerk-js": "^6.23.0",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^4.13.2",
