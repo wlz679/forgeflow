@@ -1,0 +1,29 @@
+---
+import { t } from '../i18n';
+const { lang } = Astro.props;
+---
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+      <span aria-hidden="true">💾</span>
+      <span>{t('history.title', lang)}</span>
+      (<span data-history-count>0</span>)
+    </h1>
+    <button type="button"
+            class="text-sm text-gray-500 hover:text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+            data-history-clear-all>
+      {t('history.clear_all', lang)}
+    </button>
+  </div>
+  <p class="text-sm text-gray-500 mb-6" data-history-subtitle>
+    {t('history.subtitle', lang, { count: 0 })}
+  </p>
+
+  <div
+    data-history-container
+    data-mode="full"
+    class="space-y-3"
+  >
+    <!-- Rendered at runtime by history-init.client.ts -->
+  </div>
+</div>

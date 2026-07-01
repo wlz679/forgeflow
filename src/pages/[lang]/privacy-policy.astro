@@ -65,6 +65,19 @@ const privacySchema = JSON.stringify({
             <li>不包含任何可识别个人身份的信息（仅工具 slug + 时间戳）</li>
           </ul>
           <p>如果你不希望使用此功能，可使用浏览器的隐私模式或禁用站点数据。</p>
+          <h2>历史快照（History Snapshots）</h2>
+          <p>我们在你的浏览器中使用 localStorage 存储以下数据：</p>
+          <ul>
+            <li>你保存的计算快照（最多 100 个），含工具 slug、输入值、计算结果、保存时间</li>
+          </ul>
+          <p>这些数据：</p>
+          <ul>
+            <li>仅存储在你的设备上（不发送至我们的服务器，不跨设备同步）</li>
+            <li>可随时在浏览器设置中清除（站点数据 → 删除）</li>
+            <li>可在 /history/ 页面查看、恢复、删除单条或清空</li>
+            <li>不包含任何可识别个人身份的信息（仅工具 slug + 输入值 + 时间戳）</li>
+          </ul>
+          <p>如果你不希望使用此功能，可使用浏览器的隐私模式或禁用站点数据。</p>
         </>
       ) : (
         <>
@@ -90,6 +103,19 @@ const privacySchema = JSON.stringify({
             <li>Is stored only on your device (not sent to our servers, no cross-device sync)</li>
             <li>Can be cleared at any time in your browser settings (Site data → Clear)</li>
             <li>Contains no personally identifiable information (only tool slugs + timestamps)</li>
+          </ul>
+          <p>If you prefer not to use this feature, you can use your browser's private/incognito mode or disable site data.</p>
+          <h2>History Snapshots</h2>
+          <p>We use localStorage in your browser to store the following data:</p>
+          <ul>
+            <li>The calculation snapshots you save (up to 100), including tool slug, input values, result, and timestamp</li>
+          </ul>
+          <p>This data:</p>
+          <ul>
+            <li>Is stored only on your device (not sent to our servers, no cross-device sync)</li>
+            <li>Can be cleared at any time in your browser settings (Site data → Clear)</li>
+            <li>Can be viewed, restored, individually deleted, or fully cleared on the /history/ page</li>
+            <li>Contains no personally identifiable information (only tool slugs + input values + timestamps)</li>
           </ul>
           <p>If you prefer not to use this feature, you can use your browser's private/incognito mode or disable site data.</p>
         </>
