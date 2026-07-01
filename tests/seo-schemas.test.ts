@@ -282,3 +282,30 @@ test('P2c — every page has [data-history-container] preview dropdown', { skip:
     }
   }
 });
+
+// =============================================================================
+// P3-1 — Account Authentication (Clerk) privacy disclosure (Task 5, 2026-07-01)
+// =============================================================================
+
+test('P3-1 — privacy policy discloses Account Authentication (Clerk)', { skip: !existsSync(distDir) }, () => {
+  // P3-1 wires Clerk into Header + BaseLayout (Task 4). The privacy page must disclose
+  // that authentication data (email, IP, browser fingerprint) is collected by Clerk
+  // on their servers — we don't store any of it. The Clerk privacy policy URL must
+  // be linked so users can audit the third-party processor.
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'privacy-policy', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    if (lang === 'en') {
+      assert.ok(html.includes('Account Authentication (Clerk)'), 'en privacy: "Account Authentication (Clerk)" heading present');
+      assert.ok(html.includes('We use'), 'en privacy: "We use" intro present');
+      assert.ok(html.includes('https://clerk.com/privacy'), 'en privacy: Clerk privacy policy URL present');
+      assert.ok(html.includes('not store any of this data'), 'en privacy: "not store any of this data" disclaimer present');
+    } else {
+      assert.ok(html.includes('账户认证'), 'zh privacy: "账户认证" heading present');
+      assert.ok(html.includes('我们使用'), 'zh privacy: "我们使用" intro present');
+      assert.ok(html.includes('https://clerk.com/privacy'), 'zh privacy: Clerk privacy policy URL present');
+      assert.ok(html.includes('我们不存储任何这些数据'), 'zh privacy: "我们不存储任何这些数据" disclaimer present');
+    }
+  }
+});

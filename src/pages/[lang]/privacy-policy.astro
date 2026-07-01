@@ -41,6 +41,19 @@ const privacySchema = JSON.stringify({
       <p>This website uses Google AdSense, a third-party advertising service. Google's use of advertising cookies enables it and its partners to serve ads based on your visit to this site and/or other sites on the Internet.</p>
       {lang === 'zh' ? (
         <>
+          <h2>账户认证（Clerk）</h2>
+          <p>我们使用 <a href="https://clerk.com">Clerk</a> 处理用户认证。当你登录时，Clerk 在他们的服务器上收集和处理你的邮箱地址、IP 地址和浏览器指纹。我们不存储任何这些数据 — Clerk 是认证数据的唯一控制方。其隐私政策适用于：<a href="https://clerk.com/privacy">https://clerk.com/privacy</a>。</p>
+          <p>如果你不希望使用 Clerk 认证，请勿点击 Header 中的 [Login] 按钮。ForgeFlowKit 的所有计算功能（32 个工具）和 P2 features（favorites / recent / history）在不登录的情况下均可正常使用。</p>
+        </>
+      ) : (
+        <>
+          <h2>Account Authentication (Clerk)</h2>
+          <p>We use <a href="https://clerk.com">Clerk</a> to handle user authentication. When you log in, Clerk collects and processes your email address, IP address, and browser fingerprint on their servers. We do not store any of this data — Clerk is the sole data controller for authentication. Their privacy policy applies: <a href="https://clerk.com/privacy">https://clerk.com/privacy</a>.</p>
+          <p>If you prefer not to use Clerk authentication, simply do not click the [Login] button in the Header. All 32 ForgeFlowKit calculators and P2 features (favorites / recent / history) work fully without signing in.</p>
+        </>
+      )}
+      {lang === 'zh' ? (
+        <>
           <h2>浏览器存储（Browser Storage）</h2>
           <p>我们在你的浏览器中使用 localStorage 存储以下数据：</p>
           <ul>
