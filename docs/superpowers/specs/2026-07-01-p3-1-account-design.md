@@ -308,7 +308,7 @@ No Playwright/Cypress. Project has no E2E framework per CLAUDE.md. Defer until P
 
 **New constraints introduced by P3-1:**
 - `PUBLIC_CLERK_PUBLISHABLE_KEY` required in CI env (build fails without it)
-- `@clerk/clerk-js ^5.x` added to dependencies
+- `@clerk/clerk-js ^6.x` added to dependencies (revised 2026-07-01 during Task 3: pnpm resolved to 6.23.0; API surface (Clerk class + load() + mountUserButton + openSignIn + user getter) fully compatible with brief usage)
 - `.env` and `.env.local` added to `.gitignore`
 - `.env.example` created with placeholder key
 
