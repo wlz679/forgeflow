@@ -90,6 +90,22 @@ const REQUIRED_KEYS = {
     'recent.time.hours_ago',
     'recent.time.days_ago',
   ],
+  history: [
+    'history.title',
+    'history.subtitle',
+    'history.empty.title',
+    'history.empty.body',
+    'history.empty.browse',
+    'history.header_label',
+    'history.dropdown.view_all',
+    'history.dropdown.empty',
+    'history.btn.save',
+    'history.btn.saved',
+    'history.btn.restore',
+    'history.btn.delete',
+    'history.clear_all',
+    'history.clear_all.confirm',
+  ],
 };
 
 const src = readFileSync(translationsPath, 'utf-8');

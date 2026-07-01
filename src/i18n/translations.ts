@@ -1567,4 +1567,20 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'recent.time.just_now': { en: 'Just now', zh: '刚刚' },
   'recent.time.hours_ago': { en: '{count}h ago', zh: '{count} 小时前' },
   'recent.time.days_ago': { en: '{count}d ago', zh: '{count} 天前' },
+
+  // ===== P2c History =====
+  'history.title': { en: 'History', zh: '历史快照' },
+  'history.subtitle': { en: '{count} snapshots saved', zh: '已保存 {count} 个快照' },
+  'history.empty.title': { en: 'No history yet', zh: '暂无历史' },
+  'history.empty.body': { en: 'Save a calculation to see it here', zh: '保存计算后将在此显示' },
+  'history.empty.browse': { en: 'Browse all tools', zh: '浏览全部工具' },
+  'history.header_label': { en: 'History', zh: '历史快照' },
+  'history.dropdown.view_all': { en: 'View all ({count}) →', zh: '查看全部 ({count}) →' },
+  'history.dropdown.empty': { en: 'No history yet', zh: '暂无历史' },
+  'history.btn.save': { en: '💾 Save', zh: '💾 保存' },
+  'history.btn.saved': { en: '✓ Saved', zh: '✓ 已保存' },
+  'history.btn.restore': { en: '↺ Restore', zh: '↺ 恢复' },
+  'history.btn.delete': { en: '🗑', zh: '🗑' },
+  'history.clear_all': { en: 'Clear all', zh: '清空全部' },
+  'history.clear_all.confirm': { en: 'Delete all {count} snapshots? This cannot be undone.', zh: '确认删除全部 {count} 个快照？此操作不可撤销。' },
 };
