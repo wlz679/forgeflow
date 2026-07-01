@@ -6,11 +6,13 @@
  * i18n from window.__i18n_recent__ (populated by BaseLayout).
  */
 import {
+  RECENT_STORAGE_KEY,
   read, recordVisit, isAvailable, subscribe,
 } from '../lib/recent';
 
 type Lang = 'en' | 'zh';
 type RecentEntry = { slug: string; visitedAt: string };
+type ToolMeta = { title: string; description: string; categoryId: string };
 
 let initialized = false;
 
@@ -24,11 +26,14 @@ function getCurrentSlug(): string | null {
   const m = window.location.pathname.match(/^\/(?:en|zh)\/([a-z0-9-]+)\/?$/);
   if (!m) return null;
   const slug = m[1];
-  // Exclude known non-tool slugs
-  if (['about', 'contact', 'blog', 'privacy-policy', 'terms', 'favorites', 'recent',
-       'saas-metrics', 'cost-efficiency', 'freelance-pricing', 'investment-roi',
-       'valuation-exit', 'ai-cost-tools'].includes(slug)) return null;
-  return slug;
+  // Whitelist: only treat as a tool visit if BaseLayout injected __tools_slugs__
+  // and the slug is in that Set. Falls back to null if the global is absent
+  // (e.g. older cached HTML, or a non-app page) — never silently records.
+  const set = (window as { __tools_slugs__?: ReadonlyArray<string> | Set<string> }).__tools_slugs__;
+  if (!set) return null;
+  // Accept both array and Set shapes (defensive — BaseLayout injects an array)
+  const arr = Array.isArray(set) ? set : Array.from(set as Set<string>);
+  return arr.includes(slug) ? slug : null;
 }
 
 function t(key: string, lang: Lang, vars: Record<string, string | number> = {}): string {
@@ -131,6 +136,23 @@ function renderFull(container: Element, entries: RecentEntry[], lang: Lang): voi
   // /recent/ page delegates to the existing ToolCard grid pattern (data-recent-grid wrapper)
   // We just hand off to a global function set by the page (or render plain list fallback).
   while (container.firstChild) container.removeChild(container.firstChild);
+
+  // Update the page subtitle to reflect the actual visit count.
+  // The build-time rendering hardcodes count=0; the init layer must rewrite it
+  // so users with N>0 visits see a non-zero count.
+  const subtitle = document.querySelector('[data-recent-subtitle]');
+  if (subtitle) subtitle.textContent = t('recent.subtitle', lang, { count: entries.length });
+
+  // Read embedded tools metadata (slug → {title, description, categoryId}) so we
+  // can render proper tool titles instead of raw slugs. The hydration hook is
+  // emitted by /recent/ page only; other pages won't have it — fall back to slug.
+  let toolsMap: Record<string, ToolMeta> = {};
+  const dataEl = document.getElementById('recent-tools-data');
+  if (dataEl?.textContent) {
+    try { toolsMap = JSON.parse(dataEl.textContent) as Record<string, ToolMeta>; }
+    catch { /* malformed JSON → fall back to slug rendering */ }
+  }
+
   if (entries.length === 0) {
     const wrap = document.createElement('div');
     wrap.setAttribute('class', 'text-center py-16');
@@ -158,7 +180,8 @@ function renderFull(container: Element, entries: RecentEntry[], lang: Lang): voi
     card.setAttribute('data-recent-slug', e.slug);
     const h3 = document.createElement('h3');
     h3.setAttribute('class', 'text-base font-semibold text-gray-900 mb-1');
-    h3.textContent = e.slug;
+    const meta = toolsMap[e.slug];
+    h3.textContent = meta ? meta.title : e.slug;
     const p = document.createElement('p');
     p.setAttribute('class', 'text-sm text-gray-500');
     p.textContent = timeAgo(e.visitedAt, lang);
@@ -210,7 +233,7 @@ export function init(): void {
 
   // Listen to cross-tab storage event
   window.addEventListener('storage', (ev) => {
-    if (ev.key === 'forgeflowkit:recent:v1') renderAll();
+    if (ev.key === RECENT_STORAGE_KEY) renderAll();
   });
 
   // Initial render

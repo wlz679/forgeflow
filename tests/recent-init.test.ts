@@ -21,7 +21,7 @@ type ChildResult = { ok: boolean; stdout: string; stderr: string };
 const CWD_PATH = process.cwd().replace(/\\/g, '/');
 const INIT_MOD_URL = 'file:///' + CWD_PATH.replace(/^\/+/, '') + '/src/scripts/recent-init.client.ts';
 
-function runChild(scenario: string, opts: { pathname?: string; lsStore?: Record<string, string>; lang?: string; lsThrows?: boolean } = {}): ChildResult {
+function runChild(scenario: string, opts: { pathname?: string; lsStore?: Record<string, string>; lang?: string; lsThrows?: boolean; toolsSlugs?: string[] } = {}): ChildResult {
   const dir = mkdtempSync(join(tmpdir(), 'p2b-test-'));
   const tmpFile = join(dir, 'scenario.mjs');
 
@@ -29,6 +29,15 @@ function runChild(scenario: string, opts: { pathname?: string; lsStore?: Record<
   const pathname = opts.pathname ?? '/en/';
   const lang = opts.lang ?? 'en';
   const lsThrowsFlag = opts.lsThrows ? 'true' : 'false';
+  // Default whitelist covers the 5 slugs the existing test scenarios use, plus
+  // a few common static pages to verify the data-driven whitelist excludes them.
+  const toolsSlugs = opts.toolsSlugs ?? [
+    'solopreneur-mrr-calculator',
+    'solopreneur-ltv-calculator',
+    'solopreneur-cac-calculator',
+    'solopreneur-burn-rate-calculator',
+  ];
+  const toolsSlugsJson = JSON.stringify(toolsSlugs);
 
   // Build inline shim + scenario. The child:
   // 1. sets up globalThis.document/window with our StubElement
@@ -151,6 +160,7 @@ globalThis.window = {
   addEventListener(ev, cb) { _windowListeners.push({ ev, cb }); },
   removeEventListener(ev, cb) { const i = _windowListeners.findIndex(l => l.ev === ev && l.cb === cb); if (i >= 0) _windowListeners.splice(i, 1); },
   dispatchEvent(ev) { for (const l of _windowListeners) if (l.ev === ev.type) { try { l.cb(ev); } catch (e) {} } },
+  __tools_slugs__: ${toolsSlugsJson},
   __i18n_recent__: {
     en: {
       'recent.title': 'Recently Viewed',
@@ -617,3 +627,232 @@ test('init: preview mode updates Header [data-recent-count] badge in parent <sum
   });
   assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
 });
+
+// =============================================================================
+// Holistic review fix wave — Important findings (2026-07-01)
+// =============================================================================
+
+test('init: renderFull updates [data-recent-subtitle] to reflect actual entry count', () => {
+  // Pre-seed LS with 3 entries; renderFull must rewrite the build-time "0 tools
+  // visited" subtitle to "{count} tools visited" with the real count.
+  const scenario = `
+  // Build the /recent/ page shape: subtitle + tools data + full container.
+  const subtitle = document.createElement('p');
+  subtitle.setAttribute('data-recent-subtitle', '');
+  subtitle._textContent = '0 tools visited';
+  document.body.appendChild(subtitle);
+
+  const dataEl = document.createElement('script');
+  dataEl.id = 'recent-tools-data';
+  dataEl.type = 'application/json';
+  document.body.appendChild(dataEl);
+
+  const fullContainer = document.createElement('div');
+  fullContainer.setAttribute('data-recent-container', '');
+  fullContainer.setAttribute('data-mode', 'full');
+  fullContainer.id = 'full-recent';
+  const fullGrid = document.createElement('div');
+  fullGrid.setAttribute('data-recent-grid', '');
+  fullContainer.appendChild(fullGrid);
+  document.body.appendChild(fullContainer);
+
+  initMod.renderAll();
+
+  check('subtitle updated (not the build-time "0 tools visited")',
+    subtitle._textContent !== '0 tools visited',
+    'got: ' + JSON.stringify(subtitle._textContent));
+  check('subtitle contains the actual count "3"',
+    subtitle._textContent.includes('3'),
+    'got: ' + JSON.stringify(subtitle._textContent));
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/recent/',
+    lsStore: {
+      'forgeflowkit:recent:v1': JSON.stringify({
+        version: 1,
+        entries: [
+          { slug: 'solopreneur-mrr-calculator', visitedAt: new Date().toISOString() },
+          { slug: 'solopreneur-ltv-calculator', visitedAt: new Date(Date.now() - 3600_000).toISOString() },
+          { slug: 'solopreneur-cac-calculator', visitedAt: new Date(Date.now() - 7200_000).toISOString() },
+        ],
+        lastUpdated: new Date().toISOString(),
+      }),
+    },
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: renderFull reads #recent-tools-data and renders tool title (not raw slug)', () => {
+  // The /recent/ page embeds tools metadata as <script type="application/json">.
+  // renderFull must look up the slug there and render the human-readable title.
+  const scenario = `
+  const dataEl = document.createElement('script');
+  dataEl.id = 'recent-tools-data';
+  dataEl.type = 'application/json';
+  dataEl.textContent = JSON.stringify({
+    'solopreneur-mrr-calculator': {
+      title: 'MRR Calculator',
+      description: 'Monthly recurring revenue calculator for SaaS',
+      categoryId: 'saas-metrics',
+    },
+  });
+  document.body.appendChild(dataEl);
+
+  const fullContainer = document.createElement('div');
+  fullContainer.setAttribute('data-recent-container', '');
+  fullContainer.setAttribute('data-mode', 'full');
+  fullContainer.id = 'full-recent';
+  const fullGrid = document.createElement('div');
+  fullGrid.setAttribute('data-recent-grid', '');
+  fullContainer.appendChild(fullGrid);
+  document.body.appendChild(fullContainer);
+
+  initMod.renderAll();
+
+  function walk(n, acc) {
+    if (n.attributes && n.attributes['data-recent-slug']) acc.push(n);
+    for (const c of (n.children || [])) walk(c, acc);
+  }
+  const cards = [];
+  walk(document.body, cards);
+  check('exactly one card rendered', cards.length === 1, 'got ' + cards.length);
+
+  const card = cards[0];
+  const h3 = card.children.find(c => c.tagName === 'H3');
+  check('card has an <h3> title', h3 !== undefined);
+  check('h3 text is the tool title (not the slug)',
+    h3 && h3._textContent === 'MRR Calculator',
+    'got: ' + JSON.stringify(h3 && h3._textContent));
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/recent/',
+    lsStore: {
+      'forgeflowkit:recent:v1': JSON.stringify({
+        version: 1,
+        entries: [
+          { slug: 'solopreneur-mrr-calculator', visitedAt: new Date().toISOString() },
+        ],
+        lastUpdated: new Date().toISOString(),
+      }),
+    },
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: getCurrentSlug uses window.__tools_slugs__ whitelist (data-driven)', () => {
+  // Whitelist-based gating: a non-whitelisted slug on /en/about/ must not
+  // trigger an auto-record, even though the regex matches the pathname shape.
+  // Also verify the whitelist contains real tool slugs and excludes static pages.
+  const scenario = `
+  const toolsSlugs = globalThis.window.__tools_slugs__;
+  check('window.__tools_slugs__ is an array', Array.isArray(toolsSlugs),
+    'got type: ' + typeof toolsSlugs);
+  check('whitelist contains mrr', toolsSlugs.includes('solopreneur-mrr-calculator'));
+  check('whitelist excludes about', !toolsSlugs.includes('about'));
+  check('whitelist excludes recent', !toolsSlugs.includes('recent'));
+  check('whitelist excludes favorites', !toolsSlugs.includes('favorites'));
+
+  // /en/about/ is NOT in the whitelist, so no LS write should occur.
+  const lsAfter = globalThis.localStorage.getItem('forgeflowkit:recent:v1');
+  check('about page: no LS write (whitelist gating)', lsAfter === null, 'got: ' + JSON.stringify(lsAfter));
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/about/',
+    toolsSlugs: ['solopreneur-mrr-calculator', 'solopreneur-ltv-calculator'],
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: getCurrentSlug returns null when window.__tools_slugs__ is absent', () => {
+  // Defensive: if BaseLayout fails to inject the whitelist (cached HTML,
+  // ad-blocker stripping inline scripts, etc.), getCurrentSlug must NOT
+  // auto-record. Pass an empty whitelist (treated as "no slugs match").
+  const scenario = `
+  const toolsSlugs = globalThis.window.__tools_slugs__;
+  check('whitelist is an empty array',
+    Array.isArray(toolsSlugs) && toolsSlugs.length === 0,
+    'got: ' + JSON.stringify(toolsSlugs));
+  // No LS write — empty whitelist means no slug matches.
+  const lsAfter = globalThis.localStorage.getItem('forgeflowkit:recent:v1');
+  check('no auto-record with empty whitelist', lsAfter === null, 'got: ' + JSON.stringify(lsAfter));
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/solopreneur-mrr-calculator/',
+    toolsSlugs: [],
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: storage event with WRONG key does NOT trigger re-render (uses RECENT_STORAGE_KEY constant)', () => {
+  // The cross-tab sync listener must compare ev.key against RECENT_STORAGE_KEY
+  // (imported from lib/recent), not a hardcoded literal. A wrong key (some
+  // other app's storage event) must be ignored — only the exact key triggers.
+  const scenario = `
+  // Build a full container so we can detect a re-render via card count.
+  const fullContainer = document.createElement('div');
+  fullContainer.setAttribute('data-recent-container', '');
+  fullContainer.setAttribute('data-mode', 'full');
+  fullContainer.id = 'full-recent';
+  const fullGrid = document.createElement('div');
+  fullGrid.setAttribute('data-recent-grid', '');
+  fullContainer.appendChild(fullGrid);
+  document.body.appendChild(fullContainer);
+  initMod.renderAll();
+  // Count cards via a walk — the header container has dropdown anchors, not cards.
+  function walk(n, acc) {
+    if (n.attributes && n.attributes['data-recent-slug']) acc.push(n);
+    for (const c of (n.children || [])) walk(c, acc);
+  }
+  const beforeCards = [];
+  walk(document.body, beforeCards);
+  const beforeCount = beforeCards.length;
+
+  // Wrong key (e.g. some other app's storage) — must be ignored.
+  const wrongKeyEv = new Event('storage');
+  wrongKeyEv.key = 'some-other-app:key';
+  wrongKeyEv.newValue = 'whatever';
+  globalThis.window.dispatchEvent(wrongKeyEv);
+  await new Promise(r => setImmediate(r));
+
+  const afterWrong = [];
+  walk(document.body, afterWrong);
+  check('wrong-key storage event did NOT re-render', afterWrong.length === beforeCount,
+    'before: ' + beforeCount + ', after: ' + afterWrong.length);
+
+  // Correct key — must re-render. Use the header container (it has 3 dropdown anchors).
+  const rightKeyEv = new Event('storage');
+  rightKeyEv.key = 'forgeflowkit:recent:v1';
+  rightKeyEv.newValue = JSON.stringify({
+    version: 1,
+    entries: [
+      { slug: 'solopreneur-burn-rate-calculator', visitedAt: new Date().toISOString() },
+    ],
+    lastUpdated: new Date().toISOString(),
+  });
+  globalThis.localStorage.setItem('forgeflowkit:recent:v1', rightKeyEv.newValue);
+  globalThis.window.dispatchEvent(rightKeyEv);
+  await new Promise(r => setImmediate(r));
+
+  const header = document.getElementById('header-recent');
+  const headerLinks = header.querySelectorAll('a');
+  check('right-key storage event DID re-render (header now shows burn-rate)',
+    Array.from(headerLinks).some(a => (a.attributes.href || '').includes('burn-rate')),
+    'links: ' + Array.from(headerLinks).map(a => a.attributes.href).join(', '));
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/',
+    lsStore: {
+      'forgeflowkit:recent:v1': JSON.stringify({
+        version: 1,
+        entries: [
+          { slug: 'solopreneur-mrr-calculator', visitedAt: new Date().toISOString() },
+          { slug: 'solopreneur-ltv-calculator', visitedAt: new Date(Date.now() - 3600_000).toISOString() },
+          { slug: 'solopreneur-cac-calculator', visitedAt: new Date(Date.now() - 7200_000).toISOString() },
+        ],
+        lastUpdated: new Date().toISOString(),
+      }),
+    },
+  });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+

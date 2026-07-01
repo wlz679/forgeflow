@@ -2,6 +2,7 @@
 import '../styles/global.css';
 import { getLang, t } from '../i18n';
 import { SITE_URL } from '../lib/site-config';
+import { tools } from '../data/tools';
 
 export interface Props {
   title: string;
@@ -14,6 +15,13 @@ const { title, description, ogImage = '/og-default.png', schema, pageType = 'sta
 const lang = getLang(Astro);
 
 const ogType = { home: 'website', tool: 'product', article: 'article', static: 'website' }[pageType];
+
+// Whitelist of all 32 tool slugs. Consumed by src/scripts/recent-init.client.ts
+// (getCurrentSlug) to decide whether a pathname like /en/foo/ refers to a real
+// tool detail page (auto-record visit) vs. a static page (recent, favorites,
+// about, contact, blog, etc.). Data-driven: re-derived from src/data/tools on
+// every build, so adding a new tool automatically extends the whitelist.
+const toolsSlugsJson = JSON.stringify(tools.map(tool => tool.slug));
 
 const recentI18n = {
   en: {
@@ -113,6 +121,7 @@ const orgSchema = JSON.stringify({
     import '../scripts/recent-init.client.ts';
   </script>
   <script is:inline set:html={`window.__i18n_recent__ = ${recentI18nJson};`}></script>
+  <script is:inline set:html={`window.__tools_slugs__ = ${toolsSlugsJson};`}></script>
   <script type="application/ld+json" set:html={siteSchema} />
   {pageType === 'home' && <script type="application/ld+json" set:html={orgSchema} />}
   {schema && <script type="application/ld+json" set:html={schema} />}
