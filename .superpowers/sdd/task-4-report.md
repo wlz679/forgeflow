@@ -4,7 +4,7 @@
 DONE_WITH_CONCERNS
 
 ## Commits
-- pending (see below)
+- `ffa774a` — `feat(p3-1): Header Clerk block + BaseLayout script + env config (Task 4)`
 
 ## Test Results
 - `node --import tsx --test --test-concurrency=1 tests/header-clerk-render.test.ts tests/baselayout-clerk-script.test.ts`: 5/5 pass
