@@ -53,3 +53,15 @@ function handleLoginClick(e: Event): void {
 export function getClerkInstance(): Clerk | null {
   return clerkInstance;
 }
+
+// Self-invoke: matches P2 init scripts (favorites/recent/history).
+// At runtime in the browser, kick off init when DOM is ready.
+// `typeof document !== 'undefined'` guards against the tsx test harness
+// (which has no DOM, so init() returns early on its own mount-null check).
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initClerk);
+  } else {
+    initClerk();
+  }
+}
