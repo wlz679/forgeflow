@@ -26,7 +26,7 @@
 - 删除单条（`/history/` 页 [🗑]）+ Clear all（顶右 + 二次确认）
 - Restore 机制：跳原工具页 + URL `?prefill=base64-encoded-inputs` + form 自动填充 + 重算
 - Privacy policy 加 "历史快照（History Snapshots）" 段落（与 P2a/P2b 平行）
-- i18n 中英双语
+- i18n 中英双语（14 keys × 2 lang = 28 行；含 `btn.save/saved/restore/delete` + `clear_all/clear_all.confirm`）
 
 ### 不包含（Out of Scope，保留未来或 P3）
 
