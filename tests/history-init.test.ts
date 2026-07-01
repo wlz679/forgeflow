@@ -229,12 +229,23 @@ saveBtn.setAttribute('data-history-save', '');
 resultCard.appendChild(saveBtn);
 document.body.appendChild(resultCard);
 
-// Header dropdown preview container
+// Header dropdown preview container (wrapped in <details><summary> with sibling badge)
+// Mirrors the production Header.astro structure: badge lives in <summary>, container
+// is a sibling <div>. renderPreview must walk up to find the badge.
+const sharedDetails = document.createElement('details');
+document.body.appendChild(sharedDetails);
+const sharedSummary = document.createElement('summary');
+sharedDetails.appendChild(sharedSummary);
+const sharedHeaderBadge = document.createElement('span');
+sharedHeaderBadge.setAttribute('data-history-count', '');
+sharedHeaderBadge.setAttribute('style', 'display: none;');
+sharedHeaderBadge._textContent = '(0)';
+sharedSummary.appendChild(sharedHeaderBadge);
 const previewContainer = document.createElement('div');
 previewContainer.setAttribute('data-history-container', '');
 previewContainer.setAttribute('data-mode', 'preview');
 previewContainer.id = 'header-history';
-document.body.appendChild(previewContainer);
+sharedDetails.appendChild(previewContainer);
 
 // === Import init module ===
 const initUrl = ${JSON.stringify(INIT_MOD_URL)};
@@ -636,5 +647,33 @@ test('init: error path — init does not crash when document is empty', () => {
   check('no uncaught error', true);
   `;
   const r = runChild(scenario, { pathname: '/en/' });
+  assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
+});
+
+test('init: preview mode updates Header [data-history-count] badge in parent <summary>', () => {
+  // The badge lives OUTSIDE the dropdown body (in <summary>), so renderPreview
+  // must walk up to container.parentElement and find the sibling badge there.
+  // Spec: badge shows "(N)" when entries > 0, hidden when 0.
+  const scenario = `
+  const badge = document.querySelector('[data-history-count]');
+  check('badge exists in document', badge !== null);
+  check('badge text updated to (3)', badge._textContent === '(3)', 'got "' + badge._textContent + '"');
+  check('badge style attribute removed (now visible)', badge.attributes.style === undefined,
+    'style attr still: "' + (badge.attributes.style ?? '') + '"');
+  `;
+  const r = runChild(scenario, {
+    pathname: '/en/',
+    lsStore: {
+      'forgeflowkit:history:v1': JSON.stringify({
+        version: 1,
+        entries: [
+          { id: 'a', slug: 'mrr', inputs: {x: '1'}, result: 'r', savedAt: '2026-07-01T10:00:00Z', accessedAt: '2026-07-01T10:00:00Z' },
+          { id: 'b', slug: 'cac', inputs: {x: '2'}, result: 'r', savedAt: '2026-07-01T10:00:00Z', accessedAt: '2026-07-01T10:00:00Z' },
+          { id: 'c', slug: 'ltv', inputs: {x: '3'}, result: 'r', savedAt: '2026-07-01T10:00:00Z', accessedAt: '2026-07-01T10:00:00Z' },
+        ],
+        lastUpdated: '2026-07-01T10:00:00Z',
+      }),
+    },
+  });
   assert.equal(r.ok, true, r.stdout + '\n' + r.stderr);
 });
