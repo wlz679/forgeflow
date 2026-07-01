@@ -275,7 +275,10 @@ process.stdout.write('JSONRESULT_BEGIN' + JSON.stringify(out) + 'JSONRESULT_END'
 
 test('init: prefill from URL ?prefill= fills form fields', () => {
   const scenario = `
-  // Pre-populate form
+  // init() ran during module load with the URL set in spawn options. Since the
+  // form didn't exist at that time, init's prefill call no-op'd and cleared the
+  // URL. Now we have a form, so re-inject the prefill param into window.location
+  // and call the test seam to verify the fill path.
   const form = document.createElement('form');
   form.id = 'tool-form';
   const input1 = document.createElement('input');
@@ -287,23 +290,31 @@ test('init: prefill from URL ?prefill= fills form fields', () => {
   input2.setAttribute('id', 'monthlyPrice');
   form.appendChild(input2);
   document.body.appendChild(form);
-  // Force re-init via exported renderAll + manually re-trigger prefill.
-  // (P2b precedent: \`?t=\` cache-buster doesn't work under tsx, so we use the test seam.)
-  // Pre-populate window.location.search before importing. Since re-import is unreliable,
-  // we directly call the prefill decoder through the lib to simulate the same effect
-  // by writing the same LS state the URL prefill would have written. Here, the test
-  // scenario for the prefill path uses a separate child with search set — but the brief
-  // requires verifying form fields are filled.
-  // For this test, the URL is set in the spawn options and the form is pre-populated.
-  // We need to trigger init after form exists. We do this by calling the same path
-  // the prefill handler would: re-dispatch DOMContentLoaded via the test seam.
-  // Simpler: directly call the init module's prefill handler by re-importing.
-  // But P2b precedent says re-import is unreliable under tsx. Workaround:
-  // verify the prefill decode works by calling the lib directly (already covered in history.test.ts),
-  // and verify init() didn't crash.
-  check('init did not crash', true);
-  check('subscriberCount input exists', input1 !== null);
-  check('monthlyPrice input exists', input2 !== null);
+
+  // Stub history.replaceState so the handler's URL-cleanup is observable.
+  let replaceStateArgs = null;
+  globalThis.window.history.replaceState = (_state, _title, url) => { replaceStateArgs = url; };
+
+  // Re-stamp the prefill param onto location.search and re-run the handler.
+  const prefillParam = ${JSON.stringify(`?prefill=${Buffer.from(JSON.stringify({ subscriberCount: '1000', monthlyPrice: '5.99' }), 'utf-8').toString('base64')}`)};
+  globalThis.window.location.search = prefillParam;
+  globalThis.window.location.href = 'http://localhost/en/solopreneur-mrr-calculator/' + prefillParam;
+  // Set form + input IDs directly on the stub's instance field (StubElement.getElementById
+  // walks \`n.id === id\`, not the attribute map — setAttribute alone wouldn't be queryable).
+  form.id = 'tool-form';
+  input1.id = 'subscriberCount';
+  input2.id = 'monthlyPrice';
+  initMod.handlePrefillFromURL();
+
+  // Assert: form fields are filled from decoded base64
+  check('subscriberCount filled from prefill', input1.value === '1000', 'got: ' + input1.value);
+  check('monthlyPrice filled from prefill', input2.value === '5.99', 'got: ' + input2.value);
+
+  // Assert: URL was cleaned (replaceState called with search without prefill)
+  check('replaceState called with cleaned URL', replaceStateArgs !== null && !replaceStateArgs.includes('prefill='), 'replaceStateArgs: ' + replaceStateArgs);
+
+  // Assert: handler did not throw
+  check('handler did not throw', true);
   `;
   const inputs = { subscriberCount: '1000', monthlyPrice: '5.99' };
   const encoded = Buffer.from(JSON.stringify(inputs), 'utf-8').toString('base64');

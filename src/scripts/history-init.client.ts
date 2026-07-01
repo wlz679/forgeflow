@@ -283,6 +283,19 @@ function bindEvents(): void {
   });
 }
 
+/**
+ * Read `?prefill=<base64>` from the current URL, decode the saved inputs, and:
+ *   1. Fill the matching form fields (by `id` then by `name`).
+ *   2. Remove the `?prefill=...` param from the URL via `history.replaceState`.
+ *   3. Submit the form (after a 100ms tick) to re-run calculate.
+ *
+ * @internal Test seam only — not for production consumers.
+ * The brief does not expose this function as public API; it is exported solely so
+ * the component tests (which run under tsx, where module caching breaks the brief's
+ * `?t=` cache-buster re-import approach) can call it directly in a single import
+ * with form fields present. In production, `init()` is the only entry point and
+ * calls this internally.
+ */
 function handlePrefillFromURL(): void {
   const params = new URLSearchParams(window.location.search);
   const encoded = params.get('prefill');
@@ -304,6 +317,8 @@ function handlePrefillFromURL(): void {
     setTimeout(() => form.submit(), 100);
   }
 }
+
+export { handlePrefillFromURL };
 
 export function init(): void {
   if (initialized) return;
