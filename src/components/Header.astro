@@ -34,6 +34,19 @@ const categoriesWithTranslated = categories.map(c => ({
     <div class="flex items-center gap-6 text-sm">
       <details class="relative group">
         <summary class="cursor-pointer text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 list-none flex items-center gap-1">
+          <span aria-hidden="true">💾</span>
+          <span>{t('history.header_label', lang)}</span>
+          <span data-history-count class="text-xs text-gray-400 ml-1" style="display: none;">(0)</span>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <div class="absolute top-full right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-96 overflow-auto"
+             data-history-container
+             data-mode="preview">
+          <!-- Rendered at runtime by history-init.client.ts -->
+        </div>
+      </details>
+      <details class="relative group">
+        <summary class="cursor-pointer text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 list-none flex items-center gap-1">
           <span aria-hidden="true">👁</span>
           <span>{t('recent.header_label', lang)}</span>
           <span data-recent-count class="text-xs text-gray-400 ml-1" style="display: none;">(0)</span>

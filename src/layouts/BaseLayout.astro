@@ -53,6 +53,42 @@ const recentI18n = {
 };
 const recentI18nJson = JSON.stringify(recentI18n);
 
+const historyI18n = {
+  en: {
+    'history.title': t('history.title', 'en'),
+    'history.subtitle': t('history.subtitle', 'en'),
+    'history.empty.title': t('history.empty.title', 'en'),
+    'history.empty.body': t('history.empty.body', 'en'),
+    'history.empty.browse': t('history.empty.browse', 'en'),
+    'history.header_label': t('history.header_label', 'en'),
+    'history.dropdown.view_all': t('history.dropdown.view_all', 'en'),
+    'history.dropdown.empty': t('history.dropdown.empty', 'en'),
+    'history.btn.save': t('history.btn.save', 'en'),
+    'history.btn.saved': t('history.btn.saved', 'en'),
+    'history.btn.restore': t('history.btn.restore', 'en'),
+    'history.btn.delete': t('history.btn.delete', 'en'),
+    'history.clear_all': t('history.clear_all', 'en'),
+    'history.clear_all.confirm': t('history.clear_all.confirm', 'en'),
+  },
+  zh: {
+    'history.title': t('history.title', 'zh'),
+    'history.subtitle': t('history.subtitle', 'zh'),
+    'history.empty.title': t('history.empty.title', 'zh'),
+    'history.empty.body': t('history.empty.body', 'zh'),
+    'history.empty.browse': t('history.empty.browse', 'zh'),
+    'history.header_label': t('history.header_label', 'zh'),
+    'history.dropdown.view_all': t('history.dropdown.view_all', 'zh'),
+    'history.dropdown.empty': t('history.dropdown.empty', 'zh'),
+    'history.btn.save': t('history.btn.save', 'zh'),
+    'history.btn.saved': t('history.btn.saved', 'zh'),
+    'history.btn.restore': t('history.btn.restore', 'zh'),
+    'history.btn.delete': t('history.btn.delete', 'zh'),
+    'history.clear_all': t('history.clear_all', 'zh'),
+    'history.clear_all.confirm': t('history.clear_all.confirm', 'zh'),
+  },
+};
+const historyI18nJson = JSON.stringify(historyI18n);
+
 const siteSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -120,7 +156,11 @@ const orgSchema = JSON.stringify({
   <script>
     import '../scripts/recent-init.client.ts';
   </script>
+  <script>
+    import '../scripts/history-init.client.ts';
+  </script>
   <script is:inline set:html={`window.__i18n_recent__ = ${recentI18nJson};`}></script>
+  <script is:inline set:html={`window.__i18n_history__ = ${historyI18nJson};`}></script>
   <script is:inline set:html={`window.__tools_slugs__ = ${toolsSlugsJson};`}></script>
   <script type="application/ld+json" set:html={siteSchema} />
   {pageType === 'home' && <script type="application/ld+json" set:html={orgSchema} />}
