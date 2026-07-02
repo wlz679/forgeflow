@@ -1597,4 +1597,14 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'sync.toast.full': { en: 'Storage full, sync paused.', zh: '存储已满，同步已暂停。' },
   'sync.toast.deleted': { en: 'Cloud data deleted.', zh: '云端数据已删除。' },
   'sync.toast.exported': { en: 'Sync data exported.', zh: '同步数据已导出。' },
+
+  // Migration toast (P3-3) — shows once after first sign-in per device
+  'sync.migration.complete': {
+    en: 'Imported {favorites} favorites, {recent} recent items, {history} history snapshots',
+    zh: '已导入 {favorites} 个收藏、{recent} 个最近查看、{history} 个历史快照',
+  },
+  'sync.migration.empty': {
+    en: 'No local data to migrate',
+    zh: '没有本地数据需要迁移',
+  },
 };

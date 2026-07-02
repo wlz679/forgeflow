@@ -22,6 +22,7 @@ import { subscribe as subscribeFavorites } from '../lib/favorites';
 import { subscribe as subscribeRecent } from '../lib/recent';
 import { subscribe as subscribeHistory } from '../lib/history';
 import { getClerkInstance } from './clerk-init.client';
+import { maybeMigrate } from './migration.client.ts';
 import {
   pushCollection,
   pullCollection,
@@ -284,10 +285,13 @@ function pollForAuthAndPull(): void {
   const tick = (): void => {
     const clerk = getClerkInstance();
     if (clerk?.user) {
-      if (!sessionStorage.getItem(SESSION_PULL_KEY)) {
-        sessionStorage.setItem(SESSION_PULL_KEY, '1');
-        void pullAndMerge(clerk.user.id).catch(() => { /* logged; will retry on next change */ });
-      }
+      // Delegate to migration.client.maybeMigrate which checks BOTH the
+      // per-tab sessionStorage guard AND the per-device per-user LS flag
+      // (forgeflowkit:migration:{userId}). Sets both flags on success.
+      void maybeMigrate(clerk.user.id).catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('[sync] maybeMigrate failed', err);
+      });
       // Wire Header sync menu now that we have a user identity.
       wireSyncMenu();
       if (authPollTimer !== null) { clearInterval(authPollTimer); authPollTimer = null; }
