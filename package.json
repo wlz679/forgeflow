@@ -38,6 +38,7 @@
     "@astrojs/sitemap": "3.2.1",
     "@clerk/clerk-js": "^6.23.0",
     "@resvg/resvg-js": "^2.6.2",
+    "@supabase/supabase-js": "^2.110.0",
     "@tailwindcss/vite": "^4.3.0",
     "astro": "^4.13.2",
     "react": "^19.2.7",
