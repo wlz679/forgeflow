@@ -159,9 +159,9 @@ async function main(): Promise<void> {
       entries: [{ slug: 'a', visitedAt: '2026-07-01T00:00:00.000Z' }],
       lastUpdated: '2026-07-01T00:00:00.000Z',
     }));
-    await maybeMigrate('test-user');
+    const migrated = await maybeMigrate('test-user');
     process.stdout.write(JSON.stringify({
-      migrated: true,
+      migrated,
       alertCount: alertsShown.length,
       alertText: alertsShown[0] ?? null,
     }) + '\n');
@@ -169,10 +169,11 @@ async function main(): Promise<void> {
   }
 
   if (scenario === 'silent-on-empty') {
-    // After migration (which itself is a no-op for empty), no toast.
-    await maybeMigrate('test-user');
+    // Cross-device: empty LS but cloud-pull still runs (no items → no toast).
+    const migrated = await maybeMigrate('test-user');
     process.stdout.write(JSON.stringify({
-      migrated: false,
+      migrated,
+      fetchCallCount: fetchCalls.length,
       alertCount: alertsShown.length,
     }) + '\n');
     return;

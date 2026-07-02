@@ -6,9 +6,10 @@
  * (suppressed when no items existed pre-merge — silent no-op for empty users).
  *
  * Idempotency guards (BOTH must be unset to run):
- *   - sessionStorage['sync:did-pull-once']   per-tab (set by sync-init.client.ts
- *                                              after first auth resolution; also
- *                                              re-set here on success)
+ *   - sessionStorage['sync:did-pull-once']   per-tab (set here in maybeMigrate
+ *                                              on successful migration; checked
+ *                                              both here AND by subsequent sync
+ *                                              debounce cycles)
  *   - localStorage[`forgeflowkit:migration:{userId}`]  per-device per-user
  *
  * P3-1 self-call pattern preserved at EOF so Vite does not tree-shake the
@@ -152,20 +153,13 @@ export async function maybeMigrate(userId: string): Promise<boolean> {
 
   const beforeStats = readItemCounts();
 
-  // Short-circuit: nothing local to migrate → silent no-op (no fetch, no toast,
-  // no flag mutation). If the user adds data later, a future sign-in will
-  // re-evaluate this branch and migrate it then.
-  if (!hasAnyItems(beforeStats)) {
-    return false;
-  }
-
   try {
     await pullMergePush(userId);
     setMigrated(userId);
     try { ss.setItem(SESSION_PULL_KEY, '1'); } catch { /* ignore */ }
     const afterStats = readItemCounts();
     showToast(afterStats);
-    if (typeof console !== 'undefined' && hasAnyItems(beforeStats)) {
+    if (typeof console !== 'undefined') {
       console.info('[migration] migrated', { before: beforeStats, after: afterStats });
     }
     return true;

@@ -47,7 +47,6 @@ const DEBOUNCE_MS = 5000;
 const POLL_FOR_AUTH_MS = 5000;
 const POLL_INTERVAL_MS = 1000;
 const LAST_PUSHED_KEY_PREFIX = 'forgeflowkit:sync-last-pushed:';
-const SESSION_PULL_KEY = 'sync:did-pull-once';
 
 const pendingPushes: Set<Collection> = new Set();
 let debounceTimer: number | null = null;

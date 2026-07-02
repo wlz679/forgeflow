@@ -39,17 +39,18 @@ function runChild(env: Record<string, string>): { ok: boolean; error?: string; r
   };
 }
 
-test('migration: empty LS + empty cloud → no fetch, no toast, returns false', () => {
+test('migration: empty LS + empty cloud → 6 fetches but no toast (cross-device still pulls)', () => {
   const { ok, error, result } = runChild({
     __TEST_SCENARIO: 'empty-ls-empty-cloud-skips',
     LANG_PREFIX: '/en/',
   });
   assert.equal(ok, true, `child failed: ${error}`);
-  assert.equal(result.migrated, false, 'migrated should be false (nothing to do)');
-  assert.equal(result.fetchCallCount, 0, 'no fetch should occur for empty LS');
-  assert.equal(result.alertCount, 0, 'no alert should fire for empty LS');
-  assert.equal(result.ssSet, false, 'sessionStorage flag should NOT be set when migration is skipped');
-  assert.equal(result.lsMigrationFlagSet, false, 'LS flag should NOT be set when migration is skipped');
+  assert.equal(result.migrated, true, 'migrated should be true (cross-device case still runs pullAndMerge)');
+  // pullAndMerge does 3 GETs + 3 POSTs = 6 fetches
+  assert.equal(result.fetchCallCount, 6, `expected 6 fetches (3 GET + 3 POST), got ${result.fetchCallCount}`);
+  assert.equal(result.alertCount, 0, 'no alert should fire when nothing was imported (empty LS)');
+  assert.equal(result.ssSet, true, 'sessionStorage flag should be set after migration completes');
+  assert.equal(result.lsMigrationFlagSet, true, 'LS flag should be set after migration completes');
 });
 
 test('migration: LS-only with items + empty cloud → 3 pushes, toast fires, both flags set', () => {
@@ -96,12 +97,13 @@ test('migration: toast text contains correct counts after merge', () => {
   assert.match(result.alertText ?? '', /0 history/, 'toast should mention 0 history');
 });
 
-test('migration: empty LS → no toast (silent no-op)', () => {
+test('migration: empty LS → runs pullAndMerge (cross-device) but no toast', () => {
   const { ok, error, result } = runChild({
     __TEST_SCENARIO: 'silent-on-empty',
     LANG_PREFIX: '/en/',
   });
   assert.equal(ok, true, `child failed: ${error}`);
-  assert.equal(result.migrated, false, 'empty LS means nothing to migrate');
-  assert.equal(result.alertCount, 0, 'no toast when nothing to migrate');
+  assert.equal(result.migrated, true, 'cross-device empty-LS case still runs pullAndMerge');
+  assert.equal(result.fetchCallCount, 6, `expected 6 fetches (3 GET + 3 POST), got ${result.fetchCallCount}`);
+  assert.equal(result.alertCount, 0, 'no toast when nothing was imported (empty LS)');
 });
