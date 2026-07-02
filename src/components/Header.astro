@@ -100,10 +100,10 @@ const categoriesWithTranslated = categories.map(c => ({
       )}
       {showClerk && showSupabase && (
         <div class="sync-menu inline-flex items-center gap-2" data-sync-menu hidden>
-          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-now>Sync now</button>
-          <span class="text-xs text-gray-400" data-sync-last>Last synced: never</span>
-          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-export>Export JSON</button>
-          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-delete>Delete cloud data</button>
+          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-now>{t('sync.menu.syncNow', lang)}</button>
+          <span class="text-xs text-gray-400" data-sync-last>{t('sync.menu.lastSyncedNever', lang)}</span>
+          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-export>{t('sync.menu.export', lang)}</button>
+          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-delete>{t('sync.menu.delete', lang)}</button>
         </div>
       )}
       {navItems.map(item => (

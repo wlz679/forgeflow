@@ -5,12 +5,18 @@
  * Wires Clerk auth resolution to one-time cloud pull.
  * Wires visibilitychange to sendBeacon flush.
  *
+ * Wires the Header sync menu UI (data-sync-* elements):
+ *   - sync now → syncNow()
+ *   - export JSON → exportAll() → blob download
+ *   - delete cloud data → deleteCloudData() (after confirm)
+ *
  * P3-1 self-call pattern: self-invokes startSync() at EOF (P3-1 Task 4 lesson).
  * Uses P3-1 getClerkInstance() to read user identity without modifying P3-1 code.
  *
  * Polls getClerkInstance() every 1s for first 5s after page load to detect
  * auth resolution (P3-1 has no onAuthResolved event emitter; we don't add one
- * to keep P3-1 0 lines changed).
+ * to keep P3-1 0 lines changed). Also re-runs wireSyncMenu() if the user
+ * wasn't signed in at initial load and later signs in (page-not-closed case).
  */
 import { subscribe as subscribeFavorites } from '../lib/favorites';
 import { subscribe as subscribeRecent } from '../lib/recent';
@@ -20,17 +26,21 @@ import {
   pushCollection,
   pullCollection,
   syncNow,
+  exportAll,
+  deleteCloudData,
   mergeFavorites,
   mergeRecent,
   mergeHistory,
   readLSEnvelope,
   writeLSEnvelope,
   setLastSyncedAt,
+  getLastSyncedAt,
   type Collection,
   type FavoritesPayload,
   type RecentPayload,
   type HistoryPayload,
 } from '../lib/sync';
+import { translations, type Lang } from '../i18n/translations';
 
 const DEBOUNCE_MS = 5000;
 const POLL_FOR_AUTH_MS = 5000;
@@ -42,6 +52,48 @@ const pendingPushes: Set<Collection> = new Set();
 let debounceTimer: number | null = null;
 let authPollTimer: number | null = null;
 let visibilityHandlerInstalled = false;
+let syncMenuWired = false;
+let lastLastSyncedAt: string | null = null;
+
+// ----- i18n helpers (browser-side) -----
+
+function getLang(): Lang {
+  if (typeof window === 'undefined') return 'en';
+  const m = /^\/(en|zh)(\/|$)/.exec(window.location.pathname);
+  return (m?.[1] as Lang) || 'en';
+}
+
+function t(key: string, vars?: Record<string, string>): string {
+  const entry = translations[key];
+  if (!entry) return key;
+  let text = entry[getLang()];
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      text = text.replace(`{${k}}`, v);
+    }
+  }
+  return text;
+}
+
+function formatLastSynced(iso: string | null): string {
+  if (!iso) return t('sync.menu.lastSyncedNever');
+  // Use a short, locale-agnostic format: YYYY-MM-DD HH:MM (UTC)
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return t('sync.menu.lastSyncedNever');
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const ts = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  return t('sync.menu.lastSynced', { time: ts });
+}
+
+function refreshLastSyncedLabel(): void {
+  if (typeof document === 'undefined') return;
+  const el = document.querySelector<HTMLElement>('[data-sync-last]');
+  if (!el) return;
+  const iso = getLastSyncedAt() ?? lastLastSyncedAt;
+  el.textContent = formatLastSynced(iso);
+}
+
+// ----- Push / pull core -----
 
 function armDebounce(): void {
   if (debounceTimer !== null) clearTimeout(debounceTimer);
@@ -75,6 +127,8 @@ async function flushPending(): Promise<void> {
     }
   }
   setLastSyncedAt(new Date().toISOString());
+  lastLastSyncedAt = new Date().toISOString();
+  refreshLastSyncedLabel();
 }
 
 async function pullAndMerge(userId: string): Promise<void> {
@@ -99,6 +153,8 @@ async function pullAndMerge(userId: string): Promise<void> {
   await pushCollection(userId, 'recent', recMerged);
   await pushCollection(userId, 'history', histMerged);
   setLastSyncedAt(new Date().toISOString());
+  lastLastSyncedAt = new Date().toISOString();
+  refreshLastSyncedLabel();
 }
 
 function installVisibilityFlush(): void {
@@ -119,6 +175,102 @@ function installVisibilityFlush(): void {
   });
 }
 
+// ----- Sync menu UI wiring -----
+
+/**
+ * Trigger a Blob download in the browser. Pure browser-side helper.
+ */
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Defer revoke so the download commit lands before we free the object URL.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/**
+ * Bind Header sync menu (data-sync-menu/now/last/export/delete) to sync.ts
+ * operations. Idempotent — only wires once per page load. Only meaningful
+ * when the user is signed in; safe to call either way (guards on userId).
+ */
+export function wireSyncMenu(): void {
+  if (typeof document === 'undefined') return;
+  if (syncMenuWired) return;
+  const menu = document.querySelector<HTMLElement>('[data-sync-menu]');
+  if (!menu) return;
+  // Only keep the menu enabled when Clerk has a signed-in user.
+  const clerk = getClerkInstance();
+  if (!clerk?.user) return;
+
+  syncMenuWired = true;
+  menu.removeAttribute('hidden');
+  refreshLastSyncedLabel();
+
+  const nowBtn = document.querySelector<HTMLButtonElement>('[data-sync-now]');
+  const exportBtn = document.querySelector<HTMLButtonElement>('[data-sync-export]');
+  const deleteBtn = document.querySelector<HTMLButtonElement>('[data-sync-delete]');
+
+  if (nowBtn) {
+    nowBtn.addEventListener('click', () => {
+      const userId = getClerkInstance()?.user?.id;
+      if (!userId) return;
+      void (async () => {
+        try {
+          const result = await syncNow(userId);
+          setLastSyncedAt(new Date().toISOString());
+          lastLastSyncedAt = new Date().toISOString();
+          refreshLastSyncedLabel();
+          // Pulled/pushed counts useful for debugging — kept unobtrusive.
+          // eslint-disable-next-line no-console
+          console.info('[sync] manual syncNow', result);
+        } catch (err) {
+          console.error('[sync] syncNow failed', err);
+        }
+      })();
+    });
+  }
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      const userId = getClerkInstance()?.user?.id;
+      if (!userId) return;
+      void (async () => {
+        try {
+          const blob = await exportAll(userId);
+          downloadBlob(blob, `forgeflowkit-sync-${new Date().toISOString().slice(0, 10)}.json`);
+        } catch (err) {
+          console.error('[sync] exportAll failed', err);
+        }
+      })();
+    });
+  }
+
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
+      const userId = getClerkInstance()?.user?.id;
+      if (!userId) return;
+      const msg = t('sync.menu.confirmDelete');
+      if (typeof window.confirm === 'undefined') return;
+      if (!window.confirm(msg)) return;
+      void (async () => {
+        try {
+          await deleteCloudData(userId);
+          setLastSyncedAt(new Date().toISOString());
+          lastLastSyncedAt = new Date().toISOString();
+          refreshLastSyncedLabel();
+          console.info('[sync] cloud data deleted');
+        } catch (err) {
+          console.error('[sync] deleteCloudData failed', err);
+        }
+      })();
+    });
+  }
+}
+
 export function startSync(): void {
   // Wire P2 layer subscribe → queue push.
   subscribeFavorites(() => queuePush('favorites'));
@@ -136,6 +288,8 @@ function pollForAuthAndPull(): void {
         sessionStorage.setItem(SESSION_PULL_KEY, '1');
         void pullAndMerge(clerk.user.id).catch(() => { /* logged; will retry on next change */ });
       }
+      // Wire Header sync menu now that we have a user identity.
+      wireSyncMenu();
       if (authPollTimer !== null) { clearInterval(authPollTimer); authPollTimer = null; }
       return;
     }

@@ -26,9 +26,6 @@ import { existsSync, readFileSync, rmSync } from 'node:fs';
 const root = resolve(import.meta.dirname, '..');
 const distPath = resolve(root, 'dist');
 
-interface CacheEntry { sig: string; en: string; zh: string }
-const cache: CacheEntry | null = null;
-
 function cleanDist(): void {
   if (existsSync(distPath)) {
     try {
@@ -68,7 +65,8 @@ function envSig(env: Record<string, string>): string {
  */
 export function buildWithEnv(env: Record<string, string>): { en: string; zh: string } {
   const sig = envSig(env);
-  // Per-process cache keyed by env signature.
+  // Per-process cache keyed by env signature (globalThis so it survives
+  // multiple calls within the same tsx process).
   // (Test runs are short-lived; one build per env combination is enough.)
   const cacheKey = `_p32_${sig}`;
   const cached = (globalThis as any)[cacheKey] as { en: string; zh: string } | undefined;
