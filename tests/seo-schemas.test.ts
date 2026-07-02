@@ -309,3 +309,39 @@ test('P3-1 — privacy policy discloses Account Authentication (Clerk)', { skip:
     }
   }
 });
+
+// =============================================================================
+// P3-2 — Data Sync (Supabase) privacy disclosure (Task 7, 2026-07-02)
+// =============================================================================
+
+test('P3-2 — privacy policy discloses Data Sync (Supabase)', { skip: !existsSync(distDir) }, () => {
+  // P3-2 wires cross-device sync (favorites / recent / history) via Supabase,
+  // keyed by Clerk user ID. The privacy page must disclose that synced data
+  // is sent to Supabase, that export/delete is available from the account
+  // menu, and that the data size is bounded (~23KB across 3 collections).
+  // The existing favorites / recently-viewed / history sections must be
+  // updated to reflect the new "sync across signed-in devices" wording.
+  for (const lang of ['en', 'zh']) {
+    const path = resolve(distDir, lang, 'privacy-policy', 'index.html');
+    assert.ok(existsSync(path), `dist missing: ${path}`);
+    const html = readFileSync(path, 'utf-8');
+    if (lang === 'en') {
+      assert.ok(html.includes('Data Sync (Supabase)'), 'en privacy: "Data Sync (Supabase)" heading present');
+      assert.ok(html.includes('synced across your signed-in devices'), 'en privacy: "synced across your signed-in devices" wording present');
+      assert.ok(html.includes('https://supabase.com'), 'en privacy: Supabase link present');
+      assert.ok(html.includes('export all synced data as JSON'), 'en privacy: export-as-JSON disclaimer present');
+      assert.ok(html.includes('~23KB total'), 'en privacy: data size bound present');
+      // Updated existing sections must no longer claim "never synced" / "no cross-device sync"
+      assert.ok(!html.includes('never synced across devices'), 'en privacy: stale "never synced" wording still present');
+      assert.ok(!html.includes('no cross-device sync'), 'en privacy: stale "no cross-device sync" wording still present');
+    } else {
+      assert.ok(html.includes('数据同步（Supabase）'), 'zh privacy: "数据同步（Supabase）" heading present');
+      assert.ok(html.includes('在你登录的设备之间同步'), 'zh privacy: "在你登录的设备之间同步" wording present');
+      assert.ok(html.includes('https://supabase.com'), 'zh privacy: Supabase link present');
+      assert.ok(html.includes('导出所有同步数据为 JSON'), 'zh privacy: export-as-JSON disclaimer present');
+      assert.ok(html.includes('约 23KB'), 'zh privacy: data size bound present');
+      // Updated existing sections must no longer claim "不跨设备同步"
+      assert.ok(!html.includes('不跨设备同步'), 'zh privacy: stale "不跨设备同步" wording still present');
+    }
+  }
+});

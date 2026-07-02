@@ -54,6 +54,19 @@ const privacySchema = JSON.stringify({
       )}
       {lang === 'zh' ? (
         <>
+          <h2>数据同步（Supabase）</h2>
+          <p>登录后，你的收藏、最近查看的计算器和保存的历史快照会通过 <a href="https://supabase.com">Supabase</a> 在你登录的设备之间同步。你可以随时从账户菜单导出所有同步数据为 JSON 格式，或将其删除。我们会保留你的同步数据，直到你删除或注销账户。</p>
+          <p>Supabase 接收你的 Clerk 用户 ID（用于身份验证）和 3 个数据集合（favorites / recent / history，约 23KB）</p>
+        </>
+      ) : (
+        <>
+          <h2>Data Sync (Supabase)</h2>
+          <p>When you're signed in, your favorites, recently viewed calculators, and saved history snapshots are synced across your signed-in devices via <a href="https://supabase.com">Supabase</a> (supabase.com). You can export all synced data as JSON or delete it at any time from the account menu. We retain your synced data until you delete it or delete your account.</p>
+          <p>Supabase receives your Clerk user ID (for authentication) and 3 data collections (favorites / recent / history, ~23KB total).</p>
+        </>
+      )}
+      {lang === 'zh' ? (
+        <>
           <h2>浏览器存储（Browser Storage）</h2>
           <p>我们在你的浏览器中使用 localStorage 存储以下数据：</p>
           <ul>
@@ -61,7 +74,7 @@ const privacySchema = JSON.stringify({
           </ul>
           <p>这些数据：</p>
           <ul>
-            <li>仅存储在你的设备上（不发送至我们的服务器，不跨设备同步）</li>
+            <li>保存在你的设备上，并在你登录的设备之间同步</li>
             <li>可随时在浏览器设置中清除（站点数据 → 删除）</li>
             <li>不包含任何可识别个人身份的信息（仅工具 slug）</li>
           </ul>
@@ -73,7 +86,7 @@ const privacySchema = JSON.stringify({
           </ul>
           <p>这些数据：</p>
           <ul>
-            <li>仅存储在你的设备上（不发送至我们的服务器，不跨设备同步）</li>
+            <li>本地存储，并在你登录的设备之间同步（不分享给第三方）</li>
             <li>可随时在浏览器设置中清除（站点数据 → 删除）</li>
             <li>不包含任何可识别个人身份的信息（仅工具 slug + 时间戳）</li>
           </ul>
@@ -85,7 +98,7 @@ const privacySchema = JSON.stringify({
           </ul>
           <p>这些数据：</p>
           <ul>
-            <li>仅存储在你的设备上（不发送至我们的服务器，不跨设备同步）</li>
+            <li>本地存储，并通过 Supabase 在你登录的设备之间同步</li>
             <li>可随时在浏览器设置中清除（站点数据 → 删除）</li>
             <li>可在 /history/ 页面查看、恢复、删除单条或清空</li>
             <li>不包含任何可识别个人身份的信息（仅工具 slug + 输入值 + 时间戳）</li>
@@ -101,7 +114,7 @@ const privacySchema = JSON.stringify({
           </ul>
           <p>This data:</p>
           <ul>
-            <li>Stays on your device only — never sent to our servers, never synced across devices</li>
+            <li>Stays on your device and syncs across your signed-in devices</li>
             <li>Can be cleared at any time via your browser's site data settings</li>
             <li>Contains no personally identifiable information — only tool slug strings</li>
           </ul>
@@ -113,7 +126,7 @@ const privacySchema = JSON.stringify({
           </ul>
           <p>This data:</p>
           <ul>
-            <li>Is stored only on your device (not sent to our servers, no cross-device sync)</li>
+            <li>Is stored locally and synced across your signed-in devices (no third-party sharing)</li>
             <li>Can be cleared at any time in your browser settings (Site data → Clear)</li>
             <li>Contains no personally identifiable information (only tool slugs + timestamps)</li>
           </ul>
@@ -125,7 +138,7 @@ const privacySchema = JSON.stringify({
           </ul>
           <p>This data:</p>
           <ul>
-            <li>Is stored only on your device (not sent to our servers, no cross-device sync)</li>
+            <li>Is stored locally and synced across your signed-in devices via Supabase</li>
             <li>Can be cleared at any time in your browser settings (Site data → Clear)</li>
             <li>Can be viewed, restored, individually deleted, or fully cleared on the /history/ page</li>
             <li>Contains no personally identifiable information (only tool slugs + input values + timestamps)</li>
