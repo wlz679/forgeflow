@@ -19,13 +19,19 @@
  * V1 does NOT validate process.env directly — that's `scripts/check-supabase-env.mjs`'s job.
  * This helper is for the Astro-side gate in Header.astro.
  */
-export function hasSupabaseEnv(): boolean {
+function readSupabaseEnvVars(): { url: string | undefined; key: string | undefined } {
   const fromUrlMeta = (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined;
   const fromKeyMeta = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string | undefined;
   const fromUrlProc = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || undefined;
   const fromKeyProc = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || undefined;
-  const url = fromUrlMeta ?? fromUrlProc;
-  const key = fromKeyMeta ?? fromKeyProc;
+  return {
+    url: fromUrlMeta ?? fromUrlProc,
+    key: fromKeyMeta ?? fromKeyProc,
+  };
+}
+
+export function hasSupabaseEnv(): boolean {
+  const { url, key } = readSupabaseEnvVars();
   if (!url || !key) return false;
   const urlTrim = url.trim();
   const keyTrim = key.trim();
@@ -34,4 +40,17 @@ export function hasSupabaseEnv(): boolean {
   if (!urlTrim.startsWith('https://')) return false;
   if (!urlTrim.includes('.supabase.co')) return false;
   return true;
+}
+
+/**
+ * Resolve Supabase config as a {url, key} pair, or null if env is missing /
+ * placeholder. Less strict than hasSupabaseEnv() — used by sync.ts I/O
+ * wrappers which need the values, not just a yes/no gate. Dual-source
+ * fallback (import.meta.env primary, process.env secondary) is preserved.
+ */
+export function getSupabaseEnv(): { url: string; key: string } | null {
+  const { url, key } = readSupabaseEnvVars();
+  if (!url || !key) return null;
+  if (url.includes('REPLACE_ME') || key.includes('REPLACE_ME')) return null;
+  return { url, key };
 }

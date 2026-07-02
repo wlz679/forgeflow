@@ -59,13 +59,18 @@ test('pullCollection: GET returns payload, or null if no row', async () => {
   assert.equal(p2, null);
 });
 
-test('syncNow: pull+merge+push all 3 collections in sequence', async () => {
+test('syncNow: pull+merge+push all 3 collections (parallel)', async () => {
+  // Per spec §5.3.3, syncNow runs pull+merge+push for the 3 collections in
+  // parallel (Promise.all). The mock-fetch response queue is consumed in the
+  // order fetch is invoked. With Promise.all, all 3 pulls' fetch calls run
+  // synchronously before any microtask yields, so the queue order is:
+  //   [pull fav, pull recent, pull history, push fav, push recent, push history].
   const { f, calls } = mockFetch([
     { status: 200, body: [] },  // pull favorites (no row)
+    { status: 200, body: [] },  // pull recent (no row)
+    { status: 200, body: [] },  // pull history (no row)
     { status: 201 },            // push favorites
-    { status: 200, body: [] },  // pull recent
     { status: 201 },            // push recent
-    { status: 200, body: [] },  // pull history
     { status: 201 },            // push history
   ]);
   // syncNow reads/writes LS — skip if no LS available
@@ -78,6 +83,16 @@ test('syncNow: pull+merge+push all 3 collections in sequence', async () => {
   assert.equal(result.pushed, 3);
   assert.equal(result.pulled, 0);
   assert.equal(calls.length, 6);
+  // Verify URL set — 3 pulls (GET) + 3 pushes (POST), across the 3 collections.
+  const urls = calls.map(c => c.url);
+  const pullUrls = urls.filter(u => u.includes('clerk_user_id=eq.'));
+  const pushUrls = urls.filter(u => u.includes('on_conflict=clerk_user_id'));
+  assert.equal(pullUrls.length, 3);
+  assert.equal(pushUrls.length, 3);
+  for (const table of ['user_favorites', 'user_recent', 'user_history']) {
+    assert.ok(pullUrls.some(u => u.includes(`/rest/v1/${table}?`)), `missing GET for ${table}`);
+    assert.ok(pushUrls.some(u => u.includes(`/rest/v1/${table}?`)), `missing POST for ${table}`);
+  }
 });
 
 test('pushCollection: 401 → throws SyncAuthError', async () => {

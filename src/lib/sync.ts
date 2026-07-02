@@ -7,15 +7,14 @@
  *   - history: id-based union, cap 100 by accessedAt, same id → newer wins
  *
  * I/O wrappers accept `fetchImpl` for unit testing without real Supabase.
- *
- * Env source: dual-source (import.meta.env primary, process.env fallback).
- * Mirrors `src/lib/supabase-env.ts`'s hasSupabaseEnv() — needed because
- * tsx tests don't see Astro's import.meta.env replacements.
+ * Env resolved via `getSupabaseEnv()` from `src/lib/supabase-env.ts` (dual-source:
+ * import.meta.env primary, process.env fallback — tsx tests can't see Astro's replacements).
  */
 
 import { FAVORITES_STORAGE_KEY } from './favorites.ts';
 import { RECENT_STORAGE_KEY } from './recent.ts';
 import { HISTORY_STORAGE_KEY } from './history.ts';
+import { getSupabaseEnv } from './supabase-env.ts';
 
 export const FAVORITES_MAX_ITEMS = 50;
 export const RECENT_MAX_ITEMS = 20;
@@ -148,24 +147,55 @@ export function writeLSEnvelope(collection: Collection, payload: SyncPayload): v
   ls.setItem(key, JSON.stringify(payload));
 }
 
-// ===== Supabase config (dual-source: import.meta.env primary, process.env fallback) =====
-
-function getSupabaseConfig(): { url: string; key: string } | null {
-  const fromUrlMeta = (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined;
-  const fromKeyMeta = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string | undefined;
-  const fromUrlProc = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || undefined;
-  const fromKeyProc = (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || undefined;
-  const url = fromUrlMeta ?? fromUrlProc;
-  const key = fromKeyMeta ?? fromKeyProc;
-  if (!url || !key) return null;
-  if (url.includes('REPLACE_ME') || key.includes('REPLACE_ME')) return null;
-  return { url, key };
-}
+// ===== Supabase request helper =====
 
 function tableName(collection: Collection): string {
   return collection === 'favorites' ? 'user_favorites' :
          collection === 'recent' ? 'user_recent' :
          'user_history';
+}
+
+/**
+ * Build the Supabase REST URL + headers for a collection op and execute fetch.
+ * Public wrappers (push/pull/delete) handle their own error semantics
+ * (401/403/404) on top of the raw Response.
+ */
+async function _supabaseRequest(opts: {
+  method: 'GET' | 'POST' | 'DELETE';
+  userId: string;
+  collection: Collection;
+  body?: unknown;
+  fetchImpl: typeof fetch;
+}): Promise<Response> {
+  const config = getSupabaseEnv();
+  if (!config) throw new Error('Supabase env not configured');
+  const table = tableName(opts.collection);
+  const queryUser = `clerk_user_id=eq.${encodeURIComponent(opts.userId)}`;
+  let url: string;
+  let headers: Record<string, string>;
+  let body: string | undefined;
+  if (opts.method === 'POST') {
+    url = `${config.url}/rest/v1/${table}?on_conflict=clerk_user_id`;
+    headers = {
+      'apikey': config.key,
+      'Authorization': `Bearer ${config.key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal',
+    };
+    body = JSON.stringify({
+      clerk_user_id: opts.userId,
+      payload: opts.body,
+      last_updated: new Date().toISOString(),
+    });
+  } else {
+    // GET and DELETE share URL shape and headers
+    url = `${config.url}/rest/v1/${table}?${queryUser}`;
+    headers = {
+      'apikey': config.key,
+      'Authorization': `Bearer ${config.key}`,
+    };
+  }
+  return opts.fetchImpl(url, { method: opts.method, headers, body });
 }
 
 // ===== I/O wrappers =====
@@ -176,23 +206,12 @@ export async function pushCollection(
   payload: SyncPayload,
   fetchImpl: typeof fetch = fetch
 ): Promise<void> {
-  const config = getSupabaseConfig();
-  if (!config) throw new Error('Supabase env not configured');
-  const table = tableName(collection);
-  const url = `${config.url}/rest/v1/${table}?on_conflict=clerk_user_id`;
-  const res = await fetchImpl(url, {
+  const res = await _supabaseRequest({
     method: 'POST',
-    headers: {
-      'apikey': config.key,
-      'Authorization': `Bearer ${config.key}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates,return=minimal',
-    },
-    body: JSON.stringify({
-      clerk_user_id: userId,
-      payload,
-      last_updated: new Date().toISOString(),
-    }),
+    userId,
+    collection,
+    body: payload,
+    fetchImpl,
   });
   if (!res.ok) {
     if (res.status === 401) throw new SyncAuthError('Supabase returned 401');
@@ -206,16 +225,11 @@ export async function pullCollection(
   collection: Collection,
   fetchImpl: typeof fetch = fetch
 ): Promise<SyncPayload | null> {
-  const config = getSupabaseConfig();
-  if (!config) throw new Error('Supabase env not configured');
-  const table = tableName(collection);
-  const url = `${config.url}/rest/v1/${table}?clerk_user_id=eq.${encodeURIComponent(userId)}`;
-  const res = await fetchImpl(url, {
+  const res = await _supabaseRequest({
     method: 'GET',
-    headers: {
-      'apikey': config.key,
-      'Authorization': `Bearer ${config.key}`,
-    },
+    userId,
+    collection,
+    fetchImpl,
   });
   if (!res.ok) {
     if (res.status === 401) throw new SyncAuthError('Supabase returned 401');
@@ -251,7 +265,9 @@ export async function syncNow(userId: string, fetchImpl?: typeof fetch): Promise
   let pushed = 0;
   let pulled = 0;
   try {
-    for (const col of collections) {
+    // Per spec §5.3.3 — pull + merge + push run in parallel across the 3 collections.
+    // merge* are pure/synchronous; only the I/O calls benefit from Promise.all.
+    await Promise.all(collections.map(async col => {
       const cloud = await pullCollection(userId, col, fetchImpl);
       if (cloud !== null) pulled++;
       const ls = readLSEnvelope(col);
@@ -261,7 +277,7 @@ export async function syncNow(userId: string, fetchImpl?: typeof fetch): Promise
       writeLSEnvelope(col, merged);
       await pushCollection(userId, col, merged, fetchImpl);
       pushed++;
-    }
+    }));
     emitStatus('idle');
     return { pushed, pulled };
   } catch (e) {
@@ -271,9 +287,12 @@ export async function syncNow(userId: string, fetchImpl?: typeof fetch): Promise
 }
 
 export async function exportAll(userId: string, fetchImpl?: typeof fetch): Promise<Blob> {
-  const favorites = await pullCollection(userId, 'favorites', fetchImpl);
-  const recent = await pullCollection(userId, 'recent', fetchImpl);
-  const history = await pullCollection(userId, 'history', fetchImpl);
+  // Per spec §5.3.4 — GET × 3 collections in parallel.
+  const [favorites, recent, history] = await Promise.all([
+    pullCollection(userId, 'favorites', fetchImpl),
+    pullCollection(userId, 'recent', fetchImpl),
+    pullCollection(userId, 'history', fetchImpl),
+  ]);
   const json = JSON.stringify({
     exportedAt: new Date().toISOString(),
     userId,
@@ -285,18 +304,13 @@ export async function exportAll(userId: string, fetchImpl?: typeof fetch): Promi
 }
 
 export async function deleteCloudData(userId: string, fetchImpl: typeof fetch = fetch): Promise<void> {
-  const config = getSupabaseConfig();
-  if (!config) throw new Error('Supabase env not configured');
   const collections: Collection[] = ['favorites', 'recent', 'history'];
   await Promise.all(collections.map(async col => {
-    const table = tableName(col);
-    const url = `${config.url}/rest/v1/${table}?clerk_user_id=eq.${encodeURIComponent(userId)}`;
-    const res = await fetchImpl(url, {
+    const res = await _supabaseRequest({
       method: 'DELETE',
-      headers: {
-        'apikey': config.key,
-        'Authorization': `Bearer ${config.key}`,
-      },
+      userId,
+      collection: col,
+      fetchImpl,
     });
     if (!res.ok && res.status !== 404) {
       throw new Error(`Supabase delete failed for ${col}: ${res.status}`);
