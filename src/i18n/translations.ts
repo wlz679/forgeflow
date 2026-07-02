@@ -1583,4 +1583,18 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'history.btn.delete': { en: '🗑', zh: '🗑' },
   'history.clear_all': { en: 'Clear all', zh: '清空全部' },
   'history.clear_all.confirm': { en: 'Delete all {count} snapshots? This cannot be undone.', zh: '确认删除全部 {count} 个快照？此操作不可撤销。' },
+
+  // ===== Sync UI (P3-2) =====
+  'sync.menu.syncNow': { en: 'Sync now', zh: '立即同步' },
+  'sync.menu.lastSynced': { en: 'Last synced: {time}', zh: '上次同步：{time}' },
+  'sync.menu.lastSyncedNever': { en: 'Last synced: never', zh: '上次同步：从未' },
+  'sync.menu.export': { en: 'Export JSON', zh: '导出 JSON' },
+  'sync.menu.delete': { en: 'Delete cloud data', zh: '删除云端数据' },
+  'sync.menu.confirmDelete': { en: 'Delete all synced data from Supabase? Your local data will be kept.', zh: '确定删除 Supabase 上的所有同步数据？本地数据将保留。' },
+  'sync.status.pulling': { en: 'Syncing…', zh: '同步中…' },
+  'sync.toast.expired': { en: 'Session expired, please sign in again.', zh: '会话已过期，请重新登录。' },
+  'sync.toast.unavailable': { en: 'Sync temporarily unavailable.', zh: '同步服务暂时不可用。' },
+  'sync.toast.full': { en: 'Storage full, sync paused.', zh: '存储已满，同步已暂停。' },
+  'sync.toast.deleted': { en: 'Cloud data deleted.', zh: '云端数据已删除。' },
+  'sync.toast.exported': { en: 'Sync data exported.', zh: '同步数据已导出。' },
 };

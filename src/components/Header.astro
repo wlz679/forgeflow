@@ -2,8 +2,10 @@
 import { t, getLang } from '../i18n';
 import { categories } from '../data/categories';
 import { hasClerkEnv } from '../lib/clerk-env';
+import { hasSupabaseEnv } from '../lib/supabase-env';
 
 const showClerk = hasClerkEnv();
+const showSupabase = hasSupabaseEnv();
 
 const lang = getLang(Astro);
 const otherLang = lang === 'zh' ? 'en' : 'zh';
@@ -94,6 +96,14 @@ const categoriesWithTranslated = categories.map(c => ({
           <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1">
             Login
           </button>
+        </div>
+      )}
+      {showClerk && showSupabase && (
+        <div class="sync-menu inline-flex items-center gap-2" data-sync-menu hidden>
+          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-now>Sync now</button>
+          <span class="text-xs text-gray-400" data-sync-last>Last synced: never</span>
+          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-export>Export JSON</button>
+          <button type="button" class="text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 px-2 py-1" data-sync-delete>Delete cloud data</button>
         </div>
       )}
       {navItems.map(item => (
