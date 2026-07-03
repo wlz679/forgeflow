@@ -76,6 +76,11 @@
     "headlineUnit": { "en": "burn multiple", "zh": "烧钱倍数" },
     "headlineLabel": { "en": "Burn Multiple on $2M Burn / $1.5M ARR", "zh": "$2M 烧钱 / $1.5M 新增 ARR 的烧钱倍数" }
   },
+  "solopreneur-remote-vs-office-calculator": {
+    "headline": { "en": "$120,000", "zh": "$120,000" },
+    "headlineUnit": { "en": "annual savings", "zh": "年度节省" },
+    "headlineLabel": { "en": "Annual Savings Going Remote (10 ppl, $1.5K office / $500 stipend)", "zh": "10 人团队转向远程年度节省（$1.5K 办公室 / $500 补贴）" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },
