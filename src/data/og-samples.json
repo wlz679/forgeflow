@@ -61,6 +61,11 @@
     "headlineUnit": { "en": "final balance", "zh": "最终余额" },
     "headlineLabel": { "en": "Compound Interest Result", "zh": "复利最终余额" }
   },
+  "solopreneur-stripe-fee-calculator": {
+    "headline": { "en": "$3.20", "zh": "$3.20" },
+    "headlineUnit": { "en": "fee per $100", "zh": "百元交易手续费" },
+    "headlineLabel": { "en": "Stripe US Fee on $100", "zh": "Stripe US $100 手续费" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },

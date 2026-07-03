@@ -81,6 +81,8 @@ const ENGINES = [
     subdir: 'investment',  defaultInputs: { principal: '10000', monthlyContribution: '500', annualRate: '7', compoundFrequency: 'monthly', years: '20' } },
   { file: 'project-profitability-calculator.ts', slug: 'solopreneur-project-profitability-calculator',
     subdir: 'valuation', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
+  { file: 'stripe-fee-calculator.ts', slug: 'solopreneur-stripe-fee-calculator',
+    subdir: 'valuation', defaultInputs: { chargeAmount: '100', provider: 'stripe', monthlyTransactions: '100', internationalCards: 'no' } },
   { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',
     subdir: 'freelance',     defaultInputs: { monthlyTraffic: '50000', conversionRate: '2', avgCommission: '50', monthlyCost: '200' } },
   { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',
