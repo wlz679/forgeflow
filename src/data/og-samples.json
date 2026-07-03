@@ -66,6 +66,11 @@
     "headlineUnit": { "en": "fee per $100", "zh": "百元交易手续费" },
     "headlineLabel": { "en": "Stripe US Fee on $100", "zh": "Stripe US $100 手续费" }
   },
+  "solopreneur-safe-convertible-note-calculator": {
+    "headline": { "en": "10.0%", "zh": "10.0%" },
+    "headlineUnit": { "en": "SAFE ownership", "zh": "SAFE 持股比例" },
+    "headlineLabel": { "en": "SAFE Holder Ownership at Conversion", "zh": "SAFE 投资人转股持股比例" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },

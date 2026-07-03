@@ -8,3 +8,4 @@ import './email-list-revenue-calculator';
 import './project-profitability-calculator';
 import './saas-pricing-planner';
 import './stripe-fee-calculator';
+import './safe-convertible-note-calculator';

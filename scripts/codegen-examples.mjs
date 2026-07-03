@@ -83,6 +83,8 @@ const ENGINES = [
     subdir: 'valuation', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
   { file: 'stripe-fee-calculator.ts', slug: 'solopreneur-stripe-fee-calculator',
     subdir: 'valuation', defaultInputs: { chargeAmount: '100', provider: 'stripe', monthlyTransactions: '100', internationalCards: 'no' } },
+  { file: 'safe-convertible-note-calculator.ts', slug: 'solopreneur-safe-convertible-note-calculator',
+    subdir: 'valuation', defaultInputs: { investmentAmount: '500000', postMoneyCap: '5000000', discountRate: '0', existingShares: '1000000', nextRoundValuation: '5000000' } },
   { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',
     subdir: 'freelance',     defaultInputs: { monthlyTraffic: '50000', conversionRate: '2', avgCommission: '50', monthlyCost: '200' } },
   { file: 'email-list-revenue-calculator.ts',  slug: 'solopreneur-email-list-revenue-calculator',
