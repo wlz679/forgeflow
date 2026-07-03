@@ -19,7 +19,7 @@ Add a **multi-provider payment processor fee calculator** to the **Valuation** c
 | **Output model** | Single charge breakdown (amount / % fee / fixed fee / total fee / net received) · 5-provider comparison table · monthly/yearly batch projection · 5 what-if scenarios · actionable tip on fee reduction |
 | **Math** | `fee = amount × percentage + fixed`, where `(percentage, fixed)` per provider. International Stripe surcharge: `+1.5%`. Wise: no fixed fee (varies by corridor, use 0 for V1 with disclaimer). |
 | **Visual elements** | Inline ASCII bars + 🟢🟡🟠🔴 for fee efficiency vs industry average; 5-row comparison table; NO external chart library |
-| **Category** | C class — file: `src/engines/valuation/stripe-fee-calculator.ts` |
+| **Category** | Valuation (categoryId `C`) — file: `src/engines/valuation/stripe-fee-calculator.ts` |
 | **i18n** | en + zh (calculator page auto-translates via existing pipeline) |
 
 **V2 deferred (out of scope):**
@@ -79,7 +79,7 @@ V2 candidates: Adyen (volume-discount), Braintree (PayPal-owned), 2Checkout, App
 | `chargeAmount` | number | 100 | e.g. 100 | Single transaction amount (USD) |
 | `provider` | select | stripe | — | `stripe` / `stripe-international` / `paypal` / `square` / `wise` |
 | `monthlyTransactions` | number | 100 | e.g. 100 | Batch projection; 0 = single charge only |
-| `internationalCards` | checkbox | false | — | Only matters when `provider === 'stripe'` |
+| `internationalCards` | select | no | — | Only matters when `provider === 'stripe'`; options `['no', 'yes']` (ToolInput lacks checkbox support — use select) |
 
 **Defaults rationale:**
 - `chargeAmount: $100` — typical SaaS / digital product price point
