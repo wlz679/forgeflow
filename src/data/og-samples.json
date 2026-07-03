@@ -81,6 +81,11 @@
     "headlineUnit": { "en": "annual savings", "zh": "年度节省" },
     "headlineLabel": { "en": "Annual Savings Going Remote (10 ppl, $1.5K office / $500 stipend)", "zh": "10 人团队转向远程年度节省（$1.5K 办公室 / $500 补贴）" }
   },
+  "solopreneur-arr-multiple-valuation-calculator": {
+    "headline": { "en": "15.0x", "zh": "15.0x" },
+    "headlineUnit": { "en": "ARR multiple", "zh": "ARR 倍数" },
+    "headlineLabel": { "en": "Valuation Multiple ($15M / $1M ARR)", "zh": "估值倍数 ($15M / $1M ARR)" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },

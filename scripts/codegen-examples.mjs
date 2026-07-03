@@ -87,6 +87,8 @@ const ENGINES = [
     subdir: 'valuation', defaultInputs: { investmentAmount: '500000', postMoneyCap: '5000000', discountRate: '0', existingShares: '1000000', nextRoundValuation: '5000000' } },
   { file: 'burn-multiple-rule-of-40-calculator.ts', slug: 'solopreneur-burn-multiple-rule-of-40-calculator',
     subdir: 'valuation', defaultInputs: { revenueGrowth: '100', profitMargin: '-20', netBurn: '2000000', netNewARR: '1500000' } },
+  { file: 'arr-multiple-valuation-calculator.ts', slug: 'solopreneur-arr-multiple-valuation-calculator',
+    subdir: 'valuation', defaultInputs: { arr: '1000000', valuation: '15000000', growthRate: '50', profitMargin: '0' } },
   { file: 'remote-vs-office-calculator.ts', slug: 'solopreneur-remote-vs-office-calculator',
     subdir: 'cost', defaultInputs: { headcount: '10', avgSalary: '80000', officeOverheadPerPerson: '1500', remoteStipendPerPerson: '500', oneTimeSetupPerPerson: '3000', productivityDelta: '0' } },
   { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',
