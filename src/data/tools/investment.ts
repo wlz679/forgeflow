@@ -55,5 +55,25 @@ export const tools: ToolMeta[] = [
     author: 'ForgeFlowKit',
     dataReviewedAt: '2026-06-22',
     sources: ['IRS Tax Statistics', 'Klear Influencer Sponsorship Rates', 'Indeed Salary Benchmarks'],
+  },
+  {
+    slug: 'solopreneur-compound-interest-calculator',
+    title: 'Compound Interest Calculator',
+    description: 'See how your savings grow with compound interest. Model principal + monthly contributions, compare annual vs monthly compounding, and project your final balance at 5 milestones.',
+    categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'principal', label: 'Initial Deposit ($)', placeholder: 'e.g. 10000', type: 'number' },
+      { name: 'monthlyContribution', label: 'Monthly Contribution ($)', placeholder: 'e.g. 500', type: 'number' },
+      { name: 'annualRate', label: 'Annual Interest Rate (%)', placeholder: 'e.g. 7', type: 'number' },
+      { name: 'compoundFrequency', label: 'Compounding Frequency', placeholder: '', type: 'select', options: ['annually', 'monthly'] },
+      { name: 'years', label: 'Investment Period (years)', placeholder: 'e.g. 20', type: 'number' },
+    ],
+    keywords: ['compound interest', 'savings', 'investment growth', 'monthly contribution', 'retirement', 'future value', 'startup finance', 'pricing'],
+    tags: ['investment', 'savings', 'compound interest', 'finance'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-03',
+    sources: ['Investor.gov Compound Interest Calculator', 'Investopedia Compound Interest Formula', 'FDIC Annual Percentage Yield Disclosure'],
   }
 ];

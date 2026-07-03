@@ -56,6 +56,11 @@
     "headlineUnit": { "en": "dilution", "zh": "稀释" },
     "headlineLabel": { "en": "Founder Dilution", "zh": "创始人股权稀释" }
   },
+  "solopreneur-compound-interest-calculator": {
+    "headline": { "en": "$300,851", "zh": "$300,851" },
+    "headlineUnit": { "en": "final balance", "zh": "最终余额" },
+    "headlineLabel": { "en": "Compound Interest Result", "zh": "复利最终余额" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },

@@ -77,6 +77,8 @@ const ENGINES = [
     subdir: 'valuation',       defaultInputs: { targetMonthlyIncome: '5000', estimatedBuyersPerMonth: '50', platformFee: '10' } },
   { file: 'equity-dilution-calculator.ts',     slug: 'solopreneur-equity-dilution-calculator',
     subdir: 'investment',      defaultInputs: { companyValuation: '5000000', investmentAmount: '1000000', founderShares: '10000000' } },
+  { file: 'compound-interest-calculator.ts',  slug: 'solopreneur-compound-interest-calculator',
+    subdir: 'investment',  defaultInputs: { principal: '10000', monthlyContribution: '500', annualRate: '7', compoundFrequency: 'monthly', years: '20' } },
   { file: 'project-profitability-calculator.ts', slug: 'solopreneur-project-profitability-calculator',
     subdir: 'valuation', defaultInputs: { projectRevenue: '5000', hoursEstimated: '40', hourlyCost: '50', materialCost: '200' } },
   { file: 'affiliate-income-calculator.ts',    slug: 'solopreneur-affiliate-income-calculator',
