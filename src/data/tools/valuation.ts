@@ -138,7 +138,7 @@ export const tools: ToolMeta[] = [
       'stripe 2.9% + 30¢',
     ],
     tags: ['finance', 'payments', 'solopreneur', 'ecommerce', 'pricing'],
-    reviewedBy: 'finance-team',
+    reviewedBy: 'ForgeFlowKit Team',
     author: 'ForgeFlowKit',
     dataReviewedAt: '2026-07-03',
     sources: ['https://stripe.com/pricing', 'https://paypal.com/us/webapps/mpp/paypal-fees', 'https://squareup.com/us/en/payments/pricing'],

@@ -12,3 +12,7 @@ public/og/
 
 # Superpowers scratch dirs (brainstorm + plans runtime)
 .superpowers/
+
+# Twemoji PNG cache (scripts/.twemoji-cache/) — populated on first build,
+# never commit binaries. Re-seed with `pnpm build:og` if cleared.
+scripts/.twemoji-cache/

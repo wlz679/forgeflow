@@ -28,6 +28,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const FONTS_DIR = join(ROOT, 'scripts', 'fonts');
 const OUT_DIR = join(ROOT, 'public', 'og');
+// Twemoji PNG cache: buildGraphemeImages() fetches 9 PNGs from jsDelivr on
+// every prebuild. Cache to disk so subsequent builds (and offline runs of
+// pnpm check) don't need network. Pre-populate with `pnpm build:og` once.
+const TWEMOJI_CACHE_DIR = join(ROOT, 'scripts', '.twemoji-cache');
 
 const LANGS = ['en', 'zh'] as const;
 type Lang = (typeof LANGS)[number];
@@ -105,12 +109,26 @@ async function buildGraphemeImages(): Promise<Record<string, string>> {
   await Promise.all([...EMOJI_SET].map(async (emoji) => {
     const cps = [...emoji].map(c => c.codePointAt(0)!.toString(16)).filter(c => c !== 'fe0f');
     const filename = cps.join('-');
-    const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${filename}.png`;
-    const res = await fetchWithRetry(url);
-    const buf = Buffer.from(await res.arrayBuffer());
+    const buf = await loadTwemoji(filename);
     out[emoji] = `data:image/png;base64,${buf.toString('base64')}`;
   }));
   return out;
+}
+
+// Load a Twemoji PNG from local cache, falling back to jsDelivr on miss.
+// Cache key is the hex codepoint filename (e.g. "1f3ac.png"); busting the
+// cache is `rm -rf scripts/.twemoji-cache/`.
+async function loadTwemoji(filename: string): Promise<Buffer> {
+  const cachePath = join(TWEMOJI_CACHE_DIR, `${filename}.png`);
+  if (existsSync(cachePath)) {
+    return readFileSync(cachePath);
+  }
+  const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${filename}.png`;
+  const res = await fetchWithRetry(url);
+  const buf = Buffer.from(await res.arrayBuffer());
+  mkdirSync(TWEMOJI_CACHE_DIR, { recursive: true });
+  writeFileSync(cachePath, buf);
+  return buf;
 }
 
 function loadFont(filename: string): Buffer {
