@@ -2,6 +2,7 @@
 // P5-1 mortgage-calculator.ts      -- added in P5-1 (commit e5e55be+)
 export * from './mortgage-calculator';
 // P5-2 rent-vs-buy-calculator.ts   -- added in P5-2
+export * from './rent-vs-buy-calculator';
 // P5-3 cap-rate-calculator.ts      -- added in P5-3
 // P5-4 rental-yield-calculator.ts  -- added in P5-4
 // P5-5 brrrr-calculator.ts         -- added in P5-5

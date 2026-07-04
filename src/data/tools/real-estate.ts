@@ -33,7 +33,40 @@ export const tools: ToolMeta[] = [
       'https://www.consumerfinance.gov/owning-a-home/loan-estimate/',
     ],
   },
-  // P5-2 rent-vs-buy -- added in P5-2
+  {
+    slug: 'solopreneur-rent-vs-buy-calculator',
+    title: 'Rent vs Buy Calculator',
+    description:
+      'Decide whether to rent or buy with NPV comparison over your stay horizon. Includes down payment opportunity cost, selling costs, and appreciation. Multiplies into 6 time horizons to show how the answer changes with commitment length.',
+    categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'monthlyRent', label: 'Current Monthly Rent ($)', placeholder: 'e.g. 2000', type: 'number' },
+      { name: 'homePrice', label: 'Home Purchase Price ($)', placeholder: 'e.g. 500000', type: 'number' },
+      { name: 'downPayment', label: 'Down Payment ($)', placeholder: 'e.g. 100000', type: 'number' },
+      { name: 'mortgageRate', label: 'Mortgage Rate (%)', placeholder: 'e.g. 6.5', type: 'number' },
+      { name: 'yearsToStay', label: 'Years You Plan to Stay', placeholder: 'e.g. 7', type: 'number' },
+      { name: 'annualAppreciation', label: 'Expected Home Appreciation (%/yr)', placeholder: 'e.g. 3', type: 'number' },
+      { name: 'annualRentIncrease', label: 'Annual Rent Increase (%/yr)', placeholder: 'e.g. 3', type: 'number' },
+    ],
+    keywords: [
+      'rent vs buy calculator',
+      'rent or buy',
+      'NPV real estate',
+      'time horizon rent buy',
+      'first time home buyer',
+      'opportunity cost',
+      'breakeven rent buy',
+    ],
+    tags: ['real-estate', 'decision', 'personal finance'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-04',
+    sources: [
+      'https://www.consumerfinance.gov/owning-a-home/',
+      'https://www.bankrate.com/mortgages/rent-vs-buy-calculator/',
+    ],
+  },
   // P5-3 cap-rate -- added in P5-3
   // P5-4 rental-yield -- added in P5-4
   // P5-5 brrrr -- added in P5-5
