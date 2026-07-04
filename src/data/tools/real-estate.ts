@@ -98,7 +98,43 @@ export const tools: ToolMeta[] = [
       'https://www.bankrate.com/real-estate/cap-rate/',
     ],
   },
-  // P5-4 rental-yield -- added in P5-4
+  {
+    slug: 'solopreneur-rental-yield-calculator',
+    title: 'Rental Yield / Cash-on-Cash Calculator',
+    description:
+      'Calculate gross/net yields and cash-on-cash return on a leveraged rental property. Compares annual rent, mortgage, and OpEx against actual cash invested. Shows negative cash flow warnings for appreciation-only markets.',
+    categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'purchasePrice', label: 'Purchase Price ($)', placeholder: 'e.g. 300000', type: 'number' },
+      { name: 'downPayment', label: 'Down Payment ($)', placeholder: 'e.g. 75000', type: 'number' },
+      { name: 'loanAmount', label: 'Loan Amount ($)', placeholder: 'e.g. 225000', type: 'number' },
+      { name: 'interestRate', label: 'Mortgage Rate (%)', placeholder: 'e.g. 7', type: 'number' },
+      { name: 'loanTermYears', label: 'Loan Term (years)', placeholder: 'e.g. 30', type: 'number' },
+      { name: 'monthlyRent', label: 'Monthly Rent Income ($)', placeholder: 'e.g. 2500', type: 'number' },
+      { name: 'monthlyExpenses', label: 'Monthly Operating Expenses ($)', placeholder: 'e.g. 600', type: 'number' },
+      { name: 'vacancyRate', label: 'Vacancy Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'annualAppreciation', label: 'Expected Annual Appreciation (%)', placeholder: 'e.g. 3', type: 'number' },
+    ],
+    keywords: [
+      'rental yield calculator',
+      'cash on cash return',
+      'CoC real estate',
+      'gross yield vs cap rate',
+      'leveraged rental',
+      'rental property ROI',
+      'negative cash flow',
+      'CoC by leverage',
+    ],
+    tags: ['real-estate', 'investment', 'rental'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-04',
+    sources: [
+      'https://www.biggerpockets.com/rei/glossary/cash-on-cash-return/',
+      'https://www.bankrate.com/real-estate/cash-on-cash-return/',
+    ],
+  },
   // P5-5 brrrr -- added in P5-5
   // P5-6 dscr -- added in P5-6
 ];

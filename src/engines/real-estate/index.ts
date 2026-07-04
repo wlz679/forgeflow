@@ -6,5 +6,6 @@ export * from './rent-vs-buy-calculator';
 // P5-3 cap-rate-calculator.ts      -- added in P5-3
 export * from './cap-rate-calculator';
 // P5-4 rental-yield-calculator.ts  -- added in P5-4
+export * from './rental-yield-calculator';
 // P5-5 brrrr-calculator.ts         -- added in P5-5
 // P5-6 dscr-calculator.ts          -- added in P5-6

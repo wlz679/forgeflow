@@ -101,6 +101,11 @@
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
     "headlineLabel": { "en": "NOI $22.2K / $500K property (5% vacancy)", "zh": "NOI $2.22万 / $50万房产 (5% 空置率)" }
   },
+  "solopreneur-rental-yield-calculator": {
+    "headline": { "en": "3.98%", "zh": "3.98%" },
+    "headlineUnit": { "en": "cash-on-cash", "zh": "现金回报" },
+    "headlineLabel": { "en": "CoC on $300K property, 25% down, $2.5K/mo rent", "zh": "$30万房产, 25% 首付, $2.5K/月租金 的现金回报率" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },

@@ -55,6 +55,8 @@ const ENGINES = [
     subdir: 'real-estate',       defaultInputs: { monthlyRent: '2000', homePrice: '500000', downPayment: '100000', mortgageRate: '6.5', yearsToStay: '7', annualAppreciation: '3', annualRentIncrease: '3' } },
   { file: 'cap-rate-calculator.ts',          slug: 'solopreneur-cap-rate-calculator',
     subdir: 'real-estate',          defaultInputs: { propertyValue: '500000', annualRentIncome: '36000', annualExpenses: '12000', vacancyRate: '5' } },
+  { file: 'rental-yield-calculator.ts',      slug: 'solopreneur-rental-yield-calculator',
+    subdir: 'real-estate',      defaultInputs: { purchasePrice: '300000', downPayment: '75000', loanAmount: '225000', interestRate: '7', loanTermYears: '30', monthlyRent: '2500', monthlyExpenses: '600', vacancyRate: '5', annualAppreciation: '3' } },
   { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',
     subdir: 'valuation',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
   { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',
