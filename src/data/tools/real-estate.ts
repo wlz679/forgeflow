@@ -174,5 +174,37 @@ export const tools: ToolMeta[] = [
       'https://www.biggerpockets.com/real-estate-investing/brrrr-investing/',
     ],
   },
-  // P5-6 dscr -- added in P5-6
+  {
+    slug: 'solopreneur-dscr-calculator',
+    title: 'DSCR Calculator (Debt Service Coverage Ratio)',
+    description:
+      'Measure DSCR (NOI / annual debt service) to qualify for lender approval. Includes reverse max-loan calc at lender thresholds (1.0/1.25/1.5) via binary search, plus STR and commercial RE benchmarks.',
+    categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'monthlyRent', label: 'Monthly Gross Rent ($)', placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'monthlyExpenses', label: 'Monthly Operating Expenses ($)', placeholder: 'e.g. 1500', type: 'number' },
+      { name: 'loanAmount', label: 'Loan Amount ($)', placeholder: 'e.g. 400000', type: 'number' },
+      { name: 'interestRate', label: 'Loan Rate (%)', placeholder: 'e.g. 7.5', type: 'number' },
+      { name: 'loanTermYears', label: 'Loan Term (years)', placeholder: 'e.g. 30', type: 'number' },
+      { name: 'vacancyRate', label: 'Vacancy Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+    ],
+    keywords: [
+      'DSCR calculator',
+      'debt service coverage ratio',
+      'DSCR investment property',
+      'DSCR lender requirement',
+      'rental property loan',
+      'DSCR for STR',
+      'DSCR for Airbnb',
+    ],
+    tags: ['real-estate', 'lender', 'DSCR'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-04',
+    sources: [
+      'https://www.bankrate.com/mortgages/dscr-loans/',
+      'https://www.biggerpockets.com/blog/dscr-loan/',
+    ],
+  },
 ];

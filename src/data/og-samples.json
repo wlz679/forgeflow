@@ -111,6 +111,11 @@
     "headlineUnit": { "en": "cash left", "zh": "留存现金" },
     "headlineLabel": { "en": "BRRRR Cash Left After Refi ($150K→$220K)", "zh": "BRRRR 重贷后留存现金 ($15万→$22万)" }
   },
+  "solopreneur-dscr-calculator": {
+    "headline": { "en": "1.16x", "zh": "1.16x" },
+    "headlineUnit": { "en": "DSCR", "zh": "DSCR" },
+    "headlineLabel": { "en": "DSCR on $5K rent / $400K loan (5K rent, 5% vacancy, 7.5%)", "zh": "$5K 租金 / $40万贷款 的偿债覆盖率 (5% 空置, 7.5% 利率)" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },

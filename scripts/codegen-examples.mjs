@@ -59,6 +59,8 @@ const ENGINES = [
     subdir: 'real-estate',      defaultInputs: { purchasePrice: '300000', downPayment: '75000', loanAmount: '225000', interestRate: '7', loanTermYears: '30', monthlyRent: '2500', monthlyExpenses: '600', vacancyRate: '5', annualAppreciation: '3' } },
   { file: 'brrrr-calculator.ts',             slug: 'solopreneur-brrrr-calculator',
     subdir: 'real-estate',             defaultInputs: { purchasePrice: '150000', rehabCost: '30000', afterRepairValue: '220000', downPaymentPct: '25', interestRate: '7.5', loanTermYears: '30', monthlyRent: '1800', monthlyExpenses: '400', vacancyRate: '5', holdingMonths: '6', sellingCostsPct: '8' } },
+  { file: 'dscr-calculator.ts',             slug: 'solopreneur-dscr-calculator',
+    subdir: 'real-estate',             defaultInputs: { monthlyRent: '5000', monthlyExpenses: '1500', loanAmount: '400000', interestRate: '7.5', loanTermYears: '30', vacancyRate: '5' } },
   { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',
     subdir: 'valuation',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
   { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',

@@ -9,4 +9,5 @@ export * from './cap-rate-calculator';
 export * from './rental-yield-calculator';
 // P5-5 brrrr-calculator.ts         -- added in P5-5
 export * from './brrrr-calculator';
-// P5-6 dscr-calculator.ts          -- added in P5-6
+// P5-6 dscr-calculator.ts          -- added in P5-6 (FINAL)
+export * from './dscr-calculator';
