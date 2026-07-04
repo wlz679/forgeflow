@@ -67,7 +67,37 @@ export const tools: ToolMeta[] = [
       'https://www.bankrate.com/mortgages/rent-vs-buy-calculator/',
     ],
   },
-  // P5-3 cap-rate -- added in P5-3
+  {
+    slug: 'solopreneur-cap-rate-calculator',
+    title: 'Cap Rate Calculator',
+    description:
+      'Calculate property cap rate (NOI / value) and compare to market benchmarks (Class A/B/C urban, value-add, distressed). Includes reverse implied-value calc at user-chosen target cap rates.',
+    categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'propertyValue', label: 'Property Value ($)', placeholder: 'e.g. 500000', type: 'number' },
+      { name: 'annualRentIncome', label: 'Annual Gross Rental Income ($)', placeholder: 'e.g. 36000', type: 'number' },
+      { name: 'annualExpenses', label: 'Annual Operating Expenses ($)', placeholder: 'e.g. 12000', type: 'number' },
+      { name: 'vacancyRate', label: 'Vacancy Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+    ],
+    keywords: [
+      'cap rate calculator',
+      'NOI',
+      'rental property cap rate',
+      'real estate investment',
+      'Class A cap rate',
+      'cap rate by city',
+      'implied value',
+    ],
+    tags: ['real-estate', 'investment', 'cap-rate'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-04',
+    sources: [
+      'https://www.biggerpockets.com/blog/cap-rate-explained/',
+      'https://www.bankrate.com/real-estate/cap-rate/',
+    ],
+  },
   // P5-4 rental-yield -- added in P5-4
   // P5-5 brrrr -- added in P5-5
   // P5-6 dscr -- added in P5-6

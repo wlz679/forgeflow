@@ -96,6 +96,11 @@
     "headlineUnit": { "en": "favored", "zh": "更优" },
     "headlineLabel": { "en": "Rent vs Buy Verdict (10y stay, $500K home)", "zh": "租购决策对比 (10年居住, $50万房价)" }
   },
+  "solopreneur-cap-rate-calculator": {
+    "headline": { "en": "4.44%", "zh": "4.44%" },
+    "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
+    "headlineLabel": { "en": "NOI $22.2K / $500K property (5% vacancy)", "zh": "NOI $2.22万 / $50万房产 (5% 空置率)" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },
