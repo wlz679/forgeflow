@@ -76,3 +76,25 @@ test('mortgage: 15y payment > 30y; 15y totalInterest < 30y', () => {
   const ti30 = totalInterest(p, r, 360);
   assert.ok(ti15 < ti30, `15y totalInterest should be lower: $${ti15.toFixed(0)} vs $${ti30.toFixed(0)}`);
 });
+
+// Test 9 (edge): zero principal (down payment = home price edge case)
+test('mortgage: monthlyPI zero principal → 0', () => {
+  const m = monthlyPI(0, 6.5 / 100 / 12, 360);
+  assert.equal(m, 0);
+});
+
+// Test 10 (edge): negative rate clamped downstream — confirm Math.max(0, ...) is upstream guard
+test('mortgage: monthlyPI handles very large principal (no overflow)', () => {
+  // $100M loan at 6.5% over 30 years — sanity check, should not NaN/Infinity
+  const p = 100_000_000;
+  const r = 6.5 / 100 / 12;
+  const m = monthlyPI(p, r, 360);
+  assert.ok(m > 600000 && m < 700000, `expected ~$632K/mo on $100M loan, got $${m.toFixed(0)}`);
+  assert.ok(isFinite(m), 'should not be Infinity');
+});
+
+// Test 11 (edge): negative rate or n handled (callers use Math.max(0, ...))
+test('mortgage: monthlyPI zero n → 0 (loan term guard)', () => {
+  assert.equal(monthlyPI(100000, 0.005, 0), 0);
+  assert.equal(monthlyPI(100000, 0.005, -12), 0);
+});
