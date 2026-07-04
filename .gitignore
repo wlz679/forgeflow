@@ -6,3 +6,9 @@ dist/
 public/og/
 .env
 .env.local
+
+# Astro dev/build cache (auto-generated)
+.astro/astro/
+
+# Superpowers scratch dirs (brainstorm + plans runtime)
+.superpowers/
