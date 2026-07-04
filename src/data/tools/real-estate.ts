@@ -135,6 +135,44 @@ export const tools: ToolMeta[] = [
       'https://www.bankrate.com/real-estate/cash-on-cash-return/',
     ],
   },
-  // P5-5 brrrr -- added in P5-5
+  {
+    slug: 'solopreneur-brrrr-calculator',
+    title: 'BRRRR Calculator',
+    description:
+      'Model a BRRRR (Buy Rehab Rent Refinance Repeat) deal: stage-by-stage cash flow, 70% rule check, forced appreciation, post-refi cash-on-cash return, and whether the deal achieves cash-out success.',
+    categoryId: 'F',
+    applicationCategory: 'FinanceApplication',
+    inputs: [
+      { name: 'purchasePrice', label: 'Purchase Price ($)', placeholder: 'e.g. 150000', type: 'number' },
+      { name: 'rehabCost', label: 'Rehab Cost ($)', placeholder: 'e.g. 30000', type: 'number' },
+      { name: 'afterRepairValue', label: 'After-Repair Value (ARV) ($)', placeholder: 'e.g. 220000', type: 'number' },
+      { name: 'downPaymentPct', label: 'Down Payment (%)', placeholder: 'e.g. 25', type: 'number' },
+      { name: 'interestRate', label: 'Refinance Rate (%)', placeholder: 'e.g. 7.5', type: 'number' },
+      { name: 'loanTermYears', label: 'Loan Term after Refi (years)', placeholder: 'e.g. 30', type: 'number' },
+      { name: 'monthlyRent', label: 'Monthly Rent after Refi ($)', placeholder: 'e.g. 1800', type: 'number' },
+      { name: 'monthlyExpenses', label: 'Monthly OpEx ($)', placeholder: 'e.g. 400', type: 'number' },
+      { name: 'vacancyRate', label: 'Vacancy Rate (%)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'holdingMonths', label: 'Holding Period (months)', placeholder: 'e.g. 6', type: 'number' },
+      { name: 'sellingCostsPct', label: 'Selling Costs if not held (%)', placeholder: 'e.g. 8', type: 'number' },
+    ],
+    keywords: [
+      'BRRRR calculator',
+      'buy rehab rent refinance repeat',
+      'BRRRR strategy',
+      'forced appreciation',
+      'cash-out refinance',
+      '70% rule',
+      'house flipping vs BRRRR',
+      'rental property cycle',
+    ],
+    tags: ['real-estate', 'investment', 'brrrr'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-04',
+    sources: [
+      'https://www.biggerpockets.com/blog/brrrr-calculator/',
+      'https://www.biggerpockets.com/real-estate-investing/brrrr-investing/',
+    ],
+  },
   // P5-6 dscr -- added in P5-6
 ];
