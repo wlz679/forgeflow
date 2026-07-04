@@ -10,3 +10,4 @@ import './freelance';
 import './cost';
 import './investment';
 import './real-estate';
+import './marketing';
