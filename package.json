@@ -16,7 +16,7 @@
     "preview": "astro preview",
     "sync": "node scripts/sync-pricing.mjs && node scripts/codegen-customfn.mjs && node scripts/codegen-examples.mjs",
     "translate": "tsx scripts/translate-wordpools.ts",
-    "check": "node scripts/check-clerk-env.mjs && node scripts/check-supabase-env.mjs && node scripts/check-i18n-completeness.mjs && node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check",
+    "check": "node scripts/check-clerk-env.mjs && node scripts/check-supabase-env.mjs && node scripts/check-i18n-completeness.mjs && node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check && node tests/run.mjs",
     "check:i18n": "node scripts/check-i18n-completeness.mjs",
     "check:clerk-env": "node scripts/check-clerk-env.mjs",
     "check:supabase-env": "node scripts/check-supabase-env.mjs",

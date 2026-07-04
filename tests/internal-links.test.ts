@@ -26,12 +26,16 @@ test('related list has 4 entries for all 44 tools', () => {
   }
 });
 
-test('small categories (E=cost, F=investment) use cross-category fallback', () => {
-  for (const t of tools.filter(x => x.categoryId === 'E' || x.categoryId === 'F')) {
+test('no tool has fewer than 4 same-category candidates (fallback currently dormant)', () => {
+  // Defensive: the cross-category fallback in internal-links.ts only
+  // activates when a tool has < 4 same-category peers. With all 7
+  // categories holding 5+ tools, the fallback path is dormant — kept
+  // as a safety net for future single-engine categories.
+  for (const t of tools) {
     const sameCat = tools.filter(x => x.categoryId === t.categoryId && x.slug !== t.slug);
     assert.ok(
-      relatedTools[t.slug].length > sameCat.length,
-      `${t.slug} (${t.categoryId}) fallback inactive: ${sameCat.length} same-cat available, got ${relatedTools[t.slug].length} related`
+      sameCat.length >= 4,
+      `${t.slug} (${t.categoryId}) has only ${sameCat.length} same-cat peers — fallback would activate (re-verify fallback logic if this triggers)`
     );
   }
 });

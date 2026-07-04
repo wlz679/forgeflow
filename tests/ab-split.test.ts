@@ -5,8 +5,8 @@ import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
 
-test('engines/ has 6 subdirectories', () => {
-  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment']) {
+test('engines/ has 7 subdirectories', () => {
+  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate']) {
     assert.ok(
       existsSync(join(ROOT, 'src/engines', sub)),
       `engines/${sub}/ should exist`
@@ -27,8 +27,8 @@ test('engines/ has no engine .ts files at root (only index.ts)', () => {
   assert.deepEqual(rootTs, ['index.ts'], `engines/ root should only have index.ts, found: ${rootTs.join(', ')}`);
 });
 
-test('data/tools/ has 8 files (types, 6 categories, index)', () => {
-  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'index.ts']) {
+test('data/tools/ has 9 files (types, 7 categories, index)', () => {
+  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'index.ts']) {
     assert.ok(
       existsSync(join(ROOT, 'src/data/tools', f)),
       `data/tools/${f} should exist`
@@ -56,7 +56,7 @@ test('getAllEngines() returns 44 engines after import', async () => {
 
 test('aggregated tools array has 44 entries', async () => {
   const { tools } = await import('../src/data/tools/index.ts');
-  assert.equal(tools.length, 38);
+  assert.equal(tools.length, 44);
 });
 
 test('4 consumer import paths are unchanged', () => {
