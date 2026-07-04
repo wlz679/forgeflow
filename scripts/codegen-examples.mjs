@@ -49,6 +49,8 @@ const ENGINES = [
     subdir: 'saas',          defaultInputs: { startCustomers: '1000', endCustomers: '920', months: '12' } },
   { file: 'ltv-calculator.ts',                 slug: 'solopreneur-ltv-calculator',
     subdir: 'valuation',                 defaultInputs: { monthlyRevenuePerUser: '100', grossMargin: '70', monthlyChurn: '5', customerAcquisitionCost: '300' } },
+  { file: 'mortgage-calculator.ts',           slug: 'solopreneur-mortgage-calculator',
+    subdir: 'real-estate',           defaultInputs: { homePrice: '500000', downPayment: '100000', loanTermYears: '30', interestRate: '6.5' } },
   { file: 'cac-calculator.ts',                 slug: 'solopreneur-cac-calculator',
     subdir: 'valuation',                 defaultInputs: { marketingSpend: '5000', salesSpend: '3000', newCustomers: '100' } },
   { file: 'burn-rate-calculator.ts',           slug: 'solopreneur-burn-rate-calculator',

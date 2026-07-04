@@ -86,6 +86,11 @@
     "headlineUnit": { "en": "ARR multiple", "zh": "ARR 倍数" },
     "headlineLabel": { "en": "Valuation Multiple ($15M / $1M ARR)", "zh": "估值倍数 ($15M / $1M ARR)" }
   },
+  "solopreneur-mortgage-calculator": {
+    "headline": { "en": "$2,528", "zh": "$2,528" },
+    "headlineUnit": { "en": "/month", "zh": "/月" },
+    "headlineLabel": { "en": "Mortgage P&I ($400K loan, 30y, 6.5%)", "zh": "房贷月供 ($40万贷款, 30年, 6.5%)" }
+  },
   "solopreneur-break-even-calculator": {
     "headline": { "en": "8", "zh": "8" },
     "headlineUnit": { "en": "months", "zh": "个月" },
