@@ -102,6 +102,11 @@
     "headlineLabel": { "en": "$5K ad spend → $20K revenue (60% margin)", "zh": "$5000 广告费 → $2万收入 (60% 毛利率)" },
     "trend": { "en": "profitable — scale-ready", "zh": "可盈利 — 可放量" }
   },
+  "solopreneur-ltv-by-channel-calculator": {
+    "headline": { "en": "5.0x", "zh": "5.0倍" },
+    "headlineUnit": { "en": "LTV:CAC", "zh": "LTV:CAC" },
+    "headlineLabel": { "en": "Ch1 winner — $1K spend, $500 LTV, 50 convs", "zh": "渠道1 胜出 — $1000 花费, $500 LTV, 50 转化" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

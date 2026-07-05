@@ -117,6 +117,8 @@ const ENGINES = [
     subdir: 'saas',              defaultInputs: { currentMRR: '5000', monthlyGrowthRate: '8', monthlyChurnRate: '3', monthlyExpenses: '3000', cashOnHand: '60000', arpu: '25', customGrowthRate: '0', cac: '200', months: '12' } },
   { file: 'roas-calculator.ts',                slug: 'solopreneur-roas-calculator',
     subdir: 'marketing',             defaultInputs: { adSpend: '5000', revenue: '20000', grossMargin: '60', attributionWindow: '28d' } },
+  { file: 'ltv-by-channel-calculator.ts',      slug: 'solopreneur-ltv-by-channel-calculator',
+    subdir: 'marketing',        defaultInputs: { ch1_spend: '1000', ch1_conv: '50', ch1_ltv: '500', ch2_spend: '1500', ch2_conv: '30', ch2_ltv: '800', ch3_spend: '800', ch3_conv: '20', ch3_ltv: '600', ch4_spend: '1200', ch4_conv: '40', ch4_ltv: '400', ch5_spend: '600', ch5_conv: '15', ch5_ltv: '700' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
