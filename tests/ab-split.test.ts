@@ -5,8 +5,8 @@ import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
 
-test('engines/ has 7 subdirectories', () => {
-  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate']) {
+test('engines/ has 8 subdirectories', () => {
+  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate', 'marketing']) {
     assert.ok(
       existsSync(join(ROOT, 'src/engines', sub)),
       `engines/${sub}/ should exist`
@@ -27,8 +27,8 @@ test('engines/ has no engine .ts files at root (only index.ts)', () => {
   assert.deepEqual(rootTs, ['index.ts'], `engines/ root should only have index.ts, found: ${rootTs.join(', ')}`);
 });
 
-test('data/tools/ has 9 files (types, 7 categories, index)', () => {
-  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'index.ts']) {
+test('data/tools/ has 10 files (types, 8 categories, index)', () => {
+  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'marketing.ts', 'index.ts']) {
     assert.ok(
       existsSync(join(ROOT, 'src/data/tools', f)),
       `data/tools/${f} should exist`
@@ -48,15 +48,15 @@ test('tools/index.ts uses import.meta.glob', () => {
   assert.match(content, /import\.meta\.glob/, 'tools/index.ts should use import.meta.glob');
 });
 
-test('getAllEngines() returns 44 engines after import', async () => {
+test('getAllEngines() returns 45 engines after import', async () => {
   await import('../src/engines/index.ts');
   const { getAllEngines } = await import('../src/core/engines/registry.ts');
-  assert.equal(getAllEngines().length, 44);
+  assert.equal(getAllEngines().length, 45);
 });
 
-test('aggregated tools array has 44 entries', async () => {
+test('aggregated tools array has 45 entries', async () => {
   const { tools } = await import('../src/data/tools/index.ts');
-  assert.equal(tools.length, 44);
+  assert.equal(tools.length, 45);
 });
 
 test('4 consumer import paths are unchanged', () => {

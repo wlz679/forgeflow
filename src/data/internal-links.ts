@@ -16,11 +16,15 @@ function rankByKeywords(source: ToolMeta, candidates: ToolMeta[]) {
     .sort((a, b) => b.score - a.score || a.c.slug.localeCompare(b.c.slug));
 }
 
-// Auto-generate: each tool gets up to 4 related tools.
+// Auto-generate: each tool gets exactly 4 related tools.
 // Algorithm:
 //   1. Same-category first, ranked by shared keywords (desc).
-//   2. If < 4 picks, fill from cross-category tools ranked by shared keywords.
-//      Skip cross-category picks with score 0 (no keyword overlap = irrelevant).
+//   2. If < 4 same-category, fill from cross-category scored picks (score > 0).
+//   3. If still < 4, fill remaining slots from cross-category score-0 picks
+//      (ranked by slug for stability). Ensures every tool always has exactly
+//      4 related entries — even during P6 marketing-category seeding phase
+//      when 'M' has < 5 tools. Quality degrades gracefully (score-0 picks
+//      have no keyword overlap) but navigation never breaks.
 export const relatedTools: Record<string, string[]> = {};
 
 for (const tool of tools) {
@@ -32,9 +36,20 @@ for (const tool of tools) {
     const crossCat = tools.filter(t =>
       t.categoryId !== tool.categoryId && t.slug !== tool.slug && !pickedSlugs.has(t.slug)
     );
+    // Tier 1: cross-category with score > 0 (semantic matches)
     for (const s of rankByKeywords(tool, crossCat)) {
       if (picked.length >= 4) break;
       if (s.score > 0) picked.push(s.c);
+    }
+    // Tier 2: any remaining slots — fill with score-0 (slug-sorted) for
+    // stable per-tool related-list across regenerations.
+    if (picked.length < 4) {
+      const pickedSlugs2 = new Set(picked.map(p => p.slug));
+      const remaining = crossCat.filter(t => !pickedSlugs2.has(t.slug));
+      for (const s of rankByKeywords(tool, remaining)) {
+        if (picked.length >= 4) break;
+        picked.push(s.c); // include even when score = 0
+      }
     }
   }
 

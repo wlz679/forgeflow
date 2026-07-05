@@ -115,6 +115,8 @@ const ENGINES = [
     subdir: 'saas',                  defaultInputs: { subscriberCount: '500', monthlyPrice: '29', monthlyChurnRate: '3', expansionMRR: '800', newSubsPerMonth: '100', contractionMRR: '150', reactivationMRR: '100' } },
   { file: 'revenue-projector.ts',              slug: 'solopreneur-revenue-projector',
     subdir: 'saas',              defaultInputs: { currentMRR: '5000', monthlyGrowthRate: '8', monthlyChurnRate: '3', monthlyExpenses: '3000', cashOnHand: '60000', arpu: '25', customGrowthRate: '0', cac: '200', months: '12' } },
+  { file: 'roas-calculator.ts',                slug: 'solopreneur-roas-calculator',
+    subdir: 'marketing',             defaultInputs: { adSpend: '5000', revenue: '20000', grossMargin: '60', attributionWindow: '28d' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

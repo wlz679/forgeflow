@@ -96,6 +96,12 @@
     "headlineUnit": { "en": "favored", "zh": "更优" },
     "headlineLabel": { "en": "Rent vs Buy Verdict (10y stay, $500K home)", "zh": "租购决策对比 (10年居住, $50万房价)" }
   },
+  "solopreneur-roas-calculator": {
+    "headline": { "en": "4.0x", "zh": "4.0倍" },
+    "headlineUnit": { "en": "gross ROAS", "zh": "综合 ROAS" },
+    "headlineLabel": { "en": "$5K ad spend → $20K revenue (60% margin)", "zh": "$5000 广告费 → $2万收入 (60% 毛利率)" },
+    "trend": { "en": "profitable — scale-ready", "zh": "可盈利 — 可放量" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

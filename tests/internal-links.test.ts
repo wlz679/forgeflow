@@ -3,8 +3,8 @@ import { strict as assert } from 'node:assert';
 import { relatedTools } from '../src/data/internal-links.ts';
 import { tools } from '../src/data/tools/index.ts';
 
-test('all 44 tools have relatedTools entry', () => {
-  assert.equal(Object.keys(relatedTools).length, 44);
+test('all 45 tools have relatedTools entry', () => {
+  assert.equal(Object.keys(relatedTools).length, 45);
   for (const t of tools) {
     assert.ok(relatedTools[t.slug], `missing entry for ${t.slug}`);
   }
@@ -16,7 +16,7 @@ test('related list never includes the tool itself', () => {
   }
 });
 
-test('related list has 4 entries for all 44 tools', () => {
+test('related list has 4 entries for all 45 tools', () => {
   for (const t of tools) {
     assert.equal(
       relatedTools[t.slug].length,
@@ -26,16 +26,34 @@ test('related list has 4 entries for all 44 tools', () => {
   }
 });
 
-test('no tool has fewer than 4 same-category candidates (fallback currently dormant)', () => {
-  // Defensive: the cross-category fallback in internal-links.ts only
-  // activates when a tool has < 4 same-category peers. With all 7
-  // categories holding 5+ tools, the fallback path is dormant — kept
-  // as a safety net for future single-engine categories.
+test('every tool has exactly 4 related entries (lazy fallback reports low-density state)', () => {
+  // Two-phase check:
+  //   1. Every tool must have exactly 4 related entries (hard requirement;
+  //      the cross-category fallback in internal-links.ts guarantees this
+  //      via tier-2 score-0 fill during low-density category seeding).
+  //   2. Tools relying on cross-category fallback (same-cat count < 4) are
+  //      reported as an informational warning. A-F are dense (5+ tools each);
+  //      M is the new marketing category seeded during P6 — info-level logs
+  //      until P6-5 lands 5+ same-cat peers, after which it goes dormant again.
+  const lowDensity: Array<{slug: string; categoryId: string; sameCat: number; related: number}> = [];
+  let totalTools = 0;
   for (const t of tools) {
+    totalTools++;
     const sameCat = tools.filter(x => x.categoryId === t.categoryId && x.slug !== t.slug);
-    assert.ok(
-      sameCat.length >= 4,
-      `${t.slug} (${t.categoryId}) has only ${sameCat.length} same-cat peers — fallback would activate (re-verify fallback logic if this triggers)`
+    const related = relatedTools[t.slug].length;
+    assert.equal(
+      related,
+      4,
+      `${t.slug} should have 4 related entries, got ${related}`
+    );
+    if (sameCat.length < 4) {
+      lowDensity.push({slug: t.slug, categoryId: t.categoryId, sameCat: sameCat.length, related});
+    }
+  }
+  if (lowDensity.length > 0) {
+    console.log(
+      `\n[informational] ${lowDensity.length}/${totalTools} tools cross-category fallback:`,
+      lowDensity.map(l => `${l.slug} (${l.categoryId}, same-cat=${l.sameCat})`).join(', '),
     );
   }
 });
