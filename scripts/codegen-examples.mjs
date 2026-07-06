@@ -131,6 +131,8 @@ const ENGINES = [
     subdir: 'operations',   defaultInputs: { annualCOGS: '240000', avgInventory: '40000', periodDays: '365', industry: 'general' } },
   { file: 'carrying-cost-calculator.ts',         slug: 'solopreneur-carrying-cost-calculator',
     subdir: 'operations',         defaultInputs: { avgInventoryValue: '50000', storageRate: '8', insuranceRate: '1.5', shrinkageRate: '2', oppCostRate: '8', otherCostsPct: '2' } },
+  { file: 'stockout-cost-calculator.ts',         slug: 'solopreneur-stockout-cost-calculator',
+    subdir: 'operations',         defaultInputs: { lostSalesPerDay: '1000', avgStockoutDays: '5', lostCustomerRate: '30', customerLTV: '200', annualRevenue: '600000', recoveryRate: '10' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

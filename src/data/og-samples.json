@@ -137,6 +137,11 @@
     "headlineUnit": { "en": "annual rate", "zh": "年费率" },
     "headlineLabel": { "en": "$50K inventory × 21.5% = $10,750/yr (5 components)", "zh": "$5万 库存 × 21.5% = $1.075万/年 (5项)" }
   },
+  "solopreneur-stockout-cost-calculator": {
+    "headline": { "en": "1.28%", "zh": "1.28%" },
+    "headlineUnit": { "en": "of revenue", "zh": "占收入" },
+    "headlineLabel": { "en": "$7.7K stockout cost on $600K revenue (5 days, 30% loss, $200 LTV)", "zh": "$7700 缺货成本 / $60万 收入 (5天, 30% 流失, $200 LTV)" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
