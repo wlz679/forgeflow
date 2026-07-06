@@ -147,6 +147,11 @@
     "headlineUnit": { "en": "units ROP", "zh": "单位补货点" },
     "headlineLabel": { "en": "50/day × 14d lead + Z=1.65 × 10sd × √2 ≈ 723 (95% SL)", "zh": "50/天 × 14天 + Z=1.65 × 10标准差 × √2 ≈ 723 (95% 服务水平)" }
   },
+  "solopreneur-fulfillment-cost-calculator": {
+    "headline": { "en": "$8.56", "zh": "$8.56" },
+    "headlineUnit": { "en": "per order", "zh": "/订单" },
+    "headlineLabel": { "en": "500 orders/mo: $1.50 labor + $5.50 ship + $1.20 pkg + $0.36 returns", "zh": "500订单/月: $1.50人工 + $5.50运费 + $1.20包装 + $0.36退货处理" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

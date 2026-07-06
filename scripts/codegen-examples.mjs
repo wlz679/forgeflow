@@ -135,6 +135,8 @@ const ENGINES = [
     subdir: 'operations',         defaultInputs: { lostSalesPerDay: '1000', avgStockoutDays: '5', lostCustomerRate: '30', customerLTV: '200', annualRevenue: '600000', recoveryRate: '10' } },
   { file: 'reorder-point-calculator.ts',         slug: 'solopreneur-reorder-point-calculator',
     subdir: 'operations',         defaultInputs: { avgDailyDemand: '50', leadTimeDays: '14', serviceLevel: '95', demandStdDev: '10', reviewPeriod: '7' } },
+  { file: 'fulfillment-cost-calculator.ts',      slug: 'solopreneur-fulfillment-cost-calculator',
+    subdir: 'operations',      defaultInputs: { ordersPerMonth: '500', pickMin: '3', packMin: '2', shippingCost: '5.50', packagingCost: '1.20', laborRate: '18', returnRate: '8' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
