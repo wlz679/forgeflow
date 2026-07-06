@@ -142,6 +142,11 @@
     "headlineUnit": { "en": "of revenue", "zh": "占收入" },
     "headlineLabel": { "en": "$7.7K stockout cost on $600K revenue (5 days, 30% loss, $200 LTV)", "zh": "$7700 缺货成本 / $60万 收入 (5天, 30% 流失, $200 LTV)" }
   },
+  "solopreneur-reorder-point-calculator": {
+    "headline": { "en": "723", "zh": "723" },
+    "headlineUnit": { "en": "units ROP", "zh": "单位补货点" },
+    "headlineLabel": { "en": "50/day × 14d lead + Z=1.65 × 10sd × √2 ≈ 723 (95% SL)", "zh": "50/天 × 14天 + Z=1.65 × 10标准差 × √2 ≈ 723 (95% 服务水平)" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
