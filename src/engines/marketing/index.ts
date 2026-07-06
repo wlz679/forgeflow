@@ -7,3 +7,4 @@
 // P6-6 content-marketing-roi-calculator.ts -- added in P6-6
 export * from './roas-calculator';
 export * from './ltv-by-channel-calculator';
+export * from './funnel-value-calculator';

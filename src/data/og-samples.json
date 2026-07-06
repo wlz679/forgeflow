@@ -107,6 +107,11 @@
     "headlineUnit": { "en": "LTV:CAC", "zh": "LTV:CAC" },
     "headlineLabel": { "en": "Ch1 winner — $1K spend, $500 LTV, 50 convs", "zh": "渠道1 胜出 — $1000 花费, $500 LTV, 50 转化" }
   },
+  "solopreneur-funnel-value-calculator": {
+    "headline": { "en": "0.019%", "zh": "0.019%" },
+    "headlineUnit": { "en": "overall CR", "zh": "总转化率" },
+    "headlineLabel": { "en": "100K impressions → 18.75 sales ($1.5K revenue)", "zh": "10万曝光 → 18.75 销售 ($1500 收入)" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

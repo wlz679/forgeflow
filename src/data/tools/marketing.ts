@@ -90,7 +90,44 @@ export const tools: ToolMeta[] = [
       'https://www.saastr.com/customer-acquisition-cost/',
     ],
   },
-  // P6-3 solopreneur-funnel-value-calculator          -- added in P6-3
+  {
+    slug: 'solopreneur-funnel-value-calculator',
+    title: 'Funnel Value Calculator',
+    description:
+      'Measure marketing funnel value across 4 stages: impressions → clickers → leads → sales. See overall conversion rate, biggest drop-off stage, what-if improvements, and revenue projections. Health bands: 🟢 ≥5% · 🟡 1–5% · 🟠 0.1–1% · 🔴 <0.1%.',
+    categoryId: 'M',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'impressions', label: 'Impressions (top of funnel)', placeholder: 'e.g. 100000', type: 'number' },
+      { name: 'ctr', label: 'Click-Through Rate (%)', placeholder: 'e.g. 2.5', type: 'number' },
+      { name: 'leadRate', label: 'Lead Conversion Rate (% of clickers)', placeholder: 'e.g. 15', type: 'number' },
+      { name: 'saleRate', label: 'Sale Conversion Rate (% of leads)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'aov', label: 'Average Order Value ($)', placeholder: 'e.g. 80', type: 'number' },
+      { name: 'grossMargin', label: 'Gross Margin (%)', placeholder: 'e.g. 70', type: 'number' },
+    ],
+    keywords: [
+      'funnel value calculator',
+      'marketing funnel',
+      'conversion funnel',
+      'funnel analysis',
+      'sales funnel',
+      'CTR',
+      'lead conversion',
+      'sales conversion',
+      'funnel optimization',
+      'AOV',
+    ],
+    tags: ['marketing', 'funnel', 'conversion'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-05',
+    sources: [
+      'https://blog.hubspot.com/marketing/conversion-funnel',
+      'https://www.salesforce.com/resources/articles/sales-funnel/',
+      'https://unbounce.com/conversion-rate-optimization/conversion-funnel/',
+      'https://www.optimizely.com/insights/blog/conversion-funnel/',
+    ],
+  },
   // P6-4 solopreneur-cohort-retention-calculator      -- added in P6-4
   // P6-5 solopreneur-email-campaign-roi-calculator    -- added in P6-5
   // P6-6 solopreneur-content-marketing-roi-calculator -- added in P6-6
