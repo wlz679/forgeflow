@@ -117,6 +117,11 @@
     "headlineUnit": { "en": "12-mo LTV", "zh": "12个月 LTV" },
     "headlineLabel": { "en": "1K users, 30% M6 retention, $30 rev/mo", "zh": "1000 用户, 30% 第6月留存, $30 每月收入" }
   },
+  "solopreneur-email-campaign-roi-calculator": {
+    "headline": { "en": "2400%", "zh": "2400%" },
+    "headlineUnit": { "en": "ROI", "zh": "ROI" },
+    "headlineLabel": { "en": "10K list, 25% open, 5% CTR, $25 aov, $500 cost", "zh": "1万订阅, 25% 打开率, 5% 点击率, $25 单价, $500 成本" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

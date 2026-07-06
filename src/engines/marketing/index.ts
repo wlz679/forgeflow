@@ -9,3 +9,4 @@ export * from './roas-calculator';
 export * from './ltv-by-channel-calculator';
 export * from './funnel-value-calculator';
 export * from './cohort-retention-calculator';
+export * from './email-campaign-roi-calculator';

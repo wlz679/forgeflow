@@ -123,6 +123,8 @@ const ENGINES = [
     subdir: 'marketing',          defaultInputs: { impressions: '100000', ctr: '2.5', leadRate: '15', saleRate: '5', aov: '80', grossMargin: '70' } },
   { file: 'cohort-retention-calculator.ts',      slug: 'solopreneur-cohort-retention-calculator',
     subdir: 'marketing',      defaultInputs: { cohortSize: '1000', m1Retention: '80', m2Retention: '60', m3Retention: '45', m6Retention: '30', m12Retention: '20', revenuePerUser: '30' } },
+  { file: 'email-campaign-roi-calculator.ts',     slug: 'solopreneur-email-campaign-roi-calculator',
+    subdir: 'marketing',     defaultInputs: { listSize: '10000', openRate: '25', ctr: '5', aovPerClick: '25', campaignCost: '500', numEmails: '4' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

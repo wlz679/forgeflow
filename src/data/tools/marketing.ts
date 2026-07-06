@@ -167,6 +167,43 @@ export const tools: ToolMeta[] = [
       'https://mixpanel.com/blog/cohort-analysis/',
     ],
   },
-  // P6-5 solopreneur-email-campaign-roi-calculator    -- added in P6-5
+  {
+    slug: 'solopreneur-email-campaign-roi-calculator',
+    title: 'Email Campaign ROI Calculator',
+    description:
+      'Measure email campaign ROI: gross/net revenue, cost-per-click/open, and projected scaling. Industry benchmark open rate 21% included. Health: 🟢 ≥300% ROI · 🟡 100–300% · 🟠 0–100% · 🔴 <0%.',
+    categoryId: 'M',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'listSize', label: 'Email List Size (subscribers)', placeholder: 'e.g. 10000', type: 'number' },
+      { name: 'openRate', label: 'Open Rate (%)', placeholder: 'e.g. 25', type: 'number' },
+      { name: 'ctr', label: 'Click-Through Rate (% of openers)', placeholder: 'e.g. 5', type: 'number' },
+      { name: 'aovPerClick', label: 'Revenue per Click ($)', placeholder: 'e.g. 25', type: 'number' },
+      { name: 'campaignCost', label: 'Campaign Cost ($)', placeholder: 'e.g. 500', type: 'number' },
+      { name: 'numEmails', label: 'Number of Emails in Campaign', placeholder: 'e.g. 4', type: 'number' },
+    ],
+    keywords: [
+      'email campaign ROI',
+      'email marketing ROI',
+      'email ROI calculator',
+      'email open rate',
+      'email CTR',
+      'newsletter ROI',
+      'email list monetization',
+      'campaign cost',
+      'cost per click',
+      'email marketing benchmark',
+    ],
+    tags: ['marketing', 'email', 'roi'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-06',
+    sources: [
+      'https://blog.hubspot.com/marketing/email-marketing-roi',
+      'https://www.campaignmonitor.com/resources/guides/email-marketing-roi/',
+      'https://mailchimp.com/resources/email-marketing-benchmarks/',
+      'https://www.salesforce.com/resources/articles/email-marketing-stats/',
+    ],
+  },
   // P6-6 solopreneur-content-marketing-roi-calculator -- added in P6-6
 ];
