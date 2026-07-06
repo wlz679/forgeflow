@@ -125,6 +125,8 @@ const ENGINES = [
     subdir: 'marketing',      defaultInputs: { cohortSize: '1000', m1Retention: '80', m2Retention: '60', m3Retention: '45', m6Retention: '30', m12Retention: '20', revenuePerUser: '30' } },
   { file: 'email-campaign-roi-calculator.ts',     slug: 'solopreneur-email-campaign-roi-calculator',
     subdir: 'marketing',     defaultInputs: { listSize: '10000', openRate: '25', ctr: '5', aovPerClick: '25', campaignCost: '500', numEmails: '4' } },
+  { file: 'content-marketing-roi-calculator.ts',  slug: 'solopreneur-content-marketing-roi-calculator',
+    subdir: 'marketing',  defaultInputs: { monthlyPieces: '8', monthsToRank: '6', peakMonthlyTraffic: '5000', conversionRate: '2', aov: '80', monthlyContentCost: '2000', attributionModel: 'last-touch' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

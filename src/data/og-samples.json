@@ -122,6 +122,11 @@
     "headlineUnit": { "en": "ROI", "zh": "ROI" },
     "headlineLabel": { "en": "10K list, 25% open, 5% CTR, $25 aov, $500 cost", "zh": "1万订阅, 25% 打开率, 5% 点击率, $25 单价, $500 成本" }
   },
+  "solopreneur-content-marketing-roi-calculator": {
+    "headline": { "en": "$24K", "zh": "$2.4万" },
+    "headlineUnit": { "en": "12-mo net", "zh": "12个月净收益" },
+    "headlineLabel": { "en": "8 pieces/mo, 6mo rank, 5K traffic, 2% CR, $80 aov", "zh": "8 篇/月, 6月排名, 5K 流量, 2% 转化, $80 单价" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
