@@ -13,4 +13,5 @@ export const categories: Category[] = [
   { id: 'E', name: 'Cost & Efficiency', slug: 'cost-efficiency', description: 'Figure out meeting costs, employee costs, SaaS pricing, market size, and productivity scoring.' },
   { id: 'F', name: 'Investment & ROI', slug: 'investment-roi', description: 'Calculate sponsorship rates, time value, freelance taxes, and equity dilution scenarios.' },
   { id: 'M', name: 'Marketing Analytics', slug: 'marketing-analytics', description: 'Measure ROAS, LTV by channel, funnel value, cohort retention curves, email campaign ROI, and content marketing ROI for performance marketers and growth teams.' },
+  { id: 'O', name: 'Operations / 库存运营', slug: 'operations-inventory', description: 'Calculate inventory turnover, carrying cost, stockout cost, reorder point, fulfillment cost, and supplier scorecards for Shopify/Amazon FBA sellers and product-based businesses.' },
 ];

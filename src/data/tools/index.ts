@@ -13,6 +13,7 @@ import { tools as cost } from './cost';
 import { tools as investment } from './investment';
 import { tools as realEstate } from './real-estate';
 import { tools as marketing } from './marketing';
+import { tools as operations } from './operations';
 
 export const tools: ToolMeta[] = [
   ...saas,
@@ -23,6 +24,7 @@ export const tools: ToolMeta[] = [
   ...investment,
   ...realEstate,
   ...marketing,
+  ...operations,
 ];
 
 export type { ToolMeta };
