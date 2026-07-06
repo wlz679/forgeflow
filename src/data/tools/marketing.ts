@@ -128,7 +128,45 @@ export const tools: ToolMeta[] = [
       'https://www.optimizely.com/insights/blog/conversion-funnel/',
     ],
   },
-  // P6-4 solopreneur-cohort-retention-calculator      -- added in P6-4
+  {
+    slug: 'solopreneur-cohort-retention-calculator',
+    title: 'Cohort Retention Calculator',
+    description:
+      'Measure monthly cohort retention decay (M1/M2/M3/M6/M12) and project 12-month LTV. See biggest drop month, M6 retention health band, what-if improvements, and CAC payback. Health: 🟢 ≥90% · 🟡 70–90% · 🟠 50–70% · 🔴 <50%.',
+    categoryId: 'M',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'cohortSize', label: 'Cohort Size (users)', placeholder: 'e.g. 1000', type: 'number' },
+      { name: 'm1Retention', label: 'M1 Retention (%)', placeholder: 'e.g. 80', type: 'number' },
+      { name: 'm2Retention', label: 'M2 Retention (%)', placeholder: 'e.g. 60', type: 'number' },
+      { name: 'm3Retention', label: 'M3 Retention (%)', placeholder: 'e.g. 45', type: 'number' },
+      { name: 'm6Retention', label: 'M6 Retention (%)', placeholder: 'e.g. 30', type: 'number' },
+      { name: 'm12Retention', label: 'M12 Retention (%)', placeholder: 'e.g. 20', type: 'number' },
+      { name: 'revenuePerUser', label: 'Avg Monthly Revenue / User ($)', placeholder: 'e.g. 30', type: 'number' },
+    ],
+    keywords: [
+      'cohort retention',
+      'retention curve',
+      'cohort analysis',
+      'customer retention',
+      'retention rate',
+      'churn rate',
+      'LTV projection',
+      'customer lifetime value',
+      'cohort LTV',
+      'retention decay',
+    ],
+    tags: ['marketing', 'retention', 'ltv', 'cohort'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-05',
+    sources: [
+      'https://www.profitwell.com/blog/cohort-analysis',
+      'https://amplitude.com/blog/cohort-analysis',
+      'https://www.helpscout.com/blog/customer-retention-rate',
+      'https://mixpanel.com/blog/cohort-analysis/',
+    ],
+  },
   // P6-5 solopreneur-email-campaign-roi-calculator    -- added in P6-5
   // P6-6 solopreneur-content-marketing-roi-calculator -- added in P6-6
 ];

@@ -112,6 +112,11 @@
     "headlineUnit": { "en": "overall CR", "zh": "总转化率" },
     "headlineLabel": { "en": "100K impressions → 18.75 sales ($1.5K revenue)", "zh": "10万曝光 → 18.75 销售 ($1500 收入)" }
   },
+  "solopreneur-cohort-retention-calculator": {
+    "headline": { "en": "$32.6K", "zh": "$32.6K" },
+    "headlineUnit": { "en": "12-mo LTV", "zh": "12个月 LTV" },
+    "headlineLabel": { "en": "1K users, 30% M6 retention, $30 rev/mo", "zh": "1000 用户, 30% 第6月留存, $30 每月收入" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
