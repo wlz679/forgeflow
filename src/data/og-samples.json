@@ -152,6 +152,11 @@
     "headlineUnit": { "en": "per order", "zh": "/订单" },
     "headlineLabel": { "en": "500 orders/mo: $1.50 labor + $5.50 ship + $1.20 pkg + $0.36 returns", "zh": "500订单/月: $1.50人工 + $5.50运费 + $1.20包装 + $0.36退货处理" }
   },
+  "solopreneur-supplier-scorecard-calculator": {
+    "headline": { "en": "84.0", "zh": "84.0" },
+    "headlineUnit": { "en": "grade B", "zh": "B级" },
+    "headlineLabel": { "en": "Balanced: 88% on-time + 2.5% defect + 3d lead var + 5% cost var", "zh": "均衡权重: 88% 准时 + 2.5% 缺陷 + 3天 交期波动 + 5% 成本波动" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

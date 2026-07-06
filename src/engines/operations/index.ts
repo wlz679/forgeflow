@@ -13,4 +13,5 @@ import './carrying-cost-calculator';
 import './stockout-cost-calculator';
 import './reorder-point-calculator';
 import './fulfillment-cost-calculator';
+import './supplier-scorecard-calculator';
 export {};

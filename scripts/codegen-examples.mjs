@@ -137,6 +137,8 @@ const ENGINES = [
     subdir: 'operations',         defaultInputs: { avgDailyDemand: '50', leadTimeDays: '14', serviceLevel: '95', demandStdDev: '10', reviewPeriod: '7' } },
   { file: 'fulfillment-cost-calculator.ts',      slug: 'solopreneur-fulfillment-cost-calculator',
     subdir: 'operations',      defaultInputs: { ordersPerMonth: '500', pickMin: '3', packMin: '2', shippingCost: '5.50', packagingCost: '1.20', laborRate: '18', returnRate: '8' } },
+  { file: 'supplier-scorecard-calculator.ts',    slug: 'solopreneur-supplier-scorecard-calculator',
+    subdir: 'operations',    defaultInputs: { onTimePct: '88', defectRatePct: '2.5', leadVarianceDays: '3', costVariancePct: '5', weightPreset: 'balanced' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
