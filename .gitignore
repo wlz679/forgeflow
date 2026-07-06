@@ -16,3 +16,9 @@ public/og/
 # Twemoji PNG cache (scripts/.twemoji-cache/) — populated on first build,
 # never commit binaries. Re-seed with `pnpm build:og` if cleared.
 scripts/.twemoji-cache/
+
+.codegraph/
+.claude/
+docs/
+CLAUDE.md
+.serena/

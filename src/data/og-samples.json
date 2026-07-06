@@ -132,6 +132,11 @@
     "headlineUnit": { "en": "turnover", "zh": "周转率" },
     "headlineLabel": { "en": "$240K COGS / $40K inventory = 6x/year (general)", "zh": "$24万 COGS / $4万 库存 = 6次/年 (通用)" }
   },
+  "solopreneur-carrying-cost-calculator": {
+    "headline": { "en": "21.5%", "zh": "21.5%" },
+    "headlineUnit": { "en": "annual rate", "zh": "年费率" },
+    "headlineLabel": { "en": "$50K inventory × 21.5% = $10,750/yr (5 components)", "zh": "$5万 库存 × 21.5% = $1.075万/年 (5项)" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },

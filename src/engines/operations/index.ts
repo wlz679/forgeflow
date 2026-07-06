@@ -9,4 +9,5 @@
 //
 // Engines are added one per task via Task 1..Task 6.
 import './inventory-turnover-calculator';
+import './carrying-cost-calculator';
 export {};

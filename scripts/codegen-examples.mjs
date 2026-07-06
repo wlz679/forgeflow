@@ -129,6 +129,8 @@ const ENGINES = [
     subdir: 'marketing',  defaultInputs: { monthlyPieces: '8', monthsToRank: '6', peakMonthlyTraffic: '5000', conversionRate: '2', aov: '80', monthlyContentCost: '2000', attributionModel: 'last-touch' } },
   { file: 'inventory-turnover-calculator.ts',    slug: 'solopreneur-inventory-turnover-calculator',
     subdir: 'operations',   defaultInputs: { annualCOGS: '240000', avgInventory: '40000', periodDays: '365', industry: 'general' } },
+  { file: 'carrying-cost-calculator.ts',         slug: 'solopreneur-carrying-cost-calculator',
+    subdir: 'operations',         defaultInputs: { avgInventoryValue: '50000', storageRate: '8', insuranceRate: '1.5', shrinkageRate: '2', oppCostRate: '8', otherCostsPct: '2' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
