@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-06-29",
+  "lastUpdated": "2026-07-06",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1177,6 +1177,14 @@
           "family": "claude4x",
           "contextWindow": "1M",
           "order": 19
+        },
+        "claude-sonnet-5": {
+          "input": 2,
+          "output": 10,
+          "name": "Claude Sonnet 5",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "order": 20
         }
       }
     },
