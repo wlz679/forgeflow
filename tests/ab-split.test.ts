@@ -48,15 +48,15 @@ test('tools/index.ts uses import.meta.glob', () => {
   assert.match(content, /import\.meta\.glob/, 'tools/index.ts should use import.meta.glob');
 });
 
-test('getAllEngines() returns 50 engines after import', async () => {
+test('getAllEngines() returns 51 engines after import', async () => {
   await import('../src/engines/index.ts');
   const { getAllEngines } = await import('../src/core/engines/registry.ts');
-  assert.equal(getAllEngines().length, 50);
+  assert.equal(getAllEngines().length, 51);
 });
 
-test('aggregated tools array has 50 entries', async () => {
+test('aggregated tools array has 51 entries', async () => {
   const { tools } = await import('../src/data/tools/index.ts');
-  assert.equal(tools.length, 50);
+  assert.equal(tools.length, 51);
 });
 
 test('4 consumer import paths are unchanged', () => {

@@ -127,6 +127,8 @@ const ENGINES = [
     subdir: 'marketing',     defaultInputs: { listSize: '10000', openRate: '25', ctr: '5', aovPerClick: '25', campaignCost: '500', numEmails: '4' } },
   { file: 'content-marketing-roi-calculator.ts',  slug: 'solopreneur-content-marketing-roi-calculator',
     subdir: 'marketing',  defaultInputs: { monthlyPieces: '8', monthsToRank: '6', peakMonthlyTraffic: '5000', conversionRate: '2', aov: '80', monthlyContentCost: '2000', attributionModel: 'last-touch' } },
+  { file: 'inventory-turnover-calculator.ts',    slug: 'solopreneur-inventory-turnover-calculator',
+    subdir: 'operations',   defaultInputs: { annualCOGS: '240000', avgInventory: '40000', periodDays: '365', industry: 'general' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

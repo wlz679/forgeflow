@@ -8,4 +8,5 @@
 // P7-6: supplier-scorecard      — Supplier Performance Scorecard
 //
 // Engines are added one per task via Task 1..Task 6.
+import './inventory-turnover-calculator';
 export {};

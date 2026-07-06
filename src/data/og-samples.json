@@ -127,6 +127,11 @@
     "headlineUnit": { "en": "12-mo net", "zh": "12个月净收益" },
     "headlineLabel": { "en": "8 pieces/mo, 6mo rank, 5K traffic, 2% CR, $80 aov", "zh": "8 篇/月, 6月排名, 5K 流量, 2% 转化, $80 单价" }
   },
+  "solopreneur-inventory-turnover-calculator": {
+    "headline": { "en": "6.0x", "zh": "6.0倍" },
+    "headlineUnit": { "en": "turnover", "zh": "周转率" },
+    "headlineLabel": { "en": "$240K COGS / $40K inventory = 6x/year (general)", "zh": "$24万 COGS / $4万 库存 = 6次/年 (通用)" }
+  },
   "solopreneur-cap-rate-calculator": {
     "headline": { "en": "4.44%", "zh": "4.44%" },
     "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
