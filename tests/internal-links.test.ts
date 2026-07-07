@@ -3,8 +3,8 @@ import { strict as assert } from 'node:assert';
 import { relatedTools } from '../src/data/internal-links.ts';
 import { tools } from '../src/data/tools/index.ts';
 
-test('all 57 tools have relatedTools entry', () => {
-  assert.equal(Object.keys(relatedTools).length, 57);
+test('all 58 tools have relatedTools entry', () => {
+  assert.equal(Object.keys(relatedTools).length, 58);
   for (const t of tools) {
     assert.ok(relatedTools[t.slug], `missing entry for ${t.slug}`);
   }

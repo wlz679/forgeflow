@@ -9,3 +9,4 @@
 //
 // Engines are added one per task via Task 1..Task 6.
 import './pipeline-value-calculator';
+import './sales-velocity-calculator';

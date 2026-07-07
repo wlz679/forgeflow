@@ -296,5 +296,10 @@
     "headline": { "en": "$215K", "zh": "$21.5万" },
     "headlineUnit": { "en": "weighted", "zh": "加权" },
     "headlineLabel": { "en": "Pipeline value (10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing)", "zh": "Pipeline 价值（10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing）" }
+  },
+  "solopreneur-sales-velocity-calculator": {
+    "headline": { "en": "$2,778", "zh": "$2,778" },
+    "headlineUnit": { "en": "/day", "zh": "/天" },
+    "headlineLabel": { "en": "Sales velocity (20 opps × $25K × 25% ÷ 45 days)", "zh": "销售速度（20 个机会 × $2.5万 × 25% ÷ 45 天）" }
   }
 }
