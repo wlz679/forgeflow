@@ -1,35 +1,44 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import {
-  dailyVelocity, monthlyVelocity, annualVelocity, calcHealthBand,
+  dailyVelocity, dailyVelocityRaw, monthlyVelocity, annualVelocity, calcHealthBand,
 } from '../src/engines/sales/sales-velocity-calculator.ts';
 
 // Test 1: canonical dailyVelocity (20 opps × $25K × 25% win / 45 days)
-test('dailyVelocity: canonical 20×25000×0.25/45 ≈ $2,777.78/day', () => {
+test('dailyVelocity: canonical 20×25000×0.25/45 ≈ $2,777.78/day (rounded 2dp)', () => {
   assert.equal(dailyVelocity(20, 25000, 25, 45), 2777.78);
 });
 
-// Test 2: monthlyVelocity = dailyVelocity × 30 (literal JS float of 2777.78 * 30 = 83333.4)
-//   Note: spec displays $83,333.33 (rounded to display precision from unrounded daily).
-//   The literal 2777.78 input × 30 yields 83333.4 in exact JS arithmetic.
-test('monthlyVelocity(2777.78) === 83333.4 (literal JS float)', () => {
-  assert.equal(monthlyVelocity(2777.78), 83333.4);
+// Test 2: monthlyVelocity = unrounded daily × 30 (matches spec display $83,333.33).
+//   This is the path the production calculate() now uses (dailyRaw → monthly/annual)
+//   to avoid compounding rounding drift. dailyVelocityRaw(20,25000,25,45) = 2777.7777...
+//   × 30 = 83333.333..., rounded to 2dp = 83333.33.
+test('monthlyVelocity(dailyVelocityRaw(20,25000,25,45)) === 83333.33 (spec display)', () => {
+  const raw = dailyVelocityRaw(20, 25000, 25, 45);
+  assert.equal(monthlyVelocity(raw), 83333.33);
 });
 
-// Test 3: annualVelocity = dailyVelocity × 365 (literal JS float of 2777.78 * 365 = 1013889.7)
-test('annualVelocity(2777.78) === 1013889.7 (literal JS float)', () => {
-  assert.equal(annualVelocity(2777.78), 1013889.7);
+// Test 3: annualVelocity = unrounded daily × 365 (matches spec display $1,013,888.89).
+test('annualVelocity(dailyVelocityRaw(20,25000,25,45)) === 1013888.89 (spec display)', () => {
+  const raw = dailyVelocityRaw(20, 25000, 25, 45);
+  assert.equal(annualVelocity(raw), 1013888.89);
 });
 
-// Test 3b: sanity check that monthly/annual from unrounded daily matches spec display values
-test('monthlyVelocity(unrounded daily 2777.7777...) ≈ 83333.33', () => {
-  const unrounded = 125000 / 45; // 2777.7777...
-  assert.equal(monthlyVelocity(unrounded), 83333.33);
+// Test 3b: dailyVelocityRaw is unrounded (used internally for monthly/annual derivation).
+test('dailyVelocityRaw: canonical 20×25000×0.25/45 = 2777.7777... (unrounded)', () => {
+  const raw = dailyVelocityRaw(20, 25000, 25, 45);
+  // 125000/45 = 2777.7777... ; assert that we get full precision, not 2dp-rounded
+  assert.ok(Math.abs(raw - 125000 / 45) < 1e-9);
+  assert.notEqual(raw, dailyVelocity(20, 25000, 25, 45));
 });
 
-test('annualVelocity(unrounded daily 2777.7777...) ≈ 1013888.89', () => {
-  const unrounded = 125000 / 45;
-  assert.equal(annualVelocity(unrounded), 1013888.89);
+// Test 3c: round-trip — dailyVelocity(x) and dailyVelocityRaw(x) are equivalent at 2dp.
+test('dailyVelocityRaw round-trip: monthly/annual from raw matches spec, not from rounded', () => {
+  const raw = dailyVelocityRaw(20, 25000, 25, 45);
+  const rounded = dailyVelocity(20, 25000, 25, 45);
+  // raw gives 83333.33 (spec), rounded gives 83333.40 (the bug) — proof the fix matters
+  assert.equal(monthlyVelocity(raw), 83333.33);
+  assert.equal(monthlyVelocity(rounded), 83333.4);
 });
 
 // Test 4: health band critical (< $500)

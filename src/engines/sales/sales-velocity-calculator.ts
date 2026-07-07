@@ -31,18 +31,28 @@ export const HEALTH_BANDS = {
 
 // ============== Math helpers (exported for tests) ==============
 
-/** Daily velocity = (opps × dealSize × winRate) / cycleDays. Rounded to 2dp for display stability. */
-export function dailyVelocity(openOpps: number, avgDealSize: number, winRate: number, cycleDays: number): number {
+/**
+ * Daily velocity = (opps × dealSize × winRate) / cycleDays.
+ * Returns the raw (unrounded) value so downstream monthly/annual derivations
+ * don't compound rounding drift. Use this for arithmetic, NOT for display.
+ */
+export function dailyVelocityRaw(openOpps: number, avgDealSize: number, winRate: number, cycleDays: number): number {
   if (cycleDays <= 0) return 0;
-  return Math.round((openOpps * avgDealSize * (winRate / 100)) / cycleDays * 100) / 100;
+  return (openOpps * avgDealSize * (winRate / 100)) / cycleDays;
 }
 
-/** Monthly velocity = dailyVelocity × 30. Rounded to 2dp. */
+/** Daily velocity rounded to 2dp (display-stable). Used for health band classification + display. */
+export function dailyVelocity(openOpps: number, avgDealSize: number, winRate: number, cycleDays: number): number {
+  const raw = dailyVelocityRaw(openOpps, avgDealSize, winRate, cycleDays);
+  return Math.round(raw * 100) / 100;
+}
+
+/** Monthly velocity = daily × 30. Rounded to 2dp for display. */
 export function monthlyVelocity(daily: number): number {
   return Math.round(daily * 30 * 100) / 100;
 }
 
-/** Annual velocity = dailyVelocity × 365. Rounded to 2dp. */
+/** Annual velocity = daily × 365. Rounded to 2dp for display. */
 export function annualVelocity(daily: number): number {
   return Math.round(daily * 365 * 100) / 100;
 }
@@ -63,11 +73,18 @@ function calculate(inputs: Record<string, string>): string[] {
   const winRate = Math.max(0, parseFloat(inputs.winRate) || 0);
   const cycleDays = Math.max(1, parseFloat(inputs.cycleDays) || 1);
 
+  // Use raw daily for monthly/annual derivation so cent-level precision
+  // is preserved (rounded daily × 30/365 would compound rounding drift).
+  const dailyRaw = dailyVelocityRaw(openOpps, avgDealSize, winRate, cycleDays);
   const daily = dailyVelocity(openOpps, avgDealSize, winRate, cycleDays);
-  const monthly = monthlyVelocity(daily);
-  const annual = annualVelocity(daily);
+  const monthly = monthlyVelocity(dailyRaw);
+  const annual = annualVelocity(dailyRaw);
 
+  // money() = integer formatter for most displays (deal size, what-if, milestones).
+  // moneyExact() = preserves cents, used only for the daily/monthly/annual velocity
+  //   line where spec mandates $83,333.33 / $1,013,888.89 not $83,333 / $1,013,890.
   const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
+  const moneyExact = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Health band
   const band = calcHealthBand(daily);
@@ -135,7 +152,7 @@ function calculate(inputs: Record<string, string>): string[] {
     '🩺 Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Daily velocity: ' + money(daily) + '/day  ·  Monthly: ' + money(monthly) + '  ·  Annual: ' + money(annual) + '\n' +
+    '• Daily velocity: ' + moneyExact(daily) + '/day  ·  Monthly: ' + moneyExact(monthly) + '  ·  Annual: ' + moneyExact(annual) + '\n' +
     '• Formula: (opps × deal size × win rate) ÷ cycle = (' + openOpps + ' × ' + money(avgDealSize) + ' × ' + winRate + '%) ÷ ' + cycleDays + ' days\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📊 Inputs Snapshot:\n' +
@@ -144,7 +161,7 @@ function calculate(inputs: Record<string, string>): string[] {
     '• Average deal size: ' + money(avgDealSize) + '\n' +
     '• Win rate: ' + winRate + '%\n' +
     '• Sales cycle: ' + cycleDays + ' days\n' +
-    '• Daily / Monthly / Annual velocity: ' + money(daily) + ' / ' + money(monthly) + ' / ' + money(annual) + '\n\n' +
+    '• Daily / Monthly / Annual velocity: ' + moneyExact(daily) + ' / ' + moneyExact(monthly) + ' / ' + moneyExact(annual) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -163,7 +180,7 @@ function calculate(inputs: Record<string, string>): string[] {
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Next tier: ' + nextTier + '\n' +
     '• Gap to next tier: ' + money(Math.max(0, gapToNext)) + (band === 'excellent' ? ' (already at top)' : '') + '\n' +
-    '• At current pace: ~' + money(annual) + '/year revenue contribution\n\n' +
+    '• At current pace: ~' + moneyExact(annual) + '/year revenue contribution\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
 
@@ -173,18 +190,21 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  "function dv(o,d,w,c){if(c<=0)return 0;return (o*d*(w/100))/c;}" +
-  "function mv(d){return d*30;}" +
-  "function av(d){return d*365;}" +
+  "function dvRaw(o,d,w,c){if(c<=0)return 0;return (o*d*(w/100))/c;}" +
+  "function dv(o,d,w,c){return Math.round(dvRaw(o,d,w,c)*100)/100;}" +
+  "function mv(d){return Math.round(d*30*100)/100;}" +
+  "function av(d){return Math.round(d*365*100)/100;}" +
   "function band(v){if(v>=5000)return 'excellent';if(v>=2000)return 'good';if(v>=500)return 'warning';return 'critical';}" +
   "var o=Math.max(0,parseFloat(inputs.openOpps)||0);" +
   "var d=Math.max(0,parseFloat(inputs.avgDealSize)||0);" +
   "var w=Math.max(0,parseFloat(inputs.winRate)||0);" +
   "var c=Math.max(1,parseFloat(inputs.cycleDays)||1);" +
+  "var dailyRaw=dvRaw(o,d,w,c);" +
   "var daily=dv(o,d,w,c);" +
-  "var mo=mv(daily);" +
-  "var yr=av(daily);" +
+  "var mo=mv(dailyRaw);" +
+  "var yr=av(dailyRaw);" +
   "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
+  "function moneyExact(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}" +
   "var bd=band(daily);" +
   "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
   "var hl=bd==='excellent'?'Excellent \\u2014 revenue throughput \\u2265 $5,000/day; sales engine humming':bd==='good'?'Good \\u2014 productive sales engine; room to compress cycle or lift win rate':bd==='warning'?'Warning \\u2014 slow velocity; pipeline needs more volume or faster cycle':'Critical \\u2014 sales engine stalling; urgent funnel audit needed';" +
@@ -209,7 +229,7 @@ const customFn =
   "r2+='\\uD83E\\uDE7A Health:\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Daily velocity: '+money(daily)+'/day  \\u00B7  Monthly: '+money(mo)+'  \\u00B7  Annual: '+money(yr)+'\\n';" +
+  "r2+='\\u2022 Daily velocity: '+moneyExact(daily)+'/day  \\u00B7  Monthly: '+moneyExact(mo)+'  \\u00B7  Annual: '+moneyExact(yr)+'\\n';" +
   "r2+='\\u2022 Formula: (opps \\u00D7 deal size \\u00D7 win rate) \\u00F7 cycle = ('+o+' \\u00D7 '+money(d)+' \\u00D7 '+w+'%) \\u00F7 '+c+' days\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
@@ -218,7 +238,7 @@ const customFn =
   "r2+='\\u2022 Average deal size: '+money(d)+'\\n';" +
   "r2+='\\u2022 Win rate: '+w+'%\\n';" +
   "r2+='\\u2022 Sales cycle: '+c+' days\\n';" +
-  "r2+='\\u2022 Daily / Monthly / Annual velocity: '+money(daily)+' / '+money(mo)+' / '+money(yr)+'\\n\\n';" +
+  "r2+='\\u2022 Daily / Monthly / Annual velocity: '+moneyExact(daily)+' / '+moneyExact(mo)+' / '+moneyExact(yr)+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDD04 What-If:\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
@@ -237,7 +257,7 @@ const customFn =
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 Next tier: '+nt+'\\n';" +
   "r2+='\\u2022 Gap to next tier: '+money(Math.max(0,gn))+(bd==='excellent'?' (already at top)':'')+'\\n';" +
-  "r2+='\\u2022 At current pace: ~'+money(yr)+'/year revenue contribution\\n\\n';" +
+  "r2+='\\u2022 At current pace: ~'+moneyExact(yr)+'/year revenue contribution\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
   "return [r2];";
@@ -281,7 +301,7 @@ const engine: ToolEngine = {
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
   generate: calculate,
-  staticExamples: ['🚀 Sales Velocity Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — productive sales engine; room to compress cycle or lift win rate\n• Daily velocity: $2,778/day  ·  Monthly: $83,333  ·  Annual: $1,013,890\n• Formula: (opps × deal size × win rate) ÷ cycle = (20 × $25,000 × 25%) ÷ 45 days\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Open opportunities: 20\n• Average deal size: $25,000\n• Win rate: 25%\n• Sales cycle: 45 days\n• Daily / Monthly / Annual velocity: $2,778 / $83,333 / $1,013,890\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Win rate 25%→30%: $3,333/day (+20.0% lift)\n• Cycle 45→30 days: $4,167/day (+50.0% lift)\n• Combined (win rate 30% AND cycle 30d): $5,000/day\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $5,000/day\n• Path A — lift win rate to 45.0% (cycle unchanged)\n• Path B — compress cycle to 25 days (win rate unchanged)\n• Path C — add 16 more open opps (everything else unchanged)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($5,000)\n• Gap to next tier: $2,222\n• At current pace: ~$1,013,890/year revenue contribution\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.\n'],
+  staticExamples: ['🚀 Sales Velocity Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — productive sales engine; room to compress cycle or lift win rate\n• Daily velocity: $2,777.78/day  ·  Monthly: $83,333.33  ·  Annual: $1,013,888.89\n• Formula: (opps × deal size × win rate) ÷ cycle = (20 × $25,000 × 25%) ÷ 45 days\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Open opportunities: 20\n• Average deal size: $25,000\n• Win rate: 25%\n• Sales cycle: 45 days\n• Daily / Monthly / Annual velocity: $2,777.78 / $83,333.33 / $1,013,888.89\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Win rate 25%→30%: $3,333/day (+20.0% lift)\n• Cycle 45→30 days: $4,167/day (+50.0% lift)\n• Combined (win rate 30% AND cycle 30d): $5,000/day\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $5,000/day\n• Path A — lift win rate to 45.0% (cycle unchanged)\n• Path B — compress cycle to 25 days (win rate unchanged)\n• Path C — add 16 more open opps (everything else unchanged)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($5,000)\n• Gap to next tier: $2,222\n• At current pace: ~$1,013,888.89/year revenue contribution\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.\n'],
   faq: [
     { q: 'What is sales velocity?', a: 'Sales velocity measures how fast your pipeline generates revenue. Formula: (number of opportunities × average deal size × win rate) ÷ sales cycle length (days). The result is dollars of revenue generated per day — the fundamental sales productivity metric for B2B SaaS and consultative sales.' },
     { q: 'What is a good sales velocity?', a: 'For B2B SaaS, daily velocity ≥ $5,000 is excellent (corresponds to ~$1.8M/year throughput). $2,000–$5,000/day is good (mid-market). Below $500/day is critical — the sales engine is stalling and you will not hit quota.' },
