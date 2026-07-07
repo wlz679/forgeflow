@@ -291,5 +291,10 @@
     "headlineUnit": { "en": "saved/mo", "zh": "/月节省" },
     "headlineLabel": { "en": "Cheapest Provider Found", "zh": "最便宜厂商" },
     "trend": { "en": "▲ vs $58 baseline", "zh": "▲ 对比 $58 基线" }
+  },
+  "solopreneur-pipeline-value-calculator": {
+    "headline": { "en": "$215K", "zh": "$21.5万" },
+    "headlineUnit": { "en": "weighted", "zh": "加权" },
+    "headlineLabel": { "en": "Pipeline value (10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing)", "zh": "Pipeline 价值（10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing）" }
   }
 }

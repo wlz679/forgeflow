@@ -12,3 +12,4 @@ import './investment';
 import './real-estate';
 import './marketing';
 import './operations';
+import './sales';

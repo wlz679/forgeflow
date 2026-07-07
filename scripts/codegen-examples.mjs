@@ -139,6 +139,8 @@ const ENGINES = [
     subdir: 'operations',      defaultInputs: { ordersPerMonth: '500', pickMin: '3', packMin: '2', shippingCost: '5.50', packagingCost: '1.20', laborRate: '18', returnRate: '8' } },
   { file: 'supplier-scorecard-calculator.ts',    slug: 'solopreneur-supplier-scorecard-calculator',
     subdir: 'operations',    defaultInputs: { onTimePct: '88', defectRatePct: '2.5', leadVarianceDays: '3', costVariancePct: '5', weightPreset: 'balanced' } },
+  { file: 'pipeline-value-calculator.ts',         slug: 'solopreneur-pipeline-value-calculator',
+    subdir: 'sales',         defaultInputs: { discoveryCount: '10', discoverySize: '15000', proposalCount: '5', proposalSize: '25000', negotiationCount: '3', negotiationSize: '35000', closingCount: '2', closingSize: '45000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

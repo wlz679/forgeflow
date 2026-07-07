@@ -8,4 +8,4 @@
 // P8-6: pipeline-coverage       — Pipeline Coverage
 //
 // Engines are added one per task via Task 1..Task 6.
-export {};
+import './pipeline-value-calculator';
