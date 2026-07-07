@@ -14,4 +14,5 @@ export const categories: Category[] = [
   { id: 'F', name: 'Investment & ROI', slug: 'investment-roi', description: 'Calculate sponsorship rates, time value, freelance taxes, and equity dilution scenarios.' },
   { id: 'M', name: 'Marketing Analytics', slug: 'marketing-analytics', description: 'Measure ROAS, LTV by channel, funnel value, cohort retention curves, email campaign ROI, and content marketing ROI for performance marketers and growth teams.' },
   { id: 'O', name: 'Operations / 库存运营', slug: 'operations-inventory', description: 'Calculate inventory turnover, carrying cost, stockout cost, reorder point, fulfillment cost, and supplier scorecards for Shopify/Amazon FBA sellers and product-based businesses.' },
+  { id: 'S', name: 'Sales / 销售管理', slug: 'sales', description: 'Calculate pipeline value, sales velocity, ACV, win rate by stage, quota attainment, and pipeline coverage for B2B SaaS sales teams and RevOps.' },
 ];

@@ -182,7 +182,7 @@ test('P2b — no /recent/ page contains raw user data', { skip: !existsSync(dist
 test('P2a — every ToolCard on listing pages has data-favorite-toggle with correct slug', { skip: !existsSync(distDir) }, () => {
   // ToolCard (with data-favorite-toggle) renders on listing pages: 6 category pages + 2 landing pages.
   // Individual tool detail pages use RelatedTools (pills without toggle), so they are excluded.
-  const listingPages = ['saas-metrics', 'freelance-pricing', 'cost-efficiency', 'investment-roi', 'valuation-exit', 'ai-cost-tools', 'marketing-analytics', 'operations-inventory'];
+  const listingPages = ['saas-metrics', 'freelance-pricing', 'cost-efficiency', 'investment-roi', 'valuation-exit', 'ai-cost-tools', 'marketing-analytics', 'operations-inventory', 'sales'];
   for (const lang of ['en', 'zh']) {
     for (const slug of listingPages) {
       const path = resolve(distDir, lang, slug, 'index.html');
