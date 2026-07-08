@@ -311,5 +311,10 @@
     "headline": { "en": "15%", "zh": "15%" },
     "headlineUnit": { "en": "win rate", "zh": "胜率" },
     "headlineLabel": { "en": "Win rate: 15% (bottleneck: SQL→Opp)", "zh": "胜率 15%（瓶颈：SQL→Opp）" }
+  },
+  "solopreneur-quota-attainment-calculator": {
+    "headline": { "en": "40%", "zh": "40%" },
+    "headlineUnit": { "en": "attainment", "zh": "完成度" },
+    "headlineLabel": { "en": "Quota: 40% ($400K of $1M at 6mo)", "zh": "完成度 40%（$40万 / $100万，6 个月）" }
   }
 }

@@ -150,4 +150,38 @@ export const tools: ToolMeta[] = [
       'https://blog.hubspot.com/sales/sales-conversion-rate',
     ],
   },
+  {
+    slug: 'solopreneur-quota-attainment-calculator',
+    title: 'Quota Attainment Calculator',
+    description:
+      'Track actual revenue vs annual quota with monthly pace projection and year-end forecast. Answers "am I on track to hit my number?" with attainment %, required monthly close, and gap-to-quota.',
+    categoryId: 'S',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'annualQuota', label: 'Annual quota (USD)', placeholder: '1000000', type: 'number' },
+      { name: 'monthsElapsed', label: 'Months elapsed', placeholder: '6', type: 'number' },
+      { name: 'actualRevenue', label: 'Revenue closed (USD)', placeholder: '400000', type: 'number' },
+    ],
+    keywords: [
+      'quota attainment calculator',
+      'quota tracker',
+      'sales quota',
+      'revenue target',
+      'attainment %',
+      'sales pace',
+      'year-end forecast',
+      'sales KPI',
+      'B2B SaaS sales',
+      'sales performance',
+    ],
+    tags: ['sales', 'quota', 'crm', 'performance'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-07',
+    sources: [
+      'https://blog.hubspot.com/sales/sales-quota',
+      'https://www.insivia.com/blog/sales-quota/',
+      'https://blog.hubspot.com/sales/setting-sales-quota',
+    ],
+  },
 ];

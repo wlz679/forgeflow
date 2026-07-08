@@ -147,6 +147,8 @@ const ENGINES = [
     subdir: 'sales',                      defaultInputs: { totalContractValue: '300000', contractLength: '12', numCustomers: '12', expansionRate: '10' } },
   { file: 'win-rate-by-stage-calculator.ts',       slug: 'solopreneur-win-rate-by-stage-calculator',
     subdir: 'sales',       defaultInputs: { sqlEntered: '100', sqlAdvanced: '50', oppEntered: '50', oppAdvanced: '30', proposalEntered: '30', proposalAdvanced: '20', negEntered: '20', negAdvanced: '15' } },
+  { file: 'quota-attainment-calculator.ts',         slug: 'solopreneur-quota-attainment-calculator',
+    subdir: 'sales',         defaultInputs: { annualQuota: '1000000', monthsElapsed: '6', actualRevenue: '400000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
