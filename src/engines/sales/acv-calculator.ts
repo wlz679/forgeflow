@@ -134,22 +134,25 @@ function calculate(inputs: Record<string, string>): string[] {
   // Path A: scale totalCV up (same customers, larger contracts)
   const totalCVForExcellent = annual > 0 ? (targetAnnual / annual) * totalContractValue : 0;
   const totalCVLiftNeeded = Math.max(0, totalCVForExcellent - totalContractValue);
-  // Path B: shrink customer base (fewer, higher-value customers) — each customer must be worth $50K
-  const numCustForExcellent = totalContractValue > 0 ? Math.ceil(totalContractValue / targetAnnual) : 0;
+  // Path B: shrink customer base (fewer, higher-value customers) — each customer must be worth ≥ $50K.
+  // Use Math.floor so "N or fewer customers" guarantees per-cust ≥ $50K (with Math.ceil, partial
+  // remainders made the effective per-cust < $50K and the band stayed 🟡 not 🟢).
+  const numCustForExcellent = totalContractValue > 0 ? Math.floor(totalContractValue / targetAnnual) : 0;
   const fewerCustNeeded = Math.max(0, numCustomers - numCustForExcellent);
 
-  // Milestone: gap to next tier (from expansion-adjusted ACV to next annual threshold)
-  // Spec example: $22,500 to next tier ($50K - $27,500 expansion-adjusted)
+  // Milestone: gap from the SAME base the Health band uses (annual, unexpanded) to the next tier
+  // threshold. Previously used `expanded`, which made gap dip to $0 or negative when band was 🟠/🟡
+  // (expanded already crossed the next threshold but unexpanded hadn't).
   let gapToNext: number;
   let nextTier: string;
   if (band === 'critical') {
-    gapToNext = 2000 - expanded;
+    gapToNext = 2000 - annual;
     nextTier = '🟠 Warning ($2,000)';
   } else if (band === 'warning') {
-    gapToNext = 10000 - expanded;
+    gapToNext = 10000 - annual;
     nextTier = '🟡 Good ($10,000)';
   } else if (band === 'good') {
-    gapToNext = 50000 - expanded;
+    gapToNext = 50000 - annual;
     nextTier = '🟢 Excellent ($50,000)';
   } else {
     gapToNext = 0;
@@ -179,7 +182,7 @@ function calculate(inputs: Record<string, string>): string[] {
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
     '• Base ACV: ' + money(base) + '  ·  Monthly: ' + moneyExact(monthlyDisplay) + '/month  ·  Annual: ' + money(annual) + '/year\n' +
     '• Expansion-adjusted (' + expansionRate + '%): ' + money(expanded) + '/year\n' +
-    '• Formula: ' + money(totalContractValue) + ' ÷ ' + numCustomers + ' customers ÷ ' + contractLength + ' months × (1 + ' + expansionRate + '%) = ' + money(expanded) + '\n\n' +
+    '• Formula: ' + money(totalContractValue) + ' ÷ ' + numCustomers + ' customers ÷ ' + contractLength + ' months × 12 × (1 + ' + expansionRate + '%) = ' + money(expanded) + '/year\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📊 Inputs Snapshot:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -200,13 +203,13 @@ function calculate(inputs: Record<string, string>): string[] {
     '• Target for 🟢 Excellent: ' + money(targetAnnual) + '/year ACV\n' +
     '• Gap to 🟢: ' + money(gapToExcellent) + '/year\n' +
     '• Path A — raise total contract value by ' + money(totalCVLiftNeeded) + ' (same customers, larger deals)\n' +
-    '• Path B — reduce customer base to ~' + numCustForExcellent + ' customers (each at $50K; fewer, higher-value contracts)\n' +
+    '• Path B — reduce to ~' + numCustForExcellent + ' or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n' +
     '• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🎯 Milestone:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + money(Math.max(0, gapToNext)) + (band === 'excellent' ? ' (already at top)' : '') + '\n' +
+    '• Gap to next tier: ' + money(Math.max(0, gapToNext)) + (band === 'excellent' ? ' (already at top)' : ' (before expansion)') + '\n' +
     '• At current pace: ~' + money(expanded) + '/year per-customer revenue (with ' + expansionRate + '% expansion)\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
@@ -246,12 +249,12 @@ const customFn =
   "var gap=Math.max(0,tgt-annual);" +
   "var tcvForExc=annual>0?(tgt/annual)*tcv:0;" +
   "var tcvLift=Math.max(0,tcvForExc-tcv);" +
-  "var ncForExc=tcv>0?Math.ceil(tcv/tgt):0;" +
+  "var ncForExc=tcv>0?Math.floor(tcv/tgt):0;" +
   "var fcNeed=Math.max(0,nc-ncForExc);" +
   "var gn,nt;" +
-  "if(bd==='critical'){gn=2000-expd;nt='\\uD83D\\uDFE0 Warning ($2,000)';}" +
-  "else if(bd==='warning'){gn=10000-expd;nt='\\uD83D\\uDFE1 Good ($10,000)';}" +
-  "else if(bd==='good'){gn=50000-expd;nt='\\uD83D\\uDFE2 Excellent ($50,000)';}" +
+  "if(bd==='critical'){gn=2000-annual;nt='\\uD83D\\uDFE0 Warning ($2,000)';}" +
+  "else if(bd==='warning'){gn=10000-annual;nt='\\uD83D\\uDFE1 Good ($10,000)';}" +
+  "else if(bd==='good'){gn=50000-annual;nt='\\uD83D\\uDFE2 Excellent ($50,000)';}" +
   "else{gn=0;nt='top tier maintained';}" +
   "var tip='';" +
   "if(bd==='critical'){tip='ACV < $2,000/year is micro-transaction territory \\u2014 high volume, low value. Focus on upsell paths: tier upgrades, annual prepay discounts, product bundle attach. A single sale is unlikely to move the needle; you need a flywheel of expansion revenue or a pricing re-architecture.';}" +
@@ -265,7 +268,7 @@ const customFn =
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
   "r2+='\\u2022 Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(moDisp)+'/month  \\u00B7  Annual: '+money(annual)+'/year\\n';" +
   "r2+='\\u2022 Expansion-adjusted ('+er+'%): '+money(expd)+'/year\\n';" +
-  "r2+='\\u2022 Formula: '+money(tcv)+' \\u00F7 '+nc+' customers \\u00F7 '+cl+' months \\u00D7 (1 + '+er+'%) = '+money(expd)+'\\n\\n';" +
+  "r2+='\\u2022 Formula: '+money(tcv)+' \\u00F7 '+nc+' customers \\u00F7 '+cl+' months \\u00D7 12 \\u00D7 (1 + '+er+'%) = '+money(expd)+'/year\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
@@ -286,13 +289,13 @@ const customFn =
   "r2+='\\u2022 Target for \\uD83D\\uDFE2 Excellent: '+money(tgt)+'/year ACV\\n';" +
   "r2+='\\u2022 Gap to \\uD83D\\uDFE2: '+money(gap)+'/year\\n';" +
   "r2+='\\u2022 Path A \\u2014 raise total contract value by '+money(tcvLift)+' (same customers, larger deals)\\n';" +
-  "r2+='\\u2022 Path B \\u2014 reduce customer base to ~'+ncForExc+' customers (each at $50K; fewer, higher-value contracts)\\n';" +
+  "r2+='\\u2022 Path B \\u2014 reduce to ~'+ncForExc+' or fewer customers (each \\u2265 $50K target; fewer, higher-value contracts)\\n';" +
   "r2+='\\u2022 Note: adding more customers at the same per-customer value reduces per-customer ACV\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 Next tier: '+nt+'\\n';" +
-  "r2+='\\u2022 Gap to next tier: '+money(Math.max(0,gn))+(bd==='excellent'?' (already at top)':'')+'\\n';" +
+  "r2+='\\u2022 Gap to next tier: '+money(Math.max(0,gn))+(bd==='excellent'?' (already at top)':' (before expansion)')+'\\n';" +
   "r2+='\\u2022 At current pace: ~'+money(expd)+'/year per-customer revenue (with '+er+'% expansion)\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
@@ -338,7 +341,7 @@ const engine: ToolEngine = {
   calculate,
   generate: calculate,
   staticExamples: [
-    '🚀 ACV Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — ACV $10,000–$50,000/year; mid-market sweet spot\n• Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year\n• Expansion-adjusted (10%): $27,500/year\n• Formula: $300,000 ÷ 12 customers ÷ 12 months × (1 + 10%) = $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total contract value: $300,000\n• Contract length: 12 months\n• Number of customers: 12\n• Annual expansion rate: 10%\n• Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)\n• Contract length 12→24 months: $12,500/year base (-50.0%)\n• Customers 12→24: $12,500/year base (-50.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $50,000/year ACV\n• Gap to 🟢: $25,000/year\n• Path A — raise total contract value by $300,000 (same customers, larger deals)\n• Path B — reduce customer base to ~6 customers (each at $50K; fewer, higher-value contracts)\n• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($50,000)\n• Gap to next tier: $22,500\n• At current pace: ~$27,500/year per-customer revenue (with 10% expansion)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ACV $10,000–$50,000/year is the mid-market sweet spot. To reach enterprise, invest in procurement-ready features (SSO, SOC2, audit logs), security review templates, and named CSM support. Pair with sales velocity (P8-2) to ensure deal size growth isn\'t coupled with cycle compression you can\'t sustain.\n',
+    '🚀 ACV Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — ACV $10,000–$50,000/year; mid-market sweet spot\n• Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year\n• Expansion-adjusted (10%): $27,500/year\n• Formula: $300,000 ÷ 12 customers ÷ 12 months × 12 × (1 + 10%) = $27,500/year\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total contract value: $300,000\n• Contract length: 12 months\n• Number of customers: 12\n• Annual expansion rate: 10%\n• Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)\n• Contract length 12→24 months: $12,500/year base (-50.0%)\n• Customers 12→24: $12,500/year base (-50.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $50,000/year ACV\n• Gap to 🟢: $25,000/year\n• Path A — raise total contract value by $300,000 (same customers, larger deals)\n• Path B — reduce to ~6 or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($50,000)\n• Gap to next tier: $25,000 (before expansion)\n• At current pace: ~$27,500/year per-customer revenue (with 10% expansion)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ACV $10,000–$50,000/year is the mid-market sweet spot. To reach enterprise, invest in procurement-ready features (SSO, SOC2, audit logs), security review templates, and named CSM support. Pair with sales velocity (P8-2) to ensure deal size growth isn\'t coupled with cycle compression you can\'t sustain.\n',
   ],
   faq: [
     { q: 'What is ACV (Average Contract Value)?', a: 'ACV is the average annualized revenue per customer contract. It is computed as total contract value divided by contract length (annualized), or equivalently total revenue divided by customer count for a given period. ACV is the fundamental SaaS pricing metric — it tells you how much each customer is worth on a per-year basis, separate from new vs expansion revenue.' },
