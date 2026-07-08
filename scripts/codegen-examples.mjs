@@ -143,6 +143,8 @@ const ENGINES = [
     subdir: 'sales',         defaultInputs: { discoveryCount: '10', discoverySize: '15000', proposalCount: '5', proposalSize: '25000', negotiationCount: '3', negotiationSize: '35000', closingCount: '2', closingSize: '45000' } },
   { file: 'sales-velocity-calculator.ts',           slug: 'solopreneur-sales-velocity-calculator',
     subdir: 'sales',           defaultInputs: { openOpps: '20', avgDealSize: '25000', winRate: '25', cycleDays: '45' } },
+  { file: 'acv-calculator.ts',                      slug: 'solopreneur-acv-calculator',
+    subdir: 'sales',                      defaultInputs: { totalContractValue: '300000', contractLength: '12', numCustomers: '12', expansionRate: '10' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

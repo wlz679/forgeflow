@@ -301,5 +301,10 @@
     "headline": { "en": "$2,778", "zh": "$2,778" },
     "headlineUnit": { "en": "/day", "zh": "/天" },
     "headlineLabel": { "en": "Sales velocity (20 opps × $25K × 25% ÷ 45 days)", "zh": "销售速度（20 个机会 × $2.5万 × 25% ÷ 45 天）" }
+  },
+  "solopreneur-acv-calculator": {
+    "headline": { "en": "$25,000", "zh": "$2.5万" },
+    "headlineUnit": { "en": "/year", "zh": "/年" },
+    "headlineLabel": { "en": "ACV: $25,000/year (12 customers, $300K total)", "zh": "ACV：$2.5万/年（12 个客户，$30万 总合同额）" }
   }
 }
