@@ -306,5 +306,10 @@
     "headline": { "en": "$25,000", "zh": "$2.5万" },
     "headlineUnit": { "en": "/year", "zh": "/年" },
     "headlineLabel": { "en": "ACV: $25,000/year (12 customers, $300K total)", "zh": "ACV：$2.5万/年（12 个客户，$30万 总合同额）" }
+  },
+  "solopreneur-win-rate-by-stage-calculator": {
+    "headline": { "en": "15%", "zh": "15%" },
+    "headlineUnit": { "en": "win rate", "zh": "胜率" },
+    "headlineLabel": { "en": "Win rate: 15% (bottleneck: SQL→Opp)", "zh": "胜率 15%（瓶颈：SQL→Opp）" }
   }
 }

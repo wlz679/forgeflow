@@ -145,6 +145,8 @@ const ENGINES = [
     subdir: 'sales',           defaultInputs: { openOpps: '20', avgDealSize: '25000', winRate: '25', cycleDays: '45' } },
   { file: 'acv-calculator.ts',                      slug: 'solopreneur-acv-calculator',
     subdir: 'sales',                      defaultInputs: { totalContractValue: '300000', contractLength: '12', numCustomers: '12', expansionRate: '10' } },
+  { file: 'win-rate-by-stage-calculator.ts',       slug: 'solopreneur-win-rate-by-stage-calculator',
+    subdir: 'sales',       defaultInputs: { sqlEntered: '100', sqlAdvanced: '50', oppEntered: '50', oppAdvanced: '30', proposalEntered: '30', proposalAdvanced: '20', negEntered: '20', negAdvanced: '15' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
