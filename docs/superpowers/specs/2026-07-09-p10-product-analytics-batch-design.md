@@ -164,7 +164,7 @@ Plus shared P10-0 scaffold files (separately committed as P10-0):
 | `src/data/tools/product-analytics.ts` | NEW (empty `tools: ToolMeta[] = []`) |
 | `src/data/categories.ts` | append entry: `{ id: 'P', name: 'Product Analytics', slug: 'product-analytics', description: '...' }` |
 | `src/pages/[lang]/product-analytics.astro` | NEW (template copy from `retention.astro`) |
-| `tests/ab-split.test.ts` | append `'product-analytics'` to subdir array; bump count expectations to 11 subdirs / 63 engines (post-scaffold) |
+| `tests/ab-split.test.ts` | append `'product-analytics'` to subdir array (11→12 subdirs); append `'product-analytics.ts'` to data/tools/ file list (13→14 files); engine count expectations **unchanged at 68** (P10-0 is scaffold-only, no engines yet) |
 
 **File count:**
 - P10-0 scaffold: 6 file actions + 1 dir
