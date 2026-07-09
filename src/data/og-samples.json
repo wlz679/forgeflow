@@ -1030,5 +1030,19 @@
       "en": "Feature Adoption: 25% (Good - healthy, consider promoting deeper engagement)",
       "zh": "功能采用率 25%（良好 — 健康，可推动深度参与）"
     }
+  },
+  "solopreneur-activation-rate-calculator": {
+    "headline": {
+      "en": "30%",
+      "zh": "30%"
+    },
+    "headlineUnit": {
+      "en": "Activation rate",
+      "zh": "激活率"
+    },
+    "headlineLabel": {
+      "en": "Activation: 30% (Good - healthy, identify the missing step)",
+      "zh": "激活率 30%（良好 — 健康，可识别缺漏步骤）"
+    }
   }
 }

@@ -10,3 +10,4 @@
 // Engines are added one per task via Task 1..Task 6.
 import './funnel-step-calculator';
 import './feature-adoption-calculator';
+import './activation-rate-calculator';

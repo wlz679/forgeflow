@@ -70,4 +70,38 @@ export const tools: ToolMeta[] = [
       'https://mixpanel.com/blog/feature-adoption/',
     ],
   },
+  {
+    slug: 'solopreneur-activation-rate-calculator',
+    title: 'Activation Rate',
+    description:
+      'Compute activation rate as % of signups that reached the aha-moment within a time window (7/14/30 days). The PM metric for measuring onboarding effectiveness. Health bands: green >=40% · yellow 25-40% · orange 15-25% · red <15%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.',
+    categoryId: 'P',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'signups',     label: 'New signups in period',                       placeholder: 'e.g. 500', type: 'number' },
+      { name: 'activated',   label: 'Signups reaching aha-moment in same window',   placeholder: 'e.g. 150', type: 'number' },
+      { name: 'period_days', label: 'Activation window', type: 'select',
+        options: ['7', '14', '30'],
+        default: '7' },
+    ],
+    keywords: [
+      'activation rate',
+      'aha moment',
+      'onboarding',
+      'activation rate calculator',
+      'product analytics',
+      'PM',
+      'B2B SaaS',
+      'mid-market SaaS',
+    ],
+    tags: ['product-analytics', 'pm', 'activation'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://www.reforge.com/blog/growth-loops',
+      'https://a16z.com/consumer-retention/',
+      'https://www.lennysnewsletter.com/p/activation',
+    ],
+  },
 ];
