@@ -321,5 +321,10 @@
     "headline": { "en": "1.5x", "zh": "1.5x" },
     "headlineUnit": { "en": "coverage", "zh": "覆盖率" },
     "headlineLabel": { "en": "Coverage: 1.5x (3x rule not met, $2.5M more needed)", "zh": "覆盖率 1.5x（未达 3x 规则，还需 $250万 管道）" }
+  },
+  "solopreneur-nrr-calculator": {
+    "headline": { "en": "102%", "zh": "102%" },
+    "headlineUnit": { "en": "NRR", "zh": "NRR" },
+    "headlineLabel": { "en": "Net Revenue Retention: 102% (Warning — fragile, expansion barely offsets churn)", "zh": "净收入留存率 102%（需关注 — 脆弱，扩张几乎抵消流失）" }
   }
 }

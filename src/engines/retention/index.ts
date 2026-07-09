@@ -8,3 +8,4 @@
 // P9-6: renewal-rate               — Renewal Rate
 //
 // Engines are added one per task via Task 1..Task 6.
+import './nrr-calculator';
