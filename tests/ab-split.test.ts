@@ -5,8 +5,8 @@ import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
 
-test('engines/ has 10 subdirectories', () => {
-  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate', 'marketing', 'operations', 'sales']) {
+test('engines/ has 11 subdirectories', () => {
+  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate', 'marketing', 'operations', 'sales', 'retention']) {
     assert.ok(
       existsSync(join(ROOT, 'src/engines', sub)),
       `engines/${sub}/ should exist`
@@ -27,8 +27,8 @@ test('engines/ has no engine .ts files at root (only index.ts)', () => {
   assert.deepEqual(rootTs, ['index.ts'], `engines/ root should only have index.ts, found: ${rootTs.join(', ')}`);
 });
 
-test('data/tools/ has 12 files (types, 10 categories, index)', () => {
-  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'marketing.ts', 'operations.ts', 'sales.ts', 'index.ts']) {
+test('data/tools/ has 13 files (types, 11 categories, index)', () => {
+  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'marketing.ts', 'operations.ts', 'sales.ts', 'retention.ts', 'index.ts']) {
     assert.ok(
       existsSync(join(ROOT, 'src/data/tools', f)),
       `data/tools/${f} should exist`
@@ -48,15 +48,15 @@ test('tools/index.ts uses import.meta.glob', () => {
   assert.match(content, /import\.meta\.glob/, 'tools/index.ts should use import.meta.glob');
 });
 
-test('getAllEngines() returns 62 engines after import', async () => {
+test('getAllEngines() returns 63 engines after import', async () => {
   await import('../src/engines/index.ts');
   const { getAllEngines } = await import('../src/core/engines/registry.ts');
-  assert.equal(getAllEngines().length, 62);
+  assert.equal(getAllEngines().length, 63);
 });
 
-test('aggregated tools array has 62 entries', async () => {
+test('aggregated tools array has 63 entries', async () => {
   const { tools } = await import('../src/data/tools/index.ts');
-  assert.equal(tools.length, 62);
+  assert.equal(tools.length, 63);
 });
 
 test('4 consumer import paths are unchanged', () => {
