@@ -153,6 +153,8 @@ const ENGINES = [
     subdir: 'sales',         defaultInputs: { quotaTarget: '1000000', pipelineValue: '1500000', winRate: '25' } },
   { file: 'nrr-calculator.ts',                       slug: 'solopreneur-nrr-calculator',
     subdir: 'retention',     defaultInputs: { startingMRR: '100000', expansionMRR: '15000', downgradeMRR: '5000', churnedMRR: '8000' } },
+  { file: 'grr-calculator.ts',                       slug: 'solopreneur-grr-calculator',
+    subdir: 'retention',     defaultInputs: { startingMRR: '100000', downgradeMRR: '5000', churnedMRR: '8000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
