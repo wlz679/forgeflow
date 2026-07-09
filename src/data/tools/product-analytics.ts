@@ -36,4 +36,38 @@ export const tools: ToolMeta[] = [
       'https://mixpanel.com/blog/funnel-analysis/',
     ],
   },
+  {
+    slug: 'solopreneur-feature-adoption-calculator',
+    title: 'Feature Adoption Rate',
+    description:
+      'Compute feature adoption as % of active users (WAU or MAU) — the PM metric for measuring how many users actually use a specific feature. Health bands: green >=40% · yellow 20-40% · orange 10-20% · red <10%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.',
+    categoryId: 'P',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'feature_users', label: 'Users using this feature in period', placeholder: 'e.g. 750', type: 'number' },
+      { name: 'active_users',  label: 'Total active users in period',       placeholder: 'e.g. 3000', type: 'number' },
+      { name: 'WAU_vs_MAU',    label: 'Active-user window', type: 'select',
+        options: ['WAU', 'MAU'],
+        default: 'WAU' },
+    ],
+    keywords: [
+      'feature adoption rate',
+      'feature usage',
+      'product adoption',
+      'adoption metrics',
+      'PM',
+      'product analytics',
+      'B2B SaaS',
+      'mid-market SaaS',
+    ],
+    tags: ['product-analytics', 'pm', 'adoption'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://amplitude.com/blog/product-analytics-benchmarks',
+      'https://heap.io/blog/product-adoption',
+      'https://mixpanel.com/blog/feature-adoption/',
+    ],
+  },
 ];

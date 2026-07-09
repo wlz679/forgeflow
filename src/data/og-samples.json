@@ -1016,5 +1016,19 @@
       "en": "Funnel Conversion: 32% (Good - healthy funnel, optimize biggest drop)",
       "zh": "漏斗转化 32%（良好 — 漏斗健康，优化最大流失点）"
     }
+  },
+  "solopreneur-feature-adoption-calculator": {
+    "headline": {
+      "en": "25%",
+      "zh": "25%"
+    },
+    "headlineUnit": {
+      "en": "Feature adoption rate",
+      "zh": "功能采用率"
+    },
+    "headlineLabel": {
+      "en": "Feature Adoption: 25% (Good - healthy, consider promoting deeper engagement)",
+      "zh": "功能采用率 25%（良好 — 健康，可推动深度参与）"
+    }
   }
 }
