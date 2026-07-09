@@ -70,4 +70,35 @@ export const tools: ToolMeta[] = [
       'https://www.iconiqcapital.com/growth/tte-net-dollar-retention',
     ],
   },
+  {
+    slug: 'solopreneur-expansion-revenue-calculator',
+    title: 'Expansion Revenue Calculator',
+    description:
+      'Compute expansion revenue as % of starting MRR — the top-line growth lever from existing customers. Separates upsell (same product, more usage) from cross-sell (new product). Health bands: 🟢 ≥25% · 🟡 15-25% · 🟠 5-15% · 🔴 <5%. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.',
+    categoryId: 'R',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'startingMRR',  label: 'Starting MRR (USD)',           placeholder: 'e.g. 100000', type: 'number' },
+      { name: 'upsellMRR',    label: 'Upsell MRR (more usage)',      placeholder: 'e.g. 12000',  type: 'number' },
+      { name: 'crossSellMRR', label: 'Cross-sell MRR (new product)', placeholder: 'e.g. 5000',   type: 'number' },
+    ],
+    keywords: [
+      'expansion revenue calculator',
+      'expansion MRR',
+      'upsell',
+      'cross-sell',
+      'net expansion',
+      'B2B SaaS',
+      'mid-market SaaS',
+      'growth lever',
+    ],
+    tags: ['retention', 'csm', 'expansion', 'saas-metrics'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://www.saas-capital.com/blog-posts/saas-retention-metrics/',
+      'https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/',
+    ],
+  },
 ];

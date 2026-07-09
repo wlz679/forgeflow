@@ -331,5 +331,10 @@
     "headline": { "en": "87%", "zh": "87%" },
     "headlineUnit": { "en": "GRR", "zh": "GRR" },
     "headlineLabel": { "en": "Gross Revenue Retention: 87% (Warning — high churn, mid-market median)", "zh": "总收入留存率 87%（需关注 — 高流失率，中端市场平均水平）" }
+  },
+  "solopreneur-expansion-revenue-calculator": {
+    "headline": { "en": "17%", "zh": "17%" },
+    "headlineUnit": { "en": "Expansion", "zh": "扩张" },
+    "headlineLabel": { "en": "Expansion Revenue: 17% of starting MRR (Good — top-quartile mid-market motion)", "zh": "扩张收入：占起始 MRR 17%（良好 — 中端市场头部扩张动能）" }
   }
 }
