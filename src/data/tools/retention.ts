@@ -101,4 +101,34 @@ export const tools: ToolMeta[] = [
       'https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/',
     ],
   },
+  {
+    slug: 'solopreneur-logo-churn-rate-calculator',
+    title: 'Logo Churn Rate Calculator',
+    description:
+      'Compute customer (logo) churn rate — count-based complement to GRR (revenue-based). Logo Churn counts lost customers; GRR counts lost revenue. Health bands: 🟢 <5% · 🟡 5-10% · 🟠 10-20% · 🔴 ≥20% (INVERSE). For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.',
+    categoryId: 'R',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'startCustomers', label: 'Customers at period start',  placeholder: 'e.g. 100', type: 'number' },
+      { name: 'lostCustomers',  label: 'Customers lost during period', placeholder: 'e.g. 8',   type: 'number' },
+    ],
+    keywords: [
+      'logo churn rate calculator',
+      'customer churn rate',
+      'logo churn',
+      'customer churn',
+      'churn analysis',
+      'B2B SaaS',
+      'mid-market SaaS',
+      'retention metric',
+    ],
+    tags: ['retention', 'csm', 'logo-churn', 'saas-metrics'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://www.saas-capital.com/blog-posts/saas-retention-metrics/',
+      'https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/',
+    ],
+  },
 ];

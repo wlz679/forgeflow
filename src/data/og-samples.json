@@ -336,5 +336,10 @@
     "headline": { "en": "17%", "zh": "17%" },
     "headlineUnit": { "en": "Expansion", "zh": "扩张" },
     "headlineLabel": { "en": "Expansion Revenue: 17% of starting MRR (Good — top-quartile mid-market motion)", "zh": "扩张收入：占起始 MRR 17%（良好 — 中端市场头部扩张动能）" }
+  },
+  "solopreneur-logo-churn-rate-calculator": {
+    "headline": { "en": "8%", "zh": "8%" },
+    "headlineUnit": { "en": "Logo Churn", "zh": "客户流失" },
+    "headlineLabel": { "en": "Logo Churn Rate: 8% (Good — top-quartile mid-market retention)", "zh": "客户流失率 8%（良好 — 中端市场头部留存）" }
   }
 }

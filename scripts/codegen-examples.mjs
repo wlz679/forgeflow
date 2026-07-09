@@ -157,6 +157,8 @@ const ENGINES = [
     subdir: 'retention',     defaultInputs: { startingMRR: '100000', downgradeMRR: '5000', churnedMRR: '8000' } },
   { file: 'expansion-revenue-calculator.ts',         slug: 'solopreneur-expansion-revenue-calculator',
     subdir: 'retention',     defaultInputs: { startingMRR: '100000', upsellMRR: '12000', crossSellMRR: '5000' } },
+  { file: 'logo-churn-rate-calculator.ts',           slug: 'solopreneur-logo-churn-rate-calculator',
+    subdir: 'retention',     defaultInputs: { startCustomers: '100', lostCustomers: '8' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

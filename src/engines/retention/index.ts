@@ -11,3 +11,4 @@
 import './nrr-calculator';
 import './grr-calculator';
 import './expansion-revenue-calculator';
+import './logo-churn-rate-calculator';
