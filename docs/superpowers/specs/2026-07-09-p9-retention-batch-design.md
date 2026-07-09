@@ -11,7 +11,7 @@
 
 | Element | Decision |
 |---|---|
-| **Batch size** | 6 engines (P9-1 through P9-6) — same as P5/P6/P7/P8 (38→44→50→56→62), takes us to **62→68** engines. **Total inputs across 6 calcs = 19** (4+3+3+2+5+1 select+2) |
+| **Batch size** | 6 engines (P9-1 through P9-6) — same as P5/P6/P7/P8 (38→44→50→56→62), takes us to **62→68** engines. **Total inputs across 6 calcs = 20** (4+3+3+2+5+1 select+2) |
 | **Category** | New `src/engines/retention/` + `src/data/tools/retention.ts`; **`categoryId: 'R'`** (Retention & Customer Success — new letter; A/B/C/D/E/F/M/O/S all used) |
 | **Audience** | Mid-market B2B SaaS ($10M–$50M ARR) CSMs, RevOps leads, founders wearing CS hat (post-PMF, formal CSM role, QBR cadence established) |
 | **Coverage matrix** | Retention outcome (P9-1 NRR, P9-2 GRR) · Expansion lever (P9-3 Expansion Revenue) · Churn analysis (P9-4 Logo Churn Rate) · Health/operational (P9-5 Customer Health Score) · Renewal performance (P9-6 Renewal Rate) |
@@ -243,7 +243,7 @@ grr = retainedMRR / startingMRR
 4. `calcHealthBand(0.80) === 'warning'` (exact boundary)
 5. `calcHealthBand(0.90) === 'good'` (exact boundary)
 6. `calcHealthBand(0.95) === 'excellent'` (exact boundary)
-7. Zero loss: `grr(100000, 0, 0) === 1.0` (best case, still warning since <120% would be wrong; but 1.0 should be 'warning' per spec band table — explicit)
+7. Zero loss: `grr(100000, 0, 0) === 1.0` (best case, 100% → 🟢 excellent per spec band table ≥95%)
 
 ---
 
