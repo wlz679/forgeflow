@@ -1072,5 +1072,19 @@
       "en": "Time-to-Value: 2 days (Good - fast aha, on track for B2B SaaS target)",
       "zh": "激活时间 2 天（良好 — 快速 aha，符合 B2B SaaS 目标）"
     }
+  },
+  "solopreneur-power-user-curve-calculator": {
+    "headline": {
+      "en": "3.5x",
+      "zh": "3.5x"
+    },
+    "headlineUnit": {
+      "en": "Power user ratio (70/20)",
+      "zh": "高活用户比率 (70/20)"
+    },
+    "headlineLabel": {
+      "en": "Power User Pareto: 3.5x (Excellent - strong concentration, ready for VIP program)",
+      "zh": "高活用户 Pareto 比率 3.5x（优秀 — 强集中度，适合启动 VIP 计划）"
+    }
   }
 }

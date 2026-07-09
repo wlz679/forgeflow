@@ -168,4 +168,36 @@ export const tools: ToolMeta[] = [
       'https://www.lennysnewsletter.com/p/onboarding',
     ],
   },
+  {
+    slug: 'solopreneur-power-user-curve-calculator',
+    title: 'Power User Pareto Curve',
+    description:
+      'Compute the Pareto ratio of power-user concentration: top X% of users driving Y% of total usage. Canonical 70/20 = 3.5x. Higher = more concentrated (more leverage for power-user programs). For mid-market B2B SaaS ($10M-$50M ARR) product managers.',
+    categoryId: 'P',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'top_pct',             label: 'Top % of users by activity',          placeholder: 'e.g. 20', type: 'number' },
+      { name: 'top_pct_usage_share', label: '% of total usage from those users',   placeholder: 'e.g. 70', type: 'number' },
+    ],
+    keywords: [
+      'power user',
+      'pareto curve',
+      'power user concentration',
+      '80/20 rule',
+      'engagement distribution',
+      'product analytics',
+      'PM',
+      'B2B SaaS',
+      'mid-market SaaS',
+    ],
+    tags: ['product-analytics', 'pm', 'power-user'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://andrewchen.co/the-cold-start-problem/',
+      'https://www.lennysnewsletter.com/p/power-users',
+      'https://a16z.com/power-user-curve/',
+    ],
+  },
 ];

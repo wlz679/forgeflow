@@ -173,6 +173,8 @@ const ENGINES = [
     subdir: 'product-analytics',     defaultInputs: { DAU: '650', MAU: '5000' } },
   { file: 'time-to-value-calculator.ts',          slug: 'solopreneur-time-to-value-calculator',
     subdir: 'product-analytics',     defaultInputs: { median_days: '2', p90_days: '5' } },
+  { file: 'power-user-curve-calculator.ts',       slug: 'solopreneur-power-user-curve-calculator',
+    subdir: 'product-analytics',     defaultInputs: { top_pct: '20', top_pct_usage_share: '70' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
