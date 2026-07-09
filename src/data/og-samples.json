@@ -346,5 +346,10 @@
     "headline": { "en": "73", "zh": "73" },
     "headlineUnit": { "en": "Health Score", "zh": "健康分" },
     "headlineLabel": { "en": "Customer Health Score: 73 / 100 (Good — monitor closely, engagement check)", "zh": "客户健康分 73 / 100（良好 — 密切监测，活跃度检查）" }
+  },
+  "solopreneur-renewal-rate-calculator": {
+    "headline": { "en": "85%", "zh": "85%" },
+    "headlineUnit": { "en": "Renewal Rate", "zh": "续约率" },
+    "headlineLabel": { "en": "Renewal Rate: 85% (Good — mid-market median, on track)", "zh": "续约率 85%（良好 — 中端市场平均水平，正常轨道）" }
   }
 }

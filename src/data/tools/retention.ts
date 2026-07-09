@@ -132,6 +132,37 @@ export const tools: ToolMeta[] = [
     ],
   },
   {
+    slug: 'solopreneur-renewal-rate-calculator',
+    title: 'Renewal Rate Calculator',
+    description:
+      'Compute the share of up-for-renewal ARR that actually renewed — the cleanest gross retention signal for the renewal motion itself (excludes expansion). Health bands: 🟢 ≥90% · 🟡 80-90% · 🟠 70-80% · 🔴 <70%. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.',
+    categoryId: 'R',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'arrUpForRenewal', label: 'ARR up for renewal (USD)', placeholder: 'e.g. 1000000', type: 'number' },
+      { name: 'arrRenewed',      label: 'ARR renewed (USD)',         placeholder: 'e.g. 850000',  type: 'number' },
+    ],
+    keywords: [
+      'renewal rate calculator',
+      'logo renewal rate',
+      'gross renewal rate',
+      'contract renewal rate',
+      'renewal rate',
+      'retention metric',
+      'B2B SaaS',
+      'mid-market SaaS',
+    ],
+    tags: ['retention', 'csm', 'renewal-rate', 'saas-metrics'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://www.saas-capital.com/blog-posts/saas-retention-metrics/',
+      'https://openviewpartners.com/blog/saas-benchmarks/',
+      'https://www.iconiqcapital.com/growth/saas-retention-metrics',
+    ],
+  },
+  {
     slug: 'solopreneur-customer-health-score-calculator',
     title: 'Customer Health Score Calculator',
     description:

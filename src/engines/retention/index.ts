@@ -13,3 +13,4 @@ import './grr-calculator';
 import './expansion-revenue-calculator';
 import './logo-churn-rate-calculator';
 import './customer-health-score-calculator';
+import './renewal-rate-calculator';
