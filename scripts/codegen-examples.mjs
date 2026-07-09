@@ -149,6 +149,8 @@ const ENGINES = [
     subdir: 'sales',       defaultInputs: { sqlEntered: '100', sqlAdvanced: '50', oppEntered: '50', oppAdvanced: '30', proposalEntered: '30', proposalAdvanced: '20', negEntered: '20', negAdvanced: '15' } },
   { file: 'quota-attainment-calculator.ts',         slug: 'solopreneur-quota-attainment-calculator',
     subdir: 'sales',         defaultInputs: { annualQuota: '1000000', monthsElapsed: '6', actualRevenue: '400000' } },
+  { file: 'pipeline-coverage-calculator.ts',         slug: 'solopreneur-pipeline-coverage-calculator',
+    subdir: 'sales',         defaultInputs: { quotaTarget: '1000000', pipelineValue: '1500000', winRate: '25' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

@@ -13,3 +13,4 @@ import './sales-velocity-calculator';
 import './acv-calculator';
 import './win-rate-by-stage-calculator';
 import './quota-attainment-calculator';
+import './pipeline-coverage-calculator';

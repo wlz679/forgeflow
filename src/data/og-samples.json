@@ -316,5 +316,10 @@
     "headline": { "en": "40%", "zh": "40%" },
     "headlineUnit": { "en": "attainment", "zh": "完成度" },
     "headlineLabel": { "en": "Quota: 40% ($400K of $1M at 6mo)", "zh": "完成度 40%（$40万 / $100万，6 个月）" }
+  },
+  "solopreneur-pipeline-coverage-calculator": {
+    "headline": { "en": "1.5x", "zh": "1.5x" },
+    "headlineUnit": { "en": "coverage", "zh": "覆盖率" },
+    "headlineLabel": { "en": "Coverage: 1.5x (3x rule not met, $2.5M more needed)", "zh": "覆盖率 1.5x（未达 3x 规则，还需 $250万 管道）" }
   }
 }

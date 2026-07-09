@@ -184,4 +184,38 @@ export const tools: ToolMeta[] = [
       'https://blog.hubspot.com/sales/setting-sales-quota',
     ],
   },
+  {
+    slug: 'solopreneur-pipeline-coverage-calculator',
+    title: 'Pipeline Coverage Calculator',
+    description:
+      'Compute pipeline-to-quota coverage with win-rate weighting, applying the B2B SaaS 3x rule (you need 3× your quota in pipeline to reliably hit target). Answers "do I have enough pipeline?"',
+    categoryId: 'S',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'quotaTarget', label: 'Quota target (USD)', placeholder: '1000000', type: 'number' },
+      { name: 'pipelineValue', label: 'Current pipeline value (USD)', placeholder: '1500000', type: 'number' },
+      { name: 'winRate', label: 'Expected win rate (%)', placeholder: '25', type: 'number' },
+    ],
+    keywords: [
+      'pipeline coverage calculator',
+      'pipeline coverage',
+      '3x rule',
+      'pipeline to quota',
+      'B2B SaaS pipeline',
+      'sales pipeline',
+      'coverage ratio',
+      'win rate',
+      'sales KPI',
+      'pipeline benchmark',
+    ],
+    tags: ['sales', 'pipeline', 'crm', 'coverage'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-07',
+    sources: [
+      'https://blog.hubspot.com/sales/sales-pipeline-coverage',
+      'https://www.insivia.com/blog/sales-pipeline-coverage-ratio/',
+      'https://blog.hubspot.com/sales/3x-pipeline-coverage',
+    ],
+  },
 ];
