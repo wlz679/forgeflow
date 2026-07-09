@@ -1044,5 +1044,19 @@
       "en": "Activation: 30% (Good - healthy, identify the missing step)",
       "zh": "激活率 30%（良好 — 健康，可识别缺漏步骤）"
     }
+  },
+  "solopreneur-stickiness-calculator": {
+    "headline": {
+      "en": "13%",
+      "zh": "13%"
+    },
+    "headlineUnit": {
+      "en": "DAU/MAU stickiness",
+      "zh": "DAU/MAU 黏性"
+    },
+    "headlineLabel": {
+      "en": "Stickiness: 13% (Good - high-eng SaaS, ~1 day/week)",
+      "zh": "DAU/MAU 黏性 13%（良好 — 高黏度 SaaS，约每周 1 天）"
+    }
   }
 }

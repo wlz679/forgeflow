@@ -169,6 +169,8 @@ const ENGINES = [
     subdir: 'product-analytics',     defaultInputs: { feature_users: '750', active_users: '3000', WAU_vs_MAU: 'WAU' } },
   { file: 'activation-rate-calculator.ts',        slug: 'solopreneur-activation-rate-calculator',
     subdir: 'product-analytics',     defaultInputs: { signups: '500', activated: '150', period_days: '7' } },
+  { file: 'stickiness-calculator.ts',             slug: 'solopreneur-stickiness-calculator',
+    subdir: 'product-analytics',     defaultInputs: { DAU: '650', MAU: '5000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

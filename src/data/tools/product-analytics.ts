@@ -104,4 +104,36 @@ export const tools: ToolMeta[] = [
       'https://www.lennysnewsletter.com/p/activation',
     ],
   },
+  {
+    slug: 'solopreneur-stickiness-calculator',
+    title: 'Stickiness (DAU/MAU)',
+    description:
+      'Compute stickiness as DAU/MAU ratio - the PM metric for measuring how often monthly users return daily. Social-app tier is 20%+, high-engagement SaaS is 13-20%, SaaS median ~5%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.',
+    categoryId: 'P',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'DAU', label: 'Daily Active Users (today)', placeholder: 'e.g. 650', type: 'number' },
+      { name: 'MAU', label: 'Monthly Active Users (30 days)', placeholder: 'e.g. 5000', type: 'number' },
+    ],
+    keywords: [
+      'stickiness',
+      'DAU/MAU',
+      'daily active users',
+      'monthly active users',
+      'engagement metric',
+      'product analytics',
+      'PM',
+      'B2B SaaS',
+      'mid-market SaaS',
+    ],
+    tags: ['product-analytics', 'pm', 'engagement'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://mixpanel.com/blog/2024-product-benchmarks/',
+      'https://www.lennysnewsletter.com/p/dau-mau-stickiness',
+      'https://amplitude.com/blog/calculate-stickiness',
+    ],
+  },
 ];
