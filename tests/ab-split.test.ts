@@ -5,8 +5,8 @@ import { join } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
 
-test('engines/ has 11 subdirectories', () => {
-  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate', 'marketing', 'operations', 'sales', 'retention']) {
+test('engines/ has 12 subdirectories', () => {
+  for (const sub of ['saas', 'ai-cost', 'valuation', 'freelance', 'cost', 'investment', 'real-estate', 'marketing', 'operations', 'sales', 'retention', 'product-analytics']) {
     assert.ok(
       existsSync(join(ROOT, 'src/engines', sub)),
       `engines/${sub}/ should exist`
@@ -27,8 +27,8 @@ test('engines/ has no engine .ts files at root (only index.ts)', () => {
   assert.deepEqual(rootTs, ['index.ts'], `engines/ root should only have index.ts, found: ${rootTs.join(', ')}`);
 });
 
-test('data/tools/ has 13 files (types, 11 categories, index)', () => {
-  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'marketing.ts', 'operations.ts', 'sales.ts', 'retention.ts', 'index.ts']) {
+test('data/tools/ has 14 files (types, 12 categories, index)', () => {
+  for (const f of ['types.ts', 'saas.ts', 'ai-cost.ts', 'valuation.ts', 'freelance.ts', 'cost.ts', 'investment.ts', 'real-estate.ts', 'marketing.ts', 'operations.ts', 'sales.ts', 'retention.ts', 'product-analytics.ts', 'index.ts']) {
     assert.ok(
       existsSync(join(ROOT, 'src/data/tools', f)),
       `data/tools/${f} should exist`

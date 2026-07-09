@@ -16,4 +16,5 @@ export const categories: Category[] = [
   { id: 'O', name: 'Operations / 库存运营', slug: 'operations-inventory', description: 'Calculate inventory turnover, carrying cost, stockout cost, reorder point, fulfillment cost, and supplier scorecards for Shopify/Amazon FBA sellers and product-based businesses.' },
   { id: 'S', name: 'Sales / 销售管理', slug: 'sales', description: 'Calculate pipeline value, sales velocity, ACV, win rate by stage, quota attainment, and pipeline coverage for B2B SaaS sales teams and RevOps.' },
   { id: 'R', name: 'Retention & Customer Success', slug: 'retention', description: 'Calculate NRR, GRR, expansion revenue, logo churn rate, customer health score, and renewal rate for mid-market B2B SaaS CSMs and RevOps leads.' },
+  { id: 'P', name: 'Product Analytics', slug: 'product-analytics', description: 'Calculate funnel conversion, feature adoption, activation rate, stickiness (DAU/MAU), time-to-value, and power user curves for product managers at mid-market B2B SaaS companies ($10M-$50M ARR).' },
 ];
