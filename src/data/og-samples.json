@@ -341,5 +341,10 @@
     "headline": { "en": "8%", "zh": "8%" },
     "headlineUnit": { "en": "Logo Churn", "zh": "客户流失" },
     "headlineLabel": { "en": "Logo Churn Rate: 8% (Good — top-quartile mid-market retention)", "zh": "客户流失率 8%（良好 — 中端市场头部留存）" }
+  },
+  "solopreneur-customer-health-score-calculator": {
+    "headline": { "en": "73", "zh": "73" },
+    "headlineUnit": { "en": "Health Score", "zh": "健康分" },
+    "headlineLabel": { "en": "Customer Health Score: 73 / 100 (Good — monitor closely, engagement check)", "zh": "客户健康分 73 / 100（良好 — 密切监测，活跃度检查）" }
   }
 }
