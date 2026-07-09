@@ -136,4 +136,36 @@ export const tools: ToolMeta[] = [
       'https://amplitude.com/blog/calculate-stickiness',
     ],
   },
+  {
+    slug: 'solopreneur-time-to-value-calculator',
+    title: 'Time-to-Value (TTV)',
+    description:
+      'Compute the median (p50) and p90 days from signup to key action (aha-moment). The PM metric for diagnosing onboarding speed. INVERSE health bands - lower is better: green <=1 day · yellow 1-3 days · orange 3-7 days · red >7 days. For mid-market B2B SaaS ($10M-$50M ARR) product managers.',
+    categoryId: 'P',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'median_days', label: 'Median TTV in days (p50)', placeholder: 'e.g. 2', type: 'number' },
+      { name: 'p90_days',    label: 'p90 TTV in days (long tail)', placeholder: 'e.g. 5', type: 'number' },
+    ],
+    keywords: [
+      'time to value',
+      'TTV',
+      'time to aha',
+      'onboarding speed',
+      'activation time',
+      'PM',
+      'product analytics',
+      'B2B SaaS',
+      'mid-market SaaS',
+    ],
+    tags: ['product-analytics', 'pm', 'onboarding'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-09',
+    sources: [
+      'https://www.intercom.com/blog/onboarding-benchmarks/',
+      'https://buffer.com/resources/time-to-value',
+      'https://www.lennysnewsletter.com/p/onboarding',
+    ],
+  },
 ];

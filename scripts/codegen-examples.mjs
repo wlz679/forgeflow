@@ -171,6 +171,8 @@ const ENGINES = [
     subdir: 'product-analytics',     defaultInputs: { signups: '500', activated: '150', period_days: '7' } },
   { file: 'stickiness-calculator.ts',             slug: 'solopreneur-stickiness-calculator',
     subdir: 'product-analytics',     defaultInputs: { DAU: '650', MAU: '5000' } },
+  { file: 'time-to-value-calculator.ts',          slug: 'solopreneur-time-to-value-calculator',
+    subdir: 'product-analytics',     defaultInputs: { median_days: '2', p90_days: '5' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

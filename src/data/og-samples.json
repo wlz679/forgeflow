@@ -1058,5 +1058,19 @@
       "en": "Stickiness: 13% (Good - high-eng SaaS, ~1 day/week)",
       "zh": "DAU/MAU 黏性 13%（良好 — 高黏度 SaaS，约每周 1 天）"
     }
+  },
+  "solopreneur-time-to-value-calculator": {
+    "headline": {
+      "en": "2 days",
+      "zh": "2 天"
+    },
+    "headlineUnit": {
+      "en": "Median TTV (p50)",
+      "zh": "中位 TTV (p50)"
+    },
+    "headlineLabel": {
+      "en": "Time-to-Value: 2 days (Good - fast aha, on track for B2B SaaS target)",
+      "zh": "激活时间 2 天（良好 — 快速 aha，符合 B2B SaaS 目标）"
+    }
   }
 }

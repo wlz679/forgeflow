@@ -12,3 +12,4 @@ import './funnel-step-calculator';
 import './feature-adoption-calculator';
 import './activation-rate-calculator';
 import './stickiness-calculator';
+import './time-to-value-calculator';
