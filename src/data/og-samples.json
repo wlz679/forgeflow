@@ -1,355 +1,1020 @@
 {
   "solopreneur-mrr-calculator": {
-    "headline": { "en": "$73,500", "zh": "$73,500" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Monthly Recurring Revenue", "zh": "月度经常性收入" },
-    "trend": { "en": "▲ +12% MoM", "zh": "▲ 月环比 +12%" }
+    "headline": {
+      "en": "$73,500",
+      "zh": "$73,500"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Monthly Recurring Revenue",
+      "zh": "月度经常性收入"
+    },
+    "trend": {
+      "en": "▲ +12% MoM",
+      "zh": "▲ 月环比 +12%"
+    }
   },
   "solopreneur-burn-rate-calculator": {
-    "headline": { "en": "$42,500", "zh": "$42,500" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Monthly Burn Rate", "zh": "月度烧钱速度" },
-    "trend": { "en": "⚠️ 14mo runway", "zh": "⚠️ 14 个月跑道" }
+    "headline": {
+      "en": "$42,500",
+      "zh": "$42,500"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Monthly Burn Rate",
+      "zh": "月度烧钱速度"
+    },
+    "trend": {
+      "en": "⚠️ 14mo runway",
+      "zh": "⚠️ 14 个月跑道"
+    }
   },
   "solopreneur-churn-rate-calculator": {
-    "headline": { "en": "3.2%", "zh": "3.2%" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Monthly Churn Rate", "zh": "月度流失率" }
+    "headline": {
+      "en": "3.2%",
+      "zh": "3.2%"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Monthly Churn Rate",
+      "zh": "月度流失率"
+    }
   },
   "solopreneur-market-size-estimator": {
-    "headline": { "en": "$1.5B", "zh": "$15亿" },
-    "headlineUnit": { "en": "TAM", "zh": "TAM" },
-    "headlineLabel": { "en": "Total Addressable Market", "zh": "可触达市场总量" },
-    "trend": { "en": "▲ 12% CAGR", "zh": "▲ 年复合增长 12%" }
+    "headline": {
+      "en": "$1.5B",
+      "zh": "$15亿"
+    },
+    "headlineUnit": {
+      "en": "TAM",
+      "zh": "TAM"
+    },
+    "headlineLabel": {
+      "en": "Total Addressable Market",
+      "zh": "可触达市场总量"
+    },
+    "trend": {
+      "en": "▲ 12% CAGR",
+      "zh": "▲ 年复合增长 12%"
+    }
   },
   "solopreneur-revenue-projector": {
-    "headline": { "en": "$156K", "zh": "$156K" },
-    "headlineUnit": { "en": "in 12mo", "zh": "12 个月内" },
-    "headlineLabel": { "en": "Projected MRR", "zh": "预测 MRR" },
-    "trend": { "en": "▲ from $5K", "zh": "▲ 从 $5K 起步" }
+    "headline": {
+      "en": "$156K",
+      "zh": "$156K"
+    },
+    "headlineUnit": {
+      "en": "in 12mo",
+      "zh": "12 个月内"
+    },
+    "headlineLabel": {
+      "en": "Projected MRR",
+      "zh": "预测 MRR"
+    },
+    "trend": {
+      "en": "▲ from $5K",
+      "zh": "▲ 从 $5K 起步"
+    }
   },
   "solopreneur-cac-calculator": {
-    "headline": { "en": "$215", "zh": "$215" },
-    "headlineUnit": { "en": "/customer", "zh": "/客户" },
-    "headlineLabel": { "en": "Customer Acquisition Cost", "zh": "获客成本" }
+    "headline": {
+      "en": "$215",
+      "zh": "$215"
+    },
+    "headlineUnit": {
+      "en": "/customer",
+      "zh": "/客户"
+    },
+    "headlineLabel": {
+      "en": "Customer Acquisition Cost",
+      "zh": "获客成本"
+    }
   },
   "solopreneur-ltv-calculator": {
-    "headline": { "en": "$2,400", "zh": "$2,400" },
-    "headlineUnit": { "en": "LTV", "zh": "LTV" },
-    "headlineLabel": { "en": "Customer Lifetime Value", "zh": "用户终身价值" },
-    "trend": { "en": "▲ LTV:CAC 11x", "zh": "▲ LTV:CAC 11 倍" }
+    "headline": {
+      "en": "$2,400",
+      "zh": "$2,400"
+    },
+    "headlineUnit": {
+      "en": "LTV",
+      "zh": "LTV"
+    },
+    "headlineLabel": {
+      "en": "Customer Lifetime Value",
+      "zh": "用户终身价值"
+    },
+    "trend": {
+      "en": "▲ LTV:CAC 11x",
+      "zh": "▲ LTV:CAC 11 倍"
+    }
   },
   "solopreneur-unit-economics-calculator": {
-    "headline": { "en": "$48", "zh": "$48" },
-    "headlineUnit": { "en": "/customer", "zh": "/客户" },
-    "headlineLabel": { "en": "Avg Margin per Customer", "zh": "单客户平均利润" },
-    "trend": { "en": "✅ healthy", "zh": "✅ 健康" }
+    "headline": {
+      "en": "$48",
+      "zh": "$48"
+    },
+    "headlineUnit": {
+      "en": "/customer",
+      "zh": "/客户"
+    },
+    "headlineLabel": {
+      "en": "Avg Margin per Customer",
+      "zh": "单客户平均利润"
+    },
+    "trend": {
+      "en": "✅ healthy",
+      "zh": "✅ 健康"
+    }
   },
   "solopreneur-saas-valuation-calculator": {
-    "headline": { "en": "$24M", "zh": "$2400万" },
-    "headlineUnit": { "en": "valuation", "zh": "估值" },
-    "headlineLabel": { "en": "Estimated SaaS Valuation", "zh": "SaaS 公司估值" },
-    "trend": { "en": "▲ 12x multiple", "zh": "▲ 12 倍倍数" }
+    "headline": {
+      "en": "$24M",
+      "zh": "$2400万"
+    },
+    "headlineUnit": {
+      "en": "valuation",
+      "zh": "估值"
+    },
+    "headlineLabel": {
+      "en": "Estimated SaaS Valuation",
+      "zh": "SaaS 公司估值"
+    },
+    "trend": {
+      "en": "▲ 12x multiple",
+      "zh": "▲ 12 倍倍数"
+    }
   },
   "solopreneur-equity-dilution-calculator": {
-    "headline": { "en": "18.5%", "zh": "18.5%" },
-    "headlineUnit": { "en": "dilution", "zh": "稀释" },
-    "headlineLabel": { "en": "Founder Dilution", "zh": "创始人股权稀释" }
+    "headline": {
+      "en": "18.5%",
+      "zh": "18.5%"
+    },
+    "headlineUnit": {
+      "en": "dilution",
+      "zh": "稀释"
+    },
+    "headlineLabel": {
+      "en": "Founder Dilution",
+      "zh": "创始人股权稀释"
+    }
   },
   "solopreneur-compound-interest-calculator": {
-    "headline": { "en": "$300,851", "zh": "$300,851" },
-    "headlineUnit": { "en": "final balance", "zh": "最终余额" },
-    "headlineLabel": { "en": "Compound Interest Result", "zh": "复利最终余额" }
+    "headline": {
+      "en": "$300,851",
+      "zh": "$300,851"
+    },
+    "headlineUnit": {
+      "en": "final balance",
+      "zh": "最终余额"
+    },
+    "headlineLabel": {
+      "en": "Compound Interest Result",
+      "zh": "复利最终余额"
+    }
   },
   "solopreneur-stripe-fee-calculator": {
-    "headline": { "en": "$3.20", "zh": "$3.20" },
-    "headlineUnit": { "en": "fee per $100", "zh": "百元交易手续费" },
-    "headlineLabel": { "en": "Stripe US Fee on $100", "zh": "Stripe US $100 手续费" }
+    "headline": {
+      "en": "$3.20",
+      "zh": "$3.20"
+    },
+    "headlineUnit": {
+      "en": "fee per $100",
+      "zh": "百元交易手续费"
+    },
+    "headlineLabel": {
+      "en": "Stripe US Fee on $100",
+      "zh": "Stripe US $100 手续费"
+    }
   },
   "solopreneur-safe-convertible-note-calculator": {
-    "headline": { "en": "10.0%", "zh": "10.0%" },
-    "headlineUnit": { "en": "SAFE ownership", "zh": "SAFE 持股比例" },
-    "headlineLabel": { "en": "SAFE Holder Ownership at Conversion", "zh": "SAFE 投资人转股持股比例" }
+    "headline": {
+      "en": "10.0%",
+      "zh": "10.0%"
+    },
+    "headlineUnit": {
+      "en": "SAFE ownership",
+      "zh": "SAFE 持股比例"
+    },
+    "headlineLabel": {
+      "en": "SAFE Holder Ownership at Conversion",
+      "zh": "SAFE 投资人转股持股比例"
+    }
   },
   "solopreneur-burn-multiple-rule-of-40-calculator": {
-    "headline": { "en": "1.33", "zh": "1.33" },
-    "headlineUnit": { "en": "burn multiple", "zh": "烧钱倍数" },
-    "headlineLabel": { "en": "Burn Multiple on $2M Burn / $1.5M ARR", "zh": "$2M 烧钱 / $1.5M 新增 ARR 的烧钱倍数" }
+    "headline": {
+      "en": "1.33",
+      "zh": "1.33"
+    },
+    "headlineUnit": {
+      "en": "burn multiple",
+      "zh": "烧钱倍数"
+    },
+    "headlineLabel": {
+      "en": "Burn Multiple on $2M Burn / $1.5M ARR",
+      "zh": "$2M 烧钱 / $1.5M 新增 ARR 的烧钱倍数"
+    }
   },
   "solopreneur-remote-vs-office-calculator": {
-    "headline": { "en": "$120,000", "zh": "$120,000" },
-    "headlineUnit": { "en": "annual savings", "zh": "年度节省" },
-    "headlineLabel": { "en": "Annual Savings Going Remote (10 ppl, $1.5K office / $500 stipend)", "zh": "10 人团队转向远程年度节省（$1.5K 办公室 / $500 补贴）" }
+    "headline": {
+      "en": "$120,000",
+      "zh": "$120,000"
+    },
+    "headlineUnit": {
+      "en": "annual savings",
+      "zh": "年度节省"
+    },
+    "headlineLabel": {
+      "en": "Annual Savings Going Remote (10 ppl, $1.5K office / $500 stipend)",
+      "zh": "10 人团队转向远程年度节省（$1.5K 办公室 / $500 补贴）"
+    }
   },
   "solopreneur-arr-multiple-valuation-calculator": {
-    "headline": { "en": "15.0x", "zh": "15.0x" },
-    "headlineUnit": { "en": "ARR multiple", "zh": "ARR 倍数" },
-    "headlineLabel": { "en": "Valuation Multiple ($15M / $1M ARR)", "zh": "估值倍数 ($15M / $1M ARR)" }
+    "headline": {
+      "en": "15.0x",
+      "zh": "15.0x"
+    },
+    "headlineUnit": {
+      "en": "ARR multiple",
+      "zh": "ARR 倍数"
+    },
+    "headlineLabel": {
+      "en": "Valuation Multiple ($15M / $1M ARR)",
+      "zh": "估值倍数 ($15M / $1M ARR)"
+    }
   },
   "solopreneur-mortgage-calculator": {
-    "headline": { "en": "$2,528", "zh": "$2,528" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Mortgage P&I ($400K loan, 30y, 6.5%)", "zh": "房贷月供 ($40万贷款, 30年, 6.5%)" }
+    "headline": {
+      "en": "$2,528",
+      "zh": "$2,528"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Mortgage P&I ($400K loan, 30y, 6.5%)",
+      "zh": "房贷月供 ($40万贷款, 30年, 6.5%)"
+    }
   },
   "solopreneur-rent-vs-buy-calculator": {
-    "headline": { "en": "BUY", "zh": "买房" },
-    "headlineUnit": { "en": "favored", "zh": "更优" },
-    "headlineLabel": { "en": "Rent vs Buy Verdict (10y stay, $500K home)", "zh": "租购决策对比 (10年居住, $50万房价)" }
+    "headline": {
+      "en": "BUY",
+      "zh": "买房"
+    },
+    "headlineUnit": {
+      "en": "favored",
+      "zh": "更优"
+    },
+    "headlineLabel": {
+      "en": "Rent vs Buy Verdict (10y stay, $500K home)",
+      "zh": "租购决策对比 (10年居住, $50万房价)"
+    }
   },
   "solopreneur-roas-calculator": {
-    "headline": { "en": "4.0x", "zh": "4.0倍" },
-    "headlineUnit": { "en": "gross ROAS", "zh": "综合 ROAS" },
-    "headlineLabel": { "en": "$5K ad spend → $20K revenue (60% margin)", "zh": "$5000 广告费 → $2万收入 (60% 毛利率)" },
-    "trend": { "en": "profitable — scale-ready", "zh": "可盈利 — 可放量" }
+    "headline": {
+      "en": "4.0x",
+      "zh": "4.0倍"
+    },
+    "headlineUnit": {
+      "en": "gross ROAS",
+      "zh": "综合 ROAS"
+    },
+    "headlineLabel": {
+      "en": "$5K ad spend → $20K revenue (60% margin)",
+      "zh": "$5000 广告费 → $2万收入 (60% 毛利率)"
+    },
+    "trend": {
+      "en": "profitable — scale-ready",
+      "zh": "可盈利 — 可放量"
+    }
   },
   "solopreneur-ltv-by-channel-calculator": {
-    "headline": { "en": "5.0x", "zh": "5.0倍" },
-    "headlineUnit": { "en": "LTV:CAC", "zh": "LTV:CAC" },
-    "headlineLabel": { "en": "Ch1 winner — $1K spend, $500 LTV, 50 convs", "zh": "渠道1 胜出 — $1000 花费, $500 LTV, 50 转化" }
+    "headline": {
+      "en": "5.0x",
+      "zh": "5.0倍"
+    },
+    "headlineUnit": {
+      "en": "LTV:CAC",
+      "zh": "LTV:CAC"
+    },
+    "headlineLabel": {
+      "en": "Ch1 winner — $1K spend, $500 LTV, 50 convs",
+      "zh": "渠道1 胜出 — $1000 花费, $500 LTV, 50 转化"
+    }
   },
   "solopreneur-funnel-value-calculator": {
-    "headline": { "en": "0.019%", "zh": "0.019%" },
-    "headlineUnit": { "en": "overall CR", "zh": "总转化率" },
-    "headlineLabel": { "en": "100K impressions → 18.75 sales ($1.5K revenue)", "zh": "10万曝光 → 18.75 销售 ($1500 收入)" }
+    "headline": {
+      "en": "0.019%",
+      "zh": "0.019%"
+    },
+    "headlineUnit": {
+      "en": "overall CR",
+      "zh": "总转化率"
+    },
+    "headlineLabel": {
+      "en": "100K impressions → 18.75 sales ($1.5K revenue)",
+      "zh": "10万曝光 → 18.75 销售 ($1500 收入)"
+    }
   },
   "solopreneur-cohort-retention-calculator": {
-    "headline": { "en": "$32.6K", "zh": "$32.6K" },
-    "headlineUnit": { "en": "12-mo LTV", "zh": "12个月 LTV" },
-    "headlineLabel": { "en": "1K users, 30% M6 retention, $30 rev/mo", "zh": "1000 用户, 30% 第6月留存, $30 每月收入" }
+    "headline": {
+      "en": "$32.6K",
+      "zh": "$32.6K"
+    },
+    "headlineUnit": {
+      "en": "12-mo LTV",
+      "zh": "12个月 LTV"
+    },
+    "headlineLabel": {
+      "en": "1K users, 30% M6 retention, $30 rev/mo",
+      "zh": "1000 用户, 30% 第6月留存, $30 每月收入"
+    }
   },
   "solopreneur-email-campaign-roi-calculator": {
-    "headline": { "en": "2400%", "zh": "2400%" },
-    "headlineUnit": { "en": "ROI", "zh": "ROI" },
-    "headlineLabel": { "en": "10K list, 25% open, 5% CTR, $25 aov, $500 cost", "zh": "1万订阅, 25% 打开率, 5% 点击率, $25 单价, $500 成本" }
+    "headline": {
+      "en": "2400%",
+      "zh": "2400%"
+    },
+    "headlineUnit": {
+      "en": "ROI",
+      "zh": "ROI"
+    },
+    "headlineLabel": {
+      "en": "10K list, 25% open, 5% CTR, $25 aov, $500 cost",
+      "zh": "1万订阅, 25% 打开率, 5% 点击率, $25 单价, $500 成本"
+    }
   },
   "solopreneur-content-marketing-roi-calculator": {
-    "headline": { "en": "$24K", "zh": "$2.4万" },
-    "headlineUnit": { "en": "12-mo net", "zh": "12个月净收益" },
-    "headlineLabel": { "en": "8 pieces/mo, 6mo rank, 5K traffic, 2% CR, $80 aov", "zh": "8 篇/月, 6月排名, 5K 流量, 2% 转化, $80 单价" }
+    "headline": {
+      "en": "$24K",
+      "zh": "$2.4万"
+    },
+    "headlineUnit": {
+      "en": "12-mo net",
+      "zh": "12个月净收益"
+    },
+    "headlineLabel": {
+      "en": "8 pieces/mo, 6mo rank, 5K traffic, 2% CR, $80 aov",
+      "zh": "8 篇/月, 6月排名, 5K 流量, 2% 转化, $80 单价"
+    }
   },
   "solopreneur-inventory-turnover-calculator": {
-    "headline": { "en": "6.0x", "zh": "6.0倍" },
-    "headlineUnit": { "en": "turnover", "zh": "周转率" },
-    "headlineLabel": { "en": "$240K COGS / $40K inventory = 6x/year (general)", "zh": "$24万 COGS / $4万 库存 = 6次/年 (通用)" }
+    "headline": {
+      "en": "6.0x",
+      "zh": "6.0倍"
+    },
+    "headlineUnit": {
+      "en": "turnover",
+      "zh": "周转率"
+    },
+    "headlineLabel": {
+      "en": "$240K COGS / $40K inventory = 6x/year (general)",
+      "zh": "$24万 COGS / $4万 库存 = 6次/年 (通用)"
+    }
   },
   "solopreneur-carrying-cost-calculator": {
-    "headline": { "en": "21.5%", "zh": "21.5%" },
-    "headlineUnit": { "en": "annual rate", "zh": "年费率" },
-    "headlineLabel": { "en": "$50K inventory × 21.5% = $10,750/yr (5 components)", "zh": "$5万 库存 × 21.5% = $1.075万/年 (5项)" }
+    "headline": {
+      "en": "21.5%",
+      "zh": "21.5%"
+    },
+    "headlineUnit": {
+      "en": "annual rate",
+      "zh": "年费率"
+    },
+    "headlineLabel": {
+      "en": "$50K inventory × 21.5% = $10,750/yr (5 components)",
+      "zh": "$5万 库存 × 21.5% = $1.075万/年 (5项)"
+    }
   },
   "solopreneur-stockout-cost-calculator": {
-    "headline": { "en": "1.28%", "zh": "1.28%" },
-    "headlineUnit": { "en": "of revenue", "zh": "占收入" },
-    "headlineLabel": { "en": "$7.7K stockout cost on $600K revenue (5 days, 30% loss, $200 LTV)", "zh": "$7700 缺货成本 / $60万 收入 (5天, 30% 流失, $200 LTV)" }
+    "headline": {
+      "en": "1.28%",
+      "zh": "1.28%"
+    },
+    "headlineUnit": {
+      "en": "of revenue",
+      "zh": "占收入"
+    },
+    "headlineLabel": {
+      "en": "$7.7K stockout cost on $600K revenue (5 days, 30% loss, $200 LTV)",
+      "zh": "$7700 缺货成本 / $60万 收入 (5天, 30% 流失, $200 LTV)"
+    }
   },
   "solopreneur-reorder-point-calculator": {
-    "headline": { "en": "723", "zh": "723" },
-    "headlineUnit": { "en": "units ROP", "zh": "单位补货点" },
-    "headlineLabel": { "en": "50/day × 14d lead + Z=1.65 × 10sd × √2 ≈ 723 (95% SL)", "zh": "50/天 × 14天 + Z=1.65 × 10标准差 × √2 ≈ 723 (95% 服务水平)" }
+    "headline": {
+      "en": "723",
+      "zh": "723"
+    },
+    "headlineUnit": {
+      "en": "units ROP",
+      "zh": "单位补货点"
+    },
+    "headlineLabel": {
+      "en": "50/day × 14d lead + Z=1.65 × 10sd × √2 ≈ 723 (95% SL)",
+      "zh": "50/天 × 14天 + Z=1.65 × 10标准差 × √2 ≈ 723 (95% 服务水平)"
+    }
   },
   "solopreneur-fulfillment-cost-calculator": {
-    "headline": { "en": "$8.56", "zh": "$8.56" },
-    "headlineUnit": { "en": "per order", "zh": "/订单" },
-    "headlineLabel": { "en": "500 orders/mo: $1.50 labor + $5.50 ship + $1.20 pkg + $0.36 returns", "zh": "500订单/月: $1.50人工 + $5.50运费 + $1.20包装 + $0.36退货处理" }
+    "headline": {
+      "en": "$8.56",
+      "zh": "$8.56"
+    },
+    "headlineUnit": {
+      "en": "per order",
+      "zh": "/订单"
+    },
+    "headlineLabel": {
+      "en": "500 orders/mo: $1.50 labor + $5.50 ship + $1.20 pkg + $0.36 returns",
+      "zh": "500订单/月: $1.50人工 + $5.50运费 + $1.20包装 + $0.36退货处理"
+    }
   },
   "solopreneur-supplier-scorecard-calculator": {
-    "headline": { "en": "84.0", "zh": "84.0" },
-    "headlineUnit": { "en": "grade B", "zh": "B级" },
-    "headlineLabel": { "en": "Balanced: 88% on-time + 2.5% defect + 3d lead var + 5% cost var", "zh": "均衡权重: 88% 准时 + 2.5% 缺陷 + 3天 交期波动 + 5% 成本波动" }
+    "headline": {
+      "en": "84.0",
+      "zh": "84.0"
+    },
+    "headlineUnit": {
+      "en": "grade B",
+      "zh": "B级"
+    },
+    "headlineLabel": {
+      "en": "Balanced: 88% on-time + 2.5% defect + 3d lead var + 5% cost var",
+      "zh": "均衡权重: 88% 准时 + 2.5% 缺陷 + 3天 交期波动 + 5% 成本波动"
+    }
   },
   "solopreneur-cap-rate-calculator": {
-    "headline": { "en": "4.44%", "zh": "4.44%" },
-    "headlineUnit": { "en": "cap rate", "zh": "资本化率" },
-    "headlineLabel": { "en": "NOI $22.2K / $500K property (5% vacancy)", "zh": "NOI $2.22万 / $50万房产 (5% 空置率)" }
+    "headline": {
+      "en": "4.44%",
+      "zh": "4.44%"
+    },
+    "headlineUnit": {
+      "en": "cap rate",
+      "zh": "资本化率"
+    },
+    "headlineLabel": {
+      "en": "NOI $22.2K / $500K property (5% vacancy)",
+      "zh": "NOI $2.22万 / $50万房产 (5% 空置率)"
+    }
   },
   "solopreneur-rental-yield-calculator": {
-    "headline": { "en": "3.98%", "zh": "3.98%" },
-    "headlineUnit": { "en": "cash-on-cash", "zh": "现金回报" },
-    "headlineLabel": { "en": "CoC on $300K property, 25% down, $2.5K/mo rent", "zh": "$30万房产, 25% 首付, $2.5K/月租金 的现金回报率" }
+    "headline": {
+      "en": "3.98%",
+      "zh": "3.98%"
+    },
+    "headlineUnit": {
+      "en": "cash-on-cash",
+      "zh": "现金回报"
+    },
+    "headlineLabel": {
+      "en": "CoC on $300K property, 25% down, $2.5K/mo rent",
+      "zh": "$30万房产, 25% 首付, $2.5K/月租金 的现金回报率"
+    }
   },
   "solopreneur-brrrr-calculator": {
-    "headline": { "en": "$21,318", "zh": "$21,318" },
-    "headlineUnit": { "en": "cash left", "zh": "留存现金" },
-    "headlineLabel": { "en": "BRRRR Cash Left After Refi ($150K→$220K)", "zh": "BRRRR 重贷后留存现金 ($15万→$22万)" }
+    "headline": {
+      "en": "$21,318",
+      "zh": "$21,318"
+    },
+    "headlineUnit": {
+      "en": "cash left",
+      "zh": "留存现金"
+    },
+    "headlineLabel": {
+      "en": "BRRRR Cash Left After Refi ($150K→$220K)",
+      "zh": "BRRRR 重贷后留存现金 ($15万→$22万)"
+    }
   },
   "solopreneur-dscr-calculator": {
-    "headline": { "en": "1.16x", "zh": "1.16x" },
-    "headlineUnit": { "en": "DSCR", "zh": "DSCR" },
-    "headlineLabel": { "en": "DSCR on $5K rent / $400K loan (5K rent, 5% vacancy, 7.5%)", "zh": "$5K 租金 / $40万贷款 的偿债覆盖率 (5% 空置, 7.5% 利率)" }
+    "headline": {
+      "en": "1.16x",
+      "zh": "1.16x"
+    },
+    "headlineUnit": {
+      "en": "DSCR",
+      "zh": "DSCR"
+    },
+    "headlineLabel": {
+      "en": "DSCR on $5K rent / $400K loan (5K rent, 5% vacancy, 7.5%)",
+      "zh": "$5K 租金 / $40万贷款 的偿债覆盖率 (5% 空置, 7.5% 利率)"
+    }
   },
   "solopreneur-break-even-calculator": {
-    "headline": { "en": "8", "zh": "8" },
-    "headlineUnit": { "en": "months", "zh": "个月" },
-    "headlineLabel": { "en": "Time to Break-Even", "zh": "回本周期" }
+    "headline": {
+      "en": "8",
+      "zh": "8"
+    },
+    "headlineUnit": {
+      "en": "months",
+      "zh": "个月"
+    },
+    "headlineLabel": {
+      "en": "Time to Break-Even",
+      "zh": "回本周期"
+    }
   },
   "solopreneur-freelance-rate-calculator": {
-    "headline": { "en": "$95", "zh": "$95" },
-    "headlineUnit": { "en": "/hour", "zh": "/小时" },
-    "headlineLabel": { "en": "Recommended Hourly Rate", "zh": "推荐时薪" }
+    "headline": {
+      "en": "$95",
+      "zh": "$95"
+    },
+    "headlineUnit": {
+      "en": "/hour",
+      "zh": "/小时"
+    },
+    "headlineLabel": {
+      "en": "Recommended Hourly Rate",
+      "zh": "推荐时薪"
+    }
   },
   "solopreneur-course-pricing-calculator": {
-    "headline": { "en": "$199", "zh": "$199" },
-    "headlineUnit": { "en": "/course", "zh": "/课程" },
-    "headlineLabel": { "en": "Optimal Course Price", "zh": "课程定价" }
+    "headline": {
+      "en": "$199",
+      "zh": "$199"
+    },
+    "headlineUnit": {
+      "en": "/course",
+      "zh": "/课程"
+    },
+    "headlineLabel": {
+      "en": "Optimal Course Price",
+      "zh": "课程定价"
+    }
   },
   "solopreneur-time-value-calculator": {
-    "headline": { "en": "$48", "zh": "$48" },
-    "headlineUnit": { "en": "/hour", "zh": "/小时" },
-    "headlineLabel": { "en": "Time Value", "zh": "时间价值" }
+    "headline": {
+      "en": "$48",
+      "zh": "$48"
+    },
+    "headlineUnit": {
+      "en": "/hour",
+      "zh": "/小时"
+    },
+    "headlineLabel": {
+      "en": "Time Value",
+      "zh": "时间价值"
+    }
   },
   "solopreneur-sponsorship-rate-calculator": {
-    "headline": { "en": "$3,500", "zh": "$3,500" },
-    "headlineUnit": { "en": "/episode", "zh": "/单期" },
-    "headlineLabel": { "en": "Sponsorship Rate", "zh": "赞助费率" }
+    "headline": {
+      "en": "$3,500",
+      "zh": "$3,500"
+    },
+    "headlineUnit": {
+      "en": "/episode",
+      "zh": "/单期"
+    },
+    "headlineLabel": {
+      "en": "Sponsorship Rate",
+      "zh": "赞助费率"
+    }
   },
   "solopreneur-affiliate-income-calculator": {
-    "headline": { "en": "$4,200", "zh": "$4,200" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Monthly Affiliate Income", "zh": "月度联盟营销收入" },
-    "trend": { "en": "▲ +20% growth", "zh": "▲ 增长 20%" }
+    "headline": {
+      "en": "$4,200",
+      "zh": "$4,200"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Monthly Affiliate Income",
+      "zh": "月度联盟营销收入"
+    },
+    "trend": {
+      "en": "▲ +20% growth",
+      "zh": "▲ 增长 20%"
+    }
   },
   "solopreneur-email-list-revenue-calculator": {
-    "headline": { "en": "$12K", "zh": "$12K" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Email List Revenue", "zh": "邮件列表营收" }
+    "headline": {
+      "en": "$12K",
+      "zh": "$12K"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Email List Revenue",
+      "zh": "邮件列表营收"
+    }
   },
   "solopreneur-hourly-vs-fixed-calculator": {
-    "headline": { "en": "$105", "zh": "$105" },
-    "headlineUnit": { "en": "/hour", "zh": "/小时" },
-    "headlineLabel": { "en": "Break-Even Hourly Rate", "zh": "平衡时薪" }
+    "headline": {
+      "en": "$105",
+      "zh": "$105"
+    },
+    "headlineUnit": {
+      "en": "/hour",
+      "zh": "/小时"
+    },
+    "headlineLabel": {
+      "en": "Break-Even Hourly Rate",
+      "zh": "平衡时薪"
+    }
   },
   "solopreneur-project-profitability-calculator": {
-    "headline": { "en": "$2,400", "zh": "$2,400" },
-    "headlineUnit": { "en": "profit", "zh": "利润" },
-    "headlineLabel": { "en": "Project Profit", "zh": "项目利润" },
-    "trend": { "en": "▲ 48% margin", "zh": "▲ 利润率 48%" }
+    "headline": {
+      "en": "$2,400",
+      "zh": "$2,400"
+    },
+    "headlineUnit": {
+      "en": "profit",
+      "zh": "利润"
+    },
+    "headlineLabel": {
+      "en": "Project Profit",
+      "zh": "项目利润"
+    },
+    "trend": {
+      "en": "▲ 48% margin",
+      "zh": "▲ 利润率 48%"
+    }
   },
   "solopreneur-employee-cost-calculator": {
-    "headline": { "en": "$104K", "zh": "$104K" },
-    "headlineUnit": { "en": "/year", "zh": "/年" },
-    "headlineLabel": { "en": "True Employee Cost", "zh": "真实员工成本" }
+    "headline": {
+      "en": "$104K",
+      "zh": "$104K"
+    },
+    "headlineUnit": {
+      "en": "/year",
+      "zh": "/年"
+    },
+    "headlineLabel": {
+      "en": "True Employee Cost",
+      "zh": "真实员工成本"
+    }
   },
   "solopreneur-meeting-cost-calculator": {
-    "headline": { "en": "$1,125", "zh": "$1,125" },
-    "headlineUnit": { "en": "/week", "zh": "/周" },
-    "headlineLabel": { "en": "Weekly Meeting Cost", "zh": "周会议成本" }
+    "headline": {
+      "en": "$1,125",
+      "zh": "$1,125"
+    },
+    "headlineUnit": {
+      "en": "/week",
+      "zh": "/周"
+    },
+    "headlineLabel": {
+      "en": "Weekly Meeting Cost",
+      "zh": "周会议成本"
+    }
   },
   "solopreneur-productivity-score": {
-    "headline": { "en": "78", "zh": "78" },
-    "headlineUnit": { "en": "/100", "zh": "/100" },
-    "headlineLabel": { "en": "Productivity Score", "zh": "生产力分数" },
-    "trend": { "en": "✅ strong", "zh": "✅ 优秀" }
+    "headline": {
+      "en": "78",
+      "zh": "78"
+    },
+    "headlineUnit": {
+      "en": "/100",
+      "zh": "/100"
+    },
+    "headlineLabel": {
+      "en": "Productivity Score",
+      "zh": "生产力分数"
+    },
+    "trend": {
+      "en": "✅ strong",
+      "zh": "✅ 优秀"
+    }
   },
   "solopreneur-saas-pricing-planner": {
-    "headline": { "en": "$49", "zh": "$49" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Recommended Price Point", "zh": "推荐定价点" }
+    "headline": {
+      "en": "$49",
+      "zh": "$49"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Recommended Price Point",
+      "zh": "推荐定价点"
+    }
   },
   "solopreneur-freelance-tax-calculator": {
-    "headline": { "en": "$31,500", "zh": "$31,500" },
-    "headlineUnit": { "en": "/year", "zh": "/年" },
-    "headlineLabel": { "en": "Estimated Tax Owed", "zh": "应缴税款" }
+    "headline": {
+      "en": "$31,500",
+      "zh": "$31,500"
+    },
+    "headlineUnit": {
+      "en": "/year",
+      "zh": "/年"
+    },
+    "headlineLabel": {
+      "en": "Estimated Tax Owed",
+      "zh": "应缴税款"
+    }
   },
   "solopreneur-openai-token-calculator": {
-    "headline": { "en": "$42", "zh": "$42" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "OpenAI API Cost", "zh": "OpenAI API 成本" }
+    "headline": {
+      "en": "$42",
+      "zh": "$42"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "OpenAI API Cost",
+      "zh": "OpenAI API 成本"
+    }
   },
   "solopreneur-claude-api-cost-calculator": {
-    "headline": { "en": "$58", "zh": "$58" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Claude API Cost", "zh": "Claude API 成本" }
+    "headline": {
+      "en": "$58",
+      "zh": "$58"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Claude API Cost",
+      "zh": "Claude API 成本"
+    }
   },
   "solopreneur-deepseek-api-cost-calculator": {
-    "headline": { "en": "$7", "zh": "$7" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "DeepSeek API Cost", "zh": "DeepSeek API 成本" },
-    "trend": { "en": "▲ 8x cheaper", "zh": "▲ 便宜 8 倍" }
+    "headline": {
+      "en": "$7",
+      "zh": "$7"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "DeepSeek API Cost",
+      "zh": "DeepSeek API 成本"
+    },
+    "trend": {
+      "en": "▲ 8x cheaper",
+      "zh": "▲ 便宜 8 倍"
+    }
   },
   "solopreneur-gemini-api-cost-calculator": {
-    "headline": { "en": "$35", "zh": "$35" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Gemini API Cost", "zh": "Gemini API 成本" }
+    "headline": {
+      "en": "$35",
+      "zh": "$35"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Gemini API Cost",
+      "zh": "Gemini API 成本"
+    }
   },
   "solopreneur-ai-image-cost-calculator": {
-    "headline": { "en": "$120", "zh": "$120" },
-    "headlineUnit": { "en": "/month", "zh": "/月" },
-    "headlineLabel": { "en": "Image Generation Cost", "zh": "AI 图像生成成本" }
+    "headline": {
+      "en": "$120",
+      "zh": "$120"
+    },
+    "headlineUnit": {
+      "en": "/month",
+      "zh": "/月"
+    },
+    "headlineLabel": {
+      "en": "Image Generation Cost",
+      "zh": "AI 图像生成成本"
+    }
   },
   "solopreneur-ai-training-cost-estimator": {
-    "headline": { "en": "$48K", "zh": "$48K" },
-    "headlineUnit": { "en": "training", "zh": "训练" },
-    "headlineLabel": { "en": "70B Model Training Cost", "zh": "70B 模型训练成本" }
+    "headline": {
+      "en": "$48K",
+      "zh": "$48K"
+    },
+    "headlineUnit": {
+      "en": "training",
+      "zh": "训练"
+    },
+    "headlineLabel": {
+      "en": "70B Model Training Cost",
+      "zh": "70B 模型训练成本"
+    }
   },
   "solopreneur-gpu-cloud-cost-calculator": {
-    "headline": { "en": "$2.40", "zh": "$2.40" },
-    "headlineUnit": { "en": "/hour", "zh": "/小时" },
-    "headlineLabel": { "en": "H100 Cloud Cost", "zh": "H100 云端时租" }
+    "headline": {
+      "en": "$2.40",
+      "zh": "$2.40"
+    },
+    "headlineUnit": {
+      "en": "/hour",
+      "zh": "/小时"
+    },
+    "headlineLabel": {
+      "en": "H100 Cloud Cost",
+      "zh": "H100 云端时租"
+    }
   },
   "solopreneur-ai-api-cost-comparison": {
-    "headline": { "en": "$42", "zh": "$42" },
-    "headlineUnit": { "en": "saved/mo", "zh": "/月节省" },
-    "headlineLabel": { "en": "Cheapest Provider Found", "zh": "最便宜厂商" },
-    "trend": { "en": "▲ vs $58 baseline", "zh": "▲ 对比 $58 基线" }
+    "headline": {
+      "en": "$42",
+      "zh": "$42"
+    },
+    "headlineUnit": {
+      "en": "saved/mo",
+      "zh": "/月节省"
+    },
+    "headlineLabel": {
+      "en": "Cheapest Provider Found",
+      "zh": "最便宜厂商"
+    },
+    "trend": {
+      "en": "▲ vs $58 baseline",
+      "zh": "▲ 对比 $58 基线"
+    }
   },
   "solopreneur-pipeline-value-calculator": {
-    "headline": { "en": "$215K", "zh": "$21.5万" },
-    "headlineUnit": { "en": "weighted", "zh": "加权" },
-    "headlineLabel": { "en": "Pipeline value (10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing)", "zh": "Pipeline 价值（10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing）" }
+    "headline": {
+      "en": "$215K",
+      "zh": "$21.5万"
+    },
+    "headlineUnit": {
+      "en": "weighted",
+      "zh": "加权"
+    },
+    "headlineLabel": {
+      "en": "Pipeline value (10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing)",
+      "zh": "Pipeline 价值（10 Discovery + 5 Proposal + 3 Negotiation + 2 Closing）"
+    }
   },
   "solopreneur-sales-velocity-calculator": {
-    "headline": { "en": "$2,778", "zh": "$2,778" },
-    "headlineUnit": { "en": "/day", "zh": "/天" },
-    "headlineLabel": { "en": "Sales velocity (20 opps × $25K × 25% ÷ 45 days)", "zh": "销售速度（20 个机会 × $2.5万 × 25% ÷ 45 天）" }
+    "headline": {
+      "en": "$2,778",
+      "zh": "$2,778"
+    },
+    "headlineUnit": {
+      "en": "/day",
+      "zh": "/天"
+    },
+    "headlineLabel": {
+      "en": "Sales velocity (20 opps × $25K × 25% ÷ 45 days)",
+      "zh": "销售速度（20 个机会 × $2.5万 × 25% ÷ 45 天）"
+    }
   },
   "solopreneur-acv-calculator": {
-    "headline": { "en": "$25,000", "zh": "$2.5万" },
-    "headlineUnit": { "en": "/year", "zh": "/年" },
-    "headlineLabel": { "en": "ACV: $25,000/year (12 customers, $300K total)", "zh": "ACV：$2.5万/年（12 个客户，$30万 总合同额）" }
+    "headline": {
+      "en": "$25,000",
+      "zh": "$2.5万"
+    },
+    "headlineUnit": {
+      "en": "/year",
+      "zh": "/年"
+    },
+    "headlineLabel": {
+      "en": "ACV: $25,000/year (12 customers, $300K total)",
+      "zh": "ACV：$2.5万/年（12 个客户，$30万 总合同额）"
+    }
   },
   "solopreneur-win-rate-by-stage-calculator": {
-    "headline": { "en": "15%", "zh": "15%" },
-    "headlineUnit": { "en": "win rate", "zh": "胜率" },
-    "headlineLabel": { "en": "Win rate: 15% (bottleneck: SQL→Opp)", "zh": "胜率 15%（瓶颈：SQL→Opp）" }
+    "headline": {
+      "en": "15%",
+      "zh": "15%"
+    },
+    "headlineUnit": {
+      "en": "win rate",
+      "zh": "胜率"
+    },
+    "headlineLabel": {
+      "en": "Win rate: 15% (bottleneck: SQL→Opp)",
+      "zh": "胜率 15%（瓶颈：SQL→Opp）"
+    }
   },
   "solopreneur-quota-attainment-calculator": {
-    "headline": { "en": "40%", "zh": "40%" },
-    "headlineUnit": { "en": "attainment", "zh": "完成度" },
-    "headlineLabel": { "en": "Quota: 40% ($400K of $1M at 6mo)", "zh": "完成度 40%（$40万 / $100万，6 个月）" }
+    "headline": {
+      "en": "40%",
+      "zh": "40%"
+    },
+    "headlineUnit": {
+      "en": "attainment",
+      "zh": "完成度"
+    },
+    "headlineLabel": {
+      "en": "Quota: 40% ($400K of $1M at 6mo)",
+      "zh": "完成度 40%（$40万 / $100万，6 个月）"
+    }
   },
   "solopreneur-pipeline-coverage-calculator": {
-    "headline": { "en": "1.5x", "zh": "1.5x" },
-    "headlineUnit": { "en": "coverage", "zh": "覆盖率" },
-    "headlineLabel": { "en": "Coverage: 1.5x (3x rule not met, $2.5M more needed)", "zh": "覆盖率 1.5x（未达 3x 规则，还需 $250万 管道）" }
+    "headline": {
+      "en": "1.5x",
+      "zh": "1.5x"
+    },
+    "headlineUnit": {
+      "en": "coverage",
+      "zh": "覆盖率"
+    },
+    "headlineLabel": {
+      "en": "Coverage: 1.5x (3x rule not met, $2.5M more needed)",
+      "zh": "覆盖率 1.5x（未达 3x 规则，还需 $250万 管道）"
+    }
   },
   "solopreneur-nrr-calculator": {
-    "headline": { "en": "102%", "zh": "102%" },
-    "headlineUnit": { "en": "NRR", "zh": "NRR" },
-    "headlineLabel": { "en": "Net Revenue Retention: 102% (Warning — fragile, expansion barely offsets churn)", "zh": "净收入留存率 102%（需关注 — 脆弱，扩张几乎抵消流失）" }
+    "headline": {
+      "en": "102%",
+      "zh": "102%"
+    },
+    "headlineUnit": {
+      "en": "NRR",
+      "zh": "NRR"
+    },
+    "headlineLabel": {
+      "en": "Net Revenue Retention: 102% (Warning — fragile, expansion barely offsets churn)",
+      "zh": "净收入留存率 102%（需关注 — 脆弱，扩张几乎抵消流失）"
+    }
   },
   "solopreneur-grr-calculator": {
-    "headline": { "en": "87%", "zh": "87%" },
-    "headlineUnit": { "en": "GRR", "zh": "GRR" },
-    "headlineLabel": { "en": "Gross Revenue Retention: 87% (Warning — high churn, mid-market median)", "zh": "总收入留存率 87%（需关注 — 高流失率，中端市场平均水平）" }
+    "headline": {
+      "en": "87%",
+      "zh": "87%"
+    },
+    "headlineUnit": {
+      "en": "GRR",
+      "zh": "GRR"
+    },
+    "headlineLabel": {
+      "en": "Gross Revenue Retention: 87% (Warning — high churn, mid-market median)",
+      "zh": "总收入留存率 87%（需关注 — 高流失率，中端市场平均水平）"
+    }
   },
   "solopreneur-expansion-revenue-calculator": {
-    "headline": { "en": "17%", "zh": "17%" },
-    "headlineUnit": { "en": "Expansion", "zh": "扩张" },
-    "headlineLabel": { "en": "Expansion Revenue: 17% of starting MRR (Good — top-quartile mid-market motion)", "zh": "扩张收入：占起始 MRR 17%（良好 — 中端市场头部扩张动能）" }
+    "headline": {
+      "en": "17%",
+      "zh": "17%"
+    },
+    "headlineUnit": {
+      "en": "Expansion",
+      "zh": "扩张"
+    },
+    "headlineLabel": {
+      "en": "Expansion Revenue: 17% of starting MRR (Good — top-quartile mid-market motion)",
+      "zh": "扩张收入：占起始 MRR 17%（良好 — 中端市场头部扩张动能）"
+    }
   },
   "solopreneur-logo-churn-rate-calculator": {
-    "headline": { "en": "8%", "zh": "8%" },
-    "headlineUnit": { "en": "Logo Churn", "zh": "客户流失" },
-    "headlineLabel": { "en": "Logo Churn Rate: 8% (Good — top-quartile mid-market retention)", "zh": "客户流失率 8%（良好 — 中端市场头部留存）" }
+    "headline": {
+      "en": "8%",
+      "zh": "8%"
+    },
+    "headlineUnit": {
+      "en": "Logo Churn",
+      "zh": "客户流失"
+    },
+    "headlineLabel": {
+      "en": "Logo Churn Rate: 8% (Good — top-quartile mid-market retention)",
+      "zh": "客户流失率 8%（良好 — 中端市场头部留存）"
+    }
   },
   "solopreneur-customer-health-score-calculator": {
-    "headline": { "en": "73", "zh": "73" },
-    "headlineUnit": { "en": "Health Score", "zh": "健康分" },
-    "headlineLabel": { "en": "Customer Health Score: 73 / 100 (Good — monitor closely, engagement check)", "zh": "客户健康分 73 / 100（良好 — 密切监测，活跃度检查）" }
+    "headline": {
+      "en": "73",
+      "zh": "73"
+    },
+    "headlineUnit": {
+      "en": "Health Score",
+      "zh": "健康分"
+    },
+    "headlineLabel": {
+      "en": "Customer Health Score: 73 / 100 (Good — monitor closely, engagement check)",
+      "zh": "客户健康分 73 / 100（良好 — 密切监测，活跃度检查）"
+    }
   },
   "solopreneur-renewal-rate-calculator": {
-    "headline": { "en": "85%", "zh": "85%" },
-    "headlineUnit": { "en": "Renewal Rate", "zh": "续约率" },
-    "headlineLabel": { "en": "Renewal Rate: 85% (Good — mid-market median, on track)", "zh": "续约率 85%（良好 — 中端市场平均水平，正常轨道）" }
+    "headline": {
+      "en": "85%",
+      "zh": "85%"
+    },
+    "headlineUnit": {
+      "en": "Renewal Rate",
+      "zh": "续约率"
+    },
+    "headlineLabel": {
+      "en": "Renewal Rate: 85% (Good — mid-market median, on track)",
+      "zh": "续约率 85%（良好 — 中端市场平均水平，正常轨道）"
+    }
+  },
+  "solopreneur-funnel-step-calculator": {
+    "headline": {
+      "en": "32%",
+      "zh": "32%"
+    },
+    "headlineUnit": {
+      "en": "End-to-end conversion",
+      "zh": "端到端转化率"
+    },
+    "headlineLabel": {
+      "en": "Funnel Conversion: 32% (Good - healthy funnel, optimize biggest drop)",
+      "zh": "漏斗转化 32%（良好 — 漏斗健康，优化最大流失点）"
+    }
   }
 }

@@ -163,6 +163,8 @@ const ENGINES = [
     subdir: 'retention',     defaultInputs: { productUsage: '75', nps: '40', supportTickets: '5', engagement: '80', contractValue: '60', weightPreset: 'balanced' } },
   { file: 'renewal-rate-calculator.ts',             slug: 'solopreneur-renewal-rate-calculator',
     subdir: 'retention',     defaultInputs: { arrUpForRenewal: '1000000', arrRenewed: '850000' } },
+  { file: 'funnel-step-calculator.ts',             slug: 'solopreneur-funnel-step-calculator',
+    subdir: 'product-analytics',     defaultInputs: { step1: '1000', step2: '800', step3: '500', step4: '320' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

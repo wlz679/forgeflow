@@ -8,4 +8,4 @@
 // P10-6: power-user-curve      — Power User Pareto Curve
 //
 // Engines are added one per task via Task 1..Task 6.
-export {};
+import './funnel-step-calculator';
