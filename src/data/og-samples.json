@@ -1005,16 +1005,16 @@
   },
   "solopreneur-funnel-step-calculator": {
     "headline": {
-      "en": "32%",
-      "zh": "32%"
+      "en": "21%",
+      "zh": "21%"
     },
     "headlineUnit": {
       "en": "End-to-end conversion",
       "zh": "端到端转化率"
     },
     "headlineLabel": {
-      "en": "Funnel Conversion: 32% (Good - healthy funnel, optimize biggest drop)",
-      "zh": "漏斗转化 32%（良好 — 漏斗健康，优化最大流失点）"
+      "en": "Funnel Conversion: 21% (Warning - leaks at Step 2->3, optimize biggest drop)",
+      "zh": "漏斗转化 21%（警示 — Step 2→3 流失严重，需优化最大流失点）"
     }
   },
   "solopreneur-feature-adoption-calculator": {

@@ -14,6 +14,7 @@ export const tools: ToolMeta[] = [
       { name: 'step2', label: 'Step 2 - Next event count',  placeholder: 'e.g. 800',  type: 'number' },
       { name: 'step3', label: 'Step 3 (optional)',          placeholder: 'e.g. 500',  type: 'number' },
       { name: 'step4', label: 'Step 4 (optional)',          placeholder: 'e.g. 320',  type: 'number' },
+      { name: 'step5', label: 'Step 5 (optional)',          placeholder: 'e.g. 210',  type: 'number' },
     ],
     keywords: [
       'funnel step calculator',

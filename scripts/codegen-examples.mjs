@@ -164,7 +164,7 @@ const ENGINES = [
   { file: 'renewal-rate-calculator.ts',             slug: 'solopreneur-renewal-rate-calculator',
     subdir: 'retention',     defaultInputs: { arrUpForRenewal: '1000000', arrRenewed: '850000' } },
   { file: 'funnel-step-calculator.ts',             slug: 'solopreneur-funnel-step-calculator',
-    subdir: 'product-analytics',     defaultInputs: { step1: '1000', step2: '800', step3: '500', step4: '320' } },
+    subdir: 'product-analytics',     defaultInputs: { step1: '1000', step2: '800', step3: '500', step4: '320', step5: '210' } },
   { file: 'feature-adoption-calculator.ts',       slug: 'solopreneur-feature-adoption-calculator',
     subdir: 'product-analytics',     defaultInputs: { feature_users: '750', active_users: '3000', WAU_vs_MAU: 'WAU' } },
   { file: 'activation-rate-calculator.ts',        slug: 'solopreneur-activation-rate-calculator',
