@@ -1114,5 +1114,19 @@
       "en": "Ramp Time: 8 weeks (Good - healthy IC ramp, on track)",
       "zh": "适应期 8 周（良好 — IC 健康适应期，进展正常）"
     }
+  },
+  "solopreneur-productivity-ramp-curve-calculator": {
+    "headline": {
+      "en": "3 mo",
+      "zh": "3 月"
+    },
+    "headlineUnit": {
+      "en": "P50 month (50% of months_to_full)",
+      "zh": "P50 月份（占 months_to_full 的 50%）"
+    },
+    "headlineLabel": {
+      "en": "Productivity Ramp: P50 at month 3 (Good - healthy S-Curve)",
+      "zh": "生产力爬坡：P50 在第 3 月（良好 — 健康的 S 曲线）"
+    }
   }
 }

@@ -179,6 +179,8 @@ const ENGINES = [
     subdir: 'hiring-team',     defaultInputs: { base_salary: '120000', benefits_pct: '25', payroll_tax_pct: '8', overhead_pct: '15' } },
   { file: 'time-to-productivity-calculator.ts',  slug: 'solopreneur-time-to-productivity-calculator',
     subdir: 'hiring-team',     defaultInputs: { role_level: 'IC', ramp_weeks: '8', industry_complexity: 'Med' } },
+  { file: 'productivity-ramp-curve-calculator.ts',  slug: 'solopreneur-productivity-ramp-curve-calculator',
+    subdir: 'hiring-team',     defaultInputs: { months_to_full: '6', starting_pct: '0', curve_shape: 'S-Curve', monthly_cost: '14833' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

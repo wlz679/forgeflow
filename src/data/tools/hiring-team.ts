@@ -69,4 +69,37 @@ export const tools: ToolMeta[] = [
       'https://www.pave.com/compensation-benchmarks',
     ],
   },
+  {
+    slug: 'solopreneur-productivity-ramp-curve-calculator',
+    title: 'Productivity Ramp Curve',
+    description:
+      'Model the productivity ramp curve for a new hire over months_to_full — pick from SlowStart, Linear, or S-Curve shape. INVERSE health bands based on P50 month as % of months_to_full: 🟢 ≤30% · 🟡 30-50% · 🟠 50-70% · 🔴 >70%. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.',
+    categoryId: 'H',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'months_to_full', label: 'Months to full productivity',         placeholder: 'e.g. 6',     type: 'number' },
+      { name: 'starting_pct',  label: 'Starting productivity % at month 0',  placeholder: 'e.g. 0',     type: 'number' },
+      { name: 'curve_shape',   label: 'Curve shape', type: 'select', options: ['SlowStart', 'Linear', 'S-Curve'], default: 'S-Curve' },
+      { name: 'monthly_cost',  label: 'Fully-loaded monthly cost',           placeholder: 'e.g. 14833', type: 'number' },
+    ],
+    keywords: [
+      'productivity ramp curve',
+      'ramp curve calculator',
+      'S-curve productivity',
+      'employee ramp',
+      'productivity curve',
+      'people analytics',
+      'onboarding curve',
+      'mid-market SaaS',
+    ],
+    tags: ['hiring-team', 'people-ops', 'ramp-curve'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-10',
+    sources: [
+      'https://www.bersin.com/research/talent-acquisition/',
+      'https://andrewchen.co/the-cold-start-problem/',
+      'https://www.reforge.com/blog/growth-loops',
+    ],
+  },
 ];
