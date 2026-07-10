@@ -85,13 +85,13 @@ const engine: ToolEngine = {
       '🩺 Ramp Health: ' + bandInfo.label + ' (' + fmtWeeks(adj) + ' for ' + role + ')',
       '📊 Snapshot: ' + weeks + 'w base × ' + (cplx === 'Low' ? '0.75' : cplx === 'High' ? '1.40' : '1.00') + ' (' + cplx + ' complexity) = ' + fmtWeeks(adj) + ' adjusted',
       '🔄 What-If: if complexity drops to Low, ramp = ' + fmtWeeks(altAdj) + ' (would be ' + altBandInfo.label + ')',
-      '⚖️ Break-Even: to hit ' + bandInfo.label + ' (' + (role === 'IC' ? '≤4w' : '≤8w') + ' ceiling), need base ramp of ' + fmtWeeks(targetWeeks) + ' — i.e. ' + ratioNeeded.toFixed(2) + 'x your current ' + weeks + 'w',
+      '⚖️ Break-Even: to hit 🟢 Excellent (' + (role === 'IC' ? '≤4w' : '≤8w') + ' ceiling), need base ramp of ' + fmtWeeks(targetWeeks) + ' — i.e. ' + ratioNeeded.toFixed(2) + 'x your current ' + weeks + 'w',
       '🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve',
       '💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.',
     ];
   },
   staticExamples: [
-    '🩺 Ramp Health: 🟡 Good (8w for IC)\n📊 Snapshot: 8w base × 1.00 (Med complexity) = 8w adjusted\n🔄 What-If: if complexity drops to Low, ramp = 6w (would be 🟡 Good)\n⚖️ Break-Even: to hit 🟡 Good (≤4w ceiling), need base ramp of 4w — i.e. 0.50x your current 8w\n🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve\n💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.',
+    '🩺 Ramp Health: 🟡 Good (8w for IC)\n📊 Snapshot: 8w base × 1.00 (Med complexity) = 8w adjusted\n🔄 What-If: if complexity drops to Low, ramp = 6w (would be 🟡 Good)\n⚖️ Break-Even: to hit 🟢 Excellent (≤4w ceiling), need base ramp of 4w — i.e. 0.50x your current 8w\n🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve\n💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.',
   ],
   faq: [
     { q: 'What counts as "productivity"?', a: 'A new hire is "productive" when they are contributing at the level expected for their role — usually measured by reaching OKR targets, shipping independent work, or hitting ramp-stage review milestones. Different companies use different definitions; pick one and stick with it.' },

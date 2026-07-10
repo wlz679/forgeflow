@@ -98,7 +98,7 @@ const engine: ToolEngine = {
     const monthlyCost = Number(inputs.monthly_cost) || 0;
     const p50Month = findP50Month(monthsToFull, starting, shape);
     const p50Pct = p50Month / monthsToFull;
-    const band = calcHealthBand(p50Pct);
+    const band = calcHealthBand(p50Pct * 100); // pass as percentage (0-100)
     const bandInfo = HEALTH_BANDS[band];
     const linearP50 = findP50Month(monthsToFull, starting, 'Linear');
     const slowP50 = findP50Month(monthsToFull, starting, 'SlowStart');
@@ -112,7 +112,7 @@ const engine: ToolEngine = {
     ];
   },
   staticExamples: [
-    '🩺 Ramp Health: 🟢 Excellent (P50 at month 3, 50.0% of months_to_full)\n📊 Snapshot: 6mo S-Curve curve · 0% start · $14,833/mo fully-loaded\n🔄 What-If: Linear curve hits P50 at same month (3); SlowStart hits P50 at month 4.3 (slower)\n⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤30% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp\n🎯 Milestone: At month 3 the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks\n💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).',
+    '🩺 Ramp Health: 🟡 Good (P50 at month 3, 50.0% of months_to_full)\n📊 Snapshot: 6mo S-Curve curve · 0% start · $14,833/mo fully-loaded\n🔄 What-If: Linear curve hits P50 at same month (3); SlowStart hits P50 at month 4.3 (slower)\n⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤30% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp\n🎯 Milestone: At month 3 the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks\n💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).',
   ],
   faq: [
     { q: 'Which curve shape should I pick?', a: 'S-Curve is realistic for most knowledge work (engineering, PM, design, marketing) — slow start while learning, accelerating as they ramp. Linear is the simplest baseline. SlowStart fits roles with heavy upfront training (sales bootcamp, compliance certification, equipment training).' },
