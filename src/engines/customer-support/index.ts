@@ -8,4 +8,4 @@
 // P12-6: support-capacity-planning — Support Team Capacity Planning
 //
 // Engines are added one per task via Task 1..Task 6.
-export {};
+import './cost-per-support-ticket-calculator';

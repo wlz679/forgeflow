@@ -187,6 +187,8 @@ const ENGINES = [
     subdir: 'hiring-team',     defaultInputs: { current_shares: '10000', years_since_grant: '3', refresh_pool_pct: '1.5', total_company_shares: '10000000', role_criticality: 'Med' } },
   { file: 'attrition-cost-calculator.ts',  slug: 'solopreneur-attrition-cost-calculator',
     subdir: 'hiring-team',     defaultInputs: { annual_salary: '120000', recruiting_cost: '8000', ramp_weeks: '12', lost_productivity_months: '6', role_level: 'IC' } },
+  { file: 'cost-per-support-ticket-calculator.ts', slug: 'solopreneur-cost-per-support-ticket-calculator',
+    subdir: 'customer-support', defaultInputs: { t1_cost: '8', t2_cost: '25', t3_cost: '70', t1_share: '55', t2_share: '30', monthly_volume: '5000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

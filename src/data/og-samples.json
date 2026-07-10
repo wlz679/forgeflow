@@ -1170,5 +1170,19 @@
       "en": "Attrition Cost: 68% of salary (Good - typical, track >100% for risk)",
       "zh": "离职成本：年薪 68%（良好 — 典型水平，>100% 需关注）"
     }
+  },
+  "solopreneur-cost-per-support-ticket-calculator": {
+    "headline": {
+      "en": "$22.40",
+      "zh": "$22.40"
+    },
+    "headlineUnit": {
+      "en": "Weighted avg cost per ticket",
+      "zh": "加权平均单工单成本"
+    },
+    "headlineLabel": {
+      "en": "Cost-per-Ticket: $22.40 — Good, healthy multi-tier mix ($112K/mo total)",
+      "zh": "单工单成本 $22.40 — 良好，多层级结构健康（月总计 $112K）"
+    }
   }
 }
