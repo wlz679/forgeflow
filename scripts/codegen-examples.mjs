@@ -183,6 +183,8 @@ const ENGINES = [
     subdir: 'hiring-team',     defaultInputs: { months_to_full: '6', starting_pct: '0', curve_shape: 'S-Curve', monthly_cost: '14833' } },
   { file: 'comp-banding-calculator.ts',  slug: 'solopreneur-comp-banding-calculator',
     subdir: 'hiring-team',     defaultInputs: { role_title: 'Senior Software Engineer', base_salary: '160000', market_p25: '130000', market_p50: '155000', market_p75: '185000' } },
+  { file: 'equity-refresh-calculator.ts',  slug: 'solopreneur-equity-refresh-calculator',
+    subdir: 'hiring-team',     defaultInputs: { current_shares: '10000', years_since_grant: '3', refresh_pool_pct: '1.5', total_company_shares: '10000000', role_criticality: 'Med' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

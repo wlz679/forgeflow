@@ -1142,5 +1142,19 @@
       "en": "Comp Banding: P54 (Good - above median, $5K above P50)",
       "zh": "薪酬分位：P54（良好 — 高于中位 $5K）"
     }
+  },
+  "solopreneur-equity-refresh-calculator": {
+    "headline": {
+      "en": "0.15%",
+      "zh": "0.15%"
+    },
+    "headlineUnit": {
+      "en": "Dilution (15,000 shares)",
+      "zh": "稀释（15,000 股）"
+    },
+    "headlineLabel": {
+      "en": "Equity Refresh: 0.15% dilution (Good - solid retention signal, Med criticality)",
+      "zh": "股权刷新：0.15% 稀释（良好 — 中等关键性，留存信号稳固）"
+    }
   }
 }

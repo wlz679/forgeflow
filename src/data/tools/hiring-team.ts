@@ -137,4 +137,38 @@ export const tools: ToolMeta[] = [
       'https://carta.com/data/equity-benchmarks/',
     ],
   },
+  {
+    slug: 'solopreneur-equity-refresh-calculator',
+    title: 'Equity Refresh Grant',
+    description:
+      'Compute the recommended equity refresh grant (shares + dilution %) for a key employee based on the company refresh pool, role criticality, and time since original grant. HIGHER health bands — more dilution is better (stronger retention signal): 🟢 ≥0.20% · 🟡 0.10-0.20% · 🟠 0.05-0.10% · 🔴 <0.05%. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.',
+    categoryId: 'H',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'current_shares',       label: 'Employee current shares',       placeholder: 'e.g. 10000',     type: 'number' },
+      { name: 'years_since_grant',    label: 'Years since original grant',     placeholder: 'e.g. 3',         type: 'number' },
+      { name: 'refresh_pool_pct',     label: 'Refresh pool % of total equity', placeholder: 'e.g. 1.5',       type: 'number' },
+      { name: 'total_company_shares', label: 'Total fully-diluted shares',     placeholder: 'e.g. 10000000',  type: 'number' },
+      { name: 'role_criticality',     label: 'Role criticality', type: 'select', options: ['High', 'Med', 'Low'], default: 'Med' },
+    ],
+    keywords: [
+      'equity refresh',
+      'equity refresh grant',
+      'refresh grant calculator',
+      'Pave equity',
+      'Carta refresh',
+      'role criticality',
+      'retention equity',
+      'mid-market SaaS',
+    ],
+    tags: ['hiring-team', 'people-ops', 'equity'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-10',
+    sources: [
+      'https://www.pave.com/compensation-benchmarks',
+      'https://carta.com/data/equity-benchmarks/',
+      'https://www.ycombinator.com/library/4A-handbook-for-people-operations',
+    ],
+  },
 ];
