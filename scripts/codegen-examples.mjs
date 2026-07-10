@@ -185,6 +185,8 @@ const ENGINES = [
     subdir: 'hiring-team',     defaultInputs: { role_title: 'Senior Software Engineer', base_salary: '160000', market_p25: '130000', market_p50: '155000', market_p75: '185000' } },
   { file: 'equity-refresh-calculator.ts',  slug: 'solopreneur-equity-refresh-calculator',
     subdir: 'hiring-team',     defaultInputs: { current_shares: '10000', years_since_grant: '3', refresh_pool_pct: '1.5', total_company_shares: '10000000', role_criticality: 'Med' } },
+  { file: 'attrition-cost-calculator.ts',  slug: 'solopreneur-attrition-cost-calculator',
+    subdir: 'hiring-team',     defaultInputs: { annual_salary: '120000', recruiting_cost: '8000', ramp_weeks: '12', lost_productivity_months: '6', role_level: 'IC' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

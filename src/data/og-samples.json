@@ -1156,5 +1156,19 @@
       "en": "Equity Refresh: 0.15% dilution (Good - solid retention signal, Med criticality)",
       "zh": "股权刷新：0.15% 稀释（良好 — 中等关键性，留存信号稳固）"
     }
+  },
+  "solopreneur-attrition-cost-calculator": {
+    "headline": {
+      "en": "68%",
+      "zh": "68%"
+    },
+    "headlineUnit": {
+      "en": "% of annual salary",
+      "zh": "% 年度薪资"
+    },
+    "headlineLabel": {
+      "en": "Attrition Cost: 68% of salary (Good - typical, track >100% for risk)",
+      "zh": "离职成本：年薪 68%（良好 — 典型水平，>100% 需关注）"
+    }
   }
 }

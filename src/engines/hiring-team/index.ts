@@ -13,3 +13,4 @@ import './time-to-productivity-calculator';
 import './productivity-ramp-curve-calculator';
 import './comp-banding-calculator';
 import './equity-refresh-calculator';
+import './attrition-cost-calculator';
