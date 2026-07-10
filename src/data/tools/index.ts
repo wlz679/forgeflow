@@ -18,6 +18,7 @@ import { tools as sales } from './sales';
 import { tools as retention } from './retention';
 import { tools as productAnalytics } from './product-analytics';
 import { tools as hiringTeam } from './hiring-team';
+import { tools as customerSupport } from './customer-support';
 
 export const tools: ToolMeta[] = [
   ...saas,
@@ -33,6 +34,7 @@ export const tools: ToolMeta[] = [
   ...retention,
   ...productAnalytics,
   ...hiringTeam,
+  ...customerSupport,
 ];
 
 export type { ToolMeta };

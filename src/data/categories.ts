@@ -18,4 +18,5 @@ export const categories: Category[] = [
   { id: 'R', name: 'Retention & Customer Success', slug: 'retention', description: 'Calculate NRR, GRR, expansion revenue, logo churn rate, customer health score, and renewal rate for mid-market B2B SaaS CSMs and RevOps leads.' },
   { id: 'P', name: 'Product Analytics', slug: 'product-analytics', description: 'Calculate funnel conversion, feature adoption, activation rate, stickiness (DAU/MAU), time-to-value, and power user curves for product managers at mid-market B2B SaaS companies ($10M-$50M ARR).' },
   { id: 'H', name: 'Hiring & Team', slug: 'hiring-team', description: 'Calculate fully-loaded employee cost, ramp time, productivity ramp curves, compensation banding, equity refresh grants, and attrition cost for People-ops managers and Head-of-HR at mid-market B2B SaaS companies ($10M-$50M ARR).' },
+  { id: 'T', name: 'Customer Support', slug: 'customer-support', description: 'Calculate cost-per-support-ticket, first response time SLA, resolution time, CSAT, self-service deflection rate, and team capacity planning for CS Ops managers and Head-of-CS at mid-market B2B SaaS companies ($10M-$50M ARR).' },
 ];
