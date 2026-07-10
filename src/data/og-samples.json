@@ -1086,5 +1086,19 @@
       "en": "Power User Pareto: 3.5x (Excellent - strong concentration, ready for VIP program)",
       "zh": "高活用户 Pareto 比率 3.5x（优秀 — 强集中度，适合启动 VIP 计划）"
     }
+  },
+  "solopreneur-fully-loaded-employee-cost-calculator": {
+    "headline": {
+      "en": "1.48x",
+      "zh": "1.48x"
+    },
+    "headlineUnit": {
+      "en": "Fully-loaded multiplier",
+      "zh": "全负荷成本倍数"
+    },
+    "headlineLabel": {
+      "en": "Fully-Loaded Cost: 1.48x ($178K) — Warning, above BLS average",
+      "zh": "全负荷成本 1.48 倍（$178K）— 警告，超过 BLS 平均"
+    }
   }
 }

@@ -175,6 +175,8 @@ const ENGINES = [
     subdir: 'product-analytics',     defaultInputs: { median_days: '2', p90_days: '5' } },
   { file: 'power-user-curve-calculator.ts',       slug: 'solopreneur-power-user-curve-calculator',
     subdir: 'product-analytics',     defaultInputs: { top_pct: '20', top_pct_usage_share: '70' } },
+  { file: 'fully-loaded-employee-cost-calculator.ts',  slug: 'solopreneur-fully-loaded-employee-cost-calculator',
+    subdir: 'hiring-team',     defaultInputs: { base_salary: '120000', benefits_pct: '25', payroll_tax_pct: '8', overhead_pct: '15' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

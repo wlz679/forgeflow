@@ -8,4 +8,4 @@
 // P11-6: attrition-cost               — Attrition Cost
 //
 // Engines are added one per task via Task 1..Task 6.
-export {};
+import './fully-loaded-employee-cost-calculator';
