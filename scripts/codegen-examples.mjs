@@ -177,6 +177,8 @@ const ENGINES = [
     subdir: 'product-analytics',     defaultInputs: { top_pct: '20', top_pct_usage_share: '70' } },
   { file: 'fully-loaded-employee-cost-calculator.ts',  slug: 'solopreneur-fully-loaded-employee-cost-calculator',
     subdir: 'hiring-team',     defaultInputs: { base_salary: '120000', benefits_pct: '25', payroll_tax_pct: '8', overhead_pct: '15' } },
+  { file: 'time-to-productivity-calculator.ts',  slug: 'solopreneur-time-to-productivity-calculator',
+    subdir: 'hiring-team',     defaultInputs: { role_level: 'IC', ramp_weeks: '8', industry_complexity: 'Med' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

@@ -1100,5 +1100,19 @@
       "en": "Fully-Loaded Cost: 1.48x ($178K) — Warning, above BLS average",
       "zh": "全负荷成本 1.48 倍（$178K）— 警告，超过 BLS 平均"
     }
+  },
+  "solopreneur-time-to-productivity-calculator": {
+    "headline": {
+      "en": "8w",
+      "zh": "8周"
+    },
+    "headlineUnit": {
+      "en": "IC ramp time",
+      "zh": "IC 适应期"
+    },
+    "headlineLabel": {
+      "en": "Ramp Time: 8 weeks (Good - healthy IC ramp, on track)",
+      "zh": "适应期 8 周（良好 — IC 健康适应期，进展正常）"
+    }
   }
 }

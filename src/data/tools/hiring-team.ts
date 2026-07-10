@@ -36,4 +36,37 @@ export const tools: ToolMeta[] = [
       'https://www.pave.com/compensation-benchmarks',
     ],
   },
+  {
+    slug: 'solopreneur-time-to-productivity-calculator',
+    title: 'Time to Productivity (Ramp Time)',
+    description:
+      'Compute the adjusted ramp time to first meaningful productivity for a new hire, factoring role level (IC vs Manager) and industry complexity. INVERSE health bands — shorter ramp is better. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.',
+    categoryId: 'H',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'role_level',          label: 'Role level',          type: 'select', options: ['IC', 'Manager'], default: 'IC' },
+      { name: 'ramp_weeks',          label: 'Base ramp weeks',     placeholder: 'e.g. 8', type: 'number' },
+      { name: 'industry_complexity', label: 'Industry complexity', type: 'select', options: ['Low', 'Med', 'High'], default: 'Med' },
+    ],
+    keywords: [
+      'time to productivity',
+      'ramp time calculator',
+      'ramp up time',
+      'onboarding ramp',
+      'new hire ramp',
+      'manager ramp',
+      'IC ramp',
+      'first 90 days',
+      'mid-market SaaS',
+    ],
+    tags: ['hiring-team', 'people-ops', 'ramp'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-10',
+    sources: [
+      'https://www.linkedin.com/business/talent/blog/talent-acquisition/onshore-onsite-and-ramp-up-time',
+      'https://hbr.org/2009/04/leading-change-when-business-is-good',
+      'https://www.pave.com/compensation-benchmarks',
+    ],
+  },
 ];

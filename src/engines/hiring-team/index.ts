@@ -9,3 +9,4 @@
 //
 // Engines are added one per task via Task 1..Task 6.
 import './fully-loaded-employee-cost-calculator';
+import './time-to-productivity-calculator';
