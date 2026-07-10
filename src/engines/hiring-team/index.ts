@@ -11,3 +11,4 @@
 import './fully-loaded-employee-cost-calculator';
 import './time-to-productivity-calculator';
 import './productivity-ramp-curve-calculator';
+import './comp-banding-calculator';

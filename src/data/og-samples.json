@@ -1128,5 +1128,19 @@
       "en": "Productivity Ramp: P50 at month 3 (Good - healthy S-Curve)",
       "zh": "生产力爬坡：P50 在第 3 月（良好 — 健康的 S 曲线）"
     }
+  },
+  "solopreneur-comp-banding-calculator": {
+    "headline": {
+      "en": "P54",
+      "zh": "P54"
+    },
+    "headlineUnit": {
+      "en": "Market percentile",
+      "zh": "市场百分位"
+    },
+    "headlineLabel": {
+      "en": "Comp Banding: P54 (Good - above median, $5K above P50)",
+      "zh": "薪酬分位：P54（良好 — 高于中位 $5K）"
+    }
   }
 }

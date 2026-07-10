@@ -181,6 +181,8 @@ const ENGINES = [
     subdir: 'hiring-team',     defaultInputs: { role_level: 'IC', ramp_weeks: '8', industry_complexity: 'Med' } },
   { file: 'productivity-ramp-curve-calculator.ts',  slug: 'solopreneur-productivity-ramp-curve-calculator',
     subdir: 'hiring-team',     defaultInputs: { months_to_full: '6', starting_pct: '0', curve_shape: 'S-Curve', monthly_cost: '14833' } },
+  { file: 'comp-banding-calculator.ts',  slug: 'solopreneur-comp-banding-calculator',
+    subdir: 'hiring-team',     defaultInputs: { role_title: 'Senior Software Engineer', base_salary: '160000', market_p25: '130000', market_p50: '155000', market_p75: '185000' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
