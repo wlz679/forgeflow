@@ -13,3 +13,4 @@ import './first-response-time-calculator';
 import './resolution-time-calculator';
 import './csat-calculator';
 import './deflection-rate-calculator';
+import './support-capacity-planning-calculator';

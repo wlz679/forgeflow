@@ -1240,5 +1240,19 @@
       "en": "Deflection: 35% — Good, but 5pp below 40% target; net 0.5K/mo saved",
       "zh": "分流率 35% — 良好,距 40% 目标差 5pp;月节省 0.5K"
     }
+  },
+  "solopreneur-support-capacity-planning-calculator": {
+    "headline": {
+      "en": "20 agents",
+      "zh": "20 名客服"
+    },
+    "headlineUnit": {
+      "en": "Required headcount @ 95.7% util",
+      "zh": "所需人手 @ 95.7% 利用率"
+    },
+    "headlineLabel": {
+      "en": "Capacity: 20 agents needed — Good, healthy buffer at 95.7% utilization",
+      "zh": "人力规划 20 名 — 良好,95.7% 利用率健康"
+    }
   }
 }
