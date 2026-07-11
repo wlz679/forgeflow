@@ -10,3 +10,5 @@
 // Engines are added one per task via Task 1..Task 6.
 import './cost-per-support-ticket-calculator';
 import './first-response-time-calculator';
+import './resolution-time-calculator';
+import './csat-calculator';

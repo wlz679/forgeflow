@@ -1212,5 +1212,19 @@
       "en": "Resolution Time: 75% in-SLA, tail 4.5x — Good, but heavy outliers need investigation",
       "zh": "解决时间 75% SLA 内,尾距 4.5x — 良好,但尾部异常需排查"
     }
+  },
+  "solopreneur-csat-calculator": {
+    "headline": {
+      "en": "87.0%",
+      "zh": "87.0%"
+    },
+    "headlineUnit": {
+      "en": "CSAT (95% CI ±4.7pp)",
+      "zh": "CSAT (95% CI ±4.7pp)"
+    },
+    "headlineLabel": {
+      "en": "CSAT: 87% — Good, but 3pp below 90% target; boost FRT to lift",
+      "zh": "CSAT 87% — 良好,距 90% 目标差 3pp;提升首响可拉升"
+    }
   }
 }

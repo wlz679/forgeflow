@@ -98,3 +98,27 @@ export const tools: ToolMeta[] = [
       'https://www.sqmgroup.com/resources/research/contact-center-benchmarks',
     ],
   },
+  {
+    slug: 'solopreneur-csat-calculator',
+    title: 'CSAT (Customer Satisfaction) Calculator',
+    description:
+      'Measure CSAT (customer satisfaction) with 95% confidence interval margin of error. HIGHER health bands — better satisfaction = better retention: 🟢 ≥90% · 🟡 80-90% · 🟠 70-80% · 🔴 <70%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-CS.',
+    categoryId: 'T',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'csat_pct',      label: 'CSAT score (%)',            placeholder: 'e.g. 87',  type: 'number' },
+      { name: 'response_rate', label: 'Survey response rate (%)',  placeholder: 'e.g. 35',  type: 'number' },
+      { name: 'sample_size',   label: 'Total responses collected', placeholder: 'e.g. 200', type: 'number' },
+      { name: 'target_csat',   label: 'Internal CSAT target (%)',  placeholder: 'e.g. 90',  type: 'number' },
+    ],
+    keywords: ['csat', 'customer satisfaction', 'survey margin', 'confidence interval', 'customergauge', 'zendesk csat', 'mid-market saas', 'response rate'],
+    tags: ['customer-support', 'cs-ops', 'csat'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-10',
+    sources: [
+      'https://www.customergauge.com/blog/csat-benchmarks',
+      'https://www.gainsight.com/blog/customer-success-benchmarks/',
+      'https://www.zendesk.com/customer-experience-trends/',
+    ],
+  },
