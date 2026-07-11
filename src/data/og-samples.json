@@ -1198,5 +1198,19 @@
       "en": "First Response SLA: 85.0% — Good across T1/T2/T3 targets",
       "zh": "首次响应 SLA：85.0% — T1/T2/T3 目标整体良好"
     }
+  },
+  "solopreneur-resolution-time-calculator": {
+    "headline": {
+      "en": "75.0%",
+      "zh": "75.0%"
+    },
+    "headlineUnit": {
+      "en": "In-SLA resolution attainment",
+      "zh": "SLA 内解决率"
+    },
+    "headlineLabel": {
+      "en": "Resolution Time: 75% in-SLA, tail 4.5x — Good, but heavy outliers need investigation",
+      "zh": "解决时间 75% SLA 内,尾距 4.5x — 良好,但尾部异常需排查"
+    }
   }
 }

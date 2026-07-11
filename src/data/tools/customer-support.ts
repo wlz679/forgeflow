@@ -74,4 +74,27 @@ export const tools: ToolMeta[] = [
       'https://www.icmi.com/research/contact-center-performance',
     ],
   },
-];
+];  {
+    slug: 'solopreneur-resolution-time-calculator',
+    title: 'Resolution Time Calculator',
+    description:
+      'Track full-resolution cycle health via in-SLA attainment + tail ratio (p90 / median). HIGHER health bands — more in-SLA = better: 🟢 ≥85% · 🟡 70-85% · 🟠 50-70% · 🔴 <50%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-Support.',
+    categoryId: 'T',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'sla_attainment_pct',   label: 'In-SLA resolution attainment (%)', placeholder: 'e.g. 75',   type: 'number' },
+      { name: 'median_resolution_hr', label: 'Median resolution time (hours)',  placeholder: 'e.g. 8',    type: 'number' },
+      { name: 'p90_resolution_hr',    label: 'p90 resolution time (hours)',     placeholder: 'e.g. 36',   type: 'number' },
+      { name: 'monthly_resolved',     label: 'Tickets resolved this month',    placeholder: 'e.g. 4800', type: 'number' },
+    ],
+    keywords: ['resolution time', 'sla attainment', 'tail ratio', 'p90', 'median resolution', 'tsia benchmark', 'mid-market saas', 'support ops'],
+    tags: ['customer-support', 'cs-ops', 'resolution'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-10',
+    sources: [
+      'https://www.tsia.com/blog/support-operations-benchmark',
+      'https://www.icmi.com/research/contact-center-performance',
+      'https://www.sqmgroup.com/resources/research/contact-center-benchmarks',
+    ],
+  },

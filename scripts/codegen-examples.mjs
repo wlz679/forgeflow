@@ -28,7 +28,9 @@ const ROOT = path.join(__dirname, '..');
 // of typical use — a single preset worth of data.
 const ENGINES = [
   { file: 'openai-token-calculator.ts',         slug: 'solopreneur-openai-token-calculator',
-    subdir: 'ai-cost',         defaultInputs: { models: 'gpt-5-mini,gpt-5.5,gpt-4.1', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
+    subdir: 'ai-cost',           defaultInputs: { models: 'gpt-5,gpt-5-mini,gpt-4o', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
+  { file: 'resolution-time-calculator.ts', slug: 'solopreneur-resolution-time-calculator',
+    subdir: 'customer-support', defaultInputs: { sla_attainment_pct: '75', median_resolution_hr: '8', p90_resolution_hr: '36', monthly_resolved: '4800' } },
   { file: 'claude-api-cost-calculator.ts',      slug: 'solopreneur-claude-api-cost-calculator',
     subdir: 'ai-cost',      defaultInputs: { models: 'claude-sonnet-4-6,claude-haiku-4-5,claude-fable-5', inputTokens: '1000', outputTokens: '500', requestsPerDay: '100', pricingMode: 'realtime', cacheHitRate: '0', growthRate: '0' } },
   { file: 'gemini-api-cost-calculator.ts',      slug: 'solopreneur-gemini-api-cost-calculator',
