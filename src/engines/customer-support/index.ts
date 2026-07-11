@@ -12,3 +12,4 @@ import './cost-per-support-ticket-calculator';
 import './first-response-time-calculator';
 import './resolution-time-calculator';
 import './csat-calculator';
+import './deflection-rate-calculator';

@@ -1226,5 +1226,19 @@
       "en": "CSAT: 87% — Good, but 3pp below 90% target; boost FRT to lift",
       "zh": "CSAT 87% — 良好,距 90% 目标差 3pp;提升首响可拉升"
     }
+  },
+  "solopreneur-deflection-rate-calculator": {
+    "headline": {
+      "en": "35.0%",
+      "zh": "35.0%"
+    },
+    "headlineUnit": {
+      "en": "Self-service deflection",
+      "zh": "自助服务分流率"
+    },
+    "headlineLabel": {
+      "en": "Deflection: 35% — Good, but 5pp below 40% target; net 0.5K/mo saved",
+      "zh": "分流率 35% — 良好,距 40% 目标差 5pp;月节省 0.5K"
+    }
   }
 }

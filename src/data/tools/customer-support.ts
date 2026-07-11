@@ -122,3 +122,28 @@ export const tools: ToolMeta[] = [
       'https://www.zendesk.com/customer-experience-trends/',
     ],
   },
+  {
+    slug: 'solopreneur-deflection-rate-calculator',
+    title: 'Self-Service Deflection Rate Calculator',
+    description:
+      'Measure self-service deflection via KB + chatbot (pre-T1 tickets avoided). HIGHER health bands — more deflection = better efficiency: 🟢 ≥40% · 🟡 25-40% · 🟠 10-25% · 🔴 <10%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-CS.',
+    categoryId: 'T',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'monthly_tickets',   label: 'Monthly inbound tickets',          placeholder: 'e.g. 5000', type: 'number' },
+      { name: 'deflection_rate',   label: 'Deflection rate (%)',             placeholder: 'e.g. 35',   type: 'number' },
+      { name: 'cost_per_ticket',   label: 'Cost per ticket ($)',             placeholder: 'e.g. 24',   type: 'number' },
+      { name: 'tool_monthly_cost', label: 'KB/chatbot monthly cost ($)',     placeholder: 'e.g. 1500', type: 'number' },
+      { name: 'target_deflection', label: 'Internal deflection target (%)',  placeholder: 'e.g. 40',   type: 'number' },
+    ],
+    keywords: ['deflection rate', 'self service', 'kb deflection', 'chatbot deflection', 'tsia benchmark', 'zendesk deflection', 'mid-market saas', 'cost savings'],
+    tags: ['customer-support', 'cs-ops', 'self-service'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-10',
+    sources: [
+      'https://www.tsia.com/blog/self-service-benchmark',
+      'https://www.zendesk.com/customer-experience-trends/',
+      'https://www.freshworks.com/customer-service-benchmark/',
+    ],
+  },
