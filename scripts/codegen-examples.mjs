@@ -189,6 +189,8 @@ const ENGINES = [
     subdir: 'hiring-team',     defaultInputs: { annual_salary: '120000', recruiting_cost: '8000', ramp_weeks: '12', lost_productivity_months: '6', role_level: 'IC' } },
   { file: 'cost-per-support-ticket-calculator.ts', slug: 'solopreneur-cost-per-support-ticket-calculator',
     subdir: 'customer-support', defaultInputs: { t1_cost: '8', t2_cost: '25', t3_cost: '70', t1_share: '55', t2_share: '30', monthly_volume: '5000' } },
+  { file: 'first-response-time-calculator.ts', slug: 'solopreneur-first-response-time-calculator',
+    subdir: 'customer-support', defaultInputs: { t1_target_min: '30', t2_target_hr: '4', t3_target_hr: '24', t1_attainment: '85', t2_attainment: '80', t3_attainment: '90' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

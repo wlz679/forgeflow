@@ -1184,5 +1184,19 @@
       "en": "Cost-per-Ticket: $22.40 — Good, healthy multi-tier mix ($112K/mo total)",
       "zh": "单工单成本 $22.40 — 良好，多层级结构健康（月总计 $112K）"
     }
+  },
+  "solopreneur-first-response-time-calculator": {
+    "headline": {
+      "en": "85.0%",
+      "zh": "85.0%"
+    },
+    "headlineUnit": {
+      "en": "in-SLA first responses",
+      "zh": "首响达标率"
+    },
+    "headlineLabel": {
+      "en": "First Response SLA: 85.0% — Good across T1/T2/T3 targets",
+      "zh": "首次响应 SLA：85.0% — T1/T2/T3 目标整体良好"
+    }
   }
 }
