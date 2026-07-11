@@ -74,7 +74,7 @@ export const tools: ToolMeta[] = [
       'https://www.icmi.com/research/contact-center-performance',
     ],
   },
-];  {
+  {
     slug: 'solopreneur-resolution-time-calculator',
     title: 'Resolution Time Calculator',
     description:
@@ -173,3 +173,4 @@ export const tools: ToolMeta[] = [
       'https://www.zendesk.com/customer-experience-trends/',
     ],
   },
+];
