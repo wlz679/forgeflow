@@ -209,6 +209,8 @@ const ENGINES = [
     subdir: 'knowledge', defaultInputs: { tickets_deflected_30d: '1750', tickets_reopened_30d: '210', target_quality_pct: '90', deflection_source: 'Both' } },
   { file: 'documentation-roi-calculator.ts', slug: 'solopreneur-documentation-roi-calculator',
     subdir: 'knowledge', defaultInputs: { kb_team_monthly_cost: '15000', deflected_tickets_monthly: '1750', cost_per_ticket: '24', articles_total: '500', roi_target_pct: '500' } },
+  { file: 'article-helpfulness-calculator.ts', slug: 'solopreneur-article-helpfulness-calculator',
+    subdir: 'knowledge', defaultInputs: { total_article_views: '25000', helpful_votes: '2400', unhelpful_votes: '700', total_articles: '500', target_helpful_pct: '75' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

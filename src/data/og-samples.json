@@ -1344,5 +1344,23 @@
       "en": "raise deflection before cutting cost — see K-1 Coverage",
       "zh": "先提升分流再削减成本 — 参见 K-1 覆盖率"
     }
+  },
+  "solopreneur-article-helpfulness-calculator": {
+    "headline": {
+      "en": "77.4%",
+      "zh": "77.4%"
+    },
+    "headlineUnit": {
+      "en": "helpful",
+      "zh": "有帮助"
+    },
+    "headlineLabel": {
+      "en": "Article Helpfulness: 77.4% helpful / 12.4% vote-rate — Good, +235 helpful lifts to 85% Excellent",
+      "zh": "文章帮助度 77.4% / 投票率 12.4% — 良好,再增 235 个有帮助票可达优秀级 85%"
+    },
+    "trend": {
+      "en": "audit bottom-20 unhelpful articles — lift to 85% Excellent",
+      "zh": "审计后 20% 无帮助文章 — 提升到优秀级 85%"
+    }
   }
 }

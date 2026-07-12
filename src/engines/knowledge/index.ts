@@ -13,4 +13,5 @@ import './article-freshness-calculator';
 import './search-effectiveness-calculator';
 import './deflection-quality-calculator';
 import './documentation-roi-calculator';
+import './article-helpfulness-calculator';
 export {};
