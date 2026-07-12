@@ -1308,5 +1308,23 @@
       "en": "no-result >15% = content gaps, run K-1 on top queries",
       "zh": "无结果 >15% = 内容缺口,跑 K-1 查热门"
     }
+  },
+  "solopreneur-deflection-quality-calculator": {
+    "headline": {
+      "en": "88.0%",
+      "zh": "88.0%"
+    },
+    "headlineUnit": {
+      "en": "Deflection quality",
+      "zh": "分流质量"
+    },
+    "headlineLabel": {
+      "en": "Deflection Quality: 88% quality / 12% reopen — Good, 70 fewer reopens/mo achievable at excellent",
+      "zh": "分流质量 88% / 12% 重开 — 良好,达优秀级月省约 70 重开工单"
+    },
+    "trend": {
+      "en": "12% reopen = +2pp below 90% target",
+      "zh": "12% 重开 = 距 90% 目标低 2pp"
+    }
   }
 }

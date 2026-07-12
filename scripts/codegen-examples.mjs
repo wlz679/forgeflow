@@ -205,6 +205,8 @@ const ENGINES = [
     subdir: 'knowledge', defaultInputs: { total_articles: '500', articles_updated_12mo: '325', articles_updated_6mo: '200', target_freshness_pct: '70' } },
   { file: 'search-effectiveness-calculator.ts', slug: 'solopreneur-search-effectiveness-calculator',
     subdir: 'knowledge', defaultInputs: { total_searches: '12000', searches_with_click: '9000', searches_no_result: '960', industry_benchmark: 'B2B SaaS' } },
+  { file: 'deflection-quality-calculator.ts', slug: 'solopreneur-deflection-quality-calculator',
+    subdir: 'knowledge', defaultInputs: { tickets_deflected_30d: '1750', tickets_reopened_30d: '210', target_quality_pct: '90', deflection_source: 'Both' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

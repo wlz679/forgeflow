@@ -104,4 +104,38 @@ export const tools: ToolMeta[] = [
       'https://www.zendesk.com/blog/search-analytics-self-service/',
     ],
   },
+  {
+    slug: 'solopreneur-deflection-quality-calculator',
+    title: 'Deflection Quality',
+    description:
+      'Measure % of self-service-deflected tickets that get reopened (proxy for content quality). INVERSE health bands - lower reopen = better deflection: 🟢 ≤8% reopen · 🟡 8-15% · 🟠 15-25% · 🔴 >25%. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and CS Ops leads.',
+    categoryId: 'K',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'tickets_deflected_30d', label: 'Tickets deflected (30d)',     placeholder: 'e.g. 1750', type: 'number' },
+      { name: 'tickets_reopened_30d',  label: 'Tickets reopened (30d)',      placeholder: 'e.g. 210',  type: 'number' },
+      { name: 'target_quality_pct',    label: 'Target quality % (no reopen)', placeholder: 'e.g. 90',  type: 'number' },
+      { name: 'deflection_source',     label: 'Deflection source',           placeholder: 'Both',      type: 'select', options: ['KB', 'Chatbot', 'Both'] },
+    ],
+    keywords: [
+      'deflection quality',
+      'ticket reopen rate',
+      'kb reopen',
+      'self-service quality',
+      'content quality',
+      'kb effectiveness',
+      'reopened tickets',
+      'deflection metric',
+      'mid-market saas documentation',
+    ],
+    tags: ['knowledge', 'kb', 'deflection-quality'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-12',
+    sources: [
+      'https://www.tsia.com/blog/knowledge-centered-service',
+      'https://www.nngroup.com/articles/help-and-documentation/',
+      'https://www.intercom.com/help/articles/what-is-help-center-best-practices',
+    ],
+  },
 ];
