@@ -64,11 +64,11 @@ K-1 Coverage → K-2 Freshness → K-3 Search → K-4 Deflection Quality → K-5
    (gap?)        (stale?)       (findable?)   (accurate?)            (worth it?)   (useful?)
 ```
 
-**Total inputs across 6 calcs: 27** (4 + 4 + 4 + 4 + 5 + 5 = 27).
+**Total inputs across 6 calcs: 26** (4 + 4 + 4 + 4 + 5 + 5 = 26).
 
 | # | Calc | Slug | Inputs | Canonical |
 |---|------|------|--------|-----------|
-| 1 | KB Coverage Rate | `solopreneur-kb-coverage-rate-calculator` | 4 | 70% coverage (Good), 28% gap → ~1,400 missing articles |
+| 1 | KB Coverage Rate | `solopreneur-kb-coverage-rate-calculator` | 4 | 70% coverage (Good), 30% gap = ~1,500 tickets without KB article |
 | 2 | Article Freshness | `solopreneur-article-freshness-calculator` | 4 | 65% fresh in 12mo, 35% stale (Good) |
 | 3 | Search Effectiveness | `solopreneur-search-effectiveness-calculator` | 4 | CTR 75% / no-result 8% (Good) |
 | 4 | Deflection Quality | `solopreneur-deflection-quality-calculator` | 4 | 88% quality / 12% reopen (Good) |
@@ -185,7 +185,7 @@ no_result_pct = (searches_no_result / total_searches) * 100
 **6 v3 sections**:
 - Health: Search Effectiveness 🟡 Good (CTR 75% / no-result 8%)
 - Snapshot: 12,000 searches/mo · 9,000 with click · 960 no-result · 2,040 abandoned/dwell
-- What-If: If CTR climbs to 85% (Excellent) at same no-result, 600 more searches find answers → 600 fewer tickets/mo (at P12-1 cost-per-ticket)
+- What-If: If CTR climbs to 85% (Excellent) at same no-result, 1,200 more searches find answers → at ~50% click-to-ticket-prevention rate, ~600 fewer tickets/mo (at P12-1 cost-per-ticket)
 - Break-Even: To hit Excellent, need CTR ≥85% (1,200 more clicks) OR no-result ≤5% (360 fewer no-result searches)
 - Milestone: Search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly
 - Tip: No-result >15% means content gaps OR bad search synonyms — run K-1 Coverage Rate on top no-result queries
@@ -248,18 +248,18 @@ gap_roi_pct = roi_target_pct - roi_pct  // positive = below target
 ```
 
 **4-band (HIGHER — higher ROI = better; critical = -Infinity)**:
-- 🟢 Excellent: ROI ≥ 2000% AND cost-per-article ≤ $80/mo
-- 🟡 Good: ROI ≥ 800% AND cost-per-article ≤ $200/mo
-- 🟠 Warning: ROI ≥ 300%
-- 🔴 Critical: ROI < 300%
+- 🟢 Excellent: ROI ≥ 400% AND cost-per-article ≤ $50/mo
+- 🟡 Good: ROI ≥ 150%
+- 🟠 Warning: ROI ≥ 50%
+- 🔴 Critical: ROI < 50%
 
-**Canonical**: gross = 1750 × $24 = $42,000 · net = $42,000 - $15,000 = $27,000 · ROI = **1,800%** · cost-per-article = **$30/mo** → **🟡 Good** (≥800% AND ≤$200)
+**Canonical**: gross = 1750 × $24 = $42,000 · net = $42,000 - $15,000 = $27,000 · ROI = **180%** · cost-per-article = **$30/mo** → **🟡 Good** (≥150%)
 
 **6 v3 sections**:
-- Health: Doc ROI 🟡 Good (1,800% ROI · $27K net/mo · $30/article/mo)
+- Health: Doc ROI 🟡 Good (180% ROI · $27K net/mo · $30/article/mo)
 - Snapshot: $15K KB team cost · 1,750 deflected/mo · $24 cost/ticket · $42K gross saved · $27K net
-- What-If: If deflection climbs to 2,500/mo (+43%, see K-1 Coverage), gross = $60K, net = $45K, ROI = 3,000% (Excellent)
-- Break-Even: To hit Excellent (≥2,000% ROI AND ≤$80/article), need either 50% more deflection OR 50% lower KB cost
+- What-If: If deflection climbs to 2,500/mo (+43%, see K-1 Coverage), gross = $60K, net = $45K, ROI = 300% (Excellent)
+- Break-Even: To hit Excellent (≥400% ROI AND ≤$50/article), need either 2.5× deflection OR 33% lower KB cost
 - Milestone: KB team cost scales linearly with article count — 1,000 articles needs 2× team or it'll decay. Plan headcount alongside K-2 freshness.
 - Tip: Pair with K-1 Coverage Rate — closing coverage gaps is the cheapest ROI win. New article = ~$30/mo ongoing cost.
 
@@ -312,7 +312,7 @@ gap_pct = target_helpful_pct - helpful_pct  // positive = below target
 | K-2 Article Freshness | HIGHER | -Infinity | 65% fresh | ≥80% |
 | K-3 Search Effectiveness | HIGHER (composite) | -Infinity | CTR 75% / no-result 8% | CTR ≥85% AND no-result ≤5% |
 | K-4 Deflection Quality | INVERSE (reopen) | Infinity | reopen 12% / quality 88% | reopen ≤8% (quality ≥92%) |
-| K-5 Doc ROI | HIGHER | -Infinity | 1,800% ROI | ≥2,000% AND ≤$80/article |
+| K-5 Doc ROI | HIGHER | -Infinity | 180% ROI | ≥400% AND ≤$50/article |
 | K-6 Helpfulness Score | HIGHER | -Infinity | helpful 77% / vote-rate 12% | helpful ≥85% AND vote-rate ≥15% |
 
 **Direction mix**: 5 HIGHER · 1 INVERSE (vs P12: 4 HIGHER · 2 INVERSE)
@@ -378,7 +378,7 @@ Each calc requires 8 file edits, all validated:
 | K-6 vote-rate <5% cold start (no UI prompt) | Low | Canonical vote-rate 12% with explicit ⚠️ Tip "vote-rate low = feedback loop broken" |
 | Article Freshness 6mo sub-metric vs 12mo main metric confusion | Low | 6mo is informational only; 12mo drives health band |
 | K-1 industry_benchmark is informational only | Low | Select dropdown exists for UI affordance but doesn't change math; no band coupling |
-| 28 inputs × 6 calcs exceeds P12's 31 (slightly fewer) | None | Within P-series range (P9: 20 inputs, P11: ~40 inputs) |
+| 26 inputs × 6 calcs under P12's 31 (slightly fewer) | None | Within P-series range (P9: 20 inputs, P11: ~40 inputs) |
 | Float-precision in K-3 CTR + no-result | Low | Math unrounded, display rounds; matches P12 pattern |
 
 ---
@@ -390,7 +390,7 @@ Each calc requires 8 file edits, all validated:
 | Total commits | 8 (scaffold + 6 calcs + 1 holistic fix + 1 docs) |
 | Engines | 86 → **92** (+6) |
 | Categories | 13 → **14** (NEW 'K' Knowledge/Documentation) |
-| Total inputs | 27 (across 6 calcs) |
+| Total inputs | 26 (across 6 calcs) |
 | Total tests | ~70 (per calc 10-13, range 60-78) |
 | Pass / fail target | ≥700 pass / 0 fail |
 | dist pages | +6 calc × 2 langs + 2 listing pages × 2 langs = +16 |
