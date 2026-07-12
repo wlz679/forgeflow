@@ -199,6 +199,8 @@ const ENGINES = [
     subdir: 'customer-support', defaultInputs: { t1_cost: '8', t2_cost: '25', t3_cost: '70', t1_share: '55', t2_share: '30', monthly_volume: '5000' } },
   { file: 'first-response-time-calculator.ts', slug: 'solopreneur-first-response-time-calculator',
     subdir: 'customer-support', defaultInputs: { t1_target_min: '30', t2_target_hr: '4', t3_target_hr: '24', t1_attainment: '85', t2_attainment: '80', t3_attainment: '90' } },
+  { file: 'kb-coverage-rate-calculator.ts', slug: 'solopreneur-kb-coverage-rate-calculator',
+    subdir: 'knowledge', defaultInputs: { monthly_tickets: '5000', tickets_with_kb_match: '3500', total_articles: '500', industry_benchmark: 'SaaS' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

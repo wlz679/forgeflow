@@ -1254,5 +1254,23 @@
       "en": "Capacity: 20 agents needed — Good, healthy buffer at 95.7% utilization",
       "zh": "人力规划 20 名 — 良好,95.7% 利用率健康"
     }
+  },
+  "solopreneur-kb-coverage-rate-calculator": {
+    "headline": {
+      "en": "70.0%",
+      "zh": "70.0%"
+    },
+    "headlineUnit": {
+      "en": "KB coverage",
+      "zh": "知识库覆盖率"
+    },
+    "headlineLabel": {
+      "en": "KB Coverage: 70% — Good, 1,500 tickets/mo without KB match",
+      "zh": "知识库覆盖 70% — 良好,1500 张工单/月无 KB 匹配"
+    },
+    "trend": {
+      "en": "30% gap = ~150 articles needed",
+      "zh": "30% 缺口 ≈ 需补 150 篇"
+    }
   }
 }
