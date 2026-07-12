@@ -64,7 +64,7 @@ const engine: ToolEngine = {
   var altCtr = 0.85;
   var lift = Math.max(0, altCtr * total - withClick);
   var fewerTickets = lift * 0.5;
-  var noResLift = Math.max(0, 0.05 * total - noRes);
+  var noResLift = Math.max(0, noRes - 0.05 * total);
   return [
     '🩺 Search Effectiveness Health: ' + emoji + ' ' + band + ' (CTR ' + (ctrV*100).toFixed(1) + '% / no-result ' + (noResR*100).toFixed(1) + '%)',
     '📊 Snapshot: ' + total.toLocaleString() + ' searches/mo · ' + withClick.toLocaleString() + ' with click (' + (ctrV*100).toFixed(1) + '% CTR) · ' + noRes.toLocaleString() + ' no-result (' + (noResR*100).toFixed(1) + '%) · ' + abandoned.toLocaleString() + ' abandoned/dwell',
@@ -87,10 +87,10 @@ const engine: ToolEngine = {
     const altCtr = HEALTH_BANDS.excellent.ctr;
     const lift = Math.max(0, altCtr * total - withClick);
     const fewerTickets = lift * 0.5;
-    const noResLift = Math.max(0, HEALTH_BANDS.excellent.noResult * total - noRes);
+    const noResLift = Math.max(0, noRes - HEALTH_BANDS.excellent.noResult * total);
     return [
       '🩺 Search Effectiveness Health: ' + bandInfo.label + ' (CTR ' + fmtPct(ctrVal) + ' / no-result ' + fmtPct(noResR) + ')',
-      '📊 Snapshot: ' + fmtInt(total) + ' searches/mo · ' + fmtInt(withClick) + ' with click (' + fmtPct(ctrVal) + ' CTR) · ' + fmtInt(noRes) + ' no-result (' + fmtPct(noResR) + '%) · ' + fmtInt(abandoned) + ' abandoned/dwell',
+      '📊 Snapshot: ' + fmtInt(total) + ' searches/mo · ' + fmtInt(withClick) + ' with click (' + fmtPct(ctrVal) + ' CTR) · ' + fmtInt(noRes) + ' no-result (' + fmtPct(noResR) + ') · ' + fmtInt(abandoned) + ' abandoned/dwell',
       '🔄 What-If: if CTR climbs to ' + fmtPct(altCtr) + ' (Excellent), ' + fmtInt(lift) + ' more searches find answers → at ~50% click-to-ticket-prevention rate, ~' + fmtInt(fewerTickets) + ' fewer tickets/mo',
       '⚖️ Break-Even: to hit Excellent (CTR ≥' + fmtPct(HEALTH_BANDS.excellent.ctr) + ' AND no-result ≤' + fmtPct(HEALTH_BANDS.excellent.noResult) + '), need ' + fmtInt(lift) + ' more clicks OR ' + fmtInt(noResLift) + ' fewer no-result searches',
       '🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly',
@@ -98,7 +98,7 @@ const engine: ToolEngine = {
     ];
   },
   staticExamples: [
-    '🩺 Search Effectiveness Health: Good (CTR 75.0% / no-result 8.0%)\n📊 Snapshot: 12,000 searches/mo · 9,000 with click (75.0% CTR) · 960 no-result (8.0%%) · 2,040 abandoned/dwell\n🔄 What-If: if CTR climbs to 85.0% (Excellent), 1,200 more searches find answers → at ~50% click-to-ticket-prevention rate, ~600 fewer tickets/mo\n⚖️ Break-Even: to hit Excellent (CTR ≥85.0% AND no-result ≤5.0%), need 1,200 more clicks OR 0 fewer no-result searches\n🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly\n💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.',
+    '🩺 Search Effectiveness Health: Good (CTR 75.0% / no-result 8.0%)\n📊 Snapshot: 12,000 searches/mo · 9,000 with click (75.0% CTR) · 960 no-result (8.0%) · 2,040 abandoned/dwell\n🔄 What-If: if CTR climbs to 85.0% (Excellent), 1,200 more searches find answers → at ~50% click-to-ticket-prevention rate, ~600 fewer tickets/mo\n⚖️ Break-Even: to hit Excellent (CTR ≥85.0% AND no-result ≤5.0%), need 1,200 more clicks OR 360 fewer no-result searches\n🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly\n💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.',
   ],
   faq: [
     { q: 'What is search effectiveness?', a: 'Search effectiveness measures how well your in-app KB search serves users. Two metrics: CTR (% of searches that result in a click) and no-result rate (% of searches returning zero matches). High CTR + low no-result = users find answers quickly.' },

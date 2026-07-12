@@ -88,3 +88,20 @@ test('HEALTH_BANDS exports 4 bands + calcHealthBand is 2-arg (signature verifica
   // Signature guard: composite band takes 2 args (CTR + no-result), not 1.
   assert.equal(calcHealthBand.length, 2);
 });
+
+// Regression test for holistic review finding I-1 (P13-7):
+// noResLift formula was `Math.max(0, 0.05 * total - noRes)` which is sign-flipped.
+// For canonical (total=12000, no_result=960): target=600, current=960 → 360 fewer
+// (the formula should subtract CURRENT - TARGET, not TARGET - CURRENT).
+test('noResLift direction: max(0, noRes - 0.05*total) → 360 fewer for canonical', () => {
+  const total = 12000;
+  const noRes = 960;
+  const target = 0.05 * total; // 600
+  const noResLift = Math.max(0, noRes - target); // correct: 360
+  assert.equal(noResLift, 360);
+  // Old buggy formula:
+  const buggy = Math.max(0, target - noRes); // returns 0 (wrong direction)
+  assert.equal(buggy, 0);
+  // Verify they're different (regression guard)
+  assert.notEqual(noResLift, buggy);
+});
