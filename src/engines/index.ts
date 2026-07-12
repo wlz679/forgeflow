@@ -17,3 +17,4 @@ import './retention';
 import './product-analytics';
 import './hiring-team';
 import './customer-support';
+import './knowledge';
