@@ -36,4 +36,38 @@ export const tools: ToolMeta[] = [
       'https://www.nngroup.com/articles/help-and-documentation/',
     ],
   },
+  {
+    slug: 'solopreneur-article-freshness-calculator',
+    title: 'Article Freshness',
+    description:
+      'Measure what % of KB articles are fresh (updated in last 12 months). HIGHER health bands - fresher content = better accuracy.',
+    categoryId: 'K',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'total_articles',        label: 'Total KB articles',            placeholder: 'e.g. 500', type: 'number' },
+      { name: 'articles_updated_12mo', label: 'Articles updated in 12mo',     placeholder: 'e.g. 325', type: 'number' },
+      { name: 'articles_updated_6mo',  label: 'Articles updated in 6mo',      placeholder: 'e.g. 200', type: 'number' },
+      { name: 'target_freshness_pct',  label: 'Internal freshness target (%)', placeholder: 'e.g. 70', type: 'number' },
+    ],
+    keywords: [
+      'article freshness',
+      'kb freshness',
+      'stale content',
+      'content review cadence',
+      'kb review',
+      'last reviewed',
+      'help center freshness',
+      'documentation freshness',
+      'mid-market saas documentation',
+    ],
+    tags: ['knowledge', 'kb', 'freshness'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-12',
+    sources: [
+      'https://www.nngroup.com/articles/help-and-documentation/',
+      'https://www.tsia.com/blog/knowledge-centered-service',
+      'https://www.intercom.com/help/articles/what-is-help-center-best-practices',
+    ],
+  },
 ];

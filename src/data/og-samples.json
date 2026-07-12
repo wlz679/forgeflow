@@ -1272,5 +1272,23 @@
       "en": "30% gap = ~150 articles needed",
       "zh": "30% 缺口 ≈ 需补 150 篇"
     }
+  },
+  "solopreneur-article-freshness-calculator": {
+    "headline": {
+      "en": "65.0%",
+      "zh": "65.0%"
+    },
+    "headlineUnit": {
+      "en": "KB articles fresh",
+      "zh": "KB 12 个月内更新比例"
+    },
+    "headlineLabel": {
+      "en": "Article Freshness: 65% — Good, 175 stale articles need review",
+      "zh": "文章新鲜度 65% — 良好，175 篇需复审"
+    },
+    "trend": {
+      "en": "35% stale = -5pp below target",
+      "zh": "35% 过时 = 距目标低 5pp"
+    }
   }
 }

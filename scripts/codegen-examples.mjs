@@ -201,6 +201,8 @@ const ENGINES = [
     subdir: 'customer-support', defaultInputs: { t1_target_min: '30', t2_target_hr: '4', t3_target_hr: '24', t1_attainment: '85', t2_attainment: '80', t3_attainment: '90' } },
   { file: 'kb-coverage-rate-calculator.ts', slug: 'solopreneur-kb-coverage-rate-calculator',
     subdir: 'knowledge', defaultInputs: { monthly_tickets: '5000', tickets_with_kb_match: '3500', total_articles: '500', industry_benchmark: 'SaaS' } },
+  { file: 'article-freshness-calculator.ts', slug: 'solopreneur-article-freshness-calculator',
+    subdir: 'knowledge', defaultInputs: { total_articles: '500', articles_updated_12mo: '325', articles_updated_6mo: '200', target_freshness_pct: '70' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
