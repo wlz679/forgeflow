@@ -22,6 +22,10 @@ export function gapTickets(matched: number, total: number): number {
   return Math.max(0, total - matched);
 }
 
+export function gapRate(coverage: number): number {
+  return Math.max(0, 1 - coverage);
+}
+
 export function calcHealthBand(coverage: number): keyof typeof HEALTH_BANDS {
   if (coverage >= HEALTH_BANDS.excellent.threshold) return 'excellent';
   if (coverage >= HEALTH_BANDS.good.threshold) return 'good';
@@ -47,21 +51,23 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
+  // Matches P12-1 pattern; results array flattening in [slug].astro is a holistic concern
   var total = Number(inputs.monthly_tickets) || 0;
   var matched = Number(inputs.tickets_with_kb_match) || 0;
   var articles = Number(inputs.total_articles) || 0;
   if (matched > total) matched = total;
   var coverage = total > 0 ? matched / total : 0;
   var gap = Math.max(0, total - matched);
+  var gapR = Math.max(0, 1 - coverage);
   var band = coverage >= 0.85 ? 'Excellent' : coverage >= 0.60 ? 'Good' : coverage >= 0.40 ? 'Warning' : 'Critical';
   var emoji = coverage >= 0.85 ? '🟢' : coverage >= 0.60 ? '🟡' : coverage >= 0.40 ? '🟠' : '🔴';
   var altCoverage = 0.85;
   var altMatched = altCoverage * total;
-  var lift = altMatched - matched;
+  var lift = Math.max(0, altMatched - matched);
   var atCost24 = lift * 24;
-  var needArticles = articles > 0 ? Math.ceil((total * 0.85 - matched) / (total / articles)) : 0;
+  var needArticles = articles > 0 ? Math.ceil(Math.max(0, total * 0.85 - matched) / Math.max(1, total / articles)) : 0;
   return [
-    '🩺 KB Coverage Health: ' + emoji + ' ' + band + ' (' + (coverage*100).toFixed(1) + '% coverage · ' + gap.toLocaleString() + ' tickets/mo without KB)',
+    '🩺 KB Coverage Health: ' + emoji + ' ' + band + ' (' + (coverage*100).toFixed(1) + '% coverage · ' + (gapR*100).toFixed(1) + '% gap · ' + gap.toLocaleString() + ' tickets/mo without KB)',
     '📊 Snapshot: ' + matched.toLocaleString() + ' of ' + total.toLocaleString() + ' tickets matched (' + (coverage*100).toFixed(1) + '%) · ' + articles.toLocaleString() + ' articles in KB',
     '🔄 What-If: if coverage climbs to 85% (Excellent), ~' + Math.round(lift).toLocaleString() + ' more tickets/mo find KB (at ~$24/ticket = ~$' + Math.round(atCost24).toLocaleString() + '/mo saved)',
     '⚖️ Break-Even: to hit ≥85% (Excellent), need ~' + Math.round(lift).toLocaleString() + ' more matched tickets OR ~' + needArticles + ' net new articles',
@@ -76,6 +82,7 @@ const engine: ToolEngine = {
     const articles = Number(inputs.total_articles) || 0;
     const coverage = coverageRate(matched, total);
     const gap = gapTickets(matched, total);
+    const gapR = gapRate(coverage);
     const band = calcHealthBand(coverage);
     const bandInfo = HEALTH_BANDS[band];
     const altCoverage = HEALTH_BANDS.excellent.threshold;
@@ -84,7 +91,7 @@ const engine: ToolEngine = {
     const atCost24 = lift * 24;
     const needArticles = articles > 0 ? Math.ceil(Math.max(0, total * altCoverage - matched) / Math.max(1, total / articles)) : 0;
     return [
-      '🩺 KB Coverage Health: ' + bandInfo.label + ' (' + fmtPct(coverage) + ' coverage · ' + fmtInt(gap) + ' tickets/mo without KB)',
+      '🩺 KB Coverage Health: ' + bandInfo.label + ' (' + fmtPct(coverage) + ' coverage · ' + fmtPct(gapR) + ' gap · ' + fmtInt(gap) + ' tickets/mo without KB)',
       '📊 Snapshot: ' + fmtInt(matched) + ' of ' + fmtInt(total) + ' tickets matched (' + fmtPct(coverage) + ') · ' + fmtInt(articles) + ' articles in KB',
       '🔄 What-If: if coverage climbs to ' + fmtPct(altCoverage) + ' (Excellent), ~' + fmtInt(lift) + ' more tickets/mo find KB (at ~$24/ticket = ~$' + fmtInt(atCost24) + '/mo saved)',
       '⚖️ Break-Even: to hit ' + fmtPct(HEALTH_BANDS.excellent.threshold) + ' (Excellent), need ~' + fmtInt(lift) + ' more matched tickets OR ~' + needArticles + ' net new articles',
@@ -93,7 +100,7 @@ const engine: ToolEngine = {
     ];
   },
   staticExamples: [
-    '🩺 KB Coverage Health: Good (70.0% coverage · 1,500 tickets/mo without KB)\n📊 Snapshot: 3,500 of 5,000 tickets matched (70.0%) · 500 articles in KB\n🔄 What-If: if coverage climbs to 85.0% (Excellent), ~750 more tickets/mo find KB (at ~$24/ticket = ~$18,000/mo saved)\n⚖️ Break-Even: to hit 85.0% (Excellent), need ~750 more matched tickets OR ~75 net new articles\n🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics\n💡 Tip: tickets without KB match = KB candidate list. Run this monthly and feed gaps to writers. Pair with our [Deflection Rate Calculator] (P12-5) to project $ impact.',
+    '🩺 KB Coverage Health: Good (70.0% coverage · 30.0% gap · 1,500 tickets/mo without KB)\n📊 Snapshot: 3,500 of 5,000 tickets matched (70.0%) · 500 articles in KB\n🔄 What-If: if coverage climbs to 85.0% (Excellent), ~750 more tickets/mo find KB (at ~$24/ticket = ~$18,000/mo saved)\n⚖️ Break-Even: to hit 85.0% (Excellent), need ~750 more matched tickets OR ~75 net new articles\n🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics\n💡 Tip: tickets without KB match = KB candidate list. Run this monthly and feed gaps to writers. Pair with our [Deflection Rate Calculator] (P12-5) to project $ impact.',
   ],
   faq: [
     { q: 'What is KB coverage rate?', a: 'Coverage rate = (tickets with a matching KB article) / (total inbound tickets). It measures the breadth of your KB content vs. the real questions customers ask. TSIA 2024 reports mid-market B2B SaaS at 50-75% coverage; >85% indicates a mature KB.' },
