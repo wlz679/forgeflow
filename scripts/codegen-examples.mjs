@@ -207,6 +207,8 @@ const ENGINES = [
     subdir: 'knowledge', defaultInputs: { total_searches: '12000', searches_with_click: '9000', searches_no_result: '960', industry_benchmark: 'B2B SaaS' } },
   { file: 'deflection-quality-calculator.ts', slug: 'solopreneur-deflection-quality-calculator',
     subdir: 'knowledge', defaultInputs: { tickets_deflected_30d: '1750', tickets_reopened_30d: '210', target_quality_pct: '90', deflection_source: 'Both' } },
+  { file: 'documentation-roi-calculator.ts', slug: 'solopreneur-documentation-roi-calculator',
+    subdir: 'knowledge', defaultInputs: { kb_team_monthly_cost: '15000', deflected_tickets_monthly: '1750', cost_per_ticket: '24', articles_total: '500', roi_target_pct: '500' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

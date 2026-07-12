@@ -12,4 +12,5 @@ import './kb-coverage-rate-calculator';
 import './article-freshness-calculator';
 import './search-effectiveness-calculator';
 import './deflection-quality-calculator';
+import './documentation-roi-calculator';
 export {};

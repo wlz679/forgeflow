@@ -1326,5 +1326,23 @@
       "en": "12% reopen = +2pp below 90% target",
       "zh": "12% 重开 = 距 90% 目标低 2pp"
     }
+  },
+  "solopreneur-documentation-roi-calculator": {
+    "headline": {
+      "en": "180%",
+      "zh": "180%"
+    },
+    "headlineUnit": {
+      "en": "KB ROI",
+      "zh": "知识库 ROI"
+    },
+    "headlineLabel": {
+      "en": "Documentation ROI: 180% — Good, $27K/mo net savings at $30/article, 400% Excellent achievable",
+      "zh": "文档 ROI 180% — 良好,月净省 $27K、每篇 $30,可达优秀级 400%"
+    },
+    "trend": {
+      "en": "raise deflection before cutting cost — see K-1 Coverage",
+      "zh": "先提升分流再削减成本 — 参见 K-1 覆盖率"
+    }
   }
 }
