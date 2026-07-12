@@ -70,4 +70,38 @@ export const tools: ToolMeta[] = [
       'https://www.intercom.com/help/articles/what-is-help-center-best-practices',
     ],
   },
+  {
+    slug: 'solopreneur-search-effectiveness-calculator',
+    title: 'Search Effectiveness',
+    description:
+      'Measure KB in-app search effectiveness via CTR + no-result rate. HIGHER health bands - lower no-result + higher CTR = better self-service: 🟢 CTR ≥85% AND no-result ≤5% · 🟡 70-85% & ≤10% · 🟠 55-70% & ≤20% · 🔴 either fails. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and Technical Writers.',
+    categoryId: 'K',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'total_searches',      label: 'Monthly in-app searches',  placeholder: 'e.g. 12000', type: 'number' },
+      { name: 'searches_with_click', label: 'Searches with click',      placeholder: 'e.g. 9000',  type: 'number' },
+      { name: 'searches_no_result',  label: 'Searches with no result',  placeholder: 'e.g. 960',   type: 'number' },
+      { name: 'industry_benchmark',  label: 'Industry',                 placeholder: 'B2B SaaS',    type: 'select', options: ['B2B SaaS', 'Consumer'] },
+    ],
+    keywords: [
+      'search effectiveness',
+      'kb search ctr',
+      'zero result rate',
+      'no result rate',
+      'in-app search analytics',
+      'algolia search',
+      'zendesk guide search',
+      'kb discoverability',
+      'mid-market saas documentation',
+    ],
+    tags: ['knowledge', 'kb', 'search'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-12',
+    sources: [
+      'https://www.nngroup.com/articles/help-and-documentation/',
+      'https://www.algolia.com/doc/guides/managing-results/relevance-overview/',
+      'https://www.zendesk.com/blog/search-analytics-self-service/',
+    ],
+  },
 ];

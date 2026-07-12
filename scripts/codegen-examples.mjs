@@ -203,6 +203,8 @@ const ENGINES = [
     subdir: 'knowledge', defaultInputs: { monthly_tickets: '5000', tickets_with_kb_match: '3500', total_articles: '500', industry_benchmark: 'SaaS' } },
   { file: 'article-freshness-calculator.ts', slug: 'solopreneur-article-freshness-calculator',
     subdir: 'knowledge', defaultInputs: { total_articles: '500', articles_updated_12mo: '325', articles_updated_6mo: '200', target_freshness_pct: '70' } },
+  { file: 'search-effectiveness-calculator.ts', slug: 'solopreneur-search-effectiveness-calculator',
+    subdir: 'knowledge', defaultInputs: { total_searches: '12000', searches_with_click: '9000', searches_no_result: '960', industry_benchmark: 'B2B SaaS' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

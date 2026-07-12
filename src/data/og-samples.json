@@ -1290,5 +1290,23 @@
       "en": "35% stale = -5pp below target",
       "zh": "35% 过时 = 距目标低 5pp"
     }
+  },
+  "solopreneur-search-effectiveness-calculator": {
+    "headline": {
+      "en": "75.0%",
+      "zh": "75.0%"
+    },
+    "headlineUnit": {
+      "en": "Search CTR",
+      "zh": "搜索点击率"
+    },
+    "headlineLabel": {
+      "en": "Search Effectiveness: 75% CTR / 8% no-result — Good, 600 fewer tickets/mo achievable at excellent",
+      "zh": "搜索效果 75% CTR / 8% 无结果 — 良好,达优秀级月省约 600 工单"
+    },
+    "trend": {
+      "en": "no-result >15% = content gaps, run K-1 on top queries",
+      "zh": "无结果 >15% = 内容缺口,跑 K-1 查热门"
+    }
   }
 }

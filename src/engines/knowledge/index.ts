@@ -10,4 +10,5 @@
 // Engines are added one per task via Task 2..Task 7.
 import './kb-coverage-rate-calculator';
 import './article-freshness-calculator';
+import './search-effectiveness-calculator';
 export {};
