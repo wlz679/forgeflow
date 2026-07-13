@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-07-06",
+  "lastUpdated": "2026-07-13",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -996,6 +996,54 @@
           "family": "legacy",
           "contextWindow": "128K",
           "order": 120
+        },
+        "gpt-5.6": {
+          "input": 5,
+          "output": 30,
+          "name": "GPT 5.6",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 121
+        },
+        "gpt-5.6-sol": {
+          "input": 5,
+          "output": 30,
+          "name": "GPT 5.6Sol",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 122
+        },
+        "gpt-5.6-terra": {
+          "input": 2.5,
+          "output": 15,
+          "name": "GPT 5.6Terra",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 123
+        },
+        "gpt-5.6-luna": {
+          "input": 1,
+          "output": 6,
+          "name": "GPT 5.6Luna",
+          "family": "gpt5",
+          "contextWindow": "1M",
+          "order": 124
+        },
+        "gpt-realtime-2.1": {
+          "input": 4,
+          "output": 24,
+          "name": "GPT Realtime 2.1",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 125
+        },
+        "gpt-realtime-2.1-mini": {
+          "input": 0.6,
+          "output": 2.4,
+          "name": "GPT Realtime 2.1Mini",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 126
         }
       }
     },
