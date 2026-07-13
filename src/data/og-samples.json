@@ -1434,5 +1434,23 @@
       "en": "If template-first cuts rounds to 2 → €168K/yr (Good)",
       "zh": "模板优先把轮次降至 2 → €16.8万/年 (良好)"
     }
+  },
+  "solopreneur-breach-notification-cost-calculator": {
+    "headline": {
+      "en": "€330K",
+      "zh": "€33万"
+    },
+    "headlineUnit": {
+      "en": "annual cost",
+      "zh": "年度成本"
+    },
+    "headlineLabel": {
+      "en": "Breach Notification Cost: €330K/yr (1 breach × 50K subjects × €5 + €80K remediation) — 🟠 Warning",
+      "zh": "数据泄露通知成本:€33万/年 (1起 × 5万主体 × €5 + €8万修复) — 🟠 警告"
+    },
+    "trend": {
+      "en": "If breaches drop to 0.3/yr → €99K/yr (🟡 Good)",
+      "zh": "泄露降至 0.3起/年 → €9.9万/年 (🟡 良好)"
+    }
   }
 }
