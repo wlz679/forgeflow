@@ -216,6 +216,7 @@ const ENGINES = [
   { file: 'consent-revenue-impact-calculator.ts', slug: 'solopreneur-consent-revenue-impact-calculator', subdir: 'legal-compliance', defaultInputs: { monthly_visitors: '200000', current_consent_rate_pct: '55', target_consent_rate_pct: '75', conversion_rate_pct: '2.0' } },
   { file: 'dpa-cost-calculator.ts', slug: 'solopreneur-dpa-cost-calculator', subdir: 'legal-compliance', defaultInputs: { dpas_per_quarter: 40, avg_negotiation_rounds: 4, hours_per_round: 1.5, legal_hourly_rate: 250, redlines_per_dpa: 8 } },
   { file: 'breach-notification-cost-calculator.ts', slug: 'solopreneur-breach-notification-cost-calculator', subdir: 'legal-compliance', defaultInputs: { breaches_per_year: 1, data_subjects_per_breach: 50000, notification_cost_per_subject: 5, remediation_cost_per_breach: 80000 } },
+  { file: 'cmp-roi-calculator.ts', slug: 'solopreneur-cmp-roi-calculator', subdir: 'legal-compliance', defaultInputs: { cmp_monthly_cost: 1200, dsars_per_month: 50, hours_per_dsar: 2.5, hourly_rate_dpo: 95, automation_uplift_pct: 40 } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

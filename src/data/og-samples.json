@@ -1452,5 +1452,23 @@
       "en": "If breaches drop to 0.3/yr → €99K/yr (🟡 Good)",
       "zh": "泄露降至 0.3起/年 → €9.9万/年 (🟡 良好)"
     }
+  },
+  "solopreneur-cmp-roi-calculator": {
+    "headline": {
+      "en": "€42.6K",
+      "zh": "€4.26万"
+    },
+    "headlineUnit": {
+      "en": "net savings",
+      "zh": "净节省"
+    },
+    "headlineLabel": {
+      "en": "CMP ROI: €42.6K net / 295.8% ROI / 3.0mo payback — 🟡 Good, 40% DSAR uplift × €1200/mo platform",
+      "zh": "CMP ROI:€4.26万净 / 295.8% ROI / 3.0月回本 — 🟡 良好,40% DSAR 提升 × €1200/月 平台"
+    },
+    "trend": {
+      "en": "If DSAR climbs to 200/mo → €213.6K net, 1483.3% ROI (🟢 Excellent)",
+      "zh": "DSAR 增至 200/月 → €21.36万净,1483.3% ROI (🟢 优秀)"
+    }
   }
 }
