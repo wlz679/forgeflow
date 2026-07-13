@@ -1,4 +1,4 @@
-// Aggregate all engines from 11 subdirectories.
+// Aggregate all engines from 15 subdirectories.
 // Explicit imports (vs import.meta.glob) chosen for tsx compatibility:
 // the test runner (tests/run.mjs) and prebuild script (scripts/build-og-images.ts)
 // both run under tsx, which does not implement import.meta.glob. Astro pages
@@ -18,3 +18,4 @@ import './product-analytics';
 import './hiring-team';
 import './customer-support';
 import './knowledge';
+import './legal-compliance';

@@ -20,6 +20,7 @@ import { tools as productAnalytics } from './product-analytics';
 import { tools as hiringTeam } from './hiring-team';
 import { tools as customerSupport } from './customer-support';
 import { tools as knowledge } from './knowledge';
+import { tools as legalCompliance } from './legal-compliance';
 
 export const tools: ToolMeta[] = [
   ...saas,
@@ -37,6 +38,7 @@ export const tools: ToolMeta[] = [
   ...hiringTeam,
   ...customerSupport,
   ...knowledge,
+  ...legalCompliance,
 ];
 
 export type { ToolMeta };
