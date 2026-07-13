@@ -3,7 +3,9 @@
 // P14-1: gdpr-fine                 — GDPR Fine Risk (Task 2)
 // P14-2: dsar-cost                 — DSAR Processing Cost (Task 3)
 // P14-3: consent-revenue-impact    — Cookie Consent Revenue Impact (Task 4)
+// P14-4: dpa-cost                  — DPA Negotiation Cost (Task 5)
 import './gdpr-fine-calculator';
 import './dsar-cost-calculator';
 import './consent-revenue-impact-calculator';
+import './dpa-cost-calculator';
 export {};

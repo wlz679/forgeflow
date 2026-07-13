@@ -214,6 +214,7 @@ const ENGINES = [
   { file: 'gdpr-fine-calculator.ts', slug: 'solopreneur-gdpr-fine-calculator', subdir: 'legal-compliance', defaultInputs: { annual_revenue_global: '25000000', max_fine_pct: '4%', violations_per_year: '2', industry_risk_multiplier: 'SaaS (0.8×)' } },
   { file: 'dsar-cost-calculator.ts', slug: 'solopreneur-dsar-cost-calculator', subdir: 'legal-compliance', defaultInputs: { dsars_per_month: '50', hours_per_dsar: '2.5', hourly_rate_dpo: '95', automation_pct: '30' } },
   { file: 'consent-revenue-impact-calculator.ts', slug: 'solopreneur-consent-revenue-impact-calculator', subdir: 'legal-compliance', defaultInputs: { monthly_visitors: '200000', current_consent_rate_pct: '55', target_consent_rate_pct: '75', conversion_rate_pct: '2.0' } },
+  { file: 'dpa-cost-calculator.ts', slug: 'solopreneur-dpa-cost-calculator', subdir: 'legal-compliance', defaultInputs: { dpas_per_quarter: 40, avg_negotiation_rounds: 4, hours_per_round: 1.5, legal_hourly_rate: 250, redlines_per_dpa: 8 } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

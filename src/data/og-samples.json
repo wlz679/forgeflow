@@ -1416,5 +1416,23 @@
       "en": "If consent hits 70% (gap=5pp) → €192K/yr (Good)",
       "zh": "同意率到 70% (缺口5pp) → €19.2万/年 (良好)"
     }
+  },
+  "solopreneur-dpa-cost-calculator": {
+    "headline": {
+      "en": "€336K",
+      "zh": "€33.6万"
+    },
+    "headlineUnit": {
+      "en": "annual DPA cost",
+      "zh": "年度 DPA 成本"
+    },
+    "headlineLabel": {
+      "en": "DPA Cost: €336K/yr (40/q × 4 × 6hr × €250 × 1.4× redlines) — Warning, €2.1K/DPA",
+      "zh": "DPA 成本:€33.6万/年 (40/季 × 4 × 6小时 × €250 × 1.4× 红线) — 警告,€2.1K/份"
+    },
+    "trend": {
+      "en": "If template-first cuts rounds to 2 → €168K/yr (Good)",
+      "zh": "模板优先把轮次降至 2 → €16.8万/年 (良好)"
+    }
   }
 }
