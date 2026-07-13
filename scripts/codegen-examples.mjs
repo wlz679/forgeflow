@@ -212,6 +212,7 @@ const ENGINES = [
   { file: 'article-helpfulness-calculator.ts', slug: 'solopreneur-article-helpfulness-calculator',
     subdir: 'knowledge', defaultInputs: { total_article_views: '25000', helpful_votes: '2400', unhelpful_votes: '700', total_articles: '500', target_helpful_pct: '75' } },
   { file: 'gdpr-fine-calculator.ts', slug: 'solopreneur-gdpr-fine-calculator', subdir: 'legal-compliance', defaultInputs: { annual_revenue_global: '25000000', max_fine_pct: '4%', violations_per_year: '2', industry_risk_multiplier: 'SaaS (0.8×)' } },
+  { file: 'dsar-cost-calculator.ts', slug: 'solopreneur-dsar-cost-calculator', subdir: 'legal-compliance', defaultInputs: { dsars_per_month: '50', hours_per_dsar: '2.5', hourly_rate_dpo: '95', automation_pct: '30' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

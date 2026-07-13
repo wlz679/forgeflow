@@ -36,4 +36,38 @@ export const tools: ToolMeta[] = [
       'https://iapp.org/resources/article/privacy-enforcement-atlas/',
     ],
   },
+  {
+    slug: 'solopreneur-dsar-cost-calculator',
+    title: 'DSAR Processing Cost',
+    description:
+      'Quantify annualized cost of processing Data Subject Access Requests (DSAR) given volume, manual hours, DPO rate, and automation %. HIGHER health bands — more cost = worse operational exposure: 🟢 <€25K/yr · 🟡 €25-100K · 🟠 €100-300K · 🔴 ≥€300K. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and Heads of Privacy.',
+    categoryId: 'L',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'dsars_per_month',  label: 'DSARs per month',        placeholder: 'e.g. 50',  type: 'number' },
+      { name: 'hours_per_dsar',   label: 'Manual hours per DSAR',  placeholder: 'e.g. 2.5', type: 'number' },
+      { name: 'hourly_rate_dpo',  label: 'DPO hourly rate (€/hr)', placeholder: 'e.g. 95',  type: 'number' },
+      { name: 'automation_pct',   label: 'Automation (%)',         placeholder: 'e.g. 30',  type: 'number' },
+    ],
+    keywords: [
+      'dsar cost',
+      'dsar processing',
+      'data subject access request',
+      'gdpr art 15',
+      'dsar calculator',
+      'privacy request cost',
+      'dpo workload',
+      'dsar automation',
+      'mid-market saas privacy',
+    ],
+    tags: ['legal', 'compliance', 'gdpr', 'dsar'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-13',
+    sources: [
+      'https://gdpr-info.eu/art-15-gdpr/',
+      'https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/individual-rights/right-of-access/',
+      'https://iapp.org/news/a/2024-privacy-operations-survey/',
+    ],
+  },
 ];

@@ -1380,5 +1380,23 @@
       "en": "Cut violations or move to 2% tier — drops exposure to €800K",
       "zh": "减少违规或降至 2% 档 — 风险敞口降至 €80万"
     }
+  },
+  "solopreneur-dsar-cost-calculator": {
+    "headline": {
+      "en": "€99,750",
+      "zh": "€99,750"
+    },
+    "headlineUnit": {
+      "en": "annual cost",
+      "zh": "年度成本"
+    },
+    "headlineLabel": {
+      "en": "DSAR Cost: €99,750/yr (50/mo × 1.75hr × €95) — Good, 30% automation",
+      "zh": "DSAR 成本:€99,750/年 (50/月 × 1.75小时 × €95) — 良好,30% 自动化"
+    },
+    "trend": {
+      "en": "If automation hits 60% → €57K/yr (still Good)",
+      "zh": "自动化达 60% → €5.7万/年 (仍属良好)"
+    }
   }
 }
