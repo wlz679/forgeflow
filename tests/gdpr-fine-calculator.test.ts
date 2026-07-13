@@ -1,0 +1,70 @@
+import { test } from 'node:test';
+import { strict as assert } from 'node:assert';
+import { maxFineAmount, perViolationExpected, annualExposure, exposureRatio, calcHealthBand, HEALTH_BANDS } from '../src/engines/legal-compliance/gdpr-fine-calculator.ts';
+
+test('canonical: revenue=25M, fine=4%, violations=2, industry=0.8 → €1.6M annual, 6.4% ratio (Critical). Brief typo (ratio=0.0064) corrected to math=0.064 per P8-5/P7-3 lesson (math > prose)', () => {
+  const maxFine = maxFineAmount(25_000_000, 4);
+  const perViol = perViolationExpected(maxFine, 0.8);
+  const annual = annualExposure(perViol, 2);
+  const ratio = exposureRatio(annual, 25_000_000);
+  assert.equal(maxFine, 1_000_000);
+  assert.equal(perViol, 800_000);
+  assert.equal(annual, 1_600_000);
+  assert.ok(Math.abs(ratio - 0.064) < 1e-9);
+  assert.equal(calcHealthBand(ratio), 'critical');
+});
+
+test('maxFineAmount: revenue × (finePct/100)', () => {
+  assert.equal(maxFineAmount(10_000_000, 4), 400_000);
+  assert.equal(maxFineAmount(10_000_000, 2), 200_000);
+  assert.equal(maxFineAmount(10_000_000, 0.5), 50_000);
+});
+
+test('perViolationExpected: maxFine × industryMult', () => {
+  assert.equal(perViolationExpected(1_000_000, 0.8), 800_000);
+  assert.equal(perViolationExpected(1_000_000, 1.6), 1_600_000);
+});
+
+test('annualExposure: perViolation × violations', () => {
+  assert.equal(annualExposure(800_000, 0), 0);
+  assert.equal(annualExposure(800_000, 2), 1_600_000);
+  assert.equal(annualExposure(800_000, 5), 4_000_000);
+});
+
+test('exposureRatio: annual / revenue (zero divisor guard → 0)', () => {
+  assert.equal(exposureRatio(1_600_000, 25_000_000), 0.064);
+  assert.equal(exposureRatio(0, 0), 0); // guard
+  assert.equal(exposureRatio(0, 25_000_000), 0);
+});
+
+test('Boundary excellent: ratio < 0.0025 → excellent', () => {
+  assert.equal(calcHealthBand(0.002), 'excellent');
+  assert.equal(calcHealthBand(0), 'excellent');
+});
+
+test('Boundary good: ratio 0.0025 ≤ x < 0.01 → good', () => {
+  assert.equal(calcHealthBand(0.0025), 'good');
+  assert.equal(calcHealthBand(0.0064), 'good'); // canonical
+  assert.equal(calcHealthBand(0.009), 'good');
+});
+
+test('Boundary warning: ratio 0.01 ≤ x < 0.02 → warning', () => {
+  assert.equal(calcHealthBand(0.01), 'warning');
+  assert.equal(calcHealthBand(0.015), 'warning');
+});
+
+test('Boundary critical: ratio ≥ 0.02 → critical', () => {
+  assert.equal(calcHealthBand(0.02), 'critical');
+  assert.equal(calcHealthBand(0.05), 'critical');
+  assert.equal(calcHealthBand(0.10), 'critical');
+});
+
+test('HEALTH_BANDS exports 4 bands with locked thresholds', () => {
+  assert.equal(Object.keys(HEALTH_BANDS).length, 4);
+  assert.equal(HEALTH_BANDS.excellent.threshold, 0.0025);
+  assert.equal(HEALTH_BANDS.good.threshold, 0.01);
+  assert.equal(HEALTH_BANDS.warning.threshold, 0.02);
+  assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
+  // Signature guard: single-axis band takes 1 arg
+  assert.equal(calcHealthBand.length, 1);
+});

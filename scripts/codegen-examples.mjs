@@ -211,6 +211,7 @@ const ENGINES = [
     subdir: 'knowledge', defaultInputs: { kb_team_monthly_cost: '15000', deflected_tickets_monthly: '1750', cost_per_ticket: '24', articles_total: '500', roi_target_pct: '500' } },
   { file: 'article-helpfulness-calculator.ts', slug: 'solopreneur-article-helpfulness-calculator',
     subdir: 'knowledge', defaultInputs: { total_article_views: '25000', helpful_votes: '2400', unhelpful_votes: '700', total_articles: '500', target_helpful_pct: '75' } },
+  { file: 'gdpr-fine-calculator.ts', slug: 'solopreneur-gdpr-fine-calculator', subdir: 'legal-compliance', defaultInputs: { annual_revenue_global: '25000000', max_fine_pct: '4%', violations_per_year: '2', industry_risk_multiplier: 'SaaS (0.8×)' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints

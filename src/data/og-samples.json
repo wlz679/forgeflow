@@ -1362,5 +1362,23 @@
       "en": "audit bottom-20 unhelpful articles — lift to 85% Excellent",
       "zh": "审计后 20% 无帮助文章 — 提升到优秀级 85%"
     }
+  },
+  "solopreneur-gdpr-fine-calculator": {
+    "headline": {
+      "en": "€1.6M",
+      "zh": "€160万"
+    },
+    "headlineUnit": {
+      "en": "annual exposure",
+      "zh": "年度风险敞口"
+    },
+    "headlineLabel": {
+      "en": "GDPR Fine Risk: €1.6M / 6.4% of revenue — Critical, 2 violations/yr on €25M",
+      "zh": "GDPR 罚款风险:€160万 / 6.4% 营收占比 — 严重,2500万欧元营收 2 起违规/年"
+    },
+    "trend": {
+      "en": "Cut violations or move to 2% tier — drops exposure to €800K",
+      "zh": "减少违规或降至 2% 档 — 风险敞口降至 €80万"
+    }
   }
 }
