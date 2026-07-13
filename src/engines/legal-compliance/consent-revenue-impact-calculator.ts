@@ -91,9 +91,9 @@ const engine: ToolEngine = {
   var altMonthly = altRecoverable * (conv / 100) * aov;
   var altAnnual = altMonthly * 12;
   var altEmoji = altGap < 5 ? '🟢' : altGap < 15 ? '🟡' : altGap < 30 ? '🟠' : '🔴';
-  var needCurrentPct = Math.max(0, target - 5);
+  var needCurrentPct = Math.max(0, target - 4.9);
   var needCurrentLift = Math.max(0, needCurrentPct - current);
-  var needTargetPct = Math.min(100, current + 5);
+  var needTargetPct = Math.min(100, current + 4.9);
   var needTargetReduction = Math.max(0, target - needTargetPct);
   return [
     '🩺 Consent Revenue: ' + emoji + ' ' + band + ' (gap ' + gap.toFixed(1) + 'pp · recoverable ' + Math.round(monthly).toLocaleString() + ' € /mo · ' + Math.round(annual).toLocaleString() + ' € /yr)',
@@ -123,12 +123,14 @@ const engine: ToolEngine = {
     const altAnnual = annualRecoveredRevenue(altMonthly);
     const altBand = calcHealthBand(altGap);
     const altEmoji = altGap < 5 ? '🟢' : altGap < 15 ? '🟡' : altGap < 30 ? '🟠' : '🔴';
-    // Break-Even targets for 🟢 Excellent (<5pp):
-    //   Path A: lift current consent to (target - 5)%
-    //   Path B: reduce target consent to (current + 5)%  (capped 0-100)
-    const needCurrentPct = Math.max(0, Math.min(100, target - 5));
+    // Break-Even targets for 🟢 Excellent (gap <5pp, strict less-than):
+    //   Path A: lift current consent to (target - 4.9)%
+    //   Path B: reduce target consent to (current + 4.9)%  (capped 0-100)
+    // The -4.9 epsilon keeps the displayed value aligned with user intuition (70 vs 60)
+    // while mathematically yielding gap=4.9, which IS 'excellent' under strict-<.
+    const needCurrentPct = Math.max(0, Math.min(100, target - 4.9));
     const needCurrentLift = Math.max(0, needCurrentPct - current);
-    const needTargetPct = Math.max(0, Math.min(100, current + 5));
+    const needTargetPct = Math.max(0, Math.min(100, current + 4.9));
     const needTargetReduction = Math.max(0, target - needTargetPct);
     return [
       '🩺 Consent Revenue: ' + bandInfo.label + ' (gap ' + fmtPp(gap) + ' · recoverable ' + fmtMoney(monthly) + '/mo · ' + fmtMoney(annual) + '/yr)',
@@ -140,7 +142,7 @@ const engine: ToolEngine = {
     ];
   },
   staticExamples: [
-    '🩺 Consent Revenue: Warning (gap 20.0pp · recoverable €64,000/mo · €768,000/yr)\n📊 Snapshot: 200,000 visitors/mo · consent 55.0pp → target 75.0pp (gap 20.0pp) · conv 2.00% × €80 AOV · monthly recoverable €64,000 · annual €768,000\n🔄 What-If: if consent climbs to 70% (gap=5.0pp, 🟡 Good), recoverable drops to €192,000/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.\n⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥70.0pp (lift +15.0pp) OR reduce target to ≤60.0pp (drop 15.0pp)\n🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.\n💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.',
+    '🩺 Consent Revenue: Warning (gap 20.0pp · recoverable €64,000/mo · €768,000/yr)\n📊 Snapshot: 200,000 visitors/mo · consent 55.0pp → target 75.0pp (gap 20.0pp) · conv 2.00% × €80 AOV · monthly recoverable €64,000 · annual €768,000\n🔄 What-If: if consent climbs to 70% (gap=5.0pp, 🟡 Good), recoverable drops to €192,000/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.\n⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥70.1pp (lift +15.1pp) OR reduce target to ≤59.9pp (drop 15.1pp)\n🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.\n💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.',
   ],
   faq: [
     { q: 'What is cookie consent revenue impact?', a: 'Cookie consent revenue impact measures the monthly/annual revenue you lose because visitors reject analytics + marketing cookies. EU/EEA traffic under GDPR ePrivacy Recital 32 must give explicit consent before non-essential cookies fire — visitors who decline convert at ~40-60% lower rates (per OneTrust 2024 benchmark).' },
