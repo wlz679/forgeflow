@@ -1398,5 +1398,23 @@
       "en": "If automation hits 60% → €57K/yr (still Good)",
       "zh": "自动化达 60% → €5.7万/年 (仍属良好)"
     }
+  },
+  "solopreneur-consent-revenue-impact-calculator": {
+    "headline": {
+      "en": "€64K",
+      "zh": "€6.4万"
+    },
+    "headlineUnit": {
+      "en": "monthly recovered",
+      "zh": "月度可恢复"
+    },
+    "headlineLabel": {
+      "en": "Consent Revenue: €64K/mo (20pp gap, 200K visitors) — Warning, 2% conv × €80 AOV",
+      "zh": "同意收入:€6.4万/月 (20pp 缺口,20万访客) — 警告,2% 转化 × €80 客单价"
+    },
+    "trend": {
+      "en": "If consent hits 70% (gap=5pp) → €192K/yr (Good)",
+      "zh": "同意率到 70% (缺口5pp) → €19.2万/年 (良好)"
+    }
   }
 }

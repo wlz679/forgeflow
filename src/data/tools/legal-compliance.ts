@@ -70,4 +70,38 @@ export const tools: ToolMeta[] = [
       'https://iapp.org/news/a/2024-privacy-operations-survey/',
     ],
   },
+  {
+    slug: 'solopreneur-consent-revenue-impact-calculator',
+    title: 'Cookie Consent Revenue Impact',
+    description:
+      'Quantify monthly + annual revenue recoverable by closing the cookie consent gap. Assumes €80 AOV (mid-market B2B SaaS ARPU benchmark) — adjust mentally for your segment. INVERSE health bands — smaller gap = better: 🟢 <5pp · 🟡 5-15pp · 🟠 15-30pp · 🔴 ≥30pp. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and Growth leads.',
+    categoryId: 'L',
+    applicationCategory: 'BusinessApplication',
+    inputs: [
+      { name: 'monthly_visitors',         label: 'Monthly visitors',             placeholder: 'e.g. 200000', type: 'number' },
+      { name: 'current_consent_rate_pct', label: 'Current consent rate (%)',     placeholder: 'e.g. 55',     type: 'number' },
+      { name: 'target_consent_rate_pct',  label: 'Target consent rate (%)',      placeholder: 'e.g. 75',     type: 'number' },
+      { name: 'conversion_rate_pct',      label: 'Conversion rate (%)',          placeholder: 'e.g. 2',      type: 'number' },
+    ],
+    keywords: [
+      'cookie consent',
+      'gdpr consent',
+      'consent revenue',
+      'consent rate',
+      'cmp impact',
+      'iab tcf',
+      'consent management platform',
+      'consent banner',
+      'mid-market saas privacy',
+    ],
+    tags: ['legal', 'compliance', 'gdpr', 'consent'],
+    reviewedBy: 'ForgeFlowKit Team',
+    author: 'ForgeFlowKit',
+    dataReviewedAt: '2026-07-13',
+    sources: [
+      'https://gdpr-info.eu/recitals/no-32/',
+      'https://iabeurope.eu/tcf-for-vendors/',
+      'https://www.onetrust.com/blog/consent-rate-benchmarks/',
+    ],
+  },
 ];
