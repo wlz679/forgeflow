@@ -46,3 +46,11 @@ test('HEALTH_BANDS has 4 bands with locked INVERSE thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 7);
   assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
 });
+
+// P14-followup: negative p50_days clamps to 0 → band still computable, same-session tier (defensive layer 2)
+// clampNonNegative(-2) → 0; calcHealthBand(0) → 'excellent' (same-session aha, top tier)
+test('time-to-value: negative p50_days clamps to 0 → band still computable (defensive layer 2)', () => {
+  const p = 0; // after clampNonNegative(-2)
+  const band = calcHealthBand(p);
+  assert.equal(band, 'excellent'); // 0 days = same-session aha, top tier
+});

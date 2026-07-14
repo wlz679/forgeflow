@@ -53,3 +53,12 @@ test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 2.5);
   assert.equal(HEALTH_BANDS.critical.threshold, 0);
 });
+
+// P14-followup: negative top_pct clamps to 0 → invalid input, ratio returns 0 (defensive layer 2)
+// clampNonNegative(-20) → 0; paretoRatio(70, 0) → 0 (zero-division guard kicks in)
+test('power-user-curve: negative top_pct clamps to 0 → invalid input, no divide-by-zero (defensive layer 2)', () => {
+  const p = 0; // after clampNonNegative(-20)
+  const r = paretoRatio(70, p);
+  assert.equal(r, 0); // guard against Infinity or NaN ratio
+  assert.equal(calcHealthBand(r), 'critical');
+});

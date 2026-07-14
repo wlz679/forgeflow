@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (Reforge Growth Loops + a16z Consumer PM Survey 2023).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.40, label: '🟢 Excellent', message: 'Strong onboarding — most signups reach the aha-moment within the period.' },
@@ -29,6 +30,9 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 
+// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var s = cnn(Number(inputs['signups'])); var a = cnn(Number(inputs['activated'])); if (s <= 0) return ['Signups must be > 0.']; if (a > s) a = s; var rate = a / s; var band = rate >= 0.40 ? 'Excellent' : rate >= 0.25 ? 'Good' : rate >= 0.15 ? 'Warning' : 'Critical'; var emoji = rate >= 0.40 ? 'GREEN' : rate >= 0.25 ? 'YELLOW' : rate >= 0.15 ? 'ORANGE' : 'RED'; var days = inputs['period_days'] || '7'; var nonActivated = Math.max(0, s - a); var targetA = Math.ceil(s * 0.25); return ['ACTIVATION ' + emoji + ' ' + band + ' (' + (rate*100).toFixed(1) + '% within ' + days + ' days)','SNAPSHOT: ' + fmtInt(a) + ' of ' + fmtInt(s) + ' signups reached the aha-moment in ' + days + ' days. Non-activated: ' + fmtInt(nonActivated),'WHATIF: reducing time-to-value by 1 day typically lifts activation by +5 to +10 percentage points','BREAKEVEN: to hit GOOD (25% activation), need at least ' + targetA.toLocaleString() + ' activated signups (currently ' + fmtInt(a) + ')','MILESTONE: focus on the activation event itself (what does aha look like for YOUR product?) — narrowing the definition often reveals leaks','TIP: Activation is downstream of TTV - pair with the Time-to-Value Calculator.']; function fmtInt(n) { return Math.round(n).toLocaleString(); } }";
+
 const engine: ToolEngine = {
   slug: 'solopreneur-activation-rate-calculator',
   title: 'Activation Rate',
@@ -46,11 +50,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var s = Number(inputs['signups']); var a = Number(inputs['activated']);\n  if (s <= 0) return ['Signups must be > 0.'];\n  if (a > s) a = s;\n  var rate = a / s;\n  var band = rate >= 0.40 ? 'Excellent' : rate >= 0.25 ? 'Good' : rate >= 0.15 ? 'Warning' : 'Critical';\n  var emoji = rate >= 0.40 ? 'GREEN' : rate >= 0.25 ? 'YELLOW' : rate >= 0.15 ? 'ORANGE' : 'RED';\n  var days = inputs['period_days'] || '7';\n  var nonActivated = Math.max(0, s - a);\n  var targetA = Math.ceil(s * 0.25);\n  return [\n    'ACTIVATION ' + emoji + ' ' + band + ' (' + (rate*100).toFixed(1) + '% within ' + days + ' days)',\n    'SNAPSHOT: ' + fmtInt(a) + ' of ' + fmtInt(s) + ' signups reached the aha-moment in ' + days + ' days. Non-activated: ' + fmtInt(nonActivated),\n    'WHATIF: reducing time-to-value by 1 day typically lifts activation by +5 to +10 percentage points',\n    'BREAKEVEN: to hit GOOD (25% activation), need at least ' + targetA.toLocaleString() + ' activated signups (currently ' + fmtInt(a) + ')',\n    'MILESTONE: focus on the activation event itself (what does aha look like for YOUR product?) — narrowing the definition often reveals leaks',\n    'TIP: Activation is downstream of TTV - pair with the Time-to-Value Calculator.'\n  ];\n  function fmtInt(n) { return Math.round(n).toLocaleString(); }\n}",
+    customFn,
   },
   generate(inputs) {
-    const signups = Number(inputs['signups']);
-    let activated = Number(inputs['activated']);
+    const signups = clampNonNegative(Number(inputs['signups']));
+    let activated = clampNonNegative(Number(inputs['activated']));
     if (signups <= 0) return ['Signups must be > 0.'];
     if (activated > signups) activated = signups;
     const rate = activationRate(activated, signups);

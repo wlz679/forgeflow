@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (Lenny's Newsletter / Reforge / Mixpanel benchmarks).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.40, label: '🟢 Excellent', message: 'End-to-end conversion is strong — every step is pulling weight.' },
@@ -38,6 +39,9 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 
+// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var steps = []; for (var i = 1; i <= 5; i++) { var v = cnn(Number(inputs['step' + i])); if (v > 0) steps.push(v); } if (steps.length < 2) return ['At least 2 step counts required.']; var e2e = steps[steps.length - 1] / steps[0]; var band = e2e >= 0.40 ? 'Excellent' : e2e >= 0.25 ? 'Good' : e2e >= 0.15 ? 'Warning' : 'Critical'; var emoji = e2e >= 0.40 ? 'GREEN' : e2e >= 0.25 ? 'YELLOW' : e2e >= 0.15 ? 'ORANGE' : 'RED'; var dropIdx = 0, maxDelta = 0; for (var j = 1; j < steps.length; j++) { var d = steps[j-1] - steps[j]; if (d > maxDelta) { maxDelta = d; dropIdx = j-1; } } var stepRate = []; for (var k = 1; k < steps.length; k++) stepRate.push((steps[k]/steps[k-1]*100).toFixed(1) + '%'); return ['FUNNEL ' + emoji + ' ' + band + ' (' + (e2e*100).toFixed(1) + '% end-to-end)','SNAPSHOT: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Biggest drop: Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' (lost ' + maxDelta + ' users)','WHATIF: if biggest drop step improves by +10%, e2e lifts to ' + ((steps[steps.length - 1] + maxDelta*0.5) / steps[0] * 100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (40% e2e), need final step >= ' + Math.ceil(steps[0] * 0.4).toLocaleString() + ' (currently ' + steps[steps.length-1].toLocaleString() + ')','MILESTONE: optimize Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' first; a 20% retention gain there lifts funnel to ' + ((steps[steps.length - 1] + maxDelta*0.2) / steps[0] * 100).toFixed(1) + '%','TIP: PM rule of thumb - in-product funnels lose the most users at the value-discovery step. Pair with Activation Rate Calculator to measure post-funnel commitment.']; }";
+
 const engine: ToolEngine = {
   slug: 'solopreneur-funnel-step-calculator',
   title: 'Funnel Step Conversion Analyzer',
@@ -53,12 +57,12 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var steps = [];\n  for (var i = 1; i <= 5; i++) { var v = Number(inputs['step' + i]); if (v > 0) steps.push(v); }\n  if (steps.length < 2) return ['At least 2 step counts required.'];\n  var e2e = steps[steps.length - 1] / steps[0];\n  var band = e2e >= 0.40 ? 'Excellent' : e2e >= 0.25 ? 'Good' : e2e >= 0.15 ? 'Warning' : 'Critical';\n  var emoji = e2e >= 0.40 ? 'GREEN' : e2e >= 0.25 ? 'YELLOW' : e2e >= 0.15 ? 'ORANGE' : 'RED';\n  var dropIdx = 0, maxDelta = 0;\n  for (var j = 1; j < steps.length; j++) { var d = steps[j-1] - steps[j]; if (d > maxDelta) { maxDelta = d; dropIdx = j-1; } }\n  var stepRate = []; for (var k = 1; k < steps.length; k++) stepRate.push((steps[k]/steps[k-1]*100).toFixed(1) + '%');\n  return [\n    'FUNNEL ' + emoji + ' ' + band + ' (' + (e2e*100).toFixed(1) + '% end-to-end)',\n    'SNAPSHOT: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Biggest drop: Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' (lost ' + maxDelta + ' users)',\n    'WHATIF: if biggest drop step improves by +10%, e2e lifts to ' + ((steps[steps.length - 1] + maxDelta*0.5) / steps[0] * 100).toFixed(1) + '%',\n    'BREAKEVEN: to hit GOOD (40% e2e), need final step >= ' + Math.ceil(steps[0] * 0.4).toLocaleString() + ' (currently ' + steps[steps.length-1].toLocaleString() + ')',\n    'MILESTONE: optimize Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' first; a 20% retention gain there lifts funnel to ' + ((steps[steps.length - 1] + maxDelta*0.2) / steps[0] * 100).toFixed(1) + '%',\n    'TIP: PM rule of thumb - in-product funnels lose the most users at the value-discovery step. Pair with Activation Rate Calculator to measure post-funnel commitment.'\n  ];\n}",
+    customFn,
   },
   generate(inputs) {
     const steps: number[] = [];
     for (let i = 1; i <= 5; i++) {
-      const v = Number(inputs['step' + i]);
+      const v = clampNonNegative(Number(inputs['step' + i]));
       if (v > 0) steps.push(v);
     }
     if (steps.length < 2) return ['At least 2 step counts required.'];

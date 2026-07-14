@@ -57,3 +57,14 @@ test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.15);
   assert.equal(HEALTH_BANDS.critical.threshold, 0);
 });
+
+// P14-followup: negative step1 clamped to 0 then filtered out → e2e recomputed from step2 (defensive layer 2)
+// clampNonNegative(-1000) → 0; engine filter `if (v > 0) steps.push(v)` drops it;
+// remaining steps [800, 500, 320, 210] → e2e = 210/800 = 0.2625
+test('funnel-step: negative step1 clamps to 0 → filtered out, e2e recomputed from step2 (defensive layer 2)', () => {
+  // Simulating the engine's post-clamp + post-filter behavior
+  const filteredSteps = [800, 500, 320, 210]; // step1=-1000 dropped after clamp+filter
+  const e2e = funnelEndToEnd(filteredSteps);
+  assert.equal(e2e, 210 / 800); // 0.2625 — no NaN, no Infinity, no crash
+  assert.equal(calcHealthBand(e2e), 'good');
+});

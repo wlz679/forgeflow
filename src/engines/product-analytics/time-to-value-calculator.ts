@@ -8,6 +8,7 @@
 // P9-4 lesson applied: lower_is_better uses <= comparison (NOT >=).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 1,    label: '🟢 Excellent', message: 'Lightning-fast aha-moment - users see value within their first session.' },
@@ -34,6 +35,9 @@ function fmtDays(n: number): string {
   return n.toFixed(0) + ' days (~' + (n / 30).toFixed(1) + ' months)';
 }
 
+// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var p50 = cnn(Number(inputs['median_days'])); var p90 = cnn(Number(inputs['p90_days'])); if (p90 < p50) p90 = p50; var band = p50 <= 1 ? 'Excellent' : p50 <= 3 ? 'Good' : p50 <= 7 ? 'Warning' : 'Critical'; var emoji = p50 <= 1 ? 'GREEN' : p50 <= 3 ? 'YELLOW' : p50 <= 7 ? 'ORANGE' : 'RED'; var gap = p90 - p50; return ['TTV ' + emoji + ' ' + band + ' (median ' + p50.toFixed(1) + ' days, p90 ' + p90.toFixed(1) + ' days)','SNAPSHOT: 50% of users reach the aha-moment in ' + p50.toFixed(1) + ' days. 90% do within ' + p90.toFixed(1) + ' days. Long-tail gap: ' + gap.toFixed(1) + ' days.','WHATIF: cutting the first milestone by 1 day typically improves activation by +8 to +12 percentage points','BREAKEVEN: to hit GOOD (median <=3 days), need at least 50% of signups reaching aha within 3 days','MILESTONE: focus on reducing p50 first (widest impact), then p90 (long-tail friction)','TIP: Faster TTV = higher activation = higher retention. Pair with the Activation Rate and Customer Health Score (P9) calculators.']; }";
+
 const engine: ToolEngine = {
   slug: 'solopreneur-time-to-value-calculator',
   title: 'Time-to-Value (TTV)',
@@ -48,11 +52,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var p50 = Number(inputs['median_days']);\n  var p90 = Number(inputs['p90_days']);\n  if (p50 < 0 || p90 < 0) return ['Days must be >= 0.'];\n  if (p90 < p50) p90 = p50;\n  var band = p50 <= 1 ? 'Excellent' : p50 <= 3 ? 'Good' : p50 <= 7 ? 'Warning' : 'Critical';\n  var emoji = p50 <= 1 ? 'GREEN' : p50 <= 3 ? 'YELLOW' : p50 <= 7 ? 'ORANGE' : 'RED';\n  var gap = p90 - p50;\n  return [\n    'TTV ' + emoji + ' ' + band + ' (median ' + p50.toFixed(1) + ' days, p90 ' + p90.toFixed(1) + ' days)',\n    'SNAPSHOT: 50% of users reach the aha-moment in ' + p50.toFixed(1) + ' days. 90% do within ' + p90.toFixed(1) + ' days. Long-tail gap: ' + gap.toFixed(1) + ' days.',\n    'WHATIF: cutting the first milestone by 1 day typically improves activation by +8 to +12 percentage points',\n    'BREAKEVEN: to hit GOOD (median <=3 days), need at least 50% of signups reaching aha within 3 days',\n    'MILESTONE: focus on reducing p50 first (widest impact), then p90 (long-tail friction)',\n    'TIP: Faster TTV = higher activation = higher retention. Pair with the Activation Rate and Customer Health Score (P9) calculators.'\n  ];\n}",
+    customFn,
   },
   generate(inputs) {
-    const p50 = Number(inputs['median_days']);
-    let p90 = Number(inputs['p90_days']);
+    const p50 = clampNonNegative(Number(inputs['median_days']));
+    let p90 = clampNonNegative(Number(inputs['p90_days']));
     if (p50 < 0 || p90 < 0) return ['Days must be >= 0.'];
     if (p90 < p50) p90 = p50;
     const band = calcHealthBand(p50);

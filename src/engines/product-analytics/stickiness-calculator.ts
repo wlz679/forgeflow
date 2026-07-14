@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (Mixpanel 2024 Product Benchmarks + Lenny's Newsletter PM Survey).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.20, label: '🟢 Excellent', message: 'Social-app tier stickiness - users return daily. World-class.' },
@@ -29,6 +30,9 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 
+// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var dau = cnn(Number(inputs['DAU'])); var mau = cnn(Number(inputs['MAU'])); if (mau <= 0) return ['MAU must be > 0.']; if (dau > mau) dau = mau; var s = dau / mau; var band = s >= 0.20 ? 'Excellent' : s >= 0.13 ? 'Good' : s >= 0.05 ? 'Warning' : 'Critical'; var emoji = s >= 0.20 ? 'GREEN' : s >= 0.13 ? 'YELLOW' : s >= 0.05 ? 'ORANGE' : 'RED'; var daysPerWeek = (s * 7).toFixed(1); var targetDAU = Math.ceil(mau * 0.13); return ['STICKINESS ' + emoji + ' ' + band + ' (' + (s*100).toFixed(1) + '% - users return ~' + daysPerWeek + ' days/week)','SNAPSHOT: ' + fmtInt(dau) + ' of ' + fmtInt(mau) + ' MAU users are daily-active. ' + fmtInt(mau - dau) + ' MAU users are not active today.','WHATIF: if you retain +5% more MAU as DAU (e.g. via push notifications), stickiness rises to ' + ((dau + (mau-dau)*0.05) / mau * 100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (13% stickiness), need DAU of at least ' + targetDAU.toLocaleString() + ' (currently ' + fmtInt(dau) + ')','MILESTONE: stickiness rarely moves without improving onboarding or core-loop frequency - target +5pp over next 60 days via notifications and re-engagement','TIP: Stickiness is the leading indicator of churn - pair with the GRR Calculator (P9) to confirm.']; function fmtInt(n) { return Math.round(n).toLocaleString(); } }";
+
 const engine: ToolEngine = {
   slug: 'solopreneur-stickiness-calculator',
   title: 'Stickiness (DAU/MAU)',
@@ -43,11 +47,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var dau = Number(inputs['DAU']); var mau = Number(inputs['MAU']);\n  if (mau <= 0) return ['MAU must be > 0.'];\n  if (dau > mau) dau = mau;\n  var s = dau / mau;\n  var band = s >= 0.20 ? 'Excellent' : s >= 0.13 ? 'Good' : s >= 0.05 ? 'Warning' : 'Critical';\n  var emoji = s >= 0.20 ? 'GREEN' : s >= 0.13 ? 'YELLOW' : s >= 0.05 ? 'ORANGE' : 'RED';\n  var daysPerWeek = (s * 7).toFixed(1);\n  var targetDAU = Math.ceil(mau * 0.13);\n  return [\n    'STICKINESS ' + emoji + ' ' + band + ' (' + (s*100).toFixed(1) + '% - users return ~' + daysPerWeek + ' days/week)',\n    'SNAPSHOT: ' + fmtInt(dau) + ' of ' + fmtInt(mau) + ' MAU users are daily-active. ' + fmtInt(mau - dau) + ' MAU users are not active today.',\n    'WHATIF: if you retain +5% more MAU as DAU (e.g. via push notifications), stickiness rises to ' + ((dau + (mau-dau)*0.05) / mau * 100).toFixed(1) + '%',\n    'BREAKEVEN: to hit GOOD (13% stickiness), need DAU of at least ' + targetDAU.toLocaleString() + ' (currently ' + fmtInt(dau) + ')',\n    'MILESTONE: stickiness rarely moves without improving onboarding or core-loop frequency - target +5pp over next 60 days via notifications and re-engagement',\n    'TIP: Stickiness is the leading indicator of churn - pair with the GRR Calculator (P9) to confirm.'\n  ];\n  function fmtInt(n) { return Math.round(n).toLocaleString(); }\n}",
+    customFn,
   },
   generate(inputs) {
-    let dau = Number(inputs['DAU']);
-    const mau = Number(inputs['MAU']);
+    let dau = clampNonNegative(Number(inputs['DAU']));
+    const mau = clampNonNegative(Number(inputs['MAU']));
     if (mau <= 0) return ['MAU must be > 0.'];
     if (dau > mau) dau = mau;
     const s = stickiness(dau, mau);

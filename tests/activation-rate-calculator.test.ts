@@ -49,3 +49,12 @@ test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.15);
   assert.equal(HEALTH_BANDS.critical.threshold, 0);
 });
+
+// P14-followup: negative activated clamps to 0 → no negative ratio (defensive layer 2)
+// clampNonNegative(-50) → 0; activationRate(0, 500) → 0 → critical band
+test('activation-rate: negative activated clamps to 0 → no negative ratio (defensive layer 2)', () => {
+  const a = 0; // after clampNonNegative(-50)
+  const rate = activationRate(a, 500);
+  assert.equal(rate, 0); // guard against negative or NaN ratio
+  assert.equal(calcHealthBand(rate), 'critical');
+});

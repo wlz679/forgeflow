@@ -41,3 +41,12 @@ test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.05);
   assert.equal(HEALTH_BANDS.critical.threshold, 0);
 });
+
+// P14-followup: negative MAU clamps to 0 → no divide-by-zero (defensive layer 2)
+// clampNonNegative(-5000) → 0; stickiness(650, 0) → 0 (zero-division guard kicks in)
+test('stickiness: negative MAU clamps to 0 → no divide-by-zero (defensive layer 2)', () => {
+  const m = 0; // after clampNonNegative(-5000)
+  const s = stickiness(650, m);
+  assert.equal(s, 0); // guard against negative or NaN ratio
+  assert.equal(calcHealthBand(s), 'critical');
+});

@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (Andrew Chen "The Cold Start Problem" + Pareto 70/20 anchor).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 3.5, label: '🟢 Excellent', message: 'Strong power-user concentration — top users drive disproportionate usage.' },
@@ -30,6 +31,9 @@ function fmtRatio(r: number): string {
   return r.toFixed(2) + 'x';
 }
 
+// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var p = cnn(Number(inputs['top_pct'])); var s = cnn(Number(inputs['top_pct_usage_share'])); if (p <= 0 || p > 100) return ['Top percent must be 1-100.']; if (s > 100) s = 100; var ratio = s / p; var band = ratio >= 3.5 ? 'Excellent' : ratio >= 3.0 ? 'Good' : ratio >= 2.5 ? 'Warning' : 'Critical'; var emoji = ratio >= 3.5 ? 'GREEN' : ratio >= 3.0 ? 'YELLOW' : ratio >= 2.5 ? 'ORANGE' : 'RED'; var l10 = Math.min(100, s + (100-s)*0.10); var targetShare = (p * 3.0).toFixed(1); return ['POWER USER ' + emoji + ' ' + band + ' (' + ratio.toFixed(2) + 'x ratio; ' + s.toFixed(1) + '/' + p + ')','SNAPSHOT: top ' + p.toFixed(1) + '% of users drive ' + s.toFixed(1) + '% of total usage. The remaining ' + (100 - p).toFixed(1) + '% of users account for ' + (100-s).toFixed(1) + '% of usage','WHATIF: if 10% of mid-tier users upgrade their engagement to power-user level, ratio lifts to ' + (l10/p).toFixed(2) + 'x','BREAKEVEN: to hit GOOD (3.0x ratio), need top ' + p.toFixed(1) + '% users driving at least ' + targetShare + '% of usage (currently ' + s.toFixed(1) + '%)','MILESTONE: power-user programs (VIP support / beta features) amplify existing concentration by +5-15 percentage points in usage share','TIP: Power users are the seed for referrals - pair with the NRR Calculator (P9).']; }";
+
 const engine: ToolEngine = {
   slug: 'solopreneur-power-user-curve-calculator',
   title: 'Power User Pareto Curve',
@@ -44,11 +48,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var p = Number(inputs['top_pct']);\n  var s = Number(inputs['top_pct_usage_share']);\n  if (p <= 0 || p > 100) return ['Top percent must be 1-100.'];\n  if (s > 100) s = 100;\n  var ratio = s / p;\n  var band = ratio >= 3.5 ? 'Excellent' : ratio >= 3.0 ? 'Good' : ratio >= 2.5 ? 'Warning' : 'Critical';\n  var emoji = ratio >= 3.5 ? 'GREEN' : ratio >= 3.0 ? 'YELLOW' : ratio >= 2.5 ? 'ORANGE' : 'RED';\n  var l10 = Math.min(100, s + (100-s)*0.10);\n  var targetShare = (p * 3.0).toFixed(1);\n  return [\n    'POWER USER ' + emoji + ' ' + band + ' (' + ratio.toFixed(2) + 'x ratio; ' + s.toFixed(1) + '/' + p + ')',\n    'SNAPSHOT: top ' + p.toFixed(1) + '% of users drive ' + s.toFixed(1) + '% of total usage. The remaining ' + (100 - p).toFixed(1) + '% of users account for ' + (100-s).toFixed(1) + '% of usage',\n    'WHATIF: if 10% of mid-tier users upgrade their engagement to power-user level, ratio lifts to ' + (l10/p).toFixed(2) + 'x',\n    'BREAKEVEN: to hit GOOD (3.0x ratio), need top ' + p.toFixed(1) + '% users driving at least ' + targetShare + '% of usage (currently ' + s.toFixed(1) + '%)',\n    'MILESTONE: power-user programs (VIP support / beta features) amplify existing concentration by +5-15 percentage points in usage share',\n    'TIP: Power users are the seed for referrals - pair with the NRR Calculator (P9).'\n  ];\n}",
+    customFn,
   },
   generate(inputs) {
-    const topPct = Number(inputs['top_pct']);
-    let topShare = Number(inputs['top_pct_usage_share']);
+    const topPct = clampNonNegative(Number(inputs['top_pct']));
+    let topShare = clampNonNegative(Number(inputs['top_pct_usage_share']));
     if (topPct <= 0 || topPct > 100) return ['Top percent must be 1-100.'];
     if (topShare > 100) topShare = 100;
     const ratio = paretoRatio(topShare, topPct);

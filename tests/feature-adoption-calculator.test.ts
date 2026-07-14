@@ -45,3 +45,12 @@ test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.10);
   assert.equal(HEALTH_BANDS.critical.threshold, 0);
 });
+
+// P14-followup: negative feature_users clamps to 0 → no negative ratio (defensive layer 2)
+// clampNonNegative(-750) → 0; featureAdoption(0, 3000) → 0 → critical band
+test('feature-adoption: negative feature_users clamps to 0 → no negative ratio (defensive layer 2)', () => {
+  const fu = 0; // after clampNonNegative(-750)
+  const adoption = featureAdoption(fu, 3000);
+  assert.equal(adoption, 0); // guard against negative or NaN ratio
+  assert.equal(calcHealthBand(adoption), 'critical');
+});

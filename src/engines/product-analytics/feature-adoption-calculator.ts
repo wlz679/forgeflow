@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (Amplitude Product Benchmarks + Heap Product Analytics Survey).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.40, label: '🟢 Excellent', message: 'Broad feature appeal — the feature is core to the user experience.' },
@@ -29,6 +30,9 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 
+// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var fu = cnn(Number(inputs['feature_users'])); var au = cnn(Number(inputs['active_users'])); if (au <= 0) return ['Total active users must be > 0.']; if (fu > au) fu = au; var adoption = fu / au; var band = adoption >= 0.40 ? 'Excellent' : adoption >= 0.20 ? 'Good' : adoption >= 0.10 ? 'Warning' : 'Critical'; var emoji = adoption >= 0.40 ? 'GREEN' : adoption >= 0.20 ? 'YELLOW' : adoption >= 0.10 ? 'ORANGE' : 'RED'; var denom = inputs['WAU_vs_MAU'] || 'WAU'; var nonAdopters = Math.max(0, au - fu); var targetFu = Math.ceil(au * 0.20); var l10 = Math.min(au, fu + (au - fu) * 0.10); return ['FEATURE ' + emoji + ' ' + band + ' (' + (adoption*100).toFixed(1) + '% adoption)','SNAPSHOT: ' + fmtInt(fu) + ' of ' + fmtInt(au) + ' ' + denom + ' users used this feature. Non-adopters: ' + fmtInt(nonAdopters),'WHATIF: if 10% of non-adopters convert, adoption rises to ' + (l10/au*100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (20% adoption), need at least ' + targetFu.toLocaleString() + ' feature users (currently ' + fmtInt(fu) + ')','MILESTONE: lifting adoption by +10 percentage points over the next quarter requires ' + fmtInt(Math.ceil(au * (adoption + 0.10) - fu)) + ' more feature users','TIP: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted.']; function fmtInt(n) { return Math.round(n).toLocaleString(); } }";
+
 const engine: ToolEngine = {
   slug: 'solopreneur-feature-adoption-calculator',
   title: 'Feature Adoption Rate',
@@ -46,11 +50,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var fu = Number(inputs['feature_users']); var au = Number(inputs['active_users']);\n  if (au <= 0) return ['Total active users must be > 0.'];\n  if (fu > au) fu = au;\n  var adoption = fu / au;\n  var band = adoption >= 0.40 ? 'Excellent' : adoption >= 0.20 ? 'Good' : adoption >= 0.10 ? 'Warning' : 'Critical';\n  var emoji = adoption >= 0.40 ? 'GREEN' : adoption >= 0.20 ? 'YELLOW' : adoption >= 0.10 ? 'ORANGE' : 'RED';\n  var denom = inputs['WAU_vs_MAU'] || 'WAU';\n  var nonAdopters = Math.max(0, au - fu);\n  var targetFu = Math.ceil(au * 0.20);\n  var l10 = Math.min(au, fu + (au - fu) * 0.10);\n  return [\n    'FEATURE ' + emoji + ' ' + band + ' (' + (adoption*100).toFixed(1) + '% adoption)',\n    'SNAPSHOT: ' + fmtInt(fu) + ' of ' + fmtInt(au) + ' ' + denom + ' users used this feature. Non-adopters: ' + fmtInt(nonAdopters),\n    'WHATIF: if 10% of non-adopters convert, adoption rises to ' + (l10/au*100).toFixed(1) + '%',\n    'BREAKEVEN: to hit GOOD (20% adoption), need at least ' + targetFu.toLocaleString() + ' feature users (currently ' + fmtInt(fu) + ')',\n    'MILESTONE: lifting adoption by +10 percentage points over the next quarter requires ' + fmtInt(Math.ceil(au * (adoption + 0.10) - fu)) + ' more feature users',\n    'TIP: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted.'\n  ];\n  function fmtInt(n) { return Math.round(n).toLocaleString(); }\n}",
+    customFn,
   },
   generate(inputs) {
-    const fu = Number(inputs['feature_users']);
-    const au = Number(inputs['active_users']);
+    const fu = clampNonNegative(Number(inputs['feature_users']));
+    const au = clampNonNegative(Number(inputs['active_users']));
     if (au <= 0) return ['Total active users must be > 0.'];
     const cappedFu = Math.min(fu, au);
     const adoption = featureAdoption(cappedFu, au);
