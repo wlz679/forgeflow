@@ -87,7 +87,7 @@ export function clampNonNegative(x: number): number {
 }
 ```
 
-Plus optional companion `clampNonNegativeOptional(x: number | undefined): number` returning `0` for undefined → 0. Single-purpose helper keeps the call sites tight.
+That's the only helper in `helpers.ts`. The `<input>` DOM elements pass strings, so `Number(input.value) || 0` already converts and short-circuits — no companion `clampNonNegativeOptional` helper needed. Adding more helper variants (e.g., `clampRange`, `clampUnitInterval`) would invite scope drift; not in this batch's spirit.
 
 ### 4.2 Modified files (3 categories)
 
@@ -95,7 +95,7 @@ Plus optional companion `clampNonNegativeOptional(x: number | undefined): number
 |---|---|---|
 | `src/pages/[lang]/[slug].astro` | Find all `<input type={input.type}` instances (~6-7 across AI branches). For `input.type === 'number'`, add `step="any" min="0"`. Skip selects. | ~15 |
 | `src/engines/<cat>/<slug>-calculator.ts` (×41) | Import `clampNonNegative` from `'../../core/engines/helpers'`. Wrap each `Number(inputs.X) || 0` with `clampNonNegative(Number(inputs.X) || 0)`. Apply in BOTH `generate()` (build-time) AND `customFn` (browser runtime). | ~3 lines per engine × 41 = ~120 |
-| `src/core/engines/types.ts` | No change unless helper signature requires type addition. TBD during implementation. | 0 |
+| `src/core/engines/types.ts` | No change. `clampNonNegative(x: number)` signature doesn't require any type addition. | 0 |
 
 ### 4.3 Excluded from this batch
 
@@ -150,7 +150,7 @@ generate(inputs) {
 | `"-50"` | `-50` (passes through) | `0` | **NEW: clamp catches it** |
 | `"-50"` + UI | red ring on input | red ring + clamp on compute | **NEW: two-layer UX** |
 | `"100.5"` | allowed but spinner snaps to `100` or `101` | accepted as `100.5` | **NEW: step="any" preserves decimal** |
-| `"-50"` for L-1 GDPR | `revenueRatio(-50 ...)` → NaN/error | `revenueRatio(0 ...)` → 0/0 → 0 | Defensive |
+| `"-50"` for L-1 GDPR | `exposureRatio(1600000, -50_000_000)` → -0.032 (still <0.0025 Excellent band) — misleading | `exposureRatio(1600000, 0)` → 0 (existing `revenue > 0` guard) → still Excellent but at least non-negative ratio | Defensive — silently falls to ratio=0 |
 
 ### 5.4 Boundary preservation
 
