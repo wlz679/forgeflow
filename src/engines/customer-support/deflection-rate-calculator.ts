@@ -6,6 +6,7 @@
 // Self-service deflection via KB + chatbot (pre-T1 channel).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 40, label: '🟢 Excellent', message: 'World-class self-service — KB/chatbot deflects ≥40% of tickets before they reach T1.' },
@@ -64,14 +65,14 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var vol = Number(inputs.monthly_tickets) || 0;\n  var rate = Number(inputs.deflection_rate) || 0;\n  var cost = Number(inputs.cost_per_ticket) || 0;\n  var tool = Number(inputs.tool_monthly_cost) || 0;\n  var tgt = Number(inputs.target_deflection) || 0;\n  var deflected = vol * (rate / 100);\n  var saved = deflected * cost;\n  var net = saved - tool;\n  var roi = tool > 0 ? (net / tool) * 100 : 0;\n  var gap = tgt - rate;\n  var band = rate >= 40 ? 'Excellent' : rate >= 25 ? 'Good' : rate >= 10 ? 'Warning' : 'Critical';\n  var emoji = rate >= 40 ? '🟢' : rate >= 25 ? '🟡' : rate >= 10 ? '🟠' : '🔴';\n  var ifRate = Math.min(100, rate + 10);\n  var ifBand = ifRate >= 40 ? 'Excellent' : ifRate >= 25 ? 'Good' : ifRate >= 10 ? 'Warning' : 'Critical';\n  var ifEmoji = ifRate >= 40 ? '🟢' : ifRate >= 25 ? '🟡' : ifRate >= 10 ? '🟠' : '🔴';\n  var ifSaved = vol * (ifRate / 100) * cost - tool;\n  return [\n    '🩺 Deflection Health: ' + emoji + ' ' + band + ' (' + rate.toFixed(1) + '% deflected · ' + net.toLocaleString() + ' net/mo)',\n    '📊 Snapshot: ' + Math.round(deflected).toLocaleString() + ' tickets/mo deflected · $' + Math.round(saved).toLocaleString() + ' gross saved · $' + Math.round(net).toLocaleString() + ' net · ' + Math.round(roi).toLocaleString() + '% ROI',\n    '🔄 What-If: if deflection climbs to ' + ifRate.toFixed(1) + '% (+10pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and net savings = $' + Math.round(ifSaved).toLocaleString() + '/mo',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need ' + Math.max(0, 40 - rate).toFixed(1) + 'pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction',\n    '🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.',\n    '💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.'\n  ];\n}",
+    customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var vol = cnn(Number(inputs.monthly_tickets) || 0);\n  var rate = cnn(Number(inputs.deflection_rate) || 0);\n  var cost = cnn(Number(inputs.cost_per_ticket) || 0);\n  var tool = cnn(Number(inputs.tool_monthly_cost) || 0);\n  var tgt = cnn(Number(inputs.target_deflection) || 0);\n  var deflected = vol * (rate / 100);\n  var saved = deflected * cost;\n  var net = saved - tool;\n  var roi = tool > 0 ? (net / tool) * 100 : 0;\n  var gap = tgt - rate;\n  var band = rate >= 40 ? 'Excellent' : rate >= 25 ? 'Good' : rate >= 10 ? 'Warning' : 'Critical';\n  var emoji = rate >= 40 ? '🟢' : rate >= 25 ? '🟡' : rate >= 10 ? '🟠' : '🔴';\n  var ifRate = Math.min(100, rate + 10);\n  var ifBand = ifRate >= 40 ? 'Excellent' : ifRate >= 25 ? 'Good' : ifRate >= 10 ? 'Warning' : 'Critical';\n  var ifEmoji = ifRate >= 40 ? '🟢' : ifRate >= 25 ? '🟡' : ifRate >= 10 ? '🟠' : '🔴';\n  var ifSaved = vol * (ifRate / 100) * cost - tool;\n  return [\n    '🩺 Deflection Health: ' + emoji + ' ' + band + ' (' + rate.toFixed(1) + '% deflected · ' + net.toLocaleString() + ' net/mo)',\n    '📊 Snapshot: ' + Math.round(deflected).toLocaleString() + ' tickets/mo deflected · $' + Math.round(saved).toLocaleString() + ' gross saved · $' + Math.round(net).toLocaleString() + ' net · ' + Math.round(roi).toLocaleString() + '% ROI',\n    '🔄 What-If: if deflection climbs to ' + ifRate.toFixed(1) + '% (+10pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and net savings = $' + Math.round(ifSaved).toLocaleString() + '/mo',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need ' + Math.max(0, 40 - rate).toFixed(1) + 'pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction',\n    '🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.',\n    '💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.'\n  ];\n}",
   },
   generate(inputs) {
-    const vol = Number(inputs.monthly_tickets) || 0;
-    const rate = Number(inputs.deflection_rate) || 0;
-    const cost = Number(inputs.cost_per_ticket) || 0;
-    const tool = Number(inputs.tool_monthly_cost) || 0;
-    const target = Number(inputs.target_deflection) || 0;
+    const vol = clampNonNegative(Number(inputs.monthly_tickets) || 0);
+    const rate = clampNonNegative(Number(inputs.deflection_rate) || 0);
+    const cost = clampNonNegative(Number(inputs.cost_per_ticket) || 0);
+    const tool = clampNonNegative(Number(inputs.tool_monthly_cost) || 0);
+    const target = clampNonNegative(Number(inputs.target_deflection) || 0);
     const deflected = deflectedVolume(vol, rate);
     const saved = savedCost(deflected, cost);
     const net = netSavings(saved, tool);

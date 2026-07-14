@@ -65,3 +65,13 @@ test('HEALTH_BANDS has 4 HIGHER-is-better thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 10);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P14-followup: negative deflection_rate clamps to 0 → no negative savings (defensive layer 2)
+// clampNonNegative(-25) → 0; deflectedVolume(5000, 0) → 0; calcHealthBand(0) → 'critical'
+// (Pre-clamp: deflectedVolume(5000, -25) → -1250 tickets, savedCost → -$30K, net → -$30K)
+test('deflection-rate: negative deflection_rate clamps to 0 → no negative savings (defensive layer 2)', () => {
+  const rate = 0; // after clampNonNegative(-25)
+  const deflected = deflectedVolume(5000, rate);
+  assert.equal(deflected, 0);
+  assert.equal(calcHealthBand(rate), 'critical');
+});
