@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // ROAS Calculator (P6-1) — Business v3 standard (6+ emoji sections)
@@ -50,9 +51,9 @@ export function effectiveCPMPer1000(adSpend: number, revenue: number): number {
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const adSpend = Math.max(0, parseFloat(inputs.adSpend) || 0);
-  const revenue = Math.max(0, parseFloat(inputs.revenue) || 0);
-  const grossMargin = Math.max(0, parseFloat(inputs.grossMargin) || 0);
+  const adSpend = clampNonNegative(parseFloat(inputs.adSpend) || 0);
+  const revenue = clampNonNegative(parseFloat(inputs.revenue) || 0);
+  const grossMargin = clampNonNegative(parseFloat(inputs.grossMargin) || 0);
   const attributionWindow = inputs.attributionWindow || '28d';
 
   // Edge: ad spend = 0 → prompt to enter value
@@ -181,9 +182,10 @@ const customFn =
   "function cNetROAS(s,r,m){if(s<=0)return Infinity;return((r*(m/100))-s)/s*100;}" +
   "function cNetProf(s,r,m){return r*(m/100)-s;}" +
   "function ecpm(s,r){if(r<=0)return Infinity;return(s/r)*1000;}" +
-  "var as=Math.max(0,parseFloat(inputs.adSpend)||0);" +
-  "var rev=Math.max(0,parseFloat(inputs.revenue)||0);" +
-  "var gm=Math.max(0,parseFloat(inputs.grossMargin)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var as=cnn(parseFloat(inputs.adSpend)||0);" +
+  "var rev=cnn(parseFloat(inputs.revenue)||0);" +
+  "var gm=cnn(parseFloat(inputs.grossMargin)||0);" +
   "var aw=inputs.attributionWindow||'28d';" +
   "if(as===0){return['\\u23F0 ROAS Calculator\\n\\n\\uD83D\\uDCCA Enter ad spend and revenue to see your return on ad spend ratio (ROAS), net profit margin after ad costs, and projected scaling outcomes.'];}" +
   "var roas=cROAS(as,rev);" +

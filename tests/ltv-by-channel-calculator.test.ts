@@ -83,3 +83,12 @@ test('ltv-by-channel: HEALTH_BANDS = excellent 3, good 1-3, warning 0.5-1, criti
   assert.deepEqual(bands.good, [1.0, 3.0]);
   assert.deepEqual(bands.warning, [0.5, 1.0]);
 });
+
+// Test 9 (P14-followup): negative spend clamps to 0 (defensive layer 2)
+// clampNonNegative(-1000) → 0; calcCAC(0, 50) → 0; calcLTVRatio(500, 0) → 0 (cac<=0 guard)
+test('ltv-by-channel: negative spend clamps to 0 (defensive layer 2)', () => {
+  const cac = calcCAC(0, 50); // -1000 spend clamped to 0
+  assert.equal(cac, 0);
+  const ratio = calcLTVRatio(500, cac);
+  assert.equal(ratio, 0); // cac<=0 guard prevents divide-by-zero
+});

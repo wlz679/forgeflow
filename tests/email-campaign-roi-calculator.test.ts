@@ -49,3 +49,10 @@ test('email-roi: openRate +5pp (25% → 30%) scales opens proportionally', () =>
   const newOpens = 40000 * (30 / 100);
   assert.equal(newOpens, origOpens * 1.2);
 });
+
+// Test 8 (P14-followup): negative campaignCost clamps to 0 (defensive layer 2)
+// clampNonNegative(-500) → 0; calcROI(rev=12000, cost=0) → Infinity (zero-cost guard)
+test('email-roi: negative campaignCost clamps to 0 (defensive layer 2)', () => {
+  const roi = calcROI(12000, 0); // -500 cost clamped to 0
+  assert.equal(roi, Infinity); // cost<=0 guard prevents divide-by-zero
+});

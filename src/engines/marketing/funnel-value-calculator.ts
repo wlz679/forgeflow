@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Funnel Value Calculator (P6-3) — Business v3 standard
@@ -78,12 +79,12 @@ export function biggestLeakStage(inputs: FunnelInputs): string {
 
 function calculate(inputs: Record<string, string>): string[] {
   const f: FunnelInputs = {
-    impressions: Math.max(0, parseFloat(inputs.impressions) || 0),
-    ctr: Math.max(0, parseFloat(inputs.ctr) || 0),
-    leadRate: Math.max(0, parseFloat(inputs.leadRate) || 0),
-    saleRate: Math.max(0, parseFloat(inputs.saleRate) || 0),
-    aov: Math.max(0, parseFloat(inputs.aov) || 0),
-    grossMargin: Math.max(0, parseFloat(inputs.grossMargin) || 0),
+    impressions: clampNonNegative(parseFloat(inputs.impressions) || 0),
+    ctr: clampNonNegative(parseFloat(inputs.ctr) || 0),
+    leadRate: clampNonNegative(parseFloat(inputs.leadRate) || 0),
+    saleRate: clampNonNegative(parseFloat(inputs.saleRate) || 0),
+    aov: clampNonNegative(parseFloat(inputs.aov) || 0),
+    grossMargin: clampNonNegative(parseFloat(inputs.grossMargin) || 0),
   };
 
   // Edge: no impressions
@@ -210,7 +211,8 @@ const customFn =
   "function oCR(s,i){if(i<=0)return 0;return(s/i)*100;}" +
   "function dO(p,c){return Math.max(0,p-c);}" +
   "function bLS(f){var s2=sC(f.i,f.c);var s3=sL(s2,f.l);var s4=sS(s3,f.s);var d12=dO(f.i,s2);var d23=dO(s2,s3);var d34=dO(s3,s4);var m=Math.max(d12,d23,d34);if(m===d12)return'1\\u21922';if(m===d23)return'2\\u21923';return'3\\u21924';}" +
-  "var f={i:Math.max(0,parseFloat(inputs.impressions)||0),c:Math.max(0,parseFloat(inputs.ctr)||0),l:Math.max(0,parseFloat(inputs.leadRate)||0),s:Math.max(0,parseFloat(inputs.saleRate)||0),a:Math.max(0,parseFloat(inputs.aov)||0),g:Math.max(0,parseFloat(inputs.grossMargin)||0)};" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var f={i:cnn(parseFloat(inputs.impressions)||0),c:cnn(parseFloat(inputs.ctr)||0),l:cnn(parseFloat(inputs.leadRate)||0),s:cnn(parseFloat(inputs.saleRate)||0),a:cnn(parseFloat(inputs.aov)||0),g:cnn(parseFloat(inputs.grossMargin)||0)};" +
   "if(f.i===0){return['\\u23F0 Funnel Value Calculator\\n\\n\\uD83D\\uDCCA Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.'];}" +
   "var s2=sC(f.i,f.c);var s3=sL(s2,f.l);var s4=sS(s3,f.s);" +
   "var cr=oCR(s4,f.i);var tR=s4*f.a;var tP=tR*(f.g/100);" +

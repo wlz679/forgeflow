@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Cohort Retention Calculator (P6-4) — Business v3 standard
@@ -88,15 +89,15 @@ export function retentionHealth(m6: number): 'excellent' | 'good' | 'warning' | 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const cohortSize = Math.max(0, parseFloat(inputs.cohortSize) || 0);
+  const cohortSize = clampNonNegative(parseFloat(inputs.cohortSize) || 0);
   const table: RetentionTable = {
-    m1: Math.max(0, Math.min(100, parseFloat(inputs.m1Retention) || 0)),
-    m2: Math.max(0, Math.min(100, parseFloat(inputs.m2Retention) || 0)),
-    m3: Math.max(0, Math.min(100, parseFloat(inputs.m3Retention) || 0)),
-    m6: Math.max(0, Math.min(100, parseFloat(inputs.m6Retention) || 0)),
-    m12: Math.max(0, Math.min(100, parseFloat(inputs.m12Retention) || 0)),
+    m1: clampNonNegative(Math.min(100, parseFloat(inputs.m1Retention) || 0)),
+    m2: clampNonNegative(Math.min(100, parseFloat(inputs.m2Retention) || 0)),
+    m3: clampNonNegative(Math.min(100, parseFloat(inputs.m3Retention) || 0)),
+    m6: clampNonNegative(Math.min(100, parseFloat(inputs.m6Retention) || 0)),
+    m12: clampNonNegative(Math.min(100, parseFloat(inputs.m12Retention) || 0)),
   };
-  const revenuePerUser = Math.max(0, parseFloat(inputs.revenuePerUser) || 0);
+  const revenuePerUser = clampNonNegative(parseFloat(inputs.revenuePerUser) || 0);
 
   if (cohortSize === 0) {
     return [
@@ -214,9 +215,10 @@ const customFn =
   "function cumLTV(cs,t,rpm,months){if(cs<=0)return 0;var total=0;for(var m=1;m<=months;m++){var ret=retAt(m,t)/100;total+=cs*ret*rpm;}return total;}" +
   "function bigDrop(t){var rates=[t.m1,t.m2,t.m3,t.m6,t.m12];var months=[1,2,3,6,12];var mx=0;var dm=1;for(var i=1;i<rates.length;i++){var drop=rates[i-1]-rates[i];if(drop>mx){mx=drop;dm=months[i-1];}}return dm;}" +
   "function retH(m6){if(m6>=90)return'excellent';if(m6>=70)return'good';if(m6>=50)return'warning';return'critical';}" +
-  "var cs=Math.max(0,parseFloat(inputs.cohortSize)||0);" +
-  "var t={m1:Math.max(0,Math.min(100,parseFloat(inputs.m1Retention)||0)),m2:Math.max(0,Math.min(100,parseFloat(inputs.m2Retention)||0)),m3:Math.max(0,Math.min(100,parseFloat(inputs.m3Retention)||0)),m6:Math.max(0,Math.min(100,parseFloat(inputs.m6Retention)||0)),m12:Math.max(0,Math.min(100,parseFloat(inputs.m12Retention)||0))};" +
-  "var rpm=Math.max(0,parseFloat(inputs.revenuePerUser)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var cs=cnn(parseFloat(inputs.cohortSize)||0);" +
+  "var t={m1:cnn(Math.min(100,parseFloat(inputs.m1Retention)||0)),m2:cnn(Math.min(100,parseFloat(inputs.m2Retention)||0)),m3:cnn(Math.min(100,parseFloat(inputs.m3Retention)||0)),m6:cnn(Math.min(100,parseFloat(inputs.m6Retention)||0)),m12:cnn(Math.min(100,parseFloat(inputs.m12Retention)||0))};" +
+  "var rpm=cnn(parseFloat(inputs.revenuePerUser)||0);" +
   "if(cs===0){return['\\u23F0 Cohort Retention Calculator\\n\\n\\uD83D\\uDCCA Enter cohort size, monthly retention rates (M1/M2/M3/M6/M12), and monthly revenue per user to see cumulative LTV, decay curve, and biggest drop month.'];}" +
   "var ltv12=cumLTV(cs,t,rpm,12);var ltv6=cumLTV(cs,t,rpm,6);" +
   "var bnd=retH(t.m6);var dm=bigDrop(t);" +

@@ -40,3 +40,10 @@ test('roas: netProfit(rev*margin - spend) = 20000*0.6 - 5000 = 7000', () => {
   const np = calcNetProfit(5000, 20000, 60);
   assert.ok(Math.abs(np - 7000) < 0.01, `expected 7000, got ${np.toFixed(2)}`);
 });
+
+// Test 7 (P14-followup): negative adSpend clamps to 0 (defensive layer 2)
+// clampNonNegative(-5000) → 0; calcROAS(0, 1000) → Infinity (not negative ratio)
+test('roas: negative adSpend clamps to 0 (defensive layer 2)', () => {
+  const ratio = calcROAS(0, 1000); // -5000 clamped to 0 by clampNonNegative
+  assert.equal(ratio, Infinity); // 0 adSpend triggers Infinity guard, not negative ratio
+});

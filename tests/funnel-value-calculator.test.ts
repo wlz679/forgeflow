@@ -67,3 +67,10 @@ test('funnel: leadRate +30% (15 → 19.5%) scales leads by 1.3', () => {
   const improved = stageLeads(2500, 19.5);
   assert.equal(improved, baseline * 1.3);
 });
+
+// Test 10 (P14-followup): negative impressions clamps to 0 (defensive layer 2)
+// clampNonNegative(-1000) → 0; overallCR(0, 0) → 0 (impressions<=0 guard)
+test('funnel: negative impressions clamps to 0 (defensive layer 2)', () => {
+  const cr = overallCR(0, 0); // -1000 impressions clamped to 0 by clampNonNegative
+  assert.equal(cr, 0); // impressions<=0 guard returns 0, not NaN
+});

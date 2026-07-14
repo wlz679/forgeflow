@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Content Marketing ROI Calculator (P6-6) — Business v3 standard
@@ -70,12 +71,12 @@ export function calcHealthBand(crPct: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const monthlyPieces = Math.max(0, parseFloat(inputs.monthlyPieces) || 0);
-  const monthsToRank = Math.max(0, Math.min(11, parseFloat(inputs.monthsToRank) || 0));
-  const peakMonthlyTraffic = Math.max(0, parseFloat(inputs.peakMonthlyTraffic) || 0);
-  const conversionRate = Math.max(0, parseFloat(inputs.conversionRate) || 0);
-  const aov = Math.max(0, parseFloat(inputs.aov) || 0);
-  const monthlyContentCost = Math.max(0, parseFloat(inputs.monthlyContentCost) || 0);
+  const monthlyPieces = clampNonNegative(parseFloat(inputs.monthlyPieces) || 0);
+  const monthsToRank = clampNonNegative(Math.min(11, parseFloat(inputs.monthsToRank) || 0));
+  const peakMonthlyTraffic = clampNonNegative(parseFloat(inputs.peakMonthlyTraffic) || 0);
+  const conversionRate = clampNonNegative(parseFloat(inputs.conversionRate) || 0);
+  const aov = clampNonNegative(parseFloat(inputs.aov) || 0);
+  const monthlyContentCost = clampNonNegative(parseFloat(inputs.monthlyContentCost) || 0);
   const attributionModel = (inputs.attributionModel || 'last-touch') as AttributionModel;
 
   // Edge: no traffic
@@ -196,12 +197,13 @@ const customFn =
   "function aM(m){if(m==='first-touch'||m==='last-touch')return 1.0;if(m==='linear')return 0.7;return 1.0;}" +
   "function t12T(mr,mnv,mcc,am){var rl=-mr*mcc;var pg=(12-mr)*mnv*am-(12-mr)*mcc;return rl+pg;}" +
   "function cHB(cr){if(cr>=3)return'excellent';if(cr>=1)return'good';if(cr>=0.3)return'warning';return'critical';}" +
-  "var mp=Math.max(0,parseFloat(inputs.monthlyPieces)||0);" +
-  "var mtr=Math.max(0,Math.min(11,parseFloat(inputs.monthsToRank)||0));" +
-  "var pmt=Math.max(0,parseFloat(inputs.peakMonthlyTraffic)||0);" +
-  "var cr=Math.max(0,parseFloat(inputs.conversionRate)||0);" +
-  "var aov=Math.max(0,parseFloat(inputs.aov)||0);" +
-  "var mcc=Math.max(0,parseFloat(inputs.monthlyContentCost)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var mp=cnn(parseFloat(inputs.monthlyPieces)||0);" +
+  "var mtr=cnn(Math.min(11,parseFloat(inputs.monthsToRank)||0));" +
+  "var pmt=cnn(parseFloat(inputs.peakMonthlyTraffic)||0);" +
+  "var cr=cnn(parseFloat(inputs.conversionRate)||0);" +
+  "var aov=cnn(parseFloat(inputs.aov)||0);" +
+  "var mcc=cnn(parseFloat(inputs.monthlyContentCost)||0);" +
   "var am=inputs.attributionModel||'last-touch';" +
   "if(pmt===0){return['\\u23F0 Content Marketing ROI Calculator\\n\\n\\uD83D\\uDCCA Enter monthly content pieces, months to rank, peak organic traffic, conversion rate, AOV, content cost, and attribution model to see SEO ramp-up curve, 12-month ROI, and steady-state projections.'];}" +
   "var mR2=mR(pmt,cr,aov);var mN=mNR(mR2,mcc);var aM2=aM(am);" +

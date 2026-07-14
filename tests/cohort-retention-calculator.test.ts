@@ -78,3 +78,11 @@ test('cohort: HEALTH_BANDS.excellent === 90', () => {
   const bands = { excellent: 90, good: [70, 90], warning: [50, 70], critical: 0 };
   assert.equal(bands.excellent, 90);
 });
+
+// Test 9 (P14-followup): negative cohortSize clamps to 0 (defensive layer 2)
+// clampNonNegative(-1000) → 0; cumulativeLTV(0, table, 30, 12) → 0 (zero-cohort guard)
+test('cohort: negative cohortSize clamps to 0 (defensive layer 2)', () => {
+  const table: RetentionTable = { m1: 80, m2: 60, m3: 45, m6: 30, m12: 20 };
+  const ltv = cumulativeLTV(0, table, 30, 12); // -1000 cohortSize clamped to 0
+  assert.equal(ltv, 0); // cohortSize<=0 guard prevents NaN
+});

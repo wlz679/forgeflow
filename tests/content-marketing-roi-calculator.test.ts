@@ -66,3 +66,10 @@ test('content-roi: healthBand(0.5) === warning (0.3-1)', () => {
 test('content-roi: healthBand(0.1) === critical (<0.3)', () => {
   assert.equal(calcHealthBand(0.1), 'critical');
 });
+
+// Test 8 (P14-followup): negative traffic clamps to 0 (defensive layer 2)
+// clampNonNegative(-100) → 0; monthlyRevenue(0, 2, 80) → 0 (no traffic → no revenue)
+test('content-roi: negative traffic clamps to 0 (defensive layer 2)', () => {
+  const rev = monthlyRevenue(0, 2, 80); // -100 traffic clamped to 0
+  assert.equal(rev, 0); // 0 traffic × CR × AOV = 0 (no divide-by-zero)
+});

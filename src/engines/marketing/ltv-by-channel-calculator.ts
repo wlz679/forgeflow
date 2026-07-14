@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // LTV by Channel Calculator (P6-2) — Business v3 standard
@@ -88,9 +89,9 @@ function calculate(inputs: Record<string, string>): string[] {
   const channels: Channel[] = [];
   let anyData = false;
   for (let i = 1; i <= 5; i++) {
-    const spend = Math.max(0, parseFloat(inputs[`ch${i}_spend`]) || 0);
-    const conversions = Math.max(0, parseFloat(inputs[`ch${i}_conv`]) || 0);
-    const ltv = Math.max(0, parseFloat(inputs[`ch${i}_ltv`]) || 0);
+    const spend = clampNonNegative(parseFloat(inputs[`ch${i}_spend`]) || 0);
+    const conversions = clampNonNegative(parseFloat(inputs[`ch${i}_conv`]) || 0);
+    const ltv = clampNonNegative(parseFloat(inputs[`ch${i}_ltv`]) || 0);
     if (spend > 0 || conversions > 0 || ltv > 0) anyData = true;
     const cac = calcCAC(spend, conversions);
     const ratio = calcLTVRatio(ltv, cac);
@@ -267,7 +268,8 @@ const customFn =
   "function rankF(cs){return[...cs].sort(function(a,b){if(!isFinite(a.cac)&&!isFinite(b.cac))return 0;if(!isFinite(a.cac))return 1;if(!isFinite(b.cac))return -1;return b.ratio-a.ratio;});}" +
   "function hBand(r){if(!isFinite(r)||r<=0)return'\\u26AA';if(r>=3)return'\\uD83D\\uDFE2';if(r>=1)return'\\uD83D\\uDFE1';if(r>=0.5)return'\\uD83D\\uDFE0';return'\\uD83D\\uDD34';}" +
   "var ch=[];var anyData=false;" +
-  "for(var i=1;i<=5;i++){var sp=Math.max(0,parseFloat(inputs['ch'+i+'_spend'])||0);var cv=Math.max(0,parseFloat(inputs['ch'+i+'_conv'])||0);var lv=Math.max(0,parseFloat(inputs['ch'+i+'_ltv'])||0);if(sp>0||cv>0||lv>0)anyData=true;var cac=cCAC(sp,cv);ch.push({id:'Ch'+i,spend:sp,conversions:cv,ltv:lv,cac:cac,ratio:cRatio(lv,cac)});}" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "for(var i=1;i<=5;i++){var sp=cnn(parseFloat(inputs['ch'+i+'_spend'])||0);var cv=cnn(parseFloat(inputs['ch'+i+'_conv'])||0);var lv=cnn(parseFloat(inputs['ch'+i+'_ltv'])||0);if(sp>0||cv>0||lv>0)anyData=true;var cac=cCAC(sp,cv);ch.push({id:'Ch'+i,spend:sp,conversions:cv,ltv:lv,cac:cac,ratio:cRatio(lv,cac)});}" +
   "if(!anyData){return['\\u23F0 LTV by Channel Calculator\\n\\n\\uD83D\\uDCCA Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.'];}" +
   "var ranked=rankF(ch);" +
   "var winner=ranked.find(function(c){return isFinite(c.cac);});" +

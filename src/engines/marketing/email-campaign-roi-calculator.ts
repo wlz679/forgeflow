@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Email Campaign ROI Calculator (P6-5) — Business v3 standard
@@ -59,11 +60,11 @@ export function costPerOpen(campaignCost: number, opens: number): number {
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const listSize = Math.max(0, parseFloat(inputs.listSize) || 0);
-  const openRate = Math.max(0, parseFloat(inputs.openRate) || 0);
-  const ctr = Math.max(0, parseFloat(inputs.ctr) || 0);
-  const aovPerClick = Math.max(0, parseFloat(inputs.aovPerClick) || 0);
-  const campaignCost = Math.max(0, parseFloat(inputs.campaignCost) || 0);
+  const listSize = clampNonNegative(parseFloat(inputs.listSize) || 0);
+  const openRate = clampNonNegative(parseFloat(inputs.openRate) || 0);
+  const ctr = clampNonNegative(parseFloat(inputs.ctr) || 0);
+  const aovPerClick = clampNonNegative(parseFloat(inputs.aovPerClick) || 0);
+  const campaignCost = clampNonNegative(parseFloat(inputs.campaignCost) || 0);
   const numEmails = Math.max(1, parseFloat(inputs.numEmails) || 1);
 
   // Edge: no list
@@ -197,11 +198,12 @@ const customFn =
   "function cROI(nr,cc){if(cc<=0)return Infinity;return(nr/cc)*100;}" +
   "function cPC(cc,cl){if(cl<=0)return Infinity;return cc/cl;}" +
   "function cPO(cc,op){if(op<=0)return Infinity;return cc/op;}" +
-  "var ls=Math.max(0,parseFloat(inputs.listSize)||0);" +
-  "var or2=Math.max(0,parseFloat(inputs.openRate)||0);" +
-  "var ctr2=Math.max(0,parseFloat(inputs.ctr)||0);" +
-  "var av=Math.max(0,parseFloat(inputs.aovPerClick)||0);" +
-  "var cc=Math.max(0,parseFloat(inputs.campaignCost)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var ls=cnn(parseFloat(inputs.listSize)||0);" +
+  "var or2=cnn(parseFloat(inputs.openRate)||0);" +
+  "var ctr2=cnn(parseFloat(inputs.ctr)||0);" +
+  "var av=cnn(parseFloat(inputs.aovPerClick)||0);" +
+  "var cc=cnn(parseFloat(inputs.campaignCost)||0);" +
   "var ne=Math.max(1,parseFloat(inputs.numEmails)||1);" +
   "if(ls===0){return['\\u23F0 Email Campaign ROI Calculator\\n\\n\\uD83D\\uDCCA Enter list size, open rate, CTR, AOV per click, campaign cost, and number of emails to see ROI %, cost-per-click/open, and projected scaling outcomes.'];}" +
   "var ed=ls*ne;var op=ed*(or2/100);var cl=op*(ctr2/100);" +
