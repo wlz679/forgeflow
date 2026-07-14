@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
 
 interface ProviderInfo {
@@ -67,8 +68,8 @@ function calculate(inputs: Record<string, string>): string[] {
   const provKey = inputs.provider || 'runpod';
   const prov = PROVIDERS[provKey] || PROVIDERS['runpod'];
   const gpuKey = inputs.gpuType || 'A100';
-  const gpuCount = Math.max(1, Math.min(1000, parseInt(inputs.gpuCount) || 1));
-  const hoursPerDay = Math.max(0.5, Math.min(24, parseInt(inputs.hoursPerDay) || 8));
+  const gpuCount = Math.max(1, Math.min(1000, clampNonNegative(parseInt(inputs.gpuCount)) || 1));
+  const hoursPerDay = Math.max(0.5, Math.min(24, clampNonNegative(parseInt(inputs.hoursPerDay)) || 8));
   const pricingTier = inputs.pricingTier || 'on-demand';
   const includeStorage = inputs.includeStorage !== 'no';
 
@@ -271,6 +272,8 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
+  // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
+  "var cnn=function(x){return Math.max(0,x)};" +
   "var GN={H200:'H200 141GB',H100:'H100 80GB',A100:'A100 80GB',L40S:'L40S 48GB',RTX4090:'RTX 4090 24GB',A6000:'RTX A6000 48GB'};" +
   "var PS2={" +
   "'runpod':{n:'RunPod',sm:0.6,rm:0.85,r:{H200:2.49,H100:1.99,A100:0.79,L40S:0.69,RTX4090:0.49,A6000:0.39},od:1}," +
@@ -284,8 +287,8 @@ const customFn =
   "function fm3(n){return '$'+n.toFixed(2)}function lc3(n){return n.toLocaleString()}function pd3(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
   "var SEP5='\\u2500';" +
   "var pk2=inputs.provider||'runpod';var p2=PS2[pk2]||PS2['runpod'];" +
-  "var gk2=inputs.gpuType||'A100';var gc3=Math.max(1,Math.min(1000,parseInt(inputs.gpuCount)||1));" +
-  "var hpd2=Math.max(0.5,Math.min(24,parseInt(inputs.hoursPerDay)||8));" +
+  "var gk2=inputs.gpuType||'A100';var gc3=Math.max(1,Math.min(1000,cnn(parseInt(inputs.gpuCount))||1));" +
+  "var hpd2=Math.max(0.5,Math.min(24,cnn(parseInt(inputs.hoursPerDay))||8));" +
   "var pt=inputs.pricingTier||'on-demand';var iSt=inputs.includeStorage!=='no';" +
   "var bR=p2.r[gk2]||1;var tm2=1;" +
   "if(pt==='spot')tm2=p2.sm;else if(pt==='reserved')tm2=p2.rm;" +
