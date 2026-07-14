@@ -44,7 +44,8 @@ test('Boundary excellent: ratio < 0.0025 → excellent', () => {
 
 test('Boundary good: ratio 0.0025 ≤ x < 0.01 → good', () => {
   assert.equal(calcHealthBand(0.0025), 'good');
-  assert.equal(calcHealthBand(0.0064), 'good'); // canonical
+  // 0.0064 is in-good-band only; canonical is 0.064/critical (test 1) — P14-1 brief had 10× typo (0.0064 vs 0.064), corrected to math=0.064
+  assert.equal(calcHealthBand(0.0064), 'good');
   assert.equal(calcHealthBand(0.009), 'good');
 });
 
