@@ -6,6 +6,7 @@
 // Tracks in-SLA attainment + tail-ratio (p90 / median) for full resolution cycle.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 85, label: '🟢 Excellent', message: 'Healthy full-cycle resolution — most tickets resolved within SLA, modest tail.' },
@@ -52,13 +53,13 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var sla = Number(inputs.sla_attainment_pct) || 0;\n  var med = Number(inputs.median_resolution_hr) || 0;\n  var p90 = Number(inputs.p90_resolution_hr) || 0;\n  var vol = Number(inputs.monthly_resolved) || 0;\n  var tail = med > 0 ? p90 / med : 0;\n  var tailLabel = tail <= 1.5 ? 'uniform' : tail <= 3.0 ? 'moderate' : 'heavy';\n  var band = sla >= 85 ? 'Excellent' : sla >= 70 ? 'Good' : sla >= 50 ? 'Warning' : 'Critical';\n  var emoji = sla >= 85 ? '🟢' : sla >= 70 ? '🟡' : sla >= 50 ? '🟠' : '🔴';\n  var ifSla = Math.min(100, sla + 10);\n  var ifBand = ifSla >= 85 ? 'Excellent' : ifSla >= 70 ? 'Good' : ifSla >= 50 ? 'Warning' : 'Critical';\n  var ifEmoji = ifSla >= 85 ? '🟢' : ifSla >= 70 ? '🟡' : ifSla >= 50 ? '🟠' : '🔴';\n  var gap = Math.max(0, 85 - sla);\n  var missedApprox = Math.round(vol * (100 - sla) / 100);\n  var ifMissed = Math.round(vol * (100 - ifSla) / 100);\n  return [\n    '🩺 Resolution Health: ' + emoji + ' ' + band + ' (' + sla.toFixed(1) + '% in-SLA · tail ratio ' + tail.toFixed(1) + 'x ' + tailLabel + ')',\n    '📊 Snapshot: ' + vol.toLocaleString() + ' resolved/mo · median ' + med.toFixed(1) + 'hr · p90 ' + p90.toFixed(1) + 'hr · tail ' + tail.toFixed(1) + 'x → ' + missedApprox.toLocaleString() + ' tickets missed SLA',\n    '🔄 What-If: if attainment climbs to ' + ifSla.toFixed(1) + '% (+10pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and ~' + ifMissed.toLocaleString() + ' tickets would still miss',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +' + gap.toFixed(1) + 'pp attainment — investigate the tier with the highest tail ratio',\n    '🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.',\n    '💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.'\n  ];\n}",
+    customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var sla = cnn(Number(inputs.sla_attainment_pct) || 0);\n  var med = cnn(Number(inputs.median_resolution_hr) || 0);\n  var p90 = cnn(Number(inputs.p90_resolution_hr) || 0);\n  var vol = cnn(Number(inputs.monthly_resolved) || 0);\n  var tail = med > 0 ? p90 / med : 0;\n  var tailLabel = tail <= 1.5 ? 'uniform' : tail <= 3.0 ? 'moderate' : 'heavy';\n  var band = sla >= 85 ? 'Excellent' : sla >= 70 ? 'Good' : sla >= 50 ? 'Warning' : 'Critical';\n  var emoji = sla >= 85 ? '🟢' : sla >= 70 ? '🟡' : sla >= 50 ? '🟠' : '🔴';\n  var ifSla = Math.min(100, sla + 10);\n  var ifBand = ifSla >= 85 ? 'Excellent' : ifSla >= 70 ? 'Good' : ifSla >= 50 ? 'Warning' : 'Critical';\n  var ifEmoji = ifSla >= 85 ? '🟢' : ifSla >= 70 ? '🟡' : ifSla >= 50 ? '🟠' : '🔴';\n  var gap = Math.max(0, 85 - sla);\n  var missedApprox = Math.round(vol * (100 - sla) / 100);\n  var ifMissed = Math.round(vol * (100 - ifSla) / 100);\n  return [\n    '🩺 Resolution Health: ' + emoji + ' ' + band + ' (' + sla.toFixed(1) + '% in-SLA · tail ratio ' + tail.toFixed(1) + 'x ' + tailLabel + ')',\n    '📊 Snapshot: ' + vol.toLocaleString() + ' resolved/mo · median ' + med.toFixed(1) + 'hr · p90 ' + p90.toFixed(1) + 'hr · tail ' + tail.toFixed(1) + 'x → ' + missedApprox.toLocaleString() + ' tickets missed SLA',\n    '🔄 What-If: if attainment climbs to ' + ifSla.toFixed(1) + '% (+10pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and ~' + ifMissed.toLocaleString() + ' tickets would still miss',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +' + gap.toFixed(1) + 'pp attainment — investigate the tier with the highest tail ratio',\n    '🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.',\n    '💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.'\n  ];\n}",
   },
   generate(inputs) {
-    const sla = Number(inputs.sla_attainment_pct) || 0;
-    const med = Number(inputs.median_resolution_hr) || 0;
-    const p90 = Number(inputs.p90_resolution_hr) || 0;
-    const vol = Number(inputs.monthly_resolved) || 0;
+    const sla = clampNonNegative(Number(inputs.sla_attainment_pct) || 0);
+    const med = clampNonNegative(Number(inputs.median_resolution_hr) || 0);
+    const p90 = clampNonNegative(Number(inputs.p90_resolution_hr) || 0);
+    const vol = clampNonNegative(Number(inputs.monthly_resolved) || 0);
     const tail = tailRatio(med, p90);
     const tailBand = tailRatioHealth(tail);
     const band = calcHealthBand(sla);

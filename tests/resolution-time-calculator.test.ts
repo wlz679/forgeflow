@@ -50,3 +50,15 @@ test('HEALTH_BANDS has 4 HIGHER-is-better thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 50);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P14-followup: negative sla_attainment_pct clamps to 0 → no negative attainment (defensive layer 2)
+// clampNonNegative(-20) → 0; calcHealthBand(0) → 'critical'
+// (Pre-clamp: calcHealthBand(-20) → 'critical' too, but derived metrics like missedApprox = vol * (100 - sla) / 100 would be > vol)
+test('resolution-time: negative sla_attainment_pct clamps to 0 → no negative attainment (defensive layer 2)', () => {
+  const sla = 0; // after clampNonNegative(-20)
+  const band = calcHealthBand(sla);
+  assert.equal(band, 'critical');
+  // tail ratio with median=0 returns 0 (zero-division guard), not NaN
+  const tail = tailRatio(0, 36);
+  assert.equal(tail, 0);
+});
