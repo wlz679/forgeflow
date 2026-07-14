@@ -46,3 +46,11 @@ test('calcHealthBand: typical 3→excellent, 8→good, 15→warning, 25→critic
   assert.equal(calcHealthBand(15), 'warning');
   assert.equal(calcHealthBand(25), 'critical');
 });
+
+// P14-followup: negative shippingCost clamps to 0 → per-order drops fixed costs (defensive layer 2)
+// clampNonNegative(-5) → 0; perOrderCost(1.5, 0, 1.2, 0.36) = 3.06
+test('fulfillment-cost: negative shippingCost clamps to 0 (defensive layer 2)', () => {
+  const sc = 0; // after clampNonNegative(-5)
+  const poCost = perOrderCost(1.5, sc, 1.2, 0.36);
+  assert.ok(Math.abs(poCost - 3.06) < 0.001, `expected ~3.06, got ${poCost.toFixed(2)}`);
+});

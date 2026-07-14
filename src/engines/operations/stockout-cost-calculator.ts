@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Stockout Cost Calculator (P7-3) — Business v3 standard (6+ emoji sections)
@@ -64,12 +65,12 @@ export function calcHealthBand(costPct: number): 'excellent' | 'good' | 'warning
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const lostSalesPerDay = Math.max(0, parseFloat(inputs.lostSalesPerDay) || 0);
-  const avgStockoutDays = Math.max(0, parseFloat(inputs.avgStockoutDays) || 0);
-  const lostCustomerRate = Math.max(0, Math.min(100, parseFloat(inputs.lostCustomerRate) || 0));
-  const customerLTV = Math.max(0, parseFloat(inputs.customerLTV) || 0);
-  const annualRevenue = Math.max(0, parseFloat(inputs.annualRevenue) || 0);
-  const recoveryRate = Math.max(0, Math.min(100, parseFloat(inputs.recoveryRate) || 0));
+  const lostSalesPerDay = clampNonNegative(parseFloat(inputs.lostSalesPerDay) || 0);
+  const avgStockoutDays = clampNonNegative(parseFloat(inputs.avgStockoutDays) || 0);
+  const lostCustomerRate = clampNonNegative(Math.min(100, parseFloat(inputs.lostCustomerRate) || 0));
+  const customerLTV = clampNonNegative(parseFloat(inputs.customerLTV) || 0);
+  const annualRevenue = clampNonNegative(parseFloat(inputs.annualRevenue) || 0);
+  const recoveryRate = clampNonNegative(Math.min(100, parseFloat(inputs.recoveryRate) || 0));
 
   // Edge: missing sales input or revenue → prompt
   if (lostSalesPerDay === 0 || annualRevenue === 0) {
@@ -187,12 +188,13 @@ const customFn =
   "function tc(lir,ll){return lir+ll;}" +
   "function cpct(t,rev){if(rev<=0)return 0;return (t/rev)*100;}" +
   "function band(p){if(p<5)return 'excellent';if(p<10)return 'good';if(p<15)return 'warning';return 'critical';}" +
-  "var lpd=Math.max(0,parseFloat(inputs.lostSalesPerDay)||0);" +
-  "var days=Math.max(0,parseFloat(inputs.avgStockoutDays)||0);" +
-  "var lcr=Math.max(0,Math.min(100,parseFloat(inputs.lostCustomerRate)||0));" +
-  "var ltv=Math.max(0,parseFloat(inputs.customerLTV)||0);" +
-  "var rev=Math.max(0,parseFloat(inputs.annualRevenue)||0);" +
-  "var rr=Math.max(0,Math.min(100,parseFloat(inputs.recoveryRate)||0));" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var lpd=cnn(parseFloat(inputs.lostSalesPerDay)||0);" +
+  "var days=cnn(parseFloat(inputs.avgStockoutDays)||0);" +
+  "var lcr=cnn(Math.min(100,parseFloat(inputs.lostCustomerRate)||0));" +
+  "var ltv=cnn(parseFloat(inputs.customerLTV)||0);" +
+  "var rev=cnn(parseFloat(inputs.annualRevenue)||0);" +
+  "var rr=cnn(Math.min(100,parseFloat(inputs.recoveryRate)||0));" +
   "if(lpd===0||rev===0){return['\\u23F0 Stockout Cost Calculator\\n\\n\\uD83D\\uDCCA Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.'];}" +
   "var lirV=lir(lpd,days);" +
   "var llV=ll(lirV,lcr,ltv,rr);" +

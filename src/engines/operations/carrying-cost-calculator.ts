@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Carrying Cost Calculator (P7-2) — Business v3 standard (6+ emoji sections)
@@ -60,12 +61,12 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const avgInventoryValue = Math.max(0, parseFloat(inputs.avgInventoryValue) || 0);
-  const storageRate = Math.max(0, parseFloat(inputs.storageRate) || 0);
-  const insuranceRate = Math.max(0, parseFloat(inputs.insuranceRate) || 0);
-  const shrinkageRate = Math.max(0, parseFloat(inputs.shrinkageRate) || 0);
-  const oppCostRate = Math.max(0, parseFloat(inputs.oppCostRate) || 0);
-  const otherCostsPct = Math.max(0, parseFloat(inputs.otherCostsPct) || 0);
+  const avgInventoryValue = clampNonNegative(parseFloat(inputs.avgInventoryValue) || 0);
+  const storageRate = clampNonNegative(parseFloat(inputs.storageRate) || 0);
+  const insuranceRate = clampNonNegative(parseFloat(inputs.insuranceRate) || 0);
+  const shrinkageRate = clampNonNegative(parseFloat(inputs.shrinkageRate) || 0);
+  const oppCostRate = clampNonNegative(parseFloat(inputs.oppCostRate) || 0);
+  const otherCostsPct = clampNonNegative(parseFloat(inputs.otherCostsPct) || 0);
 
   // Edge: zero inventory → prompt to enter value
   if (avgInventoryValue === 0) {
@@ -177,12 +178,13 @@ const customFn =
   "function tac(v,r){return v*(r/100);}" +
   "function cc(v,r){return v*(r/100);}" +
   "function band(r){if(r<20)return 'excellent';if(r<25)return 'good';if(r<30)return 'warning';return 'critical';}" +
-  "var inv=Math.max(0,parseFloat(inputs.avgInventoryValue)||0);" +
-  "var st=Math.max(0,parseFloat(inputs.storageRate)||0);" +
-  "var ins=Math.max(0,parseFloat(inputs.insuranceRate)||0);" +
-  "var sh=Math.max(0,parseFloat(inputs.shrinkageRate)||0);" +
-  "var oc=Math.max(0,parseFloat(inputs.oppCostRate)||0);" +
-  "var ot=Math.max(0,parseFloat(inputs.otherCostsPct)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var inv=cnn(parseFloat(inputs.avgInventoryValue)||0);" +
+  "var st=cnn(parseFloat(inputs.storageRate)||0);" +
+  "var ins=cnn(parseFloat(inputs.insuranceRate)||0);" +
+  "var sh=cnn(parseFloat(inputs.shrinkageRate)||0);" +
+  "var oc=cnn(parseFloat(inputs.oppCostRate)||0);" +
+  "var ot=cnn(parseFloat(inputs.otherCostsPct)||0);" +
   "if(inv===0){return['\\u23F0 Carrying Cost Calculator\\n\\n\\uD83D\\uDCCA Enter your average inventory value and the five carrying-cost rate components (storage, insurance, shrinkage, opportunity cost, other) to see your total annual carrying cost and how you compare to industry benchmarks.'];}" +
   "var rate=tr(st,ins,sh,oc,ot);" +
   "var cost=tac(inv,rate);" +

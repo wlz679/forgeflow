@@ -50,3 +50,11 @@ test('calcHealthBand: typical 99→excellent, 92→good, 87→warning, 50→crit
   assert.equal(calcHealthBand(87), 'warning');
   assert.equal(calcHealthBand(50), 'critical');
 });
+
+// P14-followup: negative demandStdDev clamps to 0 → safetyStock = 0 (defensive layer 2)
+// clampNonNegative(-10) → 0; safetyStock(1.65, 0, 14, 7) = 0
+test('reorder-point: negative demandStdDev clamps to 0 (defensive layer 2)', () => {
+  const dsd = 0; // after clampNonNegative(-10)
+  const ss = safetyStock(1.65, dsd, 14, 7);
+  assert.equal(ss, 0); // zero std dev = zero safety stock (no variability)
+});

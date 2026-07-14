@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Supplier Performance Scorecard Calculator (P7-6) — Business v3 standard
@@ -94,9 +95,9 @@ export function calcHealthBand(score: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const onTimePct = Math.max(0, Math.min(100, parseFloat(inputs.onTimePct) || 0));
-  const defectRatePct = Math.max(0, parseFloat(inputs.defectRatePct) || 0);
-  const leadVarianceDays = Math.max(0, parseFloat(inputs.leadVarianceDays) || 0);
+  const onTimePct = clampNonNegative(Math.min(100, parseFloat(inputs.onTimePct) || 0));
+  const defectRatePct = clampNonNegative(parseFloat(inputs.defectRatePct) || 0);
+  const leadVarianceDays = clampNonNegative(parseFloat(inputs.leadVarianceDays) || 0);
   const costVariancePct = parseFloat(inputs.costVariancePct) || 0;
   const weightPreset = inputs.weightPreset || 'balanced';
 
@@ -219,9 +220,10 @@ const customFn =
   "function cs(ot,df,ld,ct,w){return ot*w.onTime+df*w.defect+ld*w.lead+ct*w.cost;}" +
   "function gr(s){if(s>=90)return 'A';if(s>=80)return 'B';if(s>=70)return 'C';return 'D';}" +
   "function band(s){if(s>=90)return 'excellent';if(s>=80)return 'good';if(s>=70)return 'warning';return 'critical';}" +
-  "var otp=Math.max(0,Math.min(100,parseFloat(inputs.onTimePct)||0));" +
-  "var drp=Math.max(0,parseFloat(inputs.defectRatePct)||0);" +
-  "var lvd=Math.max(0,parseFloat(inputs.leadVarianceDays)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var otp=cnn(Math.min(100,parseFloat(inputs.onTimePct)||0));" +
+  "var drp=cnn(parseFloat(inputs.defectRatePct)||0);" +
+  "var lvd=cnn(parseFloat(inputs.leadVarianceDays)||0);" +
   "var cvp=parseFloat(inputs.costVariancePct)||0;" +
   "var wp=inputs.weightPreset||'balanced';" +
   "if(otp===0&&drp===0&&lvd===0&&cvp===0){return['\\u23F0 Supplier Performance Scorecard Calculator\\n\\n\\uD83D\\uDCCA Enter your supplier performance metrics \\u2014 on-time delivery %, defect rate %, lead time variance, and cost variance \\u2014 to see the composite score and letter grade.'];}" +

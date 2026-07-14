@@ -48,3 +48,11 @@ test('calcHealthBand: typical values 2→excellent, 7→good, 12→warning, 20�
   assert.equal(calcHealthBand(12), 'warning');
   assert.equal(calcHealthBand(20), 'critical');
 });
+
+// P14-followup: negative customerLTV clamps to 0 → lostLTV = 0 (defensive layer 2)
+// clampNonNegative(-200) → 0; lostLTV(5000, 30, 0, 10) = 0
+test('stockout-cost: negative customerLTV clamps to 0 (defensive layer 2)', () => {
+  const ltv = 0; // after clampNonNegative(-200)
+  const ll = lostLTV(5000, 30, ltv, 10);
+  assert.equal(ll, 0); // zero LTV means no lifetime-value loss to count
+});

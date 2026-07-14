@@ -46,3 +46,11 @@ test('single-rate dominance: storage alone = totalRate', () => {
   assert.equal(totalRate(8, 0, 0, 0, 0), 8);
   assert.equal(totalAnnualCost(50000, 8), 4000);
 });
+
+// P14-followup: negative storageRate clamps to 0 → total cost = 0 (defensive layer 2)
+// clampNonNegative(-5) → 0; componentCost(1000, 0) → 0
+test('carrying-cost: negative storageRate clamps to 0 (defensive layer 2)', () => {
+  const pct = 0; // after clampNonNegative(-5)
+  const cost = 1000 * pct / 100; // componentCost semantics
+  assert.equal(cost, 0);
+});

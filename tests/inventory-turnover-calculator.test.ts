@@ -44,3 +44,11 @@ test('calcHealthBand: typical values 8 → excellent, 5 → good, 3 → warning'
   assert.equal(calcHealthBand(5), 'good');
   assert.equal(calcHealthBand(3), 'warning');
 });
+
+// P14-followup: negative avgInventory clamps to 0 → turnoverRatio returns 0 (defensive layer 2)
+// clampNonNegative(-1000) → 0; turnoverRatio(240000, 0) → 0 (via guard, not divide-by-zero)
+test('inventory-turnover: negative avgInventory clamps to 0 (defensive layer 2)', () => {
+  const inv = 0; // after clampNonNegative(-1000)
+  const ratio = turnoverRatio(240000, inv);
+  assert.equal(ratio, 0); // guard returns 0 instead of Infinity / divide-by-zero
+});

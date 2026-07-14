@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Reorder Point Calculator (P7-4) — Business v3 standard (6+ emoji sections)
@@ -65,10 +66,10 @@ export function calcHealthBand(serviceLevel: number): 'excellent' | 'good' | 'wa
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const avgDailyDemand = Math.max(0, parseFloat(inputs.avgDailyDemand) || 0);
-  const leadTimeDays = Math.max(0, parseFloat(inputs.leadTimeDays) || 0);
+  const avgDailyDemand = clampNonNegative(parseFloat(inputs.avgDailyDemand) || 0);
+  const leadTimeDays = clampNonNegative(parseFloat(inputs.leadTimeDays) || 0);
   const serviceLevel = parseInt(inputs.serviceLevel || '95', 10);
-  const demandStdDev = Math.max(0, parseFloat(inputs.demandStdDev) || 0);
+  const demandStdDev = clampNonNegative(parseFloat(inputs.demandStdDev) || 0);
   const reviewPeriod = Math.max(1, parseFloat(inputs.reviewPeriod) || 7);
 
   // Edge: zero demand or lead time → prompt
@@ -184,10 +185,11 @@ const customFn =
   "function ss(z,sd,l,rp){if(rp<=0)return 0;return z*sd*Math.sqrt(l/rp);}" +
   "function rop(l,s){return l+s;}" +
   "function band(sl){if(sl>=95)return 'excellent';if(sl>=90)return 'good';if(sl>=85)return 'warning';return 'critical';}" +
-  "var add=Math.max(0,parseFloat(inputs.avgDailyDemand)||0);" +
-  "var ltd2=Math.max(0,parseFloat(inputs.leadTimeDays)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var add=cnn(parseFloat(inputs.avgDailyDemand)||0);" +
+  "var ltd2=cnn(parseFloat(inputs.leadTimeDays)||0);" +
   "var sl=parseInt(inputs.serviceLevel||'95',10);" +
-  "var dsd=Math.max(0,parseFloat(inputs.demandStdDev)||0);" +
+  "var dsd=cnn(parseFloat(inputs.demandStdDev)||0);" +
   "var rp=Math.max(1,parseFloat(inputs.reviewPeriod)||7);" +
   "if(add===0||ltd2===0){return['\\u23F0 Reorder Point Calculator\\n\\n\\uD83D\\uDCCA Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.'];}" +
   "var z=zScore(sl);" +

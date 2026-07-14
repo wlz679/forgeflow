@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Order Fulfillment Cost Calculator (P7-5) — Business v3 standard
@@ -76,13 +77,13 @@ export function calcHealthBand(perOrderCost: number): 'excellent' | 'good' | 'wa
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const ordersPerMonth = Math.max(0, parseFloat(inputs.ordersPerMonth) || 0);
-  const pickMin = Math.max(0, parseFloat(inputs.pickMin) || 0);
-  const packMin = Math.max(0, parseFloat(inputs.packMin) || 0);
-  const shippingCost = Math.max(0, parseFloat(inputs.shippingCost) || 0);
-  const packagingCost = Math.max(0, parseFloat(inputs.packagingCost) || 0);
-  const laborRate = Math.max(0, parseFloat(inputs.laborRate) || 0);
-  const returnRate = Math.max(0, Math.min(100, parseFloat(inputs.returnRate) || 0));
+  const ordersPerMonth = clampNonNegative(parseFloat(inputs.ordersPerMonth) || 0);
+  const pickMin = clampNonNegative(parseFloat(inputs.pickMin) || 0);
+  const packMin = clampNonNegative(parseFloat(inputs.packMin) || 0);
+  const shippingCost = clampNonNegative(parseFloat(inputs.shippingCost) || 0);
+  const packagingCost = clampNonNegative(parseFloat(inputs.packagingCost) || 0);
+  const laborRate = clampNonNegative(parseFloat(inputs.laborRate) || 0);
+  const returnRate = clampNonNegative(Math.min(100, parseFloat(inputs.returnRate) || 0));
 
   // Edge: zero orders → prompt
   if (ordersPerMonth === 0) {
@@ -207,13 +208,14 @@ const customFn =
   "function mt(poc,opm){return poc*opm;}" +
   "function at(mt){return mt*12;}" +
   "function band(p){if(p<5)return 'excellent';if(p<10)return 'good';if(p<20)return 'warning';return 'critical';}" +
-  "var opm=Math.max(0,parseFloat(inputs.ordersPerMonth)||0);" +
-  "var pk=Math.max(0,parseFloat(inputs.pickMin)||0);" +
-  "var pa=Math.max(0,parseFloat(inputs.packMin)||0);" +
-  "var sc=Math.max(0,parseFloat(inputs.shippingCost)||0);" +
-  "var pc=Math.max(0,parseFloat(inputs.packagingCost)||0);" +
-  "var lr=Math.max(0,parseFloat(inputs.laborRate)||0);" +
-  "var rr=Math.max(0,Math.min(100,parseFloat(inputs.returnRate)||0));" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var opm=cnn(parseFloat(inputs.ordersPerMonth)||0);" +
+  "var pk=cnn(parseFloat(inputs.pickMin)||0);" +
+  "var pa=cnn(parseFloat(inputs.packMin)||0);" +
+  "var sc=cnn(parseFloat(inputs.shippingCost)||0);" +
+  "var pc=cnn(parseFloat(inputs.packagingCost)||0);" +
+  "var lr=cnn(parseFloat(inputs.laborRate)||0);" +
+  "var rr=cnn(Math.min(100,parseFloat(inputs.returnRate)||0));" +
   "if(opm===0){return['\\u23F0 Order Fulfillment Cost Calculator\\n\\n\\uD83D\\uDCCA Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.'];}" +
   "var lm=lmo(pk,pa);" +
   "var lc=lcpo(lm,lr);" +

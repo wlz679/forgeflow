@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Inventory Turnover Calculator (P7-1) — Business v3 standard (6+ emoji sections)
@@ -63,8 +64,8 @@ export function calcHealthBand(ratio: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const annualCOGS = Math.max(0, parseFloat(inputs.annualCOGS) || 0);
-  const avgInventory = Math.max(0, parseFloat(inputs.avgInventory) || 0);
+  const annualCOGS = clampNonNegative(parseFloat(inputs.annualCOGS) || 0);
+  const avgInventory = clampNonNegative(parseFloat(inputs.avgInventory) || 0);
   const periodDays = Math.max(1, parseFloat(inputs.periodDays) || 365);
   const industry = inputs.industry || 'general';
 
@@ -178,8 +179,9 @@ const customFn =
   "var BM={general:6,apparel:4,electronics:6,grocery:12,furniture:3};" +
   "function bm(ind){return BM[ind]!=null?BM[ind]:6;}" +
   "function band(r){if(r>=6)return 'excellent';if(r>=4)return 'good';if(r>=2)return 'warning';return 'critical';}" +
-  "var cogs=Math.max(0,parseFloat(inputs.annualCOGS)||0);" +
-  "var inv=Math.max(0,parseFloat(inputs.avgInventory)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var cogs=cnn(parseFloat(inputs.annualCOGS)||0);" +
+  "var inv=cnn(parseFloat(inputs.avgInventory)||0);" +
   "var pd=Math.max(1,parseFloat(inputs.periodDays)||365);" +
   "var ind=inputs.industry||'general';" +
   "if(cogs===0||inv===0){return['\\u23F0 Inventory Turnover Calculator\\n\\n\\uD83D\\uDCCA Enter your annual COGS and average inventory value to see how many times your inventory cycles per year, how many days to sell, and how you compare to your industry benchmark.'];}" +
