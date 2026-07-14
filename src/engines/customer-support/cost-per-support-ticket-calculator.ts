@@ -6,6 +6,7 @@
 // Multi-tier T1/T2/T3 architecture with weighted average cost-per-ticket.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 10, label: 'Excellent', message: 'Lean support cost.' },
@@ -50,12 +51,13 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
-  var t1c = Number(inputs.t1_cost) || 0;
-  var t2c = Number(inputs.t2_cost) || 0;
-  var t3c = Number(inputs.t3_cost) || 0;
-  var t1s = Number(inputs.t1_share) || 0;
-  var t2s = Number(inputs.t2_share) || 0;
-  var vol = Number(inputs.monthly_volume) || 0;
+  var cnn=function(x){return Math.max(0,x)};
+  var t1c = cnn(Number(inputs.t1_cost) || 0);
+  var t2c = cnn(Number(inputs.t2_cost) || 0);
+  var t3c = cnn(Number(inputs.t3_cost) || 0);
+  var t1s = cnn(Number(inputs.t1_share) || 0);
+  var t2s = cnn(Number(inputs.t2_share) || 0);
+  var vol = cnn(Number(inputs.monthly_volume) || 0);
   var t3s = 100 - t1s - t2s;
   if (t3s < 0) t3s = 0;
   var avg = (t1c * t1s + t2c * t2s + t3c * t3s) / 100;
@@ -77,12 +79,12 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const t1Cost = Number(inputs.t1_cost) || 0;
-    const t2Cost = Number(inputs.t2_cost) || 0;
-    const t3Cost = Number(inputs.t3_cost) || 0;
-    const t1Share = Number(inputs.t1_share) || 0;
-    const t2Share = Number(inputs.t2_share) || 0;
-    const monthlyVolume = Number(inputs.monthly_volume) || 0;
+    const t1Cost = clampNonNegative(Number(inputs.t1_cost) || 0);
+    const t2Cost = clampNonNegative(Number(inputs.t2_cost) || 0);
+    const t3Cost = clampNonNegative(Number(inputs.t3_cost) || 0);
+    const t1Share = clampNonNegative(Number(inputs.t1_share) || 0);
+    const t2Share = clampNonNegative(Number(inputs.t2_share) || 0);
+    const monthlyVolume = clampNonNegative(Number(inputs.monthly_volume) || 0);
     const t3Share = Math.max(0, 100 - t1Share - t2Share);
     const avg = weightedAvgCost(t1Cost, t2Cost, t3Cost, t1Share, t2Share);
     const monthly = monthlyTotalCost(avg, monthlyVolume);

@@ -51,3 +51,13 @@ test('HEALTH_BANDS has 4 bands with thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 50);
   assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
 });
+
+// P14-followup: negative t3_cost clamps to 0 → no negative weighted avg (defensive layer 2)
+// clampNonNegative(-100) → 0; weightedAvgCost(8, 25, 0, 55, 30) → 11.9 → good band
+// (Pre-clamp: weightedAvgCost(8, 25, -100, 55, 30) → -3.1 → bogus Excellent verdict)
+test('cost-per-ticket: negative t3_cost clamps to 0 → no negative weighted avg (defensive layer 2)', () => {
+  const t3Cost = 0; // after clampNonNegative(-100)
+  const avg = weightedAvgCost(8, 25, t3Cost, 55, 30);
+  assert.ok(avg > 0, 'avg should be non-negative, got ' + avg);
+  assert.equal(calcHealthBand(avg), 'good');
+});
