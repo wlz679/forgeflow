@@ -53,3 +53,21 @@ export function generateCombinations(
   }
   return results;
 }
+
+/**
+ * Clamp a numeric input to [0, Infinity).
+ *
+ * Used by P-series engines to defensively guard against negative values
+ * (e.g., from URL params, presets, or copy-paste typos) that would
+ * otherwise silently produce misleading "Excellent" band verdicts.
+ *
+ * HTML5 min="0" on input fields is the first UX layer; this is the
+ * second safety layer at compute time.
+ */
+export function clampNonNegative(x: number): number {
+  // NaN guard: Math.max(0, NaN) === NaN, which would violate the [0, ∞)
+  // jsdoc contract and silently leak bad values into band comparators.
+  // Undefined passes through (returns NaN) — see tests/helpers.test.ts
+  // test 5, which documents that callers must pre-validate undefined.
+  return Number.isNaN(x as number) ? 0 : Math.max(0, x);
+}
