@@ -55,3 +55,15 @@ test('HEALTH_BANDS has 4 HIGHER-is-better thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 70);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P14-followup: negative csat_pct clamps to 0 → no negative CI / band (defensive layer 2)
+// clampNonNegative(-50) → 0; calcHealthBand(0) → 'critical'
+// (Pre-clamp: calcHealthBand(-50) → 'critical' too, but marginOfError(-50, 200) computes nonsense)
+test('csat: negative csat_pct clamps to 0 → no negative band (defensive layer 2)', () => {
+  const csat = 0; // after clampNonNegative(-50)
+  const band = calcHealthBand(csat);
+  assert.equal(band, 'critical');
+  // margin of error with clamped 0 is well-defined (csat_pct=0 → p=0 → variance=0 → m=0)
+  const m = marginOfError(csat, 200);
+  assert.equal(m, 0);
+});

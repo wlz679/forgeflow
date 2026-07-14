@@ -6,6 +6,7 @@
 // 95% CI margin of error formula: z=1.96, p*(1-p)/n.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 90, label: '🟢 Excellent', message: 'World-class CSAT — customers consistently rate interactions positively.' },
@@ -56,13 +57,13 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var csat = Number(inputs.csat_pct) || 0;\n  var rr = Number(inputs.response_rate) || 0;\n  var n = Number(inputs.sample_size) || 0;\n  var tgt = Number(inputs.target_csat) || 0;\n  var m = n > 0 ? 1.96 * Math.sqrt((csat/100) * (1 - csat/100) / n) * 100 : 0;\n  var ciLow = csat - m;\n  var ciHigh = csat + m;\n  var gap = tgt - csat;\n  var band = csat >= 90 ? 'Excellent' : csat >= 80 ? 'Good' : csat >= 70 ? 'Warning' : 'Critical';\n  var emoji = csat >= 90 ? '🟢' : csat >= 80 ? '🟡' : csat >= 70 ? '🟠' : '🔴';\n  var ifCsat = Math.min(100, csat + 3);\n  var ifBand = ifCsat >= 90 ? 'Excellent' : ifCsat >= 80 ? 'Good' : ifCsat >= 70 ? 'Warning' : 'Critical';\n  var ifEmoji = ifCsat >= 90 ? '🟢' : ifCsat >= 80 ? '🟡' : ifCsat >= 70 ? '🟠' : '🔴';\n  var ifM = n > 0 ? 1.96 * Math.sqrt((ifCsat/100) * (1 - ifCsat/100) / n) * 100 : 0;\n  var rrWarning = rr < 20 ? ' · ⚠️ Response rate <20% = biased sample' : '';\n  return [\n    '🩺 CSAT Health: ' + emoji + ' ' + band + ' (' + csat.toFixed(1) + '% CSAT · ' + m.toFixed(1) + 'pp margin · ' + rr.toFixed(1) + '% response rate)',\n    '📊 Snapshot: ' + n.toLocaleString() + ' responses · 95% CI [' + ciLow.toFixed(1) + '%, ' + ciHigh.toFixed(1) + '%] · target ' + tgt.toFixed(1) + '% · gap ' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp' + rrWarning,\n    '🔄 What-If: if CSAT climbs to ' + ifCsat.toFixed(1) + '% (+3pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and margin tightens to ' + ifM.toFixed(1) + 'pp',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',\n    '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',\n    '💡 Tip: Response rate <20% = biased sample (only happy/angry respond); incentivize responses with post-resolution email + optional micro-survey.'\n  ];\n}",
+    customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var csat = cnn(Number(inputs.csat_pct) || 0);\n  var rr = cnn(Number(inputs.response_rate) || 0);\n  var n = cnn(Number(inputs.sample_size) || 0);\n  var tgt = cnn(Number(inputs.target_csat) || 0);\n  var m = n > 0 ? 1.96 * Math.sqrt((csat/100) * (1 - csat/100) / n) * 100 : 0;\n  var ciLow = csat - m;\n  var ciHigh = csat + m;\n  var gap = tgt - csat;\n  var band = csat >= 90 ? 'Excellent' : csat >= 80 ? 'Good' : csat >= 70 ? 'Warning' : 'Critical';\n  var emoji = csat >= 90 ? '🟢' : csat >= 80 ? '🟡' : csat >= 70 ? '🟠' : '🔴';\n  var ifCsat = Math.min(100, csat + 3);\n  var ifBand = ifCsat >= 90 ? 'Excellent' : ifCsat >= 80 ? 'Good' : ifCsat >= 70 ? 'Warning' : 'Critical';\n  var ifEmoji = ifCsat >= 90 ? '🟢' : ifCsat >= 80 ? '🟡' : ifCsat >= 70 ? '🟠' : '🔴';\n  var ifM = n > 0 ? 1.96 * Math.sqrt((ifCsat/100) * (1 - ifCsat/100) / n) * 100 : 0;\n  var rrWarning = rr < 20 ? ' · ⚠️ Response rate <20% = biased sample' : '';\n  return [\n    '🩺 CSAT Health: ' + emoji + ' ' + band + ' (' + csat.toFixed(1) + '% CSAT · ' + m.toFixed(1) + 'pp margin · ' + rr.toFixed(1) + '% response rate)',\n    '📊 Snapshot: ' + n.toLocaleString() + ' responses · 95% CI [' + ciLow.toFixed(1) + '%, ' + ciHigh.toFixed(1) + '%] · target ' + tgt.toFixed(1) + '% · gap ' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp' + rrWarning,\n    '🔄 What-If: if CSAT climbs to ' + ifCsat.toFixed(1) + '% (+3pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and margin tightens to ' + ifM.toFixed(1) + 'pp',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',\n    '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',\n    '💡 Tip: Response rate <20% = biased sample (only happy/angry respond); incentivize responses with post-resolution email + optional micro-survey.'\n  ];\n}",
   },
   generate(inputs) {
-    const csat = Number(inputs.csat_pct) || 0;
-    const rr = Number(inputs.response_rate) || 0;
-    const n = Number(inputs.sample_size) || 0;
-    const target = Number(inputs.target_csat) || 0;
+    const csat = clampNonNegative(Number(inputs.csat_pct) || 0);
+    const rr = clampNonNegative(Number(inputs.response_rate) || 0);
+    const n = clampNonNegative(Number(inputs.sample_size) || 0);
+    const target = clampNonNegative(Number(inputs.target_csat) || 0);
     const m = marginOfError(csat, n);
     const ci = confidenceInterval(csat, n);
     const gap = gapToTarget(csat, target);
