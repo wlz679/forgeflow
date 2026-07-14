@@ -16,6 +16,7 @@
 // Lesson 6: Leading € format consistently in both generate() and customFn
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 50_000,    label: 'Excellent', message: 'No breaches or small-scale.' },
@@ -60,11 +61,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var breaches = Number(inputs.breaches_per_year) || 0;
-  var subjects = Number(inputs.data_subjects_per_breach) || 0;
-  var cps = Number(inputs.notification_cost_per_subject) || 0;
-  var remediation = Number(inputs.remediation_cost_per_breach) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var breaches = cnn(Number(inputs.breaches_per_year) || 0);
+  var subjects = cnn(Number(inputs.data_subjects_per_breach) || 0);
+  var cps = cnn(Number(inputs.notification_cost_per_subject) || 0);
+  var remediation = cnn(Number(inputs.remediation_cost_per_breach) || 0);
   var notifCost = subjects * cps;
   var perBreach = notifCost + remediation;
   var annual = breaches * perBreach;
@@ -104,10 +105,10 @@ const engine: ToolEngine = {
 return run(inputs, pick, fill);`,
   },
   generate(inputs) {
-    const breaches = Number(inputs.breaches_per_year) || 0;
-    const subjects = Number(inputs.data_subjects_per_breach) || 0;
-    const cps = Number(inputs.notification_cost_per_subject) || 0;
-    const remediation = Number(inputs.remediation_cost_per_breach) || 0;
+    const breaches = clampNonNegative(Number(inputs.breaches_per_year) || 0);
+    const subjects = clampNonNegative(Number(inputs.data_subjects_per_breach) || 0);
+    const cps = clampNonNegative(Number(inputs.notification_cost_per_subject) || 0);
+    const remediation = clampNonNegative(Number(inputs.remediation_cost_per_breach) || 0);
     const notifCost = notificationCost(subjects, cps);
     const perBreach = costPerBreach(notifCost, remediation);
     const annual = annualBreachCost(breaches, perBreach);

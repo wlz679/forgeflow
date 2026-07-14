@@ -73,3 +73,20 @@ test('(9) HEALTH_BANDS structure: 4 keys, Infinity critical', () => {
 test('(10) Signature guard: calcHealthBand is single-arg', () => {
   assert.equal(calcHealthBand.length, 1, 'calcHealthBand should take exactly 1 argument');
 });
+
+// P14-followup: negative subjects/remediation/breaches clamp to 0 → annual=0 → Excellent (defensive layer 2)
+// Pre-clamp: notificationCost(-50K, 5)=-250K, costPerBreach(-250K, -80K)=-330K, annualBreachCost(-1, -330K)=330K
+// → bogus 'Warning' band. Post-clamp: 0×0+0=0 annual → 'Excellent' (no breach cost).
+test('breach-notification: negative subjects/remediation/breaches clamp to 0 → annual=0 → Excellent (defensive layer 2)', () => {
+  const subjects = 0;       // after clampNonNegative(-50_000)
+  const cps = 5;
+  const remediation = 0;    // after clampNonNegative(-80_000)
+  const breaches = 0;       // after clampNonNegative(-1)
+  const notif = notificationCost(subjects, cps);
+  const perBreach = costPerBreach(notif, remediation);
+  const annual = annualBreachCost(breaches, perBreach);
+  assert.equal(notif, 0);
+  assert.equal(perBreach, 0);
+  assert.equal(annual, 0);
+  assert.equal(calcHealthBand(annual), 'excellent');
+});

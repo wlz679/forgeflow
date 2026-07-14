@@ -118,3 +118,18 @@ test('(11) HEALTH_BANDS structure: 4 keys, -Infinity critical, decimal threshold
 test('(12) Signature guard: calcHealthBand is single-arg', () => {
   assert.equal(calcHealthBand.length, 1, 'calcHealthBand should take exactly 1 argument');
 });
+
+// P14-followup: negative cmp_monthly_cost clamps to 0 → savings≥0, cost=0, ROI=-Infinity (defensive layer 2)
+// Pre-clamp: dsarAnnualSavings(-50, 2.5, 95, 40)=-57K, cmpAnnualCost(-1200)=-14400, net=-42.6K
+// → cmpROI(-42.6K, -14400) = (-42.6K / -14400) * 100 = 295.83% → bogus 'Good' band (neg cost cancels).
+// Post-clamp: cost=0 → cmpROI returns -Infinity → 'Critical' (correct: no CMP cost means no platform to evaluate).
+test('cmp-roi: negative cmp_monthly_cost clamps to 0 → ROI=-Infinity → Critical (defensive layer 2)', () => {
+  const cmpCost = 0; // after clampNonNegative(-1200)
+  const cmpAnnual = cmpAnnualCost(cmpCost);
+  const net = netAnnualSavings(0, cmpAnnual); // dsarSav clamped to 0 too
+  const roi = cmpROI(net, cmpAnnual);
+  assert.equal(cmpAnnual, 0);
+  assert.equal(net, 0);
+  assert.equal(roi, -Infinity);
+  assert.equal(calcHealthBand(roi), 'critical');
+});

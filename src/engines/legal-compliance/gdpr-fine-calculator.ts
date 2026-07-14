@@ -8,6 +8,7 @@
 // Critical threshold 2% (EU enforcement has not exceeded this in past 5 years except against Big Tech).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.0025, label: 'Excellent', message: 'Low exposure — mature compliance.' },
@@ -57,10 +58,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var revenue = Number(inputs.annual_revenue_global) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var revenue = cnn(Number(inputs.annual_revenue_global) || 0);
   var finePct = Number(String(inputs.max_fine_pct).replace('%','')) || 4;
-  var violations = Number(inputs.violations_per_year) || 0;
+  var violations = cnn(Number(inputs.violations_per_year) || 0);
   var industryStr = String(inputs.industry_risk_multiplier);
   var industryMult = industryStr.indexOf('0.8') >= 0 ? 0.8 : industryStr.indexOf('1.0') >= 0 ? 1.0 : industryStr.indexOf('1.4') >= 0 ? 1.4 : industryStr.indexOf('1.6') >= 0 ? 1.6 : 0.8;
   var maxFine = revenue * (finePct / 100);
@@ -87,9 +88,9 @@ const engine: ToolEngine = {
 return run(inputs, pick, fill);`,
   },
   generate(inputs) {
-    const revenue = Number(inputs.annual_revenue_global) || 0;
+    const revenue = clampNonNegative(Number(inputs.annual_revenue_global) || 0);
     const finePct = Number(String(inputs.max_fine_pct).replace('%', '')) || 4;
-    const violations = Number(inputs.violations_per_year) || 0;
+    const violations = clampNonNegative(Number(inputs.violations_per_year) || 0);
     const industryStr = String(inputs.industry_risk_multiplier);
     const industryMult = industryStr.indexOf('0.8') >= 0 ? 0.8 : industryStr.indexOf('1.0') >= 0 ? 1.0 : industryStr.indexOf('1.4') >= 0 ? 1.4 : industryStr.indexOf('1.6') >= 0 ? 1.6 : 0.8;
     const maxFine = maxFineAmount(revenue, finePct);

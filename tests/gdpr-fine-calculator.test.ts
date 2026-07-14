@@ -69,3 +69,19 @@ test('HEALTH_BANDS exports 4 bands with locked thresholds', () => {
   // Signature guard: single-axis band takes 1 arg
   assert.equal(calcHealthBand.length, 1);
 });
+
+// P14-followup: negative annual_revenue_global clamps to 0 → maxFine=0 → ratio=0 (defensive layer 2)
+// Pre-clamp: maxFineAmount(-25M, 4) = -1M → perViolation = -800K → annual = -1.6M → ratio(-1.6M, -25M) = 0.064
+// → bogus 'Critical' band even though math should be zero. Post-clamp: revenue=0 → maxFine=0 → ratio=0 → 'Excellent' (zero exposure).
+test('gdpr-fine: negative annual_revenue_global clamps to 0 → ratio=0 → Excellent (defensive layer 2)', () => {
+  const revenue = 0; // after clampNonNegative(-25_000_000)
+  const maxFine = maxFineAmount(revenue, 4);
+  const perViolation = perViolationExpected(maxFine, 0.8);
+  const annual = annualExposure(perViolation, 2);
+  const ratio = exposureRatio(annual, revenue);
+  assert.equal(maxFine, 0);
+  assert.equal(perViolation, 0);
+  assert.equal(annual, 0);
+  assert.equal(ratio, 0);
+  assert.equal(calcHealthBand(ratio), 'excellent');
+});

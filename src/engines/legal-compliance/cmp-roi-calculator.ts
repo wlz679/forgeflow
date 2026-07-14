@@ -16,6 +16,7 @@
 // Lesson 6: Leading € format consistently in both generate() and customFn
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // Thresholds are decimal ratios: 4.0 = 400%, 1.5 = 150%, 0.5 = 50%.
 // calcHealthBand receives roiPct in percentage form (e.g. 296 for 296%) and
@@ -74,12 +75,12 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cmpCost = Number(inputs.cmp_monthly_cost) || 0;
-  var dsars = Number(inputs.dsars_per_month) || 0;
-  var hours = Number(inputs.hours_per_dsar) || 0;
-  var rate = Number(inputs.hourly_rate_dpo) || 0;
-  var uplift = Number(inputs.automation_uplift_pct) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var cmpCost = cnn(Number(inputs.cmp_monthly_cost) || 0);
+  var dsars = cnn(Number(inputs.dsars_per_month) || 0);
+  var hours = cnn(Number(inputs.hours_per_dsar) || 0);
+  var rate = cnn(Number(inputs.hourly_rate_dpo) || 0);
+  var uplift = cnn(Number(inputs.automation_uplift_pct) || 0);
   var dsarSavings = dsars * 12 * hours * (uplift / 100) * rate;
   var cmpAnnual = cmpCost * 12;
   var net = dsarSavings - cmpAnnual;
@@ -129,11 +130,11 @@ const engine: ToolEngine = {
 return run(inputs, pick, fill);`,
   },
   generate(inputs) {
-    const cmpCost = Number(inputs.cmp_monthly_cost) || 0;
-    const dsars = Number(inputs.dsars_per_month) || 0;
-    const hours = Number(inputs.hours_per_dsar) || 0;
-    const rate = Number(inputs.hourly_rate_dpo) || 0;
-    const uplift = Number(inputs.automation_uplift_pct) || 0;
+    const cmpCost = clampNonNegative(Number(inputs.cmp_monthly_cost) || 0);
+    const dsars = clampNonNegative(Number(inputs.dsars_per_month) || 0);
+    const hours = clampNonNegative(Number(inputs.hours_per_dsar) || 0);
+    const rate = clampNonNegative(Number(inputs.hourly_rate_dpo) || 0);
+    const uplift = clampNonNegative(Number(inputs.automation_uplift_pct) || 0);
     const dsarSavings = dsarAnnualSavings(dsars, hours, rate, uplift);
     const cmpAnnual = cmpAnnualCost(cmpCost);
     const net = netAnnualSavings(dsarSavings, cmpAnnual);
