@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
 
 // --- Provider & Model definitions ---
@@ -79,9 +80,9 @@ const SEP = '─'; // ─
 
 function calculate(inputs: Record<string, string>): string[] {
   // --- Parse inputs ---
-  const inTokens = Math.max(1, Math.min(10_000_000, parseInt(inputs.inputTokens) || 1000));
-  const outTokens = Math.max(1, Math.min(10_000_000, parseInt(inputs.outputTokens) || 500));
-  const reqsPerDay = Math.max(0, Math.min(1_000_000, parseInt(inputs.requestsPerDay) || 100));
+  const inTokens = Math.max(1, Math.min(10_000_000, clampNonNegative(parseInt(inputs.inputTokens)) || 1000));
+  const outTokens = Math.max(1, Math.min(10_000_000, clampNonNegative(parseInt(inputs.outputTokens)) || 500));
+  const reqsPerDay = Math.max(0, Math.min(1_000_000, clampNonNegative(parseInt(inputs.requestsPerDay)) || 100));
   const pricingMode = inputs.pricingMode === 'batch' ? 'batch' : 'realtime';
   const batchMult = pricingMode === 'batch' ? 0.5 : 1.0;
   const reqsPerMonth = reqsPerDay * 30;
@@ -273,6 +274,8 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // --- customFn: exact sync of calculate(), minified JS ---
 const customFn =
+  // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
+  "var cnn=function(x){return Math.max(0,x)};" +
   // PROVIDERS data
   "var P={" +
   "openai:{n:'OpenAI',m:[{k:'gpt-5-mini',n:'GPT 5Mini',i:0.25,o:2,cw:'272K'}]}," +
@@ -290,9 +293,9 @@ const customFn =
   "function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
   "var SEP='\\u2500';" +
   // Parse inputs
-  "var iT=Math.max(1,Math.min(1e7,parseInt(inputs.inputTokens)||1000));" +
-  "var oT=Math.max(1,Math.min(1e7,parseInt(inputs.outputTokens)||500));" +
-  "var rpd=Math.max(0,Math.min(1e6,parseInt(inputs.requestsPerDay)||100));" +
+  "var iT=Math.max(1,Math.min(1e7,cnn(parseInt(inputs.inputTokens))||1000));" +
+  "var oT=Math.max(1,Math.min(1e7,cnn(parseInt(inputs.outputTokens))||500));" +
+  "var rpd=Math.max(0,Math.min(1e6,cnn(parseInt(inputs.requestsPerDay))||100));" +
   "var pm=inputs.pricingMode||'realtime';" +
   "var bm=pm==='batch'?0.5:1;var rpm=rpd*30;" +
   // Compute costs
