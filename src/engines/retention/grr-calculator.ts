@@ -7,6 +7,7 @@
 
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: [0.95, Infinity],
@@ -32,9 +33,9 @@ export function calcHealthBand(v: number): 'excellent' | 'good' | 'warning' | 'c
 }
 
 function calculate(inputs: Record<string, string>): string[] {
-  const startingMRR = Math.max(0, parseFloat(inputs.startingMRR) || 0);
-  const downgradeMRR = Math.max(0, parseFloat(inputs.downgradeMRR) || 0);
-  const churnedMRR = Math.max(0, parseFloat(inputs.churnedMRR) || 0);
+  const startingMRR = clampNonNegative(parseFloat(inputs.startingMRR) || 0);
+  const downgradeMRR = clampNonNegative(parseFloat(inputs.downgradeMRR) || 0);
+  const churnedMRR = clampNonNegative(parseFloat(inputs.churnedMRR) || 0);
 
   if (startingMRR === 0 && downgradeMRR === 0 && churnedMRR === 0) {
     return [
@@ -119,7 +120,8 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   "function calc(s,d,c){var r=s-d-c;var g=s===0?0:r/s;return[{ret:r,grr:g}];}" +
-  "return calc(Math.max(0,parseFloat(inputs.startingMRR)||0),Math.max(0,parseFloat(inputs.downgradeMRR)||0),Math.max(0,parseFloat(inputs.churnedMRR)||0));";
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "return calc(cnn(parseFloat(inputs.startingMRR)||0),cnn(parseFloat(inputs.downgradeMRR)||0),cnn(parseFloat(inputs.churnedMRR)||0));";
 
 // ============== Engine ==============
 

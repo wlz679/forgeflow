@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ─── Math helpers ─────────────────────────────────────────────────────────
 
@@ -39,8 +40,8 @@ const engine: ToolEngine = {
     { name: 'arrRenewed',       label: 'ARR renewed ($)',          type: 'number', default: 850_000,   min: 0, step: 50_000, hint: 'Of the up-for-renewal ARR, how much actually renewed (excludes expansion, which is captured separately by NRR/GRR).' },
   ],
   generate(inputs) {
-    const arrUpForRenewal = Math.max(0, Number(inputs.arrUpForRenewal) || 0);
-    const arrRenewed = Math.max(0, Number(inputs.arrRenewed) || 0);
+    const arrUpForRenewal = clampNonNegative(Number(inputs.arrUpForRenewal) || 0);
+    const arrRenewed = clampNonNegative(Number(inputs.arrRenewed) || 0);
     const rate = renewalRate(arrRenewed, arrUpForRenewal);
     const band = calcHealthBand(rate);
     const bandInfo = HEALTH_BANDS[band];
@@ -94,7 +95,7 @@ function formatCurrency(n: number): string {
 
 // ─── Minimal live customFn (computed in browser; mirrors calculate math) ───
 
-const customFn = "const up=Number(inputs.arrUpForRenewal)||0;const renewed=Number(inputs.arrRenewed)||0;const rate=up>0?renewed/up:0;let band='critical';if(rate>=0.90)band='excellent';else if(rate>=0.80)band='good';else if(rate>=0.70)band='warning';const pct=(rate*100).toFixed(1)+'%';const BAND_LABEL={excellent:'🟢 Excellent',good:'🟡 Good',warning:'🟠 Warning',critical:'🔴 Critical'};const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');return['🩺 Renewal Rate Health: '+BAND_LABEL[band]+' ('+pct+')','📊 Snapshot: '+fmt(renewed)+' of '+fmt(up)+' up-for-renewal ARR renewed.','🔄 What-If: Each +5pp recovers '+fmt(up*0.05)+'; 90% target lifts renewed to '+fmt(up*0.90)+'.','⚖️ Break-Even: To hit 90%, need '+fmt(up*0.90-renewed)+' more renewed ARR.','🎯 Milestone: → 80% needs '+fmt(up*0.80-renewed)+' more; → 90% needs '+fmt(up*0.90-renewed)+' more.','💡 Tip: Pair with [[solopreneur-grr-calculator]] for full gross retention and [[solopreneur-nrr-calculator]] for expansion impact.',];";
+const customFn = "var cnn=function(x){return Math.max(0,x)};const up=cnn(Number(inputs.arrUpForRenewal)||0);const renewed=cnn(Number(inputs.arrRenewed)||0);const rate=up>0?renewed/up:0;let band='critical';if(rate>=0.90)band='excellent';else if(rate>=0.80)band='good';else if(rate>=0.70)band='warning';const pct=(rate*100).toFixed(1)+'%';const BAND_LABEL={excellent:'🟢 Excellent',good:'🟡 Good',warning:'🟠 Warning',critical:'🔴 Critical'};const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');return['🩺 Renewal Rate Health: '+BAND_LABEL[band]+' ('+pct+')','📊 Snapshot: '+fmt(renewed)+' of '+fmt(up)+' up-for-renewal ARR renewed.','🔄 What-If: Each +5pp recovers '+fmt(up*0.05)+'; 90% target lifts renewed to '+fmt(up*0.90)+'.','⚖️ Break-Even: To hit 90%, need '+fmt(up*0.90-renewed)+' more renewed ARR.','🎯 Milestone: → 80% needs '+fmt(up*0.80-renewed)+' more; → 90% needs '+fmt(up*0.90-renewed)+' more.','💡 Tip: Pair with [[solopreneur-grr-calculator]] for full gross retention and [[solopreneur-nrr-calculator]] for expansion impact.',];";
 
 engine.customFn = customFn;
 engine.clientConfig = { type: 'custom', wordPools: {}, customFn };

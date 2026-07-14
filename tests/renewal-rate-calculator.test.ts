@@ -66,3 +66,12 @@ test('HEALTH_BANDS table structure', () => {
   assert.equal(HEALTH_BANDS.good.threshold, 0.80);
   assert.equal(HEALTH_BANDS.warning.threshold, 0.70);
 });
+
+// P14-followup: negative arrUpForRenewal clamps to 0 → no divide-by-zero (defensive layer 2)
+// clampNonNegative(-1000000) → 0; renewalRate(850000, 0) → 0 (zero-division guard kicks in)
+test('renewal-rate: negative arrUpForRenewal clamps to 0 → no divide-by-zero (defensive layer 2)', () => {
+  const up = 0; // after clampNonNegative(-1000000)
+  const rate = renewalRate(850_000, up);
+  assert.equal(rate, 0); // guard against negative or NaN ratio
+  assert.equal(calcHealthBand(rate), 'critical');
+});

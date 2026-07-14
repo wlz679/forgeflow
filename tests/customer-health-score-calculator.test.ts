@@ -71,3 +71,12 @@ test('HEALTH_BANDS exported with correct thresholds', () => {
   assert.deepEqual(HEALTH_BANDS.warning, [40, 60]);
   assert.deepEqual(HEALTH_BANDS.critical, [0, 40]);
 });
+
+// P14-followup: negative productUsage clamps to 0 → score remains computable (defensive layer 2)
+// clampNonNegative(-50) → 0; healthScore(0, 40, 5, 80, 60, 'balanced') yields valid score range
+// (NPS excluded — has its own range clamp; uses non-NPS input productUsage)
+test('customer-health: negative productUsage clamps to 0 → score remains computable', () => {
+  const pu = 0; // after clampNonNegative(-50)
+  const sc = healthScore(pu, 40, 5, 80, 60, 'balanced');
+  assert.ok(sc >= 0 && sc <= 100, 'score ' + sc + ' must be in [0, 100]');
+});

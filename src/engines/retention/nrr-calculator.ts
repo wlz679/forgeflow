@@ -17,6 +17,7 @@
 
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Health band constants (per-file, exported for tests) ==============
 
@@ -55,10 +56,10 @@ export function calcHealthBand(nrrValue: number): 'excellent' | 'good' | 'warnin
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const startingMRR  = Math.max(0, parseFloat(inputs.startingMRR)  || 0);
-  const expansionMRR = Math.max(0, parseFloat(inputs.expansionMRR) || 0);
-  const downgradeMRR = Math.max(0, parseFloat(inputs.downgradeMRR) || 0);
-  const churnedMRR   = Math.max(0, parseFloat(inputs.churnedMRR)   || 0);
+  const startingMRR  = clampNonNegative(parseFloat(inputs.startingMRR)  || 0);
+  const expansionMRR = clampNonNegative(parseFloat(inputs.expansionMRR) || 0);
+  const downgradeMRR = clampNonNegative(parseFloat(inputs.downgradeMRR) || 0);
+  const churnedMRR   = clampNonNegative(parseFloat(inputs.churnedMRR)   || 0);
 
   // Edge: all inputs zero → prompt to enter values
   if (startingMRR === 0 && expansionMRR === 0 && downgradeMRR === 0 && churnedMRR === 0) {
@@ -186,10 +187,11 @@ const customFn =
   "function nrm(s,e,d,c){return s+e-d-c;}" +
   "function nr(s,e,d,c){if(s===0)return 0;return nrm(s,e,d,c)/s;}" +
   "function band(v){if(v>=1.20)return 'excellent';if(v>=1.10)return 'good';if(v>=1.00)return 'warning';return 'critical';}" +
-  "var sm=Math.max(0,parseFloat(inputs.startingMRR)||0);" +
-  "var em=Math.max(0,parseFloat(inputs.expansionMRR)||0);" +
-  "var dm=Math.max(0,parseFloat(inputs.downgradeMRR)||0);" +
-  "var cm=Math.max(0,parseFloat(inputs.churnedMRR)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var sm=cnn(parseFloat(inputs.startingMRR)||0);" +
+  "var em=cnn(parseFloat(inputs.expansionMRR)||0);" +
+  "var dm=cnn(parseFloat(inputs.downgradeMRR)||0);" +
+  "var cm=cnn(parseFloat(inputs.churnedMRR)||0);" +
   "if(sm===0&&em===0&&dm===0&&cm===0){" +
     "return['\\uD83D\\uDCCA NRR Calculator\\n\\n\\uD83D\\uDCCA Enter your starting MRR, expansion MRR (upsell + cross-sell), downgrade MRR, and churned MRR to see your Net Revenue Retention ratio \\u2014 the headline SaaS metric every board reports.'];" +
   "}" +

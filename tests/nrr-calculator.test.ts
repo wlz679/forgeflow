@@ -42,3 +42,12 @@ test('HEALTH_BANDS exported with correct thresholds', () => {
   assert.deepEqual(HEALTH_BANDS.warning, [1.00, 1.10]);
   assert.deepEqual(HEALTH_BANDS.critical, [0, 1.00]);
 });
+
+// P14-followup: negative startingMRR clamps to 0 → no divide-by-zero (defensive layer 2)
+// clampNonNegative(-100000) → 0; nrr(0, 15000, 5000, 8000) → 0 (zero-division guard kicks in)
+test('nrr: negative startingMRR clamps to 0 → no divide-by-zero (defensive layer 2)', () => {
+  const s = 0; // after clampNonNegative(-100000)
+  const r = nrr(s, 15000, 5000, 8000);
+  assert.equal(r, 0); // guard against negative or NaN ratio
+  assert.equal(calcHealthBand(r), 'critical');
+});

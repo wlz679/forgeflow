@@ -16,6 +16,7 @@
 
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: [80, Infinity],
@@ -55,11 +56,11 @@ export function calcHealthBand(score: number): 'excellent' | 'good' | 'warning' 
 }
 
 function calculate(inputs: Record<string, string>): string[] {
-  const productUsage = Math.max(0, Math.min(100, parseFloat(inputs.productUsage) || 0));
+  const productUsage = clampNonNegative(Math.min(100, parseFloat(inputs.productUsage) || 0));
   const nps = Math.max(-100, Math.min(100, parseFloat(inputs.nps) || 0));
-  const supportTickets = Math.max(0, parseFloat(inputs.supportTickets) || 0);
-  const engagement = Math.max(0, Math.min(100, parseFloat(inputs.engagement) || 0));
-  const contractValue = Math.max(0, Math.min(100, parseFloat(inputs.contractValue) || 0));
+  const supportTickets = clampNonNegative(parseFloat(inputs.supportTickets) || 0);
+  const engagement = clampNonNegative(Math.min(100, parseFloat(inputs.engagement) || 0));
+  const contractValue = clampNonNegative(Math.min(100, parseFloat(inputs.contractValue) || 0));
   const preset = (inputs.weightPreset || 'balanced') as keyof typeof PRESETS;
 
   if (productUsage === 0 && nps === 0 && supportTickets === 0 && engagement === 0 && contractValue === 0) {
@@ -149,11 +150,12 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   "function nrm(s,v){if(s==='nps')return (v+100)/2;if(s==='supportTickets')return 100-Math.min(v*4,100);return v;}" +
-  "var pu=Math.max(0,Math.min(100,parseFloat(inputs.productUsage)||0));" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var pu=cnn(Math.min(100,parseFloat(inputs.productUsage)||0));" +
   "var n=Math.max(-100,Math.min(100,parseFloat(inputs.nps)||0));" +
-  "var st=Math.max(0,parseFloat(inputs.supportTickets)||0);" +
-  "var en=Math.max(0,Math.min(100,parseFloat(inputs.engagement)||0));" +
-  "var cv=Math.max(0,Math.min(100,parseFloat(inputs.contractValue)||0));" +
+  "var st=cnn(parseFloat(inputs.supportTickets)||0);" +
+  "var en=cnn(Math.min(100,parseFloat(inputs.engagement)||0));" +
+  "var cv=cnn(Math.min(100,parseFloat(inputs.contractValue)||0));" +
   "var ps=inputs.weightPreset||'balanced';" +
   "var wt=ps==='product-led'?[0.50,0.15,0.10,0.15,0.10]:ps==='service-led'?[0.10,0.20,0.35,0.25,0.10]:ps==='sales-led'?[0.15,0.25,0.10,0.10,0.40]:[0.20,0.20,0.20,0.20,0.20];" +
   "var sgs=[nrm('productUsage',pu),nrm('nps',n),nrm('supportTickets',st),nrm('engagement',en),nrm('contractValue',cv)];" +

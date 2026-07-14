@@ -18,6 +18,7 @@
 
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: [0.25, Infinity],
@@ -43,9 +44,9 @@ export function calcHealthBand(v: number): 'excellent' | 'good' | 'warning' | 'c
 }
 
 function calculate(inputs: Record<string, string>): string[] {
-  const startingMRR = Math.max(0, parseFloat(inputs.startingMRR) || 0);
-  const upsellMRR = Math.max(0, parseFloat(inputs.upsellMRR) || 0);
-  const crossSellMRR = Math.max(0, parseFloat(inputs.crossSellMRR) || 0);
+  const startingMRR = clampNonNegative(parseFloat(inputs.startingMRR) || 0);
+  const upsellMRR = clampNonNegative(parseFloat(inputs.upsellMRR) || 0);
+  const crossSellMRR = clampNonNegative(parseFloat(inputs.crossSellMRR) || 0);
 
   if (startingMRR === 0 && upsellMRR === 0 && crossSellMRR === 0) {
     return [
@@ -139,7 +140,8 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   "function exp(u,c){return u+c;}" +
   "function pct(s,u,c){if(s===0)return 0;return exp(u,c)/s;}" +
-  "return [pct(Math.max(0,parseFloat(inputs.startingMRR)||0),Math.max(0,parseFloat(inputs.upsellMRR)||0),Math.max(0,parseFloat(inputs.crossSellMRR)||0))];";
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "return [pct(cnn(parseFloat(inputs.startingMRR)||0),cnn(parseFloat(inputs.upsellMRR)||0),cnn(parseFloat(inputs.crossSellMRR)||0))];";
 
 // ============== Engine ==============
 

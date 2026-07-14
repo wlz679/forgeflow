@@ -38,3 +38,12 @@ test('HEALTH_BANDS exported with correct thresholds (INVERSE direction)', () => 
   assert.deepEqual(HEALTH_BANDS.warning, [0.10, 0.20]);
   assert.deepEqual(HEALTH_BANDS.critical, [0.20, Infinity]);
 });
+
+// P14-followup: negative startCustomers clamps to 0 → no divide-by-zero (defensive layer 2)
+// clampNonNegative(-100) → 0; logoChurnPct(0, 8) → 0 (zero-division guard kicks in)
+test('logo-churn: negative startCustomers clamps to 0 → no divide-by-zero (defensive layer 2)', () => {
+  const s = 0; // after clampNonNegative(-100)
+  const ratio = logoChurnPct(s, 8);
+  assert.equal(ratio, 0); // guard against negative or NaN ratio
+  assert.equal(calcHealthBand(ratio), 'excellent');
+});

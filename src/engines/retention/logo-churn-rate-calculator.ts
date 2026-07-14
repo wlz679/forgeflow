@@ -17,6 +17,7 @@
 
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: [0, 0.05],
@@ -42,8 +43,8 @@ export function calcHealthBand(v: number): 'excellent' | 'good' | 'warning' | 'c
 }
 
 function calculate(inputs: Record<string, string>): string[] {
-  const startCustomers = Math.max(0, parseFloat(inputs.startCustomers) || 0);
-  const lostCustomers = Math.max(0, parseFloat(inputs.lostCustomers) || 0);
+  const startCustomers = clampNonNegative(parseFloat(inputs.startCustomers) || 0);
+  const lostCustomers = clampNonNegative(parseFloat(inputs.lostCustomers) || 0);
 
   if (startCustomers === 0 && lostCustomers === 0) {
     return [
@@ -138,7 +139,8 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   "function lc(s,l){if(s===0)return 0;return l/s;}" +
   "function rc(s,l){return s-l;}" +
-  "return [lc(Math.max(0,parseFloat(inputs.startCustomers)||0),Math.max(0,parseFloat(inputs.lostCustomers)||0)),rc(Math.max(0,parseFloat(inputs.startCustomers)||0),Math.max(0,parseFloat(inputs.lostCustomers)||0))];";
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "return [lc(cnn(parseFloat(inputs.startCustomers)||0),cnn(parseFloat(inputs.lostCustomers)||0)),rc(cnn(parseFloat(inputs.startCustomers)||0),cnn(parseFloat(inputs.lostCustomers)||0))];";
 
 // ============== Engine ==============
 
