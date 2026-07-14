@@ -6,6 +6,7 @@
 // Multi-tier T1/T2/T3 first-response SLA attainment with equal-weighted tier average.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 90, label: '🟢 Excellent', message: 'World-class SLA reliability.' },
@@ -67,13 +68,13 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: [
-      "function run(inputs, pick, fill) {",
-      "  var t1Target = Number(inputs.t1_target_min) || 0;",
-      "  var t2Target = Number(inputs.t2_target_hr) || 0;",
-      "  var t3Target = Number(inputs.t3_target_hr) || 0;",
-      "  var t1 = Number(inputs.t1_attainment) || 0;",
-      "  var t2 = Number(inputs.t2_attainment) || 0;",
-      "  var t3 = Number(inputs.t3_attainment) || 0;",
+      "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {",
+      "  var t1Target = cnn(Number(inputs.t1_target_min) || 0);",
+      "  var t2Target = cnn(Number(inputs.t2_target_hr) || 0);",
+      "  var t3Target = cnn(Number(inputs.t3_target_hr) || 0);",
+      "  var t1 = cnn(Number(inputs.t1_attainment) || 0);",
+      "  var t2 = cnn(Number(inputs.t2_attainment) || 0);",
+      "  var t3 = cnn(Number(inputs.t3_attainment) || 0);",
       "  var overall = (t1 + t2 + t3) / 3;",
       "  var band = overall >= 90 ? 'Excellent' : overall >= 80 ? 'Good' : overall >= 60 ? 'Warning' : 'Critical';",
       "  var emoji = overall >= 90 ? '🟢' : overall >= 80 ? '🟡' : overall >= 60 ? '🟠' : '🔴';",
@@ -99,12 +100,12 @@ const engine: ToolEngine = {
     ].join('\n'),
   },
   generate(inputs) {
-    const t1TargetMin = Number(inputs.t1_target_min) || 0;
-    const t2TargetHr = Number(inputs.t2_target_hr) || 0;
-    const t3TargetHr = Number(inputs.t3_target_hr) || 0;
-    const t1 = Number(inputs.t1_attainment) || 0;
-    const t2 = Number(inputs.t2_attainment) || 0;
-    const t3 = Number(inputs.t3_attainment) || 0;
+    const t1TargetMin = clampNonNegative(Number(inputs.t1_target_min) || 0);
+    const t2TargetHr = clampNonNegative(Number(inputs.t2_target_hr) || 0);
+    const t3TargetHr = clampNonNegative(Number(inputs.t3_target_hr) || 0);
+    const t1 = clampNonNegative(Number(inputs.t1_attainment) || 0);
+    const t2 = clampNonNegative(Number(inputs.t2_attainment) || 0);
+    const t3 = clampNonNegative(Number(inputs.t3_attainment) || 0);
     const overall = overallAttainment(t1, t2, t3);
     const band = calcHealthBand(overall);
     const bandInfo = HEALTH_BANDS[band];

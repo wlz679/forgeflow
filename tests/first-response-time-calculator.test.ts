@@ -51,3 +51,13 @@ test('HEALTH_BANDS has 4 HIGHER-is-better thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 60);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P14-followup: negative tier attainment clamps to 0 → no negative overall SLA (defensive layer 2)
+// clampNonNegative(-20) → 0; overallAttainment(0, 80, 90) → 56.67; calcHealthBand(56.67) → 'critical'
+// (Pre-clamp: overallAttainment(-20, 80, 90) → 50; could mislead SLA reporting)
+test('first-response: negative tier attainment clamps to 0 → no negative overall SLA (defensive layer 2)', () => {
+  const t1 = 0; // after clampNonNegative(-20)
+  const overall = overallAttainment(t1, 80, 90);
+  assert.ok(overall > 0, 'overall should be non-negative, got ' + overall);
+  assert.equal(calcHealthBand(overall), 'critical');
+});
