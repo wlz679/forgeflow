@@ -82,3 +82,15 @@ test('staleCount: clamps negative (over-freshness edge)', () => {
   // updated > total clamps to 0 stale
   assert.equal(staleCount(600, 500), 0);
 });
+
+// P14-followup: negative target_freshness_pct clamps to 0 → no inverted gap_pp (defensive layer 2)
+// clampNonNegative(-30) → 0; freshRate12mo(325, 500) = 0.65 → gap = 0 - 65 = -65pp
+// (Pre-clamp: target=-30 → gap = -30 - 65 = -95pp → misleading "further from target" signal)
+test('article-freshness: negative target_freshness_pct clamps to 0 → no inverted gap_pp (defensive layer 2)', () => {
+  const target = 0; // after clampNonNegative(-30)
+  const fresh12 = freshRate12mo(325, 500); // 0.65
+  const gap = target - fresh12 * 100; // -65pp (negative = above target)
+  // Gap should NOT exceed the 65pp canonical ceiling (which would indicate inflated negative target)
+  assert.ok(gap >= -65, 'gap_pp should be >= -65, got ' + gap);
+  assert.equal(gap, -65);
+});

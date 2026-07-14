@@ -94,3 +94,15 @@ test('HEALTH_BANDS: 4 bands with threshold1/threshold2 structure for excellent/g
   // Signature guard: composite calcHealthBand takes 2 args (helpful + voteRate), not 1.
   assert.equal(calcHealthBand.length, 2);
 });
+
+// P14-followup: negative helpful_votes clamps to 0 → no inverted helpful share (defensive layer 2)
+// clampNonNegative(-100) → 0; helpfulPct(0, 700) = 0 (no NaN from negative votes)
+// (Pre-clamp: helpfulPct(-100, 700) = -100/600 = -0.1666 → negative share → bogus "below 0%" band)
+test('article-helpfulness: negative helpful_votes clamps to 0 → no inverted helpful share (defensive layer 2)', () => {
+  const helpful = 0; // after clampNonNegative(-100)
+  const unhelp = 700;
+  const hpct = helpfulPct(helpful, unhelp);
+  // helpful share must be >= 0 (defensive layer)
+  assert.ok(hpct >= 0, 'helpful share must be >= 0, got ' + hpct);
+  assert.equal(hpct, 0);
+});

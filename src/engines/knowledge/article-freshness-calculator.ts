@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (NN/g + TSIA Knowledge-Centered Service 2024 + Intercom Help Center Best Practices).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.80, label: 'Excellent', message: 'Fresh KB - most articles reviewed recently.' },
@@ -45,11 +46,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var total = Number(inputs.total_articles) || 0;
-  var up12 = Number(inputs.articles_updated_12mo) || 0;
-  var up6 = Number(inputs.articles_updated_6mo) || 0;
-  var target = Number(inputs.target_freshness_pct) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var total = cnn(Number(inputs.total_articles) || 0);
+  var up12 = cnn(Number(inputs.articles_updated_12mo) || 0);
+  var up6 = cnn(Number(inputs.articles_updated_6mo) || 0);
+  var target = cnn(Number(inputs.target_freshness_pct) || 0);
   if (up12 > total) up12 = total;
   if (up6 > up12) up6 = up12;
   var fresh12 = total > 0 ? up12 / total : 0;
@@ -71,10 +72,10 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const total = Number(inputs.total_articles) || 0;
-    const up12 = Math.min(Number(inputs.articles_updated_12mo) || 0, total);
-    const up6 = Math.min(Number(inputs.articles_updated_6mo) || 0, up12);
-    const targetPct = Number(inputs.target_freshness_pct) || 0;
+    const total = clampNonNegative(Number(inputs.total_articles) || 0);
+    const up12 = Math.min(clampNonNegative(Number(inputs.articles_updated_12mo) || 0), total);
+    const up6 = Math.min(clampNonNegative(Number(inputs.articles_updated_6mo) || 0), up12);
+    const targetPct = clampNonNegative(Number(inputs.target_freshness_pct) || 0);
     const fresh12 = freshRate12mo(up12, total);
     const fresh6 = total > 0 ? up6 / total : 0;
     const stale = staleCount(up12, total);

@@ -9,6 +9,7 @@
 // warning/critical different) — mirrors P9-5 customer-health-score pattern.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold1: 0.85, threshold2: 0.15, label: 'Excellent', message: 'Articles helping customers.' },
@@ -55,14 +56,12 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var views = Number(inputs.total_article_views) || 0;
-  var helpful = Number(inputs.helpful_votes) || 0;
-  var unhelp = Number(inputs.unhelpful_votes) || 0;
-  var articles = Number(inputs.total_articles) || 0;
-  var target = Number(inputs.target_helpful_pct) || 0;
-  if (helpful < 0) helpful = 0;
-  if (unhelp < 0) unhelp = 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var views = cnn(Number(inputs.total_article_views) || 0);
+  var helpful = cnn(Number(inputs.helpful_votes) || 0);
+  var unhelp = cnn(Number(inputs.unhelpful_votes) || 0);
+  var articles = cnn(Number(inputs.total_articles) || 0);
+  var target = cnn(Number(inputs.target_helpful_pct) || 0);
   var totalV = helpful + unhelp;
   if (helpful > totalV) helpful = totalV;
   if (unhelp > totalV) unhelp = totalV;
@@ -87,14 +86,14 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const views = Number(inputs.total_article_views) || 0;
-    const helpful = Math.max(0, Number(inputs.helpful_votes) || 0);
-    const unhelp = Math.max(0, Number(inputs.unhelpful_votes) || 0);
+    const views = clampNonNegative(Number(inputs.total_article_views) || 0);
+    const helpful = clampNonNegative(Number(inputs.helpful_votes) || 0);
+    const unhelp = clampNonNegative(Number(inputs.unhelpful_votes) || 0);
     const totalV = helpful + unhelp;
     const helpfulCapped = Math.min(helpful, totalV);
     const unhelpCapped = Math.min(unhelp, totalV);
-    const articles = Number(inputs.total_articles) || 0;
-    const target = Number(inputs.target_helpful_pct) || 0;
+    const articles = clampNonNegative(Number(inputs.total_articles) || 0);
+    const target = clampNonNegative(Number(inputs.target_helpful_pct) || 0);
     const hpct = helpfulPct(helpfulCapped, unhelpCapped);
     const vr = voteRate(totalV, views);
     const gap = target - hpct * 100;
