@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Win Rate by Stage Calculator (P8-4) — Business v3 standard (6+ emoji sections)
@@ -93,14 +94,14 @@ export function calcHealthBand(pct: number): 'excellent' | 'good' | 'warning' | 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const sqlEntered = Math.max(0, parseFloat(inputs.sqlEntered) || 0);
-  const sqlAdvanced = Math.max(0, parseFloat(inputs.sqlAdvanced) || 0);
-  const oppEntered = Math.max(0, parseFloat(inputs.oppEntered) || 0);
-  const oppAdvanced = Math.max(0, parseFloat(inputs.oppAdvanced) || 0);
-  const proposalEntered = Math.max(0, parseFloat(inputs.proposalEntered) || 0);
-  const proposalAdvanced = Math.max(0, parseFloat(inputs.proposalAdvanced) || 0);
-  const negEntered = Math.max(0, parseFloat(inputs.negEntered) || 0);
-  const negAdvanced = Math.max(0, parseFloat(inputs.negAdvanced) || 0);
+  const sqlEntered = clampNonNegative(parseFloat(inputs.sqlEntered) || 0);
+  const sqlAdvanced = clampNonNegative(parseFloat(inputs.sqlAdvanced) || 0);
+  const oppEntered = clampNonNegative(parseFloat(inputs.oppEntered) || 0);
+  const oppAdvanced = clampNonNegative(parseFloat(inputs.oppAdvanced) || 0);
+  const proposalEntered = clampNonNegative(parseFloat(inputs.proposalEntered) || 0);
+  const proposalAdvanced = clampNonNegative(parseFloat(inputs.proposalAdvanced) || 0);
+  const negEntered = clampNonNegative(parseFloat(inputs.negEntered) || 0);
+  const negAdvanced = clampNonNegative(parseFloat(inputs.negAdvanced) || 0);
 
   // Stage rates — unrounded intermediates (this is what makes defaults × to exactly 0.15)
   const sqlRate = stageRate(sqlAdvanced, sqlEntered);
@@ -260,14 +261,15 @@ const customFn =
   "function oWR(r){return r[0]*r[1]*r[2]*r[3];}" +
   "function bS(r){var mi=0,mv=r[0];for(var i=1;i<r.length;i++){if(r[i]<mv){mv=r[i];mi=i;}}return mi;}" +
   "function band(v){if(v>=25)return 'excellent';if(v>=15)return 'good';if(v>=5)return 'warning';return 'critical';}" +
-  "var sqlE=Math.max(0,parseFloat(inputs.sqlEntered)||0);" +
-  "var sqlA=Math.max(0,parseFloat(inputs.sqlAdvanced)||0);" +
-  "var oppE=Math.max(0,parseFloat(inputs.oppEntered)||0);" +
-  "var oppA=Math.max(0,parseFloat(inputs.oppAdvanced)||0);" +
-  "var proE=Math.max(0,parseFloat(inputs.proposalEntered)||0);" +
-  "var proA=Math.max(0,parseFloat(inputs.proposalAdvanced)||0);" +
-  "var negE=Math.max(0,parseFloat(inputs.negEntered)||0);" +
-  "var negA=Math.max(0,parseFloat(inputs.negAdvanced)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var sqlE=cnn(parseFloat(inputs.sqlEntered)||0);" +
+  "var sqlA=cnn(parseFloat(inputs.sqlAdvanced)||0);" +
+  "var oppE=cnn(parseFloat(inputs.oppEntered)||0);" +
+  "var oppA=cnn(parseFloat(inputs.oppAdvanced)||0);" +
+  "var proE=cnn(parseFloat(inputs.proposalEntered)||0);" +
+  "var proA=cnn(parseFloat(inputs.proposalAdvanced)||0);" +
+  "var negE=cnn(parseFloat(inputs.negEntered)||0);" +
+  "var negA=cnn(parseFloat(inputs.negAdvanced)||0);" +
   "var sqlR=sR(sqlA,sqlE);" +
   "var oppR=sR(oppA,oppE);" +
   "var proR=sR(proA,proE);" +

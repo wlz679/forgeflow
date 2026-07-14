@@ -69,3 +69,12 @@ test('single customer: baseACV(300000, 1) === 300000 → excellent', () => {
   assert.equal(annual, 300000);
   assert.equal(calcHealthBand(annual), 'excellent');
 });
+
+// P14-followup: negative totalContractValue clamps to 0 → baseACV returns 0, no negative ACV (defensive layer 2)
+// clampNonNegative(-100000) → 0; baseACV(0, 12) → 0 (instead of -8333.33 divide-by-customer result)
+test('acv: negative totalContractValue clamps to 0 (defensive layer 2)', () => {
+  const tcv = 0; // after clampNonNegative(-100000)
+  const base = baseACV(tcv, 12);
+  assert.equal(base, 0); // guard against negative ACV band flip
+  assert.equal(calcHealthBand(annualACV(monthlyACV(base, 12))), 'critical');
+});

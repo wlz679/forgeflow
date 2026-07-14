@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Pipeline Value Calculator (P8-1) — Business v3 standard (6+ emoji sections)
@@ -80,14 +81,14 @@ export function calcHealthBand(value: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const discoveryCount = Math.max(0, parseFloat(inputs.discoveryCount) || 0);
-  const discoverySize = Math.max(0, parseFloat(inputs.discoverySize) || 0);
-  const proposalCount = Math.max(0, parseFloat(inputs.proposalCount) || 0);
-  const proposalSize = Math.max(0, parseFloat(inputs.proposalSize) || 0);
-  const negotiationCount = Math.max(0, parseFloat(inputs.negotiationCount) || 0);
-  const negotiationSize = Math.max(0, parseFloat(inputs.negotiationSize) || 0);
-  const closingCount = Math.max(0, parseFloat(inputs.closingCount) || 0);
-  const closingSize = Math.max(0, parseFloat(inputs.closingSize) || 0);
+  const discoveryCount = clampNonNegative(parseFloat(inputs.discoveryCount) || 0);
+  const discoverySize = clampNonNegative(parseFloat(inputs.discoverySize) || 0);
+  const proposalCount = clampNonNegative(parseFloat(inputs.proposalCount) || 0);
+  const proposalSize = clampNonNegative(parseFloat(inputs.proposalSize) || 0);
+  const negotiationCount = clampNonNegative(parseFloat(inputs.negotiationCount) || 0);
+  const negotiationSize = clampNonNegative(parseFloat(inputs.negotiationSize) || 0);
+  const closingCount = clampNonNegative(parseFloat(inputs.closingCount) || 0);
+  const closingSize = clampNonNegative(parseFloat(inputs.closingSize) || 0);
 
   // Edge: all stages empty → prompt to enter values
   if (discoveryCount === 0 && proposalCount === 0 && negotiationCount === 0 && closingCount === 0) {
@@ -219,14 +220,15 @@ const customFn =
   "function np(dc,ds,pc,ps,nc,ns,cc,cs){return dc*ds+pc*ps+nc*ns+cc*cs;}" +
   "function wf(w){return w*0.5;}" +
   "function band(v){if(v>=500000)return 'excellent';if(v>=200000)return 'good';if(v>=50000)return 'warning';return 'critical';}" +
-  "var dc=Math.max(0,parseFloat(inputs.discoveryCount)||0);" +
-  "var ds=Math.max(0,parseFloat(inputs.discoverySize)||0);" +
-  "var pc=Math.max(0,parseFloat(inputs.proposalCount)||0);" +
-  "var ps=Math.max(0,parseFloat(inputs.proposalSize)||0);" +
-  "var nc=Math.max(0,parseFloat(inputs.negotiationCount)||0);" +
-  "var ns=Math.max(0,parseFloat(inputs.negotiationSize)||0);" +
-  "var cc=Math.max(0,parseFloat(inputs.closingCount)||0);" +
-  "var cs=Math.max(0,parseFloat(inputs.closingSize)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var dc=cnn(parseFloat(inputs.discoveryCount)||0);" +
+  "var ds=cnn(parseFloat(inputs.discoverySize)||0);" +
+  "var pc=cnn(parseFloat(inputs.proposalCount)||0);" +
+  "var ps=cnn(parseFloat(inputs.proposalSize)||0);" +
+  "var nc=cnn(parseFloat(inputs.negotiationCount)||0);" +
+  "var ns=cnn(parseFloat(inputs.negotiationSize)||0);" +
+  "var cc=cnn(parseFloat(inputs.closingCount)||0);" +
+  "var cs=cnn(parseFloat(inputs.closingSize)||0);" +
   "if(dc===0&&pc===0&&nc===0&&cc===0){" +
     "return['\\uD83D\\uDCCA Pipeline Value Calculator\\n\\n\\uD83D\\uDCCA Enter the number of deals and average deal size for each pipeline stage (Discovery / Proposal / Negotiation / Closing) to see your weighted pipeline value and revenue forecast.'];" +
   "}" +

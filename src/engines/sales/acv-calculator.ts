@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // ACV (Average Contract Value) Calculator (P8-3) — Business v3 standard (6+ emoji sections)
@@ -86,10 +87,10 @@ export function calcHealthBand(value: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const totalContractValue = Math.max(0, parseFloat(inputs.totalContractValue) || 0);
+  const totalContractValue = clampNonNegative(parseFloat(inputs.totalContractValue) || 0);
   const contractLength = Math.max(1, parseFloat(inputs.contractLength) || 1);
   const numCustomers = Math.max(1, parseFloat(inputs.numCustomers) || 1);
-  const expansionRate = Math.max(0, parseFloat(inputs.expansionRate) || 0);
+  const expansionRate = clampNonNegative(parseFloat(inputs.expansionRate) || 0);
 
   // Use unrounded intermediates for derivation, then round at display.
   const base = baseACV(totalContractValue, numCustomers);
@@ -225,10 +226,11 @@ const customFn =
   "function aACV(m){return Math.round(m*12);}" +
   "function eACV(a,r){return a*(100+r)/100;}" +
   "function band(v){if(v>=50000)return 'excellent';if(v>=10000)return 'good';if(v>=2000)return 'warning';return 'critical';}" +
-  "var tcv=Math.max(0,parseFloat(inputs.totalContractValue)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var tcv=cnn(parseFloat(inputs.totalContractValue)||0);" +
   "var cl=Math.max(1,parseFloat(inputs.contractLength)||1);" +
   "var nc=Math.max(1,parseFloat(inputs.numCustomers)||1);" +
-  "var er=Math.max(0,parseFloat(inputs.expansionRate)||0);" +
+  "var er=cnn(parseFloat(inputs.expansionRate)||0);" +
   "var base=bACV(tcv,nc);" +
   "var moRaw=mACV(base,cl);" +
   "var moDisp=Math.round(moRaw*100)/100;" +

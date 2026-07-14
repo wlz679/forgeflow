@@ -62,3 +62,17 @@ test('calcHealthBand: 3.0 → excellent (exact boundary, 3x rule)', () => {
 test('zero win rate guard: requiredAdditionalPipeline(625000, 0) === 0 (avoid Infinity)', () => {
   assert.equal(requiredAdditionalPipeline(625000, 0), 0);
 });
+
+// P14-followup: negative pipelineValue clamps to 0 → coverageRatio(0, 1M) = 0 (defensive layer 2)
+// clampNonNegative(-500000) → 0; weighted pipeline still bounded; gap is full quota
+test('pipeline-coverage: negative pipelineValue clamps to 0 (defensive layer 2)', () => {
+  const pv = 0; // after clampNonNegative(-500000)
+  const wr = 25;
+  const qt = 1_000_000;
+  const cov = coverageRatio(pv, qt);
+  assert.equal(cov, 0);
+  assert.equal(calcHealthBand(cov), 'critical');
+  // weightedPipeline(0, 25) = 0; gap = 1M - 0 = 1M; required = 1M / 0.25 = 4M
+  assert.equal(gap(qt, weightedPipeline(pv, wr)), 1_000_000);
+  assert.equal(requiredAdditionalPipeline(gap(qt, weightedPipeline(pv, wr)), wr), 4_000_000);
+});

@@ -75,3 +75,15 @@ test('all 100%: overallWinRate([1, 1, 1, 1]) === 1 → excellent', () => {
 test('zero entered guard: stageRate(0, 0) === 0', () => {
   assert.equal(stageRate(0, 0), 0);
 });
+
+// P14-followup: negative sqlEntered clamps to 0 → stageRate(adv, 0) returns 0 (defensive layer 2)
+// clampNonNegative(-100) → 0; stageRate(sqlAdvanced, 0) = 0 (denominator guard, not -X/100 negative rate)
+test('win-rate-by-stage: negative sqlEntered clamps to 0 (defensive layer 2)', () => {
+  const sqlE = 0; // after clampNonNegative(-100)
+  // stageRate(sqlAdvanced=50, sqlEntered=0) → 0 (denominator guard)
+  assert.equal(stageRate(50, sqlE), 0);
+  // overallWinRate([0, ...]) = 0 (no negative first-stage rate)
+  const r = overallWinRate([stageRate(50, sqlE), 0.6, 0.667, 0.75]);
+  assert.equal(r, 0);
+  assert.equal(calcHealthBand(r * 100), 'critical');
+});

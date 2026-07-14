@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Sales Velocity Calculator (P8-2) — Business v3 standard (6+ emoji sections)
@@ -68,9 +69,9 @@ export function calcHealthBand(value: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const openOpps = Math.max(0, parseFloat(inputs.openOpps) || 0);
-  const avgDealSize = Math.max(0, parseFloat(inputs.avgDealSize) || 0);
-  const winRate = Math.max(0, parseFloat(inputs.winRate) || 0);
+  const openOpps = clampNonNegative(parseFloat(inputs.openOpps) || 0);
+  const avgDealSize = clampNonNegative(parseFloat(inputs.avgDealSize) || 0);
+  const winRate = clampNonNegative(parseFloat(inputs.winRate) || 0);
   const cycleDays = Math.max(1, parseFloat(inputs.cycleDays) || 1);
 
   // Use raw daily for monthly/annual derivation so cent-level precision
@@ -195,9 +196,10 @@ const customFn =
   "function mv(d){return Math.round(d*30*100)/100;}" +
   "function av(d){return Math.round(d*365*100)/100;}" +
   "function band(v){if(v>=5000)return 'excellent';if(v>=2000)return 'good';if(v>=500)return 'warning';return 'critical';}" +
-  "var o=Math.max(0,parseFloat(inputs.openOpps)||0);" +
-  "var d=Math.max(0,parseFloat(inputs.avgDealSize)||0);" +
-  "var w=Math.max(0,parseFloat(inputs.winRate)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var o=cnn(parseFloat(inputs.openOpps)||0);" +
+  "var d=cnn(parseFloat(inputs.avgDealSize)||0);" +
+  "var w=cnn(parseFloat(inputs.winRate)||0);" +
   "var c=Math.max(1,parseFloat(inputs.cycleDays)||1);" +
   "var dailyRaw=dvRaw(o,d,w,c);" +
   "var daily=dv(o,d,w,c);" +

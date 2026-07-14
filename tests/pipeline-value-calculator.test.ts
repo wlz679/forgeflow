@@ -35,3 +35,13 @@ test('totalPipeline: all-zero → 0 (critical)', () => {
 test('totalPipeline: single stage only 30K', () => {
   assert.equal(totalPipeline(30000, 0, 0, 0), 30000);
 });
+
+// P14-followup: negative closingSize clamps to 0 → stageValue(count, 0, prob) = 0 (defensive layer 2)
+// clampNonNegative(-45000) → 0; stageValue(10, 0, 0.80) = 0 instead of negative weighted pipeline
+test('pipeline-value: negative closingSize clamps to 0 (defensive layer 2)', () => {
+  const sz = 0; // after clampNonNegative(-45000)
+  // closingCount=10, closingSize=0, prob=0.80 → stageValue returns 0 (no negative weighted pipeline)
+  assert.equal(stageValue(10, sz, 0.80), 0);
+  assert.equal(weightedForecast(0), 0);
+  assert.equal(calcHealthBand(0), 'critical');
+});

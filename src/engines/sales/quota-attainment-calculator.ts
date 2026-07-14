@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Quota Attainment Calculator (P8-5) — Business v3 standard (6+ emoji sections)
@@ -76,9 +77,9 @@ export function calcHealthBand(pct: number): 'excellent' | 'good' | 'warning' | 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const annualQuota = Math.max(0, parseFloat(inputs.annualQuota) || 0);
-  const monthsElapsed = Math.max(0, Math.min(12, parseFloat(inputs.monthsElapsed) || 0));
-  const actualRevenue = Math.max(0, parseFloat(inputs.actualRevenue) || 0);
+  const annualQuota = clampNonNegative(parseFloat(inputs.annualQuota) || 0);
+  const monthsElapsed = clampNonNegative(Math.min(12, parseFloat(inputs.monthsElapsed) || 0));
+  const actualRevenue = clampNonNegative(parseFloat(inputs.actualRevenue) || 0);
 
   // Edge: all inputs zero → prompt to enter values
   if (annualQuota === 0 && monthsElapsed === 0 && actualRevenue === 0) {
@@ -240,9 +241,10 @@ const customFn =
   "function pYE(ar,gv){return ar+gv;}" +
   "function oT(p,aq){return p>=aq;}" +
   "function band(v){if(v>=100)return 'excellent';if(v>=80)return 'good';if(v>=50)return 'warning';return 'critical';}" +
-  "var aq=Math.max(0,parseFloat(inputs.annualQuota)||0);" +
-  "var me=Math.max(0,Math.min(12,parseFloat(inputs.monthsElapsed)||0));" +
-  "var ar=Math.max(0,parseFloat(inputs.actualRevenue)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var aq=cnn(parseFloat(inputs.annualQuota)||0);" +
+  "var me=cnn(Math.min(12,parseFloat(inputs.monthsElapsed)||0));" +
+  "var ar=cnn(parseFloat(inputs.actualRevenue)||0);" +
   "if(aq===0&&me===0&&ar===0){" +
     "return['\\uD83C\\uDFAF Quota Attainment Calculator\\n\\n\\uD83C\\uDFAF Enter your annual quota (USD), months elapsed so far this year, and actual revenue closed to see your attainment %, monthly pace projection, and year-end forecast.'];" +
   "}" +

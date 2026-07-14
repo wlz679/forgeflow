@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // =====================================================================
 // Pipeline Coverage Calculator (P8-6) — Business v3 standard (6+ emoji sections)
@@ -71,9 +72,9 @@ export function calcHealthBand(ratio: number): 'excellent' | 'good' | 'warning' 
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
-  const quotaTarget = Math.max(0, parseFloat(inputs.quotaTarget) || 0);
-  const pipelineValue = Math.max(0, parseFloat(inputs.pipelineValue) || 0);
-  const winRate = Math.max(0, parseFloat(inputs.winRate) || 0);
+  const quotaTarget = clampNonNegative(parseFloat(inputs.quotaTarget) || 0);
+  const pipelineValue = clampNonNegative(parseFloat(inputs.pipelineValue) || 0);
+  const winRate = clampNonNegative(parseFloat(inputs.winRate) || 0);
 
   // Edge: all inputs zero → prompt to enter values
   if (quotaTarget === 0 && pipelineValue === 0 && winRate === 0) {
@@ -236,9 +237,10 @@ const customFn =
   "function gp(qt,wpv){return qt-wpv;}" +
   "function rAP(gv,wr){if(wr<=0)return 0;return gv/(wr/100);}" +
   "function band(v){if(v>=3)return 'excellent';if(v>=2)return 'good';if(v>=1)return 'warning';return 'critical';}" +
-  "var qt=Math.max(0,parseFloat(inputs.quotaTarget)||0);" +
-  "var pv=Math.max(0,parseFloat(inputs.pipelineValue)||0);" +
-  "var wr=Math.max(0,parseFloat(inputs.winRate)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var qt=cnn(parseFloat(inputs.quotaTarget)||0);" +
+  "var pv=cnn(parseFloat(inputs.pipelineValue)||0);" +
+  "var wr=cnn(parseFloat(inputs.winRate)||0);" +
   "if(qt===0&&pv===0&&wr===0){" +
     "return['\\uD83C\\uDFAF Pipeline Coverage Calculator\\n\\n\\uD83C\\uDFAF Enter your quota target, current pipeline value, and expected win rate to see your pipeline-to-quota coverage ratio with the B2B SaaS 3x rule diagnostic.'];" +
   "}" +

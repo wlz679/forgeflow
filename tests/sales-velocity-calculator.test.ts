@@ -71,3 +71,14 @@ test('dailyVelocity(0, 25000, 25, 45) === 0 → critical', () => {
 test('dailyVelocity(20, 25000, 100, 45) === 11111.11 (win rate 100% ceiling)', () => {
   assert.equal(dailyVelocity(20, 25000, 100, 45), 11111.11);
 });
+
+// P14-followup: negative openOpps clamps to 0 → dailyVelocityRaw guard returns 0 (defensive layer 2)
+// clampNonNegative(-20) → 0; dailyVelocityRaw(0, 25000, 25, 45) = 0 (guard: opps=0 short-circuits)
+test('sales-velocity: negative openOpps clamps to 0 (defensive layer 2)', () => {
+  const o = 0; // after clampNonNegative(-20)
+  const daily = dailyVelocityRaw(o, 25000, 25, 45);
+  assert.equal(daily, 0); // guard, not negative
+  assert.equal(monthlyVelocity(daily), 0);
+  assert.equal(annualVelocity(daily), 0);
+  assert.equal(calcHealthBand(daily), 'critical');
+});

@@ -67,3 +67,15 @@ test('calcHealthBand: 80 → good (exact boundary)', () => {
 test('calcHealthBand: 100 → excellent (exact boundary)', () => {
   assert.equal(calcHealthBand(100), 'excellent');
 });
+
+// P14-followup: negative actualRevenue clamps to 0 → attainmentPct = 0, no negative % (defensive layer 2)
+// clampNonNegative(-200000) → 0; attainmentPct(0, 1M) = 0 (not -20%)
+test('quota-attainment: negative actualRevenue clamps to 0 (defensive layer 2)', () => {
+  const ar = 0; // after clampNonNegative(-200000)
+  const aq = 1_000_000;
+  const pct = attainmentPct(ar, aq);
+  assert.equal(pct, 0); // not -20
+  assert.equal(calcHealthBand(pct), 'critical');
+  // gap = 1M - 0 = 1M (full quota still owed)
+  assert.equal(gap(aq, ar), 1_000_000);
+});
