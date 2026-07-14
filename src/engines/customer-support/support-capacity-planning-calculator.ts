@@ -6,6 +6,7 @@
 // Capacity planning: productive_min = hours × 60 × (1-shrink) × (occ/100).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 85, label: '🟢 Excellent', message: 'Healthy buffer — agents have ≥15% capacity for spikes + training.' },
@@ -65,15 +66,15 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "function run(inputs, pick, fill) {\n  var vol = Number(inputs.monthly_tickets) || 0;\n  var aht = Number(inputs.avg_handle_time_min) || 0;\n  var occ = Number(inputs.target_occupancy_pct) || 0;\n  var hr = Number(inputs.work_hours_per_month) || 0;\n  var sh = Number(inputs.shrinkage_pct) || 0;\n  var resp = Number(inputs.target_response_time_min) || 0;\n  var total = vol * aht;\n  var prod = hr * 60 * (1 - sh/100) * (occ/100);\n  var raw = prod > 0 ? total / prod : 0;\n  var agents = Math.ceil(raw);\n  var util = agents > 0 ? (total / (agents * prod)) * 100 : 0;\n  var band = util <= 85 ? 'Excellent' : util <= 100 ? 'Good' : util <= 120 ? 'Warning' : 'Critical';\n  var emoji = util <= 85 ? '🟢' : util <= 100 ? '🟡' : util <= 120 ? '🟠' : '🔴';\n  var ifVol = Math.round(vol * 1.2);\n  var ifTotal = ifVol * aht;\n  var ifRaw = prod > 0 ? ifTotal / prod : 0;\n  var ifAgents = Math.ceil(ifRaw);\n  var delta = ifAgents - agents;\n  return [\n    '🩺 Capacity Health: ' + emoji + ' ' + band + ' (' + agents + ' agents required · ' + util.toFixed(1) + '% utilization)',\n    '📊 Snapshot: ' + Math.round(total).toLocaleString() + ' total handle min/mo · ' + Math.round(prod).toLocaleString() + ' productive min/agent · ' + sh.toFixed(0) + '% shrinkage',\n    '🔄 What-If: if volume grows 20% to ' + ifVol.toLocaleString() + ' tickets/mo, required = ' + ifAgents + ' agents (+' + delta + ' hires) at same ' + util.toFixed(1) + '% util',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent (' + (agents+1) + ' total) for ' + ((total / ((agents+1) * prod)) * 100).toFixed(1) + '% util',\n    '🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors',\n    '💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.'\n  ];\n}",
+    customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var vol = cnn(Number(inputs.monthly_tickets) || 0);\n  var aht = cnn(Number(inputs.avg_handle_time_min) || 0);\n  var occ = cnn(Number(inputs.target_occupancy_pct) || 0);\n  var hr = cnn(Number(inputs.work_hours_per_month) || 0);\n  var sh = cnn(Number(inputs.shrinkage_pct) || 0);\n  var resp = cnn(Number(inputs.target_response_time_min) || 0);\n  var total = vol * aht;\n  var prod = hr * 60 * (1 - sh/100) * (occ/100);\n  var raw = prod > 0 ? total / prod : 0;\n  var agents = Math.ceil(raw);\n  var util = agents > 0 ? (total / (agents * prod)) * 100 : 0;\n  var band = util <= 85 ? 'Excellent' : util <= 100 ? 'Good' : util <= 120 ? 'Warning' : 'Critical';\n  var emoji = util <= 85 ? '🟢' : util <= 100 ? '🟡' : util <= 120 ? '🟠' : '🔴';\n  var ifVol = Math.round(vol * 1.2);\n  var ifTotal = ifVol * aht;\n  var ifRaw = prod > 0 ? ifTotal / prod : 0;\n  var ifAgents = Math.ceil(ifRaw);\n  var delta = ifAgents - agents;\n  return [\n    '🩺 Capacity Health: ' + emoji + ' ' + band + ' (' + agents + ' agents required · ' + util.toFixed(1) + '% utilization)',\n    '📊 Snapshot: ' + Math.round(total).toLocaleString() + ' total handle min/mo · ' + Math.round(prod).toLocaleString() + ' productive min/agent · ' + sh.toFixed(0) + '% shrinkage',\n    '🔄 What-If: if volume grows 20% to ' + ifVol.toLocaleString() + ' tickets/mo, required = ' + ifAgents + ' agents (+' + delta + ' hires) at same ' + util.toFixed(1) + '% util',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent (' + (agents+1) + ' total) for ' + ((total / ((agents+1) * prod)) * 100).toFixed(1) + '% util',\n    '🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors',\n    '💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.'\n  ];\n}",
   },
   generate(inputs) {
-    const vol = Number(inputs.monthly_tickets) || 0;
-    const aht = Number(inputs.avg_handle_time_min) || 0;
-    const occ = Number(inputs.target_occupancy_pct) || 0;
-    const hr = Number(inputs.work_hours_per_month) || 0;
-    const sh = Number(inputs.shrinkage_pct) || 0;
-    const resp = Number(inputs.target_response_time_min) || 0;
+    const vol = clampNonNegative(Number(inputs.monthly_tickets) || 0);
+    const aht = clampNonNegative(Number(inputs.avg_handle_time_min) || 0);
+    const occ = clampNonNegative(Number(inputs.target_occupancy_pct) || 0);
+    const hr = clampNonNegative(Number(inputs.work_hours_per_month) || 0);
+    const sh = clampNonNegative(Number(inputs.shrinkage_pct) || 0);
+    const resp = clampNonNegative(Number(inputs.target_response_time_min) || 0);
     const total = totalHandleMin(vol, aht);
     const prod = productiveMinPerAgent(hr, sh, occ);
     const agents = requiredAgents(total, prod);

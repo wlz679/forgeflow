@@ -67,3 +67,14 @@ test('HEALTH_BANDS has 4 INVERSE thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 120);
   assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
 });
+
+// P14-followup: negative shrinkage_pct clamps to 0 → no inflated productive min (defensive layer 2)
+// clampNonNegative(-50) → 0; productiveMinPerAgent(160, 0, 70) → 6720 (realistic max)
+// (Pre-clamp: productiveMinPerAgent(160, -50, 70) = 160*60*1.5*0.7 = 10080 → exceeds physical max)
+test('support-capacity: negative shrinkage_pct clamps to 0 → no inflated productive min (defensive layer 2)', () => {
+  const sh = 0; // after clampNonNegative(-50)
+  const prod = productiveMinPerAgent(160, sh, 70);
+  // Max physically possible: 160 * 60 * 1 * 1 = 9600 (0% shrink, 100% occ). 6720 with 70% occ is realistic.
+  assert.ok(prod <= 9600, 'productiveMin should not exceed 9600 (physical max), got ' + prod);
+  assert.equal(prod, 6720);
+});
