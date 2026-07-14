@@ -105,3 +105,16 @@ test('noResLift direction: max(0, noRes - 0.05*total) → 360 fewer for canonica
   // Verify they're different (regression guard)
   assert.notEqual(noResLift, buggy);
 });
+
+// P14-followup: negative searches_with_click clamps to 0 → no inverted CTR (defensive layer 2)
+// clampNonNegative(-200) → 0; ctr(0, 12000) = 0 → band 'critical' (no NaN from negative counts)
+// (Pre-clamp: withClick=-200 → ctr(-200, 12000) = -0.0166 → negative CTR → bogus "below 0%" band)
+test('search-effectiveness: negative searches_with_click clamps to 0 → no inverted CTR (defensive layer 2)', () => {
+  const withClick = 0; // after clampNonNegative(-200)
+  const total = 12000;
+  const ctrVal = ctr(withClick, total);
+  // CTR must be >= 0 (defensive layer)
+  assert.ok(ctrVal >= 0, 'CTR must be >= 0, got ' + ctrVal);
+  assert.equal(ctrVal, 0);
+  assert.equal(calcHealthBand(ctrVal, noResultRate(0, total)), 'critical');
+});

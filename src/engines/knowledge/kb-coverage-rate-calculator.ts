@@ -6,6 +6,7 @@
 // Single coverage math: coverage_rate = matched / total.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.85, label: 'Excellent', message: 'Comprehensive KB coverage.' },
@@ -50,11 +51,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
   // Matches P12-1 pattern; results array flattening in [slug].astro is a holistic concern
-  var total = Number(inputs.monthly_tickets) || 0;
-  var matched = Number(inputs.tickets_with_kb_match) || 0;
-  var articles = Number(inputs.total_articles) || 0;
+  var total = cnn(Number(inputs.monthly_tickets) || 0);
+  var matched = cnn(Number(inputs.tickets_with_kb_match) || 0);
+  var articles = cnn(Number(inputs.total_articles) || 0);
   if (matched > total) matched = total;
   var coverage = total > 0 ? matched / total : 0;
   var gap = Math.max(0, total - matched);
@@ -77,9 +78,9 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const total = Number(inputs.monthly_tickets) || 0;
-    const matched = Math.min(Number(inputs.tickets_with_kb_match) || 0, total);
-    const articles = Number(inputs.total_articles) || 0;
+    const total = clampNonNegative(Number(inputs.monthly_tickets) || 0);
+    const matched = Math.min(clampNonNegative(Number(inputs.tickets_with_kb_match) || 0), total);
+    const articles = clampNonNegative(Number(inputs.total_articles) || 0);
     const coverage = coverageRate(matched, total);
     const gap = gapTickets(matched, total);
     const gapR = gapRate(coverage);

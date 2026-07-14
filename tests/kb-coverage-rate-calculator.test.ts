@@ -76,3 +76,16 @@ test('total_articles=0: coverageRate + gapTickets work, no NaN', () => {
   // needArticles formula guards division-by-zero (articles > 0 check) in generate()
   // Verified via the helper functions: coverage and gap are well-defined regardless.
 });
+
+// P14-followup: negative tickets_with_kb_match clamps to 0 → no inverted coverage (defensive layer 2)
+// clampNonNegative(-100) → 0; coverageRate(0, 5000) = 0 → band 'critical' (no NaN from negative counts)
+// (Pre-clamp: matched=-100 → coverageRate(-100, 5000) = -0.02 → negative coverage → bogus "below 0%" band)
+test('kb-coverage: negative tickets_with_kb_match clamps to 0 → no inverted coverage rate (defensive layer 2)', () => {
+  const matched = 0; // after clampNonNegative(-100)
+  const total = 5000;
+  const coverage = coverageRate(matched, total);
+  // coverage must be >= 0 (defensive layer)
+  assert.ok(coverage >= 0, 'coverage must be >= 0, got ' + coverage);
+  assert.equal(coverage, 0);
+  assert.equal(calcHealthBand(coverage), 'critical');
+});

@@ -6,6 +6,7 @@
 // COMPOSITE dual-threshold band: CTR (higher better) AND no-result rate (lower better).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { ctr: 0.85, noResult: 0.05, label: 'Excellent', message: 'Search is working - users find answers quickly.' },
@@ -50,10 +51,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var total = Number(inputs.total_searches) || 0;
-  var withClick = Number(inputs.searches_with_click) || 0;
-  var noRes = Number(inputs.searches_no_result) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var total = cnn(Number(inputs.total_searches) || 0);
+  var withClick = cnn(Number(inputs.searches_with_click) || 0);
+  var noRes = cnn(Number(inputs.searches_no_result) || 0);
   if (withClick > total) withClick = total;
   if (noRes > total) noRes = total;
   var ctrV = total > 0 ? withClick / total : 0;
@@ -76,9 +77,9 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const total = Number(inputs.total_searches) || 0;
-    const withClick = Math.min(Number(inputs.searches_with_click) || 0, total);
-    const noRes = Math.min(Number(inputs.searches_no_result) || 0, total);
+    const total = clampNonNegative(Number(inputs.total_searches) || 0);
+    const withClick = Math.min(clampNonNegative(Number(inputs.searches_with_click) || 0), total);
+    const noRes = Math.min(clampNonNegative(Number(inputs.searches_no_result) || 0), total);
     const ctrVal = ctr(withClick, total);
     const noResR = noResultRate(noRes, total);
     const abandoned = abandonedSearches(total, withClick, noRes);
