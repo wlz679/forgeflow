@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
 
 interface GpuInfo {
@@ -62,11 +63,11 @@ function calculate(inputs: Record<string, string>): string[] {
   const model = MODEL_SIZES[modelKey] || MODEL_SIZES['7B'];
   const gpuKey = inputs.gpuType || 'H100-80GB';
   const gpu = GPU_TYPES[gpuKey] || GPU_TYPES['H100-80GB'];
-  const gpuCount = Math.max(1, Math.min(10000, parseInt(inputs.gpuCount) || 4));
-  const trainingHours = Math.max(1, Math.min(8760, parseInt(inputs.trainingHours) || 24));
-  const epochs = Math.max(1, Math.min(1000, parseInt(inputs.epochs) || 3));
-  const cloudStorageGB = Math.max(0, Math.min(100000, parseInt(inputs.cloudStorage) || 0));
-  const dataProcessCost = Math.max(0, Math.min(100000, parseInt(inputs.dataProcessCost) || 0));
+  const gpuCount = Math.max(1, Math.min(10000, clampNonNegative(parseInt(inputs.gpuCount)) || 4));
+  const trainingHours = Math.max(1, Math.min(8760, clampNonNegative(parseInt(inputs.trainingHours)) || 24));
+  const epochs = Math.max(1, Math.min(1000, clampNonNegative(parseInt(inputs.epochs)) || 3));
+  const cloudStorageGB = Math.max(0, Math.min(100000, clampNonNegative(parseInt(inputs.cloudStorage)) || 0));
+  const dataProcessCost = Math.max(0, Math.min(100000, clampNonNegative(parseInt(inputs.dataProcessCost)) || 0));
 
   // Determine if LoRA based on model
   const isLoRA = model.isLoRA;
@@ -214,6 +215,8 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
+  // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
+  "var cnn=function(x){return Math.max(0,x)};" +
   "var GT={" +
   "'H200-141GB':{hr:3.5,n:'H200 141GB',od:1}," +
   "'H100-80GB':{hr:2.5,n:'H100 80GB',od:2}," +
@@ -233,11 +236,11 @@ const customFn =
   "var SEP4='\\u2500';" +
   "var mk=inputs.modelSize||'7B';var m=MS[mk]||MS['7B'];" +
   "var gk=inputs.gpuType||'H100-80GB';var g=GT[gk]||GT['H100-80GB'];" +
-  "var gc2=Math.max(1,Math.min(1e4,parseInt(inputs.gpuCount)||4));" +
-  "var th=Math.max(1,Math.min(8760,parseInt(inputs.trainingHours)||24));" +
-  "var ep=Math.max(1,Math.min(1e3,parseInt(inputs.epochs)||3));" +
-  "var csg=Math.max(0,Math.min(1e5,parseInt(inputs.cloudStorage)||0));" +
-  "var dpc=Math.max(0,Math.min(1e5,parseInt(inputs.dataProcessCost)||0));" +
+  "var gc2=Math.max(1,Math.min(1e4,cnn(parseInt(inputs.gpuCount))||4));" +
+  "var th=Math.max(1,Math.min(8760,cnn(parseInt(inputs.trainingHours))||24));" +
+  "var ep=Math.max(1,Math.min(1e3,cnn(parseInt(inputs.epochs))||3));" +
+  "var csg=Math.max(0,Math.min(1e5,cnn(parseInt(inputs.cloudStorage))||0));" +
+  "var dpc=Math.max(0,Math.min(1e5,cnn(parseInt(inputs.dataProcessCost))||0));" +
   "var isL=m.isL;var ehp=isL?th*LES:th;" +
   "var tgh=ehp*ep;var gpc=tgh*gc2*g.hr;" +
   "var tm=Math.max(0.1,(tgh/24)/30);var sc=csg*SCG*tm;" +
