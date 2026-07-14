@@ -65,6 +65,9 @@ const EMOJI_SET = new Set<string>([
   '\u{1F4BC}', // 💼 Freelance Pricing
   '\u{26A1}',  // ⚡ Cost & Efficiency
   '\u{1F4C8}', // 📈 Investment & ROI
+  '\u{1F7E0}', // 🟠 orange circle (Health band)
+  '\u{1F7E1}', // 🟡 yellow circle (Health band)
+  '\u{1F7E2}', // 🟢 green circle (Health band)
 ]);
 
 function assertEmojiSet(): void {
