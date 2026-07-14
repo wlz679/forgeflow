@@ -103,7 +103,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.',
     '💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.',
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   generate(inputs) {
     const visitors = Number(inputs.monthly_visitors) || 0;

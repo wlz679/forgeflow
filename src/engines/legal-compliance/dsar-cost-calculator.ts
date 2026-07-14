@@ -37,7 +37,6 @@ export function calcHealthBand(cost: number): keyof typeof HEALTH_BANDS {
 }
 
 function fmtMoney(x: number): string { return '€' + Math.round(x).toLocaleString(); }
-function fmtMoneyExact(x: number): string { return '€' + x.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtNum(x: number, decimals: number): string { return x.toFixed(decimals); }
 function fmtPct(x: number): string { return x.toFixed(1) + '%'; }
 
@@ -83,7 +82,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: re-baseline quarterly + after any product launch that adds data-collection surface (DSAR volume correlates with consent changes).',
     '💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget.',
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   generate(inputs) {
     const dsars = Number(inputs.dsars_per_month) || 0;

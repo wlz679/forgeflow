@@ -83,7 +83,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).',
     '💡 Tip: pair with [Data Breach Notification] (L-5) — a single breach can fill the violations budget. Also pair with our [NRR Calculator] (R-1) — fines compound with churn.',
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   generate(inputs) {
     const revenue = Number(inputs.annual_revenue_global) || 0;
