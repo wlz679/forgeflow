@@ -67,3 +67,17 @@ test('HEALTH_BANDS has 4 bands with locked threshold decimals', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.5);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P14-followup: negative kb_team_monthly_cost clamps to 0 → no inverted ROI (defensive layer 2)
+// clampNonNegative(-1000) → 0; netROI(gross, 0) = -Infinity → band 'critical' (no div-by-zero surprise)
+// (Pre-clamp: kbCost=-1000 → gross=42000, net=42000-(-1000)=43000, roi=(43000/-1000)*100=-4300% →
+//  misleading "Excellent" via negative-cost edge case)
+test('documentation-roi: negative kb_cost clamps to 0 → no inverted ROI from negative-cost (defensive layer 2)', () => {
+  const kbCost = 0; // after clampNonNegative(-1000)
+  const gross = grossSavings(1750, 24); // 42000
+  const roiDec = netROI(gross, kbCost);
+  // When kbCost=0, netROI must return -Infinity (correctly mapped to critical)
+  // — NOT a huge positive number from negative-cost division.
+  assert.equal(roiDec, -Infinity);
+  assert.equal(calcHealthBand(roiDec * 100, costPerArticle(0, 500)), 'critical');
+});

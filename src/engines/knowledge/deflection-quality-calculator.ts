@@ -6,6 +6,7 @@
 // INVERSE on reopen rate: lower reopen = better deflection quality (critical uses Infinity).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.08, label: 'Excellent', message: 'KB content solving customer problems.' },
@@ -51,10 +52,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var deflected = Number(inputs.tickets_deflected_30d) || 0;
-  var reopened = Number(inputs.tickets_reopened_30d) || 0;
-  var target = Number(inputs.target_quality_pct) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var deflected = cnn(Number(inputs.tickets_deflected_30d) || 0);
+  var reopened = cnn(Number(inputs.tickets_reopened_30d) || 0);
+  var target = cnn(Number(inputs.target_quality_pct) || 0);
   var source = inputs.deflection_source || 'Both';
   if (reopened > deflected) reopened = deflected;
   var reopen = deflected > 0 ? reopened / deflected : 0;
@@ -77,9 +78,9 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const deflected = Number(inputs.tickets_deflected_30d) || 0;
-    const reopened = Math.min(Number(inputs.tickets_reopened_30d) || 0, deflected);
-    const targetPct = Number(inputs.target_quality_pct) || 0;
+    const deflected = clampNonNegative(Number(inputs.tickets_deflected_30d) || 0);
+    const reopened = Math.min(clampNonNegative(Number(inputs.tickets_reopened_30d) || 0), deflected);
+    const targetPct = clampNonNegative(Number(inputs.target_quality_pct) || 0);
     const source = String(inputs.deflection_source || 'Both');
     const reopen = reopenRate(reopened, deflected);
     const quality = qualityPct(reopen);

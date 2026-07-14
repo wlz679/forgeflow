@@ -7,6 +7,7 @@
 // critical uses -Infinity. calcHealthBand takes roi in PERCENTAGE form (e.g. 180 = 180%).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 4.0, label: 'Excellent', message: 'KB is a profit center.' },
@@ -58,12 +59,12 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var kbCost = Number(inputs.kb_team_monthly_cost) || 0;
-  var deflected = Number(inputs.deflected_tickets_monthly) || 0;
-  var costPer = Number(inputs.cost_per_ticket) || 0;
-  var articles = Number(inputs.articles_total) || 0;
-  var target = Number(inputs.roi_target_pct) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var kbCost = cnn(Number(inputs.kb_team_monthly_cost) || 0);
+  var deflected = cnn(Number(inputs.deflected_tickets_monthly) || 0);
+  var costPer = cnn(Number(inputs.cost_per_ticket) || 0);
+  var articles = cnn(Number(inputs.articles_total) || 0);
+  var target = cnn(Number(inputs.roi_target_pct) || 0);
   var gross = deflected * costPer;
   var net = gross - kbCost;
   var roi = kbCost > 0 ? (net / kbCost) * 100 : -Infinity;
@@ -94,11 +95,11 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const kbCost = Number(inputs.kb_team_monthly_cost) || 0;
-    const deflected = Number(inputs.deflected_tickets_monthly) || 0;
-    const costPer = Number(inputs.cost_per_ticket) || 0;
-    const articles = Number(inputs.articles_total) || 0;
-    const target = Number(inputs.roi_target_pct) || 0;
+    const kbCost = clampNonNegative(Number(inputs.kb_team_monthly_cost) || 0);
+    const deflected = clampNonNegative(Number(inputs.deflected_tickets_monthly) || 0);
+    const costPer = clampNonNegative(Number(inputs.cost_per_ticket) || 0);
+    const articles = clampNonNegative(Number(inputs.articles_total) || 0);
+    const target = clampNonNegative(Number(inputs.roi_target_pct) || 0);
     const gross = grossSavings(deflected, costPer);
     const net = gross - kbCost;
     const roiDec = netROI(gross, kbCost);

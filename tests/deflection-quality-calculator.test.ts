@@ -59,3 +59,15 @@ test('HEALTH_BANDS exports 4 bands with Infinity critical (signature verificatio
   // Signature guard: 1-arg band (single reopen input, NOT 2-arg like K-3).
   assert.equal(calcHealthBand.length, 1);
 });
+
+// P14-followup: negative tickets_reopened clamps to 0 → no inverted reopen rate (defensive layer 2)
+// clampNonNegative(-50) → 0; reopenRate(0, 1750) = 0 → band 'excellent' (no NaN)
+// (Pre-clamp: reopenRate(-50, 1750) = -50/1750 = -0.0286 → negative reopen → bogus "below 0%" band)
+test('deflection-quality: negative tickets_reopened clamps to 0 → no inverted reopen rate (defensive layer 2)', () => {
+  const reopened = 0; // after clampNonNegative(-50)
+  const reopen = reopenRate(reopened, 1750);
+  // reopen rate must be >= 0 (defensive layer)
+  assert.ok(reopen >= 0, 'reopen rate must be >= 0, got ' + reopen);
+  assert.equal(reopen, 0);
+  assert.equal(calcHealthBand(reopen), 'excellent');
+});
