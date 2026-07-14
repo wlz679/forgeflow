@@ -8,6 +8,7 @@
 // automation_pct is CLAMPED to [0, 100] defensively (negative hours make no sense).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 25_000,   label: 'Excellent', message: 'Low DSAR volume or high automation.' },
@@ -54,11 +55,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var dsars = Number(inputs.dsars_per_month) || 0;
-  var hours = Number(inputs.hours_per_dsar) || 0;
-  var rate = Number(inputs.hourly_rate_dpo) || 0;
-  var automationPct = Number(inputs.automation_pct) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var dsars = cnn(Number(inputs.dsars_per_month) || 0);
+  var hours = cnn(Number(inputs.hours_per_dsar) || 0);
+  var rate = cnn(Number(inputs.hourly_rate_dpo) || 0);
+  var automationPct = cnn(Number(inputs.automation_pct) || 0);
   if (automationPct < 0) automationPct = 0;
   if (automationPct > 100) automationPct = 100;
   var manualHours = hours * (1 - automationPct / 100);
@@ -86,10 +87,10 @@ const engine: ToolEngine = {
 return run(inputs, pick, fill);`,
   },
   generate(inputs) {
-    const dsars = Number(inputs.dsars_per_month) || 0;
-    const hours = Number(inputs.hours_per_dsar) || 0;
-    const rate = Number(inputs.hourly_rate_dpo) || 0;
-    const automationPct = Number(inputs.automation_pct) || 0;
+    const dsars = clampNonNegative(Number(inputs.dsars_per_month) || 0);
+    const hours = clampNonNegative(Number(inputs.hours_per_dsar) || 0);
+    const rate = clampNonNegative(Number(inputs.hourly_rate_dpo) || 0);
+    const automationPct = clampNonNegative(Number(inputs.automation_pct) || 0);
     const manualHours = manualHoursPerDSAR(hours, automationPct);
     const costPerDSARv = costPerDSAR(hours, rate, automationPct);
     const annual = annualDSARCost(dsars, hours, rate, automationPct);

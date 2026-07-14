@@ -6,6 +6,7 @@
 // HIGHER on annual_dpa_cost: more cost = worse legal-ops scaling. Bands: <€100K / €100-300K / €300-600K / ≥€600K.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 100_000,  label: 'Excellent', message: 'Lean legal ops.' },
@@ -56,12 +57,12 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var dpas = Number(inputs.dpas_per_quarter) || 0;
-  var rounds = Number(inputs.avg_negotiation_rounds) || 0;
-  var hoursPerRound = Number(inputs.hours_per_round) || 0;
-  var rate = Number(inputs.legal_hourly_rate) || 0;
-  var redlines = Number(inputs.redlines_per_dpa) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var dpas = cnn(Number(inputs.dpas_per_quarter) || 0);
+  var rounds = cnn(Number(inputs.avg_negotiation_rounds) || 0);
+  var hoursPerRound = cnn(Number(inputs.hours_per_round) || 0);
+  var rate = cnn(Number(inputs.legal_hourly_rate) || 0);
+  var redlines = cnn(Number(inputs.redlines_per_dpa) || 0);
   var baseHours = rounds * hoursPerRound;
   var multiplier = 1 + redlines * 0.05;
   var perDPA = baseHours * rate * multiplier;
@@ -104,11 +105,11 @@ const engine: ToolEngine = {
 return run(inputs, pick, fill);`,
   },
   generate(inputs) {
-    const dpas = Number(inputs.dpas_per_quarter) || 0;
-    const rounds = Number(inputs.avg_negotiation_rounds) || 0;
-    const hoursPerRound = Number(inputs.hours_per_round) || 0;
-    const rate = Number(inputs.legal_hourly_rate) || 0;
-    const redlines = Number(inputs.redlines_per_dpa) || 0;
+    const dpas = clampNonNegative(Number(inputs.dpas_per_quarter) || 0);
+    const rounds = clampNonNegative(Number(inputs.avg_negotiation_rounds) || 0);
+    const hoursPerRound = clampNonNegative(Number(inputs.hours_per_round) || 0);
+    const rate = clampNonNegative(Number(inputs.legal_hourly_rate) || 0);
+    const redlines = clampNonNegative(Number(inputs.redlines_per_dpa) || 0);
     const baseHours = dpaBaseHours(rounds, hoursPerRound);
     const multiplier = redlineMultiplier(redlines);
     const perDPA = costPerDPA(baseHours, rate, redlines);

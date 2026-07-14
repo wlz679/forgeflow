@@ -80,3 +80,17 @@ test('HEALTH_BANDS has 4 locked HIGHER bands with critical Infinity', () => {
 test('calcHealthBand remains a single-axis function', () => {
   assert.equal(calcHealthBand.length, 1);
 });
+
+// P14-followup: negative dpas_per_quarter clamps to 0 → annual=0 → Excellent (defensive layer 2)
+// Pre-clamp: redlineMultiplier(-100) = 1 + (-100)*0.05 = -4 → annualDPACost(-40, 6, 250, -8) = -40*4*6*250*(-4) = +960K
+// (sign flip on negative inputs produces bogus 'Critical'). Post-clamp: 0 redlines → 1× multiplier, 0 dpas → 0 annual.
+test('dpa-cost: negative dpas_per_quarter clamps to 0 → annual=0 → Excellent (defensive layer 2)', () => {
+  const dpas = 0;        // after clampNonNegative(-40)
+  const baseHours = dpaBaseHours(4, 1.5);
+  const redlines = 0;    // after clampNonNegative(-8)
+  const multiplier = redlineMultiplier(redlines);
+  const annual = annualDPACost(dpas, baseHours, 250, redlines);
+  assert.equal(multiplier, 1);
+  assert.equal(annual, 0);
+  assert.equal(calcHealthBand(annual), 'excellent');
+});

@@ -120,3 +120,18 @@ test('canonical-style L-2 low-volume scenario: 5 DSARs/mo × 70% automation → 
   assert.ok(Math.abs(annual - 3_600) < 1e-9, `annual=${annual}, want ~3600`);
   assert.equal(calcHealthBand(annual), 'excellent');
 });
+
+// P14-followup: negative dsars/hours/rate clamp to 0 → annual=0 → Excellent (defensive layer 2)
+// Pre-clamp: annualDSARCost(-50, -2.5, -95, -30) = -50*12*manualHoursPerDSAR(-2.5, -30)*(-95)
+//           = -50*12*(-2.5)*(-95) [automation clamped to 0, manualHours = -2.5*1=-2.5]
+//           = -50*12*(-2.5)*(-95) = -142500 → bogus 'Excellent' (negative annual).
+// Post-clamp: 0 DSARs OR 0 hours OR 0 rate → annual=0 → 'Excellent' (no cost).
+test('dsar-cost: negative dsars/hours/rate clamp to 0 → annual=0 → Excellent (defensive layer 2)', () => {
+  const dsars = 0;   // after clampNonNegative(-50)
+  const hours = 0;   // after clampNonNegative(-2.5)
+  const rate = 0;    // after clampNonNegative(-95)
+  const autoPct = 30;
+  const annual = annualDSARCost(dsars, hours, rate, autoPct);
+  assert.equal(annual, 0);
+  assert.equal(calcHealthBand(annual), 'excellent');
+});

@@ -134,3 +134,23 @@ test('What-If scenario: lift current consent 55% → 70%, target stays 75% → g
   assert.equal(altAnnual, 192_000);
   assert.equal(calcHealthBand(altGap), 'good');
 });
+
+// P14-followup: negative visitors/conv clamp to 0 → recoverable=0, monthly=0 (defensive layer 2)
+// Pre-clamp: consentGap(-10, -75) clamps to (0, 0) → gap=0. monthlyRecoverableVisitors(-200K, 0)=0
+// monthlyRecoveredRevenue(0, -2, 80)=0. So pure consentGap is already robust. The clamp matters for the
+// *generate()* path where negative monthly_visitors or conversion_rate_pct would otherwise propagate to
+// the displayed "recoverable €X/mo" line. Post-clamp: visitors=0, conv=0 → 0 monthly, 0 annual.
+test('consent-revenue: negative visitors/conv clamp to 0 → recoverable=0, monthly=0 (defensive layer 2)', () => {
+  const visitors = 0;   // after clampNonNegative(-200_000)
+  const conv = 0;       // after clampNonNegative(-2)
+  const current = 55;
+  const target = 75;
+  const gap = consentGap(current, target);
+  const recoverable = monthlyRecoverableVisitors(visitors, gap);
+  const monthly = monthlyRecoveredRevenue(recoverable, conv, 80);
+  const annual = annualRecoveredRevenue(monthly);
+  assert.equal(gap, 20);
+  assert.equal(recoverable, 0);
+  assert.equal(monthly, 0);
+  assert.equal(annual, 0);
+});

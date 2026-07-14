@@ -14,6 +14,7 @@
 // ARPU benchmark). FAQ explains; user can rescale in mind. NOT adding a 5th input.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 const AOV_EUR = 80; // hardcoded per spec — mid-market B2B SaaS ARPU anchor (€80/customer)
 
@@ -69,11 +70,11 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var visitors = Number(inputs.monthly_visitors) || 0;
-  var current = Number(inputs.current_consent_rate_pct) || 0;
-  var target = Number(inputs.target_consent_rate_pct) || 0;
-  var conv = Number(inputs.conversion_rate_pct) || 0;
+    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
+  var visitors = cnn(Number(inputs.monthly_visitors) || 0);
+  var current = cnn(Number(inputs.current_consent_rate_pct) || 0);
+  var target = cnn(Number(inputs.target_consent_rate_pct) || 0);
+  var conv = cnn(Number(inputs.conversion_rate_pct) || 0);
   if (current < 0) current = 0;
   if (current > 100) current = 100;
   if (target < 0) target = 0;
@@ -107,10 +108,10 @@ const engine: ToolEngine = {
 return run(inputs, pick, fill);`,
   },
   generate(inputs) {
-    const visitors = Number(inputs.monthly_visitors) || 0;
-    const current = Number(inputs.current_consent_rate_pct) || 0;
-    const target = Number(inputs.target_consent_rate_pct) || 0;
-    const conv = Number(inputs.conversion_rate_pct) || 0;
+    const visitors = clampNonNegative(Number(inputs.monthly_visitors) || 0);
+    const current = clampNonNegative(Number(inputs.current_consent_rate_pct) || 0);
+    const target = clampNonNegative(Number(inputs.target_consent_rate_pct) || 0);
+    const conv = clampNonNegative(Number(inputs.conversion_rate_pct) || 0);
     const gap = consentGap(current, target);
     const recoverable = monthlyRecoverableVisitors(visitors, gap);
     const monthly = monthlyRecoveredRevenue(recoverable, conv, AOV_EUR);
