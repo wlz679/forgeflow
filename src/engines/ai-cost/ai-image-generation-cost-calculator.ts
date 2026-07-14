@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
 
 interface ProviderInfo {
@@ -35,9 +36,9 @@ const SEP = '─';
 function calculate(inputs: Record<string, string>): string[] {
   const providerKey = inputs.provider || 'dalle-3';
   const p = PROVIDERS[providerKey] || PROVIDERS['dalle-3'];
-  const imgs = Math.max(1, Math.min(1000000, parseInt(inputs.imagesPerMonth) || 100));
+  const imgs = Math.max(1, Math.min(1000000, clampNonNegative(parseInt(inputs.imagesPerMonth)) || 100));
   const resolution = inputs.resolution || p.resolutions[0];
-  const batchSize = Math.max(1, Math.min(64, parseInt(inputs.batchSize) || 1));
+  const batchSize = Math.max(1, Math.min(64, clampNonNegative(parseInt(inputs.batchSize)) || 1));
   const advancedMode = inputs.advancedMode || 'standard';
   const advMult = ADVANCED_MULT[advancedMode] || 1;
 
@@ -321,6 +322,8 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — minified JS port of calculate(). Variables: bt=bestTier, pic=perImageCost, mc=monthlyCost.
 const customFn =
+  // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
+  "var cnn=function(x){return Math.max(0,x)};" +
   "var PS={" +
   "'dalle-4':{n:'DALL-E 4',pi:0.12,is:false,sr:'',q:'Highest',rs:['1024×1024','1792×1024','1024×1792'],od:1}," +
   "'dalle-3':{n:'DALL-E 3',pi:0.08,is:false,sr:'',q:'Very High',rs:['1024×1024','1792×1024','1024×1792'],od:2}," +
@@ -335,8 +338,8 @@ const customFn =
   "function fm(n){return '$'+n.toFixed(2)}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
   "var SEP3='─';" +
   "var pk=inputs.provider||'dalle-3';var p=PS[pk]||PS['dalle-3'];" +
-  "var im=Math.max(1,Math.min(1e6,parseInt(inputs.imagesPerMonth)||100));" +
-  "var res=inputs.resolution||p.rs[0];var bs=Math.max(1,Math.min(64,parseInt(inputs.batchSize)||1));" +
+  "var im=Math.max(1,Math.min(1e6,cnn(parseInt(inputs.imagesPerMonth))||100));" +
+  "var res=inputs.resolution||p.rs[0];var bs=Math.max(1,Math.min(64,cnn(parseInt(inputs.batchSize))||1));" +
   "var advm=inputs.advancedMode||'standard';var amv=AM[advm]||1;" +
   "var o=[];" +
   "var bt=0,pic=0,mc=0;" +
