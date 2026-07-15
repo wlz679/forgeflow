@@ -91,7 +91,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct = (n: number) => (n * 100).toFixed(0) + '%';
 
   const band = calcHealthBand(trueROI);
-  const healthEmoji = band === 'good' ? 'G' : band === 'warning' ? 'Y' : 'R';
+  const healthEmoji = band === 'good' ? '🟢' : band === 'warning' ? '🟡' : '🔴';
   const healthLabel = HEALTH_BANDS[band].label;
 
   // What-If: +20% redemption; -50% coupon_value; -10pp cannibalization
@@ -148,13 +148,13 @@ function calculate(inputs: Record<string, string>): string[] {
 
   const r =
     'Coupon Attribution Calculator\n\n' +
-    'Health:\n' +
+    '🩺 Health:\n' +
     '------------------------------------------------\n' +
     '* ' + healthEmoji + ' ' + healthLabel + '\n' +
     '* True ROI: ' + pct(trueROI) + '  *  Net revenue gain: ' + money(netRevenueGain) + '\n' +
     '* Cannibalization: ' + cannibalizationPct.toFixed(0) + '%  *  Coupon cost: ' + money(couponCost) + '\n\n' +
     '------------------------------------------------\n\n' +
-    'Inputs Snapshot:\n' +
+    '📊 Inputs Snapshot:\n' +
     '------------------------------------------------\n' +
     '* Coupon value:        ' + money(couponValue) + '\n' +
     '* Redemption rate:     ' + redemptionRate.toFixed(1) + '%\n' +
@@ -162,7 +162,7 @@ function calculate(inputs: Record<string, string>): string[] {
     '* Baseline revenue:    ' + money(baselineRevenue) + '\n' +
     '* Cannibalization:     ' + cannibalizationPct.toFixed(0) + '%\n\n' +
     '------------------------------------------------\n\n' +
-    'Revenue Breakdown:\n' +
+    '💰 Revenue Breakdown:\n' +
     '------------------------------------------------\n' +
     '* Total coupon revenue: ' + money(totalCouponRevenue) + '  (baseline x ' + redemptionRate.toFixed(1) + '% x AOV)\n' +
     '* Cannibalization loss: ' + money(cannibalizationLoss) + '  (orders that would have happened anyway)\n' +
@@ -170,26 +170,26 @@ function calculate(inputs: Record<string, string>): string[] {
     '* Coupon cost:          ' + money(couponCost) + '  (baseline x ' + redemptionRate.toFixed(1) + '% x discount)\n' +
     '* Net revenue gain:     ' + money(netRevenueGain) + '\n\n' +
     '------------------------------------------------\n\n' +
-    'What-If:\n' +
+    '🔄 What-If:\n' +
     '------------------------------------------------\n' +
     '* +20% redemption: true ROI = ' + pct(wrROI) + ' * net gain = ' + money(wrNet) + '\n' +
     '* -50% coupon value: true ROI = ' + pct(whROI) + ' * net gain = ' + money(whNet) + '\n' +
     '* -10pp cannibalization: true ROI = ' + pct(wcROI) + ' * net gain = ' + money(wcNet) + '\n\n' +
     '------------------------------------------------\n\n' +
-    'Break-Even:\n' +
+    '⚖️ Break-Even:\n' +
     '------------------------------------------------\n' +
     '* Cannibalization ceiling: ' + breakEvenCannibalPct.toFixed(1) + '%  (above this, coupons destroy value)\n' +
     '* Headroom: ' + cannibalHeadroom.toFixed(1) + 'pp before net revenue gain hits zero\n' +
     '* At break-even, every coupon dollar returns exactly one coupon dollar in net revenue\n\n' +
     '------------------------------------------------\n\n' +
-    'Milestone:\n' +
+    '🎯 Milestone:\n' +
     '------------------------------------------------\n' +
     '* Annualized net gain: ' + money(annualNetGain) + '  (at 1 campaign/month cadence)\n' +
     '* Annual incremental revenue: ' + money(annualIncrementalRevenue) + '\n' +
     '* Annual coupon cost: ' + money(annualCouponCost) + '\n' +
     '* (Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)\n\n' +
     '------------------------------------------------\n\n' +
-    'Tip: ' + tip + '\n';
+    '💡 Tip: ' + tip + '\n';
 
   return [r];
 }
@@ -214,7 +214,7 @@ const customFn =
   'function money(n){return "$"+Math.round(n).toLocaleString("en-US");}' +
   'function pct(n){return (n*100).toFixed(0)+"%";}' +
   'var band=roi>=1?"good":(roi>=0?"warning":"critical");' +
-  'var he=band==="good"?"G":(band==="warning"?"Y":"R");' +
+  'var he=band==="good"?"🟢":(band==="warning"?"🟡":"🔴");' +
   'var hl=band==="good"?"Good — true ROI >= 100%; coupon creates incremental profit":(band==="warning"?"Warning — true ROI 0–100%; coupon barely profitable, fragile":"Critical — true ROI < 0%; coupon destroys value");' +
   "var wrR=rr*1.2;" +
   "var wrRev=br*(wrR/100)*aov;" +
@@ -241,13 +241,13 @@ const customFn =
   'else{if(cp>50){tip="High cannibalization is the dominant drag on ROI. Run a 50/50 holdout (no-coupon cohort) for one cycle to measure true incremental conversion; if observed cannibalization is >50%, switch to dollar-off vs. percent-off and cap the discount at the smallest value that still clears your margin floor.";}else{tip="Coupon barely profitable. Tighten redemption targeting (exclude recent purchasers / email subscribers already at LTV ceiling), shorten the campaign window to avoid stacking with other promos, or reduce discount depth by 25–50%. A 10pp drop in cannibalization alone often doubles true ROI.";}}' +
   'var r="";' +
   'r+="Coupon Attribution Calculator\\n\\n";' +
-  'r+="Health:\\n";' +
+  'r+="🩺 Health:\\n";' +
   'r+="------------------------------------------------\\n";' +
   'r+="* "+he+" "+hl+"\\n";' +
   'r+="* True ROI: "+pct(roi)+"  *  Net revenue gain: "+money(net)+"\\n";' +
   'r+="* Cannibalization: "+cp.toFixed(0)+"%  *  Coupon cost: "+money(cc)+"\\n\\n";' +
   'r+="------------------------------------------------\\n\\n";' +
-  'r+="Inputs Snapshot:\\n";' +
+  'r+="📊 Inputs Snapshot:\\n";' +
   'r+="------------------------------------------------\\n";' +
   'r+="* Coupon value:        "+money(cv)+"\\n";' +
   'r+="* Redemption rate:     "+rr.toFixed(1)+"%\\n";' +
@@ -255,7 +255,7 @@ const customFn =
   'r+="* Baseline revenue:    "+money(br)+"\\n";' +
   'r+="* Cannibalization:     "+cp.toFixed(0)+"%\\n\\n";' +
   'r+="------------------------------------------------\\n\\n";' +
-  'r+="Revenue Breakdown:\\n";' +
+  'r+="💰 Revenue Breakdown:\\n";' +
   'r+="------------------------------------------------\\n";' +
   'r+="* Total coupon revenue: "+money(tcr)+"  (baseline x "+rr.toFixed(1)+"% x AOV)\\n";' +
   'r+="* Cannibalization loss: "+money(canLoss)+"  (orders that would have happened anyway)\\n";' +
@@ -263,26 +263,26 @@ const customFn =
   'r+="* Coupon cost:          "+money(cc)+"  (baseline x "+rr.toFixed(1)+"% x discount)\\n";' +
   'r+="* Net revenue gain:     "+money(net)+"\\n\\n";' +
   'r+="------------------------------------------------\\n\\n";' +
-  'r+="What-If:\\n";' +
+  'r+="🔄 What-If:\\n";' +
   'r+="------------------------------------------------\\n";' +
   'r+="* +20% redemption: true ROI = "+pct(wrROI)+" * net gain = "+money(wrNet)+"\\n";' +
   'r+="* -50% coupon value: true ROI = "+pct(whROI)+" * net gain = "+money(whNet)+"\\n";' +
   'r+="* -10pp cannibalization: true ROI = "+pct(wcROI)+" * net gain = "+money(wcNet)+"\\n\\n";' +
   'r+="------------------------------------------------\\n\\n";' +
-  'r+="Break-Even:\\n";' +
+  'r+="⚖️ Break-Even:\\n";' +
   'r+="------------------------------------------------\\n";' +
   'r+="* Cannibalization ceiling: "+beCann.toFixed(1)+"%  (above this, coupons destroy value)\\n";' +
   'r+="* Headroom: "+canHead.toFixed(1)+"pp before net revenue gain hits zero\\n";' +
   'r+="* At break-even, every coupon dollar returns exactly one coupon dollar in net revenue\\n\\n";' +
   'r+="------------------------------------------------\\n\\n";' +
-  'r+="Milestone:\\n";' +
+  'r+="🎯 Milestone:\\n";' +
   'r+="------------------------------------------------\\n";' +
   'r+="* Annualized net gain: "+money(annNet)+"  (at 1 campaign/month cadence)\\n";' +
   'r+="* Annual incremental revenue: "+money(annIncr)+"\\n";' +
   'r+="* Annual coupon cost: "+money(annCC)+"\\n";' +
   'r+="* (Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)\\n\\n";' +
   'r+="------------------------------------------------\\n\\n";' +
-  'r+="Tip: "+tip+"\\n";' +
+  'r+="💡 Tip: "+tip+"\\n";' +
   "return [r];";
 
 // ============== Engine ==============
@@ -327,7 +327,7 @@ const engine: ToolEngine = {
   calculate,
   generate: calculate,
   staticExamples: [
-    'Coupon Attribution Calculator\n\nHealth:\n------------------------------------------------\n* G Good — true ROI >= 100%; coupon creates incremental profit\n* True ROI: 180%  *  Net revenue gain: $180,000\n* Cannibalization: 30%  *  Coupon cost: $100,000\n\n------------------------------------------------\n\nInputs Snapshot:\n------------------------------------------------\n* Coupon value:        $20\n* Redemption rate:     10.0%\n* Average order value: $80\n* Baseline revenue:    $50,000\n* Cannibalization:     30%\n\n------------------------------------------------\n\nRevenue Breakdown:\n------------------------------------------------\n* Total coupon revenue: $400,000  (baseline x 10.0% x AOV)\n* Cannibalization loss: $120,000  (orders that would have happened anyway)\n* Incremental revenue:  $280,000  (after cannibalization adjustment)\n* Coupon cost:          $100,000  (baseline x 10.0% x discount)\n* Net revenue gain:     $180,000\n\n------------------------------------------------\n\nWhat-If:\n------------------------------------------------\n* +20% redemption: true ROI = 180% * net gain = $216,000\n* -50% coupon value: true ROI = 460% * net gain = $230,000\n* -10pp cannibalization: true ROI = 220% * net gain = $220,000\n\n------------------------------------------------\n\nBreak-Even:\n------------------------------------------------\n* Cannibalization ceiling: 75.0%  (above this, coupons destroy value)\n* Headroom: 45.0pp before net revenue gain hits zero\n* At break-even, every coupon dollar returns exactly one coupon dollar in net revenue\n\n------------------------------------------------\n\nMilestone:\n------------------------------------------------\n* Annualized net gain: $2,160,000  (at 1 campaign/month cadence)\n* Annual incremental revenue: $3,360,000\n* Annual coupon cost: $1,200,000\n* (Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)\n\n------------------------------------------------\n\nTip: Healthy true ROI. Lock in this audience * offer * channel combination as a template; A/B test only one variable at a time (discount depth, audience, creative) so you can attribute the next +20pp of ROI to a specific lever. Document the cannibalization % you measured — it is the single most-cited number in coupon post-mortems.\n',
+    'Coupon Attribution Calculator\n\n🩺 Health:\n------------------------------------------------\n* 🟢 Good — true ROI >= 100%; coupon creates incremental profit\n* True ROI: 180%  *  Net revenue gain: $180,000\n* Cannibalization: 30%  *  Coupon cost: $100,000\n\n------------------------------------------------\n\n📊 Inputs Snapshot:\n------------------------------------------------\n* Coupon value:        $20\n* Redemption rate:     10.0%\n* Average order value: $80\n* Baseline revenue:    $50,000\n* Cannibalization:     30%\n\n------------------------------------------------\n\n💰 Revenue Breakdown:\n------------------------------------------------\n* Total coupon revenue: $400,000  (baseline x 10.0% x AOV)\n* Cannibalization loss: $120,000  (orders that would have happened anyway)\n* Incremental revenue:  $280,000  (after cannibalization adjustment)\n* Coupon cost:          $100,000  (baseline x 10.0% x discount)\n* Net revenue gain:     $180,000\n\n------------------------------------------------\n\n🔄 What-If:\n------------------------------------------------\n* +20% redemption: true ROI = 180% * net gain = $216,000\n* -50% coupon value: true ROI = 460% * net gain = $230,000\n* -10pp cannibalization: true ROI = 220% * net gain = $220,000\n\n------------------------------------------------\n\n⚖️ Break-Even:\n------------------------------------------------\n* Cannibalization ceiling: 75.0%  (above this, coupons destroy value)\n* Headroom: 45.0pp before net revenue gain hits zero\n* At break-even, every coupon dollar returns exactly one coupon dollar in net revenue\n\n------------------------------------------------\n\n🎯 Milestone:\n------------------------------------------------\n* Annualized net gain: $2,160,000  (at 1 campaign/month cadence)\n* Annual incremental revenue: $3,360,000\n* Annual coupon cost: $1,200,000\n* (Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)\n\n------------------------------------------------\n\n💡 Tip: Healthy true ROI. Lock in this audience * offer * channel combination as a template; A/B test only one variable at a time (discount depth, audience, creative) so you can attribute the next +20pp of ROI to a specific lever. Document the cannibalization % you measured — it is the single most-cited number in coupon post-mortems.\n',
   ],
   faq: [
     { q: 'What is coupon cannibalization?', a: 'Cannibalization is the share of coupon-driven orders that would have happened anyway at full price. Industry average is ~30% if you have not run a holdout test; observed cannibalization in real holdouts is often 50–70%. Lower cannibalization means higher true ROI.' },
