@@ -1,15 +1,16 @@
 import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
+import { clampNonNegative } from "../../core/engines/helpers";
 
 function calculateMarketSize(inputs: Record<string, string>): string[] {
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
   const fmtM = (n: number) => { if (Math.abs(n) >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B"; if (Math.abs(n) >= 1e6) return "$" + (n / 1e6).toFixed(1) + "M"; return "$" + Math.round(n).toLocaleString(); };
   const pct = (n: number) => n.toFixed(1) + "%"; const loc = (n: number) => n.toLocaleString();
   const targetMarket = inputs.targetMarket || "your market";
-  const totalCustomers = parseInt(inputs.totalAddressableCustomers) || 0;
-  const annualRevPerCustomer = parseFloat(inputs.annualRevenuePerCustomer) || 0;
-  const growthRate = parseFloat(inputs.marketGrowthRate) || 0;
-  const samPercent = parseFloat(inputs.samPercent) || 25;
+  const totalCustomers = clampNonNegative(parseInt(inputs.totalAddressableCustomers) || 0);
+  const annualRevPerCustomer = clampNonNegative(parseFloat(inputs.annualRevenuePerCustomer) || 0);
+  const growthRate = clampNonNegative(parseFloat(inputs.marketGrowthRate) || 0);
+  const samPercent = clampNonNegative(parseFloat(inputs.samPercent) || 25);
   const marketStage = inputs.marketStage || "Growing";
   const tam = totalCustomers * annualRevPerCustomer;
   const growthFactor = 1 + growthRate / 100;
@@ -183,7 +184,7 @@ function calculateMarketSize(inputs: Record<string, string>): string[] {
 
 const customFn =
   "function fmt(n){return '$'+Math.round(n).toLocaleString()}function fmtM(n){if(Math.abs(n)>=1e9)return '$'+(n/1e9).toFixed(2)+'B';if(Math.abs(n)>=1e6)return '$'+(n/1e6).toFixed(1)+'M';return '$'+Math.round(n).toLocaleString()}function pct(n){return n.toFixed(1)+'%'}function loc(n){return n.toLocaleString()}" +
-  "var tm=inputs.targetMarket||'your market';var tc=parseInt(inputs.totalAddressableCustomers)||0;var ar=parseFloat(inputs.annualRevenuePerCustomer)||0;var gr=parseFloat(inputs.marketGrowthRate)||0;var sp=parseFloat(inputs.samPercent)||25;var ms=inputs.marketStage||'Growing';var tam=tc*ar;var gf=1+gr/100;" +
+  "var cnn=function(x){return Math.max(0,x)};var tm=inputs.targetMarket||'your market';var tc=cnn(parseInt(inputs.totalAddressableCustomers)||0);var ar=cnn(parseFloat(inputs.annualRevenuePerCustomer)||0);var gr=cnn(parseFloat(inputs.marketGrowthRate)||0);var sp=cnn(parseFloat(inputs.samPercent)||25);var ms=inputs.marketStage||'Growing';var tam=tc*ar;var gf=1+gr/100;" +
   "var sa={};sa['Emerging']=1.5;sa['Growing']=1.0;sa['Mature']=0.7;sa['Declining']=0.4;var sadj=sa[ms]||1.0;" +
   "var tiers=[];if(tc>100000)tiers=[{r:0.001,l:'\\uD83D\\uDFE2 Solopreneur'},{r:0.005,l:'\\uD83D\\uDFE2 Solopreneur'},{r:0.01,l:'\\uD83D\\uDFE1 Small team'},{r:0.03,l:'\\uD83D\\uDD34 VC-backed'}];else if(tc>10000)tiers=[{r:0.002,l:'\\uD83D\\uDFE2 Solopreneur'},{r:0.01,l:'\\uD83D\\uDFE2 Solopreneur'},{r:0.02,l:'\\uD83D\\uDFE1 Small team'},{r:0.05,l:'\\uD83D\\uDD34 VC-backed'}];else tiers=[{r:0.005,l:'\\uD83D\\uDFE2 Solopreneur'},{r:0.02,l:'\\uD83D\\uDFE2 Solopreneur'},{r:0.05,l:'\\uD83D\\uDFE1 Small team'},{r:0.1,l:'\\uD83D\\uDD34 VC-backed'}];" +
   "var r='\\uD83D\\uDCCA Market Size: '+tm+'\\n\\n\\uD83D\\uDCCB Market Overview\\n';if(tm)r+='\\u2022 Market:            '+tm+'\\n';r+='\\u2022 Market Stage:      '+ms+'\\n';r+='\\u2022 Addressable Customers: '+loc(tc)+'\\n\\u2022 Avg Revenue / Customer: '+fmt(ar)+'/yr\\n\\u2022 TAM (Total Addressable Market): '+fmtM(tam)+'/yr\\n';if(tam>0)r+='\\u2022 SAM (Serviceable): '+fmtM(tam*sp/100)+'/yr  (~'+pct(sp)+' of TAM)\\n';r+='\\u2022 Annual Growth Rate: '+pct(gr)+'\\n';" +

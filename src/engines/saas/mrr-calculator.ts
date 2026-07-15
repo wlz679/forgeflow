@@ -1,14 +1,15 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateMRR(inputs: Record<string, string>): string[] {
-  const subs = parseInt(inputs.subscriberCount) || 0;
-  const price = parseFloat(inputs.monthlyPrice) || 0;
-  const churnRate = parseFloat(inputs.monthlyChurnRate) || 0;
-  const expansionMrr = parseFloat(inputs.expansionMrr) || 0;
-  const newSubs = parseInt(inputs.newSubsPerMonth) || 0;
-  const contractionMrr = parseFloat(inputs.contractionMrr) || 0;
-  const reactivationMrr = parseFloat(inputs.reactivationMrr) || 0;
+  const subs = clampNonNegative(parseInt(inputs.subscriberCount) || 0);
+  const price = clampNonNegative(parseFloat(inputs.monthlyPrice) || 0);
+  const churnRate = clampNonNegative(parseFloat(inputs.monthlyChurnRate) || 0);
+  const expansionMrr = clampNonNegative(parseFloat(inputs.expansionMrr) || 0);
+  const newSubs = clampNonNegative(parseInt(inputs.newSubsPerMonth) || 0);
+  const contractionMrr = clampNonNegative(parseFloat(inputs.contractionMrr) || 0);
+  const reactivationMrr = clampNonNegative(parseFloat(inputs.reactivationMrr) || 0);
 
   const fmt = (n: number) => "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const pct = (n: number) => n.toFixed(1) + "%";
@@ -260,13 +261,14 @@ function calculateMRR(inputs: Record<string, string>): string[] {
 
 // customFn — byte-for-byte equivalent of calculateMRR for client-side execution
 const customFn =
-  "var subs=parseInt(inputs.subscriberCount)||0;" +
-  "var price=parseFloat(inputs.monthlyPrice)||0;" +
-  "var churnRate=parseFloat(inputs.monthlyChurnRate)||0;" +
-  "var expansionMrr=parseFloat(inputs.expansionMrr)||0;" +
-  "var newSubs=parseInt(inputs.newSubsPerMonth)||0;" +
-  "var contractionMrr=parseFloat(inputs.contractionMrr)||0;" +
-  "var reactivationMrr=parseFloat(inputs.reactivationMrr)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var subs=cnn(parseInt(inputs.subscriberCount)||0);" +
+  "var price=cnn(parseFloat(inputs.monthlyPrice)||0);" +
+  "var churnRate=cnn(parseFloat(inputs.monthlyChurnRate)||0);" +
+  "var expansionMrr=cnn(parseFloat(inputs.expansionMrr)||0);" +
+  "var newSubs=cnn(parseInt(inputs.newSubsPerMonth)||0);" +
+  "var contractionMrr=cnn(parseFloat(inputs.contractionMrr)||0);" +
+  "var reactivationMrr=cnn(parseFloat(inputs.reactivationMrr)||0);" +
   "function fmt(n){return '$'+n.toLocaleString(void 0,{minimumFractionDigits:2,maximumFractionDigits:2})}" +
   "function pct(n){return n.toFixed(1)+'%'}" +
   "function mn(n){return n>=0?'+'+fmt(n):fmt(n)}" +

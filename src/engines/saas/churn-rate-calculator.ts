@@ -1,12 +1,13 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateChurn(inputs: Record<string, string>): string[] {
-  const customersStart = parseInt(inputs.customersStart) || 0;
-  const customersLost = parseInt(inputs.customersLost) || 0;
-  const newCustomers = parseInt(inputs.newCustomers) || 0;
-  const avgRevenue = parseFloat(inputs.avgRevenuePerCustomer) || 0;
-  const expansionRevenue = parseFloat(inputs.expansionRevenue) || 0;
+  const customersStart = clampNonNegative(parseInt(inputs.customersStart) || 0);
+  const customersLost = clampNonNegative(parseInt(inputs.customersLost) || 0);
+  const newCustomers = clampNonNegative(parseInt(inputs.newCustomers) || 0);
+  const avgRevenue = clampNonNegative(parseFloat(inputs.avgRevenuePerCustomer) || 0);
+  const expansionRevenue = clampNonNegative(parseFloat(inputs.expansionRevenue) || 0);
   const results: string[] = [];
 
   // Logo churn (customer headcount)
@@ -191,11 +192,12 @@ function calculateChurn(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cs=parseInt(inputs.customersStart)||0;" +
-  "var cl=parseInt(inputs.customersLost)||0;" +
-  "var nc=parseInt(inputs.newCustomers)||0;" +
-  "var ar=parseFloat(inputs.avgRevenuePerCustomer)||0;" +
-  "var er=parseFloat(inputs.expansionRevenue)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var cs=cnn(parseInt(inputs.customersStart)||0);" +
+  "var cl=cnn(parseInt(inputs.customersLost)||0);" +
+  "var nc=cnn(parseInt(inputs.newCustomers)||0);" +
+  "var ar=cnn(parseFloat(inputs.avgRevenuePerCustomer)||0);" +
+  "var er=cnn(parseFloat(inputs.expansionRevenue)||0);" +
   "var mlc=cs>0?cl/cs:0;" +
   "var alc=1-Math.pow(1-mlc,12);" +
   "var ce=cs-cl+nc;" +

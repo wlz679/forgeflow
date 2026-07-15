@@ -1,5 +1,6 @@
 import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
+import { clampNonNegative } from "../../core/engines/helpers";
 
 function bar(pct: number): string {
   const w = Math.round(pct * 20);
@@ -10,13 +11,13 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
   const pct = (n: number, total: number) => total > 0 ? ((n / total) * 100).toFixed(1) + "%" : "0.0%";
 
-  const monthlyRevenue = parseFloat(inputs.monthlyRevenue) || 0;
-  const teamCost = parseFloat(inputs.teamCost) || 0;
-  const infraCost = parseFloat(inputs.infraCost) || 0;
-  const marketingCost = parseFloat(inputs.marketingCost) || 0;
-  const opsCost = parseFloat(inputs.opsCost) || 0;
-  const currentCash = parseFloat(inputs.currentCash) || 0;
-  const netNewRevenue = parseFloat(inputs.netNewRevenue) || 0;
+  const monthlyRevenue = clampNonNegative(parseFloat(inputs.monthlyRevenue) || 0);
+  const teamCost = clampNonNegative(parseFloat(inputs.teamCost) || 0);
+  const infraCost = clampNonNegative(parseFloat(inputs.infraCost) || 0);
+  const marketingCost = clampNonNegative(parseFloat(inputs.marketingCost) || 0);
+  const opsCost = clampNonNegative(parseFloat(inputs.opsCost) || 0);
+  const currentCash = clampNonNegative(parseFloat(inputs.currentCash) || 0);
+  const netNewRevenue = clampNonNegative(parseFloat(inputs.netNewRevenue) || 0);
 
   const grossBurn = teamCost + infraCost + marketingCost + opsCost;
   const netBurn = grossBurn - monthlyRevenue;
@@ -189,7 +190,7 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
 const customFn =
   "function bar(p){var w=Math.round(p*20);var r='';for(var i=0;i<20;i++)r+=i<w?'█':'░';return r}" +
   "function fmt(n){return '$'+Math.round(n).toLocaleString()}function pct(n,t){return t>0?((n/t)*100).toFixed(1)+'%':'0.0%'}" +
-  "var mr=parseFloat(inputs.monthlyRevenue)||0;var tc=parseFloat(inputs.teamCost)||0;var ic=parseFloat(inputs.infraCost)||0;var mc=parseFloat(inputs.marketingCost)||0;var oc=parseFloat(inputs.opsCost)||0;var cc=parseFloat(inputs.currentCash)||0;var nnr=parseFloat(inputs.netNewRevenue)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};var mr=cnn(parseFloat(inputs.monthlyRevenue)||0);var tc=cnn(parseFloat(inputs.teamCost)||0);var ic=cnn(parseFloat(inputs.infraCost)||0);var mc=cnn(parseFloat(inputs.marketingCost)||0);var oc=cnn(parseFloat(inputs.opsCost)||0);var cc=cnn(parseFloat(inputs.currentCash)||0);var nnr=cnn(parseFloat(inputs.netNewRevenue)||0);" +
   "var gb=tc+ic+mc+oc;var nb=gb-mr;var rm=0;" +
   "var r='\\uD83D\\uDD25 Cash Flow Health Check\n\n';" +
   "r+='\\uD83D\\uDCB8 Burn Summary\n• Gross Burn:    '+fmt(gb)+'/mo\n• Net Burn:      '+fmt(nb)+'/mo'+(mr>0?'  (Gross \\u2212 Revenue)\n':'  (no revenue yet)\n')+'• Annual Burn:   '+fmt(nb*12)+'/yr\n';" +

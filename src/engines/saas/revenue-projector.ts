@@ -1,19 +1,20 @@
 import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
+import { clampNonNegative } from "../../core/engines/helpers";
 
 function projectRevenue(inputs: Record<string, string>): string[] {
   // --- Parse inputs ---
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
   const pct = (n: number) => n.toFixed(1) + "%";
-  const currentMrr = parseFloat(inputs.currentMrr) || 0;
-  const grossGrowthRate = parseFloat(inputs.monthlyGrowthRate) || 0;
-  const churnRate = parseFloat(inputs.monthlyChurnRate) || 0;
-  const monthlyExpenses = parseFloat(inputs.monthlyExpenses) || 0;
-  const cashOnHand = parseFloat(inputs.cashOnHand) || 0;
-  const arpu = parseFloat(inputs.arpu) || 0;
-  const customGrowthRate = parseFloat(inputs.customGrowthRate) || 0;
-  const cac = parseFloat(inputs.cac) || 0;
-  const months = parseInt(inputs.months) || 12;
+  const currentMrr = clampNonNegative(parseFloat(inputs.currentMrr) || 0);
+  const grossGrowthRate = clampNonNegative(parseFloat(inputs.monthlyGrowthRate) || 0);
+  const churnRate = clampNonNegative(parseFloat(inputs.monthlyChurnRate) || 0);
+  const monthlyExpenses = clampNonNegative(parseFloat(inputs.monthlyExpenses) || 0);
+  const cashOnHand = clampNonNegative(parseFloat(inputs.cashOnHand) || 0);
+  const arpu = clampNonNegative(parseFloat(inputs.arpu) || 0);
+  const customGrowthRate = clampNonNegative(parseFloat(inputs.customGrowthRate) || 0);
+  const cac = clampNonNegative(parseFloat(inputs.cac) || 0);
+  const months = clampNonNegative(parseInt(inputs.months) || 12);
 
   const netRate = (grossGrowthRate - churnRate) / 100;
   const annualizedNetRate = (Math.pow(1 + netRate, 12) - 1) * 100;
@@ -472,15 +473,16 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 const customFn =
   "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
   "function pct(n){return n.toFixed(1)+'%'}" +
-  "var mr=parseFloat(inputs.currentMrr)||0;" +
-  "var gr=parseFloat(inputs.monthlyGrowthRate)||0;" +
-  "var cr=parseFloat(inputs.monthlyChurnRate)||0;" +
-  "var ex=parseFloat(inputs.monthlyExpenses)||0;" +
-  "var cash=parseFloat(inputs.cashOnHand)||0;" +
-  "var arpu=parseFloat(inputs.arpu)||0;" +
-  "var cgr=parseFloat(inputs.customGrowthRate)||0;" +
-  "var cac=parseFloat(inputs.cac)||0;" +
-  "var mo=parseInt(inputs.months)||12;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var mr=cnn(parseFloat(inputs.currentMrr)||0);" +
+  "var gr=cnn(parseFloat(inputs.monthlyGrowthRate)||0);" +
+  "var cr=cnn(parseFloat(inputs.monthlyChurnRate)||0);" +
+  "var ex=cnn(parseFloat(inputs.monthlyExpenses)||0);" +
+  "var cash=cnn(parseFloat(inputs.cashOnHand)||0);" +
+  "var arpu=cnn(parseFloat(inputs.arpu)||0);" +
+  "var cgr=cnn(parseFloat(inputs.customGrowthRate)||0);" +
+  "var cac=cnn(parseFloat(inputs.cac)||0);" +
+  "var mo=cnn(parseInt(inputs.months)||12);" +
   "var nr=(gr-cr)/100;" +
   "var annRate=(Math.pow(1+nr,12)-1)*100;" +
   "var end=mr*Math.pow(1+nr,mo);" +
