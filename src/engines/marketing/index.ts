@@ -6,6 +6,7 @@
 // P6-5 email-campaign-roi-calculator.ts  -- added in P6-5
 // P6-6 content-marketing-roi-calculator.ts -- added in P6-6
 // P16-1 coupon-attribution-calculator.ts -- added in P16-1
+// P16-2 cart-abandonment-cost-calculator.ts -- added in P16-2
 export * from './roas-calculator';
 export * from './ltv-by-channel-calculator';
 export * from './funnel-value-calculator';
@@ -13,3 +14,4 @@ export * from './cohort-retention-calculator';
 export * from './email-campaign-roi-calculator';
 export * from './content-marketing-roi-calculator';
 export * from './coupon-attribution-calculator';
+export * from './cart-abandonment-cost-calculator';

@@ -218,6 +218,7 @@ const ENGINES = [
   { file: 'breach-notification-cost-calculator.ts', slug: 'solopreneur-breach-notification-cost-calculator', subdir: 'legal-compliance', defaultInputs: { breaches_per_year: 1, data_subjects_per_breach: 50000, notification_cost_per_subject: 5, remediation_cost_per_breach: 80000 } },
   { file: 'cmp-roi-calculator.ts', slug: 'solopreneur-cmp-roi-calculator', subdir: 'legal-compliance', defaultInputs: { cmp_monthly_cost: 1200, dsars_per_month: 50, hours_per_dsar: 2.5, hourly_rate_dpo: 95, automation_uplift_pct: 40 } },
   { file: 'coupon-attribution-calculator.ts', slug: 'solopreneur-coupon-attribution-calculator', subdir: 'marketing', defaultInputs: { couponValue: '20', redemptionRate: '10', avgOrderValue: '80', baselineRevenue: '50000', cannibalizationPct: '30' } },
+  { file: 'cart-abandonment-cost-calculator.ts', slug: 'solopreneur-cart-abandonment-cost-calculator', subdir: 'marketing', defaultInputs: { monthlyTraffic: '50000', cartAddRate: '20', cartAbandonmentRate: '70', avgOrderValue: '80', recoveryRate: '8', recoveryCostPerSend: '0.5' } },
 ];
 
 // Generate a tsx script that imports each engine, calls generate(), and prints
