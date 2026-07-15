@@ -1,11 +1,12 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateFreelanceRate(inputs: Record<string, string>): string[] {
-  const annualIncome = parseFloat(inputs.annualIncome) || 0;
-  const expenses = parseFloat(inputs.expenses) || 0;
-  const billableHrs = parseFloat(inputs.billableHrs) || 0;
-  const profit = parseFloat(inputs.profit) || 0;
+  const annualIncome = clampNonNegative(parseFloat(inputs.annualIncome) || 0);
+  const expenses = clampNonNegative(parseFloat(inputs.expenses) || 0);
+  const billableHrs = clampNonNegative(parseFloat(inputs.billableHrs) || 0);
+  const profit = clampNonNegative(parseFloat(inputs.profit) || 0);
   const results: string[] = [];
 
   const netIncome = annualIncome - expenses;
@@ -131,10 +132,11 @@ function calculateFreelanceRate(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var ai=parseFloat(inputs.annualIncome)||0;" +
-  "var ex=parseFloat(inputs.expenses)||0;" +
-  "var bh=parseFloat(inputs.billableHrs)||0;" +
-  "var pr=parseFloat(inputs.profit)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var ai=cnn(parseFloat(inputs.annualIncome)||0);" +
+  "var ex=cnn(parseFloat(inputs.expenses)||0);" +
+  "var bh=cnn(parseFloat(inputs.billableHrs)||0);" +
+  "var pr=cnn(parseFloat(inputs.profit)||0);" +
   "var ni=ai-ex;" +
   "var br=bh>0?(ni+pr)/bh:0;" +
   "var mm=1.5;" +

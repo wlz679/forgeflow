@@ -1,11 +1,12 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculatePricingModel(inputs: Record<string, string>): string[] {
-  const annualIncomeGoal = parseFloat(inputs.annualIncomeGoal) || 0;
-  const billableHoursPerWeek = parseFloat(inputs.billableHoursPerWeek) || 0;
-  const weeksOffPerYear = parseFloat(inputs.weeksOffPerYear) || 0;
-  const annualExpenses = parseFloat(inputs.annualExpenses) || 0;
+  const annualIncomeGoal = clampNonNegative(parseFloat(inputs.annualIncomeGoal) || 0);
+  const billableHoursPerWeek = clampNonNegative(parseFloat(inputs.billableHoursPerWeek) || 0);
+  const weeksOffPerYear = clampNonNegative(parseFloat(inputs.weeksOffPerYear) || 0);
+  const annualExpenses = clampNonNegative(parseFloat(inputs.annualExpenses) || 0);
 
   const SEP = '━'.repeat(41);
 
@@ -154,10 +155,11 @@ function calculatePricingModel(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var aig=parseFloat(inputs.annualIncomeGoal)||0;" +
-  "var bhw=parseFloat(inputs.billableHoursPerWeek)||0;" +
-  "var woy=parseFloat(inputs.weeksOffPerYear)||0;" +
-  "var axe=parseFloat(inputs.annualExpenses)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var aig=cnn(parseFloat(inputs.annualIncomeGoal)||0);" +
+  "var bhw=cnn(parseFloat(inputs.billableHoursPerWeek)||0);" +
+  "var woy=cnn(parseFloat(inputs.weeksOffPerYear)||0);" +
+  "var axe=cnn(parseFloat(inputs.annualExpenses)||0);" +
   "var SEP='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';" +
   "var ww=52-woy;" +
   "var abh=bhw*ww;" +
@@ -283,3 +285,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+

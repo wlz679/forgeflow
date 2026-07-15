@@ -1,11 +1,12 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
-  const monthlyTraffic = parseFloat(inputs.monthlyTraffic) || 0;
-  const conversionRate = parseFloat(inputs.conversionRate) || 0;
-  const avgCommission = parseFloat(inputs.avgCommission) || 0;
-  const monthlyCost = parseFloat(inputs.monthlyCost) || 0;
+  const monthlyTraffic = clampNonNegative(parseFloat(inputs.monthlyTraffic) || 0);
+  const conversionRate = clampNonNegative(parseFloat(inputs.conversionRate) || 0);
+  const avgCommission = clampNonNegative(parseFloat(inputs.avgCommission) || 0);
+  const monthlyCost = clampNonNegative(parseFloat(inputs.monthlyCost) || 0);
   const results: string[] = [];
 
   const monthlyConversions = monthlyTraffic * (conversionRate / 100);
@@ -127,10 +128,11 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var mt=parseFloat(inputs.monthlyTraffic)||0;" +
-  "var cr=parseFloat(inputs.conversionRate)||0;" +
-  "var ac=parseFloat(inputs.avgCommission)||0;" +
-  "var mc2=parseFloat(inputs.monthlyCost)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var mt=cnn(parseFloat(inputs.monthlyTraffic)||0);" +
+  "var cr=cnn(parseFloat(inputs.conversionRate)||0);" +
+  "var ac=cnn(parseFloat(inputs.avgCommission)||0);" +
+  "var mc2=cnn(parseFloat(inputs.monthlyCost)||0);" +
   "var mconv=mt*(cr/100);" +
   "var mi=mconv*ac;" +
   "var ai=mi*12;" +
@@ -264,3 +266,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+
