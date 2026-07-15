@@ -1,9 +1,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateEmployeeCost(inputs: Record<string, string>): string[] {
-  const annualSalary = parseFloat(inputs.annualSalary) || 0;
-  const benefitsPct = parseFloat(inputs.benefitsPercentage) || 0;
+  const annualSalary = clampNonNegative(parseFloat(inputs.annualSalary) || 0);
+  const benefitsPct = clampNonNegative(parseFloat(inputs.benefitsPercentage) || 0);
   const location = inputs.location || 'us';
 
   const employerTaxRates: Record<string, number> = {
@@ -134,8 +135,9 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var sal=parseFloat(inputs.annualSalary)||0;" +
-  "var bp=parseFloat(inputs.benefitsPercentage)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var sal=cnn(parseFloat(inputs.annualSalary)||0);" +
+  "var bp=cnn(parseFloat(inputs.benefitsPercentage)||0);" +
   "var loc1=inputs.location||'us';" +
   "var tr={us:0.0765,uk:0.138,europe:0.20,asia:0.12,remote:0.10};" +
   "var or={us:0.25,uk:0.20,europe:0.22,asia:0.15,remote:0.10};" +
@@ -266,3 +268,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+

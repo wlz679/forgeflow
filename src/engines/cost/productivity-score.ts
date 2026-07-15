@@ -1,10 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateProductivity(inputs: Record<string, string>): string[] {
-  const deepWork = parseInt(inputs.weeklyDeepWorkHours) || 0;
-  const tools = parseInt(inputs.toolsUsed) || 0;
-  const meetings = parseInt(inputs.meetingsPerWeek) || 0;
+  const deepWork = clampNonNegative(parseInt(inputs.weeklyDeepWorkHours) || 0);
+  const tools = clampNonNegative(parseInt(inputs.toolsUsed) || 0);
+  const meetings = clampNonNegative(parseInt(inputs.meetingsPerWeek) || 0);
 
   const SEP = '━'.repeat(41);
 
@@ -142,9 +143,10 @@ function calculateProductivity(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var dw=parseInt(inputs.weeklyDeepWorkHours)||0;" +
-  "var tools=parseInt(inputs.toolsUsed)||0;" +
-  "var mtg=parseInt(inputs.meetingsPerWeek)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var dw=cnn(parseInt(inputs.weeklyDeepWorkHours)||0);" +
+  "var tools=cnn(parseInt(inputs.toolsUsed)||0);" +
+  "var mtg=cnn(parseInt(inputs.meetingsPerWeek)||0);" +
   "var SEP='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';" +
   "var score=50;var wins=[];var tips=[];" +
   "if(dw>=30){score+=25;wins.push('Elite deep work hours \\u2014 you are in the top 5% of solopreneurs.');}" +
@@ -272,3 +274,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+

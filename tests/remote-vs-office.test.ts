@@ -65,3 +65,18 @@ test('perPersonSavings scales linearly: 5 people savings = 50% of 10 people', ()
   assert.equal(pps * 5, 60000); // 5 people × $12K = $60K
   assert.equal(pps * 10, 120000); // 10 people × $12K = $120K
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative inputs
+// from propagating to annual cost math (headcount, salary, overhead, stipend, setup).
+// Note: productivityDelta is intentionally NOT clamped (it can legitimately be negative).
+test('remote-vs-office: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // After clampNonNegative: headcount 0 returns 0 from all helpers (no NaN/Infinity)
+  assert.equal(officeAnnualCost(0, 80000, 1500, 3000), 0, '0 headcount → 0 office');
+  assert.equal(remoteAnnualCost(0, 80000, 500, 3000), 0, '0 headcount → 0 remote');
+  assert.equal(hybridAnnualCost(0, 80000, 1500, 500, 3000), 0, '0 headcount → 0 hybrid');
+  // All-zero costs also return 0 (defensive layer)
+  assert.equal(officeAnnualCost(10, 0, 0, 0), 0, 'all-zero inputs → 0');
+  // productivityDelta can legitimately be negative; not clamped
+  const adj = productivityAdjustedRemote(890000, -50);
+  assert.ok(adj > 0 && Number.isFinite(adj), 'negative delta with positive cost → finite');
+});

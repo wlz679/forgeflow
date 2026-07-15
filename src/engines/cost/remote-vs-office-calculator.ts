@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -91,11 +92,11 @@ export function perPersonSavings(
 // ============== calculate() ==============
 
 function calculateRemoteOffice(inputs: Record<string, string>): string[] {
-  const headcount = Math.max(0, parseFloat(inputs.headcount) || 0);
-  const avgSalary = Math.max(0, parseFloat(inputs.avgSalary) || 0);
-  const officeOverhead = Math.max(0, parseFloat(inputs.officeOverheadPerPerson) || 0);
-  const remoteStipend = Math.max(0, parseFloat(inputs.remoteStipendPerPerson) || 0);
-  const oneTimeSetup = Math.max(0, parseFloat(inputs.oneTimeSetupPerPerson) || 0);
+  const headcount = clampNonNegative(parseFloat(inputs.headcount) || 0);
+  const avgSalary = clampNonNegative(parseFloat(inputs.avgSalary) || 0);
+  const officeOverhead = clampNonNegative(parseFloat(inputs.officeOverheadPerPerson) || 0);
+  const remoteStipend = clampNonNegative(parseFloat(inputs.remoteStipendPerPerson) || 0);
+  const oneTimeSetup = clampNonNegative(parseFloat(inputs.oneTimeSetupPerPerson) || 0);
   const productivityDelta = parseFloat(inputs.productivityDelta) || 0;
 
   if (headcount === 0) {
@@ -339,11 +340,12 @@ const customFn =
   "function adj(rc2,pd){var f=1+pd/100;if(f<=0)return Infinity;return rc2/f;}" +
   "function dhFn(sv,pd){var pp=pd>=0;var sp=sv>0;if(sp&&pp)return{e:'\\uD83D\\uDFE2',l:'STRONG \\u2014 remote saves money AND is more productive'};if(sp&&pd>=-10)return{e:'\\uD83D\\uDCA1',l:'MODERATE \\u2014 remote saves money but slight productivity loss'};if(!sp&&pp)return{e:'\\uD83D\\uDCA1',l:'MODERATE \\u2014 office saves money but remote is more productive'};return{e:'\\uD83D\\uDFE0',l:'WEAK \\u2014 office is cheaper AND remote is less productive'};}" +
   "function pps(o,r){return 12*(o-r);}" +
-  "var hc=Math.max(0,parseFloat(inputs.headcount)||0);" +
-  "var s=Math.max(0,parseFloat(inputs.avgSalary)||0);" +
-  "var o=Math.max(0,parseFloat(inputs.officeOverheadPerPerson)||0);" +
-  "var r=Math.max(0,parseFloat(inputs.remoteStipendPerPerson)||0);" +
-  "var ots=Math.max(0,parseFloat(inputs.oneTimeSetupPerPerson)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var hc=cnn(parseFloat(inputs.headcount)||0);" +
+  "var s=cnn(parseFloat(inputs.avgSalary)||0);" +
+  "var o=cnn(parseFloat(inputs.officeOverheadPerPerson)||0);" +
+  "var r=cnn(parseFloat(inputs.remoteStipendPerPerson)||0);" +
+  "var ots=cnn(parseFloat(inputs.oneTimeSetupPerPerson)||0);" +
   "var pd=parseFloat(inputs.productivityDelta)||0;" +
   "if(hc===0){return['\\u23F0 Remote vs In-Office Cost Calculator\\n\\n\\uD83D\\uDCB0 Enter headcount > 0 to compare office vs remote cost structures.'];}" +
   "if(s===0&&o===0&&r===0){return['\\u23F0 Remote vs In-Office Cost Calculator\\n\\n\\uD83D\\uDCB0 Enter average salary and overhead values to see the cost comparison.'];}" +
@@ -519,3 +521,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+

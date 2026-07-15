@@ -1,11 +1,12 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateMeetingCost(inputs: Record<string, string>): string[] {
-  const attendees = parseFloat(inputs.attendees) || 0;
-  const avgHourlyRate = parseFloat(inputs.avgHourlyRate) || 0;
-  const meetingMinutes = parseFloat(inputs.meetingMinutes) || 0;
-  const meetingsPerWeek = parseFloat(inputs.meetingsPerWeek) || 0;
+  const attendees = clampNonNegative(parseFloat(inputs.attendees) || 0);
+  const avgHourlyRate = clampNonNegative(parseFloat(inputs.avgHourlyRate) || 0);
+  const meetingMinutes = clampNonNegative(parseFloat(inputs.meetingMinutes) || 0);
+  const meetingsPerWeek = clampNonNegative(parseFloat(inputs.meetingsPerWeek) || 0);
 
   const hoursPerMeeting = meetingMinutes / 60;
   const costPerMeeting = attendees * avgHourlyRate * hoursPerMeeting;
@@ -118,10 +119,11 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var att=parseFloat(inputs.attendees)||0;" +
-  "var ahr=parseFloat(inputs.avgHourlyRate)||0;" +
-  "var mm=parseFloat(inputs.meetingMinutes)||0;" +
-  "var mpw=parseFloat(inputs.meetingsPerWeek)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var att=cnn(parseFloat(inputs.attendees)||0);" +
+  "var ahr=cnn(parseFloat(inputs.avgHourlyRate)||0);" +
+  "var mm=cnn(parseFloat(inputs.meetingMinutes)||0);" +
+  "var mpw=cnn(parseFloat(inputs.meetingsPerWeek)||0);" +
   "var hpm=mm/60;" +
   "var cpm=att*ahr*hpm;" +
   "var cpmin=mm>0?cpm/mm:0;" +
@@ -263,3 +265,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+
