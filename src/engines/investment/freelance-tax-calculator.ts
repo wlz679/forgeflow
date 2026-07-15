@@ -1,12 +1,13 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateFreelanceTax(inputs: Record<string, string>): string[] {
-  const annualIncome = parseFloat(inputs.annualIncome) || 0;
-  const businessExpenses = parseFloat(inputs.businessExpenses) || 0;
-  const retirementContribution = parseFloat(inputs.retirementContribution) || 0;
+  const annualIncome = clampNonNegative(parseFloat(inputs.annualIncome) || 0);
+  const businessExpenses = clampNonNegative(parseFloat(inputs.businessExpenses) || 0);
+  const retirementContribution = clampNonNegative(parseFloat(inputs.retirementContribution) || 0);
   const filingStatus = inputs.filingStatus || 'single';
-  const stateTaxRate = parseFloat(inputs.stateTaxRate) || 0;
+  const stateTaxRate = clampNonNegative(parseFloat(inputs.stateTaxRate) || 0);
   const country = inputs.country || 'us';
 
   const taxRates: Record<string, { rate: number; label: string; currency: string }> = {
@@ -131,11 +132,12 @@ function calculateFreelanceTax(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var ai=parseFloat(inputs.annualIncome)||0;" +
-  "var be=parseFloat(inputs.businessExpenses)||0;" +
-  "var rc=parseFloat(inputs.retirementContribution)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var ai=cnn(parseFloat(inputs.annualIncome)||0);" +
+  "var be=cnn(parseFloat(inputs.businessExpenses)||0);" +
+  "var rc=cnn(parseFloat(inputs.retirementContribution)||0);" +
   "var fs=inputs.filingStatus||'single';" +
-  "var st=parseFloat(inputs.stateTaxRate)||0;" +
+  "var st=cnn(parseFloat(inputs.stateTaxRate)||0);" +
   "var country=inputs.country||'us';" +
   "var tr={us:{rate:0.30,label:'US (Self-Employed, approx)',cur:'$'},uk:{rate:0.25,label:'UK (Sole Trader, approx)',cur:'\\u00A3'},canada:{rate:0.26,label:'Canada (Sole Proprietor, approx)',cur:'C$'},australia:{rate:0.275,label:'Australia (Sole Trader, approx)',cur:'A$'},germany:{rate:0.35,label:'Germany (Freiberufler, approx)',cur:'\\u20AC'}};" +
   "var ti=tr[country]||tr['us'];" +

@@ -1,10 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateTimeValue(inputs: Record<string, string>): string[] {
-  const annualIncome = parseFloat(inputs.annualIncome) || 0;
-  const hoursPerWeek = parseFloat(inputs.hoursPerWeek) || 0;
-  const weeksPerYear = parseFloat(inputs.weeksPerYear) || 0;
+  const annualIncome = clampNonNegative(parseFloat(inputs.annualIncome) || 0);
+  const hoursPerWeek = clampNonNegative(parseFloat(inputs.hoursPerWeek) || 0);
+  const weeksPerYear = clampNonNegative(parseFloat(inputs.weeksPerYear) || 0);
   const results: string[] = [];
 
   const totalHours = hoursPerWeek * weeksPerYear;
@@ -113,9 +114,10 @@ function calculateTimeValue(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var ai=parseFloat(inputs.annualIncome)||0;" +
-  "var hpw=parseFloat(inputs.hoursPerWeek)||0;" +
-  "var wpy=parseFloat(inputs.weeksPerYear)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var ai=cnn(parseFloat(inputs.annualIncome)||0);" +
+  "var hpw=cnn(parseFloat(inputs.hoursPerWeek)||0);" +
+  "var wpy=cnn(parseFloat(inputs.weeksPerYear)||0);" +
   "var th=hpw*wpy;" +
   "var hr=th>0?ai/th:0;" +
   "var dr=hr*8;" +

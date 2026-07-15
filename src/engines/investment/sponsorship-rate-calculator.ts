@@ -1,10 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateSponsorship(inputs: Record<string, string>): string[] {
-  const downloads = parseInt(inputs.monthlyDownloads) || 0;
-  const subscribers = parseInt(inputs.emailSubscribers) || 0;
-  const followers = parseInt(inputs.socialFollowers) || 0;
+  const downloads = clampNonNegative(parseInt(inputs.monthlyDownloads) || 0);
+  const subscribers = clampNonNegative(parseInt(inputs.emailSubscribers) || 0);
+  const followers = clampNonNegative(parseInt(inputs.socialFollowers) || 0);
   const contentType = inputs.contentType || 'newsletter';
   const results: string[] = [];
 
@@ -124,9 +125,10 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var dl=parseInt(inputs.monthlyDownloads)||0;" +
-  "var subs=parseInt(inputs.emailSubscribers)||0;" +
-  "var fol=parseInt(inputs.socialFollowers)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var dl=cnn(parseInt(inputs.monthlyDownloads)||0);" +
+  "var subs=cnn(parseInt(inputs.emailSubscribers)||0);" +
+  "var fol=cnn(parseInt(inputs.socialFollowers)||0);" +
   "var ct=inputs.contentType||'newsletter';" +
   "var cr={podcast:25,newsletter:40,youtube:20,blog:15};" +
   "var cpm=cr[ct]||20;" +

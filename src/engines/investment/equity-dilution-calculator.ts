@@ -1,10 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateEquityDilution(inputs: Record<string, string>): string[] {
-  const preMoneyValuation = parseFloat(inputs.companyValuation) || 0;
-  const investmentAmount = parseFloat(inputs.investmentAmount) || 0;
-  const founderShares = parseInt(inputs.founderShares) || 0;
+  const preMoneyValuation = clampNonNegative(parseFloat(inputs.companyValuation) || 0);
+  const investmentAmount = clampNonNegative(parseFloat(inputs.investmentAmount) || 0);
+  const founderShares = clampNonNegative(parseInt(inputs.founderShares) || 0);
   const results: string[] = [];
 
   const postMoneyValuation = preMoneyValuation + investmentAmount;
@@ -114,9 +115,10 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var pmv=parseFloat(inputs.companyValuation)||0;" +
-  "var inv=parseFloat(inputs.investmentAmount)||0;" +
-  "var fs=parseInt(inputs.founderShares)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var pmv=cnn(parseFloat(inputs.companyValuation)||0);" +
+  "var inv=cnn(parseFloat(inputs.investmentAmount)||0);" +
+  "var fs=cnn(parseInt(inputs.founderShares)||0);" +
   "var postv=pmv+inv;" +
   "var ioPct=postv>0?(inv/postv)*100:0;" +
   "var ish=pmv>0?Math.round(fs*(inv/pmv)):0;" +

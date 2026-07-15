@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -68,11 +69,11 @@ export function rateHealth(rate: number): { emoji: string; label: string } {
 // ============== calculate() — full 9-section output (v3 standard) ==============
 
 function calculateCompoundInterest(inputs: Record<string, string>): string[] {
-  const principal = parseFloat(inputs.principal) || 0;
-  const monthlyContribution = parseFloat(inputs.monthlyContribution) || 0;
-  const annualRate = parseFloat(inputs.annualRate) || 0;
+  const principal = clampNonNegative(parseFloat(inputs.principal) || 0);
+  const monthlyContribution = clampNonNegative(parseFloat(inputs.monthlyContribution) || 0);
+  const annualRate = clampNonNegative(parseFloat(inputs.annualRate) || 0);
   const compoundFrequency = (inputs.compoundFrequency === 'annually' ? 'annually' : 'monthly') as CompoundFrequency;
-  const years = Math.min(50, Math.max(0, parseFloat(inputs.years) || 0));
+  const years = Math.min(50, clampNonNegative(parseFloat(inputs.years) || 0));
 
   const fv = futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years);
   const simpleFv = simpleFinalValue(principal, monthlyContribution, annualRate, years);
@@ -185,11 +186,12 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
 const customFn =
   "function fv(p,mc,r,f,y){if(r===0||y===0)return p+mc*12*y;var rr=r/100;if(f==='monthly'){var rm=rr/12;var n=y*12;return p*Math.pow(1+rm,n)+mc*((Math.pow(1+rm,n)-1)/rm);}return p*Math.pow(1+rr,y)+mc*12*((Math.pow(1+rr,y)-1)/rr);}function sfv(p,mc,r,y){return p*(1+(r/100)*y)+mc*12*y;}function y2t(t,p,mc,r,f){if(fv(p,mc,r,f,50)<t)return Infinity;for(var y=0.5;y<=50;y+=0.5){if(fv(p,mc,r,f,y)>=t)return y;}return Infinity;}" +
   "function rh(r){if(r>=7)return'\\uD83D\\uDFE2 strong (S&P 500 historical)';if(r>=4)return'\\uD83D\\uDCA1 average (HYSA / CDs)';if(r>=1)return'\\uD83D\\uDFE0 low (basic savings account)';return'\\uD83D\\uDD34 below inflation \\u2014 consider alternatives';}" +
-  "var p=parseFloat(inputs.principal)||0;" +
-  "var mc=parseFloat(inputs.monthlyContribution)||0;" +
-  "var ar=parseFloat(inputs.annualRate)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var p=cnn(parseFloat(inputs.principal)||0);" +
+  "var mc=cnn(parseFloat(inputs.monthlyContribution)||0);" +
+  "var ar=cnn(parseFloat(inputs.annualRate)||0);" +
   "var cf=inputs.compoundFrequency==='annually'?'annually':'monthly';" +
-  "var y=Math.min(50,Math.max(0,parseFloat(inputs.years)||0));" +
+  "var y=Math.min(50,cnn(parseFloat(inputs.years)||0));" +
   "var fv1=fv(p,mc,ar,cf,y);" +
   "var sf=sfv(p,mc,ar,y);" +
   "var tc=p+mc*12*y;" +
