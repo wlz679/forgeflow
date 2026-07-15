@@ -6,6 +6,7 @@
 // HIGHER band direction — more dilution = more retention signal = better.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.20, label: '🟢 Excellent', message: 'Top-quartile refresh — strong retention signal, employee sees real upside.' },
@@ -56,10 +57,11 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
-  var cs = Number(inputs.current_shares) || 0;
-  var ys = Number(inputs.years_since_grant) || 0;
-  var rp = Number(inputs.refresh_pool_pct) || 0;
-  var ts = Number(inputs.total_company_shares) || 0;
+  var cnn=function(x){return Math.max(0,x)};
+  var cs = cnn(Number(inputs.current_shares) || 0);
+  var ys = cnn(Number(inputs.years_since_grant) || 0);
+  var rp = cnn(Number(inputs.refresh_pool_pct) || 0);
+  var ts = cnn(Number(inputs.total_company_shares) || 0);
   var rc = inputs.role_criticality || 'Med';
   var poolSize = ts * rp / 100;
   var rtp = rc === 'High' ? 0.15 : rc === 'Low' ? 0.03 : 0.08;
@@ -80,10 +82,10 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const currentShares = Number(inputs.current_shares) || 0;
-    const years = Number(inputs.years_since_grant) || 0;
-    const poolPct = Number(inputs.refresh_pool_pct) || 0;
-    const total = Number(inputs.total_company_shares) || 0;
+    const currentShares = clampNonNegative(Number(inputs.current_shares) || 0);
+    const years = clampNonNegative(Number(inputs.years_since_grant) || 0);
+    const poolPct = clampNonNegative(Number(inputs.refresh_pool_pct) || 0);
+    const total = clampNonNegative(Number(inputs.total_company_shares) || 0);
     const crit = (inputs.role_criticality || 'Med') as 'High' | 'Med' | 'Low';
     const { shares, dilutionPct } = refreshGrant(currentShares, years, poolPct, total, crit);
     const band = calcHealthBand(dilutionPct);

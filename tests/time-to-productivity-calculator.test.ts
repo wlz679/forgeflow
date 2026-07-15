@@ -50,3 +50,15 @@ test('HEALTH_BANDS has IC + Manager sub-tables with 3 band thresholds each', () 
   assert.equal(HEALTH_BANDS.Manager.warning.threshold, 26);
   assert.equal(HEALTH_BANDS.Manager.critical.threshold, Infinity);
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative ramp weeks
+// from producing negative adjusted ramp time.
+test('time-to-productivity: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // Negative weeks → 0 (clamp); adjustedRamp(0, ...) → 0
+  assert.equal(adjustedRamp(0, 'Med'), 0, '0 weeks (clamped from negative) → 0');
+  assert.equal(adjustedRamp(0, 'Low'), 0, '0 weeks → 0');
+  assert.equal(adjustedRamp(0, 'High'), 0, '0 weeks → 0');
+  // Band resolves cleanly
+  assert.equal(calcHealthBand(0, 'IC'), 'excellent', '0w IC → excellent');
+  assert.equal(calcHealthBand(0, 'Manager'), 'excellent', '0w Manager → excellent');
+});

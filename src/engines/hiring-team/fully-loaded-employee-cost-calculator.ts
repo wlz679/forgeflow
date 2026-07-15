@@ -5,6 +5,7 @@
 // Community-wisdom thresholds (BLS ECEC 2024 + SHRM 2024 Benefits Survey).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 1.25, label: '🟢 Excellent', message: 'Lean cost structure — benefits + tax + overhead all in line with BLS averages.' },
@@ -48,10 +49,11 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
-  var base = Number(inputs.base_salary) || 0;
-  var ben = Number(inputs.benefits_pct) || 0;
-  var tax = Number(inputs.payroll_tax_pct) || 0;
-  var ovh = Number(inputs.overhead_pct) || 0;
+  var cnn=function(x){return Math.max(0,x)};
+  var base = cnn(Number(inputs.base_salary) || 0);
+  var ben = cnn(Number(inputs.benefits_pct) || 0);
+  var tax = cnn(Number(inputs.payroll_tax_pct) || 0);
+  var ovh = cnn(Number(inputs.overhead_pct) || 0);
   var total = base + base * (ben + tax + ovh) / 100;
   var mult = base === 0 ? 0 : total / base;
   var band = mult <= 1.25 ? 'Excellent' : mult <= 1.40 ? 'Good' : mult <= 1.60 ? 'Warning' : 'Critical';
@@ -69,10 +71,10 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const base = Number(inputs.base_salary) || 0;
-    const benefits = Number(inputs.benefits_pct) || 0;
-    const tax = Number(inputs.payroll_tax_pct) || 0;
-    const overhead = Number(inputs.overhead_pct) || 0;
+    const base = clampNonNegative(Number(inputs.base_salary) || 0);
+    const benefits = clampNonNegative(Number(inputs.benefits_pct) || 0);
+    const tax = clampNonNegative(Number(inputs.payroll_tax_pct) || 0);
+    const overhead = clampNonNegative(Number(inputs.overhead_pct) || 0);
     const total = fullyLoadedCost(base, benefits, tax, overhead);
     const mult = costMultiplier(total, base);
     const band = calcHealthBand(mult);

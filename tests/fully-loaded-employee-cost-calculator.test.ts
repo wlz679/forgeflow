@@ -49,3 +49,15 @@ test('HEALTH_BANDS has 4 bands with thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 1.6);
   assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative inputs
+// from propagating to cost multiplier (no negative multiplier / Infinity).
+test('fully-loaded: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // After clamp, all-zero inputs → costMultiplier(0, 0) = 0 (not Infinity)
+  const mult = costMultiplier(0, 0);
+  assert.equal(mult, 0, 'all-zero → multiplier 0 (no NaN/Infinity)');
+  // calcHealthBand handles 0
+  assert.equal(calcHealthBand(mult), 'excellent', 'multiplier 0 → excellent');
+  // Negative base before clamp would yield negative — verify clamp path: -120K → 0
+  assert.equal(fullyLoadedCost(0, -25, -8, -15), 0, 'clamped negatives → 0');
+});

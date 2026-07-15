@@ -6,6 +6,7 @@
 // INVERSE band direction — lower % = better.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 50,  label: '🟢 Excellent', message: 'Lean attrition cost — strong retention practices or low-friction backfill.' },
@@ -50,10 +51,11 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
-  var sal = Number(inputs.annual_salary) || 0;
-  var rec = Number(inputs.recruiting_cost) || 0;
-  var rw = Number(inputs.ramp_weeks) || 0;
-  var lpm = Number(inputs.lost_productivity_months) || 0;
+  var cnn=function(x){return Math.max(0,x)};
+  var sal = cnn(Number(inputs.annual_salary) || 0);
+  var rec = cnn(Number(inputs.recruiting_cost) || 0);
+  var rw = cnn(Number(inputs.ramp_weeks) || 0);
+  var lpm = cnn(Number(inputs.lost_productivity_months) || 0);
   var role = inputs.role_level || 'IC';
   var mult = role === 'Manager' ? 1.5 : 1.0;
   var rampC = (sal / 52) * rw * 0.5;
@@ -76,10 +78,10 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const sal = Number(inputs.annual_salary) || 0;
-    const rec = Number(inputs.recruiting_cost) || 0;
-    const rw = Number(inputs.ramp_weeks) || 0;
-    const lpm = Number(inputs.lost_productivity_months) || 0;
+    const sal = clampNonNegative(Number(inputs.annual_salary) || 0);
+    const rec = clampNonNegative(Number(inputs.recruiting_cost) || 0);
+    const rw = clampNonNegative(Number(inputs.ramp_weeks) || 0);
+    const lpm = clampNonNegative(Number(inputs.lost_productivity_months) || 0);
     const role = (inputs.role_level || 'IC') as 'IC' | 'Manager';
     const { recruitingCost, rampCost, lostProductivityCost, total, pctOfSalary } = attritionCost(sal, rec, rw, lpm, role);
     const band = calcHealthBand(pctOfSalary);

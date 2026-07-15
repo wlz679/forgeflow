@@ -6,6 +6,7 @@
 // 3 curve shapes: SlowStart (^2) / Linear / S-Curve (logistic).
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.30, label: '🟢 Excellent', message: 'Steep ramp — employee reaches P50 productivity in <30% of months_to_full.' },
@@ -64,10 +65,11 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
-  var mt = Number(inputs.months_to_full) || 6;
-  var sp = Number(inputs.starting_pct) || 0;
+  var cnn=function(x){return Math.max(0,x)};
+  var mt = cnn(Number(inputs.months_to_full) || 6);
+  var sp = cnn(Number(inputs.starting_pct) || 0);
   var sh = inputs.curve_shape || 'S-Curve';
-  var mc = Number(inputs.monthly_cost) || 0;
+  var mc = cnn(Number(inputs.monthly_cost) || 0);
   // Find P50 month
   var p50 = mt;
   for (var t = 0.1; t <= mt * 2; t += 0.1) {
@@ -92,10 +94,10 @@ const engine: ToolEngine = {
 }`,
   },
   generate(inputs) {
-    const monthsToFull = Number(inputs.months_to_full) || 6;
-    const starting = Number(inputs.starting_pct) || 0;
+    const monthsToFull = clampNonNegative(Number(inputs.months_to_full) || 6);
+    const starting = clampNonNegative(Number(inputs.starting_pct) || 0);
     const shape = (inputs.curve_shape || 'S-Curve') as 'SlowStart' | 'Linear' | 'S-Curve';
-    const monthlyCost = Number(inputs.monthly_cost) || 0;
+    const monthlyCost = clampNonNegative(Number(inputs.monthly_cost) || 0);
     const p50Month = findP50Month(monthsToFull, starting, shape);
     const p50Pct = p50Month / monthsToFull;
     const band = calcHealthBand(p50Pct * 100); // pass as percentage (0-100)

@@ -6,6 +6,7 @@
 // Dual-band per role_level: IC ramp ~ half of Manager ramp.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   IC: {
@@ -52,7 +53,8 @@ const engine: ToolEngine = {
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
   var role = inputs.role_level || 'IC';
-  var weeks = Number(inputs.ramp_weeks) || 0;
+  var cnn=function(x){return Math.max(0,x)};
+  var weeks = cnn(Number(inputs.ramp_weeks) || 0);
   var cplx = inputs.industry_complexity || 'Med';
   var mult = cplx === 'Low' ? 0.75 : cplx === 'High' ? 1.4 : 1.0;
   var adj = weeks * mult;
@@ -71,7 +73,7 @@ const engine: ToolEngine = {
   },
   generate(inputs) {
     const role = (inputs.role_level || 'IC') as 'IC' | 'Manager';
-    const weeks = Number(inputs.ramp_weeks) || 0;
+    const weeks = clampNonNegative(Number(inputs.ramp_weeks) || 0);
     const cplx = (inputs.industry_complexity || 'Med') as 'Low' | 'Med' | 'High';
     const adj = adjustedRamp(weeks, cplx);
     const band = calcHealthBand(adj, role);

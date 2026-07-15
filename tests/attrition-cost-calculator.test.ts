@@ -63,3 +63,14 @@ test('HEALTH_BANDS has 4 bands with thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 200);
   assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative salary/
+// recruiting/ramp/lpm from producing negative cost or negative %.
+test('attrition-cost: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // Annual salary -100 → 0 (clamp); 0 salary → 0% pct; ramp 0; rec 0; lpm 0
+  const r = attritionCost(0, 0, 0, 0, 'IC');
+  assert.equal(r.total, 0, 'all-zero inputs → total = 0');
+  assert.equal(r.pctOfSalary, 0, 'all-zero salary → pct = 0 (no NaN)');
+  assert.equal(calcHealthBand(r.pctOfSalary), 'excellent', '0 → excellent band');
+});
+

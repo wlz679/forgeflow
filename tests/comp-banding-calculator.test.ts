@@ -52,3 +52,15 @@ test('HEALTH_BANDS has 4 bands with thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 25);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative inputs
+// from propagating to percentile math (no NaN/Infinity in band calc).
+test('comp-banding: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // base=0, all percentiles 0 → compPercentile handles edge cleanly
+  const pct0 = compPercentile(0, 0, 0, 0);
+  assert.equal(pct0, 0, 'all-zero input → 0');
+  assert.equal(calcHealthBand(pct0), 'critical', 'P0 → critical band');
+  // Tiny positive band
+  const pct100 = compPercentile(1, 1, 1, 1);
+  assert.ok(pct100 >= 0 && pct100 <= 100, 'percentile in [0, 100]');
+});

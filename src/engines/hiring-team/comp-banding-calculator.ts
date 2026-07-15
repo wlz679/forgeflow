@@ -6,6 +6,7 @@
 // HIGHER band direction — paying competitively is better.
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 75, label: '🟢 Excellent', message: 'Paying at or above P75 — top-quartile retention signal.' },
@@ -57,10 +58,11 @@ const engine: ToolEngine = {
     type: 'custom',
     wordPools: {},
     customFn: `function run(inputs, pick, fill) {
-  var base = Number(inputs.base_salary) || 0;
-  var p25 = Number(inputs.market_p25) || 1;
-  var p50 = Number(inputs.market_p50) || 1;
-  var p75 = Number(inputs.market_p75) || 1;
+  var cnn=function(x){return Math.max(0,x)};
+  var base = cnn(Number(inputs.base_salary) || 0);
+  var p25 = cnn(Number(inputs.market_p25) || 1);
+  var p50 = cnn(Number(inputs.market_p50) || 1);
+  var p75 = cnn(Number(inputs.market_p75) || 1);
   var role = inputs.role_title || 'this role';
   var pct = 0;
   if (base <= p25) pct = (base / p25) * 25;
@@ -82,10 +84,10 @@ const engine: ToolEngine = {
   },
   generate(inputs) {
     const role = inputs.role_title || 'this role';
-    const base = Number(inputs.base_salary) || 0;
-    const p25 = Number(inputs.market_p25) || 0;
-    const p50 = Number(inputs.market_p50) || 0;
-    const p75 = Number(inputs.market_p75) || 0;
+    const base = clampNonNegative(Number(inputs.base_salary) || 0);
+    const p25 = clampNonNegative(Number(inputs.market_p25) || 0);
+    const p50 = clampNonNegative(Number(inputs.market_p50) || 0);
+    const p75 = clampNonNegative(Number(inputs.market_p75) || 0);
     const pct = compPercentile(base, p25, p50, p75);
     const band = calcHealthBand(pct);
     const bandInfo = HEALTH_BANDS[band];

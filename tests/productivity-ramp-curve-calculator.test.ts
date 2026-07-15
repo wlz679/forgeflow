@@ -64,3 +64,17 @@ test('HEALTH_BANDS has 4 bands with thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.70);
   assert.equal(HEALTH_BANDS.critical.threshold, Infinity);
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative months/full
+// or starting_pct from producing negative productivity or NaN ratios.
+test('productivity-ramp: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // Negative monthsToFull → 0; productivityAtMonth(0, 0, 0, ...) → starting (0)
+  const p = productivityAtMonth(0, 0, 0, 'S-Curve');
+  assert.equal(p, 0, 't=0 returns starting value');
+  // 0 starting, 0 months: t >= monthsToFull branch → 100
+  const p2 = productivityAtMonth(1, 0, 0, 'Linear');
+  assert.equal(p2, 100, 't >= monthsToFull returns 100 (cap)');
+  // findP50Month with 0 months
+  const p50 = findP50Month(0, 0, 'Linear');
+  assert.ok(p50 >= 0, 'P50 month non-negative');
+});

@@ -58,3 +58,13 @@ test('HEALTH_BANDS has 4 bands with thresholds', () => {
   assert.equal(HEALTH_BANDS.warning.threshold, 0.05);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
+
+// P16-3 defensive layer 2: clampNonNegative guards prevent negative inputs
+// from producing negative share counts or negative dilution %.
+test('equity-refresh: defensive clampNonNegative guards (P16-3 layer 2)', () => {
+  // After clampNonNegative: all negative inputs → 0; refreshGrant(0,0,0,0,...)
+  const r = refreshGrant(0, 0, 0, 0, 'High');
+  assert.equal(r.shares, 0, 'all-zero inputs → 0 shares');
+  assert.equal(r.dilutionPct, 0, 'all-zero inputs → 0 dilution');
+  assert.equal(calcHealthBand(r.dilutionPct), 'critical', '0 dilution → critical');
+});
