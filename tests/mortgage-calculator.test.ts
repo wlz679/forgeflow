@@ -98,3 +98,26 @@ test('mortgage: monthlyPI zero n → 0 (loan term guard)', () => {
   assert.equal(monthlyPI(100000, 0.005, 0), 0);
   assert.equal(monthlyPI(100000, 0.005, -12), 0);
 });
+
+// P16-4 defensive test (Layer 2): negative inputs clamp to 0
+// Tests the engine.generate() flow (which applies clampNonNegative at the entry point).
+// Helper functions monthlyPI/totalInterest/ltv/principalPaidByYear are raw math and
+// accept negative inputs as-is — that's intentional, the engine is the defensive layer.
+test('mortgage: defensive clampNonNegative guards (P16-4 layer 2)', () => {
+  require('../src/engines/real-estate/mortgage-calculator');
+  const { getEngine } = require('../src/core/engines/registry');
+  const engine = getEngine('solopreneur-mortgage-calculator');
+  assert.ok(engine, 'engine should be registered');
+  // Negative inputs should be clamped to 0 inside the engine
+  const r = engine!.generate({
+    homePrice: '-500000',
+    downPayment: '-100000',
+    loanTermYears: '-30',
+    interestRate: '-6.5',
+  });
+  assert.ok(Array.isArray(r), 'engine returns an array');
+  assert.ok(r.length > 0, 'engine returns at least one result line');
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money');
+});

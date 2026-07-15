@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -48,9 +49,9 @@ export function capRateHealth(capRatePct: number): { emoji: string; label: strin
 // ============== calculate() ==============
 
 function calculateCapRate(inputs: Record<string, string>): string[] {
-  const propertyValue = Math.max(0, parseFloat(inputs.propertyValue) || 0);
-  const annualRentIncome = Math.max(0, parseFloat(inputs.annualRentIncome) || 0);
-  const annualExpenses = Math.max(0, parseFloat(inputs.annualExpenses) || 0);
+  const propertyValue = clampNonNegative(parseFloat(inputs.propertyValue) || 0);
+  const annualRentIncome = clampNonNegative(parseFloat(inputs.annualRentIncome) || 0);
+  const annualExpenses = clampNonNegative(parseFloat(inputs.annualExpenses) || 0);
   const vacancyRate = parseFloat(inputs.vacancyRate) || 0;
 
   if (propertyValue <= 0) {
@@ -162,9 +163,10 @@ const customFn =
   "function cocAC(pv,ari,ae,vr){return capR(pv,ari,ae,vr);}" +
   "function implV(noi,tcr){if(tcr<=0)return 0;return noi/(tcr/100);}" +
   "function cRH(c){if(c>=5&&c<=9)return{e:'\\uD83D\\uDFE2',l:'typical residential \\u2014 cap rate in 5-9% range'};if((c>=3&&c<5)||(c>9&&c<=12))return{e:'\\uD83D\\uDCA1',l:'marginal \\u2014 outside typical band (low HCOL or high-distressed)'};return{e:'\\uD83D\\uDFE0',l:'outlier \\u2014 cap rate outside 3-12% range; verify market assumptions'};}" +
-  "var pv=Math.max(0,parseFloat(inputs.propertyValue)||0);" +
-  "var ari=Math.max(0,parseFloat(inputs.annualRentIncome)||0);" +
-  "var ae=Math.max(0,parseFloat(inputs.annualExpenses)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var pv=cnn(parseFloat(inputs.propertyValue)||0);" +
+  "var ari=cnn(parseFloat(inputs.annualRentIncome)||0);" +
+  "var ae=cnn(parseFloat(inputs.annualExpenses)||0);" +
   "var vr=parseFloat(inputs.vacancyRate)||0;" +
   "if(pv<=0){return['\\u23F0 Cap Rate Calculator\\n\\n\\uD83D\\uDCB0 Enter property value, annual rent, expenses, and vacancy rate to see your cap rate, NOI, and stage benchmarks.'];}" +
   "if(vr>=100){return['\\u23F0 Cap Rate Calculator\\n\\n\\uD83D\\uDCB0 Vacancy \\u2265 100% would yield zero effective income. Cap rate math does not apply at this vacancy level.'];}" +

@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -49,9 +50,9 @@ export function principalPaidByYear(
 // ============== calculate() ==============
 
 function calculateMortgage(inputs: Record<string, string>): string[] {
-  const homePrice = Math.max(0, parseFloat(inputs.homePrice) || 0);
-  const downPayment = Math.max(0, parseFloat(inputs.downPayment) || 0);
-  const loanTermYears = Math.max(0, parseFloat(inputs.loanTermYears) || 0);
+  const homePrice = clampNonNegative(parseFloat(inputs.homePrice) || 0);
+  const downPayment = clampNonNegative(parseFloat(inputs.downPayment) || 0);
+  const loanTermYears = clampNonNegative(parseFloat(inputs.loanTermYears) || 0);
   const interestRate = parseFloat(inputs.interestRate) || 0;
 
   // Edge: homePrice=0 → prompt
@@ -294,9 +295,10 @@ const customFn =
   "function tI(p,r,n){return mPI(p,r,n)*n-p;}" +
   "function ltv2(p,h){if(h<=0)return 0;return p/h*100;}" +
   "function ppByY(y,p,r,n){var m=Math.min(y*12,n);if(n<=0)return 0;if(r===0)return p*(m/n);var b=(p*(Math.pow(1+r,n)-Math.pow(1+r,m)))/(Math.pow(1+r,n)-1);return p-b;}" +
-  "var hp=Math.max(0,parseFloat(inputs.homePrice)||0);" +
-  "var dp=Math.max(0,parseFloat(inputs.downPayment)||0);" +
-  "var lty=Math.max(0,parseFloat(inputs.loanTermYears)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var hp=cnn(parseFloat(inputs.homePrice)||0);" +
+  "var dp=cnn(parseFloat(inputs.downPayment)||0);" +
+  "var lty=cnn(parseFloat(inputs.loanTermYears)||0);" +
   "var ir=parseFloat(inputs.interestRate)||0;" +
   "if(hp===0){return['\\u23F0 Mortgage Calculator\\n\\n\\uD83D\\uDCB0 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.'];}" +
   "if(dp>=hp){return['\\u23F0 Mortgage Calculator\\n\\n\\uD83D\\uDCB0 Down payment ('+hp.toLocaleString('en-US')+') >= home price \\u2014 no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments.'];}" +

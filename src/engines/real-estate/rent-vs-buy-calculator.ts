@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -107,11 +108,11 @@ export function verdict(savings: number): { emoji: string; label: string } {
 // ============== calculate() ==============
 
 function calculateRentVsBuy(inputs: Record<string, string>): string[] {
-  const monthlyRent = Math.max(0, parseFloat(inputs.monthlyRent) || 0);
-  const homePrice = Math.max(0, parseFloat(inputs.homePrice) || 0);
-  const downPayment = Math.max(0, parseFloat(inputs.downPayment) || 0);
+  const monthlyRent = clampNonNegative(parseFloat(inputs.monthlyRent) || 0);
+  const homePrice = clampNonNegative(parseFloat(inputs.homePrice) || 0);
+  const downPayment = clampNonNegative(parseFloat(inputs.downPayment) || 0);
   const mortgageRate = parseFloat(inputs.mortgageRate) || 0;
-  const yearsToStay = Math.max(0, parseFloat(inputs.yearsToStay) || 0);
+  const yearsToStay = clampNonNegative(parseFloat(inputs.yearsToStay) || 0);
   const annualAppreciation = parseFloat(inputs.annualAppreciation) || 0;
   const annualRentIncrease = parseFloat(inputs.annualRentIncrease) || 0;
 
@@ -229,11 +230,12 @@ const customFn =
   "function ncb(hp,dp,mr,yrs,apr){var p=hp-dp;var r=mr/100/12;var n=yrs*12;var m=mPI(p,r,n);var tmp=m*n;var f=fv(hp,apr,yrs);var sc=f*0.06;var np=f-sc;var bcc=hp*0.03;var io=dp+bcc;var mptm=hp*0.012/12;var thc=mptm*n;return{io:io,tmp:tmp,thc:thc,sc:sc,np:np,total:io+tmp+thc-np};}" +
   "function trc(mr,ri,dp,y){var trp=trps(mr,ri,y);var og=oppG(dp,7,y);return{totalRentPaid:trp,opportunityGain:og,total:trp-og};}" +
   "function verd(s){if(s>30000)return{e:'\\uD83D\\uDFE2',l:'BUY strongly favored \\u2014 buying saves > $30K over renting'};if(s>=-30000)return{e:'\\uD83D\\uDCA1',l:'CLOSE call \\u2014 within $30K; sensitivity matters'};return{e:'\\uD83D\\uDFE0',l:'RENT favored \\u2014 renting saves > $30K over buying'};}" +
-  "var mr=Math.max(0,parseFloat(inputs.monthlyRent)||0);" +
-  "var hp=Math.max(0,parseFloat(inputs.homePrice)||0);" +
-  "var dp=Math.max(0,parseFloat(inputs.downPayment)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var mr=cnn(parseFloat(inputs.monthlyRent)||0);" +
+  "var hp=cnn(parseFloat(inputs.homePrice)||0);" +
+  "var dp=cnn(parseFloat(inputs.downPayment)||0);" +
   "var mRate=parseFloat(inputs.mortgageRate)||0;" +
-  "var yrs=Math.max(0,parseFloat(inputs.yearsToStay)||0);" +
+  "var yrs=cnn(parseFloat(inputs.yearsToStay)||0);" +
   "var appr=parseFloat(inputs.annualAppreciation)||0;" +
   "var rentI=parseFloat(inputs.annualRentIncrease)||0;" +
   "if(yrs<=0){return['\\u23F0 Rent-vs-Buy Calculator\\n\\n\\uD83D\\uDCB0 Enter years you plan to stay (>0). This is the horizon for the comparison.'];}" +

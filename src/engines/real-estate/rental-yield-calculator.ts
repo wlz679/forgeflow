@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -81,13 +82,13 @@ export function cocHealth(cocPct: number): { emoji: string; label: string } {
 // ============== calculate() ==============
 
 function calculateRentalYield(inputs: Record<string, string>): string[] {
-  const purchasePrice = Math.max(0, parseFloat(inputs.purchasePrice) || 0);
-  const downPayment = Math.max(0, parseFloat(inputs.downPayment) || 0);
-  const loanAmount = Math.max(0, parseFloat(inputs.loanAmount) || 0);
+  const purchasePrice = clampNonNegative(parseFloat(inputs.purchasePrice) || 0);
+  const downPayment = clampNonNegative(parseFloat(inputs.downPayment) || 0);
+  const loanAmount = clampNonNegative(parseFloat(inputs.loanAmount) || 0);
   const interestRate = parseFloat(inputs.interestRate) || 0;
-  const loanTermYears = Math.max(0, parseFloat(inputs.loanTermYears) || 0);
-  const monthlyRent = Math.max(0, parseFloat(inputs.monthlyRent) || 0);
-  const monthlyExpenses = Math.max(0, parseFloat(inputs.monthlyExpenses) || 0);
+  const loanTermYears = clampNonNegative(parseFloat(inputs.loanTermYears) || 0);
+  const monthlyRent = clampNonNegative(parseFloat(inputs.monthlyRent) || 0);
+  const monthlyExpenses = clampNonNegative(parseFloat(inputs.monthlyExpenses) || 0);
   const vacancyRate = parseFloat(inputs.vacancyRate) || 0;
   // annualAppreciation is for info/context only in V1 (display in tip)
 
@@ -203,13 +204,14 @@ const customFn =
   "function gY(pp,mr){if(pp<=0)return 0;return(mr*12/pp)*100;}" +
   "function cOCR(pp,dp,la,irp,lty,mr,mep,vrp){var tci=tCI(dp,pp);if(tci<=0)return 0;return(annCF(pp,dp,la,irp,lty,mr,mep,vrp)/tci)*100;}" +
   "function cocH(c){if(c>=8&&c<=12)return{e:'\\uD83D\\uDFE2',l:'strong cash-on-cash return \\u2014 8-12% range'};if((c>=4&&c<8)||(c>12&&c<=15))return{e:'\\uD83D\\uDCA1',l:'marginal \\u2014 outside 8-12% band (low HCOL or high-yield risk)'};return{e:'\\uD83D\\uDFE0',l:'outlier \\u2014 cash-on-cash outside 4-15% range; verify assumptions'};}" +
-  "var pp=Math.max(0,parseFloat(inputs.purchasePrice)||0);" +
-  "var dp=Math.max(0,parseFloat(inputs.downPayment)||0);" +
-  "var la=Math.max(0,parseFloat(inputs.loanAmount)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var pp=cnn(parseFloat(inputs.purchasePrice)||0);" +
+  "var dp=cnn(parseFloat(inputs.downPayment)||0);" +
+  "var la=cnn(parseFloat(inputs.loanAmount)||0);" +
   "var irp=parseFloat(inputs.interestRate)||0;" +
-  "var lty=Math.max(0,parseFloat(inputs.loanTermYears)||0);" +
-  "var mr=Math.max(0,parseFloat(inputs.monthlyRent)||0);" +
-  "var mep=Math.max(0,parseFloat(inputs.monthlyExpenses)||0);" +
+  "var lty=cnn(parseFloat(inputs.loanTermYears)||0);" +
+  "var mr=cnn(parseFloat(inputs.monthlyRent)||0);" +
+  "var mep=cnn(parseFloat(inputs.monthlyExpenses)||0);" +
   "var vrp=parseFloat(inputs.vacancyRate)||0;" +
   "var appr=parseFloat(inputs.annualAppreciation)||0;" +
   "if(pp<=0){return['\\u23F0 Rental Yield / Cash-on-Cash Calculator\\n\\n\\uD83D\\uDCB0 Enter purchase price and rent to see your gross/net/cash-on-cash yields, mortgage breakdown, and health assessment.'];}" +

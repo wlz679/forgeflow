@@ -12,6 +12,8 @@ import {
   brrrrHealth,
   seventyRuleCheck,
 } from '../src/engines/real-estate/brrrr-calculator';
+import '../src/engines/real-estate/brrrr-calculator';
+import { getEngine } from '../src/core/engines/registry';
 
 // Test 1: stage1Cash — purchase $150K, 25% down
 //   down = 37500; closing = 4500 (3%); total = 42000
@@ -112,4 +114,32 @@ test('brrrr: health bands', () => {
   assert.equal(brrrrHealth(5000, 50000).emoji, '🟡');
   // 20% → 🟠
   assert.equal(brrrrHealth(10000, 50000).emoji, '🟠');
+});
+
+// P16-4 defensive test (Layer 2): negative inputs clamp to 0
+// Tests the engine.generate() flow (which applies clampNonNegative at the entry point).
+// Helper functions stage1Cash/refiCalc/postRefiAnnualCashFlow are raw math and accept
+// negative inputs as-is — that's intentional, the engine is the defensive layer.
+test('brrrr: defensive clampNonNegative guards (P16-4 layer 2)', () => {
+  // Import engine for end-to-end defensive test
+  const engine = getEngine('solopreneur-brrrr-calculator');
+  assert.ok(engine, 'engine should be registered');
+  // Negative inputs should be clamped to 0 inside the engine
+  const r = engine!.generate({
+    purchasePrice: '-150000',
+    rehabCost: '-30000',
+    afterRepairValue: '-220000',
+    downPaymentPct: '-25',
+    interestRate: '-7.5',
+    loanTermYears: '-30',
+    monthlyRent: '-1800',
+    monthlyExpenses: '-400',
+    vacancyRate: '-5',
+    holdingMonths: '-6',
+  });
+  assert.ok(Array.isArray(r), 'engine returns an array');
+  assert.ok(r.length > 0, 'engine returns at least one result line');
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money');
 });

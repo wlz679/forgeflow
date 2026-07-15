@@ -57,3 +57,27 @@ test('cap-rate: health bands', () => {
   // 2.5% → outside below 🟡's 3-5% band → 🟠
   assert.equal(capRateHealth(2.5).emoji, '🟠');
 });
+
+// P16-4 defensive test (Layer 2): negative inputs clamp to 0
+// Tests the engine.generate() flow (which applies clampNonNegative at the entry point).
+// Helper functions effectiveGrossIncome/noi/capRate are raw math and accept negative
+// inputs as-is — that's intentional, the engine is the defensive layer.
+test('cap-rate: defensive clampNonNegative guards (P16-4 layer 2)', () => {
+  // Trigger engine registration
+  require('../src/engines/real-estate/cap-rate-calculator');
+  const { getEngine } = require('../src/core/engines/registry');
+  const engine = getEngine('solopreneur-cap-rate-calculator');
+  assert.ok(engine, 'engine should be registered');
+  // Negative inputs should be clamped to 0 inside the engine
+  const r = engine!.generate({
+    propertyValue: '-500000',
+    annualRentIncome: '-36000',
+    annualExpenses: '-12000',
+    vacancyRate: '-5',
+  });
+  assert.ok(Array.isArray(r), 'engine returns an array');
+  assert.ok(r.length > 0, 'engine returns at least one result line');
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money');
+});

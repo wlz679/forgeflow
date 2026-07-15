@@ -109,3 +109,29 @@ test('rent-vs-buy: appreciation +2pp reduces rentTotal vs buyNetCost gap', () =>
   assert.ok(highAppr.netCostBuy < lowAppr.netCostBuy,
     `high appreciation should reduce netCostBuy: ${highAppr.netCostBuy} vs ${lowAppr.netCostBuy}`);
 });
+
+// P16-4 defensive test (Layer 2): negative inputs clamp to 0
+// Tests the engine.generate() flow (which applies clampNonNegative at the entry point).
+// Helper functions monthlyPI/totalRentPaidSeries/opportunityGain/netCostBuy are raw math
+// and accept negative inputs as-is — that's intentional, the engine is the defensive layer.
+test('rent-vs-buy: defensive clampNonNegative guards (P16-4 layer 2)', () => {
+  require('../src/engines/real-estate/rent-vs-buy-calculator');
+  const { getEngine } = require('../src/core/engines/registry');
+  const engine = getEngine('solopreneur-rent-vs-buy-calculator');
+  assert.ok(engine, 'engine should be registered');
+  // Negative inputs should be clamped to 0 inside the engine
+  const r = engine!.generate({
+    monthlyRent: '-2000',
+    homePrice: '-500000',
+    downPayment: '-100000',
+    mortgageRate: '-6.5',
+    yearsToStay: '-7',
+    annualAppreciation: '-3',
+    annualRentIncrease: '-3',
+  });
+  assert.ok(Array.isArray(r), 'engine returns an array');
+  assert.ok(r.length > 0, 'engine returns at least one result line');
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money');
+});

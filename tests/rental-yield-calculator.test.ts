@@ -107,3 +107,32 @@ test('rental-yield: health bands', () => {
   assert.equal(cocHealth(3).emoji, '🟠');    // outside below
   assert.equal(cocHealth(20).emoji, '🟠');   // outside above
 });
+
+// P16-4 defensive test (Layer 2): negative inputs clamp to 0
+// Tests the engine.generate() flow (which applies clampNonNegative at the entry point).
+// Helper functions grossYield/annualCashFlow/cashOnCashReturn/totalCashInvested are raw
+// math and accept negative inputs as-is — that's intentional, the engine is the
+// defensive layer.
+test('rental-yield: defensive clampNonNegative guards (P16-4 layer 2)', () => {
+  require('../src/engines/real-estate/rental-yield-calculator');
+  const { getEngine } = require('../src/core/engines/registry');
+  const engine = getEngine('solopreneur-rental-yield-calculator');
+  assert.ok(engine, 'engine should be registered');
+  // Negative inputs should be clamped to 0 inside the engine
+  const r = engine!.generate({
+    purchasePrice: '-300000',
+    downPayment: '-75000',
+    loanAmount: '-225000',
+    interestRate: '-7',
+    loanTermYears: '-30',
+    monthlyRent: '-2500',
+    monthlyExpenses: '-600',
+    vacancyRate: '-5',
+    annualAppreciation: '-3',
+  });
+  assert.ok(Array.isArray(r), 'engine returns an array');
+  assert.ok(r.length > 0, 'engine returns at least one result line');
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money');
+});

@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -129,16 +130,16 @@ export function brrrrHealth(cashLeftInDeal: number, cashOut: number) {
 // ============== calculate() ==============
 
 function calculateBRRRR(inputs: Record<string, string>): string[] {
-  const purchasePrice = Math.max(0, parseFloat(inputs.purchasePrice) || 0);
-  const rehabCost = Math.max(0, parseFloat(inputs.rehabCost) || 0);
-  const afterRepairValue = Math.max(0, parseFloat(inputs.afterRepairValue) || 0);
-  const downPaymentPct = Math.max(0, parseFloat(inputs.downPaymentPct) || 0);
+  const purchasePrice = clampNonNegative(parseFloat(inputs.purchasePrice) || 0);
+  const rehabCost = clampNonNegative(parseFloat(inputs.rehabCost) || 0);
+  const afterRepairValue = clampNonNegative(parseFloat(inputs.afterRepairValue) || 0);
+  const downPaymentPct = clampNonNegative(parseFloat(inputs.downPaymentPct) || 0);
   const interestRate = parseFloat(inputs.interestRate) || 0;
-  const loanTermYears = Math.max(0, parseFloat(inputs.loanTermYears) || 0);
-  const monthlyRent = Math.max(0, parseFloat(inputs.monthlyRent) || 0);
-  const monthlyExpenses = Math.max(0, parseFloat(inputs.monthlyExpenses) || 0);
+  const loanTermYears = clampNonNegative(parseFloat(inputs.loanTermYears) || 0);
+  const monthlyRent = clampNonNegative(parseFloat(inputs.monthlyRent) || 0);
+  const monthlyExpenses = clampNonNegative(parseFloat(inputs.monthlyExpenses) || 0);
   const vacancyRate = parseFloat(inputs.vacancyRate) || 0;
-  const holdingMonths = Math.max(0, parseFloat(inputs.holdingMonths) || 0);
+  const holdingMonths = clampNonNegative(parseFloat(inputs.holdingMonths) || 0);
 
   if (purchasePrice <= 0 || afterRepairValue <= 0) {
     return ['⏰ BRRRR Calculator\n\n💰 Enter purchase price, rehab cost, and after-repair value (ARV) to see your 5-stage BRRRR analysis.'];
@@ -285,16 +286,17 @@ const customFn =
   "function sr(a,p,r){var mab=a*0.7-r;return{mab:mab,gap:p-mab};}" +
   "function cocR(cf,cld){if(cld<=0)return Infinity;if(cf<=0)return 0;return(cf/cld)*100;}" +
   "function bH(cld,co){if(co<=0)return{e:'\\uD83D\\uDFE2',l:'cash-out success \\u2014 full capital returned'};var r=(cld/co)*100;if(r<=0)return{e:'\\uD83D\\uDFE2',l:'cash-out success \\u2014 full capital returned via refi'};if(r<=15)return{e:'\\uD83D\\uDCA1',l:'small cash-in (\\u226415%) \\u2014 deal workable'};return{e:'\\uD83D\\uDFE0',l:'significant cash-in (>15%) \\u2014 capital still trapped'};}" +
-  "var pp=Math.max(0,parseFloat(inputs.purchasePrice)||0);" +
-  "var rcost=Math.max(0,parseFloat(inputs.rehabCost)||0);" +
-  "var arv=Math.max(0,parseFloat(inputs.afterRepairValue)||0);" +
-  "var dpPct=Math.max(0,parseFloat(inputs.downPaymentPct)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var pp=cnn(parseFloat(inputs.purchasePrice)||0);" +
+  "var rcost=cnn(parseFloat(inputs.rehabCost)||0);" +
+  "var arv=cnn(parseFloat(inputs.afterRepairValue)||0);" +
+  "var dpPct=cnn(parseFloat(inputs.downPaymentPct)||0);" +
   "var ir=parseFloat(inputs.interestRate)||0;" +
-  "var lty=Math.max(0,parseFloat(inputs.loanTermYears)||0);" +
-  "var mr=Math.max(0,parseFloat(inputs.monthlyRent)||0);" +
-  "var mep=Math.max(0,parseFloat(inputs.monthlyExpenses)||0);" +
+  "var lty=cnn(parseFloat(inputs.loanTermYears)||0);" +
+  "var mr=cnn(parseFloat(inputs.monthlyRent)||0);" +
+  "var mep=cnn(parseFloat(inputs.monthlyExpenses)||0);" +
   "var vr=parseFloat(inputs.vacancyRate)||0;" +
-  "var hm=Math.max(0,parseFloat(inputs.holdingMonths)||0);" +
+  "var hm=cnn(parseFloat(inputs.holdingMonths)||0);" +
   "if(pp<=0||arv<=0){return['\\u23F0 BRRRR Calculator\\n\\n\\uD83D\\uDCB0 Enter purchase price, rehab cost, and after-repair value (ARV) to see your 5-stage BRRRR analysis.'];}" +
   "if(dpPct<0||dpPct>=100){return['\\u23F0 BRRRR Calculator\\n\\n\\uD83D\\uDCB0 Down payment percentage must be 0-99. Typical BRRRR: 20-30% down (some investors use 0% via hard money).'];}" +
   "if(arv<pp+rcost){return['\\u23F0 BRRRR Calculator\\n\\n\\uD83D\\uDCB0 ARV ('+pp.toLocaleString('en-US')+') is less than purchase + rehab ('+(pp+rcost).toLocaleString('en-US')+'). This deal does not work as BRRRR \\u2014 consider flipping instead.'];}" +

@@ -106,3 +106,28 @@ test('dscr: health bands', () => {
   assert.equal(dscrHealth(0.85).emoji, '🔴');  // < 1.0 fails
   assert.equal(dscrHealth(Infinity).emoji, '🟢');  // no debt = trivially qualifies (treated by guard)
 });
+
+// P16-4 defensive test (Layer 2): negative inputs clamp to 0
+// Tests the engine.generate() flow (which applies clampNonNegative at the entry point).
+// Helper functions monthlyPI/annualNOI/annualDebtService/dscr are raw math and accept
+// negative inputs as-is — that's intentional, the engine is the defensive layer.
+test('dscr: defensive clampNonNegative guards (P16-4 layer 2)', () => {
+  require('../src/engines/real-estate/dscr-calculator');
+  const { getEngine } = require('../src/core/engines/registry');
+  const engine = getEngine('solopreneur-dscr-calculator');
+  assert.ok(engine, 'engine should be registered');
+  // Negative inputs should be clamped to 0 inside the engine
+  const r = engine!.generate({
+    monthlyRent: '-5000',
+    monthlyExpenses: '-1500',
+    loanAmount: '-400000',
+    interestRate: '-7.5',
+    loanTermYears: '-30',
+    vacancyRate: '-5',
+  });
+  assert.ok(Array.isArray(r), 'engine returns an array');
+  assert.ok(r.length > 0, 'engine returns at least one result line');
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money');
+});

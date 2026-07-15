@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -78,11 +79,11 @@ export function dscrHealth(value: number) {
 // ============== calculate() ==============
 
 function calculateDSCR(inputs: Record<string, string>): string[] {
-  const monthlyRent = Math.max(0, parseFloat(inputs.monthlyRent) || 0);
-  const monthlyExpenses = Math.max(0, parseFloat(inputs.monthlyExpenses) || 0);
-  const loanAmount = Math.max(0, parseFloat(inputs.loanAmount) || 0);
+  const monthlyRent = clampNonNegative(parseFloat(inputs.monthlyRent) || 0);
+  const monthlyExpenses = clampNonNegative(parseFloat(inputs.monthlyExpenses) || 0);
+  const loanAmount = clampNonNegative(parseFloat(inputs.loanAmount) || 0);
   const interestRate = parseFloat(inputs.interestRate) || 0;
-  const loanTermYears = Math.max(0, parseFloat(inputs.loanTermYears) || 0);
+  const loanTermYears = clampNonNegative(parseFloat(inputs.loanTermYears) || 0);
   const vacancyRate = parseFloat(inputs.vacancyRate) || 0;
 
   const args: DSCRInputs = {
@@ -206,11 +207,12 @@ const customFn =
   "function dscrF(mr,mep,vr,la,ir,lty){var ads=aDS(la,ir,lty);var noi=aNOI(mr,mep,vr);if(ads===0)return Infinity;return noi/ads;}" +
   "function maxLAtDSCR(mr,mep,vr,ir,lty,target){var noi=aNOI(mr,mep,vr);if(noi<=0)return 0;var mr2=ir/100/12;var n2=lty*12;var lo=0;var hi=noi*20;for(var i=0;i<50;i++){var mid=(lo+hi)/2;var ads=mPI(mid,mr2,n2)*12;if(ads===0){lo=mid;continue;}var c=noi/ads;if(c>target)lo=mid;else hi=mid;}return(lo+hi)/2;}" +
   "function dH(v){if(!isFinite(v))return{e:'\\uD83D\\uDFE2',l:'trivially qualifies \\u2014 no debt service'};if(v>=1.25)return{e:'\\uD83D\\uDFE2',l:'qualifies \\u2014 DSCR \\u2265 1.25 (most lenders approve)'};if(v>=1.0)return{e:'\\uD83D\\uDCA1',l:'marginal \\u2014 DSCR between 1.0-1.25 (many lenders decline)'};return{e:'\\uD83D\\uDD34',l:'fails \\u2014 DSCR < 1.0 (deal cannot service debt)'};}" +
-  "var mr=Math.max(0,parseFloat(inputs.monthlyRent)||0);" +
-  "var mep=Math.max(0,parseFloat(inputs.monthlyExpenses)||0);" +
-  "var la=Math.max(0,parseFloat(inputs.loanAmount)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var mr=cnn(parseFloat(inputs.monthlyRent)||0);" +
+  "var mep=cnn(parseFloat(inputs.monthlyExpenses)||0);" +
+  "var la=cnn(parseFloat(inputs.loanAmount)||0);" +
   "var ir=parseFloat(inputs.interestRate)||0;" +
-  "var lty=Math.max(0,parseFloat(inputs.loanTermYears)||0);" +
+  "var lty=cnn(parseFloat(inputs.loanTermYears)||0);" +
   "var vr=parseFloat(inputs.vacancyRate)||0;" +
   "if(mr<=0&&la<=0){return['\\u23F0 DSCR Calculator\\n\\n\\uD83D\\uDCB0 Enter monthly rent and loan amount to compute DSCR (NOI / annual debt service) and check lender qualification thresholds.'];}" +
   "var noi=aNOI(mr,mep,vr);" +
