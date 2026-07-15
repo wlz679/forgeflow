@@ -4,14 +4,33 @@ import fs from 'node:fs';
 
 function testParse(slug) {
   const src = fs.readFileSync('src/engines/' + slug + '.ts', 'utf8');
-  const idx = src.indexOf('const customFn');
-  if (idx < 0) { console.log(slug + ': no customFn'); return; }
-  let i = src.indexOf('"', idx);
+  // Try top-level const customFn first
+  let idx = src.indexOf('const customFn');
+  let prefix = '';
+  if (idx < 0) {
+    // Try inline form: clientConfig: { customFn: "..." } or customFn: `...`
+    const m = src.match(/customFn\s*:\s*(['"`])/);
+    if (!m) { console.log(slug + ': no customFn'); return; }
+    idx = m.index;
+    prefix = 'inline';
+  }
+  // For inline form, find the quote AFTER the `:` and start extracting from there
+  let i;
+  let openQuote = '"';
+  if (prefix === 'inline') {
+    const colonIdx = src.indexOf(':', idx);
+    i = colonIdx + 1;
+    while (i < src.length && /\s/.test(src[i])) i++;
+    // i now points to opening quote
+    openQuote = src[i];
+  } else {
+    i = src.indexOf('"', idx);
+  }
   const parts = [];
-  while (i < src.length && src[i] === '"') {
+  while (i < src.length && src[i] === openQuote) {
     let j = i + 1;
     let cur = '';
-    while (j < src.length && src[j] !== '"') {
+    while (j < src.length && src[j] !== openQuote) {
       if (src[j] === '\\' && j + 1 < src.length) {
         const c = src[j + 1];
         if (c === 'u' && j + 5 < src.length) {
@@ -34,7 +53,7 @@ function testParse(slug) {
   const body = parts.join('');
   try {
     new Function('inputs', 'pick', 'fill', body);
-    console.log(slug + ': OK (' + body.length + ' chars)');
+    console.log(slug + ': OK (' + body.length + ' chars)' + (prefix ? ' [' + prefix + ']' : ''));
   } catch (e) {
     console.log(slug + ': BROKEN - ' + e.message);
     // Show snippet around the start
