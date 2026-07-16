@@ -1,10 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateCoursePricing(inputs: Record<string, string>): string[] {
-  const targetMonthlyIncome = parseFloat(inputs.targetMonthlyIncome) || 0;
-  const estimatedBuyersPerMonth = parseFloat(inputs.estimatedBuyersPerMonth) || 0;
-  const platformFee = parseFloat(inputs.platformFee) || 0;
+  const targetMonthlyIncome = clampNonNegative(parseFloat(inputs.targetMonthlyIncome) || 0);
+  const estimatedBuyersPerMonth = clampNonNegative(parseFloat(inputs.estimatedBuyersPerMonth) || 0);
+  const platformFee = clampNonNegative(parseFloat(inputs.platformFee) || 0);
   const results: string[] = [];
 
   const feeMultiplier = 1 / (1 - platformFee / 100);
@@ -123,9 +124,10 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var tmi=parseFloat(inputs.targetMonthlyIncome)||0;" +
-  "var ebm=parseFloat(inputs.estimatedBuyersPerMonth)||0;" +
-  "var pf=parseFloat(inputs.platformFee)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var tmi=cnn(parseFloat(inputs.targetMonthlyIncome)||0);" +
+  "var ebm=cnn(parseFloat(inputs.estimatedBuyersPerMonth)||0);" +
+  "var pf=cnn(parseFloat(inputs.platformFee)||0);" +
   "var fm=1/(1-pf/100);" +
   "var op=ebm>0?(tmi/ebm)*fm:0;" +
   "var bp=ebm>0?tmi/ebm:0;" +

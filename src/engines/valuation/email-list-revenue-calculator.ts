@@ -1,14 +1,15 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateEmailRevenue(inputs: Record<string, string>): string[] {
-  const subscriberCount = parseFloat(inputs.subscriberCount) || 0;
-  const openRate = parseFloat(inputs.openRate) || 0;
-  const clickRate = parseFloat(inputs.clickRate) || 0;
-  const conversionRate = parseFloat(inputs.conversionRate) || 0;
-  const avgOrderValue = parseFloat(inputs.avgOrderValue) || 0;
-  const emailsPerMonth = parseFloat(inputs.emailsPerMonth) || 4;
-  const unsubscribeRate = parseFloat(inputs.unsubscribeRate) || 0.5;
+  const subscriberCount = clampNonNegative(parseFloat(inputs.subscriberCount) || 0);
+  const openRate = clampNonNegative(parseFloat(inputs.openRate) || 0);
+  const clickRate = clampNonNegative(parseFloat(inputs.clickRate) || 0);
+  const conversionRate = clampNonNegative(parseFloat(inputs.conversionRate) || 0);
+  const avgOrderValue = clampNonNegative(parseFloat(inputs.avgOrderValue) || 0);
+  const emailsPerMonth = clampNonNegative(parseFloat(inputs.emailsPerMonth) || 4);
+  const unsubscribeRate = clampNonNegative(parseFloat(inputs.unsubscribeRate) || 0.5);
   const results: string[] = [];
 
   const opens = subscriberCount * (openRate / 100);
@@ -135,13 +136,14 @@ function calculateEmailRevenue(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var sc=parseFloat(inputs.subscriberCount)||0;" +
-  "var orate=parseFloat(inputs.openRate)||0;" +
-  "var crate=parseFloat(inputs.clickRate)||0;" +
-  "var cvr=parseFloat(inputs.conversionRate)||0;" +
-  "var aov=parseFloat(inputs.avgOrderValue)||0;" +
-  "var epm=parseFloat(inputs.emailsPerMonth)||4;" +
-  "var unrate=parseFloat(inputs.unsubscribeRate)||0.5;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var sc=cnn(parseFloat(inputs.subscriberCount)||0);" +
+  "var orate=cnn(parseFloat(inputs.openRate)||0);" +
+  "var crate=cnn(parseFloat(inputs.clickRate)||0);" +
+  "var cvr=cnn(parseFloat(inputs.conversionRate)||0);" +
+  "var aov=cnn(parseFloat(inputs.avgOrderValue)||0);" +
+  "var epm=cnn(parseFloat(inputs.emailsPerMonth)||4);" +
+  "var unrate=cnn(parseFloat(inputs.unsubscribeRate)||0.5);" +
   "var opens=sc*(orate/100);" +
   "var clicks=opens*(crate/100);" +
   "var convs=clicks*(cvr/100);" +

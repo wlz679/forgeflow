@@ -99,3 +99,26 @@ test('safeType: 20% discount with cap → "Post-Money SAFE with Discount"', () =
   const t = safeType(5000000, 20);
   assert.equal(t, 'Post-Money SAFE with Discount');
 });
+
+// Defensive test (P16-5 Layer 2): negative inputs clamp to 0
+test('safe-convertible: negative inputs clamp to 0 (defensive layer 2)', () => {
+  const { getEngine } = require('../src/core/engines/registry.ts');
+  const engine = getEngine('solopreneur-safe-convertible-note-calculator');
+  assert.ok(engine);
+  const r = engine!.generate({
+    investmentAmount: '-500000',
+    postMoneyCap: '-5000000',
+    discountRate: '-20',
+    existingShares: '-1000000',
+    nextRoundValuation: '-10000000',
+  });
+  assert.ok(Array.isArray(r));
+  assert.ok(r.length > 0);
+  // No NaN in output
+  for (const line of r) {
+    assert.ok(!/NaN/.test(line), `output contains NaN: ${line}`);
+  }
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-[1-9]/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money: ' + (r.join('\n').match(/-\$\d|\$-[1-9]/) || []).join(','));
+});

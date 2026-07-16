@@ -1,8 +1,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateValuation(inputs: Record<string, string>): string[] {
-  const annualRevenue = parseFloat(inputs.annualRevenue) || 0;
+  const annualRevenue = clampNonNegative(parseFloat(inputs.annualRevenue) || 0);
+  // intentionally NOT clamped: semantically can be negative (negative growth / negative margin)
   const growthRate = parseFloat(inputs.growthRate) || 0;
   const profitMargin = parseFloat(inputs.profitMargin) || 0;
   const results: string[] = [];
@@ -165,7 +167,9 @@ function calculateValuation(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var ar2=parseFloat(inputs.annualRevenue)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var ar2=cnn(parseFloat(inputs.annualRevenue)||0);" +
+  // intentionally NOT clamped: semantically can be negative
   "var gr2=parseFloat(inputs.growthRate)||0;" +
   "var pm=parseFloat(inputs.profitMargin)||0;" +
   "function fmt2(n){return '$'+Math.round(n).toLocaleString()}" +

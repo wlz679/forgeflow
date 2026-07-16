@@ -1,11 +1,12 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateLTV(inputs: Record<string, string>): string[] {
-  const monthlyRevenuePerUser = parseFloat(inputs.monthlyRevenuePerUser) || 0;
-  const grossMargin = parseFloat(inputs.grossMargin) || 80;
-  const monthlyChurn = parseFloat(inputs.monthlyChurn) || 0;
-  const cac = parseFloat(inputs.cac) || 0;
+  const monthlyRevenuePerUser = clampNonNegative(parseFloat(inputs.monthlyRevenuePerUser) || 0);
+  const grossMargin = clampNonNegative(parseFloat(inputs.grossMargin) || 80);
+  const monthlyChurn = clampNonNegative(parseFloat(inputs.monthlyChurn) || 0);
+  const cac = clampNonNegative(parseFloat(inputs.cac) || 0);
   const results: string[] = [];
 
   const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
@@ -152,10 +153,11 @@ function calculateLTV(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var mru=parseFloat(inputs.monthlyRevenuePerUser)||0;" +
-  "var gm=parseFloat(inputs.grossMargin)||80;" +
-  "var mc=parseFloat(inputs.monthlyChurn)||0;" +
-  "var cacV=parseFloat(inputs.cac)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var mru=cnn(parseFloat(inputs.monthlyRevenuePerUser)||0);" +
+  "var gm=cnn(parseFloat(inputs.grossMargin)||80);" +
+  "var mc=cnn(parseFloat(inputs.monthlyChurn)||0);" +
+  "var cacV=cnn(parseFloat(inputs.cac)||0);" +
   "function fmt3(n){return '$'+Math.round(n).toLocaleString()}" +
   "function pct3(n){return n.toFixed(1)+'%'}" +
   "var cr3=mc/100;" +

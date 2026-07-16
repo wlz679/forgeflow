@@ -1,13 +1,15 @@
 import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
+import { clampNonNegative } from "../../core/engines/helpers";
 
 function calculateBreakEven(inputs: Record<string, string>): string[] {
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
   const pct = (n: number) => n.toFixed(1) + "%";
 
-  const monthlyCosts = parseFloat(inputs.monthlyCosts) || 0;
-  const monthlyRevenue = parseFloat(inputs.monthlyRevenue) || 0;
-  const initialInvestment = parseFloat(inputs.initialInvestment) || 0;
+  const monthlyCosts = clampNonNegative(parseFloat(inputs.monthlyCosts) || 0);
+  const monthlyRevenue = clampNonNegative(parseFloat(inputs.monthlyRevenue) || 0);
+  const initialInvestment = clampNonNegative(parseFloat(inputs.initialInvestment) || 0);
+  // intentionally NOT clamped: semantically can be negative (declining revenue)
   const monthlyGrowthRate = parseFloat(inputs.monthlyGrowthRate) || 0;
 
   const growthFactor = 1 + monthlyGrowthRate / 100;
@@ -135,8 +137,11 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
+  "var cnn=function(x){return Math.max(0,x)};" +
   "function fmt(n){return '$'+Math.round(n).toLocaleString()}function pct(n){return n.toFixed(1)+'%'}" +
-  "var mc=parseFloat(inputs.monthlyCosts)||0;var mr=parseFloat(inputs.monthlyRevenue)||0;var ii=parseFloat(inputs.initialInvestment)||0;var gr=parseFloat(inputs.monthlyGrowthRate)||0;" +
+  "var mc=cnn(parseFloat(inputs.monthlyCosts)||0);var mr=cnn(parseFloat(inputs.monthlyRevenue)||0);var ii=cnn(parseFloat(inputs.initialInvestment)||0);" +
+  // intentionally NOT clamped: semantically can be negative
+  "var gr=parseFloat(inputs.monthlyGrowthRate)||0;" +
   "var gf=1+gr/100;var fp=mr-mc;var fm=fp>0?Math.ceil(ii/fp):null;var gm=null;var cl=-ii;" +
   "for(var m=1;m<=60;m++){var rv=mr*Math.pow(gf,m-1);cl+=rv-mc;if(gm===null&&cl>=0){gm=m;break;}}" +
   "var r='📊 Break-Even Analysis\\n\\n⏱️ Break-Even Timeline\\n';r+='• Initial Investment:  '+fmt(ii)+'\\n• Monthly Costs:       '+fmt(mc)+'/mo\\n• Monthly Revenue:     '+fmt(mr)+'/mo\\n';" +

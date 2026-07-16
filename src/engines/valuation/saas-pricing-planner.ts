@@ -1,10 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function planPricing(inputs: Record<string, string>): string[] {
   const productType = inputs.productType || 'SaaS';
   const targetCustomer = inputs.targetCustomer || 'b2b';
-  const competitorPrice = parseFloat(inputs.competitorPrice) || 0;
+  const competitorPrice = clampNonNegative(parseFloat(inputs.competitorPrice) || 0);
 
   const basePrice = competitorPrice || 29;
   const targetMargin = 0.70;
@@ -187,9 +188,10 @@ function planPricing(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
+  "var cnn=function(x){return Math.max(0,x)};" +
   "var pt=inputs.productType||'SaaS';" +
   "var tc=inputs.targetCustomer||'b2b';" +
-  "var cp=parseFloat(inputs.competitorPrice)||0;" +
+  "var cp=cnn(parseFloat(inputs.competitorPrice)||0);" +
   "var bp=cp||29;" +
   "var tm=0.70;" +
   "var ac=0.03;" +

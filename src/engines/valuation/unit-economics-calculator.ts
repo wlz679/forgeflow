@@ -1,17 +1,18 @@
 import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
+import { clampNonNegative } from "../../core/engines/helpers";
 
 function calculateUnitEconomics(inputs: Record<string, string>): string[] {
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
   const pct = (n: number) => n.toFixed(1) + "%";
   const fmtM = (n: number) => { if (Math.abs(n) >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M"; if (Math.abs(n) >= 1e3) return "$" + (n / 1e3).toFixed(1) + "K"; return "$" + Math.round(n).toLocaleString(); };
 
-  const revPerCust = parseFloat(inputs.averageRevenuePerCustomer) || 0;
-  const expansionRev = parseFloat(inputs.expansionRevenuePerCustomer) || 0;
-  const costServe = parseFloat(inputs.costToServePerCustomer) || 0;
-  const cac = parseFloat(inputs.customerAcquisitionCost) || 0;
-  const churnRate = parseFloat(inputs.monthlyChurnRate) || 0;
-  const retentionMonths = parseFloat(inputs.retentionMonths) || 0;
+  const revPerCust = clampNonNegative(parseFloat(inputs.averageRevenuePerCustomer) || 0);
+  const expansionRev = clampNonNegative(parseFloat(inputs.expansionRevenuePerCustomer) || 0);
+  const costServe = clampNonNegative(parseFloat(inputs.costToServePerCustomer) || 0);
+  const cac = clampNonNegative(parseFloat(inputs.customerAcquisitionCost) || 0);
+  const churnRate = clampNonNegative(parseFloat(inputs.monthlyChurnRate) || 0);
+  const retentionMonths = clampNonNegative(parseFloat(inputs.retentionMonths) || 0);
   const monthlyChurn = churnRate / 100;
 
   const totalRev = revPerCust + expansionRev;
@@ -241,8 +242,9 @@ function calculateUnitEconomics(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
+  "var cnn=function(x){return Math.max(0,x)};" +
   "function fmt(n){return '$'+Math.round(n).toLocaleString()}function pct(n){return n.toFixed(1)+'%'}" +
-  "var rc=parseFloat(inputs.averageRevenuePerCustomer)||0;var er=parseFloat(inputs.expansionRevenuePerCustomer)||0;var cs=parseFloat(inputs.costToServePerCustomer)||0;var cac=parseFloat(inputs.customerAcquisitionCost)||0;var cr=parseFloat(inputs.monthlyChurnRate)||0;var rm=parseFloat(inputs.retentionMonths)||0;" +
+  "var rc=cnn(parseFloat(inputs.averageRevenuePerCustomer)||0);var er=cnn(parseFloat(inputs.expansionRevenuePerCustomer)||0);var cs=cnn(parseFloat(inputs.costToServePerCustomer)||0);var cac=cnn(parseFloat(inputs.customerAcquisitionCost)||0);var cr=cnn(parseFloat(inputs.monthlyChurnRate)||0);var rm=cnn(parseFloat(inputs.retentionMonths)||0);" +
   "var mc=cr/100;var tr=rc+er;var nc=tr-cs;var nm=tr>0?(nc/tr)*100:0;var al=rm>0?rm:(mc>0?(1/mc):Infinity);var ltv=isFinite(al)?nc*al:Infinity;var pm=nc>0?cac/nc:Infinity;var ap=nc*12;" +
   "var r='\\ud83d\\udce6 Unit Economics\\n\\n';" +
   "r+='\\ud83d\\udccb Per-Customer Snapshot\\n';" +

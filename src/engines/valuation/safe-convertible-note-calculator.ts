@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -126,11 +127,11 @@ export function safeType(
 // ============== calculate() ==============
 
 function calculateSafe(inputs: Record<string, string>): string[] {
-  const investment = Math.max(0, parseFloat(inputs.investmentAmount) || 0);
-  const postMoneyCap = Math.max(0, parseFloat(inputs.postMoneyCap) || 0);
-  const discountRate = Math.max(0, parseFloat(inputs.discountRate) || 0);
-  const existingShares = Math.max(0, parseFloat(inputs.existingShares) || 0);
-  const nextRoundValuation = Math.max(0, parseFloat(inputs.nextRoundValuation) || 0);
+  const investment = clampNonNegative(parseFloat(inputs.investmentAmount) || 0);
+  const postMoneyCap = clampNonNegative(parseFloat(inputs.postMoneyCap) || 0);
+  const discountRate = clampNonNegative(parseFloat(inputs.discountRate) || 0);
+  const existingShares = clampNonNegative(parseFloat(inputs.existingShares) || 0);
+  const nextRoundValuation = clampNonNegative(parseFloat(inputs.nextRoundValuation) || 0);
 
   // Edge case: cap must exceed investment
   if (postMoneyCap > 0 && postMoneyCap <= investment) {
@@ -403,11 +404,12 @@ const customFn =
   "function dhFn(r){if(r<5)return{e:'\\uD83D\\uDFE0',l:'low cap \\u2014 aggressive for founder'};if(r<=10)return{e:'\\uD83D\\uDCA1',l:'standard cap'};return{e:'\\uD83D\\uDFE2',l:'founder-friendly cap'};}" +
   "function dishFn(d){if(d===0)return{e:'\\uD83D\\uDFE2',l:'no discount (post-money standard)'};if(d<=15)return{e:'\\uD83D\\uDCA1',l:'moderate discount'};if(d<=25)return{e:'\\uD83D\\uDFE0',l:'high discount'};return{e:'\\uD83D\\uDD34',l:'very high discount \\u2014 unusual'};}" +
   "function typeFn(c,d){if(c>0&&d===0)return'Post-Money SAFE (YC Standard)';if(c>0&&d>0)return'Post-Money SAFE with Discount';if(c<=0&&d>0)return'Discount-Only SAFE (Pre-Conversion)';return'Custom SAFE';}" +
-  "var i=Math.max(0,parseFloat(inputs.investmentAmount)||0);" +
-  "var c=Math.max(0,parseFloat(inputs.postMoneyCap)||0);" +
-  "var d=Math.max(0,parseFloat(inputs.discountRate)||0);" +
-  "var e=Math.max(0,parseFloat(inputs.existingShares)||0);" +
-  "var nr=Math.max(0,parseFloat(inputs.nextRoundValuation)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var i=cnn(parseFloat(inputs.investmentAmount)||0);" +
+  "var c=cnn(parseFloat(inputs.postMoneyCap)||0);" +
+  "var d=cnn(parseFloat(inputs.discountRate)||0);" +
+  "var e=cnn(parseFloat(inputs.existingShares)||0);" +
+  "var nr=cnn(parseFloat(inputs.nextRoundValuation)||0);" +
   "if(c>0&&c<=i){return['\\u23F0 SAFE / Convertible Note Calculator\\n\\n\\uD83D\\uDCB0 The post-money cap ($'+c.toLocaleString()+') must exceed the investment amount ($'+i.toLocaleString()+'). A SAFE cannot have a cap lower than the investment it represents.'];}" +
   "if(i<=0||c<=0||e<=0){return['\\u23F0 SAFE / Convertible Note Calculator\\n\\n\\uD83D\\uDCB0 Enter investment amount, post-money cap, and existing fully diluted shares to see SAFE conversion mechanics.'];}" +
   "var ep=c-i;" +

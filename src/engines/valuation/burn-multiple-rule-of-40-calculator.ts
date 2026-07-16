@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -85,10 +86,11 @@ export function stageBenchmark(
 // ============== calculate() ==============
 
 function calculateBurnMultiple(inputs: Record<string, string>): string[] {
+  // intentionally NOT clamped: semantically can be negative (negative growth / negative margin)
   const growthRate = parseFloat(inputs.revenueGrowth) || 0;
   const profitMargin = parseFloat(inputs.profitMargin) || 0;
-  const netBurn = Math.max(0, parseFloat(inputs.netBurn) || 0);
-  const netNewARR = Math.max(0, parseFloat(inputs.netNewARR) || 0);
+  const netBurn = clampNonNegative(parseFloat(inputs.netBurn) || 0);
+  const netNewARR = clampNonNegative(parseFloat(inputs.netNewARR) || 0);
 
   if (growthRate === 0 && profitMargin === 0 && netBurn === 0 && netNewARR === 0) {
     return [
@@ -321,10 +323,12 @@ const customFn =
   "function bmh(r){if(r<1)return{e:'\\uD83D\\uDFE2',l:'great \\u2014 <$1 burned per $1 ARR'};if(r<1.5)return{e:'\\uD83D\\uDCA1',l:'good \\u2014 efficient growth'};if(r<3)return{e:'\\uD83D\\uDFE0',l:'concerning \\u2014 needs tightening'};return{e:'\\uD83D\\uDD34',l:'inefficient \\u2014 too much burn'};}" +
   "function quad(g,m){var hg=g>=40;var pm=m>=0;if(hg&&pm)return{e:'\\uD83D\\uDFE2',l:'Stars (high growth + positive margin)'};if(hg&&!pm)return{e:'\\uD83D\\uDCA1',l:'Growers (high growth + negative margin)'};if(!hg&&pm)return{e:'\\uD83D\\uDCA1',l:'Profitable Plowhorses (low growth + positive margin)'};return{e:'\\uD83D\\uDD34',l:'Zombies (low growth + negative margin)'};}" +
   "function sb(r,st){if(!isFinite(r))return'\\u2014 (no new ARR)';var B={seed:{great:2,good:3},a:{great:1.5,good:2},b:{great:1,good:1.5}};var b=B[st];if(r<b.great)return'\\uD83D\\uDFE2 top-quartile for '+st;if(r<b.good)return'\\uD83D\\uDCA1 on par for '+st;return'\\uD83D\\uDFE0 above median for '+st;}" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  // intentionally NOT clamped: semantically can be negative
   "var g=parseFloat(inputs.revenueGrowth)||0;" +
   "var m=parseFloat(inputs.profitMargin)||0;" +
-  "var nb=Math.max(0,parseFloat(inputs.netBurn)||0);" +
-  "var nA=Math.max(0,parseFloat(inputs.netNewARR)||0);" +
+  "var nb=cnn(parseFloat(inputs.netBurn)||0);" +
+  "var nA=cnn(parseFloat(inputs.netNewARR)||0);" +
   "if(g===0&&m===0&&nb===0&&nA===0){return['\\u23F0 Burn Multiple / Rule of 40 Calculator\\n\\n\\uD83D\\uDCB0 Enter revenue growth, profit margin, net burn, and net new ARR to see Rule of 40 score and Burn Multiple.'];}" +
   "var s=r40(g,m);" +
   "var sh=r40h(s);" +

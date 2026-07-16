@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -76,8 +77,9 @@ export function forwardValuation(
 // ============== calculate() ==============
 
 function calculateARRMultiple(inputs: Record<string, string>): string[] {
-  const arr = Math.max(0, parseFloat(inputs.arr) || 0);
-  const valuation = Math.max(0, parseFloat(inputs.valuation) || 0);
+  const arr = clampNonNegative(parseFloat(inputs.arr) || 0);
+  const valuation = clampNonNegative(parseFloat(inputs.valuation) || 0);
+  // intentionally NOT clamped: semantically can be negative (negative growth / negative margin)
   const growthRate = parseFloat(inputs.growthRate) || 0;
   const profitMargin = parseFloat(inputs.profitMargin) || 0;
 
@@ -305,8 +307,10 @@ const customFn =
   "function mh(act,exp){if(exp<=0)return{e:'\\uD83D\\uDCA1',l:'neutral (no expected baseline)'};var r=act/exp;if(r>=0.7&&r<=1.3)return{e:'\\uD83D\\uDFE2',l:'reasonable \\u2014 within 30% of expected'};if(r>=0.4&&r<=1.6)return{e:'\\uD83D\\uDCA1',l:'above/below market \\u2014 30-60% off expected'};return{e:'\\uD83D\\uDFE0',l:'outlier \\u2014 >60% off expected'};}" +
   "function mt(g){if(g<20)return{e:'\\uD83D\\uDCA1',l:'Slow growth',r:'3-8x'};if(g<50)return{e:'\\uD83D\\uDFE2',l:'Medium growth',r:'8-15x'};if(g<100)return{e:'\\uD83D\\uDFE2',l:'Fast growth',r:'15-25x'};return{e:'\\uD83D\\uDFE2',l:'Hyper growth',r:'25-40x'};}" +
   "function fv(a,g,fm){return a*(1+g/100)*fm;}" +
-  "var arr=Math.max(0,parseFloat(inputs.arr)||0);" +
-  "var val=Math.max(0,parseFloat(inputs.valuation)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var arr=cnn(parseFloat(inputs.arr)||0);" +
+  "var val=cnn(parseFloat(inputs.valuation)||0);" +
+  // intentionally NOT clamped: semantically can be negative
   "var gr=parseFloat(inputs.growthRate)||0;" +
   "var pm=parseFloat(inputs.profitMargin)||0;" +
   "if(arr===0&&val===0){return['\\u23F0 ARR Multiple / Valuation Multiplier Calculator\\n\\n\\uD83D\\uDCB0 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.'];}" +

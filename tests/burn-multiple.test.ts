@@ -80,3 +80,26 @@ test('Stage benchmark series-a: 2.1 ratio is 🟠 above median for series A', ()
   const s = stageBenchmark(2.1, 'a');
   assert.match(s, /above median for a/);
 });
+
+// Defensive test (P16-5 Layer 2): negative inputs clamp to 0 (growth/margin exempt — can be negative)
+test('burn-multiple: negative netBurn/netNewARR clamp to 0; growth/margin preserved (defensive layer 2)', () => {
+  const { getEngine } = require('../src/core/engines/registry.ts');
+  const engine = getEngine('solopreneur-burn-multiple-rule-of-40-calculator');
+  assert.ok(engine);
+  const r = engine!.generate({
+    revenueGrowth: '-50',
+    profitMargin: '-20',
+    netBurn: '-1000000',
+    netNewARR: '-500000',
+    stage: 'a',
+  });
+  assert.ok(Array.isArray(r));
+  assert.ok(r.length > 0);
+  // No NaN/Infinity in output (besides expected Infinity for division)
+  for (const line of r) {
+    assert.ok(!/NaN/.test(line), `output contains NaN: ${line}`);
+  }
+  // No negative money values
+  const hasNegativeMoney = /-\$\d|\$-[1-9]/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money: ' + (r.join('\n').match(/-\$\d|\$-[1-9]/) || []).join(','));
+});

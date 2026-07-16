@@ -1,5 +1,6 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -122,8 +123,8 @@ export function feeHealth(
 // ============== calculate() — full 9-section v3 output ==============
 
 function calculateStripeFee(inputs: Record<string, string>): string[] {
-  const chargeAmount = parseFloat(inputs.chargeAmount) || 0;
-  const monthlyTransactions = Math.max(0, parseFloat(inputs.monthlyTransactions) || 0);
+  const chargeAmount = clampNonNegative(parseFloat(inputs.chargeAmount) || 0);
+  const monthlyTransactions = clampNonNegative(parseFloat(inputs.monthlyTransactions) || 0);
   // Coerce provider (5 valid values, default 'stripe')
   const providerRaw = inputs.provider;
   const provider: Provider =
@@ -284,8 +285,9 @@ const customFn =
   "function pv(a,prov,mt){if(mt<=0||a<=0)return{mg:0,mf:0,mn:0,yg:0,yf:0,yn:0};var sf=cf(a,prov);var mg=a*mt;var mf=sf.tf*mt;var mn=sf.net*mt;return{mg:mg,mf:mf,mn:mn,yg:mg*12,yf:mf*12,yn:mn*12};}" +
   "function cmp(a){var all=['stripe','stripe-international','paypal','square','wise'];var rows=[];for(var i=0;i<all.length;i++){var p=all[i];rows.push({p:p,fee:cf(a,p),n:LABELS[p]});}rows.sort(function(x,y){return x.fee.tf-y.fee.tf;});return rows;}" +
   "function fh(er,a){if(a<5)return{e:'\\uD83D\\uDD34',l:'fixed fee dominates \\u2014 set $5 minimum or use no-fixed-fee provider'};if(er<0.02)return{e:'\\uD83D\\uDFE2',l:'excellent rate'};if(er<0.03)return{e:'\\uD83D\\uDCA1',l:'standard rate'};if(er<0.04)return{e:'\\uD83D\\uDFE0',l:'above average'};return{e:'\\uD83D\\uDD34',l:'high \\u2014 consider switching'};}" +
-  "var a=parseFloat(inputs.chargeAmount)||0;" +
-  "var mt=Math.max(0,parseFloat(inputs.monthlyTransactions)||0);" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var a=cnn(parseFloat(inputs.chargeAmount)||0);" +
+  "var mt=cnn(parseFloat(inputs.monthlyTransactions)||0);" +
   "var pr=inputs.provider;" +
   "var prov=pr==='stripe-international'?'stripe-international':pr==='paypal'?'paypal':pr==='square'?'square':pr==='wise'?'wise':'stripe';" +
   "var ic=prov==='stripe'&&inputs.internationalCards==='yes';" +

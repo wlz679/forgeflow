@@ -1,12 +1,13 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateCAC(inputs: Record<string, string>): string[] {
-  const marketingSpend = parseFloat(inputs.marketingSpend) || 0;
-  const salesSpend = parseFloat(inputs.salesSpend) || 0;
-  const newCustomers = parseInt(inputs.newCustomers) || 0;
-  const avgRevenuePerCustomer = parseFloat(inputs.avgRevenuePerCustomer) || 0;
-  const grossMargin = parseFloat(inputs.grossMargin) || 80;
+  const marketingSpend = clampNonNegative(parseFloat(inputs.marketingSpend) || 0);
+  const salesSpend = clampNonNegative(parseFloat(inputs.salesSpend) || 0);
+  const newCustomers = clampNonNegative(parseInt(inputs.newCustomers) || 0);
+  const avgRevenuePerCustomer = clampNonNegative(parseFloat(inputs.avgRevenuePerCustomer) || 0);
+  const grossMargin = clampNonNegative(parseFloat(inputs.grossMargin) || 80);
   const results: string[] = [];
 
   const totalSpend = marketingSpend + salesSpend;
@@ -149,11 +150,12 @@ function calculateCAC(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var ms=parseFloat(inputs.marketingSpend)||0;" +
-  "var ss=parseFloat(inputs.salesSpend)||0;" +
-  "var nc2=parseInt(inputs.newCustomers)||0;" +
-  "var arc=parseFloat(inputs.avgRevenuePerCustomer)||0;" +
-  "var gm2=parseFloat(inputs.grossMargin)||80;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var ms=cnn(parseFloat(inputs.marketingSpend)||0);" +
+  "var ss=cnn(parseFloat(inputs.salesSpend)||0);" +
+  "var nc2=cnn(parseInt(inputs.newCustomers)||0);" +
+  "var arc=cnn(parseFloat(inputs.avgRevenuePerCustomer)||0);" +
+  "var gm2=cnn(parseFloat(inputs.grossMargin)||80);" +
   "function fmt4(n){return '$'+Math.round(n).toLocaleString()}" +
   "function pct4(n){return n.toFixed(1)+'%'}" +
   "function loc4(n){return n.toLocaleString()}" +
@@ -230,3 +232,4 @@ const engine: ToolEngine = {
 };
 
 registerEngine(engine);
+

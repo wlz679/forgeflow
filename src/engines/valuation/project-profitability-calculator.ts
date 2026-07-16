@@ -1,11 +1,12 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
+import { clampNonNegative } from '../../core/engines/helpers';
 
 function calculateProjectProfitability(inputs: Record<string, string>): string[] {
-  const projectRevenue = parseFloat(inputs.projectRevenue) || 0;
-  const hoursEstimated = parseFloat(inputs.hoursEstimated) || 0;
-  const hourlyCost = parseFloat(inputs.hourlyCost) || 0;
-  const materialCost = parseFloat(inputs.materialCost) || 0;
+  const projectRevenue = clampNonNegative(parseFloat(inputs.projectRevenue) || 0);
+  const hoursEstimated = clampNonNegative(parseFloat(inputs.hoursEstimated) || 0);
+  const hourlyCost = clampNonNegative(parseFloat(inputs.hourlyCost) || 0);
+  const materialCost = clampNonNegative(parseFloat(inputs.materialCost) || 0);
   const results: string[] = [];
 
   const totalLaborCost = hoursEstimated * hourlyCost;
@@ -117,10 +118,11 @@ function calculateProjectProfitability(inputs: Record<string, string>): string[]
 }
 
 const customFn =
-  "var pr=parseFloat(inputs.projectRevenue)||0;" +
-  "var he=parseFloat(inputs.hoursEstimated)||0;" +
-  "var hc=parseFloat(inputs.hourlyCost)||0;" +
-  "var mc=parseFloat(inputs.materialCost)||0;" +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "var pr=cnn(parseFloat(inputs.projectRevenue)||0);" +
+  "var he=cnn(parseFloat(inputs.hoursEstimated)||0);" +
+  "var hc=cnn(parseFloat(inputs.hourlyCost)||0);" +
+  "var mc=cnn(parseFloat(inputs.materialCost)||0);" +
   "var tlc=he*hc;" +
   "var tc=tlc+mc;" +
   "var profit=pr-tc;" +

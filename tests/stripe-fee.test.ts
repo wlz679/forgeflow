@@ -88,3 +88,21 @@ test('compareProviders: returns 5 providers sorted by total fee ascending', () =
   // Stripe-international is always most expensive (4.4% + 30¢)
   assert.equal(rows[4].provider, 'stripe-international');
 });
+
+// Defensive test (P16-5 Layer 2): negative inputs clamp to 0
+test('stripe-fee: negative inputs clamp to 0 (defensive layer 2)', () => {
+  const { getEngine } = require('../src/core/engines/registry.ts');
+  const engine = getEngine('solopreneur-stripe-fee-calculator');
+  assert.ok(engine);
+  const r = engine!.generate({
+    chargeAmount: '-100',
+    monthlyTransactions: '-50',
+    provider: 'stripe',
+    internationalCards: 'no',
+  });
+  assert.ok(Array.isArray(r));
+  assert.ok(r.length > 0);
+  // No negative money values (chargeAmount should be 0 → early return message)
+  const hasNegativeMoney = /-\$\d|\$-[1-9]/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money: ' + (r.join('\n').match(/-\$\d|\$-[1-9]/) || []).join(','));
+});

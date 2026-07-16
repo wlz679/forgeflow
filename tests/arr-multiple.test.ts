@@ -82,3 +82,25 @@ test('forwardValuation: $5M ARR + 100% growth + 20x forward = $200M', () => {
   const fv = forwardValuation(5000000, 100, 20);
   assert.equal(fv, 200000000);
 });
+
+// Defensive test (P16-5 Layer 2): negative inputs clamp to 0 (growth/margin exempt — can be negative)
+test('arr-multiple: negative ARR/valuation clamp to 0; growth/margin preserved (defensive layer 2)', () => {
+  const { getEngine } = require('../src/core/engines/registry.ts');
+  const engine = getEngine('solopreneur-arr-multiple-valuation-calculator');
+  assert.ok(engine);
+  const r = engine!.generate({
+    arr: '-1000000',
+    valuation: '-15000000',
+    growthRate: '-50',
+    profitMargin: '-20',
+  });
+  assert.ok(Array.isArray(r));
+  assert.ok(r.length > 0);
+  // No NaN/Infinity in output
+  for (const line of r) {
+    assert.ok(!/NaN|Infinity/.test(line), `output contains NaN/Infinity: ${line}`);
+  }
+  // No negative money values (ARR and valuation should be clamped to 0)
+  const hasNegativeMoney = /-\$\d|\$-[1-9]/.test(r.join('\n'));
+  assert.ok(!hasNegativeMoney, 'output contains negative money: ' + (r.join('\n').match(/-\$\d|\$-[1-9]/) || []).join(','));
+});
