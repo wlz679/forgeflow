@@ -17,7 +17,7 @@
  *                      ALL tools. Engine-level input/FAQ/how-to-use keys are
  *                      NOT yet validated (P17b follow-up).
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -143,6 +143,75 @@ REQUIRED_KEYS.dynamic_category = categoryKeys;
 REQUIRED_KEYS.dynamic_tools = toolKeys;
 
 const src = readFileSync(translationsPath, 'utf-8');
+
+// Read extract output (if exists)
+const extractPath = resolve(root, 'scripts/.scratch/i18n-needed.json');
+let extractData = null;
+try {
+  extractData = JSON.parse(readFileSync(extractPath, 'utf-8'));
+} catch {
+  console.warn('⚠️  scripts/.scratch/i18n-needed.json not found — run `node scripts/extract-i18n-needed.mjs` first');
+}
+
+// Scan engines for engineKey=true flag
+const engineKeyEngines = []; // [{slug, file}]
+function walk(dir) {
+  const out = [];
+  for (const f of readdirSync(dir)) {
+    const p = resolve(dir, f);
+    if (statSync(p).isDirectory()) out.push(...walk(p));
+    else if (f.endsWith('.ts') && f !== 'index.ts') out.push(p);
+  }
+  return out;
+}
+const allEngines = walk(resolve(root, 'src/engines'));
+for (const enginePath of allEngines) {
+  const content = readFileSync(enginePath, 'utf-8');
+  if (/engineKey:\s*true/.test(content)) {
+    const slugMatch = content.match(/slug:\s*'([^']+)'/);
+    if (slugMatch) engineKeyEngines.push({ slug: slugMatch[1], file: enginePath });
+  }
+}
+
+// For each engineKey=true engine, validate ALL its required keys are in translations.ts
+const engineMissing = [];
+if (extractData) {
+  for (const { slug } of engineKeyEngines) {
+    const tool = extractData.tools.find(t => t.slug === slug);
+    if (!tool) continue;
+    const requiredKeys = [];
+    // input labels
+    for (const [name, _label] of Object.entries(tool.inputLabels || {})) {
+      requiredKeys.push(`tools.${slug}.input.${name}.label`);
+    }
+    // input placeholders (if present)
+    for (const name of Object.keys(tool.inputPlaceholders || {})) {
+      requiredKeys.push(`tools.${slug}.input.${name}.placeholder`);
+    }
+    // faq
+    for (let i = 0; i < (tool.faq || []).length; i++) {
+      requiredKeys.push(`tools.${slug}.faq.${i}.q`, `tools.${slug}.faq.${i}.a`);
+    }
+    // how_to_use
+    for (let i = 0; i < (tool.howToUse || []).length; i++) {
+      requiredKeys.push(`tools.${slug}.how_to_use.${i}`);
+    }
+    // Validate each key
+    for (const key of requiredKeys) {
+      const re = new RegExp(`'${key.replace(/\./g, '\\.')}':\\s*\\{`, 'm');
+      if (!re.test(src)) {
+        engineMissing.push(`  [engine:${slug}] ${key}`);
+      }
+    }
+  }
+}
+
+// Final summary
+if (engineMissing.length > 0) {
+  console.error(`❌ Engine-level i18n check failed. ${engineMissing.length} key(s) missing for engineKey=true engines:`);
+  for (const k of engineMissing) console.error(k);
+  process.exit(1);
+}
 const missing = [];
 
 for (const [group, keys] of Object.entries(REQUIRED_KEYS)) {
@@ -167,4 +236,5 @@ if (missing.length > 0) {
 
 const total = Object.values(REQUIRED_KEYS).flat().length;
 const dynCount = REQUIRED_KEYS.dynamic_category.length + REQUIRED_KEYS.dynamic_tools.length;
-console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{A-F}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/descs).`);
+const engineCompleteCount = engineKeyEngines.length;
+console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{A-F}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/descs + ${engineCompleteCount} engineKey=true engines fully translated).`);
