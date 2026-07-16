@@ -19,7 +19,7 @@
  *   and engine.inputs[].placeholder.
  */
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -96,6 +96,16 @@ for (const tool of out.tools) {
       if (engineFiles.includes(candidate)) { enginePath = candidate; break; }
     }
     if (enginePath) break;
+    // Fallback: scan category dir for any .ts file whose slug declaration matches tool.slug
+    // (handles filename/slug inconsistencies like ai-image-cost-calculator slug ↔ ai-image-generation-cost-calculator.ts file)
+    if (!enginePath) {
+      for (const f of engineFiles) {
+        if (!f.includes(`${cat}${sep}`)) continue;
+        const fc = readFileSync(f, 'utf-8');
+        const sm = fc.match(/slug:\s*['"]([^'"]+)['"]/);
+        if (sm && sm[1] === tool.slug) { enginePath = f; break; }
+      }
+    }
   }
 
   tool.engineFile = enginePath ? enginePath.replace(root + '\\', '').replace(/\\/g, '/') : null;

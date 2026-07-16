@@ -168,7 +168,7 @@ const allEngines = walk(resolve(root, 'src/engines'));
 for (const enginePath of allEngines) {
   const content = readFileSync(enginePath, 'utf-8');
   if (/engineKey:\s*true/.test(content)) {
-    const slugMatch = content.match(/slug:\s*'([^']+)'/);
+    const slugMatch = content.match(/slug:\s*['"]([^'"]+)['"]/);
     if (slugMatch) engineKeyEngines.push({ slug: slugMatch[1], file: enginePath });
   }
 }
