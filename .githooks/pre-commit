@@ -1,21 +1,39 @@
 #!/usr/bin/env bash
-# Pre-commit hook: detect staticExamples drift across the 32 engines.
+# Pre-commit hook: enforce generated-file freshness + i18n completeness.
 #
 # Install once after cloning:  git config core.hooksPath .githooks
 # Bypass for one commit (when intentional):  git commit --no-verify
 #
-# Drift means calculate() in some engine changed but staticExamples[0] was
-# not regenerated. Fix: `node scripts/codegen-examples.mjs` then re-commit.
+# Checks:
+#   1. staticExamples drift — calculate() in engine changed but
+#      staticExamples[0] not regenerated. Run `scripts/codegen-examples.mjs`.
+#   2. i18n completeness — new engines/categories without title/desc/name translations.
+#      Run `scripts/check-i18n-completeness.mjs` to inspect.
 
 set -e
 
-# Only run if a tracked engine file or the codegen script is staged.
-if git diff --cached --name-only | grep -qE '^(src/engines/.*\.ts|scripts/codegen-examples\.mjs)$'; then
+STAGED=$(git diff --cached --name-only)
+
+# 1. staticExamples drift
+if echo "$STAGED" | grep -qE '^(src/engines/.*\.ts|scripts/codegen-examples\.mjs)$'; then
   echo "[pre-commit] Running scripts/codegen-examples.mjs --check..."
   if ! node scripts/codegen-examples.mjs --check; then
     echo ""
     echo "[pre-commit] BLOCKED: staticExamples drift detected."
     echo "  Fix: run \`node scripts/codegen-examples.mjs\` and amend the commit."
+    echo "  Bypass (not recommended): \`git commit --no-verify\`"
+    exit 1
+  fi
+fi
+
+# 2. i18n completeness — only when translations or data files change
+if echo "$STAGED" | grep -qE '^(src/i18n/translations\.ts|src/data/(categories|tools)/.*\.ts|src/engines/.*\.ts|scripts/check-i18n-completeness\.mjs)$'; then
+  echo "[pre-commit] Running scripts/check-i18n-completeness.mjs..."
+  if ! node scripts/check-i18n-completeness.mjs; then
+    echo ""
+    echo "[pre-commit] BLOCKED: missing i18n keys for engine or category titles/descriptions."
+    echo "  Fix: add tools.{slug}.{title,description} or category.{X}.{name,desc} entries"
+    echo "        to src/i18n/translations.ts."
     echo "  Bypass (not recommended): \`git commit --no-verify\`"
     exit 1
   fi

@@ -7,10 +7,17 @@
  * Plan 1 (EEAT): validates eeat.* keys.
  * Plan 2 (About): validates about.* keys.
  * Plan 3 (Category): validates category.* + header.* keys.
+ * Plan 4 (Tools): validates tools.{slug}.{title|description} for ALL engines
+ *                 in src/data/tools/*.ts (auto-derives required key list).
  * P2a (Favorites): validates favorites.* keys.
  * P2b (Recent): validates recent.* keys.
+ * P2c (History): validates history.* keys.
+ * P17 (i18n backfill): extended to validate category.{X}.name + .desc for ALL
+ *                      categories, and tools.{slug}.title + .description for
+ *                      ALL tools. Engine-level input/FAQ/how-to-use keys are
+ *                      NOT yet validated (P17b follow-up).
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
@@ -108,6 +115,33 @@ const REQUIRED_KEYS = {
   ],
 };
 
+// P17: Dynamically derive required category.{X}.name + .desc and
+// tools.{slug}.title + .description from source data. This catches new
+// engines/categories that ship without i18n keys.
+const toolKeys = [];
+const categoryKeys = [];
+
+// Read categories
+const catsSrc = readFileSync(resolve(root, 'src/data/categories.ts'), 'utf-8');
+const catRe = /\{\s*id:\s*'([A-Z])'/g;
+let m;
+while ((m = catRe.exec(catsSrc)) !== null) {
+  categoryKeys.push(`category.${m[1]}.name`, `category.${m[1]}.desc`);
+}
+
+// Read tools
+const toolsDir = resolve(root, 'src/data/tools');
+for (const file of readdirSync(toolsDir).filter(f => f.endsWith('.ts') && f !== 'index.ts' && f !== 'types.ts')) {
+  const content = readFileSync(resolve(toolsDir, file), 'utf-8');
+  const slugRe = /slug:\s*'([^']+)'/g;
+  while ((m = slugRe.exec(content)) !== null) {
+    toolKeys.push(`tools.${m[1]}.title`, `tools.${m[1]}.description`);
+  }
+}
+
+REQUIRED_KEYS.dynamic_category = categoryKeys;
+REQUIRED_KEYS.dynamic_tools = toolKeys;
+
 const src = readFileSync(translationsPath, 'utf-8');
 const missing = [];
 
@@ -124,8 +158,13 @@ for (const [group, keys] of Object.entries(REQUIRED_KEYS)) {
 if (missing.length > 0) {
   console.error(`❌ i18n completeness check failed. Missing ${missing.length} key(s):`);
   for (const k of missing) console.error(k);
+  console.error('\nTo fix:');
+  console.error('  - Add category.*.name / category.*.desc to translations.ts');
+  console.error('  - Add tools.{slug}.title / tools.{slug}.description to translations.ts');
+  console.error('  - Run scripts/extract-i18n-needed.mjs for the full required list');
   process.exit(1);
 }
 
 const total = Object.values(REQUIRED_KEYS).flat().length;
-console.log(`✅ i18n completeness check passed (${total} required keys present).`);
+const dynCount = REQUIRED_KEYS.dynamic_category.length + REQUIRED_KEYS.dynamic_tools.length;
+console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{A-F}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/descs).`);
