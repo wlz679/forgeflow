@@ -497,6 +497,7 @@ const engine: ToolEngine = {
     'Review the bar chart, break-even analysis, and use-case recommendations to find the best deal for your needs.',
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);

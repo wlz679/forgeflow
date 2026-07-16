@@ -323,6 +323,7 @@ const engine: ToolEngine = {
     'Review per-epoch costs, optimistic/pessimistic ranges, and multi-run scaling to plan your total training budget.',
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -531,6 +531,7 @@ const engine: ToolEngine = {
     'Add a growth rate and projection period for long-term cost planning, then review savings vs other providers.',
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);

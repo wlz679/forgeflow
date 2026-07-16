@@ -906,6 +906,7 @@ const engine: ToolEngine = {
     "Use the Usage Scenarios table to see how costs scale from 50 to 10,000 requests/day, and check Savings Insights for the cheapest and best-value recommendations.",
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);

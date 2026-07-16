@@ -542,6 +542,7 @@ const engine: ToolEngine = {
     'Review the cost comparison and see how much you save vs OpenAI, Claude, and Gemini.',
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);

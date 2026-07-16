@@ -816,6 +816,7 @@ const engine: ToolEngine = {
     'Review the cost comparison bar chart, caching breakdown, and cross-provider insights.',
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);

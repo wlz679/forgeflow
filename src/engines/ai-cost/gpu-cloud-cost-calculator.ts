@@ -375,6 +375,7 @@ const engine: ToolEngine = {
     'Review the multi-provider bar chart, tier savings comparison, and multi-GPU scaling table to find the optimal configuration.',
   ],
   dataLastUpdated: PRICING.lastUpdated,
+  engineKey: true,
 };
 
 registerEngine(engine);
