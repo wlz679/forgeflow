@@ -58,7 +58,7 @@ test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
   assert.equal(HEALTH_BANDS.critical.threshold, 0);
 });
 
-// P14-followup: negative step1 clamped to 0 then filtered out → e2e recomputed from step2 (defensive layer 2)
+// P14-followup + P15 polish: negative step1 clamped to 0 then filtered out → e2e recomputed from step2 (defensive layer 2)
 // clampNonNegative(-1000) → 0; engine filter `if (v > 0) steps.push(v)` drops it;
 // remaining steps [800, 500, 320, 210] → e2e = 210/800 = 0.2625
 test('funnel-step: negative step1 clamps to 0 → filtered out, e2e recomputed from step2 (defensive layer 2)', () => {
@@ -67,4 +67,16 @@ test('funnel-step: negative step1 clamps to 0 → filtered out, e2e recomputed f
   const e2e = funnelEndToEnd(filteredSteps);
   assert.equal(e2e, 210 / 800); // 0.2625 — no NaN, no Infinity, no crash
   assert.equal(calcHealthBand(e2e), 'good');
+});
+
+// P15 polish: integration test — call full generate() pipeline to verify defensive layer works end-to-end
+import '../src/engines/product-analytics/funnel-step-calculator.ts';
+import { getEngine } from '../src/core/engines/registry.ts';
+test('funnel-step: generate() pipeline handles negative step1 without crash (defensive layer 2)', () => {
+  const engine = getEngine('solopreneur-funnel-step-calculator');
+  if (!engine) return; // engine not registered — skip
+  const result = engine.generate({ step1: '-1000', step2: '800', step3: '500', step4: '320', step5: '210' });
+  assert.ok(Array.isArray(result));
+  assert.ok(result.length > 0);
+  assert.ok(!result.some(line => /NaN|Infinity/.test(line)), 'no NaN/Infinity in output');
 });

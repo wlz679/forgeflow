@@ -106,3 +106,10 @@ test('article-helpfulness: negative helpful_votes clamps to 0 → no inverted he
   assert.ok(hpct >= 0, 'helpful share must be >= 0, got ' + hpct);
   assert.equal(hpct, 0);
 });
+
+// P15 polish: direct band cascade assertion — both inputs clamped to 0 → critical
+test('article-helpfulness: calcHealthBand(0, 0) → critical (both inputs clamped, band cascade)', () => {
+  // Direct band test: when both helpful share and vote rate are 0, the cascade
+  // should reach critical (helpful<0.55 falls through warning tier to critical fallback).
+  assert.equal(calcHealthBand(0, 0), 'critical');
+});

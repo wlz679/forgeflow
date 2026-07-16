@@ -69,5 +69,5 @@ export function clampNonNegative(x: number): number {
   // jsdoc contract and silently leak bad values into band comparators.
   // Undefined passes through (returns NaN) — see tests/helpers.test.ts
   // test 5, which documents that callers must pre-validate undefined.
-  return Number.isNaN(x as number) ? 0 : Math.max(0, x);
+  return Number.isNaN(x) ? 0 : Math.max(0, x);
 }

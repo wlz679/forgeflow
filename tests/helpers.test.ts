@@ -22,7 +22,7 @@ test('clampNonNegative: NaN → 0 (defensive)', () => {
   assert.equal(clampNonNegative(NaN), 0);
 });
 
-test('clampNonNegative: undefined → 0 (defensive, via typeof guard)', () => {
+test('clampNonNegative: undefined → NaN (caller-must-pre-validate)', () => {
   // typeof undefined !== 'number', so JS Math.max(0, undefined) = NaN, but
   // spec says "Math.max(0, x)" — the `|| 0` in parseFloat guards upstream
   // make this case unreachable in practice. Test asserts the documented behavior:

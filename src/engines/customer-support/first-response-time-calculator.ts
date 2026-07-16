@@ -15,6 +15,9 @@ export const HEALTH_BANDS = {
   critical:  { threshold: -Infinity, label: '🔴 Critical', message: 'Urgent queue coverage gap.' },
 };
 
+// P15 polish: extract magic +5 literal to named constant (community-wisdom uplift assumption for sub-target SLA attainment)
+const LIFT_PERCENT = 5;
+
 export type HealthBandKey = keyof typeof HEALTH_BANDS;
 
 export function overallAttainment(t1Attainment: number, t2Attainment: number, t3Attainment: number): number {
@@ -75,11 +78,12 @@ const engine: ToolEngine = {
       "  var t1 = cnn(Number(inputs.t1_attainment) || 0);",
       "  var t2 = cnn(Number(inputs.t2_attainment) || 0);",
       "  var t3 = cnn(Number(inputs.t3_attainment) || 0);",
+      "  var LIFT_PCT = 5;",  // mirrors src LIFT_PERCENT constant (customFn has no module scope)
       "  var overall = (t1 + t2 + t3) / 3;",
       "  var band = overall >= 90 ? 'Excellent' : overall >= 80 ? 'Good' : overall >= 60 ? 'Warning' : 'Critical';",
       "  var emoji = overall >= 90 ? '🟢' : overall >= 80 ? '🟡' : overall >= 60 ? '🟠' : '🔴';",
       "  var targetLine = 'T1 ≤' + t1Target + ' min · T2 ≤' + t2Target + 'h · T3 ≤' + t3Target + 'h';",
-      "  var ifT1 = Math.min(100, t1 + 5);",
+      "  var ifT1 = Math.min(100, t1 + LIFT_PCT);",
       "  var ifOverall = (ifT1 + t2 + t3) / 3;",
       "  var ifBand = ifOverall >= 90 ? 'Excellent' : ifOverall >= 80 ? 'Good' : ifOverall >= 60 ? 'Warning' : 'Critical';",
       "  var ifEmoji = ifOverall >= 90 ? '🟢' : ifOverall >= 80 ? '🟡' : ifOverall >= 60 ? '🟠' : '🔴';",
@@ -110,7 +114,7 @@ const engine: ToolEngine = {
     const band = calcHealthBand(overall);
     const bandInfo = HEALTH_BANDS[band];
     const targetLine = fmtTarget(t1TargetMin, t2TargetHr, t3TargetHr);
-    const ifT1 = Math.min(100, t1 + 5);
+    const ifT1 = Math.min(100, t1 + LIFT_PERCENT);
     const ifOverall = overallAttainment(ifT1, t2, t3);
     const ifBand = calcHealthBand(ifOverall);
     const gap = attainmentGapToExcellent(overall);
