@@ -254,6 +254,7 @@ const engine: ToolEngine = {
     'See your break-even hourly rate and what you need to bill for 30%/50% margins.',
     'Scroll down to compare profitability across 9 different hourly cost rates.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

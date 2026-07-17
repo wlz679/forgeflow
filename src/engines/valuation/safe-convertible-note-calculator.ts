@@ -580,6 +580,7 @@ const engine: ToolEngine = {
     'Review the conversion mechanics, deal health, and ownership outcomes.',
     'Check the 5 what-if scenarios for sensitivity analysis (double SAFE, lower cap, etc.).',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

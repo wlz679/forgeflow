@@ -309,5 +309,6 @@ const engine: ToolEngine = {
     "Read Optimization Levers to see how churn reduction, pricing, and CAC improvements compound.",
     "Compare the Lever Impact Ranking to decide whether to invest in churn reduction or expansion growth.",
   ],
+  engineKey: true,
 };
 registerEngine(engine);

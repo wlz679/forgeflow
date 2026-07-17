@@ -229,6 +229,7 @@ const engine: ToolEngine = {
     'Review your CAC, payback period, and unit economics health indicator.',
     'Scroll down to see 5 comparison scenarios at different total spend levels.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

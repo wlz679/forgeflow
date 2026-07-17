@@ -289,6 +289,7 @@ const engine: ToolEngine = {
     'Review per-sub value, break-even sub counts, and growth projections.',
     'Scroll down to see revenue projections across 9 different list sizes.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

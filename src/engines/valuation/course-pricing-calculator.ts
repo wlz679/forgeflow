@@ -270,6 +270,7 @@ const engine: ToolEngine = {
     'See the self-study vs cohort break-even to plan your offering tier.',
     'Compare revenue outcomes at 9 different price points.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

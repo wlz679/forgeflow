@@ -469,6 +469,7 @@ const engine: ToolEngine = {
     'Use the forward valuation projection to set your next round target.',
     'Apply the 5 what-if scenarios to model growth and margin improvements.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

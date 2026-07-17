@@ -315,6 +315,7 @@ const engine: ToolEngine = {
     'Check pricing health diagnostics for issues.',
     'Use the what-if scenarios to model pricing changes.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

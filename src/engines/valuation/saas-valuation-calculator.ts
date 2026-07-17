@@ -257,6 +257,7 @@ const engine: ToolEngine = {
     'Check your estimated exit value based on your profit and growth.',
     'Scroll down to see 5 valuation scenarios at different revenue multiples.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

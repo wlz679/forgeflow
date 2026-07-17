@@ -412,6 +412,7 @@ const engine: ToolEngine = {
     'Check the volume projection to see annual fee burden.',
     'Read the 5 what-if scenarios to find savings opportunities (raise price, annual billing, etc.).',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

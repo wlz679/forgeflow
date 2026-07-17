@@ -194,5 +194,6 @@ const engine: ToolEngine = {
     "Check the cumulative P&L at 3, 6, 12, and 24 months.",
     "Use the gap between flat and growth to understand how much growth impacts your timeline.",
   ],
+  engineKey: true,
 };
 registerEngine(engine);

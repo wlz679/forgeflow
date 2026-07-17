@@ -237,6 +237,7 @@ const engine: ToolEngine = {
     'Review your LTV, customer lifetime, and unit economics health indicator.',
     'Scroll down to compare 5 LTV scenarios at different churn rates.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -487,6 +487,7 @@ const engine: ToolEngine = {
     'Check the stage benchmarks (Seed / Series A / B+) to see how you compare.',
     'Use the 5 what-if scenarios to model improvements (cut burn, grow ARR, etc.).',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);
