@@ -276,6 +276,7 @@ const engine: ToolEngine = {
     'See your after-tax annual income and monthly take-home pay.',
     'Scroll down to compare tax scenarios at different income levels.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

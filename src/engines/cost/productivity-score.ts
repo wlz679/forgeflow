@@ -271,6 +271,7 @@ const engine: ToolEngine = {
     'Read the 🩺 health section for the weakest sub-score to focus on.',
     'Scroll down to compare your score against 5 archetype scenarios.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

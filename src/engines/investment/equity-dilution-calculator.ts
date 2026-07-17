@@ -246,6 +246,7 @@ const engine: ToolEngine = {
     'See exactly what percentage the investor gets and how much your ownership is diluted.',
     'Scroll down to compare exits across 5 different valuation multiples.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

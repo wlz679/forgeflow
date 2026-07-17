@@ -295,6 +295,7 @@ const engine: ToolEngine = {
     'Evaluate your GRR and NRR scores: NRR above 120% is best-in-class, GRR above 90% is healthy.',
     'Read the Churn Attribution breakdown to identify whether voluntary or involuntary churn is your biggest opportunity, then scroll to the scenario comparisons to see how improving churn rates changes your trajectory.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -262,6 +262,7 @@ const engine: ToolEngine = {
     'Check the Meeting Health diagnostics and 5 What-If scenarios.',
     'Scroll down to compare costs across 9 different meeting durations.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

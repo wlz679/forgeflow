@@ -248,5 +248,6 @@ const engine: ToolEngine = {
     "Review the cost structure chart to see which category is eating the most cash.",
     "Check the what-if scenario to see how cost-cutting extends your runway.",
   ],
+  engineKey: true,
 };
 registerEngine(engine);

@@ -263,6 +263,7 @@ const engine: ToolEngine = {
     'See your break-even traffic and how many visitors you need for $5K/$10K net income.',
     'Scroll down to see income projections across 9 different traffic levels.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

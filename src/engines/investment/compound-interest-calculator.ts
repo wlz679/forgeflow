@@ -312,6 +312,7 @@ const engine: ToolEngine = {
     'Review your final balance, milestone growth, and time-to-goal projections.',
     'Check the 5 What-If scenarios to see how small changes compound over time.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

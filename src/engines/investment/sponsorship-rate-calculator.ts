@@ -257,6 +257,7 @@ const engine: ToolEngine = {
     'Review the per-post, bundle, monthly, and annual sponsorship revenue.',
     'Compare how revenue scales at 1K, 10K, and 100K audience levels.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

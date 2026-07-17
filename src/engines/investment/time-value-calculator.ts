@@ -248,6 +248,7 @@ const engine: ToolEngine = {
     'See the dollar cost of meetings, context switches, and daily time waste.',
     'Compare time wealth at 6 different income levels.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

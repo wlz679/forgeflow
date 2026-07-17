@@ -764,5 +764,6 @@ const engine: ToolEngine = {
     "Explore What-If scenarios to see the impact of better churn or lower costs.",
     "Read the Action Plan for prioritized next steps based on your data.",
   ],
+  engineKey: true,
 };
 registerEngine(engine);

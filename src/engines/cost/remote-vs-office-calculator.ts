@@ -518,6 +518,7 @@ const engine: ToolEngine = {
     'Review the cost comparison across office, remote, and hybrid scenarios.',
     'Use the 5 what-if scenarios to model hot-desking, hybrid schedules, and hiring impact.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -272,6 +272,7 @@ const engine: ToolEngine = {
     'Review your required hourly rate and the skilled/premium/expert multipliers.',
     'See how raising rates 20-50% impacts annual revenue at your billable hours.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

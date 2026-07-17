@@ -282,6 +282,7 @@ const engine: ToolEngine = {
     'Review your required hourly, daily, weekly, and monthly retainer rates.',
     'Scroll down to compare hourly vs fixed-fee and the income ladder.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

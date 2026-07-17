@@ -265,6 +265,7 @@ const engine: ToolEngine = {
     'Check the true cost multiplier and annual projection.',
     'Compare Full-Time vs Contractor break-even and 5-year total.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

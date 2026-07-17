@@ -235,5 +235,6 @@ const engine: ToolEngine = {
     "Compare bottom-up revenue potential vs top-down cross-check.",
     "Review the 3-year projection and reality check for your $100K target.",
   ],
+  engineKey: true,
 };
 registerEngine(engine);

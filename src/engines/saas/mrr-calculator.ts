@@ -447,5 +447,6 @@ const engine: ToolEngine = {
     "Check Key SaaS Metrics — NRR above 110% and Quick Ratio above 4 are the gold standards.",
     "Use What-If Scenarios to model improvements in churn, expansion, and contraction.",
   ],
+  engineKey: true,
 };
 registerEngine(engine);
