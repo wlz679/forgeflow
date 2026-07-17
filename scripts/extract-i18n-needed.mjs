@@ -25,6 +25,45 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
 
+// Helper: extract balanced-bracket block starting at startIdx (returning full block including brackets).
+// Used by FAQ + howToUse extraction (P17b-3 fix — promoted from scripts/.scratch/extract-faqs.mjs).
+function extractBalancedBlock(content, startIdx) {
+  let i = content.indexOf('[', startIdx);
+  if (i === -1) return null;
+  let depth = 1;
+  let j = i + 1;
+  while (j < content.length && depth > 0) {
+    const ch = content[j];
+    if (ch === '[') depth++;
+    else if (ch === ']') depth--;
+    j++;
+  }
+  return content.substring(i, j);
+}
+
+// Helper: parse a string literal starting at index i. Handles both '...' and "...".
+// Honors backslash escapes (\\', \\", \\\\, \\n). Returns [value, nextIndex] or null.
+function parseStringLiteral(content, i) {
+  const quote = content[i];
+  if (quote !== '"' && quote !== "'") return null;
+  let j = i + 1;
+  let value = '';
+  while (j < content.length) {
+    const ch = content[j];
+    if (ch === '\\') {
+      value += ch + content[j + 1];
+      j += 2;
+      continue;
+    }
+    if (ch === quote) {
+      return [value, j + 1];
+    }
+    value += ch;
+    j++;
+  }
+  return null;
+}
+
 const out = {
   categories: [],
   tools: [],
@@ -117,31 +156,75 @@ for (const tool of out.tools) {
   if (enginePath) {
     const content = readFileSync(enginePath, 'utf-8');
     // Extract FAQ q/a (engine.faq: [{ q: '...', a: '...' }, ...])
-    const faqBlock = content.match(/faq:\s*\[(.*?)\n\s*\],?\s*\n\s*(?:howToUse|sources|staticExamples)/s);
-    if (faqBlock) {
-      const items = [...faqBlock[1].matchAll(/\{\s*q:\s*'((?:[^'\\]|\\.)*)'\s*,\s*a:\s*'((?:[^'\\]|\\.)*)'\s*\}/g)];
-      for (const it of items) {
-        tool.faq.push({ q: it[1].replace(/\\'/g, "'"), a: it[2].replace(/\\'/g, "'") });
+    // P17b-3 fix: regex-based extraction was fragile with mixed single/double quotes
+    // and escape sequences. Replace with state-machine parser (bracket-balanced + literal parser).
+    // Promoted from scripts/.scratch/extract-faqs.mjs (Task 3 subagent POC).
+    const faqIdx = content.indexOf('faq:');
+    if (faqIdx !== -1) {
+      const block = extractBalancedBlock(content, faqIdx);
+      if (block) {
+        const items = [];
+        let pos = 0;
+        while (pos < block.length) {
+          const objStart = block.indexOf('{', pos);
+          if (objStart === -1) break;
+          const objEnd = block.indexOf('}', objStart);
+          if (objEnd === -1) break;
+          const obj = block.substring(objStart, objEnd + 1);
+          const qKeyIdx = obj.indexOf('q:');
+          const aKeyIdx = obj.indexOf('a:');
+          if (qKeyIdx !== -1 && aKeyIdx !== -1) {
+            let qi = qKeyIdx + 2;
+            while (qi < obj.length && /\s/.test(obj[qi])) qi++;
+            if (qi < obj.length) {
+              const qResult = parseStringLiteral(obj, qi);
+              if (qResult) {
+                let ai = aKeyIdx + 2;
+                while (ai < obj.length && /\s/.test(obj[ai])) ai++;
+                if (ai < obj.length) {
+                  const aResult = parseStringLiteral(obj, ai);
+                  if (aResult) {
+                    const qVal = qResult[0].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                    const aVal = aResult[0].replace(/\\n/g, '\n').replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                    items.push({ q: qVal, a: aVal });
+                  }
+                }
+              }
+            }
+          }
+          pos = objEnd + 1;
+        }
+        tool.faq = items;
       }
     }
-    // Extract howToUse: ['...', '...', ...]
-    const htuBlock = content.match(/howToUse:\s*\[(.*?)\n\s*\]/s);
-    if (htuBlock) {
-      const items = [...htuBlock[1].matchAll(/'((?:[^'\\]|\\.)*)'/g)];
-      tool.howToUse = items.map(it => it[1].replace(/\\'/g, "'"));
+    // Extract howToUse: ['...', '...', ...] — same state-machine approach.
+    const htuIdx = content.indexOf('howToUse:');
+    if (htuIdx !== -1) {
+      const block = extractBalancedBlock(content, htuIdx + 'howToUse:'.length);
+      if (block) {
+        const items = [];
+        let i = 1; // skip the opening [
+        while (i < block.length) {
+          while (i < block.length && /\s/.test(block[i])) i++;
+          if (i >= block.length || block[i] === ']') break;
+          const result = parseStringLiteral(block, i);
+          if (result) { items.push(result[0]); i = result[1]; } else { i++; }
+        }
+        tool.howToUse = items;
+      }
     }
-    // Extract input labels/placeholders from engine.inputs
+    // Extract input labels/placeholders from engine.inputs (accept both quote styles)
     const inputsBlock = content.match(/inputs:\s*\[(.*?)\n\s*\]/s);
     if (inputsBlock) {
-      const itemRe = /\{\s*name:\s*'([^']+)'[^}]*?\}/g;
+      const itemRe = /\{\s*name:\s*(['"])([^'"]+)\1[^}]*?\}/g;
       let im;
       while ((im = itemRe.exec(inputsBlock[1])) !== null) {
         const inputObj = im[0];
-        const name = im[1];
-        const labelM = inputObj.match(/label:\s*'((?:[^'\\]|\\.)*)'/);
-        const phM = inputObj.match(/placeholder:\s*'((?:[^'\\]|\\.)*)'/);
-        if (labelM) tool.inputLabels[name] = labelM[1].replace(/\\'/g, "'");
-        if (phM && phM[1] !== '') tool.inputPlaceholders[name] = phM[1].replace(/\\'/g, "'");
+        const name = im[2];
+        const labelM = inputObj.match(/label:\s*(['"])((?:[^\\]|\\.)*?)\1/);
+        const phM = inputObj.match(/placeholder:\s*(['"])((?:[^\\]|\\.)*?)\1/);
+        if (labelM) tool.inputLabels[name] = labelM[2].replace(/\\(['"\\])/g, '$1');
+        if (phM && phM[2] !== '') tool.inputPlaceholders[name] = phM[2].replace(/\\(['"\\])/g, '$1');
       }
     }
   }

@@ -29,25 +29,29 @@ let src = readFileSync(translationsPath, 'utf-8');
 let inserted = 0, skipped = 0, failed = 0;
 for (const [key, zh] of Object.entries(entries)) {
   const escapedKey = key.replace(/\./g, '\\.');
-  // Match: 'key': { en: '...', zh: '...' } OR 'key': { en: '...', zh: '' }
-  // Caveat (P17b-1 review Finding #1): if a single-quoted zh value contains a
-  // raw ' or escaped \', this regex captures only up to the first quote and
-  // the script will silently miss. Audit 2026-07-16: 0 of 1551 single-quoted
-  // zh entries contain apostrophes today. Re-insertion of a key with such a
-  // value is the only affected flow (rare in P17b single-pass workflow).
-  // TODO (deferred to final holistic review): upgrade to a per-line parser
-  // if any P17b batch introduces an apostrophe-bearing zh value.
-  const re = new RegExp(`('${escapedKey}':\\s*\\{[^}]*?zh:\\s*)'([^']*)'`, 'm');
-  const m = src.match(re);
-  if (!m) {
-    console.warn(`⚠️  Key not found or no zh field: ${key}`);
-    failed++;
+  // Match key entry, then handle single OR double-quoted zh value.
+  // P17b-3 fix: handle both quote styles (some entries use "..." instead of '...').
+  // Caveat: nested quotes with escapes are not 100% robust — see TODO comment.
+  // First try single-quoted: 'key': { ... zh: '...' }
+  const reSingle = new RegExp(`('${escapedKey}':\\s*\\{[^}]*?zh:\\s*)'((?:[^'\\\\]|\\\\[\\'\\\\])*)'`, 'm');
+  const mSingle = src.match(reSingle);
+  if (mSingle) {
+    const escapedZh = zh.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    src = src.replace(reSingle, `$1'${escapedZh}'`);
+    inserted++;
     continue;
   }
-  // Escape single quotes in zh
-  const escapedZh = zh.replace(/'/g, "\\'");
-  src = src.replace(re, `$1'${escapedZh}'`);
-  inserted++;
+  // Then try double-quoted: 'key': { ... zh: "..." }
+  const reDouble = new RegExp(`('${escapedKey}':\\s*\\{[^}]*?zh:\\s*)"((?:[^"\\\\]|\\\\[\\"\\\\])*)"`, 'm');
+  const mDouble = src.match(reDouble);
+  if (mDouble) {
+    const escapedZh = zh.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    src = src.replace(reDouble, `$1"${escapedZh}"`);
+    inserted++;
+    continue;
+  }
+  console.warn(`⚠️  Key not found or no zh field: ${key}`);
+  failed++;
 }
 
 writeFileSync(translationsPath, src);
