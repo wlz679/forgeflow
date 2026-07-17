@@ -301,5 +301,6 @@ const engine: ToolEngine = {
     'Pick your industry benchmark for context-aware health bands.',
     'Read the turnover ratio and days-to-sell, then use What-If to model +10% sales or -10% slower sales.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

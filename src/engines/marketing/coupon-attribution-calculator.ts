@@ -343,6 +343,7 @@ const engine: ToolEngine = {
     'Enter cannibalization % — start with 30% (industry avg) if you have not run a holdout test.',
     'Read the true ROI, what-if scenarios, and break-even cannibalization ceiling to size the next campaign.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

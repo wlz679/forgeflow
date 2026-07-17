@@ -381,6 +381,7 @@ const engine: ToolEngine = {
     'Enter your recovery cost per send (your blended SMS+email send cost).',
     'Read the recovery ROI, what-if scenarios, and break-even recovery rate to size your recovery campaign.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -307,5 +307,6 @@ const engine: ToolEngine = {
     'Enter annual revenue (for % calculation) and win-back rate (10–25% is typical with good email flows).',
     'Read the stockout cost as % of revenue; use What-If to model cutting stockout days 50% or raising recovery to 25%.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

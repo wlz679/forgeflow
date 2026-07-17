@@ -360,5 +360,6 @@ const engine: ToolEngine = {
     'Read Base ACV (per-customer), Monthly (per-month per-customer), and Annual ACV. Use the health band to assess pricing tier.',
     'Pair with sales velocity (P8-2) to identify whether ACV growth opportunities exist alongside pipeline throughput improvements.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

@@ -335,5 +335,6 @@ const engine: ToolEngine = {
     'Enter return rate (% of orders returned).',
     'Read the per-order cost and compare to the $5–$10 industry benchmark band.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

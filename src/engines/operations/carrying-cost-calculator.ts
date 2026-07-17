@@ -297,5 +297,6 @@ const engine: ToolEngine = {
     'Use What-If to model shrinkage reduction (typical loss-prevention win) or rate drops.',
     'If you are above 30%, use Break-Even to see which component to attack first.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

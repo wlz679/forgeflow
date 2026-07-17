@@ -319,5 +319,6 @@ const engine: ToolEngine = {
     'Read daily velocity and the health band. Use the What-If section to model which lever (win rate, cycle, opps) moves velocity fastest.',
     'Pair with pipeline value (P8-1) to identify whether your bottleneck is pipeline fill (low opps) or pipeline conversion (low win rate / long cycle).',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

@@ -398,6 +398,7 @@ const engine: ToolEngine = {
     'Use the What-If section to model budget reallocation scenarios.',
     'Check the Break-Even target for the lowest-band channel.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -331,6 +331,7 @@ const engine: ToolEngine = {
     'Enter total monthly content cost (writer + tools + design).',
     'Pick attribution model — start with last-touch, adjust based on your sales cycle.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

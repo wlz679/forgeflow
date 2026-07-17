@@ -356,5 +356,6 @@ const engine: ToolEngine = {
     'Use the What-If section to model improvements: faster Closing-stage conversion, more Proposal deals, higher deal size.',
     'Compare to sales velocity (P8-2) to identify whether your bottleneck is volume, size, win rate, or cycle time.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

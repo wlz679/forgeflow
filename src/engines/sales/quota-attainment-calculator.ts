@@ -383,5 +383,6 @@ const engine: ToolEngine = {
     'Use the What-If section to model 3 scenarios: maintain current pace, hit required pace, or accelerate 20%.',
     'Use the Break-Even section to see the at-pace milestone (annualQuota × monthsElapsed/12) and the gap to closing it.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

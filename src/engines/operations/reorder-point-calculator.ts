@@ -307,5 +307,6 @@ const engine: ToolEngine = {
     'Enter your review period (how often you check inventory and reorder — typically weekly = 7 days).',
     'Read the reorder point — order when inventory drops to this level.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

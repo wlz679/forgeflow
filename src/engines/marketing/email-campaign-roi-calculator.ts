@@ -329,6 +329,7 @@ const engine: ToolEngine = {
     'Include ALL costs: copywriting, design, ESP fees.',
     'Enter number of emails in the campaign (1-10 typical).',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

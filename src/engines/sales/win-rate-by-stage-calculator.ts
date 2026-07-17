@@ -418,5 +418,6 @@ const engine: ToolEngine = {
     'Use the Break-Even section to see what stage rate you need at bottleneck or Negotiation→Won to reach the 🟢 25% Excellent band.',
     'Pair with sales velocity (P8-2) to identify whether the bottleneck or throughput is the bigger lever after the funnel is fixed.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

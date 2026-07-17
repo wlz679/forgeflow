@@ -337,6 +337,7 @@ const engine: ToolEngine = {
     'Read the 12-mo LTV projection and biggest drop month.',
     'Compare to your CAC to see if unit economics work.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

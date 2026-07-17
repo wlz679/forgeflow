@@ -329,6 +329,7 @@ const engine: ToolEngine = {
     'Enter AOV (average order value) and gross margin %.',
     'Read the biggest leak — that is your highest-leverage optimization target.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

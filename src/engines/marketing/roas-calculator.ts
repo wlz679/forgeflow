@@ -310,6 +310,7 @@ const engine: ToolEngine = {
     'Pick an attribution window that matches your product consideration time.',
     'Compare the health band to your target ROAS; use the What-If scenarios to model improvements.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

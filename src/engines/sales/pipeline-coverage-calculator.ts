@@ -374,5 +374,6 @@ const engine: ToolEngine = {
     'Use the What-If section to model improvements: more pipeline, higher win rate, or both. The Break-Even section shows the exact pipeline needed for 3x and 1x thresholds.',
     'Pair with pipeline value (P8-1) for stage-level diagnostics and quota attainment (P8-5) for pace tracking.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

@@ -341,5 +341,6 @@ const engine: ToolEngine = {
     'Select a weight preset (balanced = standard view; quality/speed/cost = specialized).',
     'Read the composite score, letter grade, and tip for actionable advice.',
   ],
+  engineKey: true,
 };
 registerEngine(engine);
