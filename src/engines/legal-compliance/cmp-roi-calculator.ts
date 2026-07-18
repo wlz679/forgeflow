@@ -219,5 +219,6 @@ return run(inputs, pick, fill);`,
     'https://iabeurope.eu/tcf-for-vendors/',
     'https://gdpr-info.eu/art-7-gdpr/',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

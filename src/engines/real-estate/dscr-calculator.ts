@@ -348,6 +348,7 @@ const engine: ToolEngine = {
     'Apply what-ifs (vacancy, rate, term, OpEx) for sensitivity.',
     'If DSCR falls short, see Rental Yield (P5-4) and BRRRR (P5-5) calculators for the underlying cash flow analysis.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

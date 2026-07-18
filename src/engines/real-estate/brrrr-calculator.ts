@@ -427,6 +427,7 @@ const engine: ToolEngine = {
     'Check 70% rule (your purchase should leave 30% margin).',
     'Use what-ifs (rehab cost -$10K, ARV -$20K) to stress-test sensitivity.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -120,5 +120,6 @@ const engine: ToolEngine = {
     'https://www.gallup.com/workplace/349484/state-of-the-global-workplace.aspx',
     'https://www.pave.com/compensation-benchmarks',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

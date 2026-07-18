@@ -168,5 +168,6 @@ return run(inputs, pick, fill);`,
     'https://www.onetrust.com/blog/consent-rate-benchmarks/',
     'https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/cookies-and-similar-technologies/',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

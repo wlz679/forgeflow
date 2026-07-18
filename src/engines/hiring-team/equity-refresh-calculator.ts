@@ -128,5 +128,6 @@ const engine: ToolEngine = {
     'https://carta.com/data/equity-benchmarks/',
     'https://www.ycombinator.com/library/4A-handbook-for-people-operations',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

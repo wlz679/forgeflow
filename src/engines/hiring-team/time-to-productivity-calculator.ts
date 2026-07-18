@@ -115,5 +115,6 @@ const engine: ToolEngine = {
     'https://hbr.org/2009/04/leading-change-when-business-is-good',
     'https://www.pave.com/compensation-benchmarks',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

@@ -343,6 +343,7 @@ const engine: ToolEngine = {
     'Compare negative cash flow warning if applicable.',
     'Apply 5 what-ifs for sensitivity (vacancy, rent, rate, term, leverage).',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -428,6 +428,7 @@ const engine: ToolEngine = {
     'Apply the 5 what-if scenarios for rate changes and extra payments.',
     'For "PITI" (full housing cost), add property tax + insurance + HOA to monthly P&I.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

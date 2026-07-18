@@ -281,6 +281,7 @@ const engine: ToolEngine = {
     'Use reverse calc to find implied value at target cap rates (5%, 7%, 8%, 10%).',
     'Apply what-ifs (vacancy +5pp, expenses -10%, rent +$300/mo) for sensitivity.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

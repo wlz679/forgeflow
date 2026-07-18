@@ -118,5 +118,6 @@ const engine: ToolEngine = {
     'https://www.shrm.org/topics-tools/news/talent-acquisition/2024-benefits-survey',
     'https://www.pave.com/compensation-benchmarks',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

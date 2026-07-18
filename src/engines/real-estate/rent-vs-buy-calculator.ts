@@ -353,6 +353,7 @@ const engine: ToolEngine = {
     'Check the 6 time-horizon SEO rows — answer changes dramatically with commitment length.',
     'Apply the 5 what-ifs to find your break-even stay duration.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

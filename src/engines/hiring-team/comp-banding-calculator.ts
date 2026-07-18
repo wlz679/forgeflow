@@ -124,5 +124,6 @@ const engine: ToolEngine = {
     'https://www.levels.fyi/comp-data',
     'https://carta.com/data/equity-benchmarks/',
   ],
+  engineKey: true,
 };
 registerEngine(engine);
