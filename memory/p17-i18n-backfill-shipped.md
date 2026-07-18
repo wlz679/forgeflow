@@ -317,3 +317,63 @@ This is a **project convention worth preserving**: `scripts/.scratch/` is NOT gi
 - Slug ↔ name asymmetry (`Investment & Real Estate` name + `/en/investment-roi/` URL) — user-accepted.
 - 5 untracked `docs/superpowers/plans/` plan files now visible after P19-3 .gitignore fix — can be `git add` in P20 if user wants plan history tracked.
 - `audit-zh-terminology.mjs` per-row parser only stores LAST `NOT` match (regex captures all but parser writes only `set(forbidden, info)`); acceptable for 60-row glossary.
+
+---
+
+## P20 i18n Tooling Polish — Shipped 2026-07-18
+
+Plan: `docs/superpowers/plans/2026-07-18-p20-i18n-tooling-polish.md` (4 tasks, 4 commits, baseline `16270e0`).
+Spec: `docs/superpowers/specs/2026-07-18-p20-i18n-tooling-polish-design.md` (design phase artifact).
+
+### Outcome
+
+| Metric | Value |
+|---|---|
+| Commits | 4 (P20-1/2/3 + memory) |
+| `i18n-needed.json not found` warning | **ELIMINATED** (P20-1) — check-i18n-completeness.mjs:148 + extract-i18n-needed.mjs:234-237 both synced to `_archive/` |
+| Plan files tracked | +5 (P8, P14, P17b, P18, P19 — was `?? Untracked` after P19-3 .gitignore fix) |
+| Parser functions | 2 (`parseStringLiteral` + `parseStringLiteralSmart`) → 1 (`parseStringLiteral(content, i, { tolerant })`) + alias (`parseStringLiteralSmart`) |
+| Local parser duplicate in `extract-i18n-needed.mjs` | **REMOVED** (22 lines deleted, import from lib) |
+| Tests | 4/4 → 6/6 (added fixture 5: tolerant recovery + fixture 6: strict truncation regression guard) |
+| Gates | i18n PASS (no warning); build 313 pages; raw-key 0/0; test 6/6 |
+| 3-way sync | gitee + github both at `0cc6871`; rev-list `0\t0` |
+
+### Commits
+
+- `3dcffa2` — fix(i18n): P20-1 — sync extractPath + write-target to _archive/i18n-needed.json
+- `6dcd4e4` — docs(plans): P20-2 — track 5 historical plan files (.gitignore docs/ block removed in P19-3)
+- `d400568` — refactor(i18n): P20-3 — unify parseStringLiteral + parseStringLiteralSmart (tolerant flag + alias)
+- `0cc6871` — docs(p20): P20 i18n Tooling Polish shipped — 3 housekeeping commits
+
+### Lessons Consolidated
+
+1. **`grep -n "scratch"` audit BEFORE path changes** — P20-1 hit 7 matches across 2 scripts (not the 1 read path the spec mentioned). Doing the audit FIRST caught: line 4 docstring + lines 234-237 write-target in extract-i18n-needed.mjs + line 148 read + line 153 warning in check-i18n-completeness.mjs. Line 233 in check-i18n-completeness.mjs was a SCRIPT reference (`extract-i18n-needed.mjs`), NOT a file path — easy to mis-edit without context. Plan Step 4 explicit verification caught this.
+
+2. **Back-compat alias pattern for API unification.** Unifying `parseStringLiteral` + `parseStringLiteralSmart` into one function with a `tolerant` flag is correct, but removing the named alias would break `replaceZhValue`'s internal call (line 78) + any future external caller that imports by name. The 1-line `export const parseStringLiteralSmart = (c, i) => parseStringLiteral(c, i, { tolerant: true })` preserves ergonomics for the common case ("I want the tolerant one") without inflating the function count. Zero behavior change at call sites.
+
+3. **TDD discipline for parser changes.** P20-3 followed the spec's TDD pattern exactly: Step 3 add 2 failing fixtures → Step 4 verify 1 fails (fixture 5 only, because 3rd arg ignored pre-refactor; fixture 6 is strict regression guard and passes both pre/post-refactor as designed) → Step 5 refactor lib → Step 6 verify 6/6 pass. Crucially: Step 9 regenerate `i18n-needed.json` produced BYTE-IDENTICAL output (377668 bytes) to pre-refactor — proves no semantic regression in any caller path. The strict-mode fixture (fixture 6) is a regression guard for future parser changes.
+
+4. **Local function duplicates are a refactor signal.** `extract-i18n-needed.mjs:44-65` had a byte-identical copy of `parseStringLiteral` (22 lines). Reason was historical: extract script predates `scripts/lib/zh-parser.mjs` (P18-1 created lib by extraction; extract was already in the codebase since P17b-3). Future refactor heuristic: if a function has a local copy in another file AND that copy is identical (or near-identical), it belongs in lib.
+
+5. **`git add -f` history is recoverable.** P20-2 tracked 5 plan files originally committed with `git add -f` (P8/P14/P17b/P18/P19, all written when `.gitignore:docs/` was active). After P19-3 removed the blanket rule, those files appeared as `?? Untracked` despite already being committed with `-f`. The `git add` in P20-2 does NOT create new content commits — just promotes them from `-f`-tracked to normal-tracked status. (Verified: `git log -- <file>` shows original commits with `-f` work intact; only working-tree status changes.)
+
+6. **Backwards-compatible default flags.** Setting `tolerant: false` as the DEFAULT in the unified parser means every existing call site passing only 2 args gets the same strict behavior they had before. No caller code change required for the 3 `apply-translations.mjs` strict-mode sites (line 95/185/202). The 1 `replaceZhValue` internal call uses the `parseStringLiteralSmart` alias and gets tolerant mode automatically. Zero behavior change at call sites.
+
+7. **Diagnostic warning vs implementation correctness.** P20-3 introduced TypeScript TS6133 warnings (`test` and `parseStringLiteral` imports "declared but never read") — TypeScript checker doesn't recognize `node:test`'s `test` is used in fixtures + doesn't trace imports through destructured test bodies. Fixtures 5/6 DO use both (`test('...', () => { ... parseStringLiteral(src, 4, { tolerant: true }) ... })`). Pre-existing pattern (P15 EMOJI_SET similar static analysis noise). Implementation correctness verified by 6/6 test pass + byte-identical `i18n-needed.json` regeneration. Accepted without modification.
+
+### Files Touched
+
+- 2 modified: `scripts/check-i18n-completeness.mjs` (line 148 path + line 153 warning), `scripts/extract-i18n-needed.mjs` (line 4 docstring + lines 234-237 write-target + new lib import + 22 lines deleted local parseStringLiteral)
+- 1 modified: `scripts/lib/zh-parser.mjs` (2 functions → 1 function + alias; net -20 lines)
+- 1 modified: `tests/scripts/test-apply-translations-zh-parser.mjs` (+2 fixtures + 2 new imports for `test` and `parseStringLiteral`)
+- 1 regenerated: `scripts/.scratch/_archive/i18n-needed.json` (byte-identical to pre-refactor)
+- 5 added (git add): `docs/superpowers/plans/<p8/p14/p17b/p18/p19>*.md`
+- 2 modified: `memory/{p17-i18n-backfill-shipped.md, MEMORY.md}` (P20 sections)
+
+### Deferred / P21 Candidates
+
+- TypeScript TS6133 diagnostic noise in `test-apply-translations-zh-parser.mjs` — accepted (false positive). Future option: add `// eslint-disable-next-line` or restructure imports to use `describe()` only.
+- `docs/superpowers/plans/` content audits — P8/P14 plans were written before `.gitignore:docs/` was removed; P20-2 just tracks them. Future batches may revisit content accuracy.
+- `tests/scripts/test-apply-translations-zh-parser.mjs` could grow more edge-case fixtures (mixed quote styles, multi-line zh, escape sequence edge cases). 6 fixtures cover the P17b-corruption pattern + strict-truncation regression guard; sufficient for current usage.
+- `scripts/lib/` only has `zh-parser.mjs`. Future i18n utilities (e.g., a `translations-key-validator.mjs`) could share this lib directory.
+- Two-parser alias (`parseStringLiteralSmart`) is preserved for back-compat but is now just a 1-line wrapper. Could be deprecated in a future major version bump if all callers migrate to `{ tolerant: true }` parameter syntax.
