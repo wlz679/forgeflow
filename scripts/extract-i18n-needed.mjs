@@ -21,6 +21,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { dirname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseStringLiteral } from './lib/zh-parser.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -39,29 +40,6 @@ function extractBalancedBlock(content, startIdx) {
     j++;
   }
   return content.substring(i, j);
-}
-
-// Helper: parse a string literal starting at index i. Handles both '...' and "...".
-// Honors backslash escapes (\\', \\", \\\\, \\n). Returns [value, nextIndex] or null.
-function parseStringLiteral(content, i) {
-  const quote = content[i];
-  if (quote !== '"' && quote !== "'") return null;
-  let j = i + 1;
-  let value = '';
-  while (j < content.length) {
-    const ch = content[j];
-    if (ch === '\\') {
-      value += ch + content[j + 1];
-      j += 2;
-      continue;
-    }
-    if (ch === quote) {
-      return [value, j + 1];
-    }
-    value += ch;
-    j++;
-  }
-  return null;
 }
 
 const out = {

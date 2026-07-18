@@ -2,9 +2,9 @@
 // Pre-fix, `reSingle = /('key':\s*\{[^}]*?zh:\s*)'([^']*)'/m` matched only up to
 // the first `'` in zh. If zh contains `'` (e.g. ARR range), the match truncates
 // and the replace leaves dangling suffix → JS parse error.
-import { describe, it } from 'node:test';
+import { describe, it, test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { replaceZhValue } from '../../scripts/lib/zh-parser.mjs';
+import { replaceZhValue, parseStringLiteral } from '../../scripts/lib/zh-parser.mjs';
 
 const fixtures = [
   {
@@ -47,4 +47,20 @@ describe('replaceZhValue state-machine parser (P18-1)', () => {
       );
     });
   }
+});
+
+// Fixture 5: tolerant=true recovers unescaped quote inside value (P17b corruption pattern)
+test('parseStringLiteral tolerant=true recovers unescaped quote', () => {
+  const src = `zh: '对 '$10M-$50M ARR' 的金额'`;
+  const r = parseStringLiteral(src, 4, { tolerant: true });
+  assert.ok(r, 'tolerant parser should succeed');
+  assert.equal(r[0], "对 '$10M-$50M ARR' 的金额");
+});
+
+// Fixture 6: strict (default) truncates at first unescaped quote (regression guard for back-compat)
+test('parseStringLiteral tolerant=false (default) truncates at first quote', () => {
+  const src = `zh: '对 '$10M-$50M ARR' 的金额'`;
+  const r = parseStringLiteral(src, 4);
+  assert.ok(r, 'strict parser should still succeed on the first quoted segment');
+  assert.equal(r[0], '对 ');
 });

@@ -1,7 +1,11 @@
 // State-machine string parser + zh-value replacer, shared across i18n scripts.
 // P18-1: extracted from apply-translations.mjs so tests can import without eval.
+// P20-3: unified parseStringLiteral + parseStringLiteralSmart into a single
+// function with a `tolerant` option. The smart parser is preserved as an
+// alias for backward compatibility at call sites that want the P17b-corruption
+// recovery behavior explicitly.
 
-export function parseStringLiteral(content, i) {
+export function parseStringLiteral(content, i, { tolerant = false } = {}) {
   const quote = content[i];
   if (quote !== '"' && quote !== "'") return null;
   let j = i + 1;
@@ -9,11 +13,23 @@ export function parseStringLiteral(content, i) {
   while (j < content.length) {
     const ch = content[j];
     if (ch === '\\') {
-      value += ch + content[j + 1];
+      value += ch + (content[j + 1] ?? '');
       j += 2;
       continue;
     }
     if (ch === quote) {
+      if (tolerant) {
+        // Look ahead past whitespace — closing quote must be followed by `,` or `}`
+        let k = j + 1;
+        while (k < content.length && /\s/.test(content[k])) k++;
+        if (k >= content.length || content[k] === ',' || content[k] === '}') {
+          return [value, j + 1];
+        }
+        // Not a boundary — treat as content and keep walking
+        value += ch;
+        j++;
+        continue;
+      }
       return [value, j + 1];
     }
     value += ch;
@@ -22,41 +38,11 @@ export function parseStringLiteral(content, i) {
   return null;
 }
 
-// Smart parser: like parseStringLiteral but tolerates unescaped quote chars
-// inside the value (P17b corruption pattern: `zh: '对 '$10M-$50M ARR' 的金额'`).
-// The closing quote is identified by being followed (after optional whitespace)
-// by `,` or `}` — i.e. the boundary that ends the JS object literal.
-// P18-1: returns the FULL value so replaceZhValue can substitute it cleanly.
-export function parseStringLiteralSmart(content, i) {
-  const quote = content[i];
-  if (quote !== '"' && quote !== "'") return null;
-  let j = i + 1;
-  let value = '';
-  while (j < content.length) {
-    const ch = content[j];
-    if (ch === '\\') {
-      // Escape sequence: take next char as content
-      value += ch + (content[j + 1] ?? '');
-      j += 2;
-      continue;
-    }
-    if (ch === quote) {
-      // Look ahead past whitespace — closing quote must be followed by `,` or `}`
-      let k = j + 1;
-      while (k < content.length && /\s/.test(content[k])) k++;
-      if (k >= content.length || content[k] === ',' || content[k] === '}') {
-        return [value, j + 1];
-      }
-      // Not a boundary — treat as content and keep walking
-      value += ch;
-      j++;
-      continue;
-    }
-    value += ch;
-    j++;
-  }
-  return null;
-}
+// Backward-compat alias: explicit name for the P17b-corruption-tolerant mode.
+// Kept so existing call sites (replaceZhValue line below + any future callers)
+// can opt into the recovery behavior by name without passing `{ tolerant: true }`.
+export const parseStringLiteralSmart = (content, i) =>
+  parseStringLiteral(content, i, { tolerant: true });
 
 export function replaceZhValue(src, key, newZh) {
   const escapedKey = key.replace(/\./g, '\\.');
