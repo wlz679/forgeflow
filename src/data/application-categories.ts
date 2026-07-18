@@ -8,7 +8,7 @@ export const CATEGORY_TO_APPLICATION: Record<string, string> = {
   C: 'FinanceApplication',    // Valuation & Exit
   D: 'BusinessApplication',   // Freelance Pricing
   E: 'BusinessApplication',   // Cost & Efficiency
-  F: 'FinanceApplication',    // Investment & ROI
+  F: 'FinanceApplication',    // Investment & Real Estate
 };
 
 export function categoryIdToApplicationCategory(id: string): string {
