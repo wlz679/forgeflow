@@ -92,6 +92,7 @@ const engine: ToolEngine = {
     'https://www.lennysnewsletter.com/p/power-users',
     'https://a16z.com/power-user-curve/',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

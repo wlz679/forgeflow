@@ -129,5 +129,6 @@ const engine: ToolEngine = {
     'https://www.freshworks.com/customer-service-benchmark/',
     'https://www.icmi.com/research/contact-center-performance',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

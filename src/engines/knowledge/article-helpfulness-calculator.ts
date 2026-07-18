@@ -138,5 +138,6 @@ const engine: ToolEngine = {
     'https://www.zendesk.com/blog/search-analytics-self-service/',
     'https://www.intercom.com/help/articles/what-is-help-center-best-practices',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

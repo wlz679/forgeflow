@@ -94,6 +94,7 @@ const engine: ToolEngine = {
     'https://buffer.com/resources/time-to-value',
     'https://www.lennysnewsletter.com/p/onboarding',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

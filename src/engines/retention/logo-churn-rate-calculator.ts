@@ -189,6 +189,7 @@ const engine: ToolEngine = {
     'Enter customers lost during the period (e.g., 8 customers who churned).',
     'Read the logo churn percentage and Health band. Pair with GRR (P9-2) to see logo vs revenue churn.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -118,5 +118,6 @@ const engine: ToolEngine = {
     'https://www.freshworks.com/customer-service-benchmark/',
     'https://www.gartner.com/en/customer-service-support',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

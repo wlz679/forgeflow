@@ -97,6 +97,7 @@ const engine: ToolEngine = {
     'https://heap.io/blog/product-adoption',
     'https://mixpanel.com/blog/feature-adoption/',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

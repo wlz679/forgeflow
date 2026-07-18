@@ -108,6 +108,7 @@ const engine: ToolEngine = {
     'https://mixpanel.com/blog/funnel-analysis/',
     'https://www.lennysnewsletter.com/p/funnels',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

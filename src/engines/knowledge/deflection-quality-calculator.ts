@@ -123,5 +123,6 @@ const engine: ToolEngine = {
     'https://www.intercom.com/help/articles/what-is-help-center-best-practices',
     'https://www.zendesk.com/customer-experience-trends/',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

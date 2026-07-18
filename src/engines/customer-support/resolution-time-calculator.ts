@@ -102,5 +102,6 @@ const engine: ToolEngine = {
     'https://www.sqmgroup.com/resources/research/contact-center-benchmarks',
     'https://www.gainsight.com/blog/customer-success-benchmarks/',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

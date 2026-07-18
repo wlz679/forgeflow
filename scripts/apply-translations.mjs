@@ -178,14 +178,27 @@ function readEnValue(slug, subkey) {
     const field = inpMatch[2];
     const inputsBlock = findTopLevelArray(c, 'inputs');
     if (!inputsBlock) return null;
-    // Try both single and double quote patterns
+    // Try both single and double quote patterns. Two patterns:
+    //   1. inputs with BOTH label and placeholder (number inputs)
+    //   2. inputs with only label (select inputs — type:'select', no placeholder)
+    const safeName = name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
     let re = new RegExp(
-      `name:\\s*['"]${name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}['"]\\s*,\\s*label:\\s*['"]((?:[^"'\\\\]|\\\\.)*)['"]\\s*,\\s*placeholder:\\s*['"]((?:[^"'\\\\]|\\\\.)*)['"]`
+      `name:\\s*['"]${safeName}['"]\\s*,\\s*label:\\s*['"]((?:[^"'\\\\]|\\\\.)*)['"]\\s*,\\s*placeholder:\\s*['"]((?:[^"'\\\\]|\\\\.)*)['"]`
     );
     let mm = inputsBlock.match(re);
-    if (!mm) return null;
-    const val = field === 'label' ? mm[1] : mm[2];
-    return val.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    if (mm) {
+      const val = field === 'label' ? mm[1] : mm[2];
+      return val.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    // Fallback: select-type input (label only, then type/options/default).
+    re = new RegExp(
+      `name:\\s*['"]${safeName}['"]\\s*,\\s*label:\\s*['"]((?:[^"'\\\\]|\\\\.)*)['"]`
+    );
+    mm = inputsBlock.match(re);
+    if (mm && field === 'label') {
+      return mm[1].replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    }
+    return null;
   } else if (m[1] === 'faq') {
     const faqMatch = m[2].match(/^(\d+)\.(q|a)$/);
     if (!faqMatch) return null;

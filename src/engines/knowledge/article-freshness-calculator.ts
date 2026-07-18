@@ -118,5 +118,6 @@ const engine: ToolEngine = {
     'https://www.intercom.com/help/articles/what-is-help-center-best-practices',
     'https://www.gartner.com/en/customer-service-support',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

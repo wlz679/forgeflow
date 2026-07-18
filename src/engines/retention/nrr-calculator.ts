@@ -317,6 +317,7 @@ const engine: ToolEngine = {
     'Enter Churned MRR (customers who fully cancelled during the period).',
     'Read the NRR percentage and Health band. Pair with GRR (P9-2) to see pure retention vs expansion-driven retention separately.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

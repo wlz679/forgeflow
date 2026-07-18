@@ -122,5 +122,6 @@ const engine: ToolEngine = {
     'https://www.zendesk.com/blog/search-analytics-self-service/',
     'https://www.gartner.com/en/customer-service-support',
   ],
+  engineKey: true,
 };
 registerEngine(engine);

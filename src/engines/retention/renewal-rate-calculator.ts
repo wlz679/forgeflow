@@ -87,6 +87,7 @@ const engine: ToolEngine = {
   ],
   customFn: '', // filled below
   clientConfig: { type: 'custom', wordPools: {}, customFn: '' },
+  engineKey: true,
 };
 
 function formatCurrency(n: number): string {

@@ -192,6 +192,7 @@ const engine: ToolEngine = {
     'Enter Cross-sell MRR (additional products sold to existing customers).',
     'Read the expansion percentage and Health band. Pair with NRR (P9-1) to see the full retention picture.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -202,6 +202,7 @@ const engine: ToolEngine = {
     'Select a Weight Preset that matches your GTM motion (Balanced is the default).',
     'Read the composite Health Score 0-100 and Health band. Sub-scores are shown normalized so you can identify the lowest signal for intervention.',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

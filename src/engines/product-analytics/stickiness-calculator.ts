@@ -92,6 +92,7 @@ const engine: ToolEngine = {
     'https://www.lennysnewsletter.com/p/dau-mau-stickiness',
     'https://amplitude.com/blog/calculate-stickiness',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

@@ -95,6 +95,7 @@ const engine: ToolEngine = {
     'https://a16z.com/consumer-retention/',
     'https://www.lennysnewsletter.com/p/activation',
   ],
+  engineKey: true,
 };
 
 registerEngine(engine);

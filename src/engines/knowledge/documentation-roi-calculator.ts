@@ -153,5 +153,6 @@ const engine: ToolEngine = {
     'https://www.gartner.com/en/customer-service-support',
     'https://www.nngroup.com/articles/help-and-documentation/',
   ],
+  engineKey: true,
 };
 registerEngine(engine);
