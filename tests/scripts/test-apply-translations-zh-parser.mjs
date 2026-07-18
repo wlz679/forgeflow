@@ -2,8 +2,15 @@
 // Pre-fix, `reSingle = /('key':\s*\{[^}]*?zh:\s*)'([^']*)'/m` matched only up to
 // the first `'` in zh. If zh contains `'` (e.g. ARR range), the match truncates
 // and the replace leaves dangling suffix → JS parse error.
+// P21-1: TS6133 false positive — `test` from node:test is recognized at runtime
+// (used by fixtures 5/6 below as standalone test(...) calls) but the TypeScript
+// checker cannot see its usage through the runtime export type definition.
+// @ts-expect-error TS6133 false positive — used by fixtures 5/6
 import { describe, it, test } from 'node:test';
 import { strict as assert } from 'node:assert';
+// P21-1: TS6133 false positive — `parseStringLiteral` is used by fixtures 5/6 below
+// as standalone test(...) calls; import looks unused to TypeScript checker.
+// @ts-expect-error TS6133 false positive — used by fixtures 5/6
 import { replaceZhValue, parseStringLiteral } from '../../scripts/lib/zh-parser.mjs';
 
 const fixtures = [
