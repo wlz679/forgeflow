@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseStringLiteral, replaceZhValue } from './lib/zh-parser.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // scripts/apply-translations.mjs → project root is ../
@@ -34,33 +35,12 @@ let src = readFileSync(translationsPath, 'utf-8');
 
 let updated = 0, added = 0, failed = 0;
 
-// Step 1: Update existing entries (single OR double quoted)
+// Step 1: Update existing entries (state-machine parser handles escapes correctly;
+// P18-1 supersedes the prior `[^']*` regex that corrupted values containing apostrophes)
 for (const [key, zh] of Object.entries(entries)) {
-  const escapedKey = key.replace(/\./g, '\\.');
-
-  const reSingle = new RegExp(
-    `('${escapedKey}':\\s*\\{[^}]*?zh:\\s*)'([^']*)'`,
-    'm'
-  );
-  const mSingle = src.match(reSingle);
-  if (mSingle) {
-    const escapedZh = zh.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    src = src.replace(reSingle, `$1'${escapedZh}'`);
-    updated++;
-    continue;
-  }
-
-  const reDouble = new RegExp(
-    `('${escapedKey}':\\s*\\{[^}]*?zh:\\s*)"([^"]*)"`,
-    'm'
-  );
-  const mDouble = src.match(reDouble);
-  if (mDouble) {
-    const escapedZh = zh.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    src = src.replace(reDouble, `$1"${escapedZh}"`);
-    updated++;
-    continue;
-  }
+  const before = src;
+  src = replaceZhValue(src, key, zh);
+  if (src !== before) updated++;
 }
 
 // Step 2: Identify keys that need adding
@@ -94,28 +74,6 @@ function findTopLevelArray(content, name) {
   while ((m = re.exec(content)) !== null) {
     const block = extractBalancedBlock(content, m.index);
     return block;
-  }
-  return null;
-}
-
-// State-machine string parser
-function parseStringLiteral(content, i) {
-  const quote = content[i];
-  if (quote !== '"' && quote !== "'") return null;
-  let j = i + 1;
-  let value = '';
-  while (j < content.length) {
-    const ch = content[j];
-    if (ch === '\\') {
-      value += ch + content[j + 1];
-      j += 2;
-      continue;
-    }
-    if (ch === quote) {
-      return [value, j + 1];
-    }
-    value += ch;
-    j++;
   }
   return null;
 }
