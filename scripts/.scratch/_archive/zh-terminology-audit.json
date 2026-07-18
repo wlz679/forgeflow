@@ -1,0 +1,274 @@
+[
+  {
+    "key": "category.A.faq.q3.q",
+    "en": "What is the difference between logo churn and revenue churn?",
+    "zh": "客户流失率（Logo Churn）和收入流失率（Revenue Churn）的区别是什么？",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "category.A.faq.q3.a",
+    "en": "Logo churn counts customers lost; revenue churn measures MRR lost. High logo churn with low revenue churn means your small customers are leaving while big ones stay.",
+    "zh": "客户流失率统计流失的客户数；收入流失率衡量损失的 MRR。高客户流失伴随低收入流失意味着小客户在离开而大客户在留下。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "category.A.guide.3.desc",
+    "en": "How to read attribution analysis to find the real driver behind customer loss.",
+    "zh": "如何阅读归因分析找到客户流失背后的真正驱动因素。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "category.D.guide.2.title",
+    "en": "Building a Project Retainer",
+    "zh": "建立项目保留合同",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "category.S.desc",
+    "en": "Calculate pipeline value, sales velocity, ACV, win rate by stage, quota attainment, and pipeline coverage for B2B SaaS sales teams and RevOps.",
+    "zh": "计算管线价值、销售速度、平均合同金额、各阶段赢率、指标完成率和管线覆盖率，适用于 B2B SaaS 销售团队和 RevOps。",
+    "forbidden": "管线",
+    "canonical": "销售渠道",
+    "contextEN": "pipeline"
+  },
+  {
+    "key": "category.H.desc",
+    "en": "Calculate fully-loaded employee cost, ramp time, productivity ramp curves, compensation banding, equity refresh grants, and attrition cost for People-ops managers and Head-of-HR at mid-market B2B SaaS companies ($10M-$50M ARR).",
+    "zh": "计算全职员工成本、爬坡时间、生产力爬坡曲线、薪酬区间、股权刷新授予和离职成本，适用于中型 B2B SaaS（$10M-$50M ARR）的员工运营经理和人力资源负责人。",
+    "forbidden": "爬坡时间",
+    "canonical": "磨合期",
+    "contextEN": "ramp time"
+  },
+  {
+    "key": "tools.solopreneur-mrr-calculator.faq.1.a",
+    "en": "Net Revenue Retention (NRR) measures how much revenue you retain from existing customers after accounting for expansion, contraction, and churn. NRR above 110% is best-in-class — it means you grow 10%+ from existing customers even with zero new acquisition. Below 100% means your customer base is shrinking.",
+    "zh": "净收入留存（NRR）衡量在考虑扩展、收缩和流失后，你从现有客户保留了多少收入。NRR超过110%是顶尖水平——意味着即使零新获客，你也能从老客户中增长10%以上。低于100%说明你的客户基础在萎缩。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-saas-pricing-planner.faq.4.a",
+    "en": "Raise prices when your product has significantly more value than at launch, or when demand outpaces your capacity. Grandfather existing customers to avoid churn.",
+    "zh": "当你的产品价值比发布时显著增加，或者需求超过你的服务能力时提价。给老客户保留旧价格以避免流失。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.description",
+    "en": "Analyze customer churn: monthly and annual rates, revenue impact, customer lifetime, and how reducing churn saves you money.",
+    "zh": "分析客户流失：月度和年度流失率、收入影响、客户生命周期，以及降低流失率能省多少钱。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.faq.1.q",
+    "en": "What is the difference between customer churn and revenue churn?",
+    "zh": "客户流失和收入流失有什么区别？",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.faq.1.a",
+    "en": "Customer churn measures the percentage of customers who leave. Revenue churn measures the percentage of revenue lost. Revenue churn can be higher if high-paying customers leave, or lower if only low-tier customers churn. Track both — they tell different stories.",
+    "zh": "客户流失衡量离开客户的比例，收入流失衡量损失的营收比例。高付费客户走了收入流失会更高，只有低价客户流失则更低。两者都要追踪——它们揭示不同的问题。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.faq.6.a",
+    "en": "Track both from day one. Logo churn tells you if your product is sticky; revenue churn tells you if your business is healthy. A startup with 5% logo churn but 120% NRR (from expansion) may still be growing revenue. Conversely, 2% logo churn with 95% NRR means you are slowly shrinking despite loyal customers. Use both metrics together for a complete picture.",
+    "zh": "从第一天起就两个都追踪。客户数流失告诉你产品是否有黏性；收入流失告诉你业务是否健康。一家月客户流失 5% 但 NRR 达 120%（来自扩展收入）的初创公司，收入仍可能在增长。反过来，月客户流失 2% 但 NRR 只有 95%，意味着即便客户忠诚，业务也在缓慢萎缩。两个指标一起用才能看到全貌。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-deepseek-api-cost-calculator.faq.6.a",
+    "en": "DeepSeek hosts all models in US data centers with enterprise-grade security. For regulated industries, check data residency requirements. Many enterprises use DeepSeek for cost-sensitive workloads while keeping OpenAI/Claude for sensitive data. Always review the latest privacy policy for your use case.",
+    "zh": "DeepSeek 所有模型托管在美国数据中心，采用企业级安全标准。受监管行业请检查数据驻留要求。许多企业将 DeepSeek 用于成本敏感的工作负载，同时保留 OpenAI/Claude 处理敏感数据。请务必查看最新的隐私政策。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-stockout-cost-calculator.description",
+    "en": "Quantify revenue lost + customer churn from stockouts. See health bands, what-if (stockout rate, demand, AOV), break-even stockout rate, and annualized lost revenue. Health: 🟢 <2% · 🟡 2–5% · 🟠 5–10% · 🔴 >10%.",
+    "zh": "量化缺货导致的收入损失 + 客户流失。查看健康分级、What-If（缺货率、需求、客单价）、盈亏平衡缺货率和年化损失收入。健康分级：🟢 <2% · 🟡 2–5% · 🟠 5–10% · 🔴 >10%。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-stockout-cost-calculator.how_to_use.2",
+    "en": "Enter your customer loss rate (% who defect forever; 30–60% is typical).",
+    "zh": "输入客户流失率(% 永久流失,通常 30%-60%)。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-nrr-calculator.faq.0.a",
+    "en": "NRR measures the revenue you keep and grow from existing customers over a period, expressed as a percentage of starting revenue. NRR > 100% means existing customers grew net of churn; NRR < 100% means net contraction. The headline SaaS metric every board reports.",
+    "zh": "NRR 衡量在特定周期内你从现有客户身上保留并增长的收入占期初收入的百分比。NRR > 100% 说明现有客户收入在扣减流失后仍净增长；NRR < 100% 则为净收缩。每个董事会都会追踪的 SaaS 头号指标。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-grr-calculator.faq.0.a",
+    "en": "GRR measures revenue retained from existing customers, excluding any expansion (upsell/cross-sell). GRR <= 100% always. It is the \"pure retention\" signal — investors use it to see how leaky the bucket is before counting expansion as a save.",
+    "zh": "GRR 衡量从现有客户保留的收入，不包含任何扩展（向上销售/交叉销售）。GRR 永远 ≤ 100%。它是\"纯留存\"信号——投资者用它来看扩展之前你的\"桶\"有多漏。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-logo-churn-rate-calculator.faq.0.a",
+    "en": "Logo churn rate is the percentage of customers (logos) lost during a period, regardless of revenue. It is the count-based complement to GRR (revenue-based). Logo churn and GRR diverge when customers at different price tiers churn at different rates.",
+    "zh": "Logo 流失率是周期内流失的客户（Logo）数量占客户总数的百分比，与金额无关。它是 GRR（按金额计）的客户数补充。Logo 流失与 GRR 在不同价位客户流失率不同时会背离。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-logo-churn-rate-calculator.how_to_use.2",
+    "en": "Read the logo churn percentage and Health band. Pair with GRR (P9-2) to see logo vs revenue churn.",
+    "zh": "查看 Logo 流失百分比和健康等级。可与 GRR（P9-2）配对，对比客户流失与收入流失。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-time-to-productivity-calculator.description",
+    "en": "Measure ramp time to full productivity by role level (junior/mid/senior). See health bands, what-if (onboarding investment), break-even ramp days, and cost-of-ramp calculation. Health: 🟢 ≤60 days · 🟡 60–90 · 🟠 90–150 · 🔴 >150.",
+    "zh": "按职级（初级/中级/高级）衡量达到完全生产力的爬坡时间。查看健康分级、What-If（入职投入）、盈亏平衡爬坡天数和爬坡成本计算。健康分级：🟢 ≤60 天 · 🟡 60–90 · 🟠 90–150 · 🔴 >150。",
+    "forbidden": "爬坡时间",
+    "canonical": "磨合期",
+    "contextEN": "ramp time"
+  },
+  {
+    "key": "tools.solopreneur-comp-banding-calculator.how_to_use.4",
+    "en": "Pair with [Equity Refresh Calculator] (P11-5) to plan total retention package.",
+    "zh": "与「股权刷新计算器」（P11-5）搭配，规划完整保留方案。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-equity-refresh-calculator.faq.0.a",
+    "en": "A new equity grant given to an existing employee, typically at a vesting anniversary (year 2-4). It supplements (does not replace) the original grant. Purpose: combat equity dilution from continued vesting, recognize ongoing contribution, and create new retention incentives.",
+    "zh": "指授予现有员工的新一轮股权，通常发生在归属周年（第 2-4 年）。它补充而非替代原始授予。目的：抵消持续归属造成的股权稀释、认可持续贡献、创造新的保留激励。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-equity-refresh-calculator.faq.3.a",
+    "en": "A subjective tier for how critical the role is to retention. High = founder-track, VP, staff engineer, key account exec (15% of pool). Med = senior ICs, managers, established leaders (8% of pool). Low = junior ICs, support functions, individual contributors (3% of pool).",
+    "zh": "对岗位保留重要性的主观分级。高 = 创始人梯队、VP、资深工程师、关键客户经理（占池 15%）。中 = 高级 IC、经理、成熟领导者（占池 8%）。低 = 初级 IC、支持职能、个人贡献者（占池 3%）。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-kb-coverage-rate-calculator.faq.5.a",
+    "en": "K-1 is the simplest KB upstream metric — coverage is a single ratio. industry_benchmark is informational only (does not change math), total_articles supports Break-Even calc. K-2 through K-6 add complexity (freshness, search, quality).",
+    "zh": "K-1 是最简单的 KB 上游指标——覆盖率是单一比率。industry_benchmark 仅作信息参考（不改变计算），total_articles 为盈亏平衡提供支持。K-2 至 K-6 增加了复杂性（时效性、搜索、质量）。",
+    "forbidden": "时效性",
+    "canonical": "文章新鲜度",
+    "contextEN": "article freshness"
+  },
+  {
+    "key": "tools.solopreneur-article-freshness-calculator.faq.0.q",
+    "en": "What is \"article freshness\"?",
+    "zh": "什么是\"文章时效性\"？",
+    "forbidden": "时效性",
+    "canonical": "文章新鲜度",
+    "contextEN": "article freshness"
+  },
+  {
+    "key": "tools.solopreneur-documentation-roi-calculator.faq.4.a",
+    "en": "Two levers: raise deflection volume (grow coverage — see K-1 — and search effectiveness — see K-3) or lower cost per article (consolidate stale/duplicate content — see K-2 Freshness). Raising deflection is usually higher-leverage than cutting team cost, because deflection savings compound while cost cuts are one-time.",
+    "zh": "两个杠杆：提高分流量（扩大覆盖——见 K-1——和搜索有效性——见 K-3）或降低单文章成本（整合过期/重复内容——见 K-2 时效性）。提高分流通常杠杆更大，因为分流节省会复利，而成本削减是一次性的。",
+    "forbidden": "时效性",
+    "canonical": "文章新鲜度",
+    "contextEN": "article freshness"
+  },
+  {
+    "key": "tools.solopreneur-dpa-cost-calculator.faq.4.a",
+    "en": "DPA review commonly sits between security approval and signature. Extra rounds hold weighted pipeline in the negotiation stage, delay close dates, and increase forecast slippage. Pair this calculator with P8-1 Pipeline Value to quantify the revenue waiting behind legal review.",
+    "zh": "DPA 审核通常位于安全审批与签约之间。额外的轮次会让加权管线在谈判阶段积压，推迟成交日期，增加预测偏差。可与 P8-1 管线价值搭配，量化等待法务审核的收入。",
+    "forbidden": "管线",
+    "canonical": "销售渠道",
+    "contextEN": "pipeline"
+  },
+  {
+    "key": "tools.solopreneur-breach-notification-cost-calculator.faq.4.a",
+    "en": "L-1 measures regulatory tail risk (fine exposure under GDPR Art. 83). L-5 measures the operational incident cost (notification + remediation). A single breach typically triggers both: notification cost + GDPR fine + customer churn. Combine L-1 × L-5 to model true single-incident cost.",
+    "zh": "L-1 度量监管尾部风险（GDPR 第 83 条罚款敞口）。L-5 度量运营事件成本（通知 + 修复）。一次泄露通常同时触发两者：通知成本 + GDPR 罚款 + 客户流失。将 L-1 × L-5 组合建模真实单事件成本。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-pipeline-value-calculator.title",
+    "en": "Pipeline Value Calculator",
+    "zh": "管线价值计算器",
+    "forbidden": "管线",
+    "canonical": "销售渠道",
+    "contextEN": "pipeline"
+  },
+  {
+    "key": "tools.solopreneur-pipeline-value-calculator.description",
+    "en": "Calculate weighted pipeline value: deal amount × stage probability × segment weighting. See health bands, what-if (win rate, stage migration), break-even pipeline for quota, and forecast accuracy. Health: 🟢 coverage ≥3x quota · 🟡 2–3x · 🟠 1–2x · 🔴 <1x.",
+    "zh": "计算加权管线价值：交易金额 × 阶段概率 × 分层权重。查看健康分级、What-If（赢率、阶段迁移）、指标的盈亏平衡管线和预测准确度。健康分级：🟢 覆盖 ≥3x 指标 · 🟡 2–3x · 🟠 1–2x · 🔴 <1x。",
+    "forbidden": "管线",
+    "canonical": "销售渠道",
+    "contextEN": "pipeline"
+  },
+  {
+    "key": "tools.solopreneur-pipeline-coverage-calculator.title",
+    "en": "Pipeline Coverage Calculator",
+    "zh": "管线覆盖率计算器",
+    "forbidden": "管线",
+    "canonical": "销售渠道",
+    "contextEN": "pipeline"
+  },
+  {
+    "key": "tools.solopreneur-pipeline-coverage-calculator.description",
+    "en": "Measure pipeline coverage: open pipeline value / remaining quota. See health bands, what-if (win rate, ACV), break-even coverage for forecast confidence, and gap to target. Health: 🟢 ≥3x · 🟡 2–3x · 🟠 1–2x · 🔴 <1x.",
+    "zh": "衡量管线覆盖率：开放管线价值 / 剩余指标。查看健康分级、What-If（赢率、ACV）、预测置信度的盈亏平衡覆盖率和与目标的差距。健康分级：🟢 ≥3x · 🟡 2–3x · 🟠 1–2x · 🔴 <1x。",
+    "forbidden": "管线",
+    "canonical": "销售渠道",
+    "contextEN": "pipeline"
+  },
+  {
+    "key": "tools.solopreneur-remote-vs-office-calculator.faq.3.a",
+    "en": "Research is mixed. Stanford study (Bloom 2015) showed 13% productivity increase for remote workers. Microsoft and Slack surveys show 35-50% of employees prefer hybrid. Recent 2023-2024 data suggests: (1) early-career employees are 10-20% less productive remote (need mentorship), (2) senior employees are 5-10% more productive remote (fewer distractions), (3) collaboration-heavy roles suffer 5-15% productivity loss. Most companies settle on hybrid (2-3 days in office) as the optimal balance — captures remote savings while preserving in-person collaboration.",
+    "zh": "研究结论是混合的。斯坦福研究（Bloom 2015）显示远程办公生产力提升 13%。Microsoft 和 Slack 的调查表明 35-50% 的员工偏好混合模式。2023-2024 年的最新数据表明：(1) 早期职业员工远程办公生产力低 10-20%（需要导师辅导），(2) 资深员工远程办公生产力高 5-10%（干扰更少），(3) 协作密集型岗位生产力损失 5-15%。大多数公司最终选择混合模式（每周 2-3 天到办公室）作为最优平衡——既保留远程的成本节省，又维持面对面协作。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "sync.menu.confirmDelete",
+    "en": "Delete all synced data from Supabase? Your local data will be kept.",
+    "zh": "确定删除 Supabase 上的所有同步数据？本地数据将保留。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  }
+]

@@ -1,0 +1,23 @@
+[
+  { "key": "category.D.guide.2.title", "forbidden": "保留", "canonical": "留存" },
+  { "key": "category.S.desc", "forbidden": "管线", "canonical": "销售渠道" },
+  { "key": "category.H.desc", "forbidden": "爬坡时间", "canonical": "磨合期" },
+  { "key": "tools.solopreneur-mrr-calculator.faq.1.a", "forbidden": "保留", "canonical": "留存" },
+  { "key": "tools.solopreneur-stockout-cost-calculator.description", "forbidden": "客户流失", "canonical": "流失" },
+  { "key": "tools.solopreneur-nrr-calculator.faq.0.a", "forbidden": "保留", "canonical": "留存" },
+  { "key": "tools.solopreneur-grr-calculator.faq.0.a", "forbidden": "保留", "canonical": "留存" },
+  { "key": "tools.solopreneur-logo-churn-rate-calculator.how_to_use.2", "forbidden": "客户流失", "canonical": "流失" },
+  { "key": "tools.solopreneur-time-to-productivity-calculator.description", "forbidden": "爬坡时间", "canonical": "磨合期" },
+  { "key": "tools.solopreneur-comp-banding-calculator.how_to_use.4", "forbidden": "保留", "canonical": "留存" },
+  { "key": "tools.solopreneur-equity-refresh-calculator.faq.0.a", "forbidden": "保留", "canonical": "留存" },
+  { "key": "tools.solopreneur-equity-refresh-calculator.faq.3.a", "forbidden": "保留", "canonical": "留存" },
+  { "key": "tools.solopreneur-kb-coverage-rate-calculator.faq.5.a", "forbidden": "时效性", "canonical": "文章新鲜度" },
+  { "key": "tools.solopreneur-article-freshness-calculator.faq.0.q", "forbidden": "时效性", "canonical": "文章新鲜度" },
+  { "key": "tools.solopreneur-documentation-roi-calculator.faq.4.a", "forbidden": "时效性", "canonical": "文章新鲜度" },
+  { "key": "tools.solopreneur-dpa-cost-calculator.faq.4.a", "forbidden": "管线", "canonical": "销售渠道" },
+  { "key": "tools.solopreneur-breach-notification-cost-calculator.faq.4.a", "forbidden": "客户流失", "canonical": "流失" },
+  { "key": "tools.solopreneur-pipeline-value-calculator.title", "forbidden": "管线", "canonical": "销售渠道" },
+  { "key": "tools.solopreneur-pipeline-value-calculator.description", "forbidden": "管线", "canonical": "销售渠道" },
+  { "key": "tools.solopreneur-pipeline-coverage-calculator.title", "forbidden": "管线", "canonical": "销售渠道" },
+  { "key": "tools.solopreneur-pipeline-coverage-calculator.description", "forbidden": "管线", "canonical": "销售渠道" }
+]

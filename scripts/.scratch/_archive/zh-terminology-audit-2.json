@@ -1,0 +1,106 @@
+[
+  {
+    "key": "category.A.faq.q3.q",
+    "en": "What is the difference between logo churn and revenue churn?",
+    "zh": "客户流失率（Logo Churn）和收入流失率（Revenue Churn）的区别是什么？",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "category.A.faq.q3.a",
+    "en": "Logo churn counts customers lost; revenue churn measures MRR lost. High logo churn with low revenue churn means your small customers are leaving while big ones stay.",
+    "zh": "客户流失率统计流失的客户数；收入流失率衡量损失的 MRR。高客户流失伴随低收入流失意味着小客户在离开而大客户在留下。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "category.A.guide.3.desc",
+    "en": "How to read attribution analysis to find the real driver behind customer loss.",
+    "zh": "如何阅读归因分析找到客户流失背后的真正驱动因素。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-saas-pricing-planner.faq.4.a",
+    "en": "Raise prices when your product has significantly more value than at launch, or when demand outpaces your capacity. Grandfather existing customers to avoid churn.",
+    "zh": "当你的产品价值比发布时显著增加，或者需求超过你的服务能力时提价。给老客户保留旧价格以避免流失。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.description",
+    "en": "Analyze customer churn: monthly and annual rates, revenue impact, customer lifetime, and how reducing churn saves you money.",
+    "zh": "分析客户流失：月度和年度流失率、收入影响、客户生命周期，以及降低流失率能省多少钱。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.faq.1.q",
+    "en": "What is the difference between customer churn and revenue churn?",
+    "zh": "客户流失和收入流失有什么区别？",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.faq.1.a",
+    "en": "Customer churn measures the percentage of customers who leave. Revenue churn measures the percentage of revenue lost. Revenue churn can be higher if high-paying customers leave, or lower if only low-tier customers churn. Track both — they tell different stories.",
+    "zh": "客户流失衡量离开客户的比例，收入流失衡量损失的营收比例。高付费客户走了收入流失会更高，只有低价客户流失则更低。两者都要追踪——它们揭示不同的问题。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-churn-rate-calculator.faq.6.a",
+    "en": "Track both from day one. Logo churn tells you if your product is sticky; revenue churn tells you if your business is healthy. A startup with 5% logo churn but 120% NRR (from expansion) may still be growing revenue. Conversely, 2% logo churn with 95% NRR means you are slowly shrinking despite loyal customers. Use both metrics together for a complete picture.",
+    "zh": "从第一天起就两个都追踪。客户数流失告诉你产品是否有黏性；收入流失告诉你业务是否健康。一家月客户流失 5% 但 NRR 达 120%（来自扩展收入）的初创公司，收入仍可能在增长。反过来，月客户流失 2% 但 NRR 只有 95%，意味着即便客户忠诚，业务也在缓慢萎缩。两个指标一起用才能看到全貌。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-deepseek-api-cost-calculator.faq.6.a",
+    "en": "DeepSeek hosts all models in US data centers with enterprise-grade security. For regulated industries, check data residency requirements. Many enterprises use DeepSeek for cost-sensitive workloads while keeping OpenAI/Claude for sensitive data. Always review the latest privacy policy for your use case.",
+    "zh": "DeepSeek 所有模型托管在美国数据中心，采用企业级安全标准。受监管行业请检查数据驻留要求。许多企业将 DeepSeek 用于成本敏感的工作负载，同时保留 OpenAI/Claude 处理敏感数据。请务必查看最新的隐私政策。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "tools.solopreneur-stockout-cost-calculator.how_to_use.2",
+    "en": "Enter your customer loss rate (% who defect forever; 30–60% is typical).",
+    "zh": "输入客户流失率(% 永久流失,通常 30%-60%)。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-logo-churn-rate-calculator.faq.0.a",
+    "en": "Logo churn rate is the percentage of customers (logos) lost during a period, regardless of revenue. It is the count-based complement to GRR (revenue-based). Logo churn and GRR diverge when customers at different price tiers churn at different rates.",
+    "zh": "Logo 流失率是周期内流失的客户（Logo）数量占客户总数的百分比，与金额无关。它是 GRR（按金额计）的客户数补充。Logo 流失与 GRR 在不同价位客户流失率不同时会背离。",
+    "forbidden": "客户流失",
+    "canonical": "流失",
+    "contextEN": "churn"
+  },
+  {
+    "key": "tools.solopreneur-remote-vs-office-calculator.faq.3.a",
+    "en": "Research is mixed. Stanford study (Bloom 2015) showed 13% productivity increase for remote workers. Microsoft and Slack surveys show 35-50% of employees prefer hybrid. Recent 2023-2024 data suggests: (1) early-career employees are 10-20% less productive remote (need mentorship), (2) senior employees are 5-10% more productive remote (fewer distractions), (3) collaboration-heavy roles suffer 5-15% productivity loss. Most companies settle on hybrid (2-3 days in office) as the optimal balance — captures remote savings while preserving in-person collaboration.",
+    "zh": "研究结论是混合的。斯坦福研究（Bloom 2015）显示远程办公生产力提升 13%。Microsoft 和 Slack 的调查表明 35-50% 的员工偏好混合模式。2023-2024 年的最新数据表明：(1) 早期职业员工远程办公生产力低 10-20%（需要导师辅导），(2) 资深员工远程办公生产力高 5-10%（干扰更少），(3) 协作密集型岗位生产力损失 5-15%。大多数公司最终选择混合模式（每周 2-3 天到办公室）作为最优平衡——既保留远程的成本节省，又维持面对面协作。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  },
+  {
+    "key": "sync.menu.confirmDelete",
+    "en": "Delete all synced data from Supabase? Your local data will be kept.",
+    "zh": "确定删除 Supabase 上的所有同步数据？本地数据将保留。",
+    "forbidden": "保留",
+    "canonical": "留存",
+    "contextEN": "retention"
+  }
+]
