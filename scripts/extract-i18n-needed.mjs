@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Extract all needed i18n keys + their EN values from source data.
- * Output: scripts/.scratch/i18n-needed.json (gitignored scratch)
+ * Output: scripts/.scratch/_archive/i18n-needed.json (preserved audit trail)
  *
  * Scope: category.{X}.name|desc + tools.{slug}.title|description
  *        + tools.{slug}.input.{name}.label|placeholder
@@ -231,9 +231,10 @@ for (const tool of out.tools) {
 }
 
 // Write output
-const scratchDir = resolve(root, 'scripts/.scratch');
-mkdirSync(scratchDir, { recursive: true });
-const outPath = resolve(scratchDir, 'i18n-needed.json');
+// P20-1: write to _archive/ to match check-i18n-completeness.mjs read path.
+const archiveDir = resolve(root, 'scripts/.scratch/_archive');
+mkdirSync(archiveDir, { recursive: true });
+const outPath = resolve(archiveDir, 'i18n-needed.json');
 writeFileSync(outPath, JSON.stringify(out, null, 2));
 
 // Stats

@@ -145,12 +145,13 @@ REQUIRED_KEYS.dynamic_tools = toolKeys;
 const src = readFileSync(translationsPath, 'utf-8');
 
 // Read extract output (if exists)
-const extractPath = resolve(root, 'scripts/.scratch/i18n-needed.json');
+// P20-1: extract output moved to _archive/ by P19-2; this path must match.
+const extractPath = resolve(root, 'scripts/.scratch/_archive/i18n-needed.json');
 let extractData = null;
 try {
   extractData = JSON.parse(readFileSync(extractPath, 'utf-8'));
 } catch {
-  console.warn('⚠️  scripts/.scratch/i18n-needed.json not found — run `node scripts/extract-i18n-needed.mjs` first');
+  console.warn('⚠️  scripts/.scratch/_archive/i18n-needed.json not found — run `node scripts/extract-i18n-needed.mjs` first');
 }
 
 // Scan engines for engineKey=true flag
