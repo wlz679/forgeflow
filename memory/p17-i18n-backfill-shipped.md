@@ -166,7 +166,6 @@ Added to `memory/MEMORY.md` (in-repo + Claude-side mirror) P17 pointer.
 - `src/core/engines/types.ts` (+5 lines: `engineKey?: boolean` field)
 - `scripts/check-i18n-completeness.mjs` (+74 lines: engineKey validation phase)
 - `scripts/extract-i18n-needed.mjs` (+121 lines: state-machine FAQ/howToUse parser)
-- `scripts/insert-translations.mjs` (NEW: simple fill-empty-zh, both quote styles)
 - `scripts/apply-translations.mjs` (NEW: comprehensive update + create new entries)
 - `src/i18n/translations.ts` (+~2300 entries, ~4000 lines total)
 - `src/engines/*/*.ts` (100 × +1 line each = `engineKey: true,`)
