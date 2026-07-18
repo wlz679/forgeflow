@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-commit hook: enforce generated-file freshness + i18n completeness.
+# Pre-commit hook: enforce generated-file freshness + i18n completeness + og-sample coverage.
 #
 # Install once after cloning:  git config core.hooksPath .githooks
 # Bypass for one commit (when intentional):  git commit --no-verify
@@ -9,6 +9,8 @@
 #      staticExamples[0] not regenerated. Run `scripts/codegen-examples.mjs`.
 #   2. i18n completeness — new engines/categories without title/desc/name translations.
 #      Run `scripts/check-i18n-completeness.mjs` to inspect.
+#   3. og-sample coverage — every tool in src/data/tools/ must have a matching
+#      entry in src/data/og-samples.json. P23.
 
 set -e
 
@@ -34,6 +36,19 @@ if echo "$STAGED" | grep -qE '^(src/i18n/translations\.ts|src/data/(categories|t
     echo "[pre-commit] BLOCKED: missing i18n keys for engine or category titles/descriptions."
     echo "  Fix: add tools.{slug}.{title,description} or category.{X}.{name,desc} entries"
     echo "        to src/i18n/translations.ts."
+    echo "  Bypass (not recommended): \`git commit --no-verify\`"
+    exit 1
+  fi
+fi
+
+# 3. og-sample coverage — every tool needs an og-sample (P23).
+if echo "$STAGED" | grep -qE '^(src/data/(tools|og-samples\.json)|scripts/check-og-samples-coverage\.mjs|scripts/build-og-images\.ts)$'; then
+  echo "[pre-commit] Running scripts/check-og-samples-coverage.mjs..."
+  if ! pnpm exec tsx scripts/check-og-samples-coverage.mjs; then
+    echo ""
+    echo "[pre-commit] BLOCKED: og-sample coverage mismatch."
+    echo "  Fix: add missing entries to src/data/og-samples.json"
+    echo "        or remove stale tools from src/data/tools/."
     echo "  Bypass (not recommended): \`git commit --no-verify\`"
     exit 1
   fi

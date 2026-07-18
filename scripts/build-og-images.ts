@@ -147,7 +147,7 @@ async function renderOne(slug: string, lang: Lang, graphemeImages: Record<string
   if (!cat) throw new Error(`Unknown category for ${slug}: ${tool.categoryId}`);
 
   const sample = ogSamples[slug];
-  if (!sample) throw new Error(`Missing og-sample for ${slug}`);
+  if (!sample) throw new Error(`Missing og-sample for ${slug} (unexpected — see upfront report above)`);
 
   // Translated tool title (no async - we use English-only here; og-samples already bilingual
   // for headline. The tool title is read from tools.ts which is English-only in data;
@@ -220,6 +220,24 @@ async function main() {
   }
 
   assertEmojiSet();
+
+  // P23: collect ALL missing og-samples upfront, then throw once. The old
+  // per-render check short-circuited at the first missing slug and hid
+  // subsequent ones behind it — cart-abandonment stayed invisible because
+  // coupon-attribution threw first. Pre-flight passes the FULL list so the
+  // operator can fix everything in one edit.
+  {
+    const preflight = buildTargets();
+    const missingOgSamples = [...new Set(preflight.map(t => t.slug).filter(s => !ogSamples[s]))];
+    if (missingOgSamples.length > 0) {
+      throw new Error(
+        `Missing ${missingOgSamples.length} og-sample entries in src/data/og-samples.json:\n` +
+        missingOgSamples.map(s => `  - ${s}`).join('\n') +
+        `\nAdd entries to src/data/og-samples.json.`
+      );
+    }
+  }
+
   mkdirSync(OUT_DIR, { recursive: true });
   console.log('Fetching Twemoji grapheme images...');
   const graphemeImages = await buildGraphemeImages();

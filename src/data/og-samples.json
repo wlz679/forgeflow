@@ -1470,5 +1470,33 @@
       "en": "If DSAR climbs to 200/mo → €213.6K net, 1483.3% ROI (🟢 Excellent)",
       "zh": "DSAR 增至 200/月 → €21.36万净,1483.3% ROI (🟢 优秀)"
     }
+  },
+  "solopreneur-cart-abandonment-cost-calculator": {
+    "headline": {
+      "en": "Cart Abandonment Cost Calculator",
+      "zh": "购物车放弃成本计算器"
+    },
+    "headlineUnit": {
+      "en": "lost revenue / mo",
+      "zh": "月度流失营收"
+    },
+    "headlineLabel": {
+      "en": "from X% abandonment",
+      "zh": "X% 放弃率"
+    }
+  },
+  "solopreneur-coupon-attribution-calculator": {
+    "headline": {
+      "en": "Coupon Attribution Calculator",
+      "zh": "优惠券归因计算器"
+    },
+    "headlineUnit": {
+      "en": "attributed revenue / mo",
+      "zh": "月度归因营收"
+    },
+    "headlineLabel": {
+      "en": "from $X spend",
+      "zh": "$X 投入"
+    }
   }
 }
