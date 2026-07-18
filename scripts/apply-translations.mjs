@@ -8,11 +8,13 @@
  * Usage: node scripts/apply-translations.mjs <json-file>
  * JSON format: { "tools.{slug}.{input|faq|how_to_use}.{...}": "<ZH text>", ... }
  *
- * Supersedes insert-translations.mjs (which only handles update-existing). Use this
- * for any batch that creates new keys.
+ * Supersedes the retired insert-translations.mjs (P17b-era; that script only
+ * filled empty zh fields; this one updates existing entries AND creates new ones).
+ * Use this for any batch that needs to create new keys.
  *
  * P17b-4 promotion: was scripts/.scratch/apply-translations.mjs (Task 3+4 subagent
  * POC). Promoted to canonical because Tasks 4-7 all need to create new entries.
+ * P18-1: zh-value replacer refactored to use state-machine parser via lib/zh-parser.mjs.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
