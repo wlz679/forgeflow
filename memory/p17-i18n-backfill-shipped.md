@@ -377,3 +377,49 @@ Spec: `docs/superpowers/specs/2026-07-18-p20-i18n-tooling-polish-design.md` (des
 - `tests/scripts/test-apply-translations-zh-parser.mjs` could grow more edge-case fixtures (mixed quote styles, multi-line zh, escape sequence edge cases). 6 fixtures cover the P17b-corruption pattern + strict-truncation regression guard; sufficient for current usage.
 - `scripts/lib/` only has `zh-parser.mjs`. Future i18n utilities (e.g., a `translations-key-validator.mjs`) could share this lib directory.
 - Two-parser alias (`parseStringLiteralSmart`) is preserved for back-compat but is now just a 1-line wrapper. Could be deprecated in a future major version bump if all callers migrate to `{ tolerant: true }` parameter syntax.
+
+---
+
+## P21 Tech Debt Cleanup (shipped 2026-07-18)
+
+### Outcome
+
+| Metric | Value |
+|---|---|
+| **Commits** | spec `7de4870` + plan `8843721` + 3 task commits + 1 memory = 6 commits total |
+| **Tasks** | 3/3 INLINE (no subagent; each task ≤10 tool calls) |
+| **Spec → Plan → Ship** | spec `7de4870` → plan `8843721` → ship `b68ae2a` (pre-amend; amended commit trails in reflog) |
+| **Tests** | 6/6 → **8/8 pass** (added 2 边缘 fixtures: backslash escape + empty zh) |
+| **Files modified** | 1: `tests/scripts/test-apply-translations-zh-parser.mjs` (+7 ins P21-1 +16 ins P21-3) + 1: `scripts/.scratch/_archive/README.md` (rewrite 3→35 lines) |
+| **3-way sync** | gitee (origin) + github both at `<POST-AMEND>`; rev-list `0	0` pre/post ✓ |
+
+### Task chain
+
+```
+`b68ae2a` (pre-amend) → `<POST-AMEND>`  docs(p21): P21 Tech Debt Cleanup shipped — 3 housekeeping tasks
+8d629d4  test(parser): P21-3 — add 2 edge-case fixtures (backslash escape + empty zh); 8/8 pass
+9d78559  chore(scratch): P21-2 — README护营 with provenance, per-file status table, cleanup gating rules
+33b0338  chore(tests): P21-1 — suppress TS6133 false positive on node:test + parseStringLiteral imports
+8843721  docs(plan): P21 Tech Debt Cleanup implementation plan — 4 INLINE tasks
+7de4870  docs(spec): P21 Tech Debt Cleanup design — 3-task narrow batch
+d75478e  docs(p20): P20 i18n Tooling Polish shipped — 3 housekeeping commits
+```
+
+### 4 lessons
+
+1. **`// @ts-expect-error` is the right surgical tool for node:test false positives** — adding it to the 2 specific imports (line 5 `test` + line 7 `parseStringLiteral`) is the minimum-impact fix. The annotation syntax requires a NEXT line of expected error, so placing it on the `import` line works perfectly. eslint config + project-wide no-unused-vars override would be cleaner but is a P22+ scope (10+ file project-wide change). The 5-line comment block per import (3 explanation lines + 1 `@ts-expect-error` line + the import itself) is intentionally verbose — future readers need context on why this is "unused but deliberate."
+
+2. **README护营 gives 80% safety at 5% cost** — replacing 3 vague lines with a 7-row status table + 3-condition cleanup gate gives future maintainers enough signal to NOT accidentally delete the directory. Per-file deep content audit is P22+ territory. Cross-check at execute time (Step 5 of P21-2: `grep -rn "_archive" scripts/`) caught that the spec's "4 consumers" claim was inaccurate — actual readers of `_archive/` are only 2 scripts (`extract-i18n-needed.mjs` writes + `check-i18n-completeness.mjs` reads). The other 2 named scripts (`apply-translations.mjs` + `fix-zh-terminology.mjs`) read `translations.ts` directly via the state-machine parser, not `_archive/`. The README was rewritten with accurate "2 active consumers" instead.
+
+3. **Fixture extension BEFORE any refactor** — adding fixtures 7 (backslash escape) and 8 (empty zh) at the current state-machine implementation locks in current behavior. Both pass 8/8 against the current P20-3 parser, confirming both cases are already handled correctly by the state-machine loop. If P22+ refactors the parser, these fixtures guarantee back-compat. Same TDD discipline as P20-3 byte-identical regeneration (P20 lesson #3 in this file).
+
+4. **INLINE execution beats subagent when ≤10 tool calls per task** — 5 P19/P21 INLINE cases (P19-3 / P19-4 / P19-5 / P20-4 / P21 full batch) all shipped without a review loop. The P21 plan was debated upfront with the user via 2 rounds of AskUserQuestion (scope → boundary) before write-plans, capturing decisions that would otherwise have required multiple review-roundtrips. Pre-implementation design alignment was the substitute for subagent spec-review.
+
+### P22+ candidates (deferred from P21)
+
+1. **`docs/superpowers/specs/INDEX.md`** — 37 spec files need a discovery index. ~50 lines + content audit of which specs are stable vs WIP. Specs span 2026-06-23 (i18n-drift-fix) through 2026-07-18 (P21 design) = 26 days of spec history.
+2. **`scripts/.scratch/` deep content audit** — per-file "would re-running X corrupt state?" verification. 7 files × 1 task each = 7+ tasks; not narrow enough for current batch.
+3. **`scripts/lib/` extraction rules** — `extract-i18n-needed.mjs` has FAQ/howToUse parsing blocks (lines 158-188) that could move to `scripts/lib/zh-parser.mjs` or a sibling `faq-parser.mjs`. Out of current scope.
+4. **`parseStringLiteralSmart` deprecation marker** — `/** @deprecated since 2026-07-18; use parseStringLiteral(c, i, { tolerant: true }) */` JSDoc on the alias exported from `scripts/lib/zh-parser.mjs:44`. Single-line touch but only worth doing once a major version bump is contemplated.
+5. **`eslint` setup** — project currently has no eslint config. The TS6133 disable in P21-1 would be cleaner as a project-wide no-unused-vars override. Adding eslint touches 5+ config files (`.eslintrc.json`, `.eslintignore`, package.json scripts, devDependencies, possibly CI).
+6. **`docs/superpowers/plans/` content audits** — P8/P14 plans were written before `.gitignore:docs/` was removed (P19-3); their concrete claims (line counts, byte sizes) may have drifted. Future batches may revisit content accuracy as a low-priority housekeeping item.
