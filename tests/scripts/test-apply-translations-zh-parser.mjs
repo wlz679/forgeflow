@@ -42,6 +42,22 @@ const fixtures = [
     newZh: '替换后的 zh',
     expectContains: `zh: '替换后的 zh'`,
   },
+  // P21-3 Fixture 7: backslash escape inside zh value (regression guard for the P18-1 UPDATE-regex sibling pattern).
+  {
+    name: 'backslash escape inside zh (raw string boundary case)',
+    input: `  'tools.x.input.path': { en: 'path', zh: 'C:\\\\Users\\\\public' },`,
+    key: 'tools.x.input.path',
+    newZh: 'D:\\Work\\new',
+    expectContains: `zh: 'D:\\\\Work\\\\new'`,
+  },
+  // P21-3 Fixture 8: empty zh value (off-by-one boundary case for the P20-3 state-machine).
+  {
+    name: 'empty zh value handling',
+    input: `  'tools.x.input.empty': { en: '', zh: '' },`,
+    key: 'tools.x.input.empty',
+    newZh: '新空值',
+    expectContains: `zh: '新空值'`,
+  },
 ];
 
 describe('replaceZhValue state-machine parser (P18-1)', () => {
