@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { EXPECTED_ENGINE_COUNT } from './lib/engine-count.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 
@@ -48,15 +49,15 @@ test('tools/index.ts uses import.meta.glob', () => {
   assert.match(content, /import\.meta\.glob/, 'tools/index.ts should use import.meta.glob');
 });
 
-test('getAllEngines() returns 100 engines after import', async () => {
+test(`getAllEngines() returns ${EXPECTED_ENGINE_COUNT} engines after import`, async () => {
   await import('../src/engines/index.ts');
   const { getAllEngines } = await import('../src/core/engines/registry.ts');
-  assert.equal(getAllEngines().length, 100);
+  assert.equal(getAllEngines().length, EXPECTED_ENGINE_COUNT);
 });
 
-test('aggregated tools array has 100 entries', async () => {
+test(`aggregated tools array has ${EXPECTED_ENGINE_COUNT} entries`, async () => {
   const { tools } = await import('../src/data/tools/index.ts');
-  assert.equal(tools.length, 100);
+  assert.equal(tools.length, EXPECTED_ENGINE_COUNT);
 });
 
 test('4 consumer import paths are unchanged', () => {
