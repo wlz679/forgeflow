@@ -1,11 +1,22 @@
 ---
-date: 2026-07-16
+date: 2026-07-16/17/18
 type: i18n-backfill-batch
 commits:
   - 260c46c fix(i18n): backfill 155 missing category + tool title/description keys
   - 6b1dd49 feat(i18n): input label mechanical pass + extend completeness check + precommit wiring
+  - 1a86ce9 feat(i18n): P17b tooling — engineKey marker + engine-level completeness check + insert helper
+  - 2932464 fix(i18n): P17b tooling — accept double-quoted slugs + improve engine resolver
+  - 082c168 feat(i18n): P17b AI Cost engines — 8 engines fully translated + engineKey=true
+  - c58f4e4 feat(i18n): P17b Valuation engines — 13 engines fully translated + engineKey=true
+  - fd416c3 fix(i18n): P17b tooling — state-machine FAQ/howToUse parser + double-quote zh insert
+  - 292d097 feat(i18n): P17b Legacy mix engines — 17 engines fully translated + engineKey=true
+  - 9f64a88 feat(i18n): P17b — promote apply-translations.mjs to canonical (handles new entries)
+  - 18de684 feat(i18n): P17b Marketing/Sales/Operations engines — 20 engines fully translated
+  - 3d1c5f5 feat(i18n): P17b ProductAnalytics/Retention/CustomerSupport/Knowledge engines — 24 engines
+  - 70995d7 fix(i18n): P17b Task 6 - repair 5 corrupted zh values from apply-translations regex
+  - fb0daa5 feat(i18n): P17b Hiring/Legal/RealEstate engines — 18 engines fully translated
 trigger: user-feedback (report showing raw i18n keys on home page)
-status: shipped-partial (core bug fixed, ~1400 followup keys deferred)
+status: shipped-complete (engine-level i18n 100/100)
 ---
 
 # P17 i18n Backfill Batch — Shipped (partial)
@@ -102,3 +113,74 @@ if (!entry) return key;
 ## MEMORY.md Index Update
 
 Added to `memory/MEMORY.md` (in-repo + Claude-side mirror) P17 pointer.
+
+---
+
+## P17b — Engine-Level Completion (2026-07-16/17/18)
+
+### Outcome
+
+| Metric | Value |
+|---|---|
+| **engines marked engineKey=true** | 100/100 |
+| **net keys added (P17b)** | ~2300 ZH translations (input labels, placeholders, FAQ q+a, how_to_use) |
+| **tooling added** | `engineKey?: boolean` marker, `scripts/insert-translations.mjs`, `scripts/apply-translations.mjs` (promoted), state-machine FAQ/howToUse parser |
+| **build** | 313 pages, 0 errors |
+| **gate** | `check-i18n-completeness.mjs` PASS — `+ 100 engineKey=true engines fully translated` |
+| **raw key invariant** | `dist/{en,zh}/index.html` raw-key count = 0 / 0 |
+
+### Commits by batch (Tasks 1-7)
+
+- **Task 1 (`1a86ce9`)** — Tooling: added `engineKey?: boolean` to `ToolEngine`; extended `check-i18n-completeness.mjs` to validate engine-level keys + read engineKey flag; created `scripts/insert-translations.mjs`.
+- **Tooling fix (`2932464`)** — Accept double-quoted slugs in check script; fallback resolver for engine file vs slug mismatches (e.g., `ai-image-cost-calculator` slug ↔ `ai-image-generation-cost-calculator.ts` file).
+- **Task 2 (`082c168`)** — AI Cost 8 engines marked. Hybrid pre-flight pattern discovered: P17 batch pre-populated ~164 keys → insert was no-op, marker added directly.
+- **Task 3 (`c58f4e4`)** — Valuation 13 engines. Implementer manually handled 30 missing FAQ keys + 17 placeholder updates due to extract bug (state-machine parser not yet shipped).
+- **Tooling fix (`fd416c3`)** — Replaced fragile FAQ regex with **bracket-balanced + string-literal state-machine parser**. Promoted from `scripts/.scratch/extract-faqs.mjs` (Task 3 subagent POC). Fixed `insert-translations.mjs` to handle double-quoted zh values. Stats: 870 → 1082 FAQ q+a keys (+212).
+- **Task 4 (`292d097`)** — Legacy mix 17 engines (saas + cost + freelance + investment). 67 new ZH entries. Used scratch `apply-translations.mjs` (handle-new-entries superset of insert-translations.mjs).
+- **Tooling fix (`9f64a88`)** — Promoted `scripts/.scratch/apply-translations.mjs` → canonical `scripts/apply-translations.mjs`. Tasks 5-7 use this for new entries.
+- **Task 5 (`18de684`)** — Marketing + Sales + Operations 20 engines. 507 new ZH translations. Implementer interrupted mid-task (session restart); orchestrator verified state + committed.
+- **Task 6 (`3d1c5f5`)** — Product Analytics + Retention + Customer Support + Knowledge 24 engines. 487 ZH entries. Subagent API timeout → orchestrator dispatched focused JSON-generation subagent + ran `apply-translations.mjs` + `engineKey` markers inline.
+- **Tooling fix (`70995d7`)** — Repaired 5 corrupted zh values in `translations.ts` (apply-translations.mjs UPDATE regex matched only up to first `'` when original zh had embedded apostrophes — bug from P17 batch P17-style zh values).
+- **Task 7 (`fb0daa5`)** — Hiring + Legal + Real Estate 18 engines. 517 ZH entries. Clean run (no corruption this batch).
+
+### Lessons Consolidated
+
+1. **engineKey opt-in marker is the right pattern.** Forward-compatible: legacy engines default to NOT set (no false positives); new engines SHOULD set after translating. P17b sets 100/100 → enforced completeness. Future batches add `engineKey: true` only after all keys translated.
+
+2. **State-machine parsers >> regex for structured text extraction.** The original FAQ regex `\{\s*q:\s*'((?:[^'\\]|\\.)*)'\s*,\s*a:\s*'((?:[^'\\]|\\.)*)'\s*\}` failed on 19/100 engines that used double quotes for FAQ entries. The state-machine parser (bracket-balanced + parseStringLiteral) extracted 100% of FAQ entries correctly. **Lesson: when regex has more than one escape mode (single quote + double quote + escape), prefer state-machine.**
+
+3. **`apply-translations.mjs` has a latent UPDATE-regex bug** that corrupts lines when the original zh value contains embedded apostrophes. Affects lines where P17 batch wrote `zh: '...对 '$10M-$50M...'` (unescaped `'`). The `[^']*` regex matches only up to the first `'`, the replace leaves dangling suffix, and the resulting line fails JS parse. **Fix is a state-machine parser for zh values** (deferred to P18 follow-up). P17b works around with manual repair scripts when corruption detected.
+
+4. **Hybrid pre-flight pattern works well for partially-populated translation files.** Pattern: (1) read extract JSON to get expected keys per engine; (2) count actual keys in translations.ts via `grep -c`; (3) if expected == actual → skip insert; if gap → translate missing only; (4) if actual > expected → investigate. This avoids re-translating already-populated entries (P17 batch pre-populated many).
+
+5. **Subagent API timeouts are real for translation work.** Tasks 5 + 6 hit timeouts. Mitigation: dispatch **focused JSON-generation subagents** (one task, ≤500 keys, save to .scratch/). Orchestrator runs `apply-translations.mjs` + verification inline. Pattern: orchestrator + subagent division of labor avoids both timeout AND scope risk.
+
+6. **`apply-translations.mjs` was promoted from `scripts/.scratch/` mid-batch** (Task 4 → 9f64a88). Tasks 4-7 needed it because insert-translations.mjs only handles fill-empty-zh (not create-new-entries). Keep scratch + canonical directories clean: scratch is subagent workspace, canonical is shipped tooling.
+
+7. **`engineKey=true` flag placement convention**: as the LAST field of the engine object literal, after `dataLastUpdated` (if present) or after `slug`. All 100 engines follow this pattern.
+
+8. **Build failures from corrupted translations.ts must be caught early.** Vite/esbuild errors with line:col are precise (e.g., `translations.ts:1684:368`); immediately inspect that line. Pattern: grep for lines with multiple `'tools.` references (corruption signature).
+
+### Files
+
+- `src/core/engines/types.ts` (+5 lines: `engineKey?: boolean` field)
+- `scripts/check-i18n-completeness.mjs` (+74 lines: engineKey validation phase)
+- `scripts/extract-i18n-needed.mjs` (+121 lines: state-machine FAQ/howToUse parser)
+- `scripts/insert-translations.mjs` (NEW: simple fill-empty-zh, both quote styles)
+- `scripts/apply-translations.mjs` (NEW: comprehensive update + create new entries)
+- `src/i18n/translations.ts` (+~2300 entries, ~4000 lines total)
+- `src/engines/*/*.ts` (100 × +1 line each = `engineKey: true,`)
+
+### Final Stats
+
+- **100/100 engines** with `engineKey: true`
+- **411 base + 230 dynamic + 100 engineKey** validation keys
+- **313 pages** built, **0 raw keys** in dist/{en,zh}/index.html
+- **8 batch commits** (Tasks 1-7) + **3 tooling/fix commits** (2932464, fd416c3, 9f64a88) + **1 corruption fix** (70995d7) = **12 commits** total
+
+### P18 Followups
+
+1. **`apply-translations.mjs` state-machine parser for zh values** — fix the latent UPDATE bug that corrupts lines with embedded apostrophes.
+2. **`scripts/insert-translations.mjs` cleaning** — superseded by `apply-translations.mjs`; consider deprecation or merge.
+3. **ZH terminology consistency audit** — Task 5 reviewer flagged pipeline/管线混用, cohort/同期群, etc. Cross-batch audit script.
+4. **Real-estate engines** have no category letter (R is Retention per P9 reassignment). Separate treatment in P17b was correct but unresolved at category level.
