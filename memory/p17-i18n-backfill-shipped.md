@@ -423,3 +423,45 @@ d75478e  docs(p20): P20 i18n Tooling Polish shipped — 3 housekeeping commits
 4. **`parseStringLiteralSmart` deprecation marker** — `/** @deprecated since 2026-07-18; use parseStringLiteral(c, i, { tolerant: true }) */` JSDoc on the alias exported from `scripts/lib/zh-parser.mjs:44`. Single-line touch but only worth doing once a major version bump is contemplated.
 5. **`eslint` setup** — project currently has no eslint config. The TS6133 disable in P21-1 would be cleaner as a project-wide no-unused-vars override. Adding eslint touches 5+ config files (`.eslintrc.json`, `.eslintignore`, package.json scripts, devDependencies, possibly CI).
 6. **`docs/superpowers/plans/` content audits** — P8/P14 plans were written before `.gitignore:docs/` was removed (P19-3); their concrete claims (line counts, byte sizes) may have drifted. Future batches may revisit content accuracy as a low-priority housekeeping item.
+
+---
+
+## P22 Stale Count Cleanup (shipped 2026-07-18)
+
+### Outcome
+
+| Metric | Value |
+|---|---|
+| **Commits** | spec `6288871` + plan `2cb0276` + fix `2e2e8f2` + memory `1625686` (pre-amend; amended commit trails in reflog) |
+| **Tasks** | 1 fix task (MECHANICAL, 6 line edits in 2 files = 3 test name + 3 assertion body updates) |
+| **Pre-flight investigation** | Identified 13 fails total: 3 stale 98→100 count + 10 env-dependent (Clerk/Supabase auth setup required). P22 scope limited to 3 shippable trivial fixes; 10 env-dependent deferred to P23+. |
+| **Test count transition** | pass 1064 → **1067** (+3) / fail 13 → **10** (−3) / skip 19 unchanged |
+| **Files modified** | 2: `tests/ab-split.test.ts` (lines 51, 54, 57, 59) + `tests/internal-links.test.ts` (lines 6, 7) — pure literal updates 98→100, no logic change |
+| **3-way sync** | gitee + github both at `<POST-AMEND>`; rev-list `0	0` pre/post ✓ |
+
+### Task chain
+
+```
+`1625686` (pre-amend) → `<POST-AMEND>`  docs(p22): P22 Stale Count Cleanup shipped — 3 stale count assertions fixed (memory+index with <FINAL> SHA placeholder)
+2e2e8f2    test: P22-3 — update 3 stale count assertions (98→100) to match P16 milestone engine count
+2cb0276    docs(plan): P22 Stale Count Cleanup implementation plan — 2 INLINE tasks
+6288871    docs(spec): P22 Stale Count Cleanup design
+0164edb    docs(p21): P21 Tech Debt Cleanup shipped
+```
+
+### 4 lessons
+
+1. **Pre-flight scope assessment prevented scope creep.** User chose "fix all 13 fails" without realizing 10 need external Clerk/Supabase auth setup. Pre-flight at brainstorm step split the 13 fails into 2 categories: 3 trivial literal updates (P22 scope) + 10 env-dependent (P23+ scope). Saved an entire session's worth of work trying to mock Clerk/Supabase. Pattern: any "fix all tests" request should be pre-flighted for env-dep subset first.
+
+2. **Single batch commit > 3 atomic commits for trivial fixes.** The 3 stale-count changes are all logically one operation ("update engine count assertion to match locked milestone count"). 1 commit with 2 files + 6 character pairs is more bisectable than 3 separate commits — bisect works via the test names anyway. P21-3 precedent: also a single commit across 2-test-related-fixes.
+
+3. **Pre-commit gate noise during housekeeping.** `pnpm check` would fail on P22-3 locally because the 10 env-dependent tests fail (Clerk/Supabase not configured in this session). `SKIP_PRECOMMIT_CHECK=1` is the documented escape hatch per `p14-followup-cross-cutting-audit-shipped.md`. CI with real auth secrets is the authoritative gate; local-only test fail count (10) doesn't indicate real regression.
+
+4. **Engine count assertion = the test of time for shipped milestones.** P16 (`p16-100-milestone-shipped.md`) declared "engine count locked at 100, trigger events documented in spec §10". 3 days later (2026-07-15/16 → 2026-07-18), the 3 stale 98→100 asserts in test files are the ONLY residual drift from that milestone. Future P-series expansion should follow P16's pattern: update registry + update count asserts in same commit.
+
+### P23+ candidates (deferred from P22)
+
+1. **10 env-dependent Clerk/Supabase test fail hardening** — requires real `PUBLIC_CLERK_PUBLISHABLE_KEY` + `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` in `.env` or CI secrets. Affected tests: `tests/baselayout-{clerk,sync}-script.test.ts` (2 fails: 103, 104), `tests/header-clerk-render.test.ts` (3 fails: 580-582), `tests/header-sync-ui.test.ts` (3 fails: 583-585), `tests/privacy-policy-sync.test.ts` (2 fails: 766, 767). Not shippable in single session without external auth setup.
+2. **Extract `EXPECTED_ENGINE_COUNT` shared constant** — single source of truth referenced from all count assertions. YAGNI for now; revisit if P23+ adds engines.
+3. **`tests/run.mjs` skip-in-missing-env mode** — graceful degradation when `.env` lacks Clerk/Supabase keys. Different concern from P22 (test correctness vs runner ergonomics). Would let local `pnpm check` pass without auth setup.
+4. **`tests/internal-links.test.ts:19` "all 82 tools" stale invariant** — separate from P22's "all 100" fix; this asserts related-count-per-tool invariant on a stale count. Lower priority than P22; revisit if P23 surfaces.
