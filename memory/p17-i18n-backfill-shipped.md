@@ -183,3 +183,72 @@ Added to `memory/MEMORY.md` (in-repo + Claude-side mirror) P17 pointer.
 2. **`scripts/insert-translations.mjs` cleaning** — superseded by `apply-translations.mjs`; consider deprecation or merge.
 3. **ZH terminology consistency audit** — Task 5 reviewer flagged pipeline/管线混用, cohort/同期群, etc. Cross-batch audit script.
 4. **Real-estate engines** have no category letter (R is Retention per P9 reassignment). Separate treatment in P17b was correct but unresolved at category level.
+
+---
+
+## P18 i18n Tooling Hardening — Shipped 2026-07-18
+
+Plan: `docs/superpowers/plans/2026-07-18-p18-i18n-tooling-hardening.md` (4 tasks, 7 commits, baseline `6c4e16a`).
+
+### Outcome
+
+| Metric | Value |
+|---|---|
+| Commits | 7 (Tasks 1-4 + 1 orchestrator docstring fix + 1 reviewer-fix for Task 4 + 1 ZH apply commit) |
+| Diff stat | 16 files, +543 / -141 |
+| Latent i18n UPDATE bug | **FIXED** (regex `[^']*` → `parseStringLiteralSmart` state-machine via `scripts/lib/zh-parser.mjs`) |
+| `insert-translations.mjs` retired | ✅ (P17b supersede complete; orphan docstring reference fixed in `34c2b90`) |
+| ZH terminology drift | 60-row glossary + audit script + scripted fixer; 21/21 curated fixes applied; 13 false positives preserved |
+| Category F renamed | "Investment & ROI" → "Investment & Real Estate"; slug kept `investment-roi` (zero URL migration); q6/q7 added (cap-rate + mortgage FAQs) |
+| Gates | check-i18n-completeness PASS (100 engineKey=true); build 313 pages; raw-key 0/0; regression test 4/4 pass |
+| 3-way sync | gitee + github both at `6ab23e4`; rev-list `0\t0` |
+
+### Commits
+
+- `0cd3aff` — fix(i18n): P18-1 — apply-translations.mjs uses state-machine parser for zh values
+- `014abcb` — chore(i18n): P18-2 — retire superseded scripts/insert-translations.mjs
+- `34c2b90` — chore(i18n): P18-2 — fix orphan docstring reference to deleted insert-translations.mjs
+- `60c53a5` — feat(i18n): P18-3 — ZH terminology glossary + audit script + scripted fixer (audit-only commit)
+- `1bc503a` — feat(i18n): P18-3 — apply curated ZH terminology fixes (21/21 applied)
+- `e101f00` — feat(i18n): P18-4 — rename category F to 'Investment & Real Estate'
+- `6ab23e4` — chore(i18n): P18-4 fix — swap q6/q7 key order + update About page category name
+
+### Lessons Consolidated
+
+1. **State-machine parser > regex for structured string parsing.** The latent UPDATE-regex bug (`[^']*` matches up to first `'`) corrupted 5 zh entries in P17b; manual repair scripts (`fix-5-corruptions.mjs`, `fix-nrr.mjs`, `fix-corruptions.mjs`) were the workaround. P18-1 replaces with `parseStringLiteralSmart` (looks ahead past unescaped quotes to `,`/`}` boundary) — extracted to `scripts/lib/zh-parser.mjs` for testability + reuse.
+
+2. **Two-parser design is justified, not over-engineering.** `parseStringLiteral` (strict) is correct for valid JS engine source. `parseStringLiteralSmart` (tolerant) is needed for translations.ts where P17b corruption pattern leaves unescaped quotes inside zh values. Standard parser cannot recover this; smart parser is the right level. Lesson: when input may carry data corruption (not just well-formed data), dedicated tolerant parser beats generic error.
+
+3. **`scripts/insert-translations.mjs` retirement pattern.** Retiring a supersede-by tool is mechanical + 1 file delete + 1 docstring update + grep-no-live-callers. CLAUDE.md brief instructions about "remove from tooling section" can be stale (the section may not exist); implementer should verify before acting. Orchestrator caught the orphan docstring concern via implementer report, fixed inline.
+
+4. **ZH terminology audit must distinguish "term drift" from "false positive".** 34 raw findings → 21 true positives (apply canonical form) + 13 false positives (preserve original). Curator judgment required: `保留` → `留存` only when EN is "retention" semantics, NOT when EN is "keep/preserve" (`保留旧价格` = keep old price; `本地数据将保留` = local data will be kept). `客户流失` → `流失` only when EN is generic churn, NOT when EN explicitly says "customer churn" or "logo churn" (these ARE the canonical customer/logout terms).
+
+5. **Brief-internal contradictions surface during implementation, not review.** P18-4 brief Step 3 assumed q2/q3 didn't exist (wrong, q1-q5 were all there); brief's fallback clause authorized appending. Brief's q2/q3 block content was mortgage + cap-rate but brief numbered them q2/q3 in the assumption-of-blank context — when appended they became q6/q7. Implementer correctly interpreted "append" intent; reviewer caught the key-order discrepancy; fix subagent swapped to align with brief's literal "q6=cap-rate, q7=mortgage" intent.
+
+6. **Slug-vs-URL coupling in Astro file-routing is a hidden constraint.** `src/pages/[lang]/investment-roi.astro` filename = URL `/en/investment-roi/` + `/zh/investment-roi/`. Renaming `slug: 'investment-roi'` → `slug: 'investment-real-estate'` in `categories.ts` would NOT auto-rename the file; URL would silently break. Metadata-only rename requires keeping slug stable. User accepted name↔slug asymmetry as future follow-up (URL sync would need file rename + redirect).
+
+7. **Subagent watchdog timeout mitigation.** 2 of 6 subagent dispatches stalled (P18-3 Step 9 commit + P18-5 holistic review). Recovery pattern: orchestrator takes over remaining steps inline. For Task 3: most of work was on disk (3 new files + audit JSON), so orchestrator only needed to run commit + push + curator step + apply commit + dual-push. For Task 5 (final review): per-task reviewer evidence was complete (4 APPROVED verdicts), so inline self-review is sufficient.
+
+### Files
+
+- `scripts/lib/zh-parser.mjs` (NEW, 87 lines: `parseStringLiteral` + `parseStringLiteralSmart` + `replaceZhValue`)
+- `scripts/apply-translations.mjs` (-60 / restructured: UPDATE block now uses `replaceZhValue` import)
+- `scripts/audit-zh-terminology.mjs` (NEW, 54 lines: glossary-driven audit)
+- `scripts/fix-zh-terminology.mjs` (NEW, 88 lines: applies curated fixes via `replaceZhValue`)
+- `scripts/insert-translations.mjs` (DELETED, 58 lines)
+- `scripts/.scratch/_archive/` (NEW dir; archived fix-{5-corruptions,nrr,corruptions}.mjs from P17b)
+- `tests/scripts/test-apply-translations-zh-parser.mjs` (NEW, 4 fixtures)
+- `docs/i18n/zh-terminology.md` (NEW, 60-row glossary)
+- `src/data/categories.ts` (F entry name + description updated; slug stable)
+- `src/data/application-categories.ts` (comment updated)
+- `src/i18n/translations.ts` (62 changes: about.data_sources.body + category.F entries + q6/q7 new + 21 ZH terminology fixes)
+- `src/pages/[lang]/investment-roi.astro` (FAQ array bound [1-5] → [1-7])
+- `memory/p17-i18n-backfill-shipped.md` (P18 section appended)
+
+### Deferred / P19 Candidates
+
+- `.gitignore:22 docs/` blocks new docs/ files. Workaround: `git add -f`. Cleanup is a separate gitignore decision (docs/superpowers/plans/* already tracked, but new docs/* get ignored). NOT touched in P18.
+- Two-parser design (`parseStringLiteral` + `parseStringLiteralSmart`) could be unified with a `tolerant: boolean` flag. Not refactoring at 87 LoC; deferred.
+- Slug ↔ name asymmetry (`Investment & Real Estate` name + `/en/investment-roi/` URL) — user-accepted, deferred until URL sync desired.
+- `scripts/.scratch/` directory has accumulated P17b scratch tools (build-t5-json, debug, generate-task6, etc.) — cleanup candidate.
+- `audit-zh-terminology.mjs` per-row parser only stores LAST `NOT` match (regex captures all but parser writes only `set(forbidden, info)`); acceptable for 60-row glossary. Document if glossary grows.
