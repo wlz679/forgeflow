@@ -182,7 +182,16 @@ test('P2b — no /recent/ page contains raw user data', { skip: !existsSync(dist
 test('P2a — every ToolCard on listing pages has data-favorite-toggle with correct slug', { skip: !existsSync(distDir) }, () => {
   // ToolCard (with data-favorite-toggle) renders on listing pages: 6 category pages + 2 landing pages.
   // Individual tool detail pages use RelatedTools (pills without toggle), so they are excluded.
-  const listingPages = ['saas-metrics', 'freelance-pricing', 'cost-efficiency', 'investment-roi', 'valuation-exit', 'ai-cost-tools', 'marketing-analytics', 'operations-inventory', 'sales', 'retention'];
+  // ToolCard (with data-favorite-toggle) renders on listing pages: 14 category pages + 2 landing pages.
+  // P26a: added 5 missing categories (customer-support, hiring-team, knowledge, legal-compliance,
+  // product-analytics). Originally this array was stale from P10 era — when only 10 categories had
+  // landing pages; P12 (T), P13 (K), P14 (L), P15 (H), P10 (P) all added their category listing pages
+  // but this test's array wasn't updated. Each missing category's 6 tools were silently untested.
+  const listingPages = [
+    'saas-metrics', 'freelance-pricing', 'cost-efficiency', 'investment-roi', 'valuation-exit',
+    'ai-cost-tools', 'marketing-analytics', 'operations-inventory', 'sales', 'retention',
+    'customer-support', 'hiring-team', 'knowledge', 'legal-compliance', 'product-analytics',
+  ];
   for (const lang of ['en', 'zh']) {
     for (const slug of listingPages) {
       const path = resolve(distDir, lang, slug, 'index.html');
