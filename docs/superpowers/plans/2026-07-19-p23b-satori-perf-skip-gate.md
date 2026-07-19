@@ -251,6 +251,7 @@ Section headers (use P22b + P23 memory format):
 - Verification (local < 60s vs previous 21+min; CI opt-in works)
 - Lessons (3 items: env-var gating > build perf tuning for test gates; mirrors existing `skipIfNoClerkEnv` precedent; CI author responsibility for opt-in)
 - P23c+ candidates (5 env-dep Clerk/Supabase subtests need real credentials; build-dep tests deferred to CI per env-var mechanism)
+> **P31 audit amend**: "5 env-dep Clerk/Supabase" claim is a cascade misattribution closed by P26a `ef19015` (P2a ToolCard `listingPages` array fix, 10→15 categories). The 5 build-dependent files use `pk_test_xyz` placeholder via `tests/_clerk-build-helper.ts:59` — no real Clerk/Supabase credentials needed. P28 audit confirmed: same 5-file set as plan describes, but the "env-dep" framing was wrong; correct framing is "build cascade" closed by P26a + P24 (CI half-wiring also shipped as `852c82d`). Full suite 1096/0/0.
 
 - [ ] **Step 3: Append P23b index line to `memory/MEMORY.md`**
 

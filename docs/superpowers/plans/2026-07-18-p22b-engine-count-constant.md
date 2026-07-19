@@ -22,6 +22,7 @@
    - `tests/internal-links.test.ts:7` (assertion body for `Object.keys(relatedTools).length`)
    - Test name strings at lines 51, 57 (ab-split) + 6 (internal-links) — variable interpolation uses template literals or string concat (verify form at execution).
 8. **Test count expectation** — after P22b-3: `# pass 1067` + `# fail 10` (identical to P22 baseline). The 3 affected tests still pass (now with variable interpolation). The 10 env-dependent fails remain unchanged.
+> **P31 audit amend**: "10 env-dependent fails" was cascade misattribution — closed by P26a `ef19015` (P2a ToolCard `listingPages` array fix, 10→15 categories) + P23 `9a68423` (og-sample backfill). Final outcome: full suite 1096/0/0 with `RUN_BUILD_TESTS=1`. P28 audit confirmed no real env-dep in those 5 files.
 9. **Commit message convention** — `<type>(<scope>): P22b-N — <one-liner>`. Type for refactor: `refactor` (P22b-3). Memory: `docs` (P22b-4).
 
 ---
@@ -405,10 +406,10 @@ Use Edit tool. The `old_string` is the LAST line of P22 section (the final P23+ 
 
 ### Carry-over (P23+ candidates; unchanged from P22 deferred list)
 
-1. **10 env-dependent Clerk/Supabase test fails** — unchanged baseline (103, 104, 580-585, 766, 767).
-2. **`tests/run.mjs` skip-in-missing-env mode** — graceful degradation for local dev without auth keys. Most impactful for toolchain ergonomics.
-3. **`tests/internal-links.test.ts:19` "all 82 tools" stale invariant** — also a candidate for dynamic pattern. Future P23+ could add `EXPECTED_RELATED_COUNT_PER_TOOL = 4` similar pattern if the test invariant is needed long-term.
-4. **Future category/feature constants** — if more registry-derived invariants surface (e.g., "all engines have FAQ"), same `tests/lib/` pattern with one constant per invariant is the precedent.
+1. ~~**10 env-dependent Clerk/Supabase test fails** — unchanged baseline (103, 104, 580-585, 766, 767).~~ — **Closed 2026-07-19 by P26a + P28 audit**. Cascade misattribution: same 5 build-dependent test files (`baselayout-clerk-script`, `baselayout-sync-script`, `header-clerk-render`, `header-sync-ui`, `privacy-policy-sync`) use `pk_test_xyz` placeholder via `tests/_clerk-build-helper.ts:59`. Real root cause was P2a ToolCard `listingPages` array staleness. Full suite 1096/0/0.
+2. **`tests/run.mjs` skip-in-missing-env mode** — graceful degradation for local dev without auth keys. Most impactful for toolchain ergonomics. **Open 2026-07-19**: superseded by P23b `RUN_BUILD_TESTS=1` skip-guard which covers `tests/run.mjs` runner ergonomics broadly; revisit only if specific auth skip without build still needed.
+3. ~~**`tests/internal-links.test.ts:19` "all 82 tools" stale invariant** — also a candidate for dynamic pattern.~~ — **Closed 2026-07-19 by P25** (`402052b`). Line 20 migrated to `${EXPECTED_ENGINE_COUNT}` (matches line 7 pattern). P28 audit confirmed only line 20 stale; lines 22+ use dynamic `${totalTools}`.
+4. **Future category/feature constants** — if more registry-derived invariants surface (e.g., "all engines have FAQ"), same `tests/lib/` pattern with one constant per invariant is the precedent. **Open**: no current trigger.
 ```
 
 ### Step 5: Append single-line index entry to MEMORY.md

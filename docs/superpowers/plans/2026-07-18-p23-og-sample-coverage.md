@@ -231,6 +231,7 @@ pnpm exec tsx scripts/check-og-samples-coverage.mjs || { echo "og-samples covera
 SKIP_PRECOMMIT_CHECK=1 node tests/run.mjs 2>&1 | tail -15
 ```
 Expected: pass count rises from 1067 → 1072 (5 build-dependent tests now resolve cleanly). fail count drops from 10 → 5 (5 Clerk/Supabase env-dep remains as baseline).
+> **P31 audit amend**: actual outcome diverged — the "5 Clerk/Supabase env-dep baseline" was a cascade misattribution closed by P26a `ef19015` (P2a ToolCard `listingPages` array fix, 10→15 categories). P28 audit confirmed the 5 build-dependent files use `pk_test_xyz` placeholder via `tests/_clerk-build-helper.ts:59` — no real Clerk/Supabase credentials needed. Full suite ended at 1096/0/0 with `RUN_BUILD_TESTS=1`. Archive-only marker; plan itself was correct at P23 ship time.
 
 - [ ] **Step 11: Stage + commit**
 
