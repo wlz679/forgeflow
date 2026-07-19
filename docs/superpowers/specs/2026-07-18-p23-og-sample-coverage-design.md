@@ -3,7 +3,11 @@
 > **Status:** Approved (brainstorming 2026-07-18)
 > **Baseline:** `ace65f1` (P22b Engine Count Constant ship)
 > **Scope:** 4-file fix — 1 JSON backfill (2 entries) + 1 build script improvement (collect-all-then-throw) + 1 new coverage check script + 1 precommit hook line. Unlocks 5 build-dependent test failures as side effect.
-> **Deferred (P23+ candidates):** 5 env-dependent Clerk/Supabase fails (unchanged baseline); og-card text quality audit on the 2 new entries; `tests/internal-links.test.ts:19` "all 82 tools" stale literal.
+> **Deferred (P23+ candidates):** ~~5 env-dependent Clerk/Supabase fails (unchanged baseline); og-card text quality audit on the 2 new entries; `tests/internal-links.test.ts:19` "all 82 tools" stale literal.~~ — **Closed 2026-07-19 by P25 + P26a + P28 audit**:
+> - ~~5 env-dep~~ — same cascade misattribution. Real root cause was `scripts/build-og-images.ts:150` throwing on 2 missing og-samples (this spec fixed) + P2a ToolCard test array staleness (P26a fixed). Full suite 1096/0/0.
+> - ~~og-card text quality audit~~ — remained DEFER UNTIL: tools schema adds `customOgSample` field per-tool (per P23 design §4.2). No current trigger.
+> - ~~"all 82 tools" literal~~ — P25 `402052b` fixed.
+> - Per P28 audit: this spec was 5th cascade misattribution carrier.
 
 ## 1. Goal
 

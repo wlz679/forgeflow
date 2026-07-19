@@ -3,7 +3,10 @@
 > **Status:** Approved (brainstorming 2026-07-18)
 > **Baseline:** `089798c` (P22 ship commit)
 > **Scope:** Create `tests/lib/engine-count.ts` (new dynamic constant) + update 2 test files to import and use it. 1 commit, 3 files touched. Future-proofs against engine count drift.
-> **Deferred (P23+ candidates):** 10 env-dependent Clerk/Supabase test fails; `tests/internal-links.test.ts:19` "all 82 tools" stale invariant.
+> **Deferred (P23+ candidates):** ~~10 env-dependent Clerk/Supabase test fails; `tests/internal-links.test.ts:19` "all 82 tools" stale invariant.~~ — **Closed 2026-07-19 by P25 + P26a + P28 audit**:
+> - ~~10 env-dep fails~~ — cascade misattribution. Actual single fail was P2a ToolCard test (`tests/seo-schemas.test.ts:185` `listingPages` array missed 5 categories). P26a `ef19015` extended array to 15 categories; full suite now 1096/0/0.
+> - ~~"all 82 tools" stale literal~~ — only line 20 actually had `82` literal. P25 `402052b` migrated to `${EXPECTED_ENGINE_COUNT}` (matches line 7 pattern). Lines 22+ use dynamic `${totalTools}`.
+> - Per P28 audit (`memory/p28-p10-p14-audit-pass-shipped.md`): these were 5th instance of memory cascade misattribution this session.
 
 ## 1. Goal
 

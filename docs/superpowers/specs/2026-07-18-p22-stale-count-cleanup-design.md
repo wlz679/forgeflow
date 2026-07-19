@@ -3,7 +3,10 @@
 > **Status:** Approved (brainstorming 2026-07-18)
 > **Baseline:** `0164edb` (P21 ship commit)
 > **Scope:** Single batch commit touching 2 test files (3 assertion updates: 98 → 100) + memory append + 3-way sync. All INLINE.
-> **Deferred (P23+ candidates):** 10 env-dependent Clerk/Supabase test fails (require real auth credentials or mock infra); extracting `EXPECTED_ENGINE_COUNT` shared constant.
+> **Deferred (P23+ candidates):** ~~10 env-dependent Clerk/Supabase test fails (require real auth credentials or mock infra); extracting `EXPECTED_ENGINE_COUNT` shared constant.~~ — **Closed 2026-07-19 by P22b + P26a + P28 audit**:
+> - ~~10 env-dep~~ — cascade misattribution, same as P22b/P23/P23b spec. Closed by P26a (P2a ToolCard `listingPages` array fix).
+> - ~~constant extraction~~ — shipped in P22b (`tests/lib/engine-count.ts` static const + drift guard).
+> - Per P28 audit: spec description predates P22b ship; this Deferred line was carried over without re-verification.
 
 ## 1. Goal
 

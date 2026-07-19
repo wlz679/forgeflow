@@ -3,7 +3,11 @@
 > **Status:** Approved (brainstorming 2026-07-19)
 > **Baseline:** `9a68423` (P23 OG-Sample Coverage ship)
 > **Scope:** 7-file fix — 5 build-dependent test files get `RUN_BUILD_TESTS=1` skip-guard + `tests/run.mjs` end-of-run summary line + new `scripts/test-build.mjs` opt-in wrapper (~10 LOC). 0 production code touched.
-> **Deferred:** 5 env-dependent Clerk/Supabase subtest fails (real credentials needed); `tests/internal-links.test.ts:19` "all 82 tools" stale literal.
+> **Deferred:** ~~5 env-dependent Clerk/Supabase subtest fails (real credentials needed); `tests/internal-links.test.ts:19` "all 82 tools" stale literal.~~ — **Closed 2026-07-19 by P25 + P26a + P24 + P28 audit**:
+> - ~~5 env-dep~~ — same cascade misattribution closed by P26a.
+> - ~~"all 82 tools" literal~~ — P25 `402052b` fixed.
+> - **CI half-wiring** (this spec Risk 1 deferred to "CI author"): **Closed 2026-07-19 by P24** `852c82d`. `.github/workflows/ci.yml` now sets `RUN_BUILD_TESTS: '1'` + `timeout-minutes: 30`. P23b skip-guard now active in CI.
+> - Per P28 audit: 6th cascade misattribution closed in this single session.
 
 ## 1. Goal
 
