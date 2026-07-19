@@ -4,13 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **ForgeFlowKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 32+ calculators live at the site root, each rendered as its own page.
+This is **ForgeFlowKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 100 calculators live at the site root across 16 categories (B/C/D/E/F/H/I/K/L/M/O/P/R/S/T/V + AI cost), each rendered as its own page. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/lib/engine-count.ts`); see P16 milestone for trigger events.
 
-Calculator categories:
+Calculator categories (high-level):
 - **B (Business)** — LTV, CAC, MRR, churn, break-even, valuation, equity dilution, etc.
 - **C (Pricing)** — Hourly-vs-fixed, freelance rate, sponsorship rate, course pricing, SaaS pricing
 - **D (HR/Cost)** — Employee cost, meeting cost
 - **E (Personal)** — Freelance tax, productivity score
+- **Other verticals** (P4-P14 series): F Freelance, H Hiring/Team, I Investment, K Knowledge, L Legal/Compliance, M Marketing, O Operations, P Product Analytics, R Retention, S Sales, T Customer Support, V Valuation — see `src/engines/*/index.ts` for full registry.
 - **AI cost** (data-driven, see "Data-Driven Engines" below) — OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen cost (7 providers), GPU cloud cost, AI training cost estimator, cross-provider API comparison
 
 Goal: every calculator should match **world-leading / industry-leading** quality. The v3 standard has two variants — see "v3 standard — two variants" section below.
@@ -19,20 +20,22 @@ Goal: every calculator should match **world-leading / industry-leading** quality
 
 | Variant | Mandatory sections | Applies to |
 | --- | --- | --- |
-| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip | B / C / D / E category engines (24) |
+| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip | B / C / D / E / F / H / I / K / L / M / O / P / R / S / T / V category engines (92 business) |
 | **AI Cost v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · 💡 Tip · 📊 Cost Breakdown · 🏆 Provider Comparison · 📅 Data updated badge | AI cost engines driven by `src/data/ai-pricing.json` (8) |
 
 Why two variants: `Break-Even` and `Milestone` are business-domain concepts. Forcing them onto a token-pricing calculator is anti-semantic — the result is emoji-fluff, not analysis. The AI Cost variant substitutes domain-natural sections (cost decomposition, provider comparison) that match what users actually want.
 
-**v3 status (2026-06-22):** All 32 engines at the v3 standard. 8 AI cost engines meet the AI Cost v3 variant; 24 business engines meet the Business v3 variant (7 of which were brought up in this batch — see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md`). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (16 × 6 preset keys per engine) were already complete. Plan: this file + the 2026-06-19 batch-3 plan.
+**v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. 8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 16 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (16 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
 ## Commands
 
 ```bash
 pnpm dev                # Dev server (Astro, port 4321 default)
-pnpm build              # Production build (141 static pages)
+pnpm build              # Production build (313+ static pages: 100 calcs × 2 langs + 15 category listings × 2 langs + 2 landing pages × 2 langs = ~314)
 pnpm preview            # Preview built app
 pnpm sync               # Update AI pricing from LiteLLM + regen engine data tables
+pnpm test:unit          # Unit tests (skips 5 build-dependent by default)
+pnpm test:build         # Build-dependent test wrapper (requires RUN_BUILD_TESTS=1)
 pnpm translate          # Translate wordpools (translate-wordpools.ts)
 ```
 
@@ -84,7 +87,7 @@ const engine: ToolEngine = {
 registerEngine(engine);
 ```
 
-### Data-Driven Engines (8 of 32)
+### Data-Driven Engines (8 of 100)
 
 These engines read from `src/data/ai-pricing.json` (single source of truth):
 
@@ -144,11 +147,12 @@ The two scripts together implement a `pnpm sync` convenience script.
 - **CLAUDE.md is THE source of truth** for future AI sessions. Keep it accurate.
 - **Engine pattern is strict** — `calculate()` is the source of truth; `staticExamples[0]` is auto-regenerated from it by `scripts/codegen-examples.mjs`. **After editing `calculate()` in any engine, run `node scripts/codegen-examples.mjs` before committing** — `staticExamples[0]` will drift otherwise (the v3 bug found in commit 1385725 was caused by skipping this step). Use `node scripts/codegen-examples.mjs --check` in CI / pre-commit to detect drift; exit 1 means someone forgot to regen. `customFn` is minified; `codegen-customfn.mjs` only auto-updates the data-table portion (PRICING.json-driven), the logic is hand-minified.
 - **`codegen-examples.mjs` only regenerates `staticExamples[0]`** — engines that ship `[1+]`, `[2+]`, ... (alternative scenarios shown on the page) are not auto-checked. If `generate()` logic changes, verify `[1+]` manually or hand-edit them. The `--check` mode also flags literal `\\'` or `\uXXXX` escape sequences in regenerated output (a sign that `generate()` is producing broken escape chains).
-- **customFn JS parse safety** — every engine's `customFn` is a JS source string sent to `new Function('inputs', 'pick', 'fill', customFn)` in the browser. **It must parse as valid JS or the whole page silently fails.** Use `node tests/scripts/test-customFn.mjs <slug>` (or no args for all 32) to verify a customFn parses. Watch out for the `}}if(...)` ASI trap — `}` followed by `if` (or any statement-starter token) is a JS parse error; insert a literal `;` between them.
+- **customFn JS parse safety** — every engine's `customFn` is a JS source string sent to `new Function('inputs', 'pick', 'fill', customFn)` in the browser. **It must parse as valid JS or the whole page silently fails.** Use `node tests/scripts/test-customFn.mjs <slug>` (or no args for all 100) to verify a customFn parses, OR `node tests/scripts/verify-customfn.mjs` (P15 expanded parser: matches 4 customFn declaration styles — top-level `const customFn`, `let customFn`, `var customFn`, and `clientConfig: { customFn }` inline form). Watch out for the `}}if(...)` ASI trap — `}` followed by `if` (or any statement-starter token) is a JS parse error; insert a literal `;` between them.
 - **Pre-commit hook** (`.githooks/pre-commit`) runs `codegen-examples.mjs --check` automatically. Enable once after clone: `git config core.hooksPath .githooks`. Bypass with `git commit --no-verify` (only when intentional).
 - **PRICING.json is the source of truth** for 8 engines. To add a new model, edit JSON and run `pnpm sync`.
 - **Visual diagrams** preferred over text for page/UI discussions.
 - **Don't over-engineer** — match existing style; avoid speculative abstractions.
+- **Cascade audit pattern** — when P-series batches claim "X deferred to P23+" / "P22+ candidates" / "P23b+ candidates" in specs/plans/memory files, those claims propagate across 4-8 batches without re-verification. **Every P-series memory file should have either a commit ref (closed) or a concrete trigger criterion (DEFER UNTIL: ...) for any pending item.** Vague "periodic review" / "may need audit" / "X fails remain baseline" lines are code smell — convert to trigger or close. Pattern formalized in P27 + extended in P28/P30/P31 (memory files → project memory → specs → plans → CLAUDE.md invariant check).
 
 ## Communication Style
 
