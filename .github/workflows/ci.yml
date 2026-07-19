@@ -13,7 +13,11 @@ jobs:
   build:
     name: Drift checks + build
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # P24: bumped from 10 to 30 — P23b wired RUN_BUILD_TESTS=1 into the
+    # Unit tests step, which triggers 5 build-dependent test files × ~3min
+    # each + satori prebuild. Observed local wall-clock ≈ 21+min, so 10min
+    # was insufficient and would have killed CI mid-suite.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +40,12 @@ jobs:
         run: pnpm check:customfn
 
       - name: Unit tests
+        env:
+          # P24: P23b skip-guard design assumes CI opt-in. Without this,
+          # the 5 build-dependent test files (baselayout-clerk-script,
+          # baselayout-sync-script, header-clerk-render, header-sync-ui,
+          # privacy-policy-sync) silently early-return and don't run.
+          RUN_BUILD_TESTS: '1'
         run: pnpm test:unit
 
       - name: Build
