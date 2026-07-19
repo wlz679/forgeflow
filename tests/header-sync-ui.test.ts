@@ -2,7 +2,13 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { buildWithEnv } from './_supabase-build-helper.ts';
 
+// P23b: skip-guard for build-dependent tests. Wall-clock budget per
+// pnpm build invocation is unbounded; CI runs these with
+// RUN_BUILD_TESTS=1 (via `pnpm test:build`). Local dev skips them.
+const skipIfNoBuildTests = (): boolean => !process.env.RUN_BUILD_TESTS;
+
 test('Header: sync menu rendered when both Clerk and Supabase envs present', () => {
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   const { en } = buildWithEnv({
     PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_xyz',
     VITE_SUPABASE_URL: 'https://abc.supabase.co',
@@ -15,6 +21,7 @@ test('Header: sync menu rendered when both Clerk and Supabase envs present', () 
 });
 
 test('Header: sync menu NOT rendered when only Clerk env present', () => {
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   const { en } = buildWithEnv({
     PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_xyz',
     VITE_SUPABASE_URL: '',
@@ -26,6 +33,7 @@ test('Header: sync menu NOT rendered when only Clerk env present', () => {
 });
 
 test('Header: sync menu NOT rendered when only Supabase env present', () => {
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   const { en } = buildWithEnv({
     PUBLIC_CLERK_PUBLISHABLE_KEY: '',
     VITE_SUPABASE_URL: 'https://abc.supabase.co',

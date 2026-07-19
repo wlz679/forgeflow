@@ -13,7 +13,13 @@ import { buildWithEnv, readAllHoistedChunks } from './_supabase-build-helper.ts'
  * Mirrors the P3-1 pattern in `baselayout-clerk-script.test.ts`.
  */
 
+// P23b: skip-guard for build-dependent tests. Wall-clock budget per
+// pnpm build invocation is unbounded; CI runs these with
+// RUN_BUILD_TESTS=1 (via `pnpm test:build`). Local dev skips them.
+const skipIfNoBuildTests = (): boolean => !process.env.RUN_BUILD_TESTS;
+
 test('BaseLayout: sync-init.client.ts bundled into hoisted chunk', () => {
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   buildWithEnv({
     PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_xyz',
     VITE_SUPABASE_URL: 'https://abc.supabase.co',
@@ -28,6 +34,7 @@ test('BaseLayout: sync-init.client.ts bundled into hoisted chunk', () => {
 });
 
 test('BaseLayout: sync-init and clerk-init bundled (no missing import)', () => {
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   buildWithEnv({
     PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_xyz',
     VITE_SUPABASE_URL: 'https://abc.supabase.co',

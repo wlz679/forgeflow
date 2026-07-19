@@ -23,7 +23,8 @@
     "check:examples": "node scripts/codegen-examples.mjs --check",
     "check:customfn": "node scripts/codegen-customfn.mjs --check",
     "test:schemas": "node --import tsx tests/seo-schemas.test.ts",
-    "test:unit": "node tests/run.mjs"
+    "test:unit": "node tests/run.mjs",
+    "test:build": "node scripts/test-build.mjs"
   },
   "keywords": [
     "business-calculator",

@@ -16,7 +16,13 @@ import { buildWithEnv, ROOT } from './_supabase-build-helper.ts';
  * index.html directly via fs after triggering the build.
  */
 
+// P23b: skip-guard for build-dependent tests. Wall-clock budget per
+// pnpm build invocation is unbounded; CI runs these with
+// RUN_BUILD_TESTS=1 (via `pnpm test:build`). Local dev skips them.
+const skipIfNoBuildTests = (): boolean => !process.env.RUN_BUILD_TESTS;
+
 test('privacy-policy: English Supabase section present in dist', () => {
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   // Trigger build (cache-per-env means first test in this suite pays
   // the cost, subsequent tests hit the globalThis cache).
   buildWithEnv({

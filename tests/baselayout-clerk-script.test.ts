@@ -21,8 +21,14 @@ const skipIfNoClerkEnv = () => {
   return false;
 };
 
+// P23b: skip-guard for build-dependent tests. Wall-clock budget per
+// pnpm build invocation is unbounded; CI runs these with
+// RUN_BUILD_TESTS=1 (via `pnpm test:build`). Local dev skips them.
+const skipIfNoBuildTests = (): boolean => !process.env.RUN_BUILD_TESTS;
+
 test('BaseLayout injects clerk-init.client.ts script', () => {
   if (skipIfNoClerkEnv()) return; // skip when env missing
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   // Trigger build (cached).
   buildWithEnvSet('en');
   const hoisted = readAllHoistedChunks();
@@ -35,6 +41,7 @@ test('BaseLayout injects clerk-init.client.ts script', () => {
 
 test('BaseLayout does not duplicate clerk-init script', () => {
   if (skipIfNoClerkEnv()) return; // skip when env missing
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   buildWithEnvSet('en');
   const astroDir = resolve(root, 'dist', '_astro');
   const files = readdirSync(astroDir).filter(f => f.startsWith('hoisted.') && f.endsWith('.js'));

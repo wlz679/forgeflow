@@ -33,4 +33,14 @@ const r = spawnSync(tsxBin, [...tsxArgs, ...process.argv.slice(2), ...tests], {
   stdio: 'inherit',
   shell: process.platform === 'win32',
 });
-process.exit(r.status ?? 1);
+// P23b: skip-mode summary. When RUN_BUILD_TESTS is unset, the 5
+// build-dependent test files early-return → tests appear to "pass" but
+// coverage is partial. Surface this so users know to opt in.
+const exitCode = r.status ?? 1;
+if (!process.env.RUN_BUILD_TESTS) {
+  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 5 build-dependent suites skipped.');
+  console.log('[skip-mode] Set RUN_BUILD_TESTS=1 (or run `pnpm test:build`) to enable:');
+  console.log('[skip-mode]   baselayout-clerk-script, baselayout-sync-script,');
+  console.log('[skip-mode]   header-clerk-render, header-sync-ui, privacy-policy-sync');
+}
+process.exit(exitCode);
