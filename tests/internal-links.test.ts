@@ -17,7 +17,7 @@ test('related list never includes the tool itself', () => {
   }
 });
 
-test('related list has 4 entries for all 82 tools', () => {
+test(`related list has 4 entries for all ${EXPECTED_ENGINE_COUNT} tools`, () => {
   for (const t of tools) {
     assert.equal(
       relatedTools[t.slug].length,
