@@ -38,7 +38,30 @@ Goal: every calculator should match **world-leading / industry-leading** quality
 
 Why two variants: `Break-Even` and `Milestone` are business-domain concepts. Forcing them onto a token-pricing calculator is anti-semantic — the result is emoji-fluff, not analysis. The AI Cost variant substitutes domain-natural sections (cost decomposition, provider comparison) that match what users actually want.
 
-**v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. 8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 15 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
+**v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. Engine count per category:
+
+<!-- codegen:start engine-count -->
+| Letter | Category Name | Engine Count |
+|--------|---------------|--------------|
+| A | SaaS Metrics | 5 |
+| B | AI Cost Tools | 8 |
+| C | Valuation & Exit | 10 |
+| D | Freelance Pricing | 6 |
+| E | Cost & Efficiency | 5 |
+| F | Investment & Real Estate | 10 |
+| H | Hiring & Team | 6 |
+| K | Knowledge / 知识库 | 6 |
+| L | Legal & Compliance | 6 |
+| M | Marketing Analytics | 8 |
+| O | Operations / 库存运营 | 6 |
+| P | Product Analytics | 6 |
+| R | Retention & Customer Success | 6 |
+| S | Sales / 销售管理 | 6 |
+| T | Customer Support | 6 |
+| **Total** | | **100** |
+<!-- codegen:end -->
+
+8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 15 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
 ## Commands
 
