@@ -4,15 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is **ForgeFlowKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 100 calculators live at the site root across 16 categories (B/C/D/E/F/H/I/K/L/M/O/P/R/S/T/V + AI cost), each rendered as its own page. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/lib/engine-count.ts`); see P16 milestone for trigger events.
+This is **ForgeFlowKit** — a static calculator SPA providing free business calculators for solopreneurs / SaaS founders. Currently 100 calculators live at the site root across 15 categories (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T), each rendered as its own page. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/lib/engine-count.ts`); see P16 milestone for trigger events.
 
-Calculator categories (high-level):
-- **B (Business)** — LTV, CAC, MRR, churn, break-even, valuation, equity dilution, etc.
-- **C (Pricing)** — Hourly-vs-fixed, freelance rate, sponsorship rate, course pricing, SaaS pricing
-- **D (HR/Cost)** — Employee cost, meeting cost
-- **E (Personal)** — Freelance tax, productivity score
-- **Other verticals** (P4-P14 series): F Freelance, H Hiring/Team, I Investment, K Knowledge, L Legal/Compliance, M Marketing, O Operations, P Product Analytics, R Retention, S Sales, T Customer Support, V Valuation — see `src/engines/*/index.ts` for full registry.
-- **AI cost** (data-driven, see "Data-Driven Engines" below) — OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen cost (7 providers), GPU cloud cost, AI training cost estimator, cross-provider API comparison
+> **Categories (15 letters, canonical from `src/data/categories.ts`):** A=SaaS Metrics · B=AI Cost Tools · C=Valuation & Exit · D=Freelance Pricing · E=Cost & Efficiency · F=Investment & Real Estate · H=Hiring & Team · K=Knowledge · L=Legal & Compliance · M=Marketing Analytics · O=Operations · P=Product Analytics · R=Retention & Customer Success · S=Sales · T=Customer Support. (AI cost is letter B, not a 16th separate category.) P46 audit 2026-07-20 closed drift where prior versions listed "16 categories (B/C/.../I/.../V + AI cost)" — letters I and V are phantom.
+
+Calculator categories (high-level, by `src/data/categories.ts` letter):
+- **A — SaaS Metrics** — MRR, burn rate, churn, break-even, valuation, equity dilution, ARR multiple, NRR, etc. (engines 1-30 from P0 scaffold; P-series additions)
+- **B — AI Cost Tools** (8 data-driven engines, see "Data-Driven Engines" below) — OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen cost (7 providers), GPU cloud cost, AI training cost estimator, cross-provider API comparison
+- **C — Valuation & Exit** — Unit economics, SaaS valuation, LTV, CAC, etc.
+- **D — Freelance Pricing** — Hourly-vs-fixed, freelance rate, sponsorship rate, course pricing, SaaS pricing, email list revenue
+- **E — Cost & Efficiency** — Employee cost, meeting cost, productivity score
+- **F — Investment & Real Estate** — Compound interest, mortgage, cap rates, BRRR returns, rent-vs-buy (covers M4 investment + M5 real-estate)
+- **H — Hiring & Team** — Fully-loaded employee cost, ramp time, equity refresh grants, attrition cost
+- **K — Knowledge** — KB coverage, article freshness, search effectiveness, documentation ROI
+- **L — Legal & Compliance** — GDPR fine, DSAR cost, consent revenue impact, DPA cost, breach notification, CMP ROI
+- **M — Marketing Analytics** — ROAS, LTV by channel, funnel value, cohort retention, email campaign ROI
+- **O — Operations** — Inventory turnover, carrying cost, stockout cost, reorder point, fulfillment cost, supplier scorecards
+- **P — Product Analytics** — Funnel conversion, feature adoption, activation rate, stickiness, power user curves
+- **R — Retention & Customer Success** — NRR, GRR, expansion revenue, logo churn, customer health, renewal rate
+- **S — Sales** — Pipeline value, sales velocity, ACV, win rate by stage, quota attainment, pipeline coverage
+- **T — Customer Support** — Cost-per-ticket, FRT SLA, resolution time, CSAT, self-service deflection, team capacity
+
+> **History**: pre-P46, CLAUDE.md described categories using a different taxonomy (B=Business / C=Pricing / D=HR / E=Personal / I=Investment / V=Valuation). That taxonomy was renamed/merged during P0-P16 to match `categories.ts`. P46 audit (2026-07-20) closed the drift.
 
 Goal: every calculator should match **world-leading / industry-leading** quality. The v3 standard has two variants — see "v3 standard — two variants" section below.
 
@@ -20,12 +33,12 @@ Goal: every calculator should match **world-leading / industry-leading** quality
 
 | Variant | Mandatory sections | Applies to |
 | --- | --- | --- |
-| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip | B / C / D / E / F / H / I / K / L / M / O / P / R / S / T / V category engines (92 business) |
-| **AI Cost v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · 💡 Tip · 📊 Cost Breakdown · 🏆 Provider Comparison · 📅 Data updated badge | AI cost engines driven by `src/data/ai-pricing.json` (8) |
+| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip | A / C / D / E / F / H / K / L / M / O / P / R / S / T category engines (92 business) |
+| **AI Cost v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · 💡 Tip · 📊 Cost Breakdown · 🏆 Provider Comparison · 📅 Data updated badge | B category engines driven by `src/data/ai-pricing.json` (8) |
 
 Why two variants: `Break-Even` and `Milestone` are business-domain concepts. Forcing them onto a token-pricing calculator is anti-semantic — the result is emoji-fluff, not analysis. The AI Cost variant substitutes domain-natural sections (cost decomposition, provider comparison) that match what users actually want.
 
-**v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. 8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 16 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (16 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
+**v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. 8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 15 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
 ## Commands
 

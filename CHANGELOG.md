@@ -24,7 +24,7 @@
 ### Added
 - (next P-series batch will appear here)
 - Candidate: `CHANGELOG.md` itself (P45) just shipped; `tests/codegen-drift-guard.test.ts` (P42 mock regression guard) pending
-- Candidate: `categories.ts` (15 letters) vs `CLAUDE.md` (16 letters) drift audit pending
+- Candidate: ~~`categories.ts` (15 letters) vs `CLAUDE.md` (16 letters) drift audit pending~~ ✅ AUDITED 2026-07-20 by P46 (this batch)
 
 ---
 
@@ -43,7 +43,7 @@
 ### Changed
 - **[engines] v3 standard applied to 100/100 engines** — 92 business (🩺 Health + 🔄 What-If + ⚖️ Break-Even + 🎯 Milestone + 💡 Tip) + 8 AI Cost (📊 Cost Breakdown + 🏆 Provider Comparison + 📅 Data updated badge)
 - **[ui] BIZ_CONFIG_MAP + 4 BIZ_*_CONFIG + 205 preset-chip references** wired
-- **[i18n] 16 × 6 preset keys per engine** complete
+- **[i18n] 15 × 6 preset keys per engine** complete
 
 ### Fixed
 - **[engines] v3 emoji completeness** — added 7 sections + health band 🟠🟡🟢 emojis; trailing newlines on all engines
@@ -53,7 +53,7 @@
 | Metric | Value |
 |---|---|
 | Engines | **100/100** |
-| Categories | 16 |
+| Categories | 15 |
 | v3 standard | 100% lock |
 | Defense layer (clamp + cnn) | 100% |
 | pnpm check baseline | 1095 pass / 0 fail |
@@ -129,7 +129,7 @@ R (Retention, 11th letter — distinct from M5 R Real-Estate) added. Engines 68 
 - **[categories] Two R letters in alphabet** — disambiguation needed:
   - `R` (Real-Estate) — M5, primary by P5 ship order
   - `R` (Retention) — M9, secondary
-  - `categoryId` enum has 15 entries (`real-estate`, `retention`); CLAUDE.md says "16 categories" — see P45+ drift audit
+  - `categoryId` enum has 15 entries (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T, no I/V phantom letters); CLAUDE.md was inconsistent (claimed "16 categories" with phantom I/V) — ✅ AUDITED 2026-07-20 by P46, CLAUDE.md now matches categories.ts exactly
 
 📦 ship log: [`memory/p9-series-shipped.md`](memory/p9-series-shipped.md)
 
@@ -274,7 +274,7 @@ Project bootstrap. Single commit burst (2026-05-31, 22 commits) + slow accumulat
 | Metric | Value |
 |---|---|
 | Engines | 30 → 32 |
-| Categories | A-F (5) → +R +M +O +S +R(retention) +P +K +L → 16 (final M16) |
+| Categories | A-F (5) → +R +M +O +S +R(retention) +P +K +L → **15** (final, P46 audited) |
 | Pages | 66 (initial scaffold) → 313 (final M16) |
 
 📦 ship log: [`memory/p17-i18n-backfill-shipped.md`](memory/p17-i18n-backfill-shipped.md) (P17 was first batch shipped from this era)
@@ -291,8 +291,8 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 - **[docs] `memory/INDEX.md`** (P35, 162 lines) — 41 ship logs across 6 sections
 - **[docs] `docs/INDEX.md`** (P36, 80 lines) — top-level navigator for 100 docs
 - **[docs] `README.md`** (P37, 165 lines) — human-facing entry point
-- **[docs] `src/engines/INDEX.md`** (P39, 313 lines) — 100 engines × 16 subdirs
-- **[docs] `src/data/INDEX.md`** (P40, 244 lines) — 6 top-level + tools/ 16 barrels
+- **[docs] `src/engines/INDEX.md`** (P39, 313 lines) — 100 engines × 15 subdirs
+- **[docs] `src/data/INDEX.md`** (P40, 244 lines) — 6 top-level + tools/ 15 barrels
 - **[docs] `src/components/INDEX.md`** (P43, 127 lines) — 18 components × 5 tiers
 - **[docs] `src/scripts/INDEX.md`** (P44, 276 lines) — 6 scripts × P-series sections
 

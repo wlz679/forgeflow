@@ -73,7 +73,7 @@ src/scripts/
 **Consumers**:
 - Header 最近浏览 pills (`data-recent-container` 钩子)
 - `/recent` 页面 full grid 渲染（`renderFull()` exported）
-- 100 个工具页 (`[slug].astro` × 16 cats × 2 langs = 200 page renders) — 每个页面触发 `recordView(slug)`
+- 100 个工具页 × 2 langs = 200 page renders — 每个工具页 (`[slug].astro`) 触发 `recordView(slug)` on load
 
 **URL prefill**: 工具页可带 `?from=recent` 进入 → `handlePrefillFromURL()` exported（per P2b 测试 seam）
 
@@ -253,7 +253,7 @@ BaseLayout.astro L162-174 (5 <script> 标签, 顺序敏感)
 
 | Surface | Scope | Audience |
 |---|---|---|
-| `src/engines/INDEX.md` (P39) | 100 engines × 16 subdirs | Engines contributors |
+| `src/engines/INDEX.md` (P39) | 100 engines × 15 subdirs | Engines contributors |
 | `src/data/INDEX.md` (P40) | 6 top-level + tools/ 16 barrels | Data contributors |
 | `src/components/INDEX.md` (P43) | 18 .astro components × 5 tiers | UI contributors / Astro template reviewers |
 | `src/scripts/INDEX.md` (P44, 本文件) | 6 .client.ts scripts × P2/P3 sections | Browser init layer / runtime behavior reviewers |

@@ -1,7 +1,7 @@
 # ForgeFlowKit
 
 > **Free business calculators and tools for smarter decisions.**
-> Live at **[forgeflowkit.com](https://forgeflowkit.com)** · 100 calculators · 16 categories · 2 languages (English / 中文)
+> Live at **[forgeflowkit.com](https://forgeflowkit.com)** · 100 calculators · 15 categories · 2 languages (English / 中文)
 
 ---
 
@@ -34,7 +34,7 @@ See [`CLAUDE.md`](./CLAUDE.md) for the project's source-of-truth (architecture, 
 
 ## Calculator Categories
 
-100 calculators organized into **16 categories** (15 business + AI cost). Engine count is locked at `EXPECTED_ENGINE_COUNT = 100` in `tests/lib/engine-count.ts`.
+100 calculators organized into **15 categories** (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T; B = AI Cost Tools, no separate 16th category). Engine count is locked at `EXPECTED_ENGINE_COUNT = 100` in `tests/lib/engine-count.ts`.
 
 | Letter | Category | Calculators |
 |---|---|---|
@@ -126,7 +126,7 @@ Test infrastructure includes ~1096+ passing assertions across:
 ├── package.json
 ├── tsconfig.json
 ├── src/
-│   ├── engines/              # 100 calculators, organized by 16 categories
+│   ├── engines/              # 100 calculators, organized by 15 categories
 │   ├── pages/[lang]/         # Astro pages (en + zh)
 │   ├── core/engines/         # Engine framework: types, registry, helpers
 │   ├── components/           # Shared Astro components

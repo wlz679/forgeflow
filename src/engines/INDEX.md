@@ -1,6 +1,6 @@
 # Engines Index
 
-> **目录索引** — 100 个 calculators across 16 categories, 按 category 子目录分组，按 slug 字母序。
+> **目录索引** — 100 个 calculators across 15 categories, 按 category 子目录分组，按 slug 字母序。
 > **总数验证:** `EXPECTED_ENGINE_COUNT = 100` (锁定于 `tests/lib/engine-count.ts`)
 > **最后更新:** 2026-07-19 (P39 batch)
 
@@ -12,7 +12,7 @@
 src/engines/
 ├── INDEX.md (本文件)
 ├── index.ts (root registry barrel — imports 16 barrels below)
-└── 16 category subdirs:
+└── 15 category subdirs:
     ├── ai-cost/         (8 engines)
     ├── cost/            (4)
     ├── customer-support/ (6)

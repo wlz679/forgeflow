@@ -17,16 +17,16 @@ src/data/
 ├── application-categories.ts(16 lines)   — categoryId ↔ schema.org applicationCategory 映射
 ├── internal-links.ts        (56 lines)   — 自动 generate relatedTools 表 (per-tool 4 关联)
 ├── reference-data.ts        (48 lines)   — 周期性 update 的 market benchmarks (freelance rates / SaaS churn / platform fees)
-└── tools/                   (16 category files + index.ts + types.ts)
+└── tools/                   (15 category files + index.ts + types.ts)
     ├── types.ts             — ToolMeta interface (slug / title / description / inputs / keywords / tags / EEAT)
-    ├── index.ts             — 聚合 16 category files 的 barrel export
-    └── 16 个 category files — 每个文件 export `tools: ToolMeta[]` (4-8 entries each)
+    ├── index.ts             — 聚合 15 category files 的 barrel export
+    └── 15 个 category files — 每个文件 export `tools: ToolMeta[]` (4-8 entries each)
 ```
 
 | 维度 | 总数 | 验证 |
 |---|---|---|
 | Top-level files (本目录) | 6 | `ls src/data/*.ts src/data/*.json` |
-| `tools/` files | 18 | 16 category + `index.ts` + `types.ts` |
+| `tools/` files | 17 | 15 category + `index.ts` + `types.ts` |
 | `tools/` total entries | 100 | `grep -h "^\s*slug:" src/data/tools/*.ts \| wc -l` |
 | engines 一致性 | 100 ↔ 100 | `src/engines/` 100 engine files |
 | `ai-pricing.json` provider coverage | 4 LLM + 7 image + 6 GPU | JSON schema |
@@ -91,12 +91,12 @@ Consumed by `scripts/build-og-images.ts` at build time. Per P23 coverage guard `
 | 维度 | Letters | 来源 | 用途 |
 |---|---|---|---|
 | `categories.ts` | A / B / C / D / E / F / M / O / S / R / P / H / T / K / L (15 letters) | `src/data/categories.ts` | ToolMeta.categoryId schema |
-| CLAUDE.md | B / C / D / E / F / H / I / K / L / M / O / P / R / S / T / V / AI cost (16 letters + AI) | `CLAUDE.md` §Project Overview | Site nav logical categories |
+| CLAUDE.md | A / B / C / D / E / F / H / K / L / M / O / P / R / S / T (15 letters, B = AI Cost Tools) | `CLAUDE.md` §Project Overview | Site nav logical categories |
 
-**两者不一一对应**:
-- `A`/`C`/`D`/`E`/`F` 在 categories.ts 中存在；CLAUDE.md 中无对应（A 拆分入 B+other；C 跨 subdirs；D 部分入 freelance）
-- `I`/`V` 在 CLAUDE.md 中存在；categories.ts 中无对应（投资+估值散入 F+其他）
-- `B` (AI Cost Tools in categories.ts) ≈ AI cost in CLAUDE.md (letter 不同但语义一致)
+**两者一一对应**:
+- `categories.ts` 是 canonical source（消费方：`src/pages/[lang]/*.astro` × 15 listing pages + Header nav + `internal-links.ts`）
+- `CLAUDE.md` 现已同步为 15 letters (P46 audit 2026-07-20 closed)
+- 历史: P40 当时两者不一致（CLAUDE.md 列 16 letters 含 phantom I/V），P46 audit 修复
 
 未来 AI session 修改 ToolMeta.categoryId 应**只参考 `categories.ts`**，不要被 CLAUDE.md letters 误导。
 
@@ -115,7 +115,7 @@ Consumed by JSON-LD `applicationCategory` field per page. Unmapped categoryId fa
 
 ---
 
-## 2 · `tools/` 子目录 — 16 category barrels + types + index
+## 2 · `tools/` 子目录 — 15 category barrels + types + index
 
 | File | LOC | Entries | Engines ↔ | Data category |
 |---|---|---|---|---|
@@ -171,7 +171,7 @@ export interface ToolMeta {
 
 ## 4 · `index.ts` — barrel pattern
 
-聚合 16 category files 为单一 `tools: ToolMeta[]` export (100 entries):
+聚合 15 category files 为单一 `tools: ToolMeta[]` export (100 entries):
 
 ```ts
 import { tools as saas } from './saas';
@@ -220,7 +220,7 @@ export type { ToolMeta };
 | `sales.ts` | S | `sales/` | sales |
 | `valuation.ts` | C | `valuation/` (10 of 13) | valuation-exit |
 
-**Summary**: 3 个独立分类维度共存 — tools/ 物理 (16 files), categoryId (15 letters A-F+扩展), engines 物理 (16 subdirs)。三者**不要求 1:1 对应**; Index 标注 crosswalk 防止 future AI session 误合并。
+**Summary**: 3 个独立分类维度共存 — tools/ 物理 (15 files), categoryId (15 letters A/B/C/D/E/F/H/K/L/M/O/P/R/S/T), engines 物理 (15 subdirs)。三者**1:1 对应** by canonical letter after P46 audit; Index 标注 crosswalk 防止 future AI session 误合并。
 
 ---
 

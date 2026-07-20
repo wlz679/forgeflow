@@ -59,7 +59,7 @@ src/components/
 | `CategoryFaq.astro` | 26 | `{ categoryId, faqItems[] }` — 5 pre-translated FAQ items per category |
 | `CategorySection.astro` | 20 | `{ id, name, description, tools[] }` — sectioned tool grouping within category page (wraps `ToolCard` list) |
 
-These 4 components are rendered ONLY on category landing pages (`src/pages/[lang]/[category].astro` × 16 categories × 2 langs = 32 page renders). Updating one tier-3 component touches 6 consumer files (the category page + 5 cross-listing refs).
+These 4 components are rendered ONLY on category landing pages (`src/pages/[lang]/[category].astro` × 15 categories × 2 langs = 30 page renders). Updating one tier-3 component touches 6 consumer files (the category page + 5 cross-listing refs).
 
 ---
 
@@ -120,7 +120,7 @@ These 4 components are rendered ONLY on category landing pages (`src/pages/[lang
 
 | Surface | Scope | Audience |
 |---|---|---|
-| `src/engines/INDEX.md` (P39) | 100 engines × 16 subdirs | Engines contributors |
+| `src/engines/INDEX.md` (P39) | 100 engines × 15 subdirs | Engines contributors |
 | `src/data/INDEX.md` (P40) | 6 top-level + tools/ 16 barrels | Data contributors |
 | `src/components/INDEX.md` (P43, 本文件) | 18 .astro components × 5 tiers | UI contributors / Astro template reviewers |
 
