@@ -273,7 +273,7 @@ test('T5: every ai-cost engine source contains its registered end-marker (no sil
       missing.push(`${f}: no table opening line ("var M={..." or similar)`);
       continue;
     }
-    const hasEndMarker = /var (FL|FI|ST|SCPG2|SCG)=|"Provider initials \+ colors"|Family icons/.test(content);
+    const hasEndMarker = /var (FL|FI|ST|SCPG2|SCG)=|Provider initials \+ colors|Family icons/.test(content);
     if (!hasEndMarker) {
       missing.push(`${f}: no end-marker found (codegen would return null → silent skip)`);
     }
@@ -362,13 +362,12 @@ test('T7: codegen-customfn.mjs rerun writes 0 files (idempotent)', () => {
 });
 ```
 
-- [ ] **Step 2.9: Verify file syntax + line count**
-
-Run: `node --check tests/codegen-customfn-drift-guard.test.ts`
-Expected: clean exit (Node treats `.ts` as JS for syntax check; if it complains about TS syntax, run `npx.cmd tsx --no-warnings tests/codegen-customfn-drift-guard.test.ts` instead — but for plain `import` + `assert.match` patterns, Node --check should pass).
+- [ ] **Step 2.9: Verify file line count**
 
 Run: `wc -l tests/codegen-customfn-drift-guard.test.ts`
 Expected: ~190 lines (range 175-210 acceptable).
+
+(Skipping `node --check` because Node does not parse TypeScript syntax; the standalone test run in Step 2.10 is the syntax + behavior check.)
 
 - [ ] **Step 2.10: Run test in isolation to verify all 7 pass**
 
