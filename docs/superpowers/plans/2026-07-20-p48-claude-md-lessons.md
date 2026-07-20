@@ -166,10 +166,10 @@
 
   New line (1 line, 1 markdown list item):
   ```
-  - [P48 CLAUDE.md operational lessons](p48-claude-md-lessons-shipped.md) — 1 commit `<p48-sha>` 2026-07-20; 2 bullets added to "Notes for Future Sessions" (GH Action cron race + pre-push hook stale cache); 0 production code; closes 2 lessons-learned from P43 + P44 ship memories; P49+ candidates: codegen-customfn-drift-guard, engine count per category table, engine-count subdir move
+  - [P48 CLAUDE.md operational lessons](p48-claude-md-lessons-shipped.md) — 3 commits (`302824c` spec / `e790e7a` plan / `bb0af1e` CLAUDE.md) 2026-07-20; 2 standing rules added to "Notes for Future Sessions" (GH Action cron race + pre-push hook stale cache); 0 production code; P44 bypass empirically validated during this very push (hook fired stale-cache `ahead=0` false-negative on github push; `git -c core.hooksPath=/dev/null push github master` succeeded as spec'd); closes 2 lessons-learned from P43 + P44 ship memories; P49+ candidates: codegen-customfn-drift-guard, engine count per category table, engine-count subdir move
   ```
 
-  Replace `<p48-sha>` with the actual commit SHA from Task 1 Step 4.
+  Note: Template was amended after holistic review (I1) to reflect enriched entry — original spec said "1 commit `<p48-sha>`" but P48 is a 3-commit batch (spec + plan + CLAUDE.md), and the P44 empirical-validation note is the meta-point of the batch so it belongs in the index even though it bloats the line slightly.
 
 - [ ] **Step 3: Verify MEMORY.md size under hook limit**
 
@@ -184,7 +184,7 @@
   Expected: `p48-claude-md-lessons-shipped.md` present.
 
   Run: `grep -c "p48-claude-md-lessons-shipped" ~/.claude/projects/D--E-----youtube-tools/memory/MEMORY.md`
-  Expected: `2` (one in the new line you added, one in the link target).
+  Expected: `1` (the slug appears once in the new line's markdown link `[text](p48-claude-md-lessons-shipped.md)`; `grep -c` counts matching lines, not occurrences. The original plan expected `2` but that was wrong — the slug is a single string on a single line. Amended per holistic review I2 to prevent P49 false-positive drift alarm).
 
 ---
 
