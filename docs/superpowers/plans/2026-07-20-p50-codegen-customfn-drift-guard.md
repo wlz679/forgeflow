@@ -626,17 +626,20 @@ Expected: < 17100
 
 If exceeded: trim earlier memory entries OR shorten the P50 line. Do NOT remove essential context from earlier entries.
 
-- [ ] **Step 4.3: Commit (memory-only, local)**
+- [ ] **Step 4.3: Persistence confirmation (NOT git commit)**
 
 ```bash
-cd ~/.claude/projects/D--E-----youtube-tools/memory
-git status
-git add p50-codegen-customfn-drift-guard-shipped.md MEMORY.md
-git diff --cached --stat
-git commit -m "memory(p50): ship log — codegen-customfn drift guard (7-assertion test, no production code)"
+ls -la ~/.claude/projects/D--E-----youtube-tools/memory/p50-*.md
+wc -c ~/.claude/projects/D--E-----youtube-tools/memory/MEMORY.md
 ```
 
-(Note: memory/ is a separate git repo from project root, hence separate commit.)
+Expected: p50 ship memory exists; MEMORY.md < 17100 bytes.
+
+**Why NOT git commit:** `~/.claude/projects/D--E-----youtube-tools/memory/` is the Claude Code auto-memory location (flat files, NOT a git repository). Filesystem persistence IS the auto-memory load mechanism — `git log` on this directory returns `fatal: not a git repository`. Earlier P-series plans (P47, P49) carried this same incorrect "memory repo commit" step but never actually executed it; P50 implementer surfaced the bug. Auto-memory is loaded by Claude Code each session from this directory.
+
+If explicit git tracking is desired later, run `cd ~/.claude/projects/D--E-----youtube-tools/memory && git init` as a one-time setup — but for the P-series memory function, this is unnecessary overhead.
+
+This is the SECOND plan-vs-reality drift in P50 (T5 regex typo was first). P51+ should remove this step from the plan template entirely.
 
 ---
 
