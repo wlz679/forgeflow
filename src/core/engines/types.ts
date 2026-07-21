@@ -52,6 +52,9 @@ export interface ToolEngine {
    *  {label, url} object (renewal-rate-calculator — P53 P1, human-readable labels). */
   sources?: ({ label: string; url: string } | string)[];
   categoryId?: string;
+  /** Human-readable category name (e.g., 'retention'). Distinct from `categoryId`
+   *  (the 1-letter code, e.g., 'R'). Optional — most engines don't set it. */
+  category?: string;
   applicationCategory?: string;
   keywords?: string[];
   tags?: string[];
