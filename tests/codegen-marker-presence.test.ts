@@ -144,8 +144,8 @@ test('T5: TABLE_END_MARKERS matches codegen-customfn.mjs source exactly', () => 
 test('T6: scripts/codegen-examples.mjs has "staticExamples: [" marker', () => {
   assert.match(
     EXAMPLES_SOURCE,
-    /const marker = 'staticExamples: \['/,
-    `Missing marker declaration. Source should contain: const marker = 'staticExamples: ['`
+    new RegExp(`const marker = '${EXAMPLES_MARKER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`),
+    `Missing marker declaration. Source should contain: const marker = '${EXAMPLES_MARKER}'`
   );
 });
 
