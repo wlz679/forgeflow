@@ -3620,3 +3620,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-arr-multiple-valuation-calculator.input.profitMargin.placeholder': { en: "e.g. 0", zh: "例如：0" },
   'tools.solopreneur-arr-multiple-valuation-calculator.input.valuation.label': { en: 'Valuation ($)', zh: '估值（$）' },
 };
+
+/** Re-exported for client scripts (favorites-init / sync-init) that import
+ *  the type from this module. Source of truth remains src/i18n/index.ts. */
+export type Lang = 'en' | 'zh';
