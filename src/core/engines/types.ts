@@ -3,7 +3,18 @@ export interface ToolInput {
   label: string;
   placeholder: string;
   type: 'text' | 'select' | 'number';
-  options?: string[];
+  /** Allow both legacy string-array and value/label-pair forms.
+   *  Customer Health Score (Agent A P1) uses {value,label} for human-readable
+   *  selects; most other engines use string[]. Union is non-breaking. */
+  options?: ({ value: string; label: string } | string)[];
+  /** Default value for the input. string or number depending on `type`. */
+  default?: string | number;
+  /** HTML5 number-input attrs (only when type='number'). */
+  min?: number;
+  max?: number;
+  step?: number;
+  /** Human-readable hint shown next to the input. */
+  hint?: string;
 }
 
 export interface ClientConfig {
@@ -30,4 +41,22 @@ export interface ToolEngine {
    *  scripts/check-i18n-completeness.mjs. Default false (legacy engines).
    *  New engines SHOULD set this after translating all keys. */
   engineKey?: boolean;
+
+  // EEAT/metadata fields (P53 expansion — closes Agent A P1 dead-field class).
+  // Most engines don't set these; they are here to typecheck the 19+ engines
+  // (customer-support 6 + knowledge 6 + hiring-team 6 + legal-compliance 6 +
+  // customer-health-score × all P-series metadata additions) whose literals
+  // already include them. Optional to keep migration non-breaking.
+  sources?: string[];
+  categoryId?: string;
+  applicationCategory?: string;
+  keywords?: string[];
+  tags?: string[];
+  reviewedBy?: string;
+  author?: string;
+  dataReviewedAt?: string;
+  /** Default values keyed by input.name. Some legacy engines use a single
+   *  string `default: 'X'` at ToolInput — kept there; this is a separate
+   *  engine-level bag of per-input overrides. Optional. */
+  defaults?: Record<string, string | number>;
 }
