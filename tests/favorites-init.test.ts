@@ -506,8 +506,8 @@ test('Render full mode: renders all slugs as cards with absolute lang-prefixed U
 `);
   assert.equal(result.count, 3);
   assert.equal(result.aHref, '/en/a/');
-  assert.match(result.aText, /Tool A/, 'card should contain title "Tool A"');
-  assert.match(result.aText, /desc a/, 'card should contain description');
+  assert.match(result.aText as string, /Tool A/, 'card should contain title "Tool A"');
+  assert.match(result.aText as string, /desc a/, 'card should contain description');
   assert.equal(result.emptyDisplay, 'none');
   assert.equal(result.gridDisplay, '');
 });
@@ -600,7 +600,7 @@ test('Error handling: FavoritesUnavailableError -> toggle button title="unavaila
   console.log(JSON.stringify({ title: btn.title, aria: btn.getAttribute('aria-disabled') }));
 })().catch(e => { console.error(e); process.exit(1); });
 `);
-  assert.match(result.title, /unavailable/i);
+  assert.match(result.title as string, /unavailable/i);
   assert.equal(result.aria, 'true');
 });
 
@@ -632,5 +632,5 @@ test('Error handling: QuotaExceededError -> toggle button title includes "quota 
   console.log(JSON.stringify({ title: btn.title, aria: btn.getAttribute('aria-pressed') }));
 })().catch(e => { console.error(e); process.exit(1); });
 `);
-  assert.match(result.title, /storage limit/i);
+  assert.match(result.title as string, /storage limit/i);
 });
