@@ -164,11 +164,10 @@ function installVisibilityFlush(): void {
     if (document.visibilityState === 'hidden') {
       // Use sendBeacon if available (survives page close); fall back to async flush.
       const userId = getClerkInstance()?.user?.id;
-      if (userId && pendingPushes.size > 0 && navigator.sendBeacon) {
-        // sendBeacon doesn't support custom headers (Supabase needs apikey).
-        // Fall back to async flush; the page may close before completion, but LS is already written.
-        void flushPending();
-      } else {
+      if (userId && pendingPushes.size > 0) {
+        // Note: navigator.sendBeacon doesn't support custom headers
+        // (Supabase needs apikey), so we always fall back to async flush;
+        // the page may close before completion, but LS is already written.
         void flushPending();
       }
     }
