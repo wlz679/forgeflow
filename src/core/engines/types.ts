@@ -1,7 +1,8 @@
 export interface ToolInput {
   name: string;
   label: string;
-  placeholder: string;
+  /** Optional placeholder. Select-type inputs (9 across 7 engines — P53 P1) don't need one. */
+  placeholder?: string;
   type: 'text' | 'select' | 'number';
   /** Allow both legacy string-array and value/label-pair forms.
    *  Customer Health Score (Agent A P1) uses {value,label} for human-readable
@@ -47,7 +48,9 @@ export interface ToolEngine {
   // (customer-support 6 + knowledge 6 + hiring-team 6 + legal-compliance 6 +
   // customer-health-score × all P-series metadata additions) whose literals
   // already include them. Optional to keep migration non-breaking.
-  sources?: string[];
+  /** Source list. Items may be a bare URL string (legacy/most engines) or a
+   *  {label, url} object (renewal-rate-calculator — P53 P1, human-readable labels). */
+  sources?: ({ label: string; url: string } | string)[];
   categoryId?: string;
   applicationCategory?: string;
   keywords?: string[];

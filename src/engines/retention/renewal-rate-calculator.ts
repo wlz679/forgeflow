@@ -97,8 +97,6 @@ function formatCurrency(n: number): string {
 // ─── Minimal live customFn (computed in browser; mirrors calculate math) ───
 
 const customFn = "var cnn=function(x){return Math.max(0,x)};const up=cnn(Number(inputs.arrUpForRenewal)||0);const renewed=cnn(Number(inputs.arrRenewed)||0);const rate=up>0?renewed/up:0;let band='critical';if(rate>=0.90)band='excellent';else if(rate>=0.80)band='good';else if(rate>=0.70)band='warning';const pct=(rate*100).toFixed(1)+'%';const BAND_LABEL={excellent:'🟢 Excellent',good:'🟡 Good',warning:'🟠 Warning',critical:'🔴 Critical'};const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');return['🩺 Renewal Rate Health: '+BAND_LABEL[band]+' ('+pct+')','📊 Snapshot: '+fmt(renewed)+' of '+fmt(up)+' up-for-renewal ARR renewed.','🔄 What-If: Each +5pp recovers '+fmt(up*0.05)+'; 90% target lifts renewed to '+fmt(up*0.90)+'.','⚖️ Break-Even: To hit 90%, need '+fmt(up*0.90-renewed)+' more renewed ARR.','🎯 Milestone: → 80% needs '+fmt(up*0.80-renewed)+' more; → 90% needs '+fmt(up*0.90-renewed)+' more.','💡 Tip: Pair with [[solopreneur-grr-calculator]] for full gross retention and [[solopreneur-nrr-calculator]] for expansion impact.',];";
-
-engine.customFn = customFn;
 engine.clientConfig = { type: 'custom', wordPools: {}, customFn };
 
 registerEngine(engine);
