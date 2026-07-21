@@ -33,6 +33,17 @@ export interface ToolEngine {
   inputs: ToolInput[];
   clientConfig: ClientConfig;
   generate(inputs: Record<string, string>): string[];
+  /** Legacy/historical alias for `generate`. Most engines declare BOTH
+   *  (`calculate` as the named function + `generate: calculate` as the
+   *  type-aligned bridge) — kept for backward compat. New engines can
+   *  declare just `generate` (preferred). Both have identical signatures.
+   *  P53 P1 Critical Batch: closed 25 TS2353 errors across marketing (8) +
+   *  operations (6) + retention (5) + sales (6) by adding this field. */
+  calculate?: (inputs: Record<string, string>) => string[];
+  /** Semantic version string for the engine (e.g. '1.0.0'). Renewal Rate
+   *  Calculator (P9-6) was the first to declare this — keeps room for
+   *  future engines to ship versioned revisions. P53 P1 Critical Batch. */
+  version?: string;
   staticExamples: string[];
   faq: { q: string; a: string }[];
   howToUse: string[];

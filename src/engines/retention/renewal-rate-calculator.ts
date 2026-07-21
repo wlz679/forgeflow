@@ -85,7 +85,10 @@ const engine: ToolEngine = {
     { label: 'ICONIQ Growth 2024 — SaaS Retention Metrics', url: 'https://iconiqcapital.com/growth/saas-retention-metrics' },
     { label: 'SaaS Capital — Retention Benchmark Study', url: 'https://www.saascapital.com/insights-private-company-benchmarks' },
   ],
-  customFn: '', // filled below
+  // customFn is attached via the `engine.clientConfig = { ..., customFn }` rewrite below.
+  // (Declaring `customFn: ''` here as a placeholder would need `customFn?: string` on
+  // ToolEngine, but the literal placeholder is dead code — clientConfig is overwritten
+  // immediately after registerEngine() reads the literal at module init.)
   clientConfig: { type: 'custom', wordPools: {}, customFn: '' },
   engineKey: true,
 };
