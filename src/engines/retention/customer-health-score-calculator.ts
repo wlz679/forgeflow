@@ -160,7 +160,18 @@ const customFn =
   "var wt=ps==='product-led'?[0.50,0.15,0.10,0.15,0.10]:ps==='service-led'?[0.10,0.20,0.35,0.25,0.10]:ps==='sales-led'?[0.15,0.25,0.10,0.10,0.40]:[0.20,0.20,0.20,0.20,0.20];" +
   "var sgs=[nrm('productUsage',pu),nrm('nps',n),nrm('supportTickets',st),nrm('engagement',en),nrm('contractValue',cv)];" +
   "var sc=sgs.reduce(function(a,b,i){return a+b*wt[i];},0);" +
-  "return [sc];";
+  "var band=sc>=80?'🟢 Excellent':sc>=60?'🟡 Healthy':sc>=40?'🟠 At Risk':'🔴 Critical';" +
+  "var s='\\n🩺 Customer Health Score: ' + sc.toFixed(1) + ' / 100\\n';" +
+  "s+='━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n';" +
+  "s+='Band: '+band+'\\n\\n';" +
+  "s+='Component Scores (0-100, weighted):\\n';" +
+  "s+='  • Product Usage:    ' + sgs[0].toFixed(1) + ' (× ' + wt[0].toFixed(2) + ')\\n';" +
+  "s+='  • NPS:              ' + sgs[1].toFixed(1) + ' (× ' + wt[1].toFixed(2) + ')\\n';" +
+  "s+='  • Support Tickets:  ' + sgs[2].toFixed(1) + ' (× ' + wt[2].toFixed(2) + ')\\n';" +
+  "s+='  • Engagement:       ' + sgs[3].toFixed(1) + ' (× ' + wt[3].toFixed(2) + ')\\n';" +
+  "s+='  • Contract Value:   ' + sgs[4].toFixed(1) + ' (× ' + wt[4].toFixed(2) + ')\\n\\n';" +
+  "s+='💡 Top Lever: ' + (wt[0]>=0.30?'Lean into product-usage diagnostics — DAU/MAU, feature adoption.':wt[1]>=0.30?'Survey NPS drivers — onboarding, support resolution, perceived value.':'Audit your support load — tickets drag the score most.');" +
+  "return [s];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-customer-health-score-calculator',
