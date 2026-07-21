@@ -7,11 +7,15 @@
 // P6-6 content-marketing-roi-calculator.ts -- added in P6-6
 // P16-1 coupon-attribution-calculator.ts -- added in P16-1
 // P16-2 cart-abandonment-cost-calculator.ts -- added in P16-2
-export * from './roas-calculator';
-export * from './ltv-by-channel-calculator';
-export * from './funnel-value-calculator';
-export * from './cohort-retention-calculator';
-export * from './email-campaign-roi-calculator';
-export * from './content-marketing-roi-calculator';
-export * from './coupon-attribution-calculator';
-export * from './cart-abandonment-cost-calculator';
+// P53: refactored from `export *` to `import './X'` (side-effect only) to
+// resolve 9 duplicate-export TS errors (Agent D P2 D7). All engines' helpers
+// (e.g., HEALTH_BANDS, calcHealthBand) remain exported from individual files
+// (e.g., `import { calcHealthBand } from './cohort-retention-calculator'`).
+import './roas-calculator';
+import './ltv-by-channel-calculator';
+import './funnel-value-calculator';
+import './cohort-retention-calculator';
+import './email-campaign-roi-calculator';
+import './content-marketing-roi-calculator';
+import './coupon-attribution-calculator';
+import './cart-abandonment-cost-calculator';
