@@ -31,9 +31,9 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { spawnTsxInline } from './helpers/spawn-tsx.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -98,46 +98,26 @@ test('T2: REFERENCE_DATE locked at 2026-07-15 (P42 canonical)', () => {
   );
 });
 
-// === Runner helper: spawn inline tsx that calls engine.generate(defaults)[0] ===
+// === Runner helper: spawn inline tsx that calls engine.generate(defaults)[0]
+// Migrated to tests/helpers/spawn-tsx.ts (P52). The mock block is conditional
+// via template literal; dynamic `await import(...)` for mrr-calculator keeps
+// registerEngine() side-effect ordering correct (mrr-calculator imports AFTER
+// getEngine is available).
 function runGenerate(includeMock: boolean): string {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'p51-mock-apply-'));
-  const runnerPath = path.join(tmpDir, 'runner.ts');
-
   const mockBlock = includeMock ? MOCK_BLOCK : '';
-  // Wrap in async IIFE — tsx on Windows emits CJS by default, which doesn't
-  // support top-level await. Mirrors scripts/codegen-examples.mjs:251,267
-  // (async function main() { ... } main().catch(...)).
-  // Use file:// URLs — Windows ESM loader rejects raw absolute paths
-  // (ERR_UNSUPPORTED_ESM_URL_SCHEME: only file, data, node protocols allowed).
-  const registryImport = pathToFileURL(path.join(ROOT, 'src/core/engines/registry.ts')).href;
-  const mrrImport = pathToFileURL(MRR_CALC_PATH).href;
-  const runnerSource = `
-    ${mockBlock}
-    import { getEngine } from '${registryImport}';
-    async function main() {
-      await import('${mrrImport}');
-      const engine = getEngine('solopreneur-mrr-calculator');
+  return spawnTsxInline({
+    root: ROOT,
+    runnerSource: `
+      ${mockBlock}
+      await import('${pathToFileURL(MRR_CALC_PATH).href}');
+      const engine = registry.getEngine('solopreneur-mrr-calculator');
       const ex0 = engine.generate(${JSON.stringify(MRR_DEFAULTS)})[0];
       process.stdout.write(ex0);
-    }
-    main().catch(e => { console.error(e); process.exit(1); });
-  `;
-  try {
-    fs.writeFileSync(runnerPath, runnerSource, 'utf8');
-    const tsxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-    const result = spawnSync(tsxBin, ['tsx', runnerPath], {
-      cwd: ROOT, encoding: 'utf8', shell: true,
-    });
-    if (result.status !== 0) {
-      throw new Error(
-        `runner.ts (mock=${includeMock}) exited ${result.status}.\n` +
-        `stdout: ${result.stdout}\nstderr: ${result.stderr}`
-      );
-    }
-    return result.stdout;
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
+    `,
+    imports: [
+      { path: path.join(ROOT, 'src/core/engines/registry.ts'), as: 'registry' },
+    ],
+  });
 }
 
 // === T3: mock applied → output contains "~Sep 2027" (drift-proof substring) ===
