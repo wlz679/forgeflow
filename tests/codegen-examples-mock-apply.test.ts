@@ -122,10 +122,10 @@ function runGenerate(includeMock: boolean): string {
     }
     main().catch(e => { console.error(e); process.exit(1); });
   `;
-  fs.writeFileSync(runnerPath, runnerSource, 'utf8');
-
   try {
-    const result = spawnSync('npx.cmd', ['tsx', runnerPath], {
+    fs.writeFileSync(runnerPath, runnerSource, 'utf8');
+    const tsxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+    const result = spawnSync(tsxBin, ['tsx', runnerPath], {
       cwd: ROOT, encoding: 'utf8', shell: true,
     });
     if (result.status !== 0) {
