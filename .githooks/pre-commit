@@ -55,12 +55,12 @@ if echo "$STAGED" | grep -qE '^(src/data/(tools|og-samples\.json)|scripts/check-
 fi
 
 # 4. engine count by category — per-letter count + CLAUDE.md snapshot (P49).
-if echo "$STAGED" | grep -qE '^(src/data/(categories|tools)/.*\.ts|tests/lib/engine-count\.ts|scripts/check-engine-count-by-category\.mjs|CLAUDE\.md)$'; then
+if echo "$STAGED" | grep -qE '^(src/data/(categories|tools)/.*\.ts|tests/engine-count\.ts|scripts/check-engine-count-by-category\.mjs|CLAUDE\.md)$'; then
   echo "[pre-commit] Running scripts/check-engine-count-by-category.mjs --check..."
   if ! node scripts/check-engine-count-by-category.mjs --check; then
     echo ""
     echo "[pre-commit] BLOCKED: engine count by category mismatch."
-    echo "  Fix: update tests/lib/engine-count.ts EXPECTED_ENGINES_BY_CATEGORY,"
+    echo "  Fix: update tests/engine-count.ts EXPECTED_ENGINES_BY_CATEGORY,"
     echo "        run \`node scripts/check-engine-count-by-category.mjs\` to get new table,"
     echo "        copy-paste into CLAUDE.md between codegen markers."
     echo "  Bypass (not recommended): \`git commit --no-verify\`"

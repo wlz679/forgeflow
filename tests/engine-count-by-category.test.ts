@@ -48,7 +48,7 @@ function loadTsModule<T>(modulePath: string): T {
 
 // Load engine-count.ts module via tsx subprocess (single load, then destructure).
 // Windows note: uses file:// URL to avoid ERR_UNSUPPORTED_ESM_URL_SCHEME on D:\ paths.
-const engineCountFileUrl = pathToFileURL(path.join(ROOT, 'tests/lib/engine-count.ts')).href;
+const engineCountFileUrl = pathToFileURL(path.join(ROOT, 'tests/engine-count.ts')).href;
 const engineCountResult = spawnSync(
   process.execPath,
   ['--import', 'tsx', '-e', `import m from '${engineCountFileUrl}'; process.stdout.write(JSON.stringify(m))`],

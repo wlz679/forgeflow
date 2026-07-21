@@ -73,7 +73,7 @@ const derived = JSON.parse(deriveResult.stdout);
 
 // Step 2: load EXPECTED_ENGINES_BY_CATEGORY const via tsx subprocess.
 const constScript = `
-import { EXPECTED_ENGINES_BY_CATEGORY } from '${ROOT_URL}/tests/lib/engine-count.ts';
+import { EXPECTED_ENGINES_BY_CATEGORY } from '${ROOT_URL}/tests/engine-count.ts';
 process.stdout.write(JSON.stringify(EXPECTED_ENGINES_BY_CATEGORY));
 `;
 const constResult = runTsx('const', constScript);

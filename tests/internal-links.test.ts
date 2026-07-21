@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { relatedTools } from '../src/data/internal-links.ts';
 import { tools } from '../src/data/tools/index.ts';
-import { EXPECTED_ENGINE_COUNT } from './lib/engine-count.ts';
+import { EXPECTED_ENGINE_COUNT } from './engine-count.ts';
 
 test(`all ${EXPECTED_ENGINE_COUNT} tools have relatedTools entry`, () => {
   assert.equal(Object.keys(relatedTools).length, EXPECTED_ENGINE_COUNT);

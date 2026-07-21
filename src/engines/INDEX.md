@@ -1,7 +1,7 @@
 # Engines Index
 
 > **目录索引** — 100 个 calculators across 15 categories, 按 category 子目录分组，按 slug 字母序。
-> **总数验证:** `EXPECTED_ENGINE_COUNT = 100` (锁定于 `tests/lib/engine-count.ts`)
+> **总数验证:** `EXPECTED_ENGINE_COUNT = 100` (锁定于 `tests/engine-count.ts`)
 > **最后更新:** 2026-07-19 (P39 batch)
 
 ---

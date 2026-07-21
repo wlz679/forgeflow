@@ -30,7 +30,7 @@
 
 ## [M16.0] - 2026-07-15 → 2026-07-16 — 100 engines milestone (P16)
 
-🔒 **Maintenance mode locked** after this milestone. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/lib/engine-count.ts`).
+🔒 **Maintenance mode locked** after this milestone. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/engine-count.ts`).
 
 ### Added
 - **[engines] M: +coupon-attribution** (`engine 99`) — e-commerce attribution calc
@@ -299,7 +299,7 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 ### Fixed
 - **[tests] mrr-calculator drift** (P41) — `$50K MRR: 14.4 months (~Sep→Oct 2027)` cosmetic regen
 - **[scripts] drift-proof codegen via Date mock** (P42) — `REFERENCE_DATE=2026-07-15` injected in `codegen-examples.mjs` runner script
-- **[tests] `tests/lib/engine-count.ts` static const** (P22b) — `EXPECTED_ENGINE_COUNT = 100` with drift guard
+- **[tests] `tests/engine-count.ts` static const** (P22b) — `EXPECTED_ENGINE_COUNT = 100` with drift guard
 - **[seo] 2 missing og-samples backfilled** (P23) — cart-abandonment + coupon-attribution
 - **[ci] `RUN_BUILD_TESTS=1` opt-in** (P24) — 5 build-dependent test files gated
 - **[tests] stale '82 tools' literal** (P25) → `EXPECTED_ENGINE_COUNT`

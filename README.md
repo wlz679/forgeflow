@@ -34,7 +34,7 @@ See [`CLAUDE.md`](./CLAUDE.md) for the project's source-of-truth (architecture, 
 
 ## Calculator Categories
 
-100 calculators organized into **15 categories** (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T; B = AI Cost Tools, no separate 16th category). Engine count is locked at `EXPECTED_ENGINE_COUNT = 100` in `tests/lib/engine-count.ts`.
+100 calculators organized into **15 categories** (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T; B = AI Cost Tools, no separate 16th category). Engine count is locked at `EXPECTED_ENGINE_COUNT = 100` in `tests/engine-count.ts`.
 
 | Letter | Category | Calculators |
 |---|---|---|

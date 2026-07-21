@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { EXPECTED_ENGINE_COUNT } from './lib/engine-count.ts';
+import { EXPECTED_ENGINE_COUNT } from './engine-count.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 
