@@ -4,9 +4,9 @@
 
 **Goal:** Fix the Header dropdown overlap bug by adding a single-responsibility mutex script that enforces mutual exclusion across the 4 native `<details>` dropdowns (history / recent / favorites / categories). Closes the user-reported visual bug + standardizes click-outside and ESC-to-close behavior across all 4 dropdowns.
 
-**Architecture:** 1 NEW script file (`src/scripts/header-dropdown-mutex.client.ts` ~50 lines, pure DOM coordination) + 1 NEW test file (`tests/header-dropdown-mutex.test.ts` ~80 lines, vitest + jsdom with 5 core assertions) + 1 line added to `src/layouts/BaseLayout.astro` (import) + 4 attrs added to `src/components/Header.astro` (`data-dropdown="..."`). Zero changes to existing init scripts (`history-init` / `recent-init` / `favorites-init` / `clerk-init` / `sync-init`).
+**Architecture:** 1 NEW script file (`src/scripts/header-dropdown-mutex.client.ts` ~50 lines, pure DOM coordination) + 1 NEW test file (`tests/header-dropdown-mutex.test.ts` ~200 lines, `node:test` + hand-rolled DOM stub + `spawnSync` per-test with 5 core assertions) + 1 line added to `src/layouts/BaseLayout.astro` (import) + 4 attrs added to `src/components/Header.astro` (`data-dropdown="..."`). Zero changes to existing init scripts (`history-init` / `recent-init` / `favorites-init` / `clerk-init` / `sync-init`).
 
-**Tech Stack:** Vanilla TypeScript (browser DOM APIs); vitest 2.x + jsdom (already in `package.json`); Astro 4.16.19 static site generator; `*.client.ts` suffix for Astro client-only bundling.
+**Tech Stack:** Vanilla TypeScript (browser DOM APIs); `node:test` + `tsx` for unit tests (project convention — see `tests/run.mjs`); hand-rolled DOM stub + `spawnSync` per-test pattern for module-state isolation (see `tests/favorites-init.test.ts` pattern); Astro 4.16.19 static site generator; `*.client.ts` suffix for Astro client-only bundling.
 
 **Spec:** [`docs/superpowers/specs/2026-07-22-header-dropdown-mutex-design.md`](../specs/2026-07-22-header-dropdown-mutex-design.md) @ commit `15be97e`.
 
@@ -20,7 +20,7 @@ These constraints apply to every task. Each task's requirements implicitly inclu
 4. **BaseLayout import order matters** — mutex script MUST be imported BEFORE favorites-init (current BaseLayout:162) so mutual-exclusion listeners register before any init script's content rendering (defensive; not strictly required for correctness since listeners are idempotent).
 5. **Mutex script uses pure DOM APIs only** — no `localStorage` / no fetch / no third-party deps / no imports from `src/lib/`. Pure browser DOM coordination.
 6. **TypeScript strict mode** — project uses `tsconfig.json` strict; mutex script must compile under strict (no `any` leaks, explicit return types on exported functions, defensive null checks).
-7. **5 vitest assertions must cover the spec's 5 behaviors** — see spec §3. Do NOT add e2e Playwright tests (out of scope, YAGNI).
+7. **5 `node:test` assertions must cover the spec's 5 behaviors** — see spec §3. Use `node:test` + `node:assert/strict` (NOT vitest — vitest is NOT in `package.json`; project convention is `node:test` via tsx, see `tests/run.mjs`). Do NOT add e2e Playwright tests (out of scope, YAGNI).
 8. **pnpm check target: 1152 → 1157 (+5 assertions)** — P54 baseline is 1152 pass / 0 fail / 0 skip. The new mutex test adds +5.
 9. **3-way sync required at end** — origin (gitee: wlz679/calcKit) + github (github: wlz679/forgeflow) must reflect final commits. Apply P48 (pre-push fetch) + P44 (hook stale cache bypass).
 10. **Ship memory writes to `~/.claude/projects/D--E-----youtube-tools/memory/`** — P47 + P49 + P50 + P51 + P52 + P53 + P54 patterns. MEMORY.md index updated.
@@ -96,16 +96,18 @@ If exists: STOP and investigate (orphan from prior attempt).
 ## Task 2: Write the failing test (TDD red)
 
 **Files:**
-- Create: `tests/header-dropdown-mutex.test.ts` (~110 lines)
+- Create: `tests/header-dropdown-mutex.test.ts` (~200 lines)
 - Modify: none (test-only file)
 
 **Interfaces:**
-- Consumes: `src/scripts/header-dropdown-mutex.client.ts` (does not yet exist — import will fail until Task 3); jsdom environment (vitest config provides); `document.querySelectorAll('details[data-dropdown]')`
-- Produces: 5 vitest assertions covering spec §3 test matrix; all should FAIL at this point because the mutex module does not exist
+- Consumes: `src/scripts/header-dropdown-mutex.client.ts` (does not yet exist — import will fail until Task 3); `node:test` runner via `tests/run.mjs`; `spawnSync` per-test pattern from `tests/favorites-init.test.ts:37-179`
+- Produces: 5 `node:test` assertions covering spec §3 test matrix; all should FAIL at this point because the mutex module does not exist (or the red child-process scenario fails because mutex does not exist)
 
 **Task class:** [MECHANICAL] (single-file test creation with clear assertion targets from spec §3). 1 reviewer (spec-compliance).
 
-- [ ] **Step 2.1: Create `tests/header-dropdown-mutex.test.ts` with 5 vitest cases**
+**AMENDMENT 2026-07-22 (mid-execution):** Original plan used vitest + jsdom, but `package.json` has neither (verified: `grep vitest` → no match, `grep jsdom` → no match). Project convention is `node:test` + `tsx` (see `tests/run.mjs:25-34`) + hand-rolled DOM stub + `spawnSync` per-test (see `tests/favorites-init.test.ts` pattern). This task now uses that pattern. Caught by Task 2 implementer with BLOCKED status; no production code touched.
+
+- [ ] **Step 2.1: Create `tests/header-dropdown-mutex.test.ts` with 5 `node:test` cases (spawnSync per-test pattern)**
 
 Create file `tests/header-dropdown-mutex.test.ts`:
 
@@ -115,123 +117,307 @@ Create file `tests/header-dropdown-mutex.test.ts`:
  *
  * Spec: docs/superpowers/specs/2026-07-22-header-dropdown-mutex-design.md §3
  *
- * Mocks 4 native <details data-dropdown="..."> elements with attached
- * <summary> + <div data-foo-container> children, loads the mutex module
- * (which registers 3 document-level listeners), and verifies the 5
- * core mutual-exclusion behaviors.
+ * Pattern: hand-rolled DOM stub + spawnSync per-test (no jsdom/vitest).
+ * Mirrors tests/favorites-init.test.ts but extends StubElement with
+ * .closest(selector) + boolean .open (HTMLDetailsElement-ish) because
+ * the mutex script calls element.closest() and reads .open.
  *
- * Each test resets DOM via document.body.innerHTML = '...' to isolate state.
+ * Run via: node tests/run.mjs tests/header-dropdown-mutex.test.ts
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { writeFileSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-// Import mutex module — registers 3 document-level listeners once per module load.
-// Listener registration is idempotent (addEventListener dedup not required for
-// the 5 assertions because beforeEach() reinstalls fresh DOM, listeners stay
-// bound to document and fire for the new DOM nodes).
-import '../src/scripts/header-dropdown-mutex.client';
+// file:// URL for the mutex module under test.
+const CWD_PATH = process.cwd().replace(/\\/g, '/');
+const MUTEX_MOD_URL =
+  'file:///' + CWD_PATH.replace(/^\/+/, '') + '/src/scripts/header-dropdown-mutex.client.ts';
 
-const HEADER_HTML = `
-  <header>
-    <details class="relative group" data-dropdown="history">
-      <summary>History</summary>
-      <div data-history-container></div>
-    </details>
-    <details class="relative group" data-dropdown="recent">
-      <summary>Recent</summary>
-      <div data-recent-container></div>
-    </details>
-    <details class="relative group" data-dropdown="favorites">
-      <summary>Favorites</summary>
-      <div data-favorites-container></div>
-    </details>
-    <details class="relative group" data-dropdown="categories">
-      <summary>Categories</summary>
-      <ul></ul>
-    </details>
-  </header>
+// ============== DOM Stub (extended vs favorites-init) ==============
+// Adds .closest() + boolean .open because the mutex script uses both.
+
+class StubElement {
+  constructor(tag, attrs = {}, dataset = {}) {
+    this.tagName = tag.toUpperCase();
+    this.children = [];
+    this.parent = null;
+    this.attrs = { ...attrs };
+    this.dataset = { ...dataset };
+    this._listeners = [];
+    // HTMLDetailsElement — boolean open
+    this.open = false;
+  }
+  appendChild(child) { this.children.push(child); child.parent = this; return child; }
+  addEventListener(t, fn) { this._listeners.push({ type: t, fn }); }
+  removeEventListener(t, fn) {
+    this._listeners = this._listeners.filter(l => !(l.type === t && l.fn === fn));
+  }
+  dispatchEvent(ev) {
+    ev.target = this;
+    for (const l of this._listeners.filter(l => l.type === ev.type)) l.fn(ev);
+    return !ev.defaultPrevented;
+  }
+  click() {
+    // Mirror real HTMLSummaryElement.click — fires a bubbling MouseEvent
+    this.dispatchEvent({ type: 'click', defaultPrevented: false });
+  }
+  // Walk up the parent chain looking for an element matching the selector.
+  // Supports tag-only selectors (e.g. 'summary') and a single [attr="value"]
+  // form used by the mutex script: closest('[data-dropdown] > *:not(summary)')
+  // — implemented as "this element has the attribute and is a direct child
+  // of [data-dropdown] and tag is not summary".
+  closest(selector) {
+    let cur = this;
+    // Direct child-of-[data-dropdown]-and-not-summary check first
+    if (selector === '[data-dropdown] > *:not(summary)') {
+      while (cur) {
+        if (cur.parent && cur.parent.matches?.('details[data-dropdown]') && cur.tagName.toLowerCase() !== 'summary') {
+          return cur;
+        }
+        cur = cur.parent;
+      }
+      return null;
+    }
+    // Generic tag selector (e.g. 'summary')
+    const tagMatch = selector.match(/^([a-zA-Z][a-zA-Z0-9-]*)$/);
+    if (tagMatch) {
+      const tag = tagMatch[1].toLowerCase();
+      while (cur) {
+        if (cur.tagName && cur.tagName.toLowerCase() === tag) return cur;
+        cur = cur.parent;
+      }
+      return null;
+    }
+    return null;
+  }
+  matches(selector) {
+    // Minimal selector matcher for 'details[data-dropdown]'
+    const m = selector.match(/^([a-zA-Z][a-zA-Z0-9-]*)\[(\w[\w-]*)\]$/);
+    if (!m) return false;
+    const [, tag, attr] = m;
+    if (this.tagName.toLowerCase() !== tag.toLowerCase()) return false;
+    return this.attrs[attr] !== undefined;
+  }
+  querySelectorAll(sel) {
+    const out = [];
+    const matches = (n, s) => {
+      s = s.trim();
+      const m = s.match(/^([a-zA-Z][a-zA-Z0-9-]*)?\[(\w[\w-]*)(?:="([^"]*)")?\]$/);
+      if (m) {
+        const [, tag, attr, val] = m;
+        if (tag && n.tagName.toLowerCase() !== tag.toLowerCase()) return false;
+        if (val === undefined) {
+          return n.attrs[attr] !== undefined;
+        }
+        return n.attrs[attr] === val;
+      }
+      return n.tagName.toLowerCase() === s.toLowerCase();
+    };
+    const walk = (n) => {
+      if (matches(n, sel)) out.push(n);
+      for (const c of n.children) walk(c);
+    };
+    for (const c of this.children) walk(c);
+    return out;
+  }
+}
+
+class StubEvent {
+  constructor(type, init = {}) {
+    this.type = type;
+    this.defaultPrevented = false;
+    Object.assign(this, init);
+  }
+  preventDefault() { this.defaultPrevented = true; }
+}
+
+class StubKeyboardEvent extends StubEvent {
+  constructor(type, init = {}) { super(type, init); this.key = init.key ?? ''; }
+}
+
+// ============== Test DOM factory ==============
+
+function buildDom() {
+  const body = new StubElement('body');
+  const windowEl = { location: { pathname: '/en/' }, addEventListener() {}, removeEventListener() {} };
+
+  function makeDetails(name) {
+    const d = new StubElement('details', { class: 'relative group', 'data-dropdown': name });
+    const s = new StubElement('summary');
+    const inner = new StubElement('div');
+    d.appendChild(s);
+    d.appendChild(inner);
+    return d;
+  }
+  for (const n of ['history', 'recent', 'favorites', 'categories']) {
+    body.appendChild(makeDetails(n));
+  }
+
+  const doc = {
+    body,
+    addEventListener(t, fn) { windowEl._listeners = windowEl._listeners || []; windowEl._listeners.push({ type: t, fn }); },
+    removeEventListener(t, fn) {
+      windowEl._listeners = (windowEl._listeners || []).filter(l => !(l.type === t && l.fn === fn));
+    },
+    dispatchEvent(ev) {
+      ev.target = doc;
+      const ls = windowEl._listeners || [];
+      for (const l of ls.filter(l => l.type === ev.type)) l.fn(ev);
+      return !ev.defaultPrevented;
+    },
+    querySelectorAll(sel) { return body.querySelectorAll(sel); },
+  };
+  windowEl.document = doc;
+  return { body, doc, windowEl };
+}
+
+// ============== Per-test runner ==============
+
+function runScenario(scenarioBody) {
+  const tmp = mkdtempSync(join(tmpdir(), 'mutex-'));
+  const scenarioPath = join(tmp, 'scenario.mjs');
+  const fullBody = `
+const MUTEX_MOD_URL = '${MUTEX_MOD_URL.replace(/'/g, "\\'")}';
+${StubElement.toString()}
+${StubEvent.toString()}
+${StubKeyboardEvent.toString()}
+${buildDom.toString()}
+const { body, doc, windowEl } = buildDom();
+globalThis.document = doc;
+globalThis.window = windowEl;
+globalThis.HTMLElement = StubElement;
+globalThis.Event = StubEvent;
+globalThis.KeyboardEvent = StubKeyboardEvent;
+${scenarioBody}
 `;
-
-function getDetails(name: string): HTMLDetailsElement {
-  const el = document.querySelector<HTMLDetailsElement>(`details[data-dropdown="${name}"]`);
-  if (!el) throw new Error(`details[data-dropdown="${name}"] not found in test DOM`);
-  return el;
+  writeFileSync(scenarioPath, fullBody);
+  const r = spawnSync('node', ['--import', 'tsx', scenarioPath], {
+    cwd: process.cwd(),
+    shell: process.platform === 'win32',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, NODE_NO_WARNINGS: '1' },
+  });
+  if (r.status !== 0) {
+    // Expected for TDD red: module-not-found for mutex. Throw with stderr so
+    // the parent test assertion catches the expected failure mode.
+    throw new Error(`child failed (status ${r.status}): stderr=${r.stderr.toString().slice(0, 500)}`);
+  }
+  const lastLine = r.stdout.toString().trim().split('\\n').filter(Boolean).pop();
+  return JSON.parse(lastLine);
 }
 
-function getSummary(name: string): HTMLElement {
-  const el = document.querySelector<HTMLElement>(`details[data-dropdown="${name}"] > summary`);
-  if (!el) throw new Error(`summary for ${name} not found`);
-  return el;
-}
+// ============== Tests ==============
 
-beforeEach(() => {
-  // Reset DOM to fresh 4-details layout before each test
-  document.body.innerHTML = HEADER_HTML;
+test('test 1: default state — all 4 details are closed', () => {
+  const result = runScenario(`
+(async () => {
+  await import(MUTEX_MOD_URL);
+  const h = doc.querySelectorAll('details[data-dropdown="history"]')[0].open;
+  const r = doc.querySelectorAll('details[data-dropdown="recent"]')[0].open;
+  const f = doc.querySelectorAll('details[data-dropdown="favorites"]')[0].open;
+  const c = doc.querySelectorAll('details[data-dropdown="categories"]')[0].open;
+  console.log(JSON.stringify({ h, r, f, c }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.h, false);
+  assert.equal(result.r, false);
+  assert.equal(result.f, false);
+  assert.equal(result.c, false);
 });
 
-describe('header-dropdown-mutex', () => {
-  it('test 1: default state — all 4 details are closed', () => {
-    expect(getDetails('history').open).toBe(false);
-    expect(getDetails('recent').open).toBe(false);
-    expect(getDetails('favorites').open).toBe(false);
-    expect(getDetails('categories').open).toBe(false);
-  });
+test('test 2: click history summary → only history opens', () => {
+  const result = runScenario(`
+(async () => {
+  await import(MUTEX_MOD_URL);
+  const history = doc.querySelectorAll('details[data-dropdown="history"]')[0];
+  const recent = doc.querySelectorAll('details[data-dropdown="recent"]')[0];
+  const fav = doc.querySelectorAll('details[data-dropdown="favorites"]')[0];
+  const cat = doc.querySelectorAll('details[data-dropdown="categories"]')[0];
+  history.children[0].click();
+  console.log(JSON.stringify({ h: history.open, r: recent.open, f: fav.open, c: cat.open }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.h, true);
+  assert.equal(result.r, false);
+  assert.equal(result.f, false);
+  assert.equal(result.c, false);
+});
 
-  it('test 2: click history summary → only history opens', () => {
-    getSummary('history').click();
-    expect(getDetails('history').open).toBe(true);
-    expect(getDetails('recent').open).toBe(false);
-    expect(getDetails('favorites').open).toBe(false);
-    expect(getDetails('categories').open).toBe(false);
-  });
+test('test 3: click history then click recent → only recent open (mutual exclusion)', () => {
+  const result = runScenario(`
+(async () => {
+  await import(MUTEX_MOD_URL);
+  const history = doc.querySelectorAll('details[data-dropdown="history"]')[0];
+  const recent = doc.querySelectorAll('details[data-dropdown="recent"]')[0];
+  const fav = doc.querySelectorAll('details[data-dropdown="favorites"]')[0];
+  const cat = doc.querySelectorAll('details[data-dropdown="categories"]')[0];
+  history.children[0].click();
+  recent.children[0].click();
+  console.log(JSON.stringify({ h: history.open, r: recent.open, f: fav.open, c: cat.open }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.h, false);
+  assert.equal(result.r, true);
+  assert.equal(result.f, false);
+  assert.equal(result.c, false);
+});
 
-  it('test 3: click history then click recent → mutual exclusion (only recent open)', () => {
-    getSummary('history').click();
-    expect(getDetails('history').open).toBe(true);
+test('test 4: ESC key closes all open dropdowns', () => {
+  const result = runScenario(`
+(async () => {
+  await import(MUTEX_MOD_URL);
+  const history = doc.querySelectorAll('details[data-dropdown="history"]')[0];
+  const recent = doc.querySelectorAll('details[data-dropdown="recent"]')[0];
+  const fav = doc.querySelectorAll('details[data-dropdown="favorites"]')[0];
+  const cat = doc.querySelectorAll('details[data-dropdown="categories"]')[0];
+  history.children[0].click();
+  recent.children[0].click();
+  doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  console.log(JSON.stringify({ h: history.open, r: recent.open, f: fav.open, c: cat.open }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.h, false);
+  assert.equal(result.r, false);
+  assert.equal(result.f, false);
+  assert.equal(result.c, false);
+});
 
-    getSummary('recent').click();
-    expect(getDetails('history').open).toBe(false);
-    expect(getDetails('recent').open).toBe(true);
-    expect(getDetails('favorites').open).toBe(false);
-    expect(getDetails('categories').open).toBe(false);
-  });
-
-  it('test 4: ESC key closes all open dropdowns', () => {
-    getSummary('history').click();
-    getSummary('recent').click();
-    expect(getDetails('recent').open).toBe(true);
-
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-
-    expect(getDetails('history').open).toBe(false);
-    expect(getDetails('recent').open).toBe(false);
-    expect(getDetails('favorites').open).toBe(false);
-    expect(getDetails('categories').open).toBe(false);
-  });
-
-  it('test 5: click outside (document.body) closes open dropdown', () => {
-    getSummary('history').click();
-    expect(getDetails('history').open).toBe(true);
-
-    // Click on body itself (not on summary or inside any details panel)
-    document.body.click();
-
-    expect(getDetails('history').open).toBe(false);
-    expect(getDetails('recent').open).toBe(false);
-    expect(getDetails('favorites').open).toBe(false);
-    expect(getDetails('categories').open).toBe(false);
-  });
+test('test 5: click outside (body) closes open dropdown', () => {
+  const result = runScenario(`
+(async () => {
+  await import(MUTEX_MOD_URL);
+  const history = doc.querySelectorAll('details[data-dropdown="history"]')[0];
+  const recent = doc.querySelectorAll('details[data-dropdown="recent"]')[0];
+  const fav = doc.querySelectorAll('details[data-dropdown="favorites"]')[0];
+  const cat = doc.querySelectorAll('details[data-dropdown="categories"]')[0];
+  history.children[0].click();
+  body.click();
+  console.log(JSON.stringify({ h: history.open, r: recent.open, f: fav.open, c: cat.open }));
+})().catch(e => { console.error(e); process.exit(1); });
+`);
+  assert.equal(result.h, false);
+  assert.equal(result.r, false);
+  assert.equal(result.f, false);
+  assert.equal(result.c, false);
 });
 ```
 
-- [ ] **Step 2.2: Run test file to verify it FAILS (mutex module missing)**
+- [ ] **Step 2.2: Run test file to verify it FAILS (mutex module missing — spawnSync child fails)**
 
-Run: `pnpm vitest run tests/header-dropdown-mutex.test.ts 2>&1 | tail -30`
-Expected: FAIL with module-not-found error referencing `src/scripts/header-dropdown-mutex.client.ts` (or similar — the exact error depends on vitest config but should be import resolution failure for the mutex module path).
+Run: `node --import tsx tests/header-dropdown-mutex.test.ts 2>&1 | tail -30`
+Expected: FAIL — each `test(...)` spawns a child that imports the missing `MUTEX_MOD_URL` (i.e. `src/scripts/header-dropdown-mutex.client.ts`). The child process will fail with module-not-found; the parent test catches via `runScenario`'s `throw new Error(...)`. The expected output is 5 failing test entries, each with stderr containing `Cannot find module` for `header-dropdown-mutex.client`.
 
-If test passes unexpectedly: STOP and investigate (mutex module may exist from prior commit; constraint 5 may be violated).
+If tests pass unexpectedly: STOP and investigate (mutex module may exist from prior commit).
 
-If test fails for other reasons (syntax error in test file): fix the test file and retry.
+If tests fail for OTHER reasons (e.g. TypeScript syntax error in test file, or stub class `toString()` injection broken): fix the test file and retry.
+
+Run full suite via the project runner to ensure the new test file integrates:
+Run: `node tests/run.mjs tests/header-dropdown-mutex.test.ts 2>&1 | tail -15`
+Expected: same FAIL behavior (the project runner invokes tsx on the file).
 
 ---
 
@@ -305,12 +491,12 @@ document.addEventListener('keydown', (e) => {
 
 - [ ] **Step 3.2: Run test file to verify it now PASSES (all 5 green)**
 
-Run: `pnpm vitest run tests/header-dropdown-mutex.test.ts 2>&1 | tail -20`
+Run: `node tests/run.mjs tests/header-dropdown-mutex.test.ts 2>&1 | tail -25`
 Expected:
 ```
-✓ tests/header-dropdown-mutex.test.ts (5)
-  ✓ header-dropdown-mutex > test 1: default state — all 4 details are closed
-  ✓ header-dropdown-mutex > test 2: click history summary → only history opens
+▶ tests/header-dropdown-mutex.test.ts
+  ✔ test 1: default state — all 4 details are closed
+  ✔ test 2: click history summary → only history opens
   ✓ header-dropdown-mutex > test 3: click history then click recent → mutual exclusion (only recent open)
   ✓ header-dropdown-mutex > test 4: ESC key closes all open dropdowns
   ✓ header-dropdown-mutex > test 5: click outside (document.body) closes open dropdown
@@ -339,7 +525,7 @@ If fail count > 0: STOP and investigate (something else regressed).
 
 ```bash
 git add src/scripts/header-dropdown-mutex.client.ts tests/header-dropdown-mutex.test.ts
-git commit -m "feat(p55): header dropdown mutex + 5 vitest cases
+git commit -m "feat(p55): header dropdown mutex + 5 node:test cases
 
 adds single-responsibility client script that enforces mutual exclusion
 across the 4 Header <details> dropdowns (history/recent/favorites/
@@ -348,8 +534,9 @@ categories). closes user-reported overlap bug.
 also adds click-outside-to-close and ESC-to-close as standard
 dropdown affordances.
 
-5 vitest assertions cover: default closed, summary click open,
-mutual exclusion on subsequent click, ESC close all, click-outside close.
+5 node:test assertions (spawnSync per-test + hand-rolled DOM stub)
+cover: default closed, summary click open, mutual exclusion on
+subsequent click, ESC close all, click-outside close.
 
 zero changes to existing init scripts (history-init / recent-init /
 favorites-init / clerk-init / sync-init).
@@ -435,10 +622,10 @@ Expected:
 
 If any line missing or wrong attribute value: undo and retry.
 
-- [ ] **Step 4.3: Re-run vitest to verify tests still green after wiring**
+- [ ] **Step 4.3: Re-run node:test to verify tests still green after wiring**
 
-Run: `pnpm vitest run tests/header-dropdown-mutex.test.ts 2>&1 | tail -10`
-Expected: 5 passed (tests don't read real Header.astro — they construct their own DOM — so this should still pass).
+Run: `node tests/run.mjs tests/header-dropdown-mutex.test.ts 2>&1 | tail -15`
+Expected: 5 passed (tests don't read real Header.astro — they construct their own DOM via buildDom() — so this should still pass).
 
 - [ ] **Step 4.4: Run full pnpm check**
 
@@ -549,7 +736,7 @@ metadata:
 ## What shipped
 
 - `src/scripts/header-dropdown-mutex.client.ts` (~50 LOC) — pure DOM coordination; 3 document-level listeners (summary click toggle / click-outside / ESC); ZERO deps / ZERO LS / ZERO init-script coupling.
-- `tests/header-dropdown-mutex.test.ts` (~110 LOC) — 5 vitest cases covering spec §3 test matrix (default closed, summary click open, mutual exclusion, ESC, click-outside).
+- `tests/header-dropdown-mutex.test.ts` (~200 LOC) — 5 `node:test` cases (spawnSync per-test pattern, hand-rolled DOM stub with `.closest` + boolean `.open`) covering spec §3 test matrix (default closed, summary click open, mutual exclusion, ESC, click-outside).
 - `src/layouts/BaseLayout.astro` — 1 new `<script>` import at line 161 (BEFORE favorites-init).
 - `src/components/Header.astro` — 4 `data-dropdown="..."` attrs added (lines 40/53/66/77); ZERO class / structure / nested-element changes.
 
@@ -557,7 +744,7 @@ metadata:
 
 - **Single-responsibility module** — mutex script does ONLY open/close coordination; init scripts (history-init/recent-init/favorites-init) keep doing panel rendering + badge updates + save logic untouched.
 - **Pure DOM, zero deps** — no `localStorage`, no fetch, no third-party; matches Astro client-bundle YAGNI bar.
-- **Defensive null checks + `instanceof HTMLDetailsElement`** — strict TS compliance; safe under jsdom + real browsers.
+- **Defensive null checks + `instanceof HTMLDetailsElement`** — strict TS compliance; safe under hand-rolled DOM stub + real browsers.
 - **3 listeners as separate document.addEventListener** — separation of concerns (toggle vs outside-close vs ESC); each handler has explicit return guards to avoid double-processing same click.
 
 ## pnpm check
@@ -593,7 +780,7 @@ Pattern: **single-responsibility client scripts that coordinate DOM behavior acr
 Append a 1-line entry to `~/.claude/projects/D--E-----youtube-tools/memory/MEMORY.md` under "## P17+ (active batches — cascade audit + INDEX series)" (or new section if needed):
 
 ```
-- [P55 header-dropdown-mutex shipped](p55-header-dropdown-mutex-shipped.md) — N commits `xxx`+`yyy` 2026-07-22; 4 details mutual exclusion + ESC + click-outside; +5 vitest cases; mutex script single-responsibility + zero init-script changes; closes user-reported overlap bug
+- [P55 header-dropdown-mutex shipped](p55-header-dropdown-mutex-shipped.md) — N commits `xxx`+`yyy` 2026-07-22; 4 details mutual exclusion + ESC + click-outside; +5 node:test cases; mutex script single-responsibility + zero init-script changes; closes user-reported overlap bug
 ```
 
 Replace `xxx` and `yyy` with the actual commit SHAs from Task 3 (mutex + test) and Task 4 (BaseLayout + Header wiring). Verify via `git log --oneline -5`.

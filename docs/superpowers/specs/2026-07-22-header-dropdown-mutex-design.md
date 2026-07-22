@@ -23,7 +23,7 @@
 - 新增 `src/scripts/header-dropdown-mutex.client.ts`（~50 行）：监听 4 个 details 的 click + document click + keydown，强制全局至多 1 个打开
 - `src/layouts/BaseLayout.astro` 新增 1 行 `<script>` 引入
 - `src/components/Header.astro` 给 4 个 `<details>` 加 `data-dropdown="..."` 属性（4 处）
-- 新增 `tests/header-dropdown-mutex.test.ts`（~80 行）：5 个 vitest 用例覆盖核心行为
+- 新增 `tests/header-dropdown-mutex.test.ts`（~200 行）：5 个 `node:test` 用例覆盖核心行为（hand-rolled DOM stub + `spawnSync` per-test，沿用项目 `tests/favorites-init.test.ts` 模式）
 
 ### 不包含（Out of Scope）
 
@@ -115,7 +115,7 @@ document.addEventListener('keydown', (e) => {
 
 ### 新建 — `tests/header-dropdown-mutex.test.ts` (~80 行)
 
-vitest + jsdom（项目已有配置），覆盖 5 个核心行为：
+`node:test` + 手写 DOM stub + `spawnSync` per-test（项目惯例，`tests/favorites-init.test.ts` 已有同类模式），覆盖 5 个核心行为：
 
 | # | 用例 | 断言 |
 |---|------|------|
@@ -165,7 +165,7 @@ vitest + jsdom（项目已有配置），覆盖 5 个核心行为：
 | `e.target` 为文本节点（罕见） | `closest()` 在非 Element 上调用 TS 类型已保护；运行时空值 return |
 | 重复 import（理论不会发生） | `addEventListener` 会重复注册 → 重复执行 toggle → 但行为幂等（最终 `open` 状态一致） |
 | SSR 环境 | `*.client.ts` 后缀让 Astro 仅打包到 client bundle，无 SSR 报错 |
-| jsdom 测试环境 | vitest 配置已有 jsdom，5 个测试用例可运行 |
+| jsdom-free 测试环境 | `node:test` + 手写 DOM stub（项目惯例，无 jsdom 依赖）；5 个 `spawnSync` 测试用例覆盖核心场景 |
 | 浏览器 disable JS | `<details>` 退化为原生行为（可独立开合），属降级而非 bug |
 
 ---
@@ -175,7 +175,7 @@ vitest + jsdom（项目已有配置），覆盖 5 个核心行为：
 | 风险 | 等级 | 缓解 |
 |------|------|------|
 | preventDefault 拦截 summary click 影响嵌套 `<a>` | 低 | Header 现有 summary 仅含 `<span>`/`<svg>`，无 `<a>` |
-| 测试 jsdom 模拟 click 与真实浏览器 `e.target` 差异 | 低 | 5 个测试覆盖核心 click + ESC + 外部 click；e2e 浏览器验证在 pnpm check 后手动跑 |
+| 手写 DOM stub 模拟 click 与真实浏览器 `e.target` 差异 | 低 | 5 个测试覆盖核心 click + ESC + 外部 click；e2e 浏览器验证在 pnpm build 后手动跑 |
 | iOS Safari `<details>` 兼容性 | 低 | 项目已有 4 个 details 在生产稳定运行（P2a/P2b/P2c 期间验证过） |
 | 性能开销（3 个 document-level listener） | 极低 | click 路径 1 行 closest 判断，零 DOM reflow |
 | 4 个 data-dropdown 属性命名冲突 | 零 | 新增属性，无既有 `data-dropdown` |
