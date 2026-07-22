@@ -135,7 +135,12 @@ function renderInline(container: Element, entries: RecentEntry[], lang: Lang): v
 function renderFull(container: Element, entries: RecentEntry[], lang: Lang): void {
   // /recent/ page delegates to the existing ToolCard grid pattern (data-recent-grid wrapper)
   // We just hand off to a global function set by the page (or render plain list fallback).
-  while (container.firstChild) container.removeChild(container.firstChild);
+  // Query for the inner grid first; never clear the wrapper itself (the wrapper holds
+  // the Tailwind grid classes from the /recent/ page host element). Mirrors the
+  // favorites-init pattern: query target → clear its children, preserving layout.
+  // Fallback to `container` defends against pages that omit the inner div.
+  const renderTarget = container.querySelector('[data-recent-grid]') ?? container;
+  while (renderTarget.firstChild) renderTarget.removeChild(renderTarget.firstChild);
 
   // Update the page subtitle to reflect the actual visit count.
   // The build-time rendering hardcodes count=0; the init layer must rewrite it
@@ -172,8 +177,8 @@ function renderFull(container: Element, entries: RecentEntry[], lang: Lang): voi
     container.appendChild(wrap);
     return;
   }
-  // If a global hook exists, delegate (full ToolCard rendering is in the page's own init).
-  const grid = container.querySelector('[data-recent-grid]') ?? container;
+  // Reuse the renderTarget computed above (inner grid wrapper preserves Tailwind grid classes).
+  const grid = renderTarget;
   for (const e of entries) {
     const card = document.createElement('div');
     card.setAttribute('class', 'p-5 bg-gray-50 border border-gray-100 rounded-xl');
