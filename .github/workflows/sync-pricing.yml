@@ -13,11 +13,13 @@ on:
       - 'src/data/ai-pricing.json'
       - 'scripts/sync-pricing.mjs'
       - 'scripts/codegen-customfn.mjs'
+      - 'scripts/codegen-examples.mjs'
       - '.github/workflows/sync-pricing.yml'
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 30    # mirror ci.yml:20 — avoid 6h default hang on stuck job
     permissions:
       contents: write
     steps:
