@@ -90,3 +90,20 @@ test('ltv: customFn emits 🩺 and 🔄 sections; Sae typo fixed (P53)', () => {
   assert.ok(!/Sae\b/.test(src), 'calculate() source no longer contains "Sae" literal');
   assert.ok(/SaaS healthy/.test(src), 'calculate() source contains "SaaS healthy" benchmark');
 });
+
+// P53 review Important finding: zero-LTV inputs previously caused customFn
+// to skip the 🩺 and 🔄 v3 sections (the wrappers were guarded by `if(ltv>0)`).
+// This regression test pins the contract: both sections MUST always emit.
+test('ltv: customFn emits 🩺 and 🔄 even with zero LTV (regression for zero-revenue drift)', () => {
+  const fnSrc = engine!.clientConfig.customFn!;
+  const fn = new Function('inputs', 'pick', 'fill', fnSrc);
+  const out = fn({ monthlyRevenuePerUser: '0', monthlyChurn: '5', grossMargin: '80', cac: '300' }, () => '', () => '');
+  const str = JSON.stringify(out);
+  assert.ok(str.includes('🩺 LTV Health'), '🩺 section still emitted at zero LTV');
+  assert.ok(str.includes('🔄 What-If'), '🔄 section still emitted at zero LTV');
+  // Zero-LTV should hit the red branch in 🩺 or the "Cannot model" branch in 🔄
+  assert.ok(
+    str.includes('zero or negative') || str.includes('Cannot model'),
+    'zero-LTV triggers red branch in 🩺 or Cannot-model warning in 🔄',
+  );
+});
