@@ -1,11 +1,18 @@
 import { spawnSync } from 'node:child_process';
 import { readdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
+// P53b T17a: pass RELATIVE paths to spawnSync, not absolute. On Windows
+// `shell:true` routes through cmd.exe which has a hard 8191-char command-line
+// limit; absolute paths on a deep repo (e.g. `D:\E\独立站\youtube-tools\tests\…`)
+// waste ~28 chars × N files. P53b T17 added 4 AI cost tests that pushed the
+// baseline 8063-char cmdline over the 8191 limit (→ 8318, cmd.exe rejects with
+// 「输入行太长」, zero tests run). Relative paths keep the cmdline ~4400 chars
+// for 139 files — plenty of headroom for future additions.
 const tests = readdirSync(resolve(root, 'tests'))
   .filter(f => f.endsWith('.test.ts'))
-  .map(f => resolve(root, 'tests', f));
+  .map(f => relative(root, resolve(root, 'tests', f)));
 if (!tests.length) {
   console.error('No tests found in tests/');
   process.exit(1);
