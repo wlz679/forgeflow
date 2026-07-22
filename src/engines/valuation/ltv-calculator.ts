@@ -71,7 +71,7 @@ function calculateLTV(inputs: Record<string, string>): string[] {
   } else if (cac > 0) {
     const ratio = ltv / cac;
     if (ratio >= 3) mainResult += '\n\n🩺 LTV Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 LTV:CAC = ' + ratio.toFixed(1) + ':1 — healthy. Above 3:1 = invest more in growth.\n• Industry benchmark: 3:1 (SaaS), 4:1+ (premium).';
-    else if (ratio >= 1) mainResult += '\n\n🩺 LTV Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 LTV:CAC = ' + ratio.toFixed(1) + ':1 — below target. Improve before scaling.\n• Target: 3:1+ (Sae healthy benchmark). Focus on either raising LTV or cutting CAC.';
+    else if (ratio >= 1) mainResult += '\n\n🩺 LTV Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 LTV:CAC = ' + ratio.toFixed(1) + ':1 — below target. Improve before scaling.\n• Target: 3:1+ (SaaS healthy benchmark). Focus on either raising LTV or cutting CAC.';
     else mainResult += '\n\n🩺 LTV Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 LTV:CAC = ' + ratio.toFixed(1) + ':1 — losing money per customer. Stop scaling spend.\n• Need to either reduce CAC (better targeting, organic, referrals) or raise LTV (pricing, retention).';
   } else {
     mainResult += '\n\n🩺 LTV Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 LTV = $' + Math.round(ltv).toLocaleString() + '. Enter CAC to see LTV:CAC ratio.\n• ℹ️ Industry benchmark: 3:1 LTV:CAC.';
@@ -189,6 +189,22 @@ const customFn =
   "mr5+='\\u2022 If price +20%:  LTV $'+Math.round(rpLtv).toLocaleString()+'  |  LTV:CAC '+rpRatio.toFixed(1)+':1\\n';" +
   "mr5+='\\u2022 If churn halves:  LTV $'+Math.round(lcLtv).toLocaleString()+'  (lifetime '+lcLT.toFixed(1)+' mo)\\n';" +
   "mr5+='\\u2022 For 3:1 ratio:  target CAC = $'+Math.round(tCac).toLocaleString()+'  (current: $'+Math.round(cacV).toLocaleString()+')\\n';" +
+  "}" +
+  "// 🩺 LTV Health (v3)\n" +
+  "if(ltv>0){mr5+='\\n\\n\\uD83E\\uDE7A LTV Health:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n';" +
+  "if(cacV>0){" +
+  "if(lcr>=3)mr5+='• \\uD83D\\uDFE2 LTV:CAC = '+lcr.toFixed(1)+':1 \\u2014 healthy. Above 3:1 = invest more in growth.\\n• Industry benchmark: 3:1 (SaaS), 4:1+ (premium).';" +
+  "else if(lcr>=1)mr5+='• \\uD83D\\uDFE1 LTV:CAC = '+lcr.toFixed(1)+':1 \\u2014 below target. Improve before scaling.\\n• Target: 3:1+ (SaaS healthy benchmark). Focus on either raising LTV or cutting CAC.';" +
+  "else mr5+='• \\uD83D\\uDD34 LTV:CAC = '+lcr.toFixed(1)+':1 \\u2014 losing money per customer. Stop scaling spend.\\n• Need to either reduce CAC (better targeting, organic, referrals) or raise LTV (pricing, retention).';" +
+  "}else mr5+='• \\uD83D\\uDFE2 LTV = $'+Math.round(ltv).toLocaleString()+'. Enter CAC to see LTV:CAC ratio.\\n• \\u2139\\uFE0F Industry benchmark: 3:1 LTV:CAC.';" +
+  "}" +
+  "// 🔄 What-If (v3)\n" +
+  "if(ltv>0){mr5+='\\n\\n\\uD83D\\uDD04 What-If Scenarios:\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n';" +
+  "if(mc>0){" +
+  "var hcLtv=gpm/(mc/2/100);mr5+='• Cut churn in half:  LTV $'+Math.round(ltv).toLocaleString()+' \\u2192 $'+Math.round(hcLtv).toLocaleString()+'  (+'+Math.round(hcLtv-ltv).toLocaleString()+')';" +
+  "var irLtv=(mru*1.2*(gm/100))/(mc/100);mr5+='\\n• Raise price 20%:  LTV $'+Math.round(ltv).toLocaleString()+' \\u2192 $'+Math.round(irLtv).toLocaleString()+'  (+'+Math.round(irLtv-ltv).toLocaleString()+')';" +
+  "var imLtv=(mru*(gm+10)/100)/(mc/100);mr5+='\\n• Boost gross margin +10pp:  LTV $'+Math.round(ltv).toLocaleString()+' \\u2192 $'+Math.round(imLtv).toLocaleString()+'  (focus on cost-to-serve)';" +
+  "}else mr5+='\\n• \\u26A0\\uFE0F Cannot model — ensure revenue > 0 and churn > 0.';" +
   "}" +
   "var results=[mr5];" +
   "var cs5=[{l:'Excellent (1% churn)',c:1},{l:'Good (2% churn)',c:2},{l:'Average (3% churn)',c:3},{l:'Below Avg (5% churn)',c:5},{l:'Poor (8% churn)',c:8}];" +
