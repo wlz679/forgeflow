@@ -42,6 +42,9 @@ jobs:
       - name: Check engine coverage (P53)
         run: pnpm check:engine-coverage
 
+      - name: Type check (fail-fast gate — P53)
+        run: pnpm exec tsc --noEmit
+
       - name: Unit tests
         env:
           # P24: P23b skip-guard design assumes CI opt-in. Without this,
