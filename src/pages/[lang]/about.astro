@@ -4,14 +4,18 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { t, getLang } from '../../i18n';
 import { SITE_URL } from '../../lib/site-config';
+import { tools } from '../../data/tools';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
 }
 
 const lang = getLang(Astro);
+// Drift-proof count: pulled from ToolMeta registry at build time. Mirrors
+// EXPECTED_ENGINE_COUNT in tests/engine-count.ts (P22b invariant).
+const toolsCount = String(tools.length);
 const title = t('about.title', lang);
-const description = t('about.description', lang);
+const description = t('about.description', lang, { count: toolsCount });
 const aboutSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -46,7 +50,7 @@ const aboutSchema = JSON.stringify({
 
       <section>
         <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.update_policy.h1', lang)}</h2>
-        <p class="text-sm">{t('about.update_policy.body', lang)}</p>
+        <p class="text-sm">{t('about.update_policy.body', lang, { count: toolsCount })}</p>
       </section>
 
       <section>
@@ -66,7 +70,7 @@ const aboutSchema = JSON.stringify({
 
       <section>
         <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.roadmap.h1', lang)}</h2>
-        <p class="text-sm">{t('about.roadmap.body', lang)}</p>
+        <p class="text-sm">{t('about.roadmap.body', lang, { count: toolsCount })}</p>
       </section>
     </div>
   </main>

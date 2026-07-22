@@ -15,7 +15,10 @@ export function getStaticPaths() {
 }
 
 const lang = getLang(Astro);
-const title = t('home.title', lang);
+// Drift-proof count: pulled from ToolMeta registry at build time. Mirrors
+// EXPECTED_ENGINE_COUNT in tests/engine-count.ts (P22b invariant).
+const toolsCount = String(tools.length);
+const title = t('home.title', lang, { count: toolsCount });
 const description = t('home.description', lang);
 
 const translatedTools = tools.map(tool => ({
@@ -60,7 +63,7 @@ const homeSchema = JSON.stringify({
           </div>
         </div>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">{t('home.h1', lang)}</h1>
-        <p class="text-sm text-gray-600 mt-2 max-w-xl mx-auto leading-relaxed">{t('home.subtitle', lang)}</p>
+        <p class="text-sm text-gray-600 mt-2 max-w-xl mx-auto leading-relaxed">{t('home.subtitle', lang, { count: toolsCount })}</p>
         <div class="flex justify-center gap-6 mt-6 text-xs text-gray-500">
           <span class="flex items-center gap-1">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>

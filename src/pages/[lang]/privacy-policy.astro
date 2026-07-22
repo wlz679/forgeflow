@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_URL } from '../../lib/site-config';
+import { tools } from '../../data/tools';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -11,6 +12,9 @@ export function getStaticPaths() {
 const title = 'Privacy Policy — ForgeFlowKit';
 const description = 'Privacy policy for ForgeFlowKit. Learn how we handle your data.';
 const { lang } = Astro.params;
+// Drift-proof count: pulled from ToolMeta registry at build time. Mirrors
+// EXPECTED_ENGINE_COUNT in tests/engine-count.ts (P22b invariant).
+const toolsCount = tools.length;
 const privacySchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -43,13 +47,13 @@ const privacySchema = JSON.stringify({
         <>
           <h2>账户认证（Clerk）</h2>
           <p>我们使用 <a href="https://clerk.com">Clerk</a> 处理用户认证。当你登录时，Clerk 在他们的服务器上收集和处理你的邮箱地址、IP 地址和浏览器指纹。我们不存储任何这些数据 — Clerk 是认证数据的唯一控制方。其隐私政策适用于：<a href="https://clerk.com/privacy">https://clerk.com/privacy</a>。</p>
-          <p>如果你不希望使用 Clerk 认证，请勿点击 Header 中的 [Login] 按钮。ForgeFlowKit 的所有计算功能（32 个工具）和 P2 features（favorites / recent / history）在不登录的情况下均可正常使用。</p>
+          <p>如果你不希望使用 Clerk 认证，请勿点击 Header 中的 [Login] 按钮。ForgeFlowKit 的所有计算功能（{toolsCount} 个工具）和 P2 features（favorites / recent / history）在不登录的情况下均可正常使用。</p>
         </>
       ) : (
         <>
           <h2>Account Authentication (Clerk)</h2>
           <p>We use <a href="https://clerk.com">Clerk</a> to handle user authentication. When you log in, Clerk collects and processes your email address, IP address, and browser fingerprint on their servers. We do not store any of this data — Clerk is the sole data controller for authentication. Their privacy policy applies: <a href="https://clerk.com/privacy">https://clerk.com/privacy</a>.</p>
-          <p>If you prefer not to use Clerk authentication, simply do not click the [Login] button in the Header. All 32 ForgeFlowKit calculators and P2 features (favorites / recent / history) work fully without signing in.</p>
+          <p>If you prefer not to use Clerk authentication, simply do not click the [Login] button in the Header. All {toolsCount} ForgeFlowKit calculators and P2 features (favorites / recent / history) work fully without signing in.</p>
         </>
       )}
       {lang === 'zh' ? (

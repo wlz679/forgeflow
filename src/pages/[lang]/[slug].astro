@@ -1487,7 +1487,7 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
       });
 
       // --- Unified preset chip handler ---
-      // All 32 chips use class="preset-btn" + data-* attrs in kebab-case.
+      // Every preset chip uses class="preset-btn" + data-* attrs in kebab-case.
       // Browser DOM auto-converts data-images-per-month → dataset.imagesPerMonth, which matches input id.
       var presetBtns = document.querySelectorAll('.preset-btn');
       presetBtns.forEach(function(btn) {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { tools } from '../src/data/tools/index.ts';
+import { EXPECTED_ENGINE_COUNT } from './engine-count.ts';
 
 const distDir = resolve(process.cwd(), 'dist');
 
@@ -34,7 +35,7 @@ test('EEAT — every tool page HTML has SoftwareApplication with author/dateModi
   }
 });
 
-test('EEAT — author is uniform ForgeFlowKit across 32 tools', { skip: !existsSync(distDir) }, () => {
+test(`EEAT — author is uniform ForgeFlowKit across ${EXPECTED_ENGINE_COUNT} tools`, { skip: !existsSync(distDir) }, () => {
   for (const tool of tools) {
     assert.equal(tool.author, 'ForgeFlowKit', `${tool.slug}: author must be ForgeFlowKit`);
     assert.equal(tool.reviewedBy, 'ForgeFlowKit Team', `${tool.slug}: reviewedBy must be ForgeFlowKit Team`);
@@ -151,7 +152,7 @@ test('P2b — privacy policy mentions Recently Viewed', { skip: !existsSync(dist
 });
 
 test('P2b — every tool detail page mounts RecentViewed inline container', { skip: !existsSync(distDir) }, () => {
-  // Sample 3 representative tool slugs from the 32-tool registry. These are also the
+  // Sample 3 representative tool slugs from the ${EXPECTED_ENGINE_COUNT}-tool registry. These are also the
   // most-linked MRR/LTV/CAC trio — if any of them drifts, the homepage internal-links
   // surface will look broken. Inline container is required on every tool detail page
   // so a returning user lands on a page that already shows their recent activity.
@@ -262,7 +263,7 @@ test('P2c — privacy policy mentions History Snapshots', { skip: !existsSync(di
 });
 
 test('P2c — every tool detail page has [data-history-save] button', { skip: !existsSync(distDir) }, () => {
-  // Sample 3 representative tool slugs from the 32-tool registry (MRR/LTV/CAC trio).
+  // Sample 3 representative tool slugs from the ${EXPECTED_ENGINE_COUNT}-tool registry (MRR/LTV/CAC trio).
   // The [💾 保存] button is wired in ResultCard.astro and is the user-facing entry point
   // to save a calculation snapshot — if it's missing, save flow is broken on that page.
   const slugs = ['solopreneur-mrr-calculator', 'solopreneur-ltv-calculator', 'solopreneur-cac-calculator'];
