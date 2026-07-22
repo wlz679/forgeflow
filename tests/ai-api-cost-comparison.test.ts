@@ -4,6 +4,9 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { clampNonNegative } from '../src/core/engines/helpers.ts';
+// P53b Task 18 — Agent D P1 D1 follow-up: exercise actual generate() path.
+import '../src/engines/ai-cost/ai-api-cost-comparison.ts';
+import { getEngine } from '../src/core/engines/registry.ts';
 
 test('ai-api-cost-comparison: clampNonNegative defensive layer for parseInt-in-customFn (P15)', () => {
   // customFn uses `cnn(parseInt(inputs.X))` for inputTokens/outputTokens/requestsPerDay.
@@ -15,4 +18,23 @@ test('ai-api-cost-comparison: clampNonNegative defensive layer for parseInt-in-c
   assert.equal(clampNonNegative(1), 1, 'positive passes through');
   assert.equal(clampNonNegative(1_000), 1_000, 'large positive passes through');
   assert.equal(clampNonNegative(NaN), 0, 'NaN guard → 0 (prevents silent NaN leaks)');
+});
+
+test('ai-api-cost-comparison: generate emits cross-provider comparison', () => {
+  // P53b Task 18 — generate() path coverage. Inputs match engine.inputs:
+  // inputTokens, outputTokens, requestsPerDay, pricingMode.
+  const engine = getEngine('solopreneur-ai-api-cost-comparison');
+  assert.ok(engine, 'engine should be registered');
+  const out = engine!.generate({
+    inputTokens: '1000',
+    outputTokens: '500',
+    requestsPerDay: '100',
+    pricingMode: 'realtime',
+  });
+  assert.ok(Array.isArray(out));
+  assert.ok(out.length > 0, 'cross-provider comparison returns at least one line');
+  const all = out.join('\n');
+  // Should mention at least one provider name.
+  assert.ok(/OpenAI|Claude|Gemini|DeepSeek|GPT|Anthropic|Google/i.test(all),
+    'cross-provider comparison should mention at least one provider');
 });
