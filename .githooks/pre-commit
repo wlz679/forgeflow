@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Pre-commit hook: enforce generated-file freshness + i18n completeness + og-sample coverage.
+# Pre-commit hook: enforce generated-file freshness + i18n completeness +
+# og-sample coverage + engine count by category + engine coverage.
 #
 # Install once after cloning:  git config core.hooksPath .githooks
 # Bypass for one commit (when intentional):  git commit --no-verify
@@ -11,6 +12,10 @@
 #      Run `scripts/check-i18n-completeness.mjs` to inspect.
 #   3. og-sample coverage — every tool in src/data/tools/ must have a matching
 #      entry in src/data/og-samples.json. P23.
+#   4. engine count by category — per-letter count + CLAUDE.md snapshot (P49).
+#      Run `scripts/check-engine-count-by-category.mjs` to regen the table.
+#   5. engine coverage — tools ↔ engines registry slug alignment (P53).
+#      Run `scripts/check-engine-coverage.mjs` to inspect.
 
 set -e
 
@@ -63,6 +68,19 @@ if echo "$STAGED" | grep -qE '^(src/data/(categories|tools)/.*\.ts|tests/engine-
     echo "  Fix: update tests/engine-count.ts EXPECTED_ENGINES_BY_CATEGORY,"
     echo "        run \`node scripts/check-engine-count-by-category.mjs\` to get new table,"
     echo "        copy-paste into CLAUDE.md between codegen markers."
+    echo "  Bypass (not recommended): \`git commit --no-verify\`"
+    exit 1
+  fi
+fi
+
+# 5. engine coverage — tools ↔ engines registry slug alignment (P53).
+if echo "$STAGED" | grep -qE '^(src/data/tools/.*\.ts|src/engines/.*\.ts|scripts/check-engine-coverage\.mjs)$'; then
+  echo "[pre-commit] Running scripts/check-engine-coverage.mjs..."
+  if ! node scripts/check-engine-coverage.mjs; then
+    echo ""
+    echo "[pre-commit] BLOCKED: engine coverage drift."
+    echo "  Fix: every src/data/tools/*.ts entry must have a matching"
+    echo "        engine registered in src/engines/ — add or remove to align."
     echo "  Bypass (not recommended): \`git commit --no-verify\`"
     exit 1
   fi
