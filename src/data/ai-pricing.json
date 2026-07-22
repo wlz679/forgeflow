@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-07-20",
+  "lastUpdated": "2026-07-22",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1613,6 +1613,22 @@
           "family": "legacy",
           "contextWindow": "1M",
           "order": 43
+        },
+        "gemini-3.5-flash-lite": {
+          "input": 0.3,
+          "output": 2.5,
+          "name": "Gemini 3.5Flash Lite",
+          "family": "flash35",
+          "contextWindow": "1M",
+          "order": 44
+        },
+        "gemini-3.6-flash": {
+          "input": 1.5,
+          "output": 7.5,
+          "name": "Gemini 3.6Flash",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 45
         }
       }
     },
