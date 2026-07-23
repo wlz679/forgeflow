@@ -1,91 +1,87 @@
-# Task 4 Report — P17b Legacy mix batch
+# Task 4 Report — Update 3 test file import paths
 
-**Status:** DONE
-**Base commit:** fd416c3
-**Commit:** `292d097`
+## 1. Status
 
-## Summary
+DONE
 
-Translated 17 legacy engines across 4 categories (saas, cost, freelance, investment) to professional Simplified Chinese, bulk-inserted 67 missing keys, and marked all 17 engines with `engineKey: true`. Brings engineKey=true count from 21 → 38 (all engines with existing translated entries now flagged).
+## 2. Edit commands run (per file)
 
-## Translation stats per engine
+**File 1:** `tests/course-pricing-calculator.test.ts`
+- old_string: `import '../src/engines/valuation/course-pricing-calculator.ts';`
+- new_string: `import '../src/engines/freelance/course-pricing-calculator.ts';`
 
-Pre-flight expected vs actual (input labels + placeholders + faq×2 + howToUse):
+**File 2:** `tests/email-list-revenue-calculator.test.ts`
+- old_string: `import '../src/engines/valuation/email-list-revenue-calculator.ts';`
+- new_string: `import '../src/engines/freelance/email-list-revenue-calculator.ts';`
 
-| Engine | Expected | Actual | Gap | Action |
-| --- | ---: | ---: | ---: | --- |
-| solopreneur-burn-rate-calculator | 37 | 35 | 2 | Added 2 faq.5 q+a |
-| solopreneur-churn-rate-calculator | 33 | 28 | 5 | Added 2 faq.5 q+a + 2 faq.6 q+a + 1 how_to_use.8 |
-| solopreneur-market-size-estimator | 29 | 29 | 0 | None |
-| solopreneur-mrr-calculator | 34 | 34 | 0 | None |
-| solopreneur-revenue-projector | 46 | 46 | 0 | None |
-| solopreneur-employee-cost-calculator | 21 | 21 | 0 | None |
-| solopreneur-meeting-cost-calculator | 25 | 24 | 1 | Added 1 how_to_use.6 |
-| solopreneur-productivity-score | 22 | 21 | 1 | Added 1 how_to_use.5 |
-| solopreneur-remote-vs-office-calculator | 30 | 6 | 24 | Added 6 input labels + 5 faq q+a pairs + 8 how_to_use |
-| solopreneur-affiliate-income-calculator | 25 | 23 | 2 | Added 1 input.monthlyCost.label + 1 how_to_use.6 |
-| solopreneur-freelance-rate-calculator | 24 | 19 | 5 | Added 4 input labels + 1 how_to_use.5 |
-| solopreneur-hourly-vs-fixed-calculator | 24 | 23 | 1 | Added 1 input.annualExpenses.label |
-| solopreneur-compound-interest-calculator | 26 | 5 | 21 | Added 4 input labels + 5 faq q+a pairs + 7 how_to_use |
-| solopreneur-equity-dilution-calculator | 23 | 22 | 1 | Added 1 how_to_use.6 |
-| solopreneur-freelance-tax-calculator | 27 | 23 | 4 | Added 3 input labels + 1 how_to_use.6 |
-| solopreneur-sponsorship-rate-calculator | 23 | 23 | 0 | None |
-| solopreneur-time-value-calculator | 22 | 22 | 0 | None |
-| **Total** | **489** | **424** | **67** | **67 new entries added** |
+**File 3:** `tests/project-profitability-calculator.test.ts`
+- old_string: `import '../src/engines/valuation/project-profitability-calculator.ts';`
+- new_string: `import '../src/engines/freelance/project-profitability-calculator.ts';`
 
-Note: "Actual" is count of keys in `translations.ts` matching `'tools.<slug>.<subkey>'`. The pre-flight expected count from `i18n-needed.json` is the strict subset (labels + placeholders + faq + howToUse). The simple `grep -c` count in brief differs because grep also counts title/description/preset keys (which are pre-existing and not in expected).
+## 3. `grep -n` verification
 
-## Test results
+**Step 2a — stale valuation paths:**
+```bash
+grep -nE "src/engines/valuation/(course-pricing|email-list-revenue|project-profitability)" tests/*.test.ts || echo "OK: no stale valuation paths"
+```
+Output:
+```
+OK: no stale valuation paths
+```
 
-- `node scripts/check-i18n-completeness.mjs` → PASS, "38 engineKey=true engines fully translated"
-- `node scripts/codegen-examples.mjs --check` → PASS, all 100 engines in sync
-- `node scripts/codegen-customfn.mjs --check` → PASS, no drift
-- `pnpm exec astro build` → PASS, 313 pages built, 0 errors
-- `grep -c "tools\.solopreneur-\|category\.[A-Z]\." dist/{en,zh}/index.html` → 0, 0 (no raw keys)
-- `node tests/run.mjs` → 1064 pass / 13 fail / 19 skip
+(Note: the brief used bare `grep -n` without `-E`; that returns 0 matches because BRE treats parentheses as literals. With `-E` for proper alternation support, the result is the same — 0 matches, "OK: no stale valuation paths". Either form confirms the invariant.)
 
-## Files changed
+**Step 2b — fresh freelance paths:**
+```bash
+grep -nE "src/engines/freelance/(course-pricing|email-list-revenue|project-profitability)" tests/*.test.ts
+```
+Output:
+```
+tests/course-pricing-calculator.test.ts:3:import '../src/engines/freelance/course-pricing-calculator.ts';
+tests/email-list-revenue-calculator.test.ts:3:import '../src/engines/freelance/email-list-revenue-calculator.ts';
+tests/project-profitability-calculator.test.ts:3:import '../src/engines/freelance/project-profitability-calculator.ts';
+```
 
-- `src/i18n/translations.ts` — 67 new key entries added
-- 17 engine files — added `engineKey: true,` as last field before `};`
+3 fresh freelance paths confirmed on line 3 of each file.
 
-### Engine files modified
+## 4. Step 3 smoke check
 
-saas/ (5):
-- `burn-rate-calculator.ts`
-- `churn-rate-calculator.ts`
-- `market-size-estimator.ts`
-- `mrr-calculator.ts`
-- `revenue-projector.ts`
+**Command:**
+```bash
+pnpm exec node --import tsx --test tests/course-pricing-calculator.test.ts tests/email-list-revenue-calculator.test.ts tests/project-profitability-calculator.test.ts 2>&1 | tail -25
+```
 
-cost/ (4):
-- `employee-cost-calculator.ts`
-- `meeting-cost-calculator.ts`
-- `productivity-score.ts`
-- `remote-vs-office-calculator.ts`
+**Tail-25 output:**
+```
+  ...
+# Subtest: project-profitability: canonical $10K rev / 100 hrs / $50/hr / $500 materials → profit
+ok 7 - project-profitability: canonical $10K rev / 100 hrs / $50/hr / $500 materials → profit
+  ---
+  duration_ms: 19.0969
+  ...
+# Subtest: project-profitability: zero hours returns projection
+ok 8 - project-profitability: zero hours returns projection
+  ---
+  duration_ms: 0.2483
+  ...
+# Subtest: project-profitability: negative inputs clamp to 0 (defensive layer 2)
+ok 9 - project-profitability: negative inputs clamp to 0 (defensive layer 2)
+  ---
+  duration_ms: 0.2854
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 691.1946
+```
 
-freelance/ (3):
-- `affiliate-income-calculator.ts`
-- `freelance-rate-calculator.ts`
-- `hourly-vs-fixed-calculator.ts`
+Result: **9 pass / 0 fail / 0 skipped**. No functional regression. Engine registration via sub-barrel + path resolution works after the move.
 
-investment/ (5):
-- `compound-interest-calculator.ts`
-- `equity-dilution-calculator.ts`
-- `freelance-tax-calculator.ts`
-- `sponsorship-rate-calculator.ts`
-- `time-value-calculator.ts`
+## 5. Concerns
 
-## Concerns
-
-1. **`insert-translations.mjs` only updates existing keys, not creates new ones** — for this batch, all 67 missing keys had to be added via `scripts/.scratch/apply-translations.mjs` (reads EN from engine source files and inserts in slug-prefixed position). Recommend documenting this distinction or extending insert-translations.mjs to handle creation.
-
-2. **Pre-existing test failures (13) unchanged by this batch.** The `tests/ab-split.test.ts` engine count assertion (98 vs actual 100) is a P16 batch oversight, plus 2 BaseLayout clerk-init bundling tests unrelated to i18n. None caused by Task 4.
-
-3. **Two engines (remote-vs-office, compound-interest) were almost entirely missing** from i18n — title and description existed but no input labels / FAQ / howToUse. These are the largest gap engines; 45 of 67 missing keys came from these two engines alone.
-
-## Translation tool used
-
-- `scripts/.scratch/p17b-legacy-translations.json` — 67 ZH translations, professional business Chinese matching existing style (informal-professional tone, "例如：" for placeholders, brackets/parentheses preserved, "复利/股权稀释/联盟营销/赞助" terminology)
-- `scripts/.scratch/p17b-legacy-add-engineKey.mjs` — script to insert `engineKey: true,` before closing `};`
-- `scripts/.scratch/apply-translations.mjs` — reused from previous batch, handles BOTH new key insertion AND zh fill for existing keys
+None. Working tree is dirty (per plan: T8 is the single atomic commit). 3 edits applied, 0 stale paths, 9/9 smoke tests pass.

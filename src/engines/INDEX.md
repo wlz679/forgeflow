@@ -16,7 +16,7 @@ src/engines/
     ├── ai-cost/         (8 engines)
     ├── cost/            (4)
     ├── customer-support/ (6)
-    ├── freelance/       (3)
+    ├── freelance/       (6)
     ├── hiring-team/     (6)
     ├── investment/      (5)
     ├── knowledge/       (6)
@@ -28,7 +28,7 @@ src/engines/
     ├── retention/       (6)
     ├── saas/            (5)
     ├── sales/           (6)
-    └── valuation/       (13)
+    └── valuation/       (10)
 ```
 
 | Letter | Category | Slug Count | v3 变体 |
@@ -99,13 +99,16 @@ src/engines/
 
 ---
 
-## 4 · `freelance/` — Freelance / Pricing (3 engines)
+## 4 · `freelance/` — Freelance / Pricing (6 engines)
 
 | Slug | Title |
 |---|---|
 | `affiliate-income-calculator` | Affiliate Income Calculator |
+| `course-pricing-calculator` | Course Pricing Calculator |
+| `email-list-revenue-calculator` | Email List Revenue Calculator |
 | `freelance-rate-calculator` | Freelance Rate Calculator |
 | `hourly-vs-fixed-calculator` | Hourly vs Fixed Rate Calculator |
+| `project-profitability-calculator` | Project Profitability Calculator |
 
 ---
 
@@ -258,7 +261,7 @@ src/engines/
 
 ---
 
-## 16 · `valuation/` — Valuation / Pricing (13 engines)
+## 16 · `valuation/` — Valuation / Pricing (10 engines)
 
 | Slug | Title |
 |---|---|
@@ -266,17 +269,14 @@ src/engines/
 | `break-even-calculator` | Break-Even Calculator |
 | `burn-multiple-rule-of-40-calculator` | Burn Multiple / Rule of 40 Calculator |
 | `cac-calculator` | CAC Calculator |
-| `course-pricing-calculator` | Course Pricing Calculator |
-| `email-list-revenue-calculator` | Email List Revenue Calculator |
 | `ltv-calculator` | LTV Calculator |
-| `project-profitability-calculator` | Project Profitability Calculator |
 | `saas-pricing-planner` | SaaS Pricing Planner |
 | `saas-valuation-calculator` | SaaS Valuation Calculator |
 | `safe-convertible-note-calculator` | SAFE / Convertible Note Calculator |
 | `stripe-fee-calculator` | Stripe Fee Calculator |
 | `unit-economics-calculator` | Unit Economics Calculator |
 
-> **注意:** `valuation/` 是最大 category (13 engines)，体现项目"valuation heavy"重心。其他 categories 平均 5-6 engines。
+> **注意:** `valuation/` 收窄到 10 engines（Freelance/Pricing 类 engines 已在 P59 搬到 `freelance/`）。Course pricing / Email list revenue / Project profitability 不再在此处。
 
 ---
 
@@ -287,7 +287,7 @@ src/engines/
 | 1 | ai-cost/ | 8 |
 | 2 | cost/ | 4 |
 | 3 | customer-support/ | 6 |
-| 4 | freelance/ | 3 |
+| 4 | freelance/ | 6 |
 | 5 | hiring-team/ | 6 |
 | 6 | investment/ | 5 |
 | 7 | knowledge/ | 6 |
@@ -299,7 +299,7 @@ src/engines/
 | 13 | retention/ | 6 |
 | 14 | saas/ | 5 |
 | 15 | sales/ | 6 |
-| 16 | valuation/ | 13 |
+| 16 | valuation/ | 10 |
 | | **Total** | **100** |
 
 ---

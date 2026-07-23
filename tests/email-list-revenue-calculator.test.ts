@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import '../src/engines/valuation/email-list-revenue-calculator.ts';
+import '../src/engines/freelance/email-list-revenue-calculator.ts';
 import { getEngine } from '../src/core/engines/registry.ts';
 
 const engine = getEngine('solopreneur-email-list-revenue-calculator');
