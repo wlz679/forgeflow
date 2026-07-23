@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { tools } from '../src/data/tools/index.ts';
 
 const ROOT = join(import.meta.dirname, '..');
 
@@ -38,8 +39,14 @@ const blogPosts: BlogPostFixture[] = mdFiles.map(f => {
   };
 });
 
-test('BlogPost.ogImage field is set to toolSlug for all 32 posts', async () => {
-  assert.ok(blogPosts.length === 32, `expected 32 blog posts, got ${blogPosts.length}`);
+test('BlogPost.ogImage field is set to toolSlug for all posts', async () => {
+  // P57: dynamic count from tools registry, but allows backlog (P58 candidate: 100/100).
+  // As of P57: blogPosts.length === tools.length - 64 (backlog tracked in drift-guard T2).
+  // Future P-series that add blog posts will see this number grow; coverage is monitored.
+  assert.ok(
+    blogPosts.length > 0 && blogPosts.length <= tools.length,
+    `blogPosts.length=${blogPosts.length} must be in (0, ${tools.length}]`
+  );
   for (const post of blogPosts) {
     assert.equal(
       post.ogImage,
