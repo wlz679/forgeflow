@@ -147,6 +147,46 @@ function calculateRentVsBuy(inputs: Record<string, string>): string[] {
     n.toLocaleString('en-US', { maximumFractionDigits: 0 });
   const money = (n: number) => '$' + fmt(n);
 
+  // Pre-compute projections at 6 stay horizons — used by both 🎯 Milestone and SEO rows
+  const horizonYears = [3, 5, 7, 10, 15, 30];
+  const horizonRows = horizonYears.map(h => {
+    const buyH = netCostBuy({
+      homePrice: effHomePrice,
+      downPayment: effDown,
+      mortgageRate,
+      yearsToStay: h,
+      annualAppreciation,
+    });
+    const rentH = totalRentCost({
+      monthlyRent,
+      annualRentIncrease,
+      downPayment: effDown,
+      yearsToStay: h,
+    });
+    const s = rentH.total - buyH.netCostBuy;
+    const winner = s > 30000 ? 'BUY' : s < -30000 ? 'RENT' : 'CLOSE';
+    return { h, buy: buyH.netCostBuy, rent: rentH.total, s, winner };
+  });
+
+  // Find breakeven year via linear interpolation where savings sign flips
+  let breakevenYr: number | null = null;
+  for (let i = 0; i < horizonRows.length - 1; i++) {
+    const a = horizonRows[i];
+    const b = horizonRows[i + 1];
+    if (a.s < 0 && b.s >= 0) {
+      const t = -a.s / (b.s - a.s);
+      breakevenYr = a.h + t * (b.h - a.h);
+      break;
+    } else if (a.s >= 0 && b.s < 0) {
+      const t = a.s / (a.s - b.s);
+      breakevenYr = a.h + t * (b.h - a.h);
+      break;
+    }
+  }
+  const breakevenLabel = breakevenYr !== null
+    ? breakevenYr.toFixed(1) + ' years'
+    : 'beyond 30 years';
+
   const r =
     '⏰ Rent-vs-Buy Calculator\n\n' +
     '💰 Decision Snapshot:\n' +
@@ -183,6 +223,16 @@ function calculateRentVsBuy(inputs: Record<string, string>): string[] {
     '• Renting net cost: ' + money(rentRes.total) + '\n' +
     '• Difference:       ' + money(Math.abs(savings)) + ' ' + (savings > 0 ? '(buying cheaper)' : savings < 0 ? '(renting cheaper)' : '(equal)') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+    '🎯 Stay-Horizon Milestone:\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    'At different stay horizons, the math flips:\n' +
+    horizonRows.map(hr => {
+      const lbl = (hr.winner === 'BUY' ? 'buy wins' : hr.winner === 'RENT' ? 'rent wins' : 'close').padEnd(10);
+      const sign = hr.s >= 0 ? '+' : '-';
+      return '• ' + hr.h + 'y: ' + lbl + '(' + sign + '$' + fmt(Math.abs(hr.s)) + ')';
+    }).join('\n') + '\n' +
+    '💡 Breakeven ≈ ' + breakevenLabel + ' — selling + closing costs (~9%) recouped at this horizon.\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Stay 5 years:  runs the comparison at 5y horizon\n' +
@@ -195,26 +245,11 @@ function calculateRentVsBuy(inputs: Record<string, string>): string[] {
 
   const results: string[] = [r];
 
-  // SEO comparison rows at 6 time horizons
-  const horizons = [3, 5, 7, 10, 15, 30];
-  for (const h of horizons) {
-    const buyH = netCostBuy({
-      homePrice: effHomePrice,
-      downPayment: effDown,
-      mortgageRate,
-      yearsToStay: h,
-      annualAppreciation,
-    });
-    const rentH = totalRentCost({
-      monthlyRent,
-      annualRentIncrease,
-      downPayment: effDown,
-      yearsToStay: h,
-    });
-    const s = rentH.total - buyH.netCostBuy;
-    const winner = s > 30000 ? 'BUY favored' : s < -30000 ? 'RENT favored' : 'CLOSE';
+  // SEO comparison rows (reuse pre-computed horizonRows)
+  for (const hr of horizonRows) {
+    const winner = hr.winner === 'BUY' ? 'BUY favored' : hr.winner === 'RENT' ? 'RENT favored' : 'CLOSE';
     results.push(
-      'Comparison: ' + h + '-year stay → buy ' + money(buyH.netCostBuy) + ' vs rent ' + money(rentH.total) + ' → ' + winner + ' (savings ' + money(s) + ')',
+      'Comparison: ' + hr.h + '-year stay → buy ' + money(hr.buy) + ' vs rent ' + money(hr.rent) + ' → ' + winner + ' (savings ' + money(hr.s) + ')',
     );
   }
   return results;
@@ -248,6 +283,11 @@ const customFn =
   "var v=verd(sav);" +
   "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
   "function money(n){return '$'+fmt(n);}" +
+  "var hy=[3,5,7,10,15,30];" +
+  "var hrows=hy.map(function(h){var bh=ncb(eh,ed,mRate,h,appr);var rh=trc(mr,rentI,ed,h);var s=rh.total-bh.total;var w=s>30000?'BUY':s<-30000?'RENT':'CLOSE';return{h:h,b:bh.total,r:rh.total,s:s,w:w};});" +
+  "var brk=null;" +
+  "for(var bi=0;bi<hrows.length-1;bi++){var a=hrows[bi];var b=hrows[bi+1];if(a.s<0&&b.s>=0){var t=-a.s/(b.s-a.s);brk=a.h+t*(b.h-a.h);break;}else if(a.s>=0&&b.s<0){var t=a.s/(a.s-b.s);brk=a.h+t*(b.h-a.h);break;}}" +
+  "var brkL=brk!==null?brk.toFixed(1)+' years':'beyond 30 years';" +
   "var r2='';" +
   "r2+='\\u23F0 Rent-vs-Buy Calculator\\n\\n';" +
   "r2+='\\uD83D\\uDCB0 Decision Snapshot:\\n';" +
@@ -284,6 +324,13 @@ const customFn =
   "r2+='\\u2022 Renting net cost: '+money(rR.total)+'\\n';" +
   "r2+='\\u2022 Difference:       '+money(Math.abs(sav))+' '+(sav>0?'(buying cheaper)':sav<0?'(renting cheaper)':'(equal)')+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+  // 🎯 Stay-Horizon Milestone (matches calculate() output, uses pre-computed hrows + brkL)
+  "r2+='\\uD83C\\uDFAF Stay-Horizon Milestone:\\n';" +
+  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r2+='At different stay horizons, the math flips:\\n';" +
+  "for(var him=0;him<hrows.length;him++){var hr=hrows[him];var lbl=(hr.w==='BUY'?'buy wins':hr.w==='RENT'?'rent wins':'close');while(lbl.length<10)lbl+=' ';var sg=hr.s>=0?'+':'-';r2+='\\u2022 '+hr.h+'y: '+lbl+'('+sg+'$'+fmt(Math.abs(hr.s))+')\\n';}" +
+  "r2+='\\uD83D\\uDCA1 Breakeven \\u2248 '+brkL+' \\u2014 selling + closing costs (~9%) recouped at this horizon.\\n\\n';" +
+  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 Stay 5 years:  runs the comparison at 5y horizon\\n';" +
@@ -294,8 +341,7 @@ const customFn =
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: Most rent-vs-buy decisions break on time horizon \\u2014 selling costs (~6%) and closing costs (~3%) make buying expensive in <5y stays, but appreciation + forced savings make buying cheaper in 7+ year stays.';" +
   "var results=[r2];" +
-  "var horizons=[3,5,7,10,15,30];" +
-  "for(var hi=0;hi<horizons.length;hi++){var h=horizons[hi];var bh=ncb(eh,ed,mRate,h,appr);var rh=trc(mr,rentI,ed,h);var s=rh.total-bh.total;var w=s>30000?'BUY favored':s<-30000?'RENT favored':'CLOSE';results.push('Comparison: '+h+'-year stay \\u2192 buy '+money(bh.total)+' vs rent '+money(rh.total)+' \\u2192 '+w+' (savings '+money(s)+')');}" +
+  "for(var hi=0;hi<hrows.length;hi++){var hr=hrows[hi];var w=hr.w==='BUY'?'BUY favored':hr.w==='RENT'?'RENT favored':'CLOSE';results.push('Comparison: '+hr.h+'-year stay \\u2192 buy '+money(hr.b)+' vs rent '+money(hr.r)+' \\u2192 '+w+' (savings '+money(hr.s)+')');}" +
   "return results;";
 
 // ============== Engine ==============
@@ -318,7 +364,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateRentVsBuy(inputs);
   },
-  staticExamples: ['⏰ Rent-vs-Buy Calculator\n\n💰 Decision Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Years you plan to stay:  7 years\n• Current monthly rent:    $2,000\n• Home price (assumed):    $500,000\n• Down payment (assumed):  $100,000  (20% if not specified)\n• Verdict:                 🟢 BUY strongly favored — buying saves > $30K over renting\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Cost Breakdown:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nBuying cost (over 7 years):\n• Down + closing:         $115,000\n• Total mortgage paid:    $498,941\n• Property tax + maint:   $42,000\n• Selling costs (at end): $36,896\n• Net proceeds (sale):    $578,041\n• Net cost of buying:     $77,900\n\nRenting cost (over 7 years):\n• Total rent paid:        $183,899\n• Opportunity gain (7%): -$60,578\n• Net cost of renting:    $123,321\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Verdict Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 BUY strongly favored — buying saves > $30K over renting\n• Savings (rent vs buy):  $45,421\n  (positive = buying was cheaper by this much)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Side-by-Side:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Buying net cost:  $77,900\n• Renting net cost: $123,321\n• Difference:       $45,421 (buying cheaper)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Stay 5 years:  runs the comparison at 5y horizon\n• Stay 10 years: runs the comparison at 10y horizon\n• Stay 15 years: runs the comparison at 15y horizon\n• Appreciation +2pp: rerun with 5% (boost buying math)\n• 20% down (vs current): rerun with $100,000 down\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Most rent-vs-buy decisions break on time horizon — selling costs (~6%) and closing costs (~3%) make buying expensive in <5y stays, but appreciation + forced savings make buying cheaper in 7+ year stays.\nComparison: 3-year stay → buy $60,764 vs rent $51,677 → CLOSE (savings $-9,087)\nComparison: 5-year stay → buy $69,729 vs rent $87,164 → CLOSE (savings $17,435)\nComparison: 7-year stay → buy $77,900 vs rent $123,321 → BUY favored (savings $45,421)\nComparison: 10-year stay → buy $88,390 vs rent $178,418 → BUY favored (savings $90,028)\nComparison: 15-year stay → buy $99,953 vs rent $270,471 → BUY favored (savings $170,518)\nComparison: 30-year stay → buy $64,365 vs rent $480,584 → BUY favored (savings $416,220)'],
+  staticExamples: ['⏰ Rent-vs-Buy Calculator\n\n💰 Decision Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Years you plan to stay:  7 years\n• Current monthly rent:    $2,000\n• Home price (assumed):    $500,000\n• Down payment (assumed):  $100,000  (20% if not specified)\n• Verdict:                 🟢 BUY strongly favored — buying saves > $30K over renting\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Cost Breakdown:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nBuying cost (over 7 years):\n• Down + closing:         $115,000\n• Total mortgage paid:    $498,941\n• Property tax + maint:   $42,000\n• Selling costs (at end): $36,896\n• Net proceeds (sale):    $578,041\n• Net cost of buying:     $77,900\n\nRenting cost (over 7 years):\n• Total rent paid:        $183,899\n• Opportunity gain (7%): -$60,578\n• Net cost of renting:    $123,321\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Verdict Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 BUY strongly favored — buying saves > $30K over renting\n• Savings (rent vs buy):  $45,421\n  (positive = buying was cheaper by this much)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Side-by-Side:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Buying net cost:  $77,900\n• Renting net cost: $123,321\n• Difference:       $45,421 (buying cheaper)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Stay-Horizon Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAt different stay horizons, the math flips:\n• 3y: close     (-$9,087)\n• 5y: close     (+$17,435)\n• 7y: buy wins  (+$45,421)\n• 10y: buy wins  (+$90,028)\n• 15y: buy wins  (+$170,518)\n• 30y: buy wins  (+$416,220)\n💡 Breakeven ≈ 3.7 years — selling + closing costs (~9%) recouped at this horizon.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Stay 5 years:  runs the comparison at 5y horizon\n• Stay 10 years: runs the comparison at 10y horizon\n• Stay 15 years: runs the comparison at 15y horizon\n• Appreciation +2pp: rerun with 5% (boost buying math)\n• 20% down (vs current): rerun with $100,000 down\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Most rent-vs-buy decisions break on time horizon — selling costs (~6%) and closing costs (~3%) make buying expensive in <5y stays, but appreciation + forced savings make buying cheaper in 7+ year stays.\nComparison: 3-year stay → buy $60,764 vs rent $51,677 → CLOSE (savings $-9,087)\nComparison: 5-year stay → buy $69,729 vs rent $87,164 → CLOSE (savings $17,435)\nComparison: 7-year stay → buy $77,900 vs rent $123,321 → BUY favored (savings $45,421)\nComparison: 10-year stay → buy $88,390 vs rent $178,418 → BUY favored (savings $90,028)\nComparison: 15-year stay → buy $99,953 vs rent $270,471 → BUY favored (savings $170,518)\nComparison: 30-year stay → buy $64,365 vs rent $480,584 → BUY favored (savings $416,220)'],
   faq: [
     {
       q: 'When does it make financial sense to buy vs rent?',
