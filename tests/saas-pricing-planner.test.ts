@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import '../src/engines/valuation/saas-pricing-planner.ts';
+import '../src/engines/cost/saas-pricing-planner.ts';
 import { getEngine } from '../src/core/engines/registry.ts';
 
 const engine = getEngine('solopreneur-saas-pricing-planner');

@@ -14,7 +14,7 @@ src/engines/
 ├── index.ts (root registry barrel — imports 16 barrels below)
 └── 15 category subdirs:
     ├── ai-cost/         (8 engines)
-    ├── cost/            (4)
+    ├── cost/            (5)
     ├── customer-support/ (6)
     ├── freelance/       (6)
     ├── hiring-team/     (6)
@@ -73,7 +73,7 @@ src/engines/
 
 ---
 
-## 2 · `cost/` — HR / Cost (4 engines)
+## 2 · `cost/` — HR / Cost (5 engines)
 
 | Slug | Title |
 |---|---|
@@ -81,6 +81,7 @@ src/engines/
 | `meeting-cost-calculator` | Meeting Cost Calculator |
 | `productivity-score` | Productivity Score Calculator |
 | `remote-vs-office-calculator` | Remote vs In-Office Cost Calculator |
+| `saas-pricing-planner` | SaaS Pricing Planner |
 
 ---
 
@@ -261,7 +262,7 @@ src/engines/
 
 ---
 
-## 16 · `valuation/` — Valuation / Pricing (10 engines)
+## 16 · `valuation/` — Valuation / Pricing (9 engines)
 
 | Slug | Title |
 |---|---|
@@ -270,7 +271,6 @@ src/engines/
 | `burn-multiple-rule-of-40-calculator` | Burn Multiple / Rule of 40 Calculator |
 | `cac-calculator` | CAC Calculator |
 | `ltv-calculator` | LTV Calculator |
-| `saas-pricing-planner` | SaaS Pricing Planner |
 | `saas-valuation-calculator` | SaaS Valuation Calculator |
 | `safe-convertible-note-calculator` | SAFE / Convertible Note Calculator |
 | `stripe-fee-calculator` | Stripe Fee Calculator |
@@ -285,7 +285,7 @@ src/engines/
 | # | Category (slug) | Engines |
 |---|---|---|
 | 1 | ai-cost/ | 8 |
-| 2 | cost/ | 4 |
+| 2 | cost/ | 5 |
 | 3 | customer-support/ | 6 |
 | 4 | freelance/ | 6 |
 | 5 | hiring-team/ | 6 |
@@ -299,7 +299,7 @@ src/engines/
 | 13 | retention/ | 6 |
 | 14 | saas/ | 5 |
 | 15 | sales/ | 6 |
-| 16 | valuation/ | 10 |
+| 16 | valuation/ | 9 |
 | | **Total** | **100** |
 
 ---

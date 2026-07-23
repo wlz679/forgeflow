@@ -82,7 +82,7 @@ const ENGINES = [
   { file: 'freelance-tax-calculator.ts',       slug: 'solopreneur-freelance-tax-calculator',
     subdir: 'investment',        defaultInputs: { annualIncome: '100000', businessExpenses: '15000', retirementContribution: '10000', filingStatus: 'single', stateTaxRate: '5', country: 'us' } },
   { file: 'saas-pricing-planner.ts',           slug: 'solopreneur-saas-pricing-planner',
-    subdir: 'valuation',            defaultInputs: { productType: 'SaaS', targetCustomer: 'b2b', competitorPrice: '29' } },
+    subdir: 'cost',            defaultInputs: { productType: 'SaaS', targetCustomer: 'b2b', competitorPrice: '29' } },
   { file: 'employee-cost-calculator.ts',       slug: 'solopreneur-employee-cost-calculator',
     subdir: 'cost',        defaultInputs: { annualSalary: '80000', benefitsPercentage: '30', location: 'us' } },
   { file: 'meeting-cost-calculator.ts',        slug: 'solopreneur-meeting-cost-calculator',

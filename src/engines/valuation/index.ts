@@ -3,7 +3,6 @@ import './cac-calculator';
 import './ltv-calculator';
 import './saas-valuation-calculator';
 import './break-even-calculator';
-import './saas-pricing-planner';
 import './stripe-fee-calculator';
 import './safe-convertible-note-calculator';
 import './burn-multiple-rule-of-40-calculator';

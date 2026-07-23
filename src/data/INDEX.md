@@ -140,7 +140,7 @@ Consumed by JSON-LD `applicationCategory` field per page. Unmapped categoryId fa
 > **注:** tools/ 物理 subdir 组织 ≠ engines/ 物理 subdir ≠ categories.ts letters。三个独立维度 (per P39 INDEX 物理 vs 字母 pattern)。
 >
 > **特别 cases:**
-> - `tools/cost.ts` 含 `solopreneur-saas-pricing-planner` — engines/ 中归 valuation/
+> - `tools/cost.ts` 含 `solopreneur-saas-pricing-planner` — engines/ 中归 cost/
 > - `tools/freelance.ts` 含 3 valuation engines (course-pricing, email-list-revenue, project-profitability)
 > - `tools/investment.ts` 4 entries (无 equity-dilution); `tools/valuation.ts` 10 entries 含 equity-dilution
 > - `tools/valuation.ts` 10 entries vs `engines/valuation/` 13 engines — 差 3: course-pricing, email-list-revenue, project-profitability (在 tools/freelance.ts)
