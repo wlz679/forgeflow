@@ -9,6 +9,7 @@ This is **ForgeFlowKit** — a static calculator SPA providing free business cal
 > **Categories (15 letters, canonical from `src/data/categories.ts`):** A=SaaS Metrics · B=AI Cost Tools · C=Valuation & Exit · D=Freelance Pricing · E=Cost & Efficiency · F=Investment & Real Estate · H=Hiring & Team · K=Knowledge · L=Legal & Compliance · M=Marketing Analytics · O=Operations · P=Product Analytics · R=Retention & Customer Success · S=Sales · T=Customer Support. (AI cost is letter B, not a 16th separate category.) P46 audit 2026-07-20 closed drift where prior versions listed "16 categories (B/C/.../I/.../V + AI cost)" — letters I and V are phantom.
 
 Calculator categories (high-level, by `src/data/categories.ts` letter):
+
 - **A — SaaS Metrics** — MRR, burn rate, churn, break-even, valuation, equity dilution, ARR multiple, NRR, etc. (engines 1-30 from P0 scaffold; P-series additions)
 - **B — AI Cost Tools** (8 data-driven engines, see "Data-Driven Engines" below) — OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen cost (7 providers), GPU cloud cost, AI training cost estimator, cross-provider API comparison
 - **C — Valuation & Exit** — Unit economics, SaaS valuation, LTV, CAC, etc.
@@ -31,16 +32,17 @@ Goal: every calculator should match **world-leading / industry-leading** quality
 
 **v3 standard — two variants:**
 
-| Variant | Mandatory sections | Applies to |
-| --- | --- | --- |
-| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip | A / C / D / E / F / H / K / L / M / O / P / R / S / T category engines (92 business) |
-| **AI Cost v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · 💡 Tip · 📊 Cost Breakdown · 🏆 Provider Comparison · 📅 Data updated badge | B category engines driven by `src/data/ai-pricing.json` (8) |
+| Variant         | Mandatory sections                                                                                                                  | Applies to                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Business v3** | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · ⚖️ Break-Even · 🎯 Milestone/Projection · 💡 Tip                            | A / C / D / E / F / H / K / L / M / O / P / R / S / T category engines (92 business) |
+| **AI Cost v3**  | 6+ emoji sections · 🩺 Health (🟢🟡🟠🔴) · 🔄 What-If · 💡 Tip · 📊 Cost Breakdown · 🏆 Provider Comparison · 📅 Data updated badge | B category engines driven by `src/data/ai-pricing.json` (8)                          |
 
 Why two variants: `Break-Even` and `Milestone` are business-domain concepts. Forcing them onto a token-pricing calculator is anti-semantic — the result is emoji-fluff, not analysis. The AI Cost variant substitutes domain-natural sections (cost decomposition, provider comparison) that match what users actually want.
 
 **v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. Engine count per category:
 
 <!-- codegen:start engine-count -->
+
 | Letter | Category Name | Engine Count |
 |--------|---------------|--------------|
 | A | SaaS Metrics | 5 |
@@ -59,6 +61,7 @@ Why two variants: `Break-Even` and `Milestone` are business-domain concepts. For
 | S | Sales / 销售管理 | 6 |
 | T | Customer Support | 6 |
 | **Total** | | **100** |
+
 <!-- codegen:end -->
 
 8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 15 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
@@ -105,20 +108,23 @@ i18n: English (`en`) and Chinese (`zh`). Translations in `src/i18n/translations.
 Each engine is a single self-contained `.ts` file. The registry pattern (`src/core/engines/registry.ts`) is called via `registerEngine(engine)` at module import.
 
 **Pattern for a new engine:**
+
 ```ts
-import type { ToolEngine } from '../core/engines/types';
-import { registerEngine } from '../core/engines/registry';
+import type { ToolEngine } from "../core/engines/types";
+import { registerEngine } from "../core/engines/registry";
 
 const engine: ToolEngine = {
-  slug: 'solopreneur-my-calc',
-  title: 'My Calculator',
-  description: '...',
-  inputs: [{ name: 'foo', label: 'Foo', type: 'number' }],
-  clientConfig: { type: 'custom', wordPools: {}, customFn: '...' },
-  generate(inputs) { /* returns string[] */ },
-  staticExamples: ['...'],
-  faq: [{ q: '...', a: '...' }],
-  howToUse: ['...'],
+  slug: "solopreneur-my-calc",
+  title: "My Calculator",
+  description: "...",
+  inputs: [{ name: "foo", label: "Foo", type: "number" }],
+  clientConfig: { type: "custom", wordPools: {}, customFn: "..." },
+  generate(inputs) {
+    /* returns string[] */
+  },
+  staticExamples: ["..."],
+  faq: [{ q: "...", a: "..." }],
+  howToUse: ["..."],
 };
 registerEngine(engine);
 ```
@@ -127,18 +133,19 @@ registerEngine(engine);
 
 These engines read from `src/data/ai-pricing.json` (single source of truth):
 
-| Engine | PRICING key | Notes |
-|---|---|---|
-| `openai-token-calculator` | `llm.openai.models` | 14 GPT models |
-| `claude-api-cost-calculator` | `llm.anthropic.models` | 7 Claude models |
-| `gemini-api-cost-calculator` | `llm.google.models` | 6 Gemini models |
-| `deepseek-api-cost-calculator` | `llm.deepseek.models` | 4 DeepSeek models |
-| `ai-api-cost-comparison` | `llm.*` (all 4 providers) | Cross-provider view |
-| `ai-image-generation-cost-calculator` | `image.providers` | 7 image gen providers |
-| `gpu-cloud-cost-calculator` | `gpu.providers` | 6 GPU cloud providers |
-| `ai-training-cost-estimator` | `training.gpuTypes` + `training.modelSizes` | Training cost calculator |
+| Engine                                | PRICING key                                 | Notes                    |
+| ------------------------------------- | ------------------------------------------- | ------------------------ |
+| `openai-token-calculator`             | `llm.openai.models`                         | 14 GPT models            |
+| `claude-api-cost-calculator`          | `llm.anthropic.models`                      | 7 Claude models          |
+| `gemini-api-cost-calculator`          | `llm.google.models`                         | 6 Gemini models          |
+| `deepseek-api-cost-calculator`        | `llm.deepseek.models`                       | 4 DeepSeek models        |
+| `ai-api-cost-comparison`              | `llm.*` (all 4 providers)                   | Cross-provider view      |
+| `ai-image-generation-cost-calculator` | `image.providers`                           | 7 image gen providers    |
+| `gpu-cloud-cost-calculator`           | `gpu.providers`                             | 6 GPU cloud providers    |
+| `ai-training-cost-estimator`          | `training.gpuTypes` + `training.modelSizes` | Training cost calculator |
 
 PRICING.json schema:
+
 ```json
 {
   "version": 1,
@@ -166,17 +173,17 @@ The two scripts together implement a `pnpm sync` convenience script.
 
 ## Directory Conventions
 
-| Directory | Purpose |
-| --- | --- |
-| `src/engines/` | One engine per `.ts` file. Self-registering. |
-| `src/core/engines/` | Engine framework: `types.ts`, `registry.ts`, `helpers.ts` |
-| `src/data/` | Static data files (PRICING.json etc.) |
-| `src/pages/[lang]/` | Astro pages, one per locale |
-| `src/i18n/` | Translation strings |
-| `src/scripts/` | Legacy utility scripts |
-| `src/components/` | Shared Astro components (if any) |
-| `scripts/` | Build-time automation (sync, codegen) |
-| `.github/workflows/` | CI/CD |
+| Directory            | Purpose                                                   |
+| -------------------- | --------------------------------------------------------- |
+| `src/engines/`       | One engine per `.ts` file. Self-registering.              |
+| `src/core/engines/`  | Engine framework: `types.ts`, `registry.ts`, `helpers.ts` |
+| `src/data/`          | Static data files (PRICING.json etc.)                     |
+| `src/pages/[lang]/`  | Astro pages, one per locale                               |
+| `src/i18n/`          | Translation strings                                       |
+| `src/scripts/`       | Legacy utility scripts                                    |
+| `src/components/`    | Shared Astro components (if any)                          |
+| `scripts/`           | Build-time automation (sync, codegen)                     |
+| `.github/workflows/` | CI/CD                                                     |
 
 ## Notes for Future Sessions
 
@@ -361,3 +368,28 @@ grep -rn "开发中" src/         # 中文项目；其他语言替换
 ```
 
 确认无残留的 TODO、mock 调用、占位逻辑、空实现、临时代码。有任一命中 → 未完成，继续处理。
+
+# Lazy mode — 写代码前先走这 7 级阶梯
+
+1. 这个东西真的需要存在吗？（YAGNI）
+2. 代码库里已经有的吗？复用，别重写
+3. 标准库已经做了吗？用它
+4. 原生平台 API 能覆盖吗？用它
+5. 已装依赖能解决吗？用它
+6. 能一行写完吗？就一行
+7. 以上都不行，才写满足要求的最小代码
+
+# ——不省的地方（必须保留）——
+
+- 理解问题本身：先把任务和涉及的代码读完、顺着真实流程 trace 一遍再下手
+- 信任边界的输入校验
+- 防止数据丢失的错误处理
+- 安全
+- 可访问性
+- 硬件相关场景的实测校准（平台永远不是理想规格）
+
+# ——代码留痕规则——
+
+非平凡逻辑必须留一个能跑的最小自检（assert 演示或单文件测试，不要框架、不要 fixture），
+trivial 一行代码不用写测试。简化的地方用 `ponytail:` 注释标出来，
+写明已知上限（比如 O(n²)、全局锁、naive 启发式）和升级路径。
