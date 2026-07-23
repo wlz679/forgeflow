@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-equity-dilution-calculator'
 
 ## What is the Equity Dilution Calculator?
 
-The Equity Dilution Calculator is a free online tool designed to help entrepreneurs and indie makers model how investment rounds dilute founder equity. calculate post-money valuation, investor ownership, and your remaining shares after funding.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Equity Dilution Calculator is a free online tool designed to help entrepreneurs and indie makers model how investment rounds dilute founder equity. calculate post-money valuation, investor ownership, and your remaining shares after funding.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

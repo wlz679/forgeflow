@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-freelance-tax-calculator'
 
 ## What is the Freelance Tax Calculator?
 
-The Freelance Tax Calculator is a free online tool designed to help entrepreneurs and indie makers estimate your freelance taxes across 5 countries. see your taxable income, quarterly payments, effective tax rate, and monthly take-home pay.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Freelance Tax Calculator is a free online tool designed to help entrepreneurs and indie makers estimate your freelance taxes across 5 countries. see your taxable income, quarterly payments, effective tax rate, and monthly take-home pay.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

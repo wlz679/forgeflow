@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-affiliate-income-calculator'
 
 ## What is the Affiliate Income Calculator?
 
-The Affiliate Income Calculator is a free online tool designed to help entrepreneurs and indie makers estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Affiliate Income Calculator is a free online tool designed to help entrepreneurs and indie makers estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

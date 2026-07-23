@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-sponsorship-rate-calculator'
 
 ## What is the Sponsorship Rate Calculator?
 
-The Sponsorship Rate Calculator is a free online tool designed to help entrepreneurs and indie makers estimate what brands will pay to sponsor your content. calculate cpm-based rates for podcasts, newsletters, youtube, and blogs.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Sponsorship Rate Calculator is a free online tool designed to help entrepreneurs and indie makers estimate what brands will pay to sponsor your content. calculate cpm-based rates for podcasts, newsletters, youtube, and blogs.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-course-pricing-calculator'
 
 ## What is the Course Pricing Calculator?
 
-The Course Pricing Calculator is a free online tool designed to help entrepreneurs and indie makers find the optimal course price to hit your income goals, factoring in platform fees. compare revenue at different price points.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Course Pricing Calculator is a free online tool designed to help entrepreneurs and indie makers find the optimal course price to hit your income goals, factoring in platform fees. compare revenue at different price points.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

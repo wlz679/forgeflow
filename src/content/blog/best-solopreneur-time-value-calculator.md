@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-time-value-calculator'
 
 ## What is the Time Value Calculator?
 
-The Time Value Calculator is a free online tool designed to help entrepreneurs and indie makers discover what your time is really worth. calculate your hourly rate and see the dollar cost of meetings, distractions, and daily time waste.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Time Value Calculator is a free online tool designed to help entrepreneurs and indie makers discover what your time is really worth. calculate your hourly rate and see the dollar cost of meetings, distractions, and daily time waste.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

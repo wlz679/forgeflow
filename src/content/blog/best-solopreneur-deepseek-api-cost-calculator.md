@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-deepseek-api-cost-calculator'
 
 ## What is the DeepSeek API Cost Calculator?
 
-The DeepSeek API Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate deepseek api costs for v4 flash, v4 pro, and legacy r1. includes automatic caching, growth projections, and cross-provider savings comparison.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The DeepSeek API Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate deepseek api costs for v4 flash, v4 pro, and legacy r1. includes automatic caching, growth projections, and cross-provider savings comparison.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

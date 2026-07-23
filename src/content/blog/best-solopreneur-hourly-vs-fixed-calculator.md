@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-hourly-vs-fixed-calculator'
 
 ## What is the Hourly vs Fixed Rate Calculator?
 
-The Hourly vs Fixed Rate Calculator is a free online tool designed to help entrepreneurs and indie makers calculate the hourly rate, monthly retainer, and project equivalents needed to reach your annual income goal.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Hourly vs Fixed Rate Calculator is a free online tool designed to help entrepreneurs and indie makers calculate the hourly rate, monthly retainer, and project equivalents needed to reach your annual income goal.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

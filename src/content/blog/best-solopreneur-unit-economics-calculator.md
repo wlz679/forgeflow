@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-unit-economics-calculator'
 
 ## What is the Unit Economics Calculator?
 
-The Unit Economics Calculator is a free online tool designed to help entrepreneurs and indie makers analyze per-customer profitability with expansion revenue, scaling curves (1k/10k/100k), and ranked optimization levers.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Unit Economics Calculator is a free online tool designed to help entrepreneurs and indie makers analyze per-customer profitability with expansion revenue, scaling curves (1k/10k/100k), and ranked optimization levers.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

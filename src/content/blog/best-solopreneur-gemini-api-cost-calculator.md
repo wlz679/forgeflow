@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-gemini-api-cost-calculator'
 
 ## What is the Gemini API Cost Calculator?
 
-The Gemini API Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate google gemini api costs across 6 models — gemini 3.5 flash, 3.1 pro, 3 flash, and legacy models. includes context caching, batch pricing, growth projections, and cross-provider comparison.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Gemini API Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate google gemini api costs across 6 models — gemini 3.5 flash, 3.1 pro, 3 flash, and legacy models. includes context caching, batch pricing, growth projections, and cross-provider comparison.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

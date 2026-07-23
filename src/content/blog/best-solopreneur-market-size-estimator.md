@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-market-size-estimator'
 
 ## What is the Market Size Estimator?
 
-The Market Size Estimator is a free online tool designed to help entrepreneurs and indie makers bottom-up and top-down market sizing with configurable sam, market stage, and 3-year projections. industry-standard tam/sam/som framework.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Market Size Estimator is a free online tool designed to help entrepreneurs and indie makers bottom-up and top-down market sizing with configurable sam, market stage, and 3-year projections. industry-standard tam/sam/som framework.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

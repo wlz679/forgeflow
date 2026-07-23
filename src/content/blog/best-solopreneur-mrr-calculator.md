@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-mrr-calculator'
 
 ## What is the MRR Calculator?
 
-The MRR Calculator is a free online tool designed to help entrepreneurs and indie makers track your mrr health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The MRR Calculator is a free online tool designed to help entrepreneurs and indie makers track your mrr health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

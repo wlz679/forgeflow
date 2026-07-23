@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-saas-pricing-planner'
 
 ## What is the SaaS Pricing Planner?
 
-The SaaS Pricing Planner is a free online tool designed to help entrepreneurs and indie makers compare flat, tiered, usage-based, and freemium pricing models. get personalized recommendations based on your product type, audience, and competitor prices.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The SaaS Pricing Planner is a free online tool designed to help entrepreneurs and indie makers compare flat, tiered, usage-based, and freemium pricing models. get personalized recommendations based on your product type, audience, and competitor prices.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

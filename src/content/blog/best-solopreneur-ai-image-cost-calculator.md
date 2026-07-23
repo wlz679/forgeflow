@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-ai-image-cost-calculator'
 
 ## What is the AI Image Generation Cost Calculator?
 
-The AI Image Generation Cost Calculator is a free online tool designed to help entrepreneurs and indie makers compare costs across 7 ai image providers (dall-e 4/3, midjourney v7, sd 4, ideogram 3, flux pro, leonardo ai). subscription vs api pricing, resolution tiers, bar chart comparison, and volume scenarios.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The AI Image Generation Cost Calculator is a free online tool designed to help entrepreneurs and indie makers compare costs across 7 ai image providers (dall-e 4/3, midjourney v7, sd 4, ideogram 3, flux pro, leonardo ai). subscription vs api pricing, resolution tiers, bar chart comparison, and volume scenarios.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

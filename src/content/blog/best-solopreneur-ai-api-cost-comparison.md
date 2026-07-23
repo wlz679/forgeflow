@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-ai-api-cost-comparison'
 
 ## What is the AI API Cost Comparison?
 
-The AI API Cost Comparison is a free online tool designed to help entrepreneurs and indie makers cross-provider ai api cost comparison across 15 models from openai, anthropic, google, and deepseek. find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The AI API Cost Comparison is a free online tool designed to help entrepreneurs and indie makers cross-provider ai api cost comparison across 15 models from openai, anthropic, google, and deepseek. find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

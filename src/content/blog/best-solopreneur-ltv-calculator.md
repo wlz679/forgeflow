@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-ltv-calculator'
 
 ## What is the LTV Calculator?
 
-The LTV Calculator is a free online tool designed to help entrepreneurs and indie makers calculate customer lifetime value (ltv) and ltv:cac ratio. compare how different churn rates impact customer value and unit economics.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The LTV Calculator is a free online tool designed to help entrepreneurs and indie makers calculate customer lifetime value (ltv) and ltv:cac ratio. compare how different churn rates impact customer value and unit economics.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

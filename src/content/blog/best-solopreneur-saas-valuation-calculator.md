@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-saas-valuation-calculator'
 
 ## What is the SaaS Valuation Calculator?
 
-The SaaS Valuation Calculator is a free online tool designed to help entrepreneurs and indie makers estimate your saas company valuation based on arr, growth rate, and profit margin. see how different multiples and scenarios affect your exit value.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The SaaS Valuation Calculator is a free online tool designed to help entrepreneurs and indie makers estimate your saas company valuation based on arr, growth rate, and profit margin. see how different multiples and scenarios affect your exit value.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

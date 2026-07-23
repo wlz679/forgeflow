@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-break-even-calculator'
 
 ## What is the Break-Even Calculator?
 
-The Break-Even Calculator is a free online tool designed to help entrepreneurs and indie makers calculate how many months until you break even on your initial investment. model different cost and revenue scenarios.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Break-Even Calculator is a free online tool designed to help entrepreneurs and indie makers calculate how many months until you break even on your initial investment. model different cost and revenue scenarios.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

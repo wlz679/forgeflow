@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-churn-rate-calculator'
 
 ## What is the Churn Rate Calculator?
 
-The Churn Rate Calculator is a free online tool designed to help entrepreneurs and indie makers track logo churn vs revenue churn, nrr/grr, and churn attribution. see how expansion revenue offsets churn and compare scenarios.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Churn Rate Calculator is a free online tool designed to help entrepreneurs and indie makers track logo churn vs revenue churn, nrr/grr, and churn attribution. see how expansion revenue offsets churn and compare scenarios.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

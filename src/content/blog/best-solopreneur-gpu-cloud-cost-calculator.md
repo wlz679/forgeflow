@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-gpu-cloud-cost-calculator'
 
 ## What is the GPU Cloud Cost Calculator?
 
-The GPU Cloud Cost Calculator is a free online tool designed to help entrepreneurs and indie makers compare gpu rental costs across 6 cloud providers (runpod, vast.ai, lambda labs, aws, gcp, azure). spot vs on-demand vs reserved pricing, multi-gpu scaling, storage/networking add-ons, and bar chart comparison.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The GPU Cloud Cost Calculator is a free online tool designed to help entrepreneurs and indie makers compare gpu rental costs across 6 cloud providers (runpod, vast.ai, lambda labs, aws, gcp, azure). spot vs on-demand vs reserved pricing, multi-gpu scaling, storage/networking add-ons, and bar chart comparison.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-project-profitability-calculator'
 
 ## What is the Project Profitability Calculator?
 
-The Project Profitability Calculator is a free online tool designed to help entrepreneurs and indie makers calculate profit, effective hourly rate, and profit margin for any freelance project. compare outcomes at different cost rates.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Project Profitability Calculator is a free online tool designed to help entrepreneurs and indie makers calculate profit, effective hourly rate, and profit margin for any freelance project. compare outcomes at different cost rates.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

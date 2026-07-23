@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-openai-token-calculator'
 
 ## What is the OpenAI Token Calculator?
 
-The OpenAI Token Calculator is a free online tool designed to help entrepreneurs and indie makers compare openai api costs across 14 models — gpt-5.5 to gpt-5 nano, gpt-4.1 family, and o-series. toggle batch pricing, prompt caching, and growth projections.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The OpenAI Token Calculator is a free online tool designed to help entrepreneurs and indie makers compare openai api costs across 14 models — gpt-5.5 to gpt-5 nano, gpt-4.1 family, and o-series. toggle batch pricing, prompt caching, and growth projections.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

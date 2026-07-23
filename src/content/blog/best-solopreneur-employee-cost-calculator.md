@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-employee-cost-calculator'
 
 ## What is the Employee Cost Calculator?
 
-The Employee Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. compare costs across salary levels and locations.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Employee Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. compare costs across salary levels and locations.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

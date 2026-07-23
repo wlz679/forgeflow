@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-freelance-rate-calculator'
 
 ## What is the Freelance Rate Calculator?
 
-The Freelance Rate Calculator is a free online tool designed to help entrepreneurs and indie makers calculate your ideal hourly, daily, and monthly rate based on your skill, experience level, and market location.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Freelance Rate Calculator is a free online tool designed to help entrepreneurs and indie makers calculate your ideal hourly, daily, and monthly rate based on your skill, experience level, and market location.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

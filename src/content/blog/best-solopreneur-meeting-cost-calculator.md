@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-meeting-cost-calculator'
 
 ## What is the Meeting Cost Calculator?
 
-The Meeting Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Meeting Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

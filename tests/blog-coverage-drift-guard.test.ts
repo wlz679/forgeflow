@@ -83,14 +83,12 @@ test('T1: tools registry has 100 engines (P22b sanity)', () => {
   );
 });
 
-// === T2: every tool has a matching blog file (forward coverage) — informational backlog ===
-// As of P57 ship: 64/100 engines lack blog posts (P57 backfilled 4 C-category engines).
-// This is an INTENTIONAL backlog — the 100/100 target is a P58+ candidate, not P57 scope.
-// We log the gap rather than fail, so:
-//   - Future P-series that ADD a new engine without a blog post will surface here
-//   - The existing 64-tool backlog is tracked but doesn't block shipping other work
-// When P58 backfills the remaining 64, flip this to assert.equal(missing.length, 0).
-test('T2: blog coverage backlog (forward coverage) — informational', () => {
+// === T2: every tool has a matching blog file (forward coverage) ===
+// P58 closed the 64-tool backlog (backfilled 60 + carried 4 from P57). Forward coverage
+// is now strictly enforced: any future engine ship without a matching blog post fails here.
+// The P23 og-samples pattern: assertion message lists every missing slug to make the
+// failure actionable for the next P-series.
+test('T2: every tool has a matching blog file (forward coverage)', () => {
   const blogSlugs = new Set(blogPosts.map(b => b.toolSlug));
   const missing: string[] = [];
   for (const t of tools) {
@@ -98,15 +96,14 @@ test('T2: blog coverage backlog (forward coverage) — informational', () => {
       missing.push(t.slug);
     }
   }
-  if (missing.length > 0) {
-    console.log(
-      `[blog-coverage backlog] ${missing.length}/${tools.length} engines missing blog post ` +
-      `(P57 baseline: 64; target: 0). See P58 candidate for full backfill.`
-    );
-  }
-  assert.ok(
-    true,
-    `informational only — ${missing.length}/${tools.length} backlog.`
+  assert.equal(
+    missing.length,
+    0,
+    `${missing.length}/${tools.length} engines missing blog post:\n` +
+    missing.map(s => `  - ${s}`).join('\n') +
+    `\n\nFix: create src/content/blog/best-solopreneur-{slug}.md following the ` +
+    `40-line template (see best-solopreneur-unit-economics-calculator.md). ` +
+    `P58 closed the pre-existing 64-tool backlog; future engine ships must include a blog post.`
   );
 });
 

@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-productivity-score'
 
 ## What is the Productivity Score Calculator?
 
-The Productivity Score Calculator is a free online tool designed to help entrepreneurs and indie makers rate your solopreneur productivity with a scored assessment. get actionable tips based on your deep work hours, tool stack, and meeting load.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Productivity Score Calculator is a free online tool designed to help entrepreneurs and indie makers rate your solopreneur productivity with a scored assessment. get actionable tips based on your deep work hours, tool stack, and meeting load.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

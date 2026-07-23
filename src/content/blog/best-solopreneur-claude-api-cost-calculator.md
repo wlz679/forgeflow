@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-claude-api-cost-calculator'
 
 ## What is the Claude API Cost Calculator?
 
-The Claude API Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate claude api costs for fable 5, opus 4.8, sonnet 4.6, haiku 4.5, and legacy models. includes prompt caching, batch pricing, and cross-provider comparison.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Claude API Cost Calculator is a free online tool designed to help entrepreneurs and indie makers calculate claude api costs for fable 5, opus 4.8, sonnet 4.6, haiku 4.5, and legacy models. includes prompt caching, batch pricing, and cross-provider comparison.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

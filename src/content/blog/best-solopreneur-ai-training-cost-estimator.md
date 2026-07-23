@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-ai-training-cost-estimator'
 
 ## What is the AI Training Cost Estimator?
 
-The AI Training Cost Estimator is a free online tool designed to help entrepreneurs and indie makers estimate ai model training costs from 7b to 405b parameters. lora/full fine-tuning modes, 5 gpu types (h200, h100, a100, l40s, rtx 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The AI Training Cost Estimator is a free online tool designed to help entrepreneurs and indie makers estimate ai model training costs from 7b to 405b parameters. lora/full fine-tuning modes, 5 gpu types (h200, h100, a100, l40s, rtx 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

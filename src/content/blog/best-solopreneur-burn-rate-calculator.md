@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-burn-rate-calculator'
 
 ## What is the Burn Rate Calculator?
 
-The Burn Rate Calculator is a free online tool designed to help entrepreneurs and indie makers analyze monthly cash flow by cost category, calculate runway with exact run-out date, burn multiple, and default alive/dead status.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Burn Rate Calculator is a free online tool designed to help entrepreneurs and indie makers analyze monthly cash flow by cost category, calculate runway with exact run-out date, burn multiple, and default alive/dead status.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

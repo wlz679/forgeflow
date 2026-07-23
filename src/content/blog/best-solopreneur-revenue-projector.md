@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-revenue-projector'
 
 ## What is the SaaS Financial Forecaster?
 
-The SaaS Financial Forecaster is a free online tool designed to help entrepreneurs and indie makers the complete saas financial health dashboard: net-growth projections, runway, breakeven, burn metrics, ltv, sensitivity analysis, and what-if scenarios.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The SaaS Financial Forecaster is a free online tool designed to help entrepreneurs and indie makers the complete saas financial health dashboard: net-growth projections, runway, breakeven, burn metrics, ltv, sensitivity analysis, and what-if scenarios.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

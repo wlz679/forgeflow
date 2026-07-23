@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-email-list-revenue-calculator'
 
 ## What is the Email List Revenue Calculator?
 
-The Email List Revenue Calculator is a free online tool designed to help entrepreneurs and indie makers calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The Email List Revenue Calculator is a free online tool designed to help entrepreneurs and indie makers calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 

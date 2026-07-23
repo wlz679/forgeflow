@@ -7,7 +7,7 @@ toolSlug: 'solopreneur-cac-calculator'
 
 ## What is the CAC Calculator?
 
-The CAC Calculator is a free online tool designed to help entrepreneurs and indie makers calculate your customer acquisition cost and payback period. compare different spend scenarios to find your most efficient acquisition budget.. It's part of our suite of 30 free business calculators, all built to help you build and grow your business without spending a dime.
+The CAC Calculator is a free online tool designed to help entrepreneurs and indie makers calculate your customer acquisition cost and payback period. compare different spend scenarios to find your most efficient acquisition budget.. It's part of our suite of 100 free business calculators, all built to help you build and grow your business without spending a dime.
 
 ## Why Entrepreneurs Need This Tool
 
