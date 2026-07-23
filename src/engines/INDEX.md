@@ -28,7 +28,7 @@ src/engines/
     ├── retention/       (6)
     ├── saas/            (5)
     ├── sales/           (6)
-    └── valuation/       (10)
+    └── valuation/       (9)
 ```
 
 | Letter | Category | Slug Count | v3 变体 |
@@ -276,7 +276,7 @@ src/engines/
 | `stripe-fee-calculator` | Stripe Fee Calculator |
 | `unit-economics-calculator` | Unit Economics Calculator |
 
-> **注意:** `valuation/` 收窄到 10 engines（Freelance/Pricing 类 engines 已在 P59 搬到 `freelance/`）。Course pricing / Email list revenue / Project profitability 不再在此处。
+> **注意:** `valuation/` 收窄到 9 engines（Freelance/Pricing 类 engines 已在 P59 搬到 `freelance/`，SaaS Pricing Planner 已搬到 `cost/`）。Course pricing / Email list revenue / Project profitability / SaaS Pricing Planner 不再在此处。
 
 ---
 

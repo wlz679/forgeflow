@@ -120,7 +120,7 @@ Consumed by JSON-LD `applicationCategory` field per page. Unmapped categoryId fa
 | File | LOC | Entries | Engines ↔ | Data category |
 |---|---|---|---|---|
 | `ai-cost.ts` | 179 | 8 | ai-cost/ (8) | B (AI Cost Tools) |
-| `cost.ts` | 107 | 5 | cost/ (4) + valuation/ (1, saas-pricing-planner) | E (Cost & Efficiency) |
+| `cost.ts` | 107 | 5 | cost/ (5) + valuation/ (0) | E (Cost & Efficiency) |
 | `customer-support.ts` | 176 | 6 | customer-support/ (6) | T (Customer Support) |
 | `freelance.ts` | 115 | 6 | freelance/ (3) + valuation/ (3: course-pricing, email-list-revenue, project-profitability) | D (Freelance Pricing) |
 | `hiring-team.ts` | 208 | 6 | hiring-team/ (6) | H (Hiring & Team) |
@@ -204,7 +204,7 @@ export type { ToolMeta };
 | tools/ file | categoryId (字母) | engines/ subdir | category slug |
 |---|---|---|---|
 | `ai-cost.ts` | B | `ai-cost/` | ai-cost-tools |
-| `cost.ts` | E | `cost/` (4) + `valuation/` (1) | cost-efficiency |
+| `cost.ts` | E | `cost/` (5) + `valuation/` (0) | cost-efficiency |
 | `customer-support.ts` | T | `customer-support/` | customer-support |
 | `freelance.ts` | D | `freelance/` (3) + `valuation/` (3) | freelance-pricing |
 | `hiring-team.ts` | H | `hiring-team/` | hiring-team |
