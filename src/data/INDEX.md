@@ -134,7 +134,7 @@ Consumed by JSON-LD `applicationCategory` field per page. Unmapped categoryId fa
 | `retention.ts` | 207 | 6 | retention/ (6) | R (Retention & Customer Success) |
 | `saas.ts` | 113 | 5 | saas/ (5) | A (SaaS Metrics) |
 | `sales.ts` | 220 | 6 | sales/ (6) | S (Sales) |
-| `valuation.ts` | 231 | 10 | valuation/ (13 — equity-dilution + 12 others) | C (Valuation & Exit) + partial A |
+| `valuation.ts` | 231 | 10 | valuation/ (9) | C (Valuation & Exit) + partial A |
 | **Total entries** | | **100** | **100 ↔ 100** ✓ | |
 
 > **注:** tools/ 物理 subdir 组织 ≠ engines/ 物理 subdir ≠ categories.ts letters。三个独立维度 (per P39 INDEX 物理 vs 字母 pattern)。
@@ -143,7 +143,7 @@ Consumed by JSON-LD `applicationCategory` field per page. Unmapped categoryId fa
 > - `tools/cost.ts` 含 `solopreneur-saas-pricing-planner` — engines/ 中归 cost/
 > - `tools/freelance.ts` 含 3 valuation engines (course-pricing, email-list-revenue, project-profitability)
 > - `tools/investment.ts` 4 entries (无 equity-dilution); `tools/valuation.ts` 10 entries 含 equity-dilution
-> - `tools/valuation.ts` 10 entries vs `engines/valuation/` 13 engines — 差 3: course-pricing, email-list-revenue, project-profitability (在 tools/freelance.ts)
+> - `tools/valuation.ts` 10 entries vs `engines/valuation/` 9 engines — 差 1: saas-pricing-planner (在 tools/cost.ts, P60 移到 engines/cost/)。P59-era "13 — equity-dilution + 12 others" 已闭环；P59-era "差 3 (freelance)" 由 P59 关闭
 
 ---
 
@@ -218,7 +218,7 @@ export type { ToolMeta };
 | `retention.ts` | R | `retention/` | retention |
 | `saas.ts` | A | `saas/` | saas-metrics |
 | `sales.ts` | S | `sales/` | sales |
-| `valuation.ts` | C | `valuation/` (10 of 13) | valuation-exit |
+| `valuation.ts` | C | `valuation/` (9 of 10) | valuation-exit |
 
 **Summary**: 3 个独立分类维度共存 — tools/ 物理 (15 files), categoryId (15 letters A/B/C/D/E/F/H/K/L/M/O/P/R/S/T), engines 物理 (15 subdirs)。三者**1:1 对应** by canonical letter after P46 audit; Index 标注 crosswalk 防止 future AI session 误合并。
 
