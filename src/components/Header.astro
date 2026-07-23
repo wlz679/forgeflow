@@ -37,7 +37,7 @@ const categoriesWithTranslated = categories.map(c => ({
       {t('site.name', lang)}
     </a>
     <div class="flex items-center gap-6 text-sm">
-      <details class="relative group">
+      <details class="relative group" data-dropdown="history">
         <summary class="cursor-pointer text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 list-none flex items-center gap-1">
           <span aria-hidden="true">💾</span>
           <span>{t('history.header_label', lang)}</span>
@@ -50,7 +50,7 @@ const categoriesWithTranslated = categories.map(c => ({
           <!-- Rendered at runtime by history-init.client.ts -->
         </div>
       </details>
-      <details class="relative group">
+      <details class="relative group" data-dropdown="recent">
         <summary class="cursor-pointer text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 list-none flex items-center gap-1">
           <span aria-hidden="true">👁</span>
           <span>{t('recent.header_label', lang)}</span>
@@ -63,7 +63,7 @@ const categoriesWithTranslated = categories.map(c => ({
           <!-- Rendered at runtime by recent-init.client.ts -->
         </div>
       </details>
-      <details class="relative group">
+      <details class="relative group" data-dropdown="favorites">
         <summary class="cursor-pointer text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 list-none flex items-center gap-1">
           {t('favorites.header_label', lang)}
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -74,7 +74,7 @@ const categoriesWithTranslated = categories.map(c => ({
           <!-- Rendered at runtime by favorites-init.client.ts -->
         </div>
       </details>
-      <details class="relative group">
+      <details class="relative group" data-dropdown="categories">
         <summary class="cursor-pointer text-gray-600 hover:text-[#7C3AED] transition-colors duration-200 list-none flex items-center gap-1">
           {t('header.categories', lang)}
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
