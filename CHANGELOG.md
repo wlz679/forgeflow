@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-20 (P45 batch)
+> **最后更新:** 2026-07-24 (P65 CHANGELOG catch-up)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 632 across 33 active days (2026-05-31 → 2026-07-20, 7 weeks)
+> **Total commits:** 712 across 38 active days (2026-05-31 → 2026-07-24, ~8 weeks)
 
 ---
 
@@ -61,6 +61,92 @@
 | Pre-existing findings | 1 (deferred, NOT maintenance triggers) |
 
 📦 ship log: [`memory/p16-100-milestone-shipped.md`](memory/p16-100-milestone-shipped.md) · P15 audit at [`memory/p15-cross-cutting-audit-shipped.md`](memory/p15-cross-cutting-audit-shipped.md) · P14-followup at [`memory/p14-followup-cross-cutting-audit-shipped.md`](memory/p14-followup-cross-cutting-audit-shipped.md)
+
+---
+
+## [M17.0] - 2026-07-20 → 2026-07-24 — Maintenance mode continuation (P46-P64)
+
+🧪 **Test infrastructure hardening + TS sweep + category drift fixes + CI defense-in-depth**. 19 batches · 78 commits · 0 production engine count change (engine count locked at 100). Project continues in maintenance mode with focus on drift-defense, CI regression nets, and doc/code parity.
+
+### Added (test infrastructure hardening)
+- **[tests] `tests/codegen-drift-guard.test.ts`** (P47) — 7 assertions for P42 Date mock; `1096 → 1103` pass
+- **[tests] `tests/engine-count-by-category.test.ts`** (P49) — 7 assertions mirroring P47 pattern; closes P46 categories drift root cause class
+- **[tests] `tests/codegen-customfn-drift-guard.test.ts`** (P50) — 7 assertions for 8 AI cost engines; `1110 → 1117`
+- **[tests] `tests/codegen-examples-mock-apply.test.ts`** (P51) — 5 assertions closing structural-only gap P47 left; `1117 → 1122`
+- **[tests] `tests/codegen-marker-presence.test.ts`** (P52) — 7 assertions across HTML/tableEndMarker/staticExamples markers; `1123 → 1130`
+- **[tests] 4 AI cost engines × 3 generate()** (P53b) — closes zero-coverage class; `1130 → 1133`
+- **[tests] `tests/related-blog-coverage.test.ts`** (P61) — 3 assertions: every toolSlug has 1 blog, no orphans, file-name convention
+- **[tests] `tests/category-en-cjk-guard.test.ts`** (P63) — 6th build-dep suite; dist HTML walk asserts no CJK in `<h1>` + cross-page links; `1169 → 1170`
+- **[tests] `tests/categories-i18n-leak.test.ts` + `tests/translations-i18n-leak.test.ts`** (P62) — 2 CJK-leak guards at source + translation layer
+
+### Added (TypeScript sweep + type safety)
+- **[types] `ToolEngine` + `ToolInput` expansion** (P53a) — closes 134 tsc errors; enables CI `tsc --noEmit` gate
+- **[ci] `tsc --noEmit` fail-fast gate** (P53a) — added after engine coverage check (Task 15)
+- **[barrels] `export *` → `import './X'`** (P53a) — side-effect-only imports for engine files
+- **[ci] `pnpm sync` 30min timeout + codegen-examples path trigger** (P53)
+- **[ci] engine coverage drift guard** (P53) — silent 302 prevention
+- **[ci] `RUN_BUILD_TESTS=1` opt-in** — now 6 build-dep suites (P63 added 6th)
+
+### Added (engine / page / category drift fixes)
+- **[engines] `saas-pricing-planner` moved `valuation/` → `cost/`** (P60) — 1 R + 6 M + 1 plan; P49 layer intact by design
+- **[engines] 3 D-category engines merged `valuation/` → `freelance/`** (P59) — 2 SHAs on master; closes T6 stale subdir refs
+- **[engines] `cart-abandonment-cost` 3-band → 4-band split** (P61) — caution (200-300%) / warning (100-200%) with 🟡🟠
+- **[engines] `rent-vs-buy` Stay-Horizon Milestone v3 section** (P55 follow-up) — linear-interpolated breakeven across 6 stay horizons
+- **[components] `src/components/RelatedBlog.astro`** (P61) — engine→blog reverse link; 200 calculator pages render "Read the Full Guide"
+- **[pages] 9 path-B category pages migrated to `t()` pattern** (P62) — unifies all 15 pages (path-A: i18n lookup; path-B: hardcoded literal)
+- **[data] `src/data/categories.ts` O/S/K name fields** (P62) — pure English; closes source-side CJK leak
+- **[i18n] `category.{O,S,K}.name.en` + `related_blog.title`** (P61/P62) — pure English + flat-key i18n
+- **[ui] Header dropdown mutex** (P55) — 4 details mutual exclusion + ESC + click-outside; 5 node:test cases
+- **[homepage] tool count via `tools.length` interpolation** (P55) — drift-proof vs hardcoded literal
+- **[scripts] `scripts/check-engine-count-by-category.mjs`** (P49) — emits markdown table + `--check` mode (mirrors codegen-examples.mjs shell)
+- **[scripts] `tests/helpers/spawn-tsx.ts`** (P52) — extracts mini tsx runner; migrates P51 runGenerate() (~190 → ~120 LOC)
+
+### Fixed (P46-P64)
+- **[docs] `categories.ts` (15 letters) vs `CLAUDE.md` (16 phantom letters) drift** (P46) — 7 docs amended; phantom I/V removed; pre-P46 old taxonomy re-documented as history
+- **[engines] `ltv-calculator customFn` zero-LTV drift** (P53a) — always emits 🩺+🔄; closes silent v3 violation
+- **[engines] `customer-health-score-calculator customFn` returns v3 report** (P53a) — was silently dropping v3 sections
+- **[scripts] `verify-customfn.mjs` walks per-category subdirs** (P61) — P59/P60 refile follow-up; closes silent-skip bug
+- **[scripts] `run.mjs` relative paths** (P53b) — cmd.exe 8191 char limit on Windows
+- **[scripts] `sync-init` dead `navigator.sendBeacon` check** (P53a) — TS2774
+- **[recent] preserve inner `[data-recent-grid]` wrapper** (P53) — Tailwind grid layout
+- **[tests] `engine-count.ts` from `tests/lib/` → `tests/` root** (P52) — closes P22b ESM silent-skip trap
+- **[ui] `coupon-attribution-calculator` 3-band exemption** (P61) — hard-breakpoint ROI documented in CLAUDE.md under "v3 standard — two variants"; audit-grade (a)+(b) cross-link requirement
+- **[i18n] `Lang` re-export** (P53a) — for client scripts
+- **[blog] 64 missing blog posts backfilled** (P58) — 100/100 coverage; stale `30→100` copy closed
+- **[blog] C-category coverage drift guard** (P57) — `tests/blog-coverage.test.ts`, 4 engines × 4 dimensions
+
+### Changed (CLAUDE.md + cascade audit continuation)
+- **[docs] CLAUDE.md `+2 standing rules`** (P48) — P43 GH Action cron race + P44 pre-push hook stale cache persisted to "Notes for Future Sessions"
+- **[docs] CLAUDE.md v3 status prose → codegen markers** (P49) — auto-generated per-category table; preserves 92 business + 8 AI cost prose
+- **[docs] CLAUDE.md "Hard-breakpoint exemption (3-band allowed)"** (P61) — audit-grade cross-link requirement for future exceptions
+- **[docs] `src/data/INDEX.md` engine→subdir mapping refreshed** (P49/P60) — codegen-enforced invariant; closes P46 root cause class
+
+### Engineering metrics
+| Metric | Value |
+|---|---|
+| Engines | 100 (frozen) |
+| New batches | 19 (P46-P64) |
+| New commits | ~78 (incl. 3 cron syncs + 1 merge) |
+| Test delta | `1096 → 1170` pass (+74) · 0 fail |
+| Build-dep suites | 5 → 6 |
+| pnpm check baseline | `1170/0/0` |
+| pnpm build | 449 dist pages |
+| pnpm build CJK-leak grep | `dist grep -rE 'Operations / 库存运营\|Sales / 销售管理\|Knowledge / 知识库' dist/en/` → 0 matches |
+| Production engine changes | 1 (rent-vs-buy milestone v3 — P55 follow-up) |
+| Total commits | 632 → 711 |
+| Active days | 33 → 38 |
+
+### Ship drama
+- **[P48] Pre-commit hook rerun race** — adopted as standing rule: `SKIP_PRECOMMIT_CHECK=1` for doc-only commits (P53b-era race extended).
+- **[P49] `tests/run.mjs` cmd.exe 8191 char limit** (P53b) — fix: use relative paths in `run.mjs` to avoid command-line overflow on Windows.
+- **[P59] GH Action LiteLLM cron fired during P59 push** (`049a825` racing with `40cc225`) — resolved by merge commit `157e661`; no force-with-lease needed.
+- **[P60] T2 BLOCKED → fix subagent pattern** (P53a-style) — brief算错 "valuation/=10 不变" 实为 post-P60 valuation/=9; implementer caught and BLOCKED. 2nd time subagent caught a brief-vs-reality drift.
+- **[P60] Final reviewer caught 4 doc-only stale refs** — per-task reviewers missed; P60-fix (`586eccf`) + P60+ (`d6d8c25`) closed.
+- **[P61] Subagent stop-without-record** (Task 1) — implementer stopped without writing report; `git status` + Read actual files recovered the work (4 file changes already on disk).
+- **[P53a] TS gate landable** — 134 → 0 tsc errors over 8 commits; CI `tsc --noEmit` gate added (P53a-p1-fixes sweep).
+- **[P64] Doc-only patch** (`d397584`) — close P63 reviewer doc drifts (CLAUDE.md + CHANGELOG build-dep count + test comment); 0 production code.
+
+📦 ship log: [`memory/p60-engines-cost-subdir-fix-shipped.md`](memory/p60-engines-cost-subdir-fix-shipped.md) · [`memory/p61-m-category-fixes-shipped.md`](memory/p61-m-category-fixes-shipped.md) · [`memory/p62-category-page-i18n-fix-shipped.md`](memory/p62-category-page-i18n-fix-shipped.md) · [`memory/p63-ci-cjk-guard-shipped.md`](memory/p63-ci-cjk-guard-shipped.md) · per-batch entries in [`memory/MEMORY.md`](memory/MEMORY.md) P46+ section
 
 ---
 
@@ -333,6 +419,6 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 - **本 CHANGELOG 不是 semver** — Mx.y 是 P-series 标签（M = milestone, x.y = P-series 内编号）。ForgeFlowKit 还在 pre-1.0，semver 不适用
 - **不是所有 commit 都进入 CHANGELOG** — 文档修正、refactor、CI 调整归入最近 milestone 的 "Changed" 或 "Fixed"；trivial cleanup 不单独列
 - **🟢 Active vs 🔒 Locked milestone** — M16.0 起为 maintenance mode，p16+ batches 主要是 INDEX/docs/refactor，不再扩 engine count
-- **完整 commit 历史** — `git log --oneline` (632 commits); 或 `git log --oneline --grep "p1[0-9]"` 按 P-series filter
+- **完整 commit 历史** — `git log --oneline` (711 commits); 或 `git log --oneline --grep "p1[0-9]"` 按 P-series filter
 - **Cross-references** — 每个 milestone 末尾链接到 `memory/pNN-*-shipped.md` ship memory + `docs/superpowers/plans/*.md` plan + `docs/superpowers/specs/*.md` spec（如果存在）
-- **Last CHANGELOG update** — P45 (2026-07-20); 下次更新跟 P46+ 批次一起
+- **Last CHANGELOG update** — P65 (2026-07-24); covers P46-P64 batches (19 batches, ~78 commits)
