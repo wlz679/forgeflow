@@ -40,12 +40,12 @@ export const EXPECTED_ENGINES_BY_CATEGORY: Record<string, number> = {
   E: 5,   // Cost & Efficiency
   F: 10,  // Investment & Real Estate
   H: 6,   // Hiring & Team
-  K: 6,   // Knowledge / 知识库
+  K: 6,   // Knowledge
   L: 6,   // Legal & Compliance
   M: 8,   // Marketing Analytics
-  O: 6,   // Operations / 库存运营
+  O: 6,   // Operations
   P: 6,   // Product Analytics
   R: 6,   // Retention & Customer Success
-  S: 6,   // Sales / 销售管理
+  S: 6,   // Sales
   T: 6,   // Customer Support
 };

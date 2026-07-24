@@ -1576,7 +1576,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cart-abandonment-cost-calculator.how_to_use.5': { en: 'Enter your recovery cost per send (your blended SMS+email send cost).', zh: '输入每次挽回发送成本(邮件 + SMS 的综合单次发送成本)。' },
   'tools.solopreneur-cart-abandonment-cost-calculator.how_to_use.6': { en: 'Read the recovery ROI, what-if scenarios, and break-even recovery rate to size your recovery campaign.', zh: '查看挽回 ROI、What-If 场景和盈亏平衡挽回率,以确定挽回活动的合适规模。' },
 
-  // ===== O: Operations / 库存运营 =====
+  // ===== O: Operations =====
   'tools.solopreneur-inventory-turnover-calculator.title': { en: 'Inventory Turnover Calculator', zh: '库存周转率计算器' },
   'tools.solopreneur-inventory-turnover-calculator.description': { en: 'Measure how fast you sell through inventory: turnover ratio, days-of-inventory-on-hand (DOH), and health bands. See what-if (markdown, stockout), break-even stock-to-sales, and milestone (3x/year lean). Health: 🟢 ≥6x · 🟡 4–6x · 🟠 2–4x · 🔴 <2x.', zh: '衡量库存销售速度：周转率、平均库存天数（DOH）和健康分级。查看 What-If（降价、缺货）、盈亏平衡库存销售比和里程碑（3x/年精益）。健康分级：🟢 ≥6x · 🟡 4–6x · 🟠 2–4x · 🔴 <2x。' },
   'tools.solopreneur-inventory-turnover-calculator.faq.0.a': { en: 'For general retail, 6x/year is the healthy baseline. Apparel is typically 4x (seasonal), grocery 12x (perishable, fast-moving), and furniture 3x (high-ticket, slow). Anything below 4x signals capital trapped in slow movers; below 2x is critical and demands SKU rationalization.', zh: '一般零售业:6 倍/年 为健康基准。服装通常 4 倍(季节性),杂货 12 倍(易腐、快销),家具 3 倍(高客单、慢销)。低于 4 倍提示资金被困在慢销 SKU;低于 2 倍则属危急,需做 SKU 优化。' },
@@ -2158,7 +2158,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-support-capacity-planning-calculator.how_to_use.5': { en: 'Read the required agents + utilization band; check What-If for +20% volume scenario.', zh: '查看所需客服数和利用率等级；用 What-If 检查 +20% 工单量的情景。' },
   'tools.solopreneur-support-capacity-planning-calculator.input.avg_handle_time_min.label': { en: 'Average handle time (minutes)', zh: '平均处理时长（分钟）' },
 
-  // ===== K: Knowledge / 知识库 =====
+  // ===== K: Knowledge =====
   'tools.solopreneur-kb-coverage-rate-calculator.title': { en: 'KB Coverage Rate Calculator', zh: '知识库覆盖率计算器' },
   'tools.solopreneur-kb-coverage-rate-calculator.description': { en: 'Measure knowledge base coverage: tickets with matching KB articles / total tickets. See health bands, what-if (article additions), break-even coverage for deflection target, and gap analysis by topic. Health: 🟢 ≥70% · 🟡 50–70% · 🟠 30–50% · 🔴 <30%.', zh: '衡量知识库覆盖率：匹配到知识库文章的工单 / 总工单。查看健康分级、What-If（新增文章）、分流目标的盈亏平衡覆盖率和按主题的差距分析。健康分级：🟢 ≥70% · 🟡 50–70% · 🟠 30–50% · 🔴 <30%。' },
   'tools.solopreneur-kb-coverage-rate-calculator.faq.0.a': { en: 'Coverage rate = (tickets with a matching KB article) / (total inbound tickets). It measures the breadth of your KB content vs. the real questions customers ask. TSIA 2024 reports mid-market B2B SaaS at 50-75% coverage; >85% indicates a mature KB.', zh: '覆盖率 = (有 KB 文章匹配的工单) ÷ (呼入工单总数)。它衡量 KB 内容相对于客户真实问题的覆盖广度。TSIA 2024 报告显示中型 B2B SaaS 覆盖率为 50-75%；>85% 表示 KB 已成熟。' },
@@ -2414,7 +2414,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cmp-roi-calculator.how_to_use.6': { en: 'Pair with L-2 (DSAR) for baseline privacy-ops cost; L-3 (Consent Revenue) for revenue lift from consent-rate improvement.', zh: '与 L-2（DSAR）搭配了解基线隐私运营成本；与 L-3（同意收入）搭配了解同意率提升带来的收入增长。' },
   'tools.solopreneur-cmp-roi-calculator.input.automation_uplift_pct.label': { en: 'CMP automation uplift (%)', zh: 'CMP 自动化提升比例（%）' },
 
-  // ===== S: Sales / 销售管理 =====
+  // ===== S: Sales =====
   'tools.solopreneur-pipeline-value-calculator.title': { en: 'Pipeline Value Calculator', zh: '销售渠道价值计算器' },
   'tools.solopreneur-pipeline-value-calculator.description': { en: 'Calculate weighted pipeline value: deal amount × stage probability × segment weighting. See health bands, what-if (win rate, stage migration), break-even pipeline for quota, and forecast accuracy. Health: 🟢 coverage ≥3x quota · 🟡 2–3x · 🟠 1–2x · 🔴 <1x.', zh: '计算加权销售渠道价值：交易金额 × 阶段概率 × 分层权重。查看健康分级、What-If（赢率、阶段迁移）、指标的盈亏平衡销售渠道和预测准确度。健康分级：🟢 覆盖 ≥3x 指标 · 🟡 2–3x · 🟠 1–2x · 🔴 <1x。' },
   'tools.solopreneur-pipeline-value-calculator.faq.0.a': { en: 'Pipeline value is the total dollar amount of all deals in your sales pipeline, weighted by the probability each deal will close at its current stage. A weighted pipeline gives you a realistic forecast, while a raw (nominal) pipeline shows your theoretical maximum.', zh: '管道价值是销售管道中所有合同的美元总额,按各阶段当前的成交概率加权。加权管道给出更现实的预测,原始(名义)管道则反映理论最大值。' },

@@ -12,7 +12,7 @@
 // What this test asserts:
 //   T1 — categories.ts every .name has no CJK characters (source purity)
 //   T2 — translations.ts category.{O,S,K}.name en field has no CJK
-//        (expected to FAIL until Task 2 lands)
+//        (locks P62 T2 fix in place; both assertions now PASS)
 //
 // Run via: node tests/run.mjs tests/category-i18n-purity.test.ts
 //

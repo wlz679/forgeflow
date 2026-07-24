@@ -20,9 +20,9 @@ metadata:
 
 `src/data/categories.ts` lines for O (Operations), S (Sales), K (Knowledge):
 
-- `O.name`: `"Operations / 库存运营"` → `"Operations & Inventory"`
-- `S.name`: `"Sales / 销售管理"` → `"Sales Management"`
-- `K.name`: `"Knowledge / 知识库"` → `"Knowledge Base"`
+- `O.name`: `"Operations / 库存运营"` → `"Operations"`
+- `S.name`: `"Sales / 销售管理"` → `"Sales"`
+- `K.name`: `"Knowledge / 知识库"` → `"Knowledge"`
 
 Description fields already in English (audit-confirmed); only `name` had the `"/ 中文"` suffix. This is the **canonical fallback** for any code path that still reads `category.name` directly (e.g. legacy `??` fallbacks in pages).
 
@@ -30,9 +30,9 @@ Description fields already in English (audit-confirmed); only `name` had the `"/
 
 `src/i18n/translations.ts` `category.{O,S,K}.name.en` entries:
 
-- `O.en`: `"Operations / 库存运营"` → `"Operations & Inventory"`
-- `S.en`: `"Sales / 销售管理"` → `"Sales Management"`
-- `K.en`: `"Knowledge / 知识库"` → `"Knowledge Base"`
+- `O.en`: `"Operations / 库存运营"` → `"Operations"`
+- `S.en`: `"Sales / 销售管理"` → `"Sales"`
+- `K.en`: `"Knowledge / 知识库"` → `"Knowledge"`
 
 `zh` entries left untouched (Chinese pages unaffected by the English-purity fix; the i18n table's zh fields describe the same categories in their own language and were never the leak source).
 
