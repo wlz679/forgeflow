@@ -79,7 +79,7 @@ pnpm dev                # Dev server (Astro, port 4321 default)
 pnpm build              # Production build (313+ static pages: 100 calcs × 2 langs + 15 category listings × 2 langs + 2 landing pages × 2 langs = ~314)
 pnpm preview            # Preview built app
 pnpm sync               # Update AI pricing from LiteLLM + regen engine data tables
-pnpm test:unit          # Unit tests (skips 5 build-dependent by default)
+pnpm test:unit          # Unit tests (skips 6 build-dependent by default — P63 added category-en-cjk-guard)
 pnpm test:build         # Build-dependent test wrapper (requires RUN_BUILD_TESTS=1)
 pnpm translate          # Translate wordpools (translate-wordpools.ts)
 ```

@@ -114,7 +114,7 @@ test('en category landing pages contain no CJK in <h1> or category-link text', (
     }
 
     // 2. Cross-page category-link text. Look at every en page's <a href="/en/<slug>/">
-    //    links (breadcrumbs + "Explore Other Categories" grid). This catches
+    //    links ("Explore Other Categories" grid (CategoryOtherNav component)). This catches
     //    any page introducing a bilingual category name like "Knowledge / 知识库".
     //    If no page references the slug at all, the cross-category nav has
     //    regressed (DOM structure change) — fail loudly instead of silent pass.

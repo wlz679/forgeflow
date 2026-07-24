@@ -301,7 +301,7 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 - **[scripts] drift-proof codegen via Date mock** (P42) — `REFERENCE_DATE=2026-07-15` injected in `codegen-examples.mjs` runner script
 - **[tests] `tests/engine-count.ts` static const** (P22b) — `EXPECTED_ENGINE_COUNT = 100` with drift guard
 - **[seo] 2 missing og-samples backfilled** (P23) — cart-abandonment + coupon-attribution
-- **[ci] `RUN_BUILD_TESTS=1` opt-in** (P24) — 5 build-dependent test files gated
+- **[ci] `RUN_BUILD_TESTS=1` opt-in** (P24) — 6 build-dependent test files gated (P63 added category-en-cjk-guard)
 - **[tests] stale '82 tools' literal** (P25) → `EXPECTED_ENGINE_COUNT`
 - **[tests] P2a listing pages array** (P26a) — 10 → 15 categories
 - **[docs] CLAUDE.md invariant refresh** (P32) — 6 stale numeric claims (32→100 / 24→92 / 141→313 / etc.)
