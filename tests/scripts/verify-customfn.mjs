@@ -86,8 +86,30 @@ function extractArrayJoinBody(src, propIdx) {
   return parts.map(stripAndDecode).join('\n');
 }
 
+function findEngineFile(slug) {
+  // P59/P60 batches moved engines into per-category subdirectories
+  // (marketing/, freelance/, cost/, ...). The verifier used to assume
+  // `src/engines/<slug>.ts` and failed with ENOENT for those. Try root
+  // first (legacy engines), then walk every category subdir.
+  const root = 'src/engines/' + slug + '.ts';
+  if (fs.existsSync(root)) return root;
+  const subs = fs.readdirSync('src/engines').filter(d => {
+    const p = 'src/engines/' + d;
+    return fs.statSync(p).isDirectory();
+  });
+  for (const sub of subs) {
+    const candidate = 'src/engines/' + sub + '/' + slug + '.ts';
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return null;
+}
+
 function extractCustomFn(slug) {
-  const src = fs.readFileSync('src/engines/' + slug + '.ts', 'utf8');
+  const path = findEngineFile(slug);
+  if (!path) {
+    throw new Error('engine file not found for slug: ' + slug + ' (searched src/engines/ and subdirs)');
+  }
+  const src = fs.readFileSync(path, 'utf8');
 
   // Style 1: top-level const customFn = "..."
   const topIdx = src.indexOf('const customFn');
