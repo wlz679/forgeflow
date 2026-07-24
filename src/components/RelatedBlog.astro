@@ -1,0 +1,24 @@
+---
+import { t, getLang } from '../i18n';
+import type { BlogPost } from '../lib/blog';
+
+export interface Props { posts: BlogPost[]; }
+
+const lang = getLang(Astro);
+---
+
+{Astro.props.posts.length > 0 && (
+  <div class="mt-6">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">{t('related_blog.title', lang)}</h2>
+    <div class="flex flex-wrap gap-2">
+      {Astro.props.posts.map(post => (
+        <a href={`/${lang}/blog/${post.slug}`} class="inline-flex items-center gap-2 px-4 py-2 text-sm bg-purple-50 border border-purple-100 rounded-full hover:border-[#7C3AED]/30 hover:bg-white hover:text-[#7C3AED] transition-all duration-300">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 5v14H5V5h14m1.1-2H3.9c-0.5 0-0.9 0.4-0.9 0.9v16.2c0 0.5 0.4 0.9 0.9 0.9h16.2c0.5 0 0.9-0.4 0.9-0.9V3.9c0-0.5-0.4-0.9-0.9-0.9zM7 7h10v2H7V7zm0 4h10v2H7v-2zm0 4h7v2H7v-2z"/>
+          </svg>
+          {post.title}
+        </a>
+      ))}
+    </div>
+  </div>
+)}

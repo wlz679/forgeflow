@@ -6,12 +6,14 @@ import ResultCard from '../../components/ResultCard.astro';
 import FAQ from '../../components/FAQ.astro';
 import HowToUse from '../../components/HowToUse.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
+import RelatedBlog from '../../components/RelatedBlog.astro';
 import AdUnit from '../../components/AdUnit.astro';
 import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
 import RecentViewed from '../../components/RecentViewed.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
 import { relatedTools } from '../../data/internal-links';
+import { getBlogPostsByToolSlug } from '../../lib/blog';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
 import { t, getLang } from '../../i18n';
@@ -37,6 +39,7 @@ const engine = getEngine(slug!);
 if (!engine) return Astro.redirect(`/${lang}/`);
 
 const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
+const relatedBlog = await getBlogPostsByToolSlug(slug!);
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
 const metaTitle = `${toolTitle} — ForgeFlowKit`;
@@ -975,6 +978,7 @@ const schema = JSON.stringify({
         <div id="dynamic-results" class="space-y-3 hidden"></div>
         <AdUnit slot="tool-result" />
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
+        <RelatedBlog posts={relatedBlog} />
         <EeatTrustBlock
           reviewedBy={toolMeta.reviewedBy}
           author={toolMeta.author}
