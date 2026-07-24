@@ -15,7 +15,9 @@
 //
 // Build dependency:
 //   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern, matches
-//     the 5 existing build-dep tests in this project)
+//     the 5 existing build-dep tests in this project — this file is the
+//     6th build-dep suite; tests/run.mjs skip-mode summary updated
+//     accordingly)
 //   - Spawns `pnpm build` directly via spawnSync. Does NOT use
 //     _clerk-build-helper because this test has no Clerk env requirement.
 
@@ -27,8 +29,11 @@ import { spawnSync } from 'node:child_process';
 
 const root = resolve(import.meta.dirname, '..');
 
-// P23b: skip cleanly when build-dep gate not set (local dev w/o RUN_BUILD_TESTS)
-// Match existing build-dep test pattern (baselayout-clerk-script.test.ts et al.)
+// P23b: skip cleanly when build-dep gate not set (local dev w/o RUN_BUILD_TESTS).
+// Uses file-level process.exit(0) (not `return` inside a test() callback).
+// This works because tests/run.mjs spawns each .test.ts file in its own
+// Node process via `tsx`, so exiting here means zero tests run for this
+// file — no phantom test() registrations needed.
 if (!process.env.RUN_BUILD_TESTS) {
   // silent skip — no test() registered
   process.exit(0);
@@ -61,41 +66,87 @@ function getCategorySlugs(): string[] {
 // Matches the regex in tests/category-i18n-purity.test.ts for consistency.
 const CJK = /[一-鿿㐀-䶿＀-￯]/;
 
-test('en category landing pages contain no CJK in <h1> or breadcrumb', () => {
+test('en category landing pages contain no CJK in <h1> or category-link text', () => {
   ensureBuilt();
   const slugs = getCategorySlugs();
   assert.equal(slugs.length, 15, `expected 15 category slugs in src/data/categories.ts, got ${slugs.length}`);
 
+  // Walk every en dist page once (small build output, ~314 files) and index
+  // category-link href → source page. self-pages don't link to themselves,
+  // but other pages (cross-category grid, breadcrumb) do link to /en/<slug>/.
+  // We also use the aggregated set to detect DOM structure changes: if NO
+  // page references a category, that's a structural regression worth failing.
+  const distEnDir = resolve(root, 'dist', 'en');
+  const enPages: Array<{ rel: string; html: string }> = [];
+  function walk(dir: string, relBase: string): void {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = resolve(dir, entry.name);
+      const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(full, rel);
+      else if (entry.name === 'index.html') enPages.push({ rel, html: readFileSync(full, 'utf8') });
+    }
+  }
+  walk(distEnDir, '');
+
   const violations: Array<{ slug: string; location: string; text: string }> = [];
 
   for (const slug of slugs) {
-    const htmlPath = resolve(root, 'dist', 'en', slug, 'index.html');
-    if (!existsSync(htmlPath)) {
-      violations.push({ slug, location: '<missing dist file>', text: htmlPath });
-      continue;
-    }
-    const html = readFileSync(htmlPath, 'utf8');
-
-    // 1. <h1> text (the main page title)
-    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
-    if (h1Match) {
-      const text = h1Match[1]!;
-      if (CJK.test(text)) {
-        violations.push({ slug, location: 'h1', text: text.slice(0, 80) });
+    // 1. <h1> text in the category's own page. If the regex doesn't match,
+    //    the page DOM has changed (e.g. <h1> now wraps nested elements) and
+    //    the CJK scan would be silently skipped — surface as a violation.
+    const selfPage = enPages.find(p => p.rel === `${slug}/index.html`);
+    if (!selfPage) {
+      violations.push({ slug, location: '<missing dist file>', text: `dist/en/${slug}/index.html` });
+    } else {
+      const h1Match = selfPage.html.match(/<h1[^>]*>([^<]+)<\/h1>/);
+      if (!h1Match) {
+        violations.push({
+          slug,
+          location: 'h1-missing',
+          text: 'failed to locate <h1> in HTML — DOM structure may have changed',
+        });
+      } else {
+        const text = h1Match[1]!;
+        if (CJK.test(text)) {
+          violations.push({ slug, location: 'h1', text: text.slice(0, 80) });
+        }
       }
     }
 
-    // 2. Breadcrumb category link text — <a> wrapping short category-name text
-    //    (heuristic: skip long nav strings; the breadcrumb uses <a href="/en/<slug>/">)
-    const breadcrumbLinkRe = new RegExp(
-      `<a[^>]*href="/en/${slug}/"[^>]*>\\s*([^<]+?)\\s*</a>`,
-      'g'
-    );
-    for (const m of html.matchAll(breadcrumbLinkRe)) {
-      const text = m[1]!.trim();
-      if (CJK.test(text)) {
-        violations.push({ slug, location: 'breadcrumb', text: text.slice(0, 80) });
+    // 2. Cross-page category-link text. Look at every en page's <a href="/en/<slug>/">
+    //    links (breadcrumbs + "Explore Other Categories" grid). This catches
+    //    any page introducing a bilingual category name like "Knowledge / 知识库".
+    //    If no page references the slug at all, the cross-category nav has
+    //    regressed (DOM structure change) — fail loudly instead of silent pass.
+    const linkRe = new RegExp(`<a[^>]*href="/en/${slug}/"[^>]*>([\\s\\S]*?)</a>`, 'g');
+    let crossRefCount = 0;
+    for (const { rel, html } of enPages) {
+      // Some <a> blocks wrap text in nested <div>s (cross-category grid); flatten
+      // by stripping tags from the captured body before text check.
+      for (const m of html.matchAll(linkRe)) {
+        crossRefCount++;
+        const body = m[1]!;
+        // Concatenate visible text only (strip nested tags + entities)
+        const text = body
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/&[a-z]+;|&#\d+;/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (CJK.test(text)) {
+          violations.push({
+            slug,
+            location: `cross-link in ${rel}`,
+            text: text.slice(0, 80),
+          });
+        }
       }
+    }
+    if (crossRefCount === 0) {
+      violations.push({
+        slug,
+        location: 'cross-link-missing',
+        text: 'failed to locate any <a href="/en/<slug>/"> reference across dist/en — DOM structure may have changed',
+      });
     }
   }
 
