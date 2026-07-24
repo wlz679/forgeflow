@@ -133,7 +133,7 @@
 | pnpm build | 449 dist pages |
 | pnpm build CJK-leak grep | `dist grep -rE 'Operations / 库存运营\|Sales / 销售管理\|Knowledge / 知识库' dist/en/` → 0 matches |
 | Production engine changes | 1 (rent-vs-buy milestone v3 — P55 follow-up) |
-| Total commits | 632 → 711 |
+| Total commits | 632 → 712 |
 | Active days | 33 → 38 |
 
 ### Ship drama
