@@ -19,10 +19,11 @@ import { clampNonNegative } from '../../core/engines/helpers';
 //   recovery_net_gain  = recoverable_rev - recovery_cost
 //   recovery_roi       = recoverable_rev / recovery_cost  (12.80 = 1280%)
 //
-// Health bands on recovery_roi: green >=300% . yellow 100-300% . red <100%
-//   - Good: every recovery dollar produces >=$3 of recovered revenue.
-//   - Warning: recovery barely covers its own cost (fragile).
-//   - Critical: recovery campaigns destroy value.
+// Health bands on recovery_roi (Business v3 4-band standard):
+//   green  ≥300%   every recovery dollar produces ≥$3 of recovered revenue.
+//   yellow 200-300%  profitable but headroom remains (lift via SMS / cost cuts).
+//   orange 100-200%  recovery barely covers its own cost (structurally fragile).
+//   red    <100%   recovery campaigns destroy value.
 //
 // Industry benchmarks:
 //   Cart abandonment rate: 65-80% (Baymard 2024: 70.19% avg)
@@ -33,9 +34,10 @@ import { clampNonNegative } from '../../core/engines/helpers';
 // ============== Health band constants ==============
 
 export const HEALTH_BANDS = {
-  good: { threshold: 3.0, label: 'Good — recovery ROI >= 300%; recovery spend is highly profitable' },
-  warning: { threshold: 1.0, label: 'Warning — recovery ROI 100–300%; recovery spend barely profitable' },
-  critical: { threshold: -Infinity, label: 'Critical — recovery ROI < 100%; recovery spend destroys value' },
+  good:    { threshold: 3.0,   label: 'Good — recovery ROI ≥ 300%; recovery spend is highly profitable' },
+  caution: { threshold: 2.0,   label: 'Caution — recovery ROI 200–300%; profitable but room to optimize' },
+  warning: { threshold: 1.0,   label: 'Warning — recovery ROI 100–200%; recovery spend is fragile' },
+  critical:{ threshold: -Infinity, label: 'Critical — recovery ROI < 100%; recovery spend destroys value' },
 } as const;
 
 // ============== Math helpers ==============
@@ -66,8 +68,9 @@ export function calcRecoveryROI(
 }
 
 /** Map recovery ROI ratio to health band. */
-export function calcHealthBand(roi: number): 'good' | 'warning' | 'critical' {
+export function calcHealthBand(roi: number): 'good' | 'caution' | 'warning' | 'critical' {
   if (roi >= HEALTH_BANDS.good.threshold) return 'good';
+  if (roi >= HEALTH_BANDS.caution.threshold) return 'caution';
   if (roi >= HEALTH_BANDS.warning.threshold) return 'warning';
   return 'critical';
 }
@@ -107,7 +110,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct = (n: number) => (n * 100).toFixed(0) + '%';
 
   const band = calcHealthBand(recoveryROI);
-  const healthEmoji = band === 'good' ? '🟢' : band === 'warning' ? '🟡' : '🔴';
+  const healthEmoji = band === 'good' ? '🟢' : band === 'caution' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
   const healthLabel = HEALTH_BANDS[band].label;
 
   // What-If scenarios:
@@ -158,8 +161,11 @@ function calculate(inputs: Record<string, string>): string[] {
   } else if (band === 'good') {
     tip =
       'Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.';
+  } else if (band === 'caution') {
+    tip =
+      'Profitable but with headroom. The two main levers: lift recovery rate from 8% toward 12% (SMS add-on typically triples email recovery at marginal cost) and lower cost per send by moving to email-dominant sequences. Either alone pushes ROI into 🟢; both compound to ~3x.';
   } else {
-    // warning band
+    // warning band (100-200% ROI)
     if (recoveryCostPerSend > 1.0) {
       tip =
         'SMS costs ($1+ per send) dominate the recovery math. Test email-only sequences first (Klaviyo/Mailchimp average 8% recovery at ~$0.05/send) before scaling SMS to high-AOV carts only. Alternatively, move to triggered in-app messages at near-zero cost.';
@@ -243,9 +249,9 @@ const customFn =
   'function money(n){return "$"+Math.round(n).toLocaleString("en-US");}' +
   'function money2(n){return "$"+n.toLocaleString("en-US",{maximumFractionDigits:2});}' +
   'function pct(n){return (n*100).toFixed(0)+"%";}' +
-  'var band=roi>=3?"good":(roi>=1?"warning":"critical");' +
-  'var he=band==="good"?"🟢":(band==="warning"?"🟡":"🔴");' +
-  'var hl=band==="good"?"Good — recovery ROI >= 300%; recovery spend is highly profitable":(band==="warning"?"Warning — recovery ROI 100–300%; recovery spend barely profitable":"Critical — recovery ROI < 100%; recovery spend destroys value");' +
+  'var band=roi>=3?"good":(roi>=2?"caution":(roi>=1?"warning":"critical"));' +
+  'var he=band==="good"?"🟢":(band==="caution"?"🟡":(band==="warning"?"🟠":"🔴"));' +
+  'var hl=band==="good"?"Good — recovery ROI ≥ 300%; recovery spend is highly profitable":(band==="caution"?"Caution — recovery ROI 200–300%; profitable but room to optimize":(band==="warning"?"Warning — recovery ROI 100–200%; recovery spend is fragile":"Critical — recovery ROI < 100%; recovery spend destroys value"));' +
   "var wrRR=rr*1.5;" +
   "var wrR=lr*(wrRR/100);" +
   "var wrC=ac*rcps;" +
@@ -270,6 +276,7 @@ const customFn =
   'var tip="";' +
   'if(band==="critical"){tip="Recovery spend is destroying value. Either lower recovery cost per send (switch from SMS to email, or move to triggered drip sequences rather than one-shot blasts), or focus recovery on high-AOV segments where the recovery economics work. A $0.50 send against an $80 AOV is profitable above 0.625% recovery rate; below that, the math fails.";}' +
   'else if(band==="good"){tip="Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.";}' +
+  'else if(band==="caution"){tip="Profitable but with headroom. The two main levers: lift recovery rate from 8% toward 12% (SMS add-on typically triples email recovery at marginal cost) and lower cost per send by moving to email-dominant sequences. Either alone pushes ROI into 🟢; both compound to ~3x.";}' +
   'else{if(rcps>1){tip="SMS costs ($1+ per send) dominate the recovery math. Test email-only sequences first (Klaviyo/Mailchimp average 8% recovery at ~$0.05/send) before scaling SMS to high-AOV carts only. Alternatively, move to triggered in-app messages at near-zero cost.";}else{tip="Recovery barely covers its cost. Two main levers: (1) lift recovery rate from 8% toward 15% via SMS add-on, better subject lines, and dynamic product personalization, (2) lower cost per send by moving to email-dominant sequences. Either alone doubles ROI; both compound to ~5x.";}}' +
   'var r="";' +
   'r+="Cart Abandonment Cost Calculator\\n\\n";' +
@@ -326,7 +333,7 @@ const engine: ToolEngine = {
   slug: 'solopreneur-cart-abandonment-cost-calculator',
   title: 'Cart Abandonment Cost Calculator',
   description:
-    'Model cart abandonment and the ROI of a recovery campaign (email + SMS retargeting). See 8-output breakdown, what-if scenarios (recovery rate, cost, abandonment), break-even recovery rate, and annualized projections. Industry benchmarks: 🟢 ≥300% recovery ROI · 🟡 100–300% · 🔴 <100%.',
+    'Model cart abandonment and the ROI of a recovery campaign (email + SMS retargeting). See 8-output breakdown, what-if scenarios (recovery rate, cost, abandonment), break-even recovery rate, and annualized projections. Industry benchmarks: 🟢 ≥300% · 🟡 200–300% · 🟠 100–200% · 🔴 <100% recovery ROI.',
   categoryId: 'M',
   applicationCategory: 'BusinessApplication',
   inputs: [
@@ -364,7 +371,7 @@ const engine: ToolEngine = {
   calculate,
   generate: calculate,
   staticExamples: [
-    'Cart Abandonment Cost Calculator\n\n🩺 Health:\n------------------------------------------------\n* 🟢 Good — recovery ROI >= 300%; recovery spend is highly profitable\n* Recovery ROI: 1280%  *  Net gain: $41,300\n* Abandonment rate: 70%  *  Recovery rate: 8%\n\n------------------------------------------------\n\n📊 Inputs Snapshot:\n------------------------------------------------\n* Monthly traffic:           50,000\n* Cart add rate:             20%\n* Cart abandonment rate:     70%\n* Average order value:       $80\n* Recovery rate:             8%\n* Recovery cost per send:    $0.5\n\n------------------------------------------------\n\n💰 Cost Breakdown:\n------------------------------------------------\n* Cart creations:       10,000  (traffic x 20% add rate)\n* Completed orders:     3,000  (30% conversion)\n* Abandoned carts:      7,000  (cart creations x 70%)\n* Lost revenue:         $560,000  (abandoned x AOV)\n* Recoverable revenue:  $44,800  (lost x 8% recovery)\n* Recovery cost:        $3,500  (abandoned x cost/send)\n* Net gain:             $41,300\n\n------------------------------------------------\n\n🔄 What-If:\n------------------------------------------------\n* +50% recovery rate: recovery ROI = 1920% * net gain = $63,700\n* -25% cost per send: recovery ROI = 1707% * net gain = $42,175\n* -10pp abandonment:  recovery ROI = 1280% * net gain = $35,400\n\n------------------------------------------------\n\n⚖️ Break-Even:\n------------------------------------------------\n* Minimum recovery rate for 100% ROI: 0.63%  (cost/send / AOV)\n* Headroom: 7.38pp before recovery ROI hits 100%\n* At break-even, every recovery dollar returns exactly one recovery dollar in recovered revenue\n\n------------------------------------------------\n\n🎯 Milestone:\n------------------------------------------------\n* Annualized net gain:    $495,600  (at current monthly run-rate)\n* Annual lost revenue:    $6,720,000\n* Annual recovered:       $537,600\n* (Assumes constant traffic + rates — refresh quarterly with new funnel data)\n\n------------------------------------------------\n\n💡 Tip: Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.\n',
+    'Cart Abandonment Cost Calculator\n\n🩺 Health:\n------------------------------------------------\n* 🟢 Good — recovery ROI ≥ 300%; recovery spend is highly profitable\n* Recovery ROI: 1280%  *  Net gain: $41,300\n* Abandonment rate: 70%  *  Recovery rate: 8%\n\n------------------------------------------------\n\n📊 Inputs Snapshot:\n------------------------------------------------\n* Monthly traffic:           50,000\n* Cart add rate:             20%\n* Cart abandonment rate:     70%\n* Average order value:       $80\n* Recovery rate:             8%\n* Recovery cost per send:    $0.5\n\n------------------------------------------------\n\n💰 Cost Breakdown:\n------------------------------------------------\n* Cart creations:       10,000  (traffic x 20% add rate)\n* Completed orders:     3,000  (30% conversion)\n* Abandoned carts:      7,000  (cart creations x 70%)\n* Lost revenue:         $560,000  (abandoned x AOV)\n* Recoverable revenue:  $44,800  (lost x 8% recovery)\n* Recovery cost:        $3,500  (abandoned x cost/send)\n* Net gain:             $41,300\n\n------------------------------------------------\n\n🔄 What-If:\n------------------------------------------------\n* +50% recovery rate: recovery ROI = 1920% * net gain = $63,700\n* -25% cost per send: recovery ROI = 1707% * net gain = $42,175\n* -10pp abandonment:  recovery ROI = 1280% * net gain = $35,400\n\n------------------------------------------------\n\n⚖️ Break-Even:\n------------------------------------------------\n* Minimum recovery rate for 100% ROI: 0.63%  (cost/send / AOV)\n* Headroom: 7.38pp before recovery ROI hits 100%\n* At break-even, every recovery dollar returns exactly one recovery dollar in recovered revenue\n\n------------------------------------------------\n\n🎯 Milestone:\n------------------------------------------------\n* Annualized net gain:    $495,600  (at current monthly run-rate)\n* Annual lost revenue:    $6,720,000\n* Annual recovered:       $537,600\n* (Assumes constant traffic + rates — refresh quarterly with new funnel data)\n\n------------------------------------------------\n\n💡 Tip: Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.\n',
   ],
   faq: [
     { q: 'What is cart abandonment rate?', a: 'Cart abandonment rate is the share of online shopping carts that are created but never converted to a completed purchase. Baymard Institute\'s 2024 study puts the average at 70.19% across industries. Top causes: unexpected shipping costs (48%), required account creation (24%), complicated checkout (22%).' },

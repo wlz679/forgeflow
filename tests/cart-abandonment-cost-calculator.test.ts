@@ -30,20 +30,25 @@ test('cart-abandonment: canonical inputs → 1280% ROI → 🟢 Good', () => {
   assert.equal(calcHealthBand(roi), 'good');
 });
 
-// Health bands: 3 boundary tests
+// Health bands: 4 boundary tests (Business v3 4-band standard)
 test('cart-abandonment: ROI >= 300% (3.0x) -> good', () => {
   assert.equal(calcHealthBand(3.0), 'good');
   assert.equal(calcHealthBand(5.0), 'good');
 });
 
-test('cart-abandonment: ROI 100-300% (1.0-3.0x) -> warning', () => {
-  assert.equal(calcHealthBand(2.0), 'warning');
+test('cart-abandonment: ROI 200-300% (2.0-3.0x) -> caution', () => {
+  assert.equal(calcHealthBand(2.0), 'caution');
+  assert.equal(calcHealthBand(2.5), 'caution');
+});
+
+test('cart-abandonment: ROI 100-200% (1.0-2.0x) -> warning', () => {
   assert.equal(calcHealthBand(1.0), 'warning');
+  assert.equal(calcHealthBand(1.5), 'warning');
 });
 
 test('cart-abandonment: ROI < 100% (<1.0x) -> critical', () => {
-  assert.equal(calcHealthBand(0.5), 'critical');
-  assert.equal(calcHealthBand(0.0), 'critical');
+  assert.equal(calcHealthBand(0.99), 'critical');
+  assert.equal(calcHealthBand(0), 'critical');
 });
 
 // Defensive clamp: negative input clamps to 0
@@ -61,9 +66,10 @@ test('cart-abandonment: all-zero inputs -> guard handles gracefully', () => {
   assert.ok(!isFinite(roi) ? false : roi >= 0); // Ensure no Infinity
 });
 
-test('HEALTH_BANDS has 3 bands with locked thresholds', () => {
-  assert.equal(Object.keys(HEALTH_BANDS).length, 3);
+test('HEALTH_BANDS has 4 bands with locked thresholds', () => {
+  assert.equal(Object.keys(HEALTH_BANDS).length, 4);
   assert.equal(HEALTH_BANDS.good.threshold, 3.0);
+  assert.equal(HEALTH_BANDS.caution.threshold, 2.0);
   assert.equal(HEALTH_BANDS.warning.threshold, 1.0);
   assert.equal(HEALTH_BANDS.critical.threshold, -Infinity);
 });
