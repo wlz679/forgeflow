@@ -22,6 +22,12 @@ import { clampNonNegative } from '../../core/engines/helpers';
 //   - Warning: coupons returned less than they cost (fragile).
 //   - Critical: coupons destroyed value.
 //
+// NOTE: This engine uses 3-band Health (🟢🟡🔴) by design — see CLAUDE.md
+// "v3 standard — two variants" for the ROI-hard-breakpoint exemption.
+// True coupon ROI's break-even is structurally at 100% (profit↔loss
+// boundary), not a fuzzy middle band; inserting a 🟠 band would force
+// an arbitrary split (e.g. 50–100% margin) with no business meaning.
+//
 // Cannibalization: not running A/B tests? Use 30% (industry avg).
 
 // ============== Health band constants ==============

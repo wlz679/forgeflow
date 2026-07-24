@@ -39,6 +39,12 @@ Goal: every calculator should match **world-leading / industry-leading** quality
 
 Why two variants: `Break-Even` and `Milestone` are business-domain concepts. Forcing them onto a token-pricing calculator is anti-semantic — the result is emoji-fluff, not analysis. The AI Cost variant substitutes domain-natural sections (cost decomposition, provider comparison) that match what users actually want.
 
+**Hard-breakpoint exemption (3-band allowed):** Engines whose primary metric has a structural break-even at one end of its range (true ROI = 100%, recovery ROI = 100%, payback period = 0 months, etc.) are permitted to ship with 3-band Health (🟢🟡🔴) instead of the standard 4-band. The reasoning: the "🟠 warning moderate" band normally signals "profitable but fragile"; for hard-breakpoint metrics there's no fuzzy middle — values either cross the threshold or they don't, and adding a 🟠 band forces an arbitrary split with no business meaning. Currently documented exceptions:
+
+- `coupon-attribution-calculator` (M) — true coupon ROI: 🟢 ≥100% / 🟡 0–100% / 🔴 <0%.
+
+Any future engine that wants the 3-band exemption must (a) cite the hard-breakpoint justification in its header comment and (b) cross-link the CLAUDE.md exemption note. Both pieces are required for audit-grade clarity.
+
 **v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. Engine count per category:
 
 <!-- codegen:start engine-count -->
