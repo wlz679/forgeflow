@@ -22,8 +22,17 @@ const { slug, lang } = Astro.params;
 const post = await getBlogPostBySlug(slug!);
 if (!post) return Astro.redirect(`/${lang}/blog/`);
 
-const metaTitle = `${post.title} — ForgeFlowKit Blog`;
-const metaDescription = post.excerpt;
+// P69: lang-aware title + excerpt via i18n table (was lang-agnostic `post.title`).
+// Fallback to post.title / post.excerpt if a key is missing (defense in depth).
+const translatedTitle = t(`blog.${post.slug}.title`, lang) !== `blog.${post.slug}.title`
+  ? t(`blog.${post.slug}.title`, lang)
+  : post.title;
+const translatedExcerpt = t(`blog.${post.slug}.excerpt`, lang) !== `blog.${post.slug}.excerpt`
+  ? t(`blog.${post.slug}.excerpt`, lang)
+  : post.excerpt;
+
+const metaTitle = `${translatedTitle} — ForgeFlowKit Blog`;
+const metaDescription = translatedExcerpt;
 
 // Blog posts are generated from tools.map(); assign synthetic dates so JSON-LD
 // datePublished is present. Real publication dates are not tracked in blog-posts.ts.
@@ -38,8 +47,8 @@ const articleSchema = JSON.stringify({
     {
       '@type': 'Article',
       '@id': `${SITE_URL}/${lang}/blog/${post.slug}/#article`,
-      headline: post.title,
-      description: post.excerpt,
+      headline: translatedTitle,
+      description: translatedExcerpt,
       url: `${SITE_URL}/${lang}/blog/${post.slug}/`,
       datePublished,
       inLanguage: lang,
@@ -59,18 +68,18 @@ const articleSchema = JSON.stringify({
       <span class="mx-1">/</span>
       <a href={`/${lang}/blog/`} class="hover:text-red-600">{t('breadcrumb.blog', lang)}</a>
       <span class="mx-1">/</span>
-      <span class="text-gray-600">{post.title}</span>
+      <span class="text-gray-600">{translatedTitle}</span>
     </nav>
     <article>
       <img
         src={`/og/${post.ogImage}-${lang}.png`}
-        alt={post.title}
+        alt={translatedTitle}
         width="1200"
         height="630"
         class="w-full aspect-[16/9] object-cover rounded-lg mb-6"
         loading="lazy"
       />
-      <h1 class="text-2xl font-extrabold text-gray-900 mb-4">{post.title}</h1>
+      <h1 class="text-2xl font-extrabold text-gray-900 mb-4">{translatedTitle}</h1>
       <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
         {post.content.split('\n').map(p => <p>{p}</p>)}
       </div>
