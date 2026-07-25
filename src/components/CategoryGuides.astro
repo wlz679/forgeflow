@@ -10,10 +10,19 @@ export interface Props {
 
 const { manualGuides, blogPosts } = Astro.props;
 const lang = getLang(Astro);
+
+// P72 T2-D3: lang-aware blog title via i18n table (mirrors P69 [slug].astro pattern).
+// Fallback to post.title if a key is missing (defense in depth).
+const translatedTitles = new Map<string, string>(
+  blogPosts.map(p => {
+    const titleKey = `blog.${p.slug}.title`;
+    return [p.slug, t(titleKey, lang) !== titleKey ? t(titleKey, lang) : p.title];
+  })
+);
 ---
 
 <section class="mb-10">
-  <h2 class="text-2xl font-bold text-gray-900 mb-6">Guides & Articles</h2>
+  <h2 class="text-2xl font-bold text-gray-900 mb-6">{t('category.guides_heading', lang)}</h2>
 
   {manualGuides.length > 0 && (
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -28,12 +37,12 @@ const lang = getLang(Astro);
 
   {blogPosts.length > 0 && (
     <>
-      <h3 class="text-sm font-semibold text-gray-700 mb-3 mt-6">Related Articles</h3>
+      <h3 class="text-sm font-semibold text-gray-700 mb-3 mt-6">{t('category.related_articles', lang)}</h3>
       <ul class="space-y-2">
         {blogPosts.map((post) => (
           <li>
             <a href={`/${lang}/blog/${post.slug}/`} class="text-sm text-[#7C3AED] hover:underline">
-              {post.title}
+              {translatedTitles.get(post.slug)}
             </a>
           </li>
         ))}

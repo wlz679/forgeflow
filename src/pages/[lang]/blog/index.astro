@@ -15,6 +15,19 @@ const lang = getLang(Astro);
 const title = t('blog.page_title', lang);
 const description = t('blog.subtitle', lang);
 
+// P72 T2-D1: lang-aware title + excerpt via i18n table (mirrors P69 [slug].astro pattern).
+// Fallback to post.title / post.excerpt if a key is missing (defense in depth).
+const allPosts = await getAllBlogPosts();
+const translatedPosts = allPosts.map(p => {
+  const titleKey = `blog.${p.slug}.title`;
+  const excerptKey = `blog.${p.slug}.excerpt`;
+  return {
+    ...p,
+    translatedTitle: t(titleKey, lang) !== titleKey ? t(titleKey, lang) : p.title,
+    translatedExcerpt: t(excerptKey, lang) !== excerptKey ? t(excerptKey, lang) : p.excerpt,
+  };
+});
+
 const blogIndexSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -26,9 +39,9 @@ const blogIndexSchema = JSON.stringify({
       description,
       inLanguage: lang,
       publisher: { '@id': `${SITE_URL}/#org` },
-      blogPost: (await getAllBlogPosts()).map(p => ({
+      blogPost: translatedPosts.map(p => ({
         '@type': 'BlogPosting',
-        headline: p.title,
+        headline: p.translatedTitle,
         url: `${SITE_URL}/${lang}/blog/${p.slug}/`,
       })),
     },
@@ -42,10 +55,10 @@ const blogIndexSchema = JSON.stringify({
     <h1 class="text-2xl font-extrabold mb-2">{t('blog.title', lang)}</h1>
     <p class="text-sm text-gray-500 mb-6">{t('blog.subtitle', lang)}</p>
     <div class="space-y-4">
-      {(await getAllBlogPosts()).map(post => (
+      {translatedPosts.map(post => (
         <a href={`/${lang}/blog/${post.slug}`} class="block p-4 border border-gray-200 rounded-lg hover:border-red-300 hover:bg-red-50/50 transition-colors">
-          <h2 class="text-base font-semibold text-gray-900">{post.title}</h2>
-          <p class="text-sm text-gray-500 mt-1">{post.excerpt}</p>
+          <h2 class="text-base font-semibold text-gray-900">{post.translatedTitle}</h2>
+          <p class="text-sm text-gray-500 mt-1">{post.translatedExcerpt}</p>
           <span class="text-xs text-red-600 mt-2 inline-block">{t('blog.read_more', lang)}</span>
         </a>
       ))}

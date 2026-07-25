@@ -17,6 +17,9 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'how_to_use.title': { en: 'How to Use This Tool', zh: '如何使用此工具' },
   'related_tools.title': { en: 'Related Tools', zh: '相关工具' },
   'related_blog.title': { en: 'Read the Full Guide', zh: '阅读完整指南' },
+  // P72 T2-D3: section headings for CategoryGuides component
+  'category.guides_heading': { en: 'Guides & Articles', zh: '指南与文章' },
+  'category.related_articles': { en: 'Related Articles', zh: '相关文章' },
   'footer.privacy': { en: 'Privacy Policy', zh: '隐私政策' },
   'footer.terms': { en: 'Terms & Conditions', zh: '服务条款' },
   'footer.contact': { en: 'Contact', zh: '联系我们' },
