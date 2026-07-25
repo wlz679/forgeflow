@@ -10,7 +10,8 @@ public/og/
 # Astro dev/build cache (auto-generated)
 .astro/astro/
 
-# Superpowers scratch dirs (brainstorm + plans runtime)
+# Superpowers scratch dirs (brainstorm + sdd runtime). P70 untracked all
+# historically-tracked scratch files; never `git add` files under this path.
 .superpowers/
 
 # Twemoji PNG cache (scripts/.twemoji-cache/) — populated on first build,
