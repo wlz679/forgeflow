@@ -3,6 +3,40 @@ title: 'Best DSCR Calculator (Debt Service Coverage Ratio) for Entrepreneurs (20
 excerpt: 'Discover the best dscr calculator (debt service coverage ratio) to grow your solo business. Free, no signup required. Learn how to use this tool effectively with our step-by-step guide.'
 ogImage: 'solopreneur-dscr-calculator'
 toolSlug: 'solopreneur-dscr-calculator'
+bodyZh: |
+  ## DSCR 计算器（偿债覆盖率）是什么？
+
+  DSCR 计算器（偿债覆盖率）是一款免费在线工具，旨在帮助创业者和独立开发者衡量 DSCR（NOI / 年度偿债额）以判断能否通过贷款审批，并通过二分查找按 1.0/1.25/1.5 的贷款方门槛反推最高贷款额，同时提供短租和商业地产基准。它是 ForgeFlowKit 100 款免费商业计算器之一，帮助你零成本构建并发展业务。
+
+  ## 为什么创业者需要这个工具
+
+  每一位成功的经营者都知道，合适的工具能带来显著差异。DSCR 计算器（偿债覆盖率）可节省时间，并根据成熟的创业公司和独立开发者最佳实践提供即时、可执行的结果，帮助你做出更好的决策。
+
+  无论你是在验证第一个 SaaS 创意，还是在扩展现有业务，这款工具都能在几秒内提供专业级辅助，无需任何经验。
+
+  ## 如何使用DSCR 计算器（偿债覆盖率）
+
+  使用这款工具很简单，不到一分钟即可完成：
+
+  1. 访问网站上的DSCR 计算器（偿债覆盖率）页面。
+  2. 输入月毛租金（美元）、月运营支出（美元）、贷款金额（美元）、贷款利率（%）、贷款年限（年）、空置率（%）。
+  3. 点击“生成”按钮。
+  4. 立即查看结果——每项结果都根据你的输入生成。
+  5. 点击任一结果的“复制”按钮进行保存，或使用“复制全部”一次获取所有内容。
+
+  ## 技巧与最佳实践
+
+  为了充分发挥DSCR 计算器（偿债覆盖率）的作用，请参考以下实用建议：
+
+  - **输入尽量具体。** 提供的细节越充分，结果就越贴合需求。不要只写“SaaS”，可尝试“面向远程团队的 B2B 项目管理 SaaS”。
+  - **多生成几次。** 每次点击都会得到一组新结果。建议生成 2–3 次，以获得更丰富的选项。
+  - **搭配其他工具。** 将DSCR 计算器（偿债覆盖率）与 MRR 计算器、Launch Checklist Generator 等免费工具结合使用，可获得更全面的结果。
+  - **保存优选结果。** 使用“复制”按钮保存满意的结果，再粘贴到文档中以便日后参考。
+  - **测试并迭代。** 将结果作为起点，再根据你的独特表达方式和业务需求进行调整。
+
+  ## 立即开始
+
+  准备好让业务更进一步了吗？立即试用DSCR 计算器（偿债覆盖率）——完全免费、无需注册，并可直接在浏览器中使用。
 ---
 
 ## What is the DSCR Calculator (Debt Service Coverage Ratio)?
