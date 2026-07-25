@@ -4,14 +4,15 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_URL } from '../../lib/site-config';
 import { tools } from '../../data/tools';
+import { t } from '../../i18n';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
 }
 
-const title = 'Privacy Policy — ForgeFlowKit';
-const description = 'Privacy policy for ForgeFlowKit. Learn how we handle your data.';
 const { lang } = Astro.params;
+const title = t('legal.privacy.title', lang);
+const description = t('legal.privacy.description', lang);
 // Drift-proof count: pulled from ToolMeta registry at build time. Mirrors
 // EXPECTED_ENGINE_COUNT in tests/engine-count.ts (P22b invariant).
 const toolsCount = tools.length;
@@ -34,15 +35,15 @@ const privacySchema = JSON.stringify({
 <BaseLayout title={title} description={description} schema={privacySchema} pageType="static">
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
-    <h1 class="text-2xl font-extrabold mb-4">Privacy Policy</h1>
+    <h1 class="text-2xl font-extrabold mb-4">{t('legal.privacy.h1', lang)}</h1>
     <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
-      <p>Last updated: 2026</p>
-      <h2>Information We Collect</h2>
-      <p>ForgeFlowKit does not require user registration and does not collect personal information. We do not store any data you enter into our tools — all processing happens locally in your browser.</p>
-      <h2>Cookies and Tracking</h2>
-      <p>We use Google AdSense to display advertisements. Google may use cookies to serve ads based on your prior visits to this website or other websites. You may opt out of personalized advertising by visiting Google's Ads Settings.</p>
-      <h2>Third-Party Services</h2>
-      <p>This website uses Google AdSense, a third-party advertising service. Google's use of advertising cookies enables it and its partners to serve ads based on your visit to this site and/or other sites on the Internet.</p>
+      <p>{t('legal.privacy.last_updated', lang)}</p>
+      <h2>{t('legal.privacy.info_collect_h', lang)}</h2>
+      <p>{t('legal.privacy.info_collect_p', lang)}</p>
+      <h2>{t('legal.privacy.cookies_h', lang)}</h2>
+      <p>{t('legal.privacy.cookies_p', lang)}</p>
+      <h2>{t('legal.privacy.third_party_h', lang)}</h2>
+      <p>{t('legal.privacy.third_party_p', lang)}</p>
       {lang === 'zh' ? (
         <>
           <h2>账户认证（Clerk）</h2>
@@ -150,8 +151,8 @@ const privacySchema = JSON.stringify({
           <p>If you prefer not to use this feature, you can use your browser's private/incognito mode or disable site data.</p>
         </>
       )}
-      <h2>Contact</h2>
-      <p>If you have any questions about this Privacy Policy, please contact us at hello@forgeflowkit.com.</p>
+      <h2>{t('legal.privacy.contact_h', lang)}</h2>
+      <p>{t('legal.privacy.contact_p', lang)}</p>
     </div>
   </main>
   <Footer />

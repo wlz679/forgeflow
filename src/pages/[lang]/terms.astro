@@ -3,14 +3,15 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_URL } from '../../lib/site-config';
+import { t } from '../../i18n';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
 }
 
-const title = 'Terms & Conditions — ForgeFlowKit';
-const description = 'Terms and conditions for using ForgeFlowKit.';
 const { lang } = Astro.params;
+const title = t('legal.terms.title', lang);
+const description = t('legal.terms.description', lang);
 const termsSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -30,17 +31,17 @@ const termsSchema = JSON.stringify({
 <BaseLayout title={title} description={description} schema={termsSchema} pageType="static">
   <Header />
   <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
-    <h1 class="text-2xl font-extrabold mb-4">Terms & Conditions</h1>
+    <h1 class="text-2xl font-extrabold mb-4">{t('legal.terms.h1', lang)}</h1>
     <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
-      <p>Last updated: 2026</p>
-      <h2>Acceptance of Terms</h2>
-      <p>By accessing and using ForgeFlowKit, you accept and agree to be bound by these terms and conditions.</p>
-      <h2>Use of the Service</h2>
-      <p>All tools on this website are provided free of charge for personal and commercial use. You may use the generated content for your business and creative projects without attribution.</p>
-      <h2>Disclaimer</h2>
-      <p>The tools are provided "as is" without warranty of any kind. Results are generated algorithmically and should be reviewed before use. We are not responsible for any consequences of using the generated content.</p>
-      <h2>Intellectual Property</h2>
-      <p>The website design, code, and tool algorithms are the property of ForgeFlowKit. Generated output content belongs to you.</p>
+      <p>{t('legal.terms.last_updated', lang)}</p>
+      <h2>{t('legal.terms.accept_h', lang)}</h2>
+      <p>{t('legal.terms.accept_p', lang)}</p>
+      <h2>{t('legal.terms.use_h', lang)}</h2>
+      <p>{t('legal.terms.use_p', lang)}</p>
+      <h2>{t('legal.terms.disclaimer_h', lang)}</h2>
+      <p>{t('legal.terms.disclaimer_p', lang)}</p>
+      <h2>{t('legal.terms.ip_h', lang)}</h2>
+      <p>{t('legal.terms.ip_p', lang)}</p>
     </div>
   </main>
   <Footer />
