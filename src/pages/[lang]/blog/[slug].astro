@@ -81,7 +81,7 @@ const articleSchema = JSON.stringify({
       />
       <h1 class="text-2xl font-extrabold text-gray-900 mb-4">{translatedTitle}</h1>
       <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
-        {post.content.split('\n').map(p => <p>{p}</p>)}
+        {(lang === 'zh' && post.bodyZh ? post.bodyZh : post.content).split('\n').map(p => <p>{p}</p>)}
       </div>
     </article>
     <AdUnit slot="blog-mid" />

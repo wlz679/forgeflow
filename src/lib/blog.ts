@@ -19,6 +19,9 @@ export interface BlogPost {
   excerpt: string;
   ogImage: string;
   content: string;
+  // P75: zh translation of body content. Optional — falls back to `content`
+  // (en) when missing. Set by the T1 subagent on each markdown frontmatter.
+  bodyZh?: string;
 }
 
 type BlogEntry = CollectionEntry<'blog'>;
@@ -31,6 +34,9 @@ const toolIndex = new Map(tools.map((t, i) => [t.slug, i]));
 function toBlogPost(entry: BlogEntry): BlogPost {
   const toolSlug = entry.data.toolSlug;
   const tool = tools.find(t => t.slug === toolSlug);
+  // P75: bodyZh is a frontmatter field added by T1 subagent. YAML `|`
+  // block scalar preserves newlines; astro:content exposes it as a string.
+  const frontmatter = entry.data as Record<string, unknown>;
   return {
     slug: entry.slug,
     title: entry.data.title,
@@ -39,6 +45,7 @@ function toBlogPost(entry: BlogEntry): BlogPost {
     excerpt: entry.data.excerpt,
     ogImage: entry.data.ogImage,
     content: entry.body ?? '',
+    bodyZh: typeof frontmatter.bodyZh === 'string' ? frontmatter.bodyZh : undefined,
   };
 }
 

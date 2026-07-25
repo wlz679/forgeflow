@@ -11,6 +11,10 @@ const blog = defineCollection({
     excerpt: z.string(),
     ogImage: z.string(),
     toolSlug: z.string(),
+    // P75: zh translation of body content. Optional — falls back to
+    // `content` (en body) when missing. Set by P75 T1 subagent on each
+    // markdown frontmatter as a YAML `|` block scalar (preserves newlines).
+    bodyZh: z.string().optional(),
   }),
 });
 
