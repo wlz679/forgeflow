@@ -58,6 +58,11 @@ function translateCalcOutput(text: string, lang: Lang): string {
     'ai_cost.section.best_provider',
     'ai_cost.section.cheapest_overall',
     'ai_cost.section.tip',
+    // P98: SaaS section headers (mrr-calculator, burn-rate, churn-rate)
+    'saas.section.dashboard',
+    'saas.section.snapshot',
+    'saas.section.waterfall',
+    'saas.section.breakeven_growth',
   ];
   let out = text;
   for (const key of headerKeys) {

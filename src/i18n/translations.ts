@@ -36,6 +36,11 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'ai_cost.section.best_provider': { en: '🎯 Best Provider by Use Case', zh: '🎯 按用途最佳提供商' },
   'ai_cost.section.cheapest_overall': { en: '🏆 Cheapest Model Overall', zh: '🏆 整体最便宜的模型' },
   'ai_cost.section.tip': { en: '💡 Tip', zh: '💡 提示' },
+  // P98: SaaS section headers (3 tools: burn-rate, churn-rate, mrr)
+  'saas.section.dashboard': { en: '📊 MRR Health Dashboard', zh: '📊 MRR 健康看板' },
+  'saas.section.snapshot': { en: '💰 MRR Snapshot', zh: '💰 MRR 快照' },
+  'saas.section.waterfall': { en: '📈 MRR Waterfall', zh: '📈 MRR 瀑布图' },
+  'saas.section.breakeven_growth': { en: '⚖️ Breakeven Growth', zh: '⚖️ 盈亏平衡 Growth' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },
