@@ -41,6 +41,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'saas.section.snapshot': { en: '💰 MRR Snapshot', zh: '💰 MRR 快照' },
   'saas.section.waterfall': { en: '📈 MRR Waterfall', zh: '📈 MRR 瀑布图' },
   'saas.section.breakeven_growth': { en: '⚖️ Breakeven Growth', zh: '⚖️ 盈亏平衡 Growth' },
+  // P99: Ops/Cost/Valuation section headers (8 engines: carrying-cost,
+  // fulfillment-cost, stockout-cost, employee-cost, meeting-cost,
+  // remote-vs-office, break-even, stripe-fee)
+  'ops_cost.section.savings_insights': { en: '💰 Savings Insights', zh: '💰 节省洞察' },
+  'ops_cost.section.usage_scenarios': { en: '📊 Usage Scenarios (monthly costs)', zh: '📊 使用场景（每月成本）' },
+  'ops_cost.section.breakeven_analysis': { en: '📊 Break-Even Analysis', zh: '📊 盈亏平衡分析' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },
