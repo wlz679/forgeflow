@@ -21,7 +21,19 @@ const CATEGORY_SLUG = 'hiring-team';
 const translatedName = t(`category.${CATEGORY_ID}.name`, lang);
 const translatedDesc = t(`category.${CATEGORY_ID}.desc`, lang);
 
-const categoryTools = tools.filter(tool => tool.categoryId === CATEGORY_ID);
+const categoryTools = tools
+  .filter(tool => tool.categoryId === CATEGORY_ID)
+  .map(tool => {
+    const titleKey = `tools.${tool.slug}.title`;
+    const descKey = `tools.${tool.slug}.description`;
+    return {
+      ...tool,
+      // P81: lang-aware title + description via i18n table (mirrors P80 path-A pattern).
+      // Fallback to raw tool.* fields if a key is missing (defense in depth).
+      translatedTitle: t(titleKey, lang) !== titleKey ? t(titleKey, lang) : tool.title,
+      translatedDescription: t(descKey, lang) !== descKey ? t(descKey, lang) : tool.description,
+    };
+  });
 ---
 
 <BaseLayout
@@ -40,7 +52,7 @@ const categoryTools = tools.filter(tool => tool.categoryId === CATEGORY_ID);
     <section class="mb-10">
       <h2 class="text-2xl font-bold text-gray-900 mb-6">All {categoryTools.length} {translatedName} Tools</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {categoryTools.map(t => <ToolCard slug={t.slug} title={t.title} description={t.description} />)}
+        {categoryTools.map(t => <ToolCard slug={t.slug} title={t.translatedTitle} description={t.translatedDescription} />)}
       </div>
     </section>
 
