@@ -23,6 +23,8 @@ export function createCollectionPage(input: CollectionPageInput) {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     '@id': `${SITE_URL}/${lang}/${categorySlug}/#collection`,
+    // P93: CollectionPage requires url field per schema.org.
+    url: `${SITE_URL}/${lang}/${categorySlug}/`,
     name: categoryName,
     description: categoryDescription,
     inLanguage: lang,

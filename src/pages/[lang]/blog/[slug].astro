@@ -51,6 +51,9 @@ const articleSchema = JSON.stringify({
       description: translatedExcerpt,
       url: `${SITE_URL}/${lang}/blog/${post.slug}/`,
       datePublished,
+      // P93: Article requires image field per schema.org. Reuse the same
+      // OG image (per-language) so structured data matches the preview.
+      image: `${SITE_URL}/og/${post.toolSlug}-${lang}.png`,
       inLanguage: lang,
       author: { '@type': 'Organization', name: 'ForgeFlowKit' },
       publisher: { '@id': `${SITE_URL}/#org` },
