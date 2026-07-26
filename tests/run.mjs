@@ -23,13 +23,13 @@ const tsxBin = resolve(root, 'node_modules', '.bin', process.platform === 'win32
 // Pass user argv BEFORE the test files so node flag-like args (e.g.
 // --test-name-pattern) are not mistaken for test file paths by the runner.
 //
-// --test-concurrency=1 is mandatory: 15 test files (baselayout-clerk-script,
+// --test-concurrency=1 is mandatory: 16 test files (baselayout-clerk-script,
 // baselayout-sync-script, header-clerk-render, header-sync-ui,
 // privacy-policy-sync, category-en-cjk-guard, category-zh-cjk-preservation,
 // tool-zh-cjk-preservation, tool-en-cjk-guard, blog-en-cjk-guard,
 // blog-zh-cjk-preservation, tool-cross-link-cjk-guard,
 // blog-cross-link-cjk-guard, zh-hardcoded-english-guard,
-// sitemap-hreflang-guard) each spawn `pnpm build`
+// sitemap-hreflang-guard, html-hreflang-guard) each spawn `pnpm build`
 // which calls cleanDist() + writes to dist/. Running test files in
 // parallel causes them to clobber each other's dist/ state, manifesting
 // as ERR_MODULE_NOT_FOUND for files mid-write. Concurrency=1 serializes
@@ -45,12 +45,12 @@ const r = spawnSync(tsxBin, [...tsxArgs, ...process.argv.slice(2), ...tests], {
   stdio: 'inherit',
   shell: process.platform === 'win32',
 });
-// P23b: skip-mode summary. When RUN_BUILD_TESTS is unset, the 15
+// P23b: skip-mode summary. When RUN_BUILD_TESTS is unset, the 16
 // build-dependent test files early-return → tests appear to "pass" but
 // coverage is partial. Surface this so users know to opt in.
 const exitCode = r.status ?? 1;
 if (!process.env.RUN_BUILD_TESTS) {
-  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 15 build-dependent suites skipped.');
+  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 16 build-dependent suites skipped.');
   console.log('[skip-mode] Set RUN_BUILD_TESTS=1 (or run `pnpm test:build`) to enable:');
   console.log('[skip-mode]   baselayout-clerk-script, baselayout-sync-script,');
   console.log('[skip-mode]   header-clerk-render, header-sync-ui, privacy-policy-sync,');
@@ -58,6 +58,7 @@ if (!process.env.RUN_BUILD_TESTS) {
   console.log('[skip-mode]   tool-zh-cjk-preservation, tool-en-cjk-guard,');
   console.log('[skip-mode]   blog-en-cjk-guard, blog-zh-cjk-preservation,');
   console.log('[skip-mode]   tool-cross-link-cjk-guard, blog-cross-link-cjk-guard,');
-  console.log('[skip-mode]   zh-hardcoded-english-guard, sitemap-hreflang-guard');
+  console.log('[skip-mode]   zh-hardcoded-english-guard, sitemap-hreflang-guard,');
+  console.log('[skip-mode]   html-hreflang-guard');
 }
 process.exit(exitCode);
