@@ -36,6 +36,12 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'ai_cost.section.best_provider': { en: '🎯 Best Provider by Use Case', zh: '🎯 按用途最佳提供商' },
   'ai_cost.section.cheapest_overall': { en: '🏆 Cheapest Model Overall', zh: '🏆 整体最便宜的模型' },
   'ai_cost.section.tip': { en: '💡 Tip', zh: '💡 提示' },
+  // P104: AI cost 'Savings Insights' section header. Used by all 4 LLM API cost
+  // engines (claude/deepseek/gemini/openai) — appears as the section 6 header in
+  // staticExamples[0]. P85a missed this string. The ZH translation matches the
+  // P102-deleted ops_cost.section.savings_insights key value, but this key lives
+  // in the ai_cost namespace because the string only appears in AI cost engines.
+  'ai_cost.section.savings_insights': { en: '💰 Savings Insights', zh: '💰 节省洞察' },
   // P98: SaaS section headers (3 tools: burn-rate, churn-rate, mrr)
   'saas.section.dashboard': { en: '📊 MRR Health Dashboard', zh: '📊 MRR 健康看板' },
   'saas.section.snapshot': { en: '💰 MRR Snapshot', zh: '💰 MRR 快照' },

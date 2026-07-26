@@ -71,22 +71,26 @@ function stripNonBody(html: string): string {
 }
 
 // P102-deleted dead keys — forbidden ZH translations on zh pages (visible content).
-// We assert against the ZH versions (e.g., '💰 节省洞察') rather than the EN
-// versions because AI cost engines legitimately use '💰 Savings Insights' as a
-// user-visible section header (translatable via future P-series work, but not
-// dead). The ZH translations of the P102-deleted keys are guaranteed dead —
-// they were never reachable from any engine output. If they re-appear, someone
-// re-added the deleted keys to headerKeys.
+// '💰 节省洞察' was promoted from dead to working in P104 (now
+// 'ai_cost.section.savings_insights' for 4 AI cost engines). The remaining
+// '📊 使用场景（每月成本）' is still dead — that string never appears in any
+// engine output (AI cost engines use '📅 Usage Scenarios — Top 5 Cheapest
+// Models at Different Volumes' with a date emoji and longer text).
 const DEAD_KEY_FORBIDDEN_STRINGS = [
-  '💰 节省洞察',
   '📊 使用场景（每月成本）',
 ];
 
-// P102 surviving/added working keys — required on specific zh pages (visible content).
+// Working i18n keys — required on specific zh pages (visible content).
 // If these translations disappear, the post-processor broke.
 const WORKING_KEY_REQUIRED = [
+  // P102 ops_cost keys
   { path: 'solopreneur-break-even-calculator/index.html', mustContain: '📊 盈亏平衡分析' },
   { path: 'solopreneur-remote-vs-office-calculator/index.html', mustContain: '🎯 盈亏平衡分析:' },
+  // P104 ai_cost key (4 LLM API engines)
+  { path: 'solopreneur-claude-api-cost-calculator/index.html', mustContain: '💰 节省洞察' },
+  { path: 'solopreneur-openai-token-calculator/index.html', mustContain: '💰 节省洞察' },
+  { path: 'solopreneur-gemini-api-cost-calculator/index.html', mustContain: '💰 节省洞察' },
+  { path: 'solopreneur-deepseek-api-cost-calculator/index.html', mustContain: '💰 节省洞察' },
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {
