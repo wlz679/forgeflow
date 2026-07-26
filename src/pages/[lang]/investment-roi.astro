@@ -29,17 +29,23 @@ const translatedDesc = t(`category.${CATEGORY_ID}.desc`, lang);
 
 const translatedTools = tools
   .filter(tool => tool.categoryId === CATEGORY_ID)
-  .map(tool => ({
-    ...tool,
-    title: tool.title,           // ToolMeta.title is English; translation lives in i18n
-    translatedTitle: t(`tools.${tool.slug}.title`, lang),
-  }));
+  .map(tool => {
+    const descKey = `tools.${tool.slug}.description`;
+    return {
+      ...tool,
+      title: tool.title,           // ToolMeta.title is English; translation lives in i18n
+      translatedTitle: t(`tools.${tool.slug}.title`, lang),
+      // P80: lang-aware description via i18n table. Fallback to tool.description
+      // (en) if a key is missing (defense in depth).
+      translatedDescription: t(descKey, lang) !== descKey ? t(descKey, lang) : tool.description,
+    };
+  });
 
 // Override with translated titles for display
 const displayTools = translatedTools.map(tool => ({
   slug: tool.slug,
   title: tool.translatedTitle,
-  description: tool.description,  // English fallback
+  description: tool.translatedDescription,
 }));
 
 const faqItems = [1,2,3,4,5,6,7].map(n => ({
