@@ -25,6 +25,17 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'footer.contact': { en: 'Contact', zh: '联系我们' },
   'footer.about': { en: 'About', zh: '关于' },
   'footer.copyright': { en: 'Free tools for entrepreneurs. No signup required.', zh: 'ForgeFlowKit 免费工具。无需注册。' },
+  // P85a: AI cost calculator section header translations (used by page-template
+  // post-processor to translate calculator output section headers).
+  // These are the most-visible emoji-led section labels that appear at the
+  // start of major output sections. Body content (numbers, model names)
+  // remains in English — those are technical/universal.
+  'ai_cost.section.cost_breakdown': { en: '💰 Cost Breakdown', zh: '💰 成本明细' },
+  'ai_cost.section.growth_projection': { en: '📈 Growth Projection', zh: '📈 增长预测' },
+  'ai_cost.section.break_even': { en: '⚖️ Break-Even', zh: '⚖️ 盈亏平衡' },
+  'ai_cost.section.best_provider': { en: '🎯 Best Provider by Use Case', zh: '🎯 按用途最佳提供商' },
+  'ai_cost.section.cheapest_overall': { en: '🏆 Cheapest Model Overall', zh: '🏆 整体最便宜的模型' },
+  'ai_cost.section.tip': { en: '💡 Tip', zh: '💡 提示' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },

@@ -43,6 +43,33 @@ const relatedBlog = await getBlogPostsByToolSlug(slug!);
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
 const metaTitle = `${toolTitle} — ForgeFlowKit`;
+
+// P85a: Translate AI cost calculator output section headers on zh pages.
+// Body content (numbers, model names) remains in English — those are
+// technical/universal and the cost breakdown labels above the body are the
+// highest-impact user-visible strings. Limited to AI cost engines
+// (8 tools in src/engines/ai-cost/); other calculator categories use generic
+// table labels handled by existing i18n keys.
+function translateCalcOutput(text: string, lang: Lang): string {
+  const headerKeys = [
+    'ai_cost.section.cost_breakdown',
+    'ai_cost.section.growth_projection',
+    'ai_cost.section.break_even',
+    'ai_cost.section.best_provider',
+    'ai_cost.section.cheapest_overall',
+    'ai_cost.section.tip',
+  ];
+  let out = text;
+  for (const key of headerKeys) {
+    const en = t(key, 'en');
+    const localized = t(key, lang);
+    if (en !== localized) {
+      // Replace ALL occurrences of the EN header with localized version.
+      out = out.split(en).join(localized);
+    }
+  }
+  return out;
+}
 const isInteractive = engine.inputs.length > 0;
 const isClaude = slug === 'solopreneur-claude-api-cost-calculator';
 const isDeepSeek = slug === 'solopreneur-deepseek-api-cost-calculator';
@@ -970,9 +997,16 @@ const schema = JSON.stringify({
           {(engine.clientConfig.type === 'custom'
             ? [engine.staticExamples[0]]
             : engine.staticExamples
-          ).map((ex, i) => (
-            <ResultCard text={ex} index={i} hideIndex={engine.clientConfig.type === 'custom'} />
-          ))}
+          ).map((ex, i) => {
+            // P85a: post-process AI cost calculator output to translate
+            // emoji-led section headers (e.g., "💰 Cost Breakdown") on zh
+            // pages. Body content (numbers, model names) stays in English
+            // — those are technical/universal.
+            const translatedEx = lang === 'zh' && engine.clientConfig.type === 'custom'
+              ? translateCalcOutput(ex, lang)
+              : ex;
+            return <ResultCard text={translatedEx} index={i} hideIndex={engine.clientConfig.type === 'custom'} />;
+          })}
         </div>
 
         <div id="dynamic-results" class="space-y-3 hidden"></div>
