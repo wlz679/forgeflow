@@ -1,7 +1,16 @@
 // P72 audit FINAL — uses the working state-machine parser
 const fs = require('fs');
 const path = require('path');
-const tcontent = fs.readFileSync('src/i18n/translations.ts', 'utf-8');
+const rawContent = fs.readFileSync('src/i18n/translations.ts', 'utf-8');
+
+// P83: strip `//` line comments before parsing (mirror P82 glossary guard).
+// Without this, a commented-out key would still be detected as present.
+const lines = rawContent.split('\n');
+const maskedLines = lines.map(line => {
+  const idx = line.indexOf('//');
+  return idx === -1 ? line : line.slice(0, idx);
+});
+const tcontent = maskedLines.join('\n');
 
 const keys = new Map();
 const len = tcontent.length;

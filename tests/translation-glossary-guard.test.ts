@@ -132,6 +132,62 @@ function getBlogSlugs(): string[] {
     .sort();
 }
 
+// P83: Walk all .astro/.ts/.tsx files in src/ to find every t() call site.
+// Returns Set of all keys referenced anywhere.
+//
+// Handles three call styles:
+//   t('exact.key', ...)         — adds exact key
+//   t("exact.key", ...)         — adds exact key
+//   t(`prefix.${var}.suffix`, ...) — adds the static prefix (everything
+//                                    before the first ${). Template-literal
+//                                    usage like t(`tools.${slug}.title`, lang)
+//                                    adds 'tools.' as a "used prefix"; any
+//                                    key starting with 'tools.' is treated
+//                                    as potentially referenced.
+//   key: 'exact.key'             — components like Footer.astro use a map
+//                                    of {href, key} pairs and call t(key, lang)
+//                                    with the key as a variable. Any string
+//                                    literal matching translation-key shape
+//                                    (e.g. "footer.privacy") is also treated
+//                                    as referenced.
+function getUsedKeys(): { exact: Set<string>; prefixes: Set<string> } {
+  const exact = new Set<string>();
+  const prefixes = new Set<string>();
+  function walk(dir: string): void {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = resolve(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name === 'node_modules' || entry.name === '.astro' || entry.name === 'dist') continue;
+        walk(full);
+      } else if (/\.(astro|ts|tsx|js|jsx|mjs)$/.test(entry.name)) {
+        const content = readFileSync(full, 'utf-8');
+        // Strip line comments first (mirror audit script + glossary parser)
+        const masked = content.split('\n').map(line => {
+          const idx = line.indexOf('//');
+          return idx === -1 ? line : line.slice(0, idx);
+        }).join('\n');
+        // t('exact.key', ...)
+        for (const m of masked.matchAll(/\bt\(\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g)) exact.add(m[1]!);
+        // t("exact.key", ...)
+        for (const m of masked.matchAll(/\bt\(\s*"([^"\\]*(?:\\.[^"\\]*)*)"/g)) exact.add(m[1]!);
+        // t(`prefix.${var}.suffix`, ...) — capture prefix before first ${
+        for (const m of masked.matchAll(/\bt\(\s*`([^`]*?)(?:\$\{)/g)) {
+          const prefix = m[1]!;
+          if (prefix) prefixes.add(prefix);
+        }
+        // Variable key references like `key: 'footer.privacy'` — string
+        // literal matching translation-key shape (lowercase letters, dots,
+        // optional digits/underscores/dashes).
+        for (const m of masked.matchAll(/['"`]([a-z][a-z0-9_-]*\.[a-z0-9_.-]+)['"`]/g)) {
+          exact.add(m[1]!);
+        }
+      }
+    }
+  }
+  walk(resolve(root, 'src'));
+  return { exact, prefixes };
+}
+
 test('translation glossary structural invariants (every tool/blog/category has expected keys)', () => {
   const keys = parseTranslations();
   const toolSlugs = getToolSlugs();
@@ -175,5 +231,42 @@ test('translation glossary structural invariants (every tool/blog/category has e
       (violations.length > 30 ? `\n  ... and ${violations.length - 30} more` : '') +
       `\n\nThis means a new tool/blog/category was added without its translation keys. ` +
       `See docs/i18n/zh-terminology.md for the expected structure.`
+  );
+});
+
+test('no orphan translation keys (every key in translations.ts is referenced by a t() call)', () => {
+  const keys = parseTranslations();
+  const { exact, prefixes } = getUsedKeys();
+
+  // A key is "used" if:
+  //   1. It's referenced by an exact string t('key', ...) call, OR
+  //   2. Some template literal t(`prefix.${var}...`, ...) exists where
+  //      `prefix` is a prefix of the key (e.g., key "tools.${slug}.title"
+  //      matches template literal prefix "tools.").
+  function isUsed(key: string): boolean {
+    if (exact.has(key)) return true;
+    for (const prefix of prefixes) {
+      if (key.startsWith(prefix)) return true;
+    }
+    return false;
+  }
+
+  // An "orphan" key is one in translations.ts that no t() call could resolve to.
+  // These are dead code — they bloat translations.ts without serving any page.
+  const orphans: string[] = [];
+  for (const k of keys.keys()) {
+    if (!isUsed(k)) {
+      orphans.push(k);
+    }
+  }
+
+  assert.equal(
+    orphans.length,
+    0,
+    `Orphan translation keys detected (${orphans.length}):\n` +
+      orphans.slice(0, 30).map(k => `  - ${k}`).join('\n') +
+      (orphans.length > 30 ? `\n  ... and ${orphans.length - 30} more` : '') +
+      `\n\nThese keys exist in translations.ts but no t() call references them. ` +
+      `Either wire them into templates or remove them.`
   );
 });
