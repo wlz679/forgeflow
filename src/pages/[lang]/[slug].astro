@@ -67,6 +67,11 @@ function translateCalcOutput(text: string, lang: Lang): string {
     'ops_cost.section.savings_insights',
     'ops_cost.section.usage_scenarios',
     'ops_cost.section.breakeven_analysis',
+    // P100: Misc section headers (4 engines: freelance-tax, time-value,
+    // freelance-rate, deflection-rate). P99 keys already apply generically
+    // to these via post-processor.
+    'misc.section.savings_insights',
+    'misc.section.usage_scenarios',
   ];
   let out = text;
   for (const key of headerKeys) {
