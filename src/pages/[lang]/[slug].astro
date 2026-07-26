@@ -63,15 +63,13 @@ function translateCalcOutput(text: string, lang: Lang): string {
     'saas.section.snapshot',
     'saas.section.waterfall',
     'saas.section.breakeven_growth',
-    // P99: Ops/Cost/Valuation section headers (8 engines)
-    'ops_cost.section.savings_insights',
-    'ops_cost.section.usage_scenarios',
+    // P99/P102: Ops/Cost/Valuation section headers. Two distinct emojis:
+    //   • 'breakeven_analysis' (📊, no colon) → break-even-calculator
+    //   • 'target_break_even' (🎯, with colon) → remote-vs-office-calculator
+    // P99 'savings_insights' + 'usage_scenarios' + P100 'misc.*' duplicates
+    // removed in P102 — strings don't appear in any non-AI engine output.
     'ops_cost.section.breakeven_analysis',
-    // P100: Misc section headers (4 engines: freelance-tax, time-value,
-    // freelance-rate, deflection-rate). P99 keys already apply generically
-    // to these via post-processor.
-    'misc.section.savings_insights',
-    'misc.section.usage_scenarios',
+    'ops_cost.section.target_break_even',
   ];
   let out = text;
   for (const key of headerKeys) {
