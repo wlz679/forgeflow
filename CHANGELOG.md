@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-24 (P65 CHANGELOG catch-up)
+> **最后更新:** 2026-07-26 (P84 CHANGELOG catch-up v2)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 712 across 38 active days (2026-05-31 → 2026-07-24, ~8 weeks)
 
@@ -61,6 +61,109 @@
 | Pre-existing findings | 1 (deferred, NOT maintenance triggers) |
 
 📦 ship log: [`memory/p16-100-milestone-shipped.md`](memory/p16-100-milestone-shipped.md) · P15 audit at [`memory/p15-cross-cutting-audit-shipped.md`](memory/p15-cross-cutting-audit-shipped.md) · P14-followup at [`memory/p14-followup-cross-cutting-audit-shipped.md`](memory/p14-followup-cross-cutting-audit-shipped.md)
+
+---
+
+## [M18.0] - 2026-07-24 → 2026-07-26 — i18n defense-in-depth (P66b-P83)
+
+🌏 **Page-level CJK matrix + i18n render-layer fixes + CI defense guards + glossary enforcement**. 19 batches · ~30 commits · 0 production engine count change. Project continues in maintenance mode with focus on closing all user-visible English leaks on zh pages and adding permanent CI defense.
+
+### Added (page-level CJK matrix at h1 + cross-link layers)
+- **[tests] `tests/category-zh-cjk-preservation.test.ts`** (P66b) — 7th build-dep suite; walks 15 zh category pages, asserts HAS CJK in `<h1>` + cross-link; symmetric guard to P63
+- **[tests] `tests/tool-zh-cjk-preservation.test.ts`** (P67b) — 8th build-dep suite; 100 zh tool pages, asserts HAS CJK in h1; P66b extension
+- **[tests] `tests/tool-en-cjk-guard.test.ts`** (P68) — 9th build-dep suite; 100 en tool pages, asserts NO CJK in h1; completes tool-page matrix
+- **[tests] `tests/blog-en-cjk-guard.test.ts` + `tests/blog-zh-cjk-preservation.test.ts`** (P69) — 10th + 11th build-dep suites; blog page matrix (en NO + zh HAS); ~200 zh blog pages defended
+- **[tests] `tests/tool-cross-link-cjk-guard.test.ts` + `tests/blog-cross-link-cjk-guard.test.ts`** (P71) — 12th + 13th build-dep suites; cross-link layer coverage; 400 pages × 15 cross-refs = ~6,000 assertions
+
+### Added (i18n render-layer fixes for real bugs)
+- **[i18n] `category.{O,S,K}.name.en` + `category.{O,S,K}.name.zh`** (P62) — pure English + flat-key structure; closes O/S/K bilingual leak
+- **[pages] 9 path-B category pages migrated to `t()` pattern** (P62) — `customer-support`, `hiring-team`, `knowledge`, `operations-inventory`, `marketing-analytics`, `legal-compliance`, `product-analytics`, `sales`, `retention`
+- **[data] `src/data/categories.ts` name + slug fields** (P62) — pure English fallback for path-B pages
+- **[i18n] `blog.*.title` + `blog.*.excerpt` 200 zh keys** (P69) — every blog post title + excerpt now has zh translation
+- **[components] `src/components/RelatedBlog.astro`** (P69) — lang-aware `blog.${post.slug}.title` lookup + fallback
+- **[components] `src/components/CategoryGuides.astro`** (P72 T2-A) — "Guides & Articles" → `category.guides_heading`; "Related Articles" → `category.related_articles`; blog titles → i18n lookup
+- **[pages] `src/pages/[lang]/blog/index.astro`** (P72 T2-A) — JSON-LD headline + h2 + excerpt all use `t('blog.${slug}.title', lang)` with fallback
+- **[i18n] 22 `legal.privacy.*` + `legal.terms.*` keys** (P73) — full i18n split for `privacy-policy.astro` + `terms.astro`
+- **[pages] `src/pages/[lang]/privacy-policy.astro` + `terms.astro`** (P73) — all hardcoded EN sections replaced with `t()` lookups
+- **[i18n] `category.guides_heading` + `category.related_articles` 2 keys** (P72 T2-A) — section heading translations
+- **[data] 100 `bodyZh` frontmatter fields** (P75) — every blog post MD has zh body translation (~3,000 lines total)
+- **[config] `src/content/config.ts` schema** (P75) — added `bodyZh: z.string().optional()` (root-cause fix: TS schema was silently stripping unknown field)
+- **[lib] `src/lib/blog.ts`** (P75) — `BlogPost.bodyZh?: string` field; extracted from frontmatter
+- **[pages] `src/pages/[lang]/blog/[slug].astro` body render** (P75) — `(lang === 'zh' && post.bodyZh ? post.bodyZh : post.content)` branch
+- **[pages] 6 path-A category pages tool description i18n** (P80) — `ai-cost-tools`, `cost-efficiency`, `freelance-pricing`, `investment-roi`, `saas-metrics`, `valuation-exit`; uses `t('tools.${slug}.description', lang)` with fallback
+- **[pages] 9 path-B category pages tool description i18n** (P81) — `marketing-analytics`, `operations-inventory`, `customer-support`, `hiring-team`, `knowledge`, `legal-compliance`, `product-analytics`, `sales`, `retention`
+
+### Added (CI defense guards)
+- **[tests] `tests/zh-hardcoded-english-guard.test.ts`** (P74) — 14th build-dep suite; walks dist/zh, asserts 11 known-leaked EN UI strings absent; defends P72 audit fixes (D1-D5)
+- **[tests] `tests/translation-glossary-guard.test.ts`** (P82 + P83) — 2 source-only tests:
+  - Structural invariants (P82): every tool/blog/category has expected i18n keys
+  - Orphan-key detection (P83): no dead keys in translations.ts (with template-literal + variable-key reference support)
+- **[scripts] `scripts/p72-audit-v6.cjs` filter improvements** (P79/P82/P83):
+  - Strip `<head>` to exclude SEO meta false positives (Blog 303 → 3 hits)
+  - Strip `//` line comments before parsing (mirrors P82 glossary guard)
+- **[docs] `docs/i18n/zh-terminology.md`** (P78) — extended with 4 new sections: Calculator Name Patterns, Blog Body Template Phrases, Brand Name Preservation, UI String Conventions
+
+### Fixed (real bugs found by audit + structural fixes)
+- **[i18n] zh blog index page** (P72 T2-A) — 200 EN blog titles (100 JSON-LD + 100 h2) → CJK
+- **[i18n] 100 tool pages RelatedBlog link text** (P72 T2-A) — 100 EN strings → CJK
+- **[i18n] CategoryGuides section headers + blog titles** (P72 T2-A) — ~30-40 EN strings → CJK
+- **[i18n] privacy-policy page** (P73) — 50% → 100% localized (all sections + h1 + h2 + paragraphs)
+- **[i18n] terms page** (P73) — 0% → 100% localized
+- **[i18n] 6 path-A tool descriptions on zh pages** (P80) — 0/6 CJK → 6/6 CJK
+- **[i18n] 9 path-B tool descriptions on zh pages** (P81) — 0/9 CJK → 9/9 CJK
+- **[i18n] 100 zh blog bodies** (P75) — 0 CJK → 100% CJK
+
+### Changed (CLAUDE.md + cascade audit continuation)
+- **[docs] CLAUDE.md `.superpowers/` standing rule** (P77) — formalizes P70 root-cause fix; warns future sessions not to `git add` files under `.superpowers/`
+- **[docs] `docs/i18n/zh-terminology.md`** (P78) — extends existing P18-3 glossary (53 rows) with 4 new sections documenting translation patterns observed in P69/P72/P73/P75 batches
+
+### Engineering metrics
+| Metric | Value |
+|---|---|
+| Engines | 100 (frozen) |
+| New batches | 19 (P66b-P83) |
+| New commits | ~30 |
+| Test delta | `1181 → 1181` pass (added ~10, removed ~10; net 0; defense-guards only) |
+| Build-dep suites | 13 (P63 added 6th, P66b/P67b/P68/P69/P71/P74 grew) |
+| Source-only guards | 2 (P82 + P83 in `translation-glossary-guard`) |
+| `zh-hardcoded-english-guard` leaked strings | 11 (Privacy Policy, Terms & Conditions, Information We Collect, Cookies and Tracking, Third-Party Services, Acceptance of Terms, Use of the Service, Intellectual Property, Last updated:, Guides & Articles, Related Articles) |
+| pnpm check baseline | `1181/0/0` |
+| pnpm build | 449 dist pages |
+| Total i18n keys | ~3,609 (translations.ts; +200 from P69, +22 from P73, +2 from P72 T2-A, +4 from P78) |
+| ZH coverage (page-level h1) | **100%** (215 zh pages × 100% has CJK) |
+| ZH coverage (page-level cross-link) | **100%** (200 zh tool + 200 zh blog × 15 cross-refs = 6,000 assertions all pass) |
+| Total commits | 712 → 744 |
+| Active days | 38 → 40 |
+
+### Defects closed (cumulative P62-P83)
+| Defect | Status | Closed by |
+|---|---|---|
+| en cat page h1 + cross-link NO CJK | ✅ Closed | P63 |
+| zh cat page h1 + cross-link HAS CJK | ✅ Closed | P66b |
+| en tool page h1 NO CJK | ✅ Closed | P68 |
+| zh tool page h1 HAS CJK | ✅ Closed | P67b |
+| en blog page h1 NO CJK | ✅ Closed | P69 |
+| zh blog page h1 HAS CJK | ✅ Closed | P69 |
+| tool cross-link en NO + zh HAS | ✅ Closed | P71 |
+| blog cross-link en NO + zh HAS | ✅ Closed | P71 |
+| blog index 200 EN (D1) | ✅ Closed | P72 T2-A |
+| 100 tool pages RelatedBlog EN (D2) | ✅ Closed | P72 T2-A |
+| CategoryGuides EN (D3) | ✅ Closed | P72 T2-A |
+| privacy-policy EN (D4) | ✅ Closed | P73 |
+| terms EN (D5) | ✅ Closed | P73 |
+| MD blog bodies EN (D6) | ✅ Closed | P75 |
+| 6 path-A tool desc EN on zh | ✅ Closed | P80 |
+| 9 path-B tool desc EN on zh | ✅ Closed | P81 |
+
+**P72 audit's 6 defects + 2 tool-desc extensions = 16/16 closed. i18n defense-in-depth complete at page-level h1 + cross-link layers.**
+
+### Ship drama
+- **[P75] TypeScript schema root-cause discovery** — initial T2 (wire bodyZh into template) appeared to work (1180 pass) but dist/zh blog body was still EN. TS diagnostic revealed `Property 'bodyZh' does not exist on type '{ title: string; excerpt: string; ogImage: string; toolSlug: string; }'` — astro:content's Zod schema was silently stripping the unknown field. Fixed by adding `bodyZh: z.string().optional()` to schema. **Lesson: TypeScript schema validation can silently strip valid frontmatter fields.**
+- **[P83] Orphan-key detection false positive triage** — initial implementation reported 16 false positives (e.g., `footer.privacy` used via `key: 'footer.privacy'` variable reference in Footer.astro). Added pattern #4 (variable key references) to handle components that pass keys as variables.
+- **[P77] `.superpowers/` standing rule formalization** — P70 fixed root cause but the behavioral prevention wasn't documented. P77 added standing rule to CLAUDE.md "Notes for Future Sessions" so future sessions know not to `git add` files under that path.
+- **[P79] Audit filter noise** — initial audit reported 303 "Blog" hits (SEO `<title>` / `<meta>` tags where brand preservation is by design per glossary). P82 added `<head>` strip filter — drops to 3 actual hits.
+
+📦 ship log: [`memory/p66b-zh-cjk-preservation-shipped.md`](memory/p66b-zh-cjk-preservation-shipped.md) · [`memory/p67a-working-tree-cleanup-shipped.md`](memory/p67a-working-tree-cleanup-shipped.md) · [`memory/p67b-tool-zh-cjk-preservation-shipped.md`](memory/p67b-tool-zh-cjk-preservation-shipped.md) · [`memory/p68-tool-en-cjk-guard-shipped.md`](memory/p68-tool-en-cjk-guard-shipped.md) · [`memory/p69-blog-coverage-complete-shipped.md`](memory/p69-blog-coverage-complete-shipped.md) · [`memory/p70-superpowers-gitignore-fix-shipped.md`](memory/p70-superpowers-gitignore-fix-shipped.md) · [`memory/p71-cross-link-cjk-guard-shipped.md`](memory/p71-cross-link-cjk-guard-shipped.md) · [`memory/p72-i18n-fix-d1-d2-d3-shipped.md`](memory/p72-i18n-fix-d1-d2-d3-shipped.md) · [`memory/p73-legal-pages-i18n-shipped.md`](memory/p73-legal-pages-i18n-shipped.md) · [`memory/p74-audit-ci-guard-shipped.md`](memory/p74-audit-ci-guard-shipped.md) · [`memory/p75-md-body-translation-shipped.md`](memory/p75-md-body-translation-shipped.md) · [`memory/p76-blog-body-review-shipped.md`](memory/p76-blog-body-review-shipped.md) · [`memory/p77-claude-md-standing-rule-shipped.md`](memory/p77-claude-md-standing-rule-shipped.md) · [`memory/p78-glossary-extension-shipped.md`](memory/p78-glossary-extension-shipped.md) · [`memory/p79-footer-breadcrumb-reaudit-shipped.md`](memory/p79-footer-breadcrumb-reaudit-shipped.md) · [`memory/p80-tool-descriptions-i18n-shipped.md`](memory/p80-tool-descriptions-i18n-shipped.md) · [`memory/p81-path-b-tool-descriptions-i18n-shipped.md`](memory/p81-path-b-tool-descriptions-i18n-shipped.md) · [`memory/p82-audit-filter-glossary-guard-shipped.md`](memory/p82-audit-filter-glossary-guard-shipped.md) · [`memory/p83-audit-sync-orphan-guard-shipped.md`](memory/p83-audit-sync-orphan-guard-shipped.md)
 
 ---
 
@@ -421,4 +524,4 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 - **🟢 Active vs 🔒 Locked milestone** — M16.0 起为 maintenance mode，p16+ batches 主要是 INDEX/docs/refactor，不再扩 engine count
 - **完整 commit 历史** — `git log --oneline` (711 commits); 或 `git log --oneline --grep "p1[0-9]"` 按 P-series filter
 - **Cross-references** — 每个 milestone 末尾链接到 `memory/pNN-*-shipped.md` ship memory + `docs/superpowers/plans/*.md` plan + `docs/superpowers/specs/*.md` spec（如果存在）
-- **Last CHANGELOG update** — P65 (2026-07-24); covers P46-P64 batches (19 batches, ~78 commits)
+- **Last CHANGELOG update** — P84 (2026-07-26); covers P66b-P83 batches (19 batches, ~30 commits) in M18.0 milestone
