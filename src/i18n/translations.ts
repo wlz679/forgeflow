@@ -42,6 +42,16 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // P102-deleted ops_cost.section.savings_insights key value, but this key lives
   // in the ai_cost namespace because the string only appears in AI cost engines.
   'ai_cost.section.savings_insights': { en: '💰 Savings Insights', zh: '💰 节省洞察' },
+  // P105: AI cost 'Usage Scenarios' section header. Three emoji variants across
+  // 4 engines — post-processor uses exact string match, so we need a key per variant:
+  //   • claude:    '📊 Usage Scenarios (monthly cost at 100 reqs/day)' (chart emoji)
+  //   • deepseek/gemini: '📅 Usage Scenarios (monthly cost at 100 reqs/day)' (date emoji)
+  //   • openai:    '📅 Usage Scenarios (monthly costs)' (date emoji, no volume)
+  // The P102-deleted 'ops_cost.section.usage_scenarios' had '📊 Usage Scenarios
+  // (monthly costs)' (chart, plain) — never used by any engine, truly dead.
+  'ai_cost.section.usage_scenarios_claude': { en: '📊 Usage Scenarios (monthly cost at 100 reqs/day)', zh: '📊 使用场景（按 100 reqs/日 的月度成本）' },
+  'ai_cost.section.usage_scenarios_with_volume': { en: '📅 Usage Scenarios (monthly cost at 100 reqs/day)', zh: '📅 使用场景（按 100 reqs/日 的月度成本）' },
+  'ai_cost.section.usage_scenarios_openai': { en: '📅 Usage Scenarios (monthly costs)', zh: '📅 使用场景（月度成本）' },
   // P98: SaaS section headers (3 tools: burn-rate, churn-rate, mrr)
   'saas.section.dashboard': { en: '📊 MRR Health Dashboard', zh: '📊 MRR 健康看板' },
   'saas.section.snapshot': { en: '💰 MRR Snapshot', zh: '💰 MRR 快照' },

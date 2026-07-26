@@ -86,11 +86,16 @@ const WORKING_KEY_REQUIRED = [
   // P102 ops_cost keys
   { path: 'solopreneur-break-even-calculator/index.html', mustContain: '📊 盈亏平衡分析' },
   { path: 'solopreneur-remote-vs-office-calculator/index.html', mustContain: '🎯 盈亏平衡分析:' },
-  // P104 ai_cost key (4 LLM API engines)
+  // P104 ai_cost 'Savings Insights' (4 LLM API engines)
   { path: 'solopreneur-claude-api-cost-calculator/index.html', mustContain: '💰 节省洞察' },
   { path: 'solopreneur-openai-token-calculator/index.html', mustContain: '💰 节省洞察' },
   { path: 'solopreneur-gemini-api-cost-calculator/index.html', mustContain: '💰 节省洞察' },
   { path: 'solopreneur-deepseek-api-cost-calculator/index.html', mustContain: '💰 节省洞察' },
+  // P105 ai_cost 'Usage Scenarios' (3 emoji variants × 4 engines)
+  { path: 'solopreneur-claude-api-cost-calculator/index.html', mustContain: '📊 使用场景' },
+  { path: 'solopreneur-deepseek-api-cost-calculator/index.html', mustContain: '📅 使用场景' },
+  { path: 'solopreneur-gemini-api-cost-calculator/index.html', mustContain: '📅 使用场景' },
+  { path: 'solopreneur-openai-token-calculator/index.html', mustContain: '📅 使用场景（月度成本）' },
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {
