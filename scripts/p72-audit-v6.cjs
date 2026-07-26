@@ -122,7 +122,14 @@ for (const c of candidates) {
   const pages = new Set();
   for (const f of zhFiles) {
     const content = fs.readFileSync(f, 'utf-8');
-    const stripped = content.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+type="application\/ld\+json"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ');
+    // P82: strip <head> too — SEO <title>/<meta og:title>/<meta twitter:title>
+    // tags contain brand strings like "ForgeFlowKit Blog" which are by-design
+    // (per glossary Brand Name Preservation rule). Excluding <head>
+    // removes ~303 false-positive "Blog" hits.
+    const stripped = content.replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, ' ')
+                             .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+                             .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+                             .replace(/<[^>]+type="application\/ld\+json"[^>]*>[\s\S]*?<\/[^>]+>/gi, ' ');
     const esc = c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const re3 = new RegExp(`(?<![A-Za-z0-9])${esc}(?![A-Za-z0-9])`, 'g');
     const matches = stripped.match(re3);
