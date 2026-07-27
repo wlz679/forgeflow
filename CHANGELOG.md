@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-27 (P109 CHANGELOG catch-up v3 — P84-P108 SEO/a11y/performance/i18n defense-in-depth)
+> **最后更新:** 2026-07-27 (P116 CHANGELOG catch-up v4 — P110-P115 i18n tier-2 era)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 766 across 42 active days (2026-05-31 → 2026-07-27, ~8 weeks)
+> **Total commits:** 775 across 42 active days (2026-05-31 → 2026-07-27, ~8 weeks)
 
 ---
 
@@ -23,10 +23,87 @@
 
 ### Added
 - (next P-series batch will appear here)
-- ~~Candidate: `CHANGELOG.md` itself (P45) just shipped; `tests/codegen-drift-guard.test.ts` (P42 mock regression guard) pending~~ ✅ P45 + P84 + P109 (this batch) shipped
-- Candidate: per-engine i18n keys for cost/ops/valuation headers (~20+ keys, large scope, last i18n gap)
+- ~~Candidate: `CHANGELOG.md` itself (P45) just shipped; `tests/codegen-drift-guard.test.ts` (P42 mock regression guard) pending~~ ✅ P45 + P84 + P109 + P116 (this batch) shipped
+- Candidate: per-engine i18n keys for cost/ops/valuation headers (~20+ keys, large scope, last i18n gap) → ✅ closed by P111
+- Candidate: tier-2 single-engine i18n keys (~50+ keys, projection/break-even/breakdown patterns) → 🟡 P113+P114+P115 (52 keys) shipped; ~50+ remaining (composite data lines + AI cost tip lines + engine titles)
+- Candidate: codegen-enforce defense-in-depth matrix (automate CLAUDE.md snapshot)
 - Candidate: CDN cache-control guard (production-side, not testable locally)
 - Candidate: audit script migration (extract parser logic to shared library)
+
+---
+
+## [M20.0] - 2026-07-27 — i18n tier-2 era (P110-P115)
+
+🌐 **CLAUDE.md defense-in-depth matrix + 3 tier-2 i18n rounds (52 single-engine headers) + tier-1 business headers (44 engine-instances) + P103 guard expansion (+79 assertions)**. 6 batches · 9 commits · 0 production engine count change. P111 closes the last tier-1 i18n gap; P113-P115 begin tier-2 single-engine headers.
+
+### Added (CLAUDE.md engineering — P110)
+- **[docs] `CLAUDE.md` Defense-in-Depth matrix** (P110) — 9-row matrix cataloging 29 build-dep suites across 6 dimensions; codifies the 6 defense-in-depth dimensions for future sessions; performance size triad completion note (HTML+JS+CSS+images); "When adding a new feature that affects any of the 6 dimensions, the matching suite should catch the regression" invariant
+
+### Added (tier-1 business section headers — P111+P112)
+- **[i18n] 7 `business.section.*` keys** (P111) — `health` + `inputs_snapshot` + `what_if` + `what_if_scenarios` + `milestone` + `key_metrics` + `key_results`; 44 engine-instances across 6 cost/ops + 14 other engines; closes the last tier-1 v3 i18n gap
+- **[tests] `tests/dead-i18n-keys-guard.test.ts` +27 assertions** (P112) — defends P111 from silent regression; 6 ops engines × 4 keys + 3 cross-category samples (meeting-cost / employee-cost / ltv); path-template bug found+fixed (double solopreneur- prefix)
+
+### Added (tier-2 single-engine headers — P113+P114+P115)
+- **[i18n] 18 tier-2 round 1 keys** (P113) — 11 `engine_health.*` (cost/meeting/productivity/decision/pricing/multiple/break_even/valuation/deal/fee_efficiency/unit_economics) + 7 `engine_snapshot.*` (cost/score/tier/valuation/metrics/deal/charge); 1:1 per engine; 18 P103 assertions
+- **[i18n] 12 tier-2 round 2 keys** (P114) — 2 health gap-fill (LTV, CAC missed in P113) + 4 projection (annual/quarterly_annual/improvement/volume) + 3 break-even (contractor/async_sync/deep_shallow) + 3 breakdown (per_employee/multiple/conversion); 12 P103 assertions
+- **[i18n] 22 tier-2 round 3 keys** (P115) — 8 projection (LTV milestones/multiple ranges/BRRRR targets/market benchmarks/lender thresholds/list growth/income ladder/yield benchmarks) + 6 health (burn/cap_rate/churn/DSCR/list/margin) + 3 snapshot (revenue/growth/decision) + 3 break-even (amortization milestones/side-by-side/return composition) + 2 breakdown (cap_rate math/rate multipliers); 22 P103 assertions
+
+### Engineering metrics
+| Metric | Before (M19.0) | After (M20.0) |
+|---|---|---|
+| Engines | 100 (frozen) | 100 (frozen) |
+| New batches | 25 (P84-P108) | **6** (P110-P115) |
+| New commits | 31 | **9** |
+| Test delta | `1195/0/0` | `1195/0/0` (P103 assertions are build-dep, not in unit-test count) |
+| Build-dep suites | 29 | **29** (P103 was extended, no new suites) |
+| CLAUDE.md matrix rows | 0 | **9** (P110) |
+| P103 WORKING_KEY_REQUIRED | 10 entries | **89 entries** (+79) |
+| i18n active post-processor keys | 16 | **75** (+59 across P111 + P113 + P114 + P115) |
+| pnpm check baseline | `1195/0/0` | `1195/0/0` |
+| pnpm build | 449 dist pages | 449 dist pages |
+| Total commits | 766 | **775** |
+| Active days | 42 | 42 (same day batch chain) |
+
+### Post-processor headerKeys cumulative (P85a → P115)
+
+| Batch | New keys | Cumulative |
+|---|---|---|
+| P85a | 6 | 6 |
+| P98 | 4 | 10 |
+| P99/P102 | 2 | 12 |
+| P104 | 1 | 13 |
+| P105 | 3 | 16 |
+| **P111** | **7** | **23** |
+| **P113** | **18** | **41** |
+| **P114** | **12** | **53** |
+| **P115** | **22** | **75** |
+
+### P103 WORKING_KEY_REQUIRED cumulative (P102 → P115)
+
+| Batch | New assertions | Cumulative |
+|---|---|---|
+| P102 | 2 | 2 |
+| P104 | 4 | 6 |
+| P105 | 4 | 10 |
+| **P112** | **27** | **37** |
+| **P113** | **18** | **55** |
+| **P114** | **12** | **67** |
+| **P115** | **22** | **89** |
+
+### Defense-in-depth invariant (codified by P110)
+
+> When adding a new feature that affects any of the 6 dimensions (a11y · i18n page-level · i18n dead-keys · SEO · performance HTML/JS/CSS/images · build-dep source), the matching suite should catch the regression. If it doesn't, the suite is incomplete — extend it (don't bypass).
+
+### Ship drama
+- **[P111] Tier-1 i18n closure** — pre-P111 audit revealed 44 engine-instances of `🩺 Health:` / `📊 Inputs Snapshot:` / `🔄 What-If Analysis:` / `🎯 Milestone:` / `📐 Key Metrics:` / `📊 Key Results:` on 6 cost/ops + 14 other engines. 7 `business.section.*` keys cover them all in one post-processor pass.
+- **[P112] Path-template double-prefix bug** — initial `flatMap` template was `solopreneur-${slug}` but `slug` already had `solopreneur-` prefix → `solopreneur-solopreneur-...` paths. 24 violations on first test run. Fixed by using `${slug}/index.html` directly. Lesson: slugs should be full relative paths.
+- **[P113] LTV/CAC health gap** — first pass added 11 `🩺 X Health:` keys from cost/ops clusters but missed the valuation cluster's LTV + CAC health headers. P114 cataloged and closed this gap with 2 gap-fill keys.
+- **[P114] Source string colon variance** — some engines emit `'🎯 LTV Milestones'` (no colon) while siblings emit `'🎯 Multiple Ranges by Stage:'` (with colon). Post-processor `split(en).join(zh)` exact-match handles both forms.
+- **[P115] Probe-script emoji regex bug** — bash heredoc + emoji character class failed with "unterminated character set" error. Workaround: write Python script to file, run via `PYTHONIOENCODING=utf-8`. Cleaned up probe script after use.
+
+📦 ship log: [`memory/p110-claude-md-defense-in-depth-matrix-shipped.md`](memory/p110-claude-md-defense-in-depth-matrix-shipped.md) · [`memory/p111-business-section-headers-i18n-shipped.md`](memory/p111-business-section-headers-i18n-shipped.md) · [`memory/p112-extend-dead-keys-guard-p111-assertions-shipped.md`](memory/p112-extend-dead-keys-guard-p111-assertions-shipped.md) · [`memory/p113-tier2-single-engine-headers-i18n-shipped.md`](memory/p113-tier2-single-engine-headers-i18n-shipped.md) · [`memory/p114-tier2-round2-headers-i18n-shipped.md`](memory/p114-tier2-round2-headers-i18n-shipped.md) · [`memory/p115-tier2-round3-headers-i18n-shipped.md`](memory/p115-tier2-round3-headers-i18n-shipped.md)
+
+---
 
 ---
 
