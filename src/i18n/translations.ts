@@ -150,6 +150,35 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'engine_break_even.return_composition': { en: '⚖️ Return Composition:', zh: '⚖️ 收益构成:' },
   'engine_breakdown.cap_rate_math': { en: '📐 Cap Rate Math:', zh: '📐 资本化率计算:' },
   'engine_breakdown.rate_multipliers': { en: '📐 Rate Multipliers:', zh: '📐 费率倍数:' },
+  // P117: tier-2 round 4 (22 keys, 1:1 per engine). Continues tier-2 era;
+  // closes more single-engine header gaps. 5 namespaces: engine_projection (8) +
+  // engine_health (5) + engine_snapshot (4) + engine_break_even (3) +
+  // engine_breakdown (2). 4 of 22 lack trailing colon ('MRR Milestone
+  // Projections' / 'Action Plan' / 'Cost Summary' / 'Key SaaS Metrics') — post-
+  // processor's exact-match handles both forms. 30+ tier-2 headers deferred
+  // (composite data lines, AI cost tip lines, engine titles, result lines).
+  'engine_projection.ltv_by_tier': { en: '🎯 LTV by Tier:', zh: '🎯 按层级 LTV:' },
+  'engine_projection.ownership_outcomes': { en: '🎯 Ownership Outcomes:', zh: '🎯 持股结果:' },
+  'engine_projection.quarterly_payment_plan': { en: '🎯 Quarterly Payment Plan:', zh: '🎯 季度付款计划:' },
+  'engine_projection.exit_value_by_round': { en: '🎯 Exit Value by Round:', zh: '🎯 各轮退出价值:' },
+  'engine_projection.mrr_milestone_projections': { en: '🎯 MRR Milestone Projections', zh: '🎯 MRR 里程碑预测' },
+  'engine_projection.action_plan': { en: '🎯 Action Plan', zh: '🎯 行动计划' },
+  'engine_projection.revenue_at_scale': { en: '🎯 Revenue at Scale:', zh: '🎯 规模化收入:' },
+  'engine_projection.time_to_goal_milestones': { en: '🎯 Time-to-Goal Milestones:', zh: '🎯 目标时间里程碑:' },
+  'engine_health.rate': { en: '🩺 Rate Health:', zh: '🩺 费率健康:' },
+  'engine_health.compounding': { en: '🩺 Compounding Health:', zh: '🩺 复利健康:' },
+  'engine_health.founder': { en: '🩺 Founder Health:', zh: '🩺 创始人健康:' },
+  'engine_health.market_position': { en: '🩺 Market Position:', zh: '🩺 市场定位:' },
+  'engine_health.yield': { en: '🩺 Yield Health:', zh: '🩺 收益率健康:' },
+  'engine_snapshot.loan': { en: '💰 Loan Snapshot:', zh: '💰 贷款快照:' },
+  'engine_snapshot.cost_summary': { en: '💰 Cost Summary', zh: '💰 成本摘要' },
+  'engine_snapshot.property': { en: '💰 Property Snapshot:', zh: '💰 房产快照:' },
+  'engine_snapshot.investment': { en: '💰 Investment Snapshot:', zh: '💰 投资快照:' },
+  'engine_break_even.forward_valuation': { en: '⚖️ Forward Valuation:', zh: '⚖️ 前向估值:' },
+  'engine_break_even.self_employed_vs_w2': { en: '⚖️ Self-Employed vs W-2 Break-Even:', zh: '⚖️ 自雇 vs W-2 盈亏平衡:' },
+  'engine_break_even.profitable_hourly': { en: '⚖️ Profitable Hourly:', zh: '⚖️ 盈利时薪:' },
+  'engine_breakdown.ctr_epc_funnel': { en: '📐 CTR/EPC Funnel:', zh: '📐 CTR/EPC 漏斗:' },
+  'engine_breakdown.key_saas_metrics': { en: '📐 Key SaaS Metrics', zh: '📐 关键 SaaS 指标' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },
