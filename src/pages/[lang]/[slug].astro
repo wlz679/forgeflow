@@ -76,6 +76,16 @@ function translateCalcOutput(text: string, lang: Lang): string {
     // removed in P102 — strings don't appear in any non-AI engine output.
     'ops_cost.section.breakeven_analysis',
     'ops_cost.section.target_break_even',
+    // P111: cross-category business v3 section headers (44 engine-instances
+    // across cost/operations/valuation). Closes the last i18n gap for v3
+    // standard emoji-led headers on zh pages.
+    'business.section.health',
+    'business.section.inputs_snapshot',
+    'business.section.what_if',
+    'business.section.what_if_scenarios',
+    'business.section.milestone',
+    'business.section.key_metrics',
+    'business.section.key_results',
   ];
   let out = text;
   for (const key of headerKeys) {

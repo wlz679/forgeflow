@@ -66,6 +66,18 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // any cost/ops/valuation engine output. Removed in P102 to prevent dead-code drift.
   'ops_cost.section.breakeven_analysis': { en: '📊 Break-Even Analysis', zh: '📊 盈亏平衡分析' },
   'ops_cost.section.target_break_even': { en: '🎯 Break-Even Analysis:', zh: '🎯 盈亏平衡分析:' },
+  // P111: cross-category business section headers (44 engine-instances across
+  // cost/operations/valuation). Single namespace `business.section.*` because
+  // these strings appear across multiple categories (not ops-cost-valuation
+  // specific). Post-processor does exact substring match, so emoji + colon
+  // + wording all need to match the engine staticExamples verbatim.
+  'business.section.health': { en: '🩺 Health:', zh: '🩺 健康:' },
+  'business.section.inputs_snapshot': { en: '📊 Inputs Snapshot:', zh: '📊 输入快照:' },
+  'business.section.what_if': { en: '🔄 What-If:', zh: '🔄 假设分析:' },
+  'business.section.what_if_scenarios': { en: '🔄 What-If Scenarios:', zh: '🔄 假设场景:' },
+  'business.section.milestone': { en: '🎯 Milestone:', zh: '🎯 里程碑:' },
+  'business.section.key_metrics': { en: '📐 Key Metrics:', zh: '📐 关键指标:' },
+  'business.section.key_results': { en: '📊 Key Results:', zh: '📊 关键结果:' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },
