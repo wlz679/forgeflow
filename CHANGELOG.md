@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-27 (P116 CHANGELOG catch-up v4 — P110-P115 i18n tier-2 era)
+> **最后更新:** 2026-07-27 (P120 CHANGELOG catch-up v5 — P117-P119 i18n tier-2 closure)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 775 across 42 active days (2026-05-31 → 2026-07-27, ~8 weeks)
+> **Total commits:** 781 across 42 active days (2026-05-31 → 2026-07-27, ~8 weeks)
 
 ---
 
@@ -23,9 +23,10 @@
 
 ### Added
 - (next P-series batch will appear here)
-- ~~Candidate: `CHANGELOG.md` itself (P45) just shipped; `tests/codegen-drift-guard.test.ts` (P42 mock regression guard) pending~~ ✅ P45 + P84 + P109 + P116 (this batch) shipped
+- ~~Candidate: `CHANGELOG.md` itself (P45) just shipped; `tests/codegen-drift-guard.test.ts` (P42 mock regression guard) pending~~ ✅ P45 + P84 + P109 + P116 + P120 (this batch) shipped
 - Candidate: per-engine i18n keys for cost/ops/valuation headers (~20+ keys, large scope, last i18n gap) → ✅ closed by P111
-- Candidate: tier-2 single-engine i18n keys (~50+ keys, projection/break-even/breakdown patterns) → 🟡 P113+P114+P115 (52 keys) shipped; ~50+ remaining (composite data lines + AI cost tip lines + engine titles)
+- Candidate: tier-2 single-engine i18n keys (~50+ keys, projection/break-even/breakdown patterns) → ✅ **P113+P114+P115+P117+P118+P119 closed 1:1 per-engine static tier-2 (113 keys total)**
+- Candidate: tier-2 round 7 — composite data-driven lines (NEW approach: source-level translation or customFn-based) — likely 50-100 candidates; AI cost tip lines, dynamic projection rows, bar chart labels
 - Candidate: codegen-enforce defense-in-depth matrix (automate CLAUDE.md snapshot)
 - Candidate: CDN cache-control guard (production-side, not testable locally)
 - Candidate: audit script migration (extract parser logic to shared library)
@@ -102,6 +103,81 @@
 - **[P115] Probe-script emoji regex bug** — bash heredoc + emoji character class failed with "unterminated character set" error. Workaround: write Python script to file, run via `PYTHONIOENCODING=utf-8`. Cleaned up probe script after use.
 
 📦 ship log: [`memory/p110-claude-md-defense-in-depth-matrix-shipped.md`](memory/p110-claude-md-defense-in-depth-matrix-shipped.md) · [`memory/p111-business-section-headers-i18n-shipped.md`](memory/p111-business-section-headers-i18n-shipped.md) · [`memory/p112-extend-dead-keys-guard-p111-assertions-shipped.md`](memory/p112-extend-dead-keys-guard-p111-assertions-shipped.md) · [`memory/p113-tier2-single-engine-headers-i18n-shipped.md`](memory/p113-tier2-single-engine-headers-i18n-shipped.md) · [`memory/p114-tier2-round2-headers-i18n-shipped.md`](memory/p114-tier2-round2-headers-i18n-shipped.md) · [`memory/p115-tier2-round3-headers-i18n-shipped.md`](memory/p115-tier2-round3-headers-i18n-shipped.md)
+
+---
+
+## [M21.0] - 2026-07-27 — i18n tier-2 closure (P117-P119)
+
+🌐 **Tier-2 i18n closure: 61 more single-engine headers across 3 rounds (P117 + P118 + P119); post-processor headerKeys 75 → 136; P103 WORKING_KEY_REQUIRED 89 → 150 entries (+61); 1:1 per-engine static tier-2 pattern COMPLETE.** 3 batches · 6 commits · 0 production engine count change. P119 closes the static tier-2 era; remaining untranslated output is composite data-driven lines requiring a different approach (source-level translation or customFn-based).
+
+### Added (tier-2 single-engine headers — P117+P118+P119)
+
+- **[i18n] 22 tier-2 round 4 keys** (P117) — 8 projection (ltv_by_tier / ownership_outcomes / quarterly_payment_plan / exit_value_by_round / mrr_milestone_projections / action_plan / revenue_at_scale / time_to_goal_milestones) + 5 health (rate / compounding / founder / market_position / yield) + 4 snapshot (loan / cost_summary / property / investment) + 3 break-even (forward_valuation / self_employed_vs_w2 / profitable_hourly) + 2 breakdown (ctr_epc_funnel / key_saas_metrics); 22 P103 assertions
+- **[i18n] 28 tier-2 round 5 keys** (P118) — 6 projection (mrr_milestones / key_milestones / growth_scenarios_12_month / stay_horizon_milestone / time_to_goal / scale_projection) + 7 health (funnel / verdict / utilization / saas_quadrant / affordability / churn_contraction / tax_efficiency) + 8 snapshot (traffic_conversions / time_wealth / rule_of_40 / burn_multiple / cap_table / monthly_payment / rate_ladder / reality_check) + 2 break-even (runway_breakeven / loan_term) + 5 breakdown (monthly_mrr / time_to_value / dilution_per_round / scaling_economics / funnel_metrics); 14 engines touched; 28 P103 assertions
+- **[i18n] 11 tier-2 round 6 keys (CLOSES 1:1 per-engine static tier-2)** (P119) — 1 projection (revenue_projection) + 1 health (market) + 6 snapshot (launch_revenue / pricing_metrics / list_economics / target_rate / annualized_profit / net_profit_margin) + 3 breakdown (take_home / lever_impact / optimization_levers); 7 engines touched; 11 P103 assertions
+
+### Engineering metrics
+
+| Metric | Before (M20.0) | After (M21.0) |
+|---|---|---|
+| Engines | 100 (frozen) | 100 (frozen) |
+| New batches | 6 (P110-P115) | **3** (P117-P119) |
+| New commits | 9 | **6** |
+| Test delta | `1195/0/0` | `1195/0/0` |
+| Build-dep suites | 29 | 29 (P103 was extended, no new suites) |
+| P103 WORKING_KEY_REQUIRED | 89 entries | **150 entries** (+61) |
+| i18n active post-processor keys | 75 | **136** (+61 across P117 + P118 + P119) |
+| pnpm check baseline | `1195/0/0` | `1195/0/0` |
+| pnpm build | 449 dist pages | 449 dist pages |
+| Total commits | 775 | **781** |
+| Active days | 42 | 42 (same day batch chain) |
+
+### Post-processor headerKeys cumulative (P85a → P119)
+
+| Batch | New keys | Cumulative |
+|---|---|---|
+| (M20.0 cumulative) | — | 75 |
+| **P117** | **22** | **97** |
+| **P118** | **28** | **125** |
+| **P119** | **11** | **136** |
+
+### P103 WORKING_KEY_REQUIRED cumulative (P102 → P119)
+
+| Batch | New assertions | Cumulative |
+|---|---|---|
+| (M20.0 cumulative) | — | 89 |
+| **P117** | **22** | **111** |
+| **P118** | **28** | **139** |
+| **P119** | **11** | **150** |
+
+### Tier-2 closure: 1:1 per-engine static pattern COMPLETE
+
+P119 marks the end of the **1:1 per-engine static tier-2 pattern**:
+
+| Era | Batches | Tier-2 keys | Cumulative |
+|---|---|---|---|
+| Tier-1 business section | P111 | — | 7 (`business.section.*`) |
+| Tier-2 round 1 | P113 | 18 | 25 |
+| Tier-2 round 2 | P114 | 12 | 37 |
+| Tier-2 round 3 | P115 | 22 | 59 |
+| Tier-2 round 4 | P117 | 22 | 81 |
+| Tier-2 round 5 | P118 | 28 | 109 |
+| **Tier-2 round 6 (CLOSES)** | **P119** | **11** | **120** |
+
+**120 total post-processor keys** (113 tier-2 + 7 business). All engines with static 1:1 per-engine tier-2 headers now have i18n coverage.
+
+Remaining untranslated output is **composite data-driven lines** (NOT 1:1 per engine, NOT static post-processor friendly):
+- AI cost engines: `Cost Comparison (X reqs/day)`, `Cheapest: X at $Y/mo`, `Best value: X at $Y/mo`, `Batch pricing: $X/req ($Y/mo) — save Z%`
+- Business engines: dynamic projection rows, bar chart labels, AI cost comparison tables
+- Likely 50-100 composite candidates requiring NEW approach (source-level translation OR customFn-side i18n)
+
+### Ship drama
+- **[P117] Probe regex false-positive** — initial `CJK-detection` matched headers like `🩺 CAC 健康` as "still English" (because they contain ASCII letters). Fixed by checking for CJK character presence rather than absence of ASCII letters.
+- **[P118] Stale esbuild process block** — esbuild process from previous build was holding port, blocking new builds. Killed via `taskkill //F //PID <PID>`.
+- **[P118] Source string `&` handling** — `Your Traffic & Conversions:` and similar headers contain literal `&` which HTML-escapes to `&#38;` in dist HTML. Post-processor's `split(en).join(zh)` works on raw calc output (before HTML escape), so this is transparent.
+- **[P119] Smaller batch by design** — only 11 keys remaining; P119 deliberately small to close out the pattern cleanly. Composite data-driven tier-2 round 7 deferred to P120+ with new approach.
+
+📦 ship log: [`memory/p117-tier2-round4-headers-i18n-shipped.md`](memory/p117-tier2-round4-headers-i18n-shipped.md) · [`memory/p118-tier2-round5-headers-i18n-shipped.md`](memory/p118-tier2-round5-headers-i18n-shipped.md) · [`memory/p119-tier2-round6-headers-i18n-shipped.md`](memory/p119-tier2-round6-headers-i18n-shipped.md)
 
 ---
 
@@ -687,4 +763,4 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 - **🟢 Active vs 🔒 Locked milestone** — M16.0 起为 maintenance mode，p16+ batches 主要是 INDEX/docs/refactor，不再扩 engine count
 - **完整 commit 历史** — `git log --oneline` (711 commits); 或 `git log --oneline --grep "p1[0-9]"` 按 P-series filter
 - **Cross-references** — 每个 milestone 末尾链接到 `memory/pNN-*-shipped.md` ship memory + `docs/superpowers/plans/*.md` plan + `docs/superpowers/specs/*.md` spec（如果存在）
-- **Last CHANGELOG update** — P84 (2026-07-26); covers P66b-P83 batches (19 batches, ~30 commits) in M18.0 milestone
+- **Last CHANGELOG update** — P120 (2026-07-27); covers P117-P119 batches (3 batches, 6 commits) in M21.0 milestone
