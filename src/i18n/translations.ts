@@ -78,6 +78,32 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'business.section.milestone': { en: '🎯 Milestone:', zh: '🎯 里程碑:' },
   'business.section.key_metrics': { en: '📐 Key Metrics:', zh: '📐 关键指标:' },
   'business.section.key_results': { en: '📊 Key Results:', zh: '📊 关键结果:' },
+  // P113: tier-2 single-engine section headers (18 keys, 1:1 per engine).
+  // Each key translates one engine's health/snapshot subheader. Engine-specific
+  // X is preserved in EN, translated to natural ZH (e.g., 'Cost Health' →
+  // '成本健康', 'Meeting Health' → '会议健康'). Remaining 49+ tier-2 headers
+  // (Projection, Break-Even, Breakdown, Determination, Mechanics, title lines)
+  // are deferred — most are either result/data lines (not section headers) or
+  // very specific (e.g., 'Async vs Sync Break-Even:'). Could be added in P114+
+  // if user-visible gap remains.
+  'engine_health.cost': { en: '🩺 Cost Health:', zh: '🩺 成本健康:' },
+  'engine_health.meeting': { en: '🩺 Meeting Health:', zh: '🩺 会议健康:' },
+  'engine_health.productivity': { en: '🩺 Productivity Health:', zh: '🩺 生产力健康:' },
+  'engine_health.decision': { en: '🩺 Decision Health:', zh: '🩺 决策健康:' },
+  'engine_health.pricing': { en: '🩺 Pricing Health:', zh: '🩺 定价健康:' },
+  'engine_health.multiple': { en: '🩺 Multiple Health:', zh: '🩺 倍数健康:' },
+  'engine_health.break_even': { en: '🩺 Break-Even Health:', zh: '🩺 盈亏平衡健康:' },
+  'engine_health.valuation': { en: '🩺 Valuation Health:', zh: '🩺 估值健康:' },
+  'engine_health.deal': { en: '🩺 Deal Health:', zh: '🩺 交易健康:' },
+  'engine_health.fee_efficiency': { en: '🩺 Fee Efficiency Health:', zh: '🩺 费率效率健康:' },
+  'engine_health.unit_economics': { en: '🩺 Unit Economics Health:', zh: '🩺 单位经济健康:' },
+  'engine_snapshot.cost': { en: '💰 Cost Snapshot:', zh: '💰 成本快照:' },
+  'engine_snapshot.score': { en: '💰 Score Snapshot:', zh: '💰 得分快照:' },
+  'engine_snapshot.tier': { en: '💰 Tier Snapshot:', zh: '💰 价格层快照:' },
+  'engine_snapshot.valuation': { en: '💰 Valuation Snapshot:', zh: '💰 估值快照:' },
+  'engine_snapshot.metrics': { en: '💰 Metrics Snapshot:', zh: '💰 指标快照:' },
+  'engine_snapshot.deal': { en: '💰 Deal Snapshot:', zh: '💰 交易快照:' },
+  'engine_snapshot.charge': { en: '💰 Single Charge Breakdown:', zh: '💰 单次费用明细:' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },

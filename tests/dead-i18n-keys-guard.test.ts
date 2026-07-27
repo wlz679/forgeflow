@@ -117,6 +117,25 @@ const WORKING_KEY_REQUIRED = [
   { path: 'solopreneur-meeting-cost-calculator/index.html', mustContain: '🔄 假设场景:' },
   { path: 'solopreneur-employee-cost-calculator/index.html', mustContain: '📐 关键指标:' },
   { path: 'solopreneur-ltv-calculator/index.html', mustContain: '📊 关键结果:' },
+  // P113: tier-2 single-engine health/snapshot subheaders (18 keys, 1:1 per engine)
+  { path: 'solopreneur-employee-cost-calculator/index.html', mustContain: '🩺 成本健康:' },
+  { path: 'solopreneur-meeting-cost-calculator/index.html', mustContain: '🩺 会议健康:' },
+  { path: 'solopreneur-productivity-score/index.html', mustContain: '🩺 生产力健康:' },
+  { path: 'solopreneur-remote-vs-office-calculator/index.html', mustContain: '🩺 决策健康:' },
+  { path: 'solopreneur-saas-pricing-planner/index.html', mustContain: '🩺 定价健康:' },
+  { path: 'solopreneur-arr-multiple-valuation-calculator/index.html', mustContain: '🩺 倍数健康:' },
+  { path: 'solopreneur-break-even-calculator/index.html', mustContain: '🩺 盈亏平衡健康:' },
+  { path: 'solopreneur-saas-valuation-calculator/index.html', mustContain: '🩺 估值健康:' },
+  { path: 'solopreneur-safe-convertible-note-calculator/index.html', mustContain: '🩺 交易健康:' },
+  { path: 'solopreneur-stripe-fee-calculator/index.html', mustContain: '🩺 费率效率健康:' },
+  { path: 'solopreneur-unit-economics-calculator/index.html', mustContain: '🩺 单位经济健康:' },
+  { path: 'solopreneur-meeting-cost-calculator/index.html', mustContain: '💰 成本快照:' },
+  { path: 'solopreneur-productivity-score/index.html', mustContain: '💰 得分快照:' },
+  { path: 'solopreneur-saas-pricing-planner/index.html', mustContain: '💰 价格层快照:' },
+  { path: 'solopreneur-arr-multiple-valuation-calculator/index.html', mustContain: '💰 估值快照:' },
+  { path: 'solopreneur-burn-multiple-rule-of-40-calculator/index.html', mustContain: '💰 指标快照:' },
+  { path: 'solopreneur-safe-convertible-note-calculator/index.html', mustContain: '💰 交易快照:' },
+  { path: 'solopreneur-stripe-fee-calculator/index.html', mustContain: '💰 单次费用明细:' },
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {

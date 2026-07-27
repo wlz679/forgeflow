@@ -86,6 +86,25 @@ function translateCalcOutput(text: string, lang: Lang): string {
     'business.section.milestone',
     'business.section.key_metrics',
     'business.section.key_results',
+    // P113: tier-2 single-engine health/snapshot subheaders (18 keys, 1:1 per engine)
+    'engine_health.cost',
+    'engine_health.meeting',
+    'engine_health.productivity',
+    'engine_health.decision',
+    'engine_health.pricing',
+    'engine_health.multiple',
+    'engine_health.break_even',
+    'engine_health.valuation',
+    'engine_health.deal',
+    'engine_health.fee_efficiency',
+    'engine_health.unit_economics',
+    'engine_snapshot.cost',
+    'engine_snapshot.score',
+    'engine_snapshot.tier',
+    'engine_snapshot.valuation',
+    'engine_snapshot.metrics',
+    'engine_snapshot.deal',
+    'engine_snapshot.charge',
   ];
   let out = text;
   for (const key of headerKeys) {
