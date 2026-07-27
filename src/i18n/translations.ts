@@ -211,6 +211,20 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'engine_breakdown.dilution_per_round': { en: 'Dilution per Round:', zh: '每股轮次稀释:' },
   'engine_breakdown.scaling_economics': { en: 'Scaling Economics', zh: '规模化经济' },
   'engine_breakdown.funnel_metrics': { en: 'Funnel Metrics:', zh: '漏斗指标:' },
+  // P119: tier-2 round 6 (11 keys, 1:1 per engine) — closes remaining static tier-2 gaps
+  // across 7 engines (course-pricing, email-list-revenue, freelance-rate, freelance-tax,
+  // market-size, project-profitability, unit-economics)
+  'engine_projection.revenue_projection': { en: 'Revenue Projection:', zh: '收入预测:' },
+  'engine_health.market': { en: 'Market Health:', zh: '市场健康:' },
+  'engine_snapshot.launch_revenue': { en: 'Launch Revenue:', zh: '发布收入:' },
+  'engine_snapshot.pricing_metrics': { en: 'Pricing Metrics:', zh: '定价指标:' },
+  'engine_snapshot.list_economics': { en: 'List Economics:', zh: '列表经济:' },
+  'engine_snapshot.target_rate': { en: 'Target Rate Snapshot:', zh: '目标费率快照:' },
+  'engine_snapshot.annualized_profit': { en: 'Annualized Profit:', zh: '年化利润:' },
+  'engine_snapshot.net_profit_margin': { en: 'Net Profit + Margin:', zh: '净利润与利润率:' },
+  'engine_breakdown.take_home': { en: 'Take-Home Breakdown:', zh: '实收明细:' },
+  'engine_breakdown.lever_impact': { en: 'Lever Impact Ranking', zh: '杠杆影响排名' },
+  'engine_breakdown.optimization_levers': { en: 'Optimization Levers', zh: '优化杠杆' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },

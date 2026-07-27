@@ -224,6 +224,18 @@ const WORKING_KEY_REQUIRED = [
   { path: 'solopreneur-equity-dilution-calculator/index.html', mustContain: '每股轮次稀释:' },
   { path: 'solopreneur-unit-economics-calculator/index.html', mustContain: '规模化经济' },
   { path: 'solopreneur-email-list-revenue-calculator/index.html', mustContain: '漏斗指标:' },
+  // P119: tier-2 round 6 (11 keys, 1:1 per engine) — closes remaining static tier-2 gaps
+  { path: 'solopreneur-course-pricing-calculator/index.html', mustContain: '收入预测:' },
+  { path: 'solopreneur-market-size-estimator/index.html', mustContain: '市场健康:' },
+  { path: 'solopreneur-course-pricing-calculator/index.html', mustContain: '发布收入:' },
+  { path: 'solopreneur-course-pricing-calculator/index.html', mustContain: '定价指标:' },
+  { path: 'solopreneur-email-list-revenue-calculator/index.html', mustContain: '列表经济:' },
+  { path: 'solopreneur-freelance-rate-calculator/index.html', mustContain: '目标费率快照:' },
+  { path: 'solopreneur-project-profitability-calculator/index.html', mustContain: '年化利润:' },
+  { path: 'solopreneur-project-profitability-calculator/index.html', mustContain: '净利润与利润率:' },
+  { path: 'solopreneur-freelance-tax-calculator/index.html', mustContain: '实收明细:' },
+  { path: 'solopreneur-unit-economics-calculator/index.html', mustContain: '杠杆影响排名' },
+  { path: 'solopreneur-unit-economics-calculator/index.html', mustContain: '优化杠杆' },
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {

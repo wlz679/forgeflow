@@ -195,6 +195,18 @@ function translateCalcOutput(text: string, lang: Lang): string {
     'engine_breakdown.dilution_per_round',
     'engine_breakdown.scaling_economics',
     'engine_breakdown.funnel_metrics',
+    // P119: tier-2 round 6 (11 keys, 1:1 per engine) — closes remaining static tier-2 gaps
+    'engine_projection.revenue_projection',
+    'engine_health.market',
+    'engine_snapshot.launch_revenue',
+    'engine_snapshot.pricing_metrics',
+    'engine_snapshot.list_economics',
+    'engine_snapshot.target_rate',
+    'engine_snapshot.annualized_profit',
+    'engine_snapshot.net_profit_margin',
+    'engine_breakdown.take_home',
+    'engine_breakdown.lever_impact',
+    'engine_breakdown.optimization_levers',
   ];
   let out = text;
   for (const key of headerKeys) {
