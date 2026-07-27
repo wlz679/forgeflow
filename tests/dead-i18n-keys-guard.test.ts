@@ -96,6 +96,27 @@ const WORKING_KEY_REQUIRED = [
   { path: 'solopreneur-deepseek-api-cost-calculator/index.html', mustContain: '📅 使用场景' },
   { path: 'solopreneur-gemini-api-cost-calculator/index.html', mustContain: '📅 使用场景' },
   { path: 'solopreneur-openai-token-calculator/index.html', mustContain: '📅 使用场景（月度成本）' },
+  // P111: business.section.* (44 engine-instances across 20 cost/ops/valuation
+  // engines). 6 ops-specific keys asserted across all 6 ops engines (24
+  // assertions) + 3 sample assertions for the cross-category keys.
+  // 6 ops engines × 4 ops-specific keys (health/inputs_snapshot/what_if/milestone)
+  ...[
+    'solopreneur-carrying-cost-calculator',
+    'solopreneur-fulfillment-cost-calculator',
+    'solopreneur-inventory-turnover-calculator',
+    'solopreneur-reorder-point-calculator',
+    'solopreneur-stockout-cost-calculator',
+    'solopreneur-supplier-scorecard-calculator',
+  ].flatMap(slug => [
+    { path: `${slug}/index.html`, mustContain: '🩺 健康:' },
+    { path: `${slug}/index.html`, mustContain: '📊 输入快照:' },
+    { path: `${slug}/index.html`, mustContain: '🔄 假设分析:' },
+    { path: `${slug}/index.html`, mustContain: '🎯 里程碑:' },
+  ]),
+  // Cross-category sample assertions
+  { path: 'solopreneur-meeting-cost-calculator/index.html', mustContain: '🔄 假设场景:' },
+  { path: 'solopreneur-employee-cost-calculator/index.html', mustContain: '📐 关键指标:' },
+  { path: 'solopreneur-ltv-calculator/index.html', mustContain: '📊 关键结果:' },
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {
