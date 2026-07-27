@@ -105,6 +105,20 @@ function translateCalcOutput(text: string, lang: Lang): string {
     'engine_snapshot.metrics',
     'engine_snapshot.deal',
     'engine_snapshot.charge',
+    // P114: tier-2 round 2 (12 keys, 1:1 per engine) — fills P113 LTV/CAC
+    // health gap + 4 projection + 3 break-even + 3 breakdown patterns
+    'engine_health.ltv',
+    'engine_health.cac',
+    'engine_projection.annual',
+    'engine_projection.quarterly_annual',
+    'engine_projection.improvement',
+    'engine_projection.volume',
+    'engine_break_even.contractor',
+    'engine_break_even.async_sync',
+    'engine_break_even.deep_shallow',
+    'engine_breakdown.per_employee',
+    'engine_breakdown.multiple',
+    'engine_breakdown.conversion',
   ];
   let out = text;
   for (const key of headerKeys) {

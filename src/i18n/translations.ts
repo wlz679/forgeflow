@@ -104,6 +104,23 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'engine_snapshot.metrics': { en: '💰 Metrics Snapshot:', zh: '💰 指标快照:' },
   'engine_snapshot.deal': { en: '💰 Deal Snapshot:', zh: '💰 交易快照:' },
   'engine_snapshot.charge': { en: '💰 Single Charge Breakdown:', zh: '💰 单次费用明细:' },
+  // P114: tier-2 round 2 (12 keys, 1:1 per engine). P113 missed 2 `🩺 X Health:`
+  // (LTV, CAC) — adding them now to close the gap. Plus 4 projection + 3
+  // break-even + 3 breakdown patterns. 35+ remaining tier-2 headers deferred
+  // (specific X patterns like 'LTV by Tier:', 'Multiple Ranges by Stage:',
+  // engine titles, result lines).
+  'engine_health.ltv': { en: '🩺 LTV Health:', zh: '🩺 LTV 健康:' },
+  'engine_health.cac': { en: '🩺 CAC Health:', zh: '🩺 CAC 健康:' },
+  'engine_projection.annual': { en: '🎯 Annual Projection:', zh: '🎯 年度预测:' },
+  'engine_projection.quarterly_annual': { en: '🎯 Quarterly & Annual Projection:', zh: '🎯 季度与年度预测:' },
+  'engine_projection.improvement': { en: '🎯 Improvement Projection:', zh: '🎯 改善预测:' },
+  'engine_projection.volume': { en: '🎯 Volume Projection:', zh: '🎯 交易量预测:' },
+  'engine_break_even.contractor': { en: '⚖️ Full-Time vs Contractor Break-Even:', zh: '⚖️ 全职 vs 合同工盈亏平衡:' },
+  'engine_break_even.async_sync': { en: '⚖️ Async vs Sync Break-Even:', zh: '⚖️ 异步 vs 同步盈亏平衡:' },
+  'engine_break_even.deep_shallow': { en: '⚖️ Deep Work vs Shallow Work Break-Even:', zh: '⚖️ 深度工作 vs 浅层工作盈亏平衡:' },
+  'engine_breakdown.per_employee': { en: '📐 Per-Employee Breakdown:', zh: '📐 人均明细:' },
+  'engine_breakdown.multiple': { en: '📐 Multiple Determination:', zh: '📐 倍数确定:' },
+  'engine_breakdown.conversion': { en: '📐 Conversion Mechanics:', zh: '📐 转换机制:' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },

@@ -136,6 +136,19 @@ const WORKING_KEY_REQUIRED = [
   { path: 'solopreneur-burn-multiple-rule-of-40-calculator/index.html', mustContain: '💰 指标快照:' },
   { path: 'solopreneur-safe-convertible-note-calculator/index.html', mustContain: '💰 交易快照:' },
   { path: 'solopreneur-stripe-fee-calculator/index.html', mustContain: '💰 单次费用明细:' },
+  // P114: tier-2 round 2 (12 keys, 1:1 per engine)
+  { path: 'solopreneur-ltv-calculator/index.html', mustContain: '🩺 LTV 健康:' },
+  { path: 'solopreneur-cac-calculator/index.html', mustContain: '🩺 CAC 健康:' },
+  { path: 'solopreneur-employee-cost-calculator/index.html', mustContain: '🎯 年度预测:' },
+  { path: 'solopreneur-meeting-cost-calculator/index.html', mustContain: '🎯 季度与年度预测:' },
+  { path: 'solopreneur-productivity-score/index.html', mustContain: '🎯 改善预测:' },
+  { path: 'solopreneur-stripe-fee-calculator/index.html', mustContain: '🎯 交易量预测:' },
+  { path: 'solopreneur-employee-cost-calculator/index.html', mustContain: '⚖️ 全职 vs 合同工盈亏平衡:' },
+  { path: 'solopreneur-meeting-cost-calculator/index.html', mustContain: '⚖️ 异步 vs 同步盈亏平衡:' },
+  { path: 'solopreneur-productivity-score/index.html', mustContain: '⚖️ 深度工作 vs 浅层工作盈亏平衡:' },
+  { path: 'solopreneur-remote-vs-office-calculator/index.html', mustContain: '📐 人均明细:' },
+  { path: 'solopreneur-arr-multiple-valuation-calculator/index.html', mustContain: '📐 倍数确定:' },
+  { path: 'solopreneur-safe-convertible-note-calculator/index.html', mustContain: '📐 转换机制:' },
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {
