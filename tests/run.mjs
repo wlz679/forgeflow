@@ -67,6 +67,7 @@ if (!process.env.RUN_BUILD_TESTS) {
   console.log('[skip-mode]   canonical-url-guard, og-meta-guard, json-ld-guard,');
   console.log('[skip-mode]   json-ld-field-guard, json-ld-faqpage-guard, a11y-guard,');
   console.log('[skip-mode]   page-size-guard, breadcrumb-list-guard,');
-  console.log('[skip-mode]   dead-i18n-keys-guard, js-bundle-size-guard');
+  console.log('[skip-mode]   dead-i18n-keys-guard, js-bundle-size-guard,');
+  console.log('[skip-mode]   css-bundle-size-guard');
 }
 process.exit(exitCode);
