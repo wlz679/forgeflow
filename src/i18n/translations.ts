@@ -121,6 +121,35 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'engine_breakdown.per_employee': { en: '📐 Per-Employee Breakdown:', zh: '📐 人均明细:' },
   'engine_breakdown.multiple': { en: '📐 Multiple Determination:', zh: '📐 倍数确定:' },
   'engine_breakdown.conversion': { en: '📐 Conversion Mechanics:', zh: '📐 转换机制:' },
+  // P115: tier-2 round 3 (22 keys, 1:1 per engine). Specific X patterns + engine-
+  // representative health/snapshot/projection. Source strings vary in colon usage
+  // (e.g., '🎯 LTV Milestones' without colon, others with). 5 namespaces:
+  // engine_projection (8) + engine_health (6) + engine_snapshot (3) +
+  // engine_break_even (3) + engine_breakdown (2). 80+ remaining tier-2 headers
+  // deferred (composite data-driven lines like '📊 Snapshot: ...' with values
+  // embedded, AI cost engine 'Batch pricing' tip lines, engine titles).
+  'engine_projection.ltv_milestones': { en: '🎯 LTV Milestones', zh: '🎯 LTV 里程碑' },
+  'engine_projection.multiple_ranges': { en: '🎯 Multiple Ranges by Stage:', zh: '🎯 分阶段倍数范围:' },
+  'engine_projection.brrrr_targets': { en: '🎯 BRRRR Targets:', zh: '🎯 BRRRR 目标:' },
+  'engine_projection.market_benchmarks': { en: '🎯 Market Benchmarks (Class A/B/C by city tier):', zh: '🎯 市场基准（A/B/C 类，按城市分级）:' },
+  'engine_projection.lender_thresholds': { en: '🎯 Lender Thresholds:', zh: '🎯 贷款机构阈值:' },
+  'engine_projection.list_growth': { en: '🎯 List Growth Projection:', zh: '🎯 列表增长预测:' },
+  'engine_projection.income_ladder': { en: '🎯 Income Ladder:', zh: '🎯 收入阶梯:' },
+  'engine_projection.yield_benchmarks': { en: '🎯 Yield Benchmarks:', zh: '🎯 收益率基准:' },
+  'engine_health.burn': { en: '🩺 Burn Health:', zh: '🩺 烧钱健康:' },
+  'engine_health.cap_rate': { en: '🩺 Cap Rate Health:', zh: '🩺 资本化率健康:' },
+  'engine_health.churn': { en: '🩺 Churn Health:', zh: '🩺 流失健康:' },
+  'engine_health.dscr': { en: '🩺 DSCR Health:', zh: '🩺 DSCR 健康:' },
+  'engine_health.list': { en: '🩺 List Health:', zh: '🩺 列表健康:' },
+  'engine_health.margin': { en: '🩺 Margin Health:', zh: '🩺 利润健康:' },
+  'engine_snapshot.revenue': { en: '💰 Revenue Snapshot:', zh: '💰 收入快照:' },
+  'engine_snapshot.growth': { en: '💰 Growth Snapshot:', zh: '💰 增长快照:' },
+  'engine_snapshot.decision': { en: '💰 Decision Snapshot:', zh: '💰 决策快照:' },
+  'engine_break_even.amortization_milestones': { en: '⚖️ Amortization Milestones:', zh: '⚖️ 摊销里程碑:' },
+  'engine_break_even.side_by_side': { en: '⚖️ Side-by-Side:', zh: '⚖️ 并排对比:' },
+  'engine_break_even.return_composition': { en: '⚖️ Return Composition:', zh: '⚖️ 收益构成:' },
+  'engine_breakdown.cap_rate_math': { en: '📐 Cap Rate Math:', zh: '📐 资本化率计算:' },
+  'engine_breakdown.rate_multipliers': { en: '📐 Rate Multipliers:', zh: '📐 费率倍数:' },
   // P73: legal pages (privacy-policy + terms) — full i18n split (closes P72 audit D4 + D5)
   'legal.privacy.title': { en: 'Privacy Policy — ForgeFlowKit', zh: '隐私政策 — ForgeFlowKit' },
   'legal.privacy.description': { en: 'Privacy policy for ForgeFlowKit. Learn how we handle your data.', zh: 'ForgeFlowKit 隐私政策，了解我们如何处理你的数据。' },
