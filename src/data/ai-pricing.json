@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-07-23",
+  "lastUpdated": "2026-07-27",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1233,6 +1233,14 @@
           "family": "claude4x",
           "contextWindow": "1M",
           "order": 20
+        },
+        "claude-opus-5": {
+          "input": 5,
+          "output": 25,
+          "name": "Claude Opus 5",
+          "family": "claude4x",
+          "contextWindow": "1M",
+          "order": 21
         }
       }
     },
