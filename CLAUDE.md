@@ -72,6 +72,29 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 
 8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 15 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
+## Defense-in-Depth (P110, 2026-07-27)
+
+**Test infrastructure that catches regressions across 6 user-visible dimensions.** All 29 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
+
+| Dimension | Suite count | Coverage | Memory |
+|---|---|---|---|
+| **a11y** | 1 | `a11y-guard` (P95) — `<html lang>`, `<title>`, `<meta desc>`, heading hierarchy, alt text, form labels | [`p95`](memory/p95-a11y-ci-guard-shipped.md) |
+| **i18n (page-level)** | 6 | 4 CJK matrix (en NO + zh HAS) × 2 page layers (tool + blog) + 2 cross-link layers | [`p66b-p83`](memory/MEMORY.md#p62-p83-i18n-defense-in-depth) |
+| **i18n (dead-keys)** | 1 | `dead-i18n-keys-guard` (P103) — defends against orphan-key re-additions | [`p103`](memory/p103-dead-i18n-keys-guard-shipped.md) |
+| **SEO** | 9 | hreflang × 2 (sitemap + html) + sitemap coverage + canonical + og-meta + json-ld × 3 (presence + field + faqpage) | [`p86-p94`](memory/MEMORY.md#seo-defense-in-depth) |
+| **Performance (HTML)** | 1 | `page-size-guard` (P96) — 200 KB per page | [`p96`](memory/p96-page-size-guard-shipped.md) |
+| **Performance (JS)** | 1 | `js-bundle-size-guard` (P106) — 100 KB inline per page | [`p106`](memory/p106-js-bundle-size-guard-shipped.md) |
+| **Performance (CSS)** | 1 | `css-bundle-size-guard` (P107) — 60 KB external + 5 KB inline per page | [`p107`](memory/p107-css-bundle-size-guard-shipped.md) |
+| **Performance (Images)** | 1 | `image-size-guard` (P108) — 500 KB/OG + 80 MB total bundle | [`p108`](memory/p108-image-size-guard-shipped.md) |
+| **Build-dep source guards** | 8 | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count) | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
+| **Total** | **29 build-dep suites** + 8 source-only = **37** | 6 dimensions | |
+
+**Performance size triad complete (P96+P106+P107+P108):** HTML + JS + CSS + images. Each guard has 50–72% headroom from current baseline (e.g. JS max 65 KB ≤ 100 KB threshold).
+
+**Defense-in-depth invariant:** When adding a new feature that affects any of the 6 dimensions, the matching suite should catch the regression. If it doesn't, the suite is incomplete — extend it (don't bypass).
+
+**History:** P106-P108 completed the performance size triad (2026-07-27). P95 opened a11y dimension (2026-07-22). P86-P94 layered SEO defense (2026-07-19/20). P62-P83 closed i18n defense-in-depth (2026-07-24). P32 + P49 were the first codegen-enforced invariants (CLAUDE.md engine count table, source-side guard count).
+
 ## Commands
 
 ```bash
