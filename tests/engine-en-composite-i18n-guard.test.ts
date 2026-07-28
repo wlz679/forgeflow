@@ -22,6 +22,14 @@
 // pattern. Symmetric to P123 (which was zh-side); closes the second-half
 // probe gap on the en side.
 //
+// P129 hardening: en-side mirror of P129 changes.
+//   (1) Probe regex extended to accept both '...' and "..." syntax.
+//   (2) Inner probe loop promoted `if (qMatch) push(...)` to `assert(qMatch, ...);
+//       push(...)` for missing FAQ/how_to_use translation keys.
+//   (3) P124 retains the en-side escape-strip deviation (P128-documented).
+//       The escape-strip is now applied to whichever group matched (single or
+//       double-quoted) — i.e. `(m[1] ?? m[2]).replace(/\\(.)/g, '$1')`.
+//
 // Build dependency:
 //   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern, 33rd build-dep suite)
 
@@ -206,15 +214,15 @@ test('every en engine page renders all 5 user-visible i18n surfaces (holistic gu
 
   for (const slug of allSlugs) {
     const titleMatch = translationsText.match(
-      new RegExp(`'tools\\.${slug}\\.title':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+      new RegExp(`'tools\\.${slug}\\.title':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`)
     );
     const descMatch = translationsText.match(
-      new RegExp(`'tools\\.${slug}\\.description':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+      new RegExp(`'tools\\.${slug}\\.description':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`)
     );
     const firstInputName = slugToFirstInput.get(slug);
     const inputMatch = firstInputName
       ? translationsText.match(
-          new RegExp(`'tools\\.${slug}\\.input\\.${firstInputName}\\.label':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+          new RegExp(`'tools\\.${slug}\\.input\\.${firstInputName}\\.label':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`)
         )
       : null;
     // P128: build arrays of all FAQ q/a + how_to_use probes for this slug.
@@ -228,29 +236,42 @@ test('every en engine page renders all 5 user-visible i18n surfaces (holistic gu
     const faqEn: string[] = [];
     for (let i = 0; i < faqCount; i++) {
       const qMatch = translationsText.match(
-        new RegExp(`'tools\\.${slug}\\.faq\\.${i}\\.q':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+        new RegExp(`'tools\\.${slug}\\.faq\\.${i}\\.q':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`)
       );
       const aMatch = translationsText.match(
-        new RegExp(`'tools\\.${slug}\\.faq\\.${i}\\.a':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+        new RegExp(`'tools\\.${slug}\\.faq\\.${i}\\.a':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`)
       );
-      if (qMatch) faqEn.push(escapeForHtml(qMatch[1].replace(/\\(.)/g, '$1')));
-      if (aMatch) faqEn.push(escapeForHtml(aMatch[1].replace(/\\(.)/g, '$1')));
+      // P129: assert translation key exists — P128 silently skipped missing keys.
+      assert(
+        qMatch,
+        `${slug}: missing FAQ[${i}].q translation key (engine defines ${faqCount} FAQ entries, but translations.ts has no tools.${slug}.faq.${i}.q)`
+      );
+      assert(
+        aMatch,
+        `${slug}: missing FAQ[${i}].a translation key (engine defines ${faqCount} FAQ entries, but translations.ts has no tools.${slug}.faq.${i}.a)`
+      );
+      faqEn.push(escapeForHtml((qMatch[1] ?? qMatch[2] ?? '').replace(/\\(.)/g, '$1')));
+      faqEn.push(escapeForHtml((aMatch[1] ?? aMatch[2] ?? '').replace(/\\(.)/g, '$1')));
     }
     const howToEn: string[] = [];
     for (let i = 0; i < howToCount; i++) {
       const m = translationsText.match(
-        new RegExp(`'tools\\.${slug}\\.how_to_use\\.${i}':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+        new RegExp(`'tools\\.${slug}\\.how_to_use\\.${i}':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`)
       );
-      if (m) howToEn.push(escapeForHtml(m[1].replace(/\\(.)/g, '$1')));
+      assert(
+        m,
+        `${slug}: missing how_to_use[${i}] translation key (engine defines ${howToCount} steps, but translations.ts has no tools.${slug}.how_to_use.${i})`
+      );
+      howToEn.push(escapeForHtml((m[1] ?? m[2] ?? '').replace(/\\(.)/g, '$1')));
     }
     if (!titleMatch || !descMatch) {
       // P121/P122 already catch this — skip with a flag.
       continue;
     }
     probesBySlug.set(slug, {
-      titleEn: titleMatch[1],   // P124: en value, not zh
-      descEn: descMatch[1],
-      inputLabelEn: inputMatch ? inputMatch[1] : null,
+      titleEn: (titleMatch[1] ?? titleMatch[2] ?? '').replace(/\\(.)/g, '$1'),   // P124: en value, not zh
+      descEn: (descMatch[1] ?? descMatch[2] ?? '').replace(/\\(.)/g, '$1'),
+      inputLabelEn: inputMatch ? (inputMatch[1] ?? inputMatch[2] ?? '').replace(/\\(.)/g, '$1') : null,
       faqEn,
       howToEn,
     });
