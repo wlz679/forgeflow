@@ -121,7 +121,9 @@ function buildSlugToFaqCount(): Map<string, number> {
       const faqArr = text.match(/faq:\s*\[([\s\S]*?)\n\s*\],/);
       if (faqArr) {
         // Count `q: '...'` or `q: "..."` lines (one per FAQ entry).
-        const qCount = (faqArr[1].match(/^\s*q:\s*['"]/gm) || []).length;
+        // Match `q:` preceded by `{` or `,` (with optional whitespace) so both
+        // single-line `{ q: "...", a: "..." },` and multi-line formats are counted.
+        const qCount = (faqArr[1].match(/[{,]\s*q:\s*['"]/g) || []).length;
         map.set(slug, qCount);
       }
     }
