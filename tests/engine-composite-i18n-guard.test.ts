@@ -19,6 +19,11 @@
 // key. Without this, slugs with dead input keys in translations.ts would
 // pass via coincidence. Closes the latent false-positive surfaced by P124.
 //
+// P128 extension: probes now cover ALL FAQ q/a entries and ALL how_to_use
+// steps (not just [0]). Walks src/engines/**/*.ts to get the count of FAQ +
+// howToUse entries per slug. Mirrors P127's buildSlugToFirstInput() walker
+// pattern. Closes the symmetric second-half probe gap.
+//
 // Build dependency:
 //   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern, 32nd build-dep suite)
 
@@ -94,6 +99,67 @@ function buildSlugToFirstInput(): Map<string, string> {
   return map;
 }
 
+// Walk src/engines/**/*.ts and build slug → faqCount map.
+// Counts `q: '...'` lines inside `faq: [...]` array. Each FAQ entry has exactly
+// one `q:`, so the count gives the number of entries. Mirrors P127's
+// buildSlugToFirstInput walker pattern.
+function buildSlugToFaqCount(): Map<string, number> {
+  const map = new Map<string, number>();
+  const enginesDir = resolve(root, 'src', 'engines');
+  function walk(dir: string): void {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const st = statSync(full);
+      if (st.isDirectory()) { walk(full); continue; }
+      if (!entry.endsWith('.ts')) continue;
+      if (entry === 'index.ts') continue;
+      const text = readFileSync(full, 'utf-8');
+      const slugMatch = text.match(/slug:\s*['"]([^'"]+)['"]/);
+      if (!slugMatch) continue;
+      const slug = slugMatch[1];
+      // Match faq: [...] array (greedy enough to span the whole array).
+      const faqArr = text.match(/faq:\s*\[([\s\S]*?)\n\s*\],/);
+      if (faqArr) {
+        // Count `q: '...'` or `q: "..."` lines (one per FAQ entry).
+        const qCount = (faqArr[1].match(/^\s*q:\s*['"]/gm) || []).length;
+        map.set(slug, qCount);
+      }
+    }
+  }
+  walk(enginesDir);
+  return map;
+}
+
+// Walk src/engines/**/*.ts and build slug → howToUseCount map.
+// Counts top-level quoted strings inside `howToUse: [...]` array.
+// Each entry is a quoted string on its own line.
+function buildSlugToHowToCount(): Map<string, number> {
+  const map = new Map<string, number>();
+  const enginesDir = resolve(root, 'src', 'engines');
+  function walk(dir: string): void {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const st = statSync(full);
+      if (st.isDirectory()) { walk(full); continue; }
+      if (!entry.endsWith('.ts')) continue;
+      if (entry === 'index.ts') continue;
+      const text = readFileSync(full, 'utf-8');
+      const slugMatch = text.match(/slug:\s*['"]([^'"]+)['"]/);
+      if (!slugMatch) continue;
+      const slug = slugMatch[1];
+      // Match howToUse: [...] array.
+      const howArr = text.match(/howToUse:\s*\[([\s\S]*?)\n\s*\],/);
+      if (howArr) {
+        // Count top-level string lines (each howTo entry is "..." on its own line).
+        const sCount = (howArr[1].match(/^\s*['"]/gm) || []).length;
+        map.set(slug, sCount);
+      }
+    }
+  }
+  walk(enginesDir);
+  return map;
+}
+
 test('every zh engine page renders all 5 user-visible i18n surfaces (holistic guard)', () => {
   ensureBuilt();
 
@@ -122,13 +188,17 @@ test('every zh engine page renders all 5 user-visible i18n surfaces (holistic gu
   // `annualIncome` first). Use the engine's actual first input.
   const slugToFirstInput = buildSlugToFirstInput();
 
+  // P128: walker-driven counts for FAQ + how_to_use coverage.
+  const slugToFaqCount = buildSlugToFaqCount();
+  const slugToHowToCount = buildSlugToHowToCount();
+
   // Per-slug expected strings (subset of all translation keys we use as probes).
   interface Probes {
     titleZh: string;
     descZh: string;
     inputLabelZh: string | null;  // may be null if engine has no i18n'd input
-    faqQZh: string | null;         // may be null if engine has no FAQ
-    howToZh: string | null;        // may be null if engine has no how_to_use i18n
+    faqZh: string[];              // zh values for every faq.${i}.q AND faq.${i}.a
+    howToZh: string[];            // zh values for every how_to_use.${i}
   }
   const probesBySlug = new Map<string, Probes>();
 
@@ -145,12 +215,27 @@ test('every zh engine page renders all 5 user-visible i18n surfaces (holistic gu
           new RegExp(`'tools\\.${slug}\\.input\\.${firstInputName}\\.label':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
         )
       : null;
-    const faqMatch = translationsText.match(
-      new RegExp(`'tools\\.${slug}\\.faq\\.0\\.q':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
-    );
-    const howToMatch = translationsText.match(
-      new RegExp(`'tools\\.${slug}\\.how_to_use\\.0':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
-    );
+    // P128: build arrays of all FAQ q/a + how_to_use probes for this slug.
+    const faqCount = slugToFaqCount.get(slug) ?? 0;
+    const howToCount = slugToHowToCount.get(slug) ?? 0;
+    const faqZh: string[] = [];
+    for (let i = 0; i < faqCount; i++) {
+      const qMatch = translationsText.match(
+        new RegExp(`'tools\\.${slug}\\.faq\\.${i}\\.q':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+      );
+      const aMatch = translationsText.match(
+        new RegExp(`'tools\\.${slug}\\.faq\\.${i}\\.a':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+      );
+      if (qMatch) faqZh.push(escapeForHtml(qMatch[2]));
+      if (aMatch) faqZh.push(escapeForHtml(aMatch[2]));
+    }
+    const howToZh: string[] = [];
+    for (let i = 0; i < howToCount; i++) {
+      const m = translationsText.match(
+        new RegExp(`'tools\\.${slug}\\.how_to_use\\.${i}':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+      );
+      if (m) howToZh.push(escapeForHtml(m[2]));
+    }
     if (!titleMatch || !descMatch) {
       // P121/P122 already catch this — skip with a flag.
       continue;
@@ -159,8 +244,8 @@ test('every zh engine page renders all 5 user-visible i18n surfaces (holistic gu
       titleZh: titleMatch[2],
       descZh: descMatch[2],
       inputLabelZh: inputMatch ? inputMatch[3] : null,
-      faqQZh: faqMatch ? faqMatch[2] : null,
-      howToZh: howToMatch ? howToMatch[2] : null,
+      faqZh,
+      howToZh,
     });
   }
 
@@ -191,11 +276,15 @@ test('every zh engine page renders all 5 user-visible i18n surfaces (holistic gu
     if (probes.inputLabelZh && !rawHtml.includes(escapeForHtml(probes.inputLabelZh))) {
       violations.push(`${slug}: missing first input label "${probes.inputLabelZh}"`);
     }
-    if (probes.faqQZh && !rawHtml.includes(escapeForHtml(probes.faqQZh))) {
-      violations.push(`${slug}: missing first FAQ question (zh length ${probes.faqQZh.length})`);
+    for (let i = 0; i < probes.faqZh.length; i++) {
+      if (!rawHtml.includes(probes.faqZh[i])) {
+        violations.push(`${slug}: missing FAQ entry ${i} (zh length ${probes.faqZh[i].length})`);
+      }
     }
-    if (probes.howToZh && !rawHtml.includes(escapeForHtml(probes.howToZh))) {
-      violations.push(`${slug}: missing first how_to_use step (zh length ${probes.howToZh.length})`);
+    for (let i = 0; i < probes.howToZh.length; i++) {
+      if (!rawHtml.includes(probes.howToZh[i])) {
+        violations.push(`${slug}: missing how_to_use step ${i} (zh length ${probes.howToZh[i].length})`);
+      }
     }
   }
 
