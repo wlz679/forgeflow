@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-28 (P126 CHANGELOG catch-up v6 — P121-P125 engine-page i18n + meta-guard)
+> **最后更新:** 2026-07-28 (P130 CHANGELOG catch-up v7 — P123/P124 hardening trilogy covering P126-P129)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 792 across 42 active days (2026-05-31 → 2026-07-28, ~8 weeks)
+> **Total commits:** 803 across 42 active days (2026-05-31 → 2026-07-28, ~8 weeks)
 
 ---
 
@@ -34,10 +34,13 @@
 - ~~Candidate: engine descriptions i18n audit (parallel to P121)~~ → ✅ **P122 shipped: 100/100 audit + 31st build-dep suite guard (200 page checks)**
 - ~~Candidate: FAQ / how_to_use / input labels i18n audit (sibling invariants)~~ → ✅ **P123 + P124 shipped: 5-surface composite i18n guards (32nd + 33rd build-dep suites, 1000 page checks)**
 - ~~Candidate: CHANGELOG catch-up (next time gap exceeds ~10 commits)~~ → ✅ **P126 shipped: catch-up v6 (this batch, M22.0 covering P121-P125)**
-- Candidate: P123 fix — apply `buildSlugToFirstInput()` walker to P123 too (closes latent false-positive on freelance-rate-calculator dead-key)
-- Candidate: FAQ answers + how_to_use[1+] coverage — extend P123/P124 to second-half of these arrays (currently only `[0]` is probed)
+- ~~Candidate: CHANGELOG catch-up (next time gap exceeds ~10 commits)~~ → ✅ **P130 shipped: catch-up v7 (this batch, M23.0 covering P126-P129)**
+- ~~Candidate: P123 fix — apply `buildSlugToFirstInput()` walker to P123 too (closes latent false-positive on freelance-rate-calculator dead-key)~~ → ✅ **P127 shipped: `buildSlugToFirstInput()` walker applied to P123 (closes latent false-positive on `solopreneur-freelance-rate-calculator`)**
+- ~~Candidate: FAQ answers + how_to_use[1+] coverage — extend P123/P124 to second-half of these arrays (currently only `[0]` is probed)~~ → ✅ **P128 shipped: `buildSlugToFaqCount()` + `buildSlugToHowToCount()` walkers; P123/P124 now probe ALL FAQ q/a + how_to_use entries (~1179 per-language probes, ~2358 across P123+P124)**
 - Candidate: Single-test split — extract P123 into 4 narrower tests (title-wiring, desc-wiring, input-wiring, faq-wiring) for better failure isolation
 - Candidate: CLAUDE.md additional invariants — extend P125 to assert total commit count, last-ship date, category names A/B/C/...
+- Candidate: input labels i18n backfill — verify scope; P129 walker now correctly probes all 3 cohort-retention input labels that were silently skipped, but no other engines flagged; scope unclear without audit
+- Candidate: P123/P124 defensive audit — verify no remaining silent-skip paths post-P129 (walker triplet + assert promotion should be comprehensive, but a 3rd-party review could find latent gaps)
 
 ---
 
@@ -262,6 +265,76 @@ P121/P122 are single-invariant guards (most user-visible strings); P123/P124 are
 - **[P125] Meta-guard catches its own addition** — adding P125 to the listing changes the count it asserts. Closed in 2 steps (29→33, then 33→34). Pattern: every meta-guard needs "this addition will increment me" handled.
 
 📦 ship log: [`memory/p121-engine-titles-i18n-guard-shipped.md`](memory/p121-engine-titles-i18n-guard-shipped.md) · [`memory/p122-engine-descriptions-i18n-guard-shipped.md`](memory/p122-engine-descriptions-i18n-guard-shipped.md) · [`memory/p123-composite-engine-i18n-guard-shipped.md`](memory/p123-composite-engine-i18n-guard-shipped.md) · [`memory/p124-en-composite-i18n-guard-shipped.md`](memory/p124-en-composite-i18n-guard-shipped.md) · [`memory/p125-claude-md-invariant-matrix-guard-shipped.md`](memory/p125-claude-md-invariant-matrix-guard-shipped.md)
+
+---
+
+## [M23.0] - 2026-07-28 — P123/P124 hardening trilogy (P126-P129)
+
+🛡️ **P123/P124 composite i18n guards (32nd + 33rd build-dep suites) hardened via in-place modifications only — 0 new build-dep suites, 0 new production code, 3 architectural fixes (walker triplet + assert promotion + probe regex extension).** 4 batches · 10 commits (+1 P130 itself) · 0 production engine count change. Walker triplet now covers inputs + FAQ + how_to_use across both zh and en (P124 mirrors P128 deviation). Assert promotion closes the silent-skip class of false positives that had been latent since P123 first shipped.
+
+### Added (catch-up — P126)
+- **[docs] `CHANGELOG.md` M22.0 section** (P126) — closed the documentation gap for P121-P125 (engine-page i18n guards + meta-guard); 3-way sync `0\t0`; established the "before M22.0 → after M22.0" engineering-metrics table format that P130 mirrors; +81 lines (`CHANGELOG.md`: 766 → 847)
+
+### Added (P123 walker fix — P127)
+- **[tests] `tests/engine-composite-i18n-guard.test.ts`** (P127 — modified in place, zh-side) — applied `buildSlugToFirstInput()` walker verbatim from P124; closes latent false-positive on `solopreneur-freelance-rate-calculator` (zh description coincidentally contained "你的技能", masking dead-key probe); no probe count change but probe correctness upgraded from coincidentally-passing to verified
+
+### Added (FAQ + how_to_use coverage — P128)
+- **[tests] `tests/engine-composite-i18n-guard.test.ts`** (P128 — zh-side) + **`tests/engine-en-composite-i18n-guard.test.ts`** (P128 — en-side) — added `buildSlugToFaqCount()` + `buildSlugToHowToCount()` walkers; probe loop extended from `[0]`-only to **all entries**; per-engine probe count: 5 → ~20 (FAQ q[0..N-1] + FAQ a[0..N-1] + how_to_use[0..M-1]); aggregate: ~200 → **~2358** total across P123+P124 (541 FAQ + 638 how_to_use entries per language); P124 retains en-side escape-strip deviation (`\\(.)` → `.`) for apostrophe handling; **single-line FAQ regex bug caught during T1 review** (initial `/^\s*q:\s*['"]/gm` assumed multi-line format; 95/100 engines use single-line `{ q: '...' }` — fixed via `/[{,]\s*q:\s*['"]/g`)
+
+### Added (assert + regex fix — P129)
+- **[tests] `tests/engine-composite-i18n-guard.test.ts`** (P129 — zh-side) + **`tests/engine-en-composite-i18n-guard.test.ts`** (P129 — en-side) — **two architectural fixes in one**: (1) probe regex extended from single-quote-only `'(?:[^'\\]|\\.)*?'` to alternation `(?:\'(?:[^'\\]|\\.)*?\'|"(?:[^"\\]|\\.)*?")` (4 capture groups, post-match extraction via `match[1] ?? match[2]` / `match[3] ?? match[4]`); (2) `if (qMatch) faqZh.push(...)` silent-skip path promoted to `assert(qMatch, ...)` loud-fail at 3 inner sites per file; (3) **incidental latent-bug fix**: P128's `inputMatch[3]` against a 2-group regex was always undefined; P129's 4-group regex + `??` correctly extracts the zh value; **discovered mid-execution**: applying assert promotion surfaced 16 false-positive "missing translation" failures — root cause was the regex-too-narrow bug, not missing translations; user chose Option A (extend regex + complete P129) over Option B (re-format translations); **16 silently-skipped keys across 8 engines** (13 FAQ/howTo across 7 engines + 3 input.labels on `solopreneur-cohort-retention-calculator`)
+
+### Engineering metrics
+
+| Metric | Before (M22.0) | After (M23.0) |
+|---|---|---|
+| Engines | 100 (frozen) | 100 (frozen) |
+| New batches | 5 (P121-P125) | **4** (P126-P129) |
+| New commits | 11 (10 + 1 cron) | **11** (10 + 1 P130 itself) |
+| Build-dep suites | 34 | **34** (unchanged — all 3 non-catch-up batches modify P123/P124 in-place) |
+| Source-only guards | 8 | 8 (unchanged) |
+| Defense-in-depth dimensions | 6 | 6 (unchanged — M23.0 stays within i18n dimension) |
+| P123+P124 probe count | ~1000 (5×100×2) | **~2358** ((541 FAQ + 638 how_to_use) × 2 langs; P128 authoritative claim; P129 double-quote regex restores 16 silently-skipped) |
+| Walker count | 1 (`buildSlugToFirstInput`, P124 only) | **3** (`buildSlugToFirstInput` zh+en + `buildSlugToFaqCount` zh+en + `buildSlugToHowToCount` zh+en = 6 walker instances across 2 files) |
+| Silent-skip failures | 16 (P128 era, undetected) | **0** (P129 assert promotion makes them loud) |
+| pnpm check baseline | `1198/0/0` | `1200/0/0` (P127/P128/P129 don't add test cases; P129 baseline test count unchanged at 1200) |
+| pnpm build | 449 dist pages | 449 dist pages |
+| Total commits | 792 | **803** (+11 since P126: P127×2 + P128×4 + P129×4 + P130×1) |
+| Active days | 42 | 42 (same day chain) |
+
+### Walker pattern cumulative (P127 + P128 + P129)
+
+| Batch | Walker added | Purpose | Probes before | Probes after | Asymmetry note |
+|---|---|---|---|---|---|
+| **P127** | `buildSlugToFirstInput()` (zh) | Fix **WHICH** input key to probe (closes dead-key false-positive) | 1 (probe `input.skill.label` which doesn't exist on engine) | 1 (probe `input.annualIncome.label` which does) | zh-only in P127; P124 already had it from P124 ship |
+| **P128** | `buildSlugToFaqCount()` (zh+en) | Extend FAQ coverage from `[0]` to **all** entries | FAQ q[0] only | FAQ q[0..N-1] + FAQ a[0..N-1] | En retains `\\(.)` → `.` escape-strip (apostrophe handling) |
+| **P128** | `buildSlugToHowToCount()` (zh+en) | Extend how_to_use coverage from `[0]` to **all** entries | how_to_use[0] only | how_to_use[0..M-1] | Same en escape-strip deviation |
+| **P129** | (no new walker) | Assert `qMatch` exists + extend regex to 4-group alternation | Probes silently skipped if regex didn't match | Probes assert presence; 16 previously-silent keys now probed | Regex now accepts both single-quoted `'...'` and double-quoted `"..."` translation values |
+
+P123/P124 walker triplet = `buildSlugToFirstInput()` + `buildSlugToFaqCount()` + `buildSlugToHowToCount()`. All three use the same recursive directory walk + `slug:` match + array-extract pattern (verbatim copy from P124 walker).
+
+### Audit findings (P126-P129)
+
+| Batch | Audit result | Defects caught |
+|---|---|---|
+| **P126** | M22.0 section inserted; `CHANGELOG.md`: 766 → 847 lines | 0 (this batch is catch-up itself) |
+| **P127** | 100/100 zh engines: first input label correctly probed (P124 walker now applied to P123) | 1 latent false-positive on `solopreneur-freelance-rate-calculator` (dead-key coincidence — P123's "first input.X.label match in translations.ts" probe hit dead `input.skill.label` whose zh value coincidentally appeared in `<meta name="description">`) |
+| **P128** | 100/100 engines: all FAQ q + FAQ a + how_to_use entries probed (zh + en, P124 mirrored) | 0 broken pages; verified across **541 FAQ + 638 how_to_use** entries per language (per `tests/scratch-p128-fullscope.mjs`); critical bug caught during T1 review: walker regex matched theory (multi-line `q: '...'`) but reality was single-line `{ q: '...' }` format in 95/100 engines |
+| **P129** | 100/100 engines: assert promotes silent skip → loud fail; probe regex extended to double-quote alternation | **16 silently-skipped keys across 8 engines**: 13 FAQ/howTo across 7 engines (`solopreneur-burn-rate-calculator` ×2, `solopreneur-equity-dilution-calculator` ×1, `solopreneur-freelance-rate-calculator` ×1, `solopreneur-market-size-estimator` ×1, `solopreneur-productivity-score` ×1, `solopreneur-revenue-projector` ×6, `solopreneur-saas-valuation-calculator` ×1) + 3 input.labels on `solopreneur-cohort-retention-calculator` (`cohortSize`, `m1Retention`, `m2Retention`) |
+
+### Ship drama
+
+- **[P126] Edit anchor too long** — first Edit attempt for M22.0 insertion used a multi-line anchor including the M21.0 ship-log line (with multiple Unicode chars · → 📦). Edit tool reported "String to replace not found". Resolution: shortened anchor to `---` blank `---` blank `## [M16.0]` — succeeded on second attempt. **Lesson: prefer minimal anchors when inserting in unicode-heavy text.** (carried from P126 ship memory)
+- **[P127] First-run FAIL (intended)** — applying `buildSlugToFirstInput()` walker surfaced `solopreneur-freelance-rate-calculator` had a dead `input.skill.label` key whose zh value coincidentally appeared in `<meta name="description">`. P123's audit conclusion "0 broken pages" was actually "0 broken pages + 1 latent false-negative". Walker fixes the probe.
+- **[P127] TS stale-IDE warnings** — `readdirSync`/`statSync`/`join`/`buildSlugToFirstInput` flagged as declared-but-unused before all Edits wired them up. Cleared after `pnpm exec tsc --noEmit` (exit 0). Same P52/P53a/P124 stale-IDE-cache pattern.
+- **[P128] Single-line FAQ regex miss** — initial walker regex `/^\s*q:\s*['"]/gm` only matched multi-line format where `q:` is at line start. 95/100 engines use single-line `{ q: '...' }` format. Walker returned 0 for those engines → probe loop ran 0 times → test passed by NOT testing what it claims. **Caught by T1 reviewer**, not by T1 implementer's own verification. **Fix**: `[{,]\s*q:\s*['"]/g` (matches `q:` preceded by `{` or `,`). **Lesson for P-series implementers**: always sanity-check walker output against real data, not just the regex's theoretical coverage.
+- **[P128] Subagent session interruption recovery** — T2 implementer stopped mid-task without committing; walker code + probe loop were already complete and correct, just no commit. Recovered by verifying walker output + tsc + test inline, then committing.
+- **[P129] Architectural discovery mid-execution** — original P129 scope was just `assert(qMatch, ...)` promotion. Applying it surfaced 16 false-positive "missing translation" failures. Root cause: P128's probe regex was too narrow (single-quote only; double-quoted translation values for apostrophe-containing en strings weren't matched). User chose **Option A (extend regex + complete P129)** over Option B (re-format 16 keys to single-quote) — minimum-effort root cause fix. Root-cause fix principle: extend the test, don't edit the production data to satisfy the test.
+- **[P129] Latent inputMatch[3] bug fixed incidentally** — P128's `inputLabelZh = inputMatch[3]` against a 2-capture-group regex was always undefined, so P128's inputLabelZh probe was always null (silent skip). P129's 4-group regex + `??` correctly extracts. The 3 input.label keys on `solopreneur-cohort-retention-calculator` were also silently skipped by this bug — same regex fix repairs both classes.
+- **[P129] Header comment doc drift fix** — reviewer's "16 keys across 7 engines" vs reality "13 FAQ/howTo across 7 + 3 input.labels on 1 = 16 total across 8 engines". A 6-line fix commit (`55cf1a7`) closed the doc drift before T2.
+- **[P130] Plan-spec discovery** — initial candidate pool listed P130 = "P121-P129 = 9 batches" based on P120 memory assumption. Pre-flight verification (git log + CHANGELOG header `最后更新: P126`) revealed last catch-up was P126 (not P120), making actual coverage **4 batches (P126-P129)**, not 9. Scope corrected before plan write. **Lesson: candidate-pool claims in P-series memory files drift; always pre-flight verify the actual prior catch-up SHA against CHANGELOG header before writing the new batch's scope.**
+
+📦 ship log: [`memory/p126-changelog-catchup-v6-shipped.md`](memory/p126-changelog-catchup-v6-shipped.md) · [`memory/p127-p123-latent-false-positive-fix-shipped.md`](memory/p127-p123-latent-false-positive-fix-shipped.md) · [`memory/p128-faq-howtouse-coverage-extension-shipped.md`](memory/p128-faq-howtouse-coverage-extension-shipped.md) · [`memory/p129-missing-translation-assertion-shipped.md`](memory/p129-missing-translation-assertion-shipped.md)
 
 ---
 
