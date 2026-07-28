@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-27 (P120 CHANGELOG catch-up v5 — P117-P119 i18n tier-2 closure)
+> **最后更新:** 2026-07-28 (P126 CHANGELOG catch-up v6 — P121-P125 engine-page i18n + meta-guard)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 781 across 42 active days (2026-05-31 → 2026-07-27, ~8 weeks)
+> **Total commits:** 792 across 42 active days (2026-05-31 → 2026-07-28, ~8 weeks)
 
 ---
 
@@ -27,9 +27,17 @@
 - Candidate: per-engine i18n keys for cost/ops/valuation headers (~20+ keys, large scope, last i18n gap) → ✅ closed by P111
 - Candidate: tier-2 single-engine i18n keys (~50+ keys, projection/break-even/breakdown patterns) → ✅ **P113+P114+P115+P117+P118+P119 closed 1:1 per-engine static tier-2 (113 keys total)**
 - Candidate: tier-2 round 7 — composite data-driven lines (NEW approach: source-level translation or customFn-based) — likely 50-100 candidates; AI cost tip lines, dynamic projection rows, bar chart labels
-- Candidate: codegen-enforce defense-in-depth matrix (automate CLAUDE.md snapshot)
+- Candidate: codegen-enforce defense-in-depth matrix (automate CLAUDE.md snapshot) → ✅ **P125 shipped: `tests/claude-md-invariant-guard.test.ts` meta-guard (34th build-dep suite, 4 invariants)**
 - Candidate: CDN cache-control guard (production-side, not testable locally)
 - Candidate: audit script migration (extract parser logic to shared library)
+- ~~Candidate: engine titles i18n audit (verify 100/100 `tools.${slug}.title` translate)~~ → ✅ **P121 shipped: 100/100 audit + 30th build-dep suite guard (200 page checks)**
+- ~~Candidate: engine descriptions i18n audit (parallel to P121)~~ → ✅ **P122 shipped: 100/100 audit + 31st build-dep suite guard (200 page checks)**
+- ~~Candidate: FAQ / how_to_use / input labels i18n audit (sibling invariants)~~ → ✅ **P123 + P124 shipped: 5-surface composite i18n guards (32nd + 33rd build-dep suites, 1000 page checks)**
+- ~~Candidate: CHANGELOG catch-up (next time gap exceeds ~10 commits)~~ → ✅ **P126 shipped: catch-up v6 (this batch, M22.0 covering P121-P125)**
+- Candidate: P123 fix — apply `buildSlugToFirstInput()` walker to P123 too (closes latent false-positive on freelance-rate-calculator dead-key)
+- Candidate: FAQ answers + how_to_use[1+] coverage — extend P123/P124 to second-half of these arrays (currently only `[0]` is probed)
+- Candidate: Single-test split — extract P123 into 4 narrower tests (title-wiring, desc-wiring, input-wiring, faq-wiring) for better failure isolation
+- Candidate: CLAUDE.md additional invariants — extend P125 to assert total commit count, last-ship date, category names A/B/C/...
 
 ---
 
@@ -180,6 +188,80 @@ Remaining untranslated output is **composite data-driven lines** (NOT 1:1 per en
 📦 ship log: [`memory/p117-tier2-round4-headers-i18n-shipped.md`](memory/p117-tier2-round4-headers-i18n-shipped.md) · [`memory/p118-tier2-round5-headers-i18n-shipped.md`](memory/p118-tier2-round5-headers-i18n-shipped.md) · [`memory/p119-tier2-round6-headers-i18n-shipped.md`](memory/p119-tier2-round6-headers-i18n-shipped.md)
 
 ---
+
+## [M22.0] - 2026-07-28 — Engine-page i18n + meta-guard (P121-P125)
+
+🛡️ **5 new build-dep CI guards: 4 sibling engine-page i18n guards (titles + descriptions + zh composite + en composite) + 1 meta-guard (CLAUDE.md invariant matrix).** 5 batches · 10 commits · 0 production engine count change. Engine i18n coverage now end-to-end tested across 5 user-visible surfaces (1400 page checks). Meta-guard closes the documentation-drift class that accumulated across P121-P124 (CLAUDE.md "29 build-dep suites" silently drifted to 34).
+
+### Added (engine-page i18n guards — P121+P122)
+- **[tests] `tests/engine-titles-i18n-guard.test.ts`** (P121) — 30th build-dep suite; audit result: 100/100 engines already have `tools.${slug}.title` (en + zh); regression-proof guard for future additions/removals; 2 test cases (en + zh, 200 page checks); closes "engine title is the most user-visible string" gap
+- **[tests] `tests/engine-descriptions-i18n-guard.test.ts`** (P122) — 31st build-dep suite; sibling of P121 for descriptions; balanced-brace regex matcher handles apostrophes in source; 2 test cases (en + zh, 200 page checks); `escapeForHtml()` extended for `<` and `>` HTML-escape
+
+### Added (composite engine-page i18n guards — P123+P124)
+- **[tests] `tests/engine-composite-i18n-guard.test.ts`** (P123) — 32nd build-dep suite; **holistic zh-side**: 5 surfaces × 100 zh pages = 500 page checks in one test (title + description + first input label + first FAQ question + first how_to_use step); integrator of P121+P122 plus 3 more surfaces
+- **[tests] `tests/engine-en-composite-i18n-guard.test.ts`** (P124) — 33rd build-dep suite; **en-side sibling** of P123; 500 en page checks; closes latent P123 false-positive (zh description coincidentally contained "你的技能") via `buildSlugToFirstInput()` engine-walker pattern
+
+### Added (meta-guard — P125)
+- **[tests] `tests/claude-md-invariant-guard.test.ts`** (P125) — 34th build-dep suite; **meta-guard** that asserts CLAUDE.md numeric invariants match reality (4 invariants: build-dep suite count + Defense-in-Depth arithmetic + engine count + category count); first-run correctly failed with "CLAUDE.md says 29, reality says 33" — closed the accumulated 5-batch drift in same batch (CLAUDE.md: 29→34 build-dep, 37→42 total)
+
+### Engineering metrics
+
+| Metric | Before (M21.0) | After (M22.0) |
+|---|---|---|
+| Engines | 100 (frozen) | 100 (frozen) |
+| New batches | 3 (P117-P119) | **5** (P121-P125) |
+| New commits | 6 | **10** |
+| Build-dep suites | 29 | **34** (+5) |
+| Source-only guards | 8 | 8 (unchanged) |
+| Defense-in-depth dimensions | 6 | 6 (unchanged — M22.0 stays within existing dimensions) |
+| New page checks (engine i18n) | 0 | **1400** (P121×200 + P122×200 + P123×500 + P124×500) |
+| Meta-guard invariants | 0 | **4** |
+| pnpm check baseline | `1196/0/0` | `1198/0/0` (P121: +2 cases, P122: +2 cases) |
+| pnpm build | 449 dist pages | 449 dist pages |
+| Total commits | 781 | **792** (+11: 10 P121-P125 + 1 LiteLLM cron sync) |
+| Active days | 42 | 42 (same day chain) |
+
+### P121/P122/P123/P124 invariant stack
+
+| Batch | Pattern | Suites | Page checks |
+|---|---|---|---|
+| P121 | Single: title (en+zh) | 30th | 200 |
+| P122 | Single: description (en+zh) | 31st | 200 |
+| **P123** | **Holistic: 5 surfaces × 100 zh** | **32nd** | **500** |
+| **P124** | **Holistic: 5 surfaces × 100 en** | **33rd** | **500** |
+| **Total** | | **4 suites, 1400 checks** | |
+
+P121/P122 are single-invariant guards (most user-visible strings); P123/P124 are holistic integrators. Together they cover both languages × all 5 user-visible surfaces. P124 closes the latent P123 bug on the en side via the engine-walker pattern.
+
+### Meta-guard invariant matrix (P125)
+
+| # | Invariant | Source of truth | Drift caught in this thread |
+|---|---|---|---|
+| 1 | Build-dep suite count | `tests/run.mjs` skip-mode listing | 29 → 34 (5 drifts) |
+| 2 | Defense-in-Depth arithmetic | "N build-dep + N source-only = total" | (cross-check) |
+| 3 | Engine count | `tests/engine-count.ts:EXPECTED_ENGINE_COUNT` | (locked at 100 since P22b) |
+| 4 | Category count | `src/data/categories.ts` letter IDs | (locked at 15 since P46) |
+
+### Audit findings (P121-P124)
+
+| Batch | Audit result | Defects |
+|---|---|---|
+| P121 | 100/100 engines have `tools.${slug}.title` (en+zh) | 0 |
+| P122 | 100/100 engines have `tools.${slug}.description` (en+zh) | 0 |
+| P123 | 100/100 zh pages: title + desc + first FAQ + first how_to_use reach page; first input label: 71/100 reach (29 use engine hardcoded fallback) | 0 broken pages |
+| P124 | 100/100 en pages: all 5 surfaces reach page | 0 broken pages |
+
+### Ship drama
+- **[P121] `&` HTML-escape trap** — `Burn Multiple & Rule of 40 Calculator` (en) failed first run; `&` escaped to `&amp;` by Astro. Fixed via `escapeForHtml()` helper. Same pattern as P118 "Your Traffic & Conversions:".
+- **[P122] Ran clean on first try** — `escapeForHtml()` extended for `<`/`>` proactively.
+- **[P123] Fancy Unicode quote trap** — source translations use Unicode `""` (U+201C/U+201D) which Astro converts to `&quot;` in dist HTML. Extended `escapeForHtml()` to also handle `"` → `&quot;` and `'` → `&#39;`. **Lesson: HTML escape normalization is the recurring risk for substring-match i18n tests** (same trap as P121's `&` and P118's `&`).
+- **[P123] Initial regex anchor bug** — `/^'tools\./gm` failed because translations.ts lines are indented; fixed to `/^\s*'tools\./gm`.
+- **[P124] Latent P123 bug surfaced** — first-run failed on `solopreneur-freelance-rate-calculator` missing "Your Skill" (input label). Root cause: P123's "first match in translations.ts" probe pattern can hit dead keys. P124 added `buildSlugToFirstInput()` engine-walker; P123 fix deferred to P126+ candidate.
+- **[P124] TypeScript stale-IDE warnings** — declared-but-unused imports flagged before second Edit wired them up. Stale TS server cache pattern (P52/P53a-known).
+- **[P125] 5-episode ship drama** — (1) path typo `tests/lib/engine-count.ts` doesn't exist (actual: `tests/engine-count.ts`); (2) type annotation regex miss (regex didn't allow `: number` between identifier and `=`); (3) first-run FAIL (intended — surfaced "29 → 33" drift); (4) suite-count double-jump (after adding P125 itself, count became 34); (5) multi-suite-per-line skip-mode regex (comma-separated names on single lines need split+filter).
+- **[P125] Meta-guard catches its own addition** — adding P125 to the listing changes the count it asserts. Closed in 2 steps (29→33, then 33→34). Pattern: every meta-guard needs "this addition will increment me" handled.
+
+📦 ship log: [`memory/p121-engine-titles-i18n-guard-shipped.md`](memory/p121-engine-titles-i18n-guard-shipped.md) · [`memory/p122-engine-descriptions-i18n-guard-shipped.md`](memory/p122-engine-descriptions-i18n-guard-shipped.md) · [`memory/p123-composite-engine-i18n-guard-shipped.md`](memory/p123-composite-engine-i18n-guard-shipped.md) · [`memory/p124-en-composite-i18n-guard-shipped.md`](memory/p124-en-composite-i18n-guard-shipped.md) · [`memory/p125-claude-md-invariant-matrix-guard-shipped.md`](memory/p125-claude-md-invariant-matrix-guard-shipped.md)
 
 ---
 
@@ -763,4 +845,4 @@ Engine count frozen at 100. Project enters maintenance / documentation phase.
 - **🟢 Active vs 🔒 Locked milestone** — M16.0 起为 maintenance mode，p16+ batches 主要是 INDEX/docs/refactor，不再扩 engine count
 - **完整 commit 历史** — `git log --oneline` (711 commits); 或 `git log --oneline --grep "p1[0-9]"` 按 P-series filter
 - **Cross-references** — 每个 milestone 末尾链接到 `memory/pNN-*-shipped.md` ship memory + `docs/superpowers/plans/*.md` plan + `docs/superpowers/specs/*.md` spec（如果存在）
-- **Last CHANGELOG update** — P120 (2026-07-27); covers P117-P119 batches (3 batches, 6 commits) in M21.0 milestone
+- **Last CHANGELOG update** — P126 (2026-07-28); covers P121-P125 batches (5 batches, 10 commits) in M22.0 milestone
