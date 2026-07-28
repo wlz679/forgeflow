@@ -14,13 +14,18 @@
 //   the FAQ `.map` call), this composite test fails immediately. Single test
 //   = single source of truth for "all user-visible i18n on this page works".
 //
+// P127 fix: the input-label probe now uses the engine-walker pattern from
+// P124 (buildSlugToFirstInput()) to find the correct input.${name}.label
+// key. Without this, slugs with dead input keys in translations.ts would
+// pass via coincidence. Closes the latent false-positive surfaced by P124.
+//
 // Build dependency:
 //   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern, 32nd build-dep suite)
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { resolve, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const root = resolve(import.meta.dirname, '..');
@@ -51,6 +56,44 @@ function escapeForHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
+// Walk src/engines/**/*.ts and build slug → firstInputName map.
+// Mirrors P124's walker. Without this, P123's "first input.X.label match
+// in translations.ts" probes the wrong key for slugs where translations.ts
+// has dead input keys (e.g. solopreneur-freelance-rate-calculator has
+// `input.skill.label` in translations.ts but no `skill` input in the engine
+// — page renders `annualIncome` first). Using the engine's actual first
+// input name gives the correct probe.
+function buildSlugToFirstInput(): Map<string, string> {
+  const map = new Map<string, string>();
+  const enginesDir = resolve(root, 'src', 'engines');
+  function walk(dir: string): void {
+    for (const entry of readdirSync(dir)) {
+      const full = join(dir, entry);
+      const st = statSync(full);
+      if (st.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!entry.endsWith('.ts')) continue;
+      // Skip index files (no engine definition)
+      if (entry === 'index.ts') continue;
+      const text = readFileSync(full, 'utf-8');
+      const slugMatch = text.match(/slug:\s*['"]([^'"]+)['"]/);
+      if (!slugMatch) continue;
+      const slug = slugMatch[1];
+      // Match the inputs: [...] array — first `name:` inside is the first input.
+      const inputsArr = text.match(/inputs:\s*\[([\s\S]*?)\]/);
+      if (!inputsArr) continue;
+      const nameMatch = inputsArr[1].match(/name:\s*['"]([a-zA-Z][a-zA-Z0-9_-]*)['"]/);
+      if (nameMatch) {
+        map.set(slug, nameMatch[1]);
+      }
+    }
+  }
+  walk(enginesDir);
+  return map;
+}
+
 test('every zh engine page renders all 5 user-visible i18n surfaces (holistic guard)', () => {
   ensureBuilt();
 
@@ -71,6 +114,14 @@ test('every zh engine page renders all 5 user-visible i18n surfaces (holistic gu
     `Expected 100 engine slugs, found ${allSlugs.length} — P22b lock broken?`
   );
 
+  // P127 fix: walk engine files to map slug → first input name. The naive
+  // "first input.X.label match in translations.ts" approach probes the wrong
+  // key for slugs where translations.ts has dead input keys (e.g.
+  // solopreneur-freelance-rate-calculator has `input.skill.label` in
+  // translations.ts but no `skill` input in the engine — page renders
+  // `annualIncome` first). Use the engine's actual first input.
+  const slugToFirstInput = buildSlugToFirstInput();
+
   // Per-slug expected strings (subset of all translation keys we use as probes).
   interface Probes {
     titleZh: string;
@@ -88,9 +139,12 @@ test('every zh engine page renders all 5 user-visible i18n surfaces (holistic gu
     const descMatch = translationsText.match(
       new RegExp(`'tools\\.${slug}\\.description':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
     );
-    const inputMatch = translationsText.match(
-      new RegExp(`'tools\\.${slug}\\.input\\.([a-zA-Z][a-zA-Z0-9_-]*)\\.label':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
-    );
+    const firstInputName = slugToFirstInput.get(slug);
+    const inputMatch = firstInputName
+      ? translationsText.match(
+          new RegExp(`'tools\\.${slug}\\.input\\.${firstInputName}\\.label':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
+        )
+      : null;
     const faqMatch = translationsText.match(
       new RegExp(`'tools\\.${slug}\\.faq\\.0\\.q':\\s*\\{\\s*en:\\s*'((?:[^'\\\\]|\\\\.)*?)',\\s*zh:\\s*'((?:[^'\\\\]|\\\\.)*?)'`)
     );
