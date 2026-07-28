@@ -35,7 +35,7 @@ const tsxBin = resolve(root, 'node_modules', '.bin', process.platform === 'win32
 // json-ld-faqpage-guard, a11y-guard, page-size-guard,
 // breadcrumb-list-guard, engine-titles-i18n-guard,
 // engine-descriptions-i18n-guard, engine-composite-i18n-guard,
-// engine-en-composite-i18n-guard)
+// engine-en-composite-i18n-guard, claude-md-invariant-guard)
 // each spawn `pnpm build`
 // which calls cleanDist() + writes to dist/. Running test files in
 // parallel causes them to clobber each other's dist/ state, manifesting
@@ -57,7 +57,7 @@ const r = spawnSync(tsxBin, [...tsxArgs, ...process.argv.slice(2), ...tests], {
 // Surface this so users know to opt in.
 const exitCode = r.status ?? 1;
 if (!process.env.RUN_BUILD_TESTS) {
-  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 33 build-dependent suites skipped.');
+  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 34 build-dependent suites skipped.');
   console.log('[skip-mode] Set RUN_BUILD_TESTS=1 (or run `pnpm test:build`) to enable:');
   console.log('[skip-mode]   baselayout-clerk-script, baselayout-sync-script,');
   console.log('[skip-mode]   header-clerk-render, header-sync-ui, privacy-policy-sync,');
@@ -75,6 +75,7 @@ if (!process.env.RUN_BUILD_TESTS) {
   console.log('[skip-mode]   engine-titles-i18n-guard,');
   console.log('[skip-mode]   engine-descriptions-i18n-guard,');
   console.log('[skip-mode]   engine-composite-i18n-guard,');
-  console.log('[skip-mode]   engine-en-composite-i18n-guard');
+  console.log('[skip-mode]   engine-en-composite-i18n-guard,');
+  console.log('[skip-mode]   claude-md-invariant-guard');
 }
 process.exit(exitCode);
