@@ -25,9 +25,12 @@
 // pattern. Closes the symmetric second-half probe gap.
 //
 // P129 hardening:
-//   (1) Probe regex extended to accept both '...' and "..." syntax. 16 keys
-//       across 7 engines use double quotes (to allow apostrophes in en text);
-//       P128's single-quote-only regex silently skipped these.
+//   (1) Probe regex extended to accept both '...' and "..." syntax.
+//       translations.ts mixes both quote styles — double quotes are used when
+//       the en value contains an apostrophe (e.g. "you're"). P128's
+//       single-quote-only regex silently skipped these entries: 13
+//       FAQ/how_to_use keys across 7 engines + 3 input.label keys on
+//       cohort-retention-calculator.
 //   (2) Inner probe loop promoted `if (qMatch) push(...)` to `assert(qMatch, ...);
 //       push(...)` so missing FAQ/how_to_use translation keys fail loudly.
 //       When an engine defines N FAQ entries but translations.ts has fewer than N,
