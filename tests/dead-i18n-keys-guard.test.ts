@@ -236,6 +236,19 @@ const WORKING_KEY_REQUIRED = [
   { path: 'solopreneur-freelance-tax-calculator/index.html', mustContain: '实收明细:' },
   { path: 'solopreneur-unit-economics-calculator/index.html', mustContain: '杠杆影响排名' },
   { path: 'solopreneur-unit-economics-calculator/index.html', mustContain: '优化杠杆' },
+  // P137 T2.7 composite data-driven lines (key-name entries — Task 5 asserts
+  // these exist in translations.ts; Task 2 wires the corresponding zh
+  // post-processor patterns). Plain string entries are filtered in the test
+  // loop below (the iteration works on objects only).
+  'engine_cost.comparison_title',
+  'engine_cost.reqs_per_day',
+  'engine_cost.cheapest_prefix',
+  'engine_cost.at_per_month',
+  'engine_cost.saving_prefix',
+  'engine_cost.saving_suffix',
+  'engine_cost.image_cheapest',
+  'engine_cost.gpu_total',
+  'engine_cost.training_total',
 ];
 
 test('forbidden dead-key strings never appear in user-visible zh HTML', () => {
@@ -271,7 +284,11 @@ test('working i18n keys translate on their target pages', () => {
 
   const violations: string[] = [];
 
-  for (const { path, mustContain } of WORKING_KEY_REQUIRED) {
+  // P137 T2.7: entries may be plain key-name strings (tracked for Task 5
+  // existence check) or object assertions. Filter to object entries only.
+  for (const entry of WORKING_KEY_REQUIRED) {
+    if (typeof entry === 'string') continue;
+    const { path, mustContain } = entry;
     const full = resolve(root, 'dist', 'zh', path);
     if (!existsSync(full)) {
       violations.push(`${path}: file missing`);

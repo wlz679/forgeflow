@@ -52,6 +52,43 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'ai_cost.section.usage_scenarios_claude': { en: '📊 Usage Scenarios (monthly cost at 100 reqs/day)', zh: '📊 使用场景（按 100 reqs/日 的月度成本）' },
   'ai_cost.section.usage_scenarios_with_volume': { en: '📅 Usage Scenarios (monthly cost at 100 reqs/day)', zh: '📅 使用场景（按 100 reqs/日 的月度成本）' },
   'ai_cost.section.usage_scenarios_openai': { en: '📅 Usage Scenarios (monthly costs)', zh: '📅 使用场景（月度成本）' },
+  // P137 T2.7 composite data-driven line segments (AI cost engines)
+  'engine_cost.comparison_title': {
+    en: '📊 Cost Comparison',
+    zh: '📊 成本对比',
+  },
+  'engine_cost.reqs_per_day': {
+    en: ' reqs/day',
+    zh: ' 请求/天',
+  },
+  'engine_cost.cheapest_prefix': {
+    en: '🏆 Cheapest: ',
+    zh: '🏆 最便宜: ',
+  },
+  'engine_cost.at_per_month': {
+    en: ' at ',
+    zh: '，每月 ',
+  },
+  'engine_cost.saving_prefix': {
+    en: '💡 Saving vs ',
+    zh: '💡 比 ',
+  },
+  'engine_cost.saving_suffix': {
+    en: ': ',
+    zh: ' 省: ',
+  },
+  'engine_cost.image_cheapest': {
+    en: '🎨 Cheapest provider: ',
+    zh: '🎨 最便宜提供商: ',
+  },
+  'engine_cost.gpu_total': {
+    en: '💰 Total: ',
+    zh: '💰 总计: 每月 ',
+  },
+  'engine_cost.training_total': {
+    en: '💼 Training total: ',
+    zh: '💼 训练总成本: ',
+  },
   // P98: SaaS section headers (3 tools: burn-rate, churn-rate, mrr)
   'saas.section.dashboard': { en: '📊 MRR Health Dashboard', zh: '📊 MRR 健康看板' },
   'saas.section.snapshot': { en: '💰 MRR Snapshot', zh: '💰 MRR 快照' },
