@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-28 (P130 CHANGELOG catch-up v7 — P123/P124 hardening trilogy covering P126-P129)
+> **最后更新:** 2026-07-29 (P131 catch-up v8 — composite i18n test split covering P131 single-test split, +5 commits)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 803 across 42 active days (2026-05-31 → 2026-07-28, ~8 weeks)
+> **Total commits:** 813 across 43 active days (2026-05-31 → 2026-07-29, ~8 weeks)
 
 ---
 
@@ -37,10 +37,12 @@
 - ~~Candidate: CHANGELOG catch-up (next time gap exceeds ~10 commits)~~ → ✅ **P130 shipped: catch-up v7 (this batch, M23.0 covering P126-P129)**
 - ~~Candidate: P123 fix — apply `buildSlugToFirstInput()` walker to P123 too (closes latent false-positive on freelance-rate-calculator dead-key)~~ → ✅ **P127 shipped: `buildSlugToFirstInput()` walker applied to P123 (closes latent false-positive on `solopreneur-freelance-rate-calculator`)**
 - ~~Candidate: FAQ answers + how_to_use[1+] coverage — extend P123/P124 to second-half of these arrays (currently only `[0]` is probed)~~ → ✅ **P128 shipped: `buildSlugToFaqCount()` + `buildSlugToHowToCount()` walkers; P123/P124 now probe ALL FAQ q/a + how_to_use entries (~1179 per-language probes, ~2358 across P123+P124)**
-- Candidate: Single-test split — extract P123 into 4 narrower tests (title-wiring, desc-wiring, input-wiring, faq-wiring) for better failure isolation
+- ~~Candidate: Single-test split — extract P123 into 4 narrower tests (title-wiring, desc-wiring, input-wiring, faq-wiring) for better failure isolation~~ → ✅ **P131 shipped: 6 single-dim tests (input/faq/howto × zh/en, ~70-100 lines each) + `tests/_composite-i18n-walkers.ts` (~120 lines, 6 functions) replacing 2 monolithic 329+328-line files; 34 → 38 build-dep suites; failure isolation dramatically improved**
 - Candidate: CLAUDE.md additional invariants — extend P125 to assert total commit count, last-ship date, category names A/B/C/...
 - Candidate: input labels i18n backfill — verify scope; P129 walker now correctly probes all 3 cohort-retention input labels that were silently skipped, but no other engines flagged; scope unclear without audit
-- Candidate: P123/P124 defensive audit — verify no remaining silent-skip paths post-P129 (walker triplet + assert promotion should be comprehensive, but a 3rd-party review could find latent gaps)
+- Candidate: P123/P124 defensive audit — verify no remaining silent-skip paths post-P131 (single-dim tests + extracted walker helper make 3rd-party review easier; walker regex now in one auditable location)
+- Candidate: tier-2 round 7 — composite data-driven lines (NEW approach: source-level translation or customFn-based); AI cost tip lines, dynamic projection rows, bar chart labels
+- Candidate: CHANGELOG catch-up v9 — when next P-series catch-up is needed (current gap since P131 catch-up: 0 commits)
 
 ---
 
@@ -335,6 +337,73 @@ P123/P124 walker triplet = `buildSlugToFirstInput()` + `buildSlugToFaqCount()` +
 - **[P130] Plan-spec discovery** — initial candidate pool listed P130 = "P121-P129 = 9 batches" based on P120 memory assumption. Pre-flight verification (git log + CHANGELOG header `最后更新: P126`) revealed last catch-up was P126 (not P120), making actual coverage **4 batches (P126-P129)**, not 9. Scope corrected before plan write. **Lesson: candidate-pool claims in P-series memory files drift; always pre-flight verify the actual prior catch-up SHA against CHANGELOG header before writing the new batch's scope.**
 
 📦 ship log: [`memory/p126-changelog-catchup-v6-shipped.md`](memory/p126-changelog-catchup-v6-shipped.md) · [`memory/p127-p123-latent-false-positive-fix-shipped.md`](memory/p127-p123-latent-false-positive-fix-shipped.md) · [`memory/p128-faq-howtouse-coverage-extension-shipped.md`](memory/p128-faq-howtouse-coverage-extension-shipped.md) · [`memory/p129-missing-translation-assertion-shipped.md`](memory/p129-missing-translation-assertion-shipped.md)
+
+---
+
+## [M23.1] - 2026-07-29 — Composite i18n test split (P131)
+
+🔪 **P123/P124 composite i18n guards (2 monolithic files, 329 + 328 lines, 1 test each) split into 6 single-dimension tests (input/faq/howto × zh/en) + 3 walker helpers extracted to a shared module. Failure isolation dramatically improved: a regression in any one dimension now points at the specific test file by name, instead of "composite i18n violation (N)" with up to 20 sample violations but no dimension grouping.** 1 batch · 5 commits · 0 production engine count change. P121/P122 already cover title/description dimensions (en + zh in single files); P131 focuses on the 3 dimensions not yet independently covered.
+
+### Added (walker helper — P131 Task 2)
+- **[tests] `tests/_composite-i18n-walkers.ts`** (P131 — NEW, ~120 lines) — shared module extracting 6 functions:
+  - `buildSlugToFirstInput()` (P127 lineage) — slug → first input name (closes WHICH-key probe)
+  - `buildSlugToFaqCount()` (P128 lineage) — slug → FAQ entry count
+  - `buildSlugToHowToCount()` (P128 lineage) — slug → howToUse entry count
+  - `escapeForHtml(s)` — HTML-escape for probe comparison
+  - `buildTranslationKeyRegex(key)` — P129 4-capture-group alternation regex (`(?:'...'|"...")`)
+  - `extractAllEngineSlugs(text)` — sorted slug list from `translations.ts`
+  - Consumed by 6 dimension tests (3 zh + 3 en); removes ~240 lines of duplication
+
+### Added (3 zh single-dimension tests — P131 Task 3)
+- **[tests] `tests/engine-zh-input-i18n-guard.test.ts`** (P131) — zh input label rendered (1 dim: 100 page checks)
+- **[tests] `tests/engine-zh-faq-i18n-guard.test.ts`** (P131) — zh FAQ q + a rendered (1 dim: 541 FAQ × 2 langs probes; assert promotion preserved from P129)
+- **[tests] `tests/engine-zh-howto-i18n-guard.test.ts`** (P131) — zh how_to_use steps rendered (1 dim: 638 how_to_use entries; assert promotion preserved)
+
+### Added (3 en single-dimension tests — P131 Task 4)
+- **[tests] `tests/engine-en-input-i18n-guard.test.ts`** (P131) — en input label rendered (with P128 escape-strip deviation)
+- **[tests] `tests/engine-en-faq-i18n-guard.test.ts`** (P131) — en FAQ q + a rendered (with P128 escape-strip)
+- **[tests] `tests/engine-en-howto-i18n-guard.test.ts`** (P131) — en how_to_use steps rendered (with P128 escape-strip)
+
+### Changed
+- **[tests] `tests/run.mjs` skip-mode summary** (P131) — lines 60-79 updated: count 34 → 38 build-dep suites; removed `engine-composite-i18n-guard` and `engine-en-composite-i18n-guard`; added 6 new dimension names (alphabetically ordered within language-specific block)
+
+### Removed
+- **[tests] `tests/engine-composite-i18n-guard.test.ts`** (P131) — P123 monolithic (329 lines) replaced by 3 zh tests
+- **[tests] `tests/engine-en-composite-i18n-guard.test.ts`** (P131) — P124 monolithic (328 lines) replaced by 3 en tests
+
+### Engineering metrics
+
+| Metric | Before (M23.0) | After (M23.1) |
+|---|---|---|
+| Engines | 100 (frozen) | 100 (frozen) |
+| New batches | 4 (P126-P129) | **1** (P131) |
+| New commits | 11 | **5** (helper + 3-zh + 3-en + cleanup + memory) |
+| Build-dep suites | 34 | **38** (delta +4 files: -2 P123/P124 + 6 new) |
+| Source-only guards | 8 | 8 (unchanged) |
+| P131 walker helper | (none — inline in P123/P124) | **`tests/_composite-i18n-walkers.ts` (~120 lines, 6 functions)** |
+| Per-test probe coverage | monolithic 5-dim, 1 test per file | **6 single-dim tests, 1 dimension each** |
+| Test (subtest) delta | P123=1 + P124=1 = 2 | **6 new tests = 6** (net +4 subtests) |
+| pnpm check baseline | `1200/0/0` | `1204/0/0` (+4 subtests: 6 new - 2 deleted) |
+| pnpm build | 449 dist pages | 449 dist pages |
+| Total commits | 808 (P130 ship memory said 803; P131 catch-up corrects to actual) | **813** (+5 P131) |
+| Active days | 42 | 43 (P131 is next-day batch) |
+
+### Audit findings (P131)
+
+| Aspect | Result | Defects caught |
+|---|---|---|
+| **Walker helper smoke test** | 100/100 engines in each of 3 walker maps; regex matches both single- and double-quoted keys | 0 (smoke tests passed) |
+| **6 dimension tests under build-dep** | 6/6 pass; walker counts match P128 baseline (541 FAQ + 638 how_to_use per language) | 0 broken pages; P129's 16 silently-skipped keys all probed correctly via 4-group regex |
+| **run.mjs skip-mode summary** | Lists 38 build-dep suites with 6 new names alphabetically ordered | 0 (mechanical edit verified) |
+| **tsc** | `pnpm exec tsc --noEmit` exit 0 | 0 |
+
+### Ship drama
+
+- **[P131] Plan-spec commit count discovery** — P130 ship memory said "Total commits: 803" but `git rev-list --count` at the P130 commit (`19554ad`) returns **808** (off by 5). The discrepancy is likely an off-by-5 in P130's count (probably missed 5 auto-commits between P124-P126 like LiteLLM sync, or a counting error in P130 ship itself). P131 catch-up corrects the header to actual 808 → 813 (+5 P131). **Lesson for P-series implementers**: always re-verify the prior catch-up's "Total commits" claim against `git rev-list --count <prior_sha>` before writing the next catch-up.
+- **[P131] Naming convention update** — dropped "composite" from the new test names since each new test covers 1 dimension (not 5). Follows P121/P122 convention (`engine-titles-i18n-guard.test.ts`, `engine-descriptions-i18n-guard.test.ts`). The deleted tests are explicitly named `engine-composite-i18n-guard.test.ts` to preserve history.
+- **[P131] Old P123/P124 scratch diagnostics cleared** — pre-P131 IDE showed `engine-composite-i18n-guard.test.ts` line 190/191 and `engine-en-composite-i18n-guard.test.ts` line 182/183 errors (`RegExpStringIterator` / `Set<string>` not iterable without `--downlevelIteration`). Stale IDE cache only — P131 deletes the source files so the errors clear on next `tsc --noEmit`.
+
+📦 ship log: [`memory/p131-single-test-split-shipped.md`](memory/p131-single-test-split-shipped.md)
 
 ---
 
