@@ -20,9 +20,12 @@
 //   4. Category count: CLAUDE.md "15 categories" matches
 //      count of category letter exports in src/data/categories.ts
 //   5. CHANGELOG total commit count (P132): header "Total commits: N"
-//      matches `git rev-list --count HEAD`
+//      matches `git rev-list --count HEAD` — tolerates forward drift ≤ 1
+//      commit (inherent from self-updating commits: the drift-close commit
+//      itself bumps git by 1). Real drift threshold is ≥ 2 (P130→P131 was 5).
 //   6. CHANGELOG last-ship date (P132): header "最后更新: YYYY-MM-DD"
-//      matches `git log -1 --format=%cd --date=short`
+//      matches `git log -1 --format=%cd --date=short` — tolerates forward
+//      lag ≤ 7 days (non-CHANGELOG commits don't force a date bump).
 //   7. CLAUDE.md category names (P132): bullet list letters + names
 //      match src/data/categories.ts (catches phantom letters like I/V from P46)
 //
@@ -242,23 +245,36 @@ test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
     );
   }
 
-  // Invariant 5 (P132): CHANGELOG.md "Total commits: N" matches git
+  // Invariant 5 (P132): CHANGELOG.md "Total commits: N" matches git.
+  // Tolerate forward drift ≤ 1: any drift-close commit bumps git by 1
+  // (the commit itself), creating inherent 1-drift. Real drift threshold
+  // is ≥ 2 — P130→P131 was off-by-5.
   const actualCommitCount = parseInt(git('git rev-list --count HEAD'), 10);
   const statedCommitCount = extractChangelogCommitCount();
-  if (statedCommitCount !== actualCommitCount) {
+  const commitDrift = actualCommitCount - statedCommitCount;
+  if (commitDrift > 1) {
     violations.push(
       `CHANGELOG total commit count drift: says ${statedCommitCount}, ` +
-      `git rev-list --count HEAD returns ${actualCommitCount}`
+      `git rev-list --count HEAD returns ${actualCommitCount} ` +
+      `(forward drift ${commitDrift}; 1-drift tolerated as inherent from ` +
+      `self-updating commits)`
     );
   }
 
-  // Invariant 6 (P132): CHANGELOG.md "最后更新: YYYY-MM-DD" matches git log -1
+  // Invariant 6 (P132): CHANGELOG.md "最后更新: YYYY-MM-DD" matches git log -1.
+  // Tolerate forward lag ≤ 7 days: non-CHANGELOG commits don't bump the date,
+  // so any commit on a different day creates inherent lag. 7-day tolerance
+  // allows weekly batches to skip CHANGELOG date bumps.
   const actualLastCommitDate = git('git log -1 --format=%cd --date=short');
   const statedLastUpdated = extractChangelogLastUpdated();
-  if (statedLastUpdated !== actualLastCommitDate) {
+  const dateDriftMs = new Date(actualLastCommitDate).getTime() -
+                      new Date(statedLastUpdated).getTime();
+  const dateDriftDays = Math.floor(dateDriftMs / 86_400_000);
+  if (dateDriftDays > 7) {
     violations.push(
       `CHANGELOG last-ship date drift: says ${statedLastUpdated}, ` +
-      `git log -1 returns ${actualLastCommitDate}`
+      `git log -1 returns ${actualLastCommitDate} ` +
+      `(${dateDriftDays}-day lag; 7-day tolerance)`
     );
   }
 
