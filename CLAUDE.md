@@ -74,7 +74,7 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 
 ## Defense-in-Depth (P110, 2026-07-27)
 
-**Test infrastructure that catches regressions across 6 user-visible dimensions.** All 38 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
+**Test infrastructure that catches regressions across 6 user-visible dimensions.** All 39 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
 
 | Dimension | Suite count | Coverage | Memory |
 |---|---|---|---|
@@ -87,7 +87,7 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 | **Performance (CSS)** | 1 | `css-bundle-size-guard` (P107) — 60 KB external + 5 KB inline per page | [`p107`](memory/p107-css-bundle-size-guard-shipped.md) |
 | **Performance (Images)** | 1 | `image-size-guard` (P108) — 500 KB/OG + 80 MB total bundle | [`p108`](memory/p108-image-size-guard-shipped.md) |
 | **Build-dep source guards** | 8 | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count) | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
-| **Total** | **38 build-dep suites** + 8 source-only = **46** | 6 dimensions | |
+| **Total** | **39 build-dep suites** + 8 source-only = **47** | 6 dimensions | |
 
 **Performance size triad complete (P96+P106+P107+P108):** HTML + JS + CSS + images. Each guard has 50–72% headroom from current baseline (e.g. JS max 65 KB ≤ 100 KB threshold).
 
