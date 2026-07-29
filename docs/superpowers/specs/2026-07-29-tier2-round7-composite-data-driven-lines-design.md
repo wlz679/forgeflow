@@ -21,21 +21,31 @@ static prefix + suffix. Sample from current engines:
 These need i18n but the post-processor's whole-word `split(en).join(zh)` approach breaks
 when dynamic data is interpolated mid-line.
 
-## 2. Architectural Decision (frozen)
+## 2. Architectural Decision (frozen, revised)
 
-**Route A**: `generate()` accepts an optional `lang` parameter (defaults to `'en'`). Engines
-that need it call `t(key, lang, vars)` for each composite segment.
+> **Revision**: Initial brainwrite assumed Route A (`generate()` accepts `lang`). Pre-plan
+> architecture audit discovered Astro `[slug].astro` does NOT call `generate()` at build —
+> it renders `engine.staticExamples[0]` (codegen-wrapped EN literal), then post-processes
+> via `translateCalcOutput` on zh pages. **True architecture = Route C-extended.**
 
-**Why A over B and C**:
-- A: signature is additive (`lang?`), 100 engines default to EN; codegen-friendly.
-- B (return `{en, zh}`): breaks return type across 100 engines; double-compute.
-- C (regex post-processor): works but each new line = a new regex; `t()`-style `{var}`
-  interpolation is more maintainable.
+**Route C-extended**: Extend `translateCalcOutput` to handle composite data-driven lines.
+Each composite line = a regex matcher that captures dynamic data + a replacement
+function that emits localized prefix + preserved dynamic + localized suffix.
+
+**Why C-extended over A**:
+- A (lang in `generate()`) requires building whole new server-side call path; `staticExamples`
+  pipeline is the real renderer. Big-bang rewrite of static-page rendering = riskier.
+- C-extended follows existing tier-1/2 pattern exactly (`translateCalcOutput` already maps
+  → `translations.ts` keys). Adds 6 regex patterns to a function that already runs on every
+  zh page with 120 keys active.
 
 **Trade-offs accepted**:
-- customFn does NOT change — runtime re-renders on input change stay EN, even on /zh/ pages.
-- 8 AI cost engines need codegen signature updates; 92 business engines untouched
-  (composite tier-2 work in business engines is deferred to P138+ after trial).
+- customFn does NOT change — runtime re-renders on input change stay EN.
+- Engines (`src/engines/ai-cost/*.ts`) NOT modified — `staticExamples[]` literals untouched.
+- 92 business engines NOT affected — composite tier-2 work in business engines deferred
+  to P138+ after trial feedback.
+- Regex per composite line (~6-8); pragmatic for trial scope, may need re-architecture if
+  P138+ expands beyond ~20 lines.
 
 ## 3. Scope of P137 (T2.7 trial)
 
@@ -64,104 +74,107 @@ that need it call `t(key, lang, vars)` for each composite segment.
 - Bar-chart row layouts: `icon + name + bar + cost` (multi-element, intra-line types)
 - Cross-engine comparisons: `Cheapest per family: X at $Y/mo, savings vs next: $Z/mo`
 
-### 3.3 Target: 6-8 new translation keys
+### 3.3 Target: 6-10 new translation keys (prefix/suffix segments)
 
-| New key | ZH value | Used in engines |
-|---|---|---|
-| `engine_cost.comparison_title` | `📊 成本对比` | openai/claude/gemini/deepseek/api-comparison |
-| `engine_cost.cheapest_line` | `🏆 最便宜: {model}，每月 {cost}` | claude/api-comparison |
-| `engine_cost.saving_line` | `💡 比 {other} 省: 每月 {cost}` | openai-token |
-| `engine_cost.image_cheapest` | `🎨 最便宜提供商: {model}，每张 {cost}` | image-gen |
-| `engine_cost.gpu_total` | `💰 总计: 每月 {cost}` | gpu-cloud |
-| `engine_cost.training_total` | `💼 训练总成本: {cost}` | training-cost |
+Unlike tier-1/2 which stores whole static prefixes, T2.7 stores **prefix + suffix pairs** because
+the dynamic data slots aren't known at translation time. Implementation in §4.1.a.
 
-**Cross-engine sharing rule**: Same semantically-meaningful composite line → same key.
-Multiple instances of `📊 Cost Comparison (X reqs/day)` across 4 engines share `engine_cost.comparison_title`.
+| New key | EN value | ZH value | Composite line it transforms |
+|---|---|---|---|
+| `engine_cost.comparison_title` | `📊 Cost Comparison` | `📊 成本对比` | `📊 Cost Comparison (X reqs/day)` |
+| `engine_cost.reqs_per_day`     | ` reqs/day` | ` 请求/天` | (suffix of above) |
+| `engine_cost.cheapest_prefix`  | `🏆 Cheapest: ` | `🏆 最便宜: ` | `🏆 Cheapest: GPT-4 at $0.05/mo` |
+| `engine_cost.at_per_month`     | ` at ` | `，每月 ` | (infix between model + cost) |
+| `engine_cost.saving_prefix`    | `💡 Saving vs ` | `💡 比 ` | `💡 Saving vs X: $Y/month` |
+| `engine_cost.saving_suffix`    | `: ` | ` 省: ` | (separator) |
+| `engine_cost.image_cheapest`   | `🎨 Cheapest provider: ` | `🎨 最便宜提供商: ` | `🎨 Cheapest provider: X at $Y/img` |
+| `engine_cost.gpu_total`        | `💰 Total: ` | `💰 总计: 每月 ` | `💰 Total: $X/month` |
+| `engine_cost.training_total` ⚠ | `💼 Training total: ` | `💼 训练总成本: ` | `💼 Training total: $X` |
 
-**Single shared comparison title = 1 key**, not 4. **Per-engine detail lines** = separate keys.
+**Cross-engine sharing**: Same composite line shape = same set of keys. e.g., the
+`(X reqs/day)` format appears in 4 engines → all use `comparison_title` + `reqs_per_day`.
 
 > ⚠ `engine_cost.training_total` is **tentative** — verify during implementation that
 > `ai-training-cost-estimator` has a single-variable composite line matching this shape.
-> If not, drop the key (avoid asserting on absent translations).
+> If not, drop the key.
 
 ## 4. Implementation Outline
 
-### 4.1 Signature change
+### 4.1 Component changes
 
-**`src/core/engines/types.ts`** (1-line edit, additive):
+#### 4.1.a `src/i18n/translations.ts`
+
+Add 6 entries under new namespace `engine_cost.*`. Note: key values are the **static prefix**
+portions of composite lines (entire `Cost Comparison (X reqs/day)` line is NOT stored as a key —
+the dynamic part is captured by regex in 4.1.c).
+
 ```ts
-import type { Lang } from '../../i18n';
-// ...
-export interface ToolEngine {
-  // OLD: generate(inputs: Record<string, string>): string[];
-  // NEW (optional param with default):
-  generate(inputs: Record<string, string>, lang: Lang = 'en'): string[];
-  calculate?: (inputs: Record<string, string>, lang?: Lang) => string[];
+'engine_cost.comparison_title': { en: '📊 Cost Comparison', zh: '📊 成本对比' },
+'engine_cost.reqs_per_day':     { en: ' reqs/day',         zh: ' 请求/天' },
+'engine_cost.cheapest_prefix':  { en: '🏆 Cheapest: ',     zh: '🏆 最便宜: ' },
+'engine_cost.at_per_month':     { en: ' at ',              zh: '，每月 ' },
+'engine_cost.saving_prefix':    { en: '💡 Saving vs ',     zh: '💡 比 ' },
+'engine_cost.saving_suffix':    { en: '/month',            zh: ' 省: 每月 ' },
+'engine_cost.image_cheapest':   { en: '🎨 Cheapest provider: ',
+                                  zh: '🎨 最便宜提供商: ' },
+'engine_cost.gpu_total':        { en: '💰 Total: ',        zh: '💰 总计: 每月 ' },
+'engine_cost.training_total':   { en: '💼 Training total: ', zh: '💼 训练总成本: ' },
+```
+
+(Working count: ~10 keys, possibly fewer after implementation. `⚠ engine_cost.training_total`
+tentative — drop if no matching composite line found in ai-training-cost-estimator.)
+
+#### 4.1.b `src/pages/[lang]/[slug].astro` — extend `translateCalcOutput`
+
+Add a new `compositePatterns` array alongside the existing `headerKeys`. After the existing
+`headerKeys` whole-word replacement loop, run a regex pass:
+
+```ts
+const compositePatterns: Array<{
+  regex: RegExp;
+  build: (m: RegExpExecArray, t: (k: string, l: Lang) => string) => string;
+}> = [
+  // Example: 📊 Cost Comparison (X reqs/day)
+  {
+    regex: /(📊 Cost Comparison \()(\d+)(\s*reqs\/day\))/g,
+    build: (m) => `${t('engine_cost.comparison_title', lang).replace(/ \(.*$/, '')} (${m[2]}${t('engine_cost.reqs_per_day', lang)})`,
+  },
+  // Example: 🏆 Cheapest: GPT-4 at $0.05/mo
+  {
+    regex: /(🏆 Cheapest:\s)(.+?)(\s+at\s+)(\$[\d.]+)(\/mo)/g,
+    build: (m) => `${t('engine_cost.cheapest_prefix', lang)}${m[2]}${t('engine_cost.at_per_month', lang)}${m[4]}/mo`,
+  },
+  // ... 4-6 more entries
+];
+
+for (const { regex, build } of compositePatterns) {
+  out = out.replace(regex, (...args) => build(args as RegExpExecArray));
 }
 ```
 
-**Why optional + default 'en'**: 92 business engines' existing `calculate(inputs)` signatures
-remain type-compatible without modification (a `(a) => string[]` function is assignable to
-`(a, b?) => string[]` because extra args are ignored at call site). Only the 8 AI cost engines
-need to actively thread `lang` into their `calculate()` body and call `t()`.
+#### 4.1.c Engines — ZERO modifications
 
-### 4.2 Codegen script (P137 implementation)
+8 AI cost engines + 92 business engines — **untouched**. Existing `staticExamples[]` literals
+remain EN; only the post-processor transforms them for /zh/ pages.
 
-A new helper `scripts/codegen-add-lang-param.mjs` walks all engine files and rewrites:
-- `function calculate(inputs: Record<string, string>): string[]`
-- → `function calculate(inputs: Record<string, string>, lang: Lang = 'en'): string[]`
+### 4.2 Astro rendering pipeline (unchanged)
 
-For each of the 8 AI cost engines:
-- Add `import { t } from '../../i18n'` (path adjusted per file location)
-- Rewrite composite-line `out.push('static_prefix' + X + 'static_suffix')` →
-  `out.push(t('engine_cost.X', lang, { var1, var2 }))`
-
-### 4.3 Translation keys
-
-**`src/i18n/translations.ts`** — add 6 entries:
+`[slug].astro:1145-1158` already does:
 ```ts
-'engine_cost.comparison_title': { en: '📊 Cost Comparison', zh: '📊 成本对比' },
-'engine_cost.cheapest_line': {
-  en: '🏆 Cheapest: {model} at {cost}/mo',
-  zh: '🏆 最便宜: {model}，每月 {cost}',
-},
-'engine_cost.saving_line': {
-  en: '💡 Saving vs {other}: {cost}/month',
-  zh: '💡 比 {other} 省: 每月 {cost}',
-},
-'engine_cost.image_cheapest': {
-  en: '🎨 Cheapest provider: {model} at {cost}/img',
-  zh: '🎨 最便宜提供商: {model}，每张 {cost}',
-},
-'engine_cost.gpu_total': {
-  en: '💰 Total: {cost}/month',
-  zh: '💰 总计: 每月 {cost}',
-},
-'engine_cost.training_total': {
-  en: '💼 Training total: {cost}',
-  zh: '💼 训练总成本: {cost}',
-},
+const translatedEx = lang === 'zh' && engine.clientConfig.type === 'custom'
+  ? translateCalcOutput(ex, lang)
+  : ex;
 ```
 
-### 4.4 Astro rendering
-
-**`src/pages/[lang]/[slug].astro`**:
-```ts
-// OLD: const initial = engine.generate(staticInputs);
-// NEW:
-const initial = engine.generate(staticInputs, lang);
-```
-
-8 AI cost engines will produce localized output at build time. 92 business engines
-still go through `translateCalcOutput` post-processor for tier-1/2 static keys.
+T2.7 trial = expand `translateCalcOutput` body. No page-level signature changes.
 
 ## 5. Testing
 
 | Test | Action |
 |---|---|
-| `tests/dead-i18n-keys-guard.test.ts` | Add 6 entries to `WORKING_KEY_REQUIRED` |
-| **NEW** `tests/ai-cost-t2-7-zh-output.test.ts` | 8 engines × `generate(staticInputs, 'zh')` must contain ≥1 CJK char; `generate(staticInputs, 'en')` must NOT contain CJK |
-| `scripts/codegen-examples.mjs --check` | Unchanged — `staticExamples[0]` is always EN |
+| `tests/dead-i18n-keys-guard.test.ts` | Add 6-10 entries to `WORKING_KEY_REQUIRED` |
+| **NEW** `tests/ai-cost-t2-7-zh-output.test.ts` (build-dep, `RUN_BUILD_TESTS=1`) | Read `dist/zh/.../{8 engines}/index.html`; assert ≥1 CJK in section near each composite line (e.g., grep for `📊 成本对比` after the `result` block). Read `dist/en/.../index.html`; assert NO CJK in same location. |
+| `scripts/codegen-examples.mjs --check` | Unchanged — `staticExamples[0]` still EN |
 | P131 6 i18n guards | Unchanged — operate on input/faq/howTo strings, not tier-2 composite lines |
 
 ## 6. Acceptance Criteria (P137)
@@ -170,11 +183,12 @@ still go through `translateCalcOutput` post-processor for tier-1/2 static keys.
 |---|---|
 | `pnpm build` | 449+ pages, no new pages (content-level change only) |
 | `pnpm check` | 1204 + 1 (T2.7 zh-output) = 1205 tests pass |
-| New test `ai-cost-t2-7-zh-output.test.ts` | pass |
-| P103 WORKING_KEY_REQUIRED total | 150 → ~156 |
-| `/zh/[slug]` pages in browser | CJK characters present in tier-2 lines (8 engines) |
-| `/en/[slug]` pages in browser | No CJK in tier-2 lines |
+| New test `ai-cost-t2-7-zh-output.test.ts` | pass (build-dep, RUN_BUILD_TESTS=1) |
+| P103 WORKING_KEY_REQUIRED total | 150 → ~158 (6-10 new keys) |
+| `/zh/[slug]` pages in browser | CJK characters present in tier-2 composite lines (8 engines, spot-check) |
+| `/en/[slug]` pages in browser | No CJK in tier-2 composite lines (spot-check) |
 | 3-way sync | `0	0` |
+| `pnpm exec tsc --noEmit` | 0 errors |
 
 ## 7. Out of Scope (deferred to P138+ gates)
 
@@ -184,23 +198,26 @@ still go through `translateCalcOutput` post-processor for tier-1/2 static keys.
 | Business engine tier-2 work (92 engines) | Trial-only; depends on P137 feedback |
 | customFn localization | User explicitly opted out (cost > benefit) |
 | Bar chart label localization | Multi-element intra-line, deferred |
-| Codegen-extract tier | If P137 codegen works, generalize to a `codegen-engine-params` library |
+| Codegen-extract tier | No longer needed — Route C requires zero codegen; engines untouched |
 
 ## 8. Risk Register
 
 | Risk | Mitigation |
 |---|---|
-| Codegen breaks 8 engines | Run `pnpm check` + `pnpm build` after each engine; diff vs git HEAD |
-| `t()` not called for some line | T2.7 zh-output test catches per-engine |
-| `lang` mandatory change breaks 92 business engines | All 92 still typecheck (signature accepts lang, ignored) |
-| `{model}` interpolation visible in en page | Standard practice (already in use by `t()` for other keys) |
-| customFn drift: en vs zh on live re-render | Documented in CLAUDE.md, accepted |
+| Regex false-match across line boundaries | Anchor regexes with `^` (with `m` flag) or escape suffix `(.+)` greedily |
+| Number formatting changes during translation (e.g., `1,234` vs `1234`) | Regex captures numeric portion as opaque string; only prefix/suffix translated |
+| Tier-1/2 static keys already translated → composite layers on top, no conflict | New keys use new namespace `engine_cost.*`; existing keys unchanged |
+| `pnpm build` produces trailing whitespace or escape sequence bugs in regex | zh-output test reads actual `dist/` HTML; catches drift |
+| Engine `staticExamples[]` content changes per code update break regex match | `codegen-examples.mjs --check` regenerates `staticExamples[0]`; if composite line moved, regex pattern must follow |
+| compositePatterns array grows unbounded if P138+ expands | T2.7 trial = 6-10 entries; revisit naming/refactor pattern if >20 |
 
 ## 9. Open Decisions (P137 ship memory will close)
 
 1. **Business engine coverage** (P138+)? — depends on trial feedback
-2. **Codegen library extraction** (P139+)? — depends on whether codegen script becomes reusable
-3. **Translation key naming convention** — `engine_cost.*` is domain-specific; broader `engine_t2_composite.*` may generalize better. Ship memory will document which was chosen.
+2. **Translation key naming convention** — `engine_cost.*` is domain-specific; broader
+   `engine_t2_composite.*` may generalize better. Ship memory will document which was chosen.
+3. **compositePatterns refactor** — at 6-10 entries, an inlined array is fine. At >20, extract
+   to `src/i18n/composite-patterns.ts` as a registry. P138+ decision.
 
 ## 10. References
 
