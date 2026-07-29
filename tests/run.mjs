@@ -57,7 +57,7 @@ const r = spawnSync(tsxBin, [...tsxArgs, ...process.argv.slice(2), ...tests], {
 // Surface this so users know to opt in.
 const exitCode = r.status ?? 1;
 if (!process.env.RUN_BUILD_TESTS) {
-  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 34 build-dependent suites skipped.');
+  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 38 build-dependent suites skipped.');
   console.log('[skip-mode] Set RUN_BUILD_TESTS=1 (or run `pnpm test:build`) to enable:');
   console.log('[skip-mode]   baselayout-clerk-script, baselayout-sync-script,');
   console.log('[skip-mode]   header-clerk-render, header-sync-ui, privacy-policy-sync,');
@@ -74,8 +74,9 @@ if (!process.env.RUN_BUILD_TESTS) {
   console.log('[skip-mode]   css-bundle-size-guard, image-size-guard,');
   console.log('[skip-mode]   engine-titles-i18n-guard,');
   console.log('[skip-mode]   engine-descriptions-i18n-guard,');
-  console.log('[skip-mode]   engine-composite-i18n-guard,');
-  console.log('[skip-mode]   engine-en-composite-i18n-guard,');
+  console.log('[skip-mode]   engine-en-faq-i18n-guard, engine-en-howto-i18n-guard,');
+  console.log('[skip-mode]   engine-en-input-i18n-guard, engine-zh-faq-i18n-guard,');
+  console.log('[skip-mode]   engine-zh-howto-i18n-guard, engine-zh-input-i18n-guard,');
   console.log('[skip-mode]   claude-md-invariant-guard');
 }
 process.exit(exitCode);
