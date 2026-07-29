@@ -1,17 +1,16 @@
 #!/usr/bin/env node
-// P125 — CLAUDE.md invariant matrix guard (meta-guard). Single test asserts
-// the documentation's numeric invariants match reality. Catches the drift
-// class we've seen 4 times this thread alone:
-//   - P121 added 30th build-dep suite (CLAUDE.md still said 29)
-//   - P122 added 31st build-dep suite (CLAUDE.md still said 29)
-//   - P123 added 32nd build-dep suite (CLAUDE.md still said 29)
-//   - P124 added 33rd build-dep suite (CLAUDE.md still said 29)
+// P125 + P132 — CLAUDE.md / CHANGELOG.md invariant matrix guard (meta-guard).
+// Single test asserts the documentation's numeric invariants match reality.
+// Catches the drift class we've seen multiple times this thread alone:
+//   - P121-P124 added 4 build-dep suites without updating CLAUDE.md (29 → 34)
+//   - P131 catch-up discovered P130's "Total commits: 803" claim was off by 5
+//     (actual 808); drift went undetected for one catch-up cycle
 //
-// Without this guard, future sessions adding a 34th/35th/... suite would
-// silently leave CLAUDE.md drifted until a manual audit (P27/P28/P30/P31
-// cascade audit pattern catches it). This guard catches it on every PR.
+// Without this guard, future sessions silently leaving CLAUDE.md/CHANGELOG.md
+// drifted wouldn't surface until a manual audit (P27/P28/P30/P31 cascade audit
+// pattern). This guard catches it on every PR.
 //
-// Four invariants asserted:
+// Seven invariants asserted:
 //   1. Build-dep suite count: CLAUDE.md "N build-dep suites" matches
 //      tests/run.mjs skip-mode listing length
 //   2. Defense-in-Depth arithmetic: "N build-dep + N source-only = total"
@@ -20,14 +19,21 @@
 //      tests/lib/engine-count.ts:EXPECTED_ENGINE_COUNT
 //   4. Category count: CLAUDE.md "15 categories" matches
 //      count of category letter exports in src/data/categories.ts
+//   5. CHANGELOG total commit count (P132): header "Total commits: N"
+//      matches `git rev-list --count HEAD`
+//   6. CHANGELOG last-ship date (P132): header "最后更新: YYYY-MM-DD"
+//      matches `git log -1 --format=%cd --date=short`
+//   7. CLAUDE.md category names (P132): bullet list letters + names
+//      match src/data/categories.ts (catches phantom letters like I/V from P46)
 //
 // Build dependency:
-//   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern, 34th build-dep suite)
+//   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern, 34th build-dep suite added by P125)
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { execSync } from 'node:child_process';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -109,6 +115,58 @@ function countCategoryLetters(): number {
   return letters.size;
 }
 
+// ---- P132 invariants (CHANGELOG.md + CLAUDE.md category names) ----
+
+/** Run a git command and return trimmed stdout. */
+function git(cmd: string): string {
+  return execSync(cmd, { cwd: root, encoding: 'utf-8' }).trim();
+}
+
+/** Parse "Total commits: NNN" from CHANGELOG.md header section (before first `---`). */
+function extractChangelogCommitCount(): number {
+  const text = readText('CHANGELOG.md');
+  const headerEnd = text.indexOf('\n---\n');
+  const header = headerEnd >= 0 ? text.slice(0, headerEnd) : text;
+  // Tolerant: handles `Total commits: N` / `**Total commits:** N` (markdown bold).
+  // Pattern: "Total commits" + any non-digit markup chars + digits.
+  const m = header.match(/Total commits[^0-9\n]*(\d+)/);
+  if (!m) throw new Error(`"Total commits: N" not found in CHANGELOG.md header`);
+  return parseInt(m[1], 10);
+}
+
+/** Parse "最后更新: YYYY-MM-DD" from CHANGELOG.md header section. */
+function extractChangelogLastUpdated(): string {
+  const text = readText('CHANGELOG.md');
+  const headerEnd = text.indexOf('\n---\n');
+  const header = headerEnd >= 0 ? text.slice(0, headerEnd) : text;
+  // Tolerant: handles `最后更新:` / `**最后更新:**` / `最后更新：` (full-width colon).
+  const m = header.match(/最后更新[^0-9\n]*(\d{4}-\d{2}-\d{2})/);
+  if (!m) throw new Error(`"最后更新: YYYY-MM-DD" not found in CHANGELOG.md header`);
+  return m[1];
+}
+
+/** Extract canonical category {id → name} map from src/data/categories.ts. */
+function readCanonicalCategoryNames(): Map<string, string> {
+  const text = readText('src/data/categories.ts');
+  const re = /id:\s*['"]([A-Z])['"],\s*name:\s*['"]([^'"]+)['"]/g;
+  const map = new Map<string, string>();
+  for (const m of text.matchAll(re)) {
+    map.set(m[1], m[2]);
+  }
+  if (map.size === 0) {
+    throw new Error(`No category {id, name} pairs found in src/data/categories.ts`);
+  }
+  return map;
+}
+
+/** Extract category letter IDs from CLAUDE.md bullet list (e.g. `- **A — SaaS Metrics**`). */
+function extractClaudeMdCategoryLetters(text: string): Set<string> {
+  const re = /\*\*([A-Z])\s*—/g;
+  const set = new Set<string>();
+  for (const m of text.matchAll(re)) set.add(m[1]);
+  return set;
+}
+
 test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
   const claudeMd = readText('CLAUDE.md');
   const violations: string[] = [];
@@ -184,13 +242,65 @@ test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
     );
   }
 
+  // Invariant 5 (P132): CHANGELOG.md "Total commits: N" matches git
+  const actualCommitCount = parseInt(git('git rev-list --count HEAD'), 10);
+  const statedCommitCount = extractChangelogCommitCount();
+  if (statedCommitCount !== actualCommitCount) {
+    violations.push(
+      `CHANGELOG total commit count drift: says ${statedCommitCount}, ` +
+      `git rev-list --count HEAD returns ${actualCommitCount}`
+    );
+  }
+
+  // Invariant 6 (P132): CHANGELOG.md "最后更新: YYYY-MM-DD" matches git log -1
+  const actualLastCommitDate = git('git log -1 --format=%cd --date=short');
+  const statedLastUpdated = extractChangelogLastUpdated();
+  if (statedLastUpdated !== actualLastCommitDate) {
+    violations.push(
+      `CHANGELOG last-ship date drift: says ${statedLastUpdated}, ` +
+      `git log -1 returns ${actualLastCommitDate}`
+    );
+  }
+
+  // Invariant 7 (P132): CLAUDE.md category letters + names match src/data/categories.ts
+  // Catches phantom letters (P46 class: I/V never existed) and name mismatches.
+  const canonicalNames = readCanonicalCategoryNames();
+  const claudeLetters = extractClaudeMdCategoryLetters(claudeMd);
+  const phantomLetters = [...claudeLetters].filter(l => !canonicalNames.has(l));
+  const missingLetters = [...canonicalNames.keys()].filter(l => !claudeLetters.has(l));
+  const missingNames: string[] = [];
+  for (const [letter, name] of canonicalNames) {
+    if (!claudeMd.includes(name)) {
+      missingNames.push(`${letter}="${name}"`);
+    }
+  }
+  const cat7Violations: string[] = [];
+  if (phantomLetters.length > 0) {
+    cat7Violations.push(
+      `Phantom letters in CLAUDE.md (not in src/data/categories.ts): ${phantomLetters.sort().join(', ')}`
+    );
+  }
+  if (missingLetters.length > 0) {
+    cat7Violations.push(
+      `CLAUDE.md missing category letters (in src/data/categories.ts but not in CLAUDE.md bullet list): ${missingLetters.sort().join(', ')}`
+    );
+  }
+  if (missingNames.length > 0) {
+    cat7Violations.push(
+      `CLAUDE.md category names don't match src/data/categories.ts: ${missingNames.join(', ')}`
+    );
+  }
+  if (cat7Violations.length > 0) {
+    violations.push(...cat7Violations);
+  }
+
   assert.equal(
     violations.length,
     0,
-    `CLAUDE.md invariant matrix drift (${violations.length} violation(s)):\n` +
+    `CLAUDE.md / CHANGELOG.md invariant matrix drift (${violations.length} violation(s)):\n` +
       violations.map(v => `  - ${v}`).join('\n') +
-      `\n\nFix: update CLAUDE.md to match reality, then re-run. ` +
-      `This guard prevents the documentation-drift class that occurred 4 times ` +
-      `this thread (P121/P122/P123/P124 added 4 build-dep suites without CLAUDE.md update).`
+      `\n\nFix: update CLAUDE.md / CHANGELOG.md to match reality, then re-run. ` +
+      `This guard prevents documentation-drift (P121-P124 build-dep suites + ` +
+      `P130→P131 commit count off-by-5 + P46 phantom I/V letters).`
   );
 });
