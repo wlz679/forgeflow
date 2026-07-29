@@ -57,7 +57,10 @@ export function buildSlugToFirstInput(): Map<string, string> {
     if (!slugMatch) continue;
     const slug = slugMatch[1];
     // Match the inputs: [...] array — first `name:` inside is the first input.
-    const inputsArr = text.match(/inputs:\s*\[([\s\S]*?)\]/);
+    // Anchor with `(?:^|\n)\s*` so we don't false-match `function calculate(
+    // inputs: Record<...>)` signatures (preceded by `(`) or comment examples
+    // like `// inputs: [{ ... }]` embedded mid-line. P136 audit hardening.
+    const inputsArr = text.match(/(?:^|\n)\s*inputs:\s*\[([\s\S]*?)\]/);
     if (!inputsArr) continue;
     const nameMatch = inputsArr[1].match(/name:\s*['"]([a-zA-Z][a-zA-Z0-9_-]*)['"]/);
     if (nameMatch) {
@@ -72,6 +75,12 @@ export function buildSlugToFirstInput(): Map<string, string> {
 // one `q:`, so the count gives the number of entries.
 // Match `q:` preceded by `{` or `,` (with optional whitespace) so both
 // single-line `{ q: "...", a: "..." },` and multi-line formats are counted.
+//
+// Outer regex requires `\n\s*\],` at the end — only matches multi-line FAQ
+// arrays. Single-line FAQ (e.g. `faq: [{ q: '...', a: '...' }]`) is NOT
+// captured; engines with single-line FAQ would be silently skipped (the
+// consumer test does `if (faqCount === 0) continue`). All 100 current engines
+// use multi-line format. P136 audit documented this limitation explicitly.
 export function buildSlugToFaqCount(): Map<string, number> {
   const map = new Map<string, number>();
   const enginesDir = resolve(root, 'src', 'engines');
@@ -92,6 +101,11 @@ export function buildSlugToFaqCount(): Map<string, number> {
 // Walk src/engines/**/*.ts and build slug → howToUseCount map.
 // Counts top-level quoted strings inside `howToUse: [...]` array.
 // Each entry is a quoted string on its own line.
+//
+// Outer regex requires `\n\s*\],` at the end — only matches multi-line
+// howToUse arrays. Single-line howToUse is NOT captured (same limitation as
+// buildSlugToFaqCount — P136 audit). All 100 current engines use multi-line
+// format.
 export function buildSlugToHowToCount(): Map<string, number> {
   const map = new Map<string, number>();
   const enginesDir = resolve(root, 'src', 'engines');
