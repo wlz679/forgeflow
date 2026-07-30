@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-29 (P136 — walker defensive audit: anchor `inputs:` regex + document FAQ/howToUse multi-line limitation)
+> **最后更新:** 2026-07-30 (P137 — T2.7 trial: post-processor regex for composite data-driven lines; 4 patterns shipped, 4 brief patterns deferred to P138+ after shape audit)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 827 across 43 active days (2026-05-31 → 2026-07-29, ~8 weeks)
+> **Total commits:** 835 across 44 active days (2026-05-31 → 2026-07-30, ~8 weeks)
 
 ---
 
@@ -43,6 +43,7 @@
 - Candidate: P123/P124 defensive audit — verify no remaining silent-skip paths post-P131 (single-dim tests + extracted walker helper make 3rd-party review easier; walker regex now in one auditable location)
 - Candidate: tier-2 round 7 — composite data-driven lines (NEW approach: source-level translation or customFn-based); AI cost tip lines, dynamic projection rows, bar chart labels
 - Candidate: CHANGELOG catch-up v9 — when next P-series catch-up is needed (current gap since P131 catch-up: 0 commits)
+- ✅ **P137 (T2.7 trial) — partial success**: post-processor regex Route C-extended validated for 4 composite line shapes (Cost Comparison `(N reqs/day)` × 3 + `(N Models)` × 1 + Cheapest variant 1 × 2 + Cheapest variant 2 × 1). 5 new `engine_cost.*` keys active + 4 reserved. New build-dep test (40th). 4 brief patterns (saving/image_cheapest/gpu_total/training_total) deferred to P138+ — actual engine line shapes differ from spec assumption. See plan §P137 Execution Log.
 
 ---
 
@@ -404,6 +405,45 @@ P123/P124 walker triplet = `buildSlugToFirstInput()` + `buildSlugToFaqCount()` +
 - **[P131] Old P123/P124 scratch diagnostics cleared** — pre-P131 IDE showed `engine-composite-i18n-guard.test.ts` line 190/191 and `engine-en-composite-i18n-guard.test.ts` line 182/183 errors (`RegExpStringIterator` / `Set<string>` not iterable without `--downlevelIteration`). Stale IDE cache only — P131 deletes the source files so the errors clear on next `tsc --noEmit`.
 
 📦 ship log: [`memory/p131-single-test-split-shipped.md`](memory/p131-single-test-split-shipped.md)
+
+---
+
+## [M23.2] - 2026-07-29 → 2026-07-30 — Composite data-driven lines trial (P137)
+
+🧪 **Route C-extended (post-processor regex) validated for AI cost composite data-driven lines.** Tier-2 round 7 trial — architecture decision confirmed working for static prefix + dynamic data + static suffix lines: 4 patterns shipped (Cost Comparison `(N reqs/day)` × 3 + `(N Models)` × 1 + Cheapest variant × 2 + Cheapest overall variant × 1). 9 `engine_cost.*` keys shipped (5 currently active, 4 reserved). New build-dep test `tests/ai-cost-t2-7-zh-output.test.ts` (40th build-dep suite). **Trial partial success**: 4 brief patterns deferred to P138+ after pre-implementation grep revealed actual engine line shapes differ from spec assumption. 1 batch · 5 commits · 0 production engine count change. 100 engines untouched, 0 customFn changes (constraint preserved throughout).
+
+### Added (i18n keys + test infrastructure)
+- **[i18n] `src/i18n/translations.ts`** — 9 new `engine_cost.*` entries: comparison_title, reqs_per_day, cheapest_prefix, at_per_month, saving_prefix, saving_suffix, image_cheapest, gpu_total, training_total. **5 active in shipped patterns** (comparison_title, reqs_per_day, cheapest_prefix, at_per_month). **4 reserved for P138+** (saving_*, image_cheapest, gpu_total, training_total — pre-implementation audit found no matching engine line shapes for these).
+- **[tests] `tests/ai-cost-t2-7-zh-output.test.ts`** (NEW, ~110 lines) — build-dep test asserting /zh/ AI cost pages contain localized composite fragments; /en/ pages remain baseline. 7 CASES (3 Cost Comparison + 1 Models variant + 2 Cheapest + 1 Cheapest overall). RUN_BUILD_TESTS=1 gated per P23b skip-guard pattern.
+- **[tests] `tests/dead-i18n-keys-guard.test.ts`** — WORKING_KEY_REQUIRED +9 plain-string entries (now 159 total; filtered via `typeof entry === 'string'` for P138+ hydration).
+
+### Added (post-processor extension)
+- **`src/pages/[lang]/[slug].astro`** — `compositePatterns[]` array inside `translateCalcOutput` (lines ~225-300):
+  - **Pattern 1**: `📊 Cost Comparison \((\d+ reqs/day)\)` → localized prefix + digit + suffix
+  - **Pattern 2**: `📊 Cost Comparison \((\d+ Models)\)` → localized prefix + literal suffix (openai variant)
+  - **Pattern 3**: `🏆 Cheapest: <name> at $<cost>/mo` → localized prefix + name + infix + cost + literal /mo (claude, openai)
+  - **Pattern 4**: `🏆 Cheapest overall: <name> at $<cost>/mo (<provider>)` → same translation as variant 1 (zh loses "overall" nuance; documented limitation, can add `engine_cost.cheapest_overall_prefix` key in P138+ if bilingual fidelity matters)
+- Reuses Unicode-safe `\u{XXXXX}` + `u` flag per CLAUDE.md encoding rule
+
+### Spec vs Reality (T4 audit finding)
+| Brief pattern | Engine | Actual shape (verified via grep) | Disposition |
+|---|---|---|---|
+| `💡 Saving vs X: $Y/month` | openai | `'• Switch cheapest to ' + name + ': save $X/mo'` (line 620) | DROP — different prefix |
+| `🎨 Cheapest provider: X at $Y/img` | image-gen | NO equivalent line — only `✅ ` iteration prefix | DROP — no candidate |
+| `💰 Total: $X/month` | gpu-cloud | `'  Total Monthly:        ' + fmt(totalMonthly)` (line 129, no emoji) | DROP — no emoji prefix |
+| `💼 Training total: $X` | training-cost | `'Total Estimated Cost: ' + pad('', 23) + fmt(totalCost)` (line 107) | DROP — different label |
+
+**Lesson**: Brief should require `grep -n` confirmation against actual engine source for every pattern before listing. P138+ planning checklist update.
+
+### Out of scope (P138+ carryover)
+- **gpu-cloud `Total Monthly`** (single occurrence, simple form, no emoji — possibly below cost of i18n)
+- **training-cost `Total Estimated Cost`** (same shape class)
+- **openai `Switch to batch pricing: save ~$X/mo (50% discount)`** (line 598 — has 💡 prefix, dynamic, viable composite)
+- **openai `Switch cheapest to <name>: save $X/mo`** (line 620 — different prefix style)
+- **`engine_cost.cheapest_overall_prefix`** key (closes "overall" nuance loss for variant 4 — adds 1 key)
+- **compositePatterns refactor** (>20 entries → extract to `src/i18n/composite-patterns.ts` registry — only 4 entries now, premature)
+
+📦 ship logs: [`memory/p136-walker-defensive-audit-shipped.md`](memory/p136-walker-defensive-audit-shipped.md) (P136; pre-P137) · [`memory/p137-tier2-round7-trial-shipped.md`](memory/p137-tier2-round7-trial-shipped.md) (P137)
 
 ---
 
