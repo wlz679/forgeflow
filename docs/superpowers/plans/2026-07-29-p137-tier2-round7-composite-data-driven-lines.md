@@ -619,3 +619,45 @@ Expected: pass.
   - `compositePatterns[]` shape: `{ regex: RegExp; build: (m: RegExpMatchArray) => string }` consistent across Task 2-4
 
 - [ ] Commissioning hook: this plan requires ZERO modifications to `src/engines/**`. If during execution you find yourself reaching for an engine file, STOP — re-audit the spec.
+
+---
+
+## P137 Execution Log (added 2026-07-30 after T4 phase)
+
+### T1-T3 ships (4 patterns successfully landed)
+
+| Commit | Pattern | Engines |
+|---|---|---|
+| `f03ec6c` | Cost Comparison `(N reqs/day)` | claude, gemini, deepseek |
+| `ac1aec3` (F1+F2) | Cost Comparison `(N Models)` + comma robustness | openai (added 4th case) |
+| `7f0e4a2` | Cheapest `: X at $Y/mo` (variant 1) | claude, openai |
+| `7f0e4a2` | Cheapest overall `: X at $Y/mo (provider)` (variant 2) | ai-api-cost-comparison |
+
+### T4 outcome — 4 brief patterns DROPPED (no commit, scope reduction)
+
+Pre-implementation audit revealed the **brief's 4 patterns do not match actual engine code**:
+
+| Brief pattern | Engine | Actual shape (verified) | Trial disposition |
+|---|---|---|---|
+| `💡 Saving vs X: $Y/month` | openai | `'• Switch cheapest to ' + name + ':  save ' + fmt(savings) + '/mo'` | DROP — different prefix, multi-segment structure |
+| `🎨 Cheapest provider: X at $Y/img` | image-gen | **NO equivalent line** — only `✅ ` prefix in cheapest-list iterations | DROP — no candidate exists |
+| `💰 Total: $X/month` | gpu-cloud | `'  Total Monthly:        ' + fmt(totalMonthly)` (no emoji, 8-space indent) | DROP — no emoji prefix, single occurrence |
+| `💼 Training total: $X` | training-cost | `'Total Estimated Cost: ' + pad('', 23) + fmt(totalCost)` | DROP — different prefix label |
+
+**Trial success metric**: 4/8 hypothetical patterns shipped (= 50% of brief scope). Architecture validated for the patterns that DID ship (Cost Comparison + Cheapest are working in production HTML).
+
+### P138+ candidates (carryover from T4 audit)
+
+These deferred patterns are real but require fresh spec with verified line shapes:
+
+1. **gpu-cloud "Total Monthly"** — single occurrence, simple form. Could become a new translation if we add a staticExamples fallback. Low priority.
+2. **training-cost "Total Estimated Cost"** — single occurrence, no emoji prefix. Same as gpu-cloud.
+3. **openai batch-saving line** — `'• 💡 Switch to batch pricing: save ~$X/mo'` (line 598). Has `💡` prefix, dynamic. Could be T2.8 candidate.
+4. **openai Switch cheapest** — `'• Switch cheapest to <name>:  save $X/mo'` (line 620). Different prefix style.
+5. **ai-training training_total re-audit** — `💼` emoji confirmed absent in training-cost staticExamples; the literal line is `Total Estimated Cost:` without emoji prefix. Either add an emoji to engine source (engine modification = out of trial scope per Constraint) or skip this translation key.
+
+### Lessons learned
+
+1. **Spec verification must include `grep` against actual source** — not just imagined visual shapes from existing translation keys. P138+ brief should REQUIRE `grep -n` confirmation for every pattern.
+2. **Brief emoji-vs-actual emoji mismatch is silent** — brief assumed `💰 Total:` but actual is `Total Monthly:` (no emoji). Inspection would have caught this.
+3. **Trial round value maximized** — 4 patterns shipped + 4 patterns scope-rejected, with concrete findings for P138+ follow-up. That's a useful trial.
