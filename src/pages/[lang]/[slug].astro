@@ -261,6 +261,30 @@ function translateCalcOutput(text: string, lang: Lang): string {
       // across AI cost engines (not language-specific). T2.7 trial scope
       // doesn't add a separate key for it.
     },
+    {
+      // P137 T3 — variant 1: cheapest_line (claude line 432 + openai line 868)
+      // Shape: "🏆 Cheapest: <name> at $<cost>/mo"
+      // The shortest + most direct "cheapest" composite line — appears at
+      // the bottom of these engines' Savings Insights section. Reuses
+      // engine_cost.cheapest_prefix + engine_cost.at_per_month + literal
+      // "/mo" suffix.
+      regex: /(\u{1F3C6} Cheapest: )([^()]+?)( at )(\$[\d.,]+)(\/mo)/gu,
+      build: (m) =>
+        `${t('engine_cost.cheapest_prefix', lang)}${m[2]}${t('engine_cost.at_per_month', lang)}${m[4]}${m[5]}`,
+    },
+    {
+      // P137 T3 — variant 2: cheapest_overall_line (ai-api-cost-comparison line 244)
+      // Shape: "🏆 Cheapest overall: <name> at $<cost>/mo (<provider>)"
+      // Trial-scope trade-off: reuses engine_cost.cheapest_prefix (zh loses
+      // the "overall" modifier nuance — "Cheapest overall" → "最便宜:"
+      // rather than "最便宜整体:"). Avoids adding a 10th i18n key while
+      // still translating the suffix/at/cost segments. Revisit in P138+
+      // if bilingual fidelity matters; one option is to add
+      // engine_cost.cheapest_overall_prefix without disturbing existing keys.
+      regex: /(\u{1F3C6} Cheapest overall: )([^()]+?)( at )(\$[\d.,]+)(\/mo) \(([a-z]+)\)/gu,
+      build: (m) =>
+        `${t('engine_cost.cheapest_prefix', lang)}${m[2]}${t('engine_cost.at_per_month', lang)}${m[4]}${m[5]} (${m[6]})`,
+    },
   ];
   for (const { regex, build } of compositePatterns) {
     out = out.replace(regex, (...args) => build(args as unknown as RegExpMatchArray));

@@ -69,9 +69,31 @@ const CASES: Array<{ slug: string; zhFragment: string; enFragment: string }> = [
     zhFragment: '📊 成本对比',
     enFragment: '📊 Cost Comparison',
   },
+  // P137 T3 — cheapest_line composite (claude line 432 + openai line 868).
+  // Shape: "🏆 Cheapest: <name> at $<cost>/mo" — variant 1 in
+  // compositePatterns[]. Reuses engine_cost.cheapest_prefix + at_per_month.
+  {
+    slug: 'solopreneur-claude-api-cost-calculator',
+    zhFragment: '🏆 最便宜:',
+    enFragment: '🏆 Cheapest:',
+  },
+  {
+    slug: 'solopreneur-openai-token-calculator',
+    zhFragment: '🏆 最便宜:',
+    enFragment: '🏆 Cheapest:',
+  },
+  // P137 T3 — cheapest_overall_line composite (ai-api-cost-comparison
+  // line 244). Shape: "🏆 Cheapest overall: <name> at $<cost>/mo (<provider>)"
+  // — variant 2 in compositePatterns[]. Trial limitation: zh loses "overall"
+  // nuance (zh = "🏆 最便宜:" same as variant 1).
+  {
+    slug: 'solopreneur-ai-api-cost-comparison',
+    zhFragment: '🏆 最便宜:',
+    enFragment: '🏆 Cheapest',
+  },
 ];
 
-test('P137 T2.7 composite i18n — zh-output guard: 4 AI cost engines have localized "Cost Comparison"', () => {
+test('P137 T2.7 composite i18n — zh-output guard: 4 AI cost engines have localized "Cost Comparison" + 3 cheapest variants', () => {
   ensureBuilt();
 
   const violations: string[] = [];
