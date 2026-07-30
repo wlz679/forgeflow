@@ -1226,7 +1226,9 @@ const schema = JSON.stringify({
             const translatedEx = lang === 'zh' && engine.clientConfig.type === 'custom'
               ? translateCalcOutput(ex, lang)
               : ex;
-            return <ResultCard text={translatedEx} index={i} hideIndex={engine.clientConfig.type === 'custom'} />;
+            // I2-review: v3 engines want the `💡 Tip:` line preserved so all
+            // 5 body sections render as cards. Legacy engines keep the strip.
+            return <ResultCard text={translatedEx} index={i} hideIndex={engine.clientConfig.type === 'custom'} preserveTip={bizConfigKey === 'BIZ_V3'} />;
           })}
         </div>
 
@@ -1529,7 +1531,10 @@ const schema = JSON.stringify({
           var v3hasEmoji = config.iconRegex && config.iconRegex.test(s);
           var v3hasLabel = false;
           for (var v3k in v3labelMap) { if (s.indexOf(v3k + ':') >= 0) { v3hasLabel = true; break; } }
-          if (v3hasEmoji || v3hasLabel) {
+          // C1-review: scope to BIZ_V3_CONFIG only so we never accidentally
+          // paint non-v3 engines (their iconRegex happens to overlap with the
+          // v3 set of 🩺📊🔄⚖️🎯💡 and would otherwise leak this branch).
+          if (config === BIZ_V3_CONFIG && (v3hasEmoji || v3hasLabel)) {
             var v3lines = s.split('\n').filter(function(l) { return l.trim(); });
             for (var v3i = 0; v3i < v3lines.length; v3i++) {
               var v3l = v3lines[v3i].trim();

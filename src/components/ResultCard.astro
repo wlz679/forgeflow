@@ -1,10 +1,15 @@
 ---
 import CopyButton from './CopyButton.astro';
 import { t, getLang } from '../i18n';
-export interface Props { text: string; index: number; hideIndex?: boolean; }
-const { text, index, hideIndex } = Astro.props;
+export interface Props { text: string; index: number; hideIndex?: boolean; preserveTip?: boolean; }
+const { text, index, hideIndex, preserveTip } = Astro.props;
 const lang = getLang(Astro);
-const stripped = text.split('\n').filter((l: string) => !l.includes('💡 Tip:')).join('\n');
+// I2-review: strip the standalone `💡 Tip:` footer for legacy business calcs
+// to avoid double-rendering. v3 calcs want the line preserved (it's one of
+// the 5+1 body sections, not a footer) — opt in via preserveTip.
+const stripped = preserveTip
+  ? text
+  : text.split('\n').filter((l: string) => !l.includes('💡 Tip:')).join('\n');
 const titleLine = stripped.split('\n')[0];
 const restLines = stripped.split('\n').slice(1).join('\n');
 ---
