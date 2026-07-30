@@ -236,16 +236,30 @@ function translateCalcOutput(text: string, lang: Lang): string {
       // whole "100 reqs/day" expression. Capture group 2 = "100 reqs/day"
       // (the entire bracketed payload); we split on " " to extract the
       // numeric prefix for the localized rebuild.
-      regex: /(\u{1F4CA} Cost Comparison )\((\d+ reqs\/day)\)/gu,
+      // [\d,]+ tolerates lc()'s comma-formatted reqPerDay (e.g., "1,000 reqs/day")
+      regex: /(\u{1F4CA} Cost Comparison )\(([\d,]+ reqs\/day)\)/gu,
       build: (m) => {
         const prefix = t('engine_cost.comparison_title', lang);
         const suffix = t('engine_cost.reqs_per_day', lang);
         // m[2] = "100 reqs/day" — strip the trailing " reqs/day" and
         // re-attach the localized suffix. Preserves dynamic digit data
         // (100, 1K, 10K, etc. — depending on engine's lc() output).
-        const digits = m[2].replace(/\s+reqs\/day$/, '');
+        // Strip commas to keep numeric payload consistent across locales.
+        const digits = m[2].replace(/\s+reqs\/day$/, '').replace(/,/g, '');
         return `${prefix} (${digits}${suffix})`;
       },
+    },
+    {
+      // F1: openai-token-calculator line 270 — "(14 Models)" literal
+      // (vs. claude/gemini/deepseek "(N reqs/day)" dynamic). Number of
+      // models is also dynamic in source but this engine statically
+      // emits "14 Models" since staticExamples uses default rows.
+      regex: /(\u{1F4CA} Cost Comparison )\((\d+ Models)\)/gu,
+      build: (m) =>
+        `${t('engine_cost.comparison_title', lang)} (${m[2]})`,
+      // m[2] = "14 Models" → keep as-is; suffix "Models" is universal
+      // across AI cost engines (not language-specific). T2.7 trial scope
+      // doesn't add a separate key for it.
     },
   ];
   for (const { regex, build } of compositePatterns) {

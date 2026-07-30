@@ -61,9 +61,17 @@ const CASES: Array<{ slug: string; zhFragment: string; enFragment: string }> = [
     zhFragment: '📊 成本对比',
     enFragment: '📊 Cost Comparison',
   },
+  // OpenAI: line 270 emits literal "📊 Cost Comparison (14 Models)" —
+  // different shape from the other 3 (N reqs/day). Same zh fragment
+  // because only the prefix gets translated; "Models" is universal.
+  {
+    slug: 'solopreneur-openai-token-calculator',
+    zhFragment: '📊 成本对比',
+    enFragment: '📊 Cost Comparison',
+  },
 ];
 
-test('P137 T2.7 composite i18n — zh-output guard: 3 AI cost engines have localized "Cost Comparison"', () => {
+test('P137 T2.7 composite i18n — zh-output guard: 4 AI cost engines have localized "Cost Comparison"', () => {
   ensureBuilt();
 
   const violations: string[] = [];
