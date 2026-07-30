@@ -28,9 +28,8 @@
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
 
 const root = resolve(import.meta.dirname, '..');
 
