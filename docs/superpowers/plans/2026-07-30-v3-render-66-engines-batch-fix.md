@@ -311,6 +311,8 @@ git commit -m "feat(p138): wire 60 unwired engines into BIZ_CONFIG_MAP (10 categ
 - Consumes: `dist/en/` and `dist/zh/` (built pages), `src/data/tools.ts` (tool list), `src/pages/[lang]/[slug].astro` (source containing BIZ_CONFIG_MAP)
 - Produces: PASS if every tool has a BIZ_CONFIG_MAP entry AND every business tool's rendered HTML contains the v3 6-section card class; FAIL with diagnostic listing the missing entries
 
+> **P138 Task 2 reviewer note (2026-07-30):** The brief's "rendered HTML contains the v3 6-section card class" check was abandoned. `beautifySections()` runs at hydration (client-side JS), not at SSR/build time — `dist/en/solopreneur-nrr-calculator/index.html` contains un-beautified text blobs, NOT 6-card layouts. True DOM verification (Playwright/Puppeteer) is deferred to a separate plan. This task implements three **source-level** invariants instead: dual-map equality (frontmatter vs runtime BIZ_CONFIG_MAP), coverage (100 tool slugs wired into BIZ_CONFIG_MAP or AI-cost switch), and v3 wiring (all 68 v3 slugs point to `BIZ_V3` in both maps).
+
 - [ ] **Step 1: Create the test file**
 
 Create `tests/v3-render-coverage-guard.test.ts` with the following content:
