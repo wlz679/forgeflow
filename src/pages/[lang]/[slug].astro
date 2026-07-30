@@ -217,6 +217,40 @@ function translateCalcOutput(text: string, lang: Lang): string {
       out = out.split(en).join(localized);
     }
   }
+  // P137 T2.7 — composite data-driven line patterns.
+  // Each pattern: regex captures dynamic data; build() emits localized
+  // prefix + captured data + localized suffix. Tier-1/2 above uses
+  // whole-string headerKeys; here dynamic data is preserved as-is.
+  const compositePatterns: Array<{
+    regex: RegExp;
+    build: (m: RegExpMatchArray) => string;
+  }> = [
+    {
+      // The `u` flag is mandatory: \u{1F4CA} (📊) is a 5-digit Unicode escape
+      // and JavaScript regex without `u` treats `\u{XXXXX}` as literal text
+      // (silent no-match against the actual emoji surrogate pair).
+      // Pattern shape: "📊 Cost Comparison (100 reqs/day)" — note the
+      // closing paren is at the END of the line, not before "reqs/day".
+      // The brief's spec had `([^)]+?)\)(\s*reqs\/day)` which assumed the
+      // parens wrapped only the digits; reality is the parens wrap the
+      // whole "100 reqs/day" expression. Capture group 2 = "100 reqs/day"
+      // (the entire bracketed payload); we split on " " to extract the
+      // numeric prefix for the localized rebuild.
+      regex: /(\u{1F4CA} Cost Comparison )\((\d+ reqs\/day)\)/gu,
+      build: (m) => {
+        const prefix = t('engine_cost.comparison_title', lang);
+        const suffix = t('engine_cost.reqs_per_day', lang);
+        // m[2] = "100 reqs/day" — strip the trailing " reqs/day" and
+        // re-attach the localized suffix. Preserves dynamic digit data
+        // (100, 1K, 10K, etc. — depending on engine's lc() output).
+        const digits = m[2].replace(/\s+reqs\/day$/, '');
+        return `${prefix} (${digits}${suffix})`;
+      },
+    },
+  ];
+  for (const { regex, build } of compositePatterns) {
+    out = out.replace(regex, (...args) => build(args as unknown as RegExpMatchArray));
+  }
   return out;
 }
 const isInteractive = engine.inputs.length > 0;
