@@ -45,7 +45,7 @@ Why two variants: `Break-Even` and `Milestone` are business-domain concepts. For
 
 Any future engine that wants the 3-band exemption must (a) cite the hard-breakpoint justification in its header comment and (b) cross-link the CLAUDE.md exemption note. Both pieces are required for audit-grade clarity.
 
-**v3 status (P16 milestone locked 2026-07-15/16):** All 100 engines at the v3 standard. Engine count per category:
+**v3 status (P16 milestone locked 2026-07-15/16; P138 rendering layer closed 2026-07-30):** All 100 engines at the v3 standard at both engine-code AND rendering layers. Engine count per category:
 
 <!-- codegen:start engine-count -->
 
@@ -70,7 +70,7 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 
 <!-- codegen:end -->
 
-8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant (across 15 categories). UI wiring (`BIZ_CONFIG_MAP` + 4 `BIZ_*_CONFIG` + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
+8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant at both engine-code AND rendering layers (P138 closed the rendering layer for 66 engines in 10 categories: C/F/H/K/L/M/O/P/R/T). UI wiring (`BIZ_CONFIG_MAP` + 5 `BIZ_*_CONFIG` [SAAS/VALUATION/FREELANCE/COST + BIZ_V3 universal] + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
 ## Defense-in-Depth (P110, 2026-07-27)
 
@@ -86,6 +86,7 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 | **Performance (JS)** | 1 | `js-bundle-size-guard` (P106) — 100 KB inline per page | [`p106`](memory/p106-js-bundle-size-guard-shipped.md) |
 | **Performance (CSS)** | 1 | `css-bundle-size-guard` (P107) — 60 KB external + 5 KB inline per page | [`p107`](memory/p107-css-bundle-size-guard-shipped.md) |
 | **Performance (Images)** | 1 | `image-size-guard` (P108) — 500 KB/OG + 80 MB total bundle | [`p108`](memory/p108-image-size-guard-shipped.md) |
+| **Rendering (v3 section)** | 1 | `v3-render-coverage-guard` (P138) — source-level invariants: dual `BIZ_CONFIG_MAP` equality + 100-tool coverage + 68 v3 wired. (Source-only; follows build-dep gate for summary consistency.) | [`p138`](memory/p138-v3-render-batch-fix-shipped.md) |
 | **Build-dep source guards** | 8 | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count) | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
 | **Total** | **39 build-dep suites** + 8 source-only = **47** | 6 dimensions | |
 
