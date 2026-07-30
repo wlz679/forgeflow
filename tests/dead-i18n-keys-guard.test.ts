@@ -22,6 +22,7 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { translations } from '../src/i18n/translations';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -284,10 +285,21 @@ test('working i18n keys translate on their target pages', () => {
 
   const violations: string[] = [];
 
-  // P137 T2.7: entries may be plain key-name strings (tracked for Task 5
-  // existence check) or object assertions. Filter to object entries only.
+  // P137 T2.7: entries may be plain key-name strings (tracked for
+  // translations.ts existence) or object assertions (track zh-page rendering).
+  // Plain-string entries are checked via direct translations.ts lookup;
+  // object entries are checked against the built zh/ HTML.
   for (const entry of WORKING_KEY_REQUIRED) {
-    if (typeof entry === 'string') continue;
+    if (typeof entry === 'string') {
+      // P137 I1: assert the key exists in translations.ts (without it, the
+      // guard silently accepts orphan-reference removal). For P138+,
+      // reserved keys (saving_*, image_cheapest, gpu_total, training_total)
+      // become object entries once patterns land.
+      if (!translations[entry]) {
+        violations.push(`${entry}: WORKING_KEY_REQUIRED entry references missing translations.ts key`);
+      }
+      continue;
+    }
     const { path, mustContain } = entry;
     const full = resolve(root, 'dist', 'zh', path);
     if (!existsSync(full)) {

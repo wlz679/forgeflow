@@ -86,6 +86,10 @@ const CASES: Array<{ slug: string; zhFragment: string; enFragment: string }> = [
   // line 244). Shape: "🏆 Cheapest overall: <name> at $<cost>/mo (<provider>)"
   // — variant 2 in compositePatterns[]. Trial limitation: zh loses "overall"
   // nuance (zh = "🏆 最便宜:" same as variant 1).
+  //
+  // enFragment intentionally uses base "🏆 Cheapest" (no colon) because the
+  // ai-api line is "🏆 Cheapest overall:" — both fragments still appear in
+  // the EN HTML (substring of "Cheapest overall:"), test logic unchanged.
   {
     slug: 'solopreneur-ai-api-cost-comparison',
     zhFragment: '🏆 最便宜:',
