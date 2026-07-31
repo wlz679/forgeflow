@@ -57,7 +57,6 @@ const SLUG_PATTERN = /^solopreneur-[a-z0-9-]+$/;
 const tools = defineCollection({
   type: 'content',
   schema: z.object({
-    slug: z.string().regex(SLUG_PATTERN),
     engine_ref: z.string().regex(SLUG_PATTERN),
     category_id: z.enum(CATEGORY_LETTERS),
     reviewed_by: z.array(z.string()).default([]),
