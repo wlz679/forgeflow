@@ -25,7 +25,7 @@ src/components/
 | List rendering | 2 | 58 | 29 |
 | Category-specific | 4 | 112 | 28 |
 | Tool-page widget | 8 | 277 | 34.6 |
-| Utility | 2 | 25 | 12.5 |
+| Utility | 1 | 25 | 12.5 |
 | **Total** | **18** | **631** | **35.1** |
 
 ---
