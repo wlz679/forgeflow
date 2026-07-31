@@ -56,8 +56,13 @@ test('no source file imports or renders <AdUnit /> after P140a', () => {
         walk(full, depth + 1);
         continue;
       }
-      // Only scan text-y source extensions (Astro, ts, tsx, mjs, js, md).
-      if (!/\.(astro|ts|tsx|mjs|js|md)$/.test(entry.name)) continue;
+      // Only scan text-y CODE extensions. Markdown files (.md) are intentionally
+      // excluded: docs may legitimately mention `AdUnit.astro` for historical
+      // context (e.g. INDEX.md, plan/spec retrospectives) without implying a
+      // resurrection. If a markdown file gets a literal <AdUnit /> import
+      // block, that's a docs bug — but the CI guard isn't the right place to
+      // catch it (would generate noisy false positives on every retrospective).
+      if (!/\.(astro|ts|tsx|mjs|js)$/.test(entry.name)) continue;
       // Skip binary-looking or huge files (>1MB).
       let stat;
       try { stat = statSync(full); } catch { continue; }
