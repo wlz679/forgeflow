@@ -84,7 +84,6 @@ These 4 components are rendered ONLY on category landing pages (`src/pages/[lang
 
 | Component | LOC | Props | Consumers |
 |---|---|---|---|
-| ~~`AdUnit.astro`~~ | — | *Removed in P140a — see `docs/superpowers/specs/2026-07-31-adsense-low-value-content-fix-design.md` §4. Google AdSense Auto Ads handles all ad placement via the global script in `BaseLayout.astro`.* | — |
 | `SearchBar.astro` | 14 | None — `<input type="search" id="tool-search">` with JS init layer | 1 |
 
 ---
