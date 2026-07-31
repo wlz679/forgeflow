@@ -7,7 +7,6 @@ import FAQ from '../../components/FAQ.astro';
 import HowToUse from '../../components/HowToUse.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import RelatedBlog from '../../components/RelatedBlog.astro';
-import AdUnit from '../../components/AdUnit.astro';
 import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
 import RecentViewed from '../../components/RecentViewed.astro';
 import '../../engines';
@@ -1303,7 +1302,6 @@ const schema = JSON.stringify({
         </div>
 
         <div id="dynamic-results" class="space-y-3 hidden"></div>
-        <AdUnit slot="tool-result" />
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
         <RelatedBlog posts={relatedBlog} />
         <EeatTrustBlock

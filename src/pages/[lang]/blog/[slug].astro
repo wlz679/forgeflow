@@ -2,7 +2,6 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
-import AdUnit from '../../../components/AdUnit.astro';
 import { getAllBlogPosts, getBlogPostBySlug } from '../../../lib/blog';
 import { t, getLang } from '../../../i18n';
 import { SITE_URL } from '../../../lib/site-config';
@@ -87,13 +86,11 @@ const articleSchema = JSON.stringify({
         {(lang === 'zh' && post.bodyZh ? post.bodyZh : post.content).split('\n').map(p => <p>{p}</p>)}
       </div>
     </article>
-    <AdUnit slot="blog-mid" />
     <p class="mt-6">
       <a href={`/${lang}/${post.toolSlug}`} class="inline-block px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm">
         {t('blog.try_now', lang, { tool: post.toolName })}
       </a>
     </p>
-    <AdUnit slot="blog-end" />
   </main>
   <Footer />
 </BaseLayout>

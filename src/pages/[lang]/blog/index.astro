@@ -2,7 +2,6 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
-import AdUnit from '../../../components/AdUnit.astro';
 import { getAllBlogPosts } from '../../../lib/blog';
 import { t, getLang } from '../../../i18n';
 import { SITE_URL } from '../../../lib/site-config';
@@ -63,7 +62,6 @@ const blogIndexSchema = JSON.stringify({
         </a>
       ))}
     </div>
-    <AdUnit slot="blog-mid" />
   </main>
   <Footer />
 </BaseLayout>
