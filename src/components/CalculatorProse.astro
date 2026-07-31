@@ -1,21 +1,31 @@
 ---
-// P140a-T5: Renders 1 of 4 H2 prose sections from a Calculator Content
-// Collection entry. Each section maps to a dedicated visual variant:
-//   - 'intro'        : 📌  purple tint, drops user into the business problem
-//   - 'methodology'  : ⚙️ neutral palette, host for formulas + variable tables
-//   - 'limitations'  : ⚠️  amber tint, italic-leaning typography
-//   - 'example'      : 📋 green tint, hosts step-by-step walkthroughs
+// P140a-T5 (revised after T5 reviewer design fix): Renders ONE of 4 H2 prose
+// sections from a Calculator Content Collection entry. Each panel shows
+// only the matching section's body — NOT the full markdown.
 //
-// Section names match the 4 H2s in src/content/tools/<slug>.md (P140a-T4):
-//   'intro'        → '## What This Calculator Measures'
-//   'methodology'  → '## How It Works (Methodology)'
-//   'limitations'  → '## Limitations & When Not To Use'
-//   'example'      → '## Worked Example'
+// Section extraction strategy:
+//   Astro 4.x does not expose a "render only this section" API. Instead of
+//   full entry.render() (which returns all 4 sections' Content at once), we
+//   read entry.body as raw markdown string and extract the matching H2's
+//   body via a regex split. The extracted text is rendered as plain HTML
+//   paragraphs (via `set:html` with simple markdown-aware transforms).
+//   This trades full markdown rendering for guaranteed correct per-section
+//   isolation — acceptable because the prose is paragraph-leaning and the
+//   `prose` Tailwind class handles basic typography.
+//
+// Section labels match the 4 H2s in src/content/tools/<slug>.md (P140a-T4):
+//   'intro'        → '## What This Calculator Measures'           (en)
+//                       '## 这个计算器衡量什么'                      (zh)
+//   'methodology'  → '## How It Works (Methodology)'              (en)
+//                       '## 计算方法'                                (zh)
+//   'limitations'  → '## Limitations & When Not To Use'           (en)
+//                       '## 局限性 / 何时不适用'                     (zh)
+//   'example'      → '## Worked Example'                          (en)
+//                       '## 案例走读'                                (zh)
+//   Pattern is chosen as substring-of-H2 so it survives phrasing variants.
 //
 // P140a note: this component is created but NOT yet wired into
-// src/pages/[lang]/[slug].astro — that hookup is P140b-T4. P140a simply
-// establishes the renderer contract. P140b adds getEntry() in the page
-// template and inserts <CalculatorProse section="..." /> at the 4 slots.
+// src/pages/[lang]/[slug].astro — that hookup is P140b-T4.
 
 import type { CollectionEntry } from 'astro:content';
 
@@ -27,7 +37,7 @@ export interface Props {
 const { entry, section } = Astro.props;
 
 interface SectionHeading {
-  match: string;        // substring to match in H2 (handles variant phrasings)
+  match: string;        // regex pattern: substring of H2 text to find
   containerClass: string;
   markerText: string;
   markerBg: string;
@@ -40,37 +50,157 @@ const SECTION_HEADINGS: Record<Props['section'], SectionHeading> = {
     containerClass: 'rounded-2xl border border-purple-200 bg-purple-50/60 p-6 my-8',
     markerText: '📌',
     markerBg: 'bg-purple-100/80',
-    bodyClass: 'prose prose-sm max-w-none text-gray-800 [&_h2]:hidden',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800',
   },
   methodology: {
     match: 'How It Works',
     containerClass: 'rounded-2xl border border-gray-200 bg-gray-50/60 p-6 my-8',
     markerText: '⚙️',
     markerBg: 'bg-gray-100',
-    bodyClass: 'prose prose-sm max-w-none text-gray-800 [&_h2]:hidden [&_table]:w-full [&_th]:text-left [&_code]:bg-white [&_code]:px-1 [&_code]:rounded',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800',
   },
   limitations: {
     match: 'Limitations',
     containerClass: 'rounded-2xl border border-amber-200 bg-amber-50/40 p-6 my-8',
     markerText: '⚠️',
     markerBg: 'bg-amber-100/80',
-    bodyClass: 'prose prose-sm max-w-none text-gray-700 italic [&_h2]:hidden',
+    bodyClass: 'prose prose-sm max-w-none text-gray-700 italic',
   },
   example: {
     match: 'Worked Example',
     containerClass: 'rounded-2xl border border-emerald-200 bg-emerald-50/40 p-6 my-8',
     markerText: '📋',
     markerBg: 'bg-emerald-100/80',
-    bodyClass: 'prose prose-sm max-w-none text-gray-800 [&_h2]:hidden [&_ol]:pl-5 [&_ol]:list-decimal',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800',
   },
 };
 
-const cfg = SECTION_HEADINGS[section];
+// en + zh variants — we try each in turn, first match wins. Pattern is
+// intentionally permissive (substring match on H2 text). If neither matches
+// we emit an empty panel — caller is responsible for ensuring all 4 H2s
+// are present (enforced by tests/content-prose-shape-guard.test.ts).
+const SECTION_VARIANTS: Record<Props['section'], string[]> = {
+  intro:        ['What This Calculator Measures', '这个计算器衡量什么'],
+  methodology:  ['How It Works', '计算方法'],
+  limitations:  ['Limitations', '局限性'],
+  example:      ['Worked Example', '案例走读'],
+};
 
-// Render the full markdown body, then hide everything except the matching H2 section.
-// We rely on Tailwind's prose class + [&_h2]:hidden to suppress the H2 of all 4
-// sections, then we wrap our chosen section's elements in the styled container.
-const { Content } = await entry.render();
+const cfg = SECTION_HEADINGS[section];
+const variants = SECTION_VARIANTS[section];
+
+/**
+ * Extract the body of one H2 section from raw markdown.
+ * Returns the text BETWEEN the matched H2 line and the next H2 (or end).
+ */
+function extractSection(body: string, matchers: string[]): string {
+  for (const m of matchers) {
+    // Match `^## <text containing substring>` followed by everything until the next `## ` or EOF.
+    const re = new RegExp(
+      `^##[^\\n]*${m}[^\\n]*\\n([\\s\\S]*?)(?=^## |\\Z)`,
+      'm'
+    );
+    const found = body.match(re);
+    if (found) return found[1].trim();
+  }
+  return '';
+}
+
+/**
+ * Best-effort markdown → HTML transform for prose paragraphs.
+ * Handles:
+ *   - ```fenced code blocks``` → <pre><code>...</code></pre>
+ *   - blank-line-separated paragraphs → <p>...</p>
+ *   - `inline code` → <code>...</code>
+ *   - **bold** → <strong>...</strong>
+ *   - *italic* → <em>...</em>
+ *   - markdown tables (|...| lines) → <table><tr><td>...</td></tr></table>
+ * Anything else is treated as plain text and escaped.
+ *
+ * This is intentionally minimal — no full CommonMark parser — because the
+ * prose content is paragraph-leaning with light formatting. A real
+ * markdown library (marked / remark) can be substituted later if richer
+ * formatting becomes necessary. For AdSense E-E-A-T compliance, plain
+ * paragraphs with paragraph breaks already satisfies the prose-depth
+ * requirement.
+ */
+function simpleMarkdownToHtml(md: string): string {
+  // 1. Extract fenced code blocks first (preserve verbatim)
+  const codeBlocks: string[] = [];
+  let s = md.replace(/```[a-zA-Z0-9_-]*\n([\s\S]*?)```/g, (_m, code) => {
+    const idx = codeBlocks.push(`<pre class="bg-white border border-gray-200 rounded-lg p-3 my-3 overflow-x-auto text-xs"><code>${escapeHtml(code)}</code></pre>`) - 1;
+    return `__CODE_BLOCK_${idx}__`;
+  });
+
+  // 2. Inline transforms on what's left (escape first)
+  s = escapeHtml(s);
+  s = s.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+
+  // 3. Markdown tables (gfm-style): | col | col | lines, separated by header row | --- | --- |
+  s = s.replace(/((?:^\\|[^\\n]*\\|[^\\n]*\\n)+)/gm, (tableBlock) => {
+    const rows = tableBlock.trim().split('\n').filter(Boolean);
+    if (rows.length < 2) return tableBlock;
+    const headerCells = rows[0].split('|').map(c => c.trim()).filter(Boolean);
+    // rows[1] is the | --- | --- | separator; skip
+    const bodyRows = rows.slice(2).map(r => r.split('|').map(c => c.trim()).filter(Boolean));
+    let html = '<table class="w-full text-xs my-3 border-collapse">';
+    html += '<thead><tr>';
+    for (const h of headerCells) html += `<th class="text-left px-2 py-1.5 font-semibold text-gray-600 border-b border-gray-200">${h}</th>`;
+    html += '</tr></thead><tbody>';
+    for (const row of bodyRows) {
+      html += '<tr>';
+      for (const c of row) html += `<td class="px-2 py-1.5 text-gray-700 border-b border-gray-100">${c}</td>`;
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    return html;
+  });
+
+  // 4. Split on blank lines → paragraphs
+  const paragraphs = s.split(/\n\s*\n/);
+  let html = '';
+  for (const p of paragraphs) {
+    const text = p.trim();
+    if (!text) continue;
+    // Skip a paragraph that is just a code-block placeholder
+    const codeMatch = text.match(/^__CODE_BLOCK_(\d+)__$/);
+    if (codeMatch) {
+      html += codeBlocks[Number(codeMatch[1])];
+      continue;
+    }
+    // If paragraph contains placeholders, leave them inline
+    if (text.includes('__CODE_BLOCK_')) {
+      // Replace placeholders with their HTML inline
+      let inline = text.replace(/__CODE_BLOCK_(\d+)__/g, (_m, idx) => codeBlocks[Number(idx)]);
+      // If standalone code block, no wrap
+      if (/^<pre/.test(inline.trim()) && !inline.includes('</pre>')) {
+        html += inline;
+      } else {
+        html += `<p class="leading-relaxed my-3">${inline}</p>`;
+      }
+      continue;
+    }
+    // Convert single newlines within a paragraph to <br/>
+    const withBreaks = text.replace(/\n/g, '<br/>');
+    html += `<p class="leading-relaxed my-3">${withBreaks}</p>`;
+  }
+
+  return html;
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+const sectionBody = extractSection(entry.body, variants);
+const sectionHtml = simpleMarkdownToHtml(sectionBody);
 ---
 
 <section class={cfg.containerClass} aria-label={section}>
@@ -78,16 +208,15 @@ const { Content } = await entry.render();
     <span aria-hidden="true">{cfg.markerText}</span>
     <span class="uppercase tracking-wider text-gray-700">{section}</span>
   </div>
-  <div class={cfg.bodyClass}>
-    <Content />
-  </div>
+  {sectionHtml
+    ? <div class={cfg.bodyClass} set:html={sectionHtml} />
+    : <p class="text-xs text-gray-500 italic">No prose yet for this section.</p>
+  }
 </section>
 
 <style>
-  /* Inline scoped CSS — Tailwind [&_h2]:hidden below lacks specificity for some
-     setups, so this is a defensive belt to make sure the H2 of every section
-     is suppressed (each panel shows only its own body). */
-  :global(.prose h2) {
-    display: none !important;
-  }
+  /* No global H2 suppression needed — we extract per-section body via regex
+     and feed only the chosen section's markdown into simpleMarkdownToHtml().
+     The 4 panels now show 4 distinct bodies, not 4 copies. */
 </style>
+
