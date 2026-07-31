@@ -22,9 +22,18 @@
 
 const DROPDOWN_SELECTOR = 'details[data-dropdown]';
 
+interface SummaryEl {
+  addEventListener(type: string, fn: (e: Event) => void): void;
+}
+
 interface DetailsEl {
   open: boolean;
   matches(sel: string): boolean;
+  // Element.querySelector — used instead of `children.find(...)`: in a real
+  // browser `Element.children` is an HTMLCollection, which has length + index
+  // access but NO array methods, so `.find()` throws TypeError and kills this
+  // whole module (all 3 listeners then never register → dropdowns overlap).
+  querySelector(sel: string): SummaryEl | null;
 }
 
 function closeAllExcept(target: DetailsEl | null): void {
@@ -37,9 +46,7 @@ function closeAllExcept(target: DetailsEl | null): void {
 // 1) summary click → mutual-exclusion toggle
 const detailsEls = Array.from(document.querySelectorAll(DROPDOWN_SELECTOR)) as unknown as DetailsEl[];
 for (const d of detailsEls) {
-  const summary = (d as unknown as {
-    children: Array<{ tagName: string; addEventListener: (t: string, fn: (e: Event) => void) => void }>;
-  }).children.find((c) => c.tagName.toLowerCase() === 'summary');
+  const summary = d.querySelector('summary');
   if (!summary) continue;
   summary.addEventListener('click', (e: Event) => {
     // Optional chain: the test stub's click() passes a plain object literal

@@ -34,7 +34,8 @@ interface TestResult { h: boolean; r: boolean; f: boolean; c: boolean }
 
 class StubElement {
   tagName!: string;
-  children!: StubElement[];
+  // Real child list. NOT exposed directly — see the `children` getter below.
+  _kids!: StubElement[];
   parent: StubElement | null = null;
   attrs!: Record<string, string>;
   dataset!: Record<string, string>;
@@ -43,7 +44,7 @@ class StubElement {
 
   constructor(tag: string, attrs: Record<string, string> = {}, dataset: Record<string, string> = {}) {
     this.tagName = tag.toUpperCase();
-    this.children = [];
+    this._kids = [];
     this.parent = null;
     this.attrs = { ...attrs };
     this.dataset = { ...dataset };
@@ -51,7 +52,17 @@ class StubElement {
     // HTMLDetailsElement — boolean open
     this.open = false;
   }
-  appendChild(child: StubElement): StubElement { this.children.push(child); child.parent = this; return child; }
+  // Mirror real DOM: Element.children is an HTMLCollection — an array-LIKE
+  // object with length + index access, but NO array methods (.find/.map/…).
+  // Returning a plain array here would make the stub laxer than the browser
+  // and let `children.find(...)` bugs pass CI (that is exactly what happened
+  // before this fix — see the header comment in the mutex module).
+  get children(): { [index: number]: StubElement; length: number } {
+    const coll: { [index: number]: StubElement; length: number } = { length: this._kids.length };
+    this._kids.forEach((k, i) => { coll[i] = k; });
+    return coll;
+  }
+  appendChild(child: StubElement): StubElement { this._kids.push(child); child.parent = this; return child; }
   addEventListener(t: string, fn: (ev: StubEvent) => void): void { this._listeners.push({ type: t, fn }); }
   removeEventListener(t: string, fn: (ev: StubEvent) => void): void {
     this._listeners = this._listeners.filter(l => !(l.type === t && l.fn === fn));
@@ -119,10 +130,14 @@ class StubElement {
     };
     const walk = (n: StubElement): void => {
       if (matches(n, sel)) out.push(n);
-      for (const c of n.children) walk(c);
+      for (const c of n._kids) walk(c);
     };
-    for (const c of this.children) walk(c);
+    for (const c of this._kids) walk(c);
     return out;
+  }
+  // Element.querySelector — first descendant matching the selector.
+  querySelector(sel: string): StubElement | null {
+    return this.querySelectorAll(sel)[0] ?? null;
   }
 }
 
