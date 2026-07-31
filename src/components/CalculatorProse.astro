@@ -1,0 +1,93 @@
+---
+// P140a-T5: Renders 1 of 4 H2 prose sections from a Calculator Content
+// Collection entry. Each section maps to a dedicated visual variant:
+//   - 'intro'        : 📌  purple tint, drops user into the business problem
+//   - 'methodology'  : ⚙️ neutral palette, host for formulas + variable tables
+//   - 'limitations'  : ⚠️  amber tint, italic-leaning typography
+//   - 'example'      : 📋 green tint, hosts step-by-step walkthroughs
+//
+// Section names match the 4 H2s in src/content/tools/<slug>.md (P140a-T4):
+//   'intro'        → '## What This Calculator Measures'
+//   'methodology'  → '## How It Works (Methodology)'
+//   'limitations'  → '## Limitations & When Not To Use'
+//   'example'      → '## Worked Example'
+//
+// P140a note: this component is created but NOT yet wired into
+// src/pages/[lang]/[slug].astro — that hookup is P140b-T4. P140a simply
+// establishes the renderer contract. P140b adds getEntry() in the page
+// template and inserts <CalculatorProse section="..." /> at the 4 slots.
+
+import type { CollectionEntry } from 'astro:content';
+
+export interface Props {
+  entry: CollectionEntry<'tools'>;
+  section: 'intro' | 'methodology' | 'limitations' | 'example';
+}
+
+const { entry, section } = Astro.props;
+
+interface SectionHeading {
+  match: string;        // substring to match in H2 (handles variant phrasings)
+  containerClass: string;
+  markerText: string;
+  markerBg: string;
+  bodyClass: string;
+}
+
+const SECTION_HEADINGS: Record<Props['section'], SectionHeading> = {
+  intro: {
+    match: 'What This Calculator Measures',
+    containerClass: 'rounded-2xl border border-purple-200 bg-purple-50/60 p-6 my-8',
+    markerText: '📌',
+    markerBg: 'bg-purple-100/80',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800 [&_h2]:hidden',
+  },
+  methodology: {
+    match: 'How It Works',
+    containerClass: 'rounded-2xl border border-gray-200 bg-gray-50/60 p-6 my-8',
+    markerText: '⚙️',
+    markerBg: 'bg-gray-100',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800 [&_h2]:hidden [&_table]:w-full [&_th]:text-left [&_code]:bg-white [&_code]:px-1 [&_code]:rounded',
+  },
+  limitations: {
+    match: 'Limitations',
+    containerClass: 'rounded-2xl border border-amber-200 bg-amber-50/40 p-6 my-8',
+    markerText: '⚠️',
+    markerBg: 'bg-amber-100/80',
+    bodyClass: 'prose prose-sm max-w-none text-gray-700 italic [&_h2]:hidden',
+  },
+  example: {
+    match: 'Worked Example',
+    containerClass: 'rounded-2xl border border-emerald-200 bg-emerald-50/40 p-6 my-8',
+    markerText: '📋',
+    markerBg: 'bg-emerald-100/80',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800 [&_h2]:hidden [&_ol]:pl-5 [&_ol]:list-decimal',
+  },
+};
+
+const cfg = SECTION_HEADINGS[section];
+
+// Render the full markdown body, then hide everything except the matching H2 section.
+// We rely on Tailwind's prose class + [&_h2]:hidden to suppress the H2 of all 4
+// sections, then we wrap our chosen section's elements in the styled container.
+const { Content } = await entry.render();
+---
+
+<section class={cfg.containerClass} aria-label={section}>
+  <div class:list={['inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold mb-3', cfg.markerBg]}>
+    <span aria-hidden="true">{cfg.markerText}</span>
+    <span class="uppercase tracking-wider text-gray-700">{section}</span>
+  </div>
+  <div class={cfg.bodyClass}>
+    <Content />
+  </div>
+</section>
+
+<style>
+  /* Inline scoped CSS — Tailwind [&_h2]:hidden below lacks specificity for some
+     setups, so this is a defensive belt to make sure the H2 of every section
+     is suppressed (each panel shows only its own body). */
+  :global(.prose h2) {
+    display: none !important;
+  }
+</style>
