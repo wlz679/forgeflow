@@ -200,7 +200,7 @@ function extractH2(body: string): { title: string; content: string }[] {
 // =============================================================
 // Test 1: README.md is present (editing-guide file ships with the schema).
 // =============================================================
-test('src/content/tools/README.md exists as the editor guide', () => {
+test('src/content/tools/_README.md exists as the editor guide (underscore-prefix skips Astro entry)', () => {
   assert.equal(existsSync(README), true, `Missing editing-guide at ${README}; copy from spec §3`);
 });
 
