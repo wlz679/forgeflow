@@ -95,9 +95,11 @@ const variants = SECTION_VARIANTS[section];
  */
 function extractSection(body: string, matchers: string[]): string {
   for (const m of matchers) {
-    // Match `^## <text containing substring>` followed by everything until the next `## ` or EOF.
+    // Match `^## <text containing substring>` followed by everything until the
+    // next `## ` or end-of-file. JS doesn't support PCRE's `\Z`, so we use the
+    // negative-lookahead form `(?![\\s\\S])` to mean "end of input".
     const re = new RegExp(
-      `^##[^\\n]*${m}[^\\n]*\\n([\\s\\S]*?)(?=^## |\\Z)`,
+      `^##[^\\n]*${m}[^\\n]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`,
       'm'
     );
     const found = body.match(re);
@@ -139,7 +141,9 @@ function simpleMarkdownToHtml(md: string): string {
   s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
 
   // 3. Markdown tables (gfm-style): | col | col | lines, separated by header row | --- | --- |
-  s = s.replace(/((?:^\\|[^\\n]*\\|[^\\n]*\\n)+)/gm, (tableBlock) => {
+  //    NB: inside a JS regex literal, `\|` matches a literal pipe; `\n` matches newline.
+  //    (Inside a template-literal RegExp constructor we'd need `\\|` and `\\n`.)
+  s = s.replace(/(^\|[^\n]*\|[^\n]*\n)+/gm, (tableBlock) => {
     const rows = tableBlock.trim().split('\n').filter(Boolean);
     if (rows.length < 2) return tableBlock;
     const headerCells = rows[0].split('|').map(c => c.trim()).filter(Boolean);
@@ -158,7 +162,23 @@ function simpleMarkdownToHtml(md: string): string {
     return html;
   });
 
-  // 4. Split on blank lines → paragraphs
+  // 4. List detection (precedes paragraph splitter so consecutive numbered/bulleted
+  //    lines become <ol>/<ul> instead of one <p> with <br/>).
+  //    NB: same regex-literal escape hygiene as the table regex above.
+  s = s.replace(/((?:^[ \t]*\d+\.[ \t]+\S.*\n?)+)/gm, (listBlock) => {
+    const items = listBlock.trim().split('\n').map(line => line.replace(/^[ \t]*\d+\.[ \t]+/, '').trim());
+    return '<ol class="list-decimal pl-5 my-3 space-y-1">'
+      + items.map(it => `<li>${it}</li>`).join('')
+      + '</ol>';
+  });
+  s = s.replace(/((?:^[ \t]*[-*][ \t]+\S.*\n?)+)/gm, (listBlock) => {
+    const items = listBlock.trim().split('\n').map(line => line.replace(/^[ \t]*[-*][ \t]+/, '').trim());
+    return '<ul class="list-disc pl-5 my-3 space-y-1">'
+      + items.map(it => `<li>${it}</li>`).join('')
+      + '</ul>';
+  });
+
+  // 5. Split on blank lines → paragraphs
   const paragraphs = s.split(/\n\s*\n/);
   let html = '';
   for (const p of paragraphs) {
@@ -199,7 +219,7 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-const sectionBody = extractSection(entry.body, variants);
+const sectionBody = extractSection(entry.body ?? '', variants);
 const sectionHtml = simpleMarkdownToHtml(sectionBody);
 ---
 
