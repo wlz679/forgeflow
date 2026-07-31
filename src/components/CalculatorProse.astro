@@ -94,16 +94,26 @@ const variants = SECTION_VARIANTS[section];
  * Returns the text BETWEEN the matched H2 line and the next H2 (or end).
  */
 function extractSection(body: string, matchers: string[]): string {
-  for (const m of matchers) {
-    // Match `^## <text containing substring>` followed by everything until the
-    // next `## ` or end-of-file. JS doesn't support PCRE's `\Z`, so we use the
-    // negative-lookahead form `(?![\\s\\S])` to mean "end of input".
-    const re = new RegExp(
-      `^##[^\\n]*${m}[^\\n]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`,
-      'm'
-    );
-    const found = body.match(re);
-    if (found) return found[1].trim();
+  // Split body at line-starts that introduce a new `## ` H2 section. Each
+  // element starts with the H2 line. We pick the element whose H2 contains
+  // one of the `matchers` substrings (en or zh variant).
+  //
+  // Why line-split instead of a regex with EOF lookahead:
+  //   JS regex doesn't have PCRE-style `\Z`. A `(?!\s\S)` lookahead is
+  //   satisfied at virtually any position (wherever the next 2 chars are
+  //   not whitespace-followed-by-nonspace), so capturing the empty match
+  //   before the section's first character. Splitting + matching by H2
+  //   text is unambiguous.
+  const sections = body.split(/\n(?=## )/);
+  for (const section of sections) {
+    const headerLineEnd = section.indexOf('\n');
+    const header = headerLineEnd >= 0 ? section.slice(0, headerLineEnd) : section;
+    for (const m of matchers) {
+      if (header.includes(m)) {
+        // Return everything after the H2 line, trimmed.
+        return headerLineEnd >= 0 ? section.slice(headerLineEnd + 1).trim() : '';
+      }
+    }
   }
   return '';
 }
@@ -127,22 +137,32 @@ function extractSection(body: string, matchers: string[]): string {
  * requirement.
  */
 function simpleMarkdownToHtml(md: string): string {
-  // 1. Extract fenced code blocks first (preserve verbatim)
+  // Block-level placeholders. Code blocks / tables / lists all get extracted
+  // first (each into its own numbered array), then the in-place transforms
+  // (italic, bold, inline code) operate on the remaining paragraph text only.
+  // At the very end, placeholders are inlined into their full HTML.
+  // NB: this 2-phase approach prevents inline transforms from corrupting
+  // block-level constructs — e.g. `*` is a list-marker, not an italic opener.
+
+  // 1a. Fenced code blocks → __CODE_BLOCK_n__ placeholders.
   const codeBlocks: string[] = [];
   let s = md.replace(/```[a-zA-Z0-9_-]*\n([\s\S]*?)```/g, (_m, code) => {
     const idx = codeBlocks.push(`<pre class="bg-white border border-gray-200 rounded-lg p-3 my-3 overflow-x-auto text-xs"><code>${escapeHtml(code)}</code></pre>`) - 1;
     return `__CODE_BLOCK_${idx}__`;
   });
 
-  // 2. Inline transforms on what's left (escape first)
-  s = escapeHtml(s);
-  s = s.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>');
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
-
-  // 3. Markdown tables (gfm-style): | col | col | lines, separated by header row | --- | --- |
-  //    NB: inside a JS regex literal, `\|` matches a literal pipe; `\n` matches newline.
-  //    (Inside a template-literal RegExp constructor we'd need `\\|` and `\\n`.)
+  // 1b. GFM tables → __TABLE_BLOCK_n__ placeholders.
+  //    Inside a JS regex literal `\|` matches a literal pipe; `\n` matches newline.
+  //
+  //    Compensating newline trick: each iteration consumes one trailing `\n`,
+  //    so a 5-row table eats 5 newlines. To keep the placeholder cleanly
+  //    separable in the paragraph splitter, we append one extra `\n` to
+  //    the replacement so the table block + 1 trailing blank line + whatever
+  //    blank lines the markdown already had = `\n\n__placeholder__\n\n`-ish.
+  //    Without this, the trailing `\n\n` markdown blank line collapses to
+  //    `\n`, the paragraph splitter treats placeholder + next paragraph as
+  //    ONE paragraph, and the table ends up wrapped in `<p>`.
+  const tableBlocks: string[] = [];
   s = s.replace(/(^\|[^\n]*\|[^\n]*\n)+/gm, (tableBlock) => {
     const rows = tableBlock.trim().split('\n').filter(Boolean);
     if (rows.length < 2) return tableBlock;
@@ -159,51 +179,66 @@ function simpleMarkdownToHtml(md: string): string {
       html += '</tr>';
     }
     html += '</tbody></table>';
-    return html;
+    const idx = tableBlocks.push(html) - 1;
+    return `\n__TABLE_BLOCK_${idx}__\n`;
   });
 
-  // 4. List detection (precedes paragraph splitter so consecutive numbered/bulleted
-  //    lines become <ol>/<ul> instead of one <p> with <br/>).
-  //    NB: same regex-literal escape hygiene as the table regex above.
-  s = s.replace(/((?:^[ \t]*\d+\.[ \t]+\S.*\n?)+)/gm, (listBlock) => {
+  // 1c. Lists — ordered (`1. ` / `2. `) + unordered (`- ` or `* ` markers).
+  //    MUST run BEFORE inline italic transform, otherwise `*` would be eaten as italic.
+  //    Same compensating-newline trick as tables (above): each list-line
+  //    consumes its trailing \n, so the trailing blank-line after a list can
+  //    collapse to a single \n and break paragraph-split. We append one extra
+  //    \n to the replacement so the paragraph splitter keeps a clean boundary.
+  const listBlocks: string[] = [];
+  const olRe = /((?:^[ \t]*\d+\.[ \t]+\S.*\n?)+)/gm;
+  s = s.replace(olRe, (listBlock) => {
     const items = listBlock.trim().split('\n').map(line => line.replace(/^[ \t]*\d+\.[ \t]+/, '').trim());
-    return '<ol class="list-decimal pl-5 my-3 space-y-1">'
+    const html = '<ol class="list-decimal pl-5 my-3 space-y-1">'
       + items.map(it => `<li>${it}</li>`).join('')
       + '</ol>';
+    const idx = listBlocks.push(html) - 1;
+    return `\n__LIST_BLOCK_${idx}__\n`;
   });
-  s = s.replace(/((?:^[ \t]*[-*][ \t]+\S.*\n?)+)/gm, (listBlock) => {
+  const ulRe = /((?:^[ \t]*[-*][ \t]+\S.*\n?)+)/gm;
+  s = s.replace(ulRe, (listBlock) => {
     const items = listBlock.trim().split('\n').map(line => line.replace(/^[ \t]*[-*][ \t]+/, '').trim());
-    return '<ul class="list-disc pl-5 my-3 space-y-1">'
+    const html = '<ul class="list-disc pl-5 my-3 space-y-1">'
       + items.map(it => `<li>${it}</li>`).join('')
       + '</ul>';
+    const idx = listBlocks.push(html) - 1;
+    return `\n__LIST_BLOCK_${idx}__\n`;
   });
 
-  // 5. Split on blank lines → paragraphs
+  // 2. Inline transforms on what's left (now safely — block constructs are placeholders)
+  s = escapeHtml(s);
+  s = s.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 rounded text-sm">$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+
+  // 5. Split on blank lines → paragraphs; re-inline block placeholders.
   const paragraphs = s.split(/\n\s*\n/);
   let html = '';
   for (const p of paragraphs) {
     const text = p.trim();
     if (!text) continue;
-    // Skip a paragraph that is just a code-block placeholder
-    const codeMatch = text.match(/^__CODE_BLOCK_(\d+)__$/);
-    if (codeMatch) {
-      html += codeBlocks[Number(codeMatch[1])];
+    // Standalone block placeholder → emit HTML directly (no <p> wrap).
+    const standAlone = text.match(/^__CODE_BLOCK_(\d+)__$|^__TABLE_BLOCK_(\d+)__$|^__LIST_BLOCK_(\d+)__$/);
+    if (standAlone) {
+      const codeIdx = standAlone[1];
+      const tableIdx = standAlone[2];
+      const listIdx  = standAlone[3];
+      if (codeIdx  !== undefined) html += codeBlocks[Number(codeIdx)];
+      if (tableIdx !== undefined) html += tableBlocks[Number(tableIdx)];
+      if (listIdx  !== undefined) html += listBlocks[Number(listIdx)];
       continue;
     }
-    // If paragraph contains placeholders, leave them inline
-    if (text.includes('__CODE_BLOCK_')) {
-      // Replace placeholders with their HTML inline
-      let inline = text.replace(/__CODE_BLOCK_(\d+)__/g, (_m, idx) => codeBlocks[Number(idx)]);
-      // If standalone code block, no wrap
-      if (/^<pre/.test(inline.trim()) && !inline.includes('</pre>')) {
-        html += inline;
-      } else {
-        html += `<p class="leading-relaxed my-3">${inline}</p>`;
-      }
-      continue;
-    }
+    // Inline placeholder substitutions within a paragraph.
+    let inlined = text
+      .replace(/__CODE_BLOCK_(\d+)__/g, (_m, idx) => codeBlocks[Number(idx)])
+      .replace(/__TABLE_BLOCK_(\d+)__/g, (_m, idx) => tableBlocks[Number(idx)])
+      .replace(/__LIST_BLOCK_(\d+)__/g,  (_m, idx) => listBlocks[Number(idx)]);
     // Convert single newlines within a paragraph to <br/>
-    const withBreaks = text.replace(/\n/g, '<br/>');
+    const withBreaks = inlined.replace(/\n/g, '<br/>');
     html += `<p class="leading-relaxed my-3">${withBreaks}</p>`;
   }
 
