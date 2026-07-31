@@ -5,6 +5,8 @@
 
 ## Frontmatter（必填）
 
+注：Astro 4.x 保留 `slug` 字段（用于 entry-id 派生），所以 zod schema 不校验 slug。下面示例中的 `slug:` 是装饰性的；实际强制校验的是 `engine_ref`（pattern 与之一致）。
+
 ```yaml
 ---
 slug: 'solopreneur-mrr-calculator'        # 必须与 src/data/tools/<cat>.ts 中 slug 一致
@@ -51,6 +53,6 @@ P140a-T7 跑 "relaxed" 阈值（本文档所述）。P140b-T8 会收紧到 P140b
 ## 写新文件时
 
 1. 从 `solopreneur-mrr-calculator.md` 复制模板（MRR 是 A 类的代表案例）。
-2. 修改 `slug` / `engine_ref` / `category_id` / `sources`。
+2. 修改 `engine_ref` / `category_id` / `sources`。
 3. 4 H2 段必到；按本指南词数阈值写。
 4. 跑 `pnpm build` 与 `pnpm test:build`（开启 `RUN_BUILD_TESTS=1`）确认守卫通过。
