@@ -16,7 +16,7 @@ src/components/
     ├── List tier (2):       ToolCard.astro · CategoryOtherNav.astro
     ├── Category tier (4):   CategoryHero · CategoryGuides · CategoryFaq · CategorySection
     ├── Tool-page tier (8):  ResultCard · RelatedTools · RecentViewed · HistoryList · HowToUse · FAQ · EeatTrustBlock · CopyButton
-    └── Utility tier (2):    AdUnit.astro · SearchBar.astro
+    └── Utility tier (1):    SearchBar.astro
 ```
 
 | Tier | Components | Total LOC | Avg LOC |
@@ -84,7 +84,7 @@ These 4 components are rendered ONLY on category landing pages (`src/pages/[lang
 
 | Component | LOC | Props | Consumers |
 |---|---|---|---|
-| `AdUnit.astro` | 11 | `{ slot: 'home-hero' \| 'home-mid' \| 'home-footer' \| 'tool-result' \| 'blog-mid' \| 'blog-end' }` — AdSense placeholder div with slot-specific min-height | 4 |
+| ~~`AdUnit.astro`~~ | — | *Removed in P140a — see `docs/superpowers/specs/2026-07-31-adsense-low-value-content-fix-design.md` §4. Google AdSense Auto Ads handles all ad placement via the global script in `BaseLayout.astro`.* | — |
 | `SearchBar.astro` | 14 | None — `<input type="search" id="tool-search">` with JS init layer | 1 |
 
 ---
