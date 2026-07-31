@@ -883,7 +883,7 @@ git commit -m "test(p140a): no-adsense-placeholder-guard (source-only, prevents 
 - Create: `tests/content-prose-shape-guard.test.ts`
 
 **Interfaces:**
-- Consumes: Task 3 schema + Task 4 示范 md
+- Consumes: Task 3 schema (import `tools` schema from `src/content/config.ts`) + Task 4 示范 md
 - Produces: build-dep 守卫（P23b skip-guard pattern，`RUN_BUILD_TESTS=1` 启用）
 
 > **P140a 阈值（relaxed 模式）：**
@@ -893,6 +893,14 @@ git commit -m "test(p140a): no-adsense-placeholder-guard (source-only, prevents 
 > - 全文词数：en ≥ 400 chars，zh ≥ 250 chars
 >
 > **P140b-T8 会收紧**到最终阈值（spec §3）+ 在 P140d T8 强制 zh 缺位 build fail。本批仅止于「relaxed」防止 100 md 文件一口气失败。
+>
+> **重要 — 必须 EAGER 校验，不依赖 Astro 懒校验。**
+> Astro 4.x 的 Content Collections 校验是**懒的**：schema 只在 `getEntry()` / `getCollection()` 被调用时才执行。
+> 截至本任务，src/ 中没有任何代码调用 `getCollection('tools')`（P140a-T5 CalculatorProse 还没接入到 [slug].astro —— 那是 P140b-T4 的事）。
+> 因此 `pnpm build` 单独不会触发 schema 校验。本守卫必须**自己**走 `src/content/tools/**/*.md`，抽 frontmatter，**直接调用 zod schema 的 `.safeParse()`** 做 eager 校验。
+> 这一点的根因诊断来自 T3 implementer，见 task-3-report-p140a.md "Concerns #2"。
+> 如果走自己的 mini-parser（regex / enum / array-of-source shape），会形成两个事实来源（schema 在 config.ts，parser 在测试），日后修改一方忘了另一方就会 drift。所以本任务强制要求 import zod schema 复用。
+> 引用形式（兼容 tsx）：`import { collections } from '../src/content/config.ts'`，`collections.tools.schema.safeParse(fm)`。
 
 - [ ] **Step 1: 创建 `tests/content-prose-shape-guard.test.ts`**
 
@@ -904,16 +912,29 @@ git commit -m "test(p140a): no-adsense-placeholder-guard (source-only, prevents 
 // markdown files conform to the spec's 4-H2 prose schema with relaxed
 // P140a word-count thresholds.
 //
+// Why this guard exists eagerly:
+//   Astro 4.x Content Collections validation is LAZY — the schema only
+//   fires when `getCollection('tools')` / `getEntry('tools', ...)` is
+//   invoked. As of P140a-T7 ship, NO source file imports the tools
+//   collection (CalculatorProse.astro uses CollectionEntry type but is
+//   not yet wired into [lang]/[slug].astro — that hookup is P140b-T4).
+//   Without this eager guard, broken frontmatter will pass `pnpm build`
+//   silently and only blow up later when P140b attempts to render the
+//   page. By importing the same zod schema from src/content/config.ts
+//   and calling `.safeParse()` directly, this guard fronts the validation
+//   instead of waiting for Astro's lazy hookup.
+//
 // P140a thresholds (relaxed; one demo MD ships in this PR):
-//   - frontmatter: slug / engine_ref / category_id / reviewed_by / author /
-//     data_reviewed_at / sources (≥ 1) all present and well-typed
-//   - 4 mandatory H2 sections (in order): What This Calculator Measures /
+//   - frontmatter: validated via tools schema (zod) → enforces slug
+//     pattern / category_id enum / data_reviewed_at YYYY-MM-DD / sources ≥ 1
+//     with `url()` / name min(1)
+//   - 4 mandatory H2 sections (in any order): What This Calculator Measures /
 //     How It Works (Methodology) / Limitations & When Not To Use / Worked Example
 //   - per-H2 body: en ≥ 80 chars, zh ≥ 50 chars
 //   - full document: en ≥ 400 chars, zh ≥ 250 chars
 //
 // zh handling:
-//   - filename suffix `.zh.md` triggers ZH threshold + ZH H2 fallback labels
+//   - filename suffix `.zh.md` triggers ZH threshold
 //   - P140a/b: missing zh file only emits console.warn (not fail)
 //   - P140d-T8 will tighten this to build-fail when zh is missing.
 //
@@ -925,7 +946,8 @@ git commit -m "test(p140a): no-adsense-placeholder-guard (source-only, prevents 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve, basename } from 'node:path';
+import { resolve } from 'node:path';
+import { collections } from '../src/content/config.ts';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -944,18 +966,12 @@ const THRESHOLDS = {
   zh: { perH2: 50, total: 250 },
 } as const;
 
-type Lang = keyof typeof THRESHOLDS;
+type Lang = 'en' | 'zh';
 
-// Required frontmatter keys (AdSense E-E-A-T signal carriers)
-const REQUIRED_FRONTMATTER = [
-  'slug',
-  'engine_ref',
-  'category_id',
-  'reviewed_by',
-  'author',
-  'data_reviewed_at',
-  'sources',
-] as const;
+// Reference the zod schema imported from src/content/config.ts so this guard
+// shares ONE source of truth with the Astro runtime. (T3 concern #2: lazy
+// validation gap — this guard closes it eagerly.)
+const TOOLS_SCHEMA = collections.tools.schema;
 
 // 4 mandatory H2 (the markdown body, not frontmatter)
 const REQUIRED_H2 = [
@@ -1051,26 +1067,26 @@ test('src/content/tools/README.md exists as the editor guide', () => {
 });
 
 // =============================================================
-// Test 2: every prose file has all required frontmatter keys, each non-empty.
+// Test 2: every prose file's frontmatter passes the imported zod schema.
+//       This is the SINGLE source of truth — same schema that Astro uses
+//       at runtime. (Replaces the manual REQUIRED_FRONTMATTER check, which
+//       would risk drifting from the schema if a key was added/removed.)
 // =============================================================
-test('every prose file has complete E-E-A-T frontmatter (7 required keys)', () => {
+test('every prose file frontmatter passes the imported tools schema (zod)', () => {
   const files = listProseFiles();
-  const missing: string[] = [];
+  const failures: string[] = [];
   for (const filename of files) {
     const p = loadProseFile(filename);
     if (!p) continue;
-    for (const key of REQUIRED_FRONTMATTER) {
-      const v = p.frontmatter[key];
-      if (v === undefined || v === null || v === '') {
-        missing.push(`${filename}: missing ${key}`);
-        continue;
-      }
-      if (key === 'sources' && Array.isArray(v) && v.length < 1) {
-        missing.push(`${filename}: sources must contain ≥ 1 reference (AdSense E-E-A-T signal)`);
-      }
+    const result = TOOLS_SCHEMA.safeParse(p.frontmatter);
+    if (!result.success) {
+      const issues = result.error.issues
+        .map(i => `${i.path.join('.') || '(root)'}: ${i.message}`)
+        .join('; ');
+      failures.push(`${filename}: ${issues}`);
     }
   }
-  assert.equal(missing.length, 0, missing.join('\n'));
+  assert.equal(failures.length, 0, failures.join('\n'));
 });
 
 // =============================================================
