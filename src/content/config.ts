@@ -26,14 +26,21 @@ const blog = defineCollection({
 // (P140a-T5) into [lang]/[slug].astro (P140b-T4).
 //
 // zod frontmatter invariants:
-//   - slug                : must match src/data/tools.ts:engine.slug pattern
-//   - engine_ref          : mirrors slug (kept as separate field for future divergence)
+//   - engine_ref          : canonical engine slug (mirrors src/data/tools.ts:engine.slug
+//                           and serves as the frontmatter identity field)
 //   - category_id         : one of A/B/C/D/E/F/H/K/L/M/O/P/R/S/T (15 categories, CLAUDE.md)
 //   - reviewed_by         : array of reviewer ids → src/data/reviewers.ts (P140c-T1)
 //   - author              : single reviewer id (defaults to 'wlz')
-//   - data_reviewed_at    : YYYY-MM-DD; CI guard (P140a-T7) does not validate this —
-//                           P140b T8 may add.
+//   - data_reviewed_at    : YYYY-MM-DD
 //   - sources             : ≥1 external reference with valid URL (AdSense E-E-A-T signal)
+//
+// Note: `slug` is intentionally NOT in the schema. Astro 4.x reserves `slug` for
+// entry-id generation (any `slug:` field in a defineCollection schema crashes
+// build with ContentSchemaContainsSlugError — discovered & fixed in T4 commit
+// e1465ff). Frontmatter `slug` text in md files is decorative; entry-id is
+// derived from filename (e.g. solopreneur-mrr-calculator.md → slug
+// 'solopreneur-mrr-calculator'). The `engine_ref` field enforces the slug
+// pattern that `slug` would have enforced; both can't coexist on Astro 4.
 const CATEGORY_LETTERS = [
   'A', // SaaS Metrics
   'B', // AI Cost Tools
