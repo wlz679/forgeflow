@@ -69,7 +69,9 @@ test('no source file imports or renders <AdUnit /> after P140a', () => {
       if (stat.size > 1_000_000) continue;
 
       const text = readFileSync(full, 'utf8');
-      // Strip line-number prefixes and trailing commas to narrow the search.
+      // Match either a JSX/Astro `<AdUnit …/>` instance (literal "<AdUnit"
+      // followed by space or `>`) OR a `AdUnit.astro` import specifier.
+      // Code-files only (.md excluded by extension filter above).
       if (/<AdUnit[\s>]/.test(text) || /AdUnit\.astro/.test(text)) {
         hits.push(full.replace(root + '\\', '').replace(root + '/', ''));
       }
