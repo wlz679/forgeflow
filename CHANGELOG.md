@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-30 (P137 — T2.7 trial: post-processor regex for composite data-driven lines; 4 patterns shipped, 4 brief patterns deferred to P138+ after shape audit)
+> **最后更新:** 2026-07-31 (P55b — header dropdown mutex crashed in every browser on `HTMLCollection.find`; test stub was laxer than the real DOM)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 835 across 44 active days (2026-05-31 → 2026-07-30, ~8 weeks)
+> **Total commits:** 849 across 45 active days (2026-05-31 → 2026-07-31, ~9 weeks)
 
 ---
 
@@ -444,6 +444,26 @@ P123/P124 walker triplet = `buildSlugToFirstInput()` + `buildSlugToFaqCount()` +
 - **compositePatterns refactor** (>20 entries → extract to `src/i18n/composite-patterns.ts` registry — only 4 entries now, premature)
 
 📦 ship logs: [`memory/p136-walker-defensive-audit-shipped.md`](memory/p136-walker-defensive-audit-shipped.md) (P136; pre-P137) · [`memory/p137-tier2-round7-trial-shipped.md`](memory/p137-tier2-round7-trial-shipped.md) (P137)
+
+---
+
+## [M23.3] - 2026-07-31 — Header dropdown mutex crash fix (P55b)
+
+🐛 **A shipped-and-tested feature that never ran once in a browser.** P55 (2026-07-22) added mutual exclusion for the 4 header `<details>` dropdowns and passed 5 green tests. In every real browser the module threw `TypeError: d.children.find is not a function` at top level, so **none** of its 3 listeners registered — the dropdowns kept overlapping for 9 days, exactly as originally reported. 1 batch · 2 commits · 0 engine change.
+
+### Fixed
+- **[scripts] `src/scripts/header-dropdown-mutex.client.ts`** — `children.find(c => c.tagName === 'SUMMARY')` → `d.querySelector('summary')`. Real `Element.children` is an **HTMLCollection**: `length` + index access, **no array methods**, so `.find` was `undefined`. Because the call sat at module top level, the throw killed the summary-mutex, body click-outside, and ESC handlers all at once. `DetailsEl` gains `querySelector` plus a comment pinning down why the collection's array methods are off-limits.
+- **[tests] `tests/header-dropdown-mutex.test.ts`** — the DOM stub declared `children` as a real JS array, i.e. **more permissive than the browser**, which is why 5 tests stayed green against 100%-broken code. `children` is now a getter returning an array-LIKE object (length + index only); real kids live in `_kids`; adds `querySelector`. Verified red→green: stub fix alone → 5/5 fail with the exact browser error; product fix → 5/5 pass.
+
+### Changed (documentation)
+- **[docs] `CLAUDE.md`** — two standing lessons added to Notes for Future Sessions: (1) a test double must never out-permit the runtime it stands in for (mirror the real object's *limitations*, not just its happy path — same rule for async-vs-sync APIs and omitted DTO fields); (2) `node tests/run.mjs <file>` ignores file args and runs the whole suite (~6 min) — single-file debugging is `node_modules/.bin/tsx --test tests/<name>.test.ts` (~3 s).
+- **[docs] `CLAUDE.md` defense-in-depth counts** — build-dep suites 40 → **41**, total 48 → **49**. This was **pre-existing drift, not introduced by P55b**: `tests/run.mjs` already declared 41 both before and after P138, so P138's 39→40 bump inherited a baseline that was already off by one.
+
+### Notes
+- **Global scan**: `.children` array-methods + `querySelectorAll(...).find/map/filter/...` across `src/` — this was the only occurrence.
+- **P138 has no CHANGELOG section** (v3 render batch, 2026-07-30). Deferred to the next catch-up batch; the commit-count refresh here covers its commits numerically but not narratively.
+
+📦 ship log: [`memory/p55b-header-mutex-htmlcollection-fix-shipped.md`](memory/p55b-header-mutex-htmlcollection-fix-shipped.md) — supersedes the "shipped" claim in [`memory/p55-header-dropdown-mutex-shipped.md`](memory/p55-header-dropdown-mutex-shipped.md)
 
 ---
 
