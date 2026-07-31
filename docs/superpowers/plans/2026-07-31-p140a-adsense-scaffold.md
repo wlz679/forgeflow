@@ -925,9 +925,12 @@ git commit -m "test(p140a): no-adsense-placeholder-guard (source-only, prevents 
 //   instead of waiting for Astro's lazy hookup.
 //
 // P140a thresholds (relaxed; one demo MD ships in this PR):
-//   - frontmatter: validated via tools schema (zod) → enforces slug
+//   - frontmatter: validated via tools schema (zod) → enforces engine_ref
 //     pattern / category_id enum / data_reviewed_at YYYY-MM-DD / sources ≥ 1
-//     with `url()` / name min(1)
+//     with `url()` / name min(1). Note: `slug` is intentionally NOT in the
+//     schema — Astro 4.x reserves `slug` for entry-id generation. Frontmatter
+//     `slug` fields (if any) are decorative text; entry-id derivation comes
+//     from filename (P140a-T4 implementer Concern #1, commit e1465ff).
 //   - 4 mandatory H2 sections (in any order): What This Calculator Measures /
 //     How It Works (Methodology) / Limitations & When Not To Use / Worked Example
 //   - per-H2 body: en ≥ 80 chars, zh ≥ 50 chars
