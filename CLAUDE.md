@@ -70,11 +70,11 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 
 <!-- codegen:end -->
 
-8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant at both engine-code AND rendering layers (P138 closed the rendering layer for 66 engines in 10 categories: C/F/H/K/L/M/O/P/R/T). UI wiring (`BIZ_CONFIG_MAP` + 5 `BIZ_*_CONFIG` [SAAS/VALUATION/FREELANCE/COST + BIZ_V3 universal] + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
+8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant at both engine-code (P10-P16 series) and rendering (P138) layers — P138 wired 68 engines into BIZ_V3_CONFIG across 10 categories (C/F/H/K/L/M/O/P/R/T) and the dual-`BIZ_CONFIG_MAP` invariant is now CI-guarded. UI wiring (`BIZ_CONFIG_MAP` + 5 `BIZ_*_CONFIG` [SAAS/VALUATION/FREELANCE/COST + BIZ_V3 universal] + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
-## Defense-in-Depth (P110, 2026-07-27)
+## Defense-in-Depth (P110, 2026-07-27; P138 added Rendering dimension 2026-07-30)
 
-**Test infrastructure that catches regressions across 6 user-visible dimensions.** All 39 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
+**Test infrastructure that catches regressions across 7 user-visible dimensions.** All 40 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
 
 | Dimension | Suite count | Coverage | Memory |
 |---|---|---|---|
@@ -88,11 +88,11 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 | **Performance (Images)** | 1 | `image-size-guard` (P108) — 500 KB/OG + 80 MB total bundle | [`p108`](memory/p108-image-size-guard-shipped.md) |
 | **Rendering (v3 section)** | 1 | `v3-render-coverage-guard` (P138) — source-level invariants: dual `BIZ_CONFIG_MAP` equality + 100-tool coverage + 68 v3 wired. (Source-only; follows build-dep gate for summary consistency.) | [`p138`](memory/p138-v3-render-batch-fix-shipped.md) |
 | **Build-dep source guards** | 8 | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count) | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
-| **Total** | **39 build-dep suites** + 8 source-only = **47** | 6 dimensions | |
+| **Total** | **40 build-dep suites** + 8 source-only = **48** | 7 dimensions | |
 
 **Performance size triad complete (P96+P106+P107+P108):** HTML + JS + CSS + images. Each guard has 50–72% headroom from current baseline (e.g. JS max 65 KB ≤ 100 KB threshold).
 
-**Defense-in-depth invariant:** When adding a new feature that affects any of the 6 dimensions, the matching suite should catch the regression. If it doesn't, the suite is incomplete — extend it (don't bypass).
+**Defense-in-depth invariant:** When adding a new feature that affects any of the 7 dimensions, the matching suite should catch the regression. If it doesn't, the suite is incomplete — extend it (don't bypass).
 
 **History:** P106-P108 completed the performance size triad (2026-07-27). P95 opened a11y dimension (2026-07-22). P86-P94 layered SEO defense (2026-07-19/20). P62-P83 closed i18n defense-in-depth (2026-07-24). P32 + P49 were the first codegen-enforced invariants (CLAUDE.md engine count table, source-side guard count).
 
