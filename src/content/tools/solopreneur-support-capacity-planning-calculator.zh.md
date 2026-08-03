@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-support-capacity-planning-calculator'
 engine_ref: 'solopreneur-support-capacity-planning-calculator'
 category_id: 'T'
 reviewed_by: ['wlz']

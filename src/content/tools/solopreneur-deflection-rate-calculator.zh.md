@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-deflection-rate-calculator'
 engine_ref: 'solopreneur-deflection-rate-calculator'
 category_id: 'T'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-first-response-time-calculator'
 engine_ref: 'solopreneur-first-response-time-calculator'
 category_id: 'T'
 reviewed_by: ['wlz']

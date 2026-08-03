@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-resolution-time-calculator'
 engine_ref: 'solopreneur-resolution-time-calculator'
 category_id: 'T'
 reviewed_by: ['wlz']

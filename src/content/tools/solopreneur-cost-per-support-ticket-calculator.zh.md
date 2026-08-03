@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-cost-per-support-ticket-calculator'
 engine_ref: 'solopreneur-cost-per-support-ticket-calculator'
 category_id: 'T'
 reviewed_by: ['wlz']

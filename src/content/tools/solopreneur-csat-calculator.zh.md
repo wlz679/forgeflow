@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-csat-calculator'
 engine_ref: 'solopreneur-csat-calculator'
 category_id: 'T'
 reviewed_by: ['wlz']
