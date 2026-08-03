@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-attrition-cost-calculator-zh'
 engine_ref: 'solopreneur-attrition-cost-calculator'
 category_id: 'H'
 reviewed_by: ['wlz']

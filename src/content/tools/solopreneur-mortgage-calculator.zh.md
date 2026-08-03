@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-mortgage-calculator-zh'
 engine_ref: 'solopreneur-mortgage-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

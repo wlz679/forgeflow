@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-revenue-projector-zh'
 engine_ref: 'solopreneur-revenue-projector'
 category_id: 'A'
 reviewed_by: ['wlz']

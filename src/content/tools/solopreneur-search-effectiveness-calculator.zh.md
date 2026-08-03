@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-search-effectiveness-calculator-zh'
 engine_ref: 'solopreneur-search-effectiveness-calculator'
 category_id: 'K'
 reviewed_by: ['wlz']

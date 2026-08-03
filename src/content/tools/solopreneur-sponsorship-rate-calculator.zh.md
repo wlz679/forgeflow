@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-sponsorship-rate-calculator-zh'
 engine_ref: 'solopreneur-sponsorship-rate-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

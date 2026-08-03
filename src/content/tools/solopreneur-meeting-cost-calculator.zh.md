@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-meeting-cost-calculator-zh'
 engine_ref: 'solopreneur-meeting-cost-calculator'
 category_id: 'E'
 reviewed_by: ['wlz']

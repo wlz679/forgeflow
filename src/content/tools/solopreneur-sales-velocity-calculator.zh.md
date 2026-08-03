@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-sales-velocity-calculator-zh'
 engine_ref: 'solopreneur-sales-velocity-calculator'
 category_id: 'S'
 reviewed_by: ['wlz']

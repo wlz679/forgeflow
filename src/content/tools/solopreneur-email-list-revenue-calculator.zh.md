@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-email-list-revenue-calculator-zh'
 engine_ref: 'solopreneur-email-list-revenue-calculator'
 category_id: 'D'
 reviewed_by: ['wlz']

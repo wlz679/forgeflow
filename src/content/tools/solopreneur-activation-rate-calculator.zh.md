@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-activation-rate-calculator-zh'
 engine_ref: 'solopreneur-activation-rate-calculator'
 category_id: 'P'
 reviewed_by: ['wlz']

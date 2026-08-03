@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-consent-revenue-impact-calculator-zh'
 engine_ref: 'solopreneur-consent-revenue-impact-calculator'
 category_id: 'L'
 reviewed_by: ['wlz']

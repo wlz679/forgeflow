@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-expansion-revenue-calculator-zh'
 engine_ref: 'solopreneur-expansion-revenue-calculator'
 category_id: 'R'
 reviewed_by: ['wlz']

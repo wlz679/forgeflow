@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-project-profitability-calculator-zh'
 engine_ref: 'solopreneur-project-profitability-calculator'
 category_id: 'D'
 reviewed_by: ['wlz']

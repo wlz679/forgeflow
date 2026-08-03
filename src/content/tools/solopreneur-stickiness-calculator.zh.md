@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-stickiness-calculator-zh'
 engine_ref: 'solopreneur-stickiness-calculator'
 category_id: 'P'
 reviewed_by: ['wlz']

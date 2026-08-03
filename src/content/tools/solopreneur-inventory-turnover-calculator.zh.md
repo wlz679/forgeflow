@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-inventory-turnover-calculator-zh'
 engine_ref: 'solopreneur-inventory-turnover-calculator'
 category_id: 'O'
 reviewed_by: ['wlz']

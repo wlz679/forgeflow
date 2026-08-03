@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-time-to-productivity-calculator-zh'
 engine_ref: 'solopreneur-time-to-productivity-calculator'
 category_id: 'H'
 reviewed_by: ['wlz']

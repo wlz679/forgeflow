@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-hourly-vs-fixed-calculator-zh'
 engine_ref: 'solopreneur-hourly-vs-fixed-calculator'
 category_id: 'D'
 reviewed_by: ['wlz']

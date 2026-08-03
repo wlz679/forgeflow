@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-rental-yield-calculator-zh'
 engine_ref: 'solopreneur-rental-yield-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

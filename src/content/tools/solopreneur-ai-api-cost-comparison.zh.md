@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-ai-api-cost-comparison-zh'
 engine_ref: 'solopreneur-ai-api-cost-comparison'
 category_id: 'B'
 reviewed_by: ['wlz']

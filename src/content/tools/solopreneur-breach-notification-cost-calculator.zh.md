@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-breach-notification-cost-calculator-zh'
 engine_ref: 'solopreneur-breach-notification-cost-calculator'
 category_id: 'L'
 reviewed_by: ['wlz']

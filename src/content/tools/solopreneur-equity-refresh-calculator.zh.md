@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-equity-refresh-calculator-zh'
 engine_ref: 'solopreneur-equity-refresh-calculator'
 category_id: 'H'
 reviewed_by: ['wlz']

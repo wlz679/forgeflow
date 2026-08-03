@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-cart-abandonment-cost-calculator-zh'
 engine_ref: 'solopreneur-cart-abandonment-cost-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

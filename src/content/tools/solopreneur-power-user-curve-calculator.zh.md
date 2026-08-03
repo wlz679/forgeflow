@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-power-user-curve-calculator-zh'
 engine_ref: 'solopreneur-power-user-curve-calculator'
 category_id: 'P'
 reviewed_by: ['wlz']

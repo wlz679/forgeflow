@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-fulfillment-cost-calculator-zh'
 engine_ref: 'solopreneur-fulfillment-cost-calculator'
 category_id: 'O'
 reviewed_by: ['wlz']

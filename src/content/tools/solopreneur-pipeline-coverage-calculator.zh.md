@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-pipeline-coverage-calculator-zh'
 engine_ref: 'solopreneur-pipeline-coverage-calculator'
 category_id: 'S'
 reviewed_by: ['wlz']

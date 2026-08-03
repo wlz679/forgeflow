@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-carrying-cost-calculator-zh'
 engine_ref: 'solopreneur-carrying-cost-calculator'
 category_id: 'O'
 reviewed_by: ['wlz']

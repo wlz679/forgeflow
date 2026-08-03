@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-openai-token-calculator-zh'
 engine_ref: 'solopreneur-openai-token-calculator'
 category_id: 'B'
 reviewed_by: ['wlz']

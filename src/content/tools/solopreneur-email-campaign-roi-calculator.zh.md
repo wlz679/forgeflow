@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-email-campaign-roi-calculator-zh'
 engine_ref: 'solopreneur-email-campaign-roi-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

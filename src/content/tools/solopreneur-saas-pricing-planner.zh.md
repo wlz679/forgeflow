@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-saas-pricing-planner-zh'
 engine_ref: 'solopreneur-saas-pricing-planner'
 category_id: 'E'
 reviewed_by: ['wlz']

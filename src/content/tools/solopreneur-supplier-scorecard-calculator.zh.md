@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-supplier-scorecard-calculator-zh'
 engine_ref: 'solopreneur-supplier-scorecard-calculator'
 category_id: 'O'
 reviewed_by: ['wlz']

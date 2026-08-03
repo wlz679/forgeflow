@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-logo-churn-rate-calculator-zh'
 engine_ref: 'solopreneur-logo-churn-rate-calculator'
 category_id: 'R'
 reviewed_by: ['wlz']

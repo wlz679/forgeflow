@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-quota-attainment-calculator-zh'
 engine_ref: 'solopreneur-quota-attainment-calculator'
 category_id: 'S'
 reviewed_by: ['wlz']

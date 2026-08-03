@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-freelance-tax-calculator-zh'
 engine_ref: 'solopreneur-freelance-tax-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

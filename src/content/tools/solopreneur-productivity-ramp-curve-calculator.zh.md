@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-productivity-ramp-curve-calculator-zh'
 engine_ref: 'solopreneur-productivity-ramp-curve-calculator'
 category_id: 'H'
 reviewed_by: ['wlz']

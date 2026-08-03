@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-ai-image-cost-calculator-zh'
 engine_ref: 'solopreneur-ai-image-cost-calculator'
 category_id: 'B'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-funnel-step-calculator-zh'
 engine_ref: 'solopreneur-funnel-step-calculator'
 category_id: 'P'
 reviewed_by: ['wlz']

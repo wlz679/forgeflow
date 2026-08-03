@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-deepseek-api-cost-calculator-zh'
 engine_ref: 'solopreneur-deepseek-api-cost-calculator'
 category_id: 'B'
 reviewed_by: ['wlz']

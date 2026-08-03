@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-affiliate-income-calculator-zh'
 engine_ref: 'solopreneur-affiliate-income-calculator'
 category_id: 'D'
 reviewed_by: ['wlz']

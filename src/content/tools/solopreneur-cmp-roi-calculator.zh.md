@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-cmp-roi-calculator-zh'
 engine_ref: 'solopreneur-cmp-roi-calculator'
 category_id: 'L'
 reviewed_by: ['wlz']

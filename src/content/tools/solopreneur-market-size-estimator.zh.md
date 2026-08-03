@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-market-size-estimator-zh'
 engine_ref: 'solopreneur-market-size-estimator'
 category_id: 'A'
 reviewed_by: ['wlz']

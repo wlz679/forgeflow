@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-fully-loaded-employee-cost-calculator-zh'
 engine_ref: 'solopreneur-fully-loaded-employee-cost-calculator'
 category_id: 'H'
 reviewed_by: ['wlz']

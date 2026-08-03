@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-dpa-cost-calculator-zh'
 engine_ref: 'solopreneur-dpa-cost-calculator'
 category_id: 'L'
 reviewed_by: ['wlz']

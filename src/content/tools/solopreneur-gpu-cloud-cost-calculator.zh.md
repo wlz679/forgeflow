@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-gpu-cloud-cost-calculator-zh'
 engine_ref: 'solopreneur-gpu-cloud-cost-calculator'
 category_id: 'B'
 reviewed_by: ['wlz']

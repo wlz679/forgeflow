@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-productivity-score-zh'
 engine_ref: 'solopreneur-productivity-score'
 category_id: 'E'
 reviewed_by: ['wlz']

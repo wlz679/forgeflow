@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-renewal-rate-calculator-zh'
 engine_ref: 'solopreneur-renewal-rate-calculator'
 category_id: 'R'
 reviewed_by: ['wlz']

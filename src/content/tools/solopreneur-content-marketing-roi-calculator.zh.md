@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-content-marketing-roi-calculator-zh'
 engine_ref: 'solopreneur-content-marketing-roi-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-deflection-quality-calculator-zh'
 engine_ref: 'solopreneur-deflection-quality-calculator'
 category_id: 'K'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-gemini-api-cost-calculator-zh'
 engine_ref: 'solopreneur-gemini-api-cost-calculator'
 category_id: 'B'
 reviewed_by: ['wlz']

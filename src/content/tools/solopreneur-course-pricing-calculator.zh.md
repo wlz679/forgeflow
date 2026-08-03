@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-course-pricing-calculator-zh'
 engine_ref: 'solopreneur-course-pricing-calculator'
 category_id: 'D'
 reviewed_by: ['wlz']

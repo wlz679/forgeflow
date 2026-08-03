@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-dsar-cost-calculator-zh'
 engine_ref: 'solopreneur-dsar-cost-calculator'
 category_id: 'L'
 reviewed_by: ['wlz']

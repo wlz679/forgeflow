@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-kb-coverage-rate-calculator-zh'
 engine_ref: 'solopreneur-kb-coverage-rate-calculator'
 category_id: 'K'
 reviewed_by: ['wlz']

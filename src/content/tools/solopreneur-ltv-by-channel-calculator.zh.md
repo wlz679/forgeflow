@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-ltv-by-channel-calculator-zh'
 engine_ref: 'solopreneur-ltv-by-channel-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

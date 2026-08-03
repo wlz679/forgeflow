@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-remote-vs-office-calculator-zh'
 engine_ref: 'solopreneur-remote-vs-office-calculator'
 category_id: 'E'
 reviewed_by: ['wlz']

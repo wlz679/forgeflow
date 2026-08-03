@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-mrr-calculator-zh'
 engine_ref: 'solopreneur-mrr-calculator'
 category_id: 'A'
 reviewed_by: ['wlz']

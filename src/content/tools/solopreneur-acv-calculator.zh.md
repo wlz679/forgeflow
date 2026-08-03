@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-acv-calculator-zh'
 engine_ref: 'solopreneur-acv-calculator'
 category_id: 'S'
 reviewed_by: ['wlz']

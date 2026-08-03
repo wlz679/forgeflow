@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-rent-vs-buy-calculator-zh'
 engine_ref: 'solopreneur-rent-vs-buy-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

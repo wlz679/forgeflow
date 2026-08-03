@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-time-to-value-calculator-zh'
 engine_ref: 'solopreneur-time-to-value-calculator'
 category_id: 'P'
 reviewed_by: ['wlz']

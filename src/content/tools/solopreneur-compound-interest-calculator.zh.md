@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-compound-interest-calculator-zh'
 engine_ref: 'solopreneur-compound-interest-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

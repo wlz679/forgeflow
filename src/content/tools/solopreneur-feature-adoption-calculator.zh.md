@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-feature-adoption-calculator-zh'
 engine_ref: 'solopreneur-feature-adoption-calculator'
 category_id: 'P'
 reviewed_by: ['wlz']

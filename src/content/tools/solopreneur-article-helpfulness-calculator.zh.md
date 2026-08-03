@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-article-helpfulness-calculator-zh'
 engine_ref: 'solopreneur-article-helpfulness-calculator'
 category_id: 'K'
 reviewed_by: ['wlz']

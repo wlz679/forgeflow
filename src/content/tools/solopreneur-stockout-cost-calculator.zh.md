@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-stockout-cost-calculator-zh'
 engine_ref: 'solopreneur-stockout-cost-calculator'
 category_id: 'O'
 reviewed_by: ['wlz']

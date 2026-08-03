@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-pipeline-value-calculator-zh'
 engine_ref: 'solopreneur-pipeline-value-calculator'
 category_id: 'S'
 reviewed_by: ['wlz']

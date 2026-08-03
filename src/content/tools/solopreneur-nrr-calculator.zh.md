@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-nrr-calculator-zh'
 engine_ref: 'solopreneur-nrr-calculator'
 category_id: 'R'
 reviewed_by: ['wlz']

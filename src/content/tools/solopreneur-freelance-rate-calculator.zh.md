@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-freelance-rate-calculator-zh'
 engine_ref: 'solopreneur-freelance-rate-calculator'
 category_id: 'D'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-documentation-roi-calculator-zh'
 engine_ref: 'solopreneur-documentation-roi-calculator'
 category_id: 'K'
 reviewed_by: ['wlz']

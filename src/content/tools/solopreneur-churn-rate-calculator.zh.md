@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-churn-rate-calculator-zh'
 engine_ref: 'solopreneur-churn-rate-calculator'
 category_id: 'A'
 reviewed_by: ['wlz']

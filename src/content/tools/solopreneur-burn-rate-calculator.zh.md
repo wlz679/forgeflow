@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-burn-rate-calculator-zh'
 engine_ref: 'solopreneur-burn-rate-calculator'
 category_id: 'A'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-dscr-calculator-zh'
 engine_ref: 'solopreneur-dscr-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

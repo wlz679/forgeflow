@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-comp-banding-calculator-zh'
 engine_ref: 'solopreneur-comp-banding-calculator'
 category_id: 'H'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-coupon-attribution-calculator-zh'
 engine_ref: 'solopreneur-coupon-attribution-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

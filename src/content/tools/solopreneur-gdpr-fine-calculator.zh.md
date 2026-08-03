@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-gdpr-fine-calculator-zh'
 engine_ref: 'solopreneur-gdpr-fine-calculator'
 category_id: 'L'
 reviewed_by: ['wlz']

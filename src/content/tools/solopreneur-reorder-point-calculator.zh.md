@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-reorder-point-calculator-zh'
 engine_ref: 'solopreneur-reorder-point-calculator'
 category_id: 'O'
 reviewed_by: ['wlz']

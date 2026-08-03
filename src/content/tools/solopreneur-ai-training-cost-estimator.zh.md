@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-ai-training-cost-estimator-zh'
 engine_ref: 'solopreneur-ai-training-cost-estimator'
 category_id: 'B'
 reviewed_by: ['wlz']

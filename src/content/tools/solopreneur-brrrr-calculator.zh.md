@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-brrrr-calculator-zh'
 engine_ref: 'solopreneur-brrrr-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']

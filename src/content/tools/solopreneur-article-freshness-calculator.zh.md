@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-article-freshness-calculator-zh'
 engine_ref: 'solopreneur-article-freshness-calculator'
 category_id: 'K'
 reviewed_by: ['wlz']

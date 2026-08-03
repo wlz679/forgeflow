@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-funnel-value-calculator-zh'
 engine_ref: 'solopreneur-funnel-value-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

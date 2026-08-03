@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-claude-api-cost-calculator-zh'
 engine_ref: 'solopreneur-claude-api-cost-calculator'
 category_id: 'B'
 reviewed_by: ['wlz']

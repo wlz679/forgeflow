@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-win-rate-by-stage-calculator-zh'
 engine_ref: 'solopreneur-win-rate-by-stage-calculator'
 category_id: 'S'
 reviewed_by: ['wlz']

@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-cohort-retention-calculator-zh'
 engine_ref: 'solopreneur-cohort-retention-calculator'
 category_id: 'M'
 reviewed_by: ['wlz']

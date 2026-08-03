@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-customer-health-score-calculator-zh'
 engine_ref: 'solopreneur-customer-health-score-calculator'
 category_id: 'R'
 reviewed_by: ['wlz']

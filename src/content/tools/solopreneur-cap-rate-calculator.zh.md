@@ -1,5 +1,4 @@
 ---
-slug: 'solopreneur-cap-rate-calculator-zh'
 engine_ref: 'solopreneur-cap-rate-calculator'
 category_id: 'F'
 reviewed_by: ['wlz']
