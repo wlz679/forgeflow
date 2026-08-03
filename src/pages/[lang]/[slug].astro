@@ -54,7 +54,10 @@ const metaTitle = `${toolTitle} — ForgeFlowKit`;
 const isZhPage = lang === 'zh';
 let proseEntry: CollectionEntry<'tools'> | undefined;
 if (isZhPage) {
-  proseEntry = await getEntry('tools', slug! + '.zh');
+  // P140b-T4 fix-3: Astro Content Collections derives slug by stripping ONLY
+  // `.md` from the filename — so `X.zh.md` → slug `Xzh` (the `.` is dropped).
+  // Match the lookup to Astro's actual slug derivation: `Xzh`, not `X.zh`.
+  proseEntry = await getEntry('tools', slug! + 'zh');
   if (!proseEntry) {
     console.warn(`[Prose] zh fallback for ${slug}`);
     proseEntry = await getEntry('tools', slug!);
