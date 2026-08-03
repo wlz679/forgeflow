@@ -21,7 +21,7 @@ import { createSoftwareApplication, createToolFAQPage, createToolBreadcrumbList 
 // the `tools` Astro Content Collection. Entry lookup: zh file first, fall back
 // to en if zh missing (warns once). See src/components/CalculatorProse.astro.
 import CalculatorProse from '../../components/CalculatorProse.astro';
-import { getEntry } from 'astro:content';
+import { getEntry, type CollectionEntry } from 'astro:content';
 
 export function getStaticPaths() {
   const paths: { params: { lang: string; slug: string } }[] = [];
@@ -48,13 +48,19 @@ const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
 const metaTitle = `${toolTitle} — ForgeFlowKit`;
 
-// P140b-T4: Resolve Calculator Content Collection entry (en + zh fallback).
-// Each tool page renders 4 prose sections before/after the calculator form,
-// per spec §4 topology. Missing zh → fallback to en with console.warn.
-const proseEntry = await getEntry('tools', slug! + (lang === 'zh' ? '.zh' : ''))
-  ?? await getEntry('tools', slug!);
-if (!proseEntry && lang === 'zh') {
-  console.warn(`[Prose] zh fallback for ${slug}`);
+// P140b-T4 fix: distinguish "zh entry missing → fallback to en" from "both missing".
+// Original code used `if (!proseEntry && lang === 'zh')` which only fired when BOTH
+// entries were missing (the en fallback would silently succeed and mask the issue).
+const isZhPage = lang === 'zh';
+let proseEntry: CollectionEntry<'tools'> | undefined;
+if (isZhPage) {
+  proseEntry = await getEntry('tools', slug! + '.zh');
+  if (!proseEntry) {
+    console.warn(`[Prose] zh fallback for ${slug}`);
+    proseEntry = await getEntry('tools', slug!);
+  }
+} else {
+  proseEntry = await getEntry('tools', slug!);
 }
 
 // P85a: Translate AI cost calculator output section headers on zh pages.
