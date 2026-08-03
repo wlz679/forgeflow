@@ -421,9 +421,10 @@ const isTraining = slug === 'solopreneur-ai-training-cost-estimator';
 const isGpu = slug === 'solopreneur-gpu-cloud-cost-calculator';
 const clientConfig = JSON.stringify(engine.clientConfig);
 
+// P140b T5: simplified translatedFaq — en uses engine.faq directly, zh falls back to en when missing
 const translatedFaq = engine.faq.map((item, i) => ({
-  q: t(`tools.${slug}.faq.${i}.q`, lang),
-  a: t(`tools.${slug}.faq.${i}.a`, lang),
+  q: lang === 'en' ? item.q : (t(`tools.${slug}.faq.${i}.q`, lang) || item.q),
+  a: lang === 'en' ? item.a : (t(`tools.${slug}.faq.${i}.a`, lang) || item.a),
 }));
 const translatedHowToUse = engine.howToUse.map((_, i) => t(`tools.${slug}.how_to_use.${i}`, lang));
 
