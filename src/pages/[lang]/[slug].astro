@@ -17,6 +17,11 @@ import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
 import { t, getLang } from '../../i18n';
 import { createSoftwareApplication, createToolFAQPage, createToolBreadcrumbList } from '../../lib/seo-factory';
+// P140b-T4: Render 4 prose sections (intro/methodology/limitations/example) from
+// the `tools` Astro Content Collection. Entry lookup: zh file first, fall back
+// to en if zh missing (warns once). See src/components/CalculatorProse.astro.
+import CalculatorProse from '../../components/CalculatorProse.astro';
+import { getEntry } from 'astro:content';
 
 export function getStaticPaths() {
   const paths: { params: { lang: string; slug: string } }[] = [];
@@ -42,6 +47,15 @@ const relatedBlog = await getBlogPostsByToolSlug(slug!);
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
 const metaTitle = `${toolTitle} — ForgeFlowKit`;
+
+// P140b-T4: Resolve Calculator Content Collection entry (en + zh fallback).
+// Each tool page renders 4 prose sections before/after the calculator form,
+// per spec §4 topology. Missing zh → fallback to en with console.warn.
+const proseEntry = await getEntry('tools', slug! + (lang === 'zh' ? '.zh' : ''))
+  ?? await getEntry('tools', slug!);
+if (!proseEntry && lang === 'zh') {
+  console.warn(`[Prose] zh fallback for ${slug}`);
+}
 
 // P85a: Translate AI cost calculator output section headers on zh pages.
 // Body content (numbers, model names) remains in English — those are
@@ -458,6 +472,8 @@ const schema = JSON.stringify({
           <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 leading-tight">{toolTitle}</h1>
           <p class="text-sm text-gray-500 mt-2 leading-relaxed">{toolDescription}</p>
         </div>
+
+        {proseEntry && <CalculatorProse entry={proseEntry} section="intro" />}
 
         {isInteractive && (
           <form id="tool-form" class="mt-6 p-5 bg-white border border-gray-100 rounded-2xl shadow-sm">
@@ -1267,6 +1283,14 @@ const schema = JSON.stringify({
                 {t('btn.generate', lang)}
               </button>
           </form>
+        )}
+
+        {proseEntry && (
+          <>
+            <CalculatorProse entry={proseEntry} section="methodology" />
+            <CalculatorProse entry={proseEntry} section="limitations" />
+            <CalculatorProse entry={proseEntry} section="example" />
+          </>
         )}
 
         <HowToUse steps={translatedHowToUse} />
