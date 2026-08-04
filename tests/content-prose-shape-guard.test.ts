@@ -15,7 +15,7 @@
 //   and calling `.safeParse()` directly, this guard fronts the validation
 //   instead of waiting for Astro's lazy hookup.
 //
-// P140a thresholds (relaxed; one demo MD ships in this PR):
+// P140b-T8 thresholds (tightened from P140a's relaxed values):
 //   - frontmatter: validated via tools schema (zod) → enforces engine_ref
 //     pattern / category_id enum / data_reviewed_at YYYY-MM-DD / sources ≥ 1
 //     with `url()` / name min(1). Note: `slug` is intentionally NOT in the
@@ -24,7 +24,7 @@
 //     from filename (P140a-T4 implementer Concern #1, commit e1465ff).
 //   - 4 mandatory H2 sections (in any order): What This Calculator Measures /
 //     How It Works (Methodology) / Limitations & When Not To Use / Worked Example
-//   - per-H2 body: en ≥ 80 chars, zh ≥ 50 chars
+//   - per-H2 body: en ≥ 100 chars (P140a was 80), zh ≥ 70 chars (P140a was 50)
 //   - full document: en ≥ 400 chars, zh ≥ 250 chars
 //
 // zh handling:
@@ -58,10 +58,11 @@ if (!process.env.RUN_BUILD_TESTS) {
 const PROSE_DIR = resolve(root, 'src/content/tools');
 const README = resolve(PROSE_DIR, '_README.md');
 
-// Thresholds — P140a relaxed; P140b-T8 will tighten.
+// Thresholds — P140a relaxed; P140b-T8 tightened perH2 (en 80→100, zh 50→70).
+// spec §3 final values: en perH2 ≥ 100 / total ≥ 400, zh perH2 ≥ 70 / total ≥ 250.
 const THRESHOLDS = {
-  en: { perH2: 80, total: 400 },
-  zh: { perH2: 50, total: 250 },
+  en: { perH2: 100, total: 400 },
+  zh: { perH2: 70, total: 250 },
 } as const;
 
 type Lang = 'en' | 'zh';

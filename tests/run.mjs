@@ -79,6 +79,6 @@ if (!process.env.RUN_BUILD_TESTS) {
   console.log('[skip-mode]   engine-zh-howto-i18n-guard, engine-zh-input-i18n-guard,');
   console.log('[skip-mode]   input-labels-i18n-audit, claude-md-invariant-guard,');
   console.log('[skip-mode]   ai-cost-t2-7-zh-output, v3-render-coverage-guard,');
-  console.log('[skip-mode]   content-prose-shape-guard');
+  console.log('[skip-mode]   content-prose-shape-guard, content-prose-zh-counterpart-warn');
 }
 process.exit(exitCode);
