@@ -17,6 +17,7 @@ import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
 import { t, getLang } from '../../i18n';
 import { createSoftwareApplication, createToolFAQPage, createToolBreadcrumbList } from '../../lib/seo-factory';
+import { SITE_URL } from '../../lib/site-config';
 // P140b-T4: Render 4 prose sections (intro/methodology/limitations/example) from
 // the `tools` Astro Content Collection. Entry lookup: zh file first, fall back
 // to en if zh missing (warns once). See src/components/CalculatorProse.astro.
@@ -449,6 +450,13 @@ const schema = JSON.stringify({
       author: toolMeta.author,
       reviewedBy: toolMeta.reviewedBy,
       dataReviewedAt: toolMeta.dataReviewedAt,
+      // P140b-T7: structured E-E-A-T signals (additive)
+      authorInfo: { name: 'ForgeFlowKit Editorial', url: `${SITE_URL}/about/authors/` },
+      reviewInfo: toolMeta.reviewerIds.length > 0
+        ? toolMeta.reviewerIds.slice(0, 2).map(id => ({
+            author: { name: id, url: `${SITE_URL}/about/authors/#${id}` },
+          }))
+        : [],
     }),
     createToolBreadcrumbList({
       lang,

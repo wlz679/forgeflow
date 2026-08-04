@@ -105,13 +105,18 @@ export interface SoftwareApplicationInput {
   toolSlug: string;             // for url + @id
   applicationCategory: string;  // from toolMeta.applicationCategory
   featureList: string[];        // 3 items from translatedHowToUse
-  author: string;
-  reviewedBy: string;
+  author: string;               // legacy: org-level string (kept for compat)
+  reviewedBy: string;           // legacy: org-level string (kept for compat)
   dataReviewedAt: string;       // YYYY-MM-DD format
+  // P140b-T7: Structured E-E-A-T fields (additive). Author is the writer;
+  // review[] is the structured list of human reviewers. Schema.org prefers
+  // Person objects over plain strings for E-E-A-T signals.
+  authorInfo?: { name: string; url?: string };                       // → JSON-LD `author`
+  reviewInfo?: { author: { name: string; url?: string } }[];          // → JSON-LD `review[]`
 }
 
 export function createSoftwareApplication(input: SoftwareApplicationInput) {
-  const { lang, toolTitle, toolDescription, toolSlug, applicationCategory, featureList, author, reviewedBy, dataReviewedAt } = input;
+  const { lang, toolTitle, toolDescription, toolSlug, applicationCategory, featureList, author, reviewedBy, dataReviewedAt, authorInfo, reviewInfo } = input;
   const url = `${SITE_URL}/${lang}/${toolSlug}/`;
   return {
     '@type': 'SoftwareApplication',
@@ -131,9 +136,22 @@ export function createSoftwareApplication(input: SoftwareApplicationInput) {
     isAccessibleForFree: true,
     inLanguage: lang,
     provider: { '@id': `${SITE_URL}/#org` },
-    author: { '@id': `${SITE_URL}/#org` },
+    // P140b-T7: structured author (Person object preferred over string for E-E-A-T)
+    author: authorInfo
+      ? { '@type': 'Person', name: authorInfo.name, ...(authorInfo.url ? { url: authorInfo.url } : {}) }
+      : { '@id': `${SITE_URL}/#org` },     // fallback to org when no authorInfo
     dateModified: dataReviewedAt,
+    // Legacy reviewedBy (Organization): kept for backward compat
     reviewedBy: { '@type': 'Organization', name: reviewedBy },
+    // P140b-T7: structured review[] (array of Review objects); omit when empty
+    ...(reviewInfo && reviewInfo.length > 0
+      ? {
+          review: reviewInfo.map(r => ({
+            '@type': 'Review',
+            author: { '@type': 'Person', name: r.author.name, ...(r.author.url ? { url: r.author.url } : {}) },
+          })),
+        }
+      : {}),
     publisher: { '@id': `${SITE_URL}/#org` },
   };
 }
