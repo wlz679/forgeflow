@@ -336,6 +336,17 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'eeat.author_label': { en: 'Author', zh: '作者' },
   'eeat.publisher_label': { en: 'Publisher', zh: '发布者' },
   'eeat.contact_email': { en: 'hello@forgeflowkit.com', zh: 'hello@forgeflowkit.com' },
+  // P140b-T6: AdSense E-E-A-T structured role labels (Author card + Reviewer card)
+  'eeat.author_role.founder': { en: 'Founder', zh: '创始人' },
+  'eeat.author_role.analyst': { en: 'Analyst', zh: '分析师' },
+  'eeat.author_role.expert': { en: 'Industry Expert', zh: '行业专家' },
+  'eeat.author_role.engineer': { en: 'Software Engineer', zh: '软件工程师' },
+  'eeat.reviewer_role.founder': { en: 'Founder', zh: '创始人' },
+  'eeat.reviewer_role.analyst': { en: 'Analyst', zh: '分析师' },
+  'eeat.reviewer_role.expert': { en: 'Industry Expert', zh: '行业专家' },
+  'eeat.reviewer_role.engineer': { en: 'Software Engineer', zh: '软件工程师' },
+  'eeat.reviewers': { en: 'Reviewed by', zh: '审核人' },
+  'eeat.reviewer_expertise_label': { en: 'Expertise', zh: '专长' },
 
   // ===== Blog list page =====
   'blog.page_title': { en: 'ForgeFlowKit Tips & Tools Blog', zh: 'ForgeFlowKit 技巧与工具博客' },

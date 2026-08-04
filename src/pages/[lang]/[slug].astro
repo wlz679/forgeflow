@@ -1339,10 +1339,25 @@ const schema = JSON.stringify({
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
         <RelatedBlog posts={relatedBlog} />
         <EeatTrustBlock
-          reviewedBy={toolMeta.reviewedBy}
-          author={toolMeta.author}
+          author={{
+            id: toolMeta.authorId,
+            // P140b-T6: placeholder founder persona until P140c-T1 wires real reviewer data.
+            name: toolMeta.authorId === 'wlz'
+              ? 'ForgeFlowKit Editorial'
+              : toolMeta.authorId,
+            role: 'founder',
+            bio: lang === 'zh'
+              ? 'ForgeFlowKit 创始人 — 为独立开发者和 SaaS 创业者打造免费商业计算器。'
+              : 'Founder of ForgeFlowKit — building free business calculators for solopreneurs and SaaS founders.',
+          }}
+          reviewers={toolMeta.reviewerIds.map((id) => ({
+            id,
+            name: id, // placeholder: id displayed as-is until P140c-T1
+            role: 'analyst',
+            expertise: [] as string[],
+          }))}
+          sourcesRich={toolMeta.sourcesRich}
           dataReviewedAt={toolMeta.dataReviewedAt}
-          sources={toolMeta.sources}
         />
       </div>
     </div>

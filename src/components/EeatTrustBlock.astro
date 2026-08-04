@@ -1,50 +1,150 @@
 ---
 import { t, getLang } from '../i18n';
 
-export interface Props {
-  reviewedBy: string;
-  dataReviewedAt: string;
-  sources: string[];
-  author: string;
+export interface AuthorInfo {
+  id: string;
+  name: string;
+  role: 'founder' | 'analyst' | 'expert' | 'engineer';
+  bio: string; // 1 sentence preview (caller picks en or zh based on lang)
 }
 
-const { reviewedBy, dataReviewedAt, sources, author } = Astro.props;
+export interface ReviewerInfo {
+  id: string;
+  name: string;
+  role: 'founder' | 'analyst' | 'expert' | 'engineer';
+  expertise: string[];
+}
+
+export interface SourceRich {
+  name: string;
+  url: string;
+}
+
+export interface Props {
+  author: AuthorInfo;
+  reviewers: ReviewerInfo[]; // max 2 displayed
+  sourcesRich: SourceRich[]; // shown when length >= 1
+  dataReviewedAt: string;    // YYYY-MM-DD
+}
+
+const { author, reviewers, sourcesRich, dataReviewedAt } = Astro.props;
 const lang = getLang(Astro);
 const contactEmail = t('eeat.contact_email', lang);
+
+// Last reviewed relative time + absolute date.
+const reviewedDate = new Date(dataReviewedAt);
+const today = new Date();
+const diffDays = Math.max(
+  0,
+  Math.floor((today.getTime() - reviewedDate.getTime()) / 86400000),
+);
+const relativeTime =
+  diffDays < 1
+    ? lang === 'zh' ? '今天' : 'today'
+    : diffDays < 30
+    ? lang === 'zh'
+      ? `${diffDays} 天前`
+      : `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
+    : diffDays < 365
+    ? lang === 'zh'
+      ? `${Math.floor(diffDays / 30)} 个月前`
+      : `${Math.floor(diffDays / 30)} month${Math.floor(diffDays / 30) === 1 ? '' : 's'} ago`
+    : lang === 'zh'
+    ? `${Math.floor(diffDays / 365)} 年前`
+    : `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) === 1 ? '' : 's'} ago`;
 ---
 
 <aside class="mt-12 p-6 bg-gray-50 border border-gray-200 rounded-2xl" aria-label={t('eeat.title', lang)}>
-  <div class="flex items-center gap-2 mb-3">
+  <div class="flex items-center gap-2 mb-4">
     <span class="text-green-600 text-lg">✓</span>
     <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">{t('eeat.title', lang)}</h3>
   </div>
-  <dl class="space-y-2 text-sm text-gray-700">
-    <div class="flex gap-2">
-      <dt class="font-semibold sm:min-w-[110px]">{t('eeat.reviewed_by', lang)}:</dt>
-      <dd>{reviewedBy || t('eeat.team', lang)}</dd>
+
+  <!-- Author card -->
+  <div class="flex items-start gap-3 mb-4 pb-4 border-b border-gray-200">
+    <div
+      class="w-12 h-12 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#6D28D9] flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+      aria-hidden="true"
+    >
+      {author.name.charAt(0).toUpperCase()}
     </div>
-    <div class="flex gap-2">
-      <dt class="font-semibold sm:min-w-[110px]">{t('eeat.author_label', lang)}:</dt>
-      <dd>{author || 'ForgeFlowKit'}</dd>
-    </div>
-    <div class="flex gap-2">
-      <dt class="font-semibold sm:min-w-[110px]">{t('eeat.publisher_label', lang)}:</dt>
-      <dd>ForgeFlowKit</dd>
-    </div>
-    {dataReviewedAt && (
-      <div class="flex gap-2">
-        <dt class="font-semibold sm:min-w-[110px]">{t('eeat.last_reviewed', lang)}:</dt>
-        <dd>{dataReviewedAt}</dd>
+    <div class="flex-1 min-w-0">
+      <div class="text-sm font-semibold text-gray-900">{author.name}</div>
+      <div class="text-xs text-gray-500 uppercase tracking-wide mt-0.5">
+        {t(`eeat.author_role.${author.role}`, lang)}
       </div>
-    )}
-    {sources.length >= 3 && (
-      <div class="flex gap-2">
-        <dt class="font-semibold sm:min-w-[110px]">{t('eeat.sources', lang)}:</dt>
-        <dd>{sources.join(', ')}</dd>
+      <p class="text-sm text-gray-700 mt-2">{author.bio}</p>
+    </div>
+  </div>
+
+  <!-- Reviewer card (only when reviewers > 0) -->
+  {reviewers.length > 0 && (
+    <div class="mb-4 pb-4 border-b border-gray-200">
+      <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        {t('eeat.reviewers', lang)}
       </div>
-    )}
-  </dl>
-  <p class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+      <div class="space-y-3">
+        {reviewers.slice(0, 2).map((r) => (
+          <div class="flex items-start gap-2">
+            <div
+              class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-semibold text-xs flex-shrink-0"
+              aria-hidden="true"
+            >
+              {r.name.charAt(0).toUpperCase()}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-medium text-gray-900">
+                {r.name}
+                <span class="text-xs text-gray-500">
+                  · {t(`eeat.reviewer_role.${r.role}`, lang)}
+                </span>
+              </div>
+              {r.expertise.length > 0 && (
+                <div class="flex flex-wrap gap-1 mt-1">
+                  {r.expertise.slice(0, 4).map((e) => (
+                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-700 rounded">
+                      {e}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  <!-- Sources link list (shown when sourcesRich >= 1) -->
+  {sourcesRich.length >= 1 && (
+    <div class="mb-4 pb-4 border-b border-gray-200">
+      <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        {t('eeat.sources', lang)} · {sourcesRich.length}
+      </div>
+      <ul class="space-y-1">
+        {sourcesRich.map((s) => (
+          <li class="text-sm text-gray-700">
+            <a
+              href={s.url}
+              rel="noopener noreferrer"
+              target="_blank"
+              class="text-[#7C3AED] hover:underline"
+            >
+              {s.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <!-- Last reviewed -->
+  <div class="text-xs text-gray-500 mb-3">
+    {t('eeat.last_reviewed', lang)}: <span class="font-medium text-gray-700">{relativeTime}</span> ({dataReviewedAt})
+  </div>
+
+  <!-- Suggest improvement -->
+  <p class="pt-3 border-t border-gray-200 text-sm text-gray-600">
     📧 <a href={`mailto:${contactEmail}`} class="text-[#7C3AED] hover:underline font-medium">{t('eeat.suggest_improvement', lang)}</a>
     <span class="block mt-1 text-xs text-gray-500">{t('eeat.suggest_body', lang)}</span>
   </p>
