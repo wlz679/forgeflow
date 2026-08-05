@@ -1,0 +1,2965 @@
+{
+  "source": "src/data/tools/index.ts (compiled via tsx)",
+  "totalTools": 100,
+  "byCategory": {
+    "A": 5,
+    "B": 8,
+    "C": 10,
+    "D": 6,
+    "E": 5,
+    "F": 10,
+    "M": 8,
+    "O": 6,
+    "S": 6,
+    "R": 6,
+    "P": 6,
+    "H": 6,
+    "T": 6,
+    "K": 6,
+    "L": 6
+  },
+  "tools": [
+    {
+      "slug": "solopreneur-burn-rate-calculator",
+      "title": "Burn Rate Calculator",
+      "description": "Analyze monthly cash flow by cost category, calculate runway with exact run-out date, Burn Multiple, and Default Alive/Dead status.",
+      "categoryId": "A",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "cash flow",
+        "runway",
+        "burn rate",
+        "saas metrics",
+        "startup finance",
+        "operating cost"
+      ],
+      "tags": [
+        "saas",
+        "finance",
+        "runway"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Stripe Documentation",
+        "HubSpot Marketing Benchmarks",
+        "OpenView SaaS Benchmarks 2026"
+      ]
+    },
+    {
+      "slug": "solopreneur-churn-rate-calculator",
+      "title": "Churn Rate Calculator",
+      "description": "Track logo churn vs revenue churn, NRR/GRR, and churn attribution. See how expansion revenue offsets churn and compare scenarios.",
+      "categoryId": "A",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "churn",
+        "retention",
+        "saas metrics",
+        "revenue churn",
+        "logo churn",
+        "startup finance"
+      ],
+      "tags": [
+        "saas",
+        "churn",
+        "retention"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Stripe Documentation",
+        "HubSpot Marketing Benchmarks",
+        "OpenView SaaS Benchmarks 2026"
+      ]
+    },
+    {
+      "slug": "solopreneur-market-size-estimator",
+      "title": "Market Size Estimator",
+      "description": "Bottom-up and top-down market sizing with configurable SAM, market stage, and 3-year projections. Industry-standard TAM/SAM/SOM framework.",
+      "categoryId": "A",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "market size",
+        "tam",
+        "sam",
+        "som",
+        "market research",
+        "startup finance"
+      ],
+      "tags": [
+        "market",
+        "research",
+        "tam"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Stripe Documentation",
+        "HubSpot Marketing Benchmarks",
+        "OpenView SaaS Benchmarks 2026"
+      ]
+    },
+    {
+      "slug": "solopreneur-mrr-calculator",
+      "title": "MRR Calculator",
+      "description": "Track your MRR health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.",
+      "categoryId": "A",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "mrr",
+        "recurring revenue",
+        "saas metrics",
+        "subscription",
+        "startup finance",
+        "revenue growth"
+      ],
+      "tags": [
+        "saas",
+        "mrr",
+        "subscription"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Stripe Documentation",
+        "HubSpot Marketing Benchmarks",
+        "OpenView SaaS Benchmarks 2026"
+      ]
+    },
+    {
+      "slug": "solopreneur-revenue-projector",
+      "title": "SaaS Financial Forecaster",
+      "description": "The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.",
+      "categoryId": "A",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "revenue forecast",
+        "saas metrics",
+        "unit economics",
+        "runway",
+        "startup finance",
+        "breakeven"
+      ],
+      "tags": [
+        "saas",
+        "forecast",
+        "finance"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Stripe Documentation",
+        "HubSpot Marketing Benchmarks",
+        "OpenView SaaS Benchmarks 2026"
+      ]
+    },
+    {
+      "slug": "solopreneur-openai-token-calculator",
+      "title": "OpenAI Token Calculator",
+      "description": "Compare OpenAI API costs across 14 models — GPT-5.5 to GPT-5 Nano, GPT-4.1 family, and o-series. Toggle batch pricing, prompt caching, and growth projections.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "openai",
+        "gpt",
+        "token pricing",
+        "api cost",
+        "llm cost",
+        "prompt caching"
+      ],
+      "tags": [
+        "openai",
+        "llm",
+        "tokens"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-claude-api-cost-calculator",
+      "title": "Claude API Cost Calculator",
+      "description": "Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, and cross-provider comparison.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "claude",
+        "anthropic",
+        "token pricing",
+        "api cost",
+        "llm cost",
+        "prompt caching"
+      ],
+      "tags": [
+        "claude",
+        "llm",
+        "tokens"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-deepseek-api-cost-calculator",
+      "title": "DeepSeek API Cost Calculator",
+      "description": "Calculate DeepSeek API costs for V4 Flash, V4 Pro, and legacy R1. Includes automatic caching, growth projections, and cross-provider savings comparison.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "deepseek",
+        "token pricing",
+        "api cost",
+        "llm cost",
+        "auto cache"
+      ],
+      "tags": [
+        "deepseek",
+        "llm",
+        "tokens"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-gemini-api-cost-calculator",
+      "title": "Gemini API Cost Calculator",
+      "description": "Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "gemini",
+        "google",
+        "token pricing",
+        "api cost",
+        "llm cost",
+        "context caching"
+      ],
+      "tags": [
+        "gemini",
+        "llm",
+        "tokens"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-ai-image-cost-calculator",
+      "title": "AI Image Generation Cost Calculator",
+      "description": "Compare costs across 7 AI image providers (DALL-E 4/3, Midjourney V7, SD 4, Ideogram 3, Flux Pro, Leonardo AI). Subscription vs API pricing, resolution tiers, bar chart comparison, and volume scenarios.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "image generation",
+        "dall-e",
+        "midjourney",
+        "stable diffusion",
+        "ai art cost",
+        "api cost"
+      ],
+      "tags": [
+        "image",
+        "ai art",
+        "cost"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-ai-training-cost-estimator",
+      "title": "AI Training Cost Estimator",
+      "description": "Estimate AI model training costs from 7B to 405B parameters. LoRA/full fine-tuning modes, 5 GPU types (H200, H100, A100, L40S, RTX 6000), cloud storage + data processing costs, per-epoch tracking, and multi-run scaling.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "ai training",
+        "model training",
+        "gpu cost",
+        "lora",
+        "fine-tuning",
+        "training compute"
+      ],
+      "tags": [
+        "training",
+        "gpu",
+        "ai"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-gpu-cloud-cost-calculator",
+      "title": "GPU Cloud Cost Calculator",
+      "description": "Compare GPU rental costs across 6 cloud providers (RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure). Spot vs on-demand vs reserved pricing, multi-GPU scaling, storage/networking add-ons, and bar chart comparison.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "gpu rental",
+        "cloud gpu",
+        "h100",
+        "a100",
+        "training compute",
+        "gpu cost"
+      ],
+      "tags": [
+        "gpu",
+        "cloud",
+        "compute"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-ai-api-cost-comparison",
+      "title": "AI API Cost Comparison",
+      "description": "Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.",
+      "categoryId": "B",
+      "applicationCategory": "DeveloperApplication",
+      "keywords": [
+        "api cost",
+        "llm cost",
+        "token pricing",
+        "cross-provider",
+        "model comparison",
+        "openai",
+        "claude"
+      ],
+      "tags": [
+        "comparison",
+        "llm",
+        "cost"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "LiteLLM Pricing (litellm/model_prices_and_context_window.json)",
+        "OpenAI API Pricing",
+        "Anthropic API Pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-unit-economics-calculator",
+      "title": "Unit Economics Calculator",
+      "description": "Analyze per-customer profitability with expansion revenue, scaling curves (1K/10K/100K), and ranked optimization levers.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "unit economics",
+        "ltv",
+        "cac",
+        "saas metrics",
+        "customer profitability",
+        "startup finance"
+      ],
+      "tags": [
+        "unit economics",
+        "ltv",
+        "cac"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "SaaS Capital Benchmarks",
+        "Equidam Valuation Method",
+        "Visible.vc Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-cac-calculator",
+      "title": "CAC Calculator",
+      "description": "Calculate your Customer Acquisition Cost and payback period. Compare different spend scenarios to find your most efficient acquisition budget.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "cac",
+        "customer acquisition cost",
+        "marketing",
+        "unit economics",
+        "saas metrics",
+        "payback period"
+      ],
+      "tags": [
+        "cac",
+        "marketing",
+        "saas"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "SaaS Capital Benchmarks",
+        "Equidam Valuation Method",
+        "Visible.vc Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-ltv-calculator",
+      "title": "LTV Calculator",
+      "description": "Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "ltv",
+        "lifetime value",
+        "unit economics",
+        "saas metrics",
+        "retention",
+        "churn"
+      ],
+      "tags": [
+        "ltv",
+        "retention",
+        "saas"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "SaaS Capital Benchmarks",
+        "Equidam Valuation Method",
+        "Visible.vc Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-saas-valuation-calculator",
+      "title": "SaaS Valuation Calculator",
+      "description": "Estimate your SaaS company valuation based on ARR, growth rate, and profit margin. See how different multiples and scenarios affect your exit value.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "saas valuation",
+        "arr multiple",
+        "startup valuation",
+        "exit value",
+        "startup finance"
+      ],
+      "tags": [
+        "valuation",
+        "saas",
+        "exit"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "SaaS Capital Benchmarks",
+        "Equidam Valuation Method",
+        "Visible.vc Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-break-even-calculator",
+      "title": "Break-Even Calculator",
+      "description": "Calculate how many months until you break even on your initial investment. Model different cost and revenue scenarios.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "break-even",
+        "breakeven",
+        "startup finance",
+        "monthly costs",
+        "revenue target",
+        "runway"
+      ],
+      "tags": [
+        "break-even",
+        "finance",
+        "costs"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "SaaS Capital Benchmarks",
+        "Equidam Valuation Method",
+        "Visible.vc Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-equity-dilution-calculator",
+      "title": "Equity Dilution Calculator",
+      "description": "Model how investment rounds dilute founder equity. Calculate post-money valuation, investor ownership, and your remaining shares after funding.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "equity dilution",
+        "funding round",
+        "pre-money",
+        "post-money",
+        "founder equity",
+        "startup finance"
+      ],
+      "tags": [
+        "equity",
+        "funding",
+        "startup"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "SaaS Capital Benchmarks",
+        "Equidam Valuation Method",
+        "Visible.vc Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-stripe-fee-calculator",
+      "title": "Stripe Fee Calculator",
+      "description": "Calculate Stripe, PayPal, Square, and Wise payment processing fees. Compare 5 providers, project annual fee burden, and find what-if scenarios to reduce fees.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "stripe fee calculator",
+        "paypal fee calculator",
+        "payment processor comparison",
+        "stripe vs paypal",
+        "payment processing fees",
+        "square vs stripe",
+        "wise fee calculator",
+        "stripe 2.9% + 30¢"
+      ],
+      "tags": [
+        "finance",
+        "payments",
+        "solopreneur",
+        "ecommerce",
+        "pricing"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-03",
+      "sources": [
+        "https://stripe.com/pricing",
+        "https://paypal.com/us/webapps/mpp/paypal-fees",
+        "https://squareup.com/us/en/payments/pricing"
+      ]
+    },
+    {
+      "slug": "solopreneur-safe-convertible-note-calculator",
+      "title": "SAFE / Convertible Note Calculator",
+      "description": "Model your SAFE (Simple Agreement for Future Equity) round. See how valuation cap and discount rate interact, what ownership % the SAFE investor gets at conversion, and how much existing shareholders are diluted. Covers YC post-money SAFE, pre-money SAFE with discount, and discount-only structures.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "SAFE calculator",
+        "post-money SAFE calculator",
+        "convertible note calculator",
+        "YC SAFE calculator",
+        "valuation cap",
+        "SAFE conversion",
+        "pre-money SAFE",
+        "startup funding calculator"
+      ],
+      "tags": [
+        "finance",
+        "startup",
+        "fundraising",
+        "solopreneur",
+        "valuation"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-03",
+      "sources": [
+        "https://www.ycombinator.com/documents",
+        "https://www.ycombinator.com/library",
+        "https://www.fnv.com/blog/safe-vs-convertible-note"
+      ]
+    },
+    {
+      "slug": "solopreneur-burn-multiple-rule-of-40-calculator",
+      "title": "Burn Multiple / Rule of 40 Calculator",
+      "description": "Measure your SaaS capital efficiency with two VC-favorite metrics: Burn Multiple ($ burned per $1 of new ARR) and Rule of 40 (growth % + margin %). See your SaaS health quadrant, compare to stage benchmarks, and find what-if scenarios to improve efficiency.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "burn multiple calculator",
+        "rule of 40 calculator",
+        "SaaS efficiency metrics",
+        "capital efficiency",
+        "SaaS health quadrant",
+        "SaaS benchmarks",
+        "burn multiple by stage",
+        "SaaS growth metrics"
+      ],
+      "tags": [
+        "saas",
+        "finance",
+        "metrics",
+        "startup",
+        "valuation"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-03",
+      "sources": [
+        "https://www.craftventures.com/burn-multiple",
+        "https://www.bvp.com/atlas/rule-of-40",
+        "https://www.saas-capital.com/blog/lTV"
+      ]
+    },
+    {
+      "slug": "solopreneur-arr-multiple-valuation-calculator",
+      "title": "ARR Multiple / Valuation Multiplier Calculator",
+      "description": "Determine if your SaaS valuation multiple is reasonable given your growth rate and profit margin. See your expected multiple (heuristic: 5x base + growth/10 + margin/5), compare to stage benchmarks (Slow/Medium/Fast/Hyper growth tiers), and project forward valuation at 10x and 20x.",
+      "categoryId": "C",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "ARR multiple calculator",
+        "SaaS valuation multiple",
+        "revenue multiple SaaS",
+        "valuation to ARR ratio",
+        "SaaS multiples by growth rate",
+        "ARR valuation framework",
+        "SaaS funding round valuation",
+        "how to value a SaaS company"
+      ],
+      "tags": [
+        "saas",
+        "valuation",
+        "fundraising",
+        "metrics",
+        "startup"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-03",
+      "sources": [
+        "https://www.iconiqcapital.com/growth/benchmarks",
+        "https://www.bvp.com/atlas/saas-multiples",
+        "https://www.meritechcapital.com/blog/saas-metrics"
+      ]
+    },
+    {
+      "slug": "solopreneur-affiliate-income-calculator",
+      "title": "Affiliate Income Calculator",
+      "description": "Estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission.",
+      "categoryId": "D",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "affiliate",
+        "passive income",
+        "commission",
+        "conversion rate",
+        "traffic",
+        "online business"
+      ],
+      "tags": [
+        "affiliate",
+        "passive income",
+        "online"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Glassdoor Salary Data",
+        "Upwork Rate Insights",
+        "Contena Freelance Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-course-pricing-calculator",
+      "title": "Course Pricing Calculator",
+      "description": "Find the optimal course price to hit your income goals, factoring in platform fees. Compare revenue at different price points.",
+      "categoryId": "D",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "course pricing",
+        "pricing",
+        "online course",
+        "platform fee",
+        "digital product",
+        "passive income"
+      ],
+      "tags": [
+        "course",
+        "pricing",
+        "creator"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Glassdoor Salary Data",
+        "Upwork Rate Insights",
+        "Contena Freelance Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-email-list-revenue-calculator",
+      "title": "Email List Revenue Calculator",
+      "description": "Calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics.",
+      "categoryId": "D",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "email marketing",
+        "newsletter revenue",
+        "list monetization",
+        "conversion rate",
+        "passive income",
+        "creator"
+      ],
+      "tags": [
+        "email",
+        "newsletter",
+        "creator"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Glassdoor Salary Data",
+        "Upwork Rate Insights",
+        "Contena Freelance Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-freelance-rate-calculator",
+      "title": "Freelance Rate Calculator",
+      "description": "Calculate your ideal hourly, daily, and monthly rate based on your skill, experience level, and market location.",
+      "categoryId": "D",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "freelance rate",
+        "hourly rate",
+        "pricing",
+        "freelance",
+        "consulting",
+        "remote work"
+      ],
+      "tags": [
+        "freelance",
+        "pricing",
+        "rate"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Glassdoor Salary Data",
+        "Upwork Rate Insights",
+        "Contena Freelance Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-hourly-vs-fixed-calculator",
+      "title": "Hourly vs Fixed Rate Calculator",
+      "description": "Calculate the hourly rate, monthly retainer, and project equivalents needed to reach your annual income goal.",
+      "categoryId": "D",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "hourly rate",
+        "fixed rate",
+        "retainer",
+        "freelance",
+        "annual income",
+        "pricing"
+      ],
+      "tags": [
+        "freelance",
+        "pricing",
+        "rate"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Glassdoor Salary Data",
+        "Upwork Rate Insights",
+        "Contena Freelance Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-project-profitability-calculator",
+      "title": "Project Profitability Calculator",
+      "description": "Calculate profit, effective hourly rate, and profit margin for any freelance project. Compare outcomes at different cost rates.",
+      "categoryId": "D",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "project profit",
+        "freelance",
+        "hourly cost",
+        "profit margin",
+        "effective rate",
+        "pricing"
+      ],
+      "tags": [
+        "freelance",
+        "profit",
+        "pricing"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "Glassdoor Salary Data",
+        "Upwork Rate Insights",
+        "Contena Freelance Reports"
+      ]
+    },
+    {
+      "slug": "solopreneur-saas-pricing-planner",
+      "title": "SaaS Pricing Planner",
+      "description": "Compare flat, tiered, usage-based, and freemium pricing models. Get personalized recommendations based on your product type, audience, and competitor prices.",
+      "categoryId": "E",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "pricing",
+        "saas pricing",
+        "pricing strategy",
+        "tier pricing",
+        "freemium",
+        "monetization"
+      ],
+      "tags": [
+        "pricing",
+        "saas",
+        "monetization"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "BLS Employer Costs for Employee Compensation",
+        "Harvard Business Review",
+        "ZipRecruiter Salary Data"
+      ]
+    },
+    {
+      "slug": "solopreneur-employee-cost-calculator",
+      "title": "Employee Cost Calculator",
+      "description": "Calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. Compare costs across salary levels and locations.",
+      "categoryId": "E",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "employee cost",
+        "hiring cost",
+        "salary",
+        "benefits",
+        "overhead",
+        "freelance"
+      ],
+      "tags": [
+        "hr",
+        "hiring",
+        "cost"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "BLS Employer Costs for Employee Compensation",
+        "Harvard Business Review",
+        "ZipRecruiter Salary Data"
+      ]
+    },
+    {
+      "slug": "solopreneur-meeting-cost-calculator",
+      "title": "Meeting Cost Calculator",
+      "description": "Calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.",
+      "categoryId": "E",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "meeting cost",
+        "productivity",
+        "time waste",
+        "hourly rate",
+        "team cost"
+      ],
+      "tags": [
+        "meeting",
+        "productivity",
+        "cost"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "BLS Employer Costs for Employee Compensation",
+        "Harvard Business Review",
+        "ZipRecruiter Salary Data"
+      ]
+    },
+    {
+      "slug": "solopreneur-productivity-score",
+      "title": "Productivity Score Calculator",
+      "description": "Rate your solopreneur productivity with a scored assessment. Get actionable tips based on your deep work hours, tool stack, and meeting load.",
+      "categoryId": "E",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "productivity",
+        "deep work",
+        "solopreneur",
+        "time management",
+        "tools stack"
+      ],
+      "tags": [
+        "productivity",
+        "focus",
+        "solopreneur"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "BLS Employer Costs for Employee Compensation",
+        "Harvard Business Review",
+        "ZipRecruiter Salary Data"
+      ]
+    },
+    {
+      "slug": "solopreneur-remote-vs-office-calculator",
+      "title": "Remote vs In-Office Cost Calculator",
+      "description": "Compare the true annual cost of running a fully-remote vs fully-office vs hybrid team. See per-employee breakdown, productivity-adjusted comparison, 3-year TCO, and what-if scenarios (hot-desking, hybrid schedules, hiring impact).",
+      "categoryId": "E",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "remote vs office cost",
+        "WFH vs office savings",
+        "remote work cost calculator",
+        "office overhead per employee",
+        "remote stipend calculator",
+        "hybrid work cost",
+        "back to office cost",
+        "work from home savings"
+      ],
+      "tags": [
+        "cost",
+        "hr",
+        "remote",
+        "office",
+        "solopreneur"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-03",
+      "sources": [
+        "Stanford Study on Remote Work (Bloom 2015)",
+        "BLS Employer Costs for Employee Compensation",
+        "Harvard Business Review on Hybrid Work"
+      ]
+    },
+    {
+      "slug": "solopreneur-freelance-tax-calculator",
+      "title": "Freelance Tax Calculator",
+      "description": "Estimate your freelance taxes across 5 countries. See your taxable income, quarterly payments, effective tax rate, and monthly take-home pay.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "freelance tax",
+        "tax",
+        "self-employment",
+        "quarterly tax",
+        "taxable income",
+        "freelance"
+      ],
+      "tags": [
+        "tax",
+        "freelance",
+        "finance"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "IRS Tax Statistics",
+        "Klear Influencer Sponsorship Rates",
+        "Indeed Salary Benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-sponsorship-rate-calculator",
+      "title": "Sponsorship Rate Calculator",
+      "description": "Estimate what brands will pay to sponsor your content. Calculate CPM-based rates for podcasts, newsletters, YouTube, and blogs.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "sponsorship",
+        "cpm",
+        "creator",
+        "podcast",
+        "newsletter",
+        "pricing"
+      ],
+      "tags": [
+        "sponsorship",
+        "creator",
+        "pricing"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "IRS Tax Statistics",
+        "Klear Influencer Sponsorship Rates",
+        "Indeed Salary Benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-time-value-calculator",
+      "title": "Time Value Calculator",
+      "description": "Discover what your time is really worth. Calculate your hourly rate and see the dollar cost of meetings, distractions, and daily time waste.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "time value",
+        "hourly rate",
+        "productivity",
+        "freelance",
+        "time waste",
+        "annual income"
+      ],
+      "tags": [
+        "time",
+        "productivity",
+        "rate"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-06-22",
+      "sources": [
+        "IRS Tax Statistics",
+        "Klear Influencer Sponsorship Rates",
+        "Indeed Salary Benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-compound-interest-calculator",
+      "title": "Compound Interest Calculator",
+      "description": "See how your savings grow with compound interest. Model principal + monthly contributions, compare annual vs monthly compounding, and project your final balance at 5 milestones.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "compound interest",
+        "savings",
+        "investment growth",
+        "monthly contribution",
+        "retirement",
+        "future value",
+        "startup finance",
+        "pricing"
+      ],
+      "tags": [
+        "investment",
+        "savings",
+        "compound interest",
+        "finance"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-03",
+      "sources": [
+        "Investor.gov Compound Interest Calculator",
+        "Investopedia Compound Interest Formula",
+        "FDIC Annual Percentage Yield Disclosure"
+      ]
+    },
+    {
+      "slug": "solopreneur-mortgage-calculator",
+      "title": "Mortgage Calculator",
+      "description": "Calculate your monthly P&I payment, total interest over the loan term, and amortization milestones. Compare 15y vs 30y terms, model rate changes, and check LTV-driven PMI implications.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "mortgage calculator",
+        "monthly payment",
+        "P&I",
+        "amortization",
+        "home loan",
+        "15 vs 30 year mortgage",
+        "PMI",
+        "LTV"
+      ],
+      "tags": [
+        "mortgage",
+        "real-estate",
+        "finance"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.bankrate.com/mortgages/mortgage-calculator",
+        "https://www.consumerfinance.gov/owning-a-home/loan-estimate/"
+      ]
+    },
+    {
+      "slug": "solopreneur-rent-vs-buy-calculator",
+      "title": "Rent vs Buy Calculator",
+      "description": "Decide whether to rent or buy with NPV comparison over your stay horizon. Includes down payment opportunity cost, selling costs, and appreciation. Multiplies into 6 time horizons to show how the answer changes with commitment length.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "rent vs buy calculator",
+        "rent or buy",
+        "NPV real estate",
+        "time horizon rent buy",
+        "first time home buyer",
+        "opportunity cost",
+        "breakeven rent buy"
+      ],
+      "tags": [
+        "real-estate",
+        "decision",
+        "personal finance"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.consumerfinance.gov/owning-a-home/",
+        "https://www.bankrate.com/mortgages/rent-vs-buy-calculator/"
+      ]
+    },
+    {
+      "slug": "solopreneur-cap-rate-calculator",
+      "title": "Cap Rate Calculator",
+      "description": "Calculate property cap rate (NOI / value) and compare to market benchmarks (Class A/B/C urban, value-add, distressed). Includes reverse implied-value calc at user-chosen target cap rates.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "cap rate calculator",
+        "NOI",
+        "rental property cap rate",
+        "real estate investment",
+        "Class A cap rate",
+        "cap rate by city",
+        "implied value"
+      ],
+      "tags": [
+        "real-estate",
+        "investment",
+        "cap-rate"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.biggerpockets.com/blog/cap-rate-explained/",
+        "https://www.bankrate.com/real-estate/cap-rate/"
+      ]
+    },
+    {
+      "slug": "solopreneur-rental-yield-calculator",
+      "title": "Rental Yield / Cash-on-Cash Calculator",
+      "description": "Calculate gross/net yields and cash-on-cash return on a leveraged rental property. Compares annual rent, mortgage, and OpEx against actual cash invested. Shows negative cash flow warnings for appreciation-only markets.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "rental yield calculator",
+        "cash on cash return",
+        "CoC real estate",
+        "gross yield vs cap rate",
+        "leveraged rental",
+        "rental property ROI",
+        "negative cash flow",
+        "CoC by leverage"
+      ],
+      "tags": [
+        "real-estate",
+        "investment",
+        "rental"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.biggerpockets.com/rei/glossary/cash-on-cash-return/",
+        "https://www.bankrate.com/real-estate/cash-on-cash-return/"
+      ]
+    },
+    {
+      "slug": "solopreneur-brrrr-calculator",
+      "title": "BRRRR Calculator",
+      "description": "Model a BRRRR (Buy Rehab Rent Refinance Repeat) deal: stage-by-stage cash flow, 70% rule check, forced appreciation, post-refi cash-on-cash return, and whether the deal achieves cash-out success.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "BRRRR calculator",
+        "buy rehab rent refinance repeat",
+        "BRRRR strategy",
+        "forced appreciation",
+        "cash-out refinance",
+        "70% rule",
+        "house flipping vs BRRRR",
+        "rental property cycle"
+      ],
+      "tags": [
+        "real-estate",
+        "investment",
+        "brrrr"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.biggerpockets.com/blog/brrrr-calculator/",
+        "https://www.biggerpockets.com/real-estate-investing/brrrr-investing/"
+      ]
+    },
+    {
+      "slug": "solopreneur-dscr-calculator",
+      "title": "DSCR Calculator (Debt Service Coverage Ratio)",
+      "description": "Measure DSCR (NOI / annual debt service) to qualify for lender approval. Includes reverse max-loan calc at lender thresholds (1.0/1.25/1.5) via binary search, plus STR and commercial RE benchmarks.",
+      "categoryId": "F",
+      "applicationCategory": "FinanceApplication",
+      "keywords": [
+        "DSCR calculator",
+        "debt service coverage ratio",
+        "DSCR investment property",
+        "DSCR lender requirement",
+        "rental property loan",
+        "DSCR for STR",
+        "DSCR for Airbnb"
+      ],
+      "tags": [
+        "real-estate",
+        "lender",
+        "DSCR"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.bankrate.com/mortgages/dscr-loans/",
+        "https://www.biggerpockets.com/blog/dscr-loan/"
+      ]
+    },
+    {
+      "slug": "solopreneur-roas-calculator",
+      "title": "ROAS Calculator",
+      "description": "Calculate Return on Ad Spend (ROAS) with margin-aware net profit. See health bands, what-if scenarios (revenue +20% / spend -20%), break-even revenue, and 2x scaling projections. Industry benchmarks: 🟢 ≥4.0x · 🟡 2.0–4.0x · 🟠 1.0–2.0x · 🔴 <1.0x.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "ROAS calculator",
+        "return on ad spend",
+        "ROAS",
+        "ad spend ROI",
+        "marketing ROI",
+        "ROAS benchmark",
+        "gross ROAS",
+        "net ROAS",
+        "solopreneur marketing",
+        "performance marketing"
+      ],
+      "tags": [
+        "marketing",
+        "roas",
+        "roi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-04",
+      "sources": [
+        "https://www.meta.com/business/help/430291176997522/",
+        "https://support.google.com/google-ads/answer/14090053",
+        "https://blog.hubspot.com/marketing/roas",
+        "https://www.shopify.com/blog/roas"
+      ]
+    },
+    {
+      "slug": "solopreneur-ltv-by-channel-calculator",
+      "title": "LTV by Channel Calculator",
+      "description": "Compare up to 5 marketing channels by LTV:CAC ratio. See ranked table with health bands, blended CAC, reallocation suggestions, and break-even targets. Industry benchmarks: 🟢 ≥3.0x · 🟡 1.0–3.0x · 🟠 0.5–1.0x · 🔴 <0.5x.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "LTV by channel",
+        "LTV CAC by channel",
+        "channel ROI comparison",
+        "marketing channel comparison",
+        "channel efficiency",
+        "LTV calculator multi-channel",
+        "CAC by channel",
+        "channel budget allocation",
+        "marketing mix",
+        "channel performance"
+      ],
+      "tags": [
+        "marketing",
+        "ltv",
+        "cac",
+        "channels"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-05",
+      "sources": [
+        "https://www.profitwell.com/blog/cac-by-channel",
+        "https://www.hubspot.com/marketing/cac",
+        "https://blog.hubspot.com/marketing/customer-acquisition-cost",
+        "https://www.saastr.com/customer-acquisition-cost/"
+      ]
+    },
+    {
+      "slug": "solopreneur-funnel-value-calculator",
+      "title": "Funnel Value Calculator",
+      "description": "Measure marketing funnel value across 4 stages: impressions → clickers → leads → sales. See overall conversion rate, biggest drop-off stage, what-if improvements, and revenue projections. Health bands: 🟢 ≥5% · 🟡 1–5% · 🟠 0.1–1% · 🔴 <0.1%.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "funnel value calculator",
+        "marketing funnel",
+        "conversion funnel",
+        "funnel analysis",
+        "sales funnel",
+        "CTR",
+        "lead conversion",
+        "sales conversion",
+        "funnel optimization",
+        "AOV"
+      ],
+      "tags": [
+        "marketing",
+        "funnel",
+        "conversion"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-05",
+      "sources": [
+        "https://blog.hubspot.com/marketing/conversion-funnel",
+        "https://www.salesforce.com/resources/articles/sales-funnel/",
+        "https://unbounce.com/conversion-rate-optimization/conversion-funnel/",
+        "https://www.optimizely.com/insights/blog/conversion-funnel/"
+      ]
+    },
+    {
+      "slug": "solopreneur-cohort-retention-calculator",
+      "title": "Cohort Retention Calculator",
+      "description": "Measure monthly cohort retention decay (M1/M2/M3/M6/M12) and project 12-month LTV. See biggest drop month, M6 retention health band, what-if improvements, and CAC payback. Health: 🟢 ≥90% · 🟡 70–90% · 🟠 50–70% · 🔴 <50%.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "cohort retention",
+        "retention curve",
+        "cohort analysis",
+        "customer retention",
+        "retention rate",
+        "churn rate",
+        "LTV projection",
+        "customer lifetime value",
+        "cohort LTV",
+        "retention decay"
+      ],
+      "tags": [
+        "marketing",
+        "retention",
+        "ltv",
+        "cohort"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-05",
+      "sources": [
+        "https://www.profitwell.com/blog/cohort-analysis",
+        "https://amplitude.com/blog/cohort-analysis",
+        "https://www.helpscout.com/blog/customer-retention-rate",
+        "https://mixpanel.com/blog/cohort-analysis/"
+      ]
+    },
+    {
+      "slug": "solopreneur-email-campaign-roi-calculator",
+      "title": "Email Campaign ROI Calculator",
+      "description": "Measure email campaign ROI: gross/net revenue, cost-per-click/open, and projected scaling. Industry benchmark open rate 21% included. Health: 🟢 ≥300% ROI · 🟡 100–300% · 🟠 0–100% · 🔴 <0%.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "email campaign ROI",
+        "email marketing ROI",
+        "email ROI calculator",
+        "email open rate",
+        "email CTR",
+        "newsletter ROI",
+        "email list monetization",
+        "campaign cost",
+        "cost per click",
+        "email marketing benchmark"
+      ],
+      "tags": [
+        "marketing",
+        "email",
+        "roi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://blog.hubspot.com/marketing/email-marketing-roi",
+        "https://www.campaignmonitor.com/resources/guides/email-marketing-roi/",
+        "https://mailchimp.com/resources/email-marketing-benchmarks/",
+        "https://www.salesforce.com/resources/articles/email-marketing-stats/"
+      ]
+    },
+    {
+      "slug": "solopreneur-content-marketing-roi-calculator",
+      "title": "Content Marketing ROI Calculator",
+      "description": "Model SEO/content marketing economics with ramp-up months, peak traffic, attribution model (first-touch / last-touch / linear). See 12-month ROI projection, steady-state revenue, and break-even conversion rate. Health: 🟢 ≥3% CR · 🟡 1–3% · 🟠 0.3–1% · 🔴 <0.3%.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "content marketing ROI",
+        "SEO ROI",
+        "content ROI calculator",
+        "content marketing calculator",
+        "organic traffic value",
+        "content cost",
+        "attribution model",
+        "first-touch attribution",
+        "last-touch attribution",
+        "linear attribution"
+      ],
+      "tags": [
+        "marketing",
+        "content",
+        "seo",
+        "roi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.hubspot.com/marketing/content-marketing-roi",
+        "https://contentmarketinginstitute.com/",
+        "https://www.semrush.com/blog/content-marketing-roi/",
+        "https://neilpatel.com/blog/content-marketing-roi/"
+      ]
+    },
+    {
+      "slug": "solopreneur-coupon-attribution-calculator",
+      "title": "Coupon Attribution Calculator",
+      "description": "Measure the true ROI of a coupon campaign by adjusting gross coupon revenue for cannibalization. See health bands, what-if scenarios, break-even cannibalization rate, and annualized projections. Industry benchmarks: 🟢 ≥100% true ROI · 🟡 0–100% · 🔴 <0%.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "coupon attribution",
+        "coupon ROI",
+        "coupon cannibalization",
+        "true coupon ROI",
+        "coupon campaign ROI",
+        "incremental coupon revenue",
+        "coupon effectiveness",
+        "ecommerce coupon",
+        "solopreneur marketing",
+        "coupon holdout test"
+      ],
+      "tags": [
+        "marketing",
+        "coupon",
+        "roi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-15",
+      "sources": [
+        "https://www.shopify.com/blog/coupon-marketing",
+        "https://help.klaviyo.com/hc/en-us/articles/115005758787",
+        "https://www.optimove.com/resources/learning-center/coupon-redemption-rate",
+        "https://blog.hubspot.com/marketing/coupon-marketing-strategies"
+      ]
+    },
+    {
+      "slug": "solopreneur-cart-abandonment-cost-calculator",
+      "title": "Cart Abandonment Cost Calculator",
+      "description": "Model cart abandonment and the ROI of a recovery campaign (email + SMS retargeting). See 8-output breakdown, what-if scenarios (recovery rate, cost, abandonment), break-even recovery rate, and annualized projections. Industry benchmarks: 🟢 ≥300% recovery ROI · 🟡 100–300% · 🔴 <100%.",
+      "categoryId": "M",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "cart abandonment",
+        "cart abandonment calculator",
+        "cart abandonment cost",
+        "cart recovery ROI",
+        "cart recovery rate",
+        "abandoned cart",
+        "shopping cart abandonment",
+        "cart abandonment email",
+        "cart recovery campaign",
+        "ecommerce cart recovery",
+        "solopreneur marketing"
+      ],
+      "tags": [
+        "marketing",
+        "cart",
+        "abandonment",
+        "roi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-15",
+      "sources": [
+        "https://baymard.com/lists/cart-abandonment-rate",
+        "https://www.shopify.com/blog/cart-abandonment",
+        "https://help.klaviyo.com/hc/en-us/articles/115005758787",
+        "https://www.optimizely.com/insights/blog/cart-abandonment-statistics/"
+      ]
+    },
+    {
+      "slug": "solopreneur-inventory-turnover-calculator",
+      "title": "Inventory Turnover Calculator",
+      "description": "Measure how many times your inventory cycles per year and how many days to sell. The fundamental inventory health metric for Shopify, Amazon FBA, and DTC brands.",
+      "categoryId": "O",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "inventory turnover calculator",
+        "days to sell",
+        "COGS ratio",
+        "inventory health",
+        "stock turn",
+        "inventory cycle",
+        "Shopify inventory",
+        "Amazon FBA metrics",
+        "DTC inventory",
+        "working capital"
+      ],
+      "tags": [
+        "operations",
+        "inventory",
+        "turnover",
+        "cogs"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.investopedia.com/terms/i/inventory-turnover.asp",
+        "https://www.shopify.com/blog/inventory-turnover-ratio",
+        "https://corporatefinanceinstitute.com/resources/accounting/inventory-turnover/"
+      ]
+    },
+    {
+      "slug": "solopreneur-carrying-cost-calculator",
+      "title": "Carrying Cost Calculator",
+      "description": "Total annual cost of holding inventory — storage + insurance + shrinkage + opportunity cost + other. Industry rule of thumb: 20–30% of inventory value per year.",
+      "categoryId": "O",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "carrying cost calculator",
+        "inventory holding cost",
+        "storage cost",
+        "shrinkage rate",
+        "opportunity cost inventory",
+        "inventory carrying cost",
+        "total inventory cost",
+        "B2B inventory metrics",
+        "warehouse cost",
+        "inventory financing"
+      ],
+      "tags": [
+        "operations",
+        "inventory",
+        "carrying-cost",
+        "storage"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.investopedia.com/terms/c/carrying-cost.asp",
+        "https://www.shopify.com/blog/carrying-cost",
+        "https://www.shipbob.com/blog/carrying-cost/"
+      ]
+    },
+    {
+      "slug": "solopreneur-stockout-cost-calculator",
+      "title": "Stockout Cost Calculator",
+      "description": "Quantify the cost of running out of stock — lost immediate revenue + lost customer LTV (some defect forever).",
+      "categoryId": "O",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "stockout cost calculator",
+        "lost sales revenue",
+        "inventory stockout",
+        "customer churn from stockout",
+        "LTV loss",
+        "lost customer LTV",
+        "win-back rate",
+        "Shopify out of stock",
+        "Amazon FBA stockout",
+        "inventory shortage cost"
+      ],
+      "tags": [
+        "operations",
+        "inventory",
+        "stockout",
+        "lost-sales"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.shopify.com/blog/how-to-handle-out-of-stock-products",
+        "https://www.invensia.net/wp-content/uploads/2016/09/Estimating-stockout-cost.pdf",
+        "https://www.supplychainbrain.com/blogs/1-think-tank/post/29319-the-real-cost-of-stockouts"
+      ]
+    },
+    {
+      "slug": "solopreneur-reorder-point-calculator",
+      "title": "Reorder Point Calculator",
+      "description": "Compute when to reorder — lead-time demand + safety stock. Includes service-level Z-score for statistical safety buffer.",
+      "categoryId": "O",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "reorder point calculator",
+        "safety stock",
+        "service level",
+        "Z-score inventory",
+        "lead time demand",
+        "inventory reorder",
+        "stockout prevention",
+        "demand variability",
+        "EOQ alternative",
+        "inventory buffer"
+      ],
+      "tags": [
+        "operations",
+        "inventory",
+        "reorder",
+        "safety-stock"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.investopedia.com/terms/r/reorder-point.asp",
+        "https://www.shopify.com/blog/reorder-point",
+        "https://www.netSuite.com/portal/resource/articles/inventory-management/reorder-point.shtml"
+      ]
+    },
+    {
+      "slug": "solopreneur-fulfillment-cost-calculator",
+      "title": "Order Fulfillment Cost Calculator",
+      "description": "Per-order cost decomposition — labor + shipping + packaging + returns handling. The \"true cost\" of fulfilling one order.",
+      "categoryId": "O",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "fulfillment cost calculator",
+        "order fulfillment cost",
+        "pick and pack cost",
+        "shipping cost",
+        "packaging cost",
+        "return handling cost",
+        "per order cost",
+        "3PL comparison",
+        "ecommerce fulfillment",
+        "Shopify fulfillment cost"
+      ],
+      "tags": [
+        "operations",
+        "fulfillment",
+        "pick-pack",
+        "shipping"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.shipbob.com/blog/fulfillment-cost/",
+        "https://www.shopify.com/enterprise/blog/ecommerce-fulfillment",
+        "https://www.bigcommerce.com/blog/fulfillment-cost/"
+      ]
+    },
+    {
+      "slug": "solopreneur-supplier-scorecard-calculator",
+      "title": "Supplier Performance Scorecard Calculator",
+      "description": "Weighted composite supplier score — on-time + defect + lead + cost. Letter grade A/B/C/D with health bands.",
+      "categoryId": "O",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "supplier scorecard",
+        "supplier performance",
+        "vendor rating",
+        "on-time delivery",
+        "defect rate",
+        "lead time variance",
+        "cost variance",
+        "composite score",
+        "letter grade supplier",
+        "supplier evaluation"
+      ],
+      "tags": [
+        "operations",
+        "supplier",
+        "vendor-management",
+        "scorecard"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-06",
+      "sources": [
+        "https://www.scoreboard.com/supplier-scorecard/",
+        "https://www.smartsheet.com/supplier-scorecard",
+        "https://www.iso.org/standard/62085.html"
+      ]
+    },
+    {
+      "slug": "solopreneur-pipeline-value-calculator",
+      "title": "Pipeline Value Calculator",
+      "description": "Compute the weighted value of your sales pipeline by stage probability. The fundamental sales KPI for B2B SaaS founders and sales managers.",
+      "categoryId": "S",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "pipeline value calculator",
+        "sales pipeline",
+        "weighted pipeline",
+        "pipeline forecast",
+        "deal probability",
+        "stage probability",
+        "sales KPI",
+        "B2B SaaS sales",
+        "pipeline coverage",
+        "revenue forecast"
+      ],
+      "tags": [
+        "sales",
+        "pipeline",
+        "crm",
+        "forecast"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-07",
+      "sources": [
+        "https://www.insivia.com/blog/sales-pipeline-value/",
+        "https://blog.hubspot.com/sales/sales-pipeline",
+        "https://www.salesforce.com/resources/articles/sales-pipeline/"
+      ]
+    },
+    {
+      "slug": "solopreneur-sales-velocity-calculator",
+      "title": "Sales Velocity Calculator",
+      "description": "Measure how fast your sales pipeline generates revenue — (opportunities × deal size × win rate) ÷ cycle days. The 4-factor cascade that tells founders which lever to invest in next.",
+      "categoryId": "S",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "sales velocity calculator",
+        "sales velocity",
+        "sales productivity",
+        "pipeline throughput",
+        "revenue velocity",
+        "sales KPI",
+        "B2B SaaS sales",
+        "sales cycle",
+        "win rate",
+        "deal velocity"
+      ],
+      "tags": [
+        "sales",
+        "velocity",
+        "crm",
+        "kpi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-07",
+      "sources": [
+        "https://blog.hubspot.com/sales/sales-velocity",
+        "https://www.insivia.com/blog/sales-velocity/",
+        "https://www.gong.io/blog/sales-velocity"
+      ]
+    },
+    {
+      "slug": "solopreneur-acv-calculator",
+      "title": "ACV Calculator",
+      "description": "Compute Average Contract Value with monthly/annual toggle and expansion adjustment. The fundamental SaaS pricing metric — how much revenue per customer.",
+      "categoryId": "S",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "ACV calculator",
+        "average contract value",
+        "ACV",
+        "annual contract value",
+        "SaaS pricing",
+        "contract value",
+        "revenue per customer",
+        "pricing metric",
+        "B2B SaaS pricing",
+        "customer lifetime value"
+      ],
+      "tags": [
+        "sales",
+        "acv",
+        "crm",
+        "pricing"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-07",
+      "sources": [
+        "https://www.insivia.com/blog/what-is-acv/",
+        "https://blog.hubspot.com/sales/average-contract-value",
+        "https://www.gong.io/blog/average-contract-value"
+      ]
+    },
+    {
+      "slug": "solopreneur-win-rate-by-stage-calculator",
+      "title": "Win Rate by Stage Calculator",
+      "description": "Compute overall sales win rate as a multiplicative funnel across 4 stage transitions (SQL→Opp→Proposal→Negotiation→Won) and identify the bottleneck stage. Reveals which transition is leaking the most deals.",
+      "categoryId": "S",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "win rate calculator",
+        "sales win rate",
+        "funnel conversion",
+        "stage conversion",
+        "sales funnel",
+        "win rate by stage",
+        "bottleneck analysis",
+        "sales KPI",
+        "B2B SaaS sales",
+        "pipeline conversion"
+      ],
+      "tags": [
+        "sales",
+        "win-rate",
+        "crm",
+        "funnel"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-07",
+      "sources": [
+        "https://blog.hubspot.com/sales/sales-funnel",
+        "https://www.insivia.com/blog/sales-funnel-stages/",
+        "https://blog.hubspot.com/sales/sales-conversion-rate"
+      ]
+    },
+    {
+      "slug": "solopreneur-quota-attainment-calculator",
+      "title": "Quota Attainment Calculator",
+      "description": "Track actual revenue vs annual quota with monthly pace projection and year-end forecast. Answers \"am I on track to hit my number?\" with attainment %, required monthly close, and gap-to-quota.",
+      "categoryId": "S",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "quota attainment calculator",
+        "quota tracker",
+        "sales quota",
+        "revenue target",
+        "attainment %",
+        "sales pace",
+        "year-end forecast",
+        "sales KPI",
+        "B2B SaaS sales",
+        "sales performance"
+      ],
+      "tags": [
+        "sales",
+        "quota",
+        "crm",
+        "performance"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-07",
+      "sources": [
+        "https://blog.hubspot.com/sales/sales-quota",
+        "https://www.insivia.com/blog/sales-quota/",
+        "https://blog.hubspot.com/sales/setting-sales-quota"
+      ]
+    },
+    {
+      "slug": "solopreneur-pipeline-coverage-calculator",
+      "title": "Pipeline Coverage Calculator",
+      "description": "Compute pipeline-to-quota coverage with win-rate weighting, applying the B2B SaaS 3x rule (you need 3× your quota in pipeline to reliably hit target). Answers \"do I have enough pipeline?\"",
+      "categoryId": "S",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "pipeline coverage calculator",
+        "pipeline coverage",
+        "3x rule",
+        "pipeline to quota",
+        "B2B SaaS pipeline",
+        "sales pipeline",
+        "coverage ratio",
+        "win rate",
+        "sales KPI",
+        "pipeline benchmark"
+      ],
+      "tags": [
+        "sales",
+        "pipeline",
+        "crm",
+        "coverage"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-07",
+      "sources": [
+        "https://blog.hubspot.com/sales/sales-pipeline-coverage",
+        "https://www.insivia.com/blog/sales-pipeline-coverage-ratio/",
+        "https://blog.hubspot.com/sales/3x-pipeline-coverage"
+      ]
+    },
+    {
+      "slug": "solopreneur-nrr-calculator",
+      "title": "NRR Calculator",
+      "description": "Compute Net Revenue Retention (NRR) — the headline SaaS metric every board reports. NRR measures how much revenue you keep + grow from existing customers. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.",
+      "categoryId": "R",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "NRR calculator",
+        "net revenue retention",
+        "NRR",
+        "net dollar retention",
+        "NDR",
+        "retention metric",
+        "saas KPI",
+        "expansion revenue",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "retention",
+        "csm",
+        "nrr",
+        "saas-metrics"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.saas-capital.com/blog-posts/saas-retention-metrics/",
+        "https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/",
+        "https://www.iconiqcapital.com/growth/tte-net-dollar-retention"
+      ]
+    },
+    {
+      "slug": "solopreneur-grr-calculator",
+      "title": "GRR Calculator",
+      "description": "Compute Gross Revenue Retention (GRR) — the pure retention signal that strips out expansion. GRR ≤ 100% always. Health bands: 🟢 ≥95% · 🟡 90-95% · 🟠 80-90% · 🔴 <80%. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.",
+      "categoryId": "R",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "GRR calculator",
+        "gross revenue retention",
+        "GRR",
+        "gross retention",
+        "retention metric",
+        "saas retention",
+        "B2B SaaS",
+        "mid-market SaaS",
+        "churn rate"
+      ],
+      "tags": [
+        "retention",
+        "csm",
+        "grr",
+        "saas-metrics"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.saas-capital.com/blog-posts/saas-retention-metrics/",
+        "https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/",
+        "https://www.iconiqcapital.com/growth/tte-net-dollar-retention"
+      ]
+    },
+    {
+      "slug": "solopreneur-expansion-revenue-calculator",
+      "title": "Expansion Revenue Calculator",
+      "description": "Compute expansion revenue as % of starting MRR — the top-line growth lever from existing customers. Separates upsell (same product, more usage) from cross-sell (new product). Health bands: 🟢 ≥25% · 🟡 15-25% · 🟠 5-15% · 🔴 <5%. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.",
+      "categoryId": "R",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "expansion revenue calculator",
+        "expansion MRR",
+        "upsell",
+        "cross-sell",
+        "net expansion",
+        "B2B SaaS",
+        "mid-market SaaS",
+        "growth lever"
+      ],
+      "tags": [
+        "retention",
+        "csm",
+        "expansion",
+        "saas-metrics"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.saas-capital.com/blog-posts/saas-retention-metrics/",
+        "https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/"
+      ]
+    },
+    {
+      "slug": "solopreneur-logo-churn-rate-calculator",
+      "title": "Logo Churn Rate Calculator",
+      "description": "Compute customer (logo) churn rate — count-based complement to GRR (revenue-based). Logo Churn counts lost customers; GRR counts lost revenue. Health bands: 🟢 <5% · 🟡 5-10% · 🟠 10-20% · 🔴 ≥20% (INVERSE). For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.",
+      "categoryId": "R",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "logo churn rate calculator",
+        "customer churn rate",
+        "logo churn",
+        "customer churn",
+        "churn analysis",
+        "B2B SaaS",
+        "mid-market SaaS",
+        "retention metric"
+      ],
+      "tags": [
+        "retention",
+        "csm",
+        "logo-churn",
+        "saas-metrics"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.saas-capital.com/blog-posts/saas-retention-metrics/",
+        "https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/"
+      ]
+    },
+    {
+      "slug": "solopreneur-renewal-rate-calculator",
+      "title": "Renewal Rate Calculator",
+      "description": "Compute the share of up-for-renewal ARR that actually renewed — the cleanest gross retention signal for the renewal motion itself (excludes expansion). Health bands: 🟢 ≥90% · 🟡 80-90% · 🟠 70-80% · 🔴 <70%. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.",
+      "categoryId": "R",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "renewal rate calculator",
+        "logo renewal rate",
+        "gross renewal rate",
+        "contract renewal rate",
+        "renewal rate",
+        "retention metric",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "retention",
+        "csm",
+        "renewal-rate",
+        "saas-metrics"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.saas-capital.com/blog-posts/saas-retention-metrics/",
+        "https://openviewpartners.com/blog/saas-benchmarks/",
+        "https://www.iconiqcapital.com/growth/saas-retention-metrics"
+      ]
+    },
+    {
+      "slug": "solopreneur-customer-health-score-calculator",
+      "title": "Customer Health Score Calculator",
+      "description": "Compute composite customer health score (0-100) from 5 weighted signals: product usage, NPS, support tickets, engagement, contract value. 4 weight presets: balanced, product-led, service-led, sales-led. Health bands: 🟢 ≥80 · 🟡 60-80 · 🟠 40-60 · 🔴 <40. For mid-market B2B SaaS ($10M–$50M ARR) CSMs and RevOps leads.",
+      "categoryId": "R",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "customer health score",
+        "health score calculator",
+        "CSM score",
+        "account health",
+        "product usage",
+        "NPS",
+        "support tickets",
+        "engagement",
+        "contract value",
+        "B2B SaaS"
+      ],
+      "tags": [
+        "retention",
+        "csm",
+        "health-score",
+        "saas-metrics"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.gainsight.com/blog/customer-health-score/",
+        "https://www.churnzero.com/customer-health-score/"
+      ]
+    },
+    {
+      "slug": "solopreneur-funnel-step-calculator",
+      "title": "Funnel Step Conversion Analyzer",
+      "description": "Compute end-to-end conversion across an in-product event funnel (2-5 steps) — the standard PM metric for measuring progression through product moments. Health bands: green >=40% · yellow 25-40% · orange 15-25% · red <15%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.",
+      "categoryId": "P",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "funnel step calculator",
+        "in-product funnel",
+        "conversion funnel",
+        "event funnel",
+        "funnel analysis",
+        "product analytics",
+        "PM",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "product-analytics",
+        "pm",
+        "funnel"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.reforge.com/blog/growth-loops",
+        "https://amplitude.com/blog/mobile-funnels",
+        "https://mixpanel.com/blog/funnel-analysis/"
+      ]
+    },
+    {
+      "slug": "solopreneur-feature-adoption-calculator",
+      "title": "Feature Adoption Rate",
+      "description": "Compute feature adoption as % of active users (WAU or MAU) — the PM metric for measuring how many users actually use a specific feature. Health bands: green >=40% · yellow 20-40% · orange 10-20% · red <10%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.",
+      "categoryId": "P",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "feature adoption rate",
+        "feature usage",
+        "product adoption",
+        "adoption metrics",
+        "PM",
+        "product analytics",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "product-analytics",
+        "pm",
+        "adoption"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://amplitude.com/blog/product-analytics-benchmarks",
+        "https://heap.io/blog/product-adoption",
+        "https://mixpanel.com/blog/feature-adoption/"
+      ]
+    },
+    {
+      "slug": "solopreneur-activation-rate-calculator",
+      "title": "Activation Rate",
+      "description": "Compute activation rate as % of signups that reached the aha-moment within a time window (7/14/30 days). The PM metric for measuring onboarding effectiveness. Health bands: green >=40% · yellow 25-40% · orange 15-25% · red <15%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.",
+      "categoryId": "P",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "activation rate",
+        "aha moment",
+        "onboarding",
+        "activation rate calculator",
+        "product analytics",
+        "PM",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "product-analytics",
+        "pm",
+        "activation"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.reforge.com/blog/growth-loops",
+        "https://a16z.com/consumer-retention/",
+        "https://www.lennysnewsletter.com/p/activation"
+      ]
+    },
+    {
+      "slug": "solopreneur-stickiness-calculator",
+      "title": "Stickiness (DAU/MAU)",
+      "description": "Compute stickiness as DAU/MAU ratio - the PM metric for measuring how often monthly users return daily. Social-app tier is 20%+, high-engagement SaaS is 13-20%, SaaS median ~5%. For mid-market B2B SaaS ($10M-$50M ARR) product managers.",
+      "categoryId": "P",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "stickiness",
+        "DAU/MAU",
+        "daily active users",
+        "monthly active users",
+        "engagement metric",
+        "product analytics",
+        "PM",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "product-analytics",
+        "pm",
+        "engagement"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://mixpanel.com/blog/2024-product-benchmarks/",
+        "https://www.lennysnewsletter.com/p/dau-mau-stickiness",
+        "https://amplitude.com/blog/calculate-stickiness"
+      ]
+    },
+    {
+      "slug": "solopreneur-time-to-value-calculator",
+      "title": "Time-to-Value (TTV)",
+      "description": "Compute the median (p50) and p90 days from signup to key action (aha-moment). The PM metric for diagnosing onboarding speed. INVERSE health bands - lower is better: green <=1 day · yellow 1-3 days · orange 3-7 days · red >7 days. For mid-market B2B SaaS ($10M-$50M ARR) product managers.",
+      "categoryId": "P",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "time to value",
+        "TTV",
+        "time to aha",
+        "onboarding speed",
+        "activation time",
+        "PM",
+        "product analytics",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "product-analytics",
+        "pm",
+        "onboarding"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://www.intercom.com/blog/onboarding-benchmarks/",
+        "https://buffer.com/resources/time-to-value",
+        "https://www.lennysnewsletter.com/p/onboarding"
+      ]
+    },
+    {
+      "slug": "solopreneur-power-user-curve-calculator",
+      "title": "Power User Pareto Curve",
+      "description": "Compute the Pareto ratio of power-user concentration: top X% of users driving Y% of total usage. Canonical 70/20 = 3.5x. Higher = more concentrated (more leverage for power-user programs). For mid-market B2B SaaS ($10M-$50M ARR) product managers.",
+      "categoryId": "P",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "power user",
+        "pareto curve",
+        "power user concentration",
+        "80/20 rule",
+        "engagement distribution",
+        "product analytics",
+        "PM",
+        "B2B SaaS",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "product-analytics",
+        "pm",
+        "power-user"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-09",
+      "sources": [
+        "https://andrewchen.co/the-cold-start-problem/",
+        "https://www.lennysnewsletter.com/p/power-users",
+        "https://a16z.com/power-user-curve/"
+      ]
+    },
+    {
+      "slug": "solopreneur-fully-loaded-employee-cost-calculator",
+      "title": "Fully-Loaded Employee Cost",
+      "description": "Compute total annual employee cost (base + benefits + payroll tax + overhead). INVERSE health bands — lower multiplier is better: 🟢 ≤1.25x · 🟡 1.25-1.40x · 🟠 1.40-1.60x · 🔴 >1.60x. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.",
+      "categoryId": "H",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "fully loaded employee cost",
+        "employee cost calculator",
+        "fully loaded cost",
+        "total compensation cost",
+        "benefits percentage",
+        "overhead per employee",
+        "BLS ECEC",
+        "SHRM benefits survey",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "hiring-team",
+        "people-ops",
+        "cost"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.bls.gov/news.release/ecec.toc.htm",
+        "https://www.shrm.org/topics-tools/news/talent-acquisition/2024-benefits-survey",
+        "https://www.pave.com/compensation-benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-time-to-productivity-calculator",
+      "title": "Time to Productivity (Ramp Time)",
+      "description": "Compute the adjusted ramp time to first meaningful productivity for a new hire, factoring role level (IC vs Manager) and industry complexity. INVERSE health bands — shorter ramp is better. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.",
+      "categoryId": "H",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "time to productivity",
+        "ramp time calculator",
+        "ramp up time",
+        "onboarding ramp",
+        "new hire ramp",
+        "manager ramp",
+        "IC ramp",
+        "first 90 days",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "hiring-team",
+        "people-ops",
+        "ramp"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.linkedin.com/business/talent/blog/talent-acquisition/onshore-onsite-and-ramp-up-time",
+        "https://hbr.org/2009/04/leading-change-when-business-is-good",
+        "https://www.pave.com/compensation-benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-productivity-ramp-curve-calculator",
+      "title": "Productivity Ramp Curve",
+      "description": "Model the productivity ramp curve for a new hire over months_to_full — pick from SlowStart, Linear, or S-Curve shape. INVERSE health bands based on P50 month as % of months_to_full: 🟢 ≤30% · 🟡 30-50% · 🟠 50-70% · 🔴 >70%. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.",
+      "categoryId": "H",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "productivity ramp curve",
+        "ramp curve calculator",
+        "S-curve productivity",
+        "employee ramp",
+        "productivity curve",
+        "people analytics",
+        "onboarding curve",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "hiring-team",
+        "people-ops",
+        "ramp-curve"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.bersin.com/research/talent-acquisition/",
+        "https://andrewchen.co/the-cold-start-problem/",
+        "https://www.reforge.com/blog/growth-loops"
+      ]
+    },
+    {
+      "slug": "solopreneur-comp-banding-calculator",
+      "title": "Compensation Banding",
+      "description": "Compute the market percentile of an offered salary against P25/P50/P75 benchmarks. HIGHER health bands — paying competitively is better: 🟢 ≥P75 · 🟡 P50-P75 · 🟠 P25-P50 · 🔴 <P25. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.",
+      "categoryId": "H",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "comp banding",
+        "compensation banding",
+        "comp benchmark",
+        "salary percentile",
+        "P50 P75",
+        "Pave compensation",
+        "Levels.fyi",
+        "Carta",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "hiring-team",
+        "people-ops",
+        "comp"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.pave.com/compensation-benchmarks",
+        "https://www.levels.fyi/comp-data",
+        "https://carta.com/data/equity-benchmarks/"
+      ]
+    },
+    {
+      "slug": "solopreneur-equity-refresh-calculator",
+      "title": "Equity Refresh Grant",
+      "description": "Compute the recommended equity refresh grant (shares + dilution %) for a key employee based on the company refresh pool, role criticality, and time since original grant. HIGHER health bands — more dilution is better (stronger retention signal): 🟢 ≥0.20% · 🟡 0.10-0.20% · 🟠 0.05-0.10% · 🔴 <0.05%. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.",
+      "categoryId": "H",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "equity refresh",
+        "equity refresh grant",
+        "refresh grant calculator",
+        "Pave equity",
+        "Carta refresh",
+        "role criticality",
+        "retention equity",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "hiring-team",
+        "people-ops",
+        "equity"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.pave.com/compensation-benchmarks",
+        "https://carta.com/data/equity-benchmarks/",
+        "https://www.ycombinator.com/library/4A-handbook-for-people-operations"
+      ]
+    },
+    {
+      "slug": "solopreneur-attrition-cost-calculator",
+      "title": "Attrition Cost",
+      "description": "Compute the total cost of losing a single employee — recruiting + ramp + lost productivity. INVERSE health bands — lower % of salary is better: 🟢 ≤50% · 🟡 50-100% · 🟠 100-200% · 🔴 >200%. For mid-market B2B SaaS ($10M-$50M ARR) People-ops managers and Head-of-HR.",
+      "categoryId": "H",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "attrition cost",
+        "turnover cost",
+        "employee attrition",
+        "cost of leaving",
+        "backfill cost",
+        "SHRM attrition",
+        "Gallup turnover",
+        "Pave turnover",
+        "mid-market SaaS"
+      ],
+      "tags": [
+        "hiring-team",
+        "people-ops",
+        "attrition"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.shrm.org/topics-tools/research/2022-human-capital-benchmarking-report",
+        "https://www.gallup.com/workplace/349484/state-of-the-global-workplace.aspx",
+        "https://www.pave.com/compensation-benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-cost-per-support-ticket-calculator",
+      "title": "Cost-per-Support-Ticket",
+      "description": "Compute weighted average cost-per-support-ticket across multi-tier T1/T2/T3 structure. INVERSE health bands — lower $/ticket = better cost control: 🟢 ≤$10 · 🟡 $10-$25 · 🟠 $25-$50 · 🔴 >$50. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-CS.",
+      "categoryId": "T",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "cost per support ticket",
+        "support ticket cost",
+        "tier 1 cost",
+        "tier 2 cost",
+        "tier 3 cost",
+        "multi tier support cost",
+        "TSIA benchmark",
+        "Zendesk cost",
+        "mid-market SaaS support"
+      ],
+      "tags": [
+        "customer-support",
+        "cs-ops",
+        "cost"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.tsia.com/blog/support-operations-benchmark",
+        "https://www.zendesk.com/customer-experience-trends/",
+        "https://www.freshworks.com/customer-service-benchmark/"
+      ]
+    },
+    {
+      "slug": "solopreneur-first-response-time-calculator",
+      "title": "First Response Time SLA Calculator",
+      "description": "Measure first-response SLA attainment across T1/T2/T3 support tiers using an equal-weighted tier average. HIGHER health bands — more in-SLA responses = better: 🟢 ≥90% · 🟡 80-90% · 🟠 60-80% · 🔴 <60%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-Support.",
+      "categoryId": "T",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "first response time",
+        "first response SLA",
+        "support SLA",
+        "T1 response time",
+        "T2 response time",
+        "T3 escalation SLA",
+        "queue coverage",
+        "Zendesk benchmark",
+        "mid-market SaaS support"
+      ],
+      "tags": [
+        "customer-support",
+        "cs-ops",
+        "sla"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-11",
+      "sources": [
+        "https://www.zendesk.com/customer-experience-trends/",
+        "https://www.freshworks.com/customer-service-benchmark/",
+        "https://www.icmi.com/research/contact-center-performance"
+      ]
+    },
+    {
+      "slug": "solopreneur-resolution-time-calculator",
+      "title": "Resolution Time Calculator",
+      "description": "Track full-resolution cycle health via in-SLA attainment + tail ratio (p90 / median). HIGHER health bands — more in-SLA = better: 🟢 ≥85% · 🟡 70-85% · 🟠 50-70% · 🔴 <50%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-Support.",
+      "categoryId": "T",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "resolution time",
+        "sla attainment",
+        "tail ratio",
+        "p90",
+        "median resolution",
+        "tsia benchmark",
+        "mid-market saas",
+        "support ops"
+      ],
+      "tags": [
+        "customer-support",
+        "cs-ops",
+        "resolution"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.tsia.com/blog/support-operations-benchmark",
+        "https://www.icmi.com/research/contact-center-performance",
+        "https://www.sqmgroup.com/resources/research/contact-center-benchmarks"
+      ]
+    },
+    {
+      "slug": "solopreneur-csat-calculator",
+      "title": "CSAT (Customer Satisfaction) Calculator",
+      "description": "Measure CSAT (customer satisfaction) with 95% confidence interval margin of error. HIGHER health bands — better satisfaction = better retention: 🟢 ≥90% · 🟡 80-90% · 🟠 70-80% · 🔴 <70%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-CS.",
+      "categoryId": "T",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "csat",
+        "customer satisfaction",
+        "survey margin",
+        "confidence interval",
+        "customergauge",
+        "zendesk csat",
+        "mid-market saas",
+        "response rate"
+      ],
+      "tags": [
+        "customer-support",
+        "cs-ops",
+        "csat"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.customergauge.com/blog/csat-benchmarks",
+        "https://www.gainsight.com/blog/customer-success-benchmarks/",
+        "https://www.zendesk.com/customer-experience-trends/"
+      ]
+    },
+    {
+      "slug": "solopreneur-deflection-rate-calculator",
+      "title": "Self-Service Deflection Rate Calculator",
+      "description": "Measure self-service deflection via KB + chatbot (pre-T1 tickets avoided). HIGHER health bands — more deflection = better efficiency: 🟢 ≥40% · 🟡 25-40% · 🟠 10-25% · 🔴 <10%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-CS.",
+      "categoryId": "T",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "deflection rate",
+        "self service",
+        "kb deflection",
+        "chatbot deflection",
+        "tsia benchmark",
+        "zendesk deflection",
+        "mid-market saas",
+        "cost savings"
+      ],
+      "tags": [
+        "customer-support",
+        "cs-ops",
+        "self-service"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.tsia.com/blog/self-service-benchmark",
+        "https://www.zendesk.com/customer-experience-trends/",
+        "https://www.freshworks.com/customer-service-benchmark/"
+      ]
+    },
+    {
+      "slug": "solopreneur-support-capacity-planning-calculator",
+      "title": "Support Team Capacity Planning Calculator",
+      "description": "Plan headcount capacity using handle time, shrinkage, and target occupancy. INVERSE health bands — lower utilization = more buffer: 🟢 ≤85% (15%+ buffer) · 🟡 85-100% · 🟠 100-120% · 🔴 >120%. For mid-market B2B SaaS ($10M-$50M ARR) CS Ops managers and Head-of-CS.",
+      "categoryId": "T",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "capacity planning",
+        "headcount",
+        "support staffing",
+        "workforce optimization",
+        "occupancy",
+        "shrinkage",
+        "icmi benchmark",
+        "tsia workforce"
+      ],
+      "tags": [
+        "customer-support",
+        "cs-ops",
+        "capacity"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-10",
+      "sources": [
+        "https://www.tsia.com/blog/workforce-optimization",
+        "https://www.icmi.com/research/contact-center-performance",
+        "https://www.zendesk.com/customer-experience-trends/"
+      ]
+    },
+    {
+      "slug": "solopreneur-kb-coverage-rate-calculator",
+      "title": "KB Coverage Rate",
+      "description": "Measure what % of inbound support tickets have a matching KB article. HIGHER health bands — more coverage = better self-service: 🟢 ≥85% · 🟡 60-85% · 🟠 40-60% · 🔴 <40%. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and Technical Writers.",
+      "categoryId": "K",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "kb coverage",
+        "kb coverage rate",
+        "knowledge base coverage",
+        "article coverage",
+        "kb gap",
+        "support ticket matching",
+        "tsia knowledge management",
+        "zendesk knowledge",
+        "mid-market saas documentation"
+      ],
+      "tags": [
+        "knowledge",
+        "kb",
+        "coverage"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-12",
+      "sources": [
+        "https://www.tsia.com/blog/knowledge-management-benchmark",
+        "https://www.zendesk.com/customer-experience-trends/",
+        "https://www.nngroup.com/articles/help-and-documentation/"
+      ]
+    },
+    {
+      "slug": "solopreneur-article-freshness-calculator",
+      "title": "Article Freshness",
+      "description": "Measure what % of KB articles are fresh (updated in last 12 months). HIGHER health bands - fresher content = better accuracy.",
+      "categoryId": "K",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "article freshness",
+        "kb freshness",
+        "stale content",
+        "content review cadence",
+        "kb review",
+        "last reviewed",
+        "help center freshness",
+        "documentation freshness",
+        "mid-market saas documentation"
+      ],
+      "tags": [
+        "knowledge",
+        "kb",
+        "freshness"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-12",
+      "sources": [
+        "https://www.nngroup.com/articles/help-and-documentation/",
+        "https://www.tsia.com/blog/knowledge-centered-service",
+        "https://www.intercom.com/help/articles/what-is-help-center-best-practices"
+      ]
+    },
+    {
+      "slug": "solopreneur-search-effectiveness-calculator",
+      "title": "Search Effectiveness",
+      "description": "Measure KB in-app search effectiveness via CTR + no-result rate. HIGHER health bands - lower no-result + higher CTR = better self-service: 🟢 CTR ≥85% AND no-result ≤5% · 🟡 70-85% & ≤10% · 🟠 55-70% & ≤20% · 🔴 either fails. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and Technical Writers.",
+      "categoryId": "K",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "search effectiveness",
+        "kb search ctr",
+        "zero result rate",
+        "no result rate",
+        "in-app search analytics",
+        "algolia search",
+        "zendesk guide search",
+        "kb discoverability",
+        "mid-market saas documentation"
+      ],
+      "tags": [
+        "knowledge",
+        "kb",
+        "search"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-12",
+      "sources": [
+        "https://www.nngroup.com/articles/help-and-documentation/",
+        "https://www.algolia.com/doc/guides/managing-results/relevance-overview/",
+        "https://www.zendesk.com/blog/search-analytics-self-service/"
+      ]
+    },
+    {
+      "slug": "solopreneur-deflection-quality-calculator",
+      "title": "Deflection Quality",
+      "description": "Measure % of self-service-deflected tickets that get reopened (proxy for content quality). INVERSE health bands - lower reopen = better deflection: 🟢 ≤8% reopen · 🟡 8-15% · 🟠 15-25% · 🔴 >25%. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and CS Ops leads.",
+      "categoryId": "K",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "deflection quality",
+        "ticket reopen rate",
+        "kb reopen",
+        "self-service quality",
+        "content quality",
+        "kb effectiveness",
+        "reopened tickets",
+        "deflection metric",
+        "mid-market saas documentation"
+      ],
+      "tags": [
+        "knowledge",
+        "kb",
+        "deflection-quality"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-12",
+      "sources": [
+        "https://www.tsia.com/blog/knowledge-centered-service",
+        "https://www.nngroup.com/articles/help-and-documentation/",
+        "https://www.intercom.com/help/articles/what-is-help-center-best-practices"
+      ]
+    },
+    {
+      "slug": "solopreneur-documentation-roi-calculator",
+      "title": "Documentation ROI",
+      "description": "Calculate the ROI of your knowledge base: gross ticket-deflection savings minus KB team cost. HIGHER health bands — more return = better: 🟢 ROI ≥400% AND ≤$50/article · 🟡 ≥150% · 🟠 ≥50% · 🔴 <50%. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and CS Ops leads.",
+      "categoryId": "K",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "documentation roi",
+        "knowledge base roi",
+        "kb roi",
+        "support deflection savings",
+        "ticket deflection roi",
+        "kb cost savings",
+        "self-service roi",
+        "help center roi",
+        "mid-market saas documentation"
+      ],
+      "tags": [
+        "knowledge",
+        "kb",
+        "roi"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-12",
+      "sources": [
+        "https://www.tsia.com/blog/knowledge-management-benchmark",
+        "https://www.zendesk.com/customer-experience-trends/",
+        "https://www.gartner.com/en/customer-service-support"
+      ]
+    },
+    {
+      "slug": "solopreneur-article-helpfulness-calculator",
+      "title": "Article Helpfulness Score",
+      "description": "Measure KB article helpfulness via helpful-vote share + vote participation. HIGHER health bands — more 👍 + more engagement = better content: 🟢 ≥85% helpful AND ≥15% vote-rate · 🟡 ≥70% & ≥8% · 🟠 ≥55% · 🔴 either fails. For mid-market B2B SaaS ($10M-$50M ARR) DevRel Leads, Documentation Managers, and CS Ops leads.",
+      "categoryId": "K",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "article helpfulness",
+        "kb helpful votes",
+        "helpful vote rate",
+        "article feedback",
+        "knowledge base engagement",
+        "helpful share",
+        "article quality",
+        "kb vote loop",
+        "mid-market saas documentation"
+      ],
+      "tags": [
+        "knowledge",
+        "kb",
+        "helpfulness"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-12",
+      "sources": [
+        "https://www.nngroup.com/articles/help-and-documentation/",
+        "https://www.tsia.com/blog/knowledge-centered-service",
+        "https://www.zendesk.com/blog/search-analytics-self-service/"
+      ]
+    },
+    {
+      "slug": "solopreneur-gdpr-fine-calculator",
+      "title": "GDPR Fine Risk",
+      "description": "Quantify annualized GDPR fine exposure given violation rate and industry-risk profile. HIGHER health bands — more exposure = worse: 🟢 <0.25% · 🟡 0.25-1% · 🟠 1-2% · 🔴 ≥2%. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and Heads of Privacy.",
+      "categoryId": "L",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "gdpr fine",
+        "gdpr penalty",
+        "gdpr fine risk",
+        "gdpr art 83",
+        "ico fine",
+        "data protection fine",
+        "privacy fine calculator",
+        "dpo fine exposure",
+        "mid-market saas gdpr"
+      ],
+      "tags": [
+        "legal",
+        "compliance",
+        "gdpr",
+        "privacy"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-13",
+      "sources": [
+        "https://gdpr-info.eu/art-83-gdpr/",
+        "https://ico.org.uk/for-organisations/guide-to-data-protection/",
+        "https://iapp.org/resources/article/privacy-enforcement-atlas/"
+      ]
+    },
+    {
+      "slug": "solopreneur-dsar-cost-calculator",
+      "title": "DSAR Processing Cost",
+      "description": "Quantify annualized cost of processing Data Subject Access Requests (DSAR) given volume, manual hours, DPO rate, and automation %. HIGHER health bands — more cost = worse operational exposure: 🟢 <€25K/yr · 🟡 €25-100K · 🟠 €100-300K · 🔴 ≥€300K. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and Heads of Privacy.",
+      "categoryId": "L",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "dsar cost",
+        "dsar processing",
+        "data subject access request",
+        "gdpr art 15",
+        "dsar calculator",
+        "privacy request cost",
+        "dpo workload",
+        "dsar automation",
+        "mid-market saas privacy"
+      ],
+      "tags": [
+        "legal",
+        "compliance",
+        "gdpr",
+        "dsar"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-13",
+      "sources": [
+        "https://gdpr-info.eu/art-15-gdpr/",
+        "https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/individual-rights/right-of-access/",
+        "https://iapp.org/news/a/2024-privacy-operations-survey/"
+      ]
+    },
+    {
+      "slug": "solopreneur-consent-revenue-impact-calculator",
+      "title": "Cookie Consent Revenue Impact",
+      "description": "Quantify monthly + annual revenue recoverable by closing the cookie consent gap. Assumes €80 AOV (mid-market B2B SaaS ARPU benchmark) — adjust mentally for your segment. INVERSE health bands — smaller gap = better: 🟢 <5pp · 🟡 5-15pp · 🟠 15-30pp · 🔴 ≥30pp. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and Growth leads.",
+      "categoryId": "L",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "cookie consent",
+        "gdpr consent",
+        "consent revenue",
+        "consent rate",
+        "cmp impact",
+        "iab tcf",
+        "consent management platform",
+        "consent banner",
+        "mid-market saas privacy"
+      ],
+      "tags": [
+        "legal",
+        "compliance",
+        "gdpr",
+        "consent"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-13",
+      "sources": [
+        "https://gdpr-info.eu/recitals/no-32/",
+        "https://iabeurope.eu/tcf-for-vendors/",
+        "https://www.onetrust.com/blog/consent-rate-benchmarks/"
+      ]
+    },
+    {
+      "slug": "solopreneur-dpa-cost-calculator",
+      "title": "DPA Negotiation Cost",
+      "description": "Quantify annual Data Processing Agreement negotiation cost from DPA volume, negotiation rounds, legal hours, hourly rate, and redline complexity. HIGHER health bands — more cost = worse legal-ops scaling: 🟢 <€100K/yr · 🟡 €100-300K · 🟠 €300-600K · 🔴 ≥€600K. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, Legal Ops, and Sales leaders.",
+      "categoryId": "L",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "dpa negotiation",
+        "data processing agreement",
+        "gdpr art 28",
+        "dpa cost",
+        "redline",
+        "legal ops",
+        "privacy officer",
+        "mid-market saas privacy",
+        "template-first dpa"
+      ],
+      "tags": [
+        "legal",
+        "compliance",
+        "gdpr",
+        "dpa"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-13",
+      "sources": [
+        "https://www.fieldfisher.com/en/insights/data-processing-agreements",
+        "https://gdpr-info.eu/art-28-gdpr/",
+        "https://iapp.org/resources/article/data-processing-agreements/"
+      ]
+    },
+    {
+      "slug": "solopreneur-breach-notification-cost-calculator",
+      "title": "Data Breach Notification Cost",
+      "description": "Quantify annual data breach notification cost from breach frequency, data subjects per breach, notification cost per subject, and remediation cost per breach. HIGHER health bands — more cost = worse privacy incident exposure: 🟢 <€50K/yr · 🟡 €50-250K · 🟠 €250K-1M · 🔴 ≥€1M. For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and CISOs.",
+      "categoryId": "L",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "breach notification",
+        "data breach cost",
+        "gdpr art 33",
+        "gdpr art 34",
+        "breach response cost",
+        "incident notification",
+        "data breach calculator",
+        "gdpr breach",
+        "breach exposure",
+        "mid-market saas privacy"
+      ],
+      "tags": [
+        "legal",
+        "compliance",
+        "gdpr",
+        "breach"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-13",
+      "sources": [
+        "https://gdpr-info.eu/art-33-gdpr/",
+        "https://gdpr-info.eu/art-34-gdpr/",
+        "https://ico.org.uk/for-organisations/guide-to-data-protection/guide-to-the-general-data-protection-regulation-gdpr/personal-data-breaches/",
+        "https://www.enisa.europa.eu/publications/enisa-threat-landscape-2024"
+      ]
+    },
+    {
+      "slug": "solopreneur-cmp-roi-calculator",
+      "title": "CMP ROI",
+      "description": "Quantify annual ROI of a Consent Management Platform from DSAR automation savings vs platform cost. HIGHER health bands — more ROI = better automation payback: 🟢 ≥400% (CMP pays back 5×+) · 🟡 150-400% (CMP pays for itself) · 🟠 50-150% (CMP under-saving) · 🔴 <50% (CMP costs more than it saves). For mid-market B2B SaaS (€10M-€50M ARR) DPOs, Privacy Officers, and Procurement.",
+      "categoryId": "L",
+      "applicationCategory": "BusinessApplication",
+      "keywords": [
+        "cmp",
+        "consent management platform",
+        "cmp roi",
+        "consent platform cost",
+        "cmp automation",
+        "gdpr consent",
+        "iab tcf",
+        "gdpr art 7",
+        "consent tooling",
+        "privacy automation",
+        "mid-market saas privacy"
+      ],
+      "tags": [
+        "legal",
+        "compliance",
+        "gdpr",
+        "cmp"
+      ],
+      "authorId": "wlz",
+      "dataReviewedAt": "2026-07-13",
+      "sources": [
+        "https://www.onetrust.com/blog/consent-rate-benchmarks/",
+        "https://www.didomi.io/blog/cmp-pricing-comparison",
+        "https://www.cookiebot.com/en/cmp/",
+        "https://iabeurope.eu/tcf-for-vendors/",
+        "https://gdpr-info.eu/art-7-gdpr/"
+      ]
+    }
+  ]
+}
