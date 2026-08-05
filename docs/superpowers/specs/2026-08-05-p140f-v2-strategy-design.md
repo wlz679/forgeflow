@@ -3,6 +3,18 @@
 > **Status:** APPROVED (user confirmed Path C on 2026-08-05). Pending OS doc fill-in (deferred to v2.0 promotion).
 > **Scope:** 10-20 年长期演进路径 + 短期可执行补全。
 > **Approach:** Path C 混合策略 — KB4 ADR 模板立即补全 + SEO 短期受益 + v2.0 中期演进 + v2.5 AI Native 长期目标。
+> 
+> ⚠️ **核心原则（v2.0 灵魂，user 2026-08-05 揭示）**:
+> 
+> **ForgeFlowKit 不是 Calculator Collection，是 Decision Support System。**
+> 
+> 每个计算器的目标不是"输出数字"，是 **"帮用户做出正确决策"**。
+> 
+> 例: 烧钱率计算器不是"还能坚持 X 月"，是 **"这个赛道值不值得做 + 关键不确定性识别 + 决策建议"**。
+> 
+> 对应 v2.0 12.01 5 类 Topic 中的 **"辅助决策"（Build vs Buy / 行业值不值得做 / Hiring Decision）**—— v2.0 5 类里前 4 类（衡量/计算/优化/预测）是中间产物，第 5 类（辅助决策）才是终极价值。
+> 
+> 对应 v2.0 4 层 Foundation 的 **Cognition 层**（核心）—— 从数据到认知到决策，不是从数据到数字。
 
 ---
 
@@ -10,10 +22,11 @@
 
 为 ForgeFlowKit 制定**10-20 年长期演进路径**，明确：
 
-1. 短期（1-2 周）可执行的 v2.0 兼容补全
-2. 中期（1-12 月）从 v1 演进到 v2.5 Enterprise AI Native
-3. 长期（1-2 年）达到 15 Domain / 80 Cluster / 1000 Topic / 10000 Node 终极目标
-4. 栈选择（Astro 保持 vs Next.js 切换）的最终决策
+1. **核心原则**: 每个工具从 Calculator 升级为 Decision Support Tool
+2. 短期（1-2 周）可执行的 v2.0 兼容补全 + 决策导向内容补全
+3. 中期（1-12 月）从 v1 Calculator 演进到 v2.5 Decision Support AI Native
+4. 长期（1-2 年）达到 15 Domain / 80 Cluster / 1000 Topic / 10000 Node **Decision Node** 终极目标
+5. 栈选择（Astro 保持 vs Next.js 切换）的最终决策
 
 ## 2. Background
 
@@ -32,6 +45,35 @@
 12 个根 folder × ~10 子 folder = ~120 个 docx，全部读完（Batch 1-5 sub-agent 调研）。调研数据落盘: `docs/superpowers/_research/p140e-blog-strategy/`（注: 后续 v2.0 调研应单独建 `p140f/`）。
 
 ## 3. v2.0 体系完整盘点（基于 Batch 1-5 调研）
+
+### 3.0 v2.0 核心: Decision Support System（不是 Calculator Collection）
+
+**user 2026-08-05 揭示** (本 spec 修订触发):
+
+> ForgeFlowKit 不只是 Calculator Collection，而是通过 Calculator 帮用户解决实在问题，做出正确决策。
+
+**v2.0 5 类 Topic 的价值层级**:
+
+```
+L1 衡量状态 (Profit Margin / Conversion Rate)    —— 中间产物
+L2 计算结果 (ROI / CAC / MRR Calculator)          —— 中间产物
+L3 寻找最佳方案 (Pricing / Inventory / Budget)    —— 中间产物
+L4 预测未来 (Revenue / Demand / Growth Forecast)  —— 中间产物
+L5 辅助决策 (Build vs Buy / 行业值不值得做 / Hiring)  —— ★ 终极价值 ★
+```
+
+**当前 100 calc 主要是 L1-L4（中间产物），需升级为 L5（决策支持）。**
+
+**对应 v2.0 4 层 Foundation 的 Cognition 层**:
+
+```
+Foundation        = 业务现实（用户输入 + 行业基准 + 竞品数据）
+Cognition (核心)  = 从数据到认知到"决策建议"
+Knowledge         = 知识图谱 + Industry Benchmark + Topic Score
+Specification     = 规格化输出（决策文档 / 推荐路径 / 风险清单）
+```
+
+### 3.1 体系结构（12 root folder + 4 维视图）
 
 ### 3.1 体系结构（12 root folder + 4 维视图）
 
@@ -132,55 +174,57 @@
 
 ## 4. Path C 混合策略（5 Phase）
 
-### Phase 1（1 周）: KB4 ADR 模板补全
+> ⚠️ **每个 Phase 都强调"决策支持"导向**（不只关注架构/SEO/元数据）
+
+### Phase 1（1 周）: KB4 ADR 模板 + 决策支持层补全
 
 | 项 | 详情 |
 |---|---|
-| **目标** | v2.0 标准 ADR 模板（Problem/Options/Decision/Reason）+ 现有 P44 ADR Governance 集成 |
-| **来源** | v2.0 09 KB4 ADR 模板 docx |
+| **目标** | v2.0 标准 ADR 模板 + 每个工具补"决策支持层"（L5 Topic）|
+| **来源** | v2.0 09 KB4 ADR 模板 docx + v2.0 12.01 5 类 Topic（辅助决策 L5）|
 | **集成** | 与 `docs/superpowers/plans/2026-*.md` 流程对齐；与 P44 ADR Governance 兼容 |
-| **产出** | `docs/superpowers/adrs/0001-*.md` 首批 ADR 文件 + CI guard |
-| **价值** | **最近可执行、低成本、与 P44 兼容**（v2.0 + 现状双赢）|
+| **产出** | (a) `docs/superpowers/adrs/0001-*.md` 首批 ADR；(b) **5 个示范工具补"决策支持层"**（如烧钱率 → "赛道是否值得做"建议）|
+| **价值** | **最近可执行、低成本、与 P44 兼容 + 立即体现 v2.0 灵魂**（决策支持）|
 
-### Phase 2（1-2 周）: P140e SEO 短期受益
+### Phase 2（1-2 周）: P140e SEO + 决策导向博客内容
 
 | 项 | 详情 |
 |---|---|
-| **目标** | 5 篇深度博客（csat/roas/project-profitability/cac/churn）|
+| **目标** | 5 篇深度博客（csat/roas/project-profitability/cac/churn）—— **每篇输出"决策建议"，不是"数字"** |
 | **来源** | P140e spec（已 ship）`docs/superpowers/specs/2026-08-05-p140e-blog-content-strategy-design.md` |
-| **集成** | 现有 `src/content/blog/*.md` + 100 工具页 cross-link |
-| **产出** | 5 篇 ≥ 1500 字博客 + 8 H2 + ≥80% 关键词覆盖 |
-| **价值** | 短期 SEO 受益（CSAT 28% 集中立即优化）|
+| **集成** | 现有 `src/content/blog/*.md` + 100 工具页 cross-link + **每个工具页补"决策建议"段** |
+| **产出** | 5 篇 ≥ 1500 字博客（含**决策建议章节**）+ 8 H2 + ≥80% 关键词覆盖 |
+| **价值** | 短期 SEO 受益 + **立即体现 v2.0 决策支持灵魂**（每篇博客 = 决策指南）|
 
-### Phase 3（1-2 月）: Playbook 6 字段规范标准化
+### Phase 3（1-2 月）: Playbook 6 字段 + 决策导向标准化
 
 | 项 | 详情 |
 |---|---|
-| **目标** | 100 calc 引擎标准化为 6 字段: Goal / Input / Output / Constraint / Tool / Memory |
+| **目标** | 100 calc 引擎标准化为 6 字段: **Goal = "用户能做什么决策"** + Input / Output / Constraint / Tool / Memory |
 | **来源** | v2.0 07 P6 Agent Design 6 字段 |
 | **集成** | 现有 `src/engines/*.ts` 的 `ToolEngine` interface（`src/core/engines/types.ts`）|
-| **产出** | 100 engine 文件统一 metadata + 6 字段注释 + CI guard |
-| **价值** | **标准化引擎注册 + 可 AI 化**（为 Phase 4/5 打基础）|
+| **产出** | 100 engine 文件统一 metadata（Goal 字段强调决策）+ 6 字段注释 + CI guard |
+| **价值** | **标准化引擎注册 + 可 AI 化**（Phase 4/5 基础）—— **Goal 字段让"决策支持"成为 first-class** |
 
-### Phase 4（3-12 月）: 主题簇方法论补全
+### Phase 4（3-12 月）: 主题簇方法论 + 决策价值评分
 
 | 项 | 详情 |
 |---|---|
-| **目标** | 12.x 主题簇方法论从设计骨架→实现 |
-| **范围** | 12.04 Topic Modeling（21 字段补全）+ 12.05 Topic Validation（Topic Score 公式）+ 12.10 Intelligence Engine（5 Agent）|
+| **目标** | 12.x 主题簇方法论从设计骨架→实现 + 加 **Decision Value Score** |
+| **范围** | 12.04 Topic Modeling（21 字段补全）+ 12.05 Validation（**Topic Score 加 Decision Value 维度**）+ 12.10 Intelligence Engine（5 Agent）|
 | **集成** | Phase 3 标准化引擎 + P140e SEO + CLAUDE.md P-series 集成 |
-| **产出** | 1-2 个示范 topic → 完整建模 + 验证 + 智能引擎演示 |
-| **价值** | **真正向 10000 Node 演进**（从模板批量生产 → AI 自动发现）|
+| **产出** | 1-2 个示范 topic → 完整建模 + 验证 + 智能引擎演示 + **Decision Value Score 公式** |
+| **价值** | **真正向 10000 Decision Node 演进**（从计算器 → 决策支持）|
 
-### Phase 5（1-2 年）: v2.5 Enterprise AI Native 实施
+### Phase 5（1-2 年）: v2.5 Decision Support AI Native 实施
 
 | 项 | 详情 |
 |---|---|
-| **目标** | Enterprise OS 视角全面落地（RFC v2.5 + ADR v2.5 + AI Agent 集成）|
-| **范围** | R6-R10 RFC v2.5 + A1-A10 ADR v2.5 + A1-A30 Agent System + A30 Enterprise Intelligence OS |
+| **目标** | **Decision Support OS 视角全面落地**（RFC v2.5 + ADR v2.5 + AI Agent 集成 + Cognition 层核心）|
+| **范围** | R6-R10 RFC v2.5 + A1-A10 ADR v2.5 + A1-A30 Agent System + A30 Enterprise Intelligence OS + **Cognitive Layer** |
 | **集成** | 全栈整合（Phase 1-4 全部产出 + v2.0 OS 文档微调）|
-| **产出** | Enterprise Intelligence OS 演示 + 6 阶段变现（免费工具→广告→高级→团队→API→企业）|
-| **价值** | **商业平台愿景 + 长期可持续性**（10-20 年）|
+| **产出** | Enterprise Intelligence OS 演示 + 6 阶段变现（**升级为 Decision Support 变现：免费工具→建议报告→深度决策咨询→团队决策 API→企业决策平台**）|
+| **价值** | **商业平台愿景 + 长期可持续性**（10-20 年）—— 每个工具 = 决策支持系统 |
 
 ## 5. 关键决策（已 close）
 
@@ -238,32 +282,37 @@ Day 365-730: Phase 5 — v2.5 Enterprise AI Native（触发 v2.0 OS 文档微调
 
 ## 7. Acceptance Criteria
 
+> ⚠️ **每个 Phase 的核心验收标准 = "决策支持"灵魂落地**（不是单纯的元数据/SEO/架构）
+
 ### Phase 1 完成
 - [ ] KB4 ADR 模板在 `docs/superpowers/adrs/` 落地
 - [ ] 首批 ADR（≥ 3 个）已写
-- [ ] CI guard（验证 ADR 格式）
+- [ ] **5 个示范工具补"决策支持层"**：如烧钱率 → "赛道是否值得做"建议（csat → "是否流失"、roas → "广告是否值得投入"、cac → "获客是否值得"、churn → "客户是否值得留"）
+- [ ] CI guard（验证 ADR 格式 + 决策支持层）
 - [ ] pnpm check 0 错误
 - [ ] 与 P44 ADR Governance 集成（CLAUDE.md §Notes 更新）
 
 ### Phase 2 完成
-- [ ] 5 篇深度博客 ship
+- [ ] 5 篇深度博客 ship（含**决策建议章节**）
 - [ ] 每篇 ≥ 1500 字 + 8 H2 + 关键词覆盖 ≥ 80%
-- [ ] 100 工具页 cross-link 完整
+- [ ] 100 工具页 cross-link 完整 + **每个工具页补"决策建议"段**
 - [ ] pnpm check 0 错误
 
 ### Phase 3 完成
-- [ ] 100 engine 文件统一 Playbook 6 字段 metadata
-- [ ] CI guard（验证 6 字段完整性）
+- [ ] 100 engine 文件统一 Playbook 6 字段 metadata（**Goal 字段 = "用户能做什么决策"**）
+- [ ] CI guard（验证 6 字段完整性 + Goal 字段含"决策"关键词）
 - [ ] pnpm check 0 错误
 
 ### Phase 4 完成
 - [ ] 1-2 个示范 topic 完整建模
-- [ ] Topic Score 公式实现
+- [ ] Topic Score 公式实现 + **Decision Value Score 维度**
 - [ ] 12.10 Intelligence Engine 演示
 
 ### Phase 5 完成
 - [ ] v2.5 RFC v2.5 + ADR v2.5 实施
 - [ ] A1-A30 Agent System 集成
+- [ ] **Cognitive Layer 核心落地**（从数据到决策的认知模型）
+- [ ] 6 阶段变现升级为 Decision Support 变现
 - [ ] v2.0 OS 文档微调（user 触发）
 
 ## 8. References
