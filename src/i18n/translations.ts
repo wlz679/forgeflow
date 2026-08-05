@@ -1340,7 +1340,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // --- A4: Idea Roast ---
 
   // --- A5: Market Size Estimator ---
-  'tools.solopreneur-market-size-estimator.title': { en: 'Market Size Estimator', zh: '市场规模估算器' },
+  'tools.solopreneur-market-size-estimator.title': { en: "Market Size Estimator — Free TAM + SAM + SOM Analysis (2026)", zh: "市场规模估算器 — 测算 TAM、SAM 与 SOM（2026）" },
   'tools.solopreneur-market-size-estimator.description': { en: 'Bottom-up market sizing: enter your target customers, pricing, and growth rate to estimate TAM, revenue potential, and what it takes to reach $100K.', zh: '自底向上估算市场规模：输入目标客户数、定价和增长率，估算TAM、收入潜力和达到$100K所需的条件。' },
   'tools.solopreneur-market-size-estimator.input.targetMarket.label': { en: 'Target Market', zh: '目标市场' },
   'tools.solopreneur-market-size-estimator.input.targetMarket.placeholder': { en: 'e.g. US dental clinics', zh: '例如：美国牙科诊所' },
@@ -1384,7 +1384,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // --- B5: Elevator Pitch Generator ---
 
   // --- C1: MRR Calculator ---
-  'tools.solopreneur-mrr-calculator.title': { en: 'MRR Calculator', zh: 'MRR 计算器' },
+  'tools.solopreneur-mrr-calculator.title': { en: "MRR Calculator — Free SaaS Tracker: New + Churn + Expansion (2026)", zh: "MRR 计算器 — 免费追踪新增、流失与扩展（2026）" },
   'tools.solopreneur-mrr-calculator.description': { en: 'Track your MRR health: new vs churned vs expansion revenue, monthly growth rate, and time to reach key milestones.', zh: '追踪MRR健康度：新增、流失、扩展收入对比，月增长率，以及达到关键里程碑的时间。' },
   'tools.solopreneur-mrr-calculator.input.subscriberCount.label': { en: 'Current Subscribers', zh: '当前订阅用户数' },
   'tools.solopreneur-mrr-calculator.input.subscriberCount.placeholder': { en: 'e.g. 500', zh: '例如：500' },
@@ -1422,7 +1422,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-mrr-calculator.faq.4.a': { en: 'Churn means a customer cancels completely — 100% of their revenue is lost. Contraction means they downgrade or reduce seats — they stay but pay less. Contraction is a leading indicator: customers who downgrade today are far more likely to churn tomorrow. Treat contraction as your early-warning radar.', zh: '流失是客户完全取消——100%收入损失。收缩是客户降级或减少席位——他们留下但付得更少。收缩是先行指标：今天降级的客户，明天流失的概率远高于正常客户。把收缩当作你的早期预警雷达。' },
 
   // --- C2: SaaS Pricing Planner ---
-  'tools.solopreneur-saas-pricing-planner.title': { en: 'SaaS Pricing Planner', zh: 'SaaS 定价规划器' },
+  'tools.solopreneur-saas-pricing-planner.title': { en: "SaaS Pricing Planner — Free Tier + Margin + Revenue Model (2026)", zh: "SaaS 定价规划器 — 免费测算套餐、毛利与收入（2026）" },
   'tools.solopreneur-saas-pricing-planner.description': { en: 'Compare flat, tiered, usage-based, and freemium pricing models. Get personalized recommendations based on your product type, audience, and competitor prices.', zh: '对比统一定价、分层定价、按量计费和免费增值四种定价模式。根据你的产品类型、受众和竞品价格获取个性化推荐。' },
   'tools.solopreneur-saas-pricing-planner.input.productType.label': { en: 'Product Type', zh: '产品类型' },
   'tools.solopreneur-saas-pricing-planner.input.productType.placeholder': { en: '', zh: '' },
@@ -1448,7 +1448,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-saas-pricing-planner.faq.4.a': { en: 'Raise prices when your product has significantly more value than at launch, or when demand outpaces your capacity. Grandfather existing customers to avoid churn.', zh: '当你的产品价值比发布时显著增加，或者需求超过你的服务能力时提价。给老客户保留旧价格以避免流失。' },
 
   // --- Unit Economics ---
-  'tools.solopreneur-unit-economics-calculator.title': { en: 'Unit Economics Calculator', zh: '单位经济学计算器' },
+  'tools.solopreneur-unit-economics-calculator.title': { en: "Unit Economics Calculator — SaaS LTV/CAC + Payback Months (2026)", zh: "单位经济学计算器 — 测算 LTV/CAC 与回本周期（2026）" },
   'tools.solopreneur-unit-economics-calculator.description': { en: 'Analyze per-customer profitability: gross margin, CAC payback, LTV, and how to optimize your unit economics.', zh: '分析单客户盈利：毛利率、CAC回收期、LTV，以及如何优化你的单位经济学。' },
   'tools.solopreneur-unit-economics-calculator.input.averageRevenuePerCustomer.label': { en: 'Avg Monthly Revenue per Customer ($)', zh: '每客户月均收入（$）' },
   'tools.solopreneur-unit-economics-calculator.input.averageRevenuePerCustomer.placeholder': { en: 'e.g. 50', zh: '例如：50' },
@@ -1489,7 +1489,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-unit-economics-calculator.faq.4.a': { en: 'Raising prices has the biggest leverage — a 20% price increase flows directly to gross profit. Reducing cost-to-serve (automation, better infra) compounds with scale. Doing both is ideal. See the Optimization Levers section for concrete numbers.', zh: '提价的杠杆效应最大——20%的涨价直接转化为毛利增长。降低服务成本（自动化、更好的基础设施）随规模复利。两者同时做最理想。具体数字见优化杠杆部分。' },
 
   // --- C3: Break-Even Calculator ---
-  'tools.solopreneur-break-even-calculator.title': { en: 'Break-Even Calculator', zh: '盈亏平衡计算器' },
+  'tools.solopreneur-break-even-calculator.title': { en: "Break-Even Calculator — Fixed Costs + Revenue + Time to Breakeven (2026)", zh: "盈亏平衡计算器 — 测算成本、收入与回本时间（2026）" },
   'tools.solopreneur-break-even-calculator.description': { en: 'Calculate when you will break even — with and without monthly revenue growth. See cumulative P&L at 3, 6, 12, and 24 months.', zh: '计算盈亏平衡时间——有无月收入增长两种情况。查看3、6、12、24个月的累积盈亏。' },
   'tools.solopreneur-break-even-calculator.input.monthlyCosts.label': { en: 'Monthly Costs ($)', zh: '月成本（$）' },
   'tools.solopreneur-break-even-calculator.input.monthlyCosts.placeholder': { en: 'e.g. 500', zh: '例如：500' },
@@ -1518,7 +1518,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-break-even-calculator.faq.4.a': { en: 'Launch an MVP sooner, offer pre-sales, add a consulting layer, or reduce scope. Time to market is the biggest lever — every month you delay launch is another month of costs without revenue.', zh: '更快发布MVP、提供预售、增加咨询服务层、或缩减范围。上市速度是最大杠杆——每延迟一个月上线，就多一个月只有成本没有收入。' },
 
   // --- C4: Freelance Rate Calculator ---
-  'tools.solopreneur-freelance-rate-calculator.title': { en: 'Freelance Rate Calculator', zh: '自由职业者费率计算器' },
+  'tools.solopreneur-freelance-rate-calculator.title': { en: "Freelance Rate Calculator — Free Hourly + Project Rate Planner (2026)", zh: "自由职业费率计算器 — 按时薪与项目价测算（2026）" },
   'tools.solopreneur-freelance-rate-calculator.description': { en: 'Calculate your ideal hourly, daily, and monthly rate based on your skill, experience level, and market location.', zh: '根据你的技能、经验水平和目标市场计算理想的时薪、日薪和月收入。' },
   'tools.solopreneur-freelance-rate-calculator.input.skill.label': { en: 'Your Skill', zh: '你的技能' },
   'tools.solopreneur-freelance-rate-calculator.input.skill.placeholder': { en: '', zh: '' },
@@ -1546,7 +1546,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-freelance-rate-calculator.faq.4.a': { en: 'The calculator adjusts for regional markets. However, if you work remotely for US/EU clients, charge US/EU rates regardless of where you live.', zh: '计算器会根据区域市场调整。但如果你远程为美国/欧洲客户工作，不管你在哪里生活，都按美国/欧洲费率收。' },
 
   // --- C5: Revenue Projector ---
-  'tools.solopreneur-revenue-projector.title': { en: 'SaaS Financial Forecaster', zh: 'SaaS 财务预测器' },
+  'tools.solopreneur-revenue-projector.title': { en: "Revenue Projector — Free SaaS MRR + Cash Flow Forecast (2026)", zh: "收入预测器 — 免费预测 MRR 与现金流（2026）" },
   'tools.solopreneur-revenue-projector.description': { en: 'The complete SaaS financial health dashboard: net-growth projections, runway, breakeven, burn metrics, LTV, sensitivity analysis, and what-if scenarios.', zh: '完整的SaaS财务健康仪表盘：净增长预测、跑道、打平分析、烧钱指标、LTV、敏感性分析和假设情景。' },
   'tools.solopreneur-revenue-projector.input.currentMrr.label': { en: 'Current MRR ($)', zh: '当前MRR（$）' },
   'tools.solopreneur-revenue-projector.input.currentMrr.placeholder': { en: 'e.g. 2000', zh: '例如：2000' },
@@ -1615,7 +1615,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // --- E4: Time Block Planner ---
 
   // --- E5: Productivity Score Calculator ---
-  'tools.solopreneur-productivity-score.title': { en: 'Productivity Score Calculator', zh: '效率评分计算器' },
+  'tools.solopreneur-productivity-score.title': { en: "Productivity Score Calculator — Deep Work + Meeting Load (2026)", zh: "效率评分计算器 — 按深度工作与会议负荷评分（2026）" },
   'tools.solopreneur-productivity-score.description': { en: 'Rate your solopreneur productivity with a scored assessment. Get actionable tips based on your deep work hours, tool stack, and meeting load.', zh: '通过评分评估你的创业者效率。根据你的深度工作时间、工具数量和会议负荷获取可操作的改进建议。' },
   'tools.solopreneur-productivity-score.input.weeklyDeepWorkHours.label': { en: 'Weekly Deep Work Hours', zh: '每周深度工作时间' },
   'tools.solopreneur-productivity-score.input.weeklyDeepWorkHours.placeholder': { en: 'e.g. 15', zh: '例如：15' },
@@ -1650,7 +1650,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
 
   // --- F5: Investor Update Template ---
   // --- A1: Burn Rate Calculator ---
-  'tools.solopreneur-burn-rate-calculator.title': { en: 'Burn Rate Calculator', zh: '烧钱率计算器' },
+  'tools.solopreneur-burn-rate-calculator.title': { en: "Burn Rate Calculator — Free Monthly Cash + Runway + Breakeven (2026)", zh: "烧钱率计算器 — 按月测算现金消耗与跑道（2026）" },
   'tools.solopreneur-burn-rate-calculator.description': { en: 'Analyze your monthly cash flow: break down costs by category, calculate runway, and see how cost-cutting extends your survival time.', zh: '分析你的月度现金流：按类别拆解成本、计算资金跑道、看削减成本能多撑多久。' },
   'tools.solopreneur-burn-rate-calculator.input.monthlyRevenue.label': { en: 'Monthly Revenue ($)', zh: '月收入（$）' },
   'tools.solopreneur-burn-rate-calculator.input.monthlyRevenue.placeholder': { en: 'e.g. 5000', zh: '例如：5000' },
@@ -1691,7 +1691,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-burn-rate-calculator.faq.4.a': { en: 'Monthly, when you close your books. If your net burn is trending up month-over-month, investigate immediately — cost creep is easy to miss but expensive over time.', zh: '每月关账时算一次。如果净烧钱率逐月上升，立刻调查——成本悄悄增长很容易被忽略，但长期下来代价很高。' },
 
   // --- A2: Churn Rate Calculator ---
-  'tools.solopreneur-churn-rate-calculator.title': { en: 'Churn Rate Calculator', zh: '流失率计算器' },
+  'tools.solopreneur-churn-rate-calculator.title': { en: "Churn Rate Calculator — Free Customer + Revenue Churn Tracker (2026)", zh: "流失率计算器 — 免费追踪客户与收入流失（2026）" },
   'tools.solopreneur-churn-rate-calculator.description': { en: 'Analyze customer churn: monthly and annual rates, revenue impact, customer lifetime, and how reducing churn saves you money.', zh: '分析客户流失：月度和年度流失率、收入影响、客户生命周期，以及降低流失率能省多少钱。' },
   'tools.solopreneur-churn-rate-calculator.input.customersStart.label': { en: 'Customers at Start of Month', zh: '月初客户数' },
   'tools.solopreneur-churn-rate-calculator.input.customersStart.placeholder': { en: 'e.g. 500', zh: '例如：500' },
@@ -1730,7 +1730,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // --- A3: Runway Calculator ---
 
   // --- B1: CAC Calculator ---
-  'tools.solopreneur-cac-calculator.title': { en: 'CAC Calculator', zh: '获客成本计算器' },
+  'tools.solopreneur-cac-calculator.title': { en: "CAC Calculator — Free Blended + Paid CAC + Payback (2026)", zh: "CAC 计算器 — 测算综合获客成本与回本周期（2026）" },
   'tools.solopreneur-cac-calculator.description': { en: 'Calculate your Customer Acquisition Cost and payback period. Compare different spend scenarios to find your most efficient acquisition budget.', zh: '计算你的客户获取成本和回收周期。对比不同支出场景，找到最高效的获客预算。' },
   'tools.solopreneur-cac-calculator.input.marketingSpend.label': { en: 'Marketing Spend ($)', zh: '营销支出（$）' },
   'tools.solopreneur-cac-calculator.input.marketingSpend.placeholder': { en: 'e.g. 5000', zh: '例如：5000' },
@@ -1760,7 +1760,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cac-calculator.faq.4.a': { en: 'Five proven ways: (1) Improve targeting — narrow your ideal customer profile to reduce wasted ad spend. (2) Build organic channels — SEO and content marketing have zero marginal CAC after initial investment. (3) Optimize conversion rates — small CVR improvements compound. (4) Leverage referrals — referred customers have near-zero CAC. (5) Test different channels — you may find a cheaper channel you have not tried yet.', zh: '五种验证有效的方法：（1）改进定位——缩小理想客户画像以减少广告浪费。（2）建立有机渠道——SEO和内容营销在初期投入后边际获客成本为零。（3）优化转化率——微小的CVR提升会累积。（4）利用推荐——推荐客户的获客成本几乎为零。（5）测试不同渠道——你可能找到一个尚未尝试的更便宜渠道。' },
 
   // --- B2: LTV Calculator ---
-  'tools.solopreneur-ltv-calculator.title': { en: 'LTV Calculator', zh: '客户终身价值计算器' },
+  'tools.solopreneur-ltv-calculator.title': { en: "LTV Calculator — ARPU + Margin + Churn Formula (2026)", zh: "LTV 计算器 — 按客单价、毛利与流失率测算（2026）" },
   'tools.solopreneur-ltv-calculator.description': { en: 'Calculate Customer Lifetime Value (LTV) and LTV:CAC ratio. Compare how different churn rates impact customer value and unit economics.', zh: '计算客户终身价值（LTV）和LTV:CAC比率。对比不同流失率对客户价值和单位经济的影响。' },
   'tools.solopreneur-ltv-calculator.input.monthlyRevenuePerUser.label': { en: 'Monthly Revenue per User ($)', zh: '用户月均收入（$）' },
   'tools.solopreneur-ltv-calculator.input.monthlyRevenuePerUser.placeholder': { en: 'e.g. 50', zh: '例如：50' },
@@ -1788,7 +1788,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ltv-calculator.faq.4.a': { en: 'Churn is the denominator in the LTV formula, so small changes have huge impacts. Reducing monthly churn from 5% to 3% nearly doubles your LTV (from $800 to $1,333 in the example above). This is why churn reduction is almost always a better investment than acquisition optimization.', zh: '流失率是LTV公式中的分母，所以微小变化就有巨大影响。月流失从5%降到3%几乎能让LTV翻倍（以上例而言，从800美元到1333美元）。这就是为什么降低流失率几乎总是比优化获客更值得投入。' },
 
   // --- B3: SaaS Valuation Calculator ---
-  'tools.solopreneur-saas-valuation-calculator.title': { en: 'SaaS Valuation Calculator', zh: 'SaaS估值计算器' },
+  'tools.solopreneur-saas-valuation-calculator.title': { en: "SaaS Valuation Calculator — MRR Multiple + ARR Multiple (2026)", zh: "SaaS 估值计算器 — 按 MRR/ARR 倍数估值（2026）" },
   'tools.solopreneur-saas-valuation-calculator.description': { en: 'Estimate your SaaS company valuation based on ARR, growth rate, and profit margin. See how different multiples and scenarios affect your exit value.', zh: '基于ARR、增长率和利润率估算你的SaaS公司估值。查看不同倍数和场景如何影响你的退出价值。' },
   'tools.solopreneur-saas-valuation-calculator.input.annualRevenue.label': { en: 'Annual Revenue / ARR ($)', zh: '年收入/ARR（$）' },
   'tools.solopreneur-saas-valuation-calculator.input.annualRevenue.placeholder': { en: 'e.g. 200000', zh: '例如：200000' },
@@ -1814,7 +1814,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-saas-valuation-calculator.faq.4.a': { en: 'Focus on four levers: (1) Accelerate growth — even 10% improvement in growth rate can add 1-2x to your multiple. (2) Improve profit margins — cut costs, raise prices. (3) Reduce churn — lower churn means more predictable revenue. (4) Diversify revenue — multiple customer segments or products reduce buyer risk and increase multiples.', zh: '聚焦四个杠杆：（1）加速增长——增长率哪怕提升10%也能增加1-2倍估值倍数。（2）提高利润率——削减成本、提价。（3）降低流失——低流失意味着更可预测的收入。（4）多元化收入——多个客户群体或产品降低买家风险，提升估值倍数。' },
 
   // --- C6: Affiliate Income Calculator ---
-  'tools.solopreneur-affiliate-income-calculator.title': { en: 'Affiliate Income Calculator', zh: '联盟营销收入计算器' },
+  'tools.solopreneur-affiliate-income-calculator.title': { en: "Affiliate Income Calculator — Free Commission + Conversion Forecast (2026)", zh: "联盟收入计算器 — 按佣金与转化率预测（2026）" },
   'tools.solopreneur-affiliate-income-calculator.description': { en: 'Estimate your monthly and annual affiliate income based on traffic, conversion rate, and average commission.', zh: '根据流量、转化率和平均佣金估算你的月度和年度联盟营销收入。' },
   'tools.solopreneur-affiliate-income-calculator.input.monthlyTraffic.label': { en: 'Monthly Traffic (visitors)', zh: '月流量（访客）' },
   'tools.solopreneur-affiliate-income-calculator.input.monthlyTraffic.placeholder': { en: 'e.g. 50000', zh: '例如：50000' },
@@ -1842,7 +1842,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-affiliate-income-calculator.faq.4.a': { en: 'Not necessarily. Most affiliate income comes from organic search traffic directly to your content. However, an email list lets you promote affiliate offers repeatedly without relying on new traffic. Build both channels — SEO for acquisition, email for retention and repeat promotions.', zh: '不一定。大多数联盟收入来自直接访问你内容的有机搜索流量。但邮件列表能让你反复推广联盟offer，而不依赖新流量。两个渠道都建——SEO做获客，邮件做留存和重复推广。' },
 
   // --- C7: Course Pricing Calculator ---
-  'tools.solopreneur-course-pricing-calculator.title': { en: 'Course Pricing Calculator', zh: '课程定价计算器' },
+  'tools.solopreneur-course-pricing-calculator.title': { en: "Course Pricing Calculator — Free Price + Enrollment + Revenue Plan (2026)", zh: "课程定价计算器 — 按价格与招生量预测收入（2026）" },
   'tools.solopreneur-course-pricing-calculator.description': { en: 'Find the optimal course price to hit your income goals, factoring in platform fees. Compare revenue at different price points.', zh: '找到实现收入目标的最佳课程定价，考虑平台费用。对比不同价位下的收入。' },
   'tools.solopreneur-course-pricing-calculator.input.targetMonthlyIncome.label': { en: 'Target Monthly Income ($)', zh: '目标月收入（$）' },
   'tools.solopreneur-course-pricing-calculator.input.targetMonthlyIncome.placeholder': { en: 'e.g. 5000', zh: '例如：5000' },
@@ -1869,7 +1869,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-course-pricing-calculator.faq.4.a': { en: 'Use a launch sequence: build anticipation with free content, open enrollment for a limited window (7-14 days), and offer an early-bird discount. Close enrollment after the launch to create urgency. Many creators make 50-70% of their annual course revenue during launch weeks.', zh: '使用发布序列：用免费内容建立期待感，限时开放报名（7-14天），提供早鸟折扣。发布后关闭报名以制造紧迫感。很多创作者在发布周期间就获得了全年课程收入的50-70%。' },
 
   // --- C8: Email List Revenue Calculator ---
-  'tools.solopreneur-email-list-revenue-calculator.title': { en: 'Email List Revenue Calculator', zh: '邮件列表收入计算器' },
+  'tools.solopreneur-email-list-revenue-calculator.title': { en: "Email List Revenue Calculator — Free Subscriber + Conversion Forecast (2026)", zh: "邮件列表收入计算器 — 按订阅数与转化率预测（2026）" },
   'tools.solopreneur-email-list-revenue-calculator.description': { en: 'Calculate how much revenue your email list generates per send, per month, and per year based on your funnel metrics.', zh: '根据你的漏斗指标计算邮件列表每次发送、每月和每年产生的收入。' },
   'tools.solopreneur-email-list-revenue-calculator.input.subscriberCount.label': { en: 'Number of Subscribers', zh: '订阅者数量' },
   'tools.solopreneur-email-list-revenue-calculator.input.subscriberCount.placeholder': { en: 'e.g. 10000', zh: '例如：10000' },
@@ -1930,7 +1930,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-hourly-vs-fixed-calculator.faq.4.a': { en: 'Multiply your desired take-home income by 1.3-1.5 to cover self-employment taxes (15.3% in the US), health insurance, software, hardware, and professional development. If you want $100K take-home, target $130K-$150K in gross revenue.', zh: '将你期望的到手收入乘以1.3-1.5以覆盖自雇税（美国15.3%）、健康保险、软件、硬件和职业发展。如果你想到手10万美元，目标总收入应为13万-15万美元。' },
 
   // --- C10: Project Profitability Calculator ---
-  'tools.solopreneur-project-profitability-calculator.title': { en: 'Project Profitability Calculator', zh: '项目利润计算器' },
+  'tools.solopreneur-project-profitability-calculator.title': { en: "Project Profitability Calculator — Margin + Hourly Rate + Breakeven (2026)", zh: "项目利润计算器 — 测算利润率、时薪与盈亏平衡（2026）" },
   'tools.solopreneur-project-profitability-calculator.description': { en: 'Calculate profit, effective hourly rate, and profit margin for any freelance project. Compare outcomes at different cost rates.', zh: '计算任何自由职业项目的利润、有效时薪和利润率。对比不同成本费率下的结果。' },
   'tools.solopreneur-project-profitability-calculator.input.projectRevenue.label': { en: 'Project Revenue ($)', zh: '项目收入（$）' },
   'tools.solopreneur-project-profitability-calculator.input.projectRevenue.placeholder': { en: 'e.g. 5000', zh: '例如：5000' },
@@ -1959,7 +1959,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-project-profitability-calculator.faq.4.a': { en: 'This usually means you are underestimating hours. Track actual vs estimated time for 3 projects to find your estimation bias. If you consistently spend 30% more time than estimated, increase your price by 30% or improve your scoping process.', zh: '这通常意味着你低估了工时。追踪3个项目的实际vs预估时间，找到你的估算偏差。如果一直比预估多花30%时间，就提价30%或改进范围界定流程。' },
 
   // --- D1: Employee Cost Calculator ---
-  'tools.solopreneur-employee-cost-calculator.title': { en: 'Employee Cost Calculator', zh: '员工成本计算器' },
+  'tools.solopreneur-employee-cost-calculator.title': { en: "Employee Cost Calculator — Free Salary + Benefits + Overhead (2026)", zh: "员工成本计算器 — 含薪资、福利与管理开销（2026）" },
   'tools.solopreneur-employee-cost-calculator.description': { en: 'Calculate the true cost of hiring an employee, including benefits, employer taxes, and overhead. Compare costs across salary levels and locations.', zh: '计算雇佣一名员工的真实成本，包含福利、雇主税费和间接费用。对比不同薪资水平和地区的成本。' },
   'tools.solopreneur-employee-cost-calculator.input.annualSalary.label': { en: 'Annual Base Salary ($)', zh: '年基础薪资（$）' },
   'tools.solopreneur-employee-cost-calculator.input.annualSalary.placeholder': { en: 'e.g. 80000', zh: '例如：80000' },
@@ -1985,7 +1985,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-employee-cost-calculator.faq.4.a': { en: 'The calculator provides recurring annual costs. Recruiting is typically a one-time expense of 20-30% of first-year salary (agency fees, job board postings, interview time). Onboarding and ramp-up productivity loss can add another 10-20% in the first 3-6 months. Budget separately for these upfront investments.', zh: '计算器提供的是经常性年度成本。招聘通常是一次性费用，占第一年薪资的20-30%（中介费、招聘网站发布费、面试时间）。入职和上手期的生产力损失在前3-6个月可能额外增加10-20%。这些前期投资需单独预算。' },
 
   // --- D2: Meeting Cost Calculator ---
-  'tools.solopreneur-meeting-cost-calculator.title': { en: 'Meeting Cost Calculator', zh: '会议成本计算器' },
+  'tools.solopreneur-meeting-cost-calculator.title': { en: "Meeting Cost Calculator — Free Attendee Cost + Lost Time (2026)", zh: "会议成本计算器 — 按参会人数与时间测算（2026）" },
   'tools.solopreneur-meeting-cost-calculator.description': { en: 'Calculate the true dollar cost of meetings based on attendee count, hourly rates, meeting length, and frequency.', zh: '根据参会人数、时薪、会议时长和频率计算会议的真实金钱成本。' },
   'tools.solopreneur-meeting-cost-calculator.input.attendees.label': { en: 'Number of Attendees', zh: '参会人数' },
   'tools.solopreneur-meeting-cost-calculator.input.attendees.placeholder': { en: 'e.g. 6', zh: '例如：6' },
@@ -2014,7 +2014,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-meeting-cost-calculator.faq.4.a': { en: 'Multiply the meeting cost by 1.5-2x to account for context-switching overhead. Then compare against what attendees could have produced in that time. If a $225 meeting could have generated $2,000 in billable work, the opportunity cost is significant. This is why senior engineers and executives should attend the fewest meetings.', zh: '将会议成本乘以1.5-2倍以考虑上下文切换开销。然后对比参会者在那段时间本可以产出的价值。如果一个225美元的会议本可以产生2000美元的可计费工作，机会成本就很显著了。这就是为什么高级工程师和高管应该参加最少的会议。' },
 
   // --- E1: Equity Dilution Calculator ---
-  'tools.solopreneur-equity-dilution-calculator.title': { en: 'Equity Dilution Calculator', zh: '股权稀释计算器' },
+  'tools.solopreneur-equity-dilution-calculator.title': { en: "Equity Dilution Calculator — Pre-Money + Post-Money Ownership (2026)", zh: "股权稀释计算器 — 对比投前与投后持股（2026）" },
   'tools.solopreneur-equity-dilution-calculator.description': { en: 'Model how investment rounds dilute founder equity. Calculate post-money valuation, investor ownership, and your remaining shares after funding.', zh: '模拟融资轮次如何稀释创始人股权。计算投后估值、投资人持股比例和融资后你剩余的股份。' },
   'tools.solopreneur-equity-dilution-calculator.input.companyValuation.label': { en: 'Pre-Money Valuation ($)', zh: '投前估值（$）' },
   'tools.solopreneur-equity-dilution-calculator.input.companyValuation.placeholder': { en: 'e.g. 5000000', zh: '例如：5000000' },
@@ -2041,7 +2041,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-equity-dilution-calculator.faq.4.a': { en: 'Yes, by bootstrapping and never taking investment. However, dilution is not inherently bad — it is the cost of capital that can accelerate growth. The key question is: will the investment increase the value of your remaining shares by more than the dilution cost? If $1M investment for 20% dilution helps you grow the company value from $5M to $20M, your 80% stake is now worth $16M (up from $5M). That is a great trade. Avoid dilution only when the capital would not meaningfully accelerate value creation.', zh: '可以，通过自筹资金永不融资。但稀释本质上并不坏——它是能加速增长的资本成本。关键问题是：投资带来的剩余股份价值增长是否超过稀释成本？如果100万换20%稀释帮你把公司从500万做到2000万，你80%的股份现在价值1600万（从500万涨上来），这是一笔绝佳的交易。只有当资本无法显著加速价值创造时才应避免稀释。' },
 
   // --- E2: Freelance Tax Calculator ---
-  'tools.solopreneur-freelance-tax-calculator.title': { en: 'Freelance Tax Calculator', zh: '自由职业税务计算器' },
+  'tools.solopreneur-freelance-tax-calculator.title': { en: "Freelance Tax Calculator — Free Tax Estimate + Quarterly Set-Aside (2026)", zh: "自由职业税计算器 — 预估税额与季度预留（2026）" },
   'tools.solopreneur-freelance-tax-calculator.description': { en: 'Estimate your freelance taxes across 5 countries. See your taxable income, quarterly payments, effective tax rate, and monthly take-home pay.', zh: '估算你在5个国家/地区的自由职业税费。查看应纳税所得额、季度付款、有效税率和月到手收入。' },
   'tools.solopreneur-freelance-tax-calculator.input.annualIncome.label': { en: 'Annual Income ($)', zh: '年收入（$）' },
   'tools.solopreneur-freelance-tax-calculator.input.annualIncome.placeholder': { en: 'e.g. 100000', zh: '例如：100000' },
@@ -2070,7 +2070,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-freelance-tax-calculator.faq.4.a': { en: 'An LLC provides legal liability protection but does not change your tax situation by default — single-member LLCs are still taxed as sole proprietors. The real tax optimization comes from electing S-Corp taxation (US) once your net income exceeds $60K-$80K. At that point, the payroll tax savings from the S-Corp structure typically outweigh the added accounting complexity and payroll costs. For UK freelancers, operating as a limited company becomes tax-efficient above roughly £50K.', zh: 'LLC提供法律有限责任保护，但默认不改变税务状况——单一成员LLC仍按个体经营者纳税。真正的税务优化在于净收入超过6-8万美元后选择S-Corp身份（美国）。此时S-Corp结构节省的薪资税通常超过增加的会计复杂性和工资成本。对于英国自由职业者，收入超过约5万英镑后以有限公司运营开始具有税务效率。' },
 
   // --- E3: Sponsorship Rate Calculator ---
-  'tools.solopreneur-sponsorship-rate-calculator.title': { en: 'Sponsorship Rate Calculator', zh: '赞助费率计算器' },
+  'tools.solopreneur-sponsorship-rate-calculator.title': { en: "Sponsorship Rate Calculator — Free CPM + Audience Value Pricing (2026)", zh: "赞助费率计算器 — 按 CPM 与受众价值定价（2026）" },
   'tools.solopreneur-sponsorship-rate-calculator.description': { en: 'Estimate what brands will pay to sponsor your content. Calculate CPM-based rates for podcasts, newsletters, YouTube, and blogs.', zh: '估算品牌为赞助你的内容愿意付多少钱。计算播客、邮件通讯、YouTube和博客的CPM费率。' },
   'tools.solopreneur-sponsorship-rate-calculator.input.monthlyDownloads.label': { en: 'Monthly Downloads / Listens', zh: '月下载/收听量' },
   'tools.solopreneur-sponsorship-rate-calculator.input.monthlyDownloads.placeholder': { en: 'e.g. 10000', zh: '例如：10000' },
@@ -2098,7 +2098,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-sponsorship-rate-calculator.faq.4.a': { en: 'Direct sponsorships pay 3-10x more than programmatic ads. YouTube AdSense pays roughly $2-5 CPM, while direct sponsorship deals on YouTube can fetch $15-30 CPM. Similarly, newsletter ad networks like Paved pay $15-25 CPM, while direct deals reach $40-60 CPM. Building direct brand relationships is always more profitable than relying on ad networks alone.', zh: '直接赞助比程序化广告收入高3-10倍。YouTube AdSense大约支付2-5美元CPM，而YouTube上的直接赞助交易可达15-30美元CPM。类似地，Paved等邮件通讯广告网络支付15-25美元CPM，而直接交易可达40-60美元CPM。建立直接品牌关系始终比单纯依赖广告网络更有利可图。' },
 
   // --- E4: Time Value Calculator ---
-  'tools.solopreneur-time-value-calculator.title': { en: 'Time Value Calculator', zh: '时间价值计算器' },
+  'tools.solopreneur-time-value-calculator.title': { en: "Time Value Calculator — Hourly + Minute Value + Time Waste Cost (2026)", zh: "时间价值计算器 — 换算时薪、分钟价值与浪费成本（2026）" },
   'tools.solopreneur-time-value-calculator.description': { en: 'Discover what your time is really worth. Calculate your hourly rate and see the dollar cost of meetings, distractions, and daily time waste.', zh: '发现你的时间真正值多少钱。计算你的时薪，看看会议、干扰和每天时间浪费的金钱成本。' },
   'tools.solopreneur-time-value-calculator.input.annualIncome.label': { en: 'Annual Income ($)', zh: '年收入（$）' },
   'tools.solopreneur-time-value-calculator.input.annualIncome.placeholder': { en: 'e.g. 100000', zh: '例如：100000' },
@@ -2523,7 +2523,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ai-api-cost-comparison.model.deepseek-v4-pro': { en: 'V4 Pro', zh: 'V4 Pro' },
 
   // ===== M: Marketing Analytics =====
-  'tools.solopreneur-roas-calculator.title': { en: 'ROAS Calculator', zh: 'ROAS 计算器（广告支出回报率）' },
+  'tools.solopreneur-roas-calculator.title': { en: "ROAS Calculator — Ad Spend + Margin-Aware ROI (2026)", zh: "ROAS 计算器 — 测算广告投入与毛利口径回报（2026）" },
   'tools.solopreneur-roas-calculator.description': { en: 'Calculate Return on Ad Spend (ROAS) with margin-aware net profit. See health bands, what-if scenarios (revenue +20% / spend -20%), break-even revenue, and 2x scaling projections. Industry benchmarks: 🟢 ≥4.0x · 🟡 2.0–4.0x · 🟠 1.0–2.0x · 🔴 <1.0x.', zh: '计算广告支出回报率（ROAS），含基于毛利的净利润分析。查看健康分级、What-If 场景（收入 +20% / 支出 -20%）、盈亏平衡收入和 2 倍规模预测。行业基准：🟢 ≥4.0x · 🟡 2.0–4.0x · 🟠 1.0–2.0x · 🔴 <1.0x。' },
   'tools.solopreneur-roas-calculator.faq.0.a': { en: 'A "good" ROAS depends on your gross margin. At 50% margin, ROAS ≥ 2.0x is break-even; ROAS ≥ 3.0x is comfortably profitable. At 70% margin, ROAS ≥ 1.5x is break-even. Most solopreneurs target 4.0x+ for sustainable scaling.', zh: '"好的" ROAS 取决于你的毛利率。在 50% 毛利率下,ROAS ≥2.0x 为盈亏平衡,≥3.0x 为盈利舒适区;在 70% 毛利率下,≥1.5x 即为盈亏平衡。多数独立创业者将 4.0x 以上作为可持续规模化目标。' },
   'tools.solopreneur-roas-calculator.faq.0.q': { en: 'What is a good ROAS?', zh: '什么是好的 ROAS？' },
@@ -2538,7 +2538,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-roas-calculator.how_to_use.2': { en: 'Enter your gross margin % (revenue minus COGS divided by revenue, expressed as %).', zh: '输入毛利率(收入减去 COGS 再除以收入,以 % 表示)。' },
   'tools.solopreneur-roas-calculator.how_to_use.3': { en: 'Pick an attribution window that matches your product consideration time.', zh: '选择与产品决策周期匹配的归因窗口。' },
   'tools.solopreneur-roas-calculator.how_to_use.4': { en: 'Compare the health band to your target ROAS; use the What-If scenarios to model improvements.', zh: '将健康分级与目标 ROAS 对比;使用 What-If 场景建模改进方案。' },
-  'tools.solopreneur-ltv-by-channel-calculator.title': { en: 'LTV by Channel Calculator', zh: '各渠道 LTV 计算器' },
+  'tools.solopreneur-ltv-by-channel-calculator.title': { en: "LTV by Channel Calculator — LTV/CAC + Blended CAC By Channel (2026)", zh: "渠道 LTV 计算器 — 对比 LTV/CAC 与获客成本（2026）" },
   'tools.solopreneur-ltv-by-channel-calculator.description': { en: 'Compare up to 5 marketing channels by LTV:CAC ratio. See ranked table with health bands, blended CAC, reallocation suggestions, and break-even targets. Industry benchmarks: 🟢 ≥3.0x · 🟡 1.0–3.0x · 🟠 0.5–1.0x · 🔴 <0.5x.', zh: '按 LTV:CAC 比值对比最多 5 个营销渠道。查看带健康分级的排序表、综合 CAC、再分配建议和盈亏平衡目标。行业基准：🟢 ≥3.0x · 🟡 1.0–3.0x · 🟠 0.5–1.0x · 🔴 <0.5x。' },
   'tools.solopreneur-ltv-by-channel-calculator.faq.0.a': { en: 'Up to 5 — typical solopreneurs use 3-4 (Google Ads, Meta, TikTok, Email). Empty fields are skipped; only fill channels with data.', zh: '最多 5 个,独立创业者通常使用 3-4 个(Google Ads、Meta、TikTok、邮件)。留空字段会被跳过,只填写有数据的渠道。' },
   'tools.solopreneur-ltv-by-channel-calculator.faq.0.q': { en: 'How many channels should I compare?', zh: '应比较多少个渠道？' },
@@ -2554,7 +2554,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-ltv-by-channel-calculator.how_to_use.3': { en: 'Use the What-If section to model budget reallocation scenarios.', zh: '通过 What-If 部分建模预算再分配场景。' },
   'tools.solopreneur-ltv-by-channel-calculator.how_to_use.4': { en: 'Check the Break-Even target for the lowest-band channel.', zh: '查看排名末位的渠道所对应的盈亏平衡目标。' },
   'tools.solopreneur-ltv-by-channel-calculator.input.ch1_conv.label': { en: 'Ch1: Conversions', zh: '渠道 1: 转化数' },
-  'tools.solopreneur-funnel-value-calculator.title': { en: 'Funnel Value Calculator', zh: '漏斗价值计算器' },
+  'tools.solopreneur-funnel-value-calculator.title': { en: "Funnel Value Calculator — Stage Revenue + Drop-Off Loss (2026)", zh: "漏斗价值计算器 — 测算各阶段收入与流失损失（2026）" },
   'tools.solopreneur-funnel-value-calculator.description': { en: 'Measure marketing funnel value across 4 stages: impressions → clickers → leads → sales. See overall conversion rate, biggest drop-off stage, what-if improvements, and revenue projections. Health bands: 🟢 ≥5% · 🟡 1–5% · 🟠 0.1–1% · 🔴 <0.1%.', zh: '衡量营销漏斗在 4 个阶段的价值：展示 → 点击 → 潜客 → 销售。查看整体转化率、最大流失阶段、What-If 改进和收入预测。健康分级：🟢 ≥5% · 🟡 1–5% · 🟠 0.1–1% · 🔴 <0.1%。' },
   'tools.solopreneur-funnel-value-calculator.faq.0.a': { en: 'E-commerce funnels: 1-3% overall CR (impressions → sale). B2B SaaS free-trial funnels: 0.1-1%. Lead-gen funnels: 0.5-2%. Industry varies; benchmark your funnel vs your specific vertical.', zh: '电商漏斗:整体转化率 1%-3%(展示 → 销售)。B2B SaaS 免费试用漏斗:0.1%-1%。潜客获取漏斗:0.5%-2%。具体行业差异较大,请对标你的垂直领域。' },
   'tools.solopreneur-funnel-value-calculator.faq.0.q': { en: 'What is a typical funnel conversion rate?', zh: '什么是典型的漏斗转化率？' },
@@ -2570,7 +2570,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-funnel-value-calculator.how_to_use.3': { en: 'Enter sale conversion rate (sales ÷ leads × 100).', zh: '输入销售转化率(销售 ÷ 潜客 × 100)。' },
   'tools.solopreneur-funnel-value-calculator.how_to_use.4': { en: 'Enter AOV (average order value) and gross margin %.', zh: '输入平均订单金额(AOV)与毛利率(%)。' },
   'tools.solopreneur-funnel-value-calculator.how_to_use.5': { en: 'Read the biggest leak — that is your highest-leverage optimization target.', zh: '查看最大流失环节——这就是你最值得投入的高杠杆优化点。' },
-  'tools.solopreneur-cohort-retention-calculator.title': { en: 'Cohort Retention Calculator', zh: '队列留存计算器' },
+  'tools.solopreneur-cohort-retention-calculator.title': { en: "Cohort Retention Calculator — Retention Decay + 12-Month LTV (2026)", zh: "队列留存计算器 — 分析留存衰减与年度 LTV（2026）" },
   'tools.solopreneur-cohort-retention-calculator.description': { en: 'Measure monthly cohort retention decay (M1/M2/M3/M6/M12) and project 12-month LTV. See biggest drop month, M6 retention health band, what-if improvements, and CAC payback. Health: 🟢 ≥90% · 🟡 70–90% · 🟠 50–70% · 🔴 <50%.', zh: '衡量月度队列留存衰减（M1/M2/M3/M6/M12）并预测 12 个月 LTV。查看最大流失月份、M6 留存健康分级、What-If 改进和 CAC 回本周期。健康分级：🟢 ≥90% · 🟡 70–90% · 🟠 50–70% · 🔴 <50%。' },
   'tools.solopreneur-cohort-retention-calculator.faq.0.a': { en: 'Best-in-class SaaS: ≥90% (Slack, Notion). Good consumer apps: 70–90%. Average SaaS: 50–70%. Concerning: <50%. Benchmarks vary by industry — measure against your vertical.', zh: '顶尖 SaaS:≥90%(Slack、Notion)。优质消费类应用:70%-90%。平均 SaaS:50%-70%。堪忧:<50%。基准因行业而异——请对标你的垂直领域。' },
   'tools.solopreneur-cohort-retention-calculator.faq.0.q': { en: 'What is a good M6 retention rate?', zh: '什么是好的 M6 留存率？' },
@@ -2585,7 +2585,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cohort-retention-calculator.how_to_use.2': { en: 'Enter your average monthly revenue per user (ARPU).', zh: '输入月均单用户收入(ARPU)。' },
   'tools.solopreneur-cohort-retention-calculator.how_to_use.3': { en: 'Read the 12-mo LTV projection and biggest drop month.', zh: '查看 12 个月 LTV 预测与最大流失月份。' },
   'tools.solopreneur-cohort-retention-calculator.how_to_use.4': { en: 'Compare to your CAC to see if unit economics work.', zh: '与 CAC 对比,判断单位经济模型是否成立。' },
-  'tools.solopreneur-email-campaign-roi-calculator.title': { en: 'Email Campaign ROI Calculator', zh: '邮件营销 ROI 计算器' },
+  'tools.solopreneur-email-campaign-roi-calculator.title': { en: "Email Campaign ROI Calculator — Net Revenue + Cost per Click (2026)", zh: "邮件营销 ROI 计算器 — 测算净收入与点击成本（2026）" },
   'tools.solopreneur-email-campaign-roi-calculator.description': { en: 'Measure email campaign ROI: gross/net revenue, cost-per-click/open, and projected scaling. Industry benchmark open rate 21% included. Health: 🟢 ≥300% ROI · 🟡 100–300% · 🟠 0–100% · 🔴 <0%.', zh: '衡量邮件营销 ROI：毛/净收入、每次点击/打开成本和规模化预测。内置行业基准打开率 21%。健康分级：🟢 ≥300% ROI · 🟡 100–300% · 🟠 0–100% · 🔴 <0%。' },
   'tools.solopreneur-email-campaign-roi-calculator.faq.0.a': { en: 'Average: 21% (HubSpot 2024). Good: 25-30%. Excellent: >30%. Varies by industry — B2B typically higher than B2C. Subject line, sender name, and send time all impact open rate.', zh: '平均值:21%(HubSpot 2024)。良好:25%-30%。优秀:>30%。因行业而异——B2B 通常高于 B2C。主题行、发件人名称和发送时间都会影响打开率。' },
   'tools.solopreneur-email-campaign-roi-calculator.faq.0.q': { en: 'What is a good email open rate?', zh: '什么是好的邮件打开率？' },
@@ -2602,7 +2602,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-email-campaign-roi-calculator.how_to_use.4': { en: 'Include ALL costs: copywriting, design, ESP fees.', zh: '包含所有成本:文案、设计、ESP 服务费。' },
   'tools.solopreneur-email-campaign-roi-calculator.how_to_use.5': { en: 'Enter number of emails in the campaign (1-10 typical).', zh: '输入活动邮件数量(典型 1-10 封)。' },
   'tools.solopreneur-email-campaign-roi-calculator.input.aovPerClick.label': { en: 'Revenue per Click ($)', zh: '每次点击收入 ($)' },
-  'tools.solopreneur-content-marketing-roi-calculator.title': { en: 'Content Marketing ROI Calculator', zh: '内容营销 ROI 计算器' },
+  'tools.solopreneur-content-marketing-roi-calculator.title': { en: "Content Marketing ROI Calculator — SEO Ramp + Attributed Revenue (2026)", zh: "内容营销 ROI 计算器 — 追踪 SEO 起量周期与收入（2026）" },
   'tools.solopreneur-content-marketing-roi-calculator.description': { en: 'Model SEO/content marketing economics with ramp-up months, peak traffic, attribution model (first-touch / last-touch / linear). See 12-month ROI projection, steady-state revenue, and break-even conversion rate. Health: 🟢 ≥3% CR · 🟡 1–3% · 🟠 0.3–1% · 🔴 <0.3%.', zh: '建模 SEO/内容营销经济模型，含爬坡月份、峰值流量和归因模型（首次接触/末次接触/线性）。查看 12 个月 ROI 预测、稳定态收入和盈亏平衡转化率。健康分级：🟢 ≥3% CR · 🟡 1–3% · 🟠 0.3–1% · 🔴 <0.3%。' },
   'tools.solopreneur-content-marketing-roi-calculator.faq.0.a': { en: 'Average: 3-6 months for low-competition long-tail keywords; 6-12 months for competitive head terms. E-E-A-T signals (expertise, authority, trust) accelerate ranking.', zh: '平均来看:低竞争长尾关键词 3-6 个月;竞争激烈的核心词 6-12 个月。E-E-A-T 信号(经验、专业性、权威性、可信度)能加速排名。' },
   'tools.solopreneur-content-marketing-roi-calculator.faq.0.q': { en: 'How long does SEO content take to rank?', zh: 'SEO 内容需要多久才能获得排名？' },
@@ -2619,7 +2619,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-content-marketing-roi-calculator.how_to_use.4': { en: 'Enter average order value (AOV).', zh: '输入平均订单金额(AOV)。' },
   'tools.solopreneur-content-marketing-roi-calculator.how_to_use.5': { en: 'Enter total monthly content cost (writer + tools + design).', zh: '输入月度内容总成本(写手 + 工具 + 设计)。' },
   'tools.solopreneur-content-marketing-roi-calculator.how_to_use.6': { en: 'Pick attribution model — start with last-touch, adjust based on your sales cycle.', zh: '选择归因模型——先用末次接触,再根据销售周期调整。' },
-  'tools.solopreneur-coupon-attribution-calculator.title': { en: 'Coupon Attribution Calculator', zh: '优惠券归因计算器' },
+  'tools.solopreneur-coupon-attribution-calculator.title': { en: "Coupon Attribution Calculator — Incremental Revenue + True ROI (2026)", zh: "优惠券归因计算器 — 测算增量收入与真实 ROI（2026）" },
   'tools.solopreneur-coupon-attribution-calculator.description': { en: 'Measure the true ROI of a coupon campaign by adjusting gross coupon revenue for cannibalization. See health bands, what-if scenarios, break-even cannibalization rate, and annualized projections. Industry benchmarks: 🟢 ≥100% true ROI · 🟡 0–100% · 🔴 <0%.', zh: '通过调整毛优惠券收入以抵消蚕食效应，衡量优惠券活动的真实 ROI。查看健康分级、What-If 场景、盈亏平衡蚕食率和年化预测。行业基准：🟢 ≥100% 真实 ROI · 🟡 0–100% · 🔴 <0%。' },
   'tools.solopreneur-coupon-attribution-calculator.faq.0.a': { en: 'Cannibalization is the share of coupon-driven orders that would have happened anyway at full price. Industry average is ~30% if you have not run a holdout test; observed cannibalization in real holdouts is often 50–70%. Lower cannibalization means higher true ROI.', zh: '蚕食是指优惠券促成的订单中,原本无论是否发券都会照常发生的比例。若未做过对照测试,行业均值约为 30%;真实对照实验中观察到的蚕食率通常高达 50%-70%。蚕食率越低,真实 ROI 越高。' },
   'tools.solopreneur-coupon-attribution-calculator.faq.0.q': { en: 'What is coupon cannibalization?', zh: '什么是优惠券蚕食？' },
@@ -2635,7 +2635,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-coupon-attribution-calculator.how_to_use.3': { en: 'Enter your baseline revenue (total revenue over the campaign period).', zh: '输入基线收入(活动期间的总体收入)。' },
   'tools.solopreneur-coupon-attribution-calculator.how_to_use.4': { en: 'Enter cannibalization % — start with 30% (industry avg) if you have not run a holdout test.', zh: '输入蚕蚀率(%),若未做过对照测试,以行业均值 30% 作为起点。' },
   'tools.solopreneur-coupon-attribution-calculator.how_to_use.5': { en: 'Read the true ROI, what-if scenarios, and break-even cannibalization ceiling to size the next campaign.', zh: '查看真实 ROI、What-If 场景以及盈亏平衡蚕蚀上限,以为下一场活动定规模。' },
-  'tools.solopreneur-cart-abandonment-cost-calculator.title': { en: 'Cart Abandonment Cost Calculator', zh: '购物车放弃成本计算器' },
+  'tools.solopreneur-cart-abandonment-cost-calculator.title': { en: "Cart Abandonment Cost Calculator — Lost Revenue + Recovery ROI (2026)", zh: "购物车放弃成本计算器 — 测算流失收入与挽回回报（2026）" },
   'tools.solopreneur-cart-abandonment-cost-calculator.description': { en: 'Model cart abandonment and the ROI of a recovery campaign (email + SMS retargeting). See 8-output breakdown, what-if scenarios (recovery rate, cost, abandonment), break-even recovery rate, and annualized projections. Industry benchmarks: 🟢 ≥300% recovery ROI · 🟡 100–300% · 🔴 <100%.', zh: '建模购物车放弃和挽回活动（邮件 + SMS 再营销）的 ROI。查看 8 项输出明细、What-If 场景（挽回率、成本、放弃率）、盈亏平衡挽回率和年化预测。行业基准：🟢 ≥300% 挽回 ROI · 🟡 100–300% · 🔴 <100%。' },
   'tools.solopreneur-cart-abandonment-cost-calculator.faq.0.a': { en: 'Cart abandonment rate is the share of online shopping carts that are created but never converted to a completed purchase. Baymard Institute\'s 2024 study puts the average at 70.19% across industries. Top causes: unexpected shipping costs (48%), required account creation (24%), complicated checkout (22%).', zh: '购物车放弃率是指已创建但最终未完成购买的购物车所占比例。Baymard 研究院 2024 年研究数据显示,跨行业平均为 70.19%。主要诱因:意外出现的运费(48%)、强制要求注册账户(24%)、结账流程繁琐(22%)。' },
   'tools.solopreneur-cart-abandonment-cost-calculator.faq.0.q': { en: 'What is cart abandonment rate?', zh: '什么是购物车放弃率？' },
@@ -2654,7 +2654,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cart-abandonment-cost-calculator.how_to_use.6': { en: 'Read the recovery ROI, what-if scenarios, and break-even recovery rate to size your recovery campaign.', zh: '查看挽回 ROI、What-If 场景和盈亏平衡挽回率,以确定挽回活动的合适规模。' },
 
   // ===== O: Operations =====
-  'tools.solopreneur-inventory-turnover-calculator.title': { en: 'Inventory Turnover Calculator', zh: '库存周转率计算器' },
+  'tools.solopreneur-inventory-turnover-calculator.title': { en: "Inventory Turnover Calculator — Annual Turns + Days on Hand (2026)", zh: "库存周转率计算器 — 测算年周转次数与库存天数（2026）" },
   'tools.solopreneur-inventory-turnover-calculator.description': { en: 'Measure how fast you sell through inventory: turnover ratio, days-of-inventory-on-hand (DOH), and health bands. See what-if (markdown, stockout), break-even stock-to-sales, and milestone (3x/year lean). Health: 🟢 ≥6x · 🟡 4–6x · 🟠 2–4x · 🔴 <2x.', zh: '衡量库存销售速度：周转率、平均库存天数（DOH）和健康分级。查看 What-If（降价、缺货）、盈亏平衡库存销售比和里程碑（3x/年精益）。健康分级：🟢 ≥6x · 🟡 4–6x · 🟠 2–4x · 🔴 <2x。' },
   'tools.solopreneur-inventory-turnover-calculator.faq.0.a': { en: 'For general retail, 6x/year is the healthy baseline. Apparel is typically 4x (seasonal), grocery 12x (perishable, fast-moving), and furniture 3x (high-ticket, slow). Anything below 4x signals capital trapped in slow movers; below 2x is critical and demands SKU rationalization.', zh: '一般零售业:6 倍/年 为健康基准。服装通常 4 倍(季节性),杂货 12 倍(易腐、快销),家具 3 倍(高客单、慢销)。低于 4 倍提示资金被困在慢销 SKU;低于 2 倍则属危急,需做 SKU 优化。' },
   'tools.solopreneur-inventory-turnover-calculator.faq.0.q': { en: 'What is a good inventory turnover ratio?', zh: '什么是好的库存周转率？' },
@@ -2670,7 +2670,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-inventory-turnover-calculator.how_to_use.3': { en: 'Pick your industry benchmark for context-aware health bands.', zh: '选择行业基准,以获取与场景匹配的健康分级。' },
   'tools.solopreneur-inventory-turnover-calculator.how_to_use.4': { en: 'Read the turnover ratio and days-to-sell, then use What-If to model +10% sales or -10% slower sales.', zh: '查看周转率与售罄天数,然后用 What-If 建模销量 +10% 或销量放缓 -10% 的情景。' },
   'tools.solopreneur-inventory-turnover-calculator.input.annualCOGS.label': { en: 'Annual Cost of Goods Sold (COGS)', zh: '年度销售成本(COGS)' },
-  'tools.solopreneur-carrying-cost-calculator.title': { en: 'Inventory Carrying Cost Calculator', zh: '库存持有成本计算器' },
+  'tools.solopreneur-carrying-cost-calculator.title': { en: "Inventory Carrying Cost Calculator — Storage + Capital Cost (2026)", zh: "库存持有成本计算器 — 汇总仓储与资金占用成本（2026）" },
   'tools.solopreneur-carrying-cost-calculator.description': { en: 'Calculate the true annual cost of holding inventory: capital, storage, insurance, shrinkage, and obsolescence. See health bands, what-if (carrying rate, inventory value), break-even carrying cost, and quarterly breakdown. Health: 🟢 <20% · 🟡 20–30% · 🟠 30–40% · 🔴 >40%.', zh: '计算持有库存的真实年度成本：资金、仓储、保险、损耗和过期风险。查看健康分级、What-If（持有费率、库存价值）、盈亏平衡持有成本和季度拆分。健康分级：🟢 <20% · 🟡 20–30% · 🟠 30–40% · 🔴 >40%。' },
   'tools.solopreneur-carrying-cost-calculator.faq.0.a': { en: 'Industry rule of thumb: 20–30% of inventory value per year. Storage is usually the largest component (5–10%), followed by opportunity cost (5–10%), shrinkage (1–3%), insurance (1–2%), and other (1–3%).', zh: '行业经验:每年占库存价值的 20%-30%。仓储通常占比最大(5%-10%),其次是机会成本(5%-10%)、损耗(1%-3%)、保险(1%-2%)、其他(1%-3%)。' },
   'tools.solopreneur-carrying-cost-calculator.faq.0.q': { en: 'What is a typical inventory carrying cost?', zh: '典型的库存持有成本是多少？' },
@@ -2686,7 +2686,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-carrying-cost-calculator.how_to_use.3': { en: 'Use What-If to model shrinkage reduction (typical loss-prevention win) or rate drops.', zh: '通过 What-If 建模损耗减少(典型的损失防范收益)或费率下降场景。' },
   'tools.solopreneur-carrying-cost-calculator.how_to_use.4': { en: 'If you are above 30%, use Break-Even to see which component to attack first.', zh: '若高于 30%,用 Break-Even 找出应优先处理的成本组件。' },
   'tools.solopreneur-carrying-cost-calculator.input.avgInventoryValue.label': { en: 'Average Inventory Value', zh: '平均库存价值' },
-  'tools.solopreneur-stockout-cost-calculator.title': { en: 'Stockout Cost Calculator', zh: '缺货成本计算器' },
+  'tools.solopreneur-stockout-cost-calculator.title': { en: "Stockout Cost Calculator — Lost Revenue + Customer LTV (2026)", zh: "缺货成本计算器 — 测算收入损失与客户终身价值（2026）" },
   'tools.solopreneur-stockout-cost-calculator.description': { en: 'Quantify revenue lost + customer churn from stockouts. See health bands, what-if (stockout rate, demand, AOV), break-even stockout rate, and annualized lost revenue. Health: 🟢 <2% · 🟡 2–5% · 🟠 5–10% · 🔴 >10%.', zh: '量化缺货导致的收入损失 + 流失。查看健康分级、What-If（缺货率、需求、客单价）、盈亏平衡缺货率和年化损失收入。健康分级：🟢 <2% · 🟡 2–5% · 🟠 5–10% · 🔴 >10%。' },
   'tools.solopreneur-stockout-cost-calculator.faq.0.a': { en: 'Studies show 5–15% of annual revenue for typical ecommerce businesses. Above 15% is critical — indicates either poor demand forecasting, weak supplier relationships, or systemic SKU count too high. Below 5% is excellent — indicates strong safety stock + supplier reliability.', zh: '研究显示典型电商企业为年收入的 5%-15%。高于 15% 为危急——往往意味着预测不准、供应商薄弱或 SKU 过多;低于 5% 为优秀——代表强安全库存 + 可靠供应商。' },
   'tools.solopreneur-stockout-cost-calculator.faq.0.q': { en: 'How much revenue do stockouts typically cost?', zh: '缺货通常会损失多少收入？' },
@@ -2703,7 +2703,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-stockout-cost-calculator.how_to_use.4': { en: 'Enter annual revenue (for % calculation) and win-back rate (10–25% is typical with good email flows).', zh: '输入年收入(用于百分比测算)与赢回率(良好邮件流通常 10%-25%)。' },
   'tools.solopreneur-stockout-cost-calculator.how_to_use.5': { en: 'Read the stockout cost as % of revenue; use What-If to model cutting stockout days 50% or raising recovery to 25%.', zh: '查看缺货成本占收入比;用 What-If 建模缺货天数砍半或赢回率提升至 25% 的场景。' },
   'tools.solopreneur-stockout-cost-calculator.input.annualRevenue.label': { en: 'Annual Revenue (for % calc)', zh: '年收入' },
-  'tools.solopreneur-reorder-point-calculator.title': { en: 'Reorder Point Calculator', zh: '补货点计算器' },
+  'tools.solopreneur-reorder-point-calculator.title': { en: "Reorder Point Calculator — Lead-Time Demand + Safety Stock (2026)", zh: "补货点计算器 — 按交期需求与安全库存测算（2026）" },
   'tools.solopreneur-reorder-point-calculator.description': { en: 'Calculate the reorder point (ROP) that prevents stockouts: lead time demand + safety stock. See health bands, what-if (lead time variance, demand spike), break-even safety stock, and reorder frequency. Health: 🟢 coverage ≥2x · 🟡 1–2x · 🟠 0.5–1x · 🔴 <0.5x.', zh: '计算防止缺货的补货点（ROP）：提前期需求 + 安全库存。查看健康分级、What-If（提前期波动、需求激增）、盈亏平衡安全库存和补货频率。健康分级：🟢 覆盖 ≥2x · 🟡 1–2x · 🟠 0.5–1x · 🔴 <0.5x。' },
   'tools.solopreneur-reorder-point-calculator.faq.0.a': { en: '95% is the recommended baseline for most SKUs — only 5% of cycles will stockout. 99% is reserved for high-margin, critical, or perishable items. 90% is typical retail but accepts 10% stockout risk.', zh: '95% 是多数 SKU 的推荐基线——仅 5% 的周期可能出现缺货;99% 仅适用于高毛利、关键或易腐品;90% 为典型零售水平,但需接受 10% 的缺货风险。' },
   'tools.solopreneur-reorder-point-calculator.faq.0.q': { en: 'What is a good service level for inventory?', zh: '什么是好的库存服务水平？' },
@@ -2720,7 +2720,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-reorder-point-calculator.how_to_use.4': { en: 'Enter your review period (how often you check inventory and reorder — typically weekly = 7 days).', zh: '输入复盘周期(检查库存并补货的频率,通常每周 = 7 天)。' },
   'tools.solopreneur-reorder-point-calculator.how_to_use.5': { en: 'Read the reorder point — order when inventory drops to this level.', zh: '查看补货点——库存降到该水平即应下单。' },
   'tools.solopreneur-reorder-point-calculator.input.avgDailyDemand.label': { en: 'Average Daily Demand (units)', zh: '日均需求(件)' },
-  'tools.solopreneur-fulfillment-cost-calculator.title': { en: 'Fulfillment Cost Calculator', zh: '履约成本计算器' },
+  'tools.solopreneur-fulfillment-cost-calculator.title': { en: "Fulfillment Cost Calculator — Per Order + Per Unit Cost (2026)", zh: "履约成本计算器 — 分解每单与单件成本（2026）" },
   'tools.solopreneur-fulfillment-cost-calculator.description': { en: 'Calculate per-order fulfillment cost: pick-pack-ship + storage allocation. See health bands, what-if (order volume, fixed costs), break-even order volume, and monthly cost breakdown. Health: 🟢 <$5/order · 🟡 $5–$10 · 🟠 $10–$15 · 🔴 >$15.', zh: '计算单订单履约成本：拣货打包发货 + 仓储分摊。查看健康分级、What-If（订单量、固定成本）、盈亏平衡订单量和月度成本拆分。健康分级：🟢 <$5/单 · 🟡 $5–$10 · 🟠 $10–$15 · 🔴 >$15。' },
   'tools.solopreneur-fulfillment-cost-calculator.faq.0.a': { en: '$5–$10 is typical retail. <$5 is excellent (high-volume operators or efficient 3PLs). $10–$20 is high (small-volume in-house). ≥$20 is critical (often indicates manual labor + inefficient shipping).', zh: '$5-$10 为典型零售水平;<$5 为优秀(高量运营者或高效 3PL);$10-$20 为偏高(小型自建);≥$20 为危急(往往意味着人工操作 + 低效运输)。' },
   'tools.solopreneur-fulfillment-cost-calculator.faq.0.q': { en: 'What is a typical per-order fulfillment cost?', zh: '典型的单订单履约成本是多少？' },
@@ -2738,7 +2738,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-fulfillment-cost-calculator.how_to_use.5': { en: 'Enter return rate (% of orders returned).', zh: '输入退货率(退货订单占比,%)。' },
   'tools.solopreneur-fulfillment-cost-calculator.how_to_use.6': { en: 'Read the per-order cost and compare to the $5–$10 industry benchmark band.', zh: '查看单订单成本并与 $5-$10 行业基准区间对比。' },
   'tools.solopreneur-fulfillment-cost-calculator.input.laborRate.label': { en: 'Labor Rate ($/hour)', zh: '人工费率($/小时)' },
-  'tools.solopreneur-supplier-scorecard-calculator.title': { en: 'Supplier Scorecard Calculator', zh: '供应商评分卡计算器' },
+  'tools.solopreneur-supplier-scorecard-calculator.title': { en: "Supplier Scorecard Calculator — Quality + Delivery + Cost Score (2026)", zh: "供应商评分卡计算器 — 按质量、交付与成本评分（2026）" },
   'tools.solopreneur-supplier-scorecard-calculator.description': { en: 'Score suppliers across 4 weighted dimensions: on-time delivery, defect rate, lead time, and price stability. See ranked scorecard, health bands, what-if (single-dimension improvement), break-even weighted score, and rebalance suggestions. Health: 🟢 ≥85 · 🟡 70–85 · 🟠 55–70 · 🔴 <55.', zh: '按 4 个加权维度对供应商评分：准时交付率、缺陷率、提前期和价格稳定性。查看排序评分卡、健康分级、What-If（单维度改进）、盈亏平衡加权分数和再平衡建议。健康分级：🟢 ≥85 · 🟡 70–85 · 🟠 55–70 · 🔴 <55。' },
   'tools.solopreneur-supplier-scorecard-calculator.faq.0.a': { en: 'Each dimension (on-time, defect, lead variance, cost variance) is scored 0–100, then weighted by preset (balanced 40/30/15/15, quality 25/50/15/10, speed 50/20/25/5, cost 20/20/10/50). Default balanced is the standard view.', zh: '每个维度(准时、缺陷、提前期、成本波动)先单独打分 0-100,然后按预设权重加权(均衡 40/30/15/15,质量 25/50/15/10,速度 50/20/25/5,成本 20/20/10/50)。默认均衡为标准视图。' },
   'tools.solopreneur-supplier-scorecard-calculator.faq.0.q': { en: 'How is the composite score calculated?', zh: '综合分是如何计算的？' },
@@ -2792,7 +2792,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-grr-calculator.how_to_use.2': { en: 'Enter Churned MRR (customers who fully cancelled during the period).', zh: '输入流失 MRR（周期内完全取消的客户）。' },
   'tools.solopreneur-grr-calculator.how_to_use.3': { en: 'Read the GRR percentage and Health band. Pair with NRR (P9-1) to see pure retention vs expansion-driven retention separately.', zh: '查看 GRR 百分比和健康等级。可与 NRR（P9-1）配对，区分纯留存与扩展驱动的留存。' },
   'tools.solopreneur-grr-calculator.input.churnedMRR.label': { en: 'Churned MRR', zh: '流失 MRR' },
-  'tools.solopreneur-expansion-revenue-calculator.title': { en: 'Expansion Revenue Calculator', zh: '扩展收入计算器' },
+  'tools.solopreneur-expansion-revenue-calculator.title': { en: "Expansion Revenue Calculator — Free Upsell + Cross-Sell MRR (2026)", zh: "扩展收入计算器 — 追踪加购与交叉销售 MRR（2026）" },
   'tools.solopreneur-expansion-revenue-calculator.description': { en: 'Measure upsell/cross-sell expansion revenue and its contribution to NRR. See health bands, what-if (expansion rate, account base), break-even expansion to hit 120% NRR, and ARR uplift projections. Health: 🟢 ≥30% expansion · 🟡 15–30% · 🟠 5–15% · 🔴 <5%.', zh: '衡量升级/交叉销售扩展收入及其对 NRR 的贡献。查看健康分级、What-If（扩展率、账户基数）、达到 120% NRR 的盈亏平衡扩展和 ARR 增长预测。健康分级：🟢 ≥30% 扩展 · 🟡 15–30% · 🟠 5–15% · 🔴 <5%。' },
   'tools.solopreneur-expansion-revenue-calculator.faq.0.a': { en: 'Expansion revenue is the additional MRR you generate from existing customers — either upsell (same product, more usage/seats) or cross-sell (new product from your portfolio). It is the top-line growth lever that enables NRR > 100% even when GRR is mediocre.', zh: '扩展收入是从现有客户产生的额外 MRR——要么是向上销售（同一产品，更多用量/席位），要么是交叉销售（组合内的另一款产品）。它是即使 GRR 一般也能让 NRR 超过 100% 的顶级增长杠杆。' },
   'tools.solopreneur-expansion-revenue-calculator.faq.0.q': { en: 'What is expansion revenue?', zh: '什么是扩展收入？' },
@@ -2809,7 +2809,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-expansion-revenue-calculator.how_to_use.2': { en: 'Enter Cross-sell MRR (additional products sold to existing customers).', zh: '输入交叉销售 MRR（向现有客户销售的其他产品）。' },
   'tools.solopreneur-expansion-revenue-calculator.how_to_use.3': { en: 'Read the expansion percentage and Health band. Pair with NRR (P9-1) to see the full retention picture.', zh: '查看扩展百分比和健康等级。可与 NRR（P9-1）配对，看到完整的留存情况。' },
   'tools.solopreneur-expansion-revenue-calculator.input.crossSellMRR.label': { en: 'Cross-sell MRR (new product)', zh: '交叉销售 MRR（新产品）' },
-  'tools.solopreneur-logo-churn-rate-calculator.title': { en: 'Logo Churn Rate Calculator', zh: 'Logo 流失率计算器' },
+  'tools.solopreneur-logo-churn-rate-calculator.title': { en: "Logo Churn Rate Calculator — Free Customer Loss + Retention (2026)", zh: "客户流失率计算器 — 追踪客户流失与留存（2026）" },
   'tools.solopreneur-logo-churn-rate-calculator.description': { en: 'Measure customer logo churn (accounts lost / starting accounts). See health bands, what-if (churn rate, account base), break-even churn for negative net adds, and annualized lost accounts. Health: 🟢 <5% annual · 🟡 5–10% · 🟠 10–15% · 🔴 >15%.', zh: '衡量客户 Logo 流失（流失账户 / 起始账户）。查看健康分级、What-If（流失率、账户基数）、净增长为负的盈亏平衡流失率和年化流失账户数。健康分级：🟢 <5% 年化 · 🟡 5–10% · 🟠 10–15% · 🔴 >15%。' },
   'tools.solopreneur-logo-churn-rate-calculator.faq.0.a': { en: 'Logo churn rate is the percentage of customers (logos) lost during a period, regardless of revenue. It is the count-based complement to GRR (revenue-based). Logo churn and GRR diverge when customers at different price tiers churn at different rates.', zh: 'Logo 流失率是周期内流失的客户（Logo）数量占客户总数的百分比，与金额无关。它是 GRR（按金额计）的客户数补充。Logo 流失与 GRR 在不同价位客户流失率不同时会背离。' },
   'tools.solopreneur-logo-churn-rate-calculator.faq.0.q': { en: 'What is logo churn rate?', zh: '什么是 Logo 流失率？' },
@@ -2825,7 +2825,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-logo-churn-rate-calculator.how_to_use.1': { en: 'Enter customers lost during the period (e.g., 8 customers who churned).', zh: '输入周期内流失的客户数（例如流失 8 个）。' },
   'tools.solopreneur-logo-churn-rate-calculator.how_to_use.2': { en: 'Read the logo churn percentage and Health band. Pair with GRR (P9-2) to see logo vs revenue churn.', zh: '查看 Logo 流失百分比和健康等级。可与 GRR（P9-2）配对，对比流失与收入流失。' },
   'tools.solopreneur-logo-churn-rate-calculator.input.lostCustomers.label': { en: 'Customers lost during period', zh: '周期内流失客户数' },
-  'tools.solopreneur-renewal-rate-calculator.title': { en: 'Renewal Rate Calculator', zh: '续约率计算器' },
+  'tools.solopreneur-renewal-rate-calculator.title': { en: "Renewal Rate Calculator — Free Renewed ARR + Revenue at Risk (2026)", zh: "续约率计算器 — 测算续约 ARR 与风险收入（2026）" },
   'tools.solopreneur-renewal-rate-calculator.description': { en: 'Measure contract renewal rate (renewed contracts / contracts up for renewal). See health bands, what-if (renewal rate, ARR at risk), break-even renewal rate, and ARR retained projections. Health: 🟢 ≥90% · 🟡 80–90% · 🟠 70–80% · 🔴 <70%.', zh: '衡量合同续约率（续约合同 / 应付续约合同）。查看健康分级、What-If（续约率、风险 ARR）、盈亏平衡续约率和留存 ARR 预测。健康分级：🟢 ≥90% · 🟡 80–90% · 🟠 70–80% · 🔴 <70%。' },
   'tools.solopreneur-renewal-rate-calculator.faq.0.a': { en: 'Top-quartile B2B SaaS renews 90%+ of ARR (net of churn). Mid-market median sits around 85%. Below 80% is a warning sign of CS or product-market-fit issues; below 70% is critical.', zh: '顶级 B2B SaaS 能续约 90%+ 的 ARR（净流失后）。中型市场中位数约 85%。低于 80% 是 CS 或产品市场契合度的预警；低于 70% 严重。' },
   'tools.solopreneur-renewal-rate-calculator.faq.0.q': { en: 'What is a good renewal rate for B2B SaaS?', zh: 'B2B SaaS 的良好续约率是多少？' },
@@ -2884,7 +2884,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-funnel-step-calculator.how_to_use.3': { en: 'Read the band (green/yellow/orange/red), then focus on the "Biggest drop" step from the Snapshot.', zh: '查看健康等级（绿/黄/橙/红），然后聚焦"快照"中最大流失的那一步。' },
   'tools.solopreneur-funnel-step-calculator.how_to_use.4': { en: 'Pair with the Break-Even section to set the next-quarter optimization target for that step.', zh: '结合盈亏平衡分析，为该步骤设定下一季度的优化目标。' },
   'tools.solopreneur-funnel-step-calculator.input.step1.label': { en: 'Step 1 - Entry event count', zh: '步骤 1 - 入口事件用户数' },
-  'tools.solopreneur-feature-adoption-calculator.title': { en: 'Feature Adoption Calculator', zh: '功能采用率计算器' },
+  'tools.solopreneur-feature-adoption-calculator.title': { en: "Feature Adoption Calculator — Free Active User + Usage Tracker (2026)", zh: "功能采用率计算器 — 追踪活跃用户与使用率（2026）" },
   'tools.solopreneur-feature-adoption-calculator.description': { en: 'Measure feature adoption rate (active users / total users) and stickiness (DAU/MAU). See health bands, what-if (target audience activation), break-even adoption to retire a feature, and weekly adoption curves. Health: 🟢 ≥40% · 🟡 25–40% · 🟠 10–25% · 🔴 <10%.', zh: '衡量功能采用率（活跃用户 / 总用户）和用户粘性（DAU/MAU）。查看健康分级、What-If（目标受众激活）、下线功能的盈亏平衡采用率和周采用率曲线。健康分级：🟢 ≥40% · 🟡 25–40% · 🟠 10–25% · 🔴 <10%。' },
   'tools.solopreneur-feature-adoption-calculator.faq.0.a': { en: 'WAU shows feature engagement among weekly-active users (stickier test). MAU shows overall reach. Use WAU for engagement-decisions; MAU for reach-decisions.', zh: 'WAU 显示周活跃用户中的功能参与度（粘性测试更严）。MAU 显示整体覆盖度。涉及参与度决策时用 WAU；涉及覆盖度决策时用 MAU。' },
   'tools.solopreneur-feature-adoption-calculator.faq.0.q': { en: 'WAU or MAU — which denominator?', zh: '分母应该用 WAU 还是 MAU？' },
@@ -2904,7 +2904,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-feature-adoption-calculator.how_to_use.3': { en: 'Read the band: green/yellow/orange/red indicates adoption depth.', zh: '查看健康等级：绿/黄/橙/红反映采用深度。' },
   'tools.solopreneur-feature-adoption-calculator.how_to_use.4': { en: 'For dead-feature remediation: pair with cohort analysis to see WHICH user segment ignores the feature.', zh: '如需挽救"死亡功能"：结合同期群分析找出哪类用户群体忽略了该功能。' },
   'tools.solopreneur-feature-adoption-calculator.input.active_users.label': { en: 'Total active users in period', zh: '周期内活跃用户总数' },
-  'tools.solopreneur-activation-rate-calculator.title': { en: 'Activation Rate Calculator', zh: '激活率计算器' },
+  'tools.solopreneur-activation-rate-calculator.title': { en: "Activation Rate Calculator — Free Aha-Moment + Onboarding Tracker (2026)", zh: "激活率计算器 — 追踪关键行为与新手引导（2026）" },
   'tools.solopreneur-activation-rate-calculator.description': { en: 'Measure activation rate (new users reaching the activation event / total signups). See health bands, what-if (funnel improvements, time-to-activation), break-even activation for sustainable growth, and time-to-aha benchmark. Health: 🟢 ≥40% · 🟡 25–40% · 🟠 15–25% · 🔴 <15%.', zh: '衡量激活率（达到激活事件的新用户 / 总注册数）。查看健康分级、What-If（漏斗改进、激活时间）、可持续增长的盈亏平衡激活率和价值实现时间基准。健康分级：🟢 ≥40% · 🟡 25–40% · 🟠 15–25% · 🔴 <15%。' },
   'tools.solopreneur-activation-rate-calculator.faq.0.a': { en: 'The product action that correlates with retention — e.g. for Slack it was "team sends 2000 messages", for Dropbox "user installs on 2nd device". Defining this accurately is the hardest part of activation.', zh: '与留存高度相关的产品行为——例如 Slack 是"团队发送 2000 条消息"，Dropbox 是"用户在第二台设备安装"。准确定义顿悟时刻是激活分析中最难的部分。' },
   'tools.solopreneur-activation-rate-calculator.faq.0.q': { en: 'What is the "aha-moment"?', zh: '什么是"顿悟时刻"？' },
@@ -2944,7 +2944,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-stickiness-calculator.how_to_use.3': { en: 'Days-per-week column reveals the average user behavior (e.g. 0.9 = users open ~once a week).', zh: '"每周天数"列揭示典型用户行为（例如 0.9 = 用户大约每周打开一次）。' },
   'tools.solopreneur-stickiness-calculator.how_to_use.4': { en: 'Combine with Cohort Retention (P6) to identify WHICH user segment is non-sticky.', zh: '结合同期群留存（P6）找出哪类用户群体粘性偏低。' },
   'tools.solopreneur-stickiness-calculator.input.DAU.label': { en: 'Daily Active Users (today)', zh: '日活跃用户数（今日）' },
-  'tools.solopreneur-time-to-value-calculator.title': { en: 'Time-to-Value Calculator', zh: '价值实现时间（TTV）计算器' },
+  'tools.solopreneur-time-to-value-calculator.title': { en: "Time-to-Value Calculator — Free Median + p90 Onboarding Time (2026)", zh: "价值实现时间计算器 — 对比中位数与 p90 天数（2026）" },
   'tools.solopreneur-time-to-value-calculator.description': { en: 'Measure median time from signup to first value moment (TTV). See health bands, what-if (onboarding improvements, friction removal), break-even TTV, and percentile distribution (P50/P75/P90). Health: 🟢 ≤5min · 🟡 5–30min · 🟠 30min–2hr · 🔴 >2hr.', zh: '衡量从注册到首个价值时刻的中位时间（TTV）。查看健康分级、What-If（引导改进、消除摩擦）、盈亏平衡 TTV 和百分位分布（P50/P75/P90）。健康分级：🟢 ≤5分钟 · 🟡 5–30分钟 · 🟠 30分钟–2小时 · 🔴 >2小时。' },
   'tools.solopreneur-time-to-value-calculator.faq.0.a': { en: 'The time from signup (or first session) to the moment the user reaches their first "aha" - the action that correlates with retention. Lower = better.', zh: '从注册（或首次会话）到用户首次"顿悟"——即与留存高度相关的关键行为——之间的时间。TTV 越短越好。' },
   'tools.solopreneur-time-to-value-calculator.faq.0.q': { en: 'What is TTV (Time-to-Value)?', zh: '什么是 TTV（价值实现时间）？' },
@@ -3006,7 +3006,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-fully-loaded-employee-cost-calculator.how_to_use.3': { en: 'Estimate overhead as 10-20% of base (equipment $2-5K, software $3-8K, mgmt allocation varies).', zh: '按基本工资的 10-20% 估算管理费用（设备 2000-5000 美元、软件 3000-8000 美元、管理分摊因公司而异）。' },
   'tools.solopreneur-fully-loaded-employee-cost-calculator.how_to_use.4': { en: 'Read the multiplier band, then identify the largest component for negotiation.', zh: '查看乘数区间，然后识别占比最大的项作为协商切入点。' },
   'tools.solopreneur-fully-loaded-employee-cost-calculator.input.base_salary.label': { en: 'Annual base salary', zh: '年度基本工资' },
-  'tools.solopreneur-time-to-productivity-calculator.title': { en: 'Time to Productivity Calculator', zh: '达到生产力的时间计算器' },
+  'tools.solopreneur-time-to-productivity-calculator.title': { en: "Time to Productivity Calculator — Free Ramp Weeks + Role Complexity (2026)", zh: "新员工上手时间计算器 — 按岗位预测爬坡周期（2026）" },
   'tools.solopreneur-time-to-productivity-calculator.description': { en: 'Measure ramp time to full productivity by role level (junior/mid/senior). See health bands, what-if (onboarding investment), break-even ramp days, and cost-of-ramp calculation. Health: 🟢 ≤60 days · 🟡 60–90 · 🟠 90–150 · 🔴 >150.', zh: '按职级（初级/中级/高级）衡量达到完全生产力的磨合期。查看健康分级、What-If（入职投入）、盈亏平衡爬坡天数和爬坡成本计算。健康分级：🟢 ≤60 天 · 🟡 60–90 · 🟠 90–150 · 🔴 >150。' },
   'tools.solopreneur-time-to-productivity-calculator.faq.0.a': { en: 'A new hire is "productive" when they are contributing at the level expected for their role — usually measured by reaching OKR targets, shipping independent work, or hitting ramp-stage review milestones. Different companies use different definitions; pick one and stick with it.', zh: '当新员工达到该岗位预期的产出水平时即为"具备生产力"，通常以达成 OKR 目标、独立交付工作或完成上手阶段评审里程碑来衡量。不同公司定义不同，关键是选定一种并坚持下去。' },
   'tools.solopreneur-time-to-productivity-calculator.faq.0.q': { en: 'What counts as "productivity"?', zh: '什么算作"达到生产力"？' },
@@ -3048,7 +3048,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-productivity-ramp-curve-calculator.how_to_use.4': { en: 'Read the P50 month as % of months_to_full — the band tells you how steep the ramp is.', zh: '将 P50 出现月作为 months_to_full 的百分比读出 — 该比例反映上手的陡峭程度。' },
   'tools.solopreneur-productivity-ramp-curve-calculator.input.curve_shape.label': { en: 'Curve shape', zh: '曲线形状' },
   'tools.solopreneur-productivity-ramp-curve-calculator.input.monthly_cost.label': { en: 'Fully-loaded monthly cost', zh: '完全加载月度成本' },
-  'tools.solopreneur-comp-banding-calculator.title': { en: 'Compensation Banding Calculator', zh: '薪酬区间计算器' },
+  'tools.solopreneur-comp-banding-calculator.title': { en: "Compensation Banding Calculator — Free Salary Percentile + Market Band (2026)", zh: "薪酬区间计算器 — 对比薪资百分位与市场档位（2026）" },
   'tools.solopreneur-comp-banding-calculator.description': { en: 'Build salary bands by level × location: min/midpoint/max with percentile positioning. See health bands, what-if (band range, geo adjustment), break-even mid-to-max spread, and competitive benchmark. Health: 🟢 band range 30–40% · 🟡 25–30% or 40–50% · 🟠 20–25% or 50–60% · 🔴 <20% or >60%.', zh: '按职级 × 地区建立薪酬区间：最小值/中点/最大值及百分位定位。查看健康分级、What-If（区间宽度、地区调整）、盈亏平衡中点-最大值差距和竞争对标。健康分级：🟢 区间宽度 30–40% · 🟡 25–30% 或 40–50% · 🟠 20–25% 或 50–60% · 🔴 <20% 或 >60%。' },
   'tools.solopreneur-comp-banding-calculator.faq.0.a': { en: 'Three primary sources: (1) Pave — paid comp database with role-level cuts by company size, geo, and industry. (2) Levels.fyi — free for tech roles, especially engineering. (3) Carta — for startup-stage equity + cash data. For non-tech roles, BLS OES wage data by occupation is a fallback.', zh: '三个主要来源：（1）Pave — 付费薪酬数据库，按公司规模、地域、行业划分岗位。（2）Levels.fyi — 技术岗位免费，尤其工程岗位。（3）Carta — 创业阶段的股权 + 现金数据。非技术岗位可使用 BLS OES 按职业统计的工资数据作为替代。' },
   'tools.solopreneur-comp-banding-calculator.faq.0.q': { en: 'Where do I get P25/P50/P75 market data?', zh: '从哪里获取 P25/P50/P75 市场数据？' },
@@ -3089,7 +3089,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-equity-refresh-calculator.how_to_use.4': { en: 'Select role criticality — High/Med/Low maps to 15%/8%/3% of pool.', zh: '选择岗位关键度 — 高/中/低 分别对应池的 15%/8%/3%。' },
   'tools.solopreneur-equity-refresh-calculator.how_to_use.5': { en: 'Read the band, then check What-If for what a criticality bump would do.', zh: '查看结果区间，并通过 What-If 分析关键度上调带来的变化。' },
   'tools.solopreneur-equity-refresh-calculator.input.current_shares.label': { en: 'Employee current shares', zh: '员工当前持股数' },
-  'tools.solopreneur-attrition-cost-calculator.title': { en: 'Attrition Cost Calculator', zh: '离职成本计算器' },
+  'tools.solopreneur-attrition-cost-calculator.title': { en: "Attrition Cost Calculator — Free Turnover + Replacement Cost (2026)", zh: "离职成本计算器 — 测算离职损失与补员成本（2026）" },
   'tools.solopreneur-attrition-cost-calculator.description': { en: 'Quantify the true cost of an employee leaving: recruiting + onboarding + ramp + lost output + cultural impact. See health bands, what-if (tenure, replacement time), break-even retention rate, and annualized attrition cost. Health: 🟢 <50% salary cost · 🟡 50–100% · 🟠 100–200% · 🔴 >200%.', zh: '量化员工离职的真实成本：招聘 + 入职 + 爬坡 + 产出损失 + 文化影响。查看健康分级、What-If（任期、替换时间）、盈亏平衡留存率和年化离职成本。健康分级：🟢 <50% 工资成本 · 🟡 50–100% · 🟠 100–200% · 🔴 >200%。' },
   'tools.solopreneur-attrition-cost-calculator.faq.0.a': { en: 'Three components: (1) Recruiting cost — recruiter fees, job board, interview time, signing bonus. (2) Ramp cost — the new hire takes weeks to reach productivity, during which the team is short-handed. (3) Lost productivity cost — the team and the leaver\'s network produce less during transition. P11-6 captures all three.', zh: '三部分：（1）招聘成本 — 招聘人员费、招聘网站、面试时间、签约奖金。（2）上手成本 — 新员工需要数周才能达到产出，期间团队人手不足。（3）生产力损失成本 — 团队及离职者的关系网络在过渡期产出下降。P11-6 同时覆盖这三部分。' },
   'tools.solopreneur-attrition-cost-calculator.faq.0.q': { en: 'What does "attrition cost" include?', zh: '"员工流失成本"包含哪些部分？' },
@@ -3152,7 +3152,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-first-response-time-calculator.how_to_use.3': { en: 'Use the What-If and Break-Even sections to estimate how many tier percentage-points must improve to reach the next operating level.', zh: '用 What-If 和盈亏平衡板块估算需要提升多少百分点才能进入下一档。' },
   'tools.solopreneur-first-response-time-calculator.how_to_use.4': { en: 'Investigate the weakest tier first; chronic T1 misses usually mean queue overflow or shift coverage gaps.', zh: '优先排查最弱的层级；T1 长期未达标通常意味着队列积压或班次覆盖不足。' },
   'tools.solopreneur-first-response-time-calculator.input.t1_attainment.label': { en: 'T1 in-SLA attainment (%)', zh: 'T1 SLA 达成率（%）' },
-  'tools.solopreneur-resolution-time-calculator.title': { en: 'Resolution Time Calculator', zh: '解决时间计算器' },
+  'tools.solopreneur-resolution-time-calculator.title': { en: "Resolution Time Calculator — Free Median + p90 + SLA Attainment (2026)", zh: "解决时间计算器 — 追踪中位数、p90 与 SLA 达标率（2026）" },
   'tools.solopreneur-resolution-time-calculator.description': { en: 'Measure median resolution time per tier (T1/T2/T3) and SLA attainment. See health bands, what-if (backlog, staffing), break-even median time, and percentile distribution (P50/P90). Health: 🟢 ≤4hr median · 🟡 4–12hr · 🟠 12–24hr · 🔴 >24hr.', zh: '衡量每个层级（T1/T2/T3）的中位解决时间和 SLA 达成率。查看健康分级、What-If（积压、人力配置）、盈亏平衡中位时间和百分位分布（P50/P90）。健康分级：🟢 ≤4小时 中位 · 🟡 4–12小时 · 🟠 12–24小时 · 🔴 >24小时。' },
   'tools.solopreneur-resolution-time-calculator.faq.0.a': { en: 'It is the share of tickets that are fully resolved within their promised resolution time window — distinct from first response SLA, which only counts the initial reply.', zh: '指在承诺的解决时间窗口内完全解决的工单占比——不同于首次响应 SLA（后者只统计初次回复）。' },
   'tools.solopreneur-resolution-time-calculator.faq.0.q': { en: 'What is in-SLA resolution attainment?', zh: '什么是 SLA 内解决达成率？' },
@@ -3236,7 +3236,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-support-capacity-planning-calculator.input.avg_handle_time_min.label': { en: 'Average handle time (minutes)', zh: '平均处理时长（分钟）' },
 
   // ===== K: Knowledge =====
-  'tools.solopreneur-kb-coverage-rate-calculator.title': { en: 'KB Coverage Rate Calculator', zh: '知识库覆盖率计算器' },
+  'tools.solopreneur-kb-coverage-rate-calculator.title': { en: "KB Coverage Rate Calculator — Free Content Gap + Deflection Tracker (2026)", zh: "知识库覆盖率计算器 — 发现内容缺口与分流机会（2026）" },
   'tools.solopreneur-kb-coverage-rate-calculator.description': { en: 'Measure knowledge base coverage: tickets with matching KB articles / total tickets. See health bands, what-if (article additions), break-even coverage for deflection target, and gap analysis by topic. Health: 🟢 ≥70% · 🟡 50–70% · 🟠 30–50% · 🔴 <30%.', zh: '衡量知识库覆盖率：匹配到知识库文章的工单 / 总工单。查看健康分级、What-If（新增文章）、分流目标的盈亏平衡覆盖率和按主题的差距分析。健康分级：🟢 ≥70% · 🟡 50–70% · 🟠 30–50% · 🔴 <30%。' },
   'tools.solopreneur-kb-coverage-rate-calculator.faq.0.a': { en: 'Coverage rate = (tickets with a matching KB article) / (total inbound tickets). It measures the breadth of your KB content vs. the real questions customers ask. TSIA 2024 reports mid-market B2B SaaS at 50-75% coverage; >85% indicates a mature KB.', zh: '覆盖率 = (有 KB 文章匹配的工单) ÷ (呼入工单总数)。它衡量 KB 内容相对于客户真实问题的覆盖广度。TSIA 2024 报告显示中型 B2B SaaS 覆盖率为 50-75%；>85% 表示 KB 已成熟。' },
   'tools.solopreneur-kb-coverage-rate-calculator.faq.0.q': { en: 'What is KB coverage rate?', zh: '什么是 KB 覆盖率？' },
@@ -3255,7 +3255,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-kb-coverage-rate-calculator.how_to_use.2': { en: 'Enter total KB articles — admin count from your KB platform.', zh: '输入 KB 文章总数——KB 平台的管理后台计数。' },
   'tools.solopreneur-kb-coverage-rate-calculator.how_to_use.3': { en: 'Read the coverage rate band — 🟢 Excellent ≥85% · 🟡 Good 60-85% · 🟠 Warning 40-60% · 🔴 Critical <40%.', zh: '查看覆盖率健康等级——🟢 优秀 ≥85% · 🟡 良好 60-85% · 🟠 预警 40-60% · 🔴 严重 <40%。' },
   'tools.solopreneur-kb-coverage-rate-calculator.how_to_use.4': { en: 'Use the Snapshot line to identify gap_tickets (= articles needed) and feed to writers as a monthly backlog.', zh: '用快照行识别缺口工单（= 所需文章数），作为写手的月度积压。' },
-  'tools.solopreneur-article-freshness-calculator.title': { en: 'Article Freshness Calculator', zh: '文章新鲜度计算器' },
+  'tools.solopreneur-article-freshness-calculator.title': { en: "Article Freshness Calculator — Free Stale Content + Update Priority (2026)", zh: "文章时效性计算器 — 识别过期内容与更新优先级（2026）" },
   'tools.solopreneur-article-freshness-calculator.description': { en: 'Measure the freshness of KB articles: % within refresh SLA, % stale, median age. See health bands, what-if (refresh rate), break-even freshness for trust target, and stale article list. Health: 🟢 ≥80% fresh · 🟡 60–80% · 🟠 40–60% · 🔴 <40%.', zh: '衡量知识库文章的新鲜度：在刷新 SLA 内的百分比、过时百分比、中位年龄。查看健康分级、What-If（刷新频率）、信任目标的盈亏平衡新鲜度和过时文章列表。健康分级：🟢 ≥80% 新鲜 · 🟡 60–80% · 🟠 40–60% · 🔴 <40%。' },
   'tools.solopreneur-article-freshness-calculator.faq.0.a': { en: 'The % of KB articles updated within the last 12 months. Stale articles contain outdated steps, screenshots, or product behavior - customers following them hit dead ends and reopen tickets. NN/g recommends 70%+ as the mature target.', zh: 'KB 中过去 12 个月内更新过的文章占比。过时的文章包含过期的步骤、截图或产品行为——客户按步骤操作会碰壁并重开工单。NN/g 推荐 70%+ 作为成熟目标。' },
   'tools.solopreneur-article-freshness-calculator.faq.0.q': { en: 'What is "article freshness"?', zh: '什么是"文章文章新鲜度"？' },
@@ -3317,7 +3317,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-deflection-quality-calculator.input.deflection_source.label': { en: 'Deflection source', zh: '分流来源' },
   'tools.solopreneur-deflection-quality-calculator.input.deflection_source.placeholder': { en: 'Both', zh: '两者' },
   'tools.solopreneur-deflection-quality-calculator.input.target_quality_pct.label': { en: 'Target quality % (no reopen)', zh: '质量目标 %（无重开）' },
-  'tools.solopreneur-documentation-roi-calculator.title': { en: 'Documentation ROI Calculator', zh: '文档 ROI 计算器' },
+  'tools.solopreneur-documentation-roi-calculator.title': { en: "Documentation ROI Calculator — Free Support Savings + Payback (2026)", zh: "文档 ROI 计算器 — 测算客服成本节省与回本周期（2026）" },
   'tools.solopreneur-documentation-roi-calculator.description': { en: 'Measure documentation ROI: deflection savings / content investment. See health bands, what-if (article cost, deflection volume), break-even article count, and annualized ROI projection. Health: 🟢 ≥400% ROI · 🟡 200–400% · 🟠 100–200% · 🔴 <100%.', zh: '衡量文档 ROI：分流节省 / 内容投入。查看健康分级、What-If（文章成本、分流数量）、盈亏平衡文章数和年化 ROI 预测。健康分级：🟢 ≥400% ROI · 🟡 200–400% · 🟠 100–200% · 🔴 <100%。' },
   'tools.solopreneur-documentation-roi-calculator.faq.0.a': { en: 'ROI = (net savings / KB team cost) × 100, where net savings = (tickets deflected × cost per ticket) - KB team annual cost. A "good" ROI is ≥ 400% — meaning every $1 spent on docs deflects $4+ in support costs. Below 200% means your docs are not pulling their weight.', zh: 'ROI = (净节省 / 知识库团队成本) × 100，其中净节省 = (偏转工单 × 每工单成本) - 知识库团队年度成本。优秀 ROI ≥ 400%——意味着每投入 $1 文档可偏转 $4 以上支持成本。低于 200% 说明文档未充分发挥价值。' },
   'tools.solopreneur-documentation-roi-calculator.faq.0.q': { en: 'How is Documentation ROI calculated?', zh: '文档 ROI 是如何计算的？' },
@@ -3361,7 +3361,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-article-helpfulness-calculator.input.helpful_votes.label': { en: 'Helpful votes (👍)', zh: '有用投票数（👍）' },
 
   // ===== L: Legal & Compliance =====
-  'tools.solopreneur-gdpr-fine-calculator.title': { en: 'GDPR Fine Risk Calculator', zh: 'GDPR 罚款风险计算器' },
+  'tools.solopreneur-gdpr-fine-calculator.title': { en: "GDPR Fine Risk Calculator — Revenue-Tier Penalty + Compliance Cost (2026)", zh: "GDPR 罚款风险计算器 — 按收入档测算罚款与成本（2026）" },
   'tools.solopreneur-gdpr-fine-calculator.description': { en: 'Estimate GDPR Art. 83 fine risk based on violation tier (4%/2%/1%/0.5% of revenue), industry multiplier, and repeat-offender uplift. See health bands, what-if (tier, multiplier), break-even reduction, and annualized exposure. Health (HIGHER on ratio): 🟢 <0.25% · 🟡 0.25–1% · 🟠 1–2% · 🔴 >2%.', zh: '基于违规等级（年收入的 4%/2%/1%/0.5%）、行业乘数和累犯上浮估算 GDPR Art. 83 罚款风险。查看健康分级、What-If（等级、乘数）、盈亏平衡削减幅度和年化敞口。健康分级（按比率越高越严重）：🟢 <0.25% · 🟡 0.25–1% · 🟠 1–2% · 🔴 >2%。' },
   'tools.solopreneur-gdpr-fine-calculator.faq.0.a': { en: 'GDPR fine risk quantifies your annualized exposure to fines under GDPR Art. 83. The cap is 4% of global annual revenue (Art. 83(5)) for substantive violations or 2% (Art. 83(4)) for procedural violations. Actual fines depend on case-specific factors (per ICO 2024 guidance).', zh: 'GDPR 罚款风险量化你根据 GDPR 第 83 条面临的年化罚款敞口。实体违规上限为全球年营收的 4%（第 83 条第 5 款），程序性违规上限为 2%（第 83 条第 4 款）。实际罚款因个案因素而异（依据 ICO 2024 年指南）。' },
   'tools.solopreneur-gdpr-fine-calculator.faq.0.q': { en: 'What is GDPR fine risk?', zh: '什么是 GDPR 罚款风险？' },
@@ -3382,7 +3382,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-gdpr-fine-calculator.how_to_use.4': { en: 'Read the band — 🟢 Excellent <0.25% · 🟡 Good 0.25-1% · 🟠 Warning 1-2% · 🔴 Critical ≥2%.', zh: '查看结果区间 — 🟢 优秀 <0.25% · 🟡 良好 0.25-1% · 🟠 警告 1-2% · 🔴 严重 ≥2%。' },
   'tools.solopreneur-gdpr-fine-calculator.how_to_use.5': { en: 'Pair with L-5 (Breach Notification) to compute true incident cost.', zh: '与 L-5（数据泄露通知）搭配，计算真实事件成本。' },
   'tools.solopreneur-gdpr-fine-calculator.input.annual_revenue_global.label': { en: 'Annual global revenue (€)', zh: '年度全球营收（欧元）' },
-  'tools.solopreneur-dsar-cost-calculator.title': { en: 'DSAR Processing Cost Calculator', zh: 'DSAR 处理成本计算器' },
+  'tools.solopreneur-dsar-cost-calculator.title': { en: "DSAR Processing Cost Calculator — GDPR Hours + Cost per Request (2026)", zh: "DSAR 处理成本计算器 — 按工时与请求量测算（2026）" },
   'tools.solopreneur-dsar-cost-calculator.description': { en: 'Calculate the per-DSAR and annual cost of handling Data Subject Access Requests (Art. 15 GDPR / CCPA). See health bands, what-if (automation %), break-even automation rate, and per-tier breakdown. Health (HIGHER on annual cost): 🟢 <€25K · 🟡 €25K–€100K · 🟠 €100K–€300K · 🔴 >€300K.', zh: '计算处理数据主体访问请求（GDPR Art. 15 / CCPA）的单次和年度成本。查看健康分级、What-If（自动化率）、盈亏平衡自动化率和分层拆分。健康分级（按年度成本递增）：🟢 <€25K · 🟡 €25K–€100K · 🟠 €100K–€300K · 🔴 >€300K。' },
   'tools.solopreneur-dsar-cost-calculator.faq.0.a': { en: 'DSAR (Data Subject Access Request) processing cost = annual labor cost to fulfill GDPR Art. 15 access requests. Each request takes manual hours × DPO hourly rate, scaled by annual request volume minus automation savings. Mid-market B2B SaaS averages 30–100 DSARs/mo (IAPP 2024 Privacy Operations Survey).', zh: 'DSAR（数据主体访问请求）处理成本 = 满足 GDPR 第 15 条访问请求的年度人工成本。每个请求耗时 × DPO 时薪，乘以年请求量，再扣除自动化节省。中端市场 B2B SaaS 平均每月 30-100 次 DSAR（IAPP 2024 隐私运营调查）。' },
   'tools.solopreneur-dsar-cost-calculator.faq.0.q': { en: 'What is DSAR processing cost?', zh: '什么是 DSAR 处理成本？' },
@@ -3403,7 +3403,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-dsar-cost-calculator.how_to_use.4': { en: 'Read the band — 🟢 Excellent <€25K · 🟡 Good €25-100K · 🟠 Warning €100-300K · 🔴 Critical ≥€300K.', zh: '查看结果区间 — 🟢 优秀 <€25K · 🟡 良好 €25-100K · 🟠 警告 €100-300K · 🔴 严重 ≥€300K。' },
   'tools.solopreneur-dsar-cost-calculator.how_to_use.5': { en: 'Pair with L-6 (CMP ROI) to project savings from consent tooling; L-1 (GDPR Fine) for risk context.', zh: '与 L-6（CMP ROI）搭配，预测同意工具带来的节省；用 L-1（GDPR 罚款）做风险对照。' },
   'tools.solopreneur-dsar-cost-calculator.input.automation_pct.label': { en: 'Automation (%)', zh: '自动化比例（%）' },
-  'tools.solopreneur-consent-revenue-impact-calculator.title': { en: 'Cookie Consent Revenue Impact Calculator', zh: 'Cookie 同意收入影响计算器' },
+  'tools.solopreneur-consent-revenue-impact-calculator.title': { en: "Cookie Consent Revenue Impact Calculator — Opt-In vs Opt-Out (2026)", zh: "Cookie 同意率收入影响计算器 — 对比当前与目标（2026）" },
   'tools.solopreneur-consent-revenue-impact-calculator.description': { en: 'Quantify the revenue impact of cookie consent banners: lost tracking accuracy × ad-targeting efficiency drop. See health bands, what-if (consent rate, AOV), break-even consent rate, and annualized revenue gap. Health (INVERSE on consent gap): 🟢 <5pp gap · 🟡 5–15pp · 🟠 15–30pp · 🔴 >30pp.', zh: '量化 Cookie 同意横幅的收入影响：追踪精度损失 × 广告定向效率下降。查看健康分级、What-If（同意率、客单价）、盈亏平衡同意率和年化收入差距。健康分级（按同意差距反向）：🟢 <5pp 差距 · 🟡 5–15pp · 🟠 15–30pp · 🔴 >30pp。' },
   'tools.solopreneur-consent-revenue-impact-calculator.faq.0.a': { en: 'Cookie consent revenue impact measures the monthly/annual revenue you lose because visitors reject analytics + marketing cookies. EU/EEA traffic under GDPR ePrivacy Recital 32 must give explicit consent before non-essential cookies fire — visitors who decline convert at ~40-60% lower rates (per OneTrust 2024 benchmark).', zh: 'Cookie 同意收入影响度量因访客拒绝分析 + 营销 Cookie 而损失的每月/每年收入。GDPR ePrivacy 序言 32 要求欧盟/欧洲经济区流量在非必要 Cookie 触发前获得明确同意 — 拒绝的访客转化率低约 40-60%（依据 OneTrust 2024 基准）。' },
   'tools.solopreneur-consent-revenue-impact-calculator.faq.0.q': { en: 'What is cookie consent revenue impact?', zh: '什么是 Cookie 同意收入影响？' },
@@ -3424,7 +3424,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-consent-revenue-impact-calculator.how_to_use.4': { en: 'Read the band — 🟢 Excellent <5pp · 🟡 Good 5-15pp · 🟠 Warning 15-30pp · 🔴 Critical ≥30pp.', zh: '查看结果区间 — 🟢 优秀 <5 个百分点 · 🟡 良好 5-15 · 🟠 警告 15-30 · 🔴 严重 ≥30。' },
   'tools.solopreneur-consent-revenue-impact-calculator.how_to_use.5': { en: 'Pair with L-6 (CMP ROI) to project payback from a consent-UX upgrade.', zh: '与 L-6（CMP ROI）搭配，预测同意 UX 升级带来的回收期。' },
   'tools.solopreneur-consent-revenue-impact-calculator.input.conversion_rate_pct.label': { en: 'Conversion rate (%)', zh: '转化率（%）' },
-  'tools.solopreneur-dpa-cost-calculator.title': { en: 'DPA Negotiation Cost Calculator', zh: 'DPA 谈判成本计算器' },
+  'tools.solopreneur-dpa-cost-calculator.title': { en: "DPA Negotiation Cost Calculator — Legal Hours + Redline Cost (2026)", zh: "DPA 谈判成本计算器 — 测算法务工时与修订成本（2026）" },
   'tools.solopreneur-dpa-cost-calculator.description': { en: 'Calculate the legal cost of negotiating Data Processing Agreements (Art. 28 GDPR): per-DPA cost × annual volume × redline multiplier. See health bands, what-if (redlines, rounds), 3-path break-even, and annualized spend. Health (HIGHER on annual cost): 🟢 <€100K · 🟡 €100K–€300K · 🟠 €300K–€600K · 🔴 >€600K.', zh: '计算数据处理协议（GDPR Art. 28）谈判的法律成本：单份 DPA 成本 × 年化数量 × 修订乘数。查看健康分级、What-If（修订、轮次）、3 路径盈亏平衡和年化支出。健康分级（按年度成本递增）：🟢 <€100K · 🟡 €100K–€300K · 🟠 €300K–€600K · 🔴 >€600K。' },
   'tools.solopreneur-dpa-cost-calculator.faq.0.a': { en: 'DPA negotiation cost is the annual legal labor spent reviewing and redlining Data Processing Agreements: quarterly DPA volume × 4 × negotiation rounds × hours per round × legal hourly rate × redline complexity multiplier.', zh: 'DPA（数据处理协议）谈判成本是审核和修订 DPA 的年度法律人力：每季度 DPA 数量 × 4 × 谈判轮次 × 每轮工时 × 法律时薪 × 修订复杂度乘数。' },
   'tools.solopreneur-dpa-cost-calculator.faq.0.q': { en: 'What is DPA negotiation cost?', zh: '什么是 DPA 谈判成本？' },
@@ -3445,7 +3445,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-dpa-cost-calculator.how_to_use.4': { en: 'Enter average substantive redlines per DPA; each adds 5% to base effort.', zh: '输入每份 DPA 平均的实质性修订条数；每条增加 5% 基础工作量。' },
   'tools.solopreneur-dpa-cost-calculator.how_to_use.5': { en: 'Review annual cost, the 2-round template-first scenario, and the easiest path below €100K/year.', zh: '审阅年度成本、2 轮模板优先场景以及低于 €100K/年的最简路径。' },
   'tools.solopreneur-dpa-cost-calculator.input.avg_negotiation_rounds.label': { en: 'Average negotiation rounds', zh: '平均谈判轮次' },
-  'tools.solopreneur-breach-notification-cost-calculator.title': { en: 'Data Breach Notification Cost Calculator', zh: '数据泄露通知成本计算器' },
+  'tools.solopreneur-breach-notification-cost-calculator.title': { en: "Data Breach Notification Cost Calculator — Records + Response Cost (2026)", zh: "数据泄露通知成本计算器 — 按记录数测算响应成本（2026）" },
   'tools.solopreneur-breach-notification-cost-calculator.description': { en: 'Estimate the cost of a data breach notification (Art. 33/34 GDPR): per-subject notification + remediation + regulatory fine. See health bands, what-if (subject count), 3-path break-even with feasibility gate, and annualized cost. Health (HIGHER on annual cost): 🟢 <€50K · 🟡 €50K–€250K · 🟠 €250K–€1M · 🔴 >€1M.', zh: '估算数据泄露通知成本（GDPR Art. 33/34）：每个主体的通知 + 修复 + 监管罚款。查看健康分级、What-If（主体数量）、带可行性门槛的 3 路径盈亏平衡和年化成本。健康分级（按年度成本递增）：🟢 <€50K · 🟡 €50K–€250K · 🟠 €250K–€1M · 🔴 >€1M。' },
   'tools.solopreneur-breach-notification-cost-calculator.faq.0.a': { en: 'Data breach notification cost is the annualized cost of notifying data subjects and remediating systems after a personal data breach, under GDPR Art. 33 (notify supervisory authority within 72h) and Art. 34 (notify data subjects without undue delay if high risk). The model combines breach frequency × per-breach cost (notification + remediation).', zh: '数据泄露通知成本是在个人数据泄露后通知数据主体和修复系统的年化成本，依据 GDPR 第 33 条（72 小时内通知监管机构）和第 34 条（高风险时立即通知数据主体）。该模型综合泄露频率 × 单次泄露成本（通知 + 修复）。' },
   'tools.solopreneur-breach-notification-cost-calculator.faq.0.q': { en: 'What is data breach notification cost?', zh: '什么是数据泄露通知成本？' },
@@ -3466,7 +3466,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-breach-notification-cost-calculator.how_to_use.4': { en: 'Read the band — 🟢 Excellent <€50K/yr · 🟡 Good €50-250K · 🟠 Warning €250K-1M · 🔴 Critical ≥€1M.', zh: '查看结果区间 — 🟢 优秀 <€50K/年 · 🟡 良好 €50-250K · 🟠 警告 €250K-1M · 🔴 严重 ≥€1M。' },
   'tools.solopreneur-breach-notification-cost-calculator.how_to_use.5': { en: 'Pair with L-1 (GDPR Fine) + R-1 (NRR) to model true single-incident cost including fine + churn.', zh: '与 L-1（GDPR 罚款）+ R-1（NRR）搭配，建模包含罚款 + 流失的真实单事件成本。' },
   'tools.solopreneur-breach-notification-cost-calculator.input.breaches_per_year.label': { en: 'Breaches per year', zh: '每年泄露次数' },
-  'tools.solopreneur-cmp-roi-calculator.title': { en: 'CMP ROI Calculator', zh: 'CMP 平台 ROI 计算器' },
+  'tools.solopreneur-cmp-roi-calculator.title': { en: "CMP ROI Calculator — DSAR Automation Savings + Payback (2026)", zh: "CMP ROI 计算器 — DSAR 自动化收益与回本（2026）" },
   'tools.solopreneur-cmp-roi-calculator.description': { en: 'Measure Consent Management Platform ROI: consent uplift revenue - CMP licensing - operational cost. See health bands, what-if (CMP cost, uplift %), 3-path break-even, and annualized net. Health (HIGHER on ROI): 🟢 ≥400% · 🟡 150–400% · 🟠 50–150% · 🔴 <50%.', zh: '衡量同意管理平台（CMP）ROI：同意率提升收入 - CMP 许可费用 - 运营成本。查看健康分级、What-If（CMP 成本、提升率）、3 路径盈亏平衡和年化净额。健康分级（按 ROI 递增）：🟢 ≥400% · 🟡 150–400% · 🟠 50–150% · 🔴 <50%。' },
   'tools.solopreneur-cmp-roi-calculator.faq.0.a': { en: 'CMP (Consent Management Platform) ROI measures the annual return on a privacy-tech platform investment: DSAR automation savings (volume × hours × rate × uplift %) minus platform cost, expressed as a percentage. Mid-market B2B SaaS CMPs typically run €500–€3000/month (OneTrust, Didomi, Cookiebot, Iubenda per 2024 benchmarks) and produce 100–500% annual ROI through labor savings.', zh: 'CMP（同意管理平台）ROI 度量隐私科技平台投资的年度回报：DSAR 自动化节省（数量 × 工时 × 时薪 × 提升比例）减去平台成本，以百分比表示。中端市场 B2B SaaS 的 CMP 通常 €500-€3000/月（OneTrust、Didomi、Cookiebot、Iubenda 2024 基准），通过人力节省产生 100-500% 年化 ROI。' },
   'tools.solopreneur-cmp-roi-calculator.faq.0.q': { en: 'What is CMP ROI?', zh: '什么是 CMP ROI？' },
@@ -3492,7 +3492,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cmp-roi-calculator.input.automation_uplift_pct.label': { en: 'CMP automation uplift (%)', zh: 'CMP 自动化提升比例（%）' },
 
   // ===== S: Sales =====
-  'tools.solopreneur-pipeline-value-calculator.title': { en: 'Pipeline Value Calculator', zh: '销售渠道价值计算器' },
+  'tools.solopreneur-pipeline-value-calculator.title': { en: "Pipeline Value Calculator — Free Weighted Deal Forecast (2026)", zh: "销售管道价值计算器 — 加权预测成交金额（2026）" },
   'tools.solopreneur-pipeline-value-calculator.description': { en: 'Calculate weighted pipeline value: deal amount × stage probability × segment weighting. See health bands, what-if (win rate, stage migration), break-even pipeline for quota, and forecast accuracy. Health: 🟢 coverage ≥3x quota · 🟡 2–3x · 🟠 1–2x · 🔴 <1x.', zh: '计算加权销售渠道价值：交易金额 × 阶段概率 × 分层权重。查看健康分级、What-If（赢率、阶段迁移）、指标的盈亏平衡销售渠道和预测准确度。健康分级：🟢 覆盖 ≥3x 指标 · 🟡 2–3x · 🟠 1–2x · 🔴 <1x。' },
   'tools.solopreneur-pipeline-value-calculator.faq.0.a': { en: 'Pipeline value is the total dollar amount of all deals in your sales pipeline, weighted by the probability each deal will close at its current stage. A weighted pipeline gives you a realistic forecast, while a raw (nominal) pipeline shows your theoretical maximum.', zh: '管道价值是销售管道中所有合同的美元总额,按各阶段当前的成交概率加权。加权管道给出更现实的预测,原始(名义)管道则反映理论最大值。' },
   'tools.solopreneur-pipeline-value-calculator.faq.0.q': { en: 'What is a sales pipeline value?', zh: '什么是销售管道价值？' },
@@ -3510,7 +3510,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-pipeline-value-calculator.how_to_use.3': { en: 'Use the What-If section to model improvements: faster Closing-stage conversion, more Proposal deals, higher deal size.', zh: '通过 What-If 部分建模改进:加快 Closing 阶段转化、增加 Proposal 商机数、提升合同金额。' },
   'tools.solopreneur-pipeline-value-calculator.how_to_use.4': { en: 'Compare to sales velocity (P8-2) to identify whether your bottleneck is volume, size, win rate, or cycle time.', zh: '对比销售速度(P8-2)以识别瓶颈是数量、规模、赢率还是周期。' },
   'tools.solopreneur-pipeline-value-calculator.input.closingCount.label': { en: 'Closing deals', zh: 'Closing 阶段商机数' },
-  'tools.solopreneur-sales-velocity-calculator.title': { en: 'Sales Velocity Calculator', zh: '销售速度计算器' },
+  'tools.solopreneur-sales-velocity-calculator.title': { en: "Sales Velocity Calculator — Pipeline × Win Rate ÷ Cycle Days (2026)", zh: "销售速度计算器 — 按管道、赢单率与周期测算（2026）" },
   'tools.solopreneur-sales-velocity-calculator.description': { en: 'Measure sales velocity: #opps × ACV × win rate / sales cycle length. See health bands, what-if (each lever), break-even velocity for revenue target, and benchmark vs industry. Health: 🟢 ≥$100K/day · 🟡 $50–100K · 🟠 $20–50K · 🔴 <$20K.', zh: '衡量销售速度：机会数 × 平均合同金额 × 赢率 / 销售周期长度。查看健康分级、What-If（每个杠杆）、收入目标的盈亏平衡速度和对标行业。健康分级：🟢 ≥$100K/天 · 🟡 $50–100K · 🟠 $20–50K · 🔴 <$20K。' },
   'tools.solopreneur-sales-velocity-calculator.faq.0.a': { en: 'Sales velocity measures how fast your pipeline generates revenue. Formula: (number of opportunities × average deal size × win rate) ÷ sales cycle length (days). The result is dollars of revenue generated per day — the fundamental sales productivity metric for B2B SaaS and consultative sales.', zh: '销售速度衡量你的管道产生收入的快慢。公式:(商机数 × 平均合同金额 × 赢率) ÷ 销售周期(天)。结果为每天产出的收入美元数,是 B2B SaaS 与顾问式销售的基础生产力指标。' },
   'tools.solopreneur-sales-velocity-calculator.faq.0.q': { en: 'What is sales velocity?', zh: '什么是销售速度？' },
@@ -3566,7 +3566,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-win-rate-by-stage-calculator.how_to_use.3': { en: 'Use the Break-Even section to see what stage rate you need at bottleneck or Negotiation→Won to reach the 🟢 25% Excellent band.', zh: '查看 Break-Even 部分:要达到 🟢 25% 优秀区间,瓶颈或 Negotiation→成交需要怎样的阶段率。' },
   'tools.solopreneur-win-rate-by-stage-calculator.how_to_use.4': { en: 'Pair with sales velocity (P8-2) to identify whether the bottleneck or throughput is the bigger lever after the funnel is fixed.', zh: '结合销售速度(P8-2)判断漏斗修复后瓶颈与吞吐量哪个杠杆更大。' },
   'tools.solopreneur-win-rate-by-stage-calculator.input.negAdvanced.label': { en: 'Negotiation → Won', zh: 'Negotiation → 成交数' },
-  'tools.solopreneur-quota-attainment-calculator.title': { en: 'Quota Attainment Calculator', zh: '指标完成率计算器' },
+  'tools.solopreneur-quota-attainment-calculator.title': { en: "Quota Attainment Calculator — Free Sales Target + Gap Tracker (2026)", zh: "指标完成率计算器 — 追踪销售目标与差额（2026）" },
   'tools.solopreneur-quota-attainment-calculator.description': { en: 'Measure rep quota attainment: actual bookings / quota. See health bands, what-if (territory, ramp), break-even attainment for tenure, and percentile distribution (P25/P50/P75). Health: 🟢 ≥100% · 🟡 80–100% · 🟠 50–80% · 🔴 <50%.', zh: '衡量销售代表指标完成率：实际签单 / 指标。查看健康分级、What-If（区域、爬坡）、任期的盈亏平衡完成率和百分位分布（P25/P50/P75）。健康分级：🟢 ≥100% · 🟡 80–100% · 🟠 50–80% · 🔴 <50%。' },
   'tools.solopreneur-quota-attainment-calculator.faq.0.a': { en: 'Quota attainment is the percentage of your sales quota (target) achieved in a given period — usually a year. Calculated as (actual revenue / quota) × 100. A 100% attainment means you hit your number exactly; 120% means you exceeded by 20%; 80% means you are 20% short.', zh: '配额达成率是指在给定周期(通常为年度)内完成的销售配额(目标)百分比。算法:(实际收入 / 配额) × 100。100% 意味着刚好达标;120% 为超额 20%;80% 为落后 20%。' },
   'tools.solopreneur-quota-attainment-calculator.faq.0.q': { en: 'What is quota attainment?', zh: '什么是配额达成率？' },
@@ -3585,7 +3585,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-quota-attainment-calculator.how_to_use.4': { en: 'Use the What-If section to model 3 scenarios: maintain current pace, hit required pace, or accelerate 20%.', zh: '通过 What-If 部分建模 3 种情景:维持当前节奏、达到所需节奏、加速 20%。' },
   'tools.solopreneur-quota-attainment-calculator.how_to_use.5': { en: 'Use the Break-Even section to see the at-pace milestone (annualQuota × monthsElapsed/12) and the gap to closing it.', zh: '查看 Break-Even 部分,了解节奏达标里程碑(年度配额 × 已过去月数/12)以及与其差距。' },
   'tools.solopreneur-quota-attainment-calculator.input.actualRevenue.label': { en: 'Revenue closed (USD)', zh: '已成交收入 (USD)' },
-  'tools.solopreneur-pipeline-coverage-calculator.title': { en: 'Pipeline Coverage Calculator', zh: '销售渠道覆盖率计算器' },
+  'tools.solopreneur-pipeline-coverage-calculator.title': { en: "Pipeline Coverage Calculator — Open Pipeline ÷ Quota + Gap (2026)", zh: "销售管道覆盖率计算器 — 测算配额覆盖与缺口（2026）" },
   'tools.solopreneur-pipeline-coverage-calculator.description': { en: 'Measure pipeline coverage: open pipeline value / remaining quota. See health bands, what-if (win rate, ACV), break-even coverage for forecast confidence, and gap to target. Health: 🟢 ≥3x · 🟡 2–3x · 🟠 1–2x · 🔴 <1x.', zh: '衡量销售渠道覆盖率：开放销售渠道价值 / 剩余指标。查看健康分级、What-If（赢率、ACV）、预测置信度的盈亏平衡覆盖率和与目标的差距。健康分级：🟢 ≥3x · 🟡 2–3x · 🟠 1–2x · 🔴 <1x。' },
   'tools.solopreneur-pipeline-coverage-calculator.faq.0.a': { en: 'Pipeline coverage is the ratio of your total open pipeline value to your sales quota. A coverage ratio of 3.0x means you have $3 of pipeline for every $1 of quota — the B2B SaaS benchmark for reliable quota attainment. Anything below 1.0x means you do not have enough pipeline to cover quota even at a 100% win rate.', zh: '管道覆盖率是当前开放管道价值与销售配额的比值。覆盖率为 3.0x 意味着每 1 美元配额对应 3 美元的管道——这是 B2B SaaS 可靠达成配额的标准基准。低于 1.0x 意味着即便 100% 赢率也无法覆盖配额。' },
   'tools.solopreneur-pipeline-coverage-calculator.faq.0.q': { en: 'What is pipeline coverage?', zh: '什么是管道覆盖率？' },
@@ -3649,7 +3649,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-burn-multiple-rule-of-40-calculator.input.netBurn.label': { en: 'Net Burn ($)', zh: '净烧钱（$）' },
 
   // ===== F: Investment & Real Estate backfill =====
-  'tools.solopreneur-compound-interest-calculator.title': { en: 'Compound Interest Calculator', zh: '复利计算器' },
+  'tools.solopreneur-compound-interest-calculator.title': { en: "Compound Interest Calculator — Principal + Contributions + Growth (2026)", zh: "复利计算器 — 测算本金、定投与长期增长（2026）" },
   'tools.solopreneur-compound-interest-calculator.description': { en: 'Model compound interest growth: principal × (1 + rate)^years, with monthly contribution and inflation adjustment. See health bands, what-if (rate, term), break-even contribution, and milestone (10x, 100x). Health: 🟢 real return ≥7% · 🟡 3–7% · 🟠 0–3% · 🔴 <0%.', zh: '建模复利增长：本金 ×（1 + 利率）^年数，含月度追加和通胀调整。查看健康分级、What-If（利率、期限）、盈亏平衡追加和里程碑（10x、100x）。健康分级：🟢 实际回报 ≥7% · 🟡 3–7% · 🟠 0–3% · 🔴 <0%。' },
   'tools.solopreneur-compound-interest-calculator.faq.0.a': { en: 'Compound interest is interest calculated on the initial principal and on the accumulated interest from previous periods. Unlike simple interest (which only pays interest on the original principal), compound interest grows your money exponentially because you earn "interest on interest". The longer your money compounds, the steeper the growth curve. A $10,000 deposit at 7% compounded annually becomes $16,289 after 10 years, $76,123 after 30 years, and $199,290 after 40 years.', zh: '复利是指基于初始本金以及之前累积的利息来计算利息。与单利（只对本金付息）不同，复利让钱呈指数增长，因为你赚的是「利息的利息」。复利时间越长，增长曲线越陡。一笔 1 万美元存款按 7% 年复利计算，10 年后变成 1.63 万美元，30 年后变成 7.61 万美元，40 年后变成 19.93 万美元。' },
   'tools.solopreneur-compound-interest-calculator.faq.0.q': { en: 'What is compound interest?', zh: '什么是复利？' },
@@ -3669,7 +3669,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-compound-interest-calculator.how_to_use.5': { en: 'Review your final balance, milestone growth, and time-to-goal projections.', zh: '查看最终余额、里程碑增长和达成目标的预计时间。' },
   'tools.solopreneur-compound-interest-calculator.how_to_use.6': { en: 'Check the 5 What-If scenarios to see how small changes compound over time.', zh: '查看 5 个假设场景，看微小的变化如何随时间复利。' },
   'tools.solopreneur-compound-interest-calculator.input.annualRate.label': { en: 'Annual Interest Rate (%)', zh: '年利率（%）' },
-  'tools.solopreneur-mortgage-calculator.title': { en: 'Mortgage Calculator', zh: '按揭贷款计算器' },
+  'tools.solopreneur-mortgage-calculator.title': { en: "Mortgage Calculator — Monthly Payment + Interest + Amortization (2026)", zh: "房贷计算器 — 测算月供、利息与还款计划（2026）" },
   'tools.solopreneur-mortgage-calculator.description': { en: 'Calculate monthly mortgage payment: principal × rate × (1+rate)^n / ((1+rate)^n - 1). See health bands, what-if (down payment, term, rate), break-even rate, and amortization schedule. Health: 🟢 DTI ≤28% · 🟡 28–36% · 🟠 36–43% · 🔴 >43%.', zh: '计算月度按揭还款：本金 × 利率 ×（1+利率）^n /（（1+利率）^n - 1）。查看健康分级、What-If（首付、期限、利率）、盈亏平衡利率和摊销表。健康分级：🟢 负债收入比 ≤28% · 🟡 28–36% · 🟠 36–43% · 🔴 >43%。' },
   'tools.solopreneur-mortgage-calculator.faq.0.a': { en: 'Monthly payment uses the PMT formula: P × r / (1 − (1+r)^−n), where P = loan principal (home price − down payment), r = monthly interest rate (annual rate ÷ 12), and n = total months (loan term × 12). For a $400K loan at 6.5% over 30 years, the monthly P&I is ~$2,528. The formula handles zero-rate loans gracefully (returns principal/n).', zh: '月供使用 PMT 公式：P × r / (1 − (1+r)^−n)，其中 P = 贷款本金（房总价 − 首付），r = 月利率（年利率 ÷ 12），n = 总月数（贷款年限 × 12）。40 万美元贷款、6.5% 利率、30 年期，月供本息约 $2,528。公式对零利率贷款也能正确处理（返回 本金/n）。' },
   'tools.solopreneur-mortgage-calculator.faq.0.q': { en: 'How is the monthly mortgage payment calculated?', zh: '月供是如何计算的？' },
@@ -3712,7 +3712,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-rent-vs-buy-calculator.how_to_use.8': { en: 'Check the 6 time-horizon SEO rows — answer changes dramatically with commitment length.', zh: '检查 6 个时间跨度 SEO 行 — 居住期不同结论可能截然不同。' },
   'tools.solopreneur-rent-vs-buy-calculator.how_to_use.9': { en: 'Apply the 5 what-ifs to find your break-even stay duration.', zh: '应用 5 个 What-If 情景以找到盈亏平衡的居住年数。' },
   'tools.solopreneur-rent-vs-buy-calculator.input.annualAppreciation.label': { en: 'Expected Home Appreciation (%/yr)', zh: '预期房屋年增值率（%/年）' },
-  'tools.solopreneur-cap-rate-calculator.title': { en: 'Cap Rate Calculator', zh: '资本化率计算器' },
+  'tools.solopreneur-cap-rate-calculator.title': { en: "Cap Rate Calculator — NOI ÷ Property Value + Investment Yield (2026)", zh: "资本化率计算器 — 按净运营收入测算收益率（2026）" },
   'tools.solopreneur-cap-rate-calculator.description': { en: 'Calculate capitalization rate: NOI / property value. See health bands, what-if (NOI growth, value), break-even value for target cap, and market benchmark comparison. Health: 🟢 cap ≥8% · 🟡 6–8% · 🟠 4–6% · 🔴 <4%.', zh: '计算资本化率：净营业收入 / 房产价值。查看健康分级、What-If（NOI 增长、价值）、目标资本化率的盈亏平衡价值和市场基准对比。健康分级：🟢 资本化率 ≥8% · 🟡 6–8% · 🟠 4–6% · 🔴 <4%。' },
   'tools.solopreneur-cap-rate-calculator.faq.0.a': { en: 'Cap rate (capitalization rate) is the ratio of a property\'s Net Operating Income (NOI) to its value, expressed as a percent. Formula: (NOI / Property Value) × 100. For a $500K property with $22K annual NOI, cap rate = 4.4%. Cap rate is the most fundamental metric for comparing real estate investments independent of financing.', zh: '资本化率（Cap Rate）是物业净营业收入（NOI）与其价值的比率，以百分比表示。公式：（NOI / 物业价值）× 100。例如 $500K 物业、$22K 年度 NOI，资本化率 = 4.4%。资本化率是比较房地产投资最基本的指标，与融资方式无关。' },
   'tools.solopreneur-cap-rate-calculator.faq.0.q': { en: 'What is a cap rate?', zh: '什么是资本化率？' },
@@ -3733,7 +3733,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-cap-rate-calculator.how_to_use.6': { en: 'Use reverse calc to find implied value at target cap rates (5%, 7%, 8%, 10%).', zh: '使用反向计算查找目标资本化率（5%、7%、8%、10%）下的隐含价值。' },
   'tools.solopreneur-cap-rate-calculator.how_to_use.7': { en: 'Apply what-ifs (vacancy +5pp, expenses -10%, rent +$300/mo) for sensitivity.', zh: '应用 What-If（空置 +5pp、支出 -10%、租金 +$300/月）进行敏感性分析。' },
   'tools.solopreneur-cap-rate-calculator.input.annualExpenses.label': { en: 'Annual Operating Expenses ($)', zh: '年度运营支出（美元）' },
-  'tools.solopreneur-rental-yield-calculator.title': { en: 'Rental Yield Calculator', zh: '租金收益率计算器' },
+  'tools.solopreneur-rental-yield-calculator.title': { en: "Rental Yield Calculator — Gross + Net + Cash-on-Cash Yield (2026)", zh: "租金收益率计算器 — 对比房产毛收益率与净收益率（2026）" },
   'tools.solopreneur-rental-yield-calculator.description': { en: 'Calculate rental yield: annual rent / property value (gross) and NOI / property value (net). See health bands, what-if (rent, vacancy), break-even rent for target yield, and benchmark by region. Health: 🟢 net yield ≥6% · 🟡 4–6% · 🟠 2–4% · 🔴 <2%.', zh: '计算租金收益率：年租金 / 房产价值（毛）和 NOI / 房产价值（净）。查看健康分级、What-If（租金、空置率）、目标收益率的盈亏平衡租金和地区基准。健康分级：🟢 净收益率 ≥6% · 🟡 4–6% · 🟠 2–4% · 🔴 <2%。' },
   'tools.solopreneur-rental-yield-calculator.faq.0.a': { en: 'Cash-on-cash return (CoC) measures the annual cash flow you receive as a percent of the actual cash you invested. Formula: (Annual Cash Flow / Total Cash Invested) × 100. Where Total Cash Invested = Down Payment + Closing Costs (typically 3% of price). CoC is the most relevant metric for leveraged rentals, since it isolates your actual deployed capital from the bank-financed portion.', zh: '现金回报率（CoC）度量你每年获得的现金流占实际投入现金的百分比。公式：（年度现金流 / 总投入现金）× 100。其中总投入现金 = 首付 + 手续费（通常为房价的 3%）。CoC 是杠杆租赁最相关的指标，因为它将你实际投入的资金与银行融资部分分开。' },
   'tools.solopreneur-rental-yield-calculator.faq.0.q': { en: 'What is cash-on-cash return?', zh: '什么是现金回报率？' },
@@ -3829,7 +3829,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-safe-convertible-note-calculator.how_to_use.5': { en: 'Review the conversion mechanics, deal health, and ownership outcomes.', zh: '查看转股机制、交易健康度以及各方持股比例。' },
   'tools.solopreneur-safe-convertible-note-calculator.how_to_use.6': { en: 'Check the 5 what-if scenarios for sensitivity analysis (double SAFE, lower cap, etc.).', zh: '检查 5 种 What-If 场景做敏感性分析（SAFE 翻倍、下调上限等）。' },
   'tools.solopreneur-safe-convertible-note-calculator.input.discountRate.label': { en: 'Discount Rate (%)', zh: '折扣率（%）' },
-  'tools.solopreneur-stripe-fee-calculator.title': { en: 'Stripe Fee Calculator', zh: 'Stripe 手续费计算器' },
+  'tools.solopreneur-stripe-fee-calculator.title': { en: "Stripe Fee Calculator — Stripe vs PayPal + Net Revenue (2026)", zh: "Stripe 手续费计算器 — 对比支付手续费与净收入（2026）" },
   'tools.solopreneur-stripe-fee-calculator.description': { en: 'Calculate Stripe processing fees: 2.9% + $0.30 per transaction (US standard), international cards, ACH, and subscriptions. See health bands, what-if (volume, mix), break-even revenue for fee target, and monthly fee projection. Health: 🟢 fees <2% of revenue · 🟡 2–3% · 🟠 3–4% · 🔴 >4%.', zh: '计算 Stripe 处理费：每笔交易 2.9% + $0.30（美国标准）、国际卡、ACH 和订阅。查看健康分级、What-If（量、组合）、手续费目标的盈亏平衡收入和月度手续费预测。健康分级：🟢 费用 <收入 2% · 🟡 2–3% · 🟠 3–4% · 🔴 >4%。' },
   'tools.solopreneur-stripe-fee-calculator.faq.0.a': { en: 'Stripe charges 2.9% + 30¢ per successful card transaction for US-based businesses. International cards add an extra 1.5% (4.4% + 30¢ total). There are no monthly fees, no setup fees, and no hidden costs. Stripe also charges $15 for chargebacks (disputed transactions) and 0.5% for currency conversion if you receive payments in a currency other than your account\'s default. ACH direct debit and SEPA transfers are cheaper (0.8% capped at $5) but take 2-3 business days to settle.', zh: 'Stripe 对美国商户每笔成功卡交易收取 2.9% + $0.30。国际卡再加 1.5%（共 4.4% + $0.30）。无月费、无开通费、无隐藏成本。Stripe 还对拒付（争议交易）收 $15，对非账户默认币种的入账收 0.5% 货币转换费。ACH 直接扣款和 SEPA 转账更便宜（0.8%，封顶 $5），但需要 2-3 个工作日结算。' },
   'tools.solopreneur-stripe-fee-calculator.faq.0.q': { en: 'How much does Stripe charge per transaction?', zh: 'Stripe 每笔交易收多少手续费？' },
