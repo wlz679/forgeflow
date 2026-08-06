@@ -379,3 +379,66 @@ Day 365-730: Phase 5 — v2.5 Enterprise AI Native（触发 v2.0 OS 文档微调
 3. 补全 A.04-A.06 等 v2 体系骨架空 folder
 
 **user 触发时机**: Phase 5 开始前 1-2 周告知 Claude。
+
+---
+
+## 11. Long-term Vision: v3.0 = Autonomous Decision Platform
+
+> **user 2026-08-06 决策**: v2.0 完成后不停留在 Decision Support，**直接演进到 v3.0 = Autonomous Decision Platform**。
+
+### 11.1 v2.0 → v3.0 演进
+
+| 版本 | 核心 | 用户角色 | 商业价值 |
+|---|---|---|---|
+| **v1** (当前) | Calculator Collection | 用户用工具 | 低（流量）|
+| **v2.0** (Phase 1-5) | Decision Support System | 用户决策 | 中（订阅）|
+| **v3.0** (Phase 5 后期触发) | **Autonomous Decision Platform** | **AI 决策 + 用户审批** | **高（API + 企业）** |
+
+### 11.2 v3.0 关键能力
+
+1. **Autonomous Decision Loop**: AI 主动监控 + 主动建议 + 用户一键执行
+2. **Decision Execution**: AI 直接执行（如自动调整 ad budget / 暂停亏损业务）
+3. **Decision Memory**: AI 记住所有决策历史 + 学习用户决策偏好
+4. **Decision Marketplace**: 用户分享自己的"决策模板"（如同 Notion Template）
+5. **Enterprise Decision OS**: 多用户协同决策 + 角色权限 + 决策审计
+
+### 11.3 v3.0 商业变现升级
+
+```
+v1: 免费工具 → 广告
+v2.0: → 高级（决策报告）→ 团队（决策 API）→ 企业（决策平台）
+v3.0: → 自主决策服务（AI 主动建议 + 一键执行）
+       → 决策结果订阅（月度决策报告 + 自动执行）
+       → 企业决策 OS（多团队协同 + SLA）
+```
+
+**v3.0 把"卖建议"升级为"卖执行"**——商业价值数倍增长。
+
+### 11.4 v3.0 依赖 v2.0 的基础
+
+- 没有 v2.0 100 个 Decision Tool → v3.0 没有决策输入数据
+- 没有 v2.0 Playbook 6 字段标准化 → v3.0 AI 无法执行决策
+- 没有 v2.5 RFC/ADR AI Native → v3.0 决策无法治理
+- 没有 v2.0 12.10 Intelligence Engine → v3.0 缺少数据源
+
+**v3.0 必须建立在 v2.0 Phase 1-5 全部完成之上**。
+
+### 11.5 v3.0 触发条件
+
+按 v2.0 演进路径:
+- **Day 0-90** (Phase 1-3): 决策支持基础设施（KB4 ADR / SEO / Playbook 6 字段）
+- **Day 90-365** (Phase 4): 主题簇方法论 + AI 决策辅助
+- **Day 365-730** (Phase 5): v2.5 Enterprise AI Native + A1-A30 Agent System 集成
+- **Day 730+** (Phase 5 后期): **评估 v3.0 跃迁** — 写 v3.0 spec (Autonomous Decision Platform)
+
+**v3.0 跃迁决策点** = Phase 5 完成时（Day 730+），不是现在。
+
+### 11.6 短期保持定力
+
+虽然 v3.0 是长期愿景，**v2.0 落地是 v3.0 的前置依赖**。**不能跳级**：
+
+- ❌ 现在直接写 v3.0 spec（v2.0 还没落地，跳级风险大）
+- ✅ 严格执行 v2.0 Phase 1-5
+- ✅ Phase 5 完成时主动评估 v3.0 跃迁
+
+**v3.0 不是"替代"v2.0，是 v2.0 的"自然演进"**。
