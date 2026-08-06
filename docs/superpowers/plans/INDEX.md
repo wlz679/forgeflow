@@ -105,6 +105,7 @@
 | `2026-07-18-p23-og-sample-coverage.md` | P23 OG-Sample Coverage | build-fix | 2026-07-18 |
 | `2026-07-19-p23b-satori-perf-skip-gate.md` | P23b Satori Perf Skip-Gate | test-tooling | 2026-07-19 |
 | `2026-07-19-p27-memory-audit-pass.md` | P27 Memory Audit Pass | audit | 2026-07-19 |
+| `2026-08-06-phase-1-kb4-adr-decision-layer.md` | P140f Phase 1 KB4 ADR + 决策支持层 | v2-strategy | 2026-08-06 |
 
 ---
 
@@ -134,11 +135,11 @@
 | 3 · P2 — LocalStorage trilogy | 3 |
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 15 |
-| 6 · P17b+ — Tech Debt / Cleanup / Audit | 10 |
+| 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 11 |
 | 7 · Multi-language mirrors | 1 |
-| **索引 plan 文件总数** | **51** |
+| **索引 plan 文件总数** | **52** |
 | 8 · Excluded (pr-body) | 1 |
-| **目录文件总数** | **52** |
+| **目录文件总数** | **53** |
 
 ---
 
