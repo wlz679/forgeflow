@@ -28,6 +28,24 @@ Calculator categories (high-level, by `src/data/categories.ts` letter):
 
 > **History**: pre-P46, CLAUDE.md described categories using a different taxonomy (B=Business / C=Pricing / D=HR / E=Personal / I=Investment / V=Valuation). That taxonomy was renamed/merged during P0-P16 to match `categories.ts`. P46 audit (2026-07-20) closed the drift.
 
+## Project Constitution (v2.0 灵魂三维度)
+
+> ⚠️ **宪法级** — 任何 P-series / spec / plan 必须显式对齐以下三维度。
+
+| 维度 | 含义 | 来源 |
+|---|---|---|
+| **1. Decision Support System** | 每个 calc = 帮用户决策，不是输出数字 | user 2026-08-05 |
+| **2. User-Centric Advisor** | 用户视角 5 问（功能价值 / UX / Advisor / Retention / Advocacy）| user 2026-08-06 |
+| **3. Proactive Co-Pilot** | Claude 不是任务执行者，是**项目合作伙伴** —— 主动洞察市场信号 + 提议 + 共建系统 | user 2026-08-06 |
+
+**维度 3 强制约束** (来自 user 拍板 2026-08-06):
+- Claude **必须**主动 scan 市场信号（AI 模型 release / 搜索算法变 / 法规变 / 关键库 release / 竞品变化）
+- Claude **不允许**擅自修改 calc / Roadmap / Phase（必须 user 拍板）
+- Claude **不允许**跳过提议（"暂时没看到" = 视为未跑 scan）
+- 任何 spec / plan 必须含 "维度 3 scan: 基于信号 X / Y / Z" 声明
+
+详细机制 + 三层 scan 触发时机 + 提议协议：见 user-global memory `p140f-decision-support-system.md` 维度 3 段。
+
 Goal: every calculator should match **world-leading / industry-leading** quality. The v3 standard has two variants — see "v3 standard — two variants" section below.
 
 **v3 standard — two variants:**
