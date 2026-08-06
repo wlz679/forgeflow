@@ -445,6 +445,132 @@ v3.0: → 自主决策服务（AI 主动建议 + 一键执行）
 
 ---
 
+## 15. User-Centric Advisor Layer + Technical Advisor Relationship（user 2026-08-06 揭示）
+
+> ⚠️ **v2.0 灵魂第二维度（user 揭示）**:
+> 
+> ForgeFlowKit 不只是 Decision Support System（帮用户做决策），还是 **User-Centric Advisor**（从用户视角考虑，帮用户成为"长期技术顾问关系"）。
+> 
+> 例: 用户用 csat calculator 一次 → 满意 → 复访 → 信任 → 长期留存 → 推荐 → 升级为"团队顾问订阅"。
+> 
+> 这类似"私人医生 / 私人律师"的长期专业关系 —— ForgeFlowKit 是"用户的商业技术顾问"。
+
+### 15.1 v2.0 灵魂 = 双维度
+
+| 维度 | 内容 | 核心问题 |
+|---|---|---|
+| **维度 1: Decision Support**（user 2026-08-05 揭示）| 帮用户做出正确决策 | 这个工具的输出是"决策建议"还是"数字"？|
+| **维度 2: User-Centric Advisor**（user 2026-08-06 揭示）| 用户视角 + 长期技术顾问关系 | 用户愿不愿意把它当成技术顾问？|
+
+**两个维度 = v2.0 完整灵魂**。**缺一不可**。
+
+### 15.2 用户视角 5 问（User View 5 Questions）
+
+每个新 Topic / calc **必须**能回答这 5 个问题：
+
+1. **这个工具能满足用户需求吗？**（功能价值）
+2. **功能好不好用？**（UX 易用性）
+3. **用户愿不愿意把它当成技术顾问？**（关系建立）
+4. **用户愿意长期留存吗？**（Retention）
+5. **用户会推荐给别人吗？**（Advocacy）
+
+每个新 calc 必须有 **User Value Score** 字段（含 5 维度评分）：
+- User Value Score = (功能价值 × UX 易用性 × Advisor 关系 × Retention × Advocacy) ÷ 5
+
+User Value Score ≥ 0.7 → Topic 进入候选池
+User Value Score < 0.7 → Topic 自动拒绝
+
+### 15.3 Technical Advisor Relationship（长期技术顾问关系）
+
+ForgeFlowKit v2.0+ 不只是"工具集合"——是**用户的商业技术顾问**。
+
+#### Relationship 演进路径（按 v2.0 文档相关章节）
+
+```
+v1: 单次访问（流量思维）—— 100 calc 用 1 次就走
+v2: 决策支持（订阅思维）—— 决策报告订阅，每周/每月复访
+v3: Autonomous Decision（服务思维）—— AI 主动监控 + 决策执行
+v3.5+: Technical Advisor Relationship（关系思维）
+  ↓
+  用户与 ForgeFlowKit 建立"长期专业关系"
+  类似"私人医生" / "私人律师" / "私人财务顾问"
+```
+
+#### 4 个 Relationship 维度
+
+1. **Trust**（信任）：AI 决策建议准确率 > 85%（每季度 review）
+2. **Stickiness**（粘性）：User Value Score 高 → 复访率提升
+3. **Trust → Advocacy**（倡导）：用户主动推荐 → 新用户获取成本降低
+4. **Long-term LTV**（长期价值）：用户 5+ 年留存 → CLV（Customer Lifetime Value）持续增长
+
+### 15.4 6 阶段变现路径升级
+
+| 阶段 | v1 (Calc) | v2 (Decision Support) | v3 (Autonomous) | v3.5+ (Technical Advisor) |
+|---|---|---|---|---|
+| 免费工具 | ✓ | ✓ | ✓ | ✓ |
+| 广告 | ✓ | ✓ | ✓ | ✓ |
+| 高级 | ✗ | ✓ 决策报告 | ✓ 自动决策 | ✓ Advisor 咨询 |
+| 团队 | ✗ | ✓ | ✓ | ✓ Advisor 团队 |
+| API | ✗ | ✗ | ✓ | ✓ Advisor API |
+| 企业 | ✗ | ✓ 咨询 | ✓ OS + SLA | ✓ **长期顾问关系** |
+
+**v3.5+ 把"卖工具"升级为"卖长期专业关系"** —— 商业价值数倍增长。
+
+### 15.5 用户视角工作流（Topic 全生命周期）
+
+按 v2.0 文档 12.08 Lifecycle Management + 用户视角 5 问：
+
+```
+Discovery → Validation → Modeling → Productization → Growth → Optimization
+     ↓          ↓           ↓            ↓             ↓            ↓
+   5 问       5 问        5 问        5 问           5 问         5 问
+  评估       评估         评估        评估           评估          评估
+```
+
+每个生命周期阶段**必须**回答 5 问：
+- Discovery: 这个 Topic 用户需求是什么？5 问初评
+- Validation: 用户愿不愿意用？5 问验证
+- Modeling: 数据/UX/关系建模，5 问细化
+- Productization: 发布，5 问上线检查
+- Growth: 用户复访/推荐？5 问增长指标
+- Optimization: 长期留存？5 问优化
+
+### 15.6 v2.0 文档对应章节
+
+| 维度 1 / 维度 2 | v2.0 文档章节 |
+|---|---|
+| **Decision Support**（维度 1）| 12.01 Topic Architecture 5 类 Topic（L5 辅助决策）/ Cognition 层 / 12.10 Intelligence Engine |
+| **User-Centric Advisor**（维度 2）| 04 P3 User Research（27 节）/ 04 P5 Feature Management / 04 P8 Analytics AARRR + Retention / 04 P9 Experiment Long Term Optimization / 12.08 Lifecycle Management / 10.AI Agent System Governance |
+
+### 15.7 用户视角维度 = Decision Support 不可分割的一部分
+
+按 CLAUDE.md §"Every P-series proposal must answer" 原则：
+- 任何 P-series **必须先回答**: "这个改动让工具更接近 Decision Support + User-Centric Advisor，还是只优化 Calculator？"
+- 任何新工具开发**必须**: (a) 决策导向 L5 Topic + (b) 用户视角 5 问评分 ≥ 0.7
+
+**Decision Support + User-Centric Advisor = v2.0 完整灵魂**。
+
+---
+
+## 16. Updated Acceptance Criteria（含用户视角 5 问）
+
+#### Phase 4 完成（Day 365）
+- [ ] 1-2 个示范 topic 完整建模
+- [ ] Topic Score 公式 + Decision Value Score 公式实现
+- [ ] 12.10 Intelligence Engine 演示
+- [ ] **100 新 calc 已 ship**（按 §13.2 AI 自动 + 人类审核 + **每个 calc 通过用户视角 5 问**）
+- [ ] **每个新 calc 的 User Value Score ≥ 0.7**
+
+#### Phase 5 完成（Day 730）
+- [ ] v2.5 RFC v2.5 + ADR v2.5 实施
+- [ ] A1-A30 Agent System 集成
+- [ ] **Cognitive Layer 核心落地**
+- [ ] **200+ 新 calc 已 ship**（按 §13.3 AI 自动 + **每个 calc 通过用户视角 5 问 + User Value Score ≥ 0.7**）
+- [ ] 6 阶段变现升级为 Decision Support + Technical Advisor Relationship
+- [ ] v2.0 OS 文档微调（user 触发）
+
+---
+
 ## 12. Branch Strategy（user 2026-08-06 敲定）
 
 ### 12.1 分支命名约定
@@ -499,48 +625,82 @@ v3.0: → 自主决策服务（AI 主动建议 + 一键执行）
 | **Phase 5** (v2.5 Enterprise AI Native) | Day 365-730 | **200+ 新**（1 年）| 400+ | 高（10.AI Agent 全自动 + 人类审核）|
 | **v3.0 启动** | Day 730+ | **500-1000/年**（Autonomous AI）| 5000-10000+ | 全自动（人类仅审核关键决策）|
 
-### 13.2 Phase 4 主题预分配（100 新 calc）
+### 13.2 Phase 4 主题预分配（100 新 calc，**AI 自动 + 人类审核**）
 
-按 11 业务域缺口预先规划，避免边做边想：
+> ⚠️ user 2026-08-06 修正：v2.0 Phase 4 起 AI 自动扩展主题和工具，**不用现在人为指定具体 calc 名**。
+> 
+> 保留业务方向约束，删除具体 calc 列表，AI 自动发现。
 
-| 业务域 | 当前 | 新增 | 主题方向（预设）|
-|---|---:|---:|---|
-| **11.10 Supply Chain**（完全空白）| 0 | **30** | Logistics / Procurement / Vendor / Inbound / Outbound / Reverse / Lead Time / Safety Stock / Warehouse / Carrier |
-| **11.06 HR** | 4 | 6 | Comp / Benefits / Ramp / Culture / Performance / Retention |
-| **11.01 Finance** | 8 | 20 | Tax (Income/Capital/Gains) / Personal Finance (Budget/Savings) / Investment variants / Credit variants |
-| **11.02 Marketing** | 6 | 14 | Attribution / Cohort / Campaign / SEO / Content / Email |
-| **11.03 Sales** | 6 | 14 | Win Rate variants / Cohort / Quota variants / Forecast / Pipeline |
-| **11.04 Customer** | 6 | 6 | Segment / LTV variants / Retention variants |
-| **11.05 Product** | 6 | 6 | Funnel variants / Adoption / Cohort |
-| **11.09 Legal** | 6 | 4 | Compliance / Privacy / Contract / IP |
-| **总计** | 100 | **100** | Phase 4 一年内完成 |
+#### AI 自动部分（80%）
 
-### 13.3 Phase 5 新增节奏（200+/年）
+按 v2.0 12.10 Topic Intelligence Engine + 12.04 Modeling + 12.06 Factory：
+
+| 步骤 | AI Agent | 产出 |
+|---|---|---|
+| 1. 4 数据源采集 | Search/Market/Competitor/User Problem | 候选 Topic 池 |
+| 2. Topic 自动发现 | Discovery Agent | 候选 Topic 列表 |
+| 3. Topic 自动建模 | Modeling Agent | 21 字段 + 5 决策字段 |
+| 4. engine 自动生成 | Factory Agent | Playbook 6 字段代码 |
+| 5. 候选池 | Portfolio Agent | 每周 ~25 新 Topic |
+
+#### 人类审核部分（20%）
+
+每周 1 次 review（1-2 名人类，~2 小时/周）：
+
+**业务方向约束**（保留 11 业务域缺口作为引导，**不指定具体 calc**）：
+
+| 业务域 | 当前缺口 | AI 探索方向 |
+|---|---:|---|
+| **11.10 Supply Chain**（完全空白）| 0 | Procurement / Logistics / Vendor / Inbound / Outbound / Reverse（AI 自由发现具体 calc）|
+| **11.06 HR** | 4 | Comp / Benefits / Ramp / Culture / Performance / Retention（AI 自由）|
+| **11.01 Finance** | 8+ | Tax / Personal / Investment / Credit / Loan（AI 自由）|
+| **11.02-05** | 30+ | Marketing/Sales/Customer/Product（AI 自由）|
+| **11.09 Legal** | 4 | Compliance / Privacy / Contract / IP（AI 自由）|
+
+**决策导向约束**（必须满足 v2.0 灵魂）：
+
+- 21 字段 schema（含 `decision_output` / `decision_inputs` / `decision_risks` / `decision_alternatives` 5 个新决策字段）
+- AI Confidence Score ≥ 0.85
+- Topic Score 公式: `(Search × Biz × Intent × Expansion) ÷ Competition ≥ 阈值`
+
+**用户视角约束**（v2.0 灵魂第二维度，见 §15）：
+
+- **用户视角 5 问** 每个新 Topic 必须能回答
+- 见 §15.2
+
+**合规边界**：GDPR / 隐私 / 财务合规 / 不产出赌博类工具等
+
+**1-click 批准 / 拒绝 / 修订** —— 每周 ~20 新 calc ship（每月 ~80-100）
+
+### 13.3 Phase 5 新增节奏（200+/年，AI Agent 全自动）
 
 v2.5 Enterprise AI Native 完整落地后：
-- **AI Agent 全自动**：12.10 Intelligence Engine 自动发现 Topic + 10.A2 Runtime 生成 engine 代码
-- **人类审核**：每个新 calc 由 1-2 名人类审核（决策支持灵魂 + 业务正确性）
+- **AI Agent 全自动**：A1-A30 Agent System + 12.10 Intelligence Engine 自动发现 + 10.A2 Runtime 生成代码
+- **人类审核**：每个新 calc 由 1-2 名人类审核（决策支持灵魂 + 用户视角 5 问 + 业务正确性）
 - **每周 ~4 新 calc**：每月 ~17，1 年 200+
 - **主题层自动填充**：每个新 calc 自动归档到对应 业务域/主题簇/主题
+- **User-Centric Advisor 工作流**：每个新 calc 必须填"用户视角 5 问"评分
 
 ### 13.4 主题层预设（避免方向偏离）
 
-按 v2.0 12.01 Topic Architecture 21 字段 schema，每个新 calc **必须先建模**：
+按 v2.0 12.01 Topic Architecture 21 字段 schema + 5 决策字段（用户视角 5 问另算），每个新 calc **必须先建模**：
 1. **id** / **slug** / **domain** / **theme_cluster** / **topic** / **business_question** / **formula** / **seo_keyword** / **commercial_intent** / **related_topics**（10 个核心字段）+ 11 个扩展字段
-2. **decision_output**（v2.0 灵魂字段）: 这个工具帮用户做什么决策？
-3. **decision_inputs**（决策输入）: 需要什么数据才能做决策？
-4. **decision_risks**（决策风险）: 用户可能错过的风险点
-5. **decision_alternatives**（决策备选）: 决策不同时的其他选择
+2. **decision_output**（v2.0 灵魂字段 1）: 这个工具帮用户做什么决策？
+3. **decision_inputs**（灵魂字段 2）: 需要什么数据才能做决策？
+4. **decision_risks**（灵魂字段 3）: 用户可能错过的风险点
+5. **decision_alternatives**（灵魂字段 4）: 决策不同时的其他选择
+6. **用户视角 5 问评分**（v2.0 灵魂第二维度）: 见 §15.2
 
-**这 5 个新字段**是 v2.0 Decision Support System 的"决策 schema"——每个新 calc 必须填写。
+**这 6 维度**是 v2.0 Decision Support System + User-Centric Advisor 的完整 schema——每个新 calc 必须填写。
 
-### 13.5 v3.0 终极节奏（500-1000/年）
+### 13.5 v3.0 终极节奏（500-1000/年，Autonomous + Long-term Advisor）
 
 Autonomous Decision Platform 完整落地后：
 - AI 主动监控 + 主动建议 + 用户一键执行
 - 每周 ~10-20 新 calc（每月 ~40-80）
 - 1 年 500-1000+
-- 人类角色从"开发者"转为"决策审核者"
+- 人类角色从"开发者"转为"决策审核者 + User-Centric Advisor 治理者"
+- **Technical Advisor Relationship**（§15.3）：每个用户都有"私人商业技术顾问"长期关系
 
 ---
 
