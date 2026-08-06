@@ -442,3 +442,132 @@ v3.0: → 自主决策服务（AI 主动建议 + 一键执行）
 - ✅ Phase 5 完成时主动评估 v3.0 跃迁
 
 **v3.0 不是"替代"v2.0，是 v2.0 的"自然演进"**。
+
+---
+
+## 12. Branch Strategy（user 2026-08-06 敲定）
+
+### 12.1 分支命名约定
+
+| 分支 | 用途 | 创建时机 | 合并时机 |
+|---|---|---|---|
+| `master` | 稳定已 ship | 已有 | Phase ship + pnpm check 0 |
+| `feature/phase-1-kb4-adr` | Phase 1 开发 | Phase 1 开始 | Phase 1 ship |
+| `feature/phase-2-p140e-seo` | Phase 2 开发 | Phase 2 开始 | Phase 2 ship |
+| `feature/phase-3-playbook-6-fields` | Phase 3 开发 | Phase 3 开始 | Phase 3 ship |
+| `feature/phase-4-topic-cluster` | Phase 4 开发 | Phase 4 开始 | Phase 4 ship |
+| `feature/phase-5-v25-ai-native` | Phase 5 开发 | Phase 5 开始 | Phase 5 ship |
+
+### 12.2 大更新 / 小更新约定
+
+- **Phase 内 commit**（小更新）: 直接 commit in `feature/phase-N-*`
+- **Phase 内 sub-branch**（大更新/破坏性重构）: `feature/phase-N-p150-xxx`
+- **PR 流程**: feature branch → master（squash merge or rebase）
+- **3-way push**（按 memory `github-repo-info.md`）:
+  - origin = Gitee = `wlz679/calcKit`
+  - github = `wlz679/forgeflow`
+  - Phase ship 后手动 `git push origin master && git push github master`
+- **Pre-push hook**: 已配置；按 memory `p44-scripts-index-shipped` 指引可能误报 ahead=0，按 `git -c core.hooksPath=/dev/null push` bypass
+
+### 12.3 CI/CD 配合
+
+- **`master` 分支 CI**: 全测试（pnpm check + pnpm test:build）
+- **`feature/phase-N-*` 分支 CI**: 轻量级（pnpm check + codegen checks）
+- **GH Action sync-pricing.yml cron**: 按 memory `p43-components-index-shipped` + `p48-claude-md-lessons-shipped` 提示 — push 前先 `git fetch origin && git fetch github && git rev-list`，避免 cron race
+
+### 12.4 用户切换分支时机
+
+| 阶段 | 切换到 | 备注 |
+|---|---|---|
+| Phase 1 开始 | `feature/phase-1-kb4-adr` | 从 master 新建 |
+| Phase 2 开始 | `feature/phase-2-p140e-seo` | Phase 1 merge 后从 master 新建 |
+| ... | ... | 顺序推进 |
+| Phase 5 ship | master | 最终合并 |
+
+---
+
+## 13. Theme-Calculator Roadmap（user 2026-08-06 敲定）
+
+### 13.1 总体节奏（user 修正：从 20/年 → 200/年）
+
+| 阶段 | 时长 | 新 calc | 累计 | AI 辅助 |
+|---|---|---:|---:|---|
+| **Phase 1** (KB4 ADR) | Day 1-7 | 0（升级 5 决策工具）| 100 | 低 |
+| **Phase 2** (P140e SEO) | Day 7-21 | 0（5 篇博客）| 100 | 低 |
+| **Phase 3** (Playbook 6 字段) | Day 21-90 | 0（标准化 100 calc）| 100 | 低 |
+| **Phase 4** (主题簇方法论) | Day 90-365 | **100 新**（1 年）| 200 | 中（12.10 Intelligence Engine 辅助）|
+| **Phase 5** (v2.5 Enterprise AI Native) | Day 365-730 | **200+ 新**（1 年）| 400+ | 高（10.AI Agent 全自动 + 人类审核）|
+| **v3.0 启动** | Day 730+ | **500-1000/年**（Autonomous AI）| 5000-10000+ | 全自动（人类仅审核关键决策）|
+
+### 13.2 Phase 4 主题预分配（100 新 calc）
+
+按 11 业务域缺口预先规划，避免边做边想：
+
+| 业务域 | 当前 | 新增 | 主题方向（预设）|
+|---|---:|---:|---|
+| **11.10 Supply Chain**（完全空白）| 0 | **30** | Logistics / Procurement / Vendor / Inbound / Outbound / Reverse / Lead Time / Safety Stock / Warehouse / Carrier |
+| **11.06 HR** | 4 | 6 | Comp / Benefits / Ramp / Culture / Performance / Retention |
+| **11.01 Finance** | 8 | 20 | Tax (Income/Capital/Gains) / Personal Finance (Budget/Savings) / Investment variants / Credit variants |
+| **11.02 Marketing** | 6 | 14 | Attribution / Cohort / Campaign / SEO / Content / Email |
+| **11.03 Sales** | 6 | 14 | Win Rate variants / Cohort / Quota variants / Forecast / Pipeline |
+| **11.04 Customer** | 6 | 6 | Segment / LTV variants / Retention variants |
+| **11.05 Product** | 6 | 6 | Funnel variants / Adoption / Cohort |
+| **11.09 Legal** | 6 | 4 | Compliance / Privacy / Contract / IP |
+| **总计** | 100 | **100** | Phase 4 一年内完成 |
+
+### 13.3 Phase 5 新增节奏（200+/年）
+
+v2.5 Enterprise AI Native 完整落地后：
+- **AI Agent 全自动**：12.10 Intelligence Engine 自动发现 Topic + 10.A2 Runtime 生成 engine 代码
+- **人类审核**：每个新 calc 由 1-2 名人类审核（决策支持灵魂 + 业务正确性）
+- **每周 ~4 新 calc**：每月 ~17，1 年 200+
+- **主题层自动填充**：每个新 calc 自动归档到对应 业务域/主题簇/主题
+
+### 13.4 主题层预设（避免方向偏离）
+
+按 v2.0 12.01 Topic Architecture 21 字段 schema，每个新 calc **必须先建模**：
+1. **id** / **slug** / **domain** / **theme_cluster** / **topic** / **business_question** / **formula** / **seo_keyword** / **commercial_intent** / **related_topics**（10 个核心字段）+ 11 个扩展字段
+2. **decision_output**（v2.0 灵魂字段）: 这个工具帮用户做什么决策？
+3. **decision_inputs**（决策输入）: 需要什么数据才能做决策？
+4. **decision_risks**（决策风险）: 用户可能错过的风险点
+5. **decision_alternatives**（决策备选）: 决策不同时的其他选择
+
+**这 5 个新字段**是 v2.0 Decision Support System 的"决策 schema"——每个新 calc 必须填写。
+
+### 13.5 v3.0 终极节奏（500-1000/年）
+
+Autonomous Decision Platform 完整落地后：
+- AI 主动监控 + 主动建议 + 用户一键执行
+- 每周 ~10-20 新 calc（每月 ~40-80）
+- 1 年 500-1000+
+- 人类角色从"开发者"转为"决策审核者"
+
+---
+
+## 14. Updated Ship Path（基于 200/年新基线）
+
+```
+Day 0 (2026-08-05): 本 spec ship
+Day 1-7 (Phase 1): feature/phase-1-kb4-adr — KB4 ADR + 5 决策工具
+Day 7-21 (Phase 2): feature/phase-2-p140e-seo — 5 篇决策博客
+Day 21-90 (Phase 3): feature/phase-3-playbook-6-fields — 100 calc Playbook 6 字段
+Day 90-365 (Phase 4): feature/phase-4-topic-cluster — 主题簇 + 100 新 calc（1 年）
+Day 365-730 (Phase 5): feature/phase-5-v25-ai-native — v2.5 + 200+ 新 calc（1 年）
+Day 730+ (v3.0): Autonomous Decision Platform — 500-1000 新 calc/年
+```
+
+### Acceptance Criteria 修订
+
+#### Phase 4 完成（Day 365）
+- [ ] 1-2 个示范 topic 完整建模
+- [ ] Topic Score 公式 + Decision Value Score 公式实现
+- [ ] 12.10 Intelligence Engine 演示
+- [ ] **100 新 calc 已 ship**（按 §13.2 主题预分配）
+
+#### Phase 5 完成（Day 730）
+- [ ] v2.5 RFC v2.5 + ADR v2.5 实施
+- [ ] A1-A30 Agent System 集成
+- [ ] **Cognitive Layer 核心落地**
+- [ ] **200+ 新 calc 已 ship**（按 §13.3 AI 自动生产）
+- [ ] 6 阶段变现升级为 Decision Support 变现
+- [ ] v2.0 OS 文档微调（user 触发）
