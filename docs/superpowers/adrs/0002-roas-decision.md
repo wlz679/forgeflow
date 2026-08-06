@@ -42,3 +42,8 @@ v1 ROAS 只输出"ROAS 3.2x / 健康带 🟡"。用户看到 3.2x 仍然不知�
 - [x] P44 兼容
 - [x] 4 子段
 - [x] 编号 0002
+
+---
+
+**Date**: 2026-08-06
+**Authors**: [Phase 1 KB4 ADR scaffold]

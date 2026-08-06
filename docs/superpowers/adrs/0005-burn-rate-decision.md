@@ -43,3 +43,8 @@ v1 Burn Rate 只输出"还能坚持 8 月 / Net Burn $20k/月"。用户不知道
 - [x] P44 兼容
 - [x] 4 子段
 - [x] 编号 0005
+
+---
+
+**Date**: 2026-08-06
+**Authors**: [Phase 1 KB4 ADR scaffold]
