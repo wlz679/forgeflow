@@ -140,28 +140,73 @@ Specification     = 规格化输出（决策文档 / 推荐路径 / 风险清单
 4. **Architecture Serves Product, Product Validates Architecture**（同上）
 5. **Decision First + Context Matters + Trade-off Required**（A1 ADR）
 
-### 3.3 11 业务域 ↔ 100 计算器精确对应表
+### 3.3 15 业务域 ↔ 100 计算器精确对应表（user 2026-08-06 敲定）
 
-基于 Batch 5 sub-agent 调研:
+> **v2.0 文档只列 10 域**（11.01-11.10），但**用户基于 100 calc 实际 + 调研**敲定 **15 业务域**（与 v2.0 终极目标 15 Domain 对齐）。
+>
+> 4 个新增 + 1 个拆分 + 1 个合并 = 13 业务域（11.01-11.14 中间 11.10 合并到 11.07）+ 11.15 预留
 
-| Domain | Cluster 数 | Topic 数 | ForgeFlowKit 计算器（v1 现状） | 缺口 |
-|---|---|---|---|---|
-| **11.01 Finance** | 6（Accounting/Investment/Loan/Business Finance/Tax/Personal）| 16+ | ROI/CAGR/Compound Interest/Break Even/Mortgage/Loan/Cash Flow/DCF（8 个）| 8+ topic 缺口（Tax/Personal Finance 等）|
-| **11.02 Marketing** | 5+ | 6 | ROAS/LTV by Channel/Funnel Value/Cohort Retention/Email ROI/Content ROI（6 个）| 集群广度需扩展 |
-| **11.03 Sales** | 5+ | 6 | Pipeline Value/Sales Velocity/ACV/Win Rate/Quota/Pipeline Coverage（6 个）| 集群广度需扩展 |
-| **11.04 Customer** | 5+ | 6 | NRR/GRR/Expansion/Logo Churn/Customer Health/Renewal（6 个）| 同上 |
-| **11.05 Product** | 5+ | 6 | Funnel/Feature Adoption/Activation/Stickiness/Power User（6 个）| 同上 |
-| **11.06 HR** | 5+ | 6 | Fully-Loaded Cost/Ramp/Refresh/Attrition（4 个）| 2 个 topic 缺口 |
-| **11.07 Operation** | 5+ | 6 | Inventory Turnover/Carrying Cost/Stockout/Reorder/Fulfillment/Supplier（6 个）| 集群广度 |
-| **11.08 Strategy** | 5+ | 10 | Unit Economics/Valuation/LTV/CAC/...（10 个）| 最完整 |
-| **11.09 Legal** | 5+ | 6 | GDPR/DSAR/Consent/DPA/Breach/CMP ROI（6 个）| 集群广度 |
-| **11.10 Supply Chain** | 5+ | 0 | 0（与 O-cat 重叠）| **完全缺口** |
+#### 15 业务域最终表
+
+| 编号 | 业务域 | ForgeFlowKit 类别 | v1 现状 | Phase 4 缺口 |
+|---|---|---|---:|---:|
+| 11.01 | Finance | C + F + E（部分）| 8 | 20+（Tax / Personal / Investment variants）|
+| 11.02 | Marketing | M | 6 | 14（Attribution / Cohort / Campaign 等）|
+| 11.03 | Sales | S | 6 | 14（Win Rate variants / Forecast 等）|
+| **11.04** | **Customer Success** | **R** | **6** | **6**（Segment / LTV variants）|
+| 11.05 | Product | P + A（部分）| 6 | 6（Funnel variants / Adoption / Cohort）|
+| 11.06 | HR | H | 4 | 6（Comp / Benefits / Performance）|
+| **11.07** | **Operations & Supply Chain** | **O + 新** | **6** | **30+**（Procurement / Warehouse / Logistics）|
+| 11.08 | Strategy | C（部分）+ A（部分）| 10 | 5（Market Sizing / Growth）|
+| 11.09 | Legal | L | 6 | 4（Contract / IP）|
+| (合并) | — | — | — | 11.10 合并到 11.07 |
+| **11.11** | **AI Cost Tools** | **B** | **8** | **AI 辅助 + 人类审核** |
+| **11.12** | **Knowledge / KB** | **K** | **6** | **新主题簇** |
+| **11.13** | **Customer Support** | **T** | **6** | **新主题簇** |
+| **11.14** | **Freelance / Solopreneur** | **D** | **6** | **新主题簇** |
+| 11.15 | (预留 v3.0 新增) | — | 0 | — |
+
+**关键调整**（user 2026-08-06 敲定）:
+1. **拆分 11.04 Customer**: R + T 拆分为 Customer Success (11.04) + Customer Support (11.13)
+2. **合并 11.10 Supply Chain 到 11.07 Operation**: 统一为 Operations & Supply Chain
+3. **新增 11.11 AI Cost Tools**: ForgeFlowKit B 类别 8 calc 在 v2.0 文档没单独域
+4. **新增 11.12 Knowledge / KB**: ForgeFlowKit K 类别 6 calc 在 v2.0 文档没单独域
+5. **新增 11.13 Customer Support**: 拆分自原 11.04
+6. **新增 11.14 Freelance / Solopreneur**: ForgeFlowKit D 类别 6 calc 在 v2.0 文档没单独域
 
 **关键观察**:
 - v1 现状 100 calc = v2.0 L4 Product 层（已有 ~100 Node）
 - 距离 v2.0 终极目标（15 Domain / 80 Cluster / 1000 Topic / 10000 Node）**差 9900 Node**
-- 11.10 Supply Chain 完全缺口
-- 其他 9 域每域缺 2-8 个 topic
+- **新 5 域 (11.11-11.14) 是 AI 自动 + 人类审核重点**
+- 11.07 Operations & Supply Chain **缺口最大**（30+），Phase 4 一年内补完
+
+### 3.3.1 主题簇矩阵（13 业务域 × 5-6 主题簇 ≈ 75 Cluster）
+
+> ⚠️ **AI 自动发现具体 Topic + Calc**，但**主题簇级别（业务方向）必须人预设**（避免 AI 跑偏到宠物年龄计算器等无关领域）。
+
+| 业务域 | 主题簇（5-6 个，预设）|
+|---|---|
+| **11.01 Finance** | Accounting / Investment / Loan & Debt / Business Finance / Tax / Personal Finance（6 个）|
+| **11.02 Marketing** | SEO & Content / Paid Acquisition / Organic Acquisition / Retention Marketing / Brand Marketing / Attribution（6 个）|
+| **11.03 Sales** | Pipeline Management / Conversion / Forecasting / Customer Acquisition / Sales Enablement / Pricing Strategy（6 个）|
+| **11.04 Customer Success** | Retention / Expansion / Onboarding / Engagement / Lifecycle / Voice of Customer（6 个）|
+| **11.05 Product** | Funnel / Adoption / UX / Lifecycle / Analytics / Product Strategy（6 个）|
+| **11.06 HR** | Compensation / Talent Acquisition / Talent Retention / Productivity / Culture / Performance Management（6 个）|
+| **11.07 Operations & Supply Chain** | Inventory / Logistics / Supplier Management / Quality / Procurement / Warehouse（6 个）|
+| **11.08 Strategy** | Unit Economics / Valuation / Equity / Exit / Growth / Market Sizing（6 个）|
+| **11.09 Legal** | Privacy / Compliance / Contract / IP / Litigation（5 个）|
+| **11.11 AI Cost Tools** | LLM API Cost / Image Gen Cost / GPU Cloud / Training / Cross-Provider Comparison（5 个）|
+| **11.12 Knowledge / KB** | KB Coverage / Article Freshness / Search Effectiveness / Documentation ROI / Article Helpfulness（5 个）|
+| **11.13 Customer Support** | Cost-per-Ticket / FRT SLA / Resolution Time / CSAT / Deflection Rate / Team Capacity（6 个）|
+| **11.14 Freelance / Solopreneur** | Hourly-vs-Fixed / Freelance Rate / Course Pricing / SaaS Pricing / Email List Revenue / Sponsorship Rate（6 个）|
+
+**总计**：13 业务域 × 5-6 主题簇 = **75 主题簇**（接近 v2.0 终极 80 Cluster 目标，差 5 个留 Phase 5 自由探索）
+
+**关键约定**:
+- **AI 不允许跨业务域**（如不能在 11.07 里产出宠物相关 calc）
+- **AI 不允许跨主题簇**（如 11.02 Marketing 不能产出 Finance 相关 calc）
+- **业务域 + 主题簇 = 硬约束**，具体 Topic + Calc = AI 自由
+- 每个新 calc 必须归档到对应 业务域 → 主题簇 → Topic → Calc 4 层结构
 
 ### 3.4 v2.0 vs 现状 Gap（4 大维度）
 
@@ -609,6 +654,45 @@ Discovery → Validation → Modeling → Productization → Growth → Optimiza
 | Phase 2 开始 | `feature/phase-2-p140e-seo` | Phase 1 merge 后从 master 新建 |
 | ... | ... | 顺序推进 |
 | Phase 5 ship | master | 最终合并 |
+
+### 12.5 自问机制（Phase 切换时主 agent 主动自问 + 问 user）
+
+> ⚠️ **user 2026-08-06 敲定**：当任务推进到新阶段时，主 agent **必须主动自问**清单，然后**主动问 user**是否需要进入新分支开发。
+
+#### 主 agent 主动自问清单（5 问）
+
+进入新阶段时，主 agent **自动**问自己：
+
+1. **Phase 进度**：当前 Phase 任务全部完成？pnpm check 0？
+2. **分支切换**：需要进入新分支吗？按 §12.1 命名约定
+3. **大更新 sub-branch**：当前 Phase 内有破坏性重构吗？需要 sub-branch？
+4. **跨 Phase 切换**：是否从 `feature/phase-N` → `feature/phase-(N+1)-xxx`？
+5. **3-way push 准备**：master ship 后准备好 origin + github push 吗？
+
+#### 主 agent 主动问 user 的固定话术
+
+主 agent 在切换前**必须**主动问 user：
+
+> "Phase N ship 完毕。当前完成：<清单>。要进入 Phase N+1 feature/phase-(N+1)-xxx 吗？"
+
+User 拍板（"确认"/"调整"/"延后"）后，主 agent 才创建新分支 + 切分支 + 继续下一 Phase。
+
+#### 触发时机（5 个）
+
+| 触发时机 | 主 agent 动作 |
+|---|---|
+| 当前 Phase ship 完成 | 自问 + 问 user（"进入下一 Phase？"）|
+| 大更新（破坏性重构）开始 | 自问 + 问 user（"sub-branch 命名？"）|
+| Phase 中需要切换 feature/phase-N | 自问 + 问 user（"是否切回 master 或新分支？"）|
+| master ship 后 3-way push 前 | 自问 + 问 user（"3-way push 顺序？"）|
+| Phase 5 ship 后 v3.0 启动前 | 自问 + 问 user（"启动 v3.0 Autonomous spec？"）|
+
+#### 强制约束
+
+- 主 agent **不允许**自动切分支（必须 user 拍板）
+- 主 agent **不允许**跳过自问清单（即使任务很紧急）
+- User 拍板后主 agent 才执行分支操作
+- 自问结果作为 commit message 的一部分记录（便于 audit）
 
 ---
 
