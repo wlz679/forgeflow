@@ -170,8 +170,15 @@ function calculate(inputs: Record<string, string>): string[] {
     '• 12-month projection:        revenue = ' + money(annualRevenue) + ' · net profit = ' + money(annualNetProfit) + '\n' +
     '• (Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    '💡 Tip: ' + tip + '\n\n' +
+    '🧭 Decision Recommendation\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '• 🧭 Decision Question: 3.2x ROAS 看起来"还行"，但扣除 Gross Margin + CAC + 退货率后**真正值不值得继续投放**？\n' +
+    '• 🧭 Recommendation: 必须满足 3 个条件才算"值得投"：(1) **Net ROAS ≥ 1.0x**（扣毛利后不亏）；(2) **CAC ≤ LTV × 0.33**；(3) **90 天 cohort LTV/CAC ≥ 3.0**。任一不满足 → 不扩量，先优化 ROAS 到 4.0x 再投；3 个都满足 → 加预算 25-50% 抢占市场窗口期。\n' +
+    '• 🧭 Key Uncertainty: 3.2x 是 28d click attribution，但高客单产品 90d 才回本（lead gen / B2B SaaS 90d attribution 默认）；28d 测出 3.2x ≠ 真值；attribution window 选错 = 决策错。\n' +
+    '• 🧭 Next Action: 立刻检查 (a) Gross Margin 是多少？(b) 切到 90d attribution 后 ROAS 多少？(c) 90d cohort LTV/CAC 是多少？任一不达标 → 不加预算。';
 
+  // P140f-4: L5 Decision Recommendation (per ADR-0002) — v2.0 灵魂 = Decision Support
   return [r];
 }
 
@@ -246,6 +253,7 @@ const customFn =
   "r2+='\\u2022 (Assumes constant ratio \\u2014 actual scaling often degrades 10\\u201330% as audience saturates)\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
+  "r2+=`\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 3.2x ROAS 看起来\"还行\"，但扣除 Gross Margin + CAC + 退货率后**真正值不值得继续投放**？\n• 🧭 Recommendation: 必须满足 3 个条件才算\"值得投\"：(1) **Net ROAS ≥ 1.0x**（扣毛利后不亏）；(2) **CAC ≤ LTV × 0.33**；(3) **90 天 cohort LTV/CAC ≥ 3.0**。任一不满足 → 不扩量，先优化 ROAS 到 4.0x 再投；3 个都满足 → 加预算 25-50% 抢占市场窗口期。\n• 🧭 Key Uncertainty: 3.2x 是 28d click attribution，但高客单产品 90d 才回本（lead gen / B2B SaaS 90d attribution 默认）；28d 测出 3.2x ≠ 真值；attribution window 选错 = 决策错。\n• 🧭 Next Action: 立刻检查 (a) Gross Margin 是多少？(b) 切到 90d attribution 后 ROAS 多少？(c) 90d cohort LTV/CAC 是多少？任一不达标 → 不加预算。`;" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -295,7 +303,7 @@ const engine: ToolEngine = {
   calculate,
   generate: calculate,
   staticExamples: [
-    '⏰ ROAS Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — ROAS ≥ 4.0x; profitable and scalable\n• Gross ROAS: 4.00x  ·  Net profit margin: 140.0%\n• Attribution: 28d  ·  Effective cost per $1K revenue: $250\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Ad spend:     $5,000\n• Revenue:      $20,000\n• Gross margin: 60.0%\n• Net profit:   $7,000  (after ad cost)\n• Attribution:  28d\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• +20% revenue: ROAS = 4.80x · net profit = $9,400\n• −20% spend:   ROAS = 5.00x · net profit = $8,000\n• Both:         ROAS = 6.00x (compound gain)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Break-even revenue: $8,333  (at 60% margin → ROAS = 1.67x)\n• Revenue lift needed: -58.3% to break even on net profit\n• Or raise gross margin to 25.0% on current revenue to break even\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Scale 2x at current ratio: revenue = $40,000 · profit = $14,000/period\n• 12-month projection:        revenue = $240,000 · net profit = $84,000\n• (Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Excellent ROAS. Scale confidently — increase budget 2–3x and expand to lookalike audiences or adjacent channels (Meta if on Google, TikTok if on Meta, etc.). Maintain creative refresh cadence to avoid audience fatigue.\n',
+    '⏰ ROAS Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — ROAS ≥ 4.0x; profitable and scalable\n• Gross ROAS: 4.00x  ·  Net profit margin: 140.0%\n• Attribution: 28d  ·  Effective cost per $1K revenue: $250\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Ad spend:     $5,000\n• Revenue:      $20,000\n• Gross margin: 60.0%\n• Net profit:   $7,000  (after ad cost)\n• Attribution:  28d\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• +20% revenue: ROAS = 4.80x · net profit = $9,400\n• −20% spend:   ROAS = 5.00x · net profit = $8,000\n• Both:         ROAS = 6.00x (compound gain)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Break-even revenue: $8,333  (at 60% margin → ROAS = 1.67x)\n• Revenue lift needed: -58.3% to break even on net profit\n• Or raise gross margin to 25.0% on current revenue to break even\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Scale 2x at current ratio: revenue = $40,000 · profit = $14,000/period\n• 12-month projection:        revenue = $240,000 · net profit = $84,000\n• (Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Excellent ROAS. Scale confidently — increase budget 2–3x and expand to lookalike audiences or adjacent channels (Meta if on Google, TikTok if on Meta, etc.). Maintain creative refresh cadence to avoid audience fatigue.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 3.2x ROAS 看起来"还行"，但扣除 Gross Margin + CAC + 退货率后**真正值不值得继续投放**？\n• 🧭 Recommendation: 必须满足 3 个条件才算"值得投"：(1) **Net ROAS ≥ 1.0x**（扣毛利后不亏）；(2) **CAC ≤ LTV × 0.33**；(3) **90 天 cohort LTV/CAC ≥ 3.0**。任一不满足 → 不扩量，先优化 ROAS 到 4.0x 再投；3 个都满足 → 加预算 25-50% 抢占市场窗口期。\n• 🧭 Key Uncertainty: 3.2x 是 28d click attribution，但高客单产品 90d 才回本（lead gen / B2B SaaS 90d attribution 默认）；28d 测出 3.2x ≠ 真值；attribution window 选错 = 决策错。\n• 🧭 Next Action: 立刻检查 (a) Gross Margin 是多少？(b) 切到 90d attribution 后 ROAS 多少？(c) 90d cohort LTV/CAC 是多少？任一不达标 → 不加预算。',
   ],
   faq: [
     { q: 'What is a good ROAS?', a: 'A "good" ROAS depends on your gross margin. At 50% margin, ROAS ≥ 2.0x is break-even; ROAS ≥ 3.0x is comfortably profitable. At 70% margin, ROAS ≥ 1.5x is break-even. Most solopreneurs target 4.0x+ for sustainable scaling.' },
