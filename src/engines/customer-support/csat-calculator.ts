@@ -118,5 +118,17 @@ const engine: ToolEngine = {
     'https://www.icmi.com/research/contact-center-performance',
   ],
   engineKey: true,
+  // P140f-p3-T2: 完整 6 字段 playbook (per P140f §4.3 + ADR-0001)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  // 内容镜像 Phase 1 csat 🧭 Decision Recommendation 4 子段 + ADR-0001 决策逻辑
+  playbook: {
+    goal: '用户该不该信任自己的 CSAT 数字作为留存决策依据',
+    input: 'csat_pct (0-100) + response_rate (0-100) + sample_size (≥0) + target_csat (0-100)',
+    output: '健康带 🟢≥90 / 🟡80-90 / 🟠70-80 / 🔴<70 + 95% CI 边界 + 响应率偏差警告',
+
+    constraint: '样本 < 100 视为低置信; 响应率 < 20% 视为有偏样本; CSAT 是滞后指标',
+    tool: 'Phase 1 csat-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    memory: 'CustomerGauge 2024 + Gainsight CS Benchmarks + Zendesk CX 2024',
+  },
 };
 registerEngine(engine);
