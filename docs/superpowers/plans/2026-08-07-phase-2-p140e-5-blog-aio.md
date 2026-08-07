@@ -294,23 +294,73 @@ git commit -m "feat(blog): P140e rewrite csat-calculator blog 3000+ words with �
 
 ---
 
-### Task 3-6: roas / cac / churn / burn 深度博客重写
+### Task 3: roas 深度博客重写 (3000-4000 字 + 6 AIO 元素)
 
-**Files (分别):**
-- Task 3: `src/content/blog/best-solopreneur-roas-calculator.md`
-- Task 4: `src/content/blog/best-solopreneur-cac-calculator.md`
-- Task 5: `src/content/blog/best-solopreneur-churn-rate-calculator.md`
-- Task 6: `src/content/blog/best-solopreneur-burn-rate-calculator.md`
+**Files:**
+- Modify: `src/content/blog/best-solopreneur-roas-calculator.md`
 
-每个 task 流程同 Task 2，但内容根据 ADR-0002/0003/0004/0005 + Phase 1 calc 🧭 Decision Recommendation 4 子段。cross-link 分别:
-- roas → [LTV Calculator] / [CAC Calculator] / [Customer Acquisition Cost]
-- cac → [LTV Calculator] / [Churn Rate Calculator] / [ROAS Calculator]
-- churn → [Customer Health Score] / [NPS Calculator] / [NRR Calculator]
-- burn-rate → [MRR Growth Rate Calculator] / [Burn Multiple Calculator] / [CAC Calculator]
+**Interfaces:**
+- 同 Task 2 schema/format
+- 内容根据 ADR-0002 + Phase 1 roas 🧭 Decision Recommendation 4 子段
+- cross-link: [LTV Calculator] / [CAC Calculator] / [Customer Acquisition Cost]
+- decision_query: 'Is your ROAS high enough to scale ad spend without burning cash?'
 
-每个 commit message:
+**Step 1-6**: 同 Task 2 模式（frontmatter 5 新字段 + body 3000+ 字 en + bodyZh 镜像 + wc -w 验证 + pnpm check + commit）
+
+**Step 7: Commit**
 ```
-feat(blog): P140e rewrite <slug>-calculator blog 3000+ words with §13.2 6 AIO elements
+feat(blog): P140e rewrite roas-calculator blog 3000+ words with §13.2 6 AIO elements
+```
+
+---
+
+### Task 4: cac 深度博客重写
+
+**Files:**
+- Modify: `src/content/blog/best-solopreneur-cac-calculator.md`
+
+**Interfaces:**
+- 内容根据 ADR-0003 + Phase 1 cac 🧭 Decision Recommendation 4 子段
+- cross-link: [LTV Calculator] / [Churn Rate Calculator] / [ROAS Calculator]
+- decision_query: 'Is your CAC low enough to be profitable across all channels?'
+
+**Step 7: Commit**
+```
+feat(blog): P140e rewrite cac-calculator blog 3000+ words with §13.2 6 AIO elements
+```
+
+---
+
+### Task 5: churn-rate 深度博客重写
+
+**Files:**
+- Modify: `src/content/blog/best-solopreneur-churn-rate-calculator.md`
+
+**Interfaces:**
+- 内容根据 ADR-0004 + Phase 1 churn-rate 🧭 Decision Recommendation 4 子段
+- cross-link: [Customer Health Score] / [NPS Calculator] / [NRR Calculator]
+- decision_query: 'Is your churn rate low enough to retain customers profitably?'
+
+**Step 7: Commit**
+```
+feat(blog): P140e rewrite churn-rate-calculator blog 3000+ words with §13.2 6 AIO elements
+```
+
+---
+
+### Task 6: burn-rate 深度博客重写
+
+**Files:**
+- Modify: `src/content/blog/best-solopreneur-burn-rate-calculator.md`
+
+**Interfaces:**
+- 内容根据 ADR-0005 + Phase 1 burn-rate 🧭 Decision Recommendation 4 子段
+- cross-link: [MRR Growth Rate Calculator] / [Burn Multiple Calculator] / [CAC Calculator]
+- decision_query: 'Is your burn rate sustainable enough to fund growth without running out?'
+
+**Step 7: Commit**
+```
+feat(blog): P140e rewrite burn-rate-calculator blog 3000+ words with §13.2 6 AIO elements
 ```
 
 ---
