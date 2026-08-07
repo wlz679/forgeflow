@@ -211,18 +211,68 @@ git commit -m "feat(engine): P140f-p3-T2 csat-calculator complete Playbook 6 fie
 
 ---
 
-### Task 3-6: roas / cac / churn / burn 完整 6 字段 playbook
+### Task 3: roas-calculator 完整 6 字段 playbook
 
-每个 task 流程同 T2，内容来自 ADR-0002/0003/0004/0005。
+**Files:**
+- Modify: `src/engines/marketing/roas-calculator.ts`
 
-**T3 roas** Goal: '用户该不该继续在当前渠道投放广告'
-**T4 cac** Goal: '用户该不该继续从当前渠道获取客户'
-**T5 churn (saas)**: '用户该不该投入资源救流失客户'（注意 saas/ 不是 retention/）
-**T6 burn-rate** Goal: '用户该不该现在启动融资 / 找桥 / 砍预算'
+**Interfaces:**
+- T1 schema 已 ship; Goal 字段: '用户该不该继续在当前渠道投放广告'
+- 内容来源: ADR-0002 + Phase 1 roas 🧭 Decision Recommendation 4 子段
 
-每个 commit message:
+**Step 1-3**: 同 T2 模式 (6 字段填充 + pnpm check + commit)
+
+**Step 4: Commit**
 ```
-feat(engine): P140f-p3-T<n> <slug>-calculator complete Playbook 6 fields (Goal=<decision question>)
+feat(engine): P140f-p3-T3 roas-calculator complete Playbook 6 fields (Goal=该不该继续投放)
+```
+
+---
+
+### Task 4: cac-calculator 完整 6 字段 playbook
+
+**Files:**
+- Modify: `src/engines/valuation/cac-calculator.ts`
+
+**Interfaces:**
+- Goal 字段: '用户该不该继续从当前渠道获取客户'
+- 内容来源: ADR-0003 + Phase 1 cac 🧭 Decision Recommendation
+
+**Step 4: Commit**
+```
+feat(engine): P140f-p3-T4 cac-calculator complete Playbook 6 fields (Goal=该不该继续获取客户)
+```
+
+---
+
+### Task 5: churn-rate-calculator 完整 6 字段 playbook
+
+**Files:**
+- Modify: `src/engines/saas/churn-rate-calculator.ts` (**注意 saas/ 不是 retention/**)
+
+**Interfaces:**
+- Goal 字段: '用户该不该投入资源救流失客户'
+- 内容来源: ADR-0004 + Phase 1 churn-rate 🧭 Decision Recommendation
+
+**Step 4: Commit**
+```
+feat(engine): P140f-p3-T5 churn-rate-calculator complete Playbook 6 fields (Goal=该不该救流失)
+```
+
+---
+
+### Task 6: burn-rate-calculator 完整 6 字段 playbook
+
+**Files:**
+- Modify: `src/engines/saas/burn-rate-calculator.ts`
+
+**Interfaces:**
+- Goal 字段: '用户该不该现在启动融资 / 找桥 / 砍预算'
+- 内容来源: ADR-0005 + Phase 1 burn-rate 🧭 Decision Recommendation
+
+**Step 4: Commit**
+```
+feat(engine): P140f-p3-T6 burn-rate-calculator complete Playbook 6 fields (Goal=该不该融资)
 ```
 
 ---
