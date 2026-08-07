@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-03",
+  "lastUpdated": "2026-08-07",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1249,10 +1249,10 @@
       "cacheReadMult": 0.1,
       "models": {
         "gemini-3.5-flash": {
-          "input": 1.5,
-          "output": 9,
-          "batchInput": 0.75,
-          "batchOutput": 4.5,
+          "input": 0.75,
+          "output": 4.5,
+          "batchInput": 0.375,
+          "batchOutput": 2.25,
           "name": "Gemini 3.5Flash",
           "family": "flash35",
           "contextWindow": "1M",
@@ -1262,17 +1262,18 @@
           "supportsBatch": true
         },
         "gemini-3.1-pro": {
-          "input": 2.5,
-          "output": 15,
-          "batchInput": 1.25,
-          "batchOutput": 7.5,
+          "input": 2,
+          "output": 12,
+          "batchInput": 1,
+          "batchOutput": 6,
           "name": "Gemini 3.1 Pro",
           "family": "pro",
           "contextWindow": "1M",
           "order": 2,
           "icon": "▲",
           "supportsCache": true,
-          "supportsBatch": true
+          "supportsBatch": true,
+          "longContextDoubling": ">200K"
         },
         "gemini-3-flash": {
           "input": 0.5,
