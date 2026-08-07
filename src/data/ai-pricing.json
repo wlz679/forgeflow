@@ -1249,8 +1249,8 @@
       "cacheReadMult": 0.1,
       "models": {
         "gemini-3.5-flash": {
-          "input": 0.75,
-          "output": 4.5,
+          "input": 1.5,
+          "output": 9,
           "batchInput": 0.375,
           "batchOutput": 2.25,
           "name": "Gemini 3.5Flash",
@@ -1638,6 +1638,22 @@
           "family": "flash3",
           "contextWindow": "1M",
           "order": 45
+        },
+        "gemini-robotics-er-2-preview": {
+          "input": 2,
+          "output": 10,
+          "name": "Gemini Robotics Er 2Preview",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 46
+        },
+        "gemini-robotics-er-1.6-preview": {
+          "input": 1,
+          "output": 5,
+          "name": "Gemini Robotics Er 1.6Preview",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 47
         }
       }
     },
