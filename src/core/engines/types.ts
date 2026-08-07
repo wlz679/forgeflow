@@ -26,6 +26,8 @@ export interface ClientConfig {
   customFn?: string; // JS function body for type='custom', receives (inputs, pick, fill)
 }
 
+import type { PlaybookMetadata } from './metadata';
+
 export interface ToolEngine {
   slug: string;
   title: string;
@@ -76,4 +78,9 @@ export interface ToolEngine {
    *  string `default: 'X'` at ToolInput — kept there; this is a separate
    *  engine-level bag of per-input overrides. Optional. */
   defaults?: Record<string, string | number>;
+  // P140f-p3 NEW: Playbook 6 字段 metadata (P140f §4.3 Phase 3)
+  // optional 向后兼容 100 现有 engine; T2-T7 渐进填充
+  /** 6 字段 Playbook metadata (Goal / Input / Output / Constraint / Tool / Memory).
+   *  Goal 字段必填且含"决策/decision/该不该/是否"关键词 — v2.0 Decision Support 灵魂落地。 */
+  playbook?: PlaybookMetadata;
 }
