@@ -246,6 +246,17 @@ const engine: ToolEngine = {
     'Scroll down to see 5 comparison scenarios at different total spend levels.',
   ],
   engineKey: true,
+  // P140f-p3-T4: 完整 6 字段 playbook (per P140f §4.3 + ADR-0003)
+  // Goal 含"该不该"+"继续"+"获取"三关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
+  // 内容镜像 Phase 1 cac 🧭 Decision Recommendation 4 子段 + ADR-0003 决策逻辑
+  playbook: {
+    goal: '用户该不该继续从当前渠道获取客户',
+    input: 'marketingSpend (≥0) + salesSpend (≥0) + newCustomers (≥0) + avgRevenuePerCustomer (≥0) + grossMargin (0-100)',
+    output: 'CAC ($/客户) + 健康带 🟢$80 / 🟡$80-300 / 🟠$300-700 / 🔴$700+ + LTV:CAC 比例 + 渠道拆分建议',
+    constraint: 'newCustomers = 0 时 CAC 无意义 (Infinity); mix CAC vs single-channel 差异大; LTV 历史 vs 预测需区分',
+    tool: 'Phase 1 cac-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    memory: 'SaaS Capital 2024 + ChartMogul 2024 + OpenView 2024 (SMB/mid-market/enterprise CAC 区间)',
+  },
 };
 
 registerEngine(engine);
