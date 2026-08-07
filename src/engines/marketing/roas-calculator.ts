@@ -327,6 +327,17 @@ const engine: ToolEngine = {
     'Compare the health band to your target ROAS; use the What-If scenarios to model improvements.',
   ],
   engineKey: true,
+  // P140f-p3-T3: 完整 6 字段 playbook (per P140f §4.3 + ADR-0002)
+  // Goal 含"该不该"+"投放"双关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
+  // 内容镜像 Phase 1 roas 🧭 Decision Recommendation 4 子段 + ADR-0002 决策逻辑
+  playbook: {
+    goal: '用户该不该继续在当前渠道投放广告',
+    input: 'adSpend (≥0) + revenue (≥0) + grossMargin (0-100) + attributionWindow',
+    output: 'ROAS ratio + 健康带 🟢≥4.0x / 🟡2.0-4.0x / 🟠1.0-2.0x / 🔴<1.0x + Net ROAS %',
+    constraint: 'adSpend = 0 时 ROAS 无意义 (Infinity); 28d attribution 可能低估 B2B 高客单 ROAS',
+    tool: 'Phase 1 roas-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    memory: 'Meta 7d click / Google Ads 28d click / B2B 90d attribution 行业基准',
+  },
 };
 
 registerEngine(engine);
