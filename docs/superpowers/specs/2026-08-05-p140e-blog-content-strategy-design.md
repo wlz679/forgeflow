@@ -346,3 +346,89 @@ composite = 0.50 × category_weight + 0.25 × gsc_weight + 0.25 × commercial_ke
 - 调研 `cross-analyze.mjs` 留有 sub-agent 修过公式 bug 后的 JS 语法残留（tsc 警告但不影响 build，因为不在 src/ + tests/）。
 - `xlsx` 是 sub-agent 临时装的依赖，spec 批准后 `pnpm remove xlsx` 清理。
 - 调研脚本 + JSON 数据保留在 `_research/` 作为研究证据，可重跑。
+
+## 13. AIO-Aware Amendment (维度 3 §12.6 Action C — user 拍板 2026-08-07)
+
+> ⚠️ **本节是 P140e spec 的关键升级**——基于维度 3 §12.6 web-scan 发现的 Google AI Overview 默认化危机（2026-07-10）。
+
+### 13.1 关键市场信号（来自维度 3 scan）
+
+| 信号 | 日期 | 影响 |
+|---|---|---|
+| Google AI Overview 成为 default | 2026-07-10 | 传统结果 CTR ↓58%；68% 搜索无点击 |
+| 仅 1% 点击 AI answer 内源链接 | 2026-07 | 传统 SEO 价值 ↓ |
+| Human-edited 内容排名 8x 优势 | Semrush 42000 文章研究 | 验证"深度博客"策略 |
+| Common Sense Media: AI Mode "biggest upgrade in 25 years" | 2026-05 | 市场转折点确认 |
+
+**结论**: P140e 原 §6.1-6.3"5 篇深度博客 + Top 15 + 中文试水"策略**方向正确但需调整**——从"高排名 → 高 traffic"转向"AI Overview 引用率 → trust → 转化"。
+
+### 13.2 P140e 5 篇深度博客调整（保持 §6.1 范围，加 C2 元素）
+
+| 调整 | 原 spec | AIO-aware 升级 |
+|---|---|---|
+| **schema.org FAQPage** | ❌ | ✅ **必填**（AI Overview 偏好结构化 FAQ） |
+| **comparison table** | ❌ | ✅ **必填**（ForgeFlowKit vs 行业 baseline vs 替代方案） |
+| **EEAT 标注**（Author bio / Source / Updated date） | ❌ | ✅ **必填**（Human-edited 8x 优势需显式证明） |
+| **Decision Recommendation 段** | 部分 | ✅ **必填**（与 v2.0 灵魂对齐 — 决策支持而非单纯解释） |
+| **跨 calc 互联** | 弱 | ✅ **强**（每个 blog 文末"下一步用 [X Calculator] 验证"按钮） |
+| **长度** | 当前 ~1500 字 | **3000-4000 字**（AI Overview 偏好 comprehensive sources） |
+
+### 13.3 100 blog 内容审计 + EEAT 标注层（P141 候选，user 拍板启动）
+
+- 100 现有 blog（`src/content/blog/<slug>.md`）需 audit:
+  - 是否有人类编辑痕迹（Author bio / Sources / Decision 段）
+  - 是否含 schema.org FAQPage
+  - 是否含 comparison table
+- 不达标的 blog：P141 单独 plan 重写（C3 渐进）
+- **触发条件**: Phase 2 (5 篇深度) ship 后 + 流量监测数据出炉（Day 14-21 GSC 数据）
+
+### 13.4 P140e §8 Ship Path 调整
+
+**原 §8** (Day 0-30):
+- Day 1-3: 5 篇深度博客
+- Day 7-14: 观察 GSC
+- Day 14-21: 写 Top 15 - 5 = 10 篇
+- Day 21-30: 中文试水 + 复盘
+- Day 30+: 100 篇统一升级
+
+**AIO-aware §13.4** (Day 0-30):
+- Day 1-3: **5 篇深度博客（按 §13.2 AIO-aware 格式 — FAQPage schema + comparison table + EEAT + Decision Recommendation + 跨 calc 互联）**
+- Day 7-14: 观察 GSC **+ AIO 引用率**（Ahrefs/Search Console 是否有 AI Overview 引用）
+- Day 14-21: 写 Top 15 - 5 = 10 篇（AIO-aware 格式）
+- Day 21-30: 删中文试水（§9.2 已关闭），加 **100 blog EEAT audit**（P141 候选）
+- Day 30+: 100 篇统一升级（按 P141 渐进）
+
+### 13.5 不重 brainstorm 理由（user 拍板 2026-08-07）
+
+P140e spec **不重写**，只在原 spec 加 §13 章节：
+- 原 §6.1-6.3 短期/中期/长期 范围**不变**
+- §6.4 Risk 已隐含 AIO 影响，新增 §13.4 显式化
+- §9 Open Questions 已关闭（不引入新问题）
+- §8 Ship Path 微调（非重排）
+
+**唯一新增决策**: 5 篇深度 blog 加 §13.2 6 项 AIO-aware 元素（schema / table / EEAT / Decision / cross-link / 3000-4000 字）。
+
+**这一变更不需要重新 brainstorm**——属于"市场信号触发的 spec 扩展"，按 CLAUDE.md 红线维度 3 §12.6 主动提议 + user 拍板执行。
+
+### 13.6 与 §6.4 Risk 关联
+
+§6.4 原 Risk:
+- 5 篇博客投入不达预期
+- Top 20 商业价值排序有偏差
+- 中文投入回报低
+
+§13.6 新增 Risk:
+- **AIO 引用率不达预期**: 即使 5 篇质量高，AI Overview 不引用 → 流量仍 ↓
+- **Schema 错误**: FAQPage 结构化数据错误可能被 Google 忽略
+- **EEAT 审核延迟**: Google 重新审核 EEAT 信号可能滞后 1-2 月
+
+**缓解**:
+- Day 7-14 观察 GSC **+ AIO 引用率**双指标
+- Schema 验证: P141 加入 schema.org 校验 guard
+- EEAT: 显式标注 + 来源引用（每个数据点都标）
+
+---
+
+**Date**: 2026-08-07
+**Authors**: [Phase 1 KB4 ADR scaffold + 维度 3 §12.6 Action C amendment]
+**Related**: §6.1 短期方案 + §8 Ship Path + §12.6 维度 3 强制约束
