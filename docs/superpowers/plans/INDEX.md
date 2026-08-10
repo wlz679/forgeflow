@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-07（P140e Phase 2）
+> **最后更新:** 2026-08-10（P140f Phase 3）
 
 ---
 
@@ -107,6 +107,7 @@
 | `2026-07-19-p27-memory-audit-pass.md` | P27 Memory Audit Pass | audit | 2026-07-19 |
 | `2026-08-06-phase-1-kb4-adr-decision-layer.md` | P140f Phase 1 KB4 ADR + 决策支持层 | v2-strategy | 2026-08-06 |
 | `2026-08-07-phase-2-p140e-5-blog-aio.md` | Phase 2 P140e 5 blog AIO-aware — blog schema 5 EEAT 字段 + 5 blog 重写 3000+ 字 + 新 AIO guard | v2-strategy | 2026-08-07 |
+| `2026-08-07-phase-3-p140f-playbook-6-fields.md` | Phase 3 P140f Playbook 6 字段 — 100 calc 引擎统一 metadata + 5 demo 完整 playbook + 新 guard | v2-strategy | 2026-08-07 |
 
 ---
 
@@ -136,9 +137,9 @@
 | 3 · P2 — LocalStorage trilogy | 3 |
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 15 |
-| 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 12 |
+| 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 13 |
 | 7 · Multi-language mirrors | 1 |
-| **索引 plan 文件总数** | **53** |
+| **索引 plan 文件总数** | **54** |
 | 8 · Excluded (pr-body) | 1 |
 | **目录文件总数** | **54** |
 
