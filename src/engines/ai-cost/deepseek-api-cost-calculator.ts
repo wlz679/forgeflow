@@ -519,6 +519,16 @@ const engine: ToolEngine = {
     { name: 'projectionMonths', label: 'Projection Period', placeholder: '', type: 'select', options: ['3', '6', '12'] },
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // Single comprehensive example covering all 6 sections

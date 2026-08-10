@@ -313,6 +313,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['⏰ Funnel Value Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — overall CR < 0.1%; funnel broken or extreme thin audience\n• Overall conversion rate: 0.019%  ·  Biggest leak: stage 1→2\n• Revenue: $1,500  ·  Net profit: $1,050\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Impressions:  100,000\n• Clickers:     2,500  (CTR 2.5%, drop 97.5%)\n• Leads:        375  (lead rate 15.0%, drop 85.0%)\n• Sales:        18.8  (sale rate 5.0%, drop 95.0%)\n• AOV:          $80  ·  Margin: 70%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lead rate +5.0pp (15.0% → 20.0%):\n  • Sales: 18.8 → 25  ·  Revenue: $2,000\n  • CR: 0.019% → 0.025%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• To reach $10,000 revenue at current AOV: need 125 sales\n  • Required overall CR: 0.125% (currently 0.019%)\n  • Required lead rate: 5.0% (currently 15.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Scale impressions 2x: 37.5 sales → $3,000 revenue\n• 12-month projection (constant funnel): $18,000 revenue\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Biggest leak at the awareness stage (1→2): impressions → clickers lost 98%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.\n'],
   faq: [

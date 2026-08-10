@@ -357,6 +357,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['🎯 Pipeline Coverage Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟠 Warning — 1.0x–2.0x; under the 2x comfort zone, at risk if win rate slips\n• Coverage ratio: 1.5x (pipeline / quota)  ·  Weighted coverage: 0.38x (after 25% win rate)\n• Required additional pipeline: $2,500,000  ·  Gap to quota (weighted): $625,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Quota target: $1,000,000  ·  Current pipeline: $1,500,000\n• Expected win rate: 25%  ·  3x rule target: $3,000,000 (3× quota)\n• Weighted pipeline: $375,000  ·  Coverage: 1.5x  ·  Weighted coverage: 0.38x\n• Gap to 3x rule: $1,500,000 more pipeline needed  ·  Gap to 1x break-even: $2,500,000 (or win rate → 67% at current pipeline)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• If pipeline $1.50M→$2M: 2.0x (good); weighted 0.50x\n• If win rate 25%→50%: weighted 0.75x (covRatio unchanged at 1.5x, still warning); weighted pipeline = $750,000\n• If both ($2M + 50%): 2.0x (good); weighted 1.00x = $1,000,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 3x rule (🟢 Excellent): need pipeline ≥ $3,000,000 (gap: $1,500,000)\n• 1x break-even (🟠 Warning lower bound): need pipeline ≥ $4,000,000 (gap: $2,500,000)\n• Alternative: at current pipeline $1.50M, win rate → 67% to hit 1x break-even (3x rule unreachable via win rate alone — needs more pipeline)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟡 Good (2.0x)\n• Gap to next tier: 0.5x of pipeline growth\n• Milestone summary: 1.5x current  ·  need 1.5x for 1x  ·  need 2.0x for 🟡  ·  need 3.0x for 🟢 (3x rule)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: 1.0x–2.0x is the danger zone — you have enough pipeline to hit quota, but no cushion for slippage. The 3x rule (≥ 3.0x) is the B2B SaaS benchmark for reliable attainment. Push toward 2.0x first: late-stage acceleration (Negotiation→Closing), increase top-of-funnel activity by 30–50%, and audit deal-stage conversion. A 10% win rate improvement is often faster than doubling Discovery count — pair with sales velocity (P8-2) to find your best lever.\n'],
   faq: [

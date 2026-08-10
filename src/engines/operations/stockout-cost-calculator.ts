@@ -291,6 +291,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['⏰ Stockout Cost Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier\n• Total stockout cost: $275,000/year  ·  45.83% of annual revenue\n• Lost immediate: $5,000  ·  Lost LTV: $270,000  ·  Recovery captures: $30,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lost sales per day:       $1,000\n• Stockout duration:        5 days  ·  cumulative: $5,000\n• Customer loss rate:       30.0%  ·  applies to $5,000 = $1,500 lost-customers\n• Customer LTV:             $200\n• Recovery rate:            10.0%  ·  recaptures $30,000\n• Annual revenue:           $600,000\n• Stockout cost / revenue:  45.83%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut stockout days by 50%: total cost = $137,500 (22.92%)  ·  annual savings = $137,500\n• Raise recovery rate to 25%: total cost = $230,000  ·  additional savings = $45,000\n• Combined (50% less days + 25% recovery): see Milestone below\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Max stockout days for 🟢 (< 5% of revenue): 0.5 days\n• Current vs target: reduce stockout days by 4.5 to hit 🟢\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 12-mo savings if stockout cut 50%: $137,500\n• Reinvested at 8% return: $11,000/yr additional\n• Compounded over 3 years: $33,000 (vs $0 reinvested)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ≥ 15% revenue loss to stockouts is critical. Switch to multi-supplier (reduces single-point-of-failure risk), implement safety stock buffers based on demand std dev (use reorder point calculator), and audit the top 3 SKUs by lost sales weekly.\n'],
   faq: [

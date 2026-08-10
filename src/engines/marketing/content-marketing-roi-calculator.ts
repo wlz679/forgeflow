@@ -314,6 +314,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['⏰ Content Marketing ROI Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — CR 1–3%; healthy content funnel\n• Steady-state monthly net: $6,000  ·  Annual: $72,000\n• 12-month ROI: 100%  ·  Attribution: last-touch (100% credit)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Monthly pieces:        8\n• Months to rank:        6 (ramp-up)\n• Peak monthly traffic:  5,000\n• Conversion rate:       2.0%\n• AOV:                   $80\n• Monthly content cost:  $2,000  ·  Annual: $24,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Conversion rate +1pp (2.0% → 3.0%):\n  • 12-mo total: $24,000 → $48,000 (+$24,000)\n  • ROI: 100% → 200%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Required conversion rate to break even at 12-mo: 1.00%\n  • Currently: 2.0%\n  • Gap: -1.00pp\n  • Or reduce content cost by 100%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Ramp-up: 6 months × $2,000 = $12,000 sunk\n• Steady state (post-month 6): $6,000/month net\n• Annual steady-state projection: $72,000\n• 12-mo cumulative: $24,000 net  (100% ROI)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Healthy content ROI. A/B test attribution model — first/last-touch claim full credit, linear distributes 0.7x. Adjust based on your actual sales cycle.\n'],
   faq: [

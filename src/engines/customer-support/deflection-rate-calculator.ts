@@ -67,6 +67,16 @@ const engine: ToolEngine = {
     wordPools: {},
     customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var vol = cnn(Number(inputs.monthly_tickets) || 0);\n  var rate = cnn(Number(inputs.deflection_rate) || 0);\n  var cost = cnn(Number(inputs.cost_per_ticket) || 0);\n  var tool = cnn(Number(inputs.tool_monthly_cost) || 0);\n  var tgt = cnn(Number(inputs.target_deflection) || 0);\n  var deflected = vol * (rate / 100);\n  var saved = deflected * cost;\n  var net = saved - tool;\n  var roi = tool > 0 ? (net / tool) * 100 : 0;\n  var gap = tgt - rate;\n  var band = rate >= 40 ? 'Excellent' : rate >= 25 ? 'Good' : rate >= 10 ? 'Warning' : 'Critical';\n  var emoji = rate >= 40 ? '🟢' : rate >= 25 ? '🟡' : rate >= 10 ? '🟠' : '🔴';\n  var ifRate = Math.min(100, rate + 10);\n  var ifBand = ifRate >= 40 ? 'Excellent' : ifRate >= 25 ? 'Good' : ifRate >= 10 ? 'Warning' : 'Critical';\n  var ifEmoji = ifRate >= 40 ? '🟢' : ifRate >= 25 ? '🟡' : ifRate >= 10 ? '🟠' : '🔴';\n  var ifSaved = vol * (ifRate / 100) * cost - tool;\n  return [\n    '🩺 Deflection Health: ' + emoji + ' ' + band + ' (' + rate.toFixed(1) + '% deflected · ' + net.toLocaleString() + ' net/mo)',\n    '📊 Snapshot: ' + Math.round(deflected).toLocaleString() + ' tickets/mo deflected · $' + Math.round(saved).toLocaleString() + ' gross saved · $' + Math.round(net).toLocaleString() + ' net · ' + Math.round(roi).toLocaleString() + '% ROI',\n    '🔄 What-If: if deflection climbs to ' + ifRate.toFixed(1) + '% (+10pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and net savings = $' + Math.round(ifSaved).toLocaleString() + '/mo',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need ' + Math.max(0, 40 - rate).toFixed(1) + 'pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction',\n    '🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.',\n    '💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.'\n  ];\n}",
   },
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate(inputs) {
     const vol = clampNonNegative(Number(inputs.monthly_tickets) || 0);
     const rate = clampNonNegative(Number(inputs.deflection_rate) || 0);

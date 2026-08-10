@@ -383,6 +383,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['⏰ LTV by Channel Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively\n• Winner: Ch1 (25.00x)  ·  Loser: Ch4 (13.33x)\n• Blended CAC: $32.90  ·  Blended LTV:CAC: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x\n   🟢 Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x\n   🟢 Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x\n   🟢 Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x\n   🟢 Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x\n\n• Total spend:  $5,100\n• Total conv:   155\n• Blended CAC:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nShift 25% from Ch4 → Ch1:\n  • Ch1: ratio 25.00x → 19.23x (CAC rises)\n  • Ch4: ratio 13.33x → 17.78x (improves if convs stay)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTo push Ch4 from 13.33x to 🟢 (≥3.0x):\n  • Target CAC: $400.00 (currently $30.00)\n  • Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nScaling Ch1 2x (same ratio):\n  • Revenue: $50,000\n  • Profit (after ad cost): $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Both channels healthy, but Ch1 is 1.9x more efficient. Shift 20-30% of Ch4 budget to Ch1.\n'],
   faq: [

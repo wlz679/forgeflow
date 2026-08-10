@@ -301,6 +301,16 @@ const engine: ToolEngine = {
     { name: 'dataProcessCost', label: 'Data Processing Cost ($)', placeholder: 'e.g. 100', type: 'number' },
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 8× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  8× A100 80GB @ $1.50/hr × 25.2 hrs           $302.40\nCloud Storage: 500 GB @ $0.10/GB/mo × 0.1 mo                $5.00\nData Processing: $$1000.00                                   $1000.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $1307.40\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $100.80\nPer Epoch Total:    $101.38\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $100.80        | $1101.38        \n2        | $201.60        | $1202.77        \n3        | $302.40        | $1304.15        \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $302.40        (23%)  █████\nStorage: $5.00          (0%)  \nData:    $1000.00       (76%)  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $915.18\nExpected:                                      $1307.40\nPessimistic (on-demand + overhead):            $1961.10\n\nWith Spot/Reserved Discount (40% off):          $784.44\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $1307.40     | $3922.20     | $6537.00     | $13074.00    | $32685.00    | $65370.00   \n\n💡 25.2 GPU-hours ≈ 20,160 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch to full fine-tune:  $3922.20  (3x cost, but better quality)\n• Halve epochs to 1:  $653.70  (may need more data to compensate)\n• Double epochs to 6:  $2614.80  (diminishing returns past 5)\n• Switch to cheaper GPU in same tier:  check RunPod/Vast.ai for 40-50% savings\n',

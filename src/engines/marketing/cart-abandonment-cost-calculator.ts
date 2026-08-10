@@ -369,6 +369,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: [
     'Cart Abandonment Cost Calculator\n\n🩺 Health:\n------------------------------------------------\n* 🟢 Good — recovery ROI ≥ 300%; recovery spend is highly profitable\n* Recovery ROI: 1280%  *  Net gain: $41,300\n* Abandonment rate: 70%  *  Recovery rate: 8%\n\n------------------------------------------------\n\n📊 Inputs Snapshot:\n------------------------------------------------\n* Monthly traffic:           50,000\n* Cart add rate:             20%\n* Cart abandonment rate:     70%\n* Average order value:       $80\n* Recovery rate:             8%\n* Recovery cost per send:    $0.5\n\n------------------------------------------------\n\n💰 Cost Breakdown:\n------------------------------------------------\n* Cart creations:       10,000  (traffic x 20% add rate)\n* Completed orders:     3,000  (30% conversion)\n* Abandoned carts:      7,000  (cart creations x 70%)\n* Lost revenue:         $560,000  (abandoned x AOV)\n* Recoverable revenue:  $44,800  (lost x 8% recovery)\n* Recovery cost:        $3,500  (abandoned x cost/send)\n* Net gain:             $41,300\n\n------------------------------------------------\n\n🔄 What-If:\n------------------------------------------------\n* +50% recovery rate: recovery ROI = 1920% * net gain = $63,700\n* -25% cost per send: recovery ROI = 1707% * net gain = $42,175\n* -10pp abandonment:  recovery ROI = 1280% * net gain = $35,400\n\n------------------------------------------------\n\n⚖️ Break-Even:\n------------------------------------------------\n* Minimum recovery rate for 100% ROI: 0.63%  (cost/send / AOV)\n* Headroom: 7.38pp before recovery ROI hits 100%\n* At break-even, every recovery dollar returns exactly one recovery dollar in recovered revenue\n\n------------------------------------------------\n\n🎯 Milestone:\n------------------------------------------------\n* Annualized net gain:    $495,600  (at current monthly run-rate)\n* Annual lost revenue:    $6,720,000\n* Annual recovered:       $537,600\n* (Assumes constant traffic + rates — refresh quarterly with new funnel data)\n\n------------------------------------------------\n\n💡 Tip: Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.\n',

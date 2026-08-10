@@ -325,6 +325,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['⏰ Supplier Performance Scorecard Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — composite 84.0 = grade B; solid, monitor\n• Composite: 84.0/100  ·  Grade: B  ·  Weight preset: balanced\n• Sub-scores: on-time 88 · defect 75 · lead 85 · cost 90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• On-time delivery:        88.0%  →  score 88  (weight 40%)\n• Defect rate:             2.5%  →  score 75  (weight 30%)\n• Lead time variance:      3.0 days  →  score 85  (weight 15%)\n• Cost variance:           5.0%  →  score 90  (weight 15%)\n• Composite:               84.0/100  ·  Grade B\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Defect rate drops to 0.5%: composite = 90.0 (Δ +6.0 points)\n• On-time improves to 95%: composite = 86.8 (Δ +2.8 points)\n• Combined (defect 0.5% + on-time 95%): see Milestone\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Min on-time score for grade B (≥ 80 composite): 78.1\n• Current on-time score: 88.0\n• On-time headroom: already above target\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Current grade: B (composite 84.0)\n• Upgrade target: 90+  ·  Points needed: +6.0\n• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.\n'],
   faq: [

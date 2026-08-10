@@ -68,6 +68,16 @@ const engine: ToolEngine = {
     wordPools: {},
     customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var vol = cnn(Number(inputs.monthly_tickets) || 0);\n  var aht = cnn(Number(inputs.avg_handle_time_min) || 0);\n  var occ = cnn(Number(inputs.target_occupancy_pct) || 0);\n  var hr = cnn(Number(inputs.work_hours_per_month) || 0);\n  var sh = cnn(Number(inputs.shrinkage_pct) || 0);\n  var resp = cnn(Number(inputs.target_response_time_min) || 0);\n  var total = vol * aht;\n  var prod = hr * 60 * (1 - sh/100) * (occ/100);\n  var raw = prod > 0 ? total / prod : 0;\n  var agents = Math.ceil(raw);\n  var util = agents > 0 ? (total / (agents * prod)) * 100 : 0;\n  var band = util <= 85 ? 'Excellent' : util <= 100 ? 'Good' : util <= 120 ? 'Warning' : 'Critical';\n  var emoji = util <= 85 ? '🟢' : util <= 100 ? '🟡' : util <= 120 ? '🟠' : '🔴';\n  var ifVol = Math.round(vol * 1.2);\n  var ifTotal = ifVol * aht;\n  var ifRaw = prod > 0 ? ifTotal / prod : 0;\n  var ifAgents = Math.ceil(ifRaw);\n  var delta = ifAgents - agents;\n  return [\n    '🩺 Capacity Health: ' + emoji + ' ' + band + ' (' + agents + ' agents required · ' + util.toFixed(1) + '% utilization)',\n    '📊 Snapshot: ' + Math.round(total).toLocaleString() + ' total handle min/mo · ' + Math.round(prod).toLocaleString() + ' productive min/agent · ' + sh.toFixed(0) + '% shrinkage',\n    '🔄 What-If: if volume grows 20% to ' + ifVol.toLocaleString() + ' tickets/mo, required = ' + ifAgents + ' agents (+' + delta + ' hires) at same ' + util.toFixed(1) + '% util',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent (' + (agents+1) + ' total) for ' + ((total / ((agents+1) * prod)) * 100).toFixed(1) + '% util',\n    '🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors',\n    '💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.'\n  ];\n}",
   },
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate(inputs) {
     const vol = clampNonNegative(Number(inputs.monthly_tickets) || 0);
     const aht = clampNonNegative(Number(inputs.avg_handle_time_min) || 0);

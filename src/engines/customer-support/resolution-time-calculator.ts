@@ -55,6 +55,16 @@ const engine: ToolEngine = {
     wordPools: {},
     customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var sla = cnn(Number(inputs.sla_attainment_pct) || 0);\n  var med = cnn(Number(inputs.median_resolution_hr) || 0);\n  var p90 = cnn(Number(inputs.p90_resolution_hr) || 0);\n  var vol = cnn(Number(inputs.monthly_resolved) || 0);\n  var tail = med > 0 ? p90 / med : 0;\n  var tailLabel = tail <= 1.5 ? 'uniform' : tail <= 3.0 ? 'moderate' : 'heavy';\n  var band = sla >= 85 ? 'Excellent' : sla >= 70 ? 'Good' : sla >= 50 ? 'Warning' : 'Critical';\n  var emoji = sla >= 85 ? '🟢' : sla >= 70 ? '🟡' : sla >= 50 ? '🟠' : '🔴';\n  var ifSla = Math.min(100, sla + 10);\n  var ifBand = ifSla >= 85 ? 'Excellent' : ifSla >= 70 ? 'Good' : ifSla >= 50 ? 'Warning' : 'Critical';\n  var ifEmoji = ifSla >= 85 ? '🟢' : ifSla >= 70 ? '🟡' : ifSla >= 50 ? '🟠' : '🔴';\n  var gap = Math.max(0, 85 - sla);\n  var missedApprox = Math.round(vol * (100 - sla) / 100);\n  var ifMissed = Math.round(vol * (100 - ifSla) / 100);\n  return [\n    '🩺 Resolution Health: ' + emoji + ' ' + band + ' (' + sla.toFixed(1) + '% in-SLA · tail ratio ' + tail.toFixed(1) + 'x ' + tailLabel + ')',\n    '📊 Snapshot: ' + vol.toLocaleString() + ' resolved/mo · median ' + med.toFixed(1) + 'hr · p90 ' + p90.toFixed(1) + 'hr · tail ' + tail.toFixed(1) + 'x → ' + missedApprox.toLocaleString() + ' tickets missed SLA',\n    '🔄 What-If: if attainment climbs to ' + ifSla.toFixed(1) + '% (+10pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and ~' + ifMissed.toLocaleString() + ' tickets would still miss',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +' + gap.toFixed(1) + 'pp attainment — investigate the tier with the highest tail ratio',\n    '🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.',\n    '💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.'\n  ];\n}",
   },
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate(inputs) {
     const sla = clampNonNegative(Number(inputs.sla_attainment_pct) || 0);
     const med = clampNonNegative(Number(inputs.median_resolution_hr) || 0);

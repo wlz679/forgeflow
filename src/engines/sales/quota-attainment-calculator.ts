@@ -366,6 +366,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['🎯 Quota Attainment Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — < 50% of quota; urgent catch-up needed\n• Attainment: 40%  ·  On track: ✅ yes\n• Projected year-end: $1,000,000  ·  Gap to quota: $600,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Annual quota: $1,000,000  ·  Months elapsed: 6 of 12\n• Revenue closed: $400,000  ·  Remaining: 6 months\n• Expected at-pace: $500,000  ·  Behind/ahead: $100,000 (behind)\n• Current pace: $67K/mo  ·  Required pace: $100K/mo  ·  Gap: $-16,667/mo (-20%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• If maintain current pace ($67K/mo) for 6 mo: +$400,000 → $800K total = 80% (good)\n• If hit required pace ($100K/mo) for 6 mo: +$600,000 → $1M total = 100% (excellent, onTrack)\n• If accelerate 20% to $120K/mo for 6 mo: +$720,000 → $1.12M total = 112% (excellent)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for on-track at month 6: $500,000 closed (expected at-pace)\n• Gap to at-pace: $100,000 behind\n• Target for full quota: $1,000,000  ·  Required: $100K/mo for 6 remaining months\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟠 Warning (50%)\n• Gap to next tier: 10pp\n• At current pace, year-end: $1.20M (120%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band — pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to 🟠 is > 30pp, consider a quota reset conversation with leadership now — not at year-end. A pipeline review is overdue.\n'],
   faq: [

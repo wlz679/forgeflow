@@ -200,6 +200,16 @@ const engine: ToolEngine = {
   staticExamples: ['📊 Customer Health Score Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — Score 60–80; monitor closely, engagement check\n• Health Score: 73.0 / 100  ·  Preset: balanced\n• Sub-scores: Product 75.0 · NPS 70.0 · Support 80.0 · Engagement 80.0 · Contract 60.0\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Product Usage:    75 → 75.0 normalized\n• NPS:              40 → 70.0 normalized\n• Support Tickets:  5 → 80.0 normalized\n• Engagement:       80 → 80.0 normalized\n• Contract Value:   60 → 60.0 normalized\n• Weights: Product 20% · NPS 20% · Support 20% · Engagement 20% · Contract 20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• NPS 40→70: Score 76.0 (+3.0)\n• Product Usage 75→90: Score 76.0 (+3.0)\n• Support Tickets 5→2: Score 75.4 (+2.4)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: Score ≥ 80\n• Current score: 73.0  ·  Gap to 🟢: 7.0 points\n• Action: raise Product Usage to 100 OR improve any other signal by 7.0 normalized points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent 80\n• Gap to next tier: 7.0 points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Good balanced score. Push to Excellent by improving the lowest normalized signal.\n'],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   faq: [
     { q: 'What is a customer health score?', a: 'A composite score 0-100 computed from multiple signals (product usage, NPS, support tickets, engagement, contract value) that predicts account health. The early warning system for at-risk accounts.' },

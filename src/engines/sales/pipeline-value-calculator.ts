@@ -340,6 +340,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['📊 Pipeline Value Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — mid-market sweet spot; room to grow top-of-funnel\n• Weighted pipeline: $215,000  ·  Nominal pipeline: $470,000\n• Weighted forecast (50% confidence): $107,500  ·  Coverage ratio: 45.7% of nominal\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Discovery    (10 × $15,000 × 20%) = $30,000\n• Proposal     (5 × $25,000 × 40%) = $50,000\n• Negotiation  (3 × $35,000 × 60%) = $63,000\n• Closing      (2 × $45,000 × 80%) = $72,000\n• Total weighted: $215,000  ·  Nominal face value: $470,000\n• 50% confidence forecast: $107,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Proposal probability 40%→50%: +$12,500 (per deal: $2,500)\n• Add 1 more Closing deal: +$36,000 (immediate lift to weighted)\n• Closing conversion 80%→85%: +$4,500 (no extra deals needed)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $500,000 weighted pipeline\n• Gap to 🟢: $285,000\n• Action: need 8 more Closing deal(s) at $36,000 each (or equivalent from Proposal/Negotiation)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($500K)\n• Gap to next tier: $285,000\n• Quarterly revenue at this pace: ~$53,750/month (if pipeline converts at 25%/qtr)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: $200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest.\n'],
   faq: [

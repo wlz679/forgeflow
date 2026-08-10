@@ -313,6 +313,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['⏰ Email Campaign ROI Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — ROI ≥ 300%; profitable and scalable\n• Gross revenue: $12,500  ·  Net revenue: $12,000\n• Industry benchmark open rate: 21% (yours: 25.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• List size:       10,000\n• Emails sent:     40,000  (4 per subscriber)\n• Opens:           10,000  (25.0% open rate)\n• Clicks:          500  (5.0% CTR)\n• AOV per click:   $25\n• Campaign cost:   $500\n• ROI:             2400%\n• Cost per click:  $1.00  ·  Cost per open: $0.05\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Open rate +5pp (25.0% → 30.0%):\n  • Revenue: $12,500 → $15,000 (+$2,500)\n  • ROI: 2400% → 2900%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• To hit 🟢 ROI (300%):\n  • Required revenue: $2,000  (currently $12,500)\n  • Required clicks: 80  ·  Required open rate: 0.0% (currently 25.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Annual projection (list +5%/quarter):\n  • Revenue: $53,876  ·  Cost: $2,000\n  • Net: $51,876  ·  Annual ROI: 2594%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Excellent ROI. Scale send cadence (weekly → 2-3x/week), test list segmentation, and refresh creative monthly. Don\'t let audience fatigue set in.\n'],
   faq: [

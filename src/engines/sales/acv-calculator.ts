@@ -341,6 +341,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: [
     '🚀 ACV Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — ACV $10,000–$50,000/year; mid-market sweet spot\n• Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year\n• Expansion-adjusted (10%): $27,500/year\n• Formula: $300,000 ÷ 12 customers ÷ 12 months × 12 × (1 + 10%) = $27,500/year\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total contract value: $300,000\n• Contract length: 12 months\n• Number of customers: 12\n• Annual expansion rate: 10%\n• Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)\n• Contract length 12→24 months: $12,500/year base (-50.0%)\n• Customers 12→24: $12,500/year base (-50.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $50,000/year ACV\n• Gap to 🟢: $25,000/year\n• Path A — raise total contract value by $300,000 (same customers, larger deals)\n• Path B — reduce to ~6 or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($50,000)\n• Gap to next tier: $25,000 (before expansion)\n• At current pace: ~$27,500/year per-customer revenue (with 10% expansion)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ACV $10,000–$50,000/year is the mid-market sweet spot. To reach enterprise, invest in procurement-ready features (SSO, SOC2, audit logs), security review templates, and named CSM support. Pair with sales velocity (P8-2) to ensure deal size growth isn\'t coupled with cycle compression you can\'t sustain.\n',

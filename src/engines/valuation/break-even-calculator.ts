@@ -174,6 +174,16 @@ const engine: ToolEngine = {
     { name: "monthlyGrowthRate", label: "Monthly Revenue Growth (%)", placeholder: "e.g. 10 (leave 0 for flat)", type: "number" },
   ],
   clientConfig: { type: "custom", wordPools: {}, customFn },
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate(inputs: Record<string, string>): string[] { return calculateBreakEven(inputs); },
   staticExamples: [
     '📊 Break-Even Analysis\n\n⏱️ Break-Even Timeline\n• Initial Investment:  $0\n• Monthly Costs:       $0/mo\n• Monthly Revenue:     $0/mo\n• Flat revenue:        Never — monthly costs exceed revenue. You need growth or lower costs.\n🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.\n\n\n🩺 Break-Even Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.\n\n💡 Tip: Negative monthly profit means you\'re burning cash every month. Either raise prices, cut costs, or accept that you\'ll need more runway to reach break-even. The longer you delay, the harder it gets.',

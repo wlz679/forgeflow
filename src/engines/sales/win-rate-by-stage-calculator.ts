@@ -400,6 +400,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: [
     '🎯 Win Rate by Stage Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — overall win rate 15%–25%; mid-market B2B SaaS typical\n• Overall win rate: 15%  ·  Funnel cascade: 50.0% × 60.0% × 66.7% × 75.0%\n• Bottleneck: SQL→Opp at 50.0% (lowest stage rate)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• SQL→Opp:          50 / 100 = 50.0%\n• Opp→Proposal:     30 / 50 = 60.0%\n• Proposal→Neg:     20 / 30 = 66.7%\n• Negotiation→Won:  15 / 20 = 75.0%\n• Funnel product: 50.0% × 60.0% × 66.7% × 75.0% = 15%\n• Out of 100 SQLs entered → ~15 expected won deals at this rate\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• If SQL→Opp 50.0%→65.0%: 20% overall (+4.5pp)\n• If Negotiation→Won 75.0%→85.0%: 17% overall (+2.0pp)\n• Cumulative lift of +5pp at every stage: 20% overall\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: 25% overall win rate\n• Gap to 🟢: 10.0pp\n• Path A — lift SQL→Opp from 50.0% to ~83% (or equivalent elsewhere)\n• Path B — lift Negotiation→Won from 75.0% to ~125% (late-stage fix)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent (25%)\n• Gap to next tier: 10.0pp\n• At current pace: 15 won deals per 100 SQLs entered (1 in 7)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel.\n',

@@ -178,6 +178,16 @@ const engine: ToolEngine = {
   staticExamples: ['📊 Expansion Revenue Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — Expansion 15–25%; top-quartile mid-market expansion\n• Expansion: 17% of starting MRR  ·  Total expansion: $17,000\n• Upsell: $12,000  ·  Cross-sell: $5,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Starting MRR: $100,000\n• Upsell MRR (more usage): +$12,000\n• Cross-sell MRR (new product): +$5,000\n• Total Expansion MRR: $17,000\n• Expansion %: 0.1700 (17%) of starting MRR\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Double upsell (+$12,000 → +$24,000): Expansion 29% (+12.0pp)\n• Double both (upsell + cross-sell): Expansion 34% (+17.0pp)\n• Pure cross-sell (no upsell): Expansion 5%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: Expansion ≥ 25% (expansion MRR ≥ $25,000)\n• Current expansion: $17,000  ·  Gap to 🟢: $8,000\n• Action: add $8,000 in expansion MRR (upsell + cross-sell)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent (25%)\n• Gap to next tier: $8,000 more expansion MRR\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Expansion 15–25% is healthy mid-market motion. Push to Excellent (≥25%) by focusing on the top 20% of accounts — a 10% price increase on high-value accounts often moves expansion more than broad-stroke campaigns.\n'],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   faq: [
     { q: 'What is expansion revenue?', a: 'Expansion revenue is the additional MRR you generate from existing customers — either upsell (same product, more usage/seats) or cross-sell (new product from your portfolio). It is the top-line growth lever that enables NRR > 100% even when GRR is mediocre.' },

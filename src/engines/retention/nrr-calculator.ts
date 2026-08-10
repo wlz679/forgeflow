@@ -301,6 +301,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: ['📊 NRR Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟠 Warning — NRR 100–110%; expansion barely offsets churn, fragile\n• NRR: 102%  ·  Growth above baseline: +2.0%\n• Net retained MRR: $102,000  ·  Lost MRR (downgrade + churn): $13,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Starting MRR:           $100,000\n• Expansion MRR (upsell + cross-sell):  +$15,000\n• Downgrade MRR:         -$5,000\n• Churned MRR:           -$8,000\n• Net retained MRR:      $102,000 (starting + expansion − downgrade − churn)\n• NRR ratio: 1.0200 (102%)  ·  Lost as % of start: 13.0%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Halve churn ($4,000 instead of $8,000): NRR 106% (+4.0pp)\n• Double expansion (+$15,000 → +$30,000): NRR 117% (+15.0pp)\n• Eliminate downgrades (-$5,000 → 0): NRR 107% (+5.0pp)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: NRR ≥ 120% (retained MRR ≥ $120,000)\n• Current net retained: $102,000  ·  Gap to 🟢: $18,000\n• Action: add $18,000 in expansion MRR (or equivalent via churn/downgrade reduction)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟡 Good (110%)\n• Gap to next tier: $8,000 more retained MRR\n• Annual compounded projection: ~$126,824/year MRR (if NRR compounds for 12 months)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: NRR 100–110% is fragile — one bad quarter of churn can flip you under 100%. Double down on customer success: quarterly business reviews, usage monitoring (red-flag accounts before they churn), and a price-increase motion for accounts getting value but underpaying.\n'],  // auto-filled by codegen-examples (placeholder for first codegen run)
   faq: [

@@ -331,6 +331,16 @@ const engine: ToolEngine = {
   ],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
+  // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
+  // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
+  playbook: {
+    goal: '用户该不该用此计算器的结果作为决策依据',
+    input: 'engine 定义的 inputs 字段',
+    output: 'engine 定义的 generate() 返回数组',
+    constraint: 'apply 引擎 inputs 时受实际场景约束',
+    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
+  },
   generate: calculate,
   staticExamples: [
     'Coupon Attribution Calculator\n\n🩺 Health:\n------------------------------------------------\n* 🟢 Good — true ROI >= 100%; coupon creates incremental profit\n* True ROI: 180%  *  Net revenue gain: $180,000\n* Cannibalization: 30%  *  Coupon cost: $100,000\n\n------------------------------------------------\n\n📊 Inputs Snapshot:\n------------------------------------------------\n* Coupon value:        $20\n* Redemption rate:     10.0%\n* Average order value: $80\n* Baseline revenue:    $50,000\n* Cannibalization:     30%\n\n------------------------------------------------\n\n💰 Revenue Breakdown:\n------------------------------------------------\n* Total coupon revenue: $400,000  (baseline x 10.0% x AOV)\n* Cannibalization loss: $120,000  (orders that would have happened anyway)\n* Incremental revenue:  $280,000  (after cannibalization adjustment)\n* Coupon cost:          $100,000  (baseline x 10.0% x discount)\n* Net revenue gain:     $180,000\n\n------------------------------------------------\n\n🔄 What-If:\n------------------------------------------------\n* +20% redemption: true ROI = 180% * net gain = $216,000\n* -50% coupon value: true ROI = 460% * net gain = $230,000\n* -10pp cannibalization: true ROI = 220% * net gain = $220,000\n\n------------------------------------------------\n\n⚖️ Break-Even:\n------------------------------------------------\n* Cannibalization ceiling: 75.0%  (above this, coupons destroy value)\n* Headroom: 45.0pp before net revenue gain hits zero\n* At break-even, every coupon dollar returns exactly one coupon dollar in net revenue\n\n------------------------------------------------\n\n🎯 Milestone:\n------------------------------------------------\n* Annualized net gain: $2,160,000  (at 1 campaign/month cadence)\n* Annual incremental revenue: $3,360,000\n* Annual coupon cost: $1,200,000\n* (Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)\n\n------------------------------------------------\n\n💡 Tip: Healthy true ROI. Lock in this audience * offer * channel combination as a template; A/B test only one variable at a time (discount depth, audience, creative) so you can attribute the next +20pp of ROI to a specific lever. Document the cannibalization % you measured — it is the single most-cited number in coupon post-mortems.\n',
