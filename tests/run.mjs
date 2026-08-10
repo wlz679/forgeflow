@@ -57,7 +57,7 @@ const r = spawnSync(tsxBin, [...tsxArgs, ...process.argv.slice(2), ...tests], {
 // Surface this so users know to opt in.
 const exitCode = r.status ?? 1;
 if (!process.env.RUN_BUILD_TESTS) {
-  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 43 build-dependent suites skipped.');
+  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 45 build-dependent suites skipped.');
   console.log('[skip-mode] Set RUN_BUILD_TESTS=1 (or run `pnpm test:build`) to enable:');
   console.log('[skip-mode]   baselayout-clerk-script, baselayout-sync-script,');
   console.log('[skip-mode]   header-clerk-render, header-sync-ui, privacy-policy-sync,');
@@ -80,6 +80,7 @@ if (!process.env.RUN_BUILD_TESTS) {
   console.log('[skip-mode]   input-labels-i18n-audit, claude-md-invariant-guard,');
   console.log('[skip-mode]   ai-cost-t2-7-zh-output, v3-render-coverage-guard,');
   console.log('[skip-mode]   content-prose-shape-guard, content-prose-zh-counterpart-warn,');
-  console.log('[skip-mode]   blog-aio-coverage-guard');
+  console.log('[skip-mode]   blog-aio-coverage-guard, decision-layer-coverage-guard,');
+  console.log('[skip-mode]   playbook-6-fields-coverage-guard');
 }
 process.exit(exitCode);
