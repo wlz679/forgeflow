@@ -12,7 +12,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -20,6 +22,40 @@ const PRICING_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing.json');
 
 const PRICING = JSON.parse(fs.readFileSync(PRICING_PATH, 'utf8'));
 const CHECK_MODE = process.argv.includes('--check');
+// P141-B1-T1: --use-build-customfn 启用 buildCustomFn codegen path
+// (B1-T2 将翻转为默认;当前 flag-gated 以保证不破坏现有 customFn 输出)
+const USE_BUILD_CUSTOMFN = process.argv.includes('--use-build-customfn');
+
+/**
+ * P141-B1-T1: 通过 spawn-tsx 调用 src/core/buildCustomFn.ts 的 buildCustomFn
+ * (.mjs 不能直接 import .ts;走 tsx subprocess 是 P52 + codegen-examples 已建立的 pattern)
+ * @returns buildCustomFn 生成的 JS source string,或抛错
+ */
+function callBuildCustomFn(modelMap, engineSlug, mapping) {
+  const tsxBin = path.join(ROOT, 'node_modules', '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
+  // 使用 .ts 后缀的 runner — tsx loader 同时处理 runner + 跨模块的 .ts 导入
+  const url = new URL(`file://${path.resolve(ROOT, 'src/core/buildCustomFn.ts').replace(/\\/g, '/')}`).href;
+  const runnerSource = `
+    import { buildCustomFn } from ${JSON.stringify(url)};
+    const out = buildCustomFn(${JSON.stringify(modelMap)}, ${JSON.stringify(engineSlug)}, ${JSON.stringify(mapping)});
+    process.stdout.write(out);
+  `;
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bcf-'));
+  const runnerPath = path.join(tmpDir, 'runner.ts');
+  fs.writeFileSync(runnerPath, runnerSource, 'utf8');
+  try {
+    const r = spawnSync(tsxBin, [runnerPath], {
+      cwd: ROOT, encoding: 'utf8', shell: process.platform === 'win32',
+    });
+    if (r.status !== 0) {
+      throw new Error(`buildCustomFn tsx exited ${r.status}: ${r.stderr}`);
+    }
+    return r.stdout;
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+}
 
 // ============================================================
 // Per-engine config: how to render the data table for customFn
@@ -398,6 +434,27 @@ function buildTableContent(filePath, engine) {
 // ============================================================
 // Main
 // ============================================================
+// P141-B1-T1: --use-build-customfn demo — 调用 buildCustomFn 演示集成,
+// 不写盘。验证 spawn-tsx wiring 工作正常。B1-T2 将翻转为默认 codegen path。
+if (USE_BUILD_CUSTOMFN) {
+  console.log('[codegen-customfn] --use-build-customfn: buildCustomFn integration demo');
+  const demoEngine = ENGINES[0]; // openai-token-calculator
+  const models = PRICING.llm[demoEngine.provider].models;
+  const mapping = { input: 'i', output: 'o' };
+  try {
+    const out = callBuildCustomFn(models, demoEngine.file.replace(/\.ts$/, ''), mapping);
+    console.log(`  ✓ buildCustomFn output for ${demoEngine.file}: ${out.length} chars`);
+    console.log(`    first 120 chars: ${out.slice(0, 120).replace(/\n/g, '\\n')}...`);
+    console.log(`    contains 'var ': ${out.includes('var ')}`);
+    console.log(`    parseable: ${(() => { try { new Function('inputs', 'pick', 'fill', out); return 'yes'; } catch (e) { return 'no: ' + e.message; } })()}`);
+  } catch (e) {
+    console.error(`  ✗ buildCustomFn call failed: ${e.message}`);
+    process.exit(1);
+  }
+  console.log('[codegen-customfn] Demo complete — exiting without writing.');
+  process.exit(0);
+}
+
 console.log('[codegen-customfn] ' + (CHECK_MODE ? 'Checking' : 'Regenerating') + ' customFn data tables from PRICING...');
 
 let driftCount = 0;
