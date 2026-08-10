@@ -265,5 +265,16 @@ const engine: ToolEngine = {
     "Check the what-if scenario to see how cost-cutting extends your runway.",
   ],
   engineKey: true,
+  // P140f-p3-T6: 完整 6 字段 playbook (per P140f §4.3 + ADR-0005)
+  // Goal 含"该不该"双关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
+  // 内容镜像 Phase 1 burn-rate 🧭 Decision Recommendation 4 子段 + ADR-0005 决策逻辑
+  playbook: {
+    goal: '用户该不该现在启动融资 / 找桥 / 砍预算',
+    input: 'currentCash (≥0) + monthlyRevenue (≥0) + netBurnMonthly (≥0, 或 grossBurn + revenue 自动算)',
+    output: 'runway 月数 + 健康带 🟢>18月 / 🟡12-18月 / 🟠6-12月 / 🔴<6月 + Default Alive/Dead 状态 + burn multiple',
+    constraint: 'cash=0 时无意义; 收入 vs 实际 netBurn 需区分; Net Burn 扣除一次性大额 / 含承诺未到账',
+    tool: 'Phase 1 burn-rate-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    memory: 'OpenView 2024 SaaS runway benchmark + ICONIQ Growth 2024 burn multiple + YC default alive/dead 阈值',
+  },
 };
 registerEngine(engine);
