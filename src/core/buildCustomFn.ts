@@ -16,8 +16,8 @@ export interface ModelFieldMap {
   output: string;
   /** 可选:JSON 'context' / 'contextWindow' → customFn 'c' / 'cw' */
   context?: string;
-  /** 其他可选字段 */
-  [key: string]: string;
+  /** 其他可选字段 (允许 undefined 以兼容可选字段的 index 访问) */
+  [key: string]: string | undefined;
 }
 
 /**

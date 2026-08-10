@@ -27,13 +27,13 @@ test('buildCustomFn: openai-style input/output 映射', () => {
 });
 
 test('buildCustomFn: var → const 替换', () => {
-  const src = buildCustomFn({ x: { input: 1 } }, 'test', { input: 'i' });
+  const src = buildCustomFn({ x: { input: 1 } }, 'test', { input: 'i', output: 'o' });
   assert.equal(src.includes('var '), false, 'must not contain var keyword');
 });
 
 test('buildCustomFn: 嵌套三元 → 查表', () => {
-  const src = buildCustomFn({ x: { input: 1 } }, 'test', { input: 'i' });
-  // 不应该有三元链 (3 个或以上连续 `? : : ` 模式 → 嵌套三元)
+  const src = buildCustomFn({ x: { input: 1 } }, 'test', { input: 'i', output: 'o' });
+  // 不应该有三元链 (任何 `? ... : ...` 模式都算 — nested ternary 应完全消除)
   const ternaryChain = src.match(/\?[^:?]+:[^:?]+:/g) || [];
-  assert.equal(ternaryChain.length < 3, true, `found ${ternaryChain.length} ternary chains`);
+  assert.equal(ternaryChain.length, 0, 'must have no nested ternary');
 });
