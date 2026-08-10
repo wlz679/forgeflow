@@ -312,6 +312,17 @@ const engine: ToolEngine = {
     'Read the Churn Attribution breakdown to identify whether voluntary or involuntary churn is your biggest opportunity, then scroll to the scenario comparisons to see how improving churn rates changes your trajectory.',
   ],
   engineKey: true,
+  // P140f-p3-T5: 完整 6 字段 playbook (per P140f §4.3 + ADR-0004)
+  // Goal 含"决策"+"该不该"+"救"三关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
+  // 内容镜像 Phase 1 churn-rate 🧭 Decision Recommendation 4 子段 + ADR-0004 决策逻辑
+  playbook: {
+    goal: '用户该不该投入资源救流失客户',
+    input: 'customersStart (≥0) + newCustomers (≥0) + customersLost (≥0) + monthlyRevenue (≥0)',
+    output: '月流失 % + 年化 % + 健康带 🟢<2% / 🟡2-3% / 🟠3-5% / 🔴>5% + Logo vs Revenue Churn 双轨',
+    constraint: 'customersStart = 0 时无法算; cohort vs aggregate 影响真值; 主动 vs 被动流失 (payment fail) 区别',
+    tool: 'Phase 1 churn-rate-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    memory: 'Recurly 20-40% 被动流失 baseline + ChartMogul cohort benchmark + Stripe SaaS 流失分布',
+  },
 };
 
 registerEngine(engine);
