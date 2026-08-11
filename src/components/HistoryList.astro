@@ -19,10 +19,13 @@ const { lang } = Astro.props;
     {t('history.subtitle', lang, { count: 0 })}
   </p>
 
+  <!-- P141-B2-T3: status 变化区域 aria-live (empty state vs entry list announcement) -->
   <div
     data-history-container
     data-mode="full"
     class="space-y-3"
+    aria-live="polite"
+    role="status"
   >
     <!-- Rendered at runtime by history-init.client.ts -->
   </div>
