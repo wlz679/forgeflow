@@ -644,21 +644,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   // Model data: full keys matching MODELS constant → {i,o,f,c,bi,bo,n}
-  "var M={};" +
-  "M['gpt-5.5']={i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT 5.5',od:1};" +
-  "M['gpt-5.2']={i:1.75,o:14,f:'g5',c:'272K',bi:0.875,bo:7,n:'GPT 5.2',od:2};" +
-  "M['gpt-5']={i:1.25,o:10,f:'g5',c:'272K',bi:0.625,bo:5,n:'GPT 5',od:3};" +
-  "M['gpt-5-mini']={i:0.25,o:2,f:'g5',c:'272K',bi:0.125,bo:1,n:'GPT 5Mini',od:4};" +
-  "M['gpt-5-nano']={i:0.05,o:0.4,f:'g5',c:'272K',bi:0.025,bo:0.2,n:'GPT 5Nano',od:5};" +
-  "M['gpt-4.1']={i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT 4.1',od:6};" +
-  "M['gpt-4.1-mini']={i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT 4.1Mini',od:7};" +
-  "M['gpt-4.1-nano']={i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT 4.1Nano',od:8};" +
-  "M['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'O3',rm:4,od:9};" +
-  "M['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'O4Mini',rm:4,od:10};" +
-  "M['gpt-4o']={i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT 4o',od:11};" +
-  "M['gpt-4o-mini']={i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT 4o Mini',od:12};" +
-  "M['gpt-4-turbo']={i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT 4Turbo',od:13};" +
-  "M['gpt-3.5-turbo']={i:0.5,o:1.5,f:'lg',c:'16K',bi:0.25,bo:0.75,n:'GPT 3.5Turbo',od:14};" +
+  "var M={};\nM['gpt-5.5']={i:5,o:30,f:'g5',c:'1M',bi:2.5,bo:15,n:'GPT 5.5',od:1};\nM['gpt-5.2']={i:1.75,o:14,f:'g5',c:'272K',bi:0.875,bo:7,n:'GPT 5.2',od:2};\nM['gpt-5']={i:1.25,o:10,f:'g5',c:'272K',bi:0.625,bo:5,n:'GPT 5',od:3};\nM['gpt-5-mini']={i:0.25,o:2,f:'g5',c:'272K',bi:0.125,bo:1,n:'GPT 5Mini',od:4};\nM['gpt-5-nano']={i:0.05,o:0.4,f:'g5',c:'272K',bi:0.025,bo:0.2,n:'GPT 5Nano',od:5};\nM['gpt-4.1']={i:2,o:8,f:'g41',c:'1M',bi:1,bo:4,n:'GPT 4.1',od:6};\nM['gpt-4.1-mini']={i:0.4,o:1.6,f:'g41',c:'1M',bi:0.2,bo:0.8,n:'GPT 4.1Mini',od:7};\nM['gpt-4.1-nano']={i:0.1,o:0.4,f:'g41',c:'1M',bi:0.05,bo:0.2,n:'GPT 4.1Nano',od:8};\nM['o3']={i:2,o:8,f:'os',c:'200K',bi:1,bo:4,n:'O3',rm:4,od:9};\nM['o4-mini']={i:1.1,o:4.4,f:'os',c:'200K',bi:0.55,bo:2.2,n:'O4Mini',rm:4,od:10};\nM['gpt-4o']={i:2.5,o:10,f:'lg',c:'128K',bi:1.25,bo:5,n:'GPT 4o',od:11};\nM['gpt-4o-mini']={i:0.15,o:0.6,f:'lg',c:'128K',bi:0.075,bo:0.3,n:'GPT 4o Mini',od:12};\nM['gpt-4-turbo']={i:10,o:30,f:'lg',c:'128K',bi:5,bo:15,n:'GPT 4Turbo',od:13};\nM['gpt-3.5-turbo']={i:0.5,o:1.5,f:'lg',c:'16K',bi:0.25,bo:0.75,n:'GPT 3.5Turbo',od:14};" +
 
   // Family icons
   "var FI={g5:'\\uD83D\\uDD35',g41:'\\uD83D\\uDFE2',os:'\\uD83D\\uDFE0',lg:'\\u26AA'};" +

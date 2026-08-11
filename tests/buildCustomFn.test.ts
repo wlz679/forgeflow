@@ -1,8 +1,11 @@
 // P141-B1-T1: codegen AST builder for customFn data tables
 // 守护 buildCustomFn 行为契约:
 //   1. JSON field → customFn local key 映射 (openai-style input→i, output→o, context→c)
-//   2. 输出不含 var 关键字 (Quick Win #5: var → const)
+//   2. 输出不含 var 关键字 (Quick Win #5: var → const) — 仅 default 'field-shard' 模式
 //   3. 输出不产生嵌套三元链 (Quick Win #6: 三元 → 查表)
+//
+// P141-B1-T2: model-shard 模式 — 输出 `M['k']={i:5,o:10,...};` 形式,
+// 适配 8 AI cost engine runtime 期待(`Object.keys(M)` + `m.i`)。
 //
 // 位置说明:plan 原文写 `tests/core/buildCustomFn.test.ts`,但 `tests/run.mjs` 的
 // flat glob 不递归子目录(P52 已建立此 pattern)。为保证 `pnpm check` 守护此测试,
@@ -36,4 +39,83 @@ test('buildCustomFn: 嵌套三元 → 查表', () => {
   // 不应该有三元链 (任何 `? ... : ...` 模式都算 — nested ternary 应完全消除)
   const ternaryChain = src.match(/\?[^:?]+:[^:?]+:/g) || [];
   assert.equal(ternaryChain.length, 0, 'must have no nested ternary');
+});
+
+// --- P141-B1-T2: model-shard 模式(8 AI cost engine runtime 期待) ---
+
+test('buildCustomFn: model-shard 模式输出 var M={...} 形式', () => {
+  const models = {
+    'gpt-5': { input: 2.5, output: 10 },
+    'gpt-4o': { input: 2.5, output: 10 },
+  };
+  const src = buildCustomFn(
+    models,
+    'openai-token-calc',
+    { input: 'i', output: 'o' },
+    {
+      outputFormat: 'model-shard',
+      fieldMap: (m) => `i:${m.input},o:${m.output}`,
+    },
+  );
+  // 必须以 var M={...}; 开头 — runtime 期待
+  assert.match(src, /^var M=\{/);
+  // 闭合是 `};` 形式 (var M={...};)
+  assert.match(src, /\};$/);
+  assert.match(src, /'gpt-5':\{i:2\.5,o:10\}/);
+  assert.match(src, /'gpt-4o':\{i:2\.5,o:10\}/);
+});
+
+test('buildCustomFn: model-shard 模式 openai-style 输出多行', () => {
+  const models = {
+    'gpt-5': { input: 2.5, output: 10 },
+  };
+  const src = buildCustomFn(
+    models,
+    'openai-token-calc',
+    { input: 'i', output: 'o' },
+    {
+      outputFormat: 'model-shard',
+      openaiStyle: true,
+      fieldMap: (m) => `i:${m.input},o:${m.output}`,
+    },
+  );
+  // openai 风格: `var M={};\nM['gpt-5']={i:2.5,o:10};`
+  assert.match(src, /^var M=\{\};/);
+  assert.match(src, /M\['gpt-5'\]=\{i:2\.5,o:10\};/);
+});
+
+test('buildCustomFn: model-shard 模式 new Function 可解析 + Object.keys 行为正确', () => {
+  const models = {
+    'gpt-5': { input: 2.5, output: 10 },
+    'gpt-4o': { input: 2.5, output: 10 },
+  };
+  const src = buildCustomFn(
+    models,
+    'openai-token-calc',
+    { input: 'i', output: 'o' },
+    {
+      outputFormat: 'model-shard',
+      fieldMap: (m) => `i:${m.input},o:${m.output}`,
+    },
+  );
+  // 必须能解析为合法 JS
+  const fn = new Function('inputs', 'pick', 'fill', src + 'return M;');
+  const M = fn({}, () => 0, () => 0);
+  // 模拟 runtime: Object.keys(M) + m.i
+  const keys = Object.keys(M);
+  assert.equal(keys.length, 2);
+  assert.equal(M['gpt-5'].i, 2.5);
+  assert.equal(M['gpt-5'].o, 10);
+  assert.equal(M['gpt-4o'].i, 2.5);
+  assert.equal(M['gpt-4o'].o, 10);
+});
+
+test('buildCustomFn: model-shard 必须传 fieldMap,否则抛错', () => {
+  assert.throws(
+    () => buildCustomFn({ x: { input: 1 } }, 'test', { input: 'i', output: 'o' }, {
+      outputFormat: 'model-shard',
+      // no fieldMap
+    }),
+    /requires options\.fieldMap/,
+  );
 });
