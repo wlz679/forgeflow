@@ -10,19 +10,17 @@
 // --check mode: regenerate in memory and diff against disk. Exit 1 if any drift.
 // Useful for CI: catch out-of-sync customFn tables without mutating files.
 //
-// P141-B1-T2: LLM engines (openai/claude/gemini/deepseek) now go through
-// `callBuildCustomFn` (model-shard output) by default. non-LLM engines
-// (image/gpu/training) keep the hand-minified `fieldMap` path because
-// buildCustomFn's model-shard output is currently single-record-type only
-// (every model has identical fields). Image/GPU/Training have heterogeneous
-// fields per model and stay on the inline-renderer path until buildCustomFn
-// learns multi-shape records (B1-T3+ follow-up).
+// P141-B1-T2: LLM engines (openai/claude/gemini/deepseek) render via inline
+// model-shard output (one-line customFn literal with \n escapes — equivalent
+// to buildCustomFn({outputFormat:'model-shard', ...})). Non-LLM engines
+// (image/gpu/training) keep the hand-minified multi-line path because
+// buildCustomFn's model-shard mode assumes homogeneous per-record fields,
+// while image/gpu/training have heterogeneous fields per model. Stay on this
+// dual-renderer until buildCustomFn learns multi-shape records (B1-T3+ follow-up).
 
 import fs from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -30,49 +28,10 @@ const PRICING_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing.json');
 
 const PRICING = JSON.parse(fs.readFileSync(PRICING_PATH, 'utf8'));
 const CHECK_MODE = process.argv.includes('--check');
-// P141-B1-T2: buildCustomFn is the default codegen path for LLM engines.
-// `--legacy-codegen` opt-out (escape hatch) keeps the hand-minified renderer
-// for LLM engines if buildCustomFn regresses.
+// P141-B1-T2: buildCustomFn-style model-shard render is the default codegen path
+// for LLM engines. `--legacy-codegen` opt-out (escape hatch) keeps the hand-minified
+// multi-line renderer if model-shard regresses.
 const USE_BUILD_CUSTOMFN = !process.argv.includes('--legacy-codegen');
-
-/**
- * P141-B1-T1/T2: 通过 spawn-tsx 调用 src/core/buildCustomFn.ts 的 buildCustomFn
- * (.mjs 不能直接 import .ts;走 tsx subprocess 是 P52 + codegen-examples 已建立的 pattern)
- *
- * B1-T2: 支持 model-shard outputFormat (outputFormat='model-shard' + fieldMap)。
- * fieldMap 是字符串模板形式的 JS 表达式 — runner 端用 `new Function('m', 'k', ...)` 实例化。
- * @returns buildCustomFn 生成的 JS source string,或抛错
- */
-function callBuildCustomFn(modelMap, engineSlug, mapping, options) {
-  const tsxBin = path.join(ROOT, 'node_modules', '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
-  // 使用 .ts 后缀的 runner — tsx loader 同时处理 runner + 跨模块的 .ts 导入
-  const url = new URL(`file://${path.resolve(ROOT, 'src/core/buildCustomFn.ts').replace(/\\/g, '/')}`).href;
-  // options.fieldMap 是 codegen 端已渲染好的 JS source 字符串(裸表达式),
-  // 通过 Function('m','k',`return ${fieldMap}`) 注入 runner 调用。
-  const fieldMapSource = options && options.fieldMap;
-  const runnerSource = `
-    import { buildCustomFn } from ${JSON.stringify(url)};
-    const opts = ${JSON.stringify({ ...(options || {}), fieldMap: undefined })};
-    ${fieldMapSource ? `opts.fieldMap = new Function('m', 'k', 'return ' + ${JSON.stringify(fieldMapSource)});` : ''}
-    const out = buildCustomFn(${JSON.stringify(modelMap)}, ${JSON.stringify(engineSlug)}, ${JSON.stringify(mapping)}, opts);
-    process.stdout.write(out);
-  `;
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bcf-'));
-  const runnerPath = path.join(tmpDir, 'runner.ts');
-  fs.writeFileSync(runnerPath, runnerSource, 'utf8');
-  try {
-    const r = spawnSync(tsxBin, [runnerPath], {
-      cwd: ROOT, encoding: 'utf8', shell: process.platform === 'win32',
-    });
-    if (r.status !== 0) {
-      throw new Error(`buildCustomFn tsx exited ${r.status}: ${r.stderr}`);
-    }
-    return r.stdout;
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-}
 
 // ============================================================
 // Per-engine config: how to render the data table for customFn
@@ -366,15 +325,37 @@ function generateTable(engine) {
 
   const sorted = entries.sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
 
-  // P141-B1-T2: LLM engine 走 buildCustomFn model-shard 路径(默认)。
-  // 4 个 LLM engine 都有同构 record shape(buildCustomFn 能力范围内),且 runtime 期待
-  // `M['k']={i:5,o:10,...}` 形式(与 buildCustomFn model-shard 输出一致)。
-  // non-LLM engine 暂保留 hand-minified path(buildCustomFn 暂不支持异构 record)。
+  // P141-B1-T2: LLM engine (homogeneous per-record fields) renders inline as
+  // model-shard output (one customFn string literal with \n escapes). Equivalent
+  // to buildCustomFn({outputFormat:'model-shard', ...}). T2 inline (not via
+  // callBuildCustomFn) — engine.fieldMap closure over fmt/FAMILY_SHORT/ICON
+  // can't serialize across spawn-tsx; T3+ buildCustomFn learns multi-shape
+  // records → switch to callBuildCustomFn.
   const isLlmEngine = !engine.isImage && !engine.isGpu && !engine.isTrainingGpu && !engine.isTrainingModel;
   if (USE_BUILD_CUSTOMFN && isLlmEngine) {
-    return generateTableViaBuildCustomFn(engine, sorted);
+    const fieldByKey = Object.fromEntries(sorted.map(([k, m]) => [k, engine.fieldMap(m, k)]));
+    const openaiStyle = engine.file === 'openai-token-calculator.ts';
+    const varName = 'M';
+    const srcLines = openaiStyle
+      ? [`var ${varName}={};`, ...sorted.map(([k]) => `${varName}['${k}']={${fieldByKey[k]}};`)]
+      : [`var ${varName}={${sorted.map(([k]) => `'${k}':{${fieldByKey[k]}}`).join(',')}};`];
+    const src = srcLines.join('\n');
+    // 防御性 verify:确保 src 真的可被 new Function 解析(否则 regenerate 后会让 customFn 整体失效)
+    try {
+      new Function('inputs', 'pick', 'fill', src);
+    } catch (e) {
+      throw new Error(`model-shard output not parseable for ${engine.file}: ${e.message}\n  src: ${src.slice(0, 200)}`);
+    }
+    // 转义为 JS string literal — customFn 字段是 `"..." + "..." + ...;` 拼接形式
+    // 需转义:反斜杠 → \\, 双引号 → \", 换行 → \n
+    const escaped = src.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+    return `  "${escaped}" +`;
   }
 
+  // Non-LLM engine (image/gpu/training — heterogeneous per-record fields):
+  // hand-minified multi-line '...' + '...' + 格式。buildCustomFn model-shard
+  // 不支持异构 record,所以保留 hand-minified path(B1-T3+ follow-up: buildCustomFn
+  // 学 multi-shape records 后切到 callBuildCustomFn)。
   // Openai format: M['key']={...};
   // Other format: 'key':{...},
   // Each engine has a tableStart (the declaration line emitted by the codegen,
@@ -402,57 +383,6 @@ function generateTable(engine) {
     // "var M={};" +), we use it as-is.
     return (engine.tableStart ? `  ${engine.tableStart}\n` : '') + lines;
   }
-}
-
-/**
- * P141-B1-T2: LLM engine 通过 buildCustomFn 重新生成 model-shard 数据表。
- * buildCustomFn 返真实可执行 JS (e.g. `var M={'gpt-5':{i:5,o:10,...}};`),
- * 这里把它的输出包成 JS string literal 形式(每行 `"...\\n" +`)以便塞入
- * `const customFn = "..." + "..." + ...` 字符串字面量里。
- *
- * 步骤:
- *   1. 把 sorted entries 反向构造一个 modelMap (buildCustomFn 接受 modelMap)
- *   2. 调 callBuildCustomFn(... { outputFormat:'model-shard', fieldMap, openaiStyle: file==='openai-...' })
- *   3. 拿到 `var M={...};` 或 `var M={};\nM['k']={...};` 形式
- *   4. 转义为 JS string literal,每行包成 `"..." +`
- */
-function generateTableViaBuildCustomFn(engine, sorted) {
-  // 重建 modelMap(只含 sorted 后保留的 key,让 codegen 输出与 popularKeys filter 一致)
-  const modelMap = Object.fromEntries(sorted);
-
-  // 构造 fieldMap 表达式 — 复用 engine.fieldMap 的逻辑(它本身是 `m => 'i:..,o:..'` 字符串)
-  // engine.fieldMap 是 codegen 端已有的 `(m) => 'i:...,o:...'` 函数。
-  // 但 callBuildCustomFn 跨进程传,无法直接传 function — 把 engine.fieldMap 的 source 取出。
-  // 简化:这里写一个内联 IIFE,直接 `m => engine.fieldMap(m, k)` 调用。
-  // 但 spawn 出去的 runner 看不到 engine — 必须在源里 inline engine.fieldMap body。
-  // engine.fieldMap 闭包引用 `fmt` / `FAMILY_SHORT` / `ICON` — 用 const 字符串 + JSON.stringify 序列化
-  // 到 runner 端重建,过于复杂。改用更简单的方案:把 fieldMap 实际产出 inline 进 runner。
-  // 这里用最直接的兜底:把 sorted 数组 + fieldMap 公式 序列化进 runner source,runner 端调一次
-  // engine.fieldMap 等价逻辑。但 engine.fieldMap 引用了 fmt/FAMILY_SHORT — 我们已经在 codegen 端
-  // 跑过(本函数能拿到 sorted),所以更简单方案:在 codegen 端预先跑一遍 fieldMap,把
-  // {key: fieldsString} 序列化进 runner,runner 直接拼装 model-shard 输出。
-  const fieldByKey = Object.fromEntries(sorted.map(([k, m]) => [k, engine.fieldMap(m, k)]));
-
-  // 用 runner 端 inline 拼装 (绕过 buildCustomFn fieldMap closure 问题)
-  // 产出逻辑等价 buildCustomFn model-shard:`var M={...};` 或 `var M={};\nM['k']={...};`
-  const openaiStyle = engine.file === 'openai-token-calculator.ts';
-  const varName = 'M';
-  const lines = openaiStyle
-    ? [`var ${varName}={};`, ...sorted.map(([k]) => `${varName}['${k}']={${fieldByKey[k]}};`)]
-    : [`var ${varName}={${sorted.map(([k]) => `'${k}':{${fieldByKey[k]}}`).join(',')}};`];
-  const src = lines.join('\n');
-  // 防御性 verify:确保 src 真的可被 new Function 解析(否则 regenerate 后会让 customFn 整体失效)
-  try {
-    new Function('inputs', 'pick', 'fill', src);
-  } catch (e) {
-    throw new Error(`buildCustomFn-style output not parseable for ${engine.file}: ${e.message}\n  src: ${src.slice(0, 200)}`);
-  }
-  // 转义为 JS string literal — customFn 字段是 `"..." + "..." + ...;` 拼接形式
-  // 需转义:反斜杠 → \\, 双引号 → \", 换行 → \n
-  const escaped = src.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-  // 包成 `  "..." +` 每行(customFn 既有格式) — 既然 src 是单行/多行 buildCustomFn 输出,
-  // 这里只生成 **一行** customFn 字面量(包含 \\n 真实换行在 runtime 解码为 newline)。
-  return `  "${escaped}" +`;
 }
 
 /**
@@ -511,9 +441,9 @@ function buildTableContent(filePath, engine) {
 // ============================================================
 // Main
 // ============================================================
-// P141-B1-T2: buildCustomFn is the default codegen path for LLM engines.
-// Demo block removed; integration now lives in generateTableViaBuildCustomFn().
-// (Escape hatch: `--legacy-codegen` reverts to the inline hand-minified renderer.)
+// P141-B1-T2: inline model-shard render (in `generateTable`) is the default
+// codegen path for LLM engines. (Escape hatch: `--legacy-codegen` reverts to
+// the hand-minified multi-line renderer.)
 
 console.log('[codegen-customfn] ' + (CHECK_MODE ? 'Checking' : 'Regenerating') + ' customFn data tables from PRICING...');
 
