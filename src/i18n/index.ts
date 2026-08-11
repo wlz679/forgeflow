@@ -1,4 +1,11 @@
 import { translations } from './translations';
+// P141-B1-T3: t() now delegates to the unified translate() helper (OCR Quick
+// Win #2). The helper adds two behaviors the old implementation lacked:
+//   - zh→en fallback when the requested language is missing
+//   - replaceAll placeholder substitution (old code used .replace which
+//     only swapped the first occurrence and silently left `{var}` literals
+//     behind in strings like home.subtitle that use the same var twice)
+import { translate } from './translate-helper';
 
 export type Lang = 'en' | 'zh';
 
@@ -15,14 +22,4 @@ export function getLang(astro: { url: URL; params?: Record<string, string | unde
   return 'en';
 }
 
-export function t(key: string, lang: Lang, vars?: Record<string, string>): string {
-  const entry = translations[key];
-  if (!entry) return key;
-  let text = entry[lang];
-  if (vars) {
-    for (const [k, v] of Object.entries(vars)) {
-      text = text.replace(`{${k}}`, v);
-    }
-  }
-  return text;
-}
+export const t = translate;

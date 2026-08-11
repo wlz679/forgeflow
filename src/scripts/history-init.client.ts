@@ -14,6 +14,8 @@ import {
   HISTORY_STORAGE_KEY,
   HistoryUnavailableError, QuotaExceededError,
 } from '../lib/history';
+// P141-B1-T3: import the unified translate() helper (OCR Quick Win #2).
+import { translate } from '../i18n/translate-helper';
 
 type Lang = 'en' | 'zh';
 interface HistoryEntry {
@@ -35,12 +37,16 @@ function getCurrentSlug(): string | null {
 }
 
 function t(key: string, lang: Lang, vars: Record<string, string | number> = {}): string {
+  // P141-B1-T3: this script uses a window-injected __i18n_history__ dict
+  // (subset of translations for history-only keys). Map it onto the
+  // translate() helper shape by building a synthetic translations record.
   const dict = (window as { __i18n_history__?: Record<Lang, Record<string, string>> }).__i18n_history__?.[lang] ?? {};
-  let s = dict[key] ?? key;
-  for (const [k, v] of Object.entries(vars)) {
-    s = s.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
-  }
-  return s;
+  const entry = dict[key];
+  if (entry === undefined) return translate(key, lang, vars);
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    entry,
+  );
 }
 
 function toolHref(slug: string, lang: Lang): string {

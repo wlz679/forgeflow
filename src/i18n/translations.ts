@@ -6244,3 +6244,16 @@ export const translations: Record<string, { en: string; zh: string }> = {
 /** Re-exported for client scripts (favorites-init / sync-init) that import
  *  the type from this module. Source of truth remains src/i18n/index.ts. */
 export type Lang = 'en' | 'zh';
+
+// P141-B1-T3: `t` is now a thin wrapper around the unified `translate()`
+// helper (OCR Quick Win #2). Behavior change vs the old t() in index.ts:
+//   - Old: `entry[lang]` was returned as-is, even when lang was missing
+//     (returned the raw key only when entry didn't exist).
+//   - New: `entry?.[lang] ?? entry?.en ?? key` — falls back to English
+//     when the requested language is missing, then to the key itself.
+//   - Placeholder replacement now uses replaceAll (vs old .replace which
+//     left a second `{var}` literal in strings like home.subtitle).
+// This drop-in wrapper keeps the existing `t(key, lang, vars?)` API working
+// at all 25+ call sites without source edits at simple lookup sites.
+import { translate as _translate } from './translate-helper';
+export const t: typeof _translate = _translate;

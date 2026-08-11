@@ -41,7 +41,8 @@ import {
   type RecentPayload,
   type HistoryPayload,
 } from '../lib/sync';
-import { translations, type Lang } from '../i18n/translations';
+import { translate } from '../i18n/translate-helper';
+import type { Lang } from '../i18n/translations';
 
 const DEBOUNCE_MS = 5000;
 const POLL_FOR_AUTH_MS = 5000;
@@ -63,16 +64,11 @@ function getLang(): Lang {
   return (m?.[1] as Lang) || 'en';
 }
 
-function t(key: string, vars?: Record<string, string>): string {
-  const entry = translations[key];
-  if (!entry) return key;
-  let text = entry[getLang()];
-  if (vars) {
-    for (const [k, v] of Object.entries(vars)) {
-      text = text.replace(`{${k}}`, v);
-    }
-  }
-  return text;
+// P141-B1-T3: delegate to the unified translate() helper so this script
+// inherits OCR Quick Win #2 improvements (zh→en fallback,
+// replaceAll placeholder semantics) without re-implementing them.
+function t(key: string, vars?: Record<string, string | number>): string {
+  return translate(key, getLang(), vars);
 }
 
 function formatLastSynced(iso: string | null): string {

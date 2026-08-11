@@ -9,6 +9,8 @@ import {
   RECENT_STORAGE_KEY,
   read, recordVisit, isAvailable, subscribe,
 } from '../lib/recent';
+// P141-B1-T3: import the unified translate() helper (OCR Quick Win #2).
+import { translate } from '../i18n/translate-helper';
 
 type Lang = 'en' | 'zh';
 type RecentEntry = { slug: string; visitedAt: string };
@@ -37,12 +39,17 @@ function getCurrentSlug(): string | null {
 }
 
 function t(key: string, lang: Lang, vars: Record<string, string | number> = {}): string {
+  // P141-B1-T3: this script uses a window-injected __i18n_recent__ dict
+  // (subset of translations for recent-only keys). Mirror the history-init
+  // pattern: use the injected entry when present, else fall back to the
+  // unified translate() helper for fallback + replaceAll semantics.
   const dict = (window as { __i18n_recent__?: Record<Lang, Record<string, string>> }).__i18n_recent__?.[lang] ?? {};
-  let s = dict[key] ?? key;
-  for (const [k, v] of Object.entries(vars)) {
-    s = s.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
-  }
-  return s;
+  const entry = dict[key];
+  if (entry === undefined) return translate(key, lang, vars);
+  return Object.entries(vars).reduce(
+    (s, [k, v]) => s.replaceAll(`{${k}}`, String(v)),
+    entry,
+  );
 }
 
 function timeAgo(visitedAt: string, lang: Lang): string {

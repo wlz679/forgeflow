@@ -38,7 +38,8 @@ import {
   type HistoryPayload,
 } from '../lib/sync.ts';
 import { hasMigrated, setMigrated } from '../lib/migration.ts';
-import { translations } from '../i18n/translations.ts';
+// P141-B1-T3: delegate to the unified translate() helper (OCR Quick Win #2).
+import { translate } from '../i18n/translate-helper.ts';
 
 const SESSION_PULL_KEY = 'sync:did-pull-once';
 
@@ -50,10 +51,13 @@ function getLang(): Lang {
   return ((m?.[1] as Lang) || 'en');
 }
 
+// P141-B1-T3: drop-in wrapper around translate() so the showToast() caller
+// (which builds a composite template via .replace for {favorites}/{recent}/
+// {history}) can keep its existing structure. translate() handles the
+// zh→en fallback chain so we no longer need the local entry ?? entry.en ?? key
+// triplet.
 function t(key: string): string {
-  const entry = translations[key];
-  if (!entry) return key;
-  return entry[getLang()] ?? entry.en ?? key;
+  return translate(key, getLang());
 }
 
 interface MigrationStats {
