@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // Order Fulfillment Cost Calculator (P7-5) — Business v3 standard
@@ -105,7 +106,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band
   const band = calcHealthBand(poCost);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — per-order cost < $5; efficient fulfillment'

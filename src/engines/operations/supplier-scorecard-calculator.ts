@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // Supplier Performance Scorecard Calculator (P7-6) — Business v3 standard
@@ -119,7 +120,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band
   const band = calcHealthBand(score);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? `Excellent — composite ${score.toFixed(1)} = grade ${grade}; strategic partner`

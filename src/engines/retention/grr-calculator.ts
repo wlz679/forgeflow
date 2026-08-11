@@ -8,6 +8,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 export const HEALTH_BANDS = {
   excellent: [0.95, Infinity],
@@ -53,7 +54,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct1 = (n: number) => n.toFixed(1);
 
   const band = calcHealthBand(ratio);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — GRR ≥ 95%; best-in-class SaaS retention, minimal churn leakage'

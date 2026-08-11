@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // Pipeline Value Calculator (P8-1) — Business v3 standard (6+ emoji sections)
@@ -116,7 +117,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band
   const band = calcHealthBand(total);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — weighted pipeline ≥ $500K; healthy forecast'

@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // Reorder Point Calculator (P7-4) — Business v3 standard (6+ emoji sections)
@@ -87,7 +88,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band
   const band = calcHealthBand(serviceLevel);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — service level ≥ 95%; reorder point accounts for demand variability'

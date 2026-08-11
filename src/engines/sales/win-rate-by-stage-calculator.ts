@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // Win Rate by Stage Calculator (P8-4) — Business v3 standard (6+ emoji sections)
@@ -124,7 +125,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band (applied to overall win rate × 100)
   const band = calcHealthBand(overallPct);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — overall win rate ≥ 25%; healthy funnel'

@@ -75,6 +75,17 @@ export function calcHealthBand(roi: number): 'good' | 'caution' | 'warning' | 'c
   return 'critical';
 }
 
+// ============== Health band → emoji lookup (4-tier with 'caution' alias) ==============
+// P141-B1-T4: replaces nested ternary with table lookup. cart-abandonment uses
+// 'caution' as a middle-band alias rather than the canonical 'excellent' tier,
+// so the local table is more compact than BAND_META.
+const BAND_EMOJI: Record<ReturnType<typeof calcHealthBand>, string> = {
+  good:     '🟢',
+  caution:  '🟡',
+  warning:  '🟠',
+  critical: '🔴',
+};
+
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
@@ -110,7 +121,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct = (n: number) => (n * 100).toFixed(0) + '%';
 
   const band = calcHealthBand(recoveryROI);
-  const healthEmoji = band === 'good' ? '🟢' : band === 'caution' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_EMOJI[band];
   const healthLabel = HEALTH_BANDS[band].label;
 
   // What-If scenarios:

@@ -68,6 +68,16 @@ export function calcHealthBand(roi: number): 'good' | 'warning' | 'critical' {
   return 'critical';
 }
 
+// ============== Health band → emoji lookup (3-tier hard-breakpoint exemption) ==============
+// P141-B1-T4: replaces nested ternary with table lookup. Coupon ROI's structural
+// break-even at 100% (profit↔loss boundary) means there's no 'excellent' band;
+// see CLAUDE.md "Hard-breakpoint exemption".
+const BAND_EMOJI: Record<ReturnType<typeof calcHealthBand>, string> = {
+  good:     '🟢',
+  warning:  '🟡',
+  critical: '🔴',
+};
+
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
@@ -97,7 +107,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct = (n: number) => (n * 100).toFixed(0) + '%';
 
   const band = calcHealthBand(trueROI);
-  const healthEmoji = band === 'good' ? '🟢' : band === 'warning' ? '🟡' : '🔴';
+  const healthEmoji = BAND_EMOJI[band];
   const healthLabel = HEALTH_BANDS[band].label;
 
   // What-If: +20% redemption; -50% coupon_value; -10pp cannibalization

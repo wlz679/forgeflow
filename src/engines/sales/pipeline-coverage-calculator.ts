@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // Pipeline Coverage Calculator (P8-6) — Business v3 standard (6+ emoji sections)
@@ -93,7 +94,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band (3x rule is 🟢)
   const band = calcHealthBand(covRatio);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — 3x rule satisfied; comfortable pipeline cushion'

@@ -1,6 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { BAND_META } from '../../core/engines/band-meta';
 
 // =====================================================================
 // ACV (Average Contract Value) Calculator (P8-3) — Business v3 standard (6+ emoji sections)
@@ -106,7 +107,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band (applied to annualACV)
   const band = calcHealthBand(annual);
-  const healthEmoji = band === 'excellent' ? '🟢' : band === 'good' ? '🟡' : band === 'warning' ? '🟠' : '🔴';
+  const healthEmoji = BAND_META[band];
   const healthLabel =
     band === 'excellent'
       ? 'Excellent — ACV ≥ $50,000/year; enterprise-grade contracts'
