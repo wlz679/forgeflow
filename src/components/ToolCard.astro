@@ -5,10 +5,11 @@ export interface Props { slug: string; title: string; description: string; }
 const lang = getLang(Astro);
 ---
 
-<a href={`/${lang}/${Astro.props.slug}`} class="group relative flex flex-col p-5 bg-gray-50 border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:bg-white hover:shadow-lg hover:shadow-[#7C3AED]/5 transition-all duration-300 hover:-translate-y-1">
-  <!-- Favorite toggle (declarative hook — init layer handles events) -->
+<!-- P141-B2-T1: HTML invalid <a> 嵌套 <button> → 改为真正的 siblings (用 <div> wrapper) -->
+<div class="group relative flex flex-col p-5 bg-gray-50 border border-gray-100 rounded-xl hover:border-[#7C3AED]/30 hover:bg-white hover:shadow-lg hover:shadow-[#7C3AED]/5 transition-all duration-300 hover:-translate-y-1">
+  <!-- Favorite toggle — sibling (NOT inside <a>); absolute + z-20 sits above card link -->
   <button type="button"
-          class="favorite-star absolute top-3 right-3 p-1.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 hover:border-[#7C3AED]/40 transition-all duration-200 hover:scale-110 z-10"
+          class="favorite-star absolute top-3 right-3 p-1.5 rounded-full bg-white/80 hover:bg-white border border-gray-100 hover:border-[#7C3AED]/40 transition-all duration-200 hover:scale-110 z-20"
           data-favorite-toggle
           data-favorite-slug={Astro.props.slug}
           aria-label={t('favorites.aria.add', lang)}>
@@ -16,19 +17,22 @@ const lang = getLang(Astro);
       <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.957a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.922-.755 1.688-1.54 1.118l-3.37-2.448a1 1 0 00-1.176 0l-3.371 2.448c-.784.57-1.838-.196-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.07 8.384c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.95-.69l1.286-3.957z" />
     </svg>
   </button>
-  <div class="flex items-start justify-between mb-3">
-    <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-100 shadow-sm">
-      <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
-      </svg>
+  <!-- Card link — sibling (NOT wrapping <button>); holds visible content -->
+  <a href={`/${lang}/${Astro.props.slug}`} class="flex flex-col flex-1" data-tool-slug={Astro.props.slug}>
+    <div class="flex items-start justify-between mb-3">
+      <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-100 shadow-sm">
+        <svg class="w-5 h-5 text-[#7C3AED]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <svg class="w-5 h-5 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </div>
     </div>
-    <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-      <svg class="w-5 h-5 text-[#7C3AED]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-      </svg>
-    </div>
-  </div>
-  <h3 class="text-base font-semibold text-gray-900 group-hover:text-[#7C3AED] transition-colors duration-300 mb-2 truncate">{Astro.props.title}</h3>
-  <p class="text-sm text-gray-500 line-clamp-2 group-hover:text-gray-600 transition-colors duration-300 mt-auto" title={Astro.props.description}>{Astro.props.description}</p>
+    <h3 class="text-base font-semibold text-gray-900 group-hover:text-[#7C3AED] transition-colors duration-300 mb-2 truncate">{Astro.props.title}</h3>
+    <p class="text-sm text-gray-500 line-clamp-2 group-hover:text-gray-600 transition-colors duration-300 mt-auto" title={Astro.props.description}>{Astro.props.description}</p>
+  </a>
   <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7C3AED] to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-b-xl"></div>
-</a>
+</div>
