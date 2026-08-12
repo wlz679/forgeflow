@@ -59,10 +59,10 @@ const manualGuides = [1,2,3].map(n => ({
 }));
 
 const toolSlugsInCategory = new Set(translatedTools.map(t => t.slug));
-const relatedBlogPosts: BlogPost[] = [];
-for (const slug of toolSlugsInCategory) {
-  relatedBlogPosts.push(...await getBlogPostsByToolSlug(slug));
-}
+// P141-B3-T3: parallel I/O via Promise.all (was sequential for-await)
+const relatedBlogPosts = (await Promise.all(
+  Array.from(toolSlugsInCategory).map(slug => getBlogPostsByToolSlug(slug))
+)).flat();
 
 const schema = JSON.stringify({
   '@context': 'https://schema.org',
