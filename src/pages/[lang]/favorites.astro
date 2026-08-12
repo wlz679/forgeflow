@@ -48,8 +48,11 @@ const favoritesSchema = JSON.stringify({
       <p class="text-sm text-gray-600">{t('favorites.subtitle', lang)}</p>
     </div>
 
-    <!-- Tools metadata for client-side card rendering (consumed by favorites-init.client.ts) -->
-    <script id="tools-data" type="application/json" set:html={toolsDataJson}></script>
+    <!-- P141-B3-T5c: toolsDataJson is pre-stringified at line 23 (JSON.stringify
+         on toolsData). To prevent `</script>` breakout via malicious tool
+         titles/descriptions (XSS in inline JSON island), escape the literal
+         `</script>` substring to `<\/script>` (JSON-safe escape). -->
+    <script id="tools-data" type="application/json" set:html={toolsDataJson.replace(/<\/script>/g, '<\\/script>')}></script>
 
     <div data-favorites-container data-mode="full">
       <!-- JS-hydrated grid: populated by favorites-init.client.ts -->
