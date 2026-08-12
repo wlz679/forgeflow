@@ -1,3 +1,9 @@
+// P141-B3-T1: archive fix gate (防止 CI 误执行)
+if (!process.env.ALLOW_ARCHIVE_FIX) {
+  console.error('[archive] fix-nrr.mjs requires ALLOW_ARCHIVE_FIX=1 to run');
+  process.exit(0);
+}
+
 // Fix the corrupted NRR faq.2.a line
 import { readFileSync, writeFileSync } from 'node:fs';
 

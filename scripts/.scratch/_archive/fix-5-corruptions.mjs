@@ -1,3 +1,9 @@
+// P141-B3-T1: archive fix gate (防止 CI 误执行)
+if (!process.env.ALLOW_ARCHIVE_FIX) {
+  console.error('[archive] fix-5-corruptions.mjs requires ALLOW_ARCHIVE_FIX=1 to run');
+  process.exit(0);
+}
+
 // Per-line surgical fix for 5 corrupted lines
 import { readFileSync, writeFileSync } from 'node:fs';
 

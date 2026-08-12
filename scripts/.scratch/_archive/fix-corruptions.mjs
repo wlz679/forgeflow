@@ -1,3 +1,9 @@
+// P141-B3-T1: archive fix gate (防止 CI 误执行)
+if (!process.env.ALLOW_ARCHIVE_FIX) {
+  console.error('[archive] fix-corruptions.mjs requires ALLOW_ARCHIVE_FIX=1 to run');
+  process.exit(0);
+}
+
 // Fix all 5 corrupted lines in translations.ts
 // Pattern: 'key': { en: '...', zh: '<partial>'tools...: { en: '<dup EN>', zh: '<rest>' ' },
 // Fix: extract real EN, combine ZH parts, restore to single-line entry
