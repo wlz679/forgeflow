@@ -124,6 +124,9 @@ const relativeTime =
       <ul class="space-y-1">
         {sourcesRich.map((s) => (
           <li class="text-sm text-gray-700">
+            <!-- P141-B3-T5b: external source anchors use rel="noopener noreferrer"
+                 + target="_blank" to prevent reverse-tabnabbing and to
+                 decouple window.opener access (regression guard). -->
             <a
               href={s.url}
               rel="noopener noreferrer"

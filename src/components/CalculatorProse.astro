@@ -171,11 +171,13 @@ function simpleMarkdownToHtml(md: string): string {
     const bodyRows = rows.slice(2).map(r => r.split('|').map(c => c.trim()).filter(Boolean));
     let html = '<table class="w-full text-xs my-3 border-collapse">';
     html += '<thead><tr>';
-    for (const h of headerCells) html += `<th class="text-left px-2 py-1.5 font-semibold text-gray-600 border-b border-gray-200">${h}</th>`;
+    // P141-B3-T5b: escape header/body cells to prevent XSS via markdown table
+    // content (column text was previously injected unescaped).
+    for (const h of headerCells) html += `<th class="text-left px-2 py-1.5 font-semibold text-gray-600 border-b border-gray-200">${escapeHtml(h)}</th>`;
     html += '</tr></thead><tbody>';
     for (const row of bodyRows) {
       html += '<tr>';
-      for (const c of row) html += `<td class="px-2 py-1.5 text-gray-700 border-b border-gray-100">${c}</td>`;
+      for (const c of row) html += `<td class="px-2 py-1.5 text-gray-700 border-b border-gray-100">${escapeHtml(c)}</td>`;
       html += '</tr>';
     }
     html += '</tbody></table>';
