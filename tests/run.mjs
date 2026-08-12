@@ -3,16 +3,29 @@ import { readdirSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-// P53b T17a: pass RELATIVE paths to spawnSync, not absolute. On Windows
-// `shell:true` routes through cmd.exe which has a hard 8191-char command-line
-// limit; absolute paths on a deep repo (e.g. `D:\E\独立站\youtube-tools\tests\…`)
-// waste ~28 chars × N files. P53b T17 added 4 AI cost tests that pushed the
-// baseline 8063-char cmdline over the 8191 limit (→ 8318, cmd.exe rejects with
-// 「输入行太长」, zero tests run). Relative paths keep the cmdline ~4400 chars
-// for 139 files — plenty of headroom for future additions.
-const tests = readdirSync(resolve(root, 'tests'))
-  .filter(f => f.endsWith('.test.ts'))
-  .map(f => relative(root, resolve(root, 'tests', f)));
+// P141-B3-T2: 动态递归扫描替代硬编码白名单 — 自动发现 subdir 里的 tests/
+// (e.g. tests/core/) 而不必在 run.mjs 里手动维护清单。原 brief 用
+// `node:fs/promises.glob`,但该 API 仅在 Node ≥22.0.0 暴露,而项目 engines
+// 允许 ^20.19.0,自写递归以兼容两个 major。P53b T17a 仍生效:传给 spawnSync
+// 的是相对 root 的 forward-slash 路径,Windows cmd.exe 的 8191-char cmdline
+// 限制靠相对路径绕开,长度基线 ~4400 chars / 190 files。
+const SKIP_DIRS = new Set(['node_modules', '.git', 'dist']);
+function walkTests(dir) {
+  const out = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIRS.has(entry.name)) continue;
+    const full = resolve(dir, entry.name);
+    if (entry.isDirectory()) {
+      out.push(...walkTests(full));
+    } else if (entry.isFile() && /\.test\.(ts|mjs)$/.test(entry.name)) {
+      out.push(full);
+    }
+  }
+  return out;
+}
+const suites = walkTests(resolve(root, 'tests'));
+console.log(`Found ${suites.length} test suites via walk`);
+const tests = suites.map(f => relative(root, f).replaceAll('\\', '/'));
 if (!tests.length) {
   console.error('No tests found in tests/');
   process.exit(1);
