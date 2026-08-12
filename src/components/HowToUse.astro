@@ -8,14 +8,15 @@ const lang = getLang(Astro);
 
 <div class="mt-8">
   <h2 class="text-lg font-bold text-gray-900 mb-4">{t('how_to_use.title', lang)}</h2>
-  <div class="space-y-3">
+  <!-- P141-B2-T4: 步骤容器使用语义化 <ol>，每步用 <li>；自定义数字徽章标记 aria-hidden 以避免 AT 重复读号 -->
+  <ol class="space-y-3 list-none">
     {Astro.props.steps.map((step, i) => (
-      <div class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+      <li class="flex gap-4 p-4 bg-gray-50 border border-gray-100 rounded-xl">
         <div class="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-[#7C3AED] to-orange-400 rounded-lg flex items-center justify-center">
-          <span class="text-xs font-bold text-white">{i + 1}</span>
+          <span class="text-xs font-bold text-white" aria-hidden="true">{i + 1}</span>
         </div>
         <span class="text-sm text-gray-600 leading-relaxed">{step}</span>
-      </div>
+      </li>
     ))}
-  </div>
+  </ol>
 </div>
