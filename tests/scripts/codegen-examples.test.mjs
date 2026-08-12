@@ -17,8 +17,8 @@ if (result.status !== 0) {
   process.exit(1);
 }
 // P141-B3-T7a: regex 替代子串断言 — 防止 "NO PASSED" / "WAS PASSED" 这类
-// 任意子串巧合命中。同时抽取数量用于后续 >=100 阈值校验。
-const passMatch = result.stdout.match(/\b(\d+)\s*PASSED\b/);
+// 任意子串巧合命中。匹配实际输出 "PASSED: all <N> engines ..." 中 <N> 部分。
+const passMatch = result.stdout.match(/\bPASSED\b\s*:\s*all\s+(\d+)\s+engines\b/);
 const passedCount = passMatch ? parseInt(passMatch[1], 10) : 0;
 if (!passMatch || passedCount < 100) {
   console.error('FAIL: --check did not report a sufficient PASSED count.');
