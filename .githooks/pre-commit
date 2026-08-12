@@ -19,6 +19,13 @@
 
 set -e
 
+# P141-B3-T7e: SKIP_PRECOMMIT_CHECK=1 输出可观测日志（--no-verify 默认静默，
+# 难排查"明明跑了 hook 但没生效"的根因）。注意：此变量只影响日志，绕过
+# hook 仍走 `git commit --no-verify`，不走本脚本。
+if [ "$SKIP_PRECOMMIT_CHECK" = "1" ]; then
+  echo "[pre-commit] SKIP via SKIP_PRECOMMIT_CHECK=1 (note: this only logs; --no-verify still bypasses hooks)" >&2
+fi
+
 STAGED=$(git diff --cached --name-only)
 
 # 1. staticExamples drift

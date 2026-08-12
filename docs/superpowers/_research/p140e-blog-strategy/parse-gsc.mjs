@@ -2,7 +2,8 @@ import xlsx from 'xlsx';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SRC = 'C:/Users/元始天尊/Downloads/forgeflowkit.com-Performance-on-Search-2026-08-04.xlsx';
+// P141-B3-T7f: 清洗 — 绝对 Windows 路径与个人用户名已脱敏为占位符。
+const SRC = '<redacted-gsc-source>/forgeflowkit-search-performance.xlsx';
 const OUT = 'docs/superpowers/_research/p140e-blog-strategy/gsc-query-table.json';
 
 const wb = xlsx.readFile(SRC);

@@ -1,5 +1,6 @@
+// P141-B3-T7f: 清洗 — 绝对 Windows 路径与个人用户名已脱敏。
 import xlsx from 'xlsx';
-const SRC = 'C:/Users/元始天尊/Downloads/forgeflowkit.com-Performance-on-Search-2026-08-04.xlsx';
+const SRC = '<redacted-gsc-source>/forgeflowkit-search-performance.xlsx';
 const wb = xlsx.readFile(SRC);
 for (const sn of wb.SheetNames) {
   const ws = wb.Sheets[sn];

@@ -13,6 +13,7 @@ public/og/
 # Superpowers scratch dirs (brainstorm + sdd runtime). P70 untracked all
 # historically-tracked scratch files; never `git add` files under this path.
 .superpowers/
+docs/superpowers/_research/
 
 # Twemoji PNG cache (scripts/.twemoji-cache/) — populated on first build,
 # never commit binaries. Re-seed with `pnpm build:og` if cleared.
