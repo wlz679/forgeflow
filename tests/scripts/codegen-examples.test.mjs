@@ -16,9 +16,14 @@ if (result.status !== 0) {
   console.error('stderr:', result.stderr);
   process.exit(1);
 }
-if (!result.stdout.includes('PASSED')) {
-  console.error('FAIL: --check did not report PASSED');
+// P141-B3-T7a: regex 替代子串断言 — 防止 "NO PASSED" / "WAS PASSED" 这类
+// 任意子串巧合命中。同时抽取数量用于后续 >=100 阈值校验。
+const passMatch = result.stdout.match(/\b(\d+)\s*PASSED\b/);
+const passedCount = passMatch ? parseInt(passMatch[1], 10) : 0;
+if (!passMatch || passedCount < 100) {
+  console.error('FAIL: --check did not report a sufficient PASSED count.');
+  console.error(`  matched: ${passMatch ? passMatch[0] : '(none)'}, passedCount=${passedCount}`);
   console.error(result.stdout);
   process.exit(1);
 }
-console.log('PASS: codegen-examples --check smoke test');
+console.log(`PASS: codegen-examples --check (passedCount=${passedCount})`);

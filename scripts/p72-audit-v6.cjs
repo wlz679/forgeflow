@@ -78,11 +78,18 @@ console.log('Empty en:', emptyEn.length, emptyEn.slice(0,30));
 console.log('Empty zh:', emptyZh.length, emptyZh.slice(0,30));
 
 // === t() calls ===
+// P141-B3-T7b: 排除 node_modules / .git / dist — 之前会扫到 monorepo 巨型
+// 依赖目录里同名的 .ts/.mjs 假阳性 key，导致 missing-key 误报。
+const excluded = ['node_modules', '.git', 'dist'];
+const filterFn = (entry) => !excluded.some(p => entry.includes(`${path.sep}${p}${path.sep}`) || entry.includes(`${path.sep}${p}`));
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) walk(p, out);
-    else if (/\.(astro|ts|tsx|js|jsx|mjs)$/.test(e.name)) out.push(p);
+    if (e.isDirectory()) {
+      if (filterFn(p)) walk(p, out);
+    } else if (/\.(astro|ts|tsx|js|jsx|mjs)$/.test(e.name)) {
+      if (filterFn(p)) out.push(p);
+    }
   }
   return out;
 }
