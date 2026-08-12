@@ -183,7 +183,15 @@ const orgSchema = JSON.stringify({
   <script is:inline set:html={`window.__tools_slugs__ = ${toolsSlugsJson};`}></script>
   <script type="application/ld+json" set:html={siteSchema} />
   {pageType === 'home' && <script type="application/ld+json" set:html={orgSchema} />}
-  {schema && <script type="application/ld+json" set:html={schema} />}
+  {/*
+    P141-B3-T5a: prevent `</script>` breakout in caller-supplied JSON.
+    The `<script type="application/ld+json">` tag itself does NOT execute
+    content (browser parses it as JSON-LD only), so the XSS surface is the
+    HTML parser prematurely closing the tag if a string value contains the
+    literal substring `</script>`. Escaping to `<\/script>` is JSON-spec
+    safe (valid escape sequence) and prevents tag breakout.
+  */}
+  {schema && <script type="application/ld+json" set:html={schema.replace(/<\/script>/g, '<\\/script>')} />}
 </head>
 <body class="min-h-screen flex flex-col bg-white text-gray-900">
   <slot />
