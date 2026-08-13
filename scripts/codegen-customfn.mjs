@@ -186,7 +186,7 @@ const ENGINES = [
         subdir: 'ai-cost',
     tableStart: '"var PS2={" +',
     tableEndMarker: 'var SCPG2=',
-    fieldMap: (m, key) => {
+    fieldMap: (m) => {
       const rates = Object.entries(m.rates).map(([g, r]) => `${g}:${fmt(r)}`).join(',');
       return [
         `n:'${m.name.replace(/'/g, "\\'")}'`,
@@ -235,20 +235,6 @@ const ENGINES = [
 // ============================================================
 // Custom generator for ai-api-cost-comparison (nested structure)
 // ============================================================
-function generateComparisonTable() {
-  // For each provider, sort models by order, render m:[{...},{...},...]
-  const providerLines = [];
-  for (const [pk, pv] of Object.entries(PRICING.llm)) {
-    const sorted = Object.entries(pv.models).sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
-    const modelLines = sorted.map(([mk, mv], i) => {
-      const sep = i === sorted.length - 1 ? '' : ',';
-      return `  "{k:'${mk}',n:'${mv.name.replace(/'/g, "\\'")}',i:${fmt(mv.input)},o:${fmt(mv.output)},cw:'${mv.contextWindow}'}${sep}" +`;
-    }).join('\n');
-    providerLines.push(`  "${pk}:{n:'${pv.name}',m:[${modelLines.includes('\n') ? '\\n' + modelLines : modelLines}]}," +`);
-  }
-  return providerLines.join('\n');
-}
-
 /**
  * Returns the new full file content with the comparison table replaced.
  * Returns null if markers are not found.
