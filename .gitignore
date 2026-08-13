@@ -15,6 +15,13 @@ public/og/
 .superpowers/
 docs/superpowers/_research/
 
+# Feishu MCP scratch (SDD subagent batch downloads). Never commit; ephemeral.
+.feishu-batch/
+
+# Audit script runtime outputs (scripts/p72-findings-final.json etc.). Source
+# scripts under scripts/ are committed; their JSON outputs are not.
+scripts/p72-findings-final.json
+
 # Twemoji PNG cache (scripts/.twemoji-cache/) — populated on first build,
 # never commit binaries. Re-seed with `pnpm build:og` if cleared.
 scripts/.twemoji-cache/

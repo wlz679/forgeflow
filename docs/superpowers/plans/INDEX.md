@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-10（P140f Phase 3）
+> **最后更新:** 2026-08-13（P141 OCR Batch Fix — 17 tasks ship）
 
 ---
 
@@ -24,6 +24,7 @@
 | `2026-06-26-c-internal-links-multi-dim.md` | C Spec: Internal-Links Multi-Dimensional Recommendation | 2026-06-26 |
 | `2026-06-26-drift-fix-engines-category.md` | Engines Category Field Drift Fix | 2026-06-26 |
 | `2026-06-30-v2-cleanup-site-url-de-dup.md` | v2 Cleanup — Consolidate SITE_URL into `src/lib/site-config.ts` | 2026-06-30 |
+| `2026-08-10-p141-ocr-batch-fix.md` | P141 OCR Batch Fix — 12 Quick Wins + 5 中型问题, 拆 3 批 ship (B1/B2/B3) — 17 tasks + 2 前置/收尾 | 2026-08-10 |
 
 ---
 
