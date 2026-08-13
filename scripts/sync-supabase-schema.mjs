@@ -45,10 +45,27 @@ if (!dbUrl) {
 }
 
 console.log(`[sync-supabase-schema] Applying ${sqlPath} to ${dbUrl.replace(/:[^:@]+@/, ':***@')}...`);
-const r = spawnSync('psql', [dbUrl, '-f', sqlPath], {
-  cwd: root,
-  stdio: 'inherit',
-});
+// P142-B2-C: env-via PGPASSWORD/PGHOST/PGUSER/PGDATABASE prevents password
+// leak via psql child process /proc/<pid>/cmdline + ps auxf (P141-B3-T6
+// residual exposure; old dbUrl argv exposed password ~ms-seconds during psql
+// startup). URL parse failure falls through to existing r.status check.
+// Known limit: PGPASSWORD still in /proc/<pid>/environ (harder to read —
+// requires same UID + ptrace); this is a psql API limit, not solvable
+// client-side.
+const u = new URL(dbUrl);
+const env = {
+  ...process.env,
+  PGPASSWORD: decodeURIComponent(u.password ?? ''),
+  PGHOST: u.hostname,
+  PGPORT: u.port || '5432',
+  PGUSER: decodeURIComponent(u.username),
+  PGDATABASE: u.pathname.replace(/^\//, '') || 'postgres',
+};
+const r = spawnSync(
+  'psql',
+  ['-h', env.PGHOST, '-p', env.PGPORT, '-U', env.PGUSER, '-d', env.PGDATABASE, '-f', sqlPath],
+  { cwd: root, stdio: 'inherit', env }
+);
 
 if (r.status !== 0) {
   console.error(`[sync-supabase-schema] FAIL: psql exited with status ${r.status}`);
