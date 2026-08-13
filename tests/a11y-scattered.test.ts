@@ -38,8 +38,14 @@ test('ToolCard: <a> 不嵌套 <button>', () => {
   assert.equal(/<a[^>]*>[^<]*<button/.test(stripped), false);
 });
 
-test('装饰 SVG: aria-hidden × 3', () => {
-  for (const f of ['RelatedTools.astro', 'RelatedBlog.astro', 'Footer.astro']) {
+test('装饰 SVG: aria-hidden × 9 (3 P141-B2-T2 + 6 P142-B3-D)', () => {
+  for (const f of [
+    // P141-B2-T2 (existing)
+    'RelatedTools.astro', 'RelatedBlog.astro', 'Footer.astro',
+    // P142-B3-D (new — 6 target components)
+    'ToolCard.astro', 'ResultCard.astro', 'Header.astro',
+    'FAQ.astro', 'SearchBar.astro', 'CopyButton.astro',
+  ]) {
     const src = read(f);
     const svgCount = (src.match(/<svg/g) || []).length;
     const ariaCount = (src.match(/aria-hidden="true"/g) || []).length;
