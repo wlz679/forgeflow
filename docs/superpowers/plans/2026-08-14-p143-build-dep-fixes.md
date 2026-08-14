@@ -63,16 +63,22 @@ Expected: 20 (faq.5.q through faq.14.a, 10 q + 10 a). If different, STOP — inv
 Run: `grep "slug === " src/pages/[lang]/[slug].astro | grep image`
 Expected: `const isImage = slug === 'solopreneur-ai-image-cost-calculator';` (short form). This confirms the rename target matches the actual page URL slug.
 
-- [ ] **Step 4: Perform the rename**
+- [ ] **Step 4: DELETE the duplicate block (NOT rename)**
+
+**CRITICAL**: Lines 4764-4783 are NOT orphans — they are a **stale duplicate** of the canonical short-form block at lines 2356-2385. Both blocks contain overlapping FAQ keys (faq.5.q through faq.14.a), but block 2 uses the LONG slug `solopreneur-ai-image-generation-cost-calculator` with EMPTY `zh: ''` strings, while block 1 uses the canonical SHORT slug `solopreneur-ai-image-cost-calculator` with FULL zh translations.
+
+**Why DELETE not RENAME**:
+- After rename, the renamed lines would collide with the canonical block at lines 2368-2369 as duplicate object-literal keys → TS1117 error.
+- Block 1 already has all the same content (with rich zh translations). Deleting block 2 loses only the stale empty-zh duplicates.
 
 Run:
 ```bash
-sed -i 's/ai-image-generation-cost-calculator/ai-image-cost-calculator/g' src/i18n/translations.ts
+sed -i '4764,4783d' src/i18n/translations.ts
 ```
 
-Expected: 20 substitutions applied. Verify with: `grep -c "ai-image-generation-cost-calculator" src/i18n/translations.ts` — must return 0.
+Expected: 20 lines deleted (block 2 removed). Verify with: `grep -c "ai-image-generation-cost-calculator" src/i18n/translations.ts` — must still return >= 1 (block 1's canonical entries survive).
 
-- [ ] **Step 5: Verify rename (no orphans remain)**
+- [ ] **Step 5: Verify long-form slug fully removed**
 
 Run:
 ```bash
@@ -80,17 +86,17 @@ grep -c "ai-image-generation-cost-calculator" src/i18n/translations.ts
 grep -c "ai-image-cost-calculator" src/i18n/translations.ts
 ```
 
-Expected: first command 0, second command >= 21 (20 original short-form + 20 renamed = 40).
+Expected: first command 0 (long-form fully removed), second command >= 20 (short-form canonical block intact).
 
 - [ ] **Step 6: Verify slug count = 100**
 
 Run: `grep -oE "tools\.(solopreneur-[a-z0-9-]+)\." src/i18n/translations.ts | grep -oE "solopreneur-[a-z0-9-]+" | sort -u | wc -l`
-Expected: 100. If 99 or, 101, STOP — investigate.
+Expected: 100. If 99 or 101, STOP — investigate.
 
-- [ ] **Step 7: Verify pnpm check passes (no source change should break, but sanity)**
+- [ ] **Step 7: Verify pnpm check passes (TS1117 collision would surface here)**
 
 Run: `pnpm check 2>&1 | tail -3`
-Expected: `# tests 1240 / # pass 1240 / # fail 0`.
+Expected: `# tests 1240 / # pass 1240 / # fail 0`. If TS1117 errors appear, STOP — the canonical block has duplicate keys that need investigation.
 
 - [ ] **Step 8: Verify RUN_BUILD_TESTS=1 (8 i18n tests now pass)**
 
@@ -101,10 +107,10 @@ Expected: `# tests 1254 / # pass 1254 / # fail 0` (8 i18n tests fixed: #525-#532
 
 ```bash
 git add src/i18n/translations.ts
-git commit -m "fix(i18n): P143-B3-A rename 20 orphan keys in translations.ts"
+git commit -m "fix(i18n): P143-B3-A delete 20-key stale duplicate in translations.ts"
 ```
 
-Expected: 1 file changed, 20 insertions / 20 deletions (rename is content-preserving). Total line count unchanged but key names differ.
+Expected: 1 file changed, 20 deletions (canonical block untouched, empty-zh duplicates removed).
 
 ---
 
