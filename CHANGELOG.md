@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-07-31 (P140a — AdSense compliance scaffold: deleted literal-placeholder AdUnit.astro + Content Collections schema + 4-H2 prose foundation + 2 CI guards (T6 source-only + T7 build-dep))
+> **最后更新:** 2026-08-13 (P143-B3-BCD — sync CLAUDE.md build-dep suite count 42 → 47 + CHANGELOG.md commit count 870 → 989 + last-ship date 2026-07-31 → 2026-08-13; closes P141-B3-T7 + spec stale §B docs drift)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 870 across 45 active days (2026-05-31 → 2026-07-31, ~9 weeks)
+> **Total commits:** 989 across 55 active days (2026-05-31 → 2026-08-13, ~10.5 weeks)
 
 ---
 
