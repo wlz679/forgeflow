@@ -33,7 +33,7 @@ P143 is small (2 root causes → 4 surgical fixes). All 4 candidates are MECH cl
 ```
 Branch: feature/p143-build-dep-fixes (off master 6093597)
   │
-  ├── Commit 1: fix(i18n): P143 rename 20 orphan keys in translations.ts
+  ├── Commit 1: fix(i18n): P143 delete 20-key stale duplicate in translations.ts
   │              (closes #525, #526, #527, #528, #529, #530, #531, #532)
   │
   └── Commit 2: docs(meta): P143 sync CLAUDE.md + CHANGELOG.md to current state
@@ -66,14 +66,15 @@ Branch: feature/p143-build-dep-fixes (off master 6093597)
 
 ## 4. Components (per-fix detail)
 
-### A — rename 20 orphan keys in translations.ts
+### A — delete 20-key stale duplicate in translations.ts
 - **File**: `src/i18n/translations.ts` lines 4764-4783
-- **Change**: rename slug `ai-image-generation-cost-calculator` → `ai-image-cost-calculator` (matches page URL `dist/en/solopreneur-ai-image-cost-calculator/index.html`)
+- **Change**: DELETE the duplicate block (NOT rename — see plan amendment 2026-08-14)
+- **Why DELETE not RENAME**: Lines 4764-4783 are a **stale duplicate** of the canonical short-form block at lines 2356-2385. Block 1 has `tools.solopreneur-ai-image-cost-calculator.faq.5.q` through `.faq.14.a` WITH rich `zh` translations. Block 2 has the LONG slug `ai-image-generation-cost-calculator` with EMPTY `zh: ''` strings. RENAME would collide with block 1 as TS1117 duplicate keys. Block 1 is canonical; block 2 is leftover from a partial rename. Delete block 2.
 - **Scope**: 20 keys (faq.5.q / .5.a / .6.q / .6.a / .7.q / .7.a / .8.q / .8.a / .9.q / .9.a / .10.q / .10.a / .11.q / .11.a / .12.q / .12.a / .13.q / .13.a / .14.q / .14.a = 10 q + 10 a)
-- **Pattern**: `sed -i 's/ai-image-generation-cost-calculator/ai-image-cost-calculator/g' src/i18n/translations.ts`
-- **Verification**: `grep -c "ai-image-generation-cost-calculator" src/i18n/translations.ts` should return 0 (post-rename); `extractAllEngineSlugs(translations.ts).length === 100`
+- **Pattern**: `sed -i '4764,4783d' src/i18n/translations.ts`
+- **Verification**: `grep -c "ai-image-generation-cost-calculator" src/i18n/translations.ts` returns 0 (long-form fully removed); `grep -c "ai-image-cost-calculator"` returns >= 20 (block 1 canonical entries intact); `extractAllEngineSlugs(translations.ts).length === 100`
 - **Subagent class**: MECH
-- **Risk**: 0 — mechanical rename, content preserved
+- **Risk**: 0 — deletes stale duplicates only; canonical content (with rich zh translations) untouched
 
 ### B — CLAUDE.md build-dep suite count 42 → 47
 - **File**: `CLAUDE.md` Defense-in-Depth section
