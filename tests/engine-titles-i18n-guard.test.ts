@@ -65,9 +65,9 @@ function getTitleMap(): Record<string, { en: string; zh: string }> {
   const text = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
   const map: Record<string, { en: string; zh: string }> = {};
   // Match: 'tools.<slug>.title': { en: '<en>', zh: '<zh>' }
-  const re = /'tools\.(solopreneur-[a-z0-9-]+)\.title':\s*\{\s*en:\s*'([^']*)',\s*zh:\s*'([^']*)'\s*\}/g;
+  const re = /'tools\.(solopreneur-[a-z0-9-]+)\.title':\s*\{\s*en:\s*(?:'([^']*)'|"([^"]*)"),\s*zh:\s*(?:'([^']*)'|"([^"]*)")\s*\}/g;
   for (const m of text.matchAll(re)) {
-    map[m[1]] = { en: m[2], zh: m[3] };
+    map[m[1]] = { en: m[2] ?? m[3], zh: m[4] ?? m[5] };
   }
   return map;
 }
