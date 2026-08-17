@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-14（P143 Build-Dep Fixes — 2 atomic commits ship）
+> **最后更新:** 2026-08-17（P144 P143-followup — 8 atomic commits ship；quote-style drift + 13 engines FAQ gap + 261 en-faq violations deferred to P145）
 
 ---
 
@@ -27,6 +27,7 @@
 | `2026-08-10-p141-ocr-batch-fix.md` | P141 OCR Batch Fix — 12 Quick Wins + 5 中型问题, 拆 3 批 ship (B1/B2/B3) — 17 tasks + 2 前置/收尾 | 2026-08-10 |
 | `2026-08-13-p142-p141-followup.md` | P142 P141-followup — 4 candidates (A tsc gate + B dead code + C env-via + D a11y SVG), 3 batches ship — 4-5 atomic commits + 1 plan amend | 2026-08-13 |
 | `2026-08-14-p143-build-dep-fixes.md` | P143 Build-Dep Fixes — 9 → 4 pre-existing build-dep failures closed (orphan slug delete + docs sync), 2 atomic commits + 2 plan/spec amendments — faq.7-14 + title violations deferred to P143-followup | 2026-08-14 |
+| `2026-08-14-p144-p143-followup.md` | P144 P143-followup — 4 build-dep failures closed partially (#528/#529 fully; #525/#530 for 16 of 100 engines) + 6 doc drift items + run.mjs off-by-one, 8 atomic commits + 2 plan amends mid-execution — 261 remaining en-faq violations deferred to P145 | 2026-08-17 |
 
 ---
 
