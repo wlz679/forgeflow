@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-13",
+  "lastUpdated": "2026-08-17",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1678,6 +1678,22 @@
           "family": "legacy",
           "contextWindow": "128K",
           "order": 48
+        },
+        "gemini-3.7-flash": {
+          "input": 0.75,
+          "output": 3.75,
+          "name": "Gemini 3.7Flash",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 49
+        },
+        "gemini-3.1-flash-tts-preview": {
+          "input": 1,
+          "output": 20,
+          "name": "Gemini 3.1Flash Tts Preview",
+          "family": "flash3",
+          "contextWindow": "8K",
+          "order": 50
         }
       }
     },
