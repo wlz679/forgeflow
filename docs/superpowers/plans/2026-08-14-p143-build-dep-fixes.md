@@ -36,6 +36,8 @@
 | `memory/p143-build-dep-fixes-shipped.md` | Create | Ship record (P142 ship memory pattern) |
 | `MEMORY.md` (project) | Modify (P142 line area) | Add `✅ P143 Build-Dep Fixes Shipped` index line |
 | `docs/superpowers/plans/INDEX.md` | Modify (line 6 + Section 0) | Update last-update date + append P143 row |
+| `docs/superpowers/specs/2026-08-14-p143-build-dep-fixes-design.md` | Amend (commit `517e246`) | §4 A change: DELETE 20-key duplicate (not RENAME) |
+| `docs/superpowers/plans/2026-08-14-p143-build-dep-fixes.md` | Amend (commit `f805509`) | Task 1 Step 4 change: `sed -i '4764,4783d'` (delete) not `sed -i 's/.../.../g'` (rename) |
 
 ---
 

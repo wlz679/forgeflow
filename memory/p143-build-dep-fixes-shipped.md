@@ -30,7 +30,7 @@ metadata:
 | --- | --- |
 | Implementation tasks | 2 (Task 1 + Task 2) + 2 docs (plan/spec + amendments) + 1 ship record = 5 |
 | Subagent calls | 2 implementer (haiku) + 2 reviewer (haiku) + 1 final review = 5 calls |
-| Commits on `feature/p143-build-dep-fixes` | 6 (2 implementation + 2 docs + 2 amendments) |
+| Commits on `feature/p143-build-dep-fixes` | 7 (2 implementation + 2 docs + 2 amendments + 1 ship record) |
 | Master HEAD (pre-merge) | `6093597` |
 | Origin (Gitee) | `6093597` (pre-merge) |
 | Github (ForgeFlowKit) | `6093597` (pre-merge) |

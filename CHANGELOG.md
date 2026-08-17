@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-13 (P143-B3-BCD — sync CLAUDE.md build-dep suite count 42 → 47 + CHANGELOG.md commit count 870 → 989 + last-ship date 2026-07-31 → 2026-08-13; closes P141-B3-T7 + spec stale §B docs drift)
+> **最后更新:** 2026-08-17 (P144 P143-followup — 4 build-dep failures closed partially [#528/#529 fully; #525/#530 for 16 of 100 engines] + 6 doc drift items + run.mjs off-by-one; 8 atomic commits on `feature/p144-p143-followup`; 261 remaining en-faq violations deferred to P145)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 989 across 55 active days (2026-05-31 → 2026-08-13, ~10.5 weeks)
+> **Total commits:** 997 across 59 active days (2026-05-31 → 2026-08-17, ~11 weeks)
 
 ---
 

@@ -202,9 +202,9 @@ P143 is fix-only; no new test files. Defensive orphan guard deferred (per scope 
 2. **B**: `CLAUDE.md` Defense-in-Depth section reports `47 build-dep suites` (was 42); grep for stale `42` returns no remaining build-dep claims
 3. **C**: `CHANGELOG.md` total commit count = `984` (was 870); `git rev-list --count HEAD` = 984
 4. **D**: `CHANGELOG.md` last-ship date = `2026-08-13` (was 2026-07-31); `git log -1 --format=%as` = 2026-08-13
-5. `RUN_BUILD_TESTS=1 pnpm test:build` reports `# tests 1263 / # pass 1263 / # fail 0`
+5. `RUN_BUILD_TESTS=1 pnpm test:build` reports `# tests 1263 / # pass 1263 / # fail 0` — *Note: per user Q1 decision during P143 ship, only 5 of 9 failures closed in P143; remaining 4 (#525/#528/#529/#530) deferred to P144 (p144-p143-followup).*
 6. `pnpm check` exit 0 (1240/0/0)
-7. 2 atomic commits on `feature/p143-build-dep-fixes` branch (Commit 1 = `fix(i18n):` + Commit 2 = `docs(meta):`)
+7. 6 atomic commits on `feature/p143-build-dep-fixes` branch (Commit 1-2 = implementation `fix(i18n):` + `docs(meta):`; Commit 3-4 = plan/spec amendments; Commit 5 = ship record)
 8. 3-way push: local = origin = github at single SHA, 0 divergence
 
 ---
