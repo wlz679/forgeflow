@@ -67,6 +67,17 @@ ea187d4 fix(i18n): P144-B4 close pre-existing FAQ gaps across 13 engines
 | run.mjs:73 | "off-by-one" | **CLAUDE.md drift**: P143-B commit `364cb11` updated CLAUDE.md to 47 build-dep suites, but skip-mode message hardcoded "46". 1 line fix. |
 | 6 doc drift items M1-M6 | per P143 final review | Various count/date drift in P143 batch's docs. Fixed. |
 
+## Mid-execution scope expansion summary (final)
+
+P144 went through **4 layers of mid-execution scope discovery**:
+- Layer 1 (pre-flight): 4 build-dep failures (#525/#528/#529/#530) — Task 1 + Task 2 close ai-image-cost scope
+- Layer 2 (Task 2): discovered carrying-cost-calculator same pattern → Task 2.5 added
+- Layer 3 (Task 2.5): discovered 13 engines same pattern → Task 2.6 added
+- Layer 4 (Task 2.6): discovered 261 en-faq violations across ~87 engines (text-mismatch class, different from key-missing class)
+- **Post-final-review fix**: Fable review found Important #1 (revenue-projector zh regression from Task 2.6 misaligned faq indices) → Task 2.7 fixed
+
+**Total commits on branch**: 9 (8 implementation + ship record + Task 2.7 fix)
+
 ## Critical Pattern Discovery (261 remaining violations)
 
 After Task 2.6 closed 13 engines + ai-image-cost + carrying-cost, the `engine-en-faq-i18n-guard.test.ts` STILL failed with **261 violations across ~87 other engines**.
