@@ -52,6 +52,7 @@ transactional, project-based, or has heavy one-time fees (e.g. hardware
 resale, implementation services), MRR will understate your true revenue
 trajectory. For those businesses, use ARR (if multi-year contracts dominate)
 or simply run a cash-flow projection.
+Twilio (usage) vs Figma (seat), per OpenView 2024.
 
 ## Worked Example
 
