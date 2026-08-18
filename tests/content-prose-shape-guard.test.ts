@@ -29,8 +29,9 @@
 //
 // zh handling:
 //   - filename suffix `.zh.md` triggers ZH threshold
-//   - P140a/b: missing zh file only emits console.warn (not fail)
-//   - P140d-T8 will tighten this to build-fail when zh is missing.
+//   - P140a/b: missing zh file only emitted console.warn (not fail)
+//   - P140d-T8: tightened to build-fail when zh is missing (shipped).
+//   - As of ship: 100 en + 100 zh = perfect parity (0 missing).
 //
 // Build dependency:
 //   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern).
@@ -295,24 +296,24 @@ test('every prose file meets full-document body length thresholds', () => {
 });
 
 // =============================================================
-// Test 6: for each en file, the corresponding zh counterpart warns (not fails)
-//         if missing — P140a/b phase. P140d-T8 will tighten.
+// Test 6: for each en file, the corresponding zh counterpart MUST exist
+//         (P140d-T8 ship — was warn-only in P140a/b).
+//         As of ship: 100/100 parity; this guard now actively prevents
+//         regression if any future engine ships en-only.
 // =============================================================
-test('zh counterparts are encouraged but not required yet (P140a phase)', () => {
+test('every en file has a zh counterpart (P140d-T8 build-fail)', () => {
   const files = listProseFiles();
-  const pairs: string[] = [];   // en→zh expected pairs
+  const missing: string[] = [];   // en→zh expected pairs that don't exist
   for (const filename of files) {
     if (filename.endsWith('.zh.md')) continue;
     const slug = filename.replace(/\.md$/, '');
     const zhName = `${slug}.zh.md`;
     if (!files.includes(zhName)) {
-      pairs.push(zhName);
+      missing.push(zhName);
     }
   }
-  // P140a: only console.warn; not a hard fail.
-  if (pairs.length > 0) {
-    console.warn(`[p140a-T7] Missing zh counterparts (P140a tolerated): ${pairs.join(', ')}`);
-  }
-  // Always pass — leaving the door open for P140b's mass-write to ship incrementally.
-  assert.ok(true);
+  assert.equal(
+    missing.length, 0,
+    `${missing.length} en file(s) missing zh counterpart: ${missing.join(', ')}`,
+  );
 });
