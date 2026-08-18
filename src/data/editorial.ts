@@ -28,7 +28,7 @@ export interface ReviewerPersona {
 export const EDITORIAL = {
   author: 'ForgeFlowKit Editorial Team',
   bio: {
-    en: "ForgeFlowKit's editorial team maintains the methodology, accuracy, and review cadence of every calculator on the site. Each prose file below the calculator form is reviewed by our founder Wang Lizhu, a 10-year veteran front-end engineer, against cited sources (regulatory docs, standards bodies, industry research, and academic literature where applicable).",
+    en: 'ForgeFlowKit\'s editorial team maintains the methodology, accuracy, and review cadence of every calculator on the site. Each prose file below the calculator form is reviewed by our founder Wang Lizhu, a 10-year veteran front-end engineer, against cited sources (regulatory docs, standards bodies, industry research, and academic literature where applicable).',
     zh: 'ForgeFlowKit 编辑团队维护本站每个计算器的方法论、准确性和审查节奏。计算器下方的每一篇编辑内容都由创始人王立柱(10 年经验前端工程师)亲自审核,对照引用的来源(监管机构文档、标准组织、行业研究,以及适用时的学术文献)。',
   },
   methodology: {
