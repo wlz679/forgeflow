@@ -21,6 +21,14 @@ sources:
 的基石。和营销漏斗（追踪曝光到付费客户）不同，产品内漏斗
 追踪事件到事件，让产品团队能真正优化拉动注册后体验的关键节点。
 
+"步"的定义因模型而异：AARRR 框架（Acquisition / Activation
+/ Retention / Revenue / Referral）关注宏观增长环节，HEART 框架
+（Happiness / Engagement / Adoption / Retention / Task success）
+则偏用户体验指标。Mixpanel 公开基准显示，SaaS 注册到激活步转化
+率中位数约 20–30%，OpenView 报告 PLG 公司激活率每 +10%
+与 ARR 留存显著正相关——这就是"哪步不能跳过"的本质，也是
+先做漏斗诊断、再投增长的依据。
+
 ## 计算方法
 
 我们使用的 v3 标准公式：
