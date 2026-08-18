@@ -3,7 +3,7 @@
 > **目录索引** — 所有 design specs 按类别分组，按日期升序。
 > **Plans:** 参见 `../plans/`（52 个 plan 文件，本 INDEX 不覆盖）。
 > **Memory:** 参见 `../../../memory/MEMORY.md`（项目级 ship log 索引）。
-> **最后更新:** 2026-07-19（P33 batch）
+> **最后更新:** 2026-08-18（P140b spec 落盘）
 
 ---
 
@@ -110,7 +110,18 @@
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 19 |
 | 6 · P20+ — Tech Debt / Cleanup / Audit | 7 |
-| **总计** | **44** |
+| 7 · P140+ — AdSense Compliance + 2.0 | 1 |
+| **总计** | **45** |
+
+---
+
+## 7 · P140+ — AdSense Compliance + 2.0 Strategy
+
+| 文件 | 标题 | 类别 | 日期 |
+|---|---|---|---|
+| `2026-08-18-p140b-editorial-prose-design.md` | P140b Editorial Prose Mass-Write for AdSense Recovery | AdSense compliance | 2026-08-18 |
+
+> **已知 INDEX 缺口（2026-08-XX 其他 specs 待补）:** 2026-08-04 h1-keyword-refresh / 2026-08-05 P140d/P140e/P140f / 2026-08-13 P142 / 2026-08-14 P143/P144 / 2026-08-17 P145/P146 共 9 个 spec 文件已落盘但未列入 INDEX。P140b-followup candidate 处理。
 
 ---
 
