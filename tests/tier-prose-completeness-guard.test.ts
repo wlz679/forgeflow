@@ -3,10 +3,10 @@
 // 200 prose files in src/content/tools/. Tier assignments come from
 // src/data/prose-tiers.ts (P140c-T1).
 //
-// Thresholds (P140c spec §3):
-//   Tier-1 (15 anchors): en perH2 ≥ 200 / total ≥ 800; zh perH2 ≥ 150 / total ≥ 600
-//   Tier-2 (35):         en perH2 ≥ 130 / total ≥ 500; zh perH2 ≥  90 / total ≥ 350
-//   Tier-3 (50):         en perH2 ≥ 100 / total ≥ 400; zh perH2 ≥  70 / total ≥ 250
+// Thresholds (P140d C3 — +70% over P140c):
+//   Tier-1 (15 anchors): en perH2 ≥ 340 / total ≥ 1400; zh perH2 ≥ 255 / total ≥ 1000
+//   Tier-2 (35):         en perH2 ≥ 220 / total ≥  850; zh perH2 ≥ 150 / total ≥  595
+//   Tier-3 (50):         en perH2 ≥ 170 / total ≥  680; zh perH2 ≥ 120 / total ≥  425
 //
 // Build dependency: RUN_BUILD_TESTS=1 required (P23b skip-guard pattern).
 
@@ -26,9 +26,9 @@ if (!process.env.RUN_BUILD_TESTS) {
 const PROSE_DIR = resolve(root, 'src/content/tools');
 
 const TIER_THRESHOLDS = {
-  1: { en: { perH2: 200, total: 800 }, zh: { perH2: 150, total: 600 } },
-  2: { en: { perH2: 130, total: 500 }, zh: { perH2:  90, total: 350 } },
-  3: { en: { perH2: 100, total: 400 }, zh: { perH2:  70, total: 250 } },
+  1: { en: { perH2: 340, total: 1400 }, zh: { perH2: 255, total: 1000 } },
+  2: { en: { perH2: 220, total: 850 },  zh: { perH2: 150, total: 595 } },
+  3: { en: { perH2: 170, total: 680 },  zh: { perH2: 120, total: 425 } },
 } as const;
 
 type Lang = 'en' | 'zh';
