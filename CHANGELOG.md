@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-17 (P145 Comprehensive Build-Dep — 261 en-faq text-mismatch violations closed [B-1: engine.en ↔ translations.en sync] + 1 defensive FAQ coverage guard [B-2; text-match guard deferred — see commit message] + CHANGELOG drift fixed [B-3]; 3 atomic commits on `feature/p145-comprehensive-build-dep`)
+> **最后更新:** 2026-08-18 (P140c E-E-A-T Completion — single real reviewer identity [王立柱 / Wang Lizhu] replaces 5 fictional personas + About page Editorial Standards / Our Reviewers / Methodology sections [Medium depth] + EeatTrustBlock wired to real data [P140b-T6 placeholder closed] + 2 build-dep CI guards [tier-prose-completeness + sources-quality] + 5 zh prose H2 threshold drift fix + P140b doc catch-up; 6 atomic commits on `feature/p140c-eeat-completion`; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1262/1262/0)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1014 across 59 active days (2026-05-31 → 2026-08-17, ~11 weeks)
+> **Total commits:** 1028 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
 ---
 
@@ -464,6 +464,70 @@ P123/P124 walker triplet = `buildSlugToFirstInput()` + `buildSlugToFaqCount()` +
 - **P138 has no CHANGELOG section** (v3 render batch, 2026-07-30). Deferred to the next catch-up batch; the commit-count refresh here covers its commits numerically but not narratively.
 
 📦 ship log: [`memory/p55b-header-mutex-htmlcollection-fix-shipped.md`](memory/p55b-header-mutex-htmlcollection-fix-shipped.md) — supersedes the "shipped" claim in [`memory/p55-header-dropdown-mutex-shipped.md`](memory/p55-header-dropdown-mutex-shipped.md)
+
+---
+
+## [M24.0] - 2026-08-03 → 2026-08-04 — P140b Editorial Prose Mass-Write (catch-up)
+
+📦 Ship record: `memory/p140b-editorial-prose-shipped.md` (catch-up created in P140c-T5)
+
+P140b shipped 28 commits on master during 2026-08-03 → 2026-08-04 but was never recorded in CHANGELOG. This catch-up entry documents the missing milestone (closes a documentation gap surfaced by P140c design phase). Closed at master HEAD `75707a5` before P146 ff-merge.
+
+### Added
+- **[content] 100 × 2 = 200 editorial prose files** in `src/content/tools/` (en + zh per engine). 14 category-batch commits: saas / retention / customer-support / hiring-team / legal-compliance / cost / valuation / real-estate / marketing / sales / investment / product-analytics / ai-cost / freelance / knowledge / operations.
+- **[components] CalculatorProse wired** into `[lang]/[slug].astro` (commit `1bf1a9a`) — 4-section rendering (intro / methodology / limitations / worked example) with zh fallback + `Xzh` slug derivation fix (Astro 4.x strips dots).
+- **[components] EeatTrustBlock** with Author card + Reviewer cards + Sources links (`682d602`). Initial commit used placeholder reviewer data (P140b-T6 TODO marker) — closed in P140c.
+- **[seo] SoftwareApplication JSON-LD** author (Person) + review (Review[]) fields (`11f4ac9`).
+- **[i18n] FAQ 5→12+ expansion** across 100 engines + en/zh i18n + translatedFaq fallback (`a69e9f6`).
+- **[i18n] FAQ dedup** — 21 questions across 19 engines + LLM-fluff sweep from 147 entries (`9c9a3ab`).
+- **[data] ToolMeta E-E-A-T fields** (authorId/reviewerIds/sourcesRich, additive) (`de4f13c`).
+- **[tests] content-prose-shape-guard threshold tightened** (en perH2 80→100, zh 50→70) + zh counterpart warn guard (`250505d`).
+- **[seo] seo-schemas assertion** updated for new author: Person JSON-LD structure (`744a502`).
+
+### Known gaps closed by P140c
+- Placeholder reviewer data at `[slug].astro:1352-1366` (P140b-T6 marker) → closed by P140c-T3 with real persona from `src/data/editorial.ts`.
+- About page missing Editorial Standards / Our Reviewers / Methodology sections → closed by P140c-T2.
+- No tier-differentiated length CI guard → closed by P140c-T4a (`tier-prose-completeness-guard`).
+- No source URL quality CI guard → closed by P140c-T4b (`sources-quality-guard`).
+
+### Commit range
+28 commits (`6850a00` plan → `75707a5` holistic dedup) on master HEAD `75707a5` before P146 ff-merge.
+
+---
+
+## [M24.1] - 2026-08-18 — P140c E-E-A-T Completion
+
+📦 Ship record: `memory/p140c-eeat-completion-shipped.md`
+
+P140c closes the remaining AdSense "low-value content" rejection drivers that P140b's 200-prose mass-write did not address.
+
+### Added
+- **[data] `src/data/editorial.ts`** — single source of truth for E-E-A-T reviewer identity. 1 named persona **王立柱 (Wang Lizhu)**, Founder & Editor in Chief, with credentials `10-year veteran front-end engineer` + `ForgeFlowKit founder (2022–present)`. All 15 categories route to the single `'reviewer-founder'` entry via `reviewerForCategory()`. EDITORIAL constant (author / bio / methodology / reviewCadence='Quarterly') exported.
+- **[data] `src/data/prose-tiers.ts`** — tier assignments for the 100 engines × 2 langs = 200 prose files. `TIER_1_SLUGS` (15 hand-written anchors, 1 per category letter) + `TIER_2_SLUGS` (35 mid-priority, 2-4 per category) + `TIER_3_SLUGS` (50 remaining) + `getTier(slug)` helper returning 1 | 2 | 3.
+- **[pages] About page 3 sections** in `src/pages/[lang]/about.astro` — `#editorial-standards` (5-step review process) + `#our-reviewers` (single founder persona card) + `#methodology` (100 calcs × 15 categories framework). Medium depth ≥ 400 字 each × 2 langs.
+- **[pages] EeatTrustBlock wired to real persona** in `[slug].astro` — replaces P140b-T6 placeholder with `reviewerForCategory(toolMeta.categoryId)` lookup. P140b-T6 TODO markers removed.
+- **[tests] `tests/tier-prose-completeness-guard.test.ts`** — 2 build-dep tests: per-tier length threshold compliance (Tier-1 zh ≥ 150 perH2; Tier-2 zh ≥ 90 perH2; etc.) + tier-count sanity (15 + 35 + 50 = 100).
+- **[tests] `tests/sources-quality-guard.test.ts`** — 1 build-dep test verifying all 200 prose files sources[] entries have HTTPS/HTTP URL format + non-empty name.
+- **[docs] Spec + plan + INDEX** — `docs/superpowers/specs/2026-08-18-p140c-eeat-completion-design.md` + `docs/superpowers/plans/2026-08-18-p140c-eeat-completion.md` + INDEX row in Section 7.
+
+### Fixed
+- **[i18n] 5 zh prose H2 threshold drift** — `solopreneur-mrr-calculator.zh` intro (121→223) + limitations (105→171); `solopreneur-roas-calculator.zh` intro (148→246); `solopreneur-cost-per-support-ticket-calculator.zh` limitations (127→180); `solopreneur-resolution-time-calculator.zh` limitations (89→129). Each expansion added specific domain knowledge (OpenView ARR-tier breakdown, DTC vs B2B ROAS variance, CSAT/FRT as complementary dimensions, etc.) — no LLM-fluff.
+
+### Security / ethics
+- **Removed** 5 fictional personas from early commit `8e828dd` (Sarah Chen / Marcus Lee / Priya Patel / 李华 / David Park with made-up credentials) — would have been publicly displayed as E-E-A-T endorsement and violated AdSense policy against fictional expert personas. Replaced in-place via `git commit --amend` with user-provided real identity (王立柱 / Wang Lizhu). Final commit hash `a41008e`.
+
+### Build status
+- `pnpm check` 1244 / 0 / 0 (1242 baseline + 2 new unit tests from T4)
+- `RUN_BUILD_TESTS=1 pnpm test:build` 1262 / 1262 / 0 (1244 unit + 18 existing build-dep + 2 new build-dep from T4)
+- Subagent calls: ~9 (4 implementer + 4-5 reviewer + 1 final)
+- Branch: `feature/p140c-eeat-completion` (6 atomic commits: a41008e + 1d60c7e + ad65b36 + 34c83bc + 607ef7f + 0e2865b)
+
+### Out of scope (P140d candidates)
+- AdSense Console Auto Ads toggle + resubmit (manual step).
+- `content-prose-shape-guard.test.ts` zh 缺位 upgrade: warn → build fail.
+- Per-tier length tightening (Tier-1/2 above current thresholds).
+- Author bio pages at `/about/authors/<slug>.astro` (optional).
+- INDEX gap cleanup (9 missing 2026-08-XX specs: P140d/e/f, P142, P143, P144, P145, P146).
 
 ---
 

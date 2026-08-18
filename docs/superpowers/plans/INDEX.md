@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-18（P146 P145-followup — #707 + #249 closed (cache-bust + CHANGELOG fix) + 1 build-dep HTML render guard + 5 zh strings QA review; 3 atomic commits ship）
+> **最后更新:** 2026-08-18（P140c E-E-A-T Completion — single real reviewer identity + About 3 sections + EeatTrustBlock wire + 2 CI guards + 5 zh H2 drift fix + P140b catch-up; 6 atomic commits ship; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1262/1262/0）
 
 ---
 
@@ -30,6 +30,7 @@
 | `2026-08-14-p144-p143-followup.md` | P144 P143-followup — 4 build-dep failures closed partially (#528/#529 fully; #525/#530 for 16 of 100 engines) + 6 doc drift items + run.mjs off-by-one, 8 atomic commits + 2 plan amends mid-execution — 261 remaining en-faq violations deferred to P145 | 2026-08-17 |
 | `2026-08-17-p145-comprehensive-build-dep.md` | P145 Comprehensive Build-Dep — 261 en-faq text-mismatch violations closed (engine.en ↔ translations.en sync) + 1 defensive FAQ coverage guard + CHANGELOG drift fix; 3 atomic commits — text-match guard deferred | 2026-08-17 |
 | `2026-08-17-p146-p145-followup.md` | P146 P145-followup — #707 + #249 closed (cache-bust buildWithEnv + CHANGELOG 1014 fix) + 1 build-dep HTML render guard + 5 zh strings QA review (no fixes); 3 atomic commits | 2026-08-18 |
+| `2026-08-18-p140c-eeat-completion.md` | P140c E-E-A-T Completion — single real reviewer identity (王立柱) + About page 3 sections (Editorial Standards / Our Reviewers / Methodology, Medium depth) + EeatTrustBlock wire to real data (P140b-T6 placeholder closed) + 2 CI guards (tier-prose-completeness + sources-quality) + 5 zh H2 threshold drift fix + P140b doc catch-up; 6 atomic commits | 2026-08-18 |
 
 ---
 
@@ -145,9 +146,9 @@
 | 5 · P4-P16 — Calculator batches | 15 |
 | 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 13 |
 | 7 · Multi-language mirrors | 1 |
-| **索引 plan 文件总数** | **54** |
+| **索引 plan 文件总数** | **55** |
 | 8 · Excluded (pr-body) | 1 |
-| **目录文件总数** | **54** |
+| **目录文件总数** | **55** |
 
 ---
 
