@@ -1,6 +1,11 @@
 # P140b — Editorial Prose Mass-Write for AdSense Recovery (Design)
 
-> **Status:** READY for `superpowers:writing-plans`. P140b closes the AdSense "low-value content" rejection by mass-writing 200 editorial prose files (100 engines × 2 langs) + shipping E-E-A-T infrastructure (author / reviewer / sources / Editorial Standards / Our Reviewers).
+> **⚠️ STATUS: ALREADY SHIPPED 2026-08-04 (28 commits in master).**
+> **This spec served as the design plan for P140b execution; the implementation diverged from this plan (Tiered 15/35/50 was not the actual split — all 100×2 prose were mass-written via category-batch commits with template-quality across the board, not differentiated by tier).**
+> **See P140b ship record (post-P140c):** `memory/p140b-editorial-prose-shipped.md` (catch-up in P140c Commit 5).
+> **Remaining work (real reviewer data + About page sections + tier/sources CI guards) was deferred to:** `docs/superpowers/specs/2026-08-18-p140c-eeat-completion-design.md`.
+>
+> **Original Status:** READY for `superpowers:writing-plans`. P140b closes the AdSense "low-value content" rejection by mass-writing 200 editorial prose files (100 engines × 2 langs) + shipping E-E-A-T infrastructure (author / reviewer / sources / Editorial Standards / Our Reviewers).
 >
 > **Origin**: P140a ship memory §"Deferred to P140b/c/d" + AdSense rejection notification for `forgeflowkit.com` on 2026-08-17 ("低价值内容", status 需要审核). 2026-08-18.
 

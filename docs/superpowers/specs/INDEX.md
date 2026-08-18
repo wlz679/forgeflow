@@ -110,8 +110,8 @@
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 19 |
 | 6 · P20+ — Tech Debt / Cleanup / Audit | 7 |
-| 7 · P140+ — AdSense Compliance + 2.0 | 1 |
-| **总计** | **45** |
+| 7 · P140+ — AdSense Compliance + 2.0 | 2 |
+| **总计** | **46** |
 
 ---
 
