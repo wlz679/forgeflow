@@ -65,18 +65,22 @@ function envSig(env: Record<string, string>): string {
  */
 export function buildWithEnv(env: Record<string, string>): { en: string; zh: string } {
   const sig = envSig(env);
-  // Per-process cache keyed by env signature (globalThis so it survives
-  // multiple calls within the same tsx process).
-  // (Test runs are short-lived; one build per env combination is enough.)
+  // P146-S1: When running in full test:build mode, bypass per-process cache
+  // to prevent cross-test stale-state contamination. Each build-dep test
+  // gets a fresh build, eliminating the race condition where test N uses
+  // test N-1's incomplete dist/ output.
+  const isFullTestBuild = !!process.env.RUN_BUILD_TESTS;
   const cacheKey = `_p32_${sig}`;
-  const cached = (globalThis as any)[cacheKey] as { en: string; zh: string } | undefined;
+  const cached = isFullTestBuild ? undefined : (globalThis as any)[cacheKey] as { en: string; zh: string } | undefined;
   if (cached) return cached;
 
   runBuild(env);
   const en = readFileSync(resolve(distPath, 'en', 'index.html'), 'utf8');
   const zh = readFileSync(resolve(distPath, 'zh', 'index.html'), 'utf8');
   const result = { en, zh };
-  (globalThis as any)[cacheKey] = result;
+  if (!isFullTestBuild) {
+    (globalThis as any)[cacheKey] = result;
+  }
   return result;
 }
 
