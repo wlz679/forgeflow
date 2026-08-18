@@ -117,11 +117,12 @@
 
 ## 7 · P140+ — AdSense Compliance + 2.0 Strategy
 
-| 文件 | 标题 | 类别 | 日期 |
-|---|---|---|---|
-| `2026-08-18-p140b-editorial-prose-design.md` | P140b Editorial Prose Mass-Write for AdSense Recovery | AdSense compliance | 2026-08-18 |
+| 文件 | 标题 | 类别 | 日期 | 状态 |
+|---|---|---|---|---|
+| `2026-08-18-p140b-editorial-prose-design.md` | P140b Editorial Prose Mass-Write for AdSense Recovery (SUPERSEDED — already shipped 2026-08-04) | AdSense compliance | 2026-08-18 | SHIPPED |
+| `2026-08-18-p140c-eeat-completion-design.md` | P140c E-E-A-T Completion (Real Reviewers + About Sections + Tier/Sources Guards) | AdSense compliance | 2026-08-18 | READY |
 
-> **已知 INDEX 缺口（2026-08-XX 其他 specs 待补）:** 2026-08-04 h1-keyword-refresh / 2026-08-05 P140d/P140e/P140f / 2026-08-13 P142 / 2026-08-14 P143/P144 / 2026-08-17 P145/P146 共 9 个 spec 文件已落盘但未列入 INDEX。P140b-followup candidate 处理。
+> **已知 INDEX 缺口（2026-08-XX 其他 specs 待补）:** 2026-08-04 h1-keyword-refresh / 2026-08-05 P140d/P140e/P140f / 2026-08-13 P142 / 2026-08-14 P143/P144 / 2026-08-17 P145/P146 共 9 个 spec 文件已落盘但未列入 INDEX。P140d candidate 处理。
 
 ---
 
