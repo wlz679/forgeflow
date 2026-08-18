@@ -20,7 +20,8 @@ sources:
 叠加 30% 到 80%。本工具把美国、英国、欧盟、亚洲、全球远程 5 种雇佣
 场景下的 fully-loaded 倍数拆开，预测 5 年支出 runway，对比
 **全职-vs-外包**的盈亏平衡点，帮助独立创业者决定是招人、留外包、
-还是跨境雇佣。
+还是跨境雇佣。BLS ECEC Q4 2025 拆解：benefits 29.7%、paid leave 7.2%、
+insurance 8.9%、retirement 5.4%——四块加起来撑起 fully-loaded 倍数。
 
 ## 计算方法
 
