@@ -157,6 +157,12 @@ const CATEGORY_DESC_ZH: Record<string, string> = {
               <strong>{lang === 'zh' ? '资质 / Credentials' : 'Credentials'}:</strong>
               {' '}{r.credentials.join(' · ')}
             </p>
+            <a
+              href={`/${lang}/about/authors/${r.id}/`}
+              class="text-[#7C3AED] hover:underline text-sm font-medium mt-2 inline-block"
+            >
+              {t('authors.read_full_bio', lang)}
+            </a>
           </div>
         ))}
         <p class="text-sm mb-3">
