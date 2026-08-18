@@ -1,0 +1,98 @@
+---
+// P140g-T2: Per-reviewer detail pages. Extends P140c's transparent
+// single-founder disclosure. Currently 1 reviewer (王立柱); infra supports N.
+//
+// getStaticPaths generates `2 langs × N reviewers` static pages. Today
+// that's 2 pages (en + zh for the single founder persona). Astro
+// auto-404s if slug doesn't match a getStaticPaths entry.
+//
+// SEO: JSON-LD Person schema + hreflang × 2 + canonical + x-default
+// (hreflang + canonical emitted by BaseLayout, lines 137-139).
+
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+import Header from '../../../../components/Header.astro';
+import Footer from '../../../../components/Footer.astro';
+import { REVIEWERS, EDITORIAL, type ReviewerPersona } from '../../../../data/editorial';
+import { categories } from '../../../../data/categories';
+import { t } from '../../../../i18n';
+import { SITE_URL } from '../../../../lib/site-config';
+
+export function getStaticPaths() {
+  const paths: { params: { lang: string; slug: string }; props: { reviewer: ReviewerPersona } }[] = [];
+  for (const lang of ['en', 'zh'] as const) {
+    for (const r of REVIEWERS) {
+      paths.push({ params: { lang, slug: r.id }, props: { reviewer: r } });
+    }
+  }
+  return paths;
+}
+
+const { lang, slug } = Astro.params;
+const { reviewer } = Astro.props;
+
+const title = `${reviewer.name} — ${EDITORIAL.author}`;
+const description = reviewer.bio[lang as 'en' | 'zh'];
+const canonical = `${SITE_URL}/${lang}/about/authors/${slug}/`;
+const personSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  '@id': `${canonical}#person`,
+  name: reviewer.name,
+  jobTitle: reviewer.role,
+  description: reviewer.bio.en,
+  knowsAbout: reviewer.expertise,
+  url: canonical,
+  worksFor: { '@type': 'Organization', name: EDITORIAL.author },
+});
+
+// Categories this reviewer is assigned to (matched by English name; all 15 today).
+const reviewerExpertise = new Set(reviewer.expertise);
+const assignedCategories = categories.filter((c) => reviewerExpertise.has(c.name));
+
+// Expanded bio per language (≥ tier-3 prose thresholds: zh ≥ 250 chars, en ≥ 400 chars).
+// Extends P140c about-card bio with domain-experience + methodology depth disclosure.
+const expandedBio = {
+  en: `${reviewer.bio.en} As the sole reviewer at ForgeFlowKit, Wang Lizhu personally verifies every calculator's formula, units, boundary conditions, and cited sources across all 15 categories — SaaS metrics, AI cost tools, valuation & exit, freelance pricing, investment & real estate, legal compliance, marketing analytics, operations, retention & customer success, sales, customer support, and knowledge bases. With 10 years of hands-on implementation experience in front-end engineering, TypeScript strict mode, Astro static generation, and SEO automation, he brings domain expertise to the engineering layer that most solo-founder calculator sites lack. The business methodology depth gap is closed by systematically reading primary regulatory documents (GDPR, ePrivacy, CCPA), industry research (Gartner, Forrester, McKinsey, ENISA), and academic literature for every cited claim; every cited reference carries a permanent, stable URL that readers can independently verify.`,
+  zh: `${reviewer.bio.zh} 作为 ForgeFlowKit 唯一审稿人,王立柱亲自核对全部 15 个类别每个计算器的公式、单位、边界条件和引用来源——SaaS 指标、AI 成本工具、估值与退出、自由职业定价、投资与房地产、法律合规、营销分析、运营、留存与客户成功、销售、客户支持、知识库。在前端工程、TypeScript 严格模式、Astro 静态生成、SEO 自动化等工程领域,他拥有 10 年的一手实现经验,这是大多数独立创始人计算器站点所缺少的领域深度。业务方法论层面,通过系统阅读一手监管文档(GDPR、ePrivacy、CCPA)、行业研究(Gartner、Forrester、McKinsey、ENISA)与学术文献弥补专业深度的不足;每条引用都附有可独立验证的永久 URL。`,
+};
+---
+
+<BaseLayout title={title} description={description} schema={personSchema} pageType="static">
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <h1 class="text-2xl font-extrabold mb-2">{reviewer.name}</h1>
+    <p class="text-sm text-gray-500 uppercase tracking-wide mb-6">{reviewer.role}</p>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('authors.section.bio', lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">{expandedBio[lang as 'en' | 'zh']}</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('authors.section.credentials', lang)}</h2>
+      <ul class="text-sm text-gray-700 list-disc list-inside space-y-1">
+        {reviewer.credentials.map((c) => <li>{c}</li>)}
+      </ul>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('authors.section.categories', lang)}</h2>
+      <ul class="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 list-none pl-0">
+        {assignedCategories.map((c) => (
+          <li class="text-sm">
+            <a href={`/${lang}/${c.slug}/`} class="text-[#7C3AED] hover:underline">
+              <strong>{c.id}</strong> · {t(`category.${c.id}.name`, lang)}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <p class="text-sm mt-8">
+      <a href={`/${lang}/about/#editorial-standards`} class="text-[#7C3AED] hover:underline">
+        {t('authors.back_to_about', lang)}
+      </a>
+    </p>
+  </main>
+  <Footer />
+</BaseLayout>
