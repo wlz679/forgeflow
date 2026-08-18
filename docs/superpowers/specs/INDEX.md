@@ -3,7 +3,7 @@
 > **目录索引** — 所有 design specs 按类别分组，按日期升序。
 > **Plans:** 参见 `../plans/`（52 个 plan 文件，本 INDEX 不覆盖）。
 > **Memory:** 参见 `../../../memory/MEMORY.md`（项目级 ship log 索引）。
-> **最后更新:** 2026-08-18（P140d Tier Threshold Tightening spec 落盘）
+> **最后更新:** 2026-08-18（P140e INDEX catch-up — 9 missing 2026-08 spec files synced: h1-keyword-refresh + p140d-t1-csat + p140e + p140f + P142/P143/P144/P145/P146）
 
 ---
 
@@ -96,6 +96,14 @@
 | `2026-07-18-p23-og-sample-coverage-design.md` | P23 OG-Sample Coverage — Design | build-fix | 2026-07-18 |
 | `2026-07-19-p23b-satori-perf-skip-gate-design.md` | P23b Satori Perf Skip-Gate — Design | test-tooling | 2026-07-19 |
 | `2026-07-19-p27-memory-audit-pass-design.md` | P27 Memory Audit Pass — Design | audit | 2026-07-19 |
+| `2026-08-04-h1-keyword-refresh-design.md` | H1 + metaTitle Keyword Refresh — 65 B+C class rewrite (commit `1d8943c`) | SEO | 2026-08-04 |
+| `2026-08-05-p140d-t1-csat-and-friends-design.md` | P140d-T1 H1 Refresh Round 2 (17 misclassified slugs) — DRAFT pre-GSC-data | SEO | 2026-08-05 |
+| `2026-08-05-p140e-blog-content-strategy-design.md` | P140e Blog Content Strategy — DRAFT pending user §9 decisions | content | 2026-08-05 |
+| `2026-08-13-p142-p141-followup-design.md` | P142 P141-followup Integration (4 candidates: A tsc gate + B dead code + C env-via + D a11y SVG) | build-dep | 2026-08-13 |
+| `2026-08-14-p143-build-dep-fixes-design.md` | P143 Build-Dep Fixes (9 → 4 pre-existing failures closed) | build-dep | 2026-08-14 |
+| `2026-08-14-p144-p143-followup-design.md` | P144 P143-followup (4 build-dep failures partially closed + 6 doc drift items + run.mjs off-by-one) | build-dep | 2026-08-14 |
+| `2026-08-17-p145-comprehensive-build-dep-design.md` | P145 Comprehensive Build-Dep (#249 + #525 261 en-faq mismatches closed) | build-dep | 2026-08-17 |
+| `2026-08-17-p146-p145-followup-design.md` | P146 P145-followup (#707 + #249 closed + 1 HTML render guard) | build-dep | 2026-08-17 |
 
 ---
 
@@ -109,9 +117,9 @@
 | 3 · P2 — LocalStorage trilogy | 3 |
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 19 |
-| 6 · P20+ — Tech Debt / Cleanup / Audit | 7 |
-| 7 · P140+ — AdSense Compliance + 2.0 | 2 |
-| **总计** | **46** |
+| 6 · P20+ — Tech Debt / Cleanup / Audit | 15 |
+| 7 · P140+ — AdSense Compliance + 2.0 | 3 |
+| **总计** | **55** |
 
 ---
 
@@ -122,8 +130,7 @@
 | `2026-08-18-p140b-editorial-prose-design.md` | P140b Editorial Prose Mass-Write for AdSense Recovery (SUPERSEDED — already shipped 2026-08-04) | AdSense compliance | 2026-08-18 | SHIPPED |
 | `2026-08-18-p140c-eeat-completion-design.md` | P140c E-E-A-T Completion (Real Reviewers + About Sections + Tier/Sources Guards) | AdSense compliance | 2026-08-18 | READY |
 | `2026-08-18-p140d-tier-threshold-tightening-design.md` | P140d Tier Threshold Tightening (C3 +70% Thresholds + 31 H2 Domain Expansions) | Content quality | 2026-08-18 | SHIPPED |
-
-> **已知 INDEX 缺口（2026-08-XX 其他 specs 待补）:** 2026-08-04 h1-keyword-refresh / 2026-08-05 P140e/P140f / 2026-08-13 P142 / 2026-08-14 P143/P144 / 2026-08-17 P145/P146 共 8 个 spec 文件已落盘但未列入 INDEX。P140d 已 ship + INDEXed；P140e+ 候选 next batch。
+| `2026-08-05-p140f-v2-strategy-design.md` | P140f v2.0 Evolution Strategy — APPROVED Path C (deferred to v2.0 promotion) | v2-strategy | 2026-08-05 | APPROVED |
 
 ---
 
