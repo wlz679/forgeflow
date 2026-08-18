@@ -23,6 +23,10 @@ ROAS（广告支出回报率）衡量每花 1 元广告费产生的总收入，�
 单位经济模型时，请搭配 **CAC（客户获取成本）** 工具使用。Meta、Google、
 TikTok 的同 ROAS 在不同行业转化价值差异很大，需结合行业基准判断
 （例如 DTC 美妆 4x 通常合格，B2B SaaS 往往要到 5x 以上才可持续扩量）。
+不同平台归因窗口差异显著——Meta 默认 7d click / 1d view，Google Ads
+默认 30d click，B2B 长漏斗常延至 90d；last-click 视角会高估成交型
+渠道、低估种草型增量，要严格区分 attribution 报告与 incrementality
+实验的结论。
 
 ## 计算方法
 
