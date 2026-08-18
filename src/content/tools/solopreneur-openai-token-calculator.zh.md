@@ -57,7 +57,11 @@ Prompt Caching 把缓存命中的输入 token 砍掉一半费用，但只缓存�
 图片生成（DALL-E 按张计费——见 AI Image Cost Calculator）、微调训练
 成本（见 AI Training Cost Estimator）。OpenAI 每季度调价一次——为多
 月项目锁定模型前请重新评估。区域差价（欧盟数据驻留、主权云）也不
-在覆盖范围内。
+在覆盖范围内。token 计数也因模型而异：GPT-4o / GPT-4o-mini 1 token
+≈ 4 字符英文 / ≈1.5 字符中文，o-series 略多 10–15%（推理 token 按
+输出费率计费）。Prompt Caching 仅对 ≥1024 token 前缀生效，缓存命中
+输入 5 折；Batch API 5 折但 24h SLA、速率上限减半；微调（fine-tuning）
+按 \$25/百万输入 token 单独计费，不与推理费率合并。
 
 ## 案例走读
 
