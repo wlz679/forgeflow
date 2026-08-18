@@ -15,6 +15,7 @@ import { relatedTools } from '../../data/internal-links';
 import { getBlogPostsByToolSlug } from '../../lib/blog';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
+import { EDITORIAL, reviewerForCategory } from '../../data/editorial';
 import { t, getLang } from '../../i18n';
 import { createSoftwareApplication, createToolFAQPage, createToolBreadcrumbList } from '../../lib/seo-factory';
 import { SITE_URL } from '../../lib/site-config';
@@ -431,6 +432,9 @@ const translatedHowToUse = engine.howToUse.map((_, i) => t(`tools.${slug}.how_to
 
 const toolMeta = tools.find(t => t.slug === slug)!;
 const featureList = translatedHowToUse.slice(0, 3);
+// P140c-T3: Resolve reviewer persona once per page (category → persona lookup)
+// so the JSX renders the same identity 4× in author/reviewer slots.
+const persona = reviewerForCategory(toolMeta.categoryId);
 
 const categoryName = t(`category.${toolMeta.categoryId}.name`, lang);
 const categorySlug = categories.find(c => c.id === toolMeta.categoryId)?.slug ?? '';
@@ -1349,21 +1353,16 @@ const schema = JSON.stringify({
         <EeatTrustBlock
           author={{
             id: toolMeta.authorId,
-            // P140b-T6: placeholder founder persona until P140c-T1 wires real reviewer data.
-            name: toolMeta.authorId === 'wlz'
-              ? 'ForgeFlowKit Editorial'
-              : toolMeta.authorId,
+            name: toolMeta.authorId === 'wlz' ? EDITORIAL.author : toolMeta.authorId,
             role: 'founder',
-            bio: lang === 'zh'
-              ? 'ForgeFlowKit 创始人 — 为独立开发者和 SaaS 创业者打造免费商业计算器。'
-              : 'Founder of ForgeFlowKit — building free business calculators for solopreneurs and SaaS founders.',
+            bio: EDITORIAL.bio[lang],
           }}
-          reviewers={toolMeta.reviewerIds.map((id) => ({
-            id,
-            name: id, // placeholder: id displayed as-is until P140c-T1
-            role: 'analyst',
-            expertise: [] as string[],
-          }))}
+          reviewers={[{
+            id: persona.id,
+            name: persona.name,
+            role: 'expert',
+            expertise: persona.expertise,
+          }]}
           sourcesRich={toolMeta.sourcesRich}
           dataReviewedAt={toolMeta.dataReviewedAt}
         />
