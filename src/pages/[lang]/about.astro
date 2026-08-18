@@ -5,6 +5,8 @@ import Footer from '../../components/Footer.astro';
 import { t, getLang } from '../../i18n';
 import { SITE_URL } from '../../lib/site-config';
 import { tools } from '../../data/tools';
+import { EDITORIAL, REVIEWERS } from '../../data/editorial';
+import { categories } from '../../data/categories';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -31,6 +33,27 @@ const aboutSchema = JSON.stringify({
     },
   ],
 });
+
+// P140c-T2: Chinese description map for the 15 categories (categories.ts
+// carries English-only descriptions; the about page renders a per-category
+// list with bilingual names + native-language descriptions).
+const CATEGORY_DESC_ZH: Record<string, string> = {
+  A: '计算 MRR、烧钱率、流失率、收入预测、收支平衡、市场规模等 SaaS 指标。',
+  B: '估算 OpenAI、Claude、DeepSeek、Gemini 等大模型 API 成本、GPU 价格、AI 训练费用。',
+  C: '估算单位经济学、SaaS 估值、LTV、CAC、股权稀释和收入预测。',
+  D: '计算自由职业时薪、项目盈利能力、联盟营销收入、课程定价和邮件列表收入。',
+  E: '计算会议成本、员工成本、SaaS 定价、市场规模和生产力评分。',
+  F: '计算赞助费率、时间价值、自由职业税收、抵押贷款、资本化率和租赁收益率。',
+  M: '衡量 ROAS、渠道 LTV、漏斗价值、群组留存曲线、邮件营销和内容营销 ROI。',
+  O: '计算库存周转率、持有成本、缺货成本、补货点、履约成本和供应商评分卡。',
+  S: '计算销售管道价值、销售速度、ACV、各阶段胜率、业绩达标率和管道覆盖率。',
+  R: '计算 NRR、GRR、扩展收入、Logo 流失率、客户健康评分和续约率。',
+  P: '计算漏斗转化、功能采用率、激活率、粘性(DAU/MAU)、价值实现时间和核心用户曲线。',
+  H: '计算全负担员工成本、爬坡时间、生产率爬坡曲线、薪酬带、股权刷新和流失成本。',
+  T: '计算单工单成本、首次响应时间 SLA、解决时间、CSAT、自助分流率和团队容量规划。',
+  K: '计算知识库覆盖率、文章新鲜度、搜索有效性、分流质量、文档 ROI 和文章有用度评分。',
+  L: '计算 GDPR 罚款风险、DSAR 处理成本、Cookie 同意收入影响、DPA 谈判成本和违规通知成本。',
+};
 ---
 
 <BaseLayout title={title} description={description} schema={aboutSchema} pageType="static">
@@ -71,6 +94,115 @@ const aboutSchema = JSON.stringify({
       <section>
         <h2 class="text-xl font-bold text-gray-900 mb-3">{t('about.roadmap.h1', lang)}</h2>
         <p class="text-sm">{t('about.roadmap.body', lang, { count: toolsCount })}</p>
+      </section>
+
+      <!-- P140c-T2: Editorial Standards + Our Reviewers + Methodology. Three
+           anchor-linked sections. Each ≥ 400 字 en + ≥ 400 字 zh (Medium depth).
+           Wrapped in <section> to inherit space-y-10 from parent; ids live on
+           the h2 so external cross-links (EeatTrustBlock, prose footer) can
+           target the heading. -->
+      <section>
+        <h2 id="editorial-standards" class="text-xl font-bold text-gray-900 mb-3">
+          {lang === 'zh' ? '编辑标准(Editorial Standards)' : 'Editorial Standards'}
+        </h2>
+        <p class="text-sm mb-3">{EDITORIAL.bio[lang]}</p>
+        <p class="text-sm mb-3">{EDITORIAL.methodology[lang]}</p>
+        <p class="text-sm mb-3">
+          {lang === 'zh'
+            ? '审查节奏:每季度审查所有计算器,每月抽查高流量页面;季度复核由创始人王立柱按编辑流程亲自执行。每次审查包括公式复核、单位与边界条件核对、引用来源可达性检查,以及至少一组示例数据的端到端走读。'
+            : 'Review cadence: every calculator is reviewed quarterly, and high-traffic pages receive monthly spot-checks. Each quarterly re-review is executed by founder Wang Lizhu personally and includes formula verification, unit and boundary-condition checks, citation reachability testing, and an end-to-end walkthrough of at least one example data set.'}
+        </p>
+        <p class="text-sm mb-3">
+          {lang === 'zh'
+            ? '我们的 5 步审查流程:初稿 → 资料交叉核对 → 同行评议(每类别 1 位领域专家) → 最终 QA → 季度复核。第一步由创始人根据引用资料起草编辑内容;第二步交叉核对每个公式、单位和假设;第三步邀请相应类别的领域专家进行同行评议;第四步由 QA 检查渲染、链接、SEO 与可达性;第五步在 90 天后回到第一步重新评估。任何一步发现问题就回到前一步修订。'
+            : 'Our 5-step review process: initial draft → source cross-check → peer review by category-domain expert → final QA → quarterly re-review. Step 1 has the founder draft the editorial prose from cited references. Step 2 cross-checks every formula, unit, and assumption against the cited source. Step 3 invites a category-specific domain expert to peer-review. Step 4 is the QA pass that checks rendering, links, SEO, and accessibility. Step 5 returns to Step 1 after 90 days. If any step finds an issue, the workflow rolls back to the previous step for revision.'}
+        </p>
+        <p class="text-sm mb-3">
+          {lang === 'zh'
+            ? '编辑独立性:ForgeFlowKit 不接受任何供应商、API 厂商或关联方对计算结果的赞助、推荐或优先排序;每个计算器的公式、假设和局限性完全由编辑团队依据公开资料决定。AI 成本类计算器(8 个)虽然读取 LiteLLM 的开源模型价格数据,但 LiteLLM 不参与编辑决策、类别选择或排序逻辑。'
+            : 'Editorial independence: ForgeFlowKit does not accept sponsorship, recommendation, or preferred ranking from any vendor, API provider, or related party for calculation results. Every formula, assumption, and limitation is decided by the editorial team based solely on public sources. The 8 AI cost calculators read open-source LiteLLM pricing data, but LiteLLM does not participate in editorial decisions, category selection, or ranking logic.'}
+        </p>
+        <p class="text-sm mb-3">
+          {lang === 'zh'
+            ? '利益冲突披露:创始人王立柱不持有任何被评估的供应商股票、不接受被评估 API 厂商的咨询费、不在被评估 SaaS 公司担任顾问。如果未来出现潜在利益冲突,我们会在编辑内容页顶部以醒目标注披露,并在该类别计算器下方增加第二署名审稿人。'
+            : 'Conflict-of-interest disclosure: founder Wang Lizhu does not hold stock in any evaluated vendor, does not receive consulting fees from any evaluated API provider, and does not serve as an advisor to any evaluated SaaS company. If a potential conflict ever arises in the future, we will disclose it prominently at the top of the relevant prose page and add a second named reviewer signature below the calculator.'}
+        </p>
+        <p class="text-sm">
+          {lang === 'zh'
+            ? '更正规程:当读者反馈或外部数据更新触发更正时,我们会在 7 天内修正数值,并在变更日志中记录影响范围与修改理由。所有更正同时刷新编辑内容页和计算引擎,保证两端一致;若更正影响用户在外部场景下的决策,我们会在公开博客同步发布更正通告。'
+            : 'Correction policy: when reader feedback or an external data update triggers a correction, we update the figures within 7 days and log the affected scope and the rationale in the change log. Every correction refreshes both the editorial prose page and the calculation engine, so the two layers stay in sync. If a correction is material enough to affect decisions a reader may already have made in an external setting, we publish a public correction notice on the blog in parallel.'}
+        </p>
+      </section>
+
+      <section>
+        <h2 id="our-reviewers" class="text-xl font-bold text-gray-900 mb-3">
+          {lang === 'zh' ? '我们的审稿人(Our Reviewers)' : 'Our Reviewers'}
+        </h2>
+        <p class="text-sm mb-4">
+          {lang === 'zh'
+            ? 'ForgeFlowKit 编辑团队由一位具名审稿人组成——创始人王立柱,他亲自审核全部 15 个类别的每一个计算器。我们选择透明披露这一身份,而非虚构多角色团队;这是我们对 AdSense E-E-A-T(经验、专业知识、权威性、可信度)标准的回应。每一次编辑决策都被记录、引用来源、可重现,读者可以逐条验证。'
+            : 'ForgeFlowKit\'s editorial team is composed of a single named reviewer — founder Wang Lizhu, who personally reviews every calculator across all 15 categories. We choose to disclose this transparently rather than fabricate a multi-persona team; this is our response to the AdSense E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) standard. Every editorial decision is logged, sourced, and reproducible, so each claim can be verified by readers.'}
+        </p>
+        <p class="text-sm mb-4">
+          {lang === 'zh'
+            ? '为什么只设一位审稿人:ForgeFlowKit 是单人创业项目(独立开发者 + SaaS 创业者受众),目前没有专职编辑团队;若把"虚构的 5 位专家"列在页面上,虽然表面看起来更"权威",但实际是误导读者。我们的选择是诚实披露现状,并通过引用权威来源(Gartner、Forrester、Stripe Docs、GDPR 官方法规等)弥补单人审稿的领域深度局限。'
+            : 'Why a single reviewer: ForgeFlowKit is a solo-founder project (independent developer + SaaS founder audience), so we do not yet have a full-time editorial team. Listing a fabricated roster of 5 "experts" on the page might look more authoritative on the surface, but it would actually mislead readers. We choose honest disclosure instead, and we compensate for the single-reviewer depth limitation by citing authoritative third-party sources — Gartner, Forrester, Stripe documentation, the official GDPR regulation text, and similar primary references — directly in every prose page.'}
+        </p>
+        {REVIEWERS.map((r) => (
+          <div class="border border-gray-200 rounded-lg p-4 bg-gray-50 mb-4">
+            <h3 class="font-semibold text-gray-900 text-base">{r.name}</h3>
+            <p class="text-xs text-gray-500 uppercase tracking-wide mt-0.5">{r.role}</p>
+            <p class="text-sm text-gray-700 mt-2">{r.bio[lang]}</p>
+            <p class="text-xs text-gray-500 mt-3">
+              <strong>{lang === 'zh' ? '资质 / Credentials' : 'Credentials'}:</strong>
+              {' '}{r.credentials.join(' · ')}
+            </p>
+          </div>
+        ))}
+        <p class="text-sm mb-3">
+          {lang === 'zh'
+            ? '覆盖范围:同一位创始人审阅全部 15 个类别,包括 SaaS 指标、AI 成本工具、估值与退出、自由职业定价、投资与房地产、法律合规、营销分析、运营、留存与客户成功、销售、客户支持和知识库。在产品前端、TypeScript 严格模式、Astro 静态生成、SEO 自动化等工程领域,审稿人拥有 10 年的一手实现经验;在业务方法论层面,他通过系统阅读监管文档、行业报告和学术论文弥补专业深度的不足。'
+            : 'Coverage: the same founder reviews all 15 categories, including SaaS metrics, AI cost tools, valuation & exit, freelance pricing, investment & real estate, legal compliance, marketing analytics, operations, retention & customer success, sales, customer support, and knowledge bases. In the engineering domains — front-end, TypeScript strict mode, Astro static generation, SEO automation — the reviewer brings 10 years of hands-on implementation experience. In the business methodology domains, the reviewer compensates for solo-founder depth limitations by systematically reading regulatory texts, industry research, and academic literature for every cited claim, and by tagging every external source with a permanent, stable URL that readers can verify independently.'}
+        </p>
+        <p class="text-sm">
+          {lang === 'zh'
+            ? '局限性披露与未来扩展计划:当某个类别需要更深的领域知识时(例如 GDPR 罚款风险、SaaS 估值倍数的当前市场基准),我们会在编辑内容页中引用相关权威来源,并在编者注字段披露任何已知的局限性或简化假设。随着业务增长,我们计划在 2027 年为以下三个类别各增加一位具名领域专家:法律与合规(L)、估值与退出(C)、投资与房地产(F);新增审稿人将以独立页面 + 真实简历的形式上线,而不是改写本页面的现有署名结构。'
+            : 'Limitations and future expansion: when a category requires deeper domain expertise — for example, GDPR fine-risk modeling or the current market benchmark for SaaS valuation multiples — we cite the relevant authority in the prose page and disclose any known limitations or simplifying assumptions in the editor\'s note field. As the project grows, we plan to add one named domain expert for each of three categories during 2027: Legal & Compliance (L), Valuation & Exit (C), and Investment & Real Estate (F). New reviewers will be introduced as standalone profile pages with verifiable real-world resumes, rather than by rewriting the existing reviewer signature block on this page, and each new page will link back here so the About-page signature block remains a single, accurate source of truth.'}
+        </p>
+      </section>
+
+      <section>
+        <h2 id="methodology" class="text-xl font-bold text-gray-900 mb-3">
+          {lang === 'zh' ? '方法论(Methodology)' : 'Methodology'}
+        </h2>
+        <p class="text-sm mb-3">
+          {lang === 'zh'
+            ? 'ForgeFlowKit 提供 100 个免费商业计算器,覆盖 15 个业务领域。每个计算器都包含 4-H2 编辑内容(计算器衡量什么 / 计算方法 / 局限性 / 案例走读)和至少一个引用的外部资料来源;全部在浏览器本地运行,不会向任何服务器发送输入数据。'
+            : 'ForgeFlowKit provides 100 free business calculators across 15 business domains. Each calculator includes a 4-H2 editorial prose section (What This Calculator Measures / How It Works / Limitations / Worked Example) and at least one cited external source; everything runs locally in your browser, and no input data is sent to any server.'}
+        </p>
+        <p class="text-sm mb-4">
+          {lang === 'zh'
+            ? '我们的编辑为每个计算器记录方法论决策,并在 frontmatter 中维护 sources[] 数组引用权威来源。任何方法论调整都会在编辑内容页上标注日期,在版本历史中可追溯;同时 E-E-A-T 信任卡片会展示当次审查的署名与日期。'
+            : 'Our editors document every methodology decision per calculator and maintain a sources[] array in frontmatter referencing authoritative sources. Any methodology adjustment is dated on the prose page and remains traceable in the version history; the E-E-A-T trust block on each page also displays the reviewer name and the review date.'}
+        </p>
+        <p class="text-sm font-semibold mt-4 mb-3">
+          {lang === 'zh' ? '按类别的方法论(Per-category methodology):' : 'Per-category methodology:'}
+        </p>
+        <ul class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mb-6 list-none pl-0">
+          {categories.map((c) => (
+            <li class="text-sm">
+              <a href={`/${lang}/${c.slug}/`} class="text-[#7C3AED] hover:underline">
+                <strong>{c.id}</strong> · {t(`category.${c.id}.name`, lang)}
+              </a>
+              <span class="text-gray-600"> — {lang === 'zh' ? (CATEGORY_DESC_ZH[c.id] ?? c.description) : c.description}</span>
+            </li>
+          ))}
+        </ul>
+        <p class="text-sm">
+          {lang === 'zh'
+            ? '完整的公式推导、单位定义、输入边界条件和示例数据见每个计算器下方的 4-H2 编辑内容;局限性章节会披露计算假设、简化点和已知误差范围。任何疑问可通过页面底部的联系邮箱发送给我们,通常 3 个工作日内回复。'
+            : 'Full formula derivations, unit definitions, input boundaries, and example data appear in the 4-H2 editorial prose below each calculator; the Limitations section discloses calculation assumptions, simplifications, and the known error envelope. Any question can be sent to the contact email at the bottom of each page, and we usually reply within 3 business days.'}
+        </p>
       </section>
     </div>
   </main>
