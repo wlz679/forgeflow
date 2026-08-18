@@ -348,6 +348,14 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'eeat.reviewers': { en: 'Reviewed by', zh: '审核人' },
   'eeat.reviewer_expertise_label': { en: 'Expertise', zh: '专长' },
 
+  // P140g: author bio pages i18n keys (1 new route + 1 about-page link)
+  'authors.page.title_suffix': { en: '{name} — About ForgeFlowKit', zh: '{name} — 关于 ForgeFlowKit' },
+  'authors.section.bio': { en: 'Background', zh: '背景' },
+  'authors.section.credentials': { en: 'Credentials', zh: '资质' },
+  'authors.section.categories': { en: 'Categories Reviewed', zh: '审核类别' },
+  'authors.back_to_about': { en: '← Back to About', zh: '← 返回关于' },
+  'authors.read_full_bio': { en: 'Read full bio →', zh: '阅读完整简介 →' },
+
   // ===== Blog list page =====
   'blog.page_title': { en: 'ForgeFlowKit Tips & Tools Blog', zh: 'ForgeFlowKit 技巧与工具博客' },
 
