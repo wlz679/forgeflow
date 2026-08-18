@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-18 (P140e INDEX + CHANGELOG catch-up — 9 missing 2026-08 spec files INDEXed [h1-keyword + p140d-t1-csat + p140e + p140f + P142/P143/P144/P145/P146] + CHANGELOG M24.2 [P140d] + M24.3 [P141-P146 catch-up] added; specs/INDEX.md count 46 → 55; commit count 1028 → 1065; pnpm check 1244/0/0)
+> **最后更新:** 2026-08-18 (P140d-T8 zh 缺位 warn → build-fail upgrade — content-prose-shape-guard Test 6 tightened; M24.4 added; closes P140c out-of-scope line 527; commit count 1065 → 1066; pnpm check 1244/0/0 unchanged)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
@@ -633,6 +633,29 @@ Catch-up for 6 build-dep batches shipped 2026-08-13 → 2026-08-17 that were nev
 | Open FAQ drift (#525) | 0 remaining | **0** (P145-B1 closed all 261) |
 
 📦 Pre-P140c ship was at 1029 commits; P141-P146 added 35 commits; P140d added 36 commits → **1065** total as of M24.2 + M24.3 ship record.
+
+---
+
+## [M24.4] - 2026-08-18 — P140d-T8 zh 缺位 warn → build-fail upgrade
+
+📦 Ship record: `memory/p140d-t8-zh-coverage-guard-shipped.md`
+
+Closes P140c ship record "Out of scope (P140d candidates)" line 527 — `content-prose-shape-guard.test.ts` zh 缺位 upgrade: warn → build fail. The last P140a-T7 warn-only check is now CI-enforced. Audit before upgrade confirmed 100/100 zh parity (0 missing, 0 extra), so upgrade is safe and adds zero new failures.
+
+### Changed
+- **[tests] `content-prose-shape-guard.test.ts` Test 6** — `'every en file has a zh counterpart (P140d-T8 build-fail)'`. The previous `assert.ok(true)` always-pass (P140a-T7 phase) is replaced with `assert.equal(missing.length, 0, ...)` — any future engine that ships en-only gets caught at CI time. Header comment updated from "P140a phase / P140d-T8 will tighten" to "P140d-T8 ship" with 100/100 parity note.
+
+### Engineering metrics
+
+| Metric | Before (M24.3) | After (M24.4) |
+|---|---|---|
+| Build-dep suites (cumulative) | 47 | **47** (no new suite; existing Test 6 tightened) |
+| pnpm check baseline | 1244/0/0 | **1244/0/0** |
+| RUN_BUILD_TESTS=1 baseline | 1262/1262/0 | **1262/1262/0** |
+| zh coverage | 100/100 | **100/100** (audit: 0 missing, 0 extra) |
+| Total master commits | 1065 | **1066** (+1 commit) |
+
+📦 1 atomic commit (`63be890`); tsc clean; build-dep test 6/6 pass; no new failures introduced.
 
 ---
 
