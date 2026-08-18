@@ -20,7 +20,11 @@ sources:
 「真正可以期待」的那部分收入，从而能做现金流预测、设定销售配额、
 跨订阅层级比较增长时不被季节性扭曲。OpenView 2026 把 SaaS 切成
 0–1M / 1–5M / 5–30M / 30M+ 四档 ARR 区间，每档的 MRR 健康阈值与流失
-形态不同；本工具只输出指标本身，区间判断留给读者。
+形态不同；本工具只输出指标本身，区间判断留给读者。净 MRR（Net MRR）
+= 新增 MRR + 扩展 MRR − 缩减 MRR − 流失 MRR，用于刻画订阅经济的净
+增长；本工具聚焦毛 MRR 口径，NRR/GRR 留给 NRR Calculator。OpenView
+2024 早-stage \$5–30k、growth \$30–300k、enterprise \$300k+ 三档 MRR
+分位是 SaaS 估值常用的 benchmark。
 
 ## 计算方法
 
