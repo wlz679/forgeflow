@@ -3,7 +3,7 @@
 > **目录索引** — 所有 design specs 按类别分组，按日期升序。
 > **Plans:** 参见 `../plans/`（52 个 plan 文件，本 INDEX 不覆盖）。
 > **Memory:** 参见 `../../../memory/MEMORY.md`（项目级 ship log 索引）。
-> **最后更新:** 2026-08-18（P140b spec 落盘）
+> **最后更新:** 2026-08-18（P140d Tier Threshold Tightening spec 落盘）
 
 ---
 
@@ -121,8 +121,9 @@
 |---|---|---|---|---|
 | `2026-08-18-p140b-editorial-prose-design.md` | P140b Editorial Prose Mass-Write for AdSense Recovery (SUPERSEDED — already shipped 2026-08-04) | AdSense compliance | 2026-08-18 | SHIPPED |
 | `2026-08-18-p140c-eeat-completion-design.md` | P140c E-E-A-T Completion (Real Reviewers + About Sections + Tier/Sources Guards) | AdSense compliance | 2026-08-18 | READY |
+| `2026-08-18-p140d-tier-threshold-tightening-design.md` | P140d Tier Threshold Tightening (C3 +70% Thresholds + 31 H2 Domain Expansions) | Content quality | 2026-08-18 | SHIPPED |
 
-> **已知 INDEX 缺口（2026-08-XX 其他 specs 待补）:** 2026-08-04 h1-keyword-refresh / 2026-08-05 P140d/P140e/P140f / 2026-08-13 P142 / 2026-08-14 P143/P144 / 2026-08-17 P145/P146 共 9 个 spec 文件已落盘但未列入 INDEX。P140d candidate 处理。
+> **已知 INDEX 缺口（2026-08-XX 其他 specs 待补）:** 2026-08-04 h1-keyword-refresh / 2026-08-05 P140e/P140f / 2026-08-13 P142 / 2026-08-14 P143/P144 / 2026-08-17 P145/P146 共 8 个 spec 文件已落盘但未列入 INDEX。P140d 已 ship + INDEXed；P140e+ 候选 next batch。
 
 ---
 

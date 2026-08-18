@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-18（P140c E-E-A-T Completion — single real reviewer identity + About 3 sections + EeatTrustBlock wire + 2 CI guards + 5 zh H2 drift fix + P140b catch-up; 6 atomic commits ship; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1262/1262/0）
+> **最后更新:** 2026-08-18（P140d Tier Threshold Tightening — C3 +70% thresholds [T1 zh perH2 150→255 etc.] + 31 H2 domain-specific expansions [BLS ECEC, OpenView tiers, Zendesk deflection, GDPR Art. 83, TSIA attrition, AARRR/HEART, Twilio/Figma MRR] + 33 commits on `feature/p140d-tier-threshold-tightening`; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1262/1262/0；guard now has real teeth against future drift）
 
 ---
 
@@ -31,6 +31,7 @@
 | `2026-08-17-p145-comprehensive-build-dep.md` | P145 Comprehensive Build-Dep — 261 en-faq text-mismatch violations closed (engine.en ↔ translations.en sync) + 1 defensive FAQ coverage guard + CHANGELOG drift fix; 3 atomic commits — text-match guard deferred | 2026-08-17 |
 | `2026-08-17-p146-p145-followup.md` | P146 P145-followup — #707 + #249 closed (cache-bust buildWithEnv + CHANGELOG 1014 fix) + 1 build-dep HTML render guard + 5 zh strings QA review (no fixes); 3 atomic commits | 2026-08-18 |
 | `2026-08-18-p140c-eeat-completion.md` | P140c E-E-A-T Completion — single real reviewer identity (王立柱) + About page 3 sections (Editorial Standards / Our Reviewers / Methodology, Medium depth) + EeatTrustBlock wire to real data (P140b-T6 placeholder closed) + 2 CI guards (tier-prose-completeness + sources-quality) + 5 zh H2 threshold drift fix + P140b doc catch-up; 6 atomic commits | 2026-08-18 |
+| `2026-08-18-p140d-tier-threshold-tightening.md` | P140d Tier Threshold Tightening — C3 thresholds (+70%) + 31 H2 domain-specific expansions (22 T1 zh + 1 T1 en + 6 T2 zh + 2 T3 zh = +1480 chars; per-file subagent pattern); 5 conceptual commits + 33 branch commits on `feature/p140d-tier-threshold-tightening` | 2026-08-18 |
 
 ---
 
