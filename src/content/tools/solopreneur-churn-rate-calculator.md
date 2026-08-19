@@ -57,6 +57,8 @@ is a 60/40 industry default (Recurly, ChartMogul); your real ratio
 depends on your billing model (annual contracts push involuntary toward
 0, monthly pushes it higher).
 
+Source for these bands: Recurly's annual Subscription Benchmarks Report (B2C SaaS logo churn rates by vertical), ChartMogul's SaaS Churn Rate Benchmarks (gross MRR churn by company stage), and SaaS Capital's published B2B SaaS cohort churn data.
+
 ## Limitations & When Not To Use
 
 This calculator assumes a **subscription business with monthly billing
@@ -66,6 +68,18 @@ annual contract data and divide by 12. It also does not handle
 **delinquent** customers (still on the books but past due); those belong
 in your dunning pipeline, not your churn rate. For transactional
 businesses, use repeat-purchase rate or 90-day repurchase rate instead.
+
+## Assumptions
+
+- Churn is measured as the share of customers (or MRR) lost in a given period — does not include downgrades (use NRR/GRR calculators for downgrade-adjusted churn).
+- Voluntary vs involuntary split assumes 60/40 industry default (Recurly/ChartMogul); for B2B enterprise SaaS, involuntary tends to be higher (15-25%) due to procurement-driven cancellations.
+- Annualized churn = monthly churn × 12; this linear extrapolation overstates true churn (compounding effect), prefer cohort-based annualized churn for accuracy.
+
+## Common Mistakes
+
+- Mixing gross churn with net churn — gross churn is total lost customers; net churn accounts for upgrades/expansion; for investor reporting, always show net.
+- Reporting logo churn vs revenue churn — logo churn can miss expansion impact (negative net churn from upsell); both metrics tell different stories, report both.
+- Optimizing for low churn via product stickiness without measuring expansion — best-in-class SaaS has negative net churn (expansion > churn); pure retention is a low bar.
 
 ## Worked Example
 
