@@ -1,0 +1,104 @@
+---
+// P140f: Topic Benchmark page template. Data-table-focused with 4 sections.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Breadcrumb from '../../../components/Breadcrumb.astro';
+import { TOPICS, type Topic } from '../../../data/topics';
+import { categories } from '../../../data/categories';
+import { t } from '../../../i18n';
+import { SITE_URL } from '../../../lib/site-config';
+
+export function getStaticPaths() {
+  const paths: { params: { lang: string; letter: string; topic: string }; props: { topic: Topic; letter: string } }[] = [];
+  for (const lang of ['en', 'zh'] as const) {
+    for (const topic of TOPICS.filter((t) => t.tier === 1)) {
+      const cat = categories.find((c) => c.id === topic.letterId);
+      if (cat) {
+        paths.push({
+          params: { lang, letter: cat.slug, topic: topic.id },
+          props: { topic, letter: topic.letterId },
+        });
+      }
+    }
+  }
+  return paths;
+}
+
+const { lang, topic: topicId } = Astro.params;
+const { topic } = Astro.props;
+const cat = categories.find((c) => c.id === topic.letterId)!;
+
+const title = `${topic.title[lang]} — Industry Benchmarks`;
+const description = `${topic.description[lang]} Current industry data + benchmarks.`;
+const canonical = `${SITE_URL}/${lang}/${cat.slug}/${topic.id}-benchmark/`;
+
+const datasetSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Dataset',
+  name: title,
+  description: description,
+  variableMeasured: topic.calculatorSlugs,
+  url: canonical,
+  creator: { '@type': 'Person', name: '王立柱 (Wang Lizhu)' },
+  datePublished: topic.publishedAt,
+});
+---
+
+<BaseLayout title={title} description={description} schema={datasetSchema} pageType="static">
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <Breadcrumb lang={lang} letter={topic.letterId} topicId={topic.id} />
+    <h1 class="text-2xl font-extrabold mb-2">{topic.title[lang]} — {t('topic.benchmark.h2.industry_benchmarks', lang)}</h1>
+    <p class="text-sm text-gray-500 uppercase tracking-wide mb-6">{t(`category.${topic.letterId}.name`, lang)} · Benchmark</p>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.what_we_measure', lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~150 字 — which metrics covered — editorial-fill via T4.x sub-batches]</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.industry_benchmarks', lang)}</h2>
+      <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Last updated: 2026-08-19 · Quarterly refresh</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Segment</th>
+              <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Metric</th>
+              <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Benchmark</th>
+              <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Source</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-white">
+              <td class="border border-gray-300 px-3 py-2">[CONTENT]</td>
+              <td class="border border-gray-300 px-3 py-2">[CONTENT]</td>
+              <td class="border border-gray-300 px-3 py-2 font-medium">[CONTENT]</td>
+              <td class="border border-gray-300 px-3 py-2 text-xs">[CONTENT]</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.how_to_use', lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed mb-4">[CONTENT: ~200 字 interpretation guidance]</p>
+      <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
+        <p class="text-sm font-semibold text-gray-900 mb-2">{t('topic.cta.use_calculator', lang)}:</p>
+        <ul class="space-y-1 text-sm">
+          {topic.calculatorSlugs.map((slug) => (
+            <li><a href={`/${lang}/${slug}/`} class="text-[#7C3AED] hover:underline">{t(`tools.${slug}.title`, lang)} →</a></li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.sources', lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 — source citations + methodology]</p>
+    </section>
+  </main>
+  <Footer />
+</BaseLayout>
