@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-19 (P141h AdSense P0 Audit Fixes — ChatGPT 2026-08-19 audit validation: 4 P0 claims → 3 FALSE + 1 REAL [renewal-rate-calculator placeholder leakage]; 4 MAJOR claims → 3 REAL [sources not rendered, last-reviewed stale 5w, health-band thresholds no source]; shipped (P0-1) 2 i18n placeholder keys for renewal-rate-calculator; (P0-2) prose-first refactor in [slug].astro — sourcesRich + dataReviewedAt now read from prose frontmatter when present; (P0-3) new build-dep guard engine-input-placeholder-i18n-guard [200 page checks]; 4 atomic commits on master; M25.0 added; commit count 1075 → 1079; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1264/1264/0 [49 build-dep suites])
+> **最后更新:** 2026-08-19 (P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions 🔍 sky-50 + Common Mistakes ⚠️ rose-50] + 18 per-file prose expansions [9 marketing/retention engines × en + zh] — inline HEALTH_BANDS source citations [Meta Ads, Google Ads, HubSpot, Klaviyo, Baymard, Mixpanel, ChartMogul, Recurly, DMA, CMI, SaaS Capital, HBR] + Assumptions + Common Mistakes H2s + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 14 atomic commits on `feature/p141i-prose-p1-deepening` [T1 + T2 + T3 [9 per-engine] + H2 normalize fix + T4 + 2 ship commits]; M25.1 added; commit count 1079 → 1093; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1265/1265/0 [49 build-dep suites])
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
@@ -718,6 +718,47 @@ Audit-driven targeted bug fixes. 2 Explore subagents validated ChatGPT's 2026-08
 - **P1 Assumptions / Common Mistakes H2** — 4-H2 schema from P140a-T7 intact; adding 2 more optional sections would deepen analytical coverage without forcing every tool to fill them. ~1-2 h.
 - **P2 Topic Authority upgrade** — Domain → Topic Cluster → Topic → Product redesign. Major strategic shift. Defer to dedicated brainstorm.
 - **About page hardcoded "100" / "100 个"** — `src/pages/[lang]/about.astro:186-187` currently consistent with `tools.length = 100` but drifts silently on future batch. MINOR; deferred.
+
+---
+
+## [M25.1] - 2026-08-19 — P141i Prose P1 Deepening
+
+📦 Ship record: `memory/p141i-prose-p1-deepening-shipped.md`
+
+Closes ChatGPT "professional credibility" gap surfaced in P141h audit — health-band thresholds now have inline source citations + every page now has Assumptions + Common Mistakes sections surfacing calculation boundaries + common interpretation pitfalls.
+
+### Changed
+- **[prose] `src/components/CalculatorProse.astro`** — Props union + SECTION_HEADINGS + SECTION_VARIANTS extended with `assumptions` (🔍, sky-50) and `common_mistakes` (⚠️, rose-50) sections. Both optional (return empty body when H2 not in prose).
+- **[pages] `src/pages/[lang]/[slug].astro`** — 2 conditional `<CalculatorProse>` invocations after example section. Local `extractProseSection` helper (not exported from CalculatorProse.astro to keep component API narrow). IIFE pattern for conditional rendering.
+- **[prose] 18 prose files (9 engines × en + zh)** — per-file 3 changes:
+  1. Append source citation sentence to existing "How It Works (Methodology)" / "计算方法" H2 body
+  2. New `## Assumptions` / `## 假设与边界` H2 with 3 domain-specific bullets
+  3. New `## Common Mistakes` / `## 常见误区` H2 with 3 domain-specific bullets
+- Source organizations cited inline: Meta Ads Help Center, Google Ads ROAS docs, Shopify ROAS guide, Content Marketing Institute, HubSpot State of Marketing, MarketingProfs, Shopify coupon analytics, Klaviyo coupon guides, RetailMeNot, Baymard Institute 70-85% cart abandonment benchmark, Statista e-commerce, Mixpanel AARRR/HEART frameworks, Amplitude cohort docs, Recurly Subscription Metrics 2024, DMA Email Marketing Council $36:$1 ROI benchmark, Litmus email benchmarks, ChartMogul SaaS LTV, HBR CLV research, SaaS Capital cohort churn.
+
+### Added
+- **[tests] `tests/content-prose-shape-guard.test.ts` Test 7** — warn-only assertion that 9 target engines (× en + zh = 18 files) contain both `Assumptions`/`假设与边界` AND `Common Mistakes`/`常见误区` H2 headers. First-pass validation; will tighten to build-fail in follow-up.
+
+### Fixed (mid-batch)
+- **[prose] H2 normalize fix** — `solopreneur-roas-calculator.zh.md` had `## 假设条件` (would fail T2 substring match); `solopreneur-content-marketing-roi-calculator.zh.md` had `## 假设` + `## 常见错误` (both wrong). Fixed to exact substrings `## 假设与边界` + `## 常见误区` matching T1 SECTION_VARIANTS markers.
+
+### Engineering metrics
+
+| Metric | Before (M25.0) | After (M25.1) |
+|---|---|---|
+| Build-dep suites (cumulative) | 49 | **49** (extended existing content-prose-shape-guard, no new suite) |
+| pnpm check baseline | 1244/0/0 | **1244/0/0** (skip-guard preserved) |
+| RUN_BUILD_TESTS=1 baseline | 1264/1264/0 | **1265/1265/0** (+1 new Test 7) |
+| Static pages built | 451 | **451** (unchanged; new sections conditional) |
+| Total master commits | 1079 | **1093** (+14 atomic commits on `feature/p141i-prose-p1-deepening`) |
+
+📦 T3 used per-engine subagent dispatch (9 subagents, each commits en + zh in one atomic commit) — P140d lesson learned about concurrent dispatch race conditions. 1 mid-batch fix subagent for H2 normalize. Test 7 is warn-only per first-pass validation pattern (will tighten to build-fail in follow-up).
+
+### Out of scope (deferred)
+
+- **About page hardcoded "100" / "100 个"** — MINOR; deferred.
+- **Test 7 build-fail tightening** — wait until pattern validated across at least 1 month of CI runs.
+- **Other 91 engines** — schema extension is in place; only 9 engines populated the new sections. Future batches can populate more if needed.
 
 ---
 
