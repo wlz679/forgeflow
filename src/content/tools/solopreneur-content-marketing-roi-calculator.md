@@ -53,6 +53,8 @@ Break-even CR          = monthlyContentCost / (peakTraffic × AOV
 
 Health bands (conversion rate): 🟢 ≥ 3% · 🟡 1–3% · 🟠 0.3–1% · 🔴 < 0.3%.
 
+Source for these bands: Content Marketing Institute (CMI) annual B2B Content Marketing Benchmarks report, HubSpot State of Marketing report content marketing ROI benchmarks, and MarketingProfs B2B content marketing ROI study.
+
 ## Limitations & When Not To Use
 
 The model assumes a **single ramp-up window** followed by stable
@@ -63,6 +65,18 @@ search, last-click will under-credit content for awareness-stage
 conversions. The 0.7 linear multiplier is a heuristic from Wistia /
 ChartMogul's blended-attribution work; for true multi-touch revenue,
 pipe through your MTA tool.
+
+## Assumptions
+
+- Content marketing ROI is measured against the full content production cost (writers, designers, editors, distribution) — not just ad spend.
+- Time horizon assumes content value compounds over 6-12 months; short-window ROI will understate SEO-driven content's true contribution.
+- Does not isolate attribution per channel (organic, social, email, referral) — for per-channel attribution, pair with the funnel-value calculator.
+
+## Common Mistakes
+
+- Counting only direct conversions — content marketing's biggest value is upper-funnel awareness + assisted conversions; use multi-touch attribution or assisted-conversion metrics.
+- Comparing blog ROI vs paid ads ROI on the same timeframe — paid ads deliver immediate ROAS, content compounds over months; use 6-12 month trailing windows for fair comparison.
+- Stopping measurement when ROI dips — content marketing has a long ramp-up period (3-6 months for SEO); give new content at least 6 months before killing.
 
 ## Worked Example
 
