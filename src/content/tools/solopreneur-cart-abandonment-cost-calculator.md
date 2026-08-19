@@ -55,6 +55,8 @@ Break-even RR %    = Recovery Cost / Lost Revenue × 100
 
 Health bands (Recovery ROI): 🟢 ≥ 300% · 🟡 200–300% · 🟠 100–200% · 🔴 < 100%.
 
+Source for these bands: Baymard Institute's annual cart abandonment benchmark (industry average 70-85% across verticals), Statista's e-commerce cart abandonment statistics, and Shopify's cart recovery guide.
+
 ## Limitations & When Not To Use
 
 Recovery rates vary **2–3× by channel**: email-only ~8%, SMS-led
@@ -65,6 +67,18 @@ bench. Also, the cost-per-send is a *variable* cost — it excludes
 fixed ESP / SMS platform fees (~$300–$1,000/mo for Klaviyo +
 Postscript), so the true ROI for low-volume stores is worse than the
 calc shows. Pair with **ROAS** if you also run paid retargeting ads.
+
+## Assumptions
+
+- Cart abandonment rate is the share of carts created but not completed within the session — does not include saved-for-later or wishlist activity.
+- Recovery rate assumption uses industry benchmarks (10-30% via email, 5-15% via SMS); your actual recovery rates will depend on list size and offer.
+- Average order value calculation uses cart-value-at-abandonment; for SKUs with high price variance, prefer cohort- or segment-level analysis.
+
+## Common Mistakes
+
+- Reporting gross abandonment vs net abandonment — gross includes all sessions; net excludes browsers/researchers who abandoned multiple times; use net for ROI calculations.
+- Sending single recovery email vs sequence — single email recovers 5-10%; 3-email sequence over 72 hours recovers 15-25% per Baymard.
+- Discounting every cart abandonment as price-driven — 30-40% of abandons are due to shipping cost or unexpected fees, not price; test message variants before assuming discount fixes everything.
 
 ## Worked Example
 
