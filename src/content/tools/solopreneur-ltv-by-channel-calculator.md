@@ -51,6 +51,8 @@ CAC across all 5 channels, and a reallocation suggestion: shift spend
 from the lowest-ratio channel into the highest until that channel's ratio
 falls below the 3x line.
 
+Source for these benchmarks: Shopify's LTV guides for ecommerce, ChartMogul's SaaS LTV benchmarks by acquisition channel (organic, paid, referral), Recurly's subscription LTV analysis, and Customer Lifetime Value research from Harvard Business Review (freemium vs paid LTV differentials).
+
 ## Limitations & When Not To Use
 
 LTV per user must be a **forward-looking** estimate that includes
@@ -60,6 +62,18 @@ will look much worse than reality. Also, LTV:CAC ignores **time**:
 a channel with 4x LTV:CAC but 18-month payback is worse than a channel
 with 2.5x and 3-month payback. For payback-aware comparison, layer the
 **CAC Payback** calculator on top.
+
+## Assumptions
+
+- `LTV is forward-looking estimate based on observed retention + ARPU over a fixed time window (12-24 months typical); past behavior does not guarantee future retention.`
+- `Channel attribution assumes first-touch (channel-of-acquisition) — last-touch LTV would assign all revenue to the final channel before purchase; choose model that matches your measurement framework.`
+- `Discount rate (when used) defaults to 10% annual; for SaaS with negative working capital, use higher rate (15-20%); for e-commerce, use lower rate (5-8%).`
+
+## Common Mistakes
+
+- `Comparing LTV across channels with different attribution windows — organic LTV typically 24-36 month window, paid LTV often only 6-12 months; normalize before comparison.`
+- `Ignoring CAC payback period — high-LTV channels with high CAC may have longer payback; pair with CAC payback calculator for full ROI picture.`
+- `Treating gross LTV as net — gross LTV is total revenue; net LTV subtracts CAC + COGS + retention costs; only net LTV is comparable to CAC.`
 
 ## Worked Example
 
