@@ -317,3 +317,49 @@ test('every en file has a zh counterpart (P140d-T8 build-fail)', () => {
     `${missing.length} en file(s) missing zh counterpart: ${missing.join(', ')}`,
   );
 });
+
+// =============================================================
+// Test 7 (P141i-T4, warn-only): 9 target engines have Assumptions +
+//         Common Mistakes H2s in both en + zh prose files.
+//         First-pass validation; will tighten to build-fail in follow-up.
+// =============================================================
+test('9 target marketing/retention engines have Assumptions + Common Mistakes H2s (warn-only)', () => {
+  // P141i-T4: 9 engines to deepen with optional sections + source citations.
+  const TARGET_SLUGS = [
+    'solopreneur-roas-calculator',
+    'solopreneur-content-marketing-roi-calculator',
+    'solopreneur-coupon-attribution-calculator',
+    'solopreneur-cart-abandonment-cost-calculator',
+    'solopreneur-cohort-retention-calculator',
+    'solopreneur-email-campaign-roi-calculator',
+    'solopreneur-funnel-value-calculator',
+    'solopreneur-ltv-by-channel-calculator',
+    'solopreneur-churn-rate-calculator',
+  ] as const;
+  const REQUIRED_EN = ['Assumptions', 'Common Mistakes'] as const;
+  const REQUIRED_ZH = ['假设与边界', '常见误区'] as const;
+
+  const missing: string[] = [];
+  for (const slug of TARGET_SLUGS) {
+    for (const fileSuffix of ['', '.zh']) {
+      const filename = `${slug}${fileSuffix}.md`;
+      const p = loadProseFile(filename);
+      if (!p) {
+        missing.push(`${filename}: file not found`);
+        continue;
+      }
+      const required = p.isZh ? REQUIRED_ZH : REQUIRED_EN;
+      const h2s = extractH2(p.body).map((h) => h.title);
+      for (const r of required) {
+        if (!h2s.some((t) => t.includes(r))) {
+          missing.push(`${filename}: missing H2 containing "${r}"`);
+        }
+      }
+    }
+  }
+  if (missing.length > 0) {
+    console.warn(`[p141i-T4] Optional H2 missing (warn, not fail yet): ${missing.join('; ')}`);
+  }
+  // Warn-only — first-pass validation; tighten to build-fail after follow-up.
+  assert.ok(true);
+});
