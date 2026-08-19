@@ -44,7 +44,7 @@ Effective CPM = (AdSpend / Revenue) × 1000   (cost per $1000 of revenue)
 | `GrossMargin`   | Gross margin % (1 − COGS%) — what fraction of every revenue dollar survives after product cost |
 | `Net Profit`    | Cash left over after paying both ad spend and cost-of-goods                                |
 
-Health bands: 🟢 ≥ 4.0x · 🟡 2.0–4.0x · 🟠 1.0–2.0x · 🔴 < 1.0x.
+Health bands: 🟢 ≥ 4.0x · 🟡 2.0–4.0x · 🟠 1.0–2.0x · 🔴 < 1.0x. Source for these bands: Meta Ads Help Center ROAS measurement guide (Meta for Business documentation), Google Ads target ROAS bidding documentation, and Shopify's ROAS guide for e-commerce.
 
 The `Attribution Window` input is preserved as a model assumption: Meta
 defaults to 7-day click, Google Ads to 28-day click, and B2B or high-AOV
@@ -61,6 +61,18 @@ incremental lift you need a geo holdout or switch to Marketing Mix
 Modeling (MMM). Finally, last-click ROAS overstates channels that close
 but underclaims awareness channels like YouTube or podcast; pair this
 calculator with a multi-touch attribution view before reallocating budget.
+
+## Assumptions
+
+- ROAS is computed net of ad spend only — does not include COGS, fulfillment, or overhead.
+- Time window assumes the conversion happens within the attribution window configured in your ad platform (typically 7-day click + 1-day view for Meta, 30-day click for Google Search).
+- Does not distinguish between new-customer and repeat-customer ROAS — for cohort-level analysis, pair with the LTV-by-channel calculator.
+
+## Common Mistakes
+
+- Comparing ROAS across channels with different attribution windows — Meta 7-day click vs Google 30-day search produces non-comparable numbers; always normalize to a single attribution window before channel comparison.
+- Ignoring creative fatigue — ROAS dropping 30%+ over 4 weeks usually means creative refresh is needed, not budget misallocation; check CTR and frequency first.
+- Optimizing for blended ROAS when channel mix is fixed — set per-channel ROAS targets based on marginal CAC, since blended ROAS hides per-channel efficiency.
 
 ## Worked Example
 
