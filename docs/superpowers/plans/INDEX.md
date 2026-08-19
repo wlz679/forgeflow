@@ -34,6 +34,7 @@
 | `2026-08-18-p140d-tier-threshold-tightening.md` | P140d Tier Threshold Tightening — C3 thresholds (+70%) + 31 H2 domain-specific expansions (22 T1 zh + 1 T1 en + 6 T2 zh + 2 T3 zh = +1480 chars; per-file subagent pattern); 5 conceptual commits + 33 branch commits on `feature/p140d-tier-threshold-tightening` | 2026-08-18 |
 | `2026-08-18-p140g-author-bio-pages.md` | P140g Author Bio Pages — per-reviewer detail pages [Background / Credentials / Categories Reviewed] + JSON-LD Person schema + about-card 'Read full bio →' link + build-dep render guard; 5 atomic commits + Minimal scope (no new data fields) | 2026-08-19 |
 | `2026-08-19-p141h-adsense-p0-fixes.md` | P141h AdSense P0 Audit Fixes — 2 i18n placeholder keys [renewal-rate-calculator] + prose-first refactor [sources + last reviewed] + new build-dep guard [placeholder leakage across all 100 engines]; 3 atomic commits on master; no spec/plan file (audit-driven targeted bug fix, not a planning-grade batch) | 2026-08-19 |
+| `2026-08-19-p141i-prose-p1-deepening.md` | P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions + Common Mistakes] + 18 per-file prose expansions [9 engines × en + zh] with inline HEALTH_BANDS source citations + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 13 atomic commits on `feature/p141i-prose-p1-deepening`; closes ChatGPT "professional credibility" gap from P141h audit | 2026-08-19 |
 
 ---
 
