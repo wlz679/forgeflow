@@ -58,6 +58,8 @@ Health bands (True ROI): 🟢 ≥ 100% · 🟡 0–100% · 🔴 < 0% (3-band —
 arbitrary midpoint with no business meaning — see CLAUDE.md
 "hard-breakpoint exemption" for the documented exemption.
 
+Source for these bands: Shopify coupon analytics documentation, Klaviyo coupon revenue attribution guides, and RetailMeNot's annual coupon usage report (industry 88% of consumers used a coupon when shopping in 2023).
+
 ## Limitations & When Not To Use
 
 The `cannibalizationPct` input is the dominant lever and the least
@@ -68,6 +70,18 @@ geo-holdout test or randomized coupon-eligibility experiment, replace
 from 🟢 to 🔴. Also, the model assumes **uniform AOV** across
 coupon vs. non-coupon orders; if coupons attract lower-AOV
 "bargain hunters", true ROI is even worse than the calc says.
+
+## Assumptions
+
+- Attribution assumes coupon code is the LAST touch before purchase — first-touch attribution may shift ~10-20% of conversions between organic and coupon-driven.
+- Marginal cost calculation includes redemption-rate-adjusted distribution cost (email/SMS sends × delivery cost), not just face-value discount.
+- Does not isolate coupon-driven vs organic conversions for new vs returning customers — for segment-level analysis, pair with LTV-by-channel calculator.
+
+## Common Mistakes
+
+- Treating all coupon users as net-new — 60-70% of coupon users would have purchased anyway; always report incremental lift, not gross conversions.
+- Running blanket discounts site-wide instead of segmented offers — broad 20% off margins worse than targeted 20% off to non-converters; measure segment-specific ROI.
+- Ignoring coupon stacking and code leakage — affiliate/influencer codes can stack with public codes, doubling discount rate; audit redemptions for unusual patterns.
 
 ## Worked Example
 
