@@ -31,7 +31,7 @@ import type { CollectionEntry } from 'astro:content';
 
 export interface Props {
   entry: CollectionEntry<'tools'>;
-  section: 'intro' | 'methodology' | 'limitations' | 'example';
+  section: 'intro' | 'methodology' | 'limitations' | 'example' | 'assumptions' | 'common_mistakes';
 }
 
 const { entry, section } = Astro.props;
@@ -73,6 +73,20 @@ const SECTION_HEADINGS: Record<Props['section'], SectionHeading> = {
     markerBg: 'bg-emerald-100/80',
     bodyClass: 'prose prose-sm max-w-none text-gray-800',
   },
+  assumptions: {
+    match: 'Assumptions',
+    containerClass: 'rounded-2xl border border-sky-200 bg-sky-50/40 p-6 my-8',
+    markerText: '🔍',
+    markerBg: 'bg-sky-100/80',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800',
+  },
+  common_mistakes: {
+    match: 'Common Mistakes',
+    containerClass: 'rounded-2xl border border-rose-200 bg-rose-50/40 p-6 my-8',
+    markerText: '⚠️',
+    markerBg: 'bg-rose-100/80',
+    bodyClass: 'prose prose-sm max-w-none text-gray-800',
+  },
 };
 
 // en + zh variants — we try each in turn, first match wins. Pattern is
@@ -84,6 +98,8 @@ const SECTION_VARIANTS: Record<Props['section'], string[]> = {
   methodology:  ['How It Works', '计算方法'],
   limitations:  ['Limitations', '局限性'],
   example:      ['Worked Example', '案例走读'],
+  assumptions:    ['Assumptions',                '假设与边界'],
+  common_mistakes: ['Common Mistakes',           '常见误区'],
 };
 
 const cfg = SECTION_HEADINGS[section];
