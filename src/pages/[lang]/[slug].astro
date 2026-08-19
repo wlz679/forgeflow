@@ -81,6 +81,27 @@ const proseFirstSourcesRich: { name: string; url: string }[] =
 const proseFirstDataReviewedAt: string =
   proseEntry?.data.data_reviewed_at ?? toolMeta.dataReviewedAt;
 
+// P141i-T2: Extract optional H2 section body for conditional rendering.
+// Mirrors the internal extractSection logic in CalculatorProse.astro
+// but exposed here so the page can decide whether to render the panel.
+function extractProseSection(body: string, section: 'assumptions' | 'common_mistakes'): string {
+  const matchers: Record<typeof section, string[]> = {
+    assumptions: ['Assumptions', '假设与边界'],
+    common_mistakes: ['Common Mistakes', '常见误区'],
+  };
+  const sections = body.split(/\n(?=## )/);
+  for (const s of sections) {
+    const headerEnd = s.indexOf('\n');
+    const header = headerEnd >= 0 ? s.slice(0, headerEnd) : s;
+    for (const m of matchers[section]) {
+      if (header.includes(m)) {
+        return headerEnd >= 0 ? s.slice(headerEnd + 1).trim() : '';
+      }
+    }
+  }
+  return '';
+}
+
 // P85a: Translate AI cost calculator output section headers on zh pages.
 // Body content (numbers, model names) remains in English — those are
 // technical/universal and the cost breakdown labels above the body are the
@@ -1325,6 +1346,16 @@ const schema = JSON.stringify({
             <CalculatorProse entry={proseEntry} section="methodology" />
             <CalculatorProse entry={proseEntry} section="limitations" />
             <CalculatorProse entry={proseEntry} section="example" />
+            {(() => {
+              const assumptionsBody = proseEntry ? extractProseSection(proseEntry.body, 'assumptions') : '';
+              const mistakesBody = proseEntry ? extractProseSection(proseEntry.body, 'common_mistakes') : '';
+              return (
+                <>
+                  {assumptionsBody && <CalculatorProse entry={proseEntry} section="assumptions" />}
+                  {mistakesBody && <CalculatorProse entry={proseEntry} section="common_mistakes" />}
+                </>
+              );
+            })()}
           </>
         )}
 
