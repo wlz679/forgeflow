@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-19 (P140g Author Bio Pages — 1 new route [lang]/about/authors/[slug].astro [3 H2 + JSON-LD Person + hreflang + canonical] + 1 about.astro modify ['Read full bio →' link] + 1 build-dep test + 6 new i18n keys; 5 atomic commits on `feature/p140g-author-bio-pages`; closes P140c out-of-scope line 529 [last item]; M24.5 added; commit count 1066 → 1075; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1263/1263/0 [48 build-dep suites])
+> **最后更新:** 2026-08-19 (P141h AdSense P0 Audit Fixes — ChatGPT 2026-08-19 audit validation: 4 P0 claims → 3 FALSE + 1 REAL [renewal-rate-calculator placeholder leakage]; 4 MAJOR claims → 3 REAL [sources not rendered, last-reviewed stale 5w, health-band thresholds no source]; shipped (P0-1) 2 i18n placeholder keys for renewal-rate-calculator; (P0-2) prose-first refactor in [slug].astro — sourcesRich + dataReviewedAt now read from prose frontmatter when present; (P0-3) new build-dep guard engine-input-placeholder-i18n-guard [200 page checks]; 4 atomic commits on master; M25.0 added; commit count 1075 → 1079; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1264/1264/0 [49 build-dep suites])
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
@@ -684,6 +684,40 @@ Closes P140c ship record "Out of scope (P140d candidates)" line 529 — **last i
 | Total master commits | 1066 | **1075** (+9 commits: 2 P140d-T8 [63be890, c2a94db] + 7 P140g [spec 7a31d24 + plan 690e59c + T1-T5 16e685b/8d9ee70/db3788f/09397e1/3a467d0]) |
 
 📦 P140g branch: `feature/p140g-author-bio-pages` (5 atomic commits + ff-merge to master). No new data fields (Approach A constraint); reuses existing `ReviewerPersona`. No `ReviewerCard.astro` component extraction (YAGNI — only 2 places render reviewer data today).
+
+---
+
+## [M25.0] - 2026-08-19 — P141h AdSense P0 Audit Fixes
+
+📦 Ship record: `memory/p141h-adsense-p0-fixes-shipped.md`
+
+Audit-driven targeted bug fixes. 2 Explore subagents validated ChatGPT's 2026-08-19 AdSense rejection analysis: **4 P0 claims → 3 FALSE + 1 REAL (narrow scope)**. 4 MAJOR tool-page claims → 3 REAL. This batch closes the REAL ones; deferred items in P1.
+
+### Fixed
+- **[i18n] 2 missing placeholder keys** — `tools.solopreneur-renewal-rate-calculator.input.{arrRenewed,arrUpForRenewal}.placeholder` (en + zh). Audit found `<input placeholder="tools.X.input.Y.placeholder">` rendered literally on `/solopreneur-renewal-rate-calculator/` (en + zh). Visible to Google crawl (AdSense "low-value content" risk) + visible to users as gray placeholder on form load.
+- **[pages] prose-first refactor in `src/pages/[lang]/[slug].astro`** — 2 new constants `proseFirstSourcesRich` + `proseFirstDataReviewedAt` prefer `proseEntry.data.{sources,data_reviewed_at}` when present, fall back to `toolMeta.{sourcesRich,dataReviewedAt}`. **Fixes both Issues in one refactor**: (1) Sources never displayed (sourcesRich was always `[]` in `src/data/tools/*.ts`); (2) Last reviewed date stale ~5 weeks (toolMeta = `2026-06-22`, prose = `2026-07-31`). Also fixes stale JSON-LD `dateModified` in SoftwareApplication schema. Single root cause: page template was reading from parallel `src/data/tools/*.ts` records instead of canonical prose frontmatter.
+
+### Added
+- **[tests] `tests/engine-input-placeholder-i18n-guard.test.ts`** — build-dep guard. Walks all 200 tool pages (100 slugs × 2 langs), regex-extracts `<input>/<textarea>` placeholder attributes, fails if any value matches raw i18n key shape (`tools.X.Y.Z`). Closes the regression class for future engine updates that add input fields without corresponding `translations.ts` entries. Mirrors `tests/engine-faq-html-render-guard.test.ts` (P146-S2) pattern.
+
+### Engineering metrics
+
+| Metric | Before (M24.5) | After (M25.0) |
+|---|---|---|
+| Build-dep suites (cumulative) | 48 | **49** (+1 new guard) |
+| pnpm check baseline | 1244/0/0 | **1244/0/0** (skip-guard preserved) |
+| RUN_BUILD_TESTS=1 baseline | 1263/1263/0 | **1264/1264/0** (+1 new test) |
+| Static pages built | 451 | **451** (unchanged) |
+| Total master commits | 1075 | **1079** (+4 atomic commits: 3 implementation `4218609` + `20a79ae` + `bebae0f` + 1 ship `92e570a`) |
+
+📦 4 atomic commits on master (no feature branch — small targeted fixes). ChatGPT audit findings summary in `memory/p141h-adsense-p0-fixes-shipped.md` §ChatGPT vs audit reality.
+
+### Out of scope (P1 + P2 — deferred)
+
+- **P1 Health-band source citations** — 8+ marketing engines (`roas`, `content-marketing-roi`, `coupon-attribution`, `cart-abandonment-cost`, `cohort-retention`, `email-campaign-roi`, `funnel-value`, `ltv-by-channel`) define `HEALTH_BANDS` constants without inline source citations. Prose H2 bodies mention band values (🟢 ≥4.0x · 🟡 2.0-4.0x · 🟠 1.0-2.0x · 🔴 <1.0x for ROAS) but not the benchmark source. MRR prose has correct pattern (cites OpenView 2024/2026); needs replication. ~3-4 h.
+- **P1 Assumptions / Common Mistakes H2** — 4-H2 schema from P140a-T7 intact; adding 2 more optional sections would deepen analytical coverage without forcing every tool to fill them. ~1-2 h.
+- **P2 Topic Authority upgrade** — Domain → Topic Cluster → Topic → Product redesign. Major strategic shift. Defer to dedicated brainstorm.
+- **About page hardcoded "100" / "100 个"** — `src/pages/[lang]/about.astro:186-187` currently consistent with `tools.length = 100` but drifts silently on future batch. MINOR; deferred.
 
 ---
 
