@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-19（P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions 🔍 + Common Mistakes ⚠️] + 18 per-file prose expansions [9 marketing/retention engines × en + zh] — inline HEALTH_BANDS source citations [Meta Ads, Google Ads, HubSpot, Klaviyo, Baymard, Mixpanel, ChartMogul, Recurly, DMA, CMI, SaaS Capital, HBR] + Assumptions + Common Mistakes H2s + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 13 atomic commits on `feature/p141i-prose-p1-deepening`; closes ChatGPT "professional credibility" gap from P141h audit; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1265/1265/0 [49 build-dep suites]）
+> **最后更新:** 2026-08-19（P140f Batch A Tier 1 Anchor Topics — Topic data layer (15 Tier 1 anchor Topics × 2 langs) + 2 new components [Breadcrumb + TopicCard] + categories domain field + i18n keys [Topic H2 names + CTA labels] + 2 new page templates [Topic Guide 6-section + Topic Benchmark 4-section data-table] generating 30 new pages + calculator page Related Topics section + 2 new build-dep guards [lang-aware Topic Guide shape + Topic Benchmark shape]; 7 atomic commits on `feature/p140f-batch-a-tier1-anchors`; static pages 451 → 511 [+60]; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1266/1266/0 [50 build-dep suites]）
 
 ---
 
@@ -35,6 +35,7 @@
 | `2026-08-18-p140g-author-bio-pages.md` | P140g Author Bio Pages — per-reviewer detail pages [Background / Credentials / Categories Reviewed] + JSON-LD Person schema + about-card 'Read full bio →' link + build-dep render guard; 5 atomic commits + Minimal scope (no new data fields) | 2026-08-19 |
 | `2026-08-19-p141h-adsense-p0-fixes.md` | P141h AdSense P0 Audit Fixes — 2 i18n placeholder keys [renewal-rate-calculator] + prose-first refactor [sources + last reviewed] + new build-dep guard [placeholder leakage across all 100 engines]; 3 atomic commits on master; no spec/plan file (audit-driven targeted bug fix, not a planning-grade batch) | 2026-08-19 |
 | `2026-08-19-p141i-prose-p1-deepening.md` | P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions + Common Mistakes] + 18 per-file prose expansions [9 engines × en + zh] with inline HEALTH_BANDS source citations + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 13 atomic commits on `feature/p141i-prose-p1-deepening`; closes ChatGPT "professional credibility" gap from P141h audit | 2026-08-19 |
+| `2026-08-19-p140f-batch-a-tier1-anchors.md` | P140f Batch A Tier 1 Anchor Topics — Topic data layer (15 Tier 1 anchor Topics) + 2 new components (Breadcrumb + TopicCard) + 2 new page templates (Topic Guide 6-section + Topic Benchmark 4-section data-table) generating 30 new pages + calculator page Related Topics section + 2 new build-dep guards; 7 atomic commits on `feature/p140f-batch-a-tier1-anchors`; closes nothing (P141j/P141i already closed rejection signals; first concrete deliver of v2.0 Topic Authority architecture) | 2026-08-19 |
 
 ---
 
