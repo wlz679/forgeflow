@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-19（P141h AdSense P0 Audit Fixes — ChatGPT 2026-08-19 audit validation: 4 P0 claims → 3 FALSE + 1 REAL [renewal-rate-calculator placeholder leakage]; 4 MAJOR claims → 3 REAL [sources not rendered, last-reviewed stale 5w, health-band thresholds no source]; shipped (P0-1) 2 i18n placeholder keys for renewal-rate-calculator; (P0-2) prose-first refactor in [slug].astro — sourcesRich + dataReviewedAt now read from prose frontmatter when present; (P0-3) new build-dep guard engine-input-placeholder-i18n-guard (catches regression class for all 100 engines × 2 langs = 200 page checks); 3 atomic commits on master; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1264/1264/0 [49 build-dep suites]）
+> **最后更新:** 2026-08-19（P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions 🔍 + Common Mistakes ⚠️] + 18 per-file prose expansions [9 marketing/retention engines × en + zh] — inline HEALTH_BANDS source citations [Meta Ads, Google Ads, HubSpot, Klaviyo, Baymard, Mixpanel, ChartMogul, Recurly, DMA, CMI, SaaS Capital, HBR] + Assumptions + Common Mistakes H2s + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 13 atomic commits on `feature/p141i-prose-p1-deepening`; closes ChatGPT "professional credibility" gap from P141h audit; pnpm check 1244/0/0; RUN_BUILD_TESTS=1 1265/1265/0 [49 build-dep suites]）
 
 ---
 
