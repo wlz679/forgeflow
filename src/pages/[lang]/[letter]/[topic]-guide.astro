@@ -8,6 +8,7 @@ import Breadcrumb from '../../../components/Breadcrumb.astro';
 import TopicCard from '../../../components/TopicCard.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
+import { TOPIC_GUIDE_CONTENT } from '../../../data/topic-content';
 import { t } from '../../../i18n';
 import { SITE_URL } from '../../../lib/site-config';
 
@@ -53,6 +54,13 @@ const articleSchema = JSON.stringify({
 const relatedTopics = topic.relatedTopicIds
   .map((id) => TOPICS.find((t) => t.id === id))
   .filter((t): t is Topic => Boolean(t));
+
+const guideContent = TOPIC_GUIDE_CONTENT[topic.id]?.[lang as 'en' | 'zh'];
+const wc = guideContent ? guideContent.whatIs : '[CONTENT: ~200 字 plain-language definition + business context — editorial-fill via T3.x sub-batches]';
+const wm = guideContent ? guideContent.whyMatters : '[CONTENT: ~200 字 business impact + when to care]';
+const kc = guideContent ? guideContent.keyConcepts : '[CONTENT: ~300 字 — 3-5 numbered concepts/principles]';
+const ha = guideContent ? guideContent.howToApply : '[CONTENT: ~300 字 practical steps]';
+const cp = guideContent ? guideContent.commonPitfalls : '[CONTENT: ~200 字 — 3-4 traps people fall into]';
 ---
 
 <BaseLayout title={title} description={description} schema={articleSchema} pageType="static">
@@ -64,22 +72,22 @@ const relatedTopics = topic.relatedTopicIds
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.what_is', lang, { topic: topic.title[lang] })}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 plain-language definition + business context — editorial-fill via T3.x sub-batches]</p>
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{wc}</p>
     </section>
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.why_matters', lang, { topic: topic.title[lang] })}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 business impact + when to care]</p>
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{wm}</p>
     </section>
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.key_concepts', lang)}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~300 字 — 3-5 numbered concepts/principles]</p>
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{kc}</p>
     </section>
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.how_to_apply', lang, { topic: topic.title[lang] })}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed mb-4">[CONTENT: ~300 字 practical steps]</p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-4 whitespace-pre-line">{ha}</p>
       <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
         <p class="text-sm font-semibold text-gray-900 mb-2">{t('topic.cta.use_calculator', lang)}:</p>
         <ul class="space-y-1 text-sm">
@@ -92,7 +100,7 @@ const relatedTopics = topic.relatedTopicIds
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.common_pitfalls', lang)}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 — 3-4 traps people fall into]</p>
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{cp}</p>
     </section>
 
     {relatedTopics.length > 0 && (

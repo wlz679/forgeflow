@@ -6,6 +6,7 @@ import Footer from '../../../components/Footer.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
+import { TOPIC_BENCHMARK_CONTENT } from '../../../data/topic-content';
 import { t } from '../../../i18n';
 import { SITE_URL } from '../../../lib/site-config';
 
@@ -43,6 +44,13 @@ const datasetSchema = JSON.stringify({
   creator: { '@type': 'Person', name: '王立柱 (Wang Lizhu)' },
   datePublished: topic.publishedAt,
 });
+
+const benchContent = TOPIC_BENCHMARK_CONTENT[topic.id]?.[lang as 'en' | 'zh'];
+const bwm = benchContent ? benchContent.whatWeMeasure : '[CONTENT: ~150 字 — which metrics covered — editorial-fill via T4.x sub-batches]';
+const bib = benchContent ? benchContent.industryBenchmarks : 'Last updated: 2026-08-19 · Quarterly refresh';
+const bhu = benchContent ? benchContent.howToUse : '[CONTENT: ~200 字 interpretation guidance]';
+const bsr = benchContent ? benchContent.sources : '[CONTENT: ~200 字 — source citations + methodology]';
+const brows = benchContent ? benchContent.rows : [];
 ---
 
 <BaseLayout title={title} description={description} schema={datasetSchema} pageType="static">
@@ -54,12 +62,12 @@ const datasetSchema = JSON.stringify({
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.what_we_measure', lang)}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~150 字 — which metrics covered — editorial-fill via T4.x sub-batches]</p>
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{bwm}</p>
     </section>
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.industry_benchmarks', lang)}</h2>
-      <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Last updated: 2026-08-19 · Quarterly refresh</p>
+      <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">{bib}</p>
       <div class="overflow-x-auto">
         <table class="w-full text-sm border-collapse">
           <thead class="bg-gray-100">
@@ -71,12 +79,21 @@ const datasetSchema = JSON.stringify({
             </tr>
           </thead>
           <tbody>
-            <tr class="bg-white">
-              <td class="border border-gray-300 px-3 py-2">[CONTENT]</td>
-              <td class="border border-gray-300 px-3 py-2">[CONTENT]</td>
-              <td class="border border-gray-300 px-3 py-2 font-medium">[CONTENT]</td>
-              <td class="border border-gray-300 px-3 py-2 text-xs">[CONTENT]</td>
-            </tr>
+            {brows.length > 0 ? brows.map((row) => (
+              <tr class="bg-white">
+                <td class="border border-gray-300 px-3 py-2">{row.segment}</td>
+                <td class="border border-gray-300 px-3 py-2">{row.metric}</td>
+                <td class="border border-gray-300 px-3 py-2 font-medium">{row.benchmark}</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">{row.source}</td>
+              </tr>
+            )) : (
+              <tr class="bg-white">
+                <td class="border border-gray-300 px-3 py-2">[CONTENT]</td>
+                <td class="border border-gray-300 px-3 py-2">[CONTENT]</td>
+                <td class="border border-gray-300 px-3 py-2 font-medium">[CONTENT]</td>
+                <td class="border border-gray-300 px-3 py-2 text-xs">[CONTENT]</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -84,7 +101,7 @@ const datasetSchema = JSON.stringify({
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.how_to_use', lang)}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed mb-4">[CONTENT: ~200 字 interpretation guidance]</p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-4 whitespace-pre-line">{bhu}</p>
       <div class="bg-sky-50 border border-sky-200 rounded-lg p-4">
         <p class="text-sm font-semibold text-gray-900 mb-2">{t('topic.cta.use_calculator', lang)}:</p>
         <ul class="space-y-1 text-sm">
@@ -97,7 +114,7 @@ const datasetSchema = JSON.stringify({
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.sources', lang)}</h2>
-      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 — source citations + methodology]</p>
+      <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{bsr}</p>
     </section>
   </main>
   <Footer />
