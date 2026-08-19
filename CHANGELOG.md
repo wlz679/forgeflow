@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-18 (P140d-T8 zh 缺位 warn → build-fail upgrade — content-prose-shape-guard Test 6 tightened; M24.4 added; closes P140c out-of-scope line 527; commit count 1065 → 1066; pnpm check 1244/0/0 unchanged)
+> **最后更新:** 2026-08-19 (P140g Author Bio Pages — 1 new route [lang]/about/authors/[slug].astro [3 H2 + JSON-LD Person + hreflang + canonical] + 1 about.astro modify ['Read full bio →' link] + 1 build-dep test + 6 new i18n keys; 5 atomic commits on `feature/p140g-author-bio-pages`; closes P140c out-of-scope line 529 [last item]; M24.5 added; commit count 1066 → 1075; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1263/1263/0 [48 build-dep suites])
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
@@ -656,6 +656,34 @@ Closes P140c ship record "Out of scope (P140d candidates)" line 527 — `content
 | Total master commits | 1065 | **1066** (+1 commit) |
 
 📦 1 atomic commit (`63be890`); tsc clean; build-dep test 6/6 pass; no new failures introduced.
+
+---
+
+## [M24.5] - 2026-08-18 → 2026-08-19 — P140g Author Bio Pages
+
+📦 Ship record: `memory/p140g-author-bio-pages-shipped.md`
+
+Closes P140c ship record "Out of scope (P140d candidates)" line 529 — **last item** in the P140c out-of-scope list. Per-reviewer detail pages extending P140c's transparent single-founder disclosure (王立柱 / Wang Lizhu) into standalone pages. Infrastructure supports N reviewers; currently 1 ships.
+
+### Added
+- **[pages] `src/pages/[lang]/about/authors/[slug].astro`** — per-reviewer detail page. 3 H2 sections (Background / Credentials / Categories Reviewed) + header (name + role) + back-link to `/{lang}/about/#editorial-standards`. `getStaticPaths()` generates `2 langs × N reviewers` static pages — today = 2.
+- **[tests] `tests/authors-page-render-guard.test.ts`** — build-dep guard. For each `(lang, reviewer.id)` combination, asserts dist HTML contains: reviewer.name + role + bio[lang] + all credentials + JSON-LD Person schema + hreflang × 2 + canonical. Mirrors `tests/engine-faq-html-render-guard.test.ts` (P146-S2) pattern.
+- **[i18n] 6 new keys** — `authors.page.title_suffix`, `authors.section.bio`, `authors.section.credentials`, `authors.section.categories`, `authors.back_to_about`, `authors.read_full_bio` (en + zh).
+
+### Changed
+- **[pages] `src/pages/[lang]/about.astro`** — append "Read full bio →" link inside each `#our-reviewers` card, pointing to `/{lang}/about/authors/{r.id}/`. Same purple `text-[#7C3AED] hover:underline` styling as about cross-links.
+
+### Engineering metrics
+
+| Metric | Before (M24.4) | After (M24.5) |
+|---|---|---|
+| Build-dep suites (cumulative) | 47 | **48** (+1 new from P140g-T4) |
+| pnpm check baseline | 1244/0/0 | **1244/0/0** (skip-guard preserved) |
+| RUN_BUILD_TESTS=1 baseline | 1262/1262/0 | **1263/1263/0** (+1 new test) |
+| Static pages built | 449 | **451** (+2 author bio pages) |
+| Total master commits | 1066 | **1075** (+9 commits: 2 P140d-T8 [63be890, c2a94db] + 7 P140g [spec 7a31d24 + plan 690e59c + T1-T5 16e685b/8d9ee70/db3788f/09397e1/3a467d0]) |
+
+📦 P140g branch: `feature/p140g-author-bio-pages` (5 atomic commits + ff-merge to master). No new data fields (Approach A constraint); reuses existing `ReviewerPersona`. No `ReviewerCard.astro` component extraction (YAGNI — only 2 places render reviewer data today).
 
 ---
 
