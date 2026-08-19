@@ -68,6 +68,19 @@ if (isZhPage) {
   proseEntry = await getEntry('tools', slug!);
 }
 
+// P0-2 audit fix: prose frontmatter is the source of truth for sources[] +
+// data_reviewed_at. The parallel src/data/tools/*.ts records had stale
+// sourcesRich (always []) and stale dataReviewedAt (~5 weeks behind).
+// Prefer prose when present, fall back to toolMeta. Used by:
+//   - line 456: JSON-LD SoftwareApplication dateModified
+//   - line 1366-1367: EeatTrustBlock sources render + Last reviewed
+const proseFirstSourcesRich: { name: string; url: string }[] =
+  proseEntry?.data.sources && proseEntry.data.sources.length > 0
+    ? proseEntry.data.sources
+    : toolMeta.sourcesRich;
+const proseFirstDataReviewedAt: string =
+  proseEntry?.data.data_reviewed_at ?? toolMeta.dataReviewedAt;
+
 // P85a: Translate AI cost calculator output section headers on zh pages.
 // Body content (numbers, model names) remains in English — those are
 // technical/universal and the cost breakdown labels above the body are the
@@ -453,7 +466,7 @@ const schema = JSON.stringify({
       featureList,
       author: toolMeta.author,
       reviewedBy: toolMeta.reviewedBy,
-      dataReviewedAt: toolMeta.dataReviewedAt,
+      dataReviewedAt: proseFirstDataReviewedAt,
       // P140b-T7: structured E-E-A-T signals (additive)
       authorInfo: { name: 'ForgeFlowKit Editorial', url: `${SITE_URL}/about/authors/` },
       reviewInfo: toolMeta.reviewerIds.length > 0
@@ -1363,8 +1376,8 @@ const schema = JSON.stringify({
             role: 'expert',
             expertise: persona.expertise,
           }]}
-          sourcesRich={toolMeta.sourcesRich}
-          dataReviewedAt={toolMeta.dataReviewedAt}
+          sourcesRich={proseFirstSourcesRich}
+          dataReviewedAt={proseFirstDataReviewedAt}
         />
       </div>
     </div>
