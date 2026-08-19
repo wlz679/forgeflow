@@ -1,0 +1,70 @@
+---
+// P140f: Site-wide breadcrumb with Domain → Letter → Topic → Calculator
+// hierarchy. Used on Topic Guide, Topic Benchmark, Calculator, and Letter pages.
+import { t, type Lang } from '../i18n';
+import { getTopicById } from '../data/topics';
+import { categories } from '../data/categories';
+
+export interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+export interface Props {
+  lang: Lang;
+  letter?: string;
+  topicId?: string;
+  calculatorTitle?: string;
+}
+
+const { lang, letter, topicId, calculatorTitle } = Astro.props;
+
+const items: BreadcrumbItem[] = [];
+items.push({ label: t('breadcrumb.home', lang), href: `/${lang}/` });
+
+if (letter) {
+  const cat = categories.find((c) => c.id === letter);
+  if (cat) {
+    items.push({
+      label: t(`breadcrumb.domain.${cat.domain}`, lang),
+      href: `/${lang}/#domain-${cat.domain}`,
+    });
+    items.push({
+      label: t(`category.${letter}.name`, lang),
+      href: `/${lang}/${cat.slug}/`,
+    });
+  }
+}
+
+if (topicId) {
+  const topic = getTopicById(topicId);
+  if (topic && letter) {
+    const cat = categories.find((c) => c.id === letter);
+    if (cat) {
+      items.push({
+        label: topic.title[lang],
+        href: `/${lang}/${cat.slug}/${topic.id}/`,
+      });
+    }
+  }
+}
+
+if (calculatorTitle) {
+  items.push({ label: calculatorTitle });
+}
+---
+
+<nav aria-label="Breadcrumb" class="text-sm text-gray-500 mb-4">
+  <ol class="flex flex-wrap items-center gap-1">
+    {items.map((item, idx) => (
+      <li class="flex items-center gap-1">
+        {idx > 0 && <span class="text-gray-400">›</span>}
+        {item.href ? (
+          <a href={item.href} class="text-[#7C3AED] hover:underline">{item.label}</a>
+        ) : (
+          <span class="text-gray-700">{item.label}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>

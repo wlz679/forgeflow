@@ -1,0 +1,33 @@
+---
+// P140f: Topic card component. Used in (1) letter page Topics grid,
+// (2) calculator page Related Topics section.
+import { t, type Lang } from '../i18n';
+import { categories } from '../data/categories';
+import type { Topic } from '../data/topics';
+
+export interface Props {
+  topic: Topic;
+  lang: Lang;
+  variant?: 'full' | 'compact';
+}
+
+const { topic, lang, variant = 'full' } = Astro.props;
+const cat = categories.find((c) => c.id === topic.letterId);
+const href = cat ? `/${lang}/${cat.slug}/${topic.id}/` : '#';
+const isCompact = variant === 'compact';
+---
+
+<a
+  href={href}
+  class={`block border border-gray-200 rounded-lg p-4 bg-white hover:bg-gray-50 transition-colors ${isCompact ? '' : 'mb-3'}`}
+>
+  <h3 class={`font-semibold text-gray-900 ${isCompact ? 'text-sm' : 'text-base'} mb-1`}>
+    {topic.title[lang]}
+  </h3>
+  {isCompact && (
+    <p class="text-xs text-gray-600 mt-1 line-clamp-2">{topic.description[lang]}</p>
+  )}
+  <div class="flex gap-2 mt-2">
+    <span class="text-xs text-[#7C3AED] font-medium">{t('topic.cta.read_guide', lang)} →</span>
+  </div>
+</a>
