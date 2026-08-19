@@ -2896,6 +2896,8 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-renewal-rate-calculator.how_to_use.4': { en: 'Pair with GRR (for full gross retention) and NRR (for net retention including expansion) to see the full retention picture.', zh: '结合 GRR（完整毛留存）和 NRR（含扩展的净留存）看到完整留存图景。' },
   'tools.solopreneur-renewal-rate-calculator.input.arrRenewed.label': { en: 'ARR renewed ($)', zh: '已续约 ARR（美元）' },
   'tools.solopreneur-renewal-rate-calculator.input.arrUpForRenewal.label': { en: 'ARR up for renewal ($)', zh: '即将续约的 ARR（美元）' },
+  'tools.solopreneur-renewal-rate-calculator.input.arrRenewed.placeholder': { en: 'e.g. 720000', zh: '例如 720000' },
+  'tools.solopreneur-renewal-rate-calculator.input.arrUpForRenewal.placeholder': { en: 'e.g. 1000000', zh: '例如 1000000' },
   'tools.solopreneur-customer-health-score-calculator.title': { en: 'Customer Health Score Calculator', zh: '客户健康评分计算器' },
   'tools.solopreneur-customer-health-score-calculator.description': { en: 'Composite customer health score from 4 weighted dimensions: product usage, support sentiment, NPS, and commercial signals. See health bands, what-if (single-dimension improvement), break-even composite score, and risk-tier segmentation. Health: 🟢 ≥80 · 🟡 65–80 · 🟠 50–65 · 🔴 <50.', zh: '由 4 个加权维度组成的客户健康综合评分：产品使用、支持情绪、NPS 和商业信号。查看健康分级、What-If（单维度改进）、盈亏平衡综合分数和风险分层。健康分级：🟢 ≥80 · 🟡 65–80 · 🟠 50–65 · 🔴 <50。' },
   'tools.solopreneur-customer-health-score-calculator.faq.0.a': { en: 'A composite score 0-100 computed from multiple signals (product usage, NPS, support tickets, engagement, contract value) that predicts account health. The early warning system for at-risk accounts.', zh: '客户健康分是基于多个信号（产品使用、NPS、支持工单、互动、合同价值）加权计算的 0-100 复合分数，用于预测账户健康状态。它是预警有流失风险账户的早期信号系统。' },
