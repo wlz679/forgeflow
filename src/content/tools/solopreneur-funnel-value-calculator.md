@@ -56,6 +56,8 @@ The Calculator marks the **biggest-leak stage** (the one with the
 largest absolute drop in user count) — that's where the highest-ROI
 optimization work usually lives.
 
+Source for these benchmarks: Mixpanel's AARRR (Acquisition, Activation, Retention, Referral, Revenue) and HEART (Happiness, Engagement, Adoption, Retention, Task success) framework documentation, Amplitude's funnel analysis guide, and Shopify's ecommerce funnel conversion benchmarks report.
+
 ## Limitations & When Not To Use
 
 Funnel value assumes a **linear, sequential** funnel. If your real flow
@@ -66,6 +68,18 @@ is sensitive to **absolute size** of the drop, not relative rate — a
 100 leads, and the engine will correctly flag the former. For
 multi-path funnels, use a behavioral analytics tool (Mixpanel,
 Amplitude) instead of a static calculator.
+
+## Assumptions
+
+- Funnel value is computed using last-touch attribution per stage — does not account for cross-stage influence or assisted conversions between stages.
+- Stage conversion rates default to industry averages (top-of-funnel 100% → bottom 1-5%); override with your actual measured rates for accurate valuation.
+- Customer lifetime value is forward-looking estimate based on retention + ARPU; for high-variance segments, prefer cohort-level funnel value.
+
+## Common Mistakes
+
+- Reporting funnel value as total revenue rather than incremental value — total includes baseline conversions that would happen without optimization; incremental value is the optimization target.
+- Optimizing only the bottom-of-funnel conversion rate — biggest ROI often comes from top/mid-funnel improvements (e.g. doubling 5% to 10% at top funnel = 2x more downstream).
+- Ignoring stage-level micro-conversions — secondary actions (add to cart, view product detail) often predict downstream conversion; instrument the full funnel, not just final purchase.
 
 ## Worked Example
 
