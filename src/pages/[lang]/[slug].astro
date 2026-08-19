@@ -8,6 +8,7 @@ import HowToUse from '../../components/HowToUse.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
 import RelatedBlog from '../../components/RelatedBlog.astro';
 import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
+import TopicCard from '../../components/TopicCard.astro';
 import RecentViewed from '../../components/RecentViewed.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
@@ -15,6 +16,7 @@ import { relatedTools } from '../../data/internal-links';
 import { getBlogPostsByToolSlug } from '../../lib/blog';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
+import { TOPICS } from '../../data/topics';
 import { EDITORIAL, reviewerForCategory } from '../../data/editorial';
 import { t, getLang } from '../../i18n';
 import { createSoftwareApplication, createToolFAQPage, createToolBreadcrumbList } from '../../lib/seo-factory';
@@ -45,6 +47,7 @@ const engine = getEngine(slug!);
 if (!engine) return Astro.redirect(`/${lang}/`);
 
 const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
+const relatedTopics = TOPICS.filter((t) => t.calculatorSlugs.includes(slug!));
 const relatedBlog = await getBlogPostsByToolSlug(slug!);
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
@@ -1392,6 +1395,19 @@ const schema = JSON.stringify({
         </div>
 
         <div id="dynamic-results" class="space-y-3 hidden"></div>
+        {relatedTopics.length > 0 && (
+          <section class="mb-8 mt-8 p-6 bg-gradient-to-br from-purple-50 to-sky-50 border border-purple-200 rounded-2xl">
+            <h2 class="text-xl font-bold text-gray-900 mb-3">
+              {lang === 'zh' ? '相关商业主题' : 'Related business Topics'}
+            </h2>
+            <p class="text-sm text-gray-600 mb-4">
+              {t(`tools.${slug}.title`, lang)} {lang === 'zh' ? ' 是这些商业主题的核心工具。每个主题提供教育性指南 + 行业基准。' : ' is the core calculator for these business Topics. Each Topic includes an educational guide + industry benchmarks.'}
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {relatedTopics.map((topic) => <TopicCard topic={topic} lang={lang} variant="full" />)}
+            </div>
+          </section>
+        )}
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
         <RelatedBlog posts={relatedBlog} />
         <EeatTrustBlock
