@@ -53,6 +53,8 @@ Cost / Click    = campaignCost / Clicks
 
 Health bands (ROI %): 🟢 ≥ 300% · 🟡 100–300% · 🟠 0–100% · 🔴 < 0%.
 
+Source for these benchmarks: DMA (Data & Marketing Association) Email Marketing Council annual report (industry ROI $36-$42 per $1 spent), HubSpot State of Marketing email benchmarks, Klaviyo's annual ecommerce email benchmark report, and Litmus's Email Marketing ROI industry analysis.
+
 ## Limitations & When Not To Use
 
 This calculator assumes **last-click attribution** — every click that
@@ -62,6 +64,18 @@ your "open rate" is now a directional signal at best; rely on CTR and
 revenue-per-click for real performance reads. Also, the model ignores
 **list churn** between sends — if your list decays 0.5%/month, a
 6-email sequence will reach ~3% fewer subscribers on email #6 than #1.
+
+## Assumptions
+
+- Email ROI calculation includes campaign cost (platform fees, design, list management) but does not include subscriber acquisition cost; for full-funnel ROI, pair with CAC calculator.
+- Revenue attribution assumes email is the last-touch conversion driver; first-touch or multi-touch attribution will produce different numbers.
+- Open rate assumption excludes Apple Mail Privacy Protection (MPP) prefetches (~50% of opens); click-through and conversion rates are more reliable metrics.
+
+## Common Mistakes
+
+- Reporting open rates as the primary success metric — Apple MPP inflates open rates 2-3x; prioritize click-to-open ratio and conversion rate instead.
+- Treating unsubscribes as failure — 0.1-0.5% unsubscribe rate per send is healthy; high engagement lists can tolerate more aggressive frequency.
+- Sending same content to entire list — segment-level CTAs (cart abandoners, recent purchasers, dormant users) drive 3-5x higher ROI than broadcast emails.
 
 ## Worked Example
 
