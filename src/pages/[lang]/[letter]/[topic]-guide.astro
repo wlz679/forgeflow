@@ -1,0 +1,108 @@
+---
+// P140f: Topic Guide page template. Per Tier 1 anchor Topic, renders
+// 6-section educational article + links to calculators + Related Topics.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Breadcrumb from '../../../components/Breadcrumb.astro';
+import TopicCard from '../../../components/TopicCard.astro';
+import { TOPICS, type Topic } from '../../../data/topics';
+import { categories } from '../../../data/categories';
+import { t } from '../../../i18n';
+import { SITE_URL } from '../../../lib/site-config';
+
+export function getStaticPaths() {
+  const paths: { params: { lang: string; letter: string; topic: string }; props: { topic: Topic; letter: string } }[] = [];
+  for (const lang of ['en', 'zh'] as const) {
+    for (const topic of TOPICS.filter((t) => t.tier === 1)) {
+      const cat = categories.find((c) => c.id === topic.letterId);
+      if (cat) {
+        paths.push({
+          params: { lang, letter: cat.slug, topic: topic.id },
+          props: { topic, letter: topic.letterId },
+        });
+      }
+    }
+  }
+  return paths;
+}
+
+const { lang, topic: topicId } = Astro.params;
+const { topic } = Astro.props;
+const cat = categories.find((c) => c.id === topic.letterId)!;
+
+const title = `${topic.title[lang]} — Topic Guide`;
+const description = topic.description[lang];
+const canonical = `${SITE_URL}/${lang}/${cat.slug}/${topic.id}-guide/`;
+
+const articleSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  articleSection: `${cat.name} / ${topic.title.en}`,
+  about: { '@type': 'Thing', name: topic.title.en },
+  mentions: topic.calculatorSlugs.map((slug) => ({
+    '@type': 'SoftwareApplication',
+    name: t(`tools.${slug}.title`, lang),
+    url: `${SITE_URL}/${lang}/${slug}/`,
+  })),
+  author: { '@type': 'Person', name: '王立柱 (Wang Lizhu)', url: `${SITE_URL}/about/authors/reviewer-founder/` },
+  datePublished: topic.publishedAt,
+});
+
+const relatedTopics = topic.relatedTopicIds
+  .map((id) => TOPICS.find((t) => t.id === id))
+  .filter((t): t is Topic => Boolean(t));
+---
+
+<BaseLayout title={title} description={description} schema={articleSchema} pageType="static">
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-8 flex-1">
+    <Breadcrumb lang={lang} letter={topic.letterId} topicId={topic.id} />
+    <h1 class="text-2xl font-extrabold mb-2">{topic.title[lang]}</h1>
+    <p class="text-sm text-gray-500 uppercase tracking-wide mb-6">{t(`category.${topic.letterId}.name`, lang)} · Topic Guide</p>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.what_is', lang, { topic: topic.title[lang] })}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 plain-language definition + business context — editorial-fill via T3.x sub-batches]</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.why_matters', lang, { topic: topic.title[lang] })}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 business impact + when to care]</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.key_concepts', lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~300 字 — 3-5 numbered concepts/principles]</p>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.how_to_apply', lang, { topic: topic.title[lang] })}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed mb-4">[CONTENT: ~300 字 practical steps]</p>
+      <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <p class="text-sm font-semibold text-gray-900 mb-2">{t('topic.cta.use_calculator', lang)}:</p>
+        <ul class="space-y-1 text-sm">
+          {topic.calculatorSlugs.map((slug) => (
+            <li><a href={`/${lang}/${slug}/`} class="text-[#7C3AED] hover:underline">{t(`tools.${slug}.title`, lang)} →</a></li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="mb-8">
+      <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.common_pitfalls', lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed">[CONTENT: ~200 字 — 3-4 traps people fall into]</p>
+    </section>
+
+    {relatedTopics.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.related', lang)}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {relatedTopics.map((rt) => <TopicCard topic={rt} lang={lang} variant="full" />)}
+        </div>
+      </section>
+    )}
+  </main>
+  <Footer />
+</BaseLayout>
