@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-19 (P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions 🔍 sky-50 + Common Mistakes ⚠️ rose-50] + 18 per-file prose expansions [9 marketing/retention engines × en + zh] — inline HEALTH_BANDS source citations [Meta Ads, Google Ads, HubSpot, Klaviyo, Baymard, Mixpanel, ChartMogul, Recurly, DMA, CMI, SaaS Capital, HBR] + Assumptions + Common Mistakes H2s + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 14 atomic commits on `feature/p141i-prose-p1-deepening` [T1 + T2 + T3 [9 per-engine] + H2 normalize fix + T4 + 2 ship commits]; M25.1 added; commit count 1079 → 1093; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1265/1265/0 [49 build-dep suites])
+> **最后更新:** 2026-08-19 (P141j About page methodology {count} interpolation — 1 i18n key added `about.methodology.body` with `{count}` placeholder mirroring existing `about.update_policy.body` pattern; hardcoded "100 个免费商业计算器" / "100 free business calculators" in src/pages/[lang]/about.astro:186-187 now uses `t('about.methodology.body', lang, { count: toolsCount })` to prevent silent drift on future batch; closes ChatGPT P141h audit "tool count inconsistency" item; 1 atomic commit on master; M25.2 added; commit count 1093 → 1094; pnpm check 1244/0/0 unchanged)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
