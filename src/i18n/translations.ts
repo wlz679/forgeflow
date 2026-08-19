@@ -313,6 +313,38 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // P141j: methodology body uses {count} placeholder (was hardcoded "100"/"100 个").
   // Mirrors about.update_policy.body interpolation pattern.
   'about.methodology.body': { en: 'ForgeFlowKit provides {count} free business calculators across 15 business domains. Each calculator includes a 4-H2 editorial prose section (What This Calculator Measures / How It Works / Limitations / Worked Example) and at least one cited external source; everything runs locally in your browser, and no input data is sent to any server.', zh: 'ForgeFlowKit 提供 {count} 个免费商业计算器，覆盖 15 个业务领域。每个计算器都包含 4-H2 编辑内容（计算器衡量什么 / 计算方法 / 局限性 / 案例走读）和至少一个引用的外部资料来源；全部在浏览器本地运行，不会向任何服务器发送输入数据。' },
+
+  // P140f: Topic page H2 names (Guide + Benchmark)
+  'topic.guide.h2.what_is': { en: 'What is {topic}?', zh: '什么是 {topic}？' },
+  'topic.guide.h2.why_matters': { en: 'Why {topic} matters', zh: '为什么 {topic} 重要' },
+  'topic.guide.h2.key_concepts': { en: 'Key concepts', zh: '核心概念' },
+  'topic.guide.h2.how_to_apply': { en: 'How to apply {topic}', zh: '如何应用 {topic}' },
+  'topic.guide.h2.common_pitfalls': { en: 'Common pitfalls', zh: '常见误区' },
+  'topic.guide.h2.related': { en: 'Related Topics & calculators', zh: '相关主题与计算器' },
+  'topic.benchmark.h2.what_we_measure': { en: 'What we measure', zh: '测量指标' },
+  'topic.benchmark.h2.industry_benchmarks': { en: 'Industry benchmarks', zh: '行业基准' },
+  'topic.benchmark.h2.how_to_use': { en: 'How to use these numbers', zh: '如何使用这些数据' },
+  'topic.benchmark.h2.sources': { en: 'Sources & methodology', zh: '来源与方法论' },
+
+  // P140f: Breadcrumb segments (Domain names)
+  'breadcrumb.home': { en: 'Home', zh: '首页' },
+  'breadcrumb.domain.finance': { en: 'Finance & Investment', zh: '财务与投资' },
+  'breadcrumb.domain.marketing': { en: 'Marketing & Sales', zh: '营销与销售' },
+  'breadcrumb.domain.customer': { en: 'Customer & Retention', zh: '客户与留存' },
+  'breadcrumb.domain.product': { en: 'Product & Engineering', zh: '产品与工程' },
+  'breadcrumb.domain.people': { en: 'People & Operations', zh: '人事与运营' },
+  'breadcrumb.domain.legal': { en: 'Legal & Compliance', zh: '法务与合规' },
+  'breadcrumb.domain.ai-cost': { en: 'AI Cost Tools', zh: 'AI 成本工具' },
+  'breadcrumb.domain.operations': { en: 'Operations', zh: '运营' },
+
+  // P140f: CTA labels
+  'topic.cta.read_guide': { en: 'Read the Topic Guide', zh: '阅读主题指南' },
+  'topic.cta.view_benchmarks': { en: 'View industry benchmarks', zh: '查看行业基准' },
+  'topic.cta.use_calculator': { en: 'Use the calculator', zh: '使用计算器' },
+  'topic.cta.learn_methodology': { en: 'Learn the methodology', zh: '了解方法论' },
+
+  // P140f: Letter page Topics section
+  'letter.topics_section.h2': { en: 'Topics in this category', zh: '本类别主题' },
   'about.editorial_policy.h1': { en: 'How We Stay Neutral', zh: '编辑中立' },
   'about.editorial_policy.body': { en: 'ForgeFlowKit accepts no payment for tool rankings, recommendation order, or editorial coverage. Calculations are transparent — every formula is visible in the page source. We do not run user-tracking scripts, do not collect any input data, and do not require accounts. We do display contextual advertisements (clearly labeled as "Sponsored" or "Ad") to keep the site free, but ads never influence calculation results or tool recommendations.', zh: 'ForgeFlowKit 不接受任何工具排名、推荐顺序或编辑报道的付费。计算过程透明 — 每个公式都在页面源码中可见。我们不运行用户跟踪脚本，不收集任何输入数据，不需要账号。我们展示情境广告（明确标注为「赞助」或「广告」）以保持网站免费，但广告绝不会影响计算结果或工具推荐。' },
   'about.contact.h1': { en: 'Get in Touch', zh: '联系我们' },

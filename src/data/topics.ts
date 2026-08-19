@@ -1,0 +1,121 @@
+// P140f: Topic layer between Category letter and Calculator. Each Topic
+// has 1 Guide page + 1 Benchmark page (Tier 1 anchor in Batch A).
+export type TopicId = string;
+export type TopicTier = 1 | 2 | 3;
+
+export interface Topic {
+  id: TopicId;
+  letterId: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'H' | 'K' | 'L' | 'M' | 'O' | 'P' | 'R' | 'S' | 'T';
+  domain: 'finance' | 'marketing' | 'customer' | 'product' | 'people' | 'legal' | 'ai-cost' | 'operations';
+  title: { en: string; zh: string };
+  description: { en: string; zh: string };
+  calculatorSlugs: string[];
+  relatedTopicIds: TopicId[];
+  tier: TopicTier;
+  publishedAt: string;
+}
+
+export const TOPICS: Topic[] = [
+  { id: 'mrr-growth-strategies', letterId: 'A', domain: 'finance', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'MRR Growth Strategies', zh: 'MRR 增长策略' },
+    description: { en: 'Frameworks for measuring and accelerating monthly recurring revenue growth across SaaS stages.',
+                    zh: '衡量并加速 SaaS 不同阶段月度经常性收入增长的框架。' },
+    calculatorSlugs: ['solopreneur-mrr-calculator', 'solopreneur-revenue-projector'],
+    relatedTopicIds: ['net-revenue-retention', 'customer-acquisition-cost'] },
+  { id: 'llm-api-cost-optimization', letterId: 'B', domain: 'ai-cost', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'LLM API Cost Optimization', zh: 'LLM API 成本优化' },
+    description: { en: 'Strategies for reducing token spend across OpenAI, Claude, Gemini, and DeepSeek APIs.',
+                    zh: '在 OpenAI、Claude、Gemini、DeepSeek API 之间降低 token 成本的策略。' },
+    calculatorSlugs: ['solopreneur-openai-token-calculator', 'solopreneur-claude-api-cost-calculator', 'solopreneur-ai-api-cost-comparison'],
+    relatedTopicIds: [] },
+  { id: 'customer-acquisition-cost', letterId: 'C', domain: 'finance', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Customer Acquisition Cost', zh: '客户获取成本' },
+    description: { en: 'Measure, benchmark, and reduce your customer acquisition cost across B2B and B2C channels.',
+                    zh: '衡量、基准化并降低 B2B 与 B2C 渠道的客户获取成本。' },
+    calculatorSlugs: ['solopreneur-cac-calculator', 'solopreneur-ltv-calculator'],
+    relatedTopicIds: ['net-revenue-retention', 'funnel-conversion-optimization'] },
+  { id: 'freelance-rate-strategy', letterId: 'D', domain: 'finance', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Freelance Rate Strategy', zh: '自由职业费率策略' },
+    description: { en: 'Set freelance rates by skill, market, and business model — and model what you actually take home.',
+                    zh: '按技能、市场和业务模式设定自由职业费率，并建模实际到手收入。' },
+    calculatorSlugs: ['solopreneur-freelance-rate-calculator', 'solopreneur-hourly-vs-fixed-calculator', 'solopreneur-freelance-tax-calculator'],
+    relatedTopicIds: ['employee-cost-planning'] },
+  { id: 'meeting-cost-optimization', letterId: 'E', domain: 'operations', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Meeting Cost Optimization', zh: '会议成本优化' },
+    description: { en: 'Quantify the true cost of meetings and decide which ones are worth having.',
+                    zh: '量化会议的真实成本，并决定哪些会议值得开。' },
+    calculatorSlugs: ['solopreneur-meeting-cost-calculator', 'solopreneur-employee-cost-calculator', 'solopreneur-productivity-score'],
+    relatedTopicIds: ['employee-cost-planning'] },
+  { id: 'mortgage-strategy-comparison', letterId: 'F', domain: 'finance', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Mortgage Strategy Comparison', zh: '按揭策略对比' },
+    description: { en: 'Compare fixed vs adjustable, 15 vs 30 year, and amortization strategies for your mortgage.',
+                    zh: '对比固定 vs 可调、15 年 vs 30 年以及按揭偿还策略。' },
+    calculatorSlugs: ['solopreneur-mortgage-calculator', 'solopreneur-rent-vs-buy-calculator', 'solopreneur-brrrr-calculator'],
+    relatedTopicIds: [] },
+  { id: 'employee-cost-planning', letterId: 'H', domain: 'people', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Employee Cost Planning', zh: '员工成本规划' },
+    description: { en: 'Budget for fully-loaded employee cost, ramp time, and attrition.',
+                    zh: '为全负担员工成本、爬坡时间和流失做预算。' },
+    calculatorSlugs: ['solopreneur-fully-loaded-employee-cost-calculator', 'solopreneur-attrition-cost-calculator', 'solopreneur-time-to-productivity-calculator'],
+    relatedTopicIds: ['meeting-cost-optimization'] },
+  { id: 'knowledge-base-coverage', letterId: 'K', domain: 'customer', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Knowledge Base Coverage', zh: '知识库覆盖率' },
+    description: { en: 'Measure and improve your self-service knowledge base coverage to reduce support tickets.',
+                    zh: '衡量并提升自助知识库覆盖率，减少客服工单。' },
+    calculatorSlugs: ['solopreneur-kb-coverage-rate-calculator', 'solopreneur-deflection-quality-calculator', 'solopreneur-article-helpfulness-calculator'],
+    relatedTopicIds: ['support-cost-optimization'] },
+  { id: 'gdpr-compliance-strategy', letterId: 'L', domain: 'legal', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'GDPR Compliance Strategy', zh: 'GDPR 合规策略' },
+    description: { en: 'Assess GDPR fine risk, DSAR cost, and consent revenue impact for your SaaS business.',
+                    zh: '评估 GDPR 罚款风险、DSAR 处理成本和同意营收影响。' },
+    calculatorSlugs: ['solopreneur-gdpr-fine-calculator', 'solopreneur-dsar-cost-calculator', 'solopreneur-consent-revenue-impact-calculator', 'solopreneur-dpa-cost-calculator'],
+    relatedTopicIds: ['support-cost-optimization'] },
+  { id: 'roas-optimization', letterId: 'M', domain: 'marketing', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'ROAS Optimization', zh: 'ROAS 优化' },
+    description: { en: 'Measure return on ad spend across channels and find your most efficient acquisition mix.',
+                    zh: '衡量跨渠道广告支出回报，找到最高效的获客组合。' },
+    calculatorSlugs: ['solopreneur-roas-calculator', 'solopreneur-content-marketing-roi-calculator'],
+    relatedTopicIds: ['customer-acquisition-cost', 'funnel-conversion-optimization'] },
+  { id: 'inventory-turnover-optimization', letterId: 'O', domain: 'operations', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Inventory Turnover Optimization', zh: '库存周转优化' },
+    description: { en: 'Reduce carrying cost and stockout risk by tuning your inventory turnover rate.',
+                    zh: '通过优化库存周转率降低持有成本和缺货风险。' },
+    calculatorSlugs: ['solopreneur-inventory-turnover-calculator', 'solopreneur-carrying-cost-calculator', 'solopreneur-reorder-point-calculator'],
+    relatedTopicIds: [] },
+  { id: 'funnel-conversion-optimization', letterId: 'P', domain: 'product', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Funnel Conversion Optimization', zh: '漏斗转化优化' },
+    description: { en: 'Diagnose and improve conversion at each funnel stage from awareness to purchase.',
+                    zh: '诊断并提升从认知到购买各漏斗阶段的转化率。' },
+    calculatorSlugs: ['solopreneur-funnel-step-calculator', 'solopreneur-funnel-value-calculator', 'solopreneur-feature-adoption-calculator'],
+    relatedTopicIds: ['roas-optimization', 'customer-acquisition-cost'] },
+  { id: 'net-revenue-retention', letterId: 'R', domain: 'customer', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Net Revenue Retention', zh: '净收入留存' },
+    description: { en: 'Measure NRR and GRR to understand your expansion vs churn dynamics.',
+                    zh: '衡量 NRR 与 GRR，理解扩展与流失的动态。' },
+    calculatorSlugs: ['solopreneur-nrr-calculator', 'solopreneur-grr-calculator', 'solopreneur-customer-health-score-calculator'],
+    relatedTopicIds: ['mrr-growth-strategies', 'customer-acquisition-cost'] },
+  { id: 'pipeline-value-optimization', letterId: 'S', domain: 'marketing', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Pipeline Value Optimization', zh: '管道价值优化' },
+    description: { en: 'Forecast pipeline coverage and velocity to hit your quota with the right deal mix.',
+                    zh: '预测管道覆盖率和销售速度，用正确的成交组合达成业绩。' },
+    calculatorSlugs: ['solopreneur-pipeline-value-calculator', 'solopreneur-pipeline-coverage-calculator', 'solopreneur-sales-velocity-calculator'],
+    relatedTopicIds: ['funnel-conversion-optimization'] },
+  { id: 'support-cost-optimization', letterId: 'T', domain: 'people', tier: 1, publishedAt: '2026-08-19',
+    title: { en: 'Support Cost Optimization', zh: '客服成本优化' },
+    description: { en: 'Reduce cost-per-ticket by improving deflection, FRT, and team capacity planning.',
+                    zh: '通过提升分流、首次响应和团队容量规划降低单工单成本。' },
+    calculatorSlugs: ['solopreneur-cost-per-support-ticket-calculator', 'solopreneur-deflection-rate-calculator', 'solopreneur-support-capacity-planning-calculator'],
+    relatedTopicIds: ['knowledge-base-coverage'] },
+];
+
+export function getTopicById(id: TopicId): Topic | undefined {
+  return TOPICS.find((t) => t.id === id);
+}
+
+export function getTopicsByLetter(letterId: string): Topic[] {
+  return TOPICS.filter((t) => t.letterId === letterId);
+}
+
+export function getTier1Topics(): Topic[] {
+  return TOPICS.filter((t) => t.tier === 1);
+}
