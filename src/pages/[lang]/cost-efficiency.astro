@@ -12,6 +12,8 @@ import { tools } from '../../data/tools';
 import { getBlogPostsByToolSlug } from '../../lib/blog';
 import type { BlogPost } from '../../lib/blog';
 import { t, getLang } from '../../i18n';
+import { getTopicsByLetter } from '../../data/topics';
+import TopicCard from '../../components/TopicCard.astro';
 import { createCollectionPage, createBreadcrumb3 } from '../../lib/seo-factory';
 
 export function getStaticPaths() {
@@ -85,6 +87,7 @@ const schema = JSON.stringify({
     }),
   ],
 });
+const letterTopics = getTopicsByLetter(CATEGORY_ID);
 ---
 
 <BaseLayout
@@ -118,6 +121,22 @@ const schema = JSON.stringify({
 
     <CategoryFaq categoryId={CATEGORY_ID} faqItems={faqItems} />
     <CategoryGuides categoryId={CATEGORY_ID} manualGuides={manualGuides} blogPosts={relatedBlogPosts} />
+{letterTopics.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">{t('letter.topics_section.h2', lang)}</h2>
+        <p class="text-sm text-gray-600 mb-6">
+          {lang === 'zh'
+            ? '深入理解本类别的商业问题。每个主题包括教育性指南 + 行业基准 + 关联计算器。'
+            : 'Deep-dive into the business questions in this category. Each Topic includes an educational guide, industry benchmarks, and linked calculators.'}
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {letterTopics.map((topic) => (
+            <TopicCard topic={topic} lang={lang} variant="full" />
+          ))}
+        </div>
+      </section>
+    )}
+
     <CategoryOtherNav currentCategoryId={CATEGORY_ID} categories={categories} />
   </main>
   <Footer />
