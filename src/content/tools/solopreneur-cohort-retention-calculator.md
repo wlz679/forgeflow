@@ -51,6 +51,8 @@ Months 4, 5, 7, 8, 9, 10, 11 are filled by linear interpolation between
 adjacent known months. The engine surfaces the **biggest drop month**
 as the steepest absolute change between consecutive known months.
 
+Source for these benchmarks: Mixpanel's cohort analysis documentation (industry retention curves and decay models), Amplitude's cohort retention methodology guide, and the Recurly Subscription Metrics Benchmark Report 2024 (cohort retention curves by vertical).
+
 ## Limitations & When Not To Use
 
 Linear interpolation between known months is a deliberate simplification.
@@ -60,6 +62,18 @@ understate retention. The calculator is also single-cohort — if you run
 multiple pricing tiers with very different retention shapes, average
 across them and you'll smooth away the tier signal. For multi-cohort
 analysis, export to Amplitude / Mixpanel / a Looker cohort view.
+
+## Assumptions
+
+- Cohort retention is measured as the share of users from a given acquisition cohort who are still active at month N — does not control for cohort size or seasonality.
+- Decay model assumes a fixed retention curve shape (linear or exponential); for cohorts with step-function churn (e.g. annual contracts), prefer curve-fitting with retention heatmap data.
+- Time window defaults to 12 months; for shorter product cycles (e.g. consumer apps), use 90-day or 30-day cohort windows.
+
+## Common Mistakes
+
+- Reporting average retention across cohorts vs curve-based retention — average masks the actual shape (e.g. steep early drop then plateau); always report the curve, not a single number.
+- Mixing voluntary and involuntary churn — voluntary (cancellation) is a product/marketing signal; involuntary (payment failure) is a billing signal; report separately.
+- Ignoring cohort size — small cohorts (n<50) have noisy retention curves; report confidence intervals or hide small-cohort data from dashboards.
 
 ## Worked Example
 
