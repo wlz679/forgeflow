@@ -327,7 +327,7 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'topic.benchmark.h2.sources': { en: 'Sources & methodology', zh: '来源与方法论' },
 
   // P140f: Breadcrumb segments (Domain names)
-  'breadcrumb.home': { en: 'Home', zh: '首页' },
+  // 'breadcrumb.home' already exists at line 14 — not duplicated
   'breadcrumb.domain.finance': { en: 'Finance & Investment', zh: '财务与投资' },
   'breadcrumb.domain.marketing': { en: 'Marketing & Sales', zh: '营销与销售' },
   'breadcrumb.domain.customer': { en: 'Customer & Retention', zh: '客户与留存' },
