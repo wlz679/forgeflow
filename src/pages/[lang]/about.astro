@@ -182,9 +182,7 @@ const CATEGORY_DESC_ZH: Record<string, string> = {
           {lang === 'zh' ? '方法论(Methodology)' : 'Methodology'}
         </h2>
         <p class="text-sm mb-3">
-          {lang === 'zh'
-            ? 'ForgeFlowKit 提供 100 个免费商业计算器,覆盖 15 个业务领域。每个计算器都包含 4-H2 编辑内容(计算器衡量什么 / 计算方法 / 局限性 / 案例走读)和至少一个引用的外部资料来源;全部在浏览器本地运行,不会向任何服务器发送输入数据。'
-            : 'ForgeFlowKit provides 100 free business calculators across 15 business domains. Each calculator includes a 4-H2 editorial prose section (What This Calculator Measures / How It Works / Limitations / Worked Example) and at least one cited external source; everything runs locally in your browser, and no input data is sent to any server.'}
+          {t('about.methodology.body', lang, { count: toolsCount })}
         </p>
         <p class="text-sm mb-4">
           {lang === 'zh'
