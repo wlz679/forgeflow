@@ -218,7 +218,7 @@ test('every Tier 1 Topic has Guide + Benchmark content', () => {
 
 ## §6 Ship Cadence
 
-**Letter-by-letter, 15 waves**:
+**Letter-by-letter, 15 waves, DIRECT TO MASTER**:
 
 | Wave | Letter | 2 Topics × 2 pages | Target date |
 |---|---|---|---|
@@ -240,19 +240,31 @@ test('every Tier 1 Topic has Guide + Benchmark content', () => {
 
 (Some waves may run in parallel — see §7.)
 
-### Per-wave ship procedure
+### Per-wave ship procedure (direct to master)
 
-1. **Branch**: `feature/p140f-b2-letter-{letter}-extension`
-2. **Atomic commits** (per wave):
-   - `feat(data): P140f-B2 letter {letter} Tier 1 extension content fill (2 Topics)`
-3. **Verify**: tsc clean + 3 guards pass + 3-way 0/0
-4. **ff-merge to master**: `git checkout master && git merge --ff-only feature/p140f-b2-letter-{letter}-extension`
-5. **3-way push**: origin (gitee) + github + master
+**Decision**: Direct commits to master (NOT feature branches). Rationale:
+- Phase 1 content fill (14 Topics, 4 commits) shipped directly to master successfully
+- Each wave is small (4 pages, 2-3 files modified)
+- Avoids 15-branch management overhead
+- Reverts possible via `git revert` if needed
+
+Per wave:
+1. Identify 2 Tier 1 extension Topic IDs (from TIER_2_SLUGS, avoiding overlap)
+2. Read calculator engines for those Topic slugs
+3. Dispatch 2 subagents in parallel (one per Topic)
+4. Each subagent writes `tmp/topic-content-<id>.ts` with Guide + Benchmark
+5. Subagent returns: file path, char counts, sources, 8-row table summary
+6. Run `tmp/merge_batch.mjs` to merge 2 entries into `topic-content.ts`
+7. Add 2 new entries to `topics.ts` TOPICS array (in same commit)
+8. Remove 2 promoted SLUGS from `prose-tiers.ts` TIER_2_SLUGS
+9. Run: `tsc --noEmit` + `RUN_BUILD_TESTS=1` (all 3 guards)
+10. Commit: `feat(data): P140f-B2 letter {letter} Tier 1 extension content fill (2 Topics)`
+11. **3-way push**: origin (gitee) + github + master
 
 **Total commits across Phase 2**:
 - ~15 atomic content commits (1 per letter wave)
 - ~15 wave ship records (memory/p140f-b2-letter-{letter}-extension-shipped.md)
-- ~1 new guard commit (topic-content-coverage-guard)
+- ~1 new guard commit (topic-content-coverage-guard) — Wave 0
 - ~1 MEMORY index bump
 - ~1 CHANGELOG M25.6 entry
 - **~33 commits**
