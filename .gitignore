@@ -26,6 +26,10 @@ scripts/p72-findings-final.json
 # never commit binaries. Re-seed with `pnpm build:og` if cleared.
 scripts/.twemoji-cache/
 
+# Per-batch merge scratch (merge_batch1.mjs, extract_entries.mjs, etc.) — local
+# staging only. Sources are in src/data/, build artifacts in dist/; tmp is ephemeral.
+tmp/
+
 .codegraph/
 .claude/
 CLAUDE.md

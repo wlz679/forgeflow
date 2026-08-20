@@ -3,5 +3,5 @@
   "compilerOptions": {
     "jsx": "preserve"
   },
-  "exclude": ["dist", "node_modules", "tests/_*.ts"]
+  "exclude": ["dist", "node_modules", "tmp", "tests/_*.ts"]
 }
