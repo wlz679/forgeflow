@@ -142,6 +142,18 @@ export const TOPICS: Topic[] = [
                     zh: '衡量并优化 SaaS 业务的单位级损益表——LTV、CAC、毛利率、回本周期与贡献毛利。' },
     calculatorSlugs: ['solopreneur-unit-economics-calculator'],
     relatedTopicIds: ['customer-acquisition-cost'] },
+  { id: 'project-profitability-optimization', letterId: 'D', domain: 'finance', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'Project Profitability Optimization', zh: '项目盈利能力优化' },
+    description: { en: 'Measure true project margin for freelance and consulting work — billable hours, scope creep, and overhead allocation.',
+                    zh: '衡量自由职业与咨询项目的真实毛利——计费工时、范围蔓延与运营成本分摊。' },
+    calculatorSlugs: ['solopreneur-project-profitability-calculator'],
+    relatedTopicIds: ['freelance-rate-strategy'] },
+  { id: 'saas-pricing-strategy', letterId: 'D', domain: 'finance', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'SaaS Pricing Strategy', zh: 'SaaS 定价策略' },
+    description: { en: 'Design SaaS pricing tiers, packaging, and discount strategy to maximize LTV and minimize CAC payback.',
+                    zh: '设计 SaaS 定价分层、产品打包与折扣策略，最大限度提升 LTV 并缩短 CAC 回本周期。' },
+    calculatorSlugs: ['solopreneur-saas-pricing-planner'],
+    relatedTopicIds: ['customer-acquisition-cost', 'unit-economics-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {

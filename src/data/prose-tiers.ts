@@ -47,9 +47,7 @@ export const TIER_2_SLUGS: string[] = [
   // C (Valuation) — 2 mid-priority (2 promoted to Tier 1 extension in P140f-B2 wave C)
   'solopreneur-ltv-calculator',                          // was solopreneur-ltv-cac-calculator
   'solopreneur-cac-calculator',                          // C+1 over plan to meet 35 count
-  // D (Freelance) — 2
-  'solopreneur-project-profitability-calculator',
-  'solopreneur-saas-pricing-planner',
+  // D (Freelance) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave D)
   // E (Cost) — 2
   'solopreneur-meeting-cost-calculator',
   'solopreneur-productivity-score',                      // was solopreneur-productivity-score-calculator
