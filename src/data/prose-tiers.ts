@@ -39,9 +39,7 @@ export const TIER_1_SLUGS: string[] = [
 ];
 
 export const TIER_2_SLUGS: string[] = [
-  // A (SaaS Metrics) — 3 mid-priority
-  'solopreneur-arr-multiple-valuation-calculator',       // was solopreneur-arr-multiple-calculator
-  'solopreneur-burn-rate-calculator',
+  // A (SaaS Metrics) — 1 mid-priority (2 promoted to Tier 1 extension in P140f-B2 wave A)
   'solopreneur-churn-rate-calculator',
   // B (AI Cost) — 4 mid-priority
   'solopreneur-claude-api-cost-calculator',

@@ -106,6 +106,18 @@ export const TOPICS: Topic[] = [
                     zh: '通过提升分流、首次响应和团队容量规划降低单工单成本。' },
     calculatorSlugs: ['solopreneur-cost-per-support-ticket-calculator', 'solopreneur-deflection-rate-calculator', 'solopreneur-support-capacity-planning-calculator'],
     relatedTopicIds: ['knowledge-base-coverage'] },
+  { id: 'arr-multiple-valuation', letterId: 'A', domain: 'finance', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'ARR Multiple Valuation', zh: 'ARR 倍数估值' },
+    description: { en: 'Use ARR multiples to value your SaaS company for fundraising, M&A, or internal benchmarking.',
+                    zh: '用 ARR 倍数估值 SaaS 公司，为融资、并购或内部基准对比提供依据。' },
+    calculatorSlugs: ['solopreneur-arr-multiple-valuation-calculator'],
+    relatedTopicIds: ['mrr-growth-strategies'] },
+  { id: 'burn-rate-optimization', letterId: 'A', domain: 'finance', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'Burn Rate Optimization', zh: '燃烧率优化' },
+    description: { en: 'Measure net burn, gross burn, and runway to extend founder and operating flexibility.',
+                    zh: '衡量净燃烧、毛燃烧和现金跑道，延长创始人和运营灵活性。' },
+    calculatorSlugs: ['solopreneur-burn-rate-calculator'],
+    relatedTopicIds: ['mrr-growth-strategies'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
