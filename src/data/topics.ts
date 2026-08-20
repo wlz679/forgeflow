@@ -118,6 +118,18 @@ export const TOPICS: Topic[] = [
                     zh: '衡量净燃烧、毛燃烧和现金跑道，延长创始人和运营灵活性。' },
     calculatorSlugs: ['solopreneur-burn-rate-calculator'],
     relatedTopicIds: ['mrr-growth-strategies'] },
+  { id: 'ai-image-cost-optimization', letterId: 'B', domain: 'ai-cost', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'AI Image Generation Cost Optimization', zh: 'AI 图像生成成本优化' },
+    description: { en: 'Compare per-image cost across DALL-E, Stable Diffusion, Midjourney, Imagen, Firefly, and other providers.',
+                    zh: '对比 DALL-E、Stable Diffusion、Midjourney、Imagen、Firefly 等图像生成服务的单张成本。' },
+    calculatorSlugs: ['solopreneur-ai-image-cost-calculator'],
+    relatedTopicIds: ['llm-api-cost-optimization'] },
+  { id: 'gpu-cloud-cost-optimization', letterId: 'B', domain: 'ai-cost', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'GPU Cloud Cost Optimization', zh: 'GPU 云成本优化' },
+    description: { en: 'Compare hourly GPU rental costs across Lambda Labs, RunPod, Vast, CoreWeave, AWS, GCP, and Azure for training and inference workloads.',
+                    zh: '对比 Lambda Labs、RunPod、Vast、CoreWeave、AWS、GCP、Azure 的 GPU 时租成本，覆盖训练与推理工作负载。' },
+    calculatorSlugs: ['solopreneur-gpu-cloud-cost-calculator'],
+    relatedTopicIds: ['llm-api-cost-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
