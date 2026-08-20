@@ -130,6 +130,18 @@ export const TOPICS: Topic[] = [
                     zh: '对比 Lambda Labs、RunPod、Vast、CoreWeave、AWS、GCP、Azure 的 GPU 时租成本，覆盖训练与推理工作负载。' },
     calculatorSlugs: ['solopreneur-gpu-cloud-cost-calculator'],
     relatedTopicIds: ['llm-api-cost-optimization'] },
+  { id: 'equity-dilution-optimization', letterId: 'C', domain: 'finance', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'Equity Dilution Optimization', zh: '股权稀释优化' },
+    description: { en: 'Model founder ownership dilution through funding rounds and compare SAFE vs priced rounds for cap table impact.',
+                    zh: '建模创始人在融资轮次中的股权稀释，对比 SAFE 与 priced round 对股权结构的影响。' },
+    calculatorSlugs: ['solopreneur-equity-dilution-calculator'],
+    relatedTopicIds: ['customer-acquisition-cost', 'arr-multiple-valuation'] },
+  { id: 'unit-economics-optimization', letterId: 'C', domain: 'finance', tier: 1, publishedAt: '2026-08-20',
+    title: { en: 'Unit Economics Optimization', zh: '单位经济学优化' },
+    description: { en: 'Measure and improve the unit-level P&L of your SaaS business — LTV, CAC, gross margin, payback, and contribution margin.',
+                    zh: '衡量并优化 SaaS 业务的单位级损益表——LTV、CAC、毛利率、回本周期与贡献毛利。' },
+    calculatorSlugs: ['solopreneur-unit-economics-calculator'],
+    relatedTopicIds: ['customer-acquisition-cost'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
