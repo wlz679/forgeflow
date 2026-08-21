@@ -166,6 +166,18 @@ export const TOPICS: Topic[] = [
                     zh: '衡量并提升个人生产力评分——深度工作、会议、沟通、学习的时间分配综合优化。' },
     calculatorSlugs: ['solopreneur-productivity-score'],
     relatedTopicIds: ['meeting-cost-optimization', 'employee-cost-planning'] },
+  { id: 'compound-interest-optimization', letterId: 'F', domain: 'finance', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Compound Interest Optimization', zh: '复利优化' },
+    description: { en: 'Model long-term wealth compounding across stocks, bonds, savings, and retirement accounts — with tax-aware return bands.',
+                    zh: '建模股票、债券、储蓄与退休账户的长期复利增长——含税后收益分档。' },
+    calculatorSlugs: ['solopreneur-compound-interest-calculator'],
+    relatedTopicIds: ['mortgage-strategy-comparison'] },
+  { id: 'cap-rate-optimization', letterId: 'F', domain: 'finance', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Cap Rate Optimization', zh: '资本化率优化' },
+    description: { en: 'Evaluate real estate deals using capitalization rate, NOI, and cap rate compression/expansion by market cycle.',
+                    zh: '用资本化率、NOI 与市场周期压缩/扩张评估房地产交易。' },
+    calculatorSlugs: ['solopreneur-cap-rate-calculator'],
+    relatedTopicIds: ['mortgage-strategy-comparison'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
