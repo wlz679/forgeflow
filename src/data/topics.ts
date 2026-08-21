@@ -250,6 +250,18 @@ export const TOPICS: Topic[] = [
                     zh: '提升 DAU/MAU 比、留存曲线与互动频率，建立产品使用习惯。' },
     calculatorSlugs: ['solopreneur-stickiness-calculator'],
     relatedTopicIds: ['funnel-conversion-optimization', 'feature-adoption-optimization'] },
+  { id: 'grr-optimization', letterId: 'R', domain: 'customer', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'GRR (Gross Revenue Retention) Optimization', zh: '毛收入留存优化' },
+    description: { en: 'Improve Gross Revenue Retention through churn prevention, save-the-customer plays, and cohort-level intervention.',
+                    zh: '通过流失预防、客户挽回与群组级干预提升毛收入留存。' },
+    calculatorSlugs: ['solopreneur-grr-calculator'],
+    relatedTopicIds: ['net-revenue-retention'] },
+  { id: 'customer-health-score-optimization', letterId: 'R', domain: 'customer', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Customer Health Score Optimization', zh: '客户健康评分优化' },
+    description: { en: 'Build and tune Customer Health Score (CHS) leading indicators to predict churn before it appears in lagging metrics.',
+                    zh: '构建并调优客户健康评分（CHS）领先指标，在流失出现在滞后指标前预测风险。' },
+    calculatorSlugs: ['solopreneur-customer-health-score-calculator'],
+    relatedTopicIds: ['net-revenue-retention', 'grr-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
