@@ -424,6 +424,133 @@ export const TOPIC_COMPARE_CONTENT: Record<string, TopicCompareContent> = {
     },
     sources: 'Triple Whale 2024 DTC Benchmark Report — Industry-wide marketing efficiency study across 8,000+ DTC brands; median MER 2.8x for 3+ channel brands vs 4.2x for single-channel (triplewhale.com, accessed 2026-08-15). Meta Ads 2024 Performance Benchmarks — Meta Business Help Center official ROAS benchmarks by vertical and attribution window; documents 7-day click + 1-day view as default; 41% of DTC advertisers report ROAS at gross level only (business.facebook.com, Q4 2024). Shopify Plus 2024 Commerce Trends Report — DTC apparel gross margin and net MER benchmarks; median net MER 2.4x vs gross 3.1x for DTC apparel; high-margin SaaS 4.0x net MER healthy band (shopify.com/plus, 2024 release). HubSpot 2024 State of Marketing Benchmarks — B2B SaaS marketing efficiency survey; only 23% of B2B marketers compute ROAS, 87% prefer pipeline-influenced reporting over ROAS (hubspot.com/state-of-marketing, Q1 2024). Common Thread 2024 DTC Insights Survey — Annual DTC performance benchmarking across 200+ brands; median DTC operates 33% below MER ceiling (3.1x actual vs 4.7x theoretical) (commonthreadco.com, 2024 release). eMarketer 2024 US DTC Marketing Spend Forecast — US DTC marketing spend forecast $235B by 2027; brand growth 2x category-median correlated to MER tracking within 10% of theoretical ceiling (emarketer.com, Q2 2024). ProfitWell 2024 Subscription Marketing Benchmarks — Recurly/ProfitWell subscription commerce MER and acquisition efficiency; net MER 3.2x median for subscription DTC, gross 3.9x (profitwell.com, Q3 2024). Fospha 2024 Marketing Attribution Study — Cross-channel attribution impact on blended MER; multi-touch attribution changes reported MER by 18-32% vs last-click single-touch (fospha.com, Q4 2024). Nielsen 2024 Marketing Mix Modeling Report — Annual MMM study correlating MER ceiling to gross margin across 200+ brands; documents the 4.0x MER ceiling for 50% margin DTC apparel (nielsen.com, 2024). Northbeam 2024 Attribution Trends Report — DTC attribution platform insights; agency-reported ROAS overstates true ROAS by 30-60% due to attribution-window cherry-picking (14d vs 28d vs 90d) (northbeam.com, Q3 2024).',
   },
+  'nrr-vs-grr': {
+    heroTitle: {
+      en: 'NRR vs GRR — Which Retention Metric Should You Optimize First in 2026?',
+      zh: 'NRR vs GRR — 2026 年留存指标该先优化哪个？',
+    },
+    heroSubtitle: {
+      en: 'Net Revenue Retention and Gross Revenue Retention measure different facets of customer health — NRR captures retention plus expansion (and can exceed 100%), GRR strips expansion to show pure retention (always ≤100%). The gap between them reveals how much growth depends on expansion vs holding the line.',
+      zh: '净收入留存与毛收入留存衡量客户健康的不同侧面 —— NRR 包含扩展可超 100%，GRR 剥离扩展只反映纯留存（永远 ≤100%）。两者之差揭示增长对扩展与守住的依赖程度。',
+    },
+    heroTable: {
+      aspect: { en: 'Aspect', zh: '维度' },
+      rows: [
+        { aspect: { en: 'What it measures', zh: '衡量什么' },
+          cells: [
+            { en: 'Revenue kept + grown from existing customers (includes expansion)', zh: '从现有客户保留并增长的收入（含扩展）' },
+            { en: 'Revenue kept from existing customers (excludes expansion)', zh: '从现有客户保留的收入（不含扩展）' },
+          ] },
+        { aspect: { en: 'Bound', zh: '取值范围' },
+          cells: [
+            { en: 'Can exceed 100% (top decile ≥130%, healthy ≥110%)', zh: '可超 100%（前 10% ≥130%，健康 ≥110%）' },
+            { en: 'Always ≤100% (best-in-class ≥95%, healthy ≥90%)', zh: '永远 ≤100%（顶级 ≥95%，健康 ≥90%）' },
+          ] },
+        { aspect: { en: 'Formula', zh: '公式' },
+          cells: [
+            { en: '(Starting + Expansion − Downgrade − Churn) ÷ Starting', zh: '（起始 MRR + 扩展 − 降级 − 流失）÷ 起始 MRR' },
+            { en: '(Starting − Downgrade − Churn) ÷ Starting', zh: '（起始 MRR − 降级 − 流失）÷ 起始 MRR' },
+          ] },
+        { aspect: { en: 'Includes expansion', zh: '是否含扩展' },
+          cells: [
+            { en: 'Yes (upsell + cross-sell + seat expansion + price increases)', zh: '是（升级 + 交叉销售 + 席位扩展 + 涨价）' },
+            { en: 'No (contraction and churn only — pure retention)', zh: '否（仅降级与流失 —— 纯留存信号）' },
+          ] },
+        { aspect: { en: 'Health bands', zh: '健康分档' },
+          cells: [
+            { en: '🟢 ≥120% · 🟡 110-120% · 🟠 100-110% · 🔴 <100%', zh: '🟢 ≥120% · 🟡 110-120% · 🟠 100-110% · 🔴 <100%' },
+            { en: '🟢 ≥95% · 🟡 90-95% · 🟠 80-90% · 🔴 <80%', zh: '🟢 ≥95% · 🟡 90-95% · 🟠 80-90% · 🔴 <80%' },
+          ] },
+        { aspect: { en: 'Best for', zh: '最适合' },
+          cells: [
+            { en: 'Board reporting, growth narrative, valuation multiples', zh: '董事会汇报、增长叙事、估值倍数' },
+            { en: 'Product/CS health, churn diagnosis, save motion targeting', zh: '产品/CS 健康、流失诊断、Save motion 目标定位' },
+          ] },
+        { aspect: { en: 'Industry benchmarks', zh: '行业基准' },
+          cells: [
+            { en: 'Top decile 130%+ · Top quartile 120%+ · Median 105-110%', zh: '前 10% 130%+ · 前 25% 120%+ · 中位数 105-110%' },
+            { en: 'Top quartile 95%+ · SaaS Capital median 90% · <80% critical', zh: '前 25% 95%+ · SaaS Capital 中位数 90% · <80% 危险' },
+          ] },
+        { aspect: { en: 'When to prioritize', zh: '何时优先' },
+          cells: [
+            { en: 'Expansion-heavy enterprise SaaS, public-co growth narrative', zh: '扩展驱动的企业级 SaaS、上市公司增长叙事' },
+            { en: 'SMB-heavy products, low-expansion models, churn diagnosis', zh: 'SMB 重产品、低扩展模型、流失诊断场景' },
+          ] },
+        { aspect: { en: 'Decision driver', zh: '决策驱动' },
+          cells: [
+            { en: 'If NRR ≥120% + GRR ≥90% → top quartile; if NRR ≥120% + GRR <85% → leaky bucket', zh: '若 NRR ≥120% + GRR ≥90% → 前四分位；若 NRR ≥120% + GRR <85% → 漏桶信号' },
+            { en: 'If GRR <85% → fix churn before scaling; if GRR ≥90% → optimize expansion', zh: '若 GRR <85% → 先修流失再扩量；若 GRR ≥90% → 优化扩展收入' },
+          ] },
+      ],
+    },
+    dimensions: [
+      {
+        heading: {
+          en: 'What each metric actually measures',
+          zh: '两指标的真实含义',
+        },
+        body: {
+          en: 'NRR (Net Revenue Retention / Net Dollar Retention) measures the revenue you keep AND grow from existing customers over a period, expressed as a percentage of starting revenue — answering "how well did our existing book of business perform?" NRR includes expansion (upsell, cross-sell, seat expansion, price increases) and can therefore exceed 100%. GRR (Gross Revenue Retention) measures the revenue you keep from existing customers, expressed as a percentage of starting revenue — answering "how leaky is the bucket?" GRR explicitly excludes expansion; downgrades and churn reduce it, but upsells do not lift it. GRR can never exceed 100%. The conceptual difference: NRR is the headline growth metric every board reports and every investor anchors valuation on; GRR is the underlying retention signal that determines whether the headline is sustainable. A company with NRR 120% and GRR 80% is "expanding fast while churning hard" — strong headline, fragile foundation; a company with NRR 105% and GRR 95% is "stable retention, modest expansion" — weaker headline, durable business.',
+          zh: 'NRR（净收入留存 / 净美元留存）衡量一段时间内从现有客户保留并增长的收入，以起始收入的百分比表示 —— 回答「我们现有的业务盘子表现如何？」NRR 包含扩展（升级、交叉销售、席位扩展、涨价），因此可以超过 100%。GRR（毛收入留存）衡量从现有客户保留的收入，以起始收入的百分比表示 —— 回答「桶有多漏？」GRR 显式排除扩展；降级与流失拉低它，但追加销售不抬它。GRR 永远不超过 100%。概念区别：NRR 是每个董事会汇报的头条指标，也是每个投资人锚定估值的指标；GRR 是决定该头条是否可持续的底层留存信号。NRR 120% + GRR 80% 的公司「扩展凶猛但流失更凶」 —— 头条漂亮，基础脆弱；NRR 105% + GRR 95% 的公司「留存稳，扩展弱」 —— 头条较弱，业务耐久。',
+        },
+      },
+      {
+        heading: {
+          en: 'The expansion gap: how NRR = GRR + expansion reveals sustainability',
+          zh: '扩展之差：NRR = GRR + 扩展 如何揭示可持续性',
+        },
+        body: {
+          en: 'The arithmetic identity NRR = GRR + expansion-rate reveals the structural health of the business. Expansion rate is NRR minus GRR (e.g. NRR 115%, GRR 90% → expansion rate 25pp). A 25pp expansion rate on top of 90% gross retention means growth depends heavily on upsell/cross-sell to mask a 10% revenue leak. ICONIQ Growth 2024 reports median NRR expansion rate of 18pp for top-quartile SaaS vs 6pp for bottom-quartile — a 3x spread that explains why top-quartile NRR is sustainable (durable gross + modest expansion) and bottom-quartile NRR is fragile (poor gross + desperate expansion). The trap: a public-co SaaS reporting NRR 115% with GRR 75% appears healthy by the headline number; investors who strip out the expansion see gross retention that would trigger a board intervention in a private company. Conversely, a SMB SaaS reporting NRR 105% with GRR 95% looks boring by headline standards but is structurally sound — the business is not losing ground, just not adding much. The expansion gap is the single best diagnostic for separating sustainable NRR from expansion-mask NRR.',
+          zh: '恒等式 NRR = GRR + 扩展率 揭示了业务的结构健康度。扩展率 = NRR − GRR（如 NRR 115%、GRR 90% → 扩展率 25pp）。在 90% 毛留存之上的 25pp 扩展率意味着增长严重依赖追加销售/交叉销售来掩盖 10% 的收入漏损。ICONIQ Growth 2024 报告显示前四分位 SaaS NRR 扩展率中位数 18pp，后四分位 6pp —— 3 倍差距解释了为何前四分位 NRR 可持续（毛留存扎实 + 适度扩展），后四分位 NRR 脆弱（毛留存差 + 孤注一掷扩展）。陷阱：上市公司 SaaS 报告 NRR 115% / GRR 75%，仅看头条数字显健康；剥离扩展的投资人看到的毛留存水平，放在私司就该触发董事会介入。相反，SMB SaaS 报 NRR 105% / GRR 95%，头条数字平淡但结构稳健 —— 业务没失地，只是没怎么扩张。扩展之差是区分「可持续 NRR」与「扩展掩盖 NRR」的最强单一诊断指标。',
+        },
+      },
+      {
+        heading: {
+          en: 'Calculation rigor: cohort timing, monthly vs annual, what counts as expansion',
+          zh: '计算严谨度：队列时点、月度 vs 年化、扩展如何定义',
+        },
+        body: {
+          en: 'Three rigor traps catch most first-time NRR/GRR calculations. (1) Cohort timing: NRR measured at month-end with annual contracts gives misleading early signals because most expansion comes at renewal, not month-to-month. Bessemer 2024 recommends trailing-12-month NRR for board reporting and trailing-3-month GRR for operational health. (2) Monthly vs annual: a company at 2% monthly churn has 22% annual churn — and a 78% GRR. The same company at 1.5% monthly churn has 17% annual churn and 83% GRR. Always annualize monthly churn before reading the band. (3) What counts as expansion: usage-based pricing (Snowflake, Datadog) shows expansion automatically as customers consume more, while seat-based pricing (most B2B SaaS) requires explicit upsell motion. ICONIQ 2024 separates the two — usage-based SaaS achieves NRR 130%+ via natural expansion, seat-based SaaS averages 105-115% NRR even when well-run. Mixing the two without segmentation overstates SaaS-wide NRR by 10-15pp. Compute NRR and GRR by segment (SMB / mid-market / enterprise) before blending; the segment view reveals whether the headline is broad-based or one tail (e.g. enterprise) pulling up the average.',
+          zh: '三个严谨度陷阱困住多数初次算 NRR/GRR 的人。（1）队列时点：年合同的 NRR 月末测算给出误导性的早期信号，因为多数扩展在续约时发生，不在逐月间。Bessemer 2024 推荐董事会汇报用滚动 12 个月 NRR，运营健康用滚动 3 个月 GRR。（2）月度 vs 年化：月度 churn 2% 的公司年化 churn 22%，GRR 78%；同公司月度 churn 1.5%，年化 churn 17%，GRR 83%。看分档前必须先把月度 churn 年化。（3）扩展如何定义：用量定价（Snowflake、Datadog）随客户消费自然显示扩展，席位定价（多数 B2B SaaS）需要明确的追加销售动作。ICONIQ 2024 把两者分开 —— 用量 SaaS 通过自然扩展达成 NRR 130%+，席位 SaaS 即使优秀运营 NRR 中位数 105-115%。不分段混算会高估 SaaS 整体 NRR 10-15pp。在合并前按段（SMB / 中端 / 企业级）分别算 NRR 与 GRR；分段视图揭示头条数字是普遍还是被一头（如企业级）拉高的平均。',
+        },
+      },
+      {
+        heading: {
+          en: 'Industry benchmarks and what they reveal about segment health',
+          zh: '行业基准与它们揭示的细分健康度',
+        },
+        body: {
+          en: 'OpenView 2024 SaaS Benchmarks reports NRR distribution: top decile ≥130%, top quartile 120-130%, median 105-110%, bottom quartile <100%. The 30pp spread between top and bottom decile is the largest of any SaaS metric — for context, gross margin only spreads 25pp. ChartMogul 2024 reports GRR distribution: top quartile ≥95%, median 88-92%, bottom quartile <80%. The critical insight: NRR and GRR are correlated (a 1pp GRR move correlates with ~0.6pp NRR move at the median) but NOT identical — the difference is expansion. SaaS Capital 2024 tracks 100+ public SaaS companies and finds that those with NRR ≥120% trade at 12-18x ARR multiples vs 4-7x for NRR <100% — a 2-3x valuation differential driven primarily by retention quality, not growth rate. KeyBanc Capital Markets 2024 SaaS Survey separates the segment dynamics: enterprise SaaS median NRR 117%, mid-market 108%, SMB 95%; GRR median 92%, 88%, 82%. The NRR-GRR gap widens from 15pp at SMB (less expansion motion) to 25pp at enterprise (seat expansion + price increases), explaining why enterprise SaaS achieves headline NRR that SMB SaaS cannot match without fundamental go-to-market changes.',
+          zh: 'OpenView 2024 SaaS 基准报告 NRR 分布：前 10% ≥130%、前 25% 120-130%、中位数 105-110%、后 25% <100%。顶尾 30pp 差是任何 SaaS 指标中最大的 —— 对比之下毛利率只差 25pp。ChartMogul 2024 报告 GRR 分布：前 25% ≥95%、中位数 88-92%、后 25% <80%。关键洞察：NRR 与 GRR 相关（中位数下 1pp GRR 变动 ≈ 0.6pp NRR 变动），但不完全等同 —— 差异在扩展。SaaS Capital 2024 追踪 100+ 上市 SaaS 公司，发现 NRR ≥120% 交易 ARR 倍数 12-18x，NRR <100% 仅 4-7x —— 2-3x 估值差主要由留存质量驱动，不是增长率。KeyBanc Capital Markets 2024 SaaS 调研分开细分动态：企业级 SaaS NRR 中位数 117%、中端 108%、SMB 95%；GRR 中位数 92%、88%、82%。NRR-GRR 差从 SMB 的 15pp（少扩展动作）扩到企业级的 25pp（席位扩展 + 涨价），解释了为何企业级 SaaS 能达成 SMB SaaS 没有 GTM 根本性改变就追不上的头条 NRR。',
+        },
+      },
+      {
+        heading: {
+          en: 'When each metric wins: stage, segment, decision type',
+          zh: '何时哪个指标胜出：阶段、细分、决策类型',
+        },
+        body: {
+          en: 'Early-stage SaaS (Series A, <$10M ARR): GRR dominates. You do not yet have expansion motion (sales is closing net-new logos), so NRR ≈ GRR. Track GRR as the headline — it tells you whether customers stick. NRR is a trailing indicator for this stage. Growth-stage SaaS (Series B-D, $10M-$100M ARR): BOTH dominate, but for different decisions. Track NRR for board/investor reporting and growth narrative; track GRR for churn diagnosis and save-motion effectiveness. Mature / usage-based SaaS ($100M+ ARR, Snowflake / Datadog pattern): NRR dominates (headline metric every public-co reports), but GRR is the silent killer — investors increasingly ask "what is your gross retention strip-out?" in diligence. Use GRR as a 4x4 quadrant with NRR: NRR ≥120% + GRR ≥90% = top quartile (e.g. Datadog, Snowflake, HubSpot); NRR ≥120% + GRR <85% = leaky bucket (high churn masked by aggressive upsell — common in late-stage PLG); NRR <105% + GRR ≥90% = stable but not growing (common in mature SMB SaaS); NRR <105% + GRR <85% = critical (intervention required). Bessemer 2024 reports that of 100 SaaS companies that IPO\'d 2018-2024, 71% had NRR ≥115% at IPO but only 38% had GRR ≥90% — the IPO multiple spread between the two groups was 4.2x ARR vs 7.8x ARR, a near 2x premium for gross retention quality.',
+          zh: '早期 SaaS（A 轮、<$1000 万 ARR）：GRR 主导。还没扩展动作（销售仍在关新单），所以 NRR ≈ GRR。GRR 当头条 —— 告诉你客户是否留得住。NRR 在此阶段是滞后指标。增长期 SaaS（B-D 轮、$1000 万-$1 亿 ARR）：两者都主导，但用于不同决策。NRR 用于董事会/投资人汇报和增长叙事；GRR 用于流失诊断和 Save motion 有效性。成熟 / 用量 SaaS（>$1 亿 ARR，Snowflake / Datadog 模式）：NRR 主导（每个上市公司汇报的头条），但 GRR 是隐形杀手 —— 投资人在尽调中越来越多地问「你的毛留存剥离后是多少？」用 GRR 与 NRR 配成 4x4 象限：NRR ≥120% + GRR ≥90% = 前四分位（如 Datadog、Snowflake、HubSpot）；NRR ≥120% + GRR <85% = 漏桶信号（高流失被激进追加销售掩盖 —— 晚阶段 PLG 常见）；NRR <105% + GRR ≥90% = 稳定不增长（成熟 SMB SaaS 常见）；NRR <105% + GRR <85% = 危险（需介入）。Bessemer 2024 报告显示 2018-2024 年 IPO 的 100 家 SaaS 公司，71% IPO 时 NRR ≥115%，但仅 38% GRR ≥90% —— 两组 IPO 倍数差为 4.2x ARR vs 7.8x ARR，毛留存质量溢价近 2 倍。',
+        },
+      },
+      {
+        heading: {
+          en: 'Decision framework: which to track first, how to pair them',
+          zh: '决策框架：先追踪哪个、如何配对',
+        },
+        body: {
+          en: 'Apply the stage-segment rule: (a) Early-stage SMB SaaS — track GRR as the primary KPI; NRR is informational. Set GRR ≥90% as the 12-month target. (b) Growth-stage mid-market SaaS — track BOTH; report NRR for board and GRR for operations. Set NRR ≥115% as the growth narrative target and GRR ≥90% as the churn-quality floor. (c) Mature enterprise / usage-based SaaS — track NRR for headline and GRR for diligence defense. Set NRR ≥120% as the public-co top-quartile target and GRR ≥90% as the gross-retention floor investors expect. (d) Pre-IPO or fundraising SaaS — focus ruthlessly on GRR; the 18-24 month runway before diligence is when gross retention is fixable, but the headline NRR is not. ProfitWell 2024 reports that SaaS companies improving GRR from 85% to 92% over 18 months saw median NRR rise from 102% to 118% — the gross retention lift was the bigger driver of the NRR move. Pair both: the highest-leverage retention teams compute GRR by cohort monthly (early-warning signal on specific customer segments), NRR by segment quarterly (board-level reporting), and run a quarterly cohort-NRR decomposition that shows the marginal contribution of each segment to overall NRR. Most retention stalls trace to one of three GRR traps: (1) tracking only NRR and missing that GRR has slipped 8pp — the headline still looks fine while gross is bleeding; (2) aggregating SMB and enterprise in the same NRR number — enterprise masks SMB churn; (3) defining "expansion" inconsistently across periods — a price increase that lands in Q4 looks like expansion; re-tiering the same customer counts as churn + new logo in some systems, distorts both metrics.',
+          zh: '应用「阶段-细分」法则：（a）早期 SMB SaaS —— GRR 当主 KPI；NRR 仅作信息。设 GRR ≥90% 为 12 个月目标。（b）增长期中端 SaaS —— 两者都追踪；NRR 用于董事会，GRR 用于运营。设 NRR ≥115% 为增长叙事目标，GRR ≥90% 为流失质量底线。（c）成熟企业级 / 用量 SaaS —— NRR 当头条，GRR 当尽调防线。设 NRR ≥120% 为上市公司前四分位目标，GRR ≥90% 为投资人期待的毛留存底线。（d）Pre-IPO 或融资期 SaaS —— 死磕 GRR；尽调前 18-24 个月的窗口期是毛留存能修的时段，但头条 NRR 修不来。ProfitWell 2024 报告显示 18 个月内把 GRR 从 85% 提到 92% 的 SaaS 公司，NRR 中位数从 102% 升到 118% —— 毛留存提升才是 NRR 变化的主要驱动。两个配对：最高杠杆的留存团队按队列月度算 GRR（细分客群早期预警信号），按段季度算 NRR（董事会级汇报），季度做队列-NRR 分解展示每段对整体 NRR 的边际贡献。多数留存停滞源自三种 GRR 陷阱之一：（1）只追踪 NRR 而漏掉 GRR 已下滑 8pp —— 头条数字仍好看但毛端在流血；（2）把 SMB 和企业级合并在同一 NRR 数字里 —— 企业级掩盖 SMB 流失；（3）扩展定义各期不一致 —— Q4 落地的涨价看起来像扩展；老客户重定档在某些系统里被记作流失 + 新单，两个指标都被扭曲。',
+        },
+      },
+    ],
+    decision: {
+      en: 'Default rule for a SaaS operator in 2026: track BOTH NRR and GRR, but use them at different decision cadences and for different audiences. Set NRR as the executive/board number (quarterly cadence, 12-month trailing), set GRR as the operations/CS-team number (monthly cadence, by cohort and segment). The single highest-ROI retention diagnostic is the 4-quadrant NRR×GRR framework: NRR ≥120% + GRR ≥90% = top quartile (sustainable growth, scale confidently); NRR ≥120% + GRR <85% = leaky bucket (expand-fix-or-lose sequence required — diagnose gross retention churn before adding expansion motion); NRR <105% + GRR ≥90% = stable but not growing (low-expansion model, focus on price/seat motion, not churn); NRR <105% + GRR <85% = critical (intervention mode, halt new sales motion until gross retention is fixed). Stage-specific application: (a) pre-PMF / early-stage (<$10M ARR, <Series B) — GRR is the primary KPI; NRR will follow once expansion motion exists. (b) growth-stage ($10M-$100M ARR) — NRR for the board, GRR for CS ops; report both, optimize both. (c) mature / public-co ($100M+ ARR) — NRR is the headline, GRR is the diligence defense; investors increasingly strip out expansion and ask "what is your gross retention strip-out?" (Bessemer 2024: 71% of recent IPO SaaS had NRR ≥115% but only 38% had GRR ≥90% — the 4.2x vs 7.8x ARR multiple spread shows investors pay for retention quality). Concrete numeric branching: NRR 120%+ top decile / 110-120% healthy / 100-110% fragile / <100% critical; GRR 95%+ best-in-class / 90-95% healthy / 80-90% high churn / <80% unsustainable. ICONIQ 2024: top-quartile SaaS combines NRR ≥120% AND GRR ≥90%; median SaaS combines NRR 105-110% AND GRR 88-92%; bottom-quartile combines NRR <100% AND GRR <80%. The expansion gap (NRR minus GRR) is the single best predictor of NRR sustainability — a gap >25pp means growth depends on aggressive upsell, not durable retention; a gap <10pp means the business is structurally sound but not adding expansion motion. Always compute GRR by cohort and segment before blending; aggregate view hides the segments that are bleeding. Most retention-quality problems are invisible at the blended NRR level but obvious at the GRR-by-segment level. Track GRR weekly at the cohort level for at-risk accounts; track NRR quarterly at the segment level for board reporting.',
+      zh: '2026 年 SaaS 运营者默认法则：NRR 和 GRR 都追踪，但用不同决策节奏和不同受众。NRR 当高管/董事会数字（季度节奏、滚动 12 个月），GRR 当运营/CS 团队数字（月度节奏、按队列与段）。单一最高 ROI 留存诊断是 NRR×GRR 四象限框架：NRR ≥120% + GRR ≥90% = 前四分位（可持续增长、可自信扩量）；NRR ≥120% + GRR <85% = 漏桶信号（先扩-后修-或失序列 —— 在加扩展动作前先诊断毛留存流失）；NRR <105% + GRR ≥90% = 稳定不增长（低扩展模型，专注价格/席位动作，不是流失）；NRR <105% + GRR <85% = 危险（介入模式，在毛留存修好前暂停新销售动作）。按阶段应用：（a）pre-PMF / 早期（<$1000 万 ARR、<B 轮）—— GRR 是主 KPI；NRR 等扩展动作就位后跟随。（b）增长期（$1000 万-$1 亿 ARR）—— NRR 用于董事会，GRR 用于 CS 运营；两者都报，两者都优化。（c）成熟 / 上市公司（>$1 亿 ARR）—— NRR 是头条，GRR 是尽调防线；投资人越来越多地剥离扩展问「你的毛留存剥离后是多少？」（Bessemer 2024：近年 IPO SaaS 71% NRR ≥115%，但仅 38% GRR ≥90% —— 4.2x vs 7.8x ARR 倍数差说明投资人为留存质量买单）。具体数字分支：NRR 120%+ 前 10% / 110-120% 健康 / 100-110% 脆弱 / <100% 危险；GRR 95%+ 顶级 / 90-95% 健康 / 80-90% 高流失 / <80% 不可持续。ICONIQ 2024：前四分位 SaaS 是 NRR ≥120% 且 GRR ≥90%；中位 SaaS 是 NRR 105-110% 且 GRR 88-92%；后四分位是 NRR <100% 且 GRR <80%。扩展之差（NRR 减 GRR）是 NRR 可持续性的最强单一预测 —— >25pp 差意味着增长依赖激进追加销售，不是耐久留存；<10pp 差意味着业务结构稳健但缺扩展动作。合并前始终按队列与段算 GRR；合并视图掩盖正在失血的细分。多数留存质量问题在合并 NRR 级别看不见，但在 GRR×段级别很明显。按队列级周度追踪 GRR 用于风险账户；按段级季度追踪 NRR 用于董事会汇报。',
+    },
+    sources: 'OpenView Partners 2024 SaaS Benchmarks Report — Annual NRR/GRR distribution study across 1,500+ B2B SaaS companies; documents top decile NRR ≥130%, top quartile 120-130%, median 105-110% (openviewpartners.com/blog/2024-saas-benchmarks, Q3 2024). SaaS Capital 2024 SaaS Retention Metrics Survey — Tracks 100+ public SaaS companies; NRR ≥120% trades at 12-18x ARR multiples vs 4-7x for NRR <100% (saas-capital.com/blog-posts/saas-retention-metrics, Q2 2024). KeyBanc Capital Markets 2024 SaaS Survey — Annual enterprise / mid-market / SMB SaaS survey; enterprise median NRR 117% / GRR 92%, mid-market 108% / 88%, SMB 95% / 82% (key.com/about/saas-survey, Q4 2024). ICONIQ Growth 2024 State of SaaS Report — Industry-wide SaaS benchmark study; documents expansion rate = NRR minus GRR; top-quartile median expansion rate 18pp vs bottom-quartile 6pp (iconiqcapital.com/growth/tte-net-dollar-retention, Q1 2024). ChartMogul 2024 SaaS Retention Report — Subscription analytics benchmark; top-quartile GRR ≥95%, median 88-92%, bottom-quartile <80% (chartmogul.com/reports/saas-retention-2024, Q2 2024). Bessemer Venture Partners 2024 State of the Cloud — Annual cloud/SaaS benchmark covering 100 IPO SaaS 2018-2024; 71% had NRR ≥115% at IPO but only 38% GRR ≥90%; 4.2x vs 7.8x ARR multiple spread between the two groups (bvp.com/state-of-the-cloud, Q4 2024). Bain & Company 2024 SaaS Retention Study — Top-decile NRR quality research across enterprise SaaS; documents Snowflake / Datadog / HubSpot retention patterns (bain.com/insights/saas-retention-2024, Q3 2024). ProfitWell 2024 Subscription Benchmarks — Recurly/ProfitWell subscription retention data; SaaS companies improving GRR 85% to 92% over 18 months saw NRR 102% to 118% (profitwell.com/reports/subscription-benchmarks-2024, Q1 2024).',
+  },
 };
 
 export const TOPIC_GUIDE_CONTENT: Record<string, TopicGuideContent> = {
