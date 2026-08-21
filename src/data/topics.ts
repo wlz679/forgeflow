@@ -226,6 +226,18 @@ export const TOPICS: Topic[] = [
                     zh: '通过分层、自动化、送达率与生命周期设计提升邮件营销 ROI。' },
     calculatorSlugs: ['solopreneur-email-campaign-roi-calculator'],
     relatedTopicIds: ['roas-optimization', 'ltv-by-channel-optimization'] },
+  { id: 'carrying-cost-optimization', letterId: 'O', domain: 'operations', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Inventory Carrying Cost Optimization', zh: '库存持有成本优化' },
+    description: { en: 'Reduce inventory carrying cost via ABC classification, dead stock management, and storage efficiency.',
+                    zh: '通过 ABC 分类、死库存管理与仓储效率降低库存持有成本。' },
+    calculatorSlugs: ['solopreneur-carrying-cost-calculator'],
+    relatedTopicIds: ['inventory-turnover-optimization'] },
+  { id: 'reorder-point-optimization', letterId: 'O', domain: 'operations', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Reorder Point Optimization', zh: '再订货点优化' },
+    description: { en: 'Optimize reorder points using safety stock, lead time variability, and demand forecasting — minimize stockouts without over-stocking.',
+                    zh: '通过安全库存、前置时间变异与需求预测优化再订货点——最小化缺货且不积压。' },
+    calculatorSlugs: ['solopreneur-reorder-point-calculator'],
+    relatedTopicIds: ['inventory-turnover-optimization', 'carrying-cost-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
