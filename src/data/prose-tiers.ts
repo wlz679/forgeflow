@@ -57,9 +57,7 @@ export const TIER_2_SLUGS: string[] = [
   // O (Ops) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave O)
   // P (Product) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave P)
   // R (Retention) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave R)
-  // S (Sales) — 2
-  'solopreneur-sales-velocity-calculator',
-  'solopreneur-acv-calculator',
+  // S (Sales) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave S)
   // T (Support) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave T)
 ];
 

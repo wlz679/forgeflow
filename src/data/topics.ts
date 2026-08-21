@@ -274,6 +274,18 @@ export const TOPICS: Topic[] = [
                     zh: '通过分层分流、升级路径与知识库分流降低平均解决时间。' },
     calculatorSlugs: ['solopreneur-resolution-time-calculator'],
     relatedTopicIds: ['support-cost-optimization', 'first-response-time-optimization'] },
+  { id: 'sales-velocity-optimization', letterId: 'S', domain: 'marketing', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Sales Velocity Optimization', zh: '销售速度优化' },
+    description: { en: 'Increase sales velocity (deals × ACV / win rate × cycle) — focus on the slowest constraint for compounding pipeline output.',
+                    zh: '提升销售速度（成交数 × ACV / 赢率 × 周期）——聚焦最慢环节以复利放大管道产出。' },
+    calculatorSlugs: ['solopreneur-sales-velocity-calculator'],
+    relatedTopicIds: ['pipeline-value-optimization'] },
+  { id: 'acv-optimization', letterId: 'S', domain: 'marketing', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'ACV (Annual Contract Value) Optimization', zh: 'ACV（年度合同价值）优化' },
+    description: { en: 'Increase average contract value through pricing tier migration, multi-year deals, and bundling — LTV-uplift lever.',
+                    zh: '通过定价分层升级、多年期合同与打包销售提升平均合同价值——LTV 提升杠杆。' },
+    calculatorSlugs: ['solopreneur-acv-calculator'],
+    relatedTopicIds: ['pipeline-value-optimization', 'sales-velocity-optimization', 'saas-pricing-strategy'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
