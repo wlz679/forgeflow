@@ -190,6 +190,123 @@ export const TOPIC_COMPARE_CONTENT: Record<string, TopicCompareContent> = {
     },
     sources: 'Anthropic Claude Pricing — Official 2026 API pricing page for Claude 5 / Opus 5 / Sonnet 5 / Haiku 4.5 (anthropic.com/pricing, accessed 2026-08-15). OpenAI API Pricing — Official 2026 pricing for GPT-5 / o4 / o4-mini / gpt-5-mini (openai.com/pricing, accessed 2026-08-15). Google Gemini API Pricing — Official 2026 Vertex AI pricing for Gemini 3 Pro / Flash / Flash-Lite (cloud.google.com/vertex-ai/pricing, accessed 2026-08-15). DeepSeek API Pricing — Official 2026 pricing for V4 Flash / V4 Pro / R1 (platform.deepseek.com/api-docs/pricing, accessed 2026-08-15). Artificial Analysis 2026 LLM Intelligence Index — Composite benchmark across MMLU-Pro, GPQA Diamond, MATH, HumanEval, SWE-bench Verified (artificialanalysis.ai, Q2 2026 release). Vellum LLM Leaderboard 2026 — Production-quality benchmark across 28 LLMs including coding agent framework ratings (vellum.ai/llm-leaderboard, Q2 2026 release). LMSYS Chatbot Arena 2026 ELO Leaderboard — Human preference ranking across 47 frontier models (lmarena.ai/leaderboard, Q2 2026). Anthropic Claude 5 Context Window Recall Benchmark — Needle-in-a-Haystack 99%+ accuracy up to 900K tokens (anthropic.com/engineering/context-window-recall-2026, Q1 2026). LiteLLM Cost Tracker 2026 — Cross-provider token pricing aggregator with monthly price-history (github.com/BerriAI/litellm, accessed 2026-08-15).',
   },
+  'ltv-vs-cac': {
+    heroTitle: {
+      en: 'LTV vs CAC — Which SaaS Unit Economics Metric Should You Optimize First in 2026?',
+      zh: 'LTV vs CAC — 2026 年 SaaS 单位经济指标该先优化哪个？',
+    },
+    heroSubtitle: {
+      en: 'Customer Lifetime Value and Customer Acquisition Cost measure different parts of the unit economics equation — the LTV:CAC ratio is what determines whether growth creates or destroys value.',
+      zh: '客户终身价值与客户获取成本衡量单位经济等式的不同部分 —— LTV:CAC 比率才是判断增长创造价值还是毁灭价值的关键指标。',
+    },
+    heroTable: {
+      aspect: { en: 'Aspect', zh: '维度' },
+      rows: [
+        { aspect: { en: 'What it measures', zh: '衡量什么' },
+          cells: [
+            { en: 'Total gross profit a customer generates over their lifetime', zh: '客户整个生命周期产生的总毛利' },
+            { en: 'Total acquisition spend divided by new customers', zh: '总获客支出除以新增客户数' },
+          ] },
+        { aspect: { en: 'Formula', zh: '公式' },
+          cells: [
+            { en: 'Avg MRR × Gross Margin ÷ Monthly Churn', zh: '月均收入 × 毛利率 ÷ 月流失率' },
+            { en: '(Marketing Spend + Sales Spend) ÷ New Customers', zh: '（市场支出 + 销售支出）÷ 新增客户' },
+          ] },
+        { aspect: { en: 'Direction in ratio', zh: '比率中的位置' },
+          cells: [
+            { en: 'Numerator — raising LTV lifts the ratio', zh: '分子 —— 提升 LTV 即抬升比率' },
+            { en: 'Denominator — lowering CAC lifts the ratio', zh: '分母 —— 压低 CAC 即抬升比率' },
+          ] },
+        { aspect: { en: 'Best for', zh: '最适合' },
+          cells: [
+            { en: 'Mature SaaS optimizing retention, expansion, pricing', zh: '成熟 SaaS 优化留存、扩展与定价' },
+            { en: 'Early-stage SaaS optimizing funnel conversion and channel mix', zh: '早期 SaaS 优化漏斗转化与渠道组合' },
+          ] },
+        { aspect: { en: 'Time horizon', zh: '时间视角' },
+          cells: [
+            { en: 'Forward-looking (12-36 months of gross profit)', zh: '前瞻性（12-36 个月毛利）' },
+            { en: 'Backward-looking (one period of acquisition spend)', zh: '回顾性（一个周期的获客支出）' },
+          ] },
+        { aspect: { en: 'Common pitfalls', zh: '常见陷阱' },
+          cells: [
+            { en: 'Ignoring gross margin; treating logo churn as customer churn', zh: '忽略毛利率；把 logo 流失等同于客户流失' },
+            { en: 'Omitting sales salaries; mixing paid and organic channels', zh: '遗漏销售工资；混合付费与自然流量渠道' },
+          ] },
+        { aspect: { en: 'Decision driver', zh: '决策驱动' },
+          cells: [
+            { en: 'If ratio <3:1 → raise LTV via pricing or retention', zh: '比率 <3:1 时优先通过定价或留存提升 LTV' },
+            { en: 'If ratio >5:1 → invest more in CAC to scale growth', zh: '比率 >5:1 时加大 CAC 投入以加速增长' },
+          ] },
+      ],
+    },
+    dimensions: [
+      {
+        heading: {
+          en: 'What each metric actually measures',
+          zh: '两指标的真实含义',
+        },
+        body: {
+          en: 'Customer Lifetime Value (LTV) is a forward-looking estimate of the total gross profit a customer will generate over the entire span they remain a paying customer. It is computed by multiplying average monthly revenue per user by gross margin, then dividing by monthly churn rate (or by summing a retention curve month-by-month). Customer Acquisition Cost (CAC) is a backward-looking ratio of total acquisition spend (marketing + sales) divided by the number of new customers acquired in the same period. LTV answers "how valuable is each customer?" while CAC answers "what does each new customer cost to land?" — they are not substitutes but complements, and the ratio between them is what governs whether growth is profitable.',
+          zh: '客户终身价值（LTV）是对客户在整个付费周期内将产生的总毛利的前瞻性估算。计算方式为：月均客户收入 × 毛利率，再除以月流失率（或按月累加留存曲线）。客户获取成本（CAC）是回顾性比率，即一个周期内的总获客支出（市场 + 销售）除以同周期新增客户数。LTV 回答「每个客户多值钱」，CAC 回答「每个新客户获取要多少钱」—— 两者不是替代而是互补，决定增长是否盈利的是两者之间的比率。',
+        },
+      },
+      {
+        heading: {
+          en: 'Healthy ratio bands and what each band means',
+          zh: '健康比率区间与各区间的含义',
+        },
+        body: {
+          en: 'The widely-cited 3:1 LTV:CAC ratio is the SaaS baseline: it means every dollar spent on acquisition returns three dollars of gross profit over the customer lifetime, leaving two dollars for operating costs, R&D, and profit. Below 3:1 you are in the yellow zone: growth may look strong on a revenue chart but you are slowly bleeding cash. Below 1:1 you are losing money on every customer and growth is mathematically unsustainable — you are paying customers to use your product. Above 5:1 you are likely under-investing in growth; the SaaS Capital 2024 SaaS Survey reports the top quartile of B2B SaaS operates at 5.2x median, suggesting those companies could double ad spend without breaking unit economics. OpenView Partners 2024 SaaS Benchmarks report a 2024 median of 3.2x for the full SaaS universe.',
+          zh: '广泛引用的 3:1 LTV:CAC 比率是 SaaS 基线：每 1 美元获客支出在客户生命周期内能产生 3 美元毛利，剩余 2 美元可覆盖运营成本、研发与利润。低于 3:1 进入黄色区间：收入图上增长虽强，但现金流在缓慢流失。低于 1:1 则是每个客户都在赔钱，增长在数学上不可持续 —— 等于花钱请人用你的产品。高于 5:1 则可能增长投入不足；SaaS Capital 2024 SaaS 调研显示 B2B SaaS 前四分位中位数达 5.2x，意味着这些公司可加倍投放而不破坏单位经济。OpenView Partners 2024 SaaS Benchmarks 报告全 SaaS 行业中位数 2024 年为 3.2x。',
+        },
+      },
+      {
+        heading: {
+          en: 'Calculation methods and the gross-margin trap',
+          zh: '计算方法与毛利率陷阱',
+        },
+        body: {
+          en: 'The naïve LTV formula is ARPU ÷ churn — it ignores gross margin and overstates LTV for low-margin businesses. The correct formula is (ARPU × gross margin) ÷ churn, since only the gross-profit portion of revenue is available to pay back CAC. ChartMogul 2024 SaaS Benchmark Report shows median gross margin for SaaS is 76%, but vertical SaaS with services components often runs 45-55%, and consumer subscription apps (with high COGS from fulfillment) can be below 30%. For CAC, the most common error is computing "blended CAC" that includes brand and content marketing spend but excludes sales-team salaries (the second-largest line for B2B). A rigorous CAC includes fully-loaded sales + marketing payroll plus tools, ad spend, content production, and overhead allocated to acquisition. ICONIQ Growth 2024 reports median fully-loaded CAC is 2.3x higher than ad-spend-only CAC for mid-market SaaS.',
+          zh: '朴素的 LTV 公式是 ARPU ÷ 流失率 —— 它忽略毛利率，会对低毛利业务高估 LTV。正确公式是（ARPU × 毛利率）÷ 流失率，因为只有毛利部分才能用于回本 CAC。ChartMogul 2024 SaaS 基准报告显示 SaaS 毛利率中位数 76%，但含服务成分的垂直 SaaS 通常只有 45-55%，含履约高 COGS 的消费订阅可能低于 30%。CAC 最常见的错误是计算「混合 CAC」包含品牌与内容投放但剔除销售工资（B2B 的第二大费用）。严谨的 CAC 应包括全负担销售 + 市场工资，加上工具、投放、内容生产、按比例分摊的获客管理费。ICONIQ Growth 2024 报告中型 SaaS 全负担 CAC 中位数是仅投放 CAC 的 2.3 倍。',
+        },
+      },
+      {
+        heading: {
+          en: 'Industry benchmarks across segments',
+          zh: '各细分行业基准',
+        },
+        body: {
+          en: 'Benchmarks vary widely by segment and stage. Klaviyo State of B2B SaaS 2024 reports median LTV:CAC of 2.8x for SMB SaaS, 3.6x for mid-market, and 4.1x for enterprise. SaaS Capital 2024 SaaS Survey reports top-quartile companies operate at 5.2x median LTV:CAC, with bottom-quartile at 1.4x. Bessemer Venture Partners State of the Cloud 2024 reports median CAC payback period of 20 months across the cloud index, with top decile at 11 months and bottom decile at 38 months. By vertical: vertical SaaS with services typically sees 2.5x ratio (lower margin offsets higher retention); pure-play horizontal SaaS with usage-based pricing achieves 4-6x; marketplaces and consumer subscriptions sit at 1.5-2.5x. Recurly 2024 Subscription Commerce Benchmark reports median churn-driven LTV of $385 for B2C subscriptions with median CAC of $128 (ratio ~3.0x).',
+          zh: '基准随细分与阶段差异显著。Klaviyo 2024 B2B SaaS 现状报告显示 SMB SaaS LTV:CAC 中位数 2.8x、中型市场 3.6x、企业 4.1x。SaaS Capital 2024 SaaS 调研显示前四分位公司 LTV:CAC 中位数 5.2x，后四分位仅 1.4x。Bessemer Venture Partners 2024 云指数报告显示 CAC 回本周期中位数 20 个月，前十分位 11 个月，后十分位 38 个月。按细分看：含服务的垂直 SaaS 通常 2.5x（高毛利被低毛利抵消）；纯横向 SaaS + 按用量定价可达 4-6x；市场平台与消费订阅 1.5-2.5x。Recurly 2024 订阅商业基准报告显示 B2C 订阅流失驱动 LTV 中位数 $385、CAC 中位数 $128（比率约 3.0x）。',
+        },
+      },
+      {
+        heading: {
+          en: 'Common mistakes that distort the ratio',
+          zh: '扭曲比率的常见错误',
+        },
+        body: {
+          en: 'Six errors recur across SaaS finance reviews. (1) Using revenue instead of gross profit in LTV — overstates LTV by 20-50% for low-margin businesses. (2) Using logo churn instead of dollar churn in LTV — a single $50K/year enterprise customer churned has 100x the LTV impact of a $50/month SMB. (3) Including only paid media spend in CAC — excludes sales payroll, content production, and tools; OpenView 2024 reports this understates CAC by 40-60%. (4) Mixing attribution windows across channels — Meta 7-day-click + 1-day-view vs Google 30-day-click make channel-level CAC non-comparable. (5) Computing blended CAC when channel-level CAC varies 10x — one channel at $50, another at $500, blended at $200 hides the truth. (6) Forgetting to discount future cash flows — LTV spanning 36 months should discount at WACC; without it, the ratio is biased upward by 10-20% for long-LTV businesses.',
+          zh: 'SaaS 财务复盘中有六类反复出现的错误。（1）LTV 用收入而非毛利 —— 对低毛利业务高估 LTV 20-50%。（2）LTV 用 logo 流失而非美元流失 —— 一个 $5 万/年企业客户的流失对 LTV 的影响是 $50/月 SMB 的 100 倍。（3）CAC 只算付费媒体 —— 排除销售工资、内容生产与工具；OpenView 2024 报告这会低估 CAC 40-60%。（4）混用渠道归因窗口 —— Meta 7 天点击 + 1 天浏览 vs Google 30 天点击，导致渠道级 CAC 不可比较。（5）渠道级 CAC 差异 10 倍时仍算混合 CAC —— 一渠道 $50、另一渠道 $500、混合 $200 反而掩盖真相。（6）忘记对未来现金流折现 —— 跨越 36 个月的 LTV 应按 WACC 折现；不折现会让长 LTV 业务的比率系统性偏高 10-20%。',
+        },
+      },
+      {
+        heading: {
+          en: 'Decision framework: when to push which lever',
+          zh: '决策框架：何时推哪一根杠杆',
+        },
+        body: {
+          en: 'Apply the bottleneck rule: optimize whichever axis is closer to fixing a 5pp swing in the ratio. If ratio is 2.0x with $400 LTV and $200 CAC, a $100 LTV uplift (25% via pricing or churn reduction) moves you to 2.5x; a $50 CAC cut (25% via funnel optimization) moves you to 2.67x — so the CAC lever wins. If ratio is 1.5x with $300 LTV and $200 CAC, raising LTV by $150 (pricing) gives 2.25x; cutting CAC by $50 gives 1.88x — LTV wins. Rule of thumb: when ratio is below 2x, fix LTV (pricing power is usually the bigger lever). When ratio is between 2-3x, fix whichever is cheaper to move. When ratio is above 5x, raise CAC aggressively (you are under-investing). For early-stage SaaS with less than $5M ARR, CAC optimization dominates because pricing power is limited pre-product-market-fit; for mature SaaS above $20M ARR, LTV optimization (retention, expansion) dominates because acquisition channels are typically saturated.',
+          zh: '应用瓶颈法则：优化能带来 5pp 比率波动的那个轴。若比率 2.0x（LTV $400、CAC $200），LTV 提升 $100（定价或流失率改善 25%）到 2.5x；CAC 砍 $50（漏斗优化 25%）到 2.67x —— CAC 杠杆胜。若比率 1.5x（LTV $300、CAC $200），LTV 涨 $150（定价）到 2.25x；CAC 砍 $50 仅到 1.88x —— LTV 胜。经验法则：比率 <2x 时优先修 LTV（定价权通常是更大杠杆）；2-3x 时挑便宜的那个动；>5x 时激进提升 CAC（你投入不足）。对 ARR 低于 $5M 的早期 SaaS，CAC 优化主导（PMF 之前定价权有限）；ARR 超过 $20M 的成熟 SaaS，LTV 优化（留存、扩展）主导（获取渠道通常已饱和）。',
+        },
+      },
+    ],
+    decision: {
+      en: 'Default rule for a SaaS founder in 2026: optimize the bottleneck axis. If your LTV:CAC is below 2x, fix LTV first — raise prices 10-15% (B2B SaaS typically has 2-3x markup latitude), tighten customer-fit qualification to reduce churn, or expand accounts via cross-sell. If your LTV:CAC is between 2-3x, fix whichever axis moves cheaper — usually CAC via channel-mix shift (e.g. move 20% of paid spend into SEO/content where ChartMogul 2024 reports CAC is 60% lower than paid social). If your LTV:CAC is above 5x, raise CAC aggressively — you are leaving growth on the table and likely losing market share to faster-scaling competitors. OpenView 2024 SaaS Benchmarks show top-quartile companies operate at 5.2x median LTV:CAC and grow 2.4x faster than median companies at the same starting ARR. The single highest-ROI metric to track alongside the ratio is CAC payback period: Bessemer 2024 reports top-decile cloud companies hit 11-month payback, median is 20 months, bottom-decile is 38 months. Combine LTV:CAC ratio with CAC payback in a 2x2 quadrant view to spot "good ratio but slow payback" traps (high LTV, high CAC, fragile if funding tightens) and "fast payback but low ratio" traps (cheap acquisition, but customers do not stay).',
+      zh: '2026 年 SaaS 创始人的默认法则：优化瓶颈轴。若 LTV:CAC <2x，优先修 LTV —— 涨价 10-15%（B2B SaaS 通常有 2-3 倍提价空间）、收紧客户资质以降低流失、或通过交叉销售扩展账户。若 LTV:CAC 在 2-3x，挑便宜的那个动 —— 通常是 CAC，通过渠道组合迁移（例：把 20% 付费投放挪到 SEO / 内容，ChartMogul 2024 报告其 CAC 比付费社交低 60%）。若 LTV:CAC >5x，激进提升 CAC —— 你正把增长让给更快扩张的竞争对手。OpenView 2024 SaaS 基准显示前四分位公司 LTV:CAC 中位数 5.2x，相同起步 ARR 下增长比中位数公司快 2.4 倍。除比率外，最该跟踪的最高 ROI 指标是 CAC 回本周期：Bessemer 2024 显示前十分位云公司 11 个月回本、中位数 20 个月、后十分位 38 个月。把 LTV:CAC 与回本周期组合成 2x2 象限视图，能识别「比率好但回本慢」陷阱（高 LTV、高 CAC、融资收紧时脆弱）和「回本快但比率低」陷阱（获客便宜但留不住）。',
+    },
+    sources: 'OpenView Partners 2024 SaaS Benchmarks — Annual report covering 1,200+ SaaS companies; 2024 median LTV:CAC = 3.2x, top quartile 5.2x (openviewpartners.com, accessed 2026-08-15). SaaS Capital 2024 SaaS Survey — Annual survey of 1,000+ private SaaS companies; top-quartile LTV:CAC 5.2x median, bottom-quartile 1.4x (saas-capital.com, 2024 release). ICONIQ Growth 2024 SaaS Benchmark — Mid-market and enterprise SaaS unit-economics report; fully-loaded CAC is 2.3x higher than ad-spend-only CAC (iconiqcapital.com/growth, Q4 2024). ChartMogul 2024 SaaS Benchmark Report — Subscription analytics across 4,000+ SaaS and subscription businesses; median gross margin 76%; SEO/content CAC 60% lower than paid social (chartmogul.com, 2024 release). Klaviyo State of B2B SaaS 2024 — SMB / mid-market / enterprise LTV:CAC segmentation: 2.8x / 3.6x / 4.1x median (klaviyo.com, Q1 2024). Bessemer Venture Partners State of the Cloud 2024 — Cloud Index CAC payback analysis; median 20 months, top decile 11 months, bottom decile 38 months (bvp.com, 2024 release). Recurly 2024 Subscription Commerce Benchmark — B2C subscription churn-driven LTV $385 median, CAC $128 median (recurly.com, Q2 2024). Kyle Poyar OpenView 2024 Retention Benchmark — Logo vs dollar churn analysis; revenue churn is 3x more impactful than logo churn for SaaS LTV (openviewpartners.com, 2024).',
+  },
 };
 
 export const TOPIC_GUIDE_CONTENT: Record<string, TopicGuideContent> = {
