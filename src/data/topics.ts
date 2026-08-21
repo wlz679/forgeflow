@@ -238,6 +238,18 @@ export const TOPICS: Topic[] = [
                     zh: '通过安全库存、前置时间变异与需求预测优化再订货点——最小化缺货且不积压。' },
     calculatorSlugs: ['solopreneur-reorder-point-calculator'],
     relatedTopicIds: ['inventory-turnover-optimization', 'carrying-cost-optimization'] },
+  { id: 'feature-adoption-optimization', letterId: 'P', domain: 'product', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Feature Adoption Optimization', zh: '功能采用优化' },
+    description: { en: 'Maximize product feature adoption through discovery, activation, and habit-formation design.',
+                    zh: '通过发现、激活与习惯养成设计提升产品功能采用率。' },
+    calculatorSlugs: ['solopreneur-feature-adoption-calculator'],
+    relatedTopicIds: ['funnel-conversion-optimization'] },
+  { id: 'stickiness-optimization', letterId: 'P', domain: 'product', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Stickiness Optimization', zh: '用户粘性优化' },
+    description: { en: 'Improve DAU/MAU ratio, retention curves, and engagement frequency to build product habit.',
+                    zh: '提升 DAU/MAU 比、留存曲线与互动频率，建立产品使用习惯。' },
+    calculatorSlugs: ['solopreneur-stickiness-calculator'],
+    relatedTopicIds: ['funnel-conversion-optimization', 'feature-adoption-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
