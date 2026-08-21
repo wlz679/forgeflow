@@ -202,6 +202,18 @@ export const TOPICS: Topic[] = [
                     zh: '提升知识库站内搜索点击率、无结果率与零结果处理——快速呈现正确文章。' },
     calculatorSlugs: ['solopreneur-search-effectiveness-calculator'],
     relatedTopicIds: ['knowledge-base-coverage', 'article-freshness-optimization'] },
+  { id: 'dsar-cost-optimization', letterId: 'L', domain: 'legal', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'DSAR Cost Optimization', zh: '数据主体权利请求成本优化' },
+    description: { en: 'Reduce per-DSAR processing cost through automation, workflow design, and tier-based response SLAs.',
+                    zh: '通过自动化、工作流设计与分层响应 SLA 降低单次 DSAR 处理成本。' },
+    calculatorSlugs: ['solopreneur-dsar-cost-calculator'],
+    relatedTopicIds: ['gdpr-compliance-strategy'] },
+  { id: 'consent-revenue-optimization', letterId: 'L', domain: 'legal', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Consent Revenue Optimization', zh: '同意营收影响优化' },
+    description: { en: 'Quantify and reduce consent-banner revenue impact — recover abandoned-cart visitors through optimized consent UX.',
+                    zh: '量化并降低同意横幅对营收的影响——通过优化同意 UX 挽回弃车访客。' },
+    calculatorSlugs: ['solopreneur-consent-revenue-impact-calculator'],
+    relatedTopicIds: ['gdpr-compliance-strategy', 'saas-pricing-strategy'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
