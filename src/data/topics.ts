@@ -154,6 +154,18 @@ export const TOPICS: Topic[] = [
                     zh: '设计 SaaS 定价分层、产品打包与折扣策略，最大限度提升 LTV 并缩短 CAC 回本周期。' },
     calculatorSlugs: ['solopreneur-saas-pricing-planner'],
     relatedTopicIds: ['customer-acquisition-cost', 'unit-economics-optimization'] },
+  { id: 'meeting-cost-analysis', letterId: 'E', domain: 'operations', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Meeting Cost Analysis', zh: '会议成本分析' },
+    description: { en: 'Quantify true fully-loaded meeting cost per attendee, per hour, and per quarter — and decide which meetings to keep.',
+                    zh: '量化每位与会者每小时每季度的真实会议全负担成本——并决定哪些会议值得保留。' },
+    calculatorSlugs: ['solopreneur-meeting-cost-calculator'],
+    relatedTopicIds: ['employee-cost-planning', 'meeting-cost-optimization'] },
+  { id: 'productivity-score-optimization', letterId: 'E', domain: 'people', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Productivity Score Optimization', zh: '个人生产力评分优化' },
+    description: { en: 'Measure and improve personal productivity score across deep work, meetings, communication, and learning time allocation.',
+                    zh: '衡量并提升个人生产力评分——深度工作、会议、沟通、学习的时间分配综合优化。' },
+    calculatorSlugs: ['solopreneur-productivity-score'],
+    relatedTopicIds: ['meeting-cost-optimization', 'employee-cost-planning'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {

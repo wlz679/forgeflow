@@ -48,9 +48,7 @@ export const TIER_2_SLUGS: string[] = [
   'solopreneur-ltv-calculator',                          // was solopreneur-ltv-cac-calculator
   'solopreneur-cac-calculator',                          // C+1 over plan to meet 35 count
   // D (Freelance) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave D)
-  // E (Cost) — 2
-  'solopreneur-meeting-cost-calculator',
-  'solopreneur-productivity-score',                      // was solopreneur-productivity-score-calculator
+  // E (Cost) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave E)
   // F (Investment) — 2
   'solopreneur-compound-interest-calculator',
   'solopreneur-cap-rate-calculator',
