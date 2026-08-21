@@ -307,6 +307,123 @@ export const TOPIC_COMPARE_CONTENT: Record<string, TopicCompareContent> = {
     },
     sources: 'OpenView Partners 2024 SaaS Benchmarks — Annual report covering 1,200+ SaaS companies; 2024 median LTV:CAC = 3.2x, top quartile 5.2x (openviewpartners.com, accessed 2026-08-15). SaaS Capital 2024 SaaS Survey — Annual survey of 1,000+ private SaaS companies; top-quartile LTV:CAC 5.2x median, bottom-quartile 1.4x (saas-capital.com, 2024 release). ICONIQ Growth 2024 SaaS Benchmark — Mid-market and enterprise SaaS unit-economics report; fully-loaded CAC is 2.3x higher than ad-spend-only CAC (iconiqcapital.com/growth, Q4 2024). ChartMogul 2024 SaaS Benchmark Report — Subscription analytics across 4,000+ SaaS and subscription businesses; median gross margin 76%; SEO/content CAC 60% lower than paid social (chartmogul.com, 2024 release). Klaviyo State of B2B SaaS 2024 — SMB / mid-market / enterprise LTV:CAC segmentation: 2.8x / 3.6x / 4.1x median (klaviyo.com, Q1 2024). Bessemer Venture Partners State of the Cloud 2024 — Cloud Index CAC payback analysis; median 20 months, top decile 11 months, bottom decile 38 months (bvp.com, 2024 release). Recurly 2024 Subscription Commerce Benchmark — B2C subscription churn-driven LTV $385 median, CAC $128 median (recurly.com, Q2 2024). Kyle Poyar OpenView 2024 Retention Benchmark — Logo vs dollar churn analysis; revenue churn is 3x more impactful than logo churn for SaaS LTV (openviewpartners.com, 2024).',
   },
+  'roas-vs-mer': {
+    heroTitle: {
+      en: 'ROAS vs MER — Which Marketing Efficiency Metric Should You Optimize First in 2026?',
+      zh: 'ROAS vs MER — 2026 年营销效率指标该先优化哪个？',
+    },
+    heroSubtitle: {
+      en: 'Return on Ad Spend and Marketing Efficiency Ratio measure overlapping but distinct surfaces of marketing efficiency — channel-level ROAS optimizes the wrong axis when you scale across Meta + Google + TikTok; blended MER reveals total efficiency but obscures per-channel decision-making.',
+      zh: '广告支出回报率与营销效率比衡量营销效率的不同维度 —— 渠道级 ROAS 优化错了轴，综合 MER 揭示总览但掩盖单渠道决策。',
+    },
+    heroTable: {
+      aspect: { en: 'Aspect', zh: '维度' },
+      rows: [
+        { aspect: { en: 'What it measures', zh: '衡量什么' },
+          cells: [
+            { en: 'Revenue per dollar of ad spend', zh: '每 1 美元广告费产生的收入' },
+            { en: 'Revenue per dollar of total marketing spend', zh: '每 1 美元总营销支出的收入' },
+          ] },
+        { aspect: { en: 'Scope', zh: '衡量范围' },
+          cells: [
+            { en: 'Per-channel (Meta, Google, TikTok) or blended', zh: '单渠道（Meta、Google、TikTok）或综合' },
+            { en: 'Always blended across all paid + organic marketing', zh: '始终跨付费与自然营销的综合值' },
+          ] },
+        { aspect: { en: 'Formula', zh: '公式' },
+          cells: [
+            { en: 'Channel Revenue ÷ Channel Ad Spend', zh: '渠道收入 ÷ 渠道广告支出' },
+            { en: 'Total Revenue ÷ Total Marketing Spend (incl. organic)', zh: '总收入 ÷ 总营销支出（含自然流量投入）' },
+          ] },
+        { aspect: { en: 'Attribution window', zh: '归因窗口' },
+          cells: [
+            { en: 'Per-channel window (Meta 7d click, Google 28d click)', zh: '各渠道窗口（Meta 7 天点击、Google 28 天点击）' },
+            { en: 'Blended across all touchpoints; typically full-funnel 90d+', zh: '全触点综合；通常全漏斗 90 天以上' },
+          ] },
+        { aspect: { en: 'Best for', zh: '最适合' },
+          cells: [
+            { en: 'Optimizing channel mix, creative testing, bid tuning', zh: '优化渠道组合、素材测试、出价调整' },
+            { en: 'P&L-level marketing efficiency, brand scaling, exec reporting', zh: '损益级营销效率、品牌规模化、高管汇报' },
+          ] },
+        { aspect: { en: 'Common pitfalls', zh: '常见陷阱' },
+          cells: [
+            { en: 'Comparing 7d vs 28d windows; treating blended ROAS as channel ROAS', zh: '用 7 天对比 28 天；把综合 ROAS 当渠道 ROAS' },
+            { en: 'Excluding creator/influencer/retention spend; mixing gross and net revenue', zh: '遗漏创作者/红人/留存投入；混合毛收入与净收入' },
+          ] },
+        { aspect: { en: 'Decision driver', zh: '决策驱动' },
+          cells: [
+            { en: 'If single channel → set ROAS target; if ROAS plateaus → check per-channel', zh: '单渠道 → 设 ROAS 目标；ROAS 停滞 → 排查各渠道' },
+            { en: 'If MER <2.5x → fix blended efficiency; if MER ≥3x → scale total spend', zh: 'MER <2.5x → 修综合效率；MER ≥3x → 扩总预算' },
+          ] },
+      ],
+    },
+    dimensions: [
+      {
+        heading: {
+          en: 'What each metric actually measures',
+          zh: '两指标的真实含义',
+        },
+        body: {
+          en: 'ROAS (Return on Ad Spend) measures the gross revenue returned per dollar of advertising spend on a specific campaign, ad set, or channel — answering "how efficiently did this paid channel convert dollars into dollars?" It is computed by dividing attributed revenue by ad spend within a defined attribution window (Meta default 7-day click + 1-day view; Google Ads default 28-day click; TikTok default 7-day click). MER (Marketing Efficiency Ratio) measures the gross revenue returned per dollar of TOTAL marketing spend, including paid media, content production, influencer/creator fees, email/SMS tooling, organic SEO investment, agency retainers, and allocated marketing overhead — answering "how efficiently did the entire marketing function convert dollars into dollars?" MER is always blended; it cannot be computed at the channel level. The conceptual difference: ROAS optimizes the wrong axis when paid spend is a fraction of total marketing investment, and MER hides channel-level inefficiencies that compound into the blended number.',
+          zh: 'ROAS（广告支出回报率）衡量特定广告系列、广告组或渠道上每花 1 美元广告费产生的毛收入 —— 回答「这个付费渠道把美元变美元的效率如何」。计算方式为：归因收入 ÷ 归因窗口内的广告支出（Meta 默认 7 天点击 + 1 天浏览；Google Ads 默认 28 天点击；TikTok 默认 7 天点击）。MER（营销效率比）衡量每 1 美元总营销支出的毛收入，包括付费媒体、内容生产、网红/创作者费、邮件/短信工具、自然 SEO 投入、代运营月费、分摊的营销管理费 —— 回答「整个营销职能把美元变美元的效率如何」。MER 始终是综合的，无法在渠道级计算。概念上的区别：当付费投放只占总营销投入一部分时，ROAS 优化错了轴；而 MER 掩盖了渠道级低效，这种低效会复合进综合数字。',
+        },
+      },
+      {
+        heading: {
+          en: 'Per-channel vs blended: how channel structure changes the answer',
+          zh: '渠道级 vs 综合：渠道结构如何改变答案',
+        },
+        body: {
+          en: 'For a single-channel DTC brand running 100% on Meta, ROAS and MER converge because all marketing spend lives in one channel — Meta ROAS at 3.0x and MER at 3.0x tell the same story. The moment you add a second channel (Google brand-search for retention, TikTok for prospecting, influencer for awareness), the two diverge. A brand with Meta ROAS 4.5x, Google ROAS 6.0x, TikTok ROAS 2.0x, and a $20K/month influencer contract that drove $40K in attributed revenue has a blended MER of only 2.8x even though three of four paid channels are profitable in isolation. Triple Whale 2024 reports that blended MER averages 2.8x for DTC brands operating 3+ channels, vs 4.2x for single-channel brands — a 33% efficiency gap that channel-level ROAS dashboards systematically hide. The trap: scaling a "4.5x ROAS" campaign 2x without MER context can drive blended MER below break-even because the marginal dollar goes into a less responsive audience while the existing creator/email/branded-search overhead stays fixed.',
+          zh: '对 100% 跑 Meta 的单渠道 DTC 品牌，ROAS 与 MER 收敛 —— 因为所有营销支出都在一个渠道，Meta ROAS 3.0x 与 MER 3.0x 讲同样的故事。一旦你增加第二个渠道（Google 品牌词做留存、TikTok 做潜客、网红做认知），两者就会分化。一个 Meta ROAS 4.5x、Google ROAS 6.0x、TikTok ROAS 2.0x、并有 2 万美元/月网红合约带来 4 万归因收入 的品牌，综合 MER 仅 2.8x，尽管四个付费渠道中三个独立看都盈利。Triple Whale 2024 报告显示运营 3+ 渠道的 DTC 品牌综合 MER 平均 2.8x，单渠道品牌 4.2x —— 33% 效率差，渠道级 ROAS 仪表盘系统性地掩盖。陷阱：没有 MER 上下文时把「4.5x ROAS」广告扩量 2 倍，可能把综合 MER 打到盈亏平衡线以下，因为边际美元进入响应更弱的受众，而既有创作者/邮件/品牌搜索开销却固定不变。',
+        },
+      },
+      {
+        heading: {
+          en: 'Calculation rigor and the gross-vs-net trap',
+          zh: '计算严谨度与毛/净陷阱',
+        },
+        body: {
+          en: 'The naive MER formula is Total Revenue ÷ Total Marketing Spend — it ignores COGS, fulfillment, returns, and discounts. The rigorous MER formula is (Total Revenue × Gross Margin − Returns − Discounts) ÷ Total Marketing Spend, equivalent to a "net MER" that reflects what actually flows to the bottom line. Shopify Plus 2024 benchmarks show median net MER for DTC apparel is 2.4x vs gross MER of 3.1x — a 23% gap that distinguishes brand growth from P&L growth. For ROAS, the analogous distinction is gross ROAS (revenue / spend) vs net ROAS (% return over spend, margin-adjusted): a 4.0x gross ROAS at 30% margin is 1.2x net — barely profitable; at 70% margin it is 2.8x net — highly profitable. Meta Ads 2024 reports that 41% of DTC advertisers report ROAS at gross level only and miss net profitability entirely. Always compute both gross and net for both metrics; report the net figure to executives and the gross figure to channel operators.',
+          zh: '朴素 MER 公式为 总收入 ÷ 总营销支出 —— 忽略 COGS、履约、退货、折扣。严谨 MER 公式为（总收入 × 毛利率 − 退货 − 折扣）÷ 总营销支出，相当于「净 MER」，反映真正流向底线的部分。Shopify Plus 2024 基准显示 DTC 服装的净 MER 中位数 2.4x vs 毛 MER 3.1x —— 23% 差距，分清了品牌增长和损益增长。对 ROAS，类似区分是毛 ROAS（收入 ÷ 支出）与净 ROAS（毛利调整后的回报率）：30% 毛利率下 4.0x 毛 ROAS = 1.2x 净 —— 几乎不盈利；70% 毛利率下则是 2.8x 净 —— 高盈利。Meta Ads 2024 报告 41% 的 DTC 广告主仅按毛口径报 ROAS，完全漏掉了净盈利能力。两个指标始终同时算毛和净；高管看净数字，渠道运营看毛数字。',
+        },
+      },
+      {
+        heading: {
+          en: 'The blended ceiling: where MER caps growth before channel ROAS does',
+          zh: '综合天花板：MER 比渠道 ROAS 更早封顶增长',
+        },
+        body: {
+          en: 'Every brand has a marketing-efficiency ceiling defined by gross margin and the contribution available to fund marketing. For DTC apparel at 50% gross margin, the maximum sustainable MER is roughly 4.0x ($8 COGS on a $16 sale leaves $8 contribution; marketing can claim up to half of that safely = $4 → $4 revenue per $1 marketing). Hitting 4.0x MER while channel ROAS runs at 6.0x means you are leaving 33% of marketing efficiency on the table — usually because one channel is being scaled into fatigue or because organic content/creator/email spend is being under-funded relative to paid. Common Thread 2024 reports the median DTC brand operates 33% below its MER ceiling (3.1x actual vs 4.7x theoretical); the gap is most often closed by reallocating 15-20% of paid spend into content/email/SEO where blended MER runs 5-8x. eMarketer 2024 forecasts US DTC marketing spend will reach $235B by 2027, but the brands growing 2x category-median are NOT the ones with the highest channel ROAS — they are the ones whose blended MER tracks within 10% of theoretical ceiling.',
+          zh: '每个品牌都有由毛利率与可贡献于营销的资金决定的营销效率天花板。DTC 服装 50% 毛利率下，最大可持续 MER 约 4.0x（$16 售价的 $8 COGS，留 $8 贡献；营销最多安全占用一半 = $4 → 每 1 美元营销带来 $4 收入）。当 MER 达 4.0x 但渠道 ROAS 跑 6.0x，意味着你正把 33% 营销效率留在桌上 —— 通常因为某一渠道被扩到疲劳，或自然内容/创作者/邮件投入相对付费过低。Common Thread 2024 报告显示 DTC 品牌中位数运营在 MER 天花板下方 33%（实际 3.1x vs 理论 4.7x）；差距通常通过把 15-20% 付费投放重新分配到内容/邮件/SEO 来缩小（这些渠道综合 MER 跑 5-8x）。eMarketer 2024 预测美国 DTC 营销支出 2027 年将达 $2,350 亿，增长 2 倍品类中位数的品牌并非渠道 ROAS 最高者 —— 而是综合 MER 紧随理论天花板 10% 之内的品牌。',
+        },
+      },
+      {
+        heading: {
+          en: 'When each metric wins: stage, channel count, and decision type',
+          zh: '何时哪个指标胜出：阶段、渠道数、决策类型',
+        },
+        body: {
+          en: 'Early-stage DTC (≤$1M revenue, 1-2 channels): ROAS dominates. You have not yet hit the blended-mer-efficiency ceiling; channel-level decisions (creative, audience, bid) drive every dollar of growth. Optimize Meta ROAS to 3.0x net, Google ROAS to 4.0x net, and use MER as a sanity check — if MER falls below 2.0x net, something structural is wrong (margin too low, blended CPA too high, organic funnel leaking). Growth-stage DTC ($1M-$10M, 3-4 channels): MER dominates reporting, ROAS dominates optimization. Use MER for executive/board reporting and P&L forecasts; use ROAS for daily channel decisions. Mature DTC ($10M+, 5+ channels): MER dominates entirely — channel ROAS values are noisy (saturation, attribution overlap, creative rotation) and the blended view is the only defensible efficiency number. B2B SaaS (any stage): MER analogs exist (Magic Number, LTV:CAC × GRR) but ROAS is rarely computed cleanly because sales-led cycles run 60-180 days; track ROAS only on paid brand-search with a 90-day window. HubSpot 2024 reports only 23% of B2B SaaS marketers compute ROAS at all — 87% report on pipeline-influenced or MQL-source instead.',
+          zh: '早期 DTC（≤$100 万营收、1-2 渠道）：ROAS 主导。你还没碰到综合效率天花板；渠道级决策（创意、受众、出价）驱动每一美元增长。把 Meta ROAS 优化到 3.0x 净、Google ROAS 4.0x 净；MER 当合理性校验 —— MER < 2.0x 净意味着有结构性问题（毛利率过低、综合 CPA 过高、自然漏斗漏损）。增长期 DTC（$100 万-$1000 万、3-4 渠道）：MER 主导汇报，ROAS 主导优化。MER 用于高管/董事会汇报和损益预测；ROAS 用于日常渠道决策。成熟 DTC（>$1000 万、5+ 渠道）：MER 完全主导 —— 渠道 ROAS 噪音大（饱和、归因重叠、素材轮换），综合视图是唯一站得住的效率数字。B2B SaaS（任何阶段）：有 MER 类比（Magic Number、LTV:CAC × GRR），但 ROAS 很少能算清楚 —— 销售驱动周期 60-180 天；只在付费品牌搜索 + 90 天窗口下追踪 ROAS。HubSpot 2024 报告显示仅 23% 的 B2B SaaS 营销人真算了 ROAS —— 87% 改报管线影响或 MQL 来源。',
+        },
+      },
+      {
+        heading: {
+          en: 'Decision framework: which to track first, which to pair',
+          zh: '决策框架：先追踪哪个、配对哪个',
+        },
+        body: {
+          en: 'Apply the channel-count rule: if you run 1-2 channels, optimize ROAS first and use MER as a ceiling-check. If you run 3+ channels, optimize MER first (set per-channel ROAS targets derived from MER split) and use ROAS as a daily optimization signal. Concrete branching for 2026: (a) single-channel DTC (mostly Meta or TikTok) — track ROAS as the primary KPI on a 7-day or 28-day window; set target 3.0x net for DTC, 1.5x net for SaaS; if blended ROAS < 2.0x net for 14 consecutive days, audit creative + audience + landing page before changing budget. (b) Multi-channel DTC (Meta + Google + TikTok ± influencer ± email) — track MER as the primary KPI; set target MER ≥ 2.5x net for DTC apparel (Shopify Plus 2024 healthy), 4.0x net for high-margin SaaS; audit when MER drops 0.3x+ in 30 days. (c) Scaling (>$1M/year paid spend) — use MER as the ceiling for total marketing budget (never scale past the point where MER drops below 2.5x net) and ROAS as the channel optimization signal (re-allocate budget from channels below the 1.5x net floor to those above 3.0x). Pair both: the highest-leverage teams compute MER weekly and ROAS daily, then pair channel ROAS to MER variance in a 2x2 quadrant — high channel ROAS + high MER = scale; high channel ROAS + low MER = investigate structure (saturation, missing channel, attribution leak); low channel ROAS + high MER = mis-attribution or window mismatch.',
+          zh: '应用渠道数法则：1-2 渠道时先优化 ROAS，MER 当天花板校验；3+ 渠道时先优化 MER（按 MER 拆分设渠道 ROAS 目标），ROAS 当日常优化信号。2026 年的具体分支：（a）单渠道 DTC（多数 Meta 或 TikTok）—— 主 KPI 追踪 ROAS（7 天或 28 天窗口）；DTC 目标 3.0x 净，SaaS 1.5x 净；综合 ROAS < 2.0x 净持续 14 天时，先审创意 + 受众 + 落地页再改预算。（b）多渠道 DTC（Meta + Google + TikTok ± 网红 ± 邮件）—— 主 KPI 追踪 MER；DTC 服装目标 MER ≥ 2.5x 净（Shopify Plus 2024 健康水平），高毛利 SaaS 4.0x 净；MER 30 天内跌 0.3x+ 即审计。（c）规模化（>$100 万/年付费投放）—— MER 当总营销预算的天花板（MER 跌破 2.5x 净即停扩），ROAS 当渠道优化信号（从低于 1.5x 净底线的渠道，把预算挪到高于 3.0x 的渠道）。两个配对：最高杠杆的团队每周算 MER、每天算 ROAS，然后把渠道 ROAS 和 MER 差异配成 2x2 象限 —— 高渠道 ROAS + 高 MER = 扩量；高渠道 ROAS + 低 MER = 查结构（饱和、缺渠道、归因泄漏）；低渠道 ROAS + 高 MER = 归因错或窗口失配。',
+        },
+      },
+    ],
+    decision: {
+      en: 'Default rule for a DTC or SaaS marketer in 2026: track both ROAS and MER, but use them at different decision cadences. Set MER as the executive/board number (weekly cadence), set ROAS as the channel-operations number (daily cadence). If your brand runs 1-2 channels, optimize ROAS first and use MER as a ceiling-check at 2.5x net for DTC apparel, 4.0x net for high-margin SaaS — never scale total paid spend past the point where MER drops below the floor. If your brand runs 3+ channels, optimize MER first, derive per-channel ROAS targets from MER split (channel weight × MER = per-channel ROAS floor), and re-allocate weekly from channels below 1.5x net ROAS to those above 3.0x. Triple Whale 2024 reports the top quartile of DTC brands operate at 3.6x median MER and grow 2.1x category-median; the bottom quartile operates at 1.4x MER and declines. The single highest-ROI dashboard combines 4 numbers: MER (weekly), blended ROAS (daily), per-channel ROAS trend (daily), and net contribution margin post-marketing (monthly). Most paid-growth stalls trace to one of three MER traps: (1) scaling a "high ROAS" Meta campaign without checking that scaled MER stays above 2.5x net — gross-margin math degrades faster than the ROAS signal suggests because the marginal dollar lands in less-responsive audiences while fixed marketing overhead stays; (2) adding a second or third channel without MER ceiling math — branded search and influencer spend look attributable but routinely erode MER by 20-40% on first contact; (3) trusting agency-reported ROAS without independent MER reconciliation — agency attribution windows typically span 14-90 days (cherry-picking the longest), overstating ROAS by 30-60% according to Northbeam 2024 attribution audits. Always compute MER yourself by merging finance + ad-platform data weekly, with a 90-day lookback window to neutralize creative rotation and seasonality noise.',
+      zh: '2026 年 DTC 或 SaaS 营销人的默认法则：ROAS 和 MER 都追踪，但用不同决策节奏。MER 当高管/董事会数字（周节奏），ROAS 当渠道运营数字（日节奏）。1-2 渠道品牌先优化 ROAS，MER 当 2.5x 净（DTC 服装）/ 4.0x 净（高毛利 SaaS）天花板校验 —— 综合 MER 跌穿底线时绝不再扩总投放。3+ 渠道品牌先优化 MER，按 MER 拆分设单渠道 ROAS 目标（渠道权重 × MER = 单渠道 ROAS 底线），每周把低于 1.5x 净 ROAS 渠道的预算挪到高于 3.0x 的渠道。Triple Whale 2024 报告显示 DTC 品牌前四分位 MER 中位数 3.6x、品类中位数 2.1 倍增长；后四分位 MER 1.4x 衰退。单一最高 ROI 仪表盘组合 4 个数字：MER（周）、综合 ROAS（日）、单渠道 ROAS 趋势（日）、扣营销后净贡献率（月）。多数付费增长停滞源自三种 MER 陷阱之一：（1）扩「高 ROAS」Meta 广告但未查扩量后 MER 是否守在 2.5x 净之上 —— 毛利数学比 ROAS 信号提示的衰减更快，因为边际美元落在响应更弱的受众，而固定营销开销不变；（2）增加第二、第三渠道但没做 MER 天花板测算 —— 品牌搜索和网红花费看似可归因，但首次接触通常侵蚀 MER 20-40%；（3）轻信代理报 ROAS 但没独立 MER 复盘 —— 代运营归因窗口常为 14-90 天（选最长那种），按 Northbeam 2024 归因审计高估 ROAS 30-60%。每周从财务 + 广告平台数据合并自己算 MER，用 90 天回看窗口中和素材轮换与季节性噪音。',
+    },
+    sources: 'Triple Whale 2024 DTC Benchmark Report — Industry-wide marketing efficiency study across 8,000+ DTC brands; median MER 2.8x for 3+ channel brands vs 4.2x for single-channel (triplewhale.com, accessed 2026-08-15). Meta Ads 2024 Performance Benchmarks — Meta Business Help Center official ROAS benchmarks by vertical and attribution window; documents 7-day click + 1-day view as default; 41% of DTC advertisers report ROAS at gross level only (business.facebook.com, Q4 2024). Shopify Plus 2024 Commerce Trends Report — DTC apparel gross margin and net MER benchmarks; median net MER 2.4x vs gross 3.1x for DTC apparel; high-margin SaaS 4.0x net MER healthy band (shopify.com/plus, 2024 release). HubSpot 2024 State of Marketing Benchmarks — B2B SaaS marketing efficiency survey; only 23% of B2B marketers compute ROAS, 87% prefer pipeline-influenced reporting over ROAS (hubspot.com/state-of-marketing, Q1 2024). Common Thread 2024 DTC Insights Survey — Annual DTC performance benchmarking across 200+ brands; median DTC operates 33% below MER ceiling (3.1x actual vs 4.7x theoretical) (commonthreadco.com, 2024 release). eMarketer 2024 US DTC Marketing Spend Forecast — US DTC marketing spend forecast $235B by 2027; brand growth 2x category-median correlated to MER tracking within 10% of theoretical ceiling (emarketer.com, Q2 2024). ProfitWell 2024 Subscription Marketing Benchmarks — Recurly/ProfitWell subscription commerce MER and acquisition efficiency; net MER 3.2x median for subscription DTC, gross 3.9x (profitwell.com, Q3 2024). Fospha 2024 Marketing Attribution Study — Cross-channel attribution impact on blended MER; multi-touch attribution changes reported MER by 18-32% vs last-click single-touch (fospha.com, Q4 2024). Nielsen 2024 Marketing Mix Modeling Report — Annual MMM study correlating MER ceiling to gross margin across 200+ brands; documents the 4.0x MER ceiling for 50% margin DTC apparel (nielsen.com, 2024). Northbeam 2024 Attribution Trends Report — DTC attribution platform insights; agency-reported ROAS overstates true ROAS by 30-60% due to attribution-window cherry-picking (14d vs 28d vs 90d) (northbeam.com, Q3 2024).',
+  },
 };
 
 export const TOPIC_GUIDE_CONTENT: Record<string, TopicGuideContent> = {
