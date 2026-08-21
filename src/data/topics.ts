@@ -214,6 +214,18 @@ export const TOPICS: Topic[] = [
                     zh: '量化并降低同意横幅对营收的影响——通过优化同意 UX 挽回弃车访客。' },
     calculatorSlugs: ['solopreneur-consent-revenue-impact-calculator'],
     relatedTopicIds: ['gdpr-compliance-strategy', 'saas-pricing-strategy'] },
+  { id: 'ltv-by-channel-optimization', letterId: 'M', domain: 'marketing', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'LTV by Channel Optimization', zh: '分渠道 LTV 优化' },
+    description: { en: 'Decompose customer lifetime value by acquisition channel to identify which channels produce the most valuable cohorts.',
+                    zh: '按获客渠道拆分客户终身价值，识别哪些渠道产出最高价值群组。' },
+    calculatorSlugs: ['solopreneur-ltv-by-channel-calculator'],
+    relatedTopicIds: ['customer-acquisition-cost', 'roas-optimization'] },
+  { id: 'email-campaign-roi-optimization', letterId: 'M', domain: 'marketing', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Email Campaign ROI Optimization', zh: '邮件营销 ROI 优化' },
+    description: { en: 'Maximize email campaign ROI through segmentation, automation, deliverability, and lifecycle design.',
+                    zh: '通过分层、自动化、送达率与生命周期设计提升邮件营销 ROI。' },
+    calculatorSlugs: ['solopreneur-email-campaign-roi-calculator'],
+    relatedTopicIds: ['roas-optimization', 'ltv-by-channel-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {

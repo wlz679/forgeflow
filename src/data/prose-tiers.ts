@@ -53,9 +53,7 @@ export const TIER_2_SLUGS: string[] = [
   // H (Hiring) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave H)
   // K (Knowledge) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave K)
   // L (Legal) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave L)
-  // M (Marketing) — 2
-  'solopreneur-ltv-by-channel-calculator',
-  'solopreneur-email-campaign-roi-calculator',
+  // M (Marketing) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave M)
   // O (Ops) — 2
   'solopreneur-carrying-cost-calculator',                // was solopreneur-inventory-carrying-cost-calculator
   'solopreneur-reorder-point-calculator',
