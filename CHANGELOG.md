@@ -879,7 +879,7 @@ Phase 4 introduces **Comparison Topics** — a new tier between Tier 1 Topics an
 | Comparison pages (en + zh) | 0 | **8** |
 | Static pages built | 623 | **631** (+8) |
 | Build-dep suites | 51 | **52** (+1 new comparison-shape-guard) |
-| Master commits total | 1156 | **1162** (+6 atomic: 4 content + spec + plan + ship ops) |
+| Master commits total | 1156 | **1162** (+6 atomic in diff scope: 4 content + 1 plan + 1 ship ops) |
 | pnpm check baseline | 1256/0/0 | **1256/0/0** (unchanged) |
 | 3-way divergence | 0/0 | **0/0** (after ship ops commit) |
 

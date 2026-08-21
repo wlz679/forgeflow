@@ -20,6 +20,15 @@ test('comparison-shape-guard: registry has ≥4 TOPICS comparison entries', () =
   // (which iterate Object.entries(TOPIC_COMPARE_CONTENT)).
   const compareTopics = TOPICS.filter((t) => t.tier === 'comparison');
   assert.ok(compareTopics.length >= 4, `Expected ≥4 comparison topics, found ${compareTopics.length}`);
+  // Fable review fix: every comparison-tier Topic must ship a TOPIC_COMPARE_CONTENT entry.
+  // Defends against silent-pass where Tasks 2-4 partially fill content but a Topic is
+  // shipped without heroTitle/dimensions/decision/sources.
+  for (const t of compareTopics) {
+    assert.ok(
+      TOPIC_COMPARE_CONTENT[t.id],
+      `TOPIC_COMPARE_CONTENT missing entry for ${t.id} — must ship full content for every comparison-tier Topic`
+    );
+  }
 });
 
 test('comparison-shape-guard: hero title length thresholds', () => {

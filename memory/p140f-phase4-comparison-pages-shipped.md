@@ -1,16 +1,16 @@
 ---
 name: p140f-phase4-comparison-pages-shipped
-description: P140f Phase 4 — 4 Comparison Topics (4 × 2 langs = 8 new pages) shipped letter-by-letter direct-to-master, 623 → 631 pages, 5 atomic commits.
+description: P140f Phase 4 — 4 Comparison Topics (4 × 2 langs = 8 new pages) shipped letter-by-letter direct-to-master, 623 → 631 pages, 6 atomic commits.
 metadata:
   type: project
   shipped: 2026-08-21
-  scope: full phase (5 atomic commits on master)
+  scope: full phase (6 atomic commits on master)
 ---
 
 # P140f Phase 4 — Comparison Pages — PHASE SHIPPED
 
 **Date:** 2026-08-21
-**Scope:** Full Phase 4 (5 atomic commits on master, direct-to-master cadence)
+**Scope:** Full Phase 4 (6 atomic commits on master, direct-to-master cadence)
 **Parent design:** `docs/superpowers/specs/2026-08-21-p140f-phase4-comparison-pages-design.md` (commit 29afeb1)
 **Parent plan:** `docs/superpowers/plans/2026-08-21-p140f-phase4-comparison-pages.md`
 
@@ -25,7 +25,7 @@ metadata:
 | Comparison pages (en + zh) | 0 | **8** |
 | Static pages built | 623 | **631** (+8) |
 | Build-dep suites | 51 | **52** (+1 new comparison-shape-guard) |
-| Master commits | ~1156 | **1162** (+6 atomic: 4 content + spec + plan + ship ops) |
+| Master commits | ~1156 | **1162** (+6 atomic in diff scope: 4 content + 1 plan + 1 ship ops) |
 
 ---
 

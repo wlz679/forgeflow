@@ -56,8 +56,8 @@ const articleSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: title,
-  articleSection: `${cat.name} / ${topic.title.en}`,
-  about: { '@type': 'Thing', name: topic.title.en },
+  articleSection: `${cat.name} / ${topic.title[lang]}`,
+  about: { '@type': 'Thing', name: topic.title[lang] },
   mentions: topic.calculatorSlugs.map((slug) => ({
     '@type': 'SoftwareApplication',
     name: t(`tools.${slug}.title`, lang),

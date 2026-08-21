@@ -329,9 +329,8 @@ export const translations: Record<string, { en: string; zh: string }> = {
   // P140f Phase 4: Comparison page H2 names + hero eyebrow
   // Used by src/pages/[lang]/[letter]/[topic]-compare.astro (parallel to [topic]-guide.astro)
   'topic.compare.hero.eyebrow': { en: 'Side-by-side', zh: '横向对比' },
-  'topic.compare.h2.pricing_breakdown': { en: 'Pricing breakdown', zh: '定价拆解' },
-  'topic.compare.h2.performance': { en: 'Performance', zh: '性能对比' },
-  'topic.compare.h2.ecosystem': { en: 'Ecosystem & integrations', zh: '生态与集成' },
+  // P140f Phase 4 — 3 dimension-heading keys removed (pricing_breakdown / performance / ecosystem).
+// Dimensions render via data-driven dim.heading[lang] lookup, not via i18n key.
   'topic.compare.h2.decision': { en: 'Which should you choose?', zh: '你应该选哪个?' },
   'topic.compare.h2.sources': { en: 'Sources', zh: '来源' },
   'topic.compare.h2.related_calcs': { en: 'Related calculators', zh: '相关计算器' },
