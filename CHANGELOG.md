@@ -837,6 +837,58 @@ Note: Wave order T → S (not S → T per plan) — actual ship sequence was Wav
 
 ---
 
+## [M25.7] - 2026-08-21 — P140f Phase 4 Comparison Pages
+
+Phase 4 introduces **Comparison Topics** — a new tier between Tier 1 Topics and Calculator pages, focused on "X vs Y" high-intent SEO queries.
+
+📦 Ship record: `memory/p140f-phase4-comparison-pages-shipped.md`
+
+### New tier: Comparison
+
+- New `tier: 'comparison'` in `Topic` interface (union: `'comparison' | 1 | 2 | 3`)
+- New `[topic]-compare.astro` template (parallel to `[topic]-guide.astro` / `[topic]-benchmark.astro`)
+- New `ComparisonHero.astro` component (X vs Y hero table)
+- New `TopicCompareContent` registry in `src/data/topic-content.ts` (4 fully populated entries)
+- New build-dep guard `tests/comparison-shape-guard.test.ts` (7 test cases, 52nd build-dep suite)
+- 8 new i18n keys × en + zh (comparison.hero / comparison.section namespaces)
+
+### 4 Comparison Topics shipped
+
+| Topic ID | Letter | compareSlug | Dimensions | Sources |
+|---|---|---|---|---|
+| `llm-provider-comparison` | B | claude/openai/gemini/deepseek (4 cells) | 6 | 8+ named (Anthropic 2026, OpenAI 2026, Artificial Analysis 2026, Vellum 2026, etc.) |
+| `ltv-vs-cac` | C | ltv/cac (2 cells) | 6 | 8+ named (OpenView 2024, SaaS Capital 2024, ICONIQ 2024, ChartMogul 2024, etc.) |
+| `roas-vs-mer` | M | roas/mer (2 cells) | 6 | 8+ named (Meta Ads 2024, Triple Whale 2024, Shopify Plus 2024, HubSpot 2024, etc.) |
+| `nrr-vs-grr` | R | nrr/grr (2 cells) | 6 | 8+ named (OpenView 2024, SaaS Capital 2024, KeyBanc 2024, ICONIQ 2024, etc.) |
+
+### Per-Wave Ship Log (5 atomic commits on master, direct-to-master cadence)
+
+| Wave | Task | Commit | Pages |
+|---|---|---|---|
+| W0 | Skeleton + sample (`llm-provider-comparison`) + ComparisonHero + topic-content.ts interface + i18n + comparison-shape-guard (7 cases) | `063fb66` | +2 |
+| W1 (Wave C) | `ltv-vs-cac` content fill (6 dimensions + decision + 8 sources) | `a867fd9` | +2 |
+| W2 (Wave M) | `roas-vs-mer` content fill (6 dimensions + decision + 8 sources) | `8a29fa3` | +2 |
+| W3 (Wave R) | `nrr-vs-grr` content fill (6 dimensions + decision + 8 sources) | `0b7c079` | +2 |
+| W4 | Ship ops (this section + MEMORY + plans/INDEX) | (TBD) | 0 |
+
+### Engineering Metrics
+
+| Metric | Before (M25.6) | After (M25.7) |
+|---|---|---|
+| Comparison Topics | 0 | **4** (NEW tier 'comparison') |
+| Comparison pages (en + zh) | 0 | **8** |
+| Static pages built | 623 | **631** (+8) |
+| Build-dep suites | 51 | **52** (+1 new comparison-shape-guard) |
+| Master commits total | 1156 | **1162** (+6 atomic: 4 content + spec + plan + ship ops) |
+| pnpm check baseline | 1256/0/0 | **1256/0/0** (unchanged) |
+| 3-way divergence | 0/0 | **0/0** (after ship ops commit) |
+
+### Pre-AdSense Resubmit Window
+
+Trigger ~2026-09-15 per `adsense-resubmit-window.md` (revised from initial ~2026-09-01 after Phase 2 ship). Combined Phase 1 + 2 + 4 contribution: 98 new pages (511 → 631, ~24% content growth). Closes ChatGPT §12 "X vs Y" high-intent query gap ahead of resubmit cycle.
+
+---
+
 ## [M16.0] - 2026-07-15 → 2026-07-16 — 100 engines milestone (P16)
 
 🔒 **Maintenance mode locked** after this milestone. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/engine-count.ts`).

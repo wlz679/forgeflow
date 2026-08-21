@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-21（P140f Phase 2 Tier 1 Extension — 30 new Tier 1 extension Topics (15 letters × 2 each) × 2 templates (Guide + Benchmark) = 60 new pages; letter-by-letter direct-to-master cadence across 17 atomic commits (Wave 0 guard + 15 letter waves + final ship); new build-dep guard topic-content-coverage-guard with per-field tiered min lengths (Guide body 150 / Bench body 25 / sources 50 / rows 8); promoted 30 entries from prose-tiers.ts TIER_2_SLUGS to Tier 1 extension (35 → 5 across all 15 letters); static pages 511 → 623 [+112]; RUN_BUILD_TESTS=1 1267/1267/0 [51 build-dep suites, +1 new]; pre-AdSense resubmit window ~2026-09-15 closes ChatGPT §12 "thin content" gap from P140f audit）
+> **最后更新:** 2026-08-21（P140f Phase 4 Comparison Pages — 4 new "X vs Y" Comparison Topics (B llm-provider-comparison / C ltv-vs-cac / M roas-vs-mer / R nrr-vs-grr) × 2 langs = 8 new pages (623 → 631 [+8]); new `tier: 'comparison'` union in Topic interface + new `[topic]-compare.astro` template + new ComparisonHero.astro component + new TopicCompareContent registry + new build-dep guard comparison-shape-guard (52 suites total, 7 test cases); 5 atomic commits on master (W0 skeleton + sample + 3 letter waves + final ship ops, SHAs `063fb66`/`a867fd9`/`8a29fa3`/`0b7c079`); letter-by-letter direct-to-master cadence; pre-AdSense resubmit window ~2026-09-15; closes ChatGPT §12 "X vs Y" high-intent SEO gap; pnpm check 1256/0/0 unchanged）
 
 ---
 
@@ -37,6 +37,7 @@
 | `2026-08-19-p141i-prose-p1-deepening.md` | P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions + Common Mistakes] + 18 per-file prose expansions [9 engines × en + zh] with inline HEALTH_BANDS source citations + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 13 atomic commits on `feature/p141i-prose-p1-deepening`; closes ChatGPT "professional credibility" gap from P141h audit | 2026-08-19 |
 | `2026-08-19-p140f-batch-a-tier1-anchors.md` | P140f Batch A Tier 1 Anchor Topics — Topic data layer (15 Tier 1 anchor Topics) + 2 new components (Breadcrumb + TopicCard) + 2 new page templates (Topic Guide 6-section + Topic Benchmark 4-section data-table) generating 30 new pages + calculator page Related Topics section + 2 new build-dep guards; 7 atomic commits on `feature/p140f-batch-a-tier1-anchors`; closes nothing (P141j/P141i already closed rejection signals; first concrete deliver of v2.0 Topic Authority architecture) | 2026-08-19 |
 | `2026-08-20-p140f-phase2-tier1-extension.md` | P140f Phase 2 Tier 1 Extension — 30 new Tier 1 extension Topics (15 letters × 2 each) × 2 templates (Guide + Benchmark) = 60 new pages; promote 30 from prose-tiers.ts TIER_2_SLUGS; new build-dep guard topic-content-coverage-guard (per-field tiered min lengths); 17 atomic commits on master (Wave 0 + 15 letter waves + final ship), letter-by-letter direct-to-master cadence; closes #525/#528/#529/#530 pre-AdSense resubmit window (~2026-09-15); static pages 511 → 623 [+112 = 56 pages × 2 langs]; pnpm check unchanged; RUN_BUILD_TESTS=1 1267/1267/0 [51 build-dep suites, +1 new] | 2026-08-21 |
+| `2026-08-21-p140f-phase4-comparison-pages.md` | P140f Phase 4 Comparison Pages — 4 new "X vs Y" Comparison Topics (B llm-provider-comparison / C ltv-vs-cac / M roas-vs-mer / R nrr-vs-grr) × 2 langs = 8 new pages (623 → 631 [+8]); new `tier: 'comparison'` union + new `[topic]-compare.astro` template + new ComparisonHero.astro component + new TopicCompareContent registry + new build-dep guard comparison-shape-guard (52 suites total, 7 test cases); 5 atomic commits on master (W0 skeleton + sample + 3 letter waves + final ship ops, SHAs `063fb66`/`a867fd9`/`8a29fa3`/`0b7c079`), letter-by-letter direct-to-master cadence; pre-AdSense resubmit window ~2026-09-15; closes ChatGPT §12 "X vs Y" high-intent SEO gap; pnpm check 1256/0/0 unchanged | 2026-08-21 |
 
 ---
 
@@ -144,7 +145,7 @@
 
 | 类别 | 数量 |
 |---|---|
-| 0 · Foundational / Schema / i18n / SEO / Deploy / Audit (pre-P) | 13 |
+| 0 · Foundational / Schema / i18n / SEO / Deploy / Audit (pre-P) | 14 |
 | 1 · P0 — Content Pages | 4 |
 | 2 · P1 — Schema / Blog Markdown | 2 |
 | 3 · P2 — LocalStorage trilogy | 3 |
@@ -152,9 +153,9 @@
 | 5 · P4-P16 — Calculator batches | 15 |
 | 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 13 |
 | 7 · Multi-language mirrors | 1 |
-| **索引 plan 文件总数** | **55** |
+| **索引 plan 文件总数** | **56** |
 | 8 · Excluded (pr-body) | 1 |
-| **目录文件总数** | **55** |
+| **目录文件总数** | **57** |
 
 ---
 
