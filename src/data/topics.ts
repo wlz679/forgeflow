@@ -190,6 +190,18 @@ export const TOPICS: Topic[] = [
                     zh: '量化员工流失的真实成本——含招聘、入职、生产力损失与组织知识流失。' },
     calculatorSlugs: ['solopreneur-attrition-cost-calculator'],
     relatedTopicIds: ['employee-cost-planning', 'net-revenue-retention'] },
+  { id: 'article-freshness-optimization', letterId: 'K', domain: 'customer', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Article Freshness Optimization', zh: '知识库新鲜度优化' },
+    description: { en: 'Measure and maintain KB article freshness to reduce stale content — set review cadence, decay scoring, and rewrite triggers.',
+                    zh: '衡量并维护知识库文章新鲜度以减少陈旧内容——设定审查节奏、衰减评分与重写触发器。' },
+    calculatorSlugs: ['solopreneur-article-freshness-calculator'],
+    relatedTopicIds: ['knowledge-base-coverage', 'support-cost-optimization'] },
+  { id: 'search-effectiveness-optimization', letterId: 'K', domain: 'customer', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'KB Search Effectiveness Optimization', zh: '知识库搜索效果优化' },
+    description: { en: 'Improve KB in-app search click-through, no-result rate, and zero-result handling — surface the right article fast.',
+                    zh: '提升知识库站内搜索点击率、无结果率与零结果处理——快速呈现正确文章。' },
+    calculatorSlugs: ['solopreneur-search-effectiveness-calculator'],
+    relatedTopicIds: ['knowledge-base-coverage', 'article-freshness-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {

@@ -51,9 +51,7 @@ export const TIER_2_SLUGS: string[] = [
   // E (Cost) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave E)
   // F (Investment) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave F)
   // H (Hiring) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave H)
-  // K (Knowledge) — 2
-  'solopreneur-article-freshness-calculator',
-  'solopreneur-search-effectiveness-calculator',
+  // K (Knowledge) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave K)
   // L (Legal) — 2
   'solopreneur-dsar-cost-calculator',                    // was solopreneur-dsar-processing-cost-calculator
   'solopreneur-consent-revenue-impact-calculator',       // was solopreneur-cookie-consent-revenue-calculator
