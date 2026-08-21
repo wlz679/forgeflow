@@ -1,0 +1,129 @@
+---
+// P140f Phase 4: Comparison page template (parallel to [topic]-guide.astro).
+// Renders Tier 'comparison' Topics as high-intent "X vs Y" pages.
+// - getStaticPaths walks TOPICS for tier === 'comparison', resolves cat.slug
+//   from categories (NOT topic.letterId.toLowerCase()), emits en + zh routes.
+// - Conditional rendering for dimensions / decision / sources — empty arrays
+//   or strings render as no-op until Tasks 2-4 fill content for the other 3
+//   comparison Topics. Hero + Related calculators always render.
+// - i18n: uses topic.compare.h2.* keys (mirror of topic.guide.h2.* pattern).
+// - SEO: JSON-LD Article schema with mentions[] for each calculator slug
+//   (SoftwareApplication entries linking to tool pages), author = founder
+//   reviewer profile page, datePublished from topic.publishedAt.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Header from '../../../components/Header.astro';
+import Footer from '../../../components/Footer.astro';
+import Breadcrumb from '../../../components/Breadcrumb.astro';
+import ComparisonHero from '../../../components/ComparisonHero.astro';
+import { TOPICS, type Topic } from '../../../data/topics';
+import { categories } from '../../../data/categories';
+import { TOPIC_COMPARE_CONTENT } from '../../../data/topic-content';
+import { getCalculatorBySlug } from '../../../data/tools';
+import { t } from '../../../i18n';
+import { SITE_URL } from '../../../lib/site-config';
+
+export function getStaticPaths() {
+  const paths: { params: { lang: string; letter: string; topic: string }; props: { topic: Topic } }[] = [];
+  for (const lang of ['en', 'zh'] as const) {
+    for (const topic of TOPICS.filter((t) => t.tier === 'comparison')) {
+      const cat = categories.find((c) => c.id === topic.letterId);
+      if (cat) {
+        paths.push({
+          params: { lang, letter: cat.slug, topic: topic.id },
+          props: { topic },
+        });
+      }
+    }
+  }
+  return paths;
+}
+
+const { lang, topic: topicId } = Astro.params;
+const { topic } = Astro.props;
+const cat = categories.find((c) => c.id === topic.letterId)!;
+
+const content = TOPIC_COMPARE_CONTENT[topic.id];
+const compareLabels = topic.compareSlug ?? [];
+const calculators = topic.calculatorSlugs
+  .map((slug) => getCalculatorBySlug(slug))
+  .filter((c): c is NonNullable<typeof c> => Boolean(c));
+
+const title = `${topic.title[lang]} — Side-by-side comparison`;
+const description = topic.description[lang];
+const canonical = `${SITE_URL}/${lang}/${cat.slug}/${topic.id}-compare/`;
+
+const articleSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  articleSection: `${cat.name} / ${topic.title.en}`,
+  about: { '@type': 'Thing', name: topic.title.en },
+  mentions: topic.calculatorSlugs.map((slug) => ({
+    '@type': 'SoftwareApplication',
+    name: t(`tools.${slug}.title`, lang),
+    url: `${SITE_URL}/${lang}/${slug}/`,
+  })),
+  author: { '@type': 'Person', name: '王立柱 (Wang Lizhu)', url: `${SITE_URL}/about/authors/reviewer-founder/` },
+  datePublished: topic.publishedAt,
+});
+---
+<BaseLayout title={title} description={description} schema={articleSchema} pageType="article">
+  <Header />
+  <main class="max-w-5xl mx-auto px-4 py-8 flex-1">
+    <Breadcrumb lang={lang} letter={topic.letterId} topicId={topic.id} />
+
+    {content ? (
+      <>
+        <ComparisonHero
+          heroTitle={content.heroTitle}
+          heroSubtitle={content.heroSubtitle}
+          heroTable={content.heroTable}
+          compareLabels={compareLabels}
+          lang={lang}
+        />
+
+        {content.dimensions.map((dim) => (
+          <section class="mb-8">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-50 mb-3">{dim.heading[lang]}</h2>
+            <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line">{dim.body[lang]}</p>
+          </section>
+        ))}
+
+        {content.decision.en && content.decision.zh && (
+          <section class="mb-8 p-6 bg-amber-50 dark:bg-amber-900/30 rounded-lg border-l-4 border-amber-500">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-50 mb-3">🎯 {t('topic.compare.h2.decision', lang)}</h2>
+            <p class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-line">{content.decision[lang]}</p>
+          </section>
+        )}
+
+        {content.sources && (
+          <section class="mb-8 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-gray-50 mb-3">📚 {t('topic.compare.h2.sources', lang)}</h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">{content.sources}</p>
+          </section>
+        )}
+      </>
+    ) : (
+      <section class="mb-8">
+        <h1 class="text-2xl font-extrabold mb-2">{topic.title[lang]}</h1>
+        <p class="text-sm text-gray-500 uppercase tracking-wide mb-6">{t(`category.${topic.letterId}.name`, lang)} · Side-by-side</p>
+        <p class="text-sm text-gray-700 leading-relaxed">{description}</p>
+        <p class="text-sm text-gray-500 italic mt-4">[CONTENT: comparison editorial fill ships in subsequent batch]</p>
+      </section>
+    )}
+
+    {calculators.length > 0 && (
+      <section class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-50 mb-4">🧮 {t('topic.compare.h2.related_calcs', lang)}</h2>
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <ul class="space-y-1 text-sm">
+            {calculators.map((calc) => (
+              <li><a href={`/${lang}/${calc.slug}/`} class="text-[#7C3AED] hover:underline">{t(`tools.${calc.slug}.title`, lang)} →</a></li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )}
+  </main>
+  <Footer />
+</BaseLayout>

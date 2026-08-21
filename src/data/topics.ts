@@ -1,7 +1,10 @@
 // P140f: Topic layer between Category letter and Calculator. Each Topic
 // has 1 Guide page + 1 Benchmark page (Tier 1 anchor in Batch A).
+// P140f Phase 4 (added 2026-08-21): 'comparison' tier added for high-intent
+// "X vs Y" pages. Each comparison Topic renders a single [topic]-compare.astro
+// page with optional compareSlug[] defining the comparison axes.
 export type TopicId = string;
-export type TopicTier = 1 | 2 | 3;
+export type TopicTier = 1 | 2 | 3 | 'comparison';
 
 export interface Topic {
   id: TopicId;
@@ -13,6 +16,10 @@ export interface Topic {
   relatedTopicIds: TopicId[];
   tier: TopicTier;
   publishedAt: string;
+  // P140f Phase 4 (added 2026-08-21): Only set for tier === 'comparison'.
+  // Defines the comparison axes (e.g. ['claude', 'openai'] for a 2-column table).
+  // Hero table rows[*].cells.length must equal compareSlug.length (cell count invariant).
+  compareSlug?: string[];
 }
 
 export const TOPICS: Topic[] = [
@@ -286,6 +293,49 @@ export const TOPICS: Topic[] = [
                     zh: '通过定价分层升级、多年期合同与打包销售提升平均合同价值——LTV 提升杠杆。' },
     calculatorSlugs: ['solopreneur-acv-calculator'],
     relatedTopicIds: ['pipeline-value-optimization', 'sales-velocity-optimization', 'saas-pricing-strategy'] },
+
+  // P140f Phase 4 (added 2026-08-21): Comparison tier — high-intent "X vs Y"
+  // pages shipping before the ~2026-09-01 AdSense resubmit window. Each entry
+  // registers a [topic]-compare.astro route; the 4 TOPIC_COMPARE_CONTENT entries
+  // fill progressively across Tasks 1-4. Task 1 ships the sample
+  // (llm-provider-comparison) fully populated; the other 3 render with empty
+  // content sections (conditional rendering in [topic]-compare.astro handles
+  // this gracefully until Tasks 2-4 fill them).
+  { id: 'llm-provider-comparison', letterId: 'B', domain: 'ai-cost', tier: 'comparison',
+    publishedAt: '2026-08-21',
+    title: { en: 'LLM Provider Comparison', zh: 'LLM 提供商对比' },
+    description: { en: 'Side-by-side comparison of Claude, OpenAI, Gemini, and DeepSeek APIs across pricing, context window, performance, and ecosystem.',
+                    zh: 'Claude、OpenAI、Gemini、DeepSeek API 在定价、上下文窗口、性能、生态系统的横向对比。' },
+    calculatorSlugs: ['solopreneur-claude-api-cost-calculator', 'solopreneur-openai-token-calculator', 'solopreneur-gemini-api-cost-calculator', 'solopreneur-deepseek-api-cost-calculator', 'solopreneur-ai-api-cost-comparison'],
+    relatedTopicIds: ['llm-api-cost-optimization'],
+    compareSlug: ['claude', 'openai', 'gemini', 'deepseek'] },
+
+  { id: 'ltv-vs-cac', letterId: 'C', domain: 'finance', tier: 'comparison',
+    publishedAt: '2026-08-21',
+    title: { en: 'LTV vs CAC', zh: 'LTV 与 CAC 对比' },
+    description: { en: 'Compare Customer Lifetime Value and Customer Acquisition Cost — why the ratio matters more than either metric alone.',
+                    zh: '对比客户终身价值与客户获取成本 — 为什么比率比任一指标更重要。' },
+    calculatorSlugs: ['solopreneur-ltv-calculator', 'solopreneur-cac-calculator'],
+    relatedTopicIds: ['customer-acquisition-cost'],
+    compareSlug: ['ltv', 'cac'] },
+
+  { id: 'nrr-vs-grr', letterId: 'R', domain: 'customer', tier: 'comparison',
+    publishedAt: '2026-08-21',
+    title: { en: 'NRR vs GRR', zh: 'NRR 与 GRR 对比' },
+    description: { en: 'Net Revenue Retention vs Gross Revenue Retention — what each measures, when to prioritize, and how expansion revenue shifts the picture.',
+                    zh: '净收入留存与毛收入留存 — 各自衡量什么、何者优先、扩展收入如何改变格局。' },
+    calculatorSlugs: ['solopreneur-nrr-calculator', 'solopreneur-grr-calculator'],
+    relatedTopicIds: ['net-revenue-retention'],
+    compareSlug: ['nrr', 'grr'] },
+
+  { id: 'roas-vs-mer', letterId: 'M', domain: 'marketing', tier: 'comparison',
+    publishedAt: '2026-08-21',
+    title: { en: 'ROAS vs MER', zh: 'ROAS 与 MER 对比' },
+    description: { en: 'Return on Ad Spend vs Marketing Efficiency Ratio — when channel-level ROAS hides waste and blended MER reveals the truth.',
+                    zh: '广告支出回报率与营销效率比 — 何时渠道级 ROAS 掩盖浪费而综合 MER 揭示真相。' },
+    calculatorSlugs: ['solopreneur-roas-calculator'],
+    relatedTopicIds: ['roas-optimization'],
+    compareSlug: ['roas', 'mer'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {

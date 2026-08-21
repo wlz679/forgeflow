@@ -1,0 +1,54 @@
+---
+// P140f Phase 4: Hero block for Comparison pages ([topic]-compare.astro).
+// Renders eyebrow + hero title + hero subtitle + cross-provider comparison
+// table. Each heroTable row is an aspect (Best for / Pricing / Context
+// window / ...); each row has N cells, one per compareSlug entry
+// (cell-count invariant enforced by tests/comparison-shape-guard.test.ts).
+//
+// i18n: uses topic.compare.hero.eyebrow (mirror of topic.guide.h2.* pattern).
+import { t } from '../i18n';
+
+export interface Props {
+  heroTitle: { en: string; zh: string };
+  heroSubtitle: { en: string; zh: string };
+  heroTable: {
+    aspect: { en: string; zh: string };
+    rows: Array<{
+      aspect?: { en: string; zh: string };
+      cells: Array<{ en: string; zh: string }>;
+    }>;
+  };
+  compareLabels: string[];
+  lang: 'en' | 'zh';
+}
+const { heroTitle, heroSubtitle, heroTable, compareLabels, lang } = Astro.props;
+const aspectLabel = heroTable.aspect[lang];
+const eyebrow = t('topic.compare.hero.eyebrow', lang);
+---
+<section class="comparison-hero bg-gradient-to-br from-sky-50 to-indigo-50 dark:from-sky-900 dark:to-indigo-900 p-6 md:p-8 rounded-lg shadow-sm mb-8">
+  <p class="text-sm uppercase tracking-wider text-sky-700 dark:text-sky-300 mb-2">{eyebrow}</p>
+  <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-50 mb-3">{heroTitle[lang]}</h1>
+  <p class="text-lg text-gray-700 dark:text-gray-200 mb-6">{heroSubtitle[lang]}</p>
+  <div class="overflow-x-auto">
+    <table class="w-full border-collapse bg-white dark:bg-gray-800 rounded-lg overflow-hidden text-sm">
+      <thead>
+        <tr class="bg-gray-100 dark:bg-gray-700">
+          <th class="text-left p-3 font-semibold">{aspectLabel}</th>
+          {compareLabels.map((label) => (
+            <th class="text-left p-3 font-semibold">{label}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {heroTable.rows.map((row) => (
+          <tr class="border-t border-gray-200 dark:border-gray-600">
+            {row.aspect && <td class="p-3 align-top font-semibold">{row.aspect[lang]}</td>}
+            {row.cells.map((cell) => (
+              <td class="p-3 align-top">{cell[lang]}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</section>

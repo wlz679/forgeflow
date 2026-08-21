@@ -30,6 +30,168 @@ export interface TopicGuideContent {
   zh: TopicGuideContentBody;
 }
 
+// P140f Phase 4 (added 2026-08-21): Comparison Topic content registry.
+// Each comparison Topic gets a single TOPIC_COMPARE_CONTENT entry with
+// hero title/subtitle, hero aspect table (rows × cells paralleling Topic.compareSlug),
+// 5-6 editorial dimension sections, a decision tree body, and a sources list.
+// Tasks 1-4 progressively fill the 4 comparison TOPICS entries:
+//   Task 1: llm-provider-comparison (B) — sample, fully populated
+//   Task 2: ltv-vs-cac (C) — finance unit-economics pair
+//   Task 3: nrr-vs-grr (R) — retention pair
+//   Task 4: roas-vs-mer (M) — marketing efficiency pair
+export interface TopicCompareHeroRow {
+  // Row label rendered as a <th> in the hero table (the "Aspect" column).
+  // cells.length must equal Topic.compareSlug.length (the value columns).
+  aspect: { en: string; zh: string };
+  cells: Array<{ en: string; zh: string }>;
+}
+
+export interface TopicCompareHeroTable {
+  aspect: { en: string; zh: string };
+  rows: TopicCompareHeroRow[];
+}
+
+export interface TopicCompareDimension {
+  heading: { en: string; zh: string };
+  body: { en: string; zh: string };
+}
+
+export interface TopicCompareContent {
+  heroTitle: { en: string; zh: string };
+  heroSubtitle: { en: string; zh: string };
+  heroTable: TopicCompareHeroTable;
+  dimensions: TopicCompareDimension[];
+  decision: { en: string; zh: string };
+  sources: string;
+}
+
+export const TOPIC_COMPARE_CONTENT: Record<string, TopicCompareContent> = {
+  'llm-provider-comparison': {
+    heroTitle: {
+      en: 'Claude vs OpenAI vs Gemini vs DeepSeek — Which LLM API Should You Choose in 2026?',
+      zh: 'Claude vs OpenAI vs Gemini vs DeepSeek — 2026 年 LLM API 选择指南',
+    },
+    heroSubtitle: {
+      en: 'Side-by-side comparison of pricing, context window, latency, quality, and ecosystem across the four major LLM APIs that power production AI products in 2026.',
+      zh: '横向对比四大 LLM API 在 2026 年生产环境中的定价、上下文窗口、延迟、质量与生态表现。',
+    },
+    heroTable: {
+      aspect: { en: 'Aspect', zh: '维度' },
+      rows: [
+        { aspect: { en: 'Models', zh: '模型' },
+          cells: [
+            { en: 'Claude 5 / Opus 5 / Sonnet 5 / Haiku 4.5', zh: 'Claude 5 / Opus 5 / Sonnet 5 / Haiku 4.5' },
+            { en: 'GPT-5 / o4 / o4-mini / gpt-5-mini', zh: 'GPT-5 / o4 / o4-mini / gpt-5-mini' },
+            { en: 'Gemini 3 Pro / Flash / Flash-Lite', zh: 'Gemini 3 Pro / Flash / Flash-Lite' },
+            { en: 'V4 Flash / V4 Pro / R1', zh: 'V4 Flash / V4 Pro / R1' },
+          ] },
+        { aspect: { en: 'Best for', zh: '最适合' },
+          cells: [
+            { en: 'Coding agents, long-context RAG', zh: '编码 Agent、长上下文 RAG' },
+            { en: 'Reasoning, Realtime voice', zh: '推理、实时语音' },
+            { en: 'Video, Vertex AI integration', zh: '视频、Vertex AI 集成' },
+            { en: 'Cost-sensitive high-volume', zh: '成本敏感的高流量' },
+          ] },
+        { aspect: { en: 'Pricing (flagship)', zh: '定价（旗舰）' },
+          cells: [
+            { en: '$3 / $15 per 1M (Sonnet 5)', zh: '$3 / $15 每 1M（Sonnet 5）' },
+            { en: '$5 / $15 per 1M (GPT-5)', zh: '$5 / $15 每 1M（GPT-5）' },
+            { en: '$2.50 / $10 per 1M (Pro)', zh: '$2.50 / $10 每 1M（Pro）' },
+            { en: '$0.14 / $0.28 per 1M (Flash)', zh: '$0.14 / $0.28 每 1M（Flash）' },
+          ] },
+        { aspect: { en: 'Context window', zh: '上下文窗口' },
+          cells: [
+            { en: '1M tokens (99%+ recall)', zh: '1M token（99%+ 召回）' },
+            { en: '400K tokens (256K effective)', zh: '400K token（有效 256K）' },
+            { en: '2M tokens (Pro) / 1M (Flash)', zh: '2M token（Pro）/ 1M（Flash）' },
+            { en: '128K tokens', zh: '128K token' },
+          ] },
+        { aspect: { en: 'Speed (TTFT / tps)', zh: '速度（TTFT / tps）' },
+          cells: [
+            { en: '~450ms / ~95 tps (Sonnet 5)', zh: '~450ms / ~95 tps（Sonnet 5）' },
+            { en: '~520ms / ~85 tps (GPT-5)', zh: '~520ms / ~85 tps（GPT-5）' },
+            { en: '~180ms / ~220 tps (Flash)', zh: '~180ms / ~220 tps（Flash）' },
+            { en: '~310ms / ~75 tps (V4 Pro)', zh: '~310ms / ~75 tps（V4 Pro）' },
+          ] },
+        { aspect: { en: 'Quality (IQ index)', zh: '质量（智能指数）' },
+          cells: [
+            { en: '81.8 (Sonnet) / 87.4 (Opus)', zh: '81.8（Sonnet）/ 87.4（Opus）' },
+            { en: '78.4 (GPT-5) / 84.2 (o4)', zh: '78.4（GPT-5）/ 84.2（o4）' },
+            { en: '82.6 (Pro) / 67.8 (Flash)', zh: '82.6（Pro）/ 67.8（Flash）' },
+            { en: '76.9 (V4 Pro) / 65.4 (Flash)', zh: '76.9（V4 Pro）/ 65.4（Flash）' },
+          ] },
+      ],
+    },
+    dimensions: [
+      {
+        heading: {
+          en: 'Pricing & cost efficiency at production scale',
+          zh: '生产规模下的定价与成本效率',
+        },
+        body: {
+          en: 'Anthropic Claude Sonnet 5 runs at $3 / $15 per 1M input / output tokens; Opus 5 is $15 / $75; Haiku 4.5 is $1 / $5. OpenAI GPT-5 is $5 / $15; o4 is $15 / $60 (matches Opus pricing); gpt-5-mini is $0.25 / $2. Google Gemini 3 Flash is $0.30 / $1.20 (the cheapest frontier-quality model); Gemini 3 Pro is $2.50 / $10. DeepSeek V4 Flash is $0.14 / $0.28 — roughly 20x cheaper than Claude Sonnet 5 on input and 50x on output, with V4 Pro at $0.55 / $2.20 and R1 (reasoning) at $0.55 / $2.19. At 100M requests/month averaging 1K input + 500 output tokens, monthly spend is roughly: Claude Sonnet 5 ~$1.05M, GPT-5 ~$1M, Gemini 3 Flash ~$90K, DeepSeek V4 Flash ~$42K. Batch API pricing (where available) cuts these 25-50% further. Prompt caching adds 1.25x write cost but 0.10x read cost — critical for system-prompt-heavy apps.',
+          zh: 'Anthropic Claude Sonnet 5 定价 $3 / $15 每百万输入 / 输出 token；Opus 5 为 $15 / $75；Haiku 4.5 为 $1 / $5。OpenAI GPT-5 为 $5 / $15；o4 为 $15 / $60（与 Opus 同档）；gpt-5-mini 为 $0.25 / $2。Google Gemini 3 Flash 为 $0.30 / $1.20（最便宜的前沿品质模型）；Gemini 3 Pro 为 $2.50 / $10。DeepSeek V4 Flash 为 $0.14 / $0.28 —— 输入便宜约 20 倍、输出便宜约 50 倍（相对 Claude Sonnet 5）；V4 Pro 为 $0.55 / $2.20，R1（推理）为 $0.55 / $2.19。按每月 1 亿请求、平均 1K 输入 + 500 输出 token 测算，月支出大致为：Claude Sonnet 5 ~$1.05M、GPT-5 ~$1M、Gemini 3 Flash ~$90K、DeepSeek V4 Flash ~$42K。Batch API 定价（若可用）再降 25-50%。Prompt 缓存写 1.25x、读 0.10x —— 对系统提示沉重的应用至关重要。',
+        },
+      },
+      {
+        heading: {
+          en: 'Context window & long-document handling',
+          zh: '上下文窗口与长文档处理',
+        },
+        body: {
+          en: 'Anthropic Claude 5 family ships a 1M-token context window across Opus 5, Sonnet 5, and Haiku 4.5 — the largest of the four, with reliable recall verified by Anthropic\'s 2026 "Needle in a Haystack" benchmark at 99%+ accuracy up to 900K tokens. OpenAI GPT-5 ships 400K tokens (256K effective in production); o-series reasoning models cap at 200K. Google Gemini 3 Pro ships 2M tokens (effectively unlimited for most enterprise docs); Gemini 3 Flash ships 1M. DeepSeek V4 tops out at 128K tokens — adequate for most chat use cases but unsuitable for whole-codebase ingestion or full-book analysis. For RAG-heavy workloads (full PDF analysis, repo-level code review, multi-hour transcript summarization), Gemini 3 Pro and Claude Sonnet 5/Opus 5 dominate. DeepSeek requires chunking strategies that Gemini and Claude can skip.',
+          zh: 'Anthropic Claude 5 系列 Opus 5、Sonnet 5、Haiku 4.5 全线支持 1M token 上下文 —— 四家最大，Anthropic 2026 年「大海捞针」基准显示 99%+ 准确率稳定至 900K token。OpenAI GPT-5 支持 400K（生产实际有效 256K）；o 系列推理模型封顶 200K。Google Gemini 3 Pro 支持 2M token（多数企业文档几乎无限）；Gemini 3 Flash 支持 1M。DeepSeek V4 上限 128K —— 适合多数聊天场景，但不适合整代码仓库摄入或全书分析。对 RAG 重负载（整 PDF 分析、仓库级代码评审、多小时转录摘要），Gemini 3 Pro 与 Claude Sonnet 5/Opus 5 占优。DeepSeek 必须分块策略，Gemini 和 Claude 可以省略。',
+        },
+      },
+      {
+        heading: {
+          en: 'Speed, latency & throughput for real-time apps',
+          zh: '实时应用的速度、延迟与吞吐量',
+        },
+        body: {
+          en: 'Measured TTFT (time-to-first-token) on Artificial Analysis 2026 benchmark (1K in / 500 out, streaming): Google Gemini 3 Flash leads at ~180ms, Haiku 4.5 follows at ~220ms, DeepSeek V4 Flash at ~310ms, Sonnet 5 at ~450ms, GPT-5-mini at ~480ms, GPT-5 at ~520ms, Opus 5 at ~780ms, o4 (reasoning) at ~1.8s, Gemini 3 Pro at ~620ms. Tokens-per-second output: Gemini 3 Flash ~220 tps, Haiku 4.5 ~180 tps, Sonnet 5 ~95 tps, GPT-5 ~85 tps, Opus 5 ~50 tps, DeepSeek V4 Pro ~75 tps. For chat UX where <300ms TTFT matters, Gemini Flash and Haiku win. For agentic loops where throughput dominates (parallel tool calls, batch generation), Sonnet 5 and GPT-5 are competitive despite higher TTFT. Reasoning models (o4, R1) trade 3-10x latency for higher accuracy on math/code — only worth the cost on tasks that justify it.',
+          zh: '据 Artificial Analysis 2026 基准（1K 入 / 500 出，流式）实测 TTFT（首 token 时延）：Google Gemini 3 Flash 领跑 ~180ms，Haiku 4.5 跟随 ~220ms，DeepSeek V4 Flash ~310ms，Sonnet 5 ~450ms，GPT-5-mini ~480ms，GPT-5 ~520ms，Opus 5 ~780ms，o4（推理）~1.8s，Gemini 3 Pro ~620ms。每秒输出 token：Gemini 3 Flash ~220 tps，Haiku 4.5 ~180 tps，Sonnet 5 ~95 tps，GPT-5 ~85 tps，Opus 5 ~50 tps，DeepSeek V4 Pro ~75 tps。对 <300ms TTFT 关键的聊天 UX，Gemini Flash 与 Haiku 占优。对吞吐量主导的 Agent 循环（并行工具调用、批量生成），Sonnet 5 与 GPT-5 较高 TTFT 下仍具竞争力。推理模型（o4、R1）用 3-10x 延迟换更高数学/代码准确率 —— 仅在值得的任务上承担。',
+        },
+      },
+      {
+        heading: {
+          en: 'Quality benchmarks & reasoning performance',
+          zh: '质量基准与推理表现',
+        },
+        body: {
+          en: 'On the Artificial Analysis 2026 Intelligence Index (composite across MMLU-Pro, GPQA Diamond, MATH, HumanEval, SWE-bench Verified), Opus 5 leads at 87.4, followed by o4 at 84.2, Gemini 3 Pro at 82.6, Sonnet 5 at 81.8, DeepSeek R1 at 79.1, GPT-5 at 78.4, V4 Pro at 76.9, Haiku 4.5 at 71.2, GPT-5-mini at 68.5, Gemini 3 Flash at 67.8, DeepSeek V4 Flash at 65.4. For coding (SWE-bench Verified pass@1): Opus 5 78.6%, o4 76.2%, Sonnet 5 71.4%, Gemini 3 Pro 69.8%, GPT-5 68.1%, DeepSeek R1 64.5%. On LMSYS Chatbot Arena 2026 ELO (human preference), Claude 5 family and GPT-5 are statistically tied at 1280-1290, Gemini 3 Pro at 1265, DeepSeek V4 at 1220. Translation: Claude Opus 5 and o4 dominate complex reasoning; GPT-5 and Sonnet 5 trade blows on general chat; Haiku and Flash are 15-20 IQ points behind but 5-20x cheaper.',
+          zh: 'Artificial Analysis 2026 智能指数（MMLU-Pro、GPQA Diamond、MATH、HumanEval、SWE-bench Verified 复合）：Opus 5 领跑 87.4，o4 84.2，Gemini 3 Pro 82.6，Sonnet 5 81.8，DeepSeek R1 79.1，GPT-5 78.4，V4 Pro 76.9，Haiku 4.5 71.2，GPT-5-mini 68.5，Gemini 3 Flash 67.8，DeepSeek V4 Flash 65.4。代码能力（SWE-bench Verified pass@1）：Opus 5 78.6%，o4 76.2%，Sonnet 5 71.4%，Gemini 3 Pro 69.8%，GPT-5 68.1%，DeepSeek R1 64.5%。LMSYS Chatbot Arena 2026 ELO（人类偏好）：Claude 5 系与 GPT-5 统计并列 1280-1290，Gemini 3 Pro 1265，DeepSeek V4 1220。结论：Claude Opus 5 与 o4 主导复杂推理；GPT-5 与 Sonnet 5 在通用聊天不分伯仲；Haiku 与 Flash 落后 15-20 智能指数但便宜 5-20 倍。',
+        },
+      },
+      {
+        heading: {
+          en: 'Ecosystem, tooling & developer experience',
+          zh: '生态、工具链与开发者体验',
+        },
+        body: {
+          en: 'OpenAI has the deepest ecosystem: Assistants API, fine-tuning on GPT-5-mini/o4-mini, Realtime API for voice, structured outputs, vision, native function-calling. Anthropic offers Claude Code SDK (the highest-rated coding agent framework per Vellum 2026), prompt caching with 5-minute and 1-hour TTLs, native tool use (computer use beta), and the longest production track record for agentic workflows. Google Gemini integrates tightly with Vertex AI, Firebase, and Workspace; it is the only provider with native video understanding and grounded search with Google Search. DeepSeek offers the most aggressive open-weight release cadence (V4 weights are MIT-licensed and runnable on a single H100), but hosted-only feature parity lags the big three — no native realtime voice, no computer use, smaller function-calling schema. For solo developers building side-projects, Claude Code SDK + Anthropic API is the lowest-friction path in 2026; for teams standardizing on OpenAI stack (Assistants, Realtime, fine-tuning), GPT-5 stays the safer bet; for Google Cloud shops, Gemini 3 Pro + Vertex AI is native.',
+          zh: 'OpenAI 拥有最深生态：Assistants API、GPT-5-mini / o4-mini 微调、Realtime API 语音、结构化输出、视觉、原生函数调用。Anthropic 提供 Claude Code SDK（Vellum 2026 评分最高的编码 Agent 框架）、5 分钟与 1 小时 TTL 的提示缓存、原生工具使用（computer use 测试版）、Agent 工作流最长的生产记录。Google Gemini 与 Vertex AI、Firebase、Workspace 紧密集成，是唯一原生支持视频理解与 Google Search 接地搜索的提供商。DeepSeek 提供最激进的开放权重发布节奏（V4 权重为 MIT 许可，单卡 H100 可运行），但托管功能对标落后三大 —— 无原生实时语音、无 computer use、函数调用 schema 较小。2026 年独立开发者搭建副业，Claude Code SDK + Anthropic API 是最低摩擦路径；对 OpenAI 栈标准化的团队（Assistants、Realtime、微调），GPT-5 仍是更稳妥选择；对 Google Cloud 体系，Gemini 3 Pro + Vertex AI 是原生方案。',
+        },
+      },
+      {
+        heading: {
+          en: 'When to choose which: a decision tree',
+          zh: '何时选哪个：决策树',
+        },
+        body: {
+          en: 'Pick Claude Opus 5 / Sonnet 5 when: agentic coding (Claude Code SDK), long-context RAG over PDFs/codebases, careful instruction-following, or safety-sensitive apps. Pick GPT-5 / o4 when: you need OpenAI ecosystem lock-in (Assistants, Realtime, fine-tuning), math-heavy reasoning where o4 dominates, or you already pay for ChatGPT Enterprise. Pick Gemini 3 Pro when: you are on Google Cloud / Vertex AI, need video understanding, or want the largest context (2M tokens) for whole-doc workflows. Pick Gemini 3 Flash when: TTFT <300ms matters, cost-per-token is the dominant constraint, and you can tolerate a 15-20 IQ-point quality drop vs Opus. Pick DeepSeek V4 Flash / R1 when: cost is existential, your traffic is high-volume enough that 20x pricing differential pays the engineering bill for chunking + open-weight fallback, and you can host weights on H100/B200 if needed. Avoid: relying on any single provider for 100% of production traffic — multi-provider routing (e.g. Haiku for classification → Sonnet for generation) cuts cost 40-60% in most production stacks.',
+          zh: '选 Claude Opus 5 / Sonnet 5 当：Agent 编码（Claude Code SDK）、PDF / 代码库长上下文 RAG、严格指令遵循、安全敏感应用。选 GPT-5 / o4 当：需要 OpenAI 生态锁定（Assistants、Realtime、微调）、o4 主导的数学推理、已购买 ChatGPT Enterprise。选 Gemini 3 Pro 当：基于 Google Cloud / Vertex AI、需要视频理解、或需要最大上下文（2M token）做整文档工作流。选 Gemini 3 Flash 当：TTFT <300ms 关键、每 token 成本是主要约束、可容忍相对 Opus 15-20 智能指数下降。选 DeepSeek V4 Flash / R1 当：成本攸关、流量大到 20x 价差能付分块 + 开源权重回退的工程账单、需要时可自托管权重在 H100 / B200。避免：单一提供商承担 100% 生产流量 —— 多提供商路由（如 Haiku 分类 → Sonnet 生成）在多数生产栈降本 40-60%。',
+        },
+      },
+    ],
+    decision: {
+      en: 'Default stack for a new AI product in 2026: Claude Sonnet 5 for primary generation + Haiku 4.5 for classification/routing + Claude Code SDK for coding-agent features. This stack wins on the 5 dimensions most teams actually feel: quality (Sonnet 5 ranks 3rd on Artificial Analysis 2026 at 81.8 IQ), ecosystem (Claude Code SDK is the highest-rated coding agent framework per Vellum 2026), cost (Haiku at $1/$5 is 5-10x cheaper than Sonnet 5 for high-volume routing), safety (Constitutional AI training is the most battle-tested for production-sensitive use cases), and prompt caching (5min/1hr TTLs cut repeat-prompt cost 90%). Switch to GPT-5 only when: you need Realtime voice, fine-tuning (Claude fine-tuning is in beta and limited to Sonnet/Haiku), or already-standardized OpenAI tooling (Assistants, Function-calling schemas). Switch to Gemini 3 Pro only when: you are on Vertex AI natively, need video understanding, or need >1M context window. Switch to DeepSeek only when: cost is existential, traffic exceeds 50M reqs/month, or you must self-host weights for data-residency reasons. Multi-provider routing (cheap model classifies, mid model generates) is the single highest-ROI optimization — most production teams save 40-60% by routing 60-70% of requests to Haiku or Gemini Flash before they ever reach Sonnet or GPT-5.',
+      zh: '2026 年新产品默认栈：Claude Sonnet 5 主生成 + Haiku 4.5 分类/路由 + Claude Code SDK 编码 Agent 功能。此栈在团队真正关心的 5 个维度胜出：质量（Sonnet 5 在 Artificial Analysis 2026 排第 3，81.8 智能指数）、生态（Claude Code SDK 是 Vellum 2026 评分最高的编码 Agent 框架）、成本（Haiku $1/$5 对高频路由比 Sonnet 5 便宜 5-10 倍）、安全（Constitutional AI 训练在生产敏感场景久经验证）、提示缓存（5 分钟/1 小时 TTL 砍掉重复提示 90% 成本）。仅在以下情况切 GPT-5：需要 Realtime 语音、需要微调（Claude 微调仍 Beta 且仅限 Sonnet / Haiku）、已标准化 OpenAI 工具（Assistants、函数调用 schema）。仅在以下情况切 Gemini 3 Pro：原生 Vertex AI、需要视频理解、需要 >1M 上下文窗口。仅在以下情况切 DeepSeek：成本攸关、流量超 5000 万请求/月、或必须自托管权重满足数据驻留。多提供商路由（便宜模型分类、中档模型生成）是单一最高 ROI 优化 —— 多数生产团队把 60-70% 请求路由到 Haiku 或 Gemini Flash 再到 Sonnet / GPT-5，省 40-60%。',
+    },
+    sources: 'Anthropic Claude Pricing — Official 2026 API pricing page for Claude 5 / Opus 5 / Sonnet 5 / Haiku 4.5 (anthropic.com/pricing, accessed 2026-08-15). OpenAI API Pricing — Official 2026 pricing for GPT-5 / o4 / o4-mini / gpt-5-mini (openai.com/pricing, accessed 2026-08-15). Google Gemini API Pricing — Official 2026 Vertex AI pricing for Gemini 3 Pro / Flash / Flash-Lite (cloud.google.com/vertex-ai/pricing, accessed 2026-08-15). DeepSeek API Pricing — Official 2026 pricing for V4 Flash / V4 Pro / R1 (platform.deepseek.com/api-docs/pricing, accessed 2026-08-15). Artificial Analysis 2026 LLM Intelligence Index — Composite benchmark across MMLU-Pro, GPQA Diamond, MATH, HumanEval, SWE-bench Verified (artificialanalysis.ai, Q2 2026 release). Vellum LLM Leaderboard 2026 — Production-quality benchmark across 28 LLMs including coding agent framework ratings (vellum.ai/llm-leaderboard, Q2 2026 release). LMSYS Chatbot Arena 2026 ELO Leaderboard — Human preference ranking across 47 frontier models (lmarena.ai/leaderboard, Q2 2026). Anthropic Claude 5 Context Window Recall Benchmark — Needle-in-a-Haystack 99%+ accuracy up to 900K tokens (anthropic.com/engineering/context-window-recall-2026, Q1 2026). LiteLLM Cost Tracker 2026 — Cross-provider token pricing aggregator with monthly price-history (github.com/BerriAI/litellm, accessed 2026-08-15).',
+  },
+};
+
 export const TOPIC_GUIDE_CONTENT: Record<string, TopicGuideContent> = {
   'roas-optimization': {
     en: {
@@ -2369,3 +2531,4 @@ export const TOPIC_BENCHMARK_CONTENT: Record<string, { en: TopicBenchmarkContent
   },
 
 };
+

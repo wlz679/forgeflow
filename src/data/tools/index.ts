@@ -41,4 +41,11 @@ export const tools: ToolMeta[] = [
   ...legalCompliance,
 ];
 
+// P140f Phase 4 (added 2026-08-21): Lookup helper for Comparison Topic pages.
+// [topic]-compare.astro maps topic.calculatorSlugs → ToolMeta for rendering
+// the Related calculators section with `tools.{slug}.title` i18n keys.
+export function getCalculatorBySlug(slug: string): ToolMeta | undefined {
+  return tools.find((t) => t.slug === slug);
+}
+
 export type { ToolMeta };
