@@ -60,9 +60,7 @@ export const TIER_2_SLUGS: string[] = [
   // S (Sales) — 2
   'solopreneur-sales-velocity-calculator',
   'solopreneur-acv-calculator',
-  // T (Support) — 2
-  'solopreneur-first-response-time-calculator',
-  'solopreneur-resolution-time-calculator',
+  // T (Support) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave T)
 ];
 
 // Tier-3 (50) — remaining 50 engines (100 - 15 - 35 = 50). Derived as

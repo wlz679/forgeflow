@@ -262,6 +262,18 @@ export const TOPICS: Topic[] = [
                     zh: '构建并调优客户健康评分（CHS）领先指标，在流失出现在滞后指标前预测风险。' },
     calculatorSlugs: ['solopreneur-customer-health-score-calculator'],
     relatedTopicIds: ['net-revenue-retention', 'grr-optimization'] },
+  { id: 'first-response-time-optimization', letterId: 'T', domain: 'people', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'First Response Time (FRT) Optimization', zh: '首次响应时间（FRT）优化' },
+    description: { en: 'Reduce first response time via SLA tiers, staffing model, and triage automation — CSAT and ticket-deflection driver.',
+                    zh: '通过 SLA 分层、人员配置与分流自动化降低首次响应时间——CSAT 与工单分流的关键驱动。' },
+    calculatorSlugs: ['solopreneur-first-response-time-calculator'],
+    relatedTopicIds: ['support-cost-optimization'] },
+  { id: 'resolution-time-optimization', letterId: 'T', domain: 'people', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Resolution Time (RT) Optimization', zh: '问题解决时间（RT）优化' },
+    description: { en: 'Reduce mean resolution time via tiered triage, escalation paths, and knowledge-base deflection.',
+                    zh: '通过分层分流、升级路径与知识库分流降低平均解决时间。' },
+    calculatorSlugs: ['solopreneur-resolution-time-calculator'],
+    relatedTopicIds: ['support-cost-optimization', 'first-response-time-optimization'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {
