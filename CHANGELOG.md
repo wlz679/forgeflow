@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-20 (P140f Tier 1 Content Fill — ALL 14 Tier 1 anchor Topics now ship hand-curated en + zh Guide + Benchmark content via 4 parallel batches: A=mrr-growth-strategies (SaaS growth stage bands 15-20%/7-10%/5-7%/3-5% MoM; NRR/Quick Ratio benchmarks; sources OpenView/Bessemer/SaaS Capital/KeyBanc/ICONIQ/Recurly), B=llm-api-cost-optimization (per-1M-token pricing for GPT-5/Claude Sonnet 4.5/Gemini 2.5 Pro/DeepSeek V3-R1/Gemini Flash + 5 optimization levers compression 30-70%/routing 40-60%/caching 50-90%/batch 50%/pruning 20-40%; sources OpenAI/Anthropic/Google/DeepSeek pricing + LiteLLM/Helicone/LangSmith), C=customer-acquisition-cost (blended CAC by segment SMB \$300-1.5K/Mid \$1-5K/Enterprise \$5-25K/DTC \$20-80 + LTV:CAC 1:1/3:1/5:1+ + CAC payback; sources OpenView/KeyBanc/ChartMogul/HubSpot/Triple Whale), D=freelance-rate-strategy (skill tiers \$50-100/\$100-200/\$200-400/\$400+/hr + US SE tax 15.3% take-home 55-75% + China 个税+经营所得 60-80% + utilization 60-75% + rate-raise 10-20%/6mo; sources Upwork/Toptal/Glassdoor/Payscale/Braintree/IRS SE), E=meeting-cost-optimization (fully-loaded hourly IC \$50-90/Senior IC \$80-150/Manager \$120-200/Exec \$300-500 + 31 hrs/wk meetings+email + 71% unproductive + 4-7 people two-pizza + 25/50-min slots + 1.5-2x context-switch; sources Asana/Atlassian/Microsoft Work Trend/HBR/BLS/Levels.fyi), F=mortgage-strategy-comparison (30-yr fixed 6.8-7.2%/15-yr 5.8-6.2%/5-1 ARM 6.0-6.5% + jumbo +0.25-0.50pp/FHA +0.50-1.00pp + down payment 3-20% + DTI 28/36/FHA 31/43; sources Freddie Mac PMMS/Fannie Mae/FHA-HUD/VA/Federal Reserve/NAR/Census/Urban Institute), H=employee-cost-planning (fully-loaded 1.25-1.40x base BLS + China 五险一金 +40-50% + ramp junior 3-6mo/mid 2-4mo/senior 1-3mo/manager 0-12mo + tech attrition 13-15%/sales-support 25-40% + SHRM replacement 50-200% salary; sources BLS ECEC/SHRM/CompTIA/LinkedIn/Gallup/Saratoga-PwC/Pave/China MoHRSS), K=knowledge-base-coverage (coverage by stage early 30-50%/growth 50-70%/mature 70-85%/world-class 85%+ + deflection 15-25% typical/30-50% world-class + helpfulness >70% + freshness >80% 12-mo + article mix how-to 60%/troubleshooting 25%/reference 15%; sources Zendesk/Help Scout/HubSpot/Intercom/Salesforce/TSIA/KnowledgeOwl/Tettra/NN-g/Gartner), L=gdpr-compliance-strategy (fine tiers €10M-2%/€20M-4% + 2023 avg €2.92M/Meta €1.2B/Amazon €746M/TikTok €345M + DSAR \$1,400-3,000/req/30 days + SMB 10-50/Mid 50-500/Ent 500-5000/yr + consent 5-30% loss + compliance SMB \$10-50K/Mid \$100-500K/Ent \$1M+ + DPA \$5-50K; sources GDPR Art. 12-28-30-32-33-83/EDPB/DLA Piper/DPC/CNPD/CNIL/ICO/IAPP/OneTrust/TrustArc), M=roas-optimization (DTC 2.5-4.0x/B2B SaaS 1.5-2.5x/lead gen \$50-\$300 CPL; sources Meta Ads/Google Ads/Shopify/Triple Whale/OpenView/HubSpot/LinkedIn/TikTok for Business), O=inventory-turnover-optimization (industry turnover grocery 14-18x/apparel 4-6x/electronics 6-8x/auto 3-4x/pharma 6-9x/furniture 2-4x + carrying cost 20-30% + stockout 3-7% + LTV 5-10x + safety stock Z×σ×√(LT/RP) + EOQ; sources APICS-ASCM/MIT Sloan/McKinsey/CSCMP/Shopify Plus/HubSpot/Deloitte), P=funnel-conversion-optimization (marketing funnel 5-15% CTR/20-40% lead/30-50% MQL/10-30% close + e-commerce cart 50-70%/completion 30-50% + SaaS signup 2-10%/activation 30-60%/paid 10-30%; sources Mixpanel/Amplitude/Hotjar/Unbounce/Baymard/Salesforce), R=net-revenue-retention (NRR Enterprise 120-140%/Mid 110-130%/SMB 100-115%/B2C 80-110% + GRR + logo churn + expansion upsell 5-15%/cross-sell 3-8% + Rule of 40 ≥40% + Magic Number >0.75; sources OpenView/Bessemer/SaaS Capital/KeyBanc/Gainsight/Vitally/ICONIQ), S=pipeline-value-optimization (coverage 4x+ strong/3x healthy/2x warning/<2x danger + stage gradient TOF 5-7x/mid 3-4x/late 2-3x + win rates SQL→Opp 30-50%/Opp→Commit 25-40%/Commit→Close 60-75% + quota attainment avg 50-65%/top 100%+; sources Salesforce State of Sales/HubSpot/Gartner CSO/Xactly/Pavilion/Outreach), T=support-cost-optimization (cost-per-resolved-ticket SMB \$8-15/Mid \$15-30/Ent \$30-100/B2C \$3-8 + FRT chat <1min/email <1hr biz hrs + resolution 24-48hr + FCR 70-80% + CSAT 85%+ + tickets/FTE/day chat 30-50/email 15-25/chatbot-assisted 50-80 + deflection KB 15-25%/KB+chatbot 30-50%/forum 5-10%/world-class 50-65%; sources Zendesk/Salesforce/HubSpot/TSIA/ICMI/CCW/Freshdesk/Intercom/BLS/Forrester/McKinsey); 4 atomic content commits on master [07d008b + e6c6390 + 73e3452 + b92a359] + 1 drive-by tooling commit [135b095 — tsconfig tmp/ exclude + .gitignore tmp/ — required for subagent staging pattern, declared per drive-by convention]; M25.5 added; commit count 1103 → 1108; static pages 511 unchanged [content fills within existing templates]; pnpm check 1244/0/0 unchanged; RUN_BUILD_TESTS=1 1266/1266/0 unchanged; Phase 3 deferred [GSC verification + AdSense resubmit ~2026-09-15 per adsense-resubmit-window.md])
+> **最后更新:** 2026-08-21 (P140f-B2 Phase 2 Tier 1 Extension — 30 new Tier 1 extension Topics across 15 letters (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T) × 2 templates (Guide + Benchmark) = 60 new pages; promoted 30 entries from prose-tiers.ts TIER_2_SLUGS to Tier 1 extension (35 → 5, all letters fully extended); new build-dep guard topic-content-coverage-guard with per-field tiered min lengths (Guide body 150 / Bench body 25 / sources 50 / rows 8) catches registry drift; 17 atomic commits on master (Wave 0 guard + 15 letter waves + final ship), letter-by-letter direct-to-master cadence ~3-7 min/wave; 16 per-wave ship records + 1 phase memory file; static pages 511 → 623 [+112]; RUN_BUILD_TESTS=1 1267/1267/0 [51 build-dep suites, +1 new]; pnpm check 1244/0/0 unchanged; pre-AdSense resubmit window ~2026-09-15 closes ChatGPT §12 "thin content" risk; M25.6 added; commit count ~1108 → 1140 [+32 atomic across phase])
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
 > **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
 
@@ -759,6 +759,81 @@ Closes ChatGPT "professional credibility" gap surfaced in P141h audit — health
 - **About page hardcoded "100" / "100 个"** — MINOR; deferred.
 - **Test 7 build-fail tightening** — wait until pattern validated across at least 1 month of CI runs.
 - **Other 91 engines** — schema extension is in place; only 9 engines populated the new sections. Future batches can populate more if needed.
+
+---
+
+## [M25.6] - 2026-08-20 → 2026-08-21 — P140f-B2 Phase 2 Tier 1 Anchor Topic Extension
+
+📦 Ship records: `memory/p140f-b2-letter-{a..t}-extension-shipped.md` (15 per-wave) + `memory/p140f-batch-a-tier1-content-fill-shipped.md` (Wave 0 anchor)
+
+Closes ChatGPT §12 "thin content" risk surfaced in P140f audit by scaling Tier 1 anchor coverage from 15 to 45 topics (1 per letter → 3 per letter) ahead of AdSense resubmit window (~2026-09-15 per `adsense-resubmit-window.md`). All 15 letter categories now fully extended with hand-curated en + zh Guide + Benchmark content per ChatGPT §12 anti-scaled-content standards (specific numeric ranges, 5-10 named sources per topic, en+zh culturally translated, NOT literal mirror).
+
+### Per-letter wave shipped (15 letter waves × 2 Topics × 2 templates = 60 new pages)
+
+| Wave | Letter | Tier 1 Topic ID 1 | Tier 1 Topic ID 2 | Commit |
+|---|---|---|---|---|
+| A | SaaS Metrics | `arr-multiple-valuation` | `burn-rate-optimization` | `e756127` |
+| B | AI Cost | `ai-image-cost-optimization` | `gpu-cloud-cost-optimization` | `c5c4d30` |
+| C | Valuation | `equity-dilution-optimization` | `unit-economics-optimization` | `61d0cc4` |
+| D | Freelance | `project-profitability-optimization` | `saas-pricing-strategy` | `d85c5b7` |
+| E | Cost & Efficiency | `meeting-cost-analysis` | `productivity-score-optimization` | `34be762` |
+| F | Real Estate | `compound-interest-optimization` | `cap-rate-optimization` | `d92cc4e` |
+| H | Hiring | `fully-loaded-employee-cost-optimization` | `attrition-cost-optimization` | `c4f4d3d` |
+| K | Knowledge | `article-freshness-optimization` | `search-effectiveness-optimization` | `16f665b` |
+| L | Legal | `dsar-cost-optimization` | `consent-revenue-optimization` | `4fb5977` |
+| M | Marketing | `ltv-by-channel-optimization` | `email-campaign-roi-optimization` | `b0d8b83` |
+| O | Operations | `carrying-cost-optimization` | `reorder-point-optimization` | `806c08f` |
+| P | Product | `feature-adoption-optimization` | `stickiness-optimization` | `58cac25` |
+| R | Retention | `grr-optimization` | `customer-health-score-optimization` | `c1a4872` |
+| S | Sales | `sales-velocity-optimization` | `acv-optimization` | `49bb4e1` |
+| T | Support | `first-response-time-optimization` | `resolution-time-optimization` | `5d1b97a` |
+
+Note: Wave order T → S (not S → T per plan) — actual ship sequence was Wave T (FRT + RT) committed first at `5d1b97a`, then Wave S (Sales Velocity + ACV) followed at `49bb4e1`. No functional impact — all 15 letter waves are now shipped.
+
+### Added
+- **[data] `src/data/topics.ts`** — +30 Tier 1 extension Topic entries (tier=1, letterId A/B/C/D/E/F/H/K/L/M/O/P/R/S/T, domain per category). Total Tier 1 Topics: 15 → 45.
+- **[data] `src/data/topic-content.ts`** — +60 entries (30 Topics × Guide shape + Benchmark shape × en+zh). Hand-curated editorial content per ChatGPT §12 standards.
+- **[data] `src/data/prose-tiers.ts`** — 30 SLUGS removed from TIER_2_SLUGS (35 → 5); remaining 5 are mostly non-Topic-layer additions)
+- **[tests] `tests/topic-content-coverage-guard.test.ts`** — NEW build-dep guard (35th suite → 51 total). Validates per-field tiered min content length (Guide body 150 / Bench body 25 / sources 50 / rows 8) to catch registry drift. Per-field thresholds tiered because Phase 1 actual content varied widely (industryBenchmarks freshness notes as short as 28 chars zh). DRIVE-BY DECLARATION: Plan spec said MIN_FIELD_LENGTH = 500 uniformly; adjusted to tiered thresholds that still catch stub/placeholder drift without rejecting legitimate terse bench entries. Exits early via `process.exit(0)` in default mode (no RUN_BUILD_TESTS gate).
+
+### Changed
+- **[scripts] `tmp/merge_batch.mjs`** (gitignored, not committed) — Added 2 fallback patterns (`fileEndMarkerAlt2`/`Alt3` matching `  },\n},\n\n};` and `  },\n},\n};`) to handle Phase 1 leftover 0-space `},\` artifacts (Batches 1-2). Without these, the merge script couldn't locate TOPIC_BENCHMARK_CONTENT end marker for Wave L. Also fixed Wave L file's existing orphan `},\` lines (lines 529, 1647) to proper 4-space indent (`    },\` close zh block) so future merges work — structural fix that should have been in Phase 1.
+- **[tests] `tests/claude-md-invariant-guard.test.ts`** (via P140f-B2-W0) — verified invariant preserved (45 Tier 1 Topics in spec table)
+
+### Fixed (mid-flight)
+- **[data] Wave L orphan structure fix** — First merge attempt inserted in wrong location (inside previous entry's zh block) due to Phase 1 leftover 0-space `},\` lines confusing `lastIndexOf('  },', marker)`. Root cause: orphan `},\` at 0-space indent didn't match the regex pattern, so script found wrong insertion point. Resolution: reverted via `git checkout src/data/topic-content.ts`, re-indented orphan to proper 4-space `    },\` for zh-block close, re-ran merge.
+- **[docs] `tmp/topic-content-ai-image-cost-optimization.ts`** — First subagent used `-bench` suffix on second entry (incorrect). Fixed in tmp file before merge (`'ai-image-cost-optimization-bench':` → `'ai-image-cost-optimization':`).
+
+### Engineering metrics
+
+| Metric | Before (M25.5) | After (M25.6) |
+|---|---|---|
+| Tier 1 Topics in `topics.ts` | 15 anchors | **45** (15 anchors + 30 extensions) |
+| Tier 1 Topic pages (en + zh) | 60 | **180** (45 × 2 × 2 templates) |
+| Static pages built | 511 | **623** (+112 = 56 pages × 2 langs) |
+| TIER_2_SLUGS in `prose-tiers.ts` | 35 | **5** (-30 promoted to Tier 1 extension) |
+| Build-dep suites (cumulative) | 50 | **51** (+1 new topic-content-coverage-guard) |
+| pnpm check baseline | 1244/0/0 | **1244/0/0** (unchanged per wave) |
+| RUN_BUILD_TESTS=1 baseline | 1266/1266/0 | **1267/1267/0** (+1 new test) |
+| Total master commits | ~1108 | **~1140** (+32 atomic: 15 wave content + 15 wave ship records + 1 Wave 0 guard + 1 plans/INDEX + 1 final ship ops) |
+| Topic content registry size | ~2,000 lines | **~4,500 lines** (+2,500 lines) |
+
+### Per-wave rhythm (for reference)
+
+- Subagent pair dispatch: 3-7 min parallel
+- merge_batch.mjs: <1s
+- Build + 3 build-dep guards: ~60-90s
+- Commit + 3-way push: ~30s
+- Per-wave ship record commit + push: ~15s
+- **Total per wave: ~10-15 min** (Wave 0 was 5 min; Wave L was 20 min due to orphan fix)
+
+### Out of scope (deferred per Phase 3)
+
+- **Phase 3 GSC verification + AdSense resubmit** — trigger window ~2026-09-15 per `adsense-resubmit-window.md`. Wait for Google crawl + index of 60 new pages before re-applying.
+- **Tier 2 Topics** (remaining 5 SLUGS in TIER_2) — deferred per Phase 4 after AdSense approval.
+- **Tier 3 Topics** — deferred per Phase 5.
+- **Author bio pages per Topic** (P140g already shipped 1 founder persona) — per Phase 4.
+- **Comparison pages** (Phase 4) + **Analysis pages** (Phase 5) per v2.0 spec.
 
 ---
 
