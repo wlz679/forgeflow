@@ -178,6 +178,18 @@ export const TOPICS: Topic[] = [
                     zh: '用资本化率、NOI 与市场周期压缩/扩张评估房地产交易。' },
     calculatorSlugs: ['solopreneur-cap-rate-calculator'],
     relatedTopicIds: ['mortgage-strategy-comparison'] },
+  { id: 'fully-loaded-employee-cost-optimization', letterId: 'H', domain: 'people', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Fully-Loaded Employee Cost Optimization', zh: '员工全负担成本优化' },
+    description: { en: 'Calculate true fully-loaded employee cost including salary, benefits, taxes, equipment, and overhead allocation — with regional multipliers.',
+                    zh: '计算员工真实全负担成本——含工资、福利、税费、设备与运营开销分摊——按地域倍率。' },
+    calculatorSlugs: ['solopreneur-fully-loaded-employee-cost-calculator'],
+    relatedTopicIds: ['employee-cost-planning', 'meeting-cost-analysis'] },
+  { id: 'attrition-cost-optimization', letterId: 'H', domain: 'people', tier: 1, publishedAt: '2026-08-21',
+    title: { en: 'Attrition Cost Optimization', zh: '员工流失成本优化' },
+    description: { en: 'Quantify true cost of employee turnover including recruiting, onboarding, lost productivity, and institutional knowledge loss.',
+                    zh: '量化员工流失的真实成本——含招聘、入职、生产力损失与组织知识流失。' },
+    calculatorSlugs: ['solopreneur-attrition-cost-calculator'],
+    relatedTopicIds: ['employee-cost-planning', 'net-revenue-retention'] },
 ];
 
 export function getTopicById(id: TopicId): Topic | undefined {

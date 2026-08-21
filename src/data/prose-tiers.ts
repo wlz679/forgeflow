@@ -50,9 +50,7 @@ export const TIER_2_SLUGS: string[] = [
   // D (Freelance) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave D)
   // E (Cost) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave E)
   // F (Investment) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave F)
-  // H (Hiring) — 2
-  'solopreneur-fully-loaded-employee-cost-calculator',
-  'solopreneur-attrition-cost-calculator',
+  // H (Hiring) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave H)
   // K (Knowledge) — 2
   'solopreneur-article-freshness-calculator',
   'solopreneur-search-effectiveness-calculator',
