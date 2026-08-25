@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-17",
+  "lastUpdated": "2026-08-24",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -998,19 +998,19 @@
           "order": 120
         },
         "gpt-5.6": {
-          "input": 5,
-          "output": 30,
+          "input": 4,
+          "output": 20,
           "name": "GPT 5.6",
           "family": "gpt5",
-          "contextWindow": "1M",
+          "contextWindow": "922K",
           "order": 121
         },
         "gpt-5.6-sol": {
-          "input": 5,
-          "output": 30,
+          "input": 4,
+          "output": 20,
           "name": "GPT 5.6Sol",
           "family": "gpt5",
-          "contextWindow": "1M",
+          "contextWindow": "922K",
           "order": 122
         },
         "gpt-5.6-terra": {
@@ -1018,7 +1018,7 @@
           "output": 12,
           "name": "GPT 5.6Terra",
           "family": "gpt5",
-          "contextWindow": "1M",
+          "contextWindow": "922K",
           "order": 123
         },
         "gpt-5.6-luna": {
@@ -1026,7 +1026,7 @@
           "output": 1.2,
           "name": "GPT 5.6Luna",
           "family": "gpt5",
-          "contextWindow": "1M",
+          "contextWindow": "922K",
           "order": 124
         },
         "gpt-realtime-2.1": {
@@ -1044,6 +1044,14 @@
           "family": "legacy",
           "contextWindow": "128K",
           "order": 126
+        },
+        "gpt-5.6-cyber": {
+          "input": 12.5,
+          "output": 75,
+          "name": "GPT 5.6Cyber",
+          "family": "gpt5",
+          "contextWindow": "400K",
+          "order": 127
         }
       }
     },
@@ -1392,8 +1400,8 @@
           "order": 12
         },
         "gemini-3.1-flash-image-preview": {
-          "input": 0.25,
-          "output": 1.5,
+          "input": 0.5,
+          "output": 3,
           "name": "Gemini 3.1Flash Image Preview",
           "family": "flash3",
           "contextWindow": "66K",
@@ -1624,8 +1632,8 @@
           "order": 41
         },
         "gemini-3.1-flash-image": {
-          "input": 0.25,
-          "output": 1.5,
+          "input": 0.5,
+          "output": 3,
           "name": "Gemini 3.1Flash Image",
           "family": "flash3",
           "contextWindow": "66K",
@@ -1648,8 +1656,8 @@
           "order": 44
         },
         "gemini-3.6-flash": {
-          "input": 1.5,
-          "output": 7.5,
+          "input": 0.75,
+          "output": 3.75,
           "name": "Gemini 3.6Flash",
           "family": "flash3",
           "contextWindow": "1M",
@@ -1694,6 +1702,22 @@
           "family": "flash3",
           "contextWindow": "8K",
           "order": 50
+        },
+        "gemini-3.1-flash-lite-image": {
+          "input": 0.25,
+          "output": 1.5,
+          "name": "Gemini 3.1Flash Lite Image",
+          "family": "flash3",
+          "contextWindow": "66K",
+          "order": 51
+        },
+        "gemini-3.5-live-translate-preview": {
+          "input": 3.5,
+          "output": 21,
+          "name": "Gemini 3.5Live Translate Preview",
+          "family": "flash35",
+          "contextWindow": "128K",
+          "order": 52
         }
       }
     },
@@ -1702,16 +1726,16 @@
       "cacheReadMult": 0.02,
       "models": {
         "deepseek-v4-flash": {
-          "input": 0.14,
-          "output": 0.28,
+          "input": 0.44,
+          "output": 1.32,
           "name": "Deepseek V4Flash",
           "family": "v4",
           "contextWindow": "1M",
           "order": 1
         },
         "deepseek-v4-pro": {
-          "input": 0.435,
-          "output": 0.87,
+          "input": 1.32,
+          "output": 3.96,
           "name": "Deepseek V4Pro",
           "family": "v4",
           "contextWindow": "1M",
