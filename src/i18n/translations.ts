@@ -354,6 +354,8 @@ export const translations: Record<string, { en: string; zh: string }> = {
 
   // P140f: Letter page Topics section
   'letter.topics_section.h2': { en: 'Topics in this category', zh: '本类别主题' },
+  // P147 C2: Letter page Comparison section (4 letters with comparison-tier Topics: B/C/M/R)
+  'letter.compare.section': { en: 'X vs Y comparisons', zh: '对比专题' },
 
   'about.editorial_policy.h1': { en: 'How We Stay Neutral', zh: '编辑中立' },
   'about.editorial_policy.body': { en: 'ForgeFlowKit accepts no payment for tool rankings, recommendation order, or editorial coverage. Calculations are transparent — every formula is visible in the page source. We do not run user-tracking scripts, do not collect any input data, and do not require accounts. We do display contextual advertisements (clearly labeled as "Sponsored" or "Ad") to keep the site free, but ads never influence calculation results or tool recommendations.', zh: 'ForgeFlowKit 不接受任何工具排名、推荐顺序或编辑报道的付费。计算过程透明 — 每个公式都在页面源码中可见。我们不运行用户跟踪脚本，不收集任何输入数据，不需要账号。我们展示情境广告（明确标注为「赞助」或「广告」）以保持网站免费，但广告绝不会影响计算结果或工具推荐。' },

@@ -37,6 +37,11 @@ const categoryTools = tools
     };
   });
 const letterTopics = getTopicsByLetter(CATEGORY_ID);
+// P147 C2: Comparison-tier Topics for letter page cross-link (B/C/M/R only).
+// Renders as a separate "X vs Y comparisons" grid below the Tier 1 topics grid.
+// Uses CATEGORY_ID (not a hardcoded 'R') so the filter stays in sync if the
+// constant changes — same derivation pattern as letterTopics above.
+const comparisonTopics = letterTopics.filter((t) => t.tier === 'comparison');
 ---
 
 <BaseLayout
@@ -71,6 +76,15 @@ const letterTopics = getTopicsByLetter(CATEGORY_ID);
           {letterTopics.map((topic) => (
             <TopicCard topic={topic} lang={lang} variant="full" />
           ))}
+        </div>
+      </section>
+    )}
+
+    {comparisonTopics.length > 0 && (
+      <section class="mb-10">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">{t('letter.compare.section', lang)}</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {comparisonTopics.map((c) => <TopicCard topic={c} lang={lang} variant="full" />)}
         </div>
       </section>
     )}
