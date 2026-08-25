@@ -15,6 +15,7 @@ import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import ComparisonHero from '../../../components/ComparisonHero.astro';
+import TopicCard from '../../../components/TopicCard.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
 import { TOPIC_COMPARE_CONTENT } from '../../../data/topic-content';
@@ -48,7 +49,18 @@ const calculators = topic.calculatorSlugs
   .map((slug) => getCalculatorBySlug(slug))
   .filter((c): c is NonNullable<typeof c> => Boolean(c));
 
-const title = `${topic.title[lang]} — Side-by-side comparison`;
+// Resolve relatedTopicIds -> Topic[] for Related Topics cross-link section.
+// Mirrors [topic]-guide.astro derivation pattern (P147 C1 closes Phase 4
+// fable Minor #8 — TopicCard cross-link density on comparison pages).
+const relatedTopics = topic.relatedTopicIds
+  .map((id) => TOPICS.find((t) => t.id === id))
+  .filter((t): t is Topic => Boolean(t));
+
+// Optimize <title> for SERP: heroTitle (editorial framing) + topic.title
+// (topic identifier). Replaces the previous "topic.title — Side-by-side
+// comparison" form which lost the editorial long-tail and created a
+// truncated / generic SERP snippet. Closes Phase 4 fable Minor #9.
+const title = `${content.heroTitle[lang]} — ${topic.title[lang]}`;
 const description = topic.description[lang];
 const canonical = `${SITE_URL}/${lang}/${cat.slug}/${topic.id}-compare/`;
 
@@ -121,6 +133,17 @@ const articleSchema = JSON.stringify({
               <li><a href={`/${lang}/${calc.slug}/`} class="text-[#7C3AED] hover:underline">{t(`tools.${calc.slug}.title`, lang)} →</a></li>
             ))}
           </ul>
+        </div>
+      </section>
+    )}
+
+    {relatedTopics.length > 0 && (
+      <section class="mt-10">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-4">
+          {t('topic.guide.h2.related', lang)}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {relatedTopics.map((rt) => <TopicCard topic={rt} lang={lang} variant="compact" />)}
         </div>
       </section>
     )}
