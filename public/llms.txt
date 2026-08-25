@@ -1,0 +1,193 @@
+# ForgeFlowKit — Free Business Calculators for Solopreneurs & SaaS Founders
+
+> 100 free calculator tools across 15 categories (SaaS metrics, AI cost, valuation, freelance pricing, cost & efficiency, investment, marketing analytics, operations, sales, retention, product analytics, hiring, customer support, knowledge base, legal & compliance). All tools support English and Chinese. Each tool ships with decision-support context: assumptions, what-if scenarios, break-even analysis, common mistakes, and per-tool guidance.
+
+## About
+
+- [ForgeFlowKit Landing](https://forgeflowkit.com/): Main landing page (EN + ZH).
+- [About / Methodology](https://forgeflowkit.com/en/about/): Who built this, what we cover, how we maintain accuracy.
+- [Contact](https://forgeflowkit.com/en/contact/): Reach the team.
+
+## Categories
+
+### SaaS Metrics
+
+- [Category: SaaS Metrics](https://forgeflowkit.com/en/saas-metrics/): MRR, burn rate, churn, revenue projections, break-even, market sizing.
+- [Burn Rate Calculator — Free Monthly Cash + Runway + Breakeven (2026)](https://forgeflowkit.com/en/solopreneur-burn-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Churn Rate Calculator — Free Customer + Revenue Churn Tracker (2026)](https://forgeflowkit.com/en/solopreneur-churn-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Market Size Estimator — Free TAM + SAM + SOM Analysis (2026)](https://forgeflowkit.com/en/solopreneur-market-size-estimator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [MRR Calculator — Free SaaS Tracker: New + Churn + Expansion (2026)](https://forgeflowkit.com/en/solopreneur-mrr-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Revenue Projector — Free SaaS MRR + Cash Flow Forecast (2026)](https://forgeflowkit.com/en/solopreneur-revenue-projector/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### AI Cost Tools
+
+- [Category: AI Cost Tools](https://forgeflowkit.com/en/ai-cost-tools/): OpenAI / Claude / Gemini / DeepSeek token pricing, AI image gen, GPU cloud, training cost.
+- [AI API Cost Comparison](https://forgeflowkit.com/en/solopreneur-ai-api-cost-comparison/): Free calculator with decision support (assumptions, what-if, break-even).
+- [AI Image Generation Cost Calculator](https://forgeflowkit.com/en/solopreneur-ai-image-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [AI Training Cost Estimator](https://forgeflowkit.com/en/solopreneur-ai-training-cost-estimator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Claude API Cost Calculator](https://forgeflowkit.com/en/solopreneur-claude-api-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [DeepSeek API Cost Calculator](https://forgeflowkit.com/en/solopreneur-deepseek-api-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Gemini API Cost Calculator](https://forgeflowkit.com/en/solopreneur-gemini-api-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [GPU Cloud Cost Calculator](https://forgeflowkit.com/en/solopreneur-gpu-cloud-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [OpenAI Token Calculator](https://forgeflowkit.com/en/solopreneur-openai-token-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Valuation & Exit
+
+- [Category: Valuation & Exit](https://forgeflowkit.com/en/valuation-exit/): Unit economics, SaaS valuation, LTV, CAC, equity dilution, revenue projections.
+- [ARR Multiple Valuation Calculator](https://forgeflowkit.com/en/solopreneur-arr-multiple-valuation-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Break-Even Calculator — Fixed Costs + Revenue + Time to Breakeven (2026)](https://forgeflowkit.com/en/solopreneur-break-even-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Burn Multiple & Rule of 40 Calculator](https://forgeflowkit.com/en/solopreneur-burn-multiple-rule-of-40-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [CAC Calculator — Free Blended + Paid CAC + Payback (2026)](https://forgeflowkit.com/en/solopreneur-cac-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Equity Dilution Calculator — Pre-Money + Post-Money Ownership (2026)](https://forgeflowkit.com/en/solopreneur-equity-dilution-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [LTV Calculator — ARPU + Margin + Churn Formula (2026)](https://forgeflowkit.com/en/solopreneur-ltv-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [SaaS Valuation Calculator — MRR Multiple + ARR Multiple (2026)](https://forgeflowkit.com/en/solopreneur-saas-valuation-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [SAFE / Convertible Note Calculator](https://forgeflowkit.com/en/solopreneur-safe-convertible-note-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Stripe Fee Calculator — Stripe vs PayPal + Net Revenue (2026)](https://forgeflowkit.com/en/solopreneur-stripe-fee-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Unit Economics Calculator — SaaS LTV/CAC + Payback Months (2026)](https://forgeflowkit.com/en/solopreneur-unit-economics-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Freelance Pricing
+
+- [Category: Freelance Pricing](https://forgeflowkit.com/en/freelance-pricing/): Hourly-vs-fixed, freelance rate, sponsorship rate, course pricing, SaaS pricing, email list revenue.
+- [Affiliate Income Calculator — Free Commission + Conversion Forecast (2026)](https://forgeflowkit.com/en/solopreneur-affiliate-income-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Course Pricing Calculator — Free Price + Enrollment + Revenue Plan (2026)](https://forgeflowkit.com/en/solopreneur-course-pricing-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Email List Revenue Calculator — Free Subscriber + Conversion Forecast (2026)](https://forgeflowkit.com/en/solopreneur-email-list-revenue-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Freelance Rate Calculator — Free Hourly + Project Rate Planner (2026)](https://forgeflowkit.com/en/solopreneur-freelance-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Hourly vs Fixed Rate Calculator](https://forgeflowkit.com/en/solopreneur-hourly-vs-fixed-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Project Profitability Calculator — Margin + Hourly Rate + Breakeven (2026)](https://forgeflowkit.com/en/solopreneur-project-profitability-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Cost & Efficiency
+
+- [Category: Cost & Efficiency](https://forgeflowkit.com/en/cost-efficiency/): Employee cost, meeting cost, productivity score, market size, SaaS pricing.
+- [Employee Cost Calculator — Free Salary + Benefits + Overhead (2026)](https://forgeflowkit.com/en/solopreneur-employee-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Meeting Cost Calculator — Free Attendee Cost + Lost Time (2026)](https://forgeflowkit.com/en/solopreneur-meeting-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Productivity Score Calculator — Deep Work + Meeting Load (2026)](https://forgeflowkit.com/en/solopreneur-productivity-score/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Remote vs Office Cost Calculator](https://forgeflowkit.com/en/solopreneur-remote-vs-office-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [SaaS Pricing Planner — Free Tier + Margin + Revenue Model (2026)](https://forgeflowkit.com/en/solopreneur-saas-pricing-planner/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Investment & Real Estate
+
+- [Category: Investment & Real Estate](https://forgeflowkit.com/en/investment-roi/): Compound interest, mortgage, cap rates, BRRR returns, rent-vs-buy, DSCR, time value.
+- [BRRRR Calculator (Buy Rehab Rent Refinance Repeat)](https://forgeflowkit.com/en/solopreneur-brrrr-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Cap Rate Calculator — NOI ÷ Property Value + Investment Yield (2026)](https://forgeflowkit.com/en/solopreneur-cap-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Compound Interest Calculator — Principal + Contributions + Growth (2026)](https://forgeflowkit.com/en/solopreneur-compound-interest-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [DSCR Calculator (Debt Service Coverage Ratio)](https://forgeflowkit.com/en/solopreneur-dscr-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Freelance Tax Calculator — Free Tax Estimate + Quarterly Set-Aside (2026)](https://forgeflowkit.com/en/solopreneur-freelance-tax-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Mortgage Calculator — Monthly Payment + Interest + Amortization (2026)](https://forgeflowkit.com/en/solopreneur-mortgage-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Rent vs Buy Calculator](https://forgeflowkit.com/en/solopreneur-rent-vs-buy-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Rental Yield Calculator — Gross + Net + Cash-on-Cash Yield (2026)](https://forgeflowkit.com/en/solopreneur-rental-yield-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Sponsorship Rate Calculator — Free CPM + Audience Value Pricing (2026)](https://forgeflowkit.com/en/solopreneur-sponsorship-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Time Value Calculator — Hourly + Minute Value + Time Waste Cost (2026)](https://forgeflowkit.com/en/solopreneur-time-value-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Marketing Analytics
+
+- [Category: Marketing Analytics](https://forgeflowkit.com/en/marketing-analytics/): ROAS, LTV by channel, funnel value, cohort retention, email & content marketing ROI, coupon attribution, cart abandonment.
+- [Cart Abandonment Cost Calculator — Lost Revenue + Recovery ROI (2026)](https://forgeflowkit.com/en/solopreneur-cart-abandonment-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Cohort Retention Calculator — Retention Decay + 12-Month LTV (2026)](https://forgeflowkit.com/en/solopreneur-cohort-retention-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Content Marketing ROI Calculator — SEO Ramp + Attributed Revenue (2026)](https://forgeflowkit.com/en/solopreneur-content-marketing-roi-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Coupon Attribution Calculator — Incremental Revenue + True ROI (2026)](https://forgeflowkit.com/en/solopreneur-coupon-attribution-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Email Campaign ROI Calculator — Net Revenue + Cost per Click (2026)](https://forgeflowkit.com/en/solopreneur-email-campaign-roi-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Funnel Value Calculator — Stage Revenue + Drop-Off Loss (2026)](https://forgeflowkit.com/en/solopreneur-funnel-value-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [LTV by Channel Calculator — LTV/CAC + Blended CAC By Channel (2026)](https://forgeflowkit.com/en/solopreneur-ltv-by-channel-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [ROAS Calculator — Ad Spend + Margin-Aware ROI (2026)](https://forgeflowkit.com/en/solopreneur-roas-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Operations & Inventory
+
+- [Category: Operations & Inventory](https://forgeflowkit.com/en/operations-inventory/): Inventory turnover, carrying cost, stockout cost, reorder point, fulfillment cost, supplier scorecards.
+- [Inventory Carrying Cost Calculator — Storage + Capital Cost (2026)](https://forgeflowkit.com/en/solopreneur-carrying-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Fulfillment Cost Calculator — Per Order + Per Unit Cost (2026)](https://forgeflowkit.com/en/solopreneur-fulfillment-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Inventory Turnover Calculator — Annual Turns + Days on Hand (2026)](https://forgeflowkit.com/en/solopreneur-inventory-turnover-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Reorder Point Calculator — Lead-Time Demand + Safety Stock (2026)](https://forgeflowkit.com/en/solopreneur-reorder-point-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Stockout Cost Calculator — Lost Revenue + Customer LTV (2026)](https://forgeflowkit.com/en/solopreneur-stockout-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Supplier Scorecard Calculator — Quality + Delivery + Cost Score (2026)](https://forgeflowkit.com/en/solopreneur-supplier-scorecard-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Sales Management
+
+- [Category: Sales Management](https://forgeflowkit.com/en/sales/): Pipeline value, sales velocity, ACV, win rate by stage, quota attainment, pipeline coverage.
+- [ACV (Annual Contract Value) Calculator](https://forgeflowkit.com/en/solopreneur-acv-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Pipeline Coverage Calculator — Open Pipeline ÷ Quota + Gap (2026)](https://forgeflowkit.com/en/solopreneur-pipeline-coverage-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Pipeline Value Calculator — Free Weighted Deal Forecast (2026)](https://forgeflowkit.com/en/solopreneur-pipeline-value-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Quota Attainment Calculator — Free Sales Target + Gap Tracker (2026)](https://forgeflowkit.com/en/solopreneur-quota-attainment-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Sales Velocity Calculator — Pipeline × Win Rate ÷ Cycle Days (2026)](https://forgeflowkit.com/en/solopreneur-sales-velocity-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Win Rate by Stage Calculator](https://forgeflowkit.com/en/solopreneur-win-rate-by-stage-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Retention & Customer Success
+
+- [Category: Retention & Customer Success](https://forgeflowkit.com/en/retention/): NRR, GRR, expansion revenue, logo churn, customer health, renewal rate.
+- [Customer Health Score Calculator](https://forgeflowkit.com/en/solopreneur-customer-health-score-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Expansion Revenue Calculator — Free Upsell + Cross-Sell MRR (2026)](https://forgeflowkit.com/en/solopreneur-expansion-revenue-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Gross Revenue Retention (GRR) Calculator](https://forgeflowkit.com/en/solopreneur-grr-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Logo Churn Rate Calculator — Free Customer Loss + Retention (2026)](https://forgeflowkit.com/en/solopreneur-logo-churn-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Net Revenue Retention (NRR) Calculator](https://forgeflowkit.com/en/solopreneur-nrr-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Renewal Rate Calculator — Free Renewed ARR + Revenue at Risk (2026)](https://forgeflowkit.com/en/solopreneur-renewal-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Product Analytics
+
+- [Category: Product Analytics](https://forgeflowkit.com/en/product-analytics/): Funnel conversion, feature adoption, activation rate, stickiness (DAU/MAU), time-to-value, power user curves.
+- [Activation Rate Calculator — Free Aha-Moment + Onboarding Tracker (2026)](https://forgeflowkit.com/en/solopreneur-activation-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Feature Adoption Calculator — Free Active User + Usage Tracker (2026)](https://forgeflowkit.com/en/solopreneur-feature-adoption-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Funnel Step Conversion Calculator](https://forgeflowkit.com/en/solopreneur-funnel-step-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Power User Curve Calculator](https://forgeflowkit.com/en/solopreneur-power-user-curve-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Stickiness (DAU/MAU) Calculator](https://forgeflowkit.com/en/solopreneur-stickiness-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Time-to-Value Calculator — Free Median + p90 Onboarding Time (2026)](https://forgeflowkit.com/en/solopreneur-time-to-value-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Hiring & Team
+
+- [Category: Hiring & Team](https://forgeflowkit.com/en/hiring-team/): Fully-loaded employee cost, ramp time, productivity ramp, comp banding, equity refresh, attrition cost.
+- [Attrition Cost Calculator — Free Turnover + Replacement Cost (2026)](https://forgeflowkit.com/en/solopreneur-attrition-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Compensation Banding Calculator — Free Salary Percentile + Market Band (2026)](https://forgeflowkit.com/en/solopreneur-comp-banding-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Equity Refresh Grant Calculator](https://forgeflowkit.com/en/solopreneur-equity-refresh-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Fully-Loaded Employee Cost Calculator](https://forgeflowkit.com/en/solopreneur-fully-loaded-employee-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Productivity Ramp Curve Calculator](https://forgeflowkit.com/en/solopreneur-productivity-ramp-curve-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Time to Productivity Calculator — Free Ramp Weeks + Role Complexity (2026)](https://forgeflowkit.com/en/solopreneur-time-to-productivity-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Customer Support
+
+- [Category: Customer Support](https://forgeflowkit.com/en/customer-support/): Cost-per-ticket, first response time SLA, resolution time, CSAT, self-service deflection, team capacity.
+- [Cost per Support Ticket Calculator](https://forgeflowkit.com/en/solopreneur-cost-per-support-ticket-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [CSAT (Customer Satisfaction) Calculator](https://forgeflowkit.com/en/solopreneur-csat-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Self-Service Deflection Rate Calculator](https://forgeflowkit.com/en/solopreneur-deflection-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [First Response Time SLA Calculator](https://forgeflowkit.com/en/solopreneur-first-response-time-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Resolution Time Calculator — Free Median + p90 + SLA Attainment (2026)](https://forgeflowkit.com/en/solopreneur-resolution-time-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Support Capacity Planning Calculator](https://forgeflowkit.com/en/solopreneur-support-capacity-planning-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Knowledge Base
+
+- [Category: Knowledge Base](https://forgeflowkit.com/en/knowledge/): KB coverage, article freshness, search effectiveness, deflection quality, documentation ROI, article helpfulness.
+- [Article Freshness Calculator — Free Stale Content + Update Priority (2026)](https://forgeflowkit.com/en/solopreneur-article-freshness-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Article Helpfulness Score Calculator](https://forgeflowkit.com/en/solopreneur-article-helpfulness-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Deflection Quality Calculator](https://forgeflowkit.com/en/solopreneur-deflection-quality-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Documentation ROI Calculator — Free Support Savings + Payback (2026)](https://forgeflowkit.com/en/solopreneur-documentation-roi-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [KB Coverage Rate Calculator — Free Content Gap + Deflection Tracker (2026)](https://forgeflowkit.com/en/solopreneur-kb-coverage-rate-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Search Effectiveness Calculator](https://forgeflowkit.com/en/solopreneur-search-effectiveness-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+### Legal & Compliance
+
+- [Category: Legal & Compliance](https://forgeflowkit.com/en/legal-compliance/): GDPR fine risk, DSAR cost, cookie consent revenue impact, DPA cost, breach notification, CMP ROI.
+- [Data Breach Notification Cost Calculator — Records + Response Cost (2026)](https://forgeflowkit.com/en/solopreneur-breach-notification-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [CMP ROI Calculator — DSAR Automation Savings + Payback (2026)](https://forgeflowkit.com/en/solopreneur-cmp-roi-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [Cookie Consent Revenue Impact Calculator — Opt-In vs Opt-Out (2026)](https://forgeflowkit.com/en/solopreneur-consent-revenue-impact-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [DPA Negotiation Cost Calculator — Legal Hours + Redline Cost (2026)](https://forgeflowkit.com/en/solopreneur-dpa-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [DSAR Processing Cost Calculator — GDPR Hours + Cost per Request (2026)](https://forgeflowkit.com/en/solopreneur-dsar-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+- [GDPR Fine Risk Calculator — Revenue-Tier Penalty + Compliance Cost (2026)](https://forgeflowkit.com/en/solopreneur-gdpr-fine-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
+
+## Editorial & Blog
+
+- [ForgeFlowKit Blog](https://forgeflowkit.com/en/blog/): In-depth guides, benchmarks, and comparisons for SaaS founders and solopreneurs.
+
+## Languages
+
+- English: https://forgeflowkit.com/en/
+- 中文 (Simplified Chinese): https://forgeflowkit.com/zh/
+
+## Sitemap & Feeds
+
+- XML Sitemap: https://forgeflowkit.com/sitemap-index.xml
+
+## Last Updated
+
+Reviewed 2026-08-25. Pricing data refreshed weekly via LiteLLM sync (Monday 06:00 UTC). Each calculator page shows a per-page dataReviewedAt badge via the EEAT trust block.
+
+## Reviewer
+
+- 王立柱 (ForgeFlowKit founder). All 100 calculators reviewed by a single accountable reviewer; see [About / Methodology](https://forgeflowkit.com/en/about/) for details and citation policy.
+
