@@ -889,6 +889,39 @@ Trigger ~2026-09-15 per `adsense-resubmit-window.md` (revised from initial ~2026
 
 ---
 
+## [M25.8] - 2026-08-21 — P147 Quick Wins (Phase 4 Followup)
+
+Closes Phase 4 fable Minor #8 (relatedTopicIds cross-link) + Minor #9 (`<title>` optimization). Extends Comparison cross-links to letter pages (B/C/M/R). New defensive build-dep guard.
+
+### Changes
+
+| Commit | Description |
+|---|---|
+| C1 (`ab6805e`) | fix(pages): render relatedTopicIds + optimize title in [topic]-compare.astro |
+| C2 (`e1bbe96`) | feat(pages): letter pages B/C/M/R add Comparison grid + i18n key |
+| C3 (`92704e5`) | feat(guard): comparison-cross-link-guard (5 cases) |
+| C4 (this) | docs(ship): MEMORY + CHANGELOG M25.8 + plans/INDEX |
+
+### Engineering Metrics
+
+| Metric | Before (M25.7) | After (M25.8) |
+|---|---|---|
+| New pages | 0 (cross-link only) | **0** |
+| Letter pages enhanced | 4 (B/C/M/R only) | **4** |
+| Build-dep suites | 52 → 53 | **52 → 53** (+1 new) |
+| Atomic commits on master | +4 | **+4** |
+| Master commits total | 1163 → 1167 | **1163 → 1167** |
+| 3-way divergence | 0/0 | **0/0** |
+| pnpm check baseline | 1256/0/0 | **1256/0/0** (cross-link guard adds 1 in RUN_BUILD_TESTS=1) |
+
+### Pre-AdSense Resubmit Bonus
+
+Improved internal link density + SERP CTR for "X vs Y" queries. Combined with Phase 1+2+4: 98 new pages + cross-link coverage.
+
+📦 Ship record: `memory/p147-quick-wins-shipped.md`
+
+---
+
 ## [M16.0] - 2026-07-15 → 2026-07-16 — 100 engines milestone (P16)
 
 🔒 **Maintenance mode locked** after this milestone. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/engine-count.ts`).
