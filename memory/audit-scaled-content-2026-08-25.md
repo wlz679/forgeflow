@@ -119,8 +119,8 @@ Reasons:
 ### Defensive (committed as build-dep guard)
 
 - ✅ **New guard** `tests/scaled-content-uniqueness-audit.test.ts` — runs in `RUN_BUILD_TESTS=1 pnpm test:build`
-- ✅ **Advisory only** (doesn't fail build) — surfaces any future drift
-- 🔮 **Future hardening option:** convert to hard `assert.ok(flagged.length === 0)` once we trust the threshold (probably after 1-2 successful runs post-Phase 5)
+- ✅ **HARD guard** — fails build via `assert.fail()` if any pair exceeds 0.8 (post-P148-C hardening, 2026-08-25)
+- 🔮 **Surfaces drift** — escalation path: if guard fires, audit which pair + which page-shape drifted (template change, prose drift, etc.)
 
 ### Pre-9/15 AdSense resubmit
 

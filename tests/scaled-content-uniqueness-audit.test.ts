@@ -5,8 +5,9 @@
 // computes pairwise Jaccard similarity on extracted main content. Flags any pair
 // above threshold as suspect boilerplate-heavy.
 //
-// This is an AUDIT (advisory only) — does not fail build. Output feeds the
-// memory/audit-scaled-content-2026-08-25.md report.
+// HARD GUARD — fails build if any page pair exceeds 0.8 similarity threshold.
+// See memory/audit-scaled-content-2026-08-25.md for the audit baseline (0 flagged
+// across 17,082 pairwise comparisons on 2026-08-25).
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
@@ -189,14 +190,16 @@ test('scaled-content-uniqueness-audit: pairwise Jaccard within template groups',
   }
   console.log(`\n[audit] Total pairwise comparisons: ${totalPairs}`);
   if (flagged.length > 0) {
-    console.warn(
-      `\n[audit] ⚠️  ${flagged.length} pair(s) exceed ${SIMILARITY_THRESHOLD} similarity threshold:`
+    console.error(
+      `\n[audit] ❌ ${flagged.length} pair(s) exceed ${SIMILARITY_THRESHOLD} similarity threshold:`
     );
     for (const f of flagged) {
-      console.warn(`  [${f.group}] ${f.a}\n    ↔ ${f.b}\n    jaccard=${f.jaccard.toFixed(3)}`);
+      console.error(`  [${f.group}] ${f.a}\n    ↔ ${f.b}\n    jaccard=${f.jaccard.toFixed(3)}`);
     }
-  } else {
-    console.log(`\n[audit] ✅ 0 pairs exceed ${SIMILARITY_THRESHOLD} — Aug 18 Spam Update risk = LOW`);
+    assert.fail(
+      `${flagged.length} page pair(s) exceed ${SIMILARITY_THRESHOLD} Jaccard similarity — ` +
+        `Aug 18 Spam Update scaled-content risk. See flagged pairs above.`
+    );
   }
-  // Advisory audit — does not fail build. Future hardening can convert to hard assert.
+  console.log(`\n[audit] ✅ 0 pairs exceed ${SIMILARITY_THRESHOLD} — Aug 18 Spam Update risk = LOW`);
 });
