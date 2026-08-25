@@ -12,6 +12,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { TOPICS } from '../src/data/topics.ts';
 import { categories } from '../src/data/categories.ts';
+import { translations } from '../src/i18n/translations.ts';
 
 const COMPARISON_TOPICS = TOPICS.filter((t) => t.tier === 'comparison');
 const LETTERS_WITH_COMPARE = ['B', 'C', 'M', 'R'] as const;
@@ -101,13 +102,21 @@ test('comparison-cross-link-guard: page render — each Comparison page has ≥1
   assert.ok(comparePages.length >= 8, `Expected ≥8 comparison pages in dist/, found ${comparePages.length}`);
   for (const pagePath of comparePages) {
     const html = readFileSync(pagePath, 'utf8');
-    // Check for at least one cross-link href to a related topic URL.
-    // Pattern: href containing "<topicId>-" (i.e. <topicId>-guide / -benchmark / -compare),
-    // matched within the related topic ID list.
-    const hasRelatedLink = COMPARISON_TOPICS.some((t) => {
-      return t.relatedTopicIds.some((rid) => html.includes(`/${rid}/`));
-    });
-    assert.ok(hasRelatedLink, `${pagePath} has no cross-link to any relatedTopicId`);
+    // Parse topic ID from path: dist/<lang>/<cat>/<topicId>-compare/index.html.
+    // P147-followup Important #1: precise invariant — verify THIS page links to its OWN
+    // relatedTopicIds, not just "any" comparison topic's relatedTopicIds (v1 was loose
+    // by design — `some(...)` across all comparison topics meant a deletion in ONE
+    // page's relatedTopicIds could be masked by other topics' links).
+    const match = pagePath.match(/[/\\]([^/\\]+)-compare[/\\]index\.html$/);
+    assert.ok(match, `Cannot parse topic ID from ${pagePath}`);
+    const topicId = match[1];
+    const topic = TOPICS.find((t) => t.id === topicId);
+    assert.ok(topic, `No TOPICS entry for ${topicId} (parsed from path)`);
+    const ownRelatedLinks = topic.relatedTopicIds.filter((rid) => html.includes(`/${rid}/`));
+    assert.ok(
+      ownRelatedLinks.length >= 1,
+      `${pagePath} (${topicId}) has no cross-link to its own relatedTopicIds: ${topic.relatedTopicIds.join(', ')}`
+    );
   }
 });
 
@@ -116,9 +125,11 @@ test('comparison-cross-link-guard: letter page render — B/C/M/R pages have Com
     console.warn('dist/ not built yet — skipping build-dep render check (run pnpm build first)');
     return;
   }
-  // The literal i18n strings should appear in the letter page HTML (rendered server-side)
-  const enMarker = 'X vs Y comparisons';
-  const zhMarker = '对比专题';
+  // P147-followup Important #2: marker strings sourced from translations.ts so the
+  // guard stays in sync if i18n values change (avoids hardcoded literals drifting).
+  const sectionKey = 'letter.compare.section' as const;
+  const enMarker = translations[sectionKey].en;
+  const zhMarker = translations[sectionKey].zh;
   for (const letter of LETTERS_WITH_COMPARE) {
     const paths = walkLetterPages(letter);
     assert.ok(paths, `Letter page ${letter} not found in dist/`);
