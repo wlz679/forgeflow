@@ -922,6 +922,34 @@ Improved internal link density + SERP CTR for "X vs Y" queries. Combined with Ph
 
 ---
 
+## [M25.9] - 2026-08-25 — P147 Followup (Test Design Quality)
+
+Closes 2 fable Important test design findings on `tests/comparison-cross-link-guard.test.ts`. 1 atomic commit on master (direct-to-master).
+
+### Changes
+
+| Commit | Description |
+|---|---|
+| `147d070` | fix(guard): P147-followup close fable Important test design findings |
+
+### Engineering Metrics
+
+| Metric | Before (M25.8) | After (M25.9) |
+|---|---|---|
+| Atomic commits on master | +1 | **+1** |
+| Master commits total | 1167 → **1168** | 1167 → **1168** |
+| pnpm check baseline | 1261/0/0 | **1261/0/0** (no count delta — test quality cleanup) |
+| comparison-cross-link-guard | 5/5 pass | **5/5 pass** (precise invariant + i18n-sourced markers) |
+
+### Closes
+
+- ✅ **Important #1** (Test 4) — precise invariant: each Comparison page links to its OWN `relatedTopicIds` (was loose-by-design `some(...)` that masked deletion in ONE page's relatedTopicIds)
+- ✅ **Important #2** (Test 5) — marker strings sourced from `translations.ts` `letter.compare.section` key (was hardcoded literal en/zh strings, would drift on i18n change)
+
+📦 Ship record: `memory/p147-followup-shipped.md`
+
+---
+
 ## [M16.0] - 2026-07-15 → 2026-07-16 — 100 engines milestone (P16)
 
 🔒 **Maintenance mode locked** after this milestone. Engine count locked at `EXPECTED_ENGINE_COUNT = 100` (see `tests/engine-count.ts`).

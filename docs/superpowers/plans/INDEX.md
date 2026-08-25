@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-21（P147 Quick Wins — Phase 4 followup batch: closes fable Minor #8 (relatedTopicIds cross-link) + Minor #9 (`<title>` optimization) + letter pages B/C/M/R Comparison grid + new build-dep guard comparison-cross-link-guard (5 cases); 4 atomic commits on master (C1+C2+C3+C4); direct-to-master cadence; 1163 → 1167 commits; pre-AdSense resubmit window ~2026-09-15; pnpm check 1256/0/0 unchanged）
+> **最后更新:** 2026-08-25（P147 Followup — test design quality cleanup: close 2 fable Important findings on `tests/comparison-cross-link-guard.test.ts` (Test 4 precise invariant + Test 5 i18n-sourced markers); 1 atomic commit `147d070` on master; 1167 → 1168 commits; pnpm check 1261/0/0 preserved; no new plan file — ad-hoc minimal scope under P147 parent plan）
 
 ---
 
