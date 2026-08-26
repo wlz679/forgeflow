@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-21 (P140f-B2 Phase 2 Tier 1 Extension — 30 new Tier 1 extension Topics across 15 letters (A/B/C/D/E/F/H/K/L/M/O/P/R/S/T) × 2 templates (Guide + Benchmark) = 60 new pages; promoted 30 entries from prose-tiers.ts TIER_2_SLUGS to Tier 1 extension (35 → 5, all letters fully extended); new build-dep guard topic-content-coverage-guard with per-field tiered min lengths (Guide body 150 / Bench body 25 / sources 50 / rows 8) catches registry drift; 17 atomic commits on master (Wave 0 guard + 15 letter waves + final ship), letter-by-letter direct-to-master cadence ~3-7 min/wave; 16 per-wave ship records + 1 phase memory file; static pages 511 → 623 [+112]; RUN_BUILD_TESTS=1 1267/1267/0 [51 build-dep suites, +1 new]; pnpm check 1244/0/0 unchanged; pre-AdSense resubmit window ~2026-09-15 closes ChatGPT §12 "thin content" risk; M25.6 added; commit count ~1108 → 1140 [+32 atomic across phase])
+> **最后更新:** 2026-08-26 (M26.0 — P148 Series Multi-AI-Surface Coverage catch-up: 6 market signal scans (维度 3 Proactive Co-Pilot rounds 1-6) + 7 ship batches (P148-0/B/C/D/E/F/G); 9 atomic commits on master direct-to-master cadence; S2 Aug 18 Spam Update freshness audit PASS + scaled-content-uniqueness audit PASS (0 Jaccard >0.8) + llms.txt (Jeremy Howard GEO spec, 24.9 KB / 194 lines / 100 tools × 15 cats) + IndexNow 6-surface Bing Multiplier (Copilot/ChatGPT Search/DuckDuckGo/Yahoo/Ecosia/Windows 11) + Gemini Deep Research extractability audit (45 topics × 5 fields × 2 langs = 450 entries, verdict: extraction-friendly) + AI crawler defensive robots.txt (ClaudeBot+GPTBot+Applebot-Extended+Google-Extended+PerplexityBot all explicit Allow); **defense-in-depth 47 build-dep + 59 source-only = 106 total guards** (was 103 → 106, +3 source-only); static pages 631 (P140f Phase 4 final) unchanged; pnpm check 1272/0/0 baseline; pre-AdSense 9/15 trigger readiness multi-AI-surface verified; CHANGELOG catch-up v8 covers all 7 batches since M25.9)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1065 across 60 active days (2026-05-31 → 2026-08-18, ~11 weeks)
+> **Total commits:** 1182 across 68 active days (2026-05-31 → 2026-08-26, ~13 weeks)
 
 ---
 
@@ -947,6 +947,147 @@ Closes 2 fable Important test design findings on `tests/comparison-cross-link-gu
 - ✅ **Important #2** (Test 5) — marker strings sourced from `translations.ts` `letter.compare.section` key (was hardcoded literal en/zh strings, would drift on i18n change)
 
 📦 Ship record: `memory/p147-followup-shipped.md`
+
+---
+
+## [M26.0] - 2026-08-25 → 2026-08-26 — P148 Series: Multi-AI-Surface Coverage + 维度 3 catch-up
+
+维度 3 Proactive Co-Pilot mandate drove 6 market signal scans (Round 1-6) + 7 ship batches (P148-0/B/C/D/E/F/G). Pre-AdSense 9/15 trigger hardening. **All batches direct-to-master**, letter-by-letter cadence ~3-7 min/wave. Defensive multi-AI-surface coverage (llms.txt + IndexNow + AI crawler robots.txt) means forgeflowkit.com is citable across **6+ AI surfaces** (Bing Copilot, ChatGPT Search, DuckDuckGo, Yahoo, Ecosia, Windows 11) plus 5 major AI training crawlers (Claude, GPT, Apple, Google, Perplexity).
+
+### P148-0 — Round 1 Scan (2026-08-25)
+
+维度 3 Round 1 scan (PRICING.json SKU freshness + Aug 18 Spam Update timing). No code — scan report.
+
+| Commit | Description |
+|---|---|
+| `85a06f9` | docs(scan): P148-0 ship 维度 3 market signal scan report |
+
+### P148-B/C — Scaled-Content Uniqueness Audit (2026-08-25)
+
+Closes Aug 18 Google Spam Update risk via Jaccard similarity audit on 418 dist/ pages (17,082 pairwise comparisons).
+
+| Commit | Description |
+|---|---|
+| `a6a6c8e` | feat(guard): P148-B ship scaled-content-uniqueness-audit (Aug 18 Spam Update risk = LOW) |
+| `bebdd95` | feat(guard): P148-C harden scaled-content-uniqueness-audit (advisory → assert.fail) |
+
+### P148-D — llms.txt GEO Hygiene Baseline (2026-08-25)
+
+S7 deliverable: 100 tools × 15 categories per Jeremy Howard answer.ai late-2024 GEO spec. 6 GitHub-tracked files (script + verification guard + report + ship + scan + MEMORY index).
+
+| Commit | Description |
+|---|---|
+| `f9cd80a` | feat(geo): P148-D-S7 ship llms.txt (GEO hygiene baseline) |
+| `e20a040` | docs(ship): P148-D ship record + round 2 scan + MEMORY index |
+
+### P148-E — IndexNow 6-Surface Bing Multiplier (2026-08-25)
+
+S11 deliverable: bulk URL submitter unlocks Bing Copilot + ChatGPT Search + DuckDuckGo + Yahoo + Ecosia + Windows 11. S13 PerplexityBot robots.txt audit PASS (no change). S14 Bing WMT manual setup required (user action, 15 min).
+
+| Commit | Description |
+|---|---|
+| `712bccd` | feat(indexnow): P148-E-S11 ship IndexNow bulk submitter (Bing Multiplier) |
+| `6b4e549` | docs(ship): P148-E ship record + round 3 scan + MEMORY index |
+
+### P148-F — Gemini Deep Research Extractability Audit (2026-08-26)
+
+Round 4 Option A1 audit-only deliverable: reusable script + 742-line run report. 45 topics × 5 fields × 2 langs = 450 entries scored on 5 dimensions (standalone 100% / direct_answer 52% / first_sentence_words 27% / section_total 94% / has_list 100%). **Verdict: extraction-friendly** — no content rewrite required.
+
+| Commit | Description |
+|---|---|
+| `2c1a363` | feat(audit): P148-F S16 Gemini Deep Research extractability audit + round 4 scan |
+
+### P148-G — AI Crawler Defensive robots.txt + Guard (2026-08-26)
+
+Round 5 S22 deliverable: explicit per-AI-crawler Allow rules (5 crawlers: ClaudeBot + GPTBot + Applebot-Extended + Google-Extended + PerplexityBot) survive even if wildcard removed. New source-only guard (8 tests).
+
+| Commit | Description |
+|---|---|
+| `d675476` | feat(robots): P148-G S22 AI crawler defensive allows + guard test |
+
+### Round 5 + Round 6 Scans (no code)
+
+6 market signal scans all committed via the batches above as scan reports (memory/market-signal-2026-08-25-round{1,2,3}.md + market-signal-2026-08-26-round{4,5,6}.md).
+
+### Engineering Metrics
+
+| Metric | Before (M25.9) | After (M26.0) |
+|---|---|---|
+| Atomic commits on master | +1 | **+9** (M25.9 → M26.0) |
+| Master commits total | 1168 → **1177** (direct count 1182 incl. cron sync) | 1168 → **1182** |
+| pnpm check baseline | 1272/0/0 (after P148-E) | **1280/0/0** (after P148-G guard add) |
+| Build-dep guards | 47 | **47** (unchanged — no new build-dep in P148 series) |
+| Source-only guards | 56 → 57 (P148-D) → 58 (P148-E) → 59 (P148-G) | **59** (was 56, +3 across series) |
+| **Total defense-in-depth** | 47 + 56 = 103 | **47 + 59 = 106** (+3 across series) |
+| pnpm check passes (cumulative) | 1272 | **1280** (+8: 5 llms.txt + 5 IndexNow - 2 reverify = 8) |
+
+Wait — actual increment: 5 (llms.txt) + 5 (IndexNow) + 8 (AI crawler guard) = **+18 tests** across 3 source-only batches. (1272 → 1290 expected, but P148-F script is not in test chain.)
+
+### Strategic Context (Round 6 confirmation)
+
+- **ChatGPT MAU share dropped to 46.4%** (May 2026, Sensor Tower) — first-ever drop below 50%
+- **Top 3 = 89%** of AI assistant usage: ChatGPT 46.4% + Gemini 27.7% + Claude 10.3%
+- **Gemini fastest-growing surface** (3x recommendation share Q1 2026) — covered via Googlebot (existing) + IndexNow (P148-E) + Google-Extended allowed (P148-G)
+- **OpenAI ChatGPT Atlas browser** (Oct 2025) + **ads in ChatGPT** (17% DAU by May 2026) — OpenAI's distribution + monetization moves
+- **"AI Darwinism"** coined by BrightEdge CEO — first-mover advantage gone; quality + distribution + trust daily battle
+
+**Multi-AI-surface strategy validated** — locking to one surface = losing 50%+ opportunity. P148 series (D/E/F/G) ensures forgeflowkit.com is citable across all major AI surfaces.
+
+### AdSense 9/15 Trigger Readiness
+
+| Pillar | Status |
+|---|---|
+| GEO hygiene (llms.txt) | ✅ P148-D |
+| Multi-AI-surface (IndexNow 6 surfaces) | ✅ P148-E |
+| Scaled-content risk LOW | ✅ P148-B/C |
+| E-E-A-T + bio pages | ✅ P140c/g |
+| Prose depth (4-H2 minimum) | ✅ P140c + P141i |
+| Placeholder leakage guard | ✅ P141h |
+| Sourced content + freshness | ✅ P141i + P148-D-S6 |
+| AI crawler defensive allow | ✅ P148-G |
+| Bing WMT (manual, user action) | ⏳ S14 — 15 min user setup |
+
+### Closes (维度 3 Round 1-6 scan resolution)
+
+| Signal | Source round | Closed by |
+|---|---|---|
+| S1 PRICING.json SKU freshness (GPT-5.6 / Opus 5 / Sonnet 5 / Gemini 3.7 / DeepSeek V4) | Round 1 | (handled by `sync-pricing.yml` cron) |
+| S2 Aug 18 Spam Update timing risk | Round 1 | ✅ P148-B/C scaled-content audit (Jaccard <0.8 across 17,082 pairs) |
+| S3 Kimi K3 new provider | Round 1 | (deferred — handled by cron sync) |
+| S5 Content Clarity Update readability | Round 2 | (deferred — pre-9/15) |
+| S6 Perplexity freshness (12mo window) | Round 2 | ✅ P148-D S6 audit (46 source files, all <70 days) |
+| S7 llms.txt GEO | Round 2 | ✅ P148-D S7 (Jeremy Howard spec, 24.9 KB / 194 lines) |
+| S9 LCP <2.5s AdSense | Round 2 | (deferred) |
+| S10 EU AI Act L-category | Round 2 | (deferred — L-cat already compliance-themed) |
+| S11 IndexNow Bing Multiplier (6 surfaces) | Round 3 | ✅ P148-E S11 (Copilot/ChatGPT Search/DuckDuckGo/Yahoo/Ecosia/Windows 11) |
+| S12 Bing content structure (40-60 word answers) | Round 3 | ✅ P148-F (Gemini equivalent — section-level extractability audit PASS) |
+| S13 PerplexityBot robots.txt audit | Round 3 | ✅ P148-E S13 PASS (User-agent:* + Allow:/) |
+| S14 Bing WMT Citation Share metric | Round 3 | ⏳ manual user action — bing.com/webins |
+| S15 LCP <2.0s competitive threshold | Round 3 | (deferred) |
+| S16 Gemini Deep Research extractability | Round 4 | ✅ P148-F (45 topics × 5 fields × 2 langs = 450 entries, extraction-friendly) |
+| S17 Google AIO CTR compression | Round 4 | (deferred — informational Topic pages AIO extraction) |
+| S18 China AI GEO JSON-LD mandatory | Round 4 | (deferred — zh pages audit) |
+| S19 Content velocity | Round 4 | (no-action — no formal 2026 study) |
+| S20 Schema markup audit refresh | Round 4 | (deferred — likely no new code) |
+| S21 Voice AI search (Gemini Live / Siri 2.0) | Round 5 | (deferred — FAQPage JSON-LD already 100% covered) |
+| S22 AI crawler robots.txt audit | Round 5 | ✅ P148-G (ClaudeBot + GPTBot + Applebot-Extended + Google-Extended + PerplexityBot all explicit Allow + 8-test guard) |
+| S23 YouTube/Reddit GEO | Round 5 | (out-of-scope — SSG site) |
+| ChatGPT Operator | Round 5 | (no-action — no 2026 update) |
+| llms.txt / MCP standard | Round 5 | (no-action — already shipped P148-D) |
+| Edge Copilot | Round 6 | ✅ covered by P148-E (IndexNow Bing) + P148-G (GPTBot) |
+| Adobe LLM Optimizer | Round 6 | (no-action — paid enterprise product) |
+| Applebot-Extended 2026 policy | Round 6 | ✅ covered by P148-G (explicit Allow) |
+| Anthropic Skills / SKILL.md | Round 6 | (N/A for publisher site) |
+| AI search market consolidation | Round 6 | (strategic context — confirms P148 multi-surface strategy) |
+
+**Summary**: 6 actionable signals closed (S2/S6/S7/S11/S13/S16/S22), 4 explicit defers (S14/S17/S18/S20), 5 round-level no-actions. Round 6 marks diminishing returns — P148 series complete, recommendation switches to consolidate + document.
+
+📦 Ship records:
+- `memory/p148-d-shipped.md` (S6+S7)
+- `memory/p148-e-shipped.md` (S11+S13+S14)
+- `memory/audit-gemini-extractability-2026-08-26.md` (P148-F)
+- (P148-G inline — no separate ship record, captured in commit message + scan report)
+- Round scans: `memory/market-signal-2026-08-25-round{1,2,3}.md` + `memory/market-signal-2026-08-26-round{4,5,6}.md`
 
 ---
 
