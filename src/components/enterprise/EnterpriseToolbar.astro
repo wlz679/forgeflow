@@ -1,0 +1,142 @@
+---
+/**
+ * Shared toolbar for Enterprise features (A1/A2/A3).
+ * Mounted at bottom of [slug].astro, just before <EeatTrustBlock>.
+ *
+ * Each button mounts the corresponding modal/picker via inline JS.
+ * Per spec §2.2: renders even if localStorage disabled; buttons disabled
+ * with tooltip in that case (E1).
+ */
+
+interface Props {
+  calcSlug: string;
+  currentInputs: Record<string, number | string>;
+  currentOutputs: Record<string, number | string>;
+  healthBand?: string;
+}
+
+const { calcSlug, currentInputs, currentOutputs, healthBand } = Astro.props;
+---
+
+<aside id="enterprise-toolbar" data-calc-slug={calcSlug}
+       class="my-8 p-4 bg-gray-50 rounded-lg border border-gray-200"
+       aria-label="Enterprise features">
+  <h2 class="text-lg font-semibold mb-3" data-i18n="enterprise.toolbar">Enterprise</h2>
+  <div class="flex flex-wrap gap-2">
+    <button type="button" data-action="save-scenario" data-enterprise-btn
+            class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+      <span aria-hidden="true">💾</span> <span data-i18n="enterprise.toolbar.save">Save scenario</span>
+    </button>
+    <button type="button" data-action="open-templates" data-enterprise-btn
+            class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+      <span aria-hidden="true">📋</span> <span data-i18n="enterprise.toolbar.templates">Templates</span>
+    </button>
+    <button type="button" data-action="generate-report" data-enterprise-btn
+            class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
+      <span aria-hidden="true">📄</span> <span data-i18n="enterprise.toolbar.report">Generate report</span>
+    </button>
+  </div>
+  <p id="enterprise-storage-status" class="text-xs text-gray-500 mt-2 hidden"></p>
+</aside>
+
+<script>
+  // Client island: detect storage availability (E1) + wire buttons
+  import { saveScenario } from '../../lib/enterprise/scenario-manager.ts';
+  import { listTemplates } from '../../lib/enterprise/template-manager.ts';
+  import { generateReport } from '../../lib/enterprise/report-builder.ts';
+  import { showToast } from '../../lib/enterprise/toast.ts';
+
+  const toolbar = document.getElementById('enterprise-toolbar');
+  const slug = toolbar?.dataset.calcSlug;
+  const statusEl = document.getElementById('enterprise-storage-status');
+  const buttons = document.querySelectorAll('[data-enterprise-btn]') as NodeListOf<HTMLButtonElement>;
+
+  let storageOk = false;
+  try {
+    localStorage.setItem('__test__', '1');
+    localStorage.removeItem('__test__');
+    storageOk = true;
+  } catch {
+    storageOk = false;
+  }
+  if (!storageOk) {
+    buttons.forEach(b => b.disabled = true);
+    if (statusEl) {
+      statusEl.textContent = 'Storage unavailable';
+      statusEl.classList.remove('hidden');
+    }
+  }
+
+  // Wire actions — minimal stubs; full modals mount on demand.
+  document.querySelector('[data-action="save-scenario"]')?.addEventListener('click', async () => {
+    const label = prompt('Scenario name (1-50 chars):');
+    if (!label) return;
+    const result = saveScenario({
+      calcSlug: slug || '',
+      label,
+      inputs: collectInputs(),
+      outputs: collectOutputs(),
+    });
+    if (result.ok) showToast('Scenario saved', 'success');
+    else showToast(result.reason === 'quota' ? 'Storage full' : 'Invalid input', 'error');
+  });
+
+  document.querySelector('[data-action="open-templates"]')?.addEventListener('click', () => {
+    const templates = slug ? listTemplates(slug) : [];
+    if (templates.length === 0) {
+      showToast('No templates yet', 'info');
+      return;
+    }
+    const id = prompt(`Templates:\n${templates.map((t, i) => `${i+1}. ${t.name}`).join('\n')}\n\nEnter number to apply:`);
+    if (!id) return;
+    const idx = parseInt(id, 10) - 1;
+    if (idx < 0 || idx >= templates.length) return;
+    applyTemplate(templates[idx]);
+    showToast('Template applied', 'success');
+  });
+
+  document.querySelector('[data-action="generate-report"]')?.addEventListener('click', async () => {
+    const title = prompt('Report title (1-80 chars):', `ForgeFlowKit · ${slug} · ${new Date().toISOString().slice(0,10)}`);
+    if (!title) return;
+    const result = await generateReport({
+      calcSlug: slug || '',
+      title,
+      inputs: collectInputs(),
+      outputs: collectOutputs(),
+      healthBand: document.querySelector('[data-enterprise-toolbar]')?.getAttribute('data-health') || undefined,
+    }, 'html');
+    if (result.ok && result.html) {
+      const w = window.open('', '_blank');
+      w?.document.write(result.html);
+      w?.document.close();
+      w?.print();
+      showToast('Report ready', 'success');
+    } else {
+      showToast('Report generation failed', 'error');
+    }
+  });
+
+  function collectInputs(): Record<string, number | string> {
+    const out: Record<string, number | string> = {};
+    document.querySelectorAll<HTMLInputElement>('input[data-input-name]').forEach(el => {
+      const n = el.dataset.inputName!;
+      const v = el.value;
+      out[n] = el.type === 'number' ? Number(v) : v;
+    });
+    return out;
+  }
+  function collectOutputs(): Record<string, number | string> {
+    const out: Record<string, number | string> = {};
+    document.querySelectorAll<HTMLElement>('[data-output-name]').forEach(el => {
+      out[el.dataset.outputName!] = el.textContent || '';
+    });
+    return out;
+  }
+  function applyTemplate(t: { inputs: Record<string, number | string> }) {
+    for (const [k, v] of Object.entries(t.inputs)) {
+      const el = document.querySelector<HTMLInputElement>(`input[data-input-name="${k}"]`);
+      if (el) el.value = String(v);
+    }
+    document.querySelector<HTMLButtonElement>('button[data-action="calculate"]')?.click();
+  }
+</script>

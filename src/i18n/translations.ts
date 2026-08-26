@@ -6318,6 +6318,25 @@ export const translations: Record<string, { en: string; zh: string }> = {
   'tools.solopreneur-win-rate-by-stage-calculator.faq.10.a': { en: 'Track 1) Total win rate (monthly), 2) Win rate by stage, 3) Win rate by source, 4) Win rate by rep, 5) Win rate by segment. Tools: CRM reports, dashboards. weekly review. Trend matters more than absolute. Declining: 1) Quality issue, 2) Competition, 3) Rep skill. Increasing: 1) Better qualification, 2) Better training. 5-10% YoY win rate improvement is good.', zh: '' },
   'tools.solopreneur-win-rate-by-stage-calculator.faq.11.q': { en: 'Should I disqualify more to increase win rate?', zh: '' },
   'tools.solopreneur-win-rate-by-stage-calculator.faq.11.a': { en: 'Yes, generally. Better qualification = higher win rate. Tactics include 1) BANT (Budget, Authority, Need, Timeline), 2) MEDDIC, 3) GPCT (Goals, Plans, Challenges, Timeline), 4) Discovery-first approach. 30-50% improvement in close rate. Trade-off: less pipeline volume. Net: usually better. high close + small pipeline = better than low close + huge pipeline. Quality wins.', zh: '' },
+  // P5A-T5: Enterprise toolbar / scenario modal / template picker / report generator
+  // (15 keys × 2 langs). Per spec §6 + task-5-brief Step 1.
+  // Toolbar is the user-visible surface on every [slug].astro; modals are
+  // placeholders (P5A-A.2 deferred — see EnterpriseToolbar.astro script).
+  'enterprise.toolbar.save': { en: 'Save scenario', zh: '保存场景' },
+  'enterprise.toolbar.templates': { en: 'Templates', zh: '模板' },
+  'enterprise.toolbar.report': { en: 'Generate report', zh: '生成报告' },
+  'enterprise.scenario.modal_title': { en: 'Save this scenario', zh: '保存此场景' },
+  'enterprise.scenario.placeholder.name': { en: 'e.g. Q4 forecast', zh: '例如 Q4 预测' },
+  'enterprise.scenario.placeholder.notes': { en: 'Optional notes (max 200 chars)', zh: '可选备注（最多 200 字符）' },
+  'enterprise.template.picker_title': { en: 'Decision templates', zh: '决策模板' },
+  'enterprise.template.empty_state': { en: 'No templates yet. Save your first one.', zh: '暂无模板。保存第一个模板。' },
+  'enterprise.template.apply': { en: 'Apply', zh: '应用' },
+  'enterprise.template.delete_confirm': { en: 'Delete this template?', zh: '确定删除此模板？' },
+  'enterprise.report.modal_title': { en: 'Generate decision report', zh: '生成决策报告' },
+  'enterprise.report.format': { en: 'Format', zh: '格式' },
+  'enterprise.report.success': { en: 'Report downloaded', zh: '报告已下载' },
+  'enterprise.report.error': { en: 'Report generation failed', zh: '报告生成失败' },
+  'enterprise.report.toast': { en: 'Report ready', zh: '报告已就绪' },
 };
 
 /** Re-exported for client scripts (favorites-init / sync-init) that import
