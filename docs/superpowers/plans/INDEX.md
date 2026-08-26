@@ -3,7 +3,7 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-25（P147 Followup — test design quality cleanup: close 2 fable Important findings on `tests/comparison-cross-link-guard.test.ts` (Test 4 precise invariant + Test 5 i18n-sourced markers); 1 atomic commit `147d070` on master; 1167 → 1168 commits; pnpm check 1261/0/0 preserved; no new plan file — ad-hoc minimal scope under P147 parent plan）
+> **最后更新:** 2026-08-26（Phase 5-A v2.5 Enterprise — client-side Enterprise layer (storage + 3 managers + report-builder + toast) + 3 features (A1 Saved Scenarios / A2 Decision Templates / A3 Decision Reports) + EnterpriseToolbar + 4 components + 15 i18n keys × 2 langs; 7 tasks on `feature/phase-5-v2.5-enterprise-ai-native`; 19 new tests; pnpm check 1280→1298 (+18); 9/01 AdSense unaffected (feature branch only); P5A-A.2 modal polish + P5B AI Native + P5C OS docs deferred per user "拆分 3 个 sub-projects" decision）
 
 ---
 
@@ -123,6 +123,7 @@
 | `2026-08-06-phase-1-kb4-adr-decision-layer.md` | P140f Phase 1 KB4 ADR + 决策支持层 | v2-strategy | 2026-08-06 |
 | `2026-08-07-phase-2-p140e-5-blog-aio.md` | Phase 2 P140e 5 blog AIO-aware — blog schema 5 EEAT 字段 + 5 blog 重写 3000+ 字 + 新 AIO guard | v2-strategy | 2026-08-07 |
 | `2026-08-07-phase-3-p140f-playbook-6-fields.md` | Phase 3 P140f Playbook 6 字段 — 100 calc 引擎统一 metadata + 5 demo 完整 playbook + 新 guard | v2-strategy | 2026-08-07 |
+| `2026-08-26-phase-5-v2.5-enterprise-plan.md` | Phase 5-A v2.5 Enterprise — client-side Enterprise layer (storage + 3 managers + report-builder + toast) + 3 features (A1 Saved Scenarios / A2 Decision Templates / A3 Decision Reports) + EnterpriseToolbar + 4 components + 15 i18n keys × 2 langs; 7 tasks on `feature/phase-5-v2.5-enterprise-ai-native`; 19 new tests (15 unit + 3 integration + 1 i18n guard); pnpm check 1280→1298 (+18); 9/01 AdSense unaffected (feature branch only); P5A-A.2 modal polish + P5B AI Native + P5C OS docs deferred per user "拆分 3 个 sub-projects" decision | v2-strategy | 2026-08-26 |
 
 ---
 
@@ -152,11 +153,11 @@
 | 3 · P2 — LocalStorage trilogy | 3 |
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 15 |
-| 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 13 |
+| 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 14 |
 | 7 · Multi-language mirrors | 1 |
-| **索引 plan 文件总数** | **57** |
+| **索引 plan 文件总数** | **58** |
 | 8 · Excluded (pr-body) | 1 |
-| **目录文件总数** | **57** |
+| **目录文件总数** | **58** |
 
 ---
 

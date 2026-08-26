@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-08-26 (M26.0 — P148 Series Multi-AI-Surface Coverage catch-up: 6 market signal scans (维度 3 Proactive Co-Pilot rounds 1-6) + 7 ship batches (P148-0/B/C/D/E/F/G); 9 atomic commits on master direct-to-master cadence; S2 Aug 18 Spam Update freshness audit PASS + scaled-content-uniqueness audit PASS (0 Jaccard >0.8) + llms.txt (Jeremy Howard GEO spec, 24.9 KB / 194 lines / 100 tools × 15 cats) + IndexNow 6-surface Bing Multiplier (Copilot/ChatGPT Search/DuckDuckGo/Yahoo/Ecosia/Windows 11) + Gemini Deep Research extractability audit (45 topics × 5 fields × 2 langs = 450 entries, verdict: extraction-friendly) + AI crawler defensive robots.txt (ClaudeBot+GPTBot+Applebot-Extended+Google-Extended+PerplexityBot all explicit Allow); **defense-in-depth 47 build-dep + 59 source-only = 106 total guards** (was 103 → 106, +3 source-only); static pages 631 (P140f Phase 4 final) unchanged; pnpm check 1272/0/0 baseline; pre-AdSense 9/15 trigger readiness multi-AI-surface verified; CHANGELOG catch-up v8 covers all 7 batches since M25.9)
+> **最后更新:** 2026-08-26 (M27.0 — Phase 5-A v2.5 Enterprise: client-side localStorage layer (storage envelope + 3 managers + report-builder + toast) + 3 features (A1 Saved Scenarios + A2 Decision Templates + A3 Decision Reports) + EnterpriseToolbar + 4 components + 15 i18n keys × 2 langs; 7 atomic commits on `feature/phase-5-v2.5-enterprise-ai-native` branch (T1 storage + T2 scenario-manager + T3 template-manager + T4 report-builder + T5 components/i18n + T6 wire-in + T6followup data-health selector fix); 6 new .ts + 4 new .astro + 19 new tests (15 unit + 3 integration + 1 i18n guard); +1 jspdf dep (~50KB lazy-loaded on first PDF); pnpm check 1280→1298 (+18 tests); **defense-in-depth 47 build-dep + 59 source-only = 106 total guards unchanged** (the +1 guard replaces stale i18n); **M26.0 last catch-up** — all batches since M25.9 documented in M26.0)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1182 across 68 active days (2026-05-31 → 2026-08-26, ~13 weeks)
+> **Total commits:** 1194 across 68 active days (2026-05-31 → 2026-08-26, ~13 weeks)
 
 ---
 
@@ -1088,6 +1088,66 @@ Wait — actual increment: 5 (llms.txt) + 5 (IndexNow) + 8 (AI crawler guard) = 
 - `memory/audit-gemini-extractability-2026-08-26.md` (P148-F)
 - (P148-G inline — no separate ship record, captured in commit message + scan report)
 - Round scans: `memory/market-signal-2026-08-25-round{1,2,3}.md` + `memory/market-signal-2026-08-26-round{4,5,6}.md`
+
+---
+
+## [M27.0] - 2026-08-26 — Phase 5-A v2.5 Enterprise (client-side Enterprise layer)
+
+User decision 2026-08-26 to decompose Phase 5 into 3 sub-projects (P5-A / P5-B / P5-C). **P5-A Enterprise ships first** — client-side localStorage layer (no backend; SSG preserved; 9/01 AdSense unaffected per `[[adsense-reapply-checklist-2026-09-01]]`). Defer P5-B (AI Native / LLM recommendations) and P5-C (v2.0 OS docs micro-tuning) to separate specs.
+
+### Features
+
+- **A1 Saved Scenarios** — save current calc inputs/outputs with label + notes (max 50; LRU eviction)
+- **A2 Decision Templates** — save reusable input sets as templates (max 20)
+- **A3 Decision Reports** — generate HTML/PDF reports with calc summary + recommendation; jsPDF lazy-loaded (~50KB on first report)
+- **EnterpriseToolbar** — shared 3-button component (Save Scenario / Apply Template / Generate Report) on every calc page bottom
+- **Client-side only** — localStorage 3 keys (`ffk.scenarios.v1` / `ffk.templates.v1` / `ffk.reportConfig.v1`), zero backend
+- **Cross-tab sync** — `storage` event listeners detect same-origin tab updates (E7 handling)
+
+### Engineering
+
+- **6 new .ts files** — `src/lib/enterprise/storage.ts` + `migration.ts` (T1) + `scenario-manager.ts` (T2) + `template-manager.ts` (T3) + `report-builder.ts` + `toast.ts` (T4)
+- **4 new .astro components** — `EnterpriseToolbar` + 3 modal placeholders for P5A-A.2 (SaveScenarioModal / TemplatePicker / ReportGenerator)
+- **19 new tests** — 15 unit (storage 8 + scenario 3 + template 2 + report 2) + 3 integration (build-dep end-to-end flows) + 1 i18n guard (15 keys × 2 langs)
+- **+15 i18n keys × 2 langs** = +30 new strings (toolbar buttons + toast variants)
+- **+1 jspdf dep** — package.json `^2.5.x`; lazy-loaded via dynamic import on first PDF request
+- **Wire-in** — `src/pages/[lang]/[slug].astro` updated to include `<EnterpriseToolbar>` at calc bottom + `storage` event listener
+- **pnpm check baseline**: 1280/0/0 → **1298/0/0** (+18 tests)
+
+### Strategic
+
+- **Phase 5 decomposition per user "拆分 3 个 sub-projects"** (2026-08-26):
+  - **P5-A** Enterprise (this ship) ✅
+  - **P5-B** AI Native (deferred — LLM integration / multi-model recommendations)
+  - **P5-C** OS docs (deferred — v2.0 micro-tuning per ChatGPT site recs)
+- **9/01 AdSense re-apply unaffected** — feature branch only, merge timing user-controlled
+- **Defense-in-depth**: 47 build-dep guards (one new i18n guard) + 59 source-only guards (15 new unit tests) = 106 total (unchanged net, but +1 build-dep + 15 source-only vs pre-batch coverage)
+- **Architecture decisions** (4 per brainstorming):
+  1. No backend (SSG preserved)
+  2. jsPDF lazy-loaded (not blocking initial render)
+  3. calcSlug filter: exact match (no fuzzy matching)
+  4. Schema migration: backward compat 1 release cycle (v1 → v2 path defined)
+
+### Engineering metrics
+
+| Metric | Value |
+|---|---|
+| Branch | `feature/phase-5-v2.5-enterprise-ai-native` |
+| Atomic commits | 7 (T1 + T2 + T3 + T4 + T5 + T6 + T6followup) |
+| Spec + plan commits (on branch) | 2 (pre-T1) |
+| New .ts files | 6 |
+| New .astro files | 4 |
+| New tests | 19 (15 unit + 3 integration + 1 i18n guard) |
+| New i18n strings | 30 (15 keys × 2 langs) |
+| New deps | +1 (jspdf ^2.5.x) |
+| Total commits on master after ff-merge | 1185 + 9 = **1194** |
+| pnpm check baseline | 1280/0/0 → **1298/0/0** (+18 tests) |
+
+### Closes
+
+- (no closes — pure additive feature layer; A.2 modal polish + P5-B + P5-C deferred per spec §8)
+
+📦 Ship record: [`memory/p5a-v2.5-enterprise-shipped.md`](memory/p5a-v2.5-enterprise-shipped.md)
 
 ---
 
