@@ -18,7 +18,7 @@ interface Props {
 const { calcSlug, currentInputs, currentOutputs, healthBand } = Astro.props;
 ---
 
-<aside id="enterprise-toolbar" data-calc-slug={calcSlug}
+<aside id="enterprise-toolbar" data-calc-slug={calcSlug} data-health={healthBand}
        class="my-8 p-4 bg-gray-50 rounded-lg border border-gray-200"
        aria-label="Enterprise features">
   <h2 class="text-lg font-semibold mb-3" data-i18n="enterprise.toolbar">Enterprise</h2>
@@ -103,7 +103,7 @@ const { calcSlug, currentInputs, currentOutputs, healthBand } = Astro.props;
       title,
       inputs: collectInputs(),
       outputs: collectOutputs(),
-      healthBand: document.querySelector('[data-enterprise-toolbar]')?.getAttribute('data-health') || undefined,
+      healthBand: document.getElementById('enterprise-toolbar')?.dataset.health || undefined,
     }, 'html');
     if (result.ok && result.html) {
       const w = window.open('', '_blank');
