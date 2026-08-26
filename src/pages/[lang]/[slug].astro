@@ -25,6 +25,7 @@ import { SITE_URL } from '../../lib/site-config';
 // the `tools` Astro Content Collection. Entry lookup: zh file first, fall back
 // to en if zh missing (warns once). See src/components/CalculatorProse.astro.
 import CalculatorProse from '../../components/CalculatorProse.astro';
+import EnterpriseToolbar from '../../components/enterprise/EnterpriseToolbar.astro';
 import { getEntry, type CollectionEntry } from 'astro:content';
 
 export function getStaticPaths() {
@@ -1410,6 +1411,11 @@ const schema = JSON.stringify({
         )}
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
         <RelatedBlog posts={relatedBlog} />
+        <EnterpriseToolbar
+          calcSlug={slug}
+          currentInputs={{}}
+          currentOutputs={{}}
+        />
         <EeatTrustBlock
           author={{
             id: toolMeta.authorId,
