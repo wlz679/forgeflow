@@ -38,27 +38,6 @@ const TIER_LABELS: Record<string, string> = {
   'reserved': 'Reserved (1yr)',
 };
 
-const PRESETS: Record<string, Record<string, string>> = {
-  'Budget Single GPU': {
-    provider: 'vastai', gpuType: 'RTX4090', gpuCount: '1', hoursPerDay: '12', pricingTier: 'spot', includeStorage: 'yes',
-  },
-  'Standard Dev Box': {
-    provider: 'runpod', gpuType: 'A100', gpuCount: '1', hoursPerDay: '8', pricingTier: 'on-demand', includeStorage: 'yes',
-  },
-  'Training Rig 4×A100': {
-    provider: 'lambdalabs', gpuType: 'A100', gpuCount: '4', hoursPerDay: '24', pricingTier: 'reserved', includeStorage: 'yes',
-  },
-  'Enterprise H100 Cluster': {
-    provider: 'aws', gpuType: 'H100', gpuCount: '8', hoursPerDay: '24', pricingTier: 'reserved', includeStorage: 'yes',
-  },
-  'Cheapest H200 Test': {
-    provider: 'vastai', gpuType: 'H200', gpuCount: '1', hoursPerDay: '4', pricingTier: 'spot', includeStorage: 'no',
-  },
-  'Pro 8×H100': {
-    provider: 'runpod', gpuType: 'H100', gpuCount: '8', hoursPerDay: '24', pricingTier: 'on-demand', includeStorage: 'yes',
-  },
-};
-
 function fmt(n: number): string { return '$' + n.toFixed(2); }
 function lc(n: number): string { return n.toLocaleString(); }
 function pad(s: string, len: number): string { return s + ' '.repeat(Math.max(0, len - s.length)); }
@@ -364,6 +343,16 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs) { return calculate(inputs); },
+  // P151: preset chips — replaces dead PRESETS const. Each preset fills
+  // the form inputs from preset.fields; the page renders one button per entry.
+  presets: [
+    { key: 'budget-single-gpu',   emoji: '💰', fields: { provider: 'vastai',     gpuType: 'RTX4090', gpuCount: '1', hoursPerDay: '12', pricingTier: 'spot',      includeStorage: 'yes' } },
+    { key: 'standard-dev-box',    emoji: '🛠️', fields: { provider: 'runpod',     gpuType: 'A100',    gpuCount: '1', hoursPerDay: '8',  pricingTier: 'on-demand', includeStorage: 'yes' } },
+    { key: 'training-rig-4xa100', emoji: '🏋️', fields: { provider: 'lambdalabs', gpuType: 'A100',    gpuCount: '4', hoursPerDay: '24', pricingTier: 'reserved',  includeStorage: 'yes' } },
+    { key: 'enterprise-h100',     emoji: '🏢', fields: { provider: 'aws',        gpuType: 'H100',    gpuCount: '8', hoursPerDay: '24', pricingTier: 'reserved',  includeStorage: 'yes' } },
+    { key: 'cheapest-h200',       emoji: '🔬', fields: { provider: 'vastai',     gpuType: 'H200',    gpuCount: '1', hoursPerDay: '4',  pricingTier: 'spot',      includeStorage: 'no'  } },
+    { key: 'pro-8xh100',          emoji: '👑', fields: { provider: 'runpod',     gpuType: 'H100',    gpuCount: '8', hoursPerDay: '24', pricingTier: 'on-demand', includeStorage: 'yes' } },
+  ],
   staticExamples: [
     '\n🖥️ RunPod GPU Cost — On-Demand\n\nGPU: 1× A100 80GB | Base Rate: $0.79/hr\nUsage: 8 hrs/day → 8 GPU-hrs/day\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nDaily GPU Cost (8 hrs):   $6.32\nMonthly GPU Cost (30 days): $189.60\nAnnual GPU Cost:            $2275.20\n\nStorage + Networking:\n  Storage (500GB SSD): $50.00/mo\n  Est. Egress (50GB):   $4.00/mo\n  Total Monthly:        $243.60\n\n📊 Multi-Provider Comparison — 1× A100 80GB\n──────────────────────────────────────────────────\nRunPod             ████████                              $189.60/mo\nVast.ai            ░░░░░░░                               $165.60/mo\nLambda Labs        ███████████                           $264.00/mo\nAWS                ███████████████████████████████████   $840.00/mo\nGCP                ████████████████████████████          $672.00/mo\nAzure              ██████████████████████████████        $720.00/mo\n\n📊 Pricing Tier Comparison for RunPod\n──────────────────────────────────────────────────\nTier                   | Monthly     | Annual        | Savings vs On-Demand\n───────────────────────────────────────────────────────────────────────────\nSpot (save 40%)        | $113.76        | $1365.12         | Save $75.84/mo (40%)\nOn-Demand              | $189.60        | $2275.20         | —\nReserved 1yr (save 15%) | $161.16        | $1933.92         | Save $28.44/mo (15%)\n\n🔄 Multi-GPU Scaling (RunPod, A100 80GB)\n──────────────────────────────────────────────────\nGPUs     | 1×               | 2×               | 4×               | 8×               | 16×              | 32×              | 64×             \n─────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼───────────────\nMonthly  | $189.60          | $379.20          | $758.40          | $1516.80         | $3033.60         | $6067.20         | $12134.40       \n\n💾 Storage & Networking Add-Ons\n──────────────────────────────────────────────────\nStorage (SSD): $0.10/GB/month\nNetwork Egress: $0.08/GB\n\nStorage        | Cost/Mo   | With GPU Total/Mo\n──────────────────────────────────────────────\n100 GB         | $10.00       | $203.60\n500 GB         | $50.00       | $243.60\n1,000 GB       | $100.00      | $293.60\n5,000 GB       | $500.00      | $693.60\n\n💡 RunPod spot instances save 40% but can be interrupted. Reserved instances save 15% with 1-year commitment. Cheapest provider for A100 80GB: Vast.ai at $165.60/mo.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Micro-tier — under $1/hr. Perfect for inference, small training jobs.\n• 🟢 Storage + egress is only 7% of total — well-optimized.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• You\'re already on the cheapest provider for A100 80GB!\n• Switch to spot instances:  save ~$81.44/mo  (40% off, but interruptible)\n• 1-year reserved:  save ~$30.54/mo  (guaranteed capacity)\n• Halve hours:  $101.80/mo  (workload at off-peak?)\n• Double hours:  $407.20/mo\n',
   ],
