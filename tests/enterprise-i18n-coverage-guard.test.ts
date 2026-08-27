@@ -67,37 +67,32 @@ const KEYS = [
 
 test('all 15 enterprise.* i18n keys present in en + zh', () => {
   ensureBuilt();
-  const srcPath = resolve(root, 'src/i18n/translations.ts');
-  assert.ok(existsSync(srcPath), 'translations.ts missing');
-  const src = readFileSync(srcPath, 'utf-8');
+  const enPath = resolve(root, 'src/i18n/locales/en.json');
+  const zhPath = resolve(root, 'src/i18n/locales/zh.json');
+  assert.ok(existsSync(enPath), 'en.json missing');
+  assert.ok(existsSync(zhPath), 'zh.json missing');
+  const en = JSON.parse(readFileSync(enPath, 'utf-8')) as Record<string, string>;
+  const zh = JSON.parse(readFileSync(zhPath, 'utf-8')) as Record<string, string>;
 
-  // For each key: assert key name appears AND en+zh translations differ.
-  // Since the source uses single-line `key: { en, zh }` records, we look for
-  // `'key': { en: '...', zh: '...' }` patterns with non-empty strings.
+  // For each key: assert it exists in BOTH en and zh JSON, with non-empty strings.
+  // (JSON migration from translations.ts — src no longer tree-shakes keys.)
   const missing: string[] = [];
   const empty: string[] = [];
   const langMissing: string[] = [];
 
   for (const key of KEYS) {
-    // Match the key as a quoted property name followed by en + zh values.
-    // Pattern is single-line: 'enterprise.foo.bar': { en: '...', zh: '...' },
-    const re = new RegExp(
-      `['"]${key.replace(/\./g, '\\.')}['"]\\s*:\\s*\\{\\s*en:\\s*'([^']*)'\\s*,\\s*zh:\\s*'([^']*)'`,
-    );
-    const m = src.match(re);
-    if (!m) {
-      missing.push(key);
-      continue;
-    }
-    const [, en, zh] = m;
-    if (en.trim() === '') langMissing.push(`${key}.en`);
-    if (zh.trim() === '') langMissing.push(`${key}.zh`);
+    if (!(key in en)) { missing.push(`${key} (not in en.json)`); continue; }
+    if (!(key in zh)) { missing.push(`${key} (not in zh.json)`); continue; }
+    const enVal = en[key];
+    const zhVal = zh[key];
+    if (enVal.trim() === '') langMissing.push(`${key}.en`);
+    if (zhVal.trim() === '') langMissing.push(`${key}.zh`);
   }
 
   assert.equal(
     missing.length,
     0,
-    `enterprise.* keys missing from translations.ts (${missing.length}):\n` +
+    `enterprise.* keys missing from i18n JSON (${missing.length}):\n` +
       missing.map(k => `  - ${k}`).join('\n'),
   );
   assert.equal(

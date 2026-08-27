@@ -28,7 +28,7 @@ import {
   FavoritesUnavailableError, QuotaExceededError,
 } from '../lib/favorites';
 import { translate } from '../i18n/translate-helper';
-import type { Lang } from '../i18n/translations';
+import type { Lang } from '../i18n';
 
 type Mode = 'preview' | 'full' | 'count';
 const PREVIEW_LIMIT = 3;

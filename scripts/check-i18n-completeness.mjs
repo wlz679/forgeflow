@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Build-time i18n key completeness check.
- * Scans src/i18n/translations.ts for required keys.
- * Exits 1 if any required key is missing.
+ * Validates that required keys exist in BOTH src/i18n/locales/en.json
+ * AND src/i18n/locales/zh.json (per-locale JSON files).
  *
  * Plan 1 (EEAT): validates eeat.* keys.
  * Plan 2 (About): validates about.* keys.
@@ -16,6 +16,9 @@
  *                      categories, and tools.{slug}.title + .description for
  *                      ALL tools. Engine-level input/FAQ/how-to-use keys are
  *                      NOT yet validated (P17b follow-up).
+ *
+ * P150: migration from translations.ts → per-locale JSON. The regex scan
+ *       over translations.ts source is replaced by JSON.parse + key lookup.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -23,7 +26,8 @@ import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
-const translationsPath = resolve(root, 'src/i18n/translations.ts');
+const enPath = resolve(root, 'src/i18n/locales/en.json');
+const zhPath = resolve(root, 'src/i18n/locales/zh.json');
 
 const REQUIRED_KEYS = {
   eeat: [
@@ -142,7 +146,11 @@ for (const file of readdirSync(toolsDir).filter(f => f.endsWith('.ts') && f !== 
 REQUIRED_KEYS.dynamic_category = categoryKeys;
 REQUIRED_KEYS.dynamic_tools = toolKeys;
 
-const src = readFileSync(translationsPath, 'utf-8');
+// Load locale JSON (the source of truth post-migration)
+const en = JSON.parse(readFileSync(enPath, 'utf-8'));
+const zh = JSON.parse(readFileSync(zhPath, 'utf-8'));
+
+const has = (key) => (key in en) && (key in zh);
 
 // Read extract output (if exists)
 // P20-1: extract output moved to _archive/ by P19-2; this path must match.
@@ -174,7 +182,7 @@ for (const enginePath of allEngines) {
   }
 }
 
-// For each engineKey=true engine, validate ALL its required keys are in translations.ts
+// For each engineKey=true engine, validate ALL its required keys are in BOTH en + zh JSON
 const engineMissing = [];
 if (extractData) {
   for (const { slug } of engineKeyEngines) {
@@ -182,7 +190,7 @@ if (extractData) {
     if (!tool) continue;
     const requiredKeys = [];
     // input labels
-    for (const [name, _label] of Object.entries(tool.inputLabels || {})) {
+    for (const name of Object.keys(tool.inputLabels || {})) {
       requiredKeys.push(`tools.${slug}.input.${name}.label`);
     }
     // input placeholders (if present)
@@ -197,11 +205,12 @@ if (extractData) {
     for (let i = 0; i < (tool.howToUse || []).length; i++) {
       requiredKeys.push(`tools.${slug}.how_to_use.${i}`);
     }
-    // Validate each key
+    // Validate each key in both en and zh
     for (const key of requiredKeys) {
-      const re = new RegExp(`'${key.replace(/\./g, '\\.')}':\\s*\\{`, 'm');
-      if (!re.test(src)) {
-        engineMissing.push(`  [engine:${slug}] ${key}`);
+      if (!(key in en)) {
+        engineMissing.push(`  [engine:${slug}] ${key} (missing in en.json)`);
+      } else if (!(key in zh)) {
+        engineMissing.push(`  [engine:${slug}] ${key} (missing in zh.json)`);
       }
     }
   }
@@ -217,10 +226,10 @@ const missing = [];
 
 for (const [group, keys] of Object.entries(REQUIRED_KEYS)) {
   for (const key of keys) {
-    // Match: 'key': { en: '...', zh: '...' } — key can contain dots
-    const re = new RegExp(`'${key.replace(/\./g, '\\.')}':\\s*\\{`, 'm');
-    if (!re.test(src)) {
-      missing.push(`  [${group}] ${key}`);
+    if (!has(key)) {
+      if (!(key in en)) missing.push(`  [${group}] ${key} (missing in en.json)`);
+      else if (!(key in zh)) missing.push(`  [${group}] ${key} (missing in zh.json)`);
+      else missing.push(`  [${group}] ${key}`);
     }
   }
 }
@@ -229,8 +238,8 @@ if (missing.length > 0) {
   console.error(`❌ i18n completeness check failed. Missing ${missing.length} key(s):`);
   for (const k of missing) console.error(k);
   console.error('\nTo fix:');
-  console.error('  - Add category.*.name / category.*.desc to translations.ts');
-  console.error('  - Add tools.{slug}.title / tools.{slug}.description to translations.ts');
+  console.error('  - Add category.*.name / category.*.desc to src/i18n/locales/{en,zh}.json');
+  console.error('  - Add tools.{slug}.title / tools.{slug}.description to src/i18n/locales/{en,zh}.json');
   console.error('  - Run scripts/extract-i18n-needed.mjs for the full required list');
   process.exit(1);
 }

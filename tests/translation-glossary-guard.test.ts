@@ -26,77 +26,24 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 
-// Parse translations.ts with state-machine (mirrors scripts/p72-audit-v6.cjs).
-// Returns Map<key, {en, zh}>.
+// Parse i18n locale JSON files (mirrors the structure of scripts/p72-audit-v6.cjs,
+// which previously scanned translations.ts). Returns Map<key, {en, zh}>.
 //
-// Robustness over audit-v6: track line numbers and skip content inside
-// line comments (`//...`). This catches the case where a dev comments out
-// a key (e.g., for testing) — without this, the parser would still see
-// the key as present and the structural drift would go undetected.
+// P150: data source is now per-locale JSON. The value object shape is kept
+// for backward compatibility with callers that do `.get(key).en/.zh`, even
+// though current callers only use `.has(key)` / `.keys()`.
+//
+// Robustness over audit-v6: JSON.parse catches malformed entries (trailing
+// commas, missing quotes) immediately, instead of silently skipping them
+// via the regex scan.
 function parseTranslations(): Map<string, { en: string; zh: string }> {
-  const raw = readFileSync(resolve(root, 'src/i18n/translations.ts'), 'utf-8');
-  // Build a "masked" string where commented-out lines are replaced with
-  // spaces (preserving newlines for line-number tracking). This lets the
-  // parser scan confidently without false-positive key detection.
-  const lines = raw.split('\n');
-  const maskedLines = lines.map(line => {
-    const idx = line.indexOf('//');
-    return idx === -1 ? line : line.slice(0, idx);
-  });
-  const content = maskedLines.join('\n');
+  const enPath = resolve(root, 'src/i18n/locales/en.json');
+  const zhPath = resolve(root, 'src/i18n/locales/zh.json');
+  const en = JSON.parse(readFileSync(enPath, 'utf-8')) as Record<string, string>;
+  const zh = JSON.parse(readFileSync(zhPath, 'utf-8')) as Record<string, string>;
   const keys = new Map<string, { en: string; zh: string }>();
-  const len = content.length;
-  let i = 0;
-  function skipStr(s: string, start: number): number {
-    const q = s[start];
-    let j = start + 1;
-    while (j < s.length) {
-      if (s[j] === '\\') { j += 2; continue; }
-      if (s[j] === q) return j + 1;
-      j++;
-    }
-    return j;
-  }
-  while (i < len) {
-    const ch = content[i];
-    if (ch === '"' || ch === '`') { i = skipStr(content, i); continue; }
-    if (ch === "'") {
-      const keyStart = i + 1;
-      let j = keyStart;
-      while (j < len && content[j] !== "'") {
-        if (content[j] === '\\') j++;
-        j++;
-      }
-      if (j >= len) { i++; continue; }
-      const keyStr = content.slice(keyStart, j);
-      if (!/^[\w.-]+$/.test(keyStr)) { i = j + 1; continue; }
-      let k = j + 1;
-      while (k < len && /\s/.test(content[k])) k++;
-      if (content[k] !== ':') { i = j + 1; continue; }
-      k++;
-      while (k < len && /\s/.test(content[k])) k++;
-      if (content[k] !== '{') { i = j + 1; continue; }
-      let depth = 1;
-      let m = k + 1;
-      while (m < len && depth > 0) {
-        const c = content[m];
-        if (c === "'" || c === '"' || c === '`') { m = skipStr(content, m); continue; }
-        if (c === '{') depth++;
-        else if (c === '}') depth--;
-        m++;
-      }
-      const block = content.slice(k, m);
-      const enM = /en:\s*(['"])((?:[^\\]|\\.)*?)\1/.exec(block);
-      const zhM = /zh:\s*(['"])((?:[^\\]|\\.)*?)\1/.exec(block);
-      if (enM && zhM) {
-        const en = enM[2]!.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-        const zh = zhM[2]!.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-        if (!keys.has(keyStr)) keys.set(keyStr, { en, zh });
-      }
-      i = m;
-      continue;
-    }
-    i++;
+  for (const key of Object.keys(en)) {
+    keys.set(key, { en: en[key] ?? '', zh: zh[key] ?? '' });
   }
   return keys;
 }

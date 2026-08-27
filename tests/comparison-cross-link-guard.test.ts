@@ -12,7 +12,8 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { TOPICS } from '../src/data/topics.ts';
 import { categories } from '../src/data/categories.ts';
-import { translations } from '../src/i18n/translations.ts';
+import en from '../src/i18n/locales/en.json';
+import zh from '../src/i18n/locales/zh.json';
 
 const COMPARISON_TOPICS = TOPICS.filter((t) => t.tier === 'comparison');
 const LETTERS_WITH_COMPARE = ['B', 'C', 'M', 'R'] as const;
@@ -128,8 +129,8 @@ test('comparison-cross-link-guard: letter page render — B/C/M/R pages have Com
   // P147-followup Important #2: marker strings sourced from translations.ts so the
   // guard stays in sync if i18n values change (avoids hardcoded literals drifting).
   const sectionKey = 'letter.compare.section' as const;
-  const enMarker = translations[sectionKey].en;
-  const zhMarker = translations[sectionKey].zh;
+  const enMarker = en[sectionKey] as string;
+  const zhMarker = zh[sectionKey] as string;
   for (const letter of LETTERS_WITH_COMPARE) {
     const paths = walkLetterPages(letter);
     assert.ok(paths, `Letter page ${letter} not found in dist/`);

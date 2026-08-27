@@ -9,6 +9,7 @@
     "build:og": "tsx scripts/build-og-images.ts",
     "check:og": "tsx scripts/build-og-images.ts --check",
     "build:full": "pnpm build:og && pnpm build",
+    "prebuild": "pnpm check:i18n",
     "gen:blog": "node --import tsx scripts/generate-blog-posts.mjs",
     "dev": "astro dev",
     "build": "astro build && node scripts/indexnow-submit.mjs",

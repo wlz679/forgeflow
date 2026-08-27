@@ -22,7 +22,8 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { translations } from '../src/i18n/translations';
+import en from '../src/i18n/locales/en.json';
+import zh from '../src/i18n/locales/zh.json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -295,8 +296,8 @@ test('working i18n keys translate on their target pages', () => {
       // guard silently accepts orphan-reference removal). For P138+,
       // reserved keys (saving_*, image_cheapest, gpu_total, training_total)
       // become object entries once patterns land.
-      if (!translations[entry]) {
-        violations.push(`${entry}: WORKING_KEY_REQUIRED entry references missing translations.ts key`);
+      if (!en[entry] || !zh[entry]) {
+        violations.push(`${entry}: WORKING_KEY_REQUIRED entry references missing i18n locale key (en.json or zh.json)`);
       }
       continue;
     }

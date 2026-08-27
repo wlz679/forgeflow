@@ -225,7 +225,7 @@ pnpm translate          # Translate wordpools (translate-wordpools.ts)
 - `[lang]/blog/` — blog posts
 - `[lang]/about.astro`, `contact.astro`, `privacy-policy.astro`, `terms.astro` — static content
 
-i18n: English (`en`) and Chinese (`zh`). Translations in `src/i18n/translations.ts`.
+i18n: English (`en`) and Chinese (`zh`). Translations live in per-locale JSON at `src/i18n/locales/{en,zh}.json` (P150 migration from master legacy TS dict `src/i18n/translations.ts`, now deleted). Loader: `src/i18n/translate-helper.ts` does zh→en fallback chain `locales[lang]?.[key] ?? locales.en?.[key] ?? key`. Completeness scan: `scripts/check-i18n-completeness.mjs` validates eeat/about/category/header/favorites/recent/history/tool-key sets + dynamic category + tool slugs.
 
 ### Engines (`src/engines/`)
 

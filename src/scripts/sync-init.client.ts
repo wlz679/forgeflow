@@ -42,7 +42,7 @@ import {
   type HistoryPayload,
 } from '../lib/sync';
 import { translate } from '../i18n/translate-helper';
-import type { Lang } from '../i18n/translations';
+import type { Lang } from '../i18n';
 
 const DEBOUNCE_MS = 5000;
 const POLL_FOR_AUTH_MS = 5000;

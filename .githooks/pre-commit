@@ -40,17 +40,18 @@ if echo "$STAGED" | grep -qE '^(src/engines/.*\.ts|scripts/codegen-examples\.mjs
   fi
 fi
 
-# 2. i18n completeness — only when translations or data files change
-if echo "$STAGED" | grep -qE '^(src/i18n/translations\.ts|src/data/(categories|tools)/.*\.ts|src/engines/.*\.ts|scripts/check-i18n-completeness\.mjs)$'; then
-  echo "[pre-commit] Running scripts/check-i18n-completeness.mjs..."
-  if ! node scripts/check-i18n-completeness.mjs; then
-    echo ""
-    echo "[pre-commit] BLOCKED: missing i18n keys for engine or category titles/descriptions."
-    echo "  Fix: add tools.{slug}.{title,description} or category.{X}.{name,desc} entries"
-    echo "        to src/i18n/translations.ts."
-    echo "  Bypass (not recommended): \`git commit --no-verify\`"
-    exit 1
-  fi
+# 2. i18n completeness — runs on every commit (P150, formerly gated by file
+# pattern that referenced translations.ts). With per-locale JSON in place,
+# the source-of-truth is src/i18n/locales/{en,zh}.json — checking it on
+# every commit catches missing keys the moment they're introduced.
+echo "[pre-commit] Running scripts/check-i18n-completeness.mjs..."
+if ! node scripts/check-i18n-completeness.mjs; then
+  echo ""
+  echo "[pre-commit] BLOCKED: missing i18n keys for engine or category titles/descriptions."
+  echo "  Fix: add tools.{slug}.{title,description} or category.{X}.{name,desc} entries"
+  echo "        to src/i18n/locales/{en,zh}.json."
+  echo "  Bypass (not recommended): \`git commit --no-verify\`"
+  exit 1
 fi
 
 # 3. og-sample coverage — every tool needs an og-sample (P23).
