@@ -10,6 +10,8 @@ import RelatedBlog from '../../components/RelatedBlog.astro';
 import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
 import TopicCard from '../../components/TopicCard.astro';
 import RecentViewed from '../../components/RecentViewed.astro';
+// P151: replace inline AI-cost preset button JSX with reusable component
+import PresetChips from '../../components/PresetChips.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
 import { relatedTools } from '../../data/internal-links';
@@ -844,73 +846,8 @@ const schema = JSON.stringify({
               </>
             ) : (
               <>
-              {isAiApiCostComparison && (
-                <div class="mb-5">
-                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
-                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-ai-api-cost-comparison">
-                    {[
-                      { emoji:'🤖', key:'support-bot',   'input-tokens':'800',  'output-tokens':'200',  'requests-per-day':'500',   'pricing-mode':'realtime' },
-                      { emoji:'📚', key:'rag-qa',        'input-tokens':'3000', 'output-tokens':'400',  'requests-per-day':'200',   'pricing-mode':'realtime' },
-                      { emoji:'💻', key:'code-review',   'input-tokens':'5000', 'output-tokens':'800',  'requests-per-day':'50',    'pricing-mode':'realtime' },
-                      { emoji:'✍️', key:'content-gen',   'input-tokens':'500',  'output-tokens':'2000', 'requests-per-day':'100',   'pricing-mode':'realtime' },
-                      { emoji:'📊', key:'data-analysis', 'input-tokens':'4000', 'output-tokens':'3000', 'requests-per-day':'30',    'pricing-mode':'realtime' },
-                      { emoji:'⚡', key:'batch',         'input-tokens':'3000', 'output-tokens':'5000', 'requests-per-day':'10000', 'pricing-mode':'batch' },
-                    ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-input-tokens={p['input-tokens']} data-output-tokens={p['output-tokens']} data-requests-per-day={p['requests-per-day']} data-pricing-mode={p['pricing-mode']}>{p.emoji} {t(`tools.solopreneur-ai-api-cost-comparison.preset.${p.key}`, lang)}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {isImage && (
-                <div class="mb-5">
-                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
-                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-ai-image-cost-calculator">
-                    {[
-                      { emoji:'💼', key:'solopreneur', provider:'dalle-3',                'images-per-month':'100',  resolution:'1024×1024', 'batch-size':'1', 'advanced-mode':'standard' },
-                      { emoji:'🎨', key:'creator',     provider:'midjourney-v7',         'images-per-month':'500',  resolution:'2048×2048', 'batch-size':'4', 'advanced-mode':'standard' },
-                      { emoji:'🏢', key:'agency',      provider:'dalle-4',               'images-per-month':'1000', resolution:'1024×1024', 'batch-size':'4', 'advanced-mode':'hd' },
-                      { emoji:'💰', key:'budget',      provider:'stable-diffusion-4',    'images-per-month':'5000', resolution:'512×512',   'batch-size':'8', 'advanced-mode':'standard' },
-                      { emoji:'🔤', key:'logos',       provider:'ideogram-3',            'images-per-month':'300',  resolution:'1024×1024', 'batch-size':'2', 'advanced-mode':'standard' },
-                      { emoji:'🖼️', key:'artistic',    provider:'flux-pro',              'images-per-month':'800',  resolution:'2048×2048', 'batch-size':'2', 'advanced-mode':'hd' },
-                    ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-provider={p.provider} data-images-per-month={p['images-per-month']} data-resolution={p.resolution} data-batch-size={p['batch-size']} data-advanced-mode={p['advanced-mode']}>{p.emoji} {t(`tools.solopreneur-ai-image-cost-calculator.preset.${p.key}`, lang)}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {isTraining && (
-                <div class="mb-5">
-                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
-                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-ai-training-cost-estimator">
-                    {[
-                      { emoji:'🚀', key:'quick-lora',      'model-size':'7B',   'gpu-type':'H100-80GB',  'gpu-count':'2',   'training-hours':'8',   epochs:'3', 'cloud-storage':'50',   'data-process-cost':'20' },
-                      { emoji:'📦', key:'mid-13b',         'model-size':'13B',  'gpu-type':'A100-80GB',  'gpu-count':'8',   'training-hours':'24',  epochs:'5', 'cloud-storage':'200',  'data-process-cost':'100' },
-                      { emoji:'🏭', key:'full-70b',        'model-size':'70B',  'gpu-type':'H200-141GB', 'gpu-count':'16',  'training-hours':'48',  epochs:'3', 'cloud-storage':'500',  'data-process-cost':'300' },
-                      { emoji:'🏢', key:'enterprise-180b', 'model-size':'180B', 'gpu-type':'H200-141GB', 'gpu-count':'64',  'training-hours':'168', epochs:'2', 'cloud-storage':'2000', 'data-process-cost':'1000' },
-                      { emoji:'💰', key:'budget-7b',       'model-size':'7B',   'gpu-type':'RTX-6000',   'gpu-count':'4',   'training-hours':'12',  epochs:'5', 'cloud-storage':'30',   'data-process-cost':'10' },
-                      { emoji:'🏆', key:'pro-405b',        'model-size':'405B', 'gpu-type':'H200-141GB', 'gpu-count':'128', 'training-hours':'720', epochs:'1', 'cloud-storage':'5000', 'data-process-cost':'2000' },
-                    ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-model-size={p['model-size']} data-gpu-type={p['gpu-type']} data-gpu-count={p['gpu-count']} data-training-hours={p['training-hours']} data-epochs={p.epochs} data-cloud-storage={p['cloud-storage']} data-data-process-cost={p['data-process-cost']}>{p.emoji} {t(`tools.solopreneur-ai-training-cost-estimator.preset.${p.key}`, lang)}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {isGpu && (
-                <div class="mb-5">
-                  <span class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wide">{lang === 'zh' ? '🎭 场景预设' : '🎭 Scenario Presets'}</span>
-                  <div class="flex flex-wrap gap-1.5" id="preset-buttons-gpu-cloud-cost-calculator">
-                    {[
-                      { emoji:'💰', key:'budget-single',   provider:'vastai',     gpuType:'RTX4090', gpuCount:'1',  'hours-per-day':'12', 'pricing-tier':'spot',       'include-storage':'yes' },
-                      { emoji:'💻', key:'dev-box',         provider:'runpod',     gpuType:'A100',    gpuCount:'1',  'hours-per-day':'8',  'pricing-tier':'on-demand',  'include-storage':'yes' },
-                      { emoji:'🏋️', key:'training-rig',    provider:'lambdalabs', gpuType:'A100',    gpuCount:'4',  'hours-per-day':'24', 'pricing-tier':'reserved',    'include-storage':'yes' },
-                      { emoji:'🏢', key:'enterprise-h100', provider:'aws',        gpuType:'H100',    gpuCount:'8',  'hours-per-day':'24', 'pricing-tier':'reserved',    'include-storage':'yes' },
-                      { emoji:'🏷️', key:'cheapest-h200',   provider:'vastai',     gpuType:'H200',    gpuCount:'1',  'hours-per-day':'4',  'pricing-tier':'spot',       'include-storage':'no' },
-                      { emoji:'🏆', key:'pro-8h100',       provider:'runpod',     gpuType:'H100',    gpuCount:'8',  'hours-per-day':'24', 'pricing-tier':'on-demand',  'include-storage':'yes' },
-                    ].map(p => (
-                      <button type="button" class="preset-btn text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 bg-gray-50 hover:border-[#7C3AED] hover:bg-[#7C3AED]/5 transition-all" data-provider={p.provider} data-gpu-type={p.gpuType} data-gpu-count={p.gpuCount} data-hours-per-day={p['hours-per-day']} data-pricing-tier={p['pricing-tier']} data-include-storage={p['include-storage']}>{p.emoji} {t(`tools.solopreneur-gpu-cloud-cost-calculator.preset.${p.key}`, lang)}</button>
-                    ))}
-                  </div>
-                </div>
+              {engine.presets && engine.presets.length > 0 && (
+                <PresetChips presets={engine.presets} slug={slug!} lang={lang} />
               )}
               {/* PRESET_BLOCKS_TOP: 24 calculators insert here */}
               {slug === 'solopreneur-burn-rate-calculator' && (
