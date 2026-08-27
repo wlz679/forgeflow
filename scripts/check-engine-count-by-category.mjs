@@ -157,26 +157,30 @@ if (derived.total !== 100) {
   fail(`ToolMeta total=${derived.total} but EXPECTED_ENGINE_COUNT=100`);
 }
 
-// Layer 3: CLAUDE.md snapshot table matches script output.
+// Layer 3: AGENTS.md snapshot table matches script output.
+// P150 follow-up: previously read CLAUDE.md (deleted in P150). Falls
+// back to AGENTS.md, which already contains the codegen markers + table.
+const agentsPath = path.join(ROOT, 'AGENTS.md');
 const claudePath = path.join(ROOT, 'CLAUDE.md');
-if (!fs.existsSync(claudePath)) {
-  fail(`CLAUDE.md missing at ${claudePath}`);
+const docPath = fs.existsSync(claudePath) ? claudePath : agentsPath;
+if (!fs.existsSync(docPath)) {
+  fail(`Neither CLAUDE.md nor AGENTS.md found at ROOT=${ROOT}`);
 } else {
-  const claudeContent = fs.readFileSync(claudePath, 'utf8');
+  const docContent = fs.readFileSync(docPath, 'utf8');
   const markerStart = '<!-- codegen:start engine-count -->';
   const markerEnd = '<!-- codegen:end -->';
-  const startIdx = claudeContent.indexOf(markerStart);
-  const endIdx = claudeContent.indexOf(markerEnd);
+  const startIdx = docContent.indexOf(markerStart);
+  const endIdx = docContent.indexOf(markerEnd);
   if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) {
-    fail(`CLAUDE.md missing codegen markers (start=${startIdx}, end=${endIdx})`);
+    fail(`${path.basename(docPath)} missing codegen markers (start=${startIdx}, end=${endIdx})`);
   } else {
-    const snapshot = claudeContent.slice(startIdx + markerStart.length, endIdx).trim();
+    const snapshot = docContent.slice(startIdx + markerStart.length, endIdx).trim();
     const expected = table.trim();
     if (snapshot !== expected) {
-      fail('CLAUDE.md snapshot table does not match script output. Run `node scripts/check-engine-count-by-category.mjs` and copy-paste the output into CLAUDE.md between the codegen markers.');
+      fail(`${path.basename(docPath)} snapshot table does not match script output. Run \`node scripts/check-engine-count-by-category.mjs\` and copy-paste the output into ${path.basename(docPath)} between the codegen markers.`);
       console.error('--- script output ---');
       console.error(expected);
-      console.error('--- CLAUDE.md snapshot ---');
+      console.error(`--- ${path.basename(docPath)} snapshot ---`);
       console.error(snapshot);
       console.error('--- end ---');
     }
