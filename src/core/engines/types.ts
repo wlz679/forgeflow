@@ -28,6 +28,20 @@ export interface ClientConfig {
 
 import type { PlaybookMetadata } from './metadata';
 
+/**
+ * One-click preset that fills a calculator's inputs from a button click.
+ * Rendered as a chip at the top of the form (above inputs) when `presets`
+ * is set on the engine. Currently used by AI Cost v3 (4 calcs).
+ */
+export interface Preset {
+  /** Lookup key for i18n label via t(`tools.${slug}.preset.${key}`, lang) */
+  key: string;
+  /** Emoji prefix displayed before the label (e.g. '💼') */
+  emoji: string;
+  /** input.name → value. Component converts camelCase → kebab-case for HTML data-attr */
+  fields: Record<string, string | number>;
+}
+
 export interface ToolEngine {
   slug: string;
   title: string;
@@ -83,4 +97,9 @@ export interface ToolEngine {
   /** 6 字段 Playbook metadata (Goal / Input / Output / Constraint / Tool / Memory).
    *  Goal 字段必填且含"决策/decision/该不该/是否"关键词 — v2.0 Decision Support 灵魂落地。 */
   playbook?: PlaybookMetadata;
+
+  /** P151: Optional preset chips rendered at top of form. When set, page
+   *  renders one button per preset that fills inputs from `preset.fields`.
+   *  Component converts camelCase → kebab-case for HTML data-attr. */
+  presets?: Preset[];
 }
