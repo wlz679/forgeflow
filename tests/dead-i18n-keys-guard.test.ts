@@ -22,8 +22,12 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import en from '../src/i18n/locales/en.json';
-import zh from '../src/i18n/locales/zh.json';
+import enRaw from '../src/i18n/locales/en.json';
+import zhRaw from '../src/i18n/locales/zh.json';
+// Vite/TS infers JSON imports as literal-key unions; cast to Record so
+// dynamic-string lookups (`en[entry]`) don't trigger TS7053.
+const en = enRaw as Record<string, string>;
+const zh = zhRaw as Record<string, string>;
 
 const root = resolve(import.meta.dirname, '..');
 
