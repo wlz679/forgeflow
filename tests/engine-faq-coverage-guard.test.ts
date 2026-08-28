@@ -46,7 +46,13 @@ for (const file of engineFiles) {
 const trText = readFileSync(resolve(root, 'src', 'i18n', 'locales', 'en.json'), 'utf-8');
 const trKeys = Object.keys(JSON.parse(trText));
 const transFaqIndices: Record<string, Set<number>> = {};
-const trRe = /tools\.(solopreneur-[a-z0-9-]+)\.faq\.(\d+)\.q/;
+// P150 follow-up: regex matches BOTH `.q` and `.a` keys. Original test only
+// matched `.q`, so it under-counted translations (saw 8 indices for engines
+// with 15 FAQ entries even when both .q and .a keys existed in JSON).
+// Counting either .q OR .a is equivalent (they're always emitted in pairs),
+// but matching both is more forgiving against future drift where one side
+// is missing.
+const trRe = /tools\.(solopreneur-[a-z0-9-]+)\.faq\.(\d+)\.[qa]/;
 for (const key of trKeys) {
   const m = key.match(trRe);
   if (!m) continue;
