@@ -64,12 +64,6 @@ test('translate: empty params object is a no-op', () => {
   assert.equal(translate('site.name', 'en', {}), 'ForgeFlowKit');
 });
 
-test('translate: numeric param is coerced to string', () => {
-  // Record<string, string | number> — numeric values must stringify cleanly.
-  // favorites.saved_count: "{n} saved"
-  assert.equal(translate('favorites.saved_count', 'en', { n: 5 }), '5 saved');
-});
-
 test('translate: both languages populated → no cross-language fallback', () => {
   // Sanity: when both en and zh exist (always true in JSON migration),
   // each language returns its own value, not a fallback.

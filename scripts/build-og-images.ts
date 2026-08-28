@@ -130,7 +130,11 @@ async function loadTwemoji(filename: string): Promise<Buffer> {
   const res = await fetchWithRetry(url);
   const buf = Buffer.from(await res.arrayBuffer());
   mkdirSync(TWEMOJI_CACHE_DIR, { recursive: true });
-  writeFileSync(cachePath, buf);
+  // P150 follow-up: Node 22+ @types/node tightened writeFileSync signature to
+  // string | ArrayBufferView. Buffer extends Uint8Array but TS treats it as a
+  // distinct type (entries() iterator mismatch). Wrap with a zero-copy
+  // Uint8Array view via the underlying ArrayBuffer.
+  writeFileSync(cachePath, new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
   return buf;
 }
 
@@ -248,7 +252,10 @@ async function main() {
   for (const { slug, lang } of targets) {
     const png = await renderOne(slug, lang, graphemeImages);
     const dest = join(OUT_DIR, `${slug}-${lang}.png`);
-    writeFileSync(dest, png);
+    // P150 follow-up: see comment in loadTwemoji(). Zero-copy Uint8Array view
+    // around the same underlying ArrayBuffer so writeFileSync's strict
+    // ArrayBufferView overload accepts it.
+    writeFileSync(dest, new Uint8Array(png.buffer, png.byteOffset, png.byteLength));
     i++;
     if (i % 8 === 0 || i === targets.length) {
       console.log(`  ${i}/${targets.length}`);

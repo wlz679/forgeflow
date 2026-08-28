@@ -39,10 +39,17 @@ for (const file of engineFiles) {
 }
 
 // Walk translations, build transFaqIndices map
-const trText = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
+// P150 follow-up: data source is now per-locale JSON (src/i18n/locales/en.json),
+// not src/i18n/translations.ts (deleted in P150 commit c16322b).
+// Key shape `tools.<slug>.faq.<n>.q` is preserved verbatim across the migration,
+// so the regex works the same — only the file path changed.
+const trText = readFileSync(resolve(root, 'src', 'i18n', 'locales', 'en.json'), 'utf-8');
+const trKeys = Object.keys(JSON.parse(trText));
 const transFaqIndices: Record<string, Set<number>> = {};
-const trRe = /'tools\.(solopreneur-[a-z0-9-]+)\.faq\.(\d+)\.q':/g;
-for (const m of trText.matchAll(trRe)) {
+const trRe = /tools\.(solopreneur-[a-z0-9-]+)\.faq\.(\d+)\.q/;
+for (const key of trKeys) {
+  const m = key.match(trRe);
+  if (!m) continue;
   const slug = m[1]; const idx = +m[2];
   if (!transFaqIndices[slug]) transFaqIndices[slug] = new Set();
   transFaqIndices[slug].add(idx);
