@@ -294,7 +294,7 @@ const engine: ToolEngine = {
   // P151: preset chips — replaces dead PRESETS const. Each preset fills
   // the form inputs from preset.fields; the page renders one button per entry.
   presets: [
-    { key: 'lora-7b',  emoji: '⚡', fields: { modelSize: '7B',   gpuType: 'H100-80GB',  gpuCount: '2',   trainingHours: '8',   epochs: '3', cloudStorage: '50',  dataProcessCost: '20'  } },
+    { key: 'quick-lora',  emoji: '⚡', fields: { modelSize: '7B',   gpuType: 'H100-80GB',  gpuCount: '2',   trainingHours: '8',   epochs: '3', cloudStorage: '50',  dataProcessCost: '20'  } },
     { key: 'mid-13b',  emoji: '🔧', fields: { modelSize: '13B',  gpuType: 'A100-80GB',  gpuCount: '8',   trainingHours: '24',  epochs: '5', cloudStorage: '200', dataProcessCost: '100' } },
     { key: 'full-70b', emoji: '🚀', fields: { modelSize: '70B',  gpuType: 'H200-141GB', gpuCount: '16',  trainingHours: '48',  epochs: '3', cloudStorage: '500', dataProcessCost: '300' } },
     { key: 'enterprise-180b', emoji: '🏢', fields: { modelSize: '180B', gpuType: 'H200-141GB', gpuCount: '64',  trainingHours: '168', epochs: '2', cloudStorage: '2000', dataProcessCost: '1000' } },

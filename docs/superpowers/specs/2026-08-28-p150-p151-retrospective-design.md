@@ -75,6 +75,11 @@ The decision documentation for these changes was implicit (brainstorming skill w
 **What**: Preset keys use kebab-case (`solopreneur`, `creator`, `agency`, `budget`, `logos`, `batch-7b`, `lora-7b`, `code-review`) not Title Case (`Solopreneur`, `Code Review`).
 **Why**: Matches i18n key naming convention. `tools.${slug}.preset.${key}` reads cleanly when the preset key is also kebab-case.
 
+### 2.5 — Preset key alignment with i18n (revert to canonical)
+
+**What**: Initially 4 AI cost engines were wired with descriptive kebab-case preset keys (e.g. `lora-7b`, `budget-single-gpu`, `training-rig-4xa100`). Code review after merge found 5 chips rendered broken literal i18n keys because the descriptive engine keys did not match the existing i18n labels (e.g. `quick-lora`, `budget-single`, `training-rig`). Fix commit renamed engine keys back to the i18n-canonical names so existing translations render.
+**Why**: Cross-check engine preset keys against `src/i18n/locales/{en,zh}.json` before wiring new engines. Optional `i18nKey(slug, presetKey)` helper in `src/core/engines/types.ts` would catch this drift at compile time. Recorded as follow-up for future P-series.
+
 ---
 
 ## Section 3: Meta decisions (4)
