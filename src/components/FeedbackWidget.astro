@@ -1,0 +1,103 @@
+---
+// P150 Dimension 2 (User-Centric Advisor) Phase 1: Feedback Widget
+// Per-page 👍/👎 + optional text feedback. Sends Plausible custom event.
+// Text feedback queued in localStorage for Phase 2 server endpoint.
+
+export interface Props {
+  pageKind: "calc" | "topic" | "blog";
+  slug: string;
+  lang: "en" | "zh";
+}
+
+const { pageKind, slug, lang } = Astro.props as Props;
+
+import { t } from "../i18n";
+
+const tUp = t("feedback.up", lang);
+const tDown = t("feedback.down", lang);
+const tPrompt = t("feedback.prompt", lang);
+const tThanks = t("feedback.thanks", lang);
+---
+
+<div
+  class="feedback-widget mt-8 border-t border-gray-200 pt-6"
+  data-feedback-widget
+  data-page-kind={pageKind}
+  data-slug={slug}
+  data-lang={lang}
+>
+  <div class="flex flex-col gap-3">
+    <p class="text-sm text-gray-700">{tUp}</p>
+    <div class="flex gap-2">
+      <button
+        type="button"
+        class="feedback-btn-up px-4 py-2 rounded border border-gray-300 hover:border-green-500 hover:bg-green-50"
+        data-vote="up"
+        aria-label={tUp}
+      >
+        👍
+      </button>
+      <button
+        type="button"
+        class="feedback-btn-down px-4 py-2 rounded border border-gray-300 hover:border-red-500 hover:bg-red-50"
+        data-vote="down"
+        aria-label={tDown}
+      >
+        👎
+      </button>
+    </div>
+    <details class="text-sm">
+      <summary class="cursor-pointer text-gray-600 hover:text-gray-900">
+        {tPrompt}
+      </summary>
+      <textarea
+        class="feedback-textarea mt-2 w-full p-2 border border-gray-300 rounded text-sm"
+        rows="3"
+        maxlength="500"
+        placeholder={tPrompt}
+      ></textarea>
+    </details>
+    <p class="feedback-thanks hidden text-sm text-green-700" data-feedback-thanks>
+      {tThanks}
+    </p>
+  </div>
+</div>
+
+<script>
+  // Client-side: wire buttons + Plausible + localStorage queue
+  document.querySelectorAll<HTMLDivElement>("[data-feedback-widget]").forEach((widget) => {
+    const pageKind = widget.dataset.pageKind || "calc";
+    const slug = widget.dataset.slug || "unknown";
+    const lang = widget.dataset.lang || "en";
+    const upBtn = widget.querySelector<HTMLButtonElement>(".feedback-btn-up");
+    const downBtn = widget.querySelector<HTMLButtonElement>(".feedback-btn-down");
+    const thanks = widget.querySelector<HTMLElement>("[data-feedback-thanks]");
+
+    function send(vote: "up" | "down") {
+      // Plausible custom event (no-op if Plausible blocked)
+      const w = window as any;
+      if (typeof w.plausible === "function") {
+        w.plausible("feedback_vote", { props: { vote, slug, page_kind: pageKind, lang } });
+      }
+      // localStorage queue (best-effort)
+      try {
+        const KEY = "forgeflowkit:feedback:v1";
+        const raw = localStorage.getItem(KEY);
+        const arr: any[] = raw ? JSON.parse(raw) : [];
+        arr.push({ ts: Date.now(), vote, slug, page_kind: pageKind, lang });
+        // LRU cap 100: evict oldest 10
+        if (arr.length > 100) arr.splice(0, arr.length - 100);
+        localStorage.setItem(KEY, JSON.stringify(arr));
+      } catch {
+        // localStorage disabled or quota exceeded — silent fail
+      }
+      // UI update
+      if (upBtn) upBtn.disabled = true;
+      if (downBtn) downBtn.disabled = true;
+      if (thanks) thanks.classList.remove("hidden");
+    }
+
+    upBtn?.addEventListener("click", () => send("up"));
+    downBtn?.addEventListener("click", () => send("down"));
+  });
+</script>

@@ -3,6 +3,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Header from '../../../components/Header.astro';
 import Footer from '../../../components/Footer.astro';
+import FeedbackWidget from '../../../components/FeedbackWidget.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
@@ -117,5 +118,6 @@ const brows = benchContent ? benchContent.rows : [];
       <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{bsr}</p>
     </section>
   </main>
+  <FeedbackWidget pageKind="topic" slug={topicId!} lang={lang} />
   <Footer />
 </BaseLayout>

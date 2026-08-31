@@ -3,6 +3,7 @@
 // 6-section educational article + links to calculators + Related Topics.
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Header from '../../../components/Header.astro';
+import FeedbackWidget from '../../../components/FeedbackWidget.astro';
 import Footer from '../../../components/Footer.astro';
 import Breadcrumb from '../../../components/Breadcrumb.astro';
 import TopicCard from '../../../components/TopicCard.astro';
@@ -112,5 +113,6 @@ const cp = guideContent ? guideContent.commonPitfalls : '[CONTENT: ~200 字 — 
       </section>
     )}
   </main>
+  <FeedbackWidget pageKind="topic" slug={topic.id} lang={lang} />
   <Footer />
 </BaseLayout>

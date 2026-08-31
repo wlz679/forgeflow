@@ -28,6 +28,7 @@ import { SITE_URL } from '../../lib/site-config';
 // to en if zh missing (warns once). See src/components/CalculatorProse.astro.
 import CalculatorProse from '../../components/CalculatorProse.astro';
 import EnterpriseToolbar from '../../components/enterprise/EnterpriseToolbar.astro';
+import FeedbackWidget from '../../components/FeedbackWidget.astro';
 import { getEntry, type CollectionEntry } from 'astro:content';
 
 export function getStaticPaths() {
@@ -1373,6 +1374,7 @@ const schema = JSON.stringify({
     </div>
     <RecentViewed lang={lang} />
   </main>
+  <FeedbackWidget pageKind="calc" slug={slug!} lang={lang} />
   <Footer />
 </BaseLayout>
 
