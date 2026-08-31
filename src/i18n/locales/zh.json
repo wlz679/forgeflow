@@ -5324,5 +5324,9 @@
   "tools.solopreneur-safe-convertible-note-calculator.faq.12.q": "What is the post-money SAFE vs pre-money SAFE?",
   "tools.solopreneur-safe-convertible-note-calculator.faq.12.a": "Pre-money SAFE: cap = pre-money valuation (excludes SAFE). YC post-money SAFE: cap = post-money valuation (includes SAFE). Pre-money: founder-friendly, hard to model. Post-money: investor-friendly, easy to model. Most: post-money SAFE is YC standard (since 2018). For $5M cap post-money: SAFE = 10% immediately. For pre-money $5M: SAFE = 9% (5M/5.5M). Most: 90%+ of SAFEs are now post-money. Use YC standard.",
   "tools.solopreneur-claude-api-cost-calculator.faq.12.q": "What does the \"thinking\" model cost extra?",
-  "tools.solopreneur-rent-vs-buy-calculator.faq.11.a": "Inflation helps buyers. Fixed mortgage payment: stays same. Rents: typically inflate 3-5% per year. For 30-year mortgage: paid in \"cheaper\" dollars over time. 3% inflation: $2,528 mortgage today = $1,272 in today's dollars in 20 years. Most: high inflation = buy wins. Low inflation: smaller effect. Historically: 2-3% inflation, 3-4% rent growth. Real returns favor buy in inflationary environments."
+  "tools.solopreneur-rent-vs-buy-calculator.faq.11.a": "Inflation helps buyers. Fixed mortgage payment: stays same. Rents: typically inflate 3-5% per year. For 30-year mortgage: paid in \"cheaper\" dollars over time. 3% inflation: $2,528 mortgage today = $1,272 in today's dollars in 20 years. Most: high inflation = buy wins. Low inflation: smaller effect. Historically: 2-3% inflation, 3-4% rent growth. Real returns favor buy in inflationary environments.",
+  "feedback.up": "这有帮助吗?",
+  "feedback.down": "没帮助",
+  "feedback.prompt": "告诉我们什么能让这更好 (可选)",
+  "feedback.thanks": "感谢您的反馈!"
 }
