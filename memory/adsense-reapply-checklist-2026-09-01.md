@@ -2,7 +2,7 @@
 
 **Decision date**: 2026-08-26 (per user's "b" choice in maintenance mode discussion)
 **Target re-apply date**: 2026-09-01 (5 days from now, P140c ship + 2 weeks)
-**Status**: ✅ Pre-flight verified 2026-08-28 — production 100% healthy, all 13 critical pages + 9 sitemap samples PASS. **GO for 9/01.**
+**Status**: ⚠️ DEFERRED 2026-08-31 — GSC coverage 53% with 10-day crawl stagnation (Googlebot stopped recrawling). P149 Last-Modified + sitemap lastmod injection shipped (commits 58d3cdd, 8206951, 4fce7a8). Sitemap lastmod signals Googlebot to recrawl. New target: 2026-09-08 (3-week crawl cycle).
 
 ---
 
@@ -202,9 +202,11 @@ If re-apply is rejected again:
 | 2026-08-27 (Wed) | -2 | (no action — let Googlebot crawl) | ✅ |
 | 2026-08-28 (Thu) | -1 | **Pre-flight verify completed early** | ✅ DONE — 13/13 critical + 9/9 samples PASS |
 | 2026-08-29 (Fri) | 0 | (no action) | — |
-| 2026-08-30 (Sat) | +1 | **User runs GSC verify (8/30 or 8/31)** | ⏳ TODO |
-| 2026-08-31 (Sun) | +2 | LiteLLM cron auto-sync | — |
-| 2026-09-01 (Mon) | +3 | **🎯 RE-APPLY AdSense** | 🎯 |
+| 2026-08-30 (Sat) | +1 | **User runs GSC verify (8/30 or 8/31)** | ✅ DONE 8/31 — found 53% coverage + 10-day crawl stagnation |
+| 2026-08-31 (Sun) | +2 | **P149 Last-Modified + sitemap lastmod injection shipped** | ✅ DONE — commits 58d3cdd, 8206951, 4fce7a8. Sitemap 639 lastmod entries. HTTP `Last-Modified` header not present in production (Cloudflare edge strips; out of scope per spec Layer 4 — defer Cloudflare Worker to future sub-project) |
+| 2026-09-01 (Mon) | +3 | **🎯 ORIGINAL RE-APPLY TARGET** — **DEFERRED to 9/08** | ⚠️ Waiting for Googlebot to recrawl after P149 |
+| 2026-09-02 (Tue) | +4 | GSC re-check coverage (expect rise from 53%) | TODO |
+| 2026-09-08 (Mon) | +10 | **🎯 NEW RE-APPLY TARGET** | TODO (P140c + 3 weeks + P149 recrawl window) |
 
 ---
 
