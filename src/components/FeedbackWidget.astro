@@ -11,12 +11,12 @@ export interface Props {
 
 const { pageKind, slug, lang } = Astro.props as Props;
 
-import { translate } from "../i18n";
+import { t } from "../i18n";
 
-const tUp = translate("feedback.up", lang);
-const tDown = translate("feedback.down", lang);
-const tPrompt = translate("feedback.prompt", lang);
-const tThanks = translate("feedback.thanks", lang);
+const tUp = t("feedback.up", lang);
+const tDown = t("feedback.down", lang);
+const tPrompt = t("feedback.prompt", lang);
+const tThanks = t("feedback.thanks", lang);
 ---
 
 <div
