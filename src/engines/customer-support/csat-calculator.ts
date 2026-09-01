@@ -81,8 +81,8 @@ const engine: ToolEngine = {
       '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',
       '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',
       '💡 Tip: Response rate <20% = biased sample (only happy/angry respond); incentivize responses with post-resolution email + optional micro-survey.',
-      // P140f-3: L5 Decision Recommendation (per ADR-0001) — v2.0 灵魂 = Decision Support
-      '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 客户真实满意度足够支撑 NRR ≥ 110%（健康扩张）吗？还是表面好看实际是低响应样本假象？\n• 🧭 Recommendation: 看 2 个数：(1) **响应率 ≥ 30%** 才信 CSAT 数字；(2) **目标 gap ≤ 0pp** + **过去 3 月趋势 ≤ -2pp** 才算稳定。任一不满足 → 不应基于 CSAT 单独决策，需结合 NRR / Churn 验证。\n• 🧭 Key Uncertainty: 响应率 < 20% = 严重有偏样本（只有最满意/最愤怒的人回），CSAT 实际可能是 ±10pp 真值；CSAT 是滞后指标（看上一季度体验），不代表未来留存。\n• 🧭 Next Action: 立刻检查 (a) 上月响应率 ≥ 30% 吗？(b) 目标 gap 是多少？(c) 最近 3 月 NRR 趋势是否扩张？任一不通过 → 不扩大 ARR 投入，先做留存。',
+      // P151 batch2: upgraded L5 content (≥50 chars per section) — supersedes P140f-3 shorter version
+      '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 CSAT score 是陷阱，**核心问题是"score 是否反映真实问题 + response rate + 客户分群"**。单一 score 误导（顶级客户低分 vs 低价值客户高分）。\n• 🧭 Recommendation: (1) **CSAT < 60%** → 系统性问题，立即 audit top 3 痛点（FAQ / 流程 / 产品）；(2) **60-75%** → 优化 contact reason 流程 + agent training；(3) **75-85%** → 维护 + 监控 cohort 漂移；(4) **> 85%** → 扩张投入 brand / referral。\n• 🧭 Key Uncertainty: (1) response rate 影响 score 分布（只 10% 客户响应会 bias）；(2) 不同 segment 期望值不同（enterprise > SMB）；(3) 季节性波动（holiday season 自然低）；(4) channel 差异（chat vs email CSAT 不可比）。\n• 🧭 Next Action: (a) 跑 [First Response Time Calculator] 看响应延迟影响；(b) 跑 [Resolution Time Calculator] 看解决时长；(c) 跑 [Support Capacity Planning Calculator] 看 staffing 瓶颈；(d) 决策前 segment 客户分群对比 CSAT。',
     ];
   },
   staticExamples: [
