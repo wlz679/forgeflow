@@ -19,6 +19,47 @@ const tPrompt = t("feedback.prompt", lang);
 const tThanks = t("feedback.thanks", lang);
 ---
 
+<script>
+  const FLUSH_KEY = "forgeflowkit:feedback:v1";
+  const FLUSH_ENDPOINT = "/api/feedback";
+  const BATCH_SIZE = 50;
+
+  async function flushQueue(): Promise<void> {
+    if (typeof window === "undefined") return;
+    const raw = localStorage.getItem(FLUSH_KEY);
+    if (!raw) return;
+    let queue: unknown[];
+    try {
+      queue = JSON.parse(raw);
+    } catch {
+      localStorage.removeItem(FLUSH_KEY);
+      return;
+    }
+    if (!Array.isArray(queue) || queue.length === 0) return;
+
+    const batch = queue.slice(0, BATCH_SIZE);
+    try {
+      const res = await fetch(FLUSH_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries: batch }),
+      });
+      if (res.status === 200) {
+        const remaining = queue.slice(BATCH_SIZE);
+        localStorage.setItem(FLUSH_KEY, JSON.stringify(remaining));
+      }
+    } catch {
+      // Network failure: keep queue for retry on next page load
+    }
+  }
+
+  if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", () => {
+      void flushQueue();
+    });
+  }
+</script>
+
 <div
   class="feedback-widget mt-8 border-t border-gray-200 pt-6"
   data-feedback-widget
