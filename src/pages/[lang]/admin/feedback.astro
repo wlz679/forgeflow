@@ -1,0 +1,65 @@
+---
+// P150: src/pages/[lang]/admin/feedback.astro - Clerk-protected admin dashboard
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+
+const lang = 'en';
+
+// Clerk auth gate
+const userId = Astro.locals.auth?.()?.userId ?? Astro.request.headers.get('x-mock-user');
+if (!userId) {
+  return Astro.redirect('/sign-in?redirect_url=' + encodeURIComponent(Astro.url.pathname));
+}
+
+// Fetch feedback list from API
+let entries: Array<{ ts: number; vote: string; slug: string; lang: string; text?: string; page_kind: string }> = [];
+let truncated = false;
+try {
+  const apiUrl = new URL('/api/feedback/admin?limit=50', Astro.url.origin);
+  const apiResponse = await fetch(apiUrl.toString());
+  if (apiResponse.ok) {
+    const data = await apiResponse.json() as { entries: typeof entries; truncated: boolean };
+    entries = data.entries ?? [];
+    truncated = data.truncated ?? false;
+  }
+} catch {
+  // swallow
+}
+---
+<BaseLayout lang={lang} title="Feedback Dashboard">
+  <main class="container mx-auto px-4 py-8 max-w-6xl">
+    <h1 class="text-3xl font-bold mb-6">Feedback Dashboard</h1>
+    <p class="text-sm text-gray-500 mb-4">
+      Showing {entries.length} entries (truncated: {truncated})
+    </p>
+    {entries.length === 0 ? (
+ < <p class="text-gray-600">No feedback yet.</p>
+ ) : (
+ < <table class="w-full text-sm">
+        <thead class="border-b">
+          <tr>
+            <th class="text-left py-2">Time</th>
+            <th class="text-left py-2">Slug</th>
+            <th class="text-left py-2">Lang</th>
+            <th class="text-left py-2">Vote</th>
+            <th class="text-left py-2">Page kind</th>
+            <th class="text-left py-2">Text</th>
+          </tr>
+        </thead>
+        <tbody>
+          {entries.map((e) => (
+            <tr class="border-b">
+              <td class="py-2">{new Date(e.ts).toISOString()}</td>
+              <td class="py-2 font-mono text-xs">{e.slug}</td>
+              <td class="py-2">{e.lang}</td>
+              <td class="py-2">{e.vote === 'up' ? '+' : '-'}</td>
+              <td class="py-2">{e.page_kind}</td>
+              <td class="py-2">{e.text ?? ''}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+ )}
+  </main>
+</BaseLayout>

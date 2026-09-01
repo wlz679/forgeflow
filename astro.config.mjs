@@ -1,4 +1,5 @@
 import { defineConfig } from 'astro/config';
+import cloudflare from '@astrojs/cloudflare';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
 // P149: Last-Modified meta tag injection. See src/integrations/last-modified.mjs
@@ -121,6 +122,8 @@ const lastModifiedIntegration = {
 
 export default defineConfig({
   site: SITE_URL,
+  output: 'hybrid',
+  adapter: cloudflare(),
   integrations: [
     sitemap({
       entryLimit: 45000,
