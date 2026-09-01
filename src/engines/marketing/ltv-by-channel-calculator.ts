@@ -224,7 +224,7 @@ function calculate(inputs: Record<string, string>): string[] {
     })
     .join('\n');
 
-  const r =
+  let r =
     '⏰ LTV by Channel Calculator\n\n' +
     '🩺 Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -254,6 +254,13 @@ function calculate(inputs: Record<string, string>): string[] {
     milestone + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
+
+  // P151 L5: Decision Recommendation 4-section block
+  r += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '• 🧭 Decision Question: 单纯看 LTV 是陷阱，**核心问题是"LTV/CAC 是否 ≥ 3x 且 payback < 12 月"**。LTV/CAC < 1x = 每个客户净亏；3x+ = 健康可加预算。\n' +
+    '• 🧭 Recommendation: (1) **LTV/CAC < 1x** → 立刻却预算（净亏损不可持续）；(2) **1x-3x** → 维持 + 优化 funnel conversion（最常见改善空间）；(3) **3x+** → 加预算抢市场窗口期；(4) **高 LTV 但低 volume** → 保留作为 brand 投入，不期待 direct ROI。\n' +
+    '• 🧭 Key Uncertainty: (1) attribution model 选错会让数字 2-5x 偏离（last-click 高估 direct、undercount brand）；(2) cohort 时间窗太短 (< 6 月) 会高估 churn；(3) discount rate 没折现（特别是 24+ 月 LTV）；(4) high-LTV 客户可能不可复制（outlier 而非 segment）。\n' +
+    '• 🧭 Next Action: (a) 跑 [CAC Calculator] 看单渠道 acquisition cost；(b) 跑 [ROAS Calculator] 看短期回报（与 LTV 互补）；(c) 跑 [Cohort Retention Calculator] 验证 cohort 稳定性；(d) 决策前用 6-12 月真实 cohort 数据校准 LTV。';
 
   return [r];
 }
@@ -326,6 +333,7 @@ const customFn =
   "r2+=ms+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
+  "r2+='\\n\\n\\uD83E\\uDDED Decision Recommendation\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\uD83E\\uDDED Decision Question: 单纯看 LTV 是陷阱，**核心问题是\"LTV/CAC 是否 ≥ 3x 且 payback < 12 月\"**。LTV/CAC < 1x = 每个客户净亏；3x+ = 健康可加预算。\\n\\uD83E\\uDDED Recommendation: (1) **LTV/CAC < 1x** \\u2192 立刻却预算（净亏损不可持续）；(2) **1x-3x** \\u2192 维持 + 优化 funnel conversion（最常见改善空间）；(3) **3x+** \\u2192 加预算抢市场窗口期；(4) **高 LTV 但低 volume** \\u2192 保留作为 brand 投入，不期待 direct ROI。\\n\\uD83E\\uDDED Key Uncertainty: (1) attribution model 选错会让数字 2-5x 偏离（last-click 高估 direct、undercount brand）；(2) cohort 时间窗太短 (< 6 月) 会高估 churn；(3) discount rate 没折现（特别是 24+ 月 LTV）；(4) high-LTV 客户可能不可复制（outlier 而非 segment）。\\n\\uD83E\\uDDED Next Action: (a) 跑 [CAC Calculator] 看单渠道 acquisition cost；(b) 跑 [ROAS Calculator] 看短期回报（与 LTV 互补）；(c) 跑 [Cohort Retention Calculator] 验证 cohort 稳定性；(d) 决策前用 6-12 月真实 cohort 数据校准 LTV。';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -394,7 +402,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ LTV by Channel Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively\n• Winner: Ch1 (25.00x)  ·  Loser: Ch4 (13.33x)\n• Blended CAC: $32.90  ·  Blended LTV:CAC: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x\n   🟢 Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x\n   🟢 Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x\n   🟢 Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x\n   🟢 Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x\n\n• Total spend:  $5,100\n• Total conv:   155\n• Blended CAC:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nShift 25% from Ch4 → Ch1:\n  • Ch1: ratio 25.00x → 19.23x (CAC rises)\n  • Ch4: ratio 13.33x → 17.78x (improves if convs stay)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTo push Ch4 from 13.33x to 🟢 (≥3.0x):\n  • Target CAC: $400.00 (currently $30.00)\n  • Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nScaling Ch1 2x (same ratio):\n  • Revenue: $50,000\n  • Profit (after ad cost): $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Both channels healthy, but Ch1 is 1.9x more efficient. Shift 20-30% of Ch4 budget to Ch1.\n'],
+  staticExamples: ['⏰ LTV by Channel Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively\n• Winner: Ch1 (25.00x)  ·  Loser: Ch4 (13.33x)\n• Blended CAC: $32.90  ·  Blended LTV:CAC: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x\n   🟢 Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x\n   🟢 Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x\n   🟢 Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x\n   🟢 Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x\n\n• Total spend:  $5,100\n• Total conv:   155\n• Blended CAC:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nShift 25% from Ch4 → Ch1:\n  • Ch1: ratio 25.00x → 19.23x (CAC rises)\n  • Ch4: ratio 13.33x → 17.78x (improves if convs stay)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTo push Ch4 from 13.33x to 🟢 (≥3.0x):\n  • Target CAC: $400.00 (currently $30.00)\n  • Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nScaling Ch1 2x (same ratio):\n  • Revenue: $50,000\n  • Profit (after ad cost): $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Both channels healthy, but Ch1 is 1.9x more efficient. Shift 20-30% of Ch4 budget to Ch1.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 LTV 是陷阱，**核心问题是"LTV/CAC 是否 ≥ 3x 且 payback < 12 月"**。LTV/CAC < 1x = 每个客户净亏；3x+ = 健康可加预算。\n• 🧭 Recommendation: (1) **LTV/CAC < 1x** → 立刻却预算（净亏损不可持续）；(2) **1x-3x** → 维持 + 优化 funnel conversion（最常见改善空间）；(3) **3x+** → 加预算抢市场窗口期；(4) **高 LTV 但低 volume** → 保留作为 brand 投入，不期待 direct ROI。\n• 🧭 Key Uncertainty: (1) attribution model 选错会让数字 2-5x 偏离（last-click 高估 direct、undercount brand）；(2) cohort 时间窗太短 (< 6 月) 会高估 churn；(3) discount rate 没折现（特别是 24+ 月 LTV）；(4) high-LTV 客户可能不可复制（outlier 而非 segment）。\n• 🧭 Next Action: (a) 跑 [CAC Calculator] 看单渠道 acquisition cost；(b) 跑 [ROAS Calculator] 看短期回报（与 LTV 互补）；(c) 跑 [Cohort Retention Calculator] 验证 cohort 稳定性；(d) 决策前用 6-12 月真实 cohort 数据校准 LTV。\n'],
   faq: [
     { q: 'How many channels should I compare?', a: 'Up to 5 — typical solopreneurs use 3-4 (Google Ads, Meta, TikTok, Email). Empty fields are skipped; only fill channels with data.' },
     { q: 'What is a good LTV:CAC ratio?', a: '3:1 is the textbook benchmark (🟢). 1:1 means you break even (🟡). Below 1:1 means losing money (🔴). World-class SaaS targets 5:1+' },
