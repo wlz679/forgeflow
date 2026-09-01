@@ -1,0 +1,17 @@
+﻿name = \"forgeflowkit\"
+compatibility_date = \"2026-08-31\"
+pages_build_output_dir = \"dist\"
+
+# R2 bucket for feedback storage
+[[r2_buckets]]
+binding = \"FEEDBACK_BUCKET\"
+bucket_name = \"forgeflowkit-feedback\"
+preview_bucket_name = \"forgeflowkit-feedback-preview\"
+
+# KV namespace for rate-limit counters
+[[kv_namespaces]]
+binding = \"FEEDBACK_KV\"
+id = \"REPLACE_WITH_KV_NAMESPACE_ID\"
+
+[vars]
+NODE_VERSION = \"20\"
