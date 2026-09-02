@@ -177,7 +177,7 @@ function calculate(inputs: Record<string, string>): string[] {
       'ACV ≥ $50,000/year is enterprise-grade — protect it. Maintain SLA delivery, executive sponsor relationships, and quarterly business reviews. Watch for discount creep at renewal; expansion revenue (upsell + cross-sell) should be the primary growth lever, not price increases on the base.';
   }
 
-  const r =
+  let r =
     '🚀 ACV Calculator\n\n' +
     '🩺 Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -215,6 +215,13 @@ function calculate(inputs: Record<string, string>): string[] {
     '• At current pace: ~' + money(expanded) + '/year per-customer revenue (with ' + expansionRate + '% expansion)\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
+
+  // P151 batch3: L5 Decision Recommendation
+  r += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '• 🧭 Decision Question: 单纯看 ACV 数字是陷阱，**核心问题是"ACV vs CAC 比 + 客户分群差异 + 合同长度 trade-off + expansion 上行"**。高 ACV 客户 ≠ 都健康。\n' +
+    '• 🧭 Recommendation: (1) **ACV < $2K** → 重新评估 ICP（应聚焦 self-serve / PLG）；(2) **$2K-10K** → 标准化 onboarding + 控 CAC < 1/3 ACV；(3) **$10K-50K** → 建 CSM + 探 expansion；(4) **> $50K** → enterprise 模式 + 季度 exec review。\n' +
+    '• 🧭 Key Uncertainty: (1) ACV 是 ARR 还是 TCV（区别巨大）；(2) expansion rate 假设 ±5pp 误差；(3) 合同长度 + renewal rate 影响 NPV；(4) discount / promo 未计入。\n' +
+    '• 🧭 Next Action: (a) 跑 [Pipeline Coverage Calculator] 看 sales pipeline 质量；(b) 跑 [MRR Calculator] 看 MRR vs ARR 一致性；(c) 跑 [NRR Calculator] 看扩张/流失净值；(d) 决策前 cohort 分析 high vs low ACV 客户留存差异。';
 
   return [r];
 }
