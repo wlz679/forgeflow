@@ -110,7 +110,7 @@ function calculate(inputs: Record<string, string>): string[] {
   else if (band === 'good') tip = preset === 'service-led' ? 'Good score. Maintain ticket response quality; do not let support slip.' : preset === 'product-led' ? 'Good score. Push to Excellent via adoption depth; identify expansion-ready users.' : preset === 'sales-led' ? 'Good score. Schedule exec review to align on expansion and renewal.' : 'Good balanced score. Push to Excellent by improving the lowest normalized signal.';
   else tip = preset === 'service-led' ? 'Excellent score. Maintain service quality; review quarterly.' : preset === 'product-led' ? 'Excellent score. Identify expansion-ready users for upsell motion.' : preset === 'sales-led' ? 'Excellent score. Lock in renewal with multi-year contract discussion.' : 'Excellent balanced score. Maintain the engine: monitor usage trends and protect champion relationships.';
 
-  const r =
+  let r =
   '📊 Customer Health Score Calculator\n\n' +
   '🩺 Health:\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -145,6 +145,13 @@ function calculate(inputs: Record<string, string>): string[] {
   '• Gap to next tier: ' + pct1(Math.max(0, gapToNext)) + ' points' + (band === 'excellent' ? ' already at top' : '') + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
   '💡 Tip: ' + tip + '\n';
+
+  // P151 batch3: L5 Decision Recommendation
+  r += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '• 🧭 Decision Question: 单纯看 health score 是陷阱，**核心问题是"该保存还是扩张 + 哪个信号在拖分 + 干预 ROI 哪个最高"**。单一 score 不告诉你要做什么。\n' +
+    '• 🧭 Recommendation: (1) **score < 40** → 立即 exec sponsor pairing + 应急 CSM 介入；(2) **40-60** → audit 最差信号（看 tip），top 1 优先修复；(3) **60-80** → push weakest signal 到下一档；(4) **> 80** → 锁定 renewal + 探 expansion。\n' +
+    '• 🧭 Key Uncertainty: (1) preset 权重选择 bias score（product-led 偏 usage）；(2) 5 个信号采集时间窗可能错位；(3) 自报告数据（survey NPS）有 bias；(4) high-value contract 不一定 = 健康。\n' +
+    '• 🧭 Next Action: (a) 跑 [NRR Calculator] 看健康与扩张关联；(b) 跑 [Churn Rate Calculator] 看 cohort 流失；(c) 跑 [Expansion Revenue Calculator] 看 upsell 潜力；(d) 决策前 CSM 做 qualitative call 验证 score 信号。';
 
   return [r];
 }
