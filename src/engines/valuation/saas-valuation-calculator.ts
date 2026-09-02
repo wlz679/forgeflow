@@ -146,6 +146,15 @@ function calculateValuation(inputs: Record<string, string>): string[] {
 
   results.push(mainResult);
 
+  // P151 batch3: L5 Decision Recommendation
+  results.push(
+    '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '• 🧭 Decision Question: 单纯看 ARR × multiple 是陷阱，**核心问题是"当前 growth/margin 是否支持 current multiple + 该 raise 还是 hold"**。multiples 在不同时期波动大。\n' +
+    '• 🧭 Recommendation: (1) **multiple < 4x** → 高 risk，看能否加速 growth 重 rating；(2) **4-6x** → 合理 SaaS 范围，考虑保守估值；(3) **6-10x** → 健康范围，可向投资人 pitch growth；(4) **> 10x** → 高 growth 期，估值 + fund raise 窗口期。\n' +
+    '• 🧭 Key Uncertainty: (1) growth rate 在 exit 后通常 drop 30-50%；(2) multiple 在 public comps 主导，受 sentiment 影响；(3) profit margin 差异 → 高 margin 可拿 premium；(4) growth + margin 组合决定 multiple，不是单一。\n' +
+    '• 🧭 Next Action: (a) 跑 [ARR Multiple Valuation Calculator] 看不同 multiple 下估值；(b) 跑 [Rule of 40 Calculator] 看 growth + margin 健康度；(c) 跑 [Burn Multiple Calculator] 看 capital efficiency；(d) 决策前用 3 个 comp 公司的 recent valuation 比对。'
+  );
+
   // 5 comparison scenarios at different multiples
   const multipleScenarios = [
     { label: 'Distressed Sale (2x)', multiple: 2 },
