@@ -99,6 +99,12 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
     '• Negotiate valuation +25%:  Pre $' + Math.round(preMoneyValuation * 1.25).toLocaleString() + ' → Dilution drops to ' + (preMoneyValuation * 1.25 + investmentAmount > 0 ? pct2(investmentAmount / (preMoneyValuation * 1.25 + investmentAmount) * 100) : '0.00') + '%\n' +
     '• Keep smaller option pool (5%):  Founder at ' + pct2(founderShares / (totalSharesAfter + totalSharesAfter * (5 / (100 - 5))) * 100) + '% vs current ' + pct2(founderOwnershipWithPool) + '%\n\n' +
     '💡 Tip: The price you negotiate today sets the floor for your next round. A low pre-money means you dilute more AND set a low anchor for the next raise. Even a 25% higher valuation saves you ~' + pct2(investmentAmount > 0 ? (investmentAmount / (preMoneyValuation * 1.25 + investmentAmount)) * 100 - investorOwnershipPct : 0) + '% dilution and signals momentum to future investors.',
+    // P151 batch3: L5 Decision Recommendation
+    '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    '• 🧭 Decision Question: 单纯看 dilution % 是陷阱，**核心问题是"该拿多少 + term sheet 控制权 + future dilution 上行 + valuation 是否合理"**。当前 dilution ≠ 长期 dilution。\n' +
+    '• 🧭 Recommendation: (1) **dilation > 40%** → 拒绝，重新估值（pre-money 高估）；(2) **25-40%** → 协商 valuation / option pool / SAFE vs priced；(3) **10-25%** → 合理 range，verify 控制权保留；(4) **< 10%** → 太小，可能是 bridge 或估值低。\n' +
+    '• 🧭 Key Uncertainty: (1) future dilution from option pool + down round（常 +20-30%）；(2) SAFE vs priced round 对 next round 影响不同；(3) 投资人 liquidation preference 决定 exit 时实际分配；(4) board seat + veto rights 比 % 更重要。\n' +
+    '• 🧭 Next Action: (a) 跑 [Burn Multiple Calculator] 看 capital efficiency；(b) 跑 [Rule of 40 Calculator] 看 growth 健康度；(c) 跑 [Unit Economics Calculator] 看 LTV/CAC；(d) 决策前做 4 年 exit scenario model + 引入 trusted advisor review term sheet。'
   );
 
   const exitScenarios = [exitValuation * 0.5, exitValuation, exitValuation * 2, exitValuation * 5, exitValuation * 10];
