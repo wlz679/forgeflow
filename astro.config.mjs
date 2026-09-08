@@ -19,9 +19,6 @@ function classifyUrl(url) {
   if (/^\/(en|zh)?\/?$/.test(path)) {
     return { kind: 'home', priority: 1.0, changefreq: 'daily' };
   }
-  if (/^\/(en|zh)\/blog(\/|$)/.test(path)) {
-    return { kind: 'blog', priority: 0.7, changefreq: 'weekly' };
-  }
   const staticMatch = path.match(/^\/(en|zh)\/([^/]+)\/?$/);
   if (staticMatch && STATIC_SLUGS.has(staticMatch[2])) {
     return { kind: 'static', priority: 0.5, changefreq: 'monthly' };

@@ -34,9 +34,9 @@ try {
       Showing {entries.length} entries (truncated: {truncated})
     </p>
     {entries.length === 0 ? (
- < <p class="text-gray-600">No feedback yet.</p>
- ) : (
- < <table class="w-full text-sm">
+      <p class="text-gray-600">No feedback yet.</p>
+    ) : (
+      <table class="w-full text-sm">
         <thead class="border-b">
           <tr>
             <th class="text-left py-2">Time</th>
@@ -60,6 +60,6 @@ try {
           ))}
         </tbody>
       </table>
- )}
+    )}
   </main>
 </BaseLayout>

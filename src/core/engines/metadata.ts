@@ -1,6 +1,5 @@
 // P140f-p3-T1 — Playbook 6 字段 zod schema (per P140f §4.3)
-// Mirrors src/content/blog-schema.ts P140e pattern (zod schema 独立于 astro:content,
-// 可被 tsx 测试直接 import)。
+// zod schema 独立于 astro:content，可被 tsx 测试直接 import。
 //
 // 6 字段 hard schema (P140f §4.3 + v2.0 07 P6 Agent Design):
 //   Goal / Input / Output / Constraint / Tool / Memory

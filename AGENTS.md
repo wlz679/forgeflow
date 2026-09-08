@@ -1,4 +1,5 @@
 <!-- BEGIN GSTACK-CODEX MANAGED BLOCK -->
+
 ## gstack — AI Engineering Workflow
 
 This block is managed by `gstack-codex`. Do not edit inside this block.
@@ -9,62 +10,63 @@ This repo currently has the `full` pack installed.
 
 ## Available skills
 
-| Skill | What it does |
-|-------|-------------|
-| `/office-hours` | YC Office Hours — two modes. Startup mode: six forcing questions that expose demand reality, status quo, desperate specificity, narrowest wedge, observation, and future-fit. |
-| `/plan-ceo-review` | CEO/founder-mode plan review. Rethink the problem, find the 10-star product, challenge premises, expand scope when it creates a better product. |
-| `/plan-eng-review` | Eng manager-mode plan review. Lock in the execution plan — architecture, data flow, diagrams, edge cases, test coverage, performance. |
-| `/plan-design-review` | Designer's eye plan review — interactive, like CEO and Eng review. |
-| `/design-consultation` | Design consultation: understands your product, researches the landscape, proposes a complete design system (aesthetic, typography, color, layout, spacing, motion), and generates font+color preview pages. |
-| `/review` | Pre-landing PR review. Analyzes diff against the base branch for SQL safety, LLM trust boundary violations, conditional side effects, and other structural issues. |
-| `/investigate` | Systematic debugging with root cause investigation. Four phases: investigate, analyze, hypothesize, implement. |
-| `/design-review` | Designer's eye QA: finds visual inconsistency, spacing issues, hierarchy problems, AI slop patterns, and slow interactions — then fixes them. |
-| `/qa` | Systematically QA test a web application and fix bugs found. |
-| `/qa-only` | Report-only QA testing. Systematically tests a web application and produces a structured report with health score, screenshots, and repro steps — but never fixes anything. |
-| `/ship` | Ship workflow: detect + merge base branch, run tests, review diff, bump VERSION, update CHANGELOG, commit, push, create PR. |
-| `/document-release` | Post-ship documentation update. Reads all project docs, cross-references the diff, builds a Diataxis coverage map (reference/how-to/tutorial/explanation), updates README/ARCHITECTURE/CONTRIBUTING/CLAUDE.md to match what shipped, detects architecture diagram drift, polishes CHANGELOG voice with a sell-test rubric, cleans up TODOS, and optionally bumps VERSION. |
-| `/retro` | Weekly engineering retrospective. Analyzes commit history, work patterns, and code quality metrics with persistent history and trend tracking. |
-| `/browse` | Fast headless browser for QA testing and site dogfooding. Navigate any URL, interact with elements, verify page state, diff before/after actions, take annotated screenshots, check responsive layouts, test forms and uploads, handle dialogs, and assert element states. |
-| `/setup-browser-cookies` | Import cookies from your real Chromium browser into the headless browse session. |
-| `/careful` | Safety guardrails for destructive commands. Warns before rm -rf, DROP TABLE, force-push, git reset --hard, kubectl delete, and similar destructive operations. |
-| `/freeze` | Restrict file edits to a specific directory for the session. |
-| `/guard` | Full safety mode: destructive command warnings + directory-scoped edits. |
-| `/unfreeze` | Clear the freeze boundary set by /freeze, allowing edits to all directories again. |
-| `/gstack-upgrade` | Upgrade gstack to the latest version. Detects global vs vendored install, runs the upgrade, and shows what's new. |
-| `/autoplan` | Auto-review pipeline — reads the full CEO, design, eng, and DX review skills from disk and runs them sequentially with auto-decisions using 6 decision principles. |
-| `/benchmark` | Performance regression detection using the browse daemon. Establishes baselines for page load times, Core Web Vitals, and resource sizes. |
-| `/benchmark-models` | Cross-model benchmark for gstack skills. Runs the same prompt through Claude, GPT (via Codex CLI), and Gemini side-by-side — compares latency, tokens, cost, and optionally quality via LLM judge. |
-| `/canary` | Post-deploy canary monitoring. Watches the live app for console errors, performance regressions, and page failures using the browse daemon. |
-| `/claude` | Claude Code CLI wrapper for non-Claude hosts - three modes. Review: independent diff review via claude -p. |
-| `/context-restore` | Restore working context saved earlier by /context-save. Loads the most recent saved state (across all branches by default) so you can pick up where you left off — even across Conductor workspace handoffs. |
-| `/context-save` | Save working context. Captures git state, decisions made, and remaining work so any future session can pick up without losing a beat. |
-| `/cso` | Chief Security Officer mode. Infrastructure-first security audit: secrets archaeology, dependency supply chain, CI/CD pipeline security, LLM/AI security, skill supply chain scanning, plus OWASP Top 10, STRIDE threat modeling, and active verification. |
-| `/design-html` | Design finalization: generates production-quality Pretext-native HTML/CSS. |
-| `/design-shotgun` | Design shotgun: generate multiple AI design variants, open a comparison board, collect structured feedback, and iterate. |
-| `/devex-review` | Live developer experience audit. Uses the browse tool to actually TEST the developer experience: navigates docs, tries the getting started flow, times TTHW, screenshots error messages, evaluates CLI help text. |
-| `/document-generate` | Generate missing documentation from scratch for a feature, module, or entire project. |
-| `/health` | Code quality dashboard. Wraps existing project tools (type checker, linter, test runner, dead code detector, shell linter), computes a weighted composite 0-10 score, and tracks trends over time. |
-| `/ios-clean` | Remove the DebugBridge SPM package and all #if DEBUG wiring from an iOS app. |
-| `/ios-design-review` | Visual design audit for iOS apps on real hardware. Connects to a real iPhone via the same StateServer as /ios-qa, screenshots every screen, evaluates against Apple HIG, DESIGN.md, and design best practices. |
-| `/ios-fix` | Autonomous iOS bug fixer. Takes a bug found by /ios-qa, reads the source, writes the fix, rebuilds, redeploys, and verifies the fix on the real device. |
-| `/ios-qa` | Live-device iOS QA for SwiftUI apps. Connects to a real iPhone via USB CoreDevice IPv6 tunnel, reads Swift source to understand every screen, then runs a vision-driven agent loop: screenshot → analyze → decide → act → verify → repeat. |
-| `/ios-sync` | Regenerate the iOS debug bridge against the latest upstream gstack templates. |
-| `/land-and-deploy` | Land and deploy workflow. Merges the PR, waits for CI and deploy, verifies production health via canary checks. |
-| `/landing-report` | Read-only queue dashboard for workspace-aware ship. Shows which VERSION slots are currently claimed by open PRs, which sibling Conductor workspaces have WIP work likely to ship soon, and what slot /ship would pick next. |
-| `/learn` | Manage project learnings. Review, search, prune, and export what gstack has learned across sessions. |
-| `/make-pdf` | Turn any markdown file into a publication-quality PDF. Proper 1in margins, intelligent page breaks, page numbers, cover pages, running headers, curly quotes and em dashes, clickable TOC, diagonal DRAFT watermark. |
-| `/open-gstack-browser` | Launch GStack Browser — AI-controlled Chromium with the sidebar extension baked in. |
-| `/pair-agent` | Pair a remote AI agent with your browser. One command generates a setup key and prints instructions the other agent can follow to connect. |
-| `/plan-devex-review` | Interactive developer experience plan review. Explores developer personas, benchmarks against competitors, designs magical moments, and traces friction points before scoring. |
-| `/plan-tune` | Self-tuning question sensitivity + developer psychographic for gstack (v1: observational). |
-| `/scrape` | Pull data from a web page. First call on a new intent prototypes the flow via $B primitives and returns JSON. |
-| `/setup-deploy` | Configure deployment settings for /land-and-deploy. Detects your deploy platform (Fly.io, Render, Vercel, Netlify, Heroku, GitHub Actions, custom), production URL, health check endpoints, and deploy status commands. |
-| `/setup-gbrain` | Set up gbrain for this coding agent: install the CLI, initialize a local PGLite or Supabase brain, register MCP, capture per-remote trust policy. |
-| `/skillify` | Codify the most recent successful /scrape flow into a permanent browser-skill on disk. |
-| `/sync-gbrain` | Keep gbrain current with this repo's code and refresh agent search guidance in CLAUDE.md. |
+| Skill                    | What it does                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/office-hours`          | YC Office Hours — two modes. Startup mode: six forcing questions that expose demand reality, status quo, desperate specificity, narrowest wedge, observation, and future-fit.                                                                                                                                                                                             |
+| `/plan-ceo-review`       | CEO/founder-mode plan review. Rethink the problem, find the 10-star product, challenge premises, expand scope when it creates a better product.                                                                                                                                                                                                                           |
+| `/plan-eng-review`       | Eng manager-mode plan review. Lock in the execution plan — architecture, data flow, diagrams, edge cases, test coverage, performance.                                                                                                                                                                                                                                     |
+| `/plan-design-review`    | Designer's eye plan review — interactive, like CEO and Eng review.                                                                                                                                                                                                                                                                                                        |
+| `/design-consultation`   | Design consultation: understands your product, researches the landscape, proposes a complete design system (aesthetic, typography, color, layout, spacing, motion), and generates font+color preview pages.                                                                                                                                                               |
+| `/review`                | Pre-landing PR review. Analyzes diff against the base branch for SQL safety, LLM trust boundary violations, conditional side effects, and other structural issues.                                                                                                                                                                                                        |
+| `/investigate`           | Systematic debugging with root cause investigation. Four phases: investigate, analyze, hypothesize, implement.                                                                                                                                                                                                                                                            |
+| `/design-review`         | Designer's eye QA: finds visual inconsistency, spacing issues, hierarchy problems, AI slop patterns, and slow interactions — then fixes them.                                                                                                                                                                                                                             |
+| `/qa`                    | Systematically QA test a web application and fix bugs found.                                                                                                                                                                                                                                                                                                              |
+| `/qa-only`               | Report-only QA testing. Systematically tests a web application and produces a structured report with health score, screenshots, and repro steps — but never fixes anything.                                                                                                                                                                                               |
+| `/ship`                  | Ship workflow: detect + merge base branch, run tests, review diff, bump VERSION, update CHANGELOG, commit, push, create PR.                                                                                                                                                                                                                                               |
+| `/document-release`      | Post-ship documentation update. Reads all project docs, cross-references the diff, builds a Diataxis coverage map (reference/how-to/tutorial/explanation), updates README/ARCHITECTURE/CONTRIBUTING/CLAUDE.md to match what shipped, detects architecture diagram drift, polishes CHANGELOG voice with a sell-test rubric, cleans up TODOS, and optionally bumps VERSION. |
+| `/retro`                 | Weekly engineering retrospective. Analyzes commit history, work patterns, and code quality metrics with persistent history and trend tracking.                                                                                                                                                                                                                            |
+| `/browse`                | Fast headless browser for QA testing and site dogfooding. Navigate any URL, interact with elements, verify page state, diff before/after actions, take annotated screenshots, check responsive layouts, test forms and uploads, handle dialogs, and assert element states.                                                                                                |
+| `/setup-browser-cookies` | Import cookies from your real Chromium browser into the headless browse session.                                                                                                                                                                                                                                                                                          |
+| `/careful`               | Safety guardrails for destructive commands. Warns before rm -rf, DROP TABLE, force-push, git reset --hard, kubectl delete, and similar destructive operations.                                                                                                                                                                                                            |
+| `/freeze`                | Restrict file edits to a specific directory for the session.                                                                                                                                                                                                                                                                                                              |
+| `/guard`                 | Full safety mode: destructive command warnings + directory-scoped edits.                                                                                                                                                                                                                                                                                                  |
+| `/unfreeze`              | Clear the freeze boundary set by /freeze, allowing edits to all directories again.                                                                                                                                                                                                                                                                                        |
+| `/gstack-upgrade`        | Upgrade gstack to the latest version. Detects global vs vendored install, runs the upgrade, and shows what's new.                                                                                                                                                                                                                                                         |
+| `/autoplan`              | Auto-review pipeline — reads the full CEO, design, eng, and DX review skills from disk and runs them sequentially with auto-decisions using 6 decision principles.                                                                                                                                                                                                        |
+| `/benchmark`             | Performance regression detection using the browse daemon. Establishes baselines for page load times, Core Web Vitals, and resource sizes.                                                                                                                                                                                                                                 |
+| `/benchmark-models`      | Cross-model benchmark for gstack skills. Runs the same prompt through Claude, GPT (via Codex CLI), and Gemini side-by-side — compares latency, tokens, cost, and optionally quality via LLM judge.                                                                                                                                                                        |
+| `/canary`                | Post-deploy canary monitoring. Watches the live app for console errors, performance regressions, and page failures using the browse daemon.                                                                                                                                                                                                                               |
+| `/claude`                | Claude Code CLI wrapper for non-Claude hosts - three modes. Review: independent diff review via claude -p.                                                                                                                                                                                                                                                                |
+| `/context-restore`       | Restore working context saved earlier by /context-save. Loads the most recent saved state (across all branches by default) so you can pick up where you left off — even across Conductor workspace handoffs.                                                                                                                                                              |
+| `/context-save`          | Save working context. Captures git state, decisions made, and remaining work so any future session can pick up without losing a beat.                                                                                                                                                                                                                                     |
+| `/cso`                   | Chief Security Officer mode. Infrastructure-first security audit: secrets archaeology, dependency supply chain, CI/CD pipeline security, LLM/AI security, skill supply chain scanning, plus OWASP Top 10, STRIDE threat modeling, and active verification.                                                                                                                |
+| `/design-html`           | Design finalization: generates production-quality Pretext-native HTML/CSS.                                                                                                                                                                                                                                                                                                |
+| `/design-shotgun`        | Design shotgun: generate multiple AI design variants, open a comparison board, collect structured feedback, and iterate.                                                                                                                                                                                                                                                  |
+| `/devex-review`          | Live developer experience audit. Uses the browse tool to actually TEST the developer experience: navigates docs, tries the getting started flow, times TTHW, screenshots error messages, evaluates CLI help text.                                                                                                                                                         |
+| `/document-generate`     | Generate missing documentation from scratch for a feature, module, or entire project.                                                                                                                                                                                                                                                                                     |
+| `/health`                | Code quality dashboard. Wraps existing project tools (type checker, linter, test runner, dead code detector, shell linter), computes a weighted composite 0-10 score, and tracks trends over time.                                                                                                                                                                        |
+| `/ios-clean`             | Remove the DebugBridge SPM package and all #if DEBUG wiring from an iOS app.                                                                                                                                                                                                                                                                                              |
+| `/ios-design-review`     | Visual design audit for iOS apps on real hardware. Connects to a real iPhone via the same StateServer as /ios-qa, screenshots every screen, evaluates against Apple HIG, DESIGN.md, and design best practices.                                                                                                                                                            |
+| `/ios-fix`               | Autonomous iOS bug fixer. Takes a bug found by /ios-qa, reads the source, writes the fix, rebuilds, redeploys, and verifies the fix on the real device.                                                                                                                                                                                                                   |
+| `/ios-qa`                | Live-device iOS QA for SwiftUI apps. Connects to a real iPhone via USB CoreDevice IPv6 tunnel, reads Swift source to understand every screen, then runs a vision-driven agent loop: screenshot → analyze → decide → act → verify → repeat.                                                                                                                                |
+| `/ios-sync`              | Regenerate the iOS debug bridge against the latest upstream gstack templates.                                                                                                                                                                                                                                                                                             |
+| `/land-and-deploy`       | Land and deploy workflow. Merges the PR, waits for CI and deploy, verifies production health via canary checks.                                                                                                                                                                                                                                                           |
+| `/landing-report`        | Read-only queue dashboard for workspace-aware ship. Shows which VERSION slots are currently claimed by open PRs, which sibling Conductor workspaces have WIP work likely to ship soon, and what slot /ship would pick next.                                                                                                                                               |
+| `/learn`                 | Manage project learnings. Review, search, prune, and export what gstack has learned across sessions.                                                                                                                                                                                                                                                                      |
+| `/make-pdf`              | Turn any markdown file into a publication-quality PDF. Proper 1in margins, intelligent page breaks, page numbers, cover pages, running headers, curly quotes and em dashes, clickable TOC, diagonal DRAFT watermark.                                                                                                                                                      |
+| `/open-gstack-browser`   | Launch GStack Browser — AI-controlled Chromium with the sidebar extension baked in.                                                                                                                                                                                                                                                                                       |
+| `/pair-agent`            | Pair a remote AI agent with your browser. One command generates a setup key and prints instructions the other agent can follow to connect.                                                                                                                                                                                                                                |
+| `/plan-devex-review`     | Interactive developer experience plan review. Explores developer personas, benchmarks against competitors, designs magical moments, and traces friction points before scoring.                                                                                                                                                                                            |
+| `/plan-tune`             | Self-tuning question sensitivity + developer psychographic for gstack (v1: observational).                                                                                                                                                                                                                                                                                |
+| `/scrape`                | Pull data from a web page. First call on a new intent prototypes the flow via $B primitives and returns JSON.                                                                                                                                                                                                                                                             |
+| `/setup-deploy`          | Configure deployment settings for /land-and-deploy. Detects your deploy platform (Fly.io, Render, Vercel, Netlify, Heroku, GitHub Actions, custom), production URL, health check endpoints, and deploy status commands.                                                                                                                                                   |
+| `/setup-gbrain`          | Set up gbrain for this coding agent: install the CLI, initialize a local PGLite or Supabase brain, register MCP, capture per-remote trust policy.                                                                                                                                                                                                                         |
+| `/skillify`              | Codify the most recent successful /scrape flow into a permanent browser-skill on disk.                                                                                                                                                                                                                                                                                    |
+| `/sync-gbrain`           | Keep gbrain current with this repo's code and refresh agent search guidance in CLAUDE.md.                                                                                                                                                                                                                                                                                 |
 
 Repo installs include the full generated skill pack. Heavy browser/runtime binaries stay machine-local in v1.
 Installed release: `0.2.5`
+
 <!-- END GSTACK-CODEX MANAGED BLOCK -->
 
 ---
@@ -107,13 +109,14 @@ Calculator categories (high-level, by `src/data/categories.ts` letter):
 
 > ⚠️ **宪法级** — 任何 P-series / spec / plan 必须显式对齐以下三维度。
 
-| 维度 | 含义 | 来源 |
-|---|---|---|
-| **1. Decision Support System** | 每个 calc = 帮用户决策，不是输出数字 | user 2026-08-05 |
-| **2. User-Centric Advisor** | 用户视角 5 问（功能价值 / UX / Advisor / Retention / Advocacy）| user 2026-08-06 |
-| **3. Proactive Co-Pilot** | AI 不是任务执行者，是**项目合作伙伴** —— 主动洞察市场信号 + 提议 + 共建系统 | user 2026-08-06 |
+| 维度                           | 含义                                                                        | 来源            |
+| ------------------------------ | --------------------------------------------------------------------------- | --------------- |
+| **1. Decision Support System** | 每个 calc = 帮用户决策，不是输出数字                                        | user 2026-08-05 |
+| **2. User-Centric Advisor**    | 用户视角 5 问（功能价值 / UX / Advisor / Retention / Advocacy）             | user 2026-08-06 |
+| **3. Proactive Co-Pilot**      | AI 不是任务执行者，是**项目合作伙伴** —— 主动洞察市场信号 + 提议 + 共建系统 | user 2026-08-06 |
 
 **维度 3 强制约束** (来自 user 拍板 2026-08-06):
+
 - AI **必须**主动 scan 市场信号（AI 模型 release / 搜索算法变 / 法规变 / 关键库 release / 竞品变化）
 - AI **不允许**擅自修改 calc / Roadmap / Phase（必须 user 拍板）
 - AI **不允许**跳过提议（"暂时没看到" = 视为未跑 scan）
@@ -142,47 +145,47 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 
 <!-- codegen:start engine-count -->
 
-| Letter | Category Name | Engine Count |
-|--------|---------------|--------------|
-| A | SaaS Metrics | 5 |
-| B | AI Cost Tools | 8 |
-| C | Valuation & Exit | 10 |
-| D | Freelance Pricing | 6 |
-| E | Cost & Efficiency | 5 |
-| F | Investment & Real Estate | 10 |
-| H | Hiring & Team | 6 |
-| K | Knowledge / 知识库 | 6 |
-| L | Legal & Compliance | 6 |
-| M | Marketing Analytics | 8 |
-| O | Operations / 库存运营 | 6 |
-| P | Product Analytics | 6 |
-| R | Retention & Customer Success | 6 |
-| S | Sales / 销售管理 | 6 |
-| T | Customer Support | 6 |
-| **Total** | | **100** |
+| Letter    | Category Name                | Engine Count |
+| --------- | ---------------------------- | ------------ |
+| A         | SaaS Metrics                 | 5            |
+| B         | AI Cost Tools                | 8            |
+| C         | Valuation & Exit             | 10           |
+| D         | Freelance Pricing            | 6            |
+| E         | Cost & Efficiency            | 5            |
+| F         | Investment & Real Estate     | 10           |
+| H         | Hiring & Team                | 6            |
+| K         | Knowledge / 知识库           | 6            |
+| L         | Legal & Compliance           | 6            |
+| M         | Marketing Analytics          | 8            |
+| O         | Operations / 库存运营        | 6            |
+| P         | Product Analytics            | 6            |
+| R         | Retention & Customer Success | 6            |
+| S         | Sales / 销售管理             | 6            |
+| T         | Customer Support             | 6            |
+| **Total** |                              | **100**      |
 
 <!-- codegen:end -->
 
-8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant at both engine-code (P10-P16 series) and rendering (P138) layers — P138 wired 68 engines into BIZ_V3_CONFIG across 10 categories (C/F/H/K/L/M/O/P/R/T) and the dual-`BIZ_CONFIG_MAP` invariant is now CI-guarded. UI wiring (`BIZ_CONFIG_MAP` + 5 `BIZ_*_CONFIG` [SAAS/VALUATION/FREELANCE/COST + BIZ_V3 universal] + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see `docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
+8 AI cost engines meet the AI Cost v3 variant; 92 business engines meet the Business v3 variant at both engine-code (P10-P16 series) and rendering (P138) layers — P138 wired 68 engines into BIZ*V3_CONFIG across 10 categories (C/F/H/K/L/M/O/P/R/T) and the dual-`BIZ_CONFIG_MAP` invariant is now CI-guarded. UI wiring (`BIZ_CONFIG_MAP` + 5 `BIZ*\*\_CONFIG`[SAAS/VALUATION/FREELANCE/COST + BIZ_V3 universal] + 205 preset-chip references) and i18n (15 × 6 preset keys per engine) complete. Historical batch reference: see`docs/superpowers/plans/2026-06-22-close-v3-gap-7-business-calculators.md` for the original 7-batch close.
 
 ## Defense-in-Depth (P110, 2026-07-27; P138 added Rendering dimension 2026-07-30; P140a added AdSense Compliance dimension 2026-07-31)
 
 **Test infrastructure that catches regressions across 8 user-visible dimensions.** All 47 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
 
-| Dimension | Suite count | Coverage | Memory |
-|---|---|---|---|
-| **a11y** | 1 | `a11y-guard` (P95) — `<html lang>`, `<title>`, `<meta desc>`, heading hierarchy, alt text, form labels | [`p95`](memory/p95-a11y-ci-guard-shipped.md) |
-| **i18n (page-level)** | 6 | 4 CJK matrix (en NO + zh HAS) × 2 page layers (tool + blog) + 2 cross-link layers | [`p66b-p83`](memory/MEMORY.md#p62-p83-i18n-defense-in-depth) |
-| **i18n (dead-keys)** | 1 | `dead-i18n-keys-guard` (P103) — defends against orphan-key re-additions | [`p103`](memory/p103-dead-i18n-keys-guard-shipped.md) |
-| **SEO** | 9 | hreflang × 2 (sitemap + html) + sitemap coverage + canonical + og-meta + json-ld × 3 (presence + field + faqpage) | [`p86-p94`](memory/MEMORY.md#seo-defense-in-depth) |
-| **Performance (HTML)** | 1 | `page-size-guard` (P96) — 200 KB per page | [`p96`](memory/p96-page-size-guard-shipped.md) |
-| **Performance (JS)** | 1 | `js-bundle-size-guard` (P106) — 100 KB inline per page | [`p106`](memory/p106-js-bundle-size-guard-shipped.md) |
-| **Performance (CSS)** | 1 | `css-bundle-size-guard` (P107) — 60 KB external + 5 KB inline per page | [`p107`](memory/p107-css-bundle-size-guard-shipped.md) |
-| **Performance (Images)** | 1 | `image-size-guard` (P108) — 500 KB/OG + 80 MB total bundle | [`p108`](memory/p108-image-size-guard-shipped.md) |
-| **Rendering (v3 section)** | 1 | `v3-render-coverage-guard` (P138) — source-level invariants: dual `BIZ_CONFIG_MAP` equality + 100-tool coverage + 68 v3 wired. (Source-only; follows build-dep gate for summary consistency.) | [`p138`](memory/p138-v3-render-batch-fix-shipped.md) |
-| **AdSense Compliance** | 2 | (P140a) `no-adsense-placeholder-guard` (source-only — prevents resurrection of the misleading AdUnit.astro literal-placeholder) + `content-prose-shape-guard` (build-dep — eagerly validates 4-H2 prose frontmatter via zod schema, prevents thin/missing editorial content) | [`p140a`](memory/p140a-adsense-scaffold-shipped.md) |
-| **Build-dep source guards** | 8 | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count) | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
-| **Total** | **47 build-dep suites** + 9 source-only = **56** | 8 dimensions | |
+| Dimension                   | Suite count                                      | Coverage                                                                                                                                                                                                                                                                     | Memory                                                         |
+| --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **a11y**                    | 1                                                | `a11y-guard` (P95) — `<html lang>`, `<title>`, `<meta desc>`, heading hierarchy, alt text, form labels                                                                                                                                                                       | [`p95`](memory/p95-a11y-ci-guard-shipped.md)                   |
+| **i18n (page-level)**       | 6                                                | 4 CJK matrix (en NO + zh HAS) × 2 page layers (tool + blog) + 2 cross-link layers                                                                                                                                                                                            | [`p66b-p83`](memory/MEMORY.md#p62-p83-i18n-defense-in-depth)   |
+| **i18n (dead-keys)**        | 1                                                | `dead-i18n-keys-guard` (P103) — defends against orphan-key re-additions                                                                                                                                                                                                      | [`p103`](memory/p103-dead-i18n-keys-guard-shipped.md)          |
+| **SEO**                     | 9                                                | hreflang × 2 (sitemap + html) + sitemap coverage + canonical + og-meta + json-ld × 3 (presence + field + faqpage)                                                                                                                                                            | [`p86-p94`](memory/MEMORY.md#seo-defense-in-depth)             |
+| **Performance (HTML)**      | 1                                                | `page-size-guard` (P96) — 200 KB per page                                                                                                                                                                                                                                    | [`p96`](memory/p96-page-size-guard-shipped.md)                 |
+| **Performance (JS)**        | 1                                                | `js-bundle-size-guard` (P106) — 100 KB inline per page                                                                                                                                                                                                                       | [`p106`](memory/p106-js-bundle-size-guard-shipped.md)          |
+| **Performance (CSS)**       | 1                                                | `css-bundle-size-guard` (P107) — 60 KB external + 5 KB inline per page                                                                                                                                                                                                       | [`p107`](memory/p107-css-bundle-size-guard-shipped.md)         |
+| **Performance (Images)**    | 1                                                | `image-size-guard` (P108) — 500 KB/OG + 80 MB total bundle                                                                                                                                                                                                                   | [`p108`](memory/p108-image-size-guard-shipped.md)              |
+| **Rendering (v3 section)**  | 1                                                | `v3-render-coverage-guard` (P138) — source-level invariants: dual `BIZ_CONFIG_MAP` equality + 100-tool coverage + 68 v3 wired. (Source-only; follows build-dep gate for summary consistency.)                                                                                | [`p138`](memory/p138-v3-render-batch-fix-shipped.md)           |
+| **AdSense Compliance**      | 2                                                | (P140a) `no-adsense-placeholder-guard` (source-only — prevents resurrection of the misleading AdUnit.astro literal-placeholder) + `content-prose-shape-guard` (build-dep — eagerly validates 4-H2 prose frontmatter via zod schema, prevents thin/missing editorial content) | [`p140a`](memory/p140a-adsense-scaffold-shipped.md)            |
+| **Build-dep source guards** | 8                                                | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count)                                                                                                                                                    | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
+| **Total**                   | **47 build-dep suites** + 9 source-only = **56** | 8 dimensions                                                                                                                                                                                                                                                                 |                                                                |
 
 **Performance size triad complete (P96+P106+P107+P108):** HTML + JS + CSS + images. Each guard has 50–72% headroom from current baseline (e.g. JS max 65 KB ≤ 100 KB threshold).
 
@@ -315,7 +318,7 @@ The two scripts together implement a `pnpm sync` convenience script.
 - **Engine pattern is strict** — `calculate()` is the source of truth; `staticExamples[0]` is auto-regenerated from it by `scripts/codegen-examples.mjs`. **After editing `calculate()` in any engine, run `node scripts/codegen-examples.mjs` before committing** — `staticExamples[0]` will drift otherwise (the v3 bug found in commit 1385725 was caused by skipping this step). Use `node scripts/codegen-examples.mjs --check` in CI / pre-commit to detect drift; exit 1 means someone forgot to regen. `customFn` is minified; `codegen-customfn.mjs` only auto-updates the data-table portion (PRICING.json-driven), the logic is hand-minified.
 - **`codegen-examples.mjs` only regenerates `staticExamples[0]`** — engines that ship `[1+]`, `[2+]`, ... (alternative scenarios shown on the page) are not auto-checked. If `generate()` logic changes, verify `[1+]` manually or hand-edit them. The `--check` mode also flags literal `\\'` or `\uXXXX` escape sequences in regenerated output (a sign that `generate()` is producing broken escape chains).
 - **customFn JS parse safety** — every engine's `customFn` is a JS source string sent to `new Function('inputs', 'pick', 'fill', customFn)` in the browser. **It must parse as valid JS or the whole page silently fails.** Use `node tests/scripts/test-customFn.mjs <slug>` (or no args for all 100) to verify a customFn parses, OR `node tests/scripts/verify-customfn.mjs` (P15 expanded parser: matches 4 customFn declaration styles — top-level `const customFn`, `let customFn`, `var customFn`, and `clientConfig: { customFn }` inline form). Watch out for the `}}if(...)` ASI trap — `}` followed by `if` (or any statement-starter token) is a JS parse error; insert a literal `;` between them.
-- **A test double must never be more permissive than the runtime it stands in for** — P55b (2026-07-31, `b1d96de`) shipped a header-dropdown mutex whose 5 tests were green while the script was 100% dead in every browser for 9 days. The stub declared `children` as a real JS array, so `children.find(...)` worked in tests; real `Element.children` is an **HTMLCollection** (length + index access, NO array methods), so `.find` was `undefined` → `TypeError` at module top level → all 3 listeners silently failed to register. A `as unknown as { children: Array<...> }` cast in the product code kept TS from flagging it. When hand-rolling a DOM stub, mirror the real object's *limitations*, not just its happy path — grant only what the browser grants. Same rule for async-vs-sync APIs and for DTO fields the real payload omits.
+- **A test double must never be more permissive than the runtime it stands in for** — P55b (2026-07-31, `b1d96de`) shipped a header-dropdown mutex whose 5 tests were green while the script was 100% dead in every browser for 9 days. The stub declared `children` as a real JS array, so `children.find(...)` worked in tests; real `Element.children` is an **HTMLCollection** (length + index access, NO array methods), so `.find` was `undefined` → `TypeError` at module top level → all 3 listeners silently failed to register. A `as unknown as { children: Array<...> }` cast in the product code kept TS from flagging it. When hand-rolling a DOM stub, mirror the real object's _limitations_, not just its happy path — grant only what the browser grants. Same rule for async-vs-sync APIs and for DTO fields the real payload omits.
 - **`node tests/run.mjs <file>` ignores file arguments** — it globs all `tests/*.test.ts` and runs the whole suite (~6 min). For single-file iteration during debugging, call the runner directly: `node_modules/.bin/tsx --test tests/<name>.test.ts` (~3 s). Only use `tests/run.mjs` when you want the full suite plus the skip-mode summary.
 - **Pre-commit hook** (`.githooks/pre-commit`) runs `codegen-examples.mjs --check` automatically. Enable once after clone: `git config core.hooksPath .githooks`. Bypass with `git commit --no-verify` (only when intentional).
 - **PRICING.json is the source of truth** for 8 engines. To add a new model, edit JSON and run `pnpm sync`.
@@ -523,3 +526,12 @@ trivial 一行代码不用写测试。简化的地方用 `ponytail:` 注释标�
 
 <!-- END FORGEFLOWKIT PROJECT CONSTITUTION -->
 
+## 强制规则 · 防丢代码（commit 习惯硬规定）
+
+`git reflog` 不能恢复 working tree 文件内容（只追踪 HEAD 移动），任何 `git checkout -- <file>` / `git restore <file>` / `git reset --hard` 都会把未 commit 改动清零。**working tree 改动不是持久化，git commit 才是**。
+
+1. **完成代码改动后**先**询问**是否需要 commit，等用户明确同意再 commit**：每完成一个 milestone / todo，**先列出待 commit 的文件清单 + 一句话 commit message 草稿 + 影响面**，用 `ask_user` 让用户选"是 / 暂不 / 改粒度"，再 `git add <file> && git commit -m "..."`。**不允许自动 commit\*\*。WIP commit 也走相同流程（不能因为是 WIP 就绕过 ask）。
+2. **push 之前必须先 fetch 远程代码**：`git fetch origin master` → `git status -sb` 看 ahead/behind → 如果 **behind**（远程有新 commit），先 `git pull --rebase`（或 merge）同步，再 push。**禁止在 behind 状态下强 push**，会覆盖其他协作者已 push 的提交。如果 rebase/merge 出现冲突，先停下来报告冲突点，等用户裁决。
+3. **任何 `git checkout -- <file>` / `git restore <file>` / `git reset --hard` 之前**，必须先 `cp <file> /tmp/<file>.bak` 或 `git diff <file> > /tmp/<file>.bak.diff` 做文本备份——这是 checkout 类操作的最后一道防线。**由于不再"自动 commit"（规则 #1），working tree 改动随时可能丢，这条规则更要严格执行**。
+4. **跨多次 brainstorming / executing-plans 的大改动按 logical milestone 分 commit**（由用户在 ask_user 时指定粒度），而不是一次性把多个不相关改动塞进一个 commit。
+5. **反例**：之前 V3 简化（删"已恢复" tab / stat 卡 / 改行底色）/ V4 两态化 / V5 行内文字链 — 全部只在 working tree 临时改没 commit，最后一次 `git checkout HEAD -- AlarmCenter.vue` 把这些全清空，reflog 找不到。教训：**完成 ≠ 持久化，commit 才是**。所以新流程下：即使在等用户确认 commit 的窗口期，只要后续操作有丢改动风险，先 `cp` 备份到 /tmp/。

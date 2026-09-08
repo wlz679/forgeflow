@@ -10,13 +10,11 @@
     "check:og": "tsx scripts/build-og-images.ts --check",
     "build:full": "pnpm build:og && pnpm build",
     "prebuild": "pnpm check:i18n",
-    "gen:blog": "node --import tsx scripts/generate-blog-posts.mjs",
     "dev": "astro dev",
     "build": "astro build && node scripts/indexnow-submit.mjs",
     "preview": "astro preview",
     "indexnow:check": "node scripts/indexnow-submit.mjs --check",
     "sync": "node scripts/sync-pricing.mjs && node scripts/codegen-customfn.mjs && node scripts/codegen-examples.mjs",
-    "translate": "tsx scripts/translate-wordpools.ts",
     "check": "npx tsc --noEmit && node scripts/check-clerk-env.mjs && node scripts/check-supabase-env.mjs && node scripts/check-i18n-completeness.mjs && node scripts/codegen-examples.mjs --check && node scripts/codegen-customfn.mjs --check && node scripts/check-engine-count-by-category.mjs --check && node scripts/check-engine-coverage.mjs && node tests/run.mjs",
     "check:i18n": "node scripts/check-i18n-completeness.mjs",
     "check:clerk-env": "node scripts/check-clerk-env.mjs",
@@ -56,7 +54,6 @@
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitalets/google-translate-api": "^9.2.1",
     "tsx": "^4.22.3",
     "typescript": "^5.6.3",
     "undici": "^7.27.1"

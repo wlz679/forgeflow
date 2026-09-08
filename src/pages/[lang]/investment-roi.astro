@@ -9,8 +9,6 @@ import CategoryGuides from '../../components/CategoryGuides.astro';
 import CategoryOtherNav from '../../components/CategoryOtherNav.astro';
 import { categories } from '../../data/categories';
 import { tools } from '../../data/tools';
-import { getBlogPostsByToolSlug } from '../../lib/blog';
-import type { BlogPost } from '../../lib/blog';
 import { t, getLang } from '../../i18n';
 import { getTopicsByLetter } from '../../data/topics';
 import TopicCard from '../../components/TopicCard.astro';
@@ -61,10 +59,6 @@ const manualGuides = [1,2,3].map(n => ({
 }));
 
 const toolSlugsInCategory = new Set(translatedTools.map(t => t.slug));
-// P141-B3-T3: parallel I/O via Promise.all (was sequential for-await)
-const relatedBlogPosts = (await Promise.all(
-  Array.from(toolSlugsInCategory).map(slug => getBlogPostsByToolSlug(slug))
-)).flat();
 
 const schema = JSON.stringify({
   '@context': 'https://schema.org',
@@ -120,7 +114,7 @@ const letterTopics = getTopicsByLetter(CATEGORY_ID);
     </section>
 
     <CategoryFaq categoryId={CATEGORY_ID} faqItems={faqItems} />
-    <CategoryGuides categoryId={CATEGORY_ID} manualGuides={manualGuides} blogPosts={relatedBlogPosts} />
+    <CategoryGuides categoryId={CATEGORY_ID} manualGuides={manualGuides} />
 {letterTopics.length > 0 && (
       <section class="mb-10">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">{t('letter.topics_section.h2', lang)}</h2>

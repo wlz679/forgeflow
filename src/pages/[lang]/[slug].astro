@@ -6,7 +6,6 @@ import ResultCard from '../../components/ResultCard.astro';
 import FAQ from '../../components/FAQ.astro';
 import HowToUse from '../../components/HowToUse.astro';
 import RelatedTools from '../../components/RelatedTools.astro';
-import RelatedBlog from '../../components/RelatedBlog.astro';
 import EeatTrustBlock from '../../components/EeatTrustBlock.astro';
 import TopicCard from '../../components/TopicCard.astro';
 import RecentViewed from '../../components/RecentViewed.astro';
@@ -15,7 +14,6 @@ import PresetChips from '../../components/PresetChips.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
 import { relatedTools } from '../../data/internal-links';
-import { getBlogPostsByToolSlug } from '../../lib/blog';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
 import { TOPICS } from '../../data/topics';
@@ -52,7 +50,6 @@ if (!engine) return Astro.redirect(`/${lang}/`);
 
 const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
 const relatedTopics = TOPICS.filter((t) => t.calculatorSlugs.includes(slug!));
-const relatedBlog = await getBlogPostsByToolSlug(slug!);
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
 const metaTitle = `${toolTitle} — ForgeFlowKit`;
@@ -1348,7 +1345,6 @@ const schema = JSON.stringify({
           </section>
         )}
         <RelatedTools tools={related.map(r => ({ slug: r.slug, title: t(`tools.${r.slug}.title`, lang) }))} />
-        <RelatedBlog posts={relatedBlog} />
         <EnterpriseToolbar
           calcSlug={slug}
           currentInputs={{}}
