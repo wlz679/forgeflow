@@ -2,16 +2,20 @@ name = "forgeflowkit"
 compatibility_date = "2026-08-31"
 pages_build_output_dir = "dist"
 
-# R2 bucket for feedback storage
+# R2 bucket for feedback storage (configured via CF Dashboard bindings;
+# keeping name here for reference + local dev parity).
 [[r2_buckets]]
 binding = "FEEDBACK_BUCKET"
 bucket_name = "forgeflowkit-feedback"
 preview_bucket_name = "forgeflowkit-feedback-preview"
 
-# KV namespace for rate-limit counters
-[[kv_namespaces]]
-binding = "FEEDBACK_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# FEEDBACK_KV (rate-limit counters) binding is configured via CF Dashboard.
+# It was previously declared here with id = "REPLACE_WITH_KV_NAMESPACE_ID"
+# which caused CF Pages Function publish to fail (Error 8000022: invalid KV
+# namespace ID). CF Dashboard bindings override wrangler.toml, so removing
+# the block here is sufficient for production deploy. Local `wrangler dev`
+# without this binding will throw on FEEDBACK_KV access (use `astro dev`
+# for local feedback work).
 
 [vars]
 NODE_VERSION = "20"

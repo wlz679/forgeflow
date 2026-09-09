@@ -1,2 +1,7 @@
-# www → apex (301 permanent)
-https://www.forgeflowkit.com/* https://forgeflowkit.com/:splat 301
+# NOTE: www → apex (301 permanent) was previously declared here as:
+#   https://www.forgeflowkit.com/* https://forgeflowkit.com/:splat 301
+# CF Pages rejects hostname-level redirects in _redirects (only relative
+# path → path rules are supported). Configure this in CF Dashboard:
+#   Rules → Page Rules → Add Rule
+#   URL: https://www.forgeflowkit.com/*
+#   Setting: Forwarding URL → 301 Permanent Redirect → https://forgeflowkit.com/$1
