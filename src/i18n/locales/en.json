@@ -5123,5 +5123,9 @@
   "feedback.up": "Was this helpful?",
   "feedback.down": "Not helpful",
   "feedback.prompt": "Tell us what would have made this better (optional)",
-  "feedback.thanks": "Thanks for your feedback!"
+  "feedback.thanks": "Thanks for your feedback!",
+  "notFound.title": "Page Not Found",
+  "notFound.h1": "404 — Page Not Found",
+  "notFound.body": "The page you're looking for doesn't exist or has been moved.",
+  "notFound.homeLink": "Back to Home"
 }

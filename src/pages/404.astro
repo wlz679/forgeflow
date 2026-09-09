@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { t, getLang } from '../i18n';
+
+// 404.astro renders at both /404 and (via Pages Function fallback) any unmatched
+// route under /. CF Pages serves it with HTTP 404 for unmatched paths, replacing
+// the previous Astro default of "soft 404" that returned home-page HTML with a
+// 200 status (which broke GSC Removals + kept deindex from happening).
+export function getStaticPaths() {
+  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
+}
+
+const lang = getLang(Astro);
+const title = t('notFound.title', lang);
+const description = t('notFound.body', lang);
+const homeHref = lang === 'zh' ? '/zh/' : '/';
+---
+
+<BaseLayout title={title} description={description} pageType="static">
+  <Header />
+  <main class="max-w-3xl mx-auto px-4 py-16 flex-1 text-center">
+    <p class="text-7xl font-extrabold text-gray-300 mb-4">404</p>
+    <h1 class="text-2xl font-extrabold text-gray-900 mb-4">{t('notFound.h1', lang)}</h1>
+    <p class="text-base text-gray-600 mb-8">{t('notFound.body', lang)}</p>
+    <a
+      href={homeHref}
+      class="inline-block px-6 py-3 bg-[#7C3AED] text-white font-semibold rounded-lg hover:bg-[#6D28D9] transition-colors"
+    >
+      {t('notFound.homeLink', lang)}
+    </a>
+  </main>
+  <Footer />
+</BaseLayout>
