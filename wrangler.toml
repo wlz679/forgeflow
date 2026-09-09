@@ -2,20 +2,23 @@ name = "forgeflowkit"
 compatibility_date = "2026-08-31"
 pages_build_output_dir = "dist"
 
-# R2 bucket for feedback storage (configured via CF Dashboard bindings;
-# keeping name here for reference + local dev parity).
-[[r2_buckets]]
-binding = "FEEDBACK_BUCKET"
-bucket_name = "forgeflowkit-feedback"
-preview_bucket_name = "forgeflowkit-feedback-preview"
-
-# FEEDBACK_KV (rate-limit counters) binding is configured via CF Dashboard.
-# It was previously declared here with id = "REPLACE_WITH_KV_NAMESPACE_ID"
-# which caused CF Pages Function publish to fail (Error 8000022: invalid KV
-# namespace ID). CF Dashboard bindings override wrangler.toml, so removing
-# the block here is sufficient for production deploy. Local `wrangler dev`
-# without this binding will throw on FEEDBACK_KV access (use `astro dev`
-# for local feedback work).
+# Both bindings (R2 bucket FEEDBACK_BUCKET, KV namespace FEEDBACK_KV)
+# are configured via CF Dashboard:
+#   Pages → forgeflow → Settings → Functions → R2/KV bindings.
+#
+# Declaring them here with placeholder values (e.g. R2 bucket_name
+# "forgeflowkit-feedback" pointing at a non-existent bucket, or KV id
+# "REPLACE_WITH_KV_NAMESPACE_ID") caused CF Pages Function publish to
+# fail with errors:
+#   - Error 8000022: Invalid KV namespace ID
+#   - "R2 bucket 'forgeflowkit-feedback' not found"
+#
+# The feedback API (src/pages/api/feedback.ts) gracefully returns
+# 503 when these env bindings are missing, so site content pages are
+# unaffected. If you want the feedback API live in production, create
+# the actual R2 bucket + KV namespace in the CF dashboard and link
+# them to this Pages project — the same binding names (FEEDBACK_BUCKET,
+# FEEDBACK_KV) will be picked up at runtime.
 
 [vars]
 NODE_VERSION = "20"
