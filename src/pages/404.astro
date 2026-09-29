@@ -1,21 +1,40 @@
 ---
+// P152: 404 route must be rendered on demand, NOT prerendered.
+//
+// Why this matters: in `output: 'hybrid'`, a route without
+// `export const prerender = false` is prerendered to dist/404.html.
+// Astro's App.#renderError then short-circuits with
+//
+//   if (errorRouteData.prerender) {
+//     const response = await fetch('/404.html');
+//     return this.#mergeResponses(response, originalResponse, { status: 404 });
+//   }
+//
+// which never constructs a RenderContext, so `src/middleware.ts` never
+// runs for any 404 path. The 410-Gone interceptor for the removed
+// /{lang}/blog/* URLs was silently dead because of this.
+//
+// With prerender disabled, the error route goes through RenderContext
+// with the real middleware, so:
+//   - /{en,zh}/blog/*  → 410 Gone (from middleware)
+//   - everything else  → next() → this page, rendered on demand
+//
+// No getStaticPaths: that is only meaningful for prerendered routes.
+// The language is derived from the request path instead, since a 404
+// can be requested at any URL shape.
+export const prerender = false;
+
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { t, getLang } from '../i18n';
+import { t } from '../i18n';
 
-// 404.astro renders at both /404 and (via Pages Function fallback) any unmatched
-// route under /. CF Pages serves it with HTTP 404 for unmatched paths, replacing
-// the previous Astro default of "soft 404" that returned home-page HTML with a
-// 200 status (which broke GSC Removals + kept deindex from happening).
-export function getStaticPaths() {
-  return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
-}
+const firstSegment = Astro.url.pathname.split('/').filter(Boolean)[0];
+const lang = firstSegment === 'zh' ? 'zh' : 'en';
 
-const lang = getLang(Astro);
 const title = t('notFound.title', lang);
 const description = t('notFound.body', lang);
-const homeHref = lang === 'zh' ? '/zh/' : '/';
+const homeHref = lang === 'zh' ? '/zh/' : '/en/';
 ---
 
 <BaseLayout title={title} description={description} pageType="static">
