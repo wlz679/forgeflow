@@ -14,8 +14,12 @@ const otherLang = lang === 'zh' ? 'en' : 'zh';
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '';
 const otherPath = currentPath.replace(/^\/[^/]+/, '/' + otherLang) || '/' + otherLang + '/';
 
+// P152: /{lang}/blog/ was removed in 32a982e (100 programmatic SEO blog posts
+// removed for AdSense "low value content" rejection). The nav item used to
+// point there, which now 404s on every page — a dead link an AdSense reviewer
+// would hit immediately. Removed; the Topic guide/benchmark pages carry the
+// editorial content instead.
 const navItems = [
-  { href: `/${lang}/blog/`, key: 'nav.blog' },
   { href: `/${lang}/about`, key: 'nav.about' },
 ];
 
