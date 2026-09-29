@@ -54,7 +54,7 @@ src/components/
 
 | Component | LOC | Props |
 |---|---|---|
-| `CategoryHero.astro` | 23 | `{ categoryId, categoryName, categoryDesc, toolCount }` — hero with category metadata + tool count |
+| `CategoryHero.astro` | 21 | `{ categoryName, categoryDesc, toolCount }` — hero with category metadata + tool count |
 | `CategoryGuides.astro` | 22 | `{ categoryId, manualGuides[] }` — 3 manual guides |
 | `CategoryFaq.astro` | 26 | `{ categoryId, faqItems[] }` — 5 pre-translated FAQ items per category |
 | `CategorySection.astro` | 20 | `{ id, name, description, tools[] }` — sectioned tool grouping within category page (wraps `ToolCard` list) |

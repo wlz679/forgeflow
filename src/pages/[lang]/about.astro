@@ -196,7 +196,7 @@ const CATEGORY_DESC_ZH: Record<string, string> = {
           {categories.map((c) => (
             <li class="text-sm">
               <a href={`/${lang}/${c.slug}/`} class="text-[#7C3AED] hover:underline">
-                <strong>{c.id}</strong> · {t(`category.${c.id}.name`, lang)}
+                {t(`category.${c.id}.name`, lang)}
               </a>
               <span class="text-gray-600"> — {lang === 'zh' ? (CATEGORY_DESC_ZH[c.id] ?? c.description) : c.description}</span>
             </li>

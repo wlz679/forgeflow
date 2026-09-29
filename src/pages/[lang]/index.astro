@@ -83,7 +83,7 @@ const homeSchema = JSON.stringify({
     {categories.slice(0, 3).map(cat => (
       <CategorySection
         id={cat.slug}
-        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        name={t(`category.${cat.id}.name`, lang)}
         description={t(`category.${cat.id}.desc`, lang)}
         tools={translatedTools.filter(t => t.categoryId === cat.id)}
       />
@@ -91,7 +91,7 @@ const homeSchema = JSON.stringify({
     {categories.slice(3).map(cat => (
       <CategorySection
         id={cat.slug}
-        name={`${cat.id}. ${t(`category.${cat.id}.name`, lang)}`}
+        name={t(`category.${cat.id}.name`, lang)}
         description={t(`category.${cat.id}.desc`, lang)}
         tools={translatedTools.filter(t => t.categoryId === cat.id)}
       />

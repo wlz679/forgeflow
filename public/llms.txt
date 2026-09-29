@@ -170,9 +170,9 @@
 - [DSAR Processing Cost Calculator — GDPR Hours + Cost per Request (2026)](https://forgeflowkit.com/en/solopreneur-dsar-cost-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
 - [GDPR Fine Risk Calculator — Revenue-Tier Penalty + Compliance Cost (2026)](https://forgeflowkit.com/en/solopreneur-gdpr-fine-calculator/): Free calculator with decision support (assumptions, what-if, break-even).
 
-## Editorial & Blog
+## Editorial
 
-- [ForgeFlowKit Blog](https://forgeflowkit.com/en/blog/): In-depth guides, benchmarks, and comparisons for SaaS founders and solopreneurs.
+- [Topic Guides](https://forgeflowkit.com/en/): In-depth guides, benchmarks, and comparisons for SaaS founders and solopreneurs, indexed by category from the home page.
 
 ## Languages
 
