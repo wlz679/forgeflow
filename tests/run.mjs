@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
@@ -60,41 +60,62 @@ const tsxArgs = ['--test'];
 if (!process.argv.slice(2).some(a => a.startsWith('--test-concurrency'))) {
   tsxArgs.push('--test-concurrency=1');
 }
-const r = spawnSync(tsxBin, [...tsxArgs, ...process.argv.slice(2), ...tests], {
-  cwd: root,
-  stdio: 'inherit',
-  shell: process.platform === 'win32',
-});
+
+// P153-G1 (E1): batch the spawn. A single spawn carrying all 236 test paths
+// blows past Windows' 8191-character command-line limit, so `pnpm check` could
+// never complete on Windows — it died with "The command line is too long."
+// before a single assertion ran. Spawning in batches keeps each command line
+// short while preserving the original semantics: every suite still runs,
+// sequentially (spawnSync is blocking, so batches cannot interleave and
+// clobber each other's dist/ state), and the process still exits non-zero if
+// ANY batch failed.
+const BATCH_SIZE = 30;
+const userArgs = process.argv.slice(2);
+let exitCode = 0;
+let batchNo = 0;
+for (let i = 0; i < tests.length; i += BATCH_SIZE) {
+  const batch = tests.slice(i, i + BATCH_SIZE);
+  batchNo += 1;
+  console.log(`[run] batch ${batchNo} (${batch.length} suites, ${i + 1}–${i + batch.length} of ${tests.length})`);
+  const r = spawnSync(tsxBin, [...tsxArgs, ...userArgs, ...batch], {
+    cwd: root,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+  const code = r.status ?? 1;
+  if (code !== 0 && exitCode === 0) exitCode = code;
+}
 // P23b: skip-mode summary. When RUN_BUILD_TESTS is unset, the build-dependent
 // test files early-return → tests appear to "pass" but coverage is partial.
 // Surface this so users know to opt in.
-const exitCode = r.status ?? 1;
+//
+// P153-G1: the list is COMPUTED from the test sources, not hardcoded. The
+// hardcoded copy had drifted in both directions — it named suites that no
+// longer exist (the blog-* guards were deleted) and suites that are no longer
+// build-gated (P153-G1 removed the RUN_BUILD_TESTS gate from five
+// source-only guards), while omitting suites that really are gated. A
+// computed list cannot drift.
+function stripComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+const buildGated = suites
+  .filter((f) => stripComments(readFileSync(f, 'utf8')).includes('process.env.RUN_BUILD_TESTS'))
+  .map((f) => relative(root, f).replaceAll('\\', '/').replace(/^tests\//, ''))
+  .sort();
+
 if (!process.env.RUN_BUILD_TESTS) {
-  console.log('\n[skip-mode] RUN_BUILD_TESTS not set — 47 build-dependent suites skipped.');
+  console.log(`\n[skip-mode] RUN_BUILD_TESTS not set — ${buildGated.length} build-dependent suites skipped.`);
   console.log('[skip-mode] Set RUN_BUILD_TESTS=1 (or run `pnpm test:build`) to enable:');
-  console.log('[skip-mode]   baselayout-clerk-script, baselayout-sync-script,');
-  console.log('[skip-mode]   header-clerk-render, header-sync-ui, privacy-policy-sync,');
-  console.log('[skip-mode]   category-en-cjk-guard, category-zh-cjk-preservation,');
-  console.log('[skip-mode]   tool-zh-cjk-preservation, tool-en-cjk-guard,');
-  console.log('[skip-mode]   blog-en-cjk-guard, blog-zh-cjk-preservation,');
-  console.log('[skip-mode]   tool-cross-link-cjk-guard, blog-cross-link-cjk-guard,');
-  console.log('[skip-mode]   zh-hardcoded-english-guard, sitemap-hreflang-guard,');
-  console.log('[skip-mode]   html-hreflang-guard, sitemap-url-coverage-guard,');
-  console.log('[skip-mode]   canonical-url-guard, og-meta-guard, json-ld-guard,');
-  console.log('[skip-mode]   json-ld-field-guard, json-ld-faqpage-guard, a11y-guard,');
-  console.log('[skip-mode]   page-size-guard, breadcrumb-list-guard,');
-  console.log('[skip-mode]   dead-i18n-keys-guard, js-bundle-size-guard,');
-  console.log('[skip-mode]   css-bundle-size-guard, image-size-guard,');
-  console.log('[skip-mode]   engine-titles-i18n-guard,');
-  console.log('[skip-mode]   engine-descriptions-i18n-guard,');
-  console.log('[skip-mode]   engine-en-faq-i18n-guard, engine-en-howto-i18n-guard,');
-  console.log('[skip-mode]   engine-en-input-i18n-guard, engine-zh-faq-i18n-guard,');
-  console.log('[skip-mode]   engine-zh-howto-i18n-guard, engine-zh-input-i18n-guard,');
-  console.log('[skip-mode]   input-labels-i18n-audit, claude-md-invariant-guard,');
-  console.log('[skip-mode]   ai-cost-t2-7-zh-output, v3-render-coverage-guard,');
-  console.log('[skip-mode]   content-prose-shape-guard, content-prose-zh-counterpart-warn,');
-  console.log('[skip-mode]   blog-aio-coverage-guard, decision-layer-coverage-guard,');
-  console.log('[skip-mode]   playbook-6-fields-coverage-guard,');
-  console.log('[skip-mode]   p141-b3-engineering-cleanup');
+  let line = '[skip-mode]   ';
+  for (const name of buildGated) {
+    if (line.length + name.length + 2 > 78) {
+      console.log(line);
+      line = '[skip-mode]   ';
+    }
+    line += `${name}, `;
+  }
+  if (line.trim() !== '[skip-mode]') console.log(line.replace(/,\s*$/, ''));
 }
 process.exit(exitCode);

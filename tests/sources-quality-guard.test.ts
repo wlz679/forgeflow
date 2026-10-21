@@ -18,10 +18,10 @@ import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 
-// P23b skip-guard
-if (!process.env.RUN_BUILD_TESTS) {
-  process.exit(0);
-}
+// P153-G1: source-only guard — no `pnpm build` required. The P23b
+// RUN_BUILD_TESTS gate was removed: it silently disabled this guard in
+// every default `pnpm check` run, so the invariant it protects was not
+// actually being enforced.
 
 const PROSE_DIR = resolve(root, 'src/content/tools');
 

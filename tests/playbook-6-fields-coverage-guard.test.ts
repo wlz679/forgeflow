@@ -14,7 +14,10 @@
 //   productivity-score / saas-pricing-planner
 //   market-size-estimator / revenue-projector
 //
-// Build dependency: RUN_BUILD_TESTS=1 required (P23b skip-guard pattern).
+// P153-G1: source-only guard — no `pnpm build` required. The P23b
+// RUN_BUILD_TESTS gate was removed: it silently disabled this guard in
+// every default `pnpm check` run, so the invariant it protects was not
+// actually being enforced.
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
@@ -22,10 +25,6 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-
-if (!process.env.RUN_BUILD_TESTS) {
-  process.exit(0);
-}
 
 const ENGINES_DIR = resolve(root, 'src/engines');
 const REQUIRED_FIELDS = ['goal', 'input', 'output', 'constraint', 'tool', 'memory'];

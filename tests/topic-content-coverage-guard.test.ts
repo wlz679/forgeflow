@@ -12,9 +12,10 @@ import {
   TOPIC_BENCHMARK_CONTENT,
 } from '../src/data/topic-content.ts';
 
-if (!process.env.RUN_BUILD_TESTS) {
-  process.exit(0);
-}
+// P153-G1: source-only guard — no `pnpm build` required. The P23b
+// RUN_BUILD_TESTS gate was removed: it silently disabled this guard in
+// every default `pnpm check` run, so the invariant it protects was not
+// actually being enforced.
 
 // Per-field minimum lengths (chars). Tiered by field nature:
 // - Guide body: 150 chars (essay-length prose, catches empty/TBD/stub)

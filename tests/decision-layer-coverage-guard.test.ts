@@ -9,7 +9,10 @@
 // 4 标签：Decision Question / Recommendation / Key Uncertainty / Next Action
 // Source-level：直接 grep .ts 文件字符串字面量（与 P138 v3-render-coverage-guard 同模式）。
 //
-// Build dependency: RUN_BUILD_TESTS=1 required (P23b skip-guard pattern).
+// P153-G1: source-only guard — no `pnpm build` required. The P23b
+// RUN_BUILD_TESTS gate was removed: it silently disabled this guard in
+// every default `pnpm check` run, so the invariant it protects was not
+// actually being enforced.
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
@@ -17,10 +20,6 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-
-if (!process.env.RUN_BUILD_TESTS) {
-  process.exit(0);
-}
 
 const TARGET_CALCS = [
   'src/engines/customer-support/csat-calculator.ts',
