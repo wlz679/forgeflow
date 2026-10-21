@@ -39,9 +39,9 @@ const USE_BUILD_CUSTOMFN = !process.argv.includes('--legacy-codegen');
 
 const FAMILY_SHORT = {
   // openai
-  'gpt5': 'g5', 'gpt41': 'g41', 'o-series': 'os', 'legacy': 'lg',
+  'gpt6': 'g6', 'gpt5': 'g5', 'gpt41': 'g41', 'o-series': 'os', 'legacy': 'lg',
   // claude
-  'mythos': 'mythos', 'claude4x': 'claude4x',
+  'mythos': 'mythos', 'claude5x': 'claude5x', 'claude4x': 'claude4x',
   // gemini
   'flash35': 'flash35', 'pro': 'pro', 'flash3': 'flash3',
   // deepseek
@@ -49,7 +49,7 @@ const FAMILY_SHORT = {
 };
 
 const ICON = {
-  'flash35': '●', 'pro': '▲', 'flash3': '◆', 'legacy': '◇',
+  'gem4': '★', 'flash35': '●', 'pro': '▲', 'flash3': '◆', 'legacy': '◇',
 };
 
 const ENGINES = [
@@ -60,7 +60,7 @@ const ENGINES = [
     // Only include these models in customFn (default-selected + first preset).
     // Full list (120+ models) stays in PRICING.json but isn't bundled.
     // When user selects an unlisted model, customFn returns 0/no data (graceful degrade).
-    popularKeys: ['gpt-5.5', 'gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    popularKeys: ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.5', 'gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
     tableStart: '"var M={};" +',
     tableEndMarker: 'Family icons',
     fieldMap: (m) => {
@@ -82,7 +82,7 @@ const ENGINES = [
     file: 'claude-api-cost-calculator.ts',
         subdir: 'ai-cost',
     provider: 'anthropic',
-    popularKeys: ['claude-fable-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-opus-4-1', 'claude-haiku-3-5', 'claude-haiku-3'],
+    popularKeys: ['claude-fable-5', 'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-opus-5', 'claude-sonnet-5', 'claude-mythos-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-opus-4-1', 'claude-haiku-3-5', 'claude-haiku-3'],
     tableStart: '"var M={" +',
     tableEndMarker: 'Family icons',
     fieldMap: (m) => {
@@ -104,7 +104,7 @@ const ENGINES = [
     file: 'gemini-api-cost-calculator.ts',
         subdir: 'ai-cost',
     provider: 'google',
-    popularKeys: ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+    popularKeys: ['gemini-4-argon', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
     tableStart: '"var M={" +',
     tableEndMarker: 'var FL=',
     fieldMap: (m) => {

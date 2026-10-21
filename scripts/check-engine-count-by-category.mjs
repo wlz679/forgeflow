@@ -176,7 +176,31 @@ if (!fs.existsSync(docPath)) {
   } else {
     const snapshot = docContent.slice(startIdx + markerStart.length, endIdx).trim();
     const expected = table.trim();
-    if (snapshot !== expected) {
+    // Compare table rows cell-by-cell, not raw text. The snapshot is a
+    // hand-maintained markdown table that a formatter may pad (aligned
+    // columns) while the script emits a compact one — an exact string
+    // compare failed on padding alone and silently disabled this guard
+    // from the CLAUDE.md -> AGENTS.md migration (24ca554) onward.
+    // Row/cell normalization still fails on a wrong count, wrong category
+    // name, wrong order or a missing row.
+    const normalizeTable = (text) =>
+      text
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.startsWith('|'))
+        .map((l) =>
+          l
+            .replace(/^\|/, '')
+            .replace(/\|$/, '')
+            .split('|')
+            .map((c) => c.trim()),
+        )
+        // Drop the header separator row: its dash counts differ between a
+        // compact table and a prettier-aligned one, and it carries no data.
+        .filter((cells) => !cells.every((c) => /^:?-+:?$/.test(c)))
+        .map((cells) => cells.join('|'))
+        .join('\n');
+    if (normalizeTable(snapshot) !== normalizeTable(expected)) {
       fail(`${path.basename(docPath)} snapshot table does not match script output. Run \`node scripts/check-engine-count-by-category.mjs\` and copy-paste the output into ${path.basename(docPath)} between the codegen markers.`);
       console.error('--- script output ---');
       console.error(expected);

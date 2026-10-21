@@ -7,6 +7,14 @@
 > **Author:** Mavis (agentic audit)
 > **Scope:** `docs/superpowers/specs/2026-08-05-p140f-v2-strategy-design.md` 的执行状态盘点 + 后续排序建议.
 
+> ⚠️ **更正声明(2026-10-21,同日由 P153 实测推翻 3 处结论)**
+>
+> 本文档的 **Phase 3 结论是错的** —— 探针形态用错了(量的是 `// Goal:` 注释,实现是 `playbook:` 元数据)。
+> **Phase 3 实为 100/100 已完成**,真正缺的是「守卫休眠」+「User Value Score 不存在」。
+> 同时 **Phase 2 重建成本被低估**(博客集合/路由/渲染依赖已随 `32a982e` 整体删除,重建=重开一个 URL 面)。
+> 详见 **`2026-10-21-p153-user-value-score-and-guard-activation-design.md`** §2 / §6。
+> **本节数字以 P153 为准。**
+
 **Goal:** 把 2026-08-05 批准的 v2.0 路线图与 **2026-10-21 的仓库实际状态**对齐,回答三个问题:(a) 五个 Phase 各自落地到什么程度;(b) 「v2.0 灵魂三维度」的真实覆盖率是多少;(c) 下一个动作序列该怎么排。
 
 **Method:** 全量仓库产物扫描(100 engine 源文件逐个正则匹配 + `scripts/` 清点 + 分支合并状态 + i18n/定价数据新鲜度)+ 线上抽查 + 维度 3 外部信号实测。**所有数字均为实测,非估算;估算处已显式标注。**
@@ -86,7 +94,7 @@ Day 730+   v3.0    Autonomous Decision Platform,500-1000/年
 |---|---|---|---|
 | **1** KB4 ADR | Day 1-7 | ✅ **完成** | `docs/superpowers/adrs/` 6 个文件:`0000-template` + `0001-csat` / `0002-roas` / `0003-cac` / `0004-churn-rate` / `0005-burn-rate` 决策 |
 | **2** 5 篇决策博客 | Day 7-21 | ❌ **产物已不存在** | 5 篇(`best-solopreneur-{csat,roas,cac,churn-rate,project-profitability}-calculator.md`)在 `32a982e^` 中存在,已被 `32a982e` 删除 |
-| **3** Playbook 6 字段 | Day 21-90 | ❌ **0 / 100** | 100 个 engine 源文件逐个正则匹配 `Goal:` / `Memory:` / `Tool:` / `Constraint` 注释 → 命中 **0** |
+| **3** Playbook 6 字段 | Day 21-90 | ✅ **100 / 100**(⚠️ 更正,见 P153 §2) | 元数据以 `playbook: { goal, input, output, constraint, tool, memory }` 形态存在,100/100 引擎齐备;`tests/playbook-6-fields-coverage-guard.test.ts` 守卫也在 —— 但它带 `RUN_BUILD_TESTS` gate,**在 `pnpm check` 里从不执行断言** |
 | **4** 主题簇 + Score | Day 90-365 | 🟡 **约一半** | ✅ 49 topics + 94 个 topic-content 条目;❌ 100 新 calc = 0;❌ 3 个 Score 公式在 `src/` 命中 **0** |
 | **5** v2.5 AI Native | Day 365-730 | 🟡 **约 1/3** | ✅ P5A shipped 2026-08-26(Saved Scenarios / Decision Templates / Decision Reports);P5B / P5C **deferred** |
 | **v3.0** | Day 730+ | ⏸ 按设计未启动 | — |
@@ -185,6 +193,11 @@ P151 随后做了 backfill batch 1 / 2 / 3(2026-09-01~02),**当前实测仍是 1
 
 **问题**:路线图 Phase 2 的核心交付物已不存在(§3.1)。
 
+> ⚠️ **成本已上调(2026-10-21,P153 §6)**:本节原估「中」成本。实测 `32a982e` 删除的不只是文章文件 —— **博客集合定义 / 博客路由 / markdown 渲染依赖 / sitemap 与 llms.txt 的 `/blog/` 接线全部一起没了**,master 上零残留。重建 = **重开一整个 URL 面**。
+> 另外 **AdSense 于 2026-10-19 09:40 送审、当前仍在审核中** —— 审核进行中重开刚被关掉的 `/blog/*`,**收益为零**(审核员看的是当前线上站点)、风险却是实的。
+> **建议:Phase 2 推迟到 AdSense 批准之后**,按 §12.1 单开 `feature/phase-2-p140e-seo` + 单独 spec。
+> **低成本的替代方案**:仓库里已有 prose 层(`src/content/tools/` 100 个 en 文件、**41,309 词**、均值 413 词;实测,不含 `_README.md`),5 个 ADR 对应的计算器都有 prose —— 改写成决策指南形态**零新管道、零新 URL**。独立文章 vs 升级 prose 是核心产品决策(P153 §7.2)。
+
 **为什么值得重建(双重收益)**:
 
 1. 补回路线图断层 —— Phase 1 的 5 个 ADR 已就位,但对应的「决策指南」层缺席
@@ -209,40 +222,49 @@ P151 随后做了 backfill batch 1 / 2 / 3(2026-09-01~02),**当前实测仍是 1
 | `0004-churn-rate-decision` | 客户是否值得留 | Churn 决策指南 |
 | `0005-burn-rate-decision` | 赛道是否值得做 | 烧钱率决策指南 |
 
-### 6.2 🥈 Phase 3:Playbook 6 字段(0/100)
+### 6.2 🥈 Phase 3:Playbook 6 字段(⚠️ 更正 —— 实为 100/100 已完成,不是 0/100)
 
-**问题**:p140f §11.4 明确「v3.0 必须建立在 v2.0 Phase 1-5 全部完成之上」,而 §11.4 又写「没有 v2.0 Playbook 6 字段标准化 → v3.0 AI 无法执行决策」。**这是 v3.0 的硬前置,当前是 0。**
+> **本节原结论「0/100,只差 Goal 那一层」已被推翻。** 原探针量的是引擎头注释 `// Goal:`,而真实实现是 `playbook:` 元数据。实测 100/100 引擎六字段齐备,P153 §2 有完整证据。
 
-**但不是从零做。** v3 standard 已强制 6+ emoji sections(🩺 Health / 🔄 What-If / ⚖️ Break-Even / 🎯 Milestone / 💡 Tip)—— 那已经是**结构化决策输出**了。**只差 Goal 那一层。**
+**真实状态:**
 
-现状对比(engine 头注释):
+| 项 | 实测 |
+|---|---|
+| 100 个引擎的 `playbook` 6 字段 | ✅ **100/100** |
+| `goal` 是否为真决策问题(非 placeholder) | ✅ 100/100 含「决策/decision/该不该/是否」 |
+| 5 个 demo(csat/roas/cac/churn-rate/burn-rate) 是否具体 | ✅ 全部具体(如 csat:`用户该不该信任自己的 CSAT 数字作为留存决策依据`) |
+| CI 守卫 | ✅ 存在(`tests/playbook-6-fields-coverage-guard.test.ts`) |
+| **守卫是否真的会跑** | ❌ **否** —— 它带 `RUN_BUILD_TESTS` gate,但只读 `.ts` 源码,根本不需要 build。`pnpm check` 不设该变量 → **从不执行断言** |
 
-```js
-// 现在(技术参数说明书)
-// Where:
-//   openOpps    — number of qualified open opportunities in pipeline
-//   avgDealSize — average contract value per closed-won deal (USD)
-```
+**所以 Phase 3 的真正缺口不是「补字段」,而是两件小事:**
 
-```js
-// Phase 3 目标(Playbook 6 字段)
-// Goal: 这个工具帮用户做什么决策
-//   → "这个销售管道该继续加投入,还是先修转化率"
-// Input / Output / Constraint / Tool / Memory
-```
+1. **把守卫接上电**:去掉那两处不成立的 build 依赖(分钟级)
+2. **补上真正缺的那道闸**:User Value Score(见 §6.3)
 
-**成本**:100 个文件头注释改造,机械性强。**建议配 CI guard**(校验 Goal 字段存在 + 含"决策"语义),与 p140f §7 Phase 3 验收标准一致。
+**成本**:从「100 个文件改造」降到「2 行 + 1 个新守卫」。**建议配 CI guard** 的原始设想已由仓库现有守卫实现,缺的只是让它生效。
 
 ### 6.3 🥉 User Value Score 公式 + CI guard
 
-**问题**:见 §3.3。闸门不存在 = AI 扩展无护栏。
+**问题**:见 §3.3。闸门不存在 = AI 扩展无护栏。**这条结论不变** —— 全仓 `User Value Score|userValueScore|user-value-score|Topic Score|Decision Value Score` 实测 **0 命中**。
+
+**但「直接编码 §15.2 定义」是错的** —— p140f §15.2 的公式按字面**在数学上不可满足**:
+
+```
+User Value Score = (功能价值 × UX 易用性 × Advisor 关系 × Retention × Advocacy) ÷ 5
+5 维各 ∈ [0,1] → 最大乘积 1 → 最大分 = 1 ÷ 5 = 0.2 < 0.7
+→ 连最完美的工具都过不了闸门,恒被拒绝
+```
+
+**这大概就是它从没被实现的原因**(不是没人写,是写了必然全拒)。修正方向:把 `×` 读作 `+`,即算术平均 `(a+b+c+d+e) ÷ 5`,阈值 0.7 才可达。**这是 Roadmap 定义的改动,需 user 拍板**(P153 §7.1)。
 
 **范围**:
-- 实现 `User Value Score` 公式(§15.2 定义已完备,直接编码)
-- 5 维评分的数据来源需要先定义(人工填 / LLM 评 / 混合)
-- CI guard:新 engine 缺 User Value Score → build 失败
+- 先定公式(算术平均 vs 几何平均)—— **阻塞项**
+- 实现 `User Value Score` + 5 维评分数据(`src/data/user-value-scores.json`)
+- **评分方式**:LLM 批量 + 人工抽样复核 20 个(100 引擎 × 5 维 = 500 次判断,纯人工在等待窗口内做不完)
+- CI guard:新 engine 缺评分 → build 失败;评分 < 0.7 → 不进候选池
+- ⚠️ **期望值必须是独立写死的字面量**(阈值 0.7 不要从被测模块 import),且「分数存在 / 算法正确 / 阈值拦截」拆成 3 条断言 —— 一条判据只守一件事
 
-**与 §6.2 的依赖关系**:Phase 3 的 `Goal` 字段本质就是 User Value Score 的「功能价值 + Advisor 关系」两维输入。**建议两者一起做**,否则要填两遍。
+**与 §6.2 的依赖关系(已更正)**:§6.2 原写「Phase 3 的 `Goal` 字段本质就是 User Value Score 的前两维输入,建议两者一起做」。**实测 Phase 3 已完成,所以不存在「一起做」的前提** —— 现在只剩 User Value Score 这一件事要落地。
 
 ### 6.4 维度 3 信号:AI 定价数据已过期
 
@@ -269,11 +291,20 @@ feat/i18n-drift-fix                     +16 commits 未进 master
 
 **`feat/i18n-drift-fix` 值得优先确认** —— i18n 漂移修复与「站点整改」直接相关,需确认是有意搁置还是遗漏。
 
+> ⚠️ **2026-10-21 更正(P153 §8.6):这两个分支其实已经被 squash 合入 master 了。**
+> `git cherry master <branch>` 判 `+` 只是因为 **squash 合并后 patch-id 变了**,不是「内容没进来」。实测证据:
+> - `src/i18n/translations.ts` 在 master 上**已不存在**;`src/i18n/locales/{en,zh}.json`(910KB / 886KB)、`scripts/check-i18n-completeness.mjs`、`check:i18n` 接线、pre-commit 里的 i18n 检查 **master 上全都有**
+> - `PresetChips` 组件与 `engine.presets` 字段在 master 上也都有(9 个引擎带 `presets:`)
+>
+> **真正没进 master 的只有 i18n 分支上的 2 个测试文件**(`tests/scripts/check-i18n-completeness.test.mjs`、`tests/build/no-raw-keys.test.mjs`)—— 而它们守的正是 master 上**已经生效**的漂移检测器。
+> **建议:只补这 2 个测试,然后删掉两个分支指针。**
+
 ---
 
 ## 7. 建议行动序列(待用户拍板)
 
 > 按「价值 ÷ 成本」排序。**执行需用户拍板**(§12.6)。
+> ⚠️ **本序列已于 2026-10-21 按 P153 的实测结论重排**(见下方「重排后」)。
 
 | | 动作 | 成本 | 收益 |
 |---|---|---|---|
@@ -284,6 +315,24 @@ feat/i18n-drift-fix                     +16 commits 未进 master
 | **E** | 可选:feedback R2/KV binding、`www → apex` 301 | 小 | 维度 2 数据侧;SEO 规范化 |
 
 **推荐:B 优先,A 顺手做掉。** B 同时喂两件事 —— 路线图与刚通过的 AdSense。
+
+### 7.0 重排后(2026-10-21,P153 实测后)
+
+原推荐「B 优先」基于两个现已不成立的前提:① Phase 3 是 0/100(实为 100/100);② 博客重建是「中」成本、且能立刻补 AdSense 内容信号(实为需重开 URL 面,且审核中做收益为零)。
+
+| | 动作 | 成本 | 收益 | 状态 |
+|---|---|---|---|---|
+| **A** | AI 定价全量刷新 + 新 family + 策展化 + 修 2 个红闸门 | 中 | 8 个引擎显示 2026-10 的真价格 | ✅ **已完成**(P153 §5) |
+| **G1** | 激活两个休眠守卫(去掉不成立的 build 依赖) | **分钟级** | Phase 3 的质量线从「形同虚设」变真守 | 待执行 |
+| **G2** | User Value Score + CI guard(先定公式) | 中 | Phase 4/5 扩量前唯一缺的那道闸 | 待执行(阻塞于公式) |
+| **P2** | Phase 2 重建 5 篇决策博客 | **大** | 路线图断层 + 深度内容 | **等 AdSense 批准** |
+| **E1** | 修 `tests/run.mjs` 的 Windows 命令行长度限制 | 小 | `pnpm check` 在 Windows 上能跑完 | 待执行 |
+| **E2** | 补齐博客删除后遗留的 3 处测试 ENOENT | 小 | 消除永久红的测试 | 待执行 |
+| **D** | 两个悬空分支:已确认被 squash 合入 master,只补 2 个测试后删分支 | 小 | 技术债清理 | 待执行 |
+
+**推荐顺序:G1 → G2 → (等 AdSense)P2;E1/E2/D 顺手做掉。**
+
+**理由:先把护栏修好,再扩内容。** 2026-08-17 拒审的本质就是「在没有质量准入线的情况下扩内容」;而 Phase 4/5 的 AI 自动扩展正要开始 —— 没有 User Value Score 闸门就扩,等于把同一个坑再踩一遍。
 
 ---
 
@@ -334,10 +383,17 @@ git branch --merged master; git branch -a --no-merged master
 ## 10. Open Questions(待用户拍板)
 
 1. **§7 的 A-E 五项,是否按推荐顺序执行?** 是否需要先切 `feature/phase-N-*` 分支?(§12.5 要求先自问 + 用户拍板)
+   > **2026-10-21 更新**:推荐顺序已按 P153 实测重排为 **G1 → G2 → (等 AdSense)P2**(见 §7.0);A 已完成。
 2. **§6.1 的 5 篇博客的目标语言?** v2.0 §9.2 曾定「不做中文博客」(客户全海外),是否维持?
+   > **2026-10-21 更新**:建议维持(只做英文)。**但形态待定** —— 独立文章 vs 升级既有 prose(P153 §7.2),且建议等 AdSense 批准后再动。
 3. **§6.3 的 User Value Score 五维评分,谁来打分?** 人工 / LLM / 混合 —— 这决定 CI guard 的形态。
+   > **2026-10-21 更新**:推荐 **LLM 批量 + 人工抽样复核 20 个**(P153 §4.3)。**且先要定公式** —— §15.2 按字面恒拒(P153 §7.1)。
 4. **§6.5 的 `feat/i18n-drift-fix`(+16 commits)是搁置还是遗漏?**
+   > **2026-10-21 已查明**:已被 squash 合入 master,真缺的只有 2 个测试文件 → 补测试后删分支(P153 §8.6)。
 5. ~~**`docs/superpowers/specs/INDEX.md` 是否新增 P152 行 + 计数?**~~ —— **已按 INDEX 维护约定自动同步(2026-10-21)**,无需拍板:P152 归入 §7,连带补录 25 个此前漏登的 spec,总数 55 → 81。详见 §11。
+6. **【新】P153 提案**:G1(激活两个休眠守卫)+ G2(User Value Score + CI guard)+ E1/E2(修 `tests/run.mjs` Windows 限制、补 3 处测试 ENOENT)—— 是否批准执行?分支按 §12.1 用 `feature/phase-3-playbook-6-fields`?
+7. **【新】User Value Score 公式**:算术平均(推荐)还是几何平均?**改的是 p140f §15.2 原文,需明确点头。**
+8. **【新】静态 137 模型 vs 交互 18 模型** —— 要不要统一?(统一则长尾模型名的 SEO 关键词面会缩)
 
 ---
 
@@ -373,15 +429,18 @@ git branch --merged master; git branch -a --no-merged master
 - `docs/superpowers/specs/2026-08-05-p140f-v2-strategy-design.md` —— P140f v2.0 Evolution Strategy(APPROVED Path C,891 行)
 - `AGENTS.md` L108-125 —— Project Constitution (v2.0 灵魂三维度)
 - `docs/superpowers/specs/2026-08-26-phase-5-v2.5-enterprise-design.md` —— Phase 5-A
+- `docs/superpowers/specs/2026-10-21-p153-user-value-score-and-guard-activation-design.md` —— **本 spec 的更正文档**(Phase 3 实测 + User Value Score 公式 + 守卫激活 + Phase 2 真实成本)
 
 ### 审计用到的项目产物
 
 - `docs/superpowers/adrs/0000-template.md` + `0001~0005` —— Phase 1 KB4 ADR 模板 + 5 个决策 ADR
 - `src/engines/**/*.ts` —— 100 个 engine(L5 覆盖率 / Playbook 6 字段扫描源)
 - `src/data/topics.ts`(49)+ `src/data/topic-content.ts`(94)—— Phase 4 主题层
-- `src/data/ai-pricing.json` —— 8 个 B 类别引擎的价格源(`lastUpdated: 2026-08-24`)
+- `src/data/ai-pricing.json` —— 8 个 B 类别引擎的价格源(**`lastUpdated` 已于 2026-10-21 更新至 2026-10-21**)
 - `scripts/` —— 24 个 codegen/check 脚本(AI 自动扩展机制缺失证据)
 - `memory/p151-dimension-1-audit-report.md` —— 19/100 的历史基线(2026-09-02)
+- `tests/playbook-6-fields-coverage-guard.test.ts` + `tests/decision-layer-coverage-guard.test.ts` —— **Phase 3 的两个既有守卫(P153 §2.1 证实其存在但休眠)**
+- `src/content/tools/*.md` —— prose 层(100 en / 41,309 词,实测)—— Phase 2 低成本替代方案的载体
 
 ### 外部
 

@@ -4,7 +4,7 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-openai-token-calculator',
     title: 'OpenAI Token Calculator',
-    description: 'Compare OpenAI API costs across 14 models — GPT-5.5 to GPT-5 Nano, GPT-4.1 family, and o-series. Toggle batch pricing, prompt caching, and growth projections.',
+    description: 'Compare OpenAI API costs across the GPT-6 flagship family, GPT-5, GPT-4.1 and o-series — with batch pricing, prompt caching, and growth projections.',
     categoryId: 'B',
     applicationCategory: 'DeveloperApplication',
     inputs: [
@@ -24,13 +24,13 @@ export const tools: ToolMeta[] = [
     sourcesRich: [],
     reviewedBy: 'ForgeFlowKit Team',
     author: 'ForgeFlowKit',
-    dataReviewedAt: '2026-06-22',
+    dataReviewedAt: '2026-10-21',
     sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-claude-api-cost-calculator',
     title: 'Claude API Cost Calculator',
-    description: 'Calculate Claude API costs for Fable 5, Opus 4.8, Sonnet 4.6, Haiku 4.5, and legacy models. Includes Prompt Caching, batch pricing, and cross-provider comparison.',
+    description: 'Calculate Claude API costs for Fable 5, Opus 5.5, Sonnet 5.5, Haiku 5.5 and legacy models — with Prompt Caching, batch pricing, and cross-provider comparison.',
     categoryId: 'B',
     applicationCategory: 'DeveloperApplication',
     inputs: [
@@ -52,7 +52,7 @@ export const tools: ToolMeta[] = [
     sourcesRich: [],
     reviewedBy: 'ForgeFlowKit Team',
     author: 'ForgeFlowKit',
-    dataReviewedAt: '2026-06-22',
+    dataReviewedAt: '2026-10-21',
     sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
@@ -77,13 +77,13 @@ export const tools: ToolMeta[] = [
     sourcesRich: [],
     reviewedBy: 'ForgeFlowKit Team',
     author: 'ForgeFlowKit',
-    dataReviewedAt: '2026-06-22',
+    dataReviewedAt: '2026-10-21',
     sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
     slug: 'solopreneur-gemini-api-cost-calculator',
     title: 'Gemini API Cost Calculator',
-    description: 'Calculate Google Gemini API costs across 6 models — Gemini 3.5 Flash, 3.1 Pro, 3 Flash, and legacy models. Includes Context Caching, batch pricing, growth projections, and cross-provider comparison.',
+    description: 'Calculate Google Gemini API costs across Gemini 4 Argon, 3.8 Flash, 3.5 Flash, 3.1 Pro and the legacy lines — with Context Caching, batch pricing, growth projections, and cross-provider comparison.',
     categoryId: 'B',
     applicationCategory: 'DeveloperApplication',
     inputs: [
@@ -103,7 +103,7 @@ export const tools: ToolMeta[] = [
     sourcesRich: [],
     reviewedBy: 'ForgeFlowKit Team',
     author: 'ForgeFlowKit',
-    dataReviewedAt: '2026-06-22',
+    dataReviewedAt: '2026-10-21',
     sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   },
   {
@@ -181,7 +181,7 @@ export const tools: ToolMeta[] = [
   {
     slug: 'solopreneur-ai-api-cost-comparison',
     title: 'AI API Cost Comparison',
-    description: 'Cross-provider AI API cost comparison across 15 models from OpenAI, Anthropic, Google, and DeepSeek. Find the cheapest model for your usage — with bar chart, provider summary, and volume scenario planning.',
+    description: 'Cross-provider AI API cost comparison across the full OpenAI, Anthropic, Google and DeepSeek model lineups — find the cheapest model for your usage with bar chart, provider summary, and volume scenario planning.',
     categoryId: 'B',
     applicationCategory: 'DeveloperApplication',
     inputs: [
@@ -197,7 +197,7 @@ export const tools: ToolMeta[] = [
     sourcesRich: [],
     reviewedBy: 'ForgeFlowKit Team',
     author: 'ForgeFlowKit',
-    dataReviewedAt: '2026-06-22',
+    dataReviewedAt: '2026-10-21',
     sources: ['LiteLLM Pricing (litellm/model_prices_and_context_window.json)', 'OpenAI API Pricing', 'Anthropic API Pricing'],
   }
 ];

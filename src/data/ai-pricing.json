@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-08-24",
+  "lastUpdated": "2026-10-21",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -15,7 +15,7 @@
           "name": "GPT 5.5",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 1
+          "order": 5
         },
         "gpt-5.2": {
           "input": 1.75,
@@ -25,7 +25,7 @@
           "name": "GPT 5.2",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 2
+          "order": 6
         },
         "gpt-5": {
           "input": 1.25,
@@ -35,7 +35,7 @@
           "name": "GPT 5",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 3
+          "order": 7
         },
         "gpt-5-mini": {
           "input": 0.25,
@@ -45,7 +45,7 @@
           "name": "GPT 5Mini",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 4
+          "order": 8
         },
         "gpt-5-nano": {
           "input": 0.05,
@@ -55,7 +55,7 @@
           "name": "GPT 5Nano",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 5
+          "order": 9
         },
         "gpt-4.1": {
           "input": 2,
@@ -65,7 +65,7 @@
           "name": "GPT 4.1",
           "family": "gpt41",
           "contextWindow": "1M",
-          "order": 6
+          "order": 10
         },
         "gpt-4.1-mini": {
           "input": 0.4,
@@ -75,7 +75,7 @@
           "name": "GPT 4.1Mini",
           "family": "gpt41",
           "contextWindow": "1M",
-          "order": 7
+          "order": 11
         },
         "gpt-4.1-nano": {
           "input": 0.1,
@@ -85,7 +85,7 @@
           "name": "GPT 4.1Nano",
           "family": "gpt41",
           "contextWindow": "1M",
-          "order": 8
+          "order": 12
         },
         "o3": {
           "input": 2,
@@ -95,7 +95,7 @@
           "name": "O3",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 9,
+          "order": 13,
           "reasoningMultiplier": 4
         },
         "o4-mini": {
@@ -106,7 +106,7 @@
           "name": "O4Mini",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 10,
+          "order": 14,
           "reasoningMultiplier": 4
         },
         "gpt-4o": {
@@ -117,7 +117,7 @@
           "name": "GPT 4o",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 11
+          "order": 15
         },
         "gpt-4o-mini": {
           "input": 0.15,
@@ -127,7 +127,7 @@
           "name": "GPT 4o Mini",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 12
+          "order": 16
         },
         "gpt-4-turbo": {
           "input": 10,
@@ -137,7 +137,7 @@
           "name": "GPT 4Turbo",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 13
+          "order": 17
         },
         "gpt-3.5-turbo": {
           "input": 0.5,
@@ -147,7 +147,7 @@
           "name": "GPT 3.5Turbo",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 14
+          "order": 18
         },
         "gpt-4o-transcribe-diarize": {
           "input": 2.5,
@@ -155,7 +155,7 @@
           "name": "GPT 4o Transcribe Diarize",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 15
+          "order": 19
         },
         "gpt-3.5-turbo-0125": {
           "input": 0.5,
@@ -163,7 +163,7 @@
           "name": "GPT 3.5Turbo 0125",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 16
+          "order": 20
         },
         "gpt-3.5-turbo-1106": {
           "input": 1,
@@ -171,7 +171,7 @@
           "name": "GPT 3.5Turbo 1106",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 17
+          "order": 21
         },
         "gpt-3.5-turbo-16k": {
           "input": 3,
@@ -179,7 +179,7 @@
           "name": "GPT 3.5Turbo 16k",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 18
+          "order": 22
         },
         "gpt-3.5-turbo-instruct": {
           "input": 1.5,
@@ -187,7 +187,7 @@
           "name": "GPT 3.5Turbo Instruct",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 19
+          "order": 23
         },
         "gpt-3.5-turbo-instruct-0914": {
           "input": 1.5,
@@ -195,7 +195,7 @@
           "name": "GPT 3.5Turbo Instruct 0914",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 20
+          "order": 24
         },
         "gpt-4": {
           "input": 30,
@@ -203,7 +203,7 @@
           "name": "GPT 4",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 21
+          "order": 25
         },
         "gpt-4-0125-preview": {
           "input": 10,
@@ -211,7 +211,7 @@
           "name": "GPT 40125Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 22
+          "order": 26
         },
         "gpt-4-0314": {
           "input": 30,
@@ -219,7 +219,7 @@
           "name": "GPT 40314",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 23
+          "order": 27
         },
         "gpt-4-0613": {
           "input": 30,
@@ -227,7 +227,7 @@
           "name": "GPT 40613",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 24
+          "order": 28
         },
         "gpt-4-1106-preview": {
           "input": 10,
@@ -235,7 +235,7 @@
           "name": "GPT 41106Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 25
+          "order": 29
         },
         "gpt-4-turbo-2024-04-09": {
           "input": 10,
@@ -243,7 +243,7 @@
           "name": "GPT 4Turbo 20240409",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 26
+          "order": 30
         },
         "gpt-4-turbo-preview": {
           "input": 10,
@@ -251,7 +251,7 @@
           "name": "GPT 4Turbo Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 27
+          "order": 31
         },
         "gpt-4.1-2025-04-14": {
           "input": 2,
@@ -259,7 +259,7 @@
           "name": "GPT 4.120250414",
           "family": "gpt41",
           "contextWindow": "1M",
-          "order": 28
+          "order": 32
         },
         "gpt-4.1-mini-2025-04-14": {
           "input": 0.4,
@@ -267,7 +267,7 @@
           "name": "GPT 4.1Mini 20250414",
           "family": "gpt41",
           "contextWindow": "1M",
-          "order": 29
+          "order": 33
         },
         "gpt-4.1-nano-2025-04-14": {
           "input": 0.1,
@@ -275,7 +275,7 @@
           "name": "GPT 4.1Nano 20250414",
           "family": "gpt41",
           "contextWindow": "1M",
-          "order": 30
+          "order": 34
         },
         "gpt-4o-2024-05-13": {
           "input": 5,
@@ -283,7 +283,7 @@
           "name": "GPT 4o 20240513",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 31
+          "order": 35
         },
         "gpt-4o-2024-08-06": {
           "input": 2.5,
@@ -291,7 +291,7 @@
           "name": "GPT 4o 20240806",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 32
+          "order": 36
         },
         "gpt-4o-2024-11-20": {
           "input": 2.5,
@@ -299,7 +299,7 @@
           "name": "GPT 4o 20241120",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 33
+          "order": 37
         },
         "gpt-4o-audio-preview": {
           "input": 2.5,
@@ -307,7 +307,7 @@
           "name": "GPT 4o Audio Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 34
+          "order": 38
         },
         "gpt-4o-audio-preview-2024-12-17": {
           "input": 2.5,
@@ -315,7 +315,7 @@
           "name": "GPT 4o Audio Preview 20241217",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 35
+          "order": 39
         },
         "gpt-4o-audio-preview-2025-06-03": {
           "input": 2.5,
@@ -323,7 +323,7 @@
           "name": "GPT 4o Audio Preview 20250603",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 36
+          "order": 40
         },
         "gpt-audio": {
           "input": 2.5,
@@ -331,7 +331,7 @@
           "name": "GPT Audio",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 37
+          "order": 41
         },
         "gpt-audio-1.5": {
           "input": 2.5,
@@ -339,7 +339,7 @@
           "name": "GPT Audio 1.5",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 38
+          "order": 42
         },
         "gpt-audio-2025-08-28": {
           "input": 2.5,
@@ -347,7 +347,7 @@
           "name": "GPT Audio 20250828",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 39
+          "order": 43
         },
         "gpt-audio-mini": {
           "input": 0.6,
@@ -355,7 +355,7 @@
           "name": "GPT Audio Mini",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 40
+          "order": 44
         },
         "gpt-audio-mini-2025-10-06": {
           "input": 0.6,
@@ -363,7 +363,7 @@
           "name": "GPT Audio Mini 20251006",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 41
+          "order": 45
         },
         "gpt-audio-mini-2025-12-15": {
           "input": 0.6,
@@ -371,7 +371,7 @@
           "name": "GPT Audio Mini 20251215",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 42
+          "order": 46
         },
         "gpt-4o-mini-2024-07-18": {
           "input": 0.15,
@@ -379,7 +379,7 @@
           "name": "GPT 4o Mini 20240718",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 43
+          "order": 47
         },
         "gpt-4o-mini-audio-preview": {
           "input": 0.15,
@@ -387,7 +387,7 @@
           "name": "GPT 4o Mini Audio Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 44
+          "order": 48
         },
         "gpt-4o-mini-audio-preview-2024-12-17": {
           "input": 0.15,
@@ -395,7 +395,7 @@
           "name": "GPT 4o Mini Audio Preview 20241217",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 45
+          "order": 49
         },
         "gpt-4o-mini-realtime-preview": {
           "input": 0.6,
@@ -403,7 +403,7 @@
           "name": "GPT 4o Mini Realtime Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 46
+          "order": 50
         },
         "gpt-4o-mini-realtime-preview-2024-12-17": {
           "input": 0.6,
@@ -411,7 +411,7 @@
           "name": "GPT 4o Mini Realtime Preview 20241217",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 47
+          "order": 51
         },
         "gpt-4o-mini-search-preview": {
           "input": 0.15,
@@ -419,7 +419,7 @@
           "name": "GPT 4o Mini Search Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 48
+          "order": 52
         },
         "gpt-4o-mini-search-preview-2025-03-11": {
           "input": 0.15,
@@ -427,7 +427,7 @@
           "name": "GPT 4o Mini Search Preview 20250311",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 49
+          "order": 53
         },
         "gpt-4o-mini-transcribe": {
           "input": 1.25,
@@ -435,15 +435,15 @@
           "name": "GPT 4o Mini Transcribe",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 50
+          "order": 54
         },
         "gpt-4o-mini-tts": {
-          "input": 2.5,
+          "input": 0.6,
           "output": 10,
           "name": "GPT 4o Mini Tts",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 51
+          "order": 55
         },
         "gpt-4o-realtime-preview": {
           "input": 5,
@@ -451,7 +451,7 @@
           "name": "GPT 4o Realtime Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 52
+          "order": 56
         },
         "gpt-4o-realtime-preview-2024-12-17": {
           "input": 5,
@@ -459,7 +459,7 @@
           "name": "GPT 4o Realtime Preview 20241217",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 53
+          "order": 57
         },
         "gpt-4o-realtime-preview-2025-06-03": {
           "input": 5,
@@ -467,7 +467,7 @@
           "name": "GPT 4o Realtime Preview 20250603",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 54
+          "order": 58
         },
         "gpt-4o-search-preview": {
           "input": 2.5,
@@ -475,7 +475,7 @@
           "name": "GPT 4o Search Preview",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 55
+          "order": 59
         },
         "gpt-4o-search-preview-2025-03-11": {
           "input": 2.5,
@@ -483,7 +483,7 @@
           "name": "GPT 4o Search Preview 20250311",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 56
+          "order": 60
         },
         "gpt-4o-transcribe": {
           "input": 2.5,
@@ -491,7 +491,7 @@
           "name": "GPT 4o Transcribe",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 57
+          "order": 61
         },
         "gpt-image-1.5": {
           "input": 5,
@@ -499,7 +499,7 @@
           "name": "GPT Image 1.5",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 58
+          "order": 62
         },
         "gpt-image-1.5-2025-12-16": {
           "input": 5,
@@ -507,7 +507,7 @@
           "name": "GPT Image 1.520251216",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 59
+          "order": 63
         },
         "gpt-image-2": {
           "input": 5,
@@ -515,7 +515,7 @@
           "name": "GPT Image 2",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 60
+          "order": 64
         },
         "gpt-image-2-2026-04-21": {
           "input": 5,
@@ -523,7 +523,7 @@
           "name": "GPT Image 220260421",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 61
+          "order": 65
         },
         "gpt-5.1": {
           "input": 1.25,
@@ -531,7 +531,7 @@
           "name": "GPT 5.1",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 62
+          "order": 66
         },
         "gpt-5.1-2025-11-13": {
           "input": 1.25,
@@ -539,7 +539,7 @@
           "name": "GPT 5.120251113",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 63
+          "order": 67
         },
         "gpt-5.1-chat-latest": {
           "input": 1.25,
@@ -547,7 +547,7 @@
           "name": "GPT 5.1Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
-          "order": 64
+          "order": 68
         },
         "gpt-5.2-2025-12-11": {
           "input": 1.75,
@@ -555,7 +555,7 @@
           "name": "GPT 5.220251211",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 65
+          "order": 69
         },
         "gpt-5.2-chat-latest": {
           "input": 1.75,
@@ -563,7 +563,7 @@
           "name": "GPT 5.2Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
-          "order": 66
+          "order": 70
         },
         "gpt-5.3-chat-latest": {
           "input": 1.75,
@@ -571,7 +571,7 @@
           "name": "GPT 5.3Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
-          "order": 67
+          "order": 71
         },
         "gpt-5.2-pro": {
           "input": 21,
@@ -579,7 +579,7 @@
           "name": "GPT 5.2Pro",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 68
+          "order": 72
         },
         "gpt-5.2-pro-2025-12-11": {
           "input": 21,
@@ -587,7 +587,7 @@
           "name": "GPT 5.2Pro 20251211",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 69
+          "order": 73
         },
         "gpt-5.5-2026-04-23": {
           "input": 5,
@@ -595,7 +595,7 @@
           "name": "GPT 5.520260423",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 70
+          "order": 74
         },
         "gpt-5.5-pro": {
           "input": 30,
@@ -603,7 +603,7 @@
           "name": "GPT 5.5Pro",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 71
+          "order": 75
         },
         "gpt-5.5-pro-2026-04-23": {
           "input": 30,
@@ -611,7 +611,7 @@
           "name": "GPT 5.5Pro 20260423",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 72
+          "order": 76
         },
         "gpt-5.4": {
           "input": 2.5,
@@ -619,7 +619,7 @@
           "name": "GPT 5.4",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 73
+          "order": 77
         },
         "gpt-5.4-2026-03-05": {
           "input": 2.5,
@@ -627,7 +627,7 @@
           "name": "GPT 5.420260305",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 74
+          "order": 78
         },
         "gpt-5.4-pro": {
           "input": 30,
@@ -635,7 +635,7 @@
           "name": "GPT 5.4Pro",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 75
+          "order": 79
         },
         "gpt-5.4-pro-2026-03-05": {
           "input": 30,
@@ -643,7 +643,7 @@
           "name": "GPT 5.4Pro 20260305",
           "family": "gpt5",
           "contextWindow": "1M",
-          "order": 76
+          "order": 80
         },
         "gpt-5.4-mini": {
           "input": 0.75,
@@ -651,7 +651,7 @@
           "name": "GPT 5.4Mini",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 77
+          "order": 81
         },
         "gpt-5.4-mini-2026-03-17": {
           "input": 0.75,
@@ -659,7 +659,7 @@
           "name": "GPT 5.4Mini 20260317",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 78
+          "order": 82
         },
         "gpt-5.4-nano": {
           "input": 0.2,
@@ -667,7 +667,7 @@
           "name": "GPT 5.4Nano",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 79
+          "order": 83
         },
         "gpt-5.4-nano-2026-03-17": {
           "input": 0.2,
@@ -675,7 +675,7 @@
           "name": "GPT 5.4Nano 20260317",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 80
+          "order": 84
         },
         "gpt-5-pro": {
           "input": 15,
@@ -683,7 +683,7 @@
           "name": "GPT 5Pro",
           "family": "gpt5",
           "contextWindow": "400K",
-          "order": 81
+          "order": 85
         },
         "gpt-5-pro-2025-10-06": {
           "input": 15,
@@ -691,7 +691,7 @@
           "name": "GPT 5Pro 20251006",
           "family": "gpt5",
           "contextWindow": "400K",
-          "order": 82
+          "order": 86
         },
         "gpt-5-2025-08-07": {
           "input": 1.25,
@@ -699,7 +699,7 @@
           "name": "GPT 520250807",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 83
+          "order": 87
         },
         "gpt-5-chat": {
           "input": 1.25,
@@ -707,7 +707,7 @@
           "name": "GPT 5Chat",
           "family": "gpt5",
           "contextWindow": "128K",
-          "order": 84
+          "order": 88
         },
         "gpt-5-chat-latest": {
           "input": 1.25,
@@ -715,7 +715,7 @@
           "name": "GPT 5Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
-          "order": 85
+          "order": 89
         },
         "gpt-5-codex": {
           "input": 1.25,
@@ -723,31 +723,31 @@
           "name": "GPT 5Codex",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 86
+          "order": 90
         },
         "gpt-5.1-codex": {
           "input": 1.25,
           "output": 10,
           "name": "GPT 5.1Codex",
           "family": "gpt5",
-          "contextWindow": "272K",
-          "order": 87
+          "contextWindow": "400K",
+          "order": 91
         },
         "gpt-5.1-codex-max": {
           "input": 1.25,
           "output": 10,
           "name": "GPT 5.1Codex Max",
           "family": "gpt5",
-          "contextWindow": "272K",
-          "order": 88
+          "contextWindow": "400K",
+          "order": 92
         },
         "gpt-5.1-codex-mini": {
           "input": 0.25,
           "output": 2,
           "name": "GPT 5.1Codex Mini",
           "family": "gpt5",
-          "contextWindow": "272K",
-          "order": 89
+          "contextWindow": "400K",
+          "order": 93
         },
         "gpt-5.2-codex": {
           "input": 1.75,
@@ -755,7 +755,7 @@
           "name": "GPT 5.2Codex",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 90
+          "order": 94
         },
         "gpt-5.3-codex": {
           "input": 1.75,
@@ -763,7 +763,7 @@
           "name": "GPT 5.3Codex",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 91
+          "order": 95
         },
         "gpt-5-mini-2025-08-07": {
           "input": 0.25,
@@ -771,7 +771,7 @@
           "name": "GPT 5Mini 20250807",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 92
+          "order": 96
         },
         "gpt-5-nano-2025-08-07": {
           "input": 0.05,
@@ -779,7 +779,7 @@
           "name": "GPT 5Nano 20250807",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 93
+          "order": 97
         },
         "gpt-realtime": {
           "input": 4,
@@ -787,7 +787,7 @@
           "name": "GPT Realtime",
           "family": "legacy",
           "contextWindow": "32K",
-          "order": 94
+          "order": 98
         },
         "gpt-realtime-1.5": {
           "input": 4,
@@ -795,23 +795,23 @@
           "name": "GPT Realtime 1.5",
           "family": "legacy",
           "contextWindow": "32K",
-          "order": 95
+          "order": 99
         },
         "gpt-realtime-2": {
           "input": 4,
-          "output": 16,
+          "output": 24,
           "name": "GPT Realtime 2",
           "family": "legacy",
-          "contextWindow": "32K",
-          "order": 96
+          "contextWindow": "128K",
+          "order": 100
         },
         "gpt-realtime-mini": {
           "input": 0.6,
           "output": 2.4,
           "name": "GPT Realtime Mini",
           "family": "legacy",
-          "contextWindow": "128K",
-          "order": 97
+          "contextWindow": "32K",
+          "order": 101
         },
         "gpt-realtime-2025-08-28": {
           "input": 4,
@@ -819,7 +819,7 @@
           "name": "GPT Realtime 20250828",
           "family": "legacy",
           "contextWindow": "32K",
-          "order": 98
+          "order": 102
         },
         "o1": {
           "input": 15,
@@ -827,7 +827,7 @@
           "name": "O1",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 99
+          "order": 103
         },
         "o1-2024-12-17": {
           "input": 15,
@@ -835,7 +835,7 @@
           "name": "O120241217",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 100
+          "order": 104
         },
         "o1-pro": {
           "input": 150,
@@ -843,7 +843,7 @@
           "name": "O1Pro",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 101
+          "order": 105
         },
         "o1-pro-2025-03-19": {
           "input": 150,
@@ -851,7 +851,7 @@
           "name": "O1Pro 20250319",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 102
+          "order": 106
         },
         "o3-2025-04-16": {
           "input": 2,
@@ -859,7 +859,7 @@
           "name": "O320250416",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 103
+          "order": 107
         },
         "o3-deep-research": {
           "input": 10,
@@ -867,7 +867,7 @@
           "name": "O3Deep Research",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 104
+          "order": 108
         },
         "o3-deep-research-2025-06-26": {
           "input": 10,
@@ -875,7 +875,7 @@
           "name": "O3Deep Research 20250626",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 105
+          "order": 109
         },
         "o3-mini": {
           "input": 1.1,
@@ -883,7 +883,7 @@
           "name": "O3Mini",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 106
+          "order": 110
         },
         "o3-mini-2025-01-31": {
           "input": 1.1,
@@ -891,7 +891,7 @@
           "name": "O3Mini 20250131",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 107
+          "order": 111
         },
         "o3-pro": {
           "input": 20,
@@ -899,7 +899,7 @@
           "name": "O3Pro",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 108
+          "order": 112
         },
         "o3-pro-2025-06-10": {
           "input": 20,
@@ -907,7 +907,7 @@
           "name": "O3Pro 20250610",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 109
+          "order": 113
         },
         "o4-mini-2025-04-16": {
           "input": 1.1,
@@ -915,7 +915,7 @@
           "name": "O4Mini 20250416",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 110
+          "order": 114
         },
         "o4-mini-deep-research": {
           "input": 2,
@@ -923,7 +923,7 @@
           "name": "O4Mini Deep Research",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 111
+          "order": 115
         },
         "o4-mini-deep-research-2025-06-26": {
           "input": 2,
@@ -931,23 +931,23 @@
           "name": "O4Mini Deep Research 20250626",
           "family": "o-series",
           "contextWindow": "200K",
-          "order": 112
+          "order": 116
         },
         "gpt-4o-mini-tts-2025-03-20": {
-          "input": 2.5,
+          "input": 0.6,
           "output": 10,
           "name": "GPT 4o Mini Tts 20250320",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 113
+          "order": 117
         },
         "gpt-4o-mini-tts-2025-12-15": {
-          "input": 2.5,
+          "input": 0.6,
           "output": 10,
           "name": "GPT 4o Mini Tts 20251215",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 114
+          "order": 118
         },
         "gpt-4o-mini-transcribe-2025-03-20": {
           "input": 1.25,
@@ -955,7 +955,7 @@
           "name": "GPT 4o Mini Transcribe 20250320",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 115
+          "order": 119
         },
         "gpt-4o-mini-transcribe-2025-12-15": {
           "input": 1.25,
@@ -963,7 +963,7 @@
           "name": "GPT 4o Mini Transcribe 20251215",
           "family": "legacy",
           "contextWindow": "16K",
-          "order": 116
+          "order": 120
         },
         "gpt-5-search-api": {
           "input": 1.25,
@@ -971,7 +971,7 @@
           "name": "GPT 5Search Api",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 117
+          "order": 121
         },
         "gpt-5-search-api-2025-10-14": {
           "input": 1.25,
@@ -979,7 +979,7 @@
           "name": "GPT 5Search Api 20251014",
           "family": "gpt5",
           "contextWindow": "272K",
-          "order": 118
+          "order": 122
         },
         "gpt-realtime-mini-2025-10-06": {
           "input": 0.6,
@@ -987,7 +987,7 @@
           "name": "GPT Realtime Mini 20251006",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 119
+          "order": 123
         },
         "gpt-realtime-mini-2025-12-15": {
           "input": 0.6,
@@ -995,7 +995,7 @@
           "name": "GPT Realtime Mini 20251215",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 120
+          "order": 124
         },
         "gpt-5.6": {
           "input": 4,
@@ -1003,7 +1003,7 @@
           "name": "GPT 5.6",
           "family": "gpt5",
           "contextWindow": "922K",
-          "order": 121
+          "order": 125
         },
         "gpt-5.6-sol": {
           "input": 4,
@@ -1011,7 +1011,7 @@
           "name": "GPT 5.6Sol",
           "family": "gpt5",
           "contextWindow": "922K",
-          "order": 122
+          "order": 126
         },
         "gpt-5.6-terra": {
           "input": 2,
@@ -1019,7 +1019,7 @@
           "name": "GPT 5.6Terra",
           "family": "gpt5",
           "contextWindow": "922K",
-          "order": 123
+          "order": 127
         },
         "gpt-5.6-luna": {
           "input": 0.2,
@@ -1027,7 +1027,7 @@
           "name": "GPT 5.6Luna",
           "family": "gpt5",
           "contextWindow": "922K",
-          "order": 124
+          "order": 128
         },
         "gpt-realtime-2.1": {
           "input": 4,
@@ -1035,7 +1035,7 @@
           "name": "GPT Realtime 2.1",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 125
+          "order": 129
         },
         "gpt-realtime-2.1-mini": {
           "input": 0.6,
@@ -1043,7 +1043,7 @@
           "name": "GPT Realtime 2.1Mini",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 126
+          "order": 130
         },
         "gpt-5.6-cyber": {
           "input": 12.5,
@@ -1051,7 +1051,95 @@
           "name": "GPT 5.6Cyber",
           "family": "gpt5",
           "contextWindow": "400K",
-          "order": 127
+          "order": 131
+        },
+        "gpt-6-astra": {
+          "input": 10,
+          "output": 50,
+          "name": "GPT 6Astra",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 2,
+          "batchInput": 5,
+          "batchOutput": 25
+        },
+        "gpt-6-sol": {
+          "input": 2,
+          "output": 10,
+          "name": "GPT 6Sol",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 3,
+          "batchInput": 1,
+          "batchOutput": 5
+        },
+        "gpt-6-luna": {
+          "input": 0.1,
+          "output": 0.5,
+          "name": "GPT 6Luna",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 4,
+          "batchInput": 0.05,
+          "batchOutput": 0.25
+        },
+        "gpt-daybreak-red-latest": {
+          "input": 12.5,
+          "output": 75,
+          "name": "GPT Daybreak Red Latest",
+          "family": "legacy",
+          "contextWindow": "400K",
+          "order": 132
+        },
+        "gpt-daybreak-blue-latest": {
+          "input": 4,
+          "output": 20,
+          "name": "GPT Daybreak Blue Latest",
+          "family": "legacy",
+          "contextWindow": "922K",
+          "order": 133
+        },
+        "gpt-5.5-cyber": {
+          "input": 12.5,
+          "output": 75,
+          "name": "GPT 5.5Cyber",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 134
+        },
+        "gpt-5.5-cyber-preview": {
+          "input": 12.5,
+          "output": 75,
+          "name": "GPT 5.5Cyber Preview",
+          "family": "gpt5",
+          "contextWindow": "128K",
+          "order": 135
+        },
+        "gpt-rosalind-research": {
+          "input": 5,
+          "output": 25,
+          "name": "GPT Rosalind Research",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 136
+        },
+        "gpt-6.1-sol": {
+          "input": 2,
+          "output": 10,
+          "name": "GPT 6.1Sol",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 1,
+          "batchInput": 1,
+          "batchOutput": 5
+        },
+        "gpt-rosalind-discovery": {
+          "input": 5,
+          "output": 25,
+          "name": "GPT Rosalind Discovery",
+          "family": "legacy",
+          "contextWindow": "128K",
+          "order": 137
         }
       }
     },
@@ -1081,7 +1169,7 @@
           "family": "claude4x",
           "contextWindow": "1M",
           "maxOutput": "128K",
-          "order": 2
+          "order": 8
         },
         "claude-sonnet-4-6": {
           "input": 3,
@@ -1092,7 +1180,7 @@
           "family": "claude4x",
           "contextWindow": "1M",
           "maxOutput": "64K",
-          "order": 3
+          "order": 9
         },
         "claude-haiku-4-5": {
           "input": 1,
@@ -1103,7 +1191,7 @@
           "family": "claude4x",
           "contextWindow": "200K",
           "maxOutput": "64K",
-          "order": 4
+          "order": 10
         },
         "claude-opus-4-1": {
           "input": 15,
@@ -1114,7 +1202,7 @@
           "family": "claude4x",
           "contextWindow": "200K",
           "maxOutput": "32K",
-          "order": 5
+          "order": 11
         },
         "claude-haiku-3-5": {
           "input": 0.8,
@@ -1125,7 +1213,7 @@
           "family": "legacy",
           "contextWindow": "200K",
           "maxOutput": "8K",
-          "order": 6
+          "order": 12
         },
         "claude-haiku-3": {
           "input": 0.25,
@@ -1136,7 +1224,7 @@
           "family": "legacy",
           "contextWindow": "200K",
           "maxOutput": "4K",
-          "order": 7
+          "order": 13
         },
         "claude-3-7-sonnet": {
           "input": 3,
@@ -1144,7 +1232,7 @@
           "name": "Claude 37 Sonnet",
           "family": "legacy",
           "contextWindow": "200K",
-          "order": 8
+          "order": 14
         },
         "claude-3-haiku": {
           "input": 0.25,
@@ -1152,7 +1240,7 @@
           "name": "Claude 3Haiku",
           "family": "legacy",
           "contextWindow": "200K",
-          "order": 9
+          "order": 15
         },
         "claude-3-opus": {
           "input": 15,
@@ -1160,7 +1248,7 @@
           "name": "Claude 3Opus",
           "family": "legacy",
           "contextWindow": "200K",
-          "order": 10
+          "order": 16
         },
         "claude-4-opus": {
           "input": 15,
@@ -1168,7 +1256,7 @@
           "name": "Claude 4Opus",
           "family": "legacy",
           "contextWindow": "200K",
-          "order": 11
+          "order": 17
         },
         "claude-4-sonnet": {
           "input": 3,
@@ -1176,7 +1264,7 @@
           "name": "Claude 4Sonnet",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 12
+          "order": 18
         },
         "claude-sonnet-4-5": {
           "input": 3,
@@ -1184,7 +1272,7 @@
           "name": "Claude Sonnet 45",
           "family": "claude4x",
           "contextWindow": "200K",
-          "order": 13
+          "order": 19
         },
         "claude-sonnet-4-5-20250929-v1:0": {
           "input": 3,
@@ -1192,7 +1280,7 @@
           "name": "Claude Sonnet 45 20250929V1:0",
           "family": "claude4x",
           "contextWindow": "200K",
-          "order": 14
+          "order": 20
         },
         "claude-opus-4": {
           "input": 15,
@@ -1200,7 +1288,7 @@
           "name": "Claude Opus 4",
           "family": "claude4x",
           "contextWindow": "200K",
-          "order": 15
+          "order": 21
         },
         "claude-opus-4-5": {
           "input": 5,
@@ -1208,7 +1296,7 @@
           "name": "Claude Opus 45",
           "family": "claude4x",
           "contextWindow": "200K",
-          "order": 16
+          "order": 22
         },
         "claude-opus-4-6": {
           "input": 5,
@@ -1216,7 +1304,7 @@
           "name": "Claude Opus 46",
           "family": "claude4x",
           "contextWindow": "1M",
-          "order": 17
+          "order": 23
         },
         "claude-opus-4-7": {
           "input": 5,
@@ -1224,7 +1312,7 @@
           "name": "Claude Opus 47",
           "family": "claude4x",
           "contextWindow": "1M",
-          "order": 18
+          "order": 24
         },
         "claude-sonnet-4": {
           "input": 3,
@@ -1232,23 +1320,29 @@
           "name": "Claude Sonnet 4",
           "family": "claude4x",
           "contextWindow": "1M",
-          "order": 19
+          "order": 25
         },
         "claude-sonnet-5": {
           "input": 2,
           "output": 10,
           "name": "Claude Sonnet 5",
-          "family": "claude4x",
+          "family": "claude5x",
           "contextWindow": "1M",
-          "order": 20
+          "order": 6,
+          "maxOutput": "128K",
+          "batchInput": 1,
+          "batchOutput": 5
         },
         "claude-opus-5": {
           "input": 5,
           "output": 25,
           "name": "Claude Opus 5",
-          "family": "claude4x",
+          "family": "claude5x",
           "contextWindow": "1M",
-          "order": 21
+          "order": 5,
+          "maxOutput": "128K",
+          "batchInput": 2.5,
+          "batchOutput": 12.5
         },
         "claude-mythos-5": {
           "input": 10,
@@ -1256,7 +1350,10 @@
           "name": "Claude Mythos 5",
           "family": "mythos",
           "contextWindow": "1M",
-          "order": 22
+          "order": 7,
+          "maxOutput": "128K",
+          "batchInput": 5,
+          "batchOutput": 25
         },
         "claude-mythos-preview": {
           "input": 10,
@@ -1264,7 +1361,56 @@
           "name": "Claude Mythos Preview",
           "family": "mythos",
           "contextWindow": "1M",
-          "order": 23
+          "order": 26
+        },
+        "claude-sonnet-5-5": {
+          "input": 2,
+          "output": 10,
+          "name": "Claude Sonnet 55",
+          "family": "claude5x",
+          "contextWindow": "1M",
+          "order": 3,
+          "maxOutput": "128K",
+          "batchInput": 1,
+          "batchOutput": 5
+        },
+        "claude-fable-5-1": {
+          "input": 10,
+          "output": 50,
+          "name": "Claude Fable 51",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "order": 27
+        },
+        "claude-opus-5-5": {
+          "input": 4,
+          "output": 20,
+          "name": "Claude Opus 55",
+          "family": "claude5x",
+          "contextWindow": "1M",
+          "order": 2,
+          "maxOutput": "128K",
+          "batchInput": 2,
+          "batchOutput": 10
+        },
+        "claude-mythos-5-1": {
+          "input": 10,
+          "output": 50,
+          "name": "Claude Mythos 51",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "order": 28
+        },
+        "claude-haiku-5-5": {
+          "input": 0.1,
+          "output": 0.5,
+          "name": "Claude Haiku 55",
+          "family": "claude5x",
+          "contextWindow": "1M",
+          "order": 4,
+          "maxOutput": "128K",
+          "batchInput": 0.05,
+          "batchOutput": 0.25
         }
       }
     },
@@ -1280,7 +1426,7 @@
           "name": "Gemini 3.5Flash",
           "family": "flash35",
           "contextWindow": "1M",
-          "order": 1,
+          "order": 3,
           "icon": "●",
           "supportsCache": true,
           "supportsBatch": true
@@ -1293,7 +1439,7 @@
           "name": "Gemini 3.1 Pro",
           "family": "pro",
           "contextWindow": "1M",
-          "order": 2,
+          "order": 4,
           "icon": "▲",
           "supportsCache": true,
           "supportsBatch": true,
@@ -1307,7 +1453,7 @@
           "name": "Gemini 3 Flash",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 3,
+          "order": 5,
           "icon": "◆",
           "supportsCache": true,
           "supportsBatch": true
@@ -1320,7 +1466,7 @@
           "name": "Gemini 2.5Flash",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 4,
+          "order": 6,
           "icon": "◇",
           "supportsCache": false,
           "supportsBatch": false
@@ -1333,7 +1479,7 @@
           "name": "Gemini 1.5 Pro",
           "family": "legacy",
           "contextWindow": "2M",
-          "order": 5,
+          "order": 7,
           "icon": "◇",
           "supportsCache": false,
           "supportsBatch": false
@@ -1346,7 +1492,7 @@
           "name": "Gemini 1.5 Flash",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 6,
+          "order": 8,
           "icon": "◇",
           "supportsCache": false,
           "supportsBatch": false
@@ -1357,7 +1503,7 @@
           "name": "Gemini 2.0Flash",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 7
+          "order": 9
         },
         "gemini-2.0-flash-001": {
           "input": 0.1,
@@ -1365,7 +1511,7 @@
           "name": "Gemini 2.0Flash 001",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 8
+          "order": 10
         },
         "gemini-2.0-flash-lite": {
           "input": 0.075,
@@ -1373,7 +1519,7 @@
           "name": "Gemini 2.0Flash Lite",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 9
+          "order": 11
         },
         "gemini-2.0-flash-lite-001": {
           "input": 0.075,
@@ -1381,23 +1527,23 @@
           "name": "Gemini 2.0Flash Lite 001",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 10
+          "order": 12
         },
         "gemini-2.5-flash-image": {
           "input": 0.3,
           "output": 2.5,
           "name": "Gemini 2.5Flash Image",
           "family": "legacy",
-          "contextWindow": "33K",
-          "order": 11
+          "contextWindow": "66K",
+          "order": 13
         },
         "gemini-3-pro-image-preview": {
           "input": 2,
           "output": 12,
           "name": "Gemini 3Pro Image Preview",
           "family": "flash3",
-          "contextWindow": "66K",
-          "order": 12
+          "contextWindow": "131K",
+          "order": 14
         },
         "gemini-3.1-flash-image-preview": {
           "input": 0.5,
@@ -1405,7 +1551,7 @@
           "name": "Gemini 3.1Flash Image Preview",
           "family": "flash3",
           "contextWindow": "66K",
-          "order": 13
+          "order": 15
         },
         "gemini-3.1-flash-lite-preview": {
           "input": 0.25,
@@ -1413,7 +1559,7 @@
           "name": "Gemini 3.1Flash Lite Preview",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 14
+          "order": 16
         },
         "gemini-3.1-flash-lite": {
           "input": 0.25,
@@ -1421,7 +1567,7 @@
           "name": "Gemini 3.1Flash Lite",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 15
+          "order": 17
         },
         "gemini-2.5-flash-lite": {
           "input": 0.1,
@@ -1429,7 +1575,7 @@
           "name": "Gemini 2.5Flash Lite",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 16
+          "order": 18
         },
         "gemini-2.5-flash-lite-preview-09-2025": {
           "input": 0.1,
@@ -1437,7 +1583,7 @@
           "name": "Gemini 2.5Flash Lite Preview 092025",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 17
+          "order": 19
         },
         "gemini-2.5-flash-preview-09-2025": {
           "input": 0.3,
@@ -1445,15 +1591,15 @@
           "name": "Gemini 2.5Flash Preview 092025",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 18
+          "order": 20
         },
         "gemini-live-2.5-flash-preview-native-audio-09-2025": {
-          "input": 0.3,
+          "input": 0.5,
           "output": 2,
           "name": "Gemini Live 2.5Flash Preview Native Audio 092025",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 19
+          "order": 21
         },
         "gemini-2.5-flash-lite-preview-06-17": {
           "input": 0.1,
@@ -1461,7 +1607,7 @@
           "name": "Gemini 2.5Flash Lite Preview 0617",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 20
+          "order": 22
         },
         "gemini-2.5-pro": {
           "input": 1.25,
@@ -1469,7 +1615,7 @@
           "name": "Gemini 2.5Pro",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 21
+          "order": 23
         },
         "gemini-3-pro-preview": {
           "input": 2,
@@ -1477,7 +1623,7 @@
           "name": "Gemini 3Pro Preview",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 22
+          "order": 24
         },
         "gemini-3.1-pro-preview": {
           "input": 2,
@@ -1485,7 +1631,7 @@
           "name": "Gemini 3.1Pro Preview",
           "family": "pro",
           "contextWindow": "1M",
-          "order": 23
+          "order": 25
         },
         "gemini-3.1-pro-preview-customtools": {
           "input": 2,
@@ -1493,15 +1639,15 @@
           "name": "Gemini 3.1Pro Preview Customtools",
           "family": "pro",
           "contextWindow": "1M",
-          "order": 24
+          "order": 26
         },
         "gemini-2.5-pro-preview-tts": {
-          "input": 1.25,
-          "output": 10,
+          "input": 1,
+          "output": 20,
           "name": "Gemini 2.5Pro Preview Tts",
           "family": "legacy",
-          "contextWindow": "1M",
-          "order": 25
+          "contextWindow": "8K",
+          "order": 27
         },
         "gemini-robotics-er-1.5-preview": {
           "input": 0.3,
@@ -1509,7 +1655,7 @@
           "name": "Gemini Robotics Er 1.5Preview",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 26
+          "order": 28
         },
         "gemini-2.5-computer-use-preview-10-2025": {
           "input": 1.25,
@@ -1517,39 +1663,39 @@
           "name": "Gemini 2.5Computer Use Preview 102025",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 27
+          "order": 29
         },
         "deep-research-pro-preview-12-2025": {
           "input": 2,
           "output": 12,
           "name": "Deep Research Pro Preview 122025",
           "family": "legacy",
-          "contextWindow": "66K",
-          "order": 28
-        },
-        "gemini-flash-latest": {
-          "input": 0.3,
-          "output": 2.5,
-          "name": "Gemini Flash Latest",
-          "family": "legacy",
-          "contextWindow": "1M",
-          "order": 29
-        },
-        "gemini-flash-lite-latest": {
-          "input": 0.1,
-          "output": 0.4,
-          "name": "Gemini Flash Lite Latest",
-          "family": "legacy",
           "contextWindow": "1M",
           "order": 30
         },
-        "gemini-2.5-flash-preview-tts": {
+        "gemini-flash-latest": {
+          "input": 0.75,
+          "output": 3.75,
+          "name": "Gemini Flash Latest",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 31
+        },
+        "gemini-flash-lite-latest": {
           "input": 0.3,
           "output": 2.5,
+          "name": "Gemini Flash Lite Latest",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 32
+        },
+        "gemini-2.5-flash-preview-tts": {
+          "input": 0.5,
+          "output": 10,
           "name": "Gemini 2.5Flash Preview Tts",
           "family": "legacy",
-          "contextWindow": "128K",
-          "order": 31
+          "contextWindow": "8K",
+          "order": 33
         },
         "gemini-3-flash-preview": {
           "input": 0.5,
@@ -1557,7 +1703,7 @@
           "name": "Gemini 3Flash Preview",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 32
+          "order": 34
         },
         "gemini-gemma-2-27b-it": {
           "input": 0.35,
@@ -1565,7 +1711,7 @@
           "name": "Gemini Gemma 227b It",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 33
+          "order": 35
         },
         "gemini-gemma-2-9b-it": {
           "input": 0.35,
@@ -1573,31 +1719,31 @@
           "name": "Gemini Gemma 29b It",
           "family": "legacy",
           "contextWindow": "8K",
-          "order": 34
+          "order": 36
         },
         "gemini-2.5-flash-native-audio-latest": {
-          "input": 0.3,
-          "output": 2.5,
+          "input": 0.5,
+          "output": 2,
           "name": "Gemini 2.5Flash Native Audio Latest",
           "family": "legacy",
-          "contextWindow": "1M",
-          "order": 35
+          "contextWindow": "131K",
+          "order": 37
         },
         "gemini-2.5-flash-native-audio-preview-09-2025": {
-          "input": 0.3,
-          "output": 2.5,
+          "input": 0.5,
+          "output": 2,
           "name": "Gemini 2.5Flash Native Audio Preview 092025",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 36
+          "order": 38
         },
         "gemini-2.5-flash-native-audio-preview-12-2025": {
-          "input": 0.3,
-          "output": 2.5,
+          "input": 0.5,
+          "output": 2,
           "name": "Gemini 2.5Flash Native Audio Preview 122025",
           "family": "legacy",
-          "contextWindow": "1M",
-          "order": 37
+          "contextWindow": "131K",
+          "order": 39
         },
         "gemini-3.1-flash-live-preview": {
           "input": 0.75,
@@ -1605,15 +1751,15 @@
           "name": "Gemini 3.1Flash Live Preview",
           "family": "flash3",
           "contextWindow": "131K",
-          "order": 38
+          "order": 40
         },
         "gemini-pro-latest": {
-          "input": 1.25,
-          "output": 10,
+          "input": 2,
+          "output": 12,
           "name": "Gemini Pro Latest",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 39
+          "order": 41
         },
         "gemini-exp-1206": {
           "input": 0.3,
@@ -1621,7 +1767,7 @@
           "name": "Gemini Exp 1206",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 40
+          "order": 42
         },
         "gemini-3-pro-image": {
           "input": 2,
@@ -1629,15 +1775,15 @@
           "name": "Gemini 3Pro Image",
           "family": "flash3",
           "contextWindow": "66K",
-          "order": 41
+          "order": 43
         },
         "gemini-3.1-flash-image": {
           "input": 0.5,
           "output": 3,
           "name": "Gemini 3.1Flash Image",
           "family": "flash3",
-          "contextWindow": "66K",
-          "order": 42
+          "contextWindow": "131K",
+          "order": 44
         },
         "gemini-omni-flash-preview": {
           "input": 1.5,
@@ -1645,7 +1791,7 @@
           "name": "Gemini Omni Flash Preview",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 43
+          "order": 45
         },
         "gemini-3.5-flash-lite": {
           "input": 0.3,
@@ -1653,7 +1799,7 @@
           "name": "Gemini 3.5Flash Lite",
           "family": "flash35",
           "contextWindow": "1M",
-          "order": 44
+          "order": 46
         },
         "gemini-3.6-flash": {
           "input": 0.75,
@@ -1661,15 +1807,15 @@
           "name": "Gemini 3.6Flash",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 45
+          "order": 47
         },
         "gemini-robotics-er-2-preview": {
-          "input": 2,
-          "output": 10,
+          "input": 1,
+          "output": 5,
           "name": "Gemini Robotics Er 2Preview",
           "family": "legacy",
           "contextWindow": "131K",
-          "order": 46
+          "order": 48
         },
         "gemini-robotics-er-1.6-preview": {
           "input": 1,
@@ -1677,15 +1823,15 @@
           "name": "Gemini Robotics Er 1.6Preview",
           "family": "legacy",
           "contextWindow": "131K",
-          "order": 47
+          "order": 49
         },
         "gemini-robotics-er-2-streaming-preview": {
-          "input": 2,
-          "output": 10,
+          "input": 1,
+          "output": 5,
           "name": "Gemini Robotics Er 2Streaming Preview",
           "family": "legacy",
-          "contextWindow": "128K",
-          "order": 48
+          "contextWindow": "131K",
+          "order": 50
         },
         "gemini-3.7-flash": {
           "input": 0.75,
@@ -1693,7 +1839,7 @@
           "name": "Gemini 3.7Flash",
           "family": "flash3",
           "contextWindow": "1M",
-          "order": 49
+          "order": 51
         },
         "gemini-3.1-flash-tts-preview": {
           "input": 1,
@@ -1701,7 +1847,7 @@
           "name": "Gemini 3.1Flash Tts Preview",
           "family": "flash3",
           "contextWindow": "8K",
-          "order": 50
+          "order": 52
         },
         "gemini-3.1-flash-lite-image": {
           "input": 0.25,
@@ -1709,15 +1855,145 @@
           "name": "Gemini 3.1Flash Lite Image",
           "family": "flash3",
           "contextWindow": "66K",
-          "order": 51
+          "order": 53
         },
         "gemini-3.5-live-translate-preview": {
           "input": 3.5,
           "output": 21,
           "name": "Gemini 3.5Live Translate Preview",
           "family": "flash35",
-          "contextWindow": "128K",
-          "order": 52
+          "contextWindow": "131K",
+          "order": 54
+        },
+        "gemini-live-2.5-flash-native-audio": {
+          "input": 0.5,
+          "output": 2,
+          "name": "Gemini Live 2.5Flash Native Audio",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 55
+        },
+        "deep-research-preview-04-2026": {
+          "input": 2,
+          "output": 12,
+          "name": "Deep Research Preview 042026",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 56
+        },
+        "deep-research-max-preview-04-2026": {
+          "input": 2,
+          "output": 12,
+          "name": "Deep Research Max Preview 042026",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 57
+        },
+        "nano-banana-pro-preview": {
+          "input": 2,
+          "output": 12,
+          "name": "Nano Banana Pro Preview",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 58
+        },
+        "gemini-3.8-flash": {
+          "input": 0.75,
+          "output": 3.75,
+          "name": "Gemini 3.8Flash",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 2,
+          "icon": "◆",
+          "supportsCache": true,
+          "supportsBatch": true,
+          "batchInput": 0.375,
+          "batchOutput": 1.875
+        },
+        "gemini-3.8-flash-cyber": {
+          "input": 1.5,
+          "output": 7.5,
+          "name": "Gemini 3.8Flash Cyber",
+          "family": "flash3",
+          "contextWindow": "1M",
+          "order": 59
+        },
+        "gemini-3.8-live": {
+          "input": 0.75,
+          "output": 4.5,
+          "name": "Gemini 3.8Live",
+          "family": "flash3",
+          "contextWindow": "131K",
+          "order": 60
+        },
+        "gemini-3.8-live-extended-thinking": {
+          "input": 0.75,
+          "output": 4.5,
+          "name": "Gemini 3.8Live Extended Thinking",
+          "family": "flash3",
+          "contextWindow": "131K",
+          "order": 61
+        },
+        "gemini-3.8-flash-tts": {
+          "input": 0.5,
+          "output": 9,
+          "name": "Gemini 3.8Flash Tts",
+          "family": "flash3",
+          "contextWindow": "8K",
+          "order": 62
+        },
+        "gemini-3.8-flash-lite-tts": {
+          "input": 0.5,
+          "output": 6,
+          "name": "Gemini 3.8Flash Lite Tts",
+          "family": "flash3",
+          "contextWindow": "8K",
+          "order": 63
+        },
+        "gemini-3.5-transcribe": {
+          "input": 2,
+          "output": 12,
+          "name": "Gemini 3.5Transcribe",
+          "family": "flash35",
+          "contextWindow": "98K",
+          "order": 64
+        },
+        "gemini-3.5-transcribe-live": {
+          "input": 3.5,
+          "output": 21,
+          "name": "Gemini 3.5Transcribe Live",
+          "family": "flash35",
+          "contextWindow": "131K",
+          "order": 65
+        },
+        "gemini-omni-1.1-flash": {
+          "input": 1.5,
+          "output": 9,
+          "name": "Gemini Omni 1.1Flash",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 66
+        },
+        "gemini-nano-banana-2.1": {
+          "input": 1.5,
+          "output": 7.5,
+          "name": "Gemini Nano Banana 2.1",
+          "family": "legacy",
+          "contextWindow": "131K",
+          "order": 67
+        },
+        "gemini-4-argon": {
+          "input": 2,
+          "output": 10,
+          "name": "Gemini 4Argon",
+          "family": "gem4",
+          "contextWindow": "1M",
+          "order": 1,
+          "icon": "★",
+          "supportsCache": true,
+          "supportsBatch": true,
+          "batchInput": 1,
+          "batchOutput": 5
         }
       }
     },
@@ -1726,8 +2002,8 @@
       "cacheReadMult": 0.02,
       "models": {
         "deepseek-v4-flash": {
-          "input": 0.44,
-          "output": 1.32,
+          "input": 0.3,
+          "output": 1.2,
           "name": "Deepseek V4Flash",
           "family": "v4",
           "contextWindow": "1M",
@@ -1796,6 +2072,22 @@
           "family": "legacy",
           "contextWindow": "164K",
           "order": 9
+        },
+        "deepseek-flash": {
+          "input": 0.3,
+          "output": 1.2,
+          "name": "Deepseek Flash",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 10
+        },
+        "deepseek-v4-flash-vision-exp": {
+          "input": 0.3,
+          "output": 1.2,
+          "name": "Deepseek V4Flash Vision Exp",
+          "family": "v4",
+          "contextWindow": "1M",
+          "order": 11
         }
       }
     }

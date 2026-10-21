@@ -46,17 +46,144 @@ function extractPrice(modelEntry) {
 
 function deriveFamily(modelName) {
   const n = modelName.toLowerCase();
+  if (n.includes('gpt-6')) return 'gpt6';
   if (n.includes('gpt-5')) return 'gpt5';
   if (n.includes('gpt-4.1')) return 'gpt41';
   if (n.startsWith('o1') || n.startsWith('o3') || n.startsWith('o4')) return 'o-series';
   if (n.includes('claude-fable') || n.includes('claude-mythos')) return 'mythos';
-  if (n.includes('claude-opus') || n.includes('claude-sonnet') || n.includes('claude-haiku-4') || n.includes('claude-haiku-5')) return 'claude4x';
+  if (n.includes('claude-opus-5') || n.includes('claude-sonnet-5') || n.includes('claude-haiku-5')) return 'claude5x';
+  if (n.includes('claude-opus') || n.includes('claude-sonnet') || n.includes('claude-haiku-4')) return 'claude4x';
   if (n.includes('claude-3') || n.includes('claude-2')) return 'legacy';
+  if (n.includes('gemini-4')) return 'gem4';
   if (n.includes('gemini-3.5')) return 'flash35';
   if (n.includes('gemini-3.1-pro') || n.includes('gemini-2.0-pro')) return 'pro';
   if (n.includes('gemini-3')) return 'flash3';
   if (n.includes('deepseek-v4')) return 'v4';
   return 'legacy';
+}
+
+// ============================================================
+// Curated flagship models (P153-A)
+// ------------------------------------------------------------
+// `lead` — display order, newest first. The engines sort their tables by
+//          `order`, so the curated block always leads the chart.
+// `meta` — hand-curated extras LiteLLM does not carry:
+//            batchFactor      — batch price as a fraction of realtime (0.5 = 50% off)
+//            maxOutput        — max output tokens label (Anthropic)
+//            icon             — family glyph (Gemini)
+//            supportsCache / supportsBatch — capability flags (Gemini)
+// Models absent from `meta` keep upstream-only data (no batch pricing, no icon).
+// Keeping this in the sync script (rather than hand-editing the JSON) means the
+// curated table is reproducible: `pnpm sync` always rebuilds it from scratch.
+// ============================================================
+const CURATED = {
+  openai: {
+    lead: [
+      'gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna',
+      'gpt-5.5', 'gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano',
+      'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano',
+      'o3', 'o4-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo',
+    ],
+    meta: {
+      'gpt-6.1-sol': { batchFactor: 0.5 },
+      'gpt-6-astra': { batchFactor: 0.5 },
+      'gpt-6-sol': { batchFactor: 0.5 },
+      'gpt-6-luna': { batchFactor: 0.5 },
+      'gpt-5.5': { batchFactor: 0.5 },
+      'gpt-5.2': { batchFactor: 0.5 },
+      'gpt-5': { batchFactor: 0.5 },
+      'gpt-5-mini': { batchFactor: 0.5 },
+      'gpt-5-nano': { batchFactor: 0.5 },
+      'gpt-4.1': { batchFactor: 0.5 },
+      'gpt-4.1-mini': { batchFactor: 0.5 },
+      'gpt-4.1-nano': { batchFactor: 0.5 },
+      'o3': { batchFactor: 0.5, reasoningMultiplier: 4 },
+      'o4-mini': { batchFactor: 0.5, reasoningMultiplier: 4 },
+      'gpt-4o': { batchFactor: 0.5 },
+      'gpt-4o-mini': { batchFactor: 0.5 },
+      'gpt-4-turbo': { batchFactor: 0.5 },
+      'gpt-3.5-turbo': { batchFactor: 0.5 },
+    },
+  },
+  anthropic: {
+    lead: [
+      'claude-fable-5', 'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5',
+      'claude-opus-5', 'claude-sonnet-5', 'claude-mythos-5',
+      'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5',
+      'claude-opus-4-1', 'claude-haiku-3-5', 'claude-haiku-3',
+    ],
+    meta: {
+      'claude-fable-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-opus-5-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-sonnet-5-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-haiku-5-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-opus-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-sonnet-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-mythos-5': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-opus-4-8': { batchFactor: 0.5, maxOutput: '128K' },
+      'claude-sonnet-4-6': { batchFactor: 0.5, maxOutput: '64K' },
+      'claude-haiku-4-5': { batchFactor: 0.5, maxOutput: '64K' },
+      'claude-opus-4-1': { batchFactor: 0.5, maxOutput: '32K' },
+      'claude-haiku-3-5': { batchFactor: 0.5, maxOutput: '8K' },
+      'claude-haiku-3': { batchFactor: 0.5, maxOutput: '4K' },
+    },
+  },
+  google: {
+    lead: [
+      'gemini-4-argon', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro',
+      'gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash',
+    ],
+    meta: {
+      'gemini-4-argon': { batchFactor: 0.5, icon: '★', supportsCache: true, supportsBatch: true },
+      'gemini-3.8-flash': { batchFactor: 0.5, icon: '◆', supportsCache: true, supportsBatch: true },
+      'gemini-3.5-flash': { batchFactor: 0.25, icon: '●', supportsCache: true, supportsBatch: true },
+      'gemini-3.1-pro': { batchFactor: 0.5, icon: '▲', supportsCache: true, supportsBatch: true, longContextDoubling: '>200K' },
+      'gemini-3-flash': { batchFactor: 0.5, icon: '◆', supportsCache: true, supportsBatch: true },
+      'gemini-2.5-flash': { batchFactor: 0, icon: '◇', supportsCache: false, supportsBatch: false },
+      'gemini-1.5-pro': { batchFactor: 0, icon: '◇', supportsCache: false, supportsBatch: false },
+      'gemini-1.5-flash': { batchFactor: 0, icon: '◇', supportsCache: false, supportsBatch: false },
+    },
+  },
+  deepseek: {
+    // DeepSeek has no batch tier — the deepseek engine emits no batch fields.
+    lead: [
+      'deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo',
+      'deepseek-r1', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-coder',
+      'deepseek-v3', 'deepseek-v3.2',
+    ],
+    meta: {},
+  },
+};
+
+const round8 = (n) => Math.round(n * 1e8) / 1e8;
+
+function applyCuration(data) {
+  for (const [provider, cfg] of Object.entries(CURATED)) {
+    const models = data.llm?.[provider]?.models;
+    if (!models) continue;
+
+    for (const [key, meta] of Object.entries(cfg.meta)) {
+      const m = models[key];
+      if (!m) continue;
+      for (const [field, value] of Object.entries(meta)) {
+        if (field === 'batchFactor') continue;
+        m[field] = value;
+      }
+      if (meta.batchFactor != null) {
+        m.batchInput = round8(m.input * meta.batchFactor);
+        m.batchOutput = round8(m.output * meta.batchFactor);
+      }
+    }
+
+    // Curated block leads; everything else keeps its relative order behind it.
+    const lead = cfg.lead.filter((k) => models[k]);
+    const rest = Object.entries(models)
+      .filter(([k]) => !lead.includes(k))
+      .sort((a, b) => (a[1].order || 9999) - (b[1].order || 9999));
+    let order = 1;
+    for (const k of lead) models[k].order = order++;
+    for (const [, m] of rest) m.order = order++;
+  }
 }
 
 function contextWindowLabel(tokens) {
@@ -143,6 +270,9 @@ async function main() {
   data.version = 1;
   data.lastUpdated = new Date().toISOString().slice(0, 10);
   data.source = 'litellm+manual';
+
+  // Curated flagship block: display order + hand-curated extras.
+  applyCuration(data);
 
   // Round numeric artifacts to 8 decimals to avoid IEEE-754 display cruft
   // (e.g. LiteLLM sometimes returns 0.049999999999999996 instead of 0.05).
