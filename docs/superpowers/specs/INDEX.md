@@ -1,9 +1,9 @@
 # Specs Index
 
 > **目录索引** — 所有 design specs 按类别分组，按日期升序。
-> **Plans:** 参见 `../plans/`（52 个 plan 文件，本 INDEX 不覆盖）。
+> **Plans:** 参见 `../plans/`（106 个 plan 文件，本 INDEX 不覆盖）。
 > **Memory:** 参见 `../../../memory/MEMORY.md`（项目级 ship log 索引）。
-> **最后更新:** 2026-08-18（P140e INDEX catch-up — 9 missing 2026-08 spec files synced: h1-keyword-refresh + p140d-t1-csat + p140e + p140f + P142/P143/P144/P145/P146）
+> **最后更新:** 2026-10-21（P152 INDEX catch-up — 补录 26 个漏登 spec：p42/p48-p53/header-mutex/tier2-r7/last-modified + P140/P140f×4/P140g/P147/Phase-5/P150×2/P151×3/P152 + retro×3。**计数 55 → 81**；同时修正 §7 计数错记为 3（实为 4）、§0-§6 计数与实际行数对齐）
 
 ---
 
@@ -96,6 +96,15 @@
 | `2026-07-18-p23-og-sample-coverage-design.md` | P23 OG-Sample Coverage — Design | build-fix | 2026-07-18 |
 | `2026-07-19-p23b-satori-perf-skip-gate-design.md` | P23b Satori Perf Skip-Gate — Design | test-tooling | 2026-07-19 |
 | `2026-07-19-p27-memory-audit-pass-design.md` | P27 Memory Audit Pass — Design | audit | 2026-07-19 |
+| `2026-07-19-p42-date-drift-proof-design.md` | P42 Date Drift-Proof Codegen (mrr/burn-rate) — Design | drift-guard | 2026-07-19 |
+| `2026-07-20-p48-claude-md-lessons-design.md` | P48 CLAUDE.md Operational Lessons — Design | process | 2026-07-20 |
+| `2026-07-20-p49-engine-count-table-design.md` | P49 Engine Count per Category Table — Design | refactor | 2026-07-20 |
+| `2026-07-20-p50-codegen-customfn-drift-guard-design.md` | P50 codegen-customfn drift guard — design | drift-guard | 2026-07-20 |
+| `2026-07-21-p51-codegen-examples-mock-apply-design.md` | P51 codegen-examples mock-apply drift guard — design | drift-guard | 2026-07-21 |
+| `2026-07-21-p52-test-infra-hardening-design.md` | P52 Test Infrastructure Hardening — Design | test-tooling | 2026-07-21 |
+| `2026-07-21-p53-p1-batch-design.md` | P53 P1 Critical Batch — Design | engine-fix | 2026-07-21 |
+| `2026-07-22-header-dropdown-mutex-design.md` | Header 下拉互斥脚本 — 设计 spec | ux | 2026-07-22 |
+| `2026-07-29-tier2-round7-composite-data-driven-lines-design.md` | Tier-2 Round 7 — Composite Data-Driven Lines (P137 trial) | codegen | 2026-07-29 |
 | `2026-08-04-h1-keyword-refresh-design.md` | H1 + metaTitle Keyword Refresh — 65 B+C class rewrite (commit `1d8943c`) | SEO | 2026-08-04 |
 | `2026-08-05-p140d-t1-csat-and-friends-design.md` | P140d-T1 H1 Refresh Round 2 (17 misclassified slugs) — DRAFT pre-GSC-data | SEO | 2026-08-05 |
 | `2026-08-05-p140e-blog-content-strategy-design.md` | P140e Blog Content Strategy — DRAFT pending user §9 decisions | content | 2026-08-05 |
@@ -104,6 +113,7 @@
 | `2026-08-14-p144-p143-followup-design.md` | P144 P143-followup (4 build-dep failures partially closed + 6 doc drift items + run.mjs off-by-one) | build-dep | 2026-08-14 |
 | `2026-08-17-p145-comprehensive-build-dep-design.md` | P145 Comprehensive Build-Dep (#249 + #525 261 en-faq mismatches closed) | build-dep | 2026-08-17 |
 | `2026-08-17-p146-p145-followup-design.md` | P146 P145-followup (#707 + #249 closed + 1 HTML render guard) | build-dep | 2026-08-17 |
+| `2026-08-31-last-modified-header-design.md` | P149 Last-Modified + Sitemap lastmod Injection — Design | SEO | 2026-08-31 |
 
 ---
 
@@ -117,9 +127,10 @@
 | 3 · P2 — LocalStorage trilogy | 3 |
 | 4 · P3 — Auth / Sync / Migration | 3 |
 | 5 · P4-P16 — Calculator batches | 19 |
-| 6 · P20+ — Tech Debt / Cleanup / Audit | 15 |
-| 7 · P140+ — AdSense Compliance + 2.0 | 3 |
-| **总计** | **55** |
+| 6 · P20+ — Tech Debt / Cleanup / Audit | 25 |
+| 7 · P140+ — AdSense Compliance + 2.0 | 17 |
+| 8 · Retro — 流程复盘 | 3 |
+| **总计** | **81** |
 
 ---
 
@@ -127,10 +138,33 @@
 
 | 文件 | 标题 | 类别 | 日期 | 状态 |
 |---|---|---|---|---|
+| `2026-07-31-adsense-low-value-content-fix-design.md` | P140 AdSense「Low-Value Content」整改设计 | AdSense compliance | 2026-07-31 | APPROVED |
+| `2026-08-05-p140f-v2-strategy-design.md` | P140f v2.0 Evolution Strategy — APPROVED Path C (deferred to v2.0 promotion) | v2-strategy | 2026-08-05 | APPROVED |
 | `2026-08-18-p140b-editorial-prose-design.md` | P140b Editorial Prose Mass-Write for AdSense Recovery (SUPERSEDED — already shipped 2026-08-04) | AdSense compliance | 2026-08-18 | SHIPPED |
 | `2026-08-18-p140c-eeat-completion-design.md` | P140c E-E-A-T Completion (Real Reviewers + About Sections + Tier/Sources Guards) | AdSense compliance | 2026-08-18 | READY |
 | `2026-08-18-p140d-tier-threshold-tightening-design.md` | P140d Tier Threshold Tightening (C3 +70% Thresholds + 31 H2 Domain Expansions) | Content quality | 2026-08-18 | SHIPPED |
-| `2026-08-05-p140f-v2-strategy-design.md` | P140f v2.0 Evolution Strategy — APPROVED Path C (deferred to v2.0 promotion) | v2-strategy | 2026-08-05 | APPROVED |
+| `2026-08-18-p140g-author-bio-pages-design.md` | P140g Author Bio Pages — Design Spec | AdSense compliance | 2026-08-18 | APPROVED |
+| `2026-08-19-p140f-v2-topic-authority-design.md` | P140f v2.0 Topic Authority Design Spec | v2-topic-authority | 2026-08-19 | APPROVED |
+| `2026-08-20-p140f-phase2-tier1-extension-design.md` | P140f Phase 2 — Tier 1 Anchor Topic Extension Design | v2-topic-authority | 2026-08-20 | — |
+| `2026-08-21-p140f-phase4-comparison-pages-design.md` | P140f Phase 4 — Comparison Pages Design | v2-topic-authority | 2026-08-21 | — |
+| `2026-08-21-p147-quick-wins-design.md` | P147 Quick Wins — Phase 4 Followup + Cross-Link Coverage Design | v2-topic-authority | 2026-08-21 | — |
+| `2026-08-26-phase-5-v2.5-enterprise-design.md` | Phase 5-A v2.5 Enterprise — Design Spec | v2.5-enterprise | 2026-08-26 | APPROVED |
+| `2026-08-31-p150-uc-advisor-phase1-design.md` | P150 Dimension 2: User-Centric Advisor — Phase 1 Feedback Widget | v2-dimension-2 | 2026-08-31 | DRAFT |
+| `2026-08-31-p150-uc-advisor-phase2-design.md` | P150 User-Centric Advisor — Phase 2: Feedback Backend Implementation Spec | v2-dimension-2 | 2026-08-31 | DRAFT |
+| `2026-09-01-p151-dimension-1-audit-design.md` | P151 Dimension 1: Decision Support System Audit | v2-dimension-1 | 2026-09-01 | DRAFT |
+| `2026-09-01-p151-l5-backfill-batch1-design.md` | P151 Dimension 1 Phase 2: L5 Backfill Batch 1 Design | v2-dimension-1 | 2026-09-01 | — |
+| `2026-09-01-p151-l5-backfill-batch2-design.md` | P151 Dimension 1 Phase 2: L5 Backfill Batch 2 Design | v2-dimension-1 | 2026-09-01 | — |
+| `2026-10-21-p152-v2-roadmap-execution-audit-design.md` | P152 v2.0 路线图执行审计与优化建议 | v2-audit | 2026-10-21 | DRAFT |
+
+---
+
+## 8 · Retro — 流程复盘 / Superpowers 合规补文档
+
+| 文件 | 标题 | 类别 | 日期 |
+|---|---|---|---|
+| `2026-08-28-feat-merge-retro-design.md` | Sub-project D: Retrospective Finishing — feat/preset-chip-cherrypick-p151 → master | retro | 2026-08-28 |
+| `2026-08-28-p150-p151-retrospective-design.md` | P150 + P151 Retrospective — Implicit Brainstorming Decisions | retro | 2026-08-28 |
+| `2026-08-28-writing-plans-retrospective-design.md` | Sub-project B: Retrospective Plan Docs | retro | 2026-08-28 |
 
 ---
 
