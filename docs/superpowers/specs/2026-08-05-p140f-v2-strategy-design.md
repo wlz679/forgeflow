@@ -520,7 +520,11 @@ v3.0: → 自主决策服务（AI 主动建议 + 一键执行）
 5. **用户会推荐给别人吗？**（Advocacy）
 
 每个新 calc 必须有 **User Value Score** 字段（含 5 维度评分）：
-- User Value Score = (功能价值 × UX 易用性 × Advisor 关系 × Retention × Advocacy) ÷ 5
+- User Value Score = (功能价值 + UX 易用性 + Advisor 关系 + Retention + Advocacy) ÷ 5
+
+> ⚠️ **2026-10-21 修正(user 批准)**:原文写作 `×`(乘法)。但 5 维各 ∈ [0,1] 时乘积最大为 1,再 `÷ 5` 最大 **0.2** —— **恒低于 0.7 门槛,即所有 Topic 恒被拒绝**,公式在数学上不可满足(大概率正因如此从未被实现)。改为**算术平均**后阈值 0.7 可达,且与同句 `÷ 5` 语义自洽(除数本就是求平均的除数)。
+> 详见 `docs/superpowers/specs/2026-10-21-p153-user-value-score-and-guard-activation-design.md` §4.1 / §7.1。
+> **评分刻度:每维 0 / 0.5 / 1.0 三档**(不假装有连续精度)。
 
 User Value Score ≥ 0.7 → Topic 进入候选池
 User Value Score < 0.7 → Topic 自动拒绝

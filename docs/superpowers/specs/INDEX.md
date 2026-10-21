@@ -3,7 +3,7 @@
 > **目录索引** — 所有 design specs 按类别分组，按日期升序。
 > **Plans:** 参见 `../plans/`（106 个 plan 文件，本 INDEX 不覆盖）。
 > **Memory:** 参见 `../../../memory/MEMORY.md`（项目级 ship log 索引）。
-> **最后更新:** 2026-10-21（P153 补录 —— 新增 P153 行；P152 已按 P153 实测更正 Phase 3 结论。**计数 81 → 82**。此前同日：补录 26 个漏登 spec，计数 55 → 81，同时修正 §7 计数错记为 3、§0-§6 计数与实际行数对齐）
+> **最后更新:** 2026-10-21（P153 状态 DRAFT → **APPROVED**：§7.1 公式与 §7.3 评分方式已由 user 拍板并落地，G1/G2/E1 已实施；§7.2 与 §8.4/§8.6 仍未拍板。此前同日：P153 补录（计数 81 → 82）；P152 已按 P153 实测更正 Phase 3 结论。**计数 81 → 82**。更早同日：补录 26 个漏登 spec，计数 55 → 81，同时修正 §7 计数错记为 3、§0-§6 计数与实际行数对齐）
 
 ---
 
@@ -155,7 +155,7 @@
 | `2026-09-01-p151-l5-backfill-batch1-design.md` | P151 Dimension 1 Phase 2: L5 Backfill Batch 1 Design | v2-dimension-1 | 2026-09-01 | — |
 | `2026-09-01-p151-l5-backfill-batch2-design.md` | P151 Dimension 1 Phase 2: L5 Backfill Batch 2 Design | v2-dimension-1 | 2026-09-01 | — |
 | `2026-10-21-p152-v2-roadmap-execution-audit-design.md` | P152 v2.0 路线图执行审计与优化建议 | v2-audit | 2026-10-21 | DRAFT |
-| `2026-10-21-p153-user-value-score-and-guard-activation-design.md` | P153 User Value Score 闸门 + Phase 3 守卫激活（更正 P152 的 Phase 3 结论） | v2-gate | 2026-10-21 | DRAFT |
+| `2026-10-21-p153-user-value-score-and-guard-activation-design.md` | P153 User Value Score 闸门 + Phase 3 守卫激活（更正 P152 的 Phase 3 结论） | v2-gate | 2026-10-21 | APPROVED |
 
 ---
 

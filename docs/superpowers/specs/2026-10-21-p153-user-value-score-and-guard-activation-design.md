@@ -2,7 +2,7 @@
 
 > **For agentic workers:** This is a **design spec**, not an execution log. It corrects P152's Phase 3 measurement and specifies the two remaining Phase 3 gaps. Per `AGENTS.md` §12.6 (维度 3: Proactive Co-Pilot), **AI 不允许擅自修改 Roadmap / Phase** — §7 的每一项都需要 user 拍板后才能执行。
 >
-> **Status:** DRAFT — awaiting user 拍板 on §7（尤其是 §7.1 的公式歧义）。
+> **Status:** **已实施(G1 + G2,2026-10-21)** —— §7.1 公式、§7.3 评分方式已由 user 拍板并落地;§7.2 Phase 2 形态与 §8.4 仍未拍板,等 AdSense 结果。
 > **Date:** 2026-10-21
 > **Author:** Mavis (agentic audit + spec)
 > **Supersedes:** P152 §3「Phase 3 = 0/100」与 §6.2「Phase 3 Playbook 6 字段」两条结论（**结论错误，见 §2**）。
@@ -222,6 +222,57 @@ User Value Score 是**内部准入闸门**,不是用户可见内容。
 > 1. **期望值必须是独立写死的字面量**,不能从被测模块 import 常量 —— 否则「把常量从 0.7 改成 0.5」这种变异照样绿。
 > 2. **一条判据只守一件事**:「分数存在」「分数算法对」「阈值拦截」要拆成 3 条断言,不要合成一条 —— 名字叫「阈值拦截」的判据,不能顺带负责验证分数算法。
 
+### 4.6 落地实况(2026-10-21,G2 已实施)
+
+**产物三件:**
+
+| 文件 | 作用 |
+|---|---|
+| `scripts/score-user-value.mjs` | 机械信号评分脚本;`--check` 模式断言 JSON 与引擎源码未漂移 |
+| `src/data/user-value-scores.json` | 单一真相源(100 引擎) |
+| `tests/user-value-score-guard.test.ts` | CI 守卫(5 条断言) |
+
+**守卫的 5 条断言(各自只守一件事):**
+
+| # | 断言 | 期望值来源 |
+|---|---|---|
+| 1 | 每个注册表 slug 都有评分条目,且没有多余条目 | `src/data/tools/index.ts` 的 100 个 slug(**独立于被测脚本**) |
+| 2 | 每条 5 维分值 ∈ {0, 0.5, 1} | 字面量集合 |
+| 3 | `formula` 字段 = 算术平均公式 | 字面量字符串 |
+| 4 | `score` = 5 维算术平均 | **测试内独立重算**,不信任存储值 |
+| 5 | `threshold` 字段 = 0.7 且每条 `admitted` = 「重算分数 ≥ 0.7」 | 阈值**字面量 0.7** |
+
+**设计要点:`admitted` 字段是必需的。** 若 JSON 只存 `score` 而不存准入判定,「低于阈值的引擎被拒绝」就退化成**同义反复**——测试用它自己刚算出来的谓词去验证自己。存下 `admitted` 之后,「闸门决策」才成为**可观测事实**,测试才能拿字面量 0.7 去核它。
+
+**评分方式(§7.3 拍板结果):机械信号 + 人工抽检,不是 LLM 打分。** 理由(实测驱动):
+
+- 100 引擎 × 5 维 = 500 次判断,纯人工在审核等待窗口内做不完;
+- LLM 打分**不可复现**——同一份输入两次跑可能给不同分,分数漂移就无法区分「引擎变好了」和「模型心情变了」;
+- 机械信号可复现:重跑必得同一组数字,JSON 一有 diff 就一定意味着某个信号变了。
+
+**advisor 维度的标记集必须严格。** 最初把 `不是` / `而非` 也算作边界标记,结果 **100/100 全部得 1 分**——该维度**零区分度**,等于不存在。最终标记集:`不该用` / `陷阱` / `局限` / `不建议` / `⚠️` / `不要用` / `慎用` / `caveat`。
+
+**当前实测分布(100 引擎):** ≥0.7 共 **49** 个,<0.7 共 **51** 个。
+维度分布:`functionalValue` 0.5:81 / 1:19;`ux` 0.5:22 / 1:78;`advisor` 0:1 / 0.5:69 / 1:30;`retention` 0:2 / 0.5:19 / 1:79;`advocacy` 0:51 / 0.5:19 / 1:30。
+
+**判据有效性:9 条变异全部被「指定的那条断言」杀掉**(非「有断言红了」就算数):
+
+| 变异 | 被谁杀掉 |
+|---|---|
+| JSON `threshold` 0.7→0.5 | 断言 5 |
+| 存储 `score` 手改成 0.99 | 断言 4 |
+| 某维分值改成 0.3(越档) | 断言 2 |
+| 删掉一整条评分 | 断言 1 |
+| 篡改 `admitted` 标记 | 断言 5 |
+| `formula` 改成乘法公式 | 断言 3 |
+| 加一条注册表里没有的幽灵条目 | 断言 1 |
+| **脚本** THRESHOLD 0.7→0.5 后重生成 | 断言 5 |
+| **脚本** 公式 /5→/4 后重生成 | 断言 4 |
+
+> 变异台子的三条硬纪律被遵守:还原放在 `finally` 无条件执行、还原后逐字节比对(不一致即停)、基线不绿即停。**「变异存活」与「needle 过期」在退出码上同形**,所以台子报告 `SURVIVED` / `WRONG-KILLER` / `BROKE` 三种,而不是一个布尔值。
+
+**闸门已接进 `pnpm check`:** `node scripts/score-user-value.mjs --check` 已加入 `check` 脚本(并新增 `check:user-value` 快捷命令)。否则「新增引擎但忘了评分」只有守卫的注册表比对能发现,**引擎文件与注册表同时漂移**的情形无人发现。
+
 ---
 
 ## 5. P153-A(已完成,2026-10-21):AI 定价全量刷新
@@ -291,10 +342,10 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 
 | | 动作 | 成本 | 收益 | 依赖 |
 |---|---|---|---|---|
-| **G1** | 激活两个休眠守卫:去掉 `playbook-6-fields-coverage-guard` / `decision-layer-coverage-guard` 里**不成立的** build 依赖(它们只读源码) | 分钟级 | Phase 3 的质量线**从「形同虚设」变成真守** | 无 |
-| **G2** | 实现 User Value Score:`src/data/user-value-scores.json` + LLM 批量评分 + 人工抽样 20 个 + `tests/user-value-score-guard.test.ts` | 中 | p140f §15.2 的准入线落地 → **Phase 4/5 扩量前唯一缺的那道闸** | 需先定公式(7.1) |
+| **G1** | ✅ **已完成(2026-10-21)**:去掉 5 个只读源码守卫里**不成立的** build 依赖 | 分钟级 | Phase 3 的质量线**从「形同虚设」变成真守** | 无 |
+| **G2** | ✅ **已完成(2026-10-21)**:User Value Score 落地(脚本 + JSON + 5 条断言的守卫) | 中 | p140f §15.2 的准入线落地 → **Phase 4/5 扩量前唯一缺的那道闸** | 公式已拍板(7.1) |
 | **P2** | Phase 2 重建 5 篇决策博客 | **大**(管道 + 文章 + 接线) | 路线图断层 + 深度内容 | 等 AdSense 批准 + 7.2 决策 |
-| **E1** | 修 `tests/run.mjs` 的 Windows 命令行长度限制(分批 spawn) | 小 | `pnpm check` 在 Windows 上能跑完 | 无 |
+| **E1** | ✅ **已完成(2026-10-21)**:修 `tests/run.mjs` 的 Windows 命令行长度限制(分批 spawn) | 小 | `pnpm check` 在 Windows 上能跑完 | 无 |
 | **E2** | 补齐博客删除后遗留的测试引用(`src/lib/blog.ts` / `src/components/RelatedBlog.astro` / `src/content/blog` 三处 ENOENT) | 小 | 消除 3 个永久红的测试 | 无 |
 | **E3** | 静态 / 交互模型集不一致(§5.2) | 中 | 首屏与交互一致 | 需产品决策 |
 
@@ -302,11 +353,31 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 
 **理由:G1/G2 是「先把护栏修好,再扩内容」的顺序。** 2026-08-17 的拒审本质就是「在没有质量准入线的情况下扩内容」;而现在 Phase 4/5 的 AI 自动扩展正要开始 —— 没有 User Value Score 闸门就扩,等于把同一个坑再踩一遍(§2.2 的 G2)。
 
-### 7.1 公式歧义(必须拍板)
+### 7.5 G1 落地实况(2026-10-21)
+
+**解除休眠门的 5 个守卫(只读源码,build 门不成立):**
+
+| 守卫 | 断言数 | 解除后实测 |
+|---|---|---|
+| `playbook-6-fields-coverage-guard` | 3 | pass |
+| `decision-layer-coverage-guard` | 2 | pass |
+| `content-prose-shape-guard` | 7 | pass |
+| `sources-quality-guard` | 1 | pass |
+| `topic-content-coverage-guard` | 1 | pass |
+
+> `no-adsense-placeholder-guard` **本来就没有门**(它显式声明 source-only),不是「解除」而是「确认无需解除」——原先的 todo 把它算进 6 个是笔误。
+
+**顺带修正的既有漂移:`tests/run.mjs` 的 skip-mode 清单是硬编码的,已经漂了。** 原清单列了 4 个**已删除**的 blog-* 守卫、4 个**其实没有门**的守卫(含本次解除门的 3 个),同时**漏列** 8 个真正带门的守卫(实测带门套件 **47** 个)。改为**从测试源码动态计算**(`process.env.RUN_BUILD_TESTS` 出现即算带门,注释先剥离),**清单从此不可能再漂**。
+
+### 7.1 公式歧义(必须拍板) —— ✅ 已拍板(2026-10-21)
 
 - **推荐:** `User Value Score = (功能价值 + UX + Advisor + Retention + Advocacy) ÷ 5`(算术平均)
 - **理由:** 与同句 `÷ 5` 自洽;阈值 0.7 可达;`×` 读作 `+` 几乎肯定是原意(否则公式恒拒)
 - **改的是 p140f §15.2 的原文** → 属 Roadmap 改动,需 user 明确点头
+
+> **拍板结果(user,2026-10-21):采纳算术平均。**
+> 已落地:`docs/superpowers/specs/2026-08-05-p140f-v2-strategy-design.md` §15.2 原文已改写,并附 2026-10-21 修正说明(含「为何乘法形式不可满足」的推导)与三档刻度。
+> 脚本实现:`scripts/score-user-value.mjs` 的 `score = sum / 5`;`src/data/user-value-scores.json` 的 `formula` 字段写死同一公式;守卫断言 3 / 4 独立核验该公式。
 
 ### 7.2 Phase 2 形态(必须拍板)
 
@@ -314,24 +385,30 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 - **选项 B:** 重建独立博客管道 + 5 篇独立文章 —— 真正的 P140e 交付物,但成本大、且要等 AdSense 批准
 - **选项 C:** 先 A 后 B(A 立刻提升内容质量,B 排期做)
 
-### 7.3 评分方式
+### 7.3 评分方式 —— ✅ 已拍板(2026-10-21)
 
-- **推荐:** LLM 批量 + 人工抽样 20 个(§4.3)
+- **原推荐:** LLM 批量 + 人工抽样 20 个(§4.3)
+- **拍板结果:** 改为**机械信号 + 人工抽检**(§4.6),理由见该节:LLM 打分不可复现,分数漂移无法区分「引擎变好」与「模型心情变了」;机械信号重跑必得同一组数字。
+- 人工抽检仍保留 —— 用于校准**标记集与档位规则**,而不是校准单个引擎的分数。**规则不一致时改规则,不改分数。**
 
-### 7.4 `tests/run.mjs` 修法
+### 7.4 `tests/run.mjs` 修法 —— ✅ 已实施(2026-10-21)
 
-- **推荐:** 分批 spawn(35 个/批),与本轮验证时用的方法一致;或把路径写进临时响应文件
+- 原推荐:分批 spawn(35 个/批),与本轮验证时用的方法一致;或把路径写进临时响应文件
+- **实际采用:分批 spawn(30 个/批)。** 单次 spawn 携带 236 条测试路径会超 Windows cmd.exe 的 8191 字符上限,`pnpm check` 在 Windows 上**一条断言都跑不到**就死在 "The command line is too long."。分批后:
+  - 每批一条命令行,长度远低于上限;
+  - 语义不变:所有套件仍**全部跑完**、**串行**(`spawnSync` 阻塞,批次之间不会交错,不会互相踩 `dist/`),任一批失败 → 进程非零退出;
+  - 每批打印一行 `[run] batch N (M suites, …)` 便于观察进度。
 
 ---
 
-## 8. Open Questions(待 user 拍板)
+## 8. Open Questions(2026-10-21 拍板后)
 
-1. **§7.1 公式**改成算术平均?(不改的话闸门恒拒,等于没有闸门)
-2. **§7.2 Phase 2 形态**:A(升级 prose)/ B(重建博客)/ C(先 A 后 B)?
-3. **§7.3 评分方式**:LLM 批量 + 人工抽检 20 个 —— 认可?
-4. **§5.2** 静态 137 模型 vs 交互 18 模型 —— 要不要统一?统一的话长尾模型名的 SEO 关键词面会缩
-5. **分支命名**:`feature/phase-3-playbook-6-fields`(G1+G2)与 `feature/phase-2-p140e-seo`(P2)分别开?按 §12.2,Phase 3 内的工作算「小更新」→ 直接 commit 在 `feature/phase-3-playbook-6-fields` 上,不开 sub-branch
-6. `feat/i18n-drift-fix` / `feat/ai-cost-preset-chip-unification` 两个悬空分支:**已被 squash 合入 master**(JSON 迁移 + 漂移检测 + pre-commit 接线都在 master 上),`git cherry` 判 `+` 只因 squash 后 patch-id 变了。真正没进 master 的只有 i18n 分支上的 2 个测试文件 → **建议只补这 2 个测试,然后删掉两个分支指针**
+1. ~~**§7.1 公式**改成算术平均?~~ → ✅ **已拍板:算术平均**(2026-10-21)。p140f §15.2 原文已改写并附修正说明(§4.6)。
+2. **§7.2 Phase 2 形态**:A(升级 prose)/ B(重建博客)/ C(先 A 后 B)? → ⏸ **仍未拍板**。取舍:**A 零新管道、零新 URL,当天可完成**;**B 是真正的 P140e 交付物,但成本大、且要等 AdSense 批准**。P152 §6.1 的成本估计已被实测上调(A 实际是「中等」,Phase 2 重建是「大」)。
+3. ~~**§7.3 评分方式**~~ → ✅ **已拍板:机械信号 + 人工抽检**(2026-10-21),非 LLM 批量打分(理由见 §4.6)。
+4. **§5.2** 静态 137 模型 vs 交互 18 模型 —— 要不要统一?统一的话长尾模型名的 SEO 关键词面会缩 → ⏸ 未拍板。
+5. **分支命名** → ✅ **已定**:`feature/phase-3-playbook-6-fields` 承载 G1+G2+E1,按 §12.2「Phase 3 内的工作算小更新」直接 commit 在该分支上,不开 sub-branch。P2 另开 `feature/phase-2-p140e-seo`。
+6. `feat/i18n-drift-fix` / `feat/ai-cost-preset-chip-unification` 两个悬空分支 → ⏸ 未拍板。事实:**已被 squash 合入 master**(JSON 迁移 + 漂移检测 + pre-commit 接线都在 master 上),`git cherry` 判 `+` 只因 squash 后 patch-id 变了。真正没进 master 的只有 i18n 分支上的 2 个测试文件 → **建议只补这 2 个测试,然后删掉两个分支指针**。
 
 ---
 
@@ -356,6 +433,20 @@ Get-ChildItem src,tests -Recurse -Include *.ts,*.json,*.astro |
 node scripts/check-engine-count-by-category.mjs --check
 node scripts/codegen-examples.mjs --check
 
+# User Value Score 闸门(2026-10-21 新增)
+node scripts/score-user-value.mjs --check          # JSON 与引擎源码未漂移
+node_modules\.bin\tsx.cmd --test tests/user-value-score-guard.test.ts   # 5 条断言
+
+# G1 激活后的守卫(不带 RUN_BUILD_TESTS 也必须真跑断言)
+node_modules\.bin\tsx.cmd --test tests/playbook-6-fields-coverage-guard.test.ts
+node_modules\.bin\tsx.cmd --test tests/decision-layer-coverage-guard.test.ts
+node_modules\.bin\tsx.cmd --test tests/content-prose-shape-guard.test.ts
+node_modules\.bin\tsx.cmd --test tests/sources-quality-guard.test.ts
+node_modules\.bin\tsx.cmd --test tests/topic-content-coverage-guard.test.ts
+
+# 全量(Windows 下已修:分批 spawn,不再超命令行长度上限)
+node tests/run.mjs
+
 # AI 定价新鲜度
 Get-Content src\data\ai-pricing.json | ConvertFrom-Json | Select-Object lastUpdated, source
 ```
@@ -372,12 +463,17 @@ Get-Content src\data\ai-pricing.json | ConvertFrom-Json | Select-Object lastUpda
 
 ### 审计用到的仓库产物
 
-- `tests/playbook-6-fields-coverage-guard.test.ts` —— Phase 3 守卫(休眠)
-- `tests/decision-layer-coverage-guard.test.ts` —— L5 决策层守卫(休眠)
+- `tests/playbook-6-fields-coverage-guard.test.ts` —— Phase 3 守卫(P153-G1 已激活)
+- `tests/decision-layer-coverage-guard.test.ts` —— L5 决策层守卫(P153-G1 已激活)
+- `tests/content-prose-shape-guard.test.ts` / `tests/sources-quality-guard.test.ts` / `tests/topic-content-coverage-guard.test.ts` —— 另外 3 个已激活的 source-only 守卫
+- `tests/user-value-score-guard.test.ts` —— **P153-G2 新建**:User Value Score 闸门守卫(5 条断言)
+- `scripts/score-user-value.mjs` —— **P153-G2 新建**:机械信号评分脚本(`--check` 模式)
+- `src/data/user-value-scores.json` —— **P153-G2 新建**:100 引擎的评分单一真相源
 - `src/engines/**/*.ts` —— 100 个引擎(playbook 6 字段 / L5 决策层)
+- `src/data/tools/index.ts` —— 工具注册表(100 slug,守卫断言 1 的**独立来源**)
 - `src/content/tools/*.md` —— prose 层(100 en / 41,309 词,实测)
 - `src/data/ai-pricing.json` + `scripts/sync-pricing.mjs` + `scripts/codegen-customfn.mjs` —— AI 定价链路
-- `tests/run.mjs` —— 测试 runner(Windows 命令行长度)
+- `tests/run.mjs` —— 测试 runner(P153-E1 已修:分批 spawn + 动态 skip 清单)
 
 ### 外部
 
