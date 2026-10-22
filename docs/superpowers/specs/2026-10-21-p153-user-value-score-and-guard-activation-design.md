@@ -346,7 +346,7 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 | **G2** | ✅ **已完成(2026-10-21)**:User Value Score 落地(脚本 + JSON + 5 条断言的守卫) | 中 | p140f §15.2 的准入线落地 → **Phase 4/5 扩量前唯一缺的那道闸** | 公式已拍板(7.1) |
 | **P2** | Phase 2 重建 5 篇决策博客 | **大**(管道 + 文章 + 接线) | 路线图断层 + 深度内容 | 等 AdSense 批准 + 7.2 决策 |
 | **E1** | ✅ **已完成(2026-10-21)**:修 `tests/run.mjs` 的 Windows 命令行长度限制(分批 spawn) | 小 | `pnpm check` 在 Windows 上能跑完 | 无 |
-| **E2** | 补齐博客删除后遗留的测试引用(`src/lib/blog.ts` / `src/components/RelatedBlog.astro` / `src/content/blog` 三处 ENOENT) | 小 | 消除 3 个永久红的测试 | 无 |
+| **E2** | ✅ **已完成(2026-10-21)**:补齐博客删除后遗留的测试引用 —— 实测范围比预估大(7 套件 / 10 条断言,根因是「博客删除没做收尾」),CI 已从红转绿 | 小→中 | 消除 10 个永久红的测试;**master 的 CI 第一次是绿的** | 无 |
 | **E3** | 静态 / 交互模型集不一致(§5.2) | 中 | 首屏与交互一致 | 需产品决策 |
 
 **推荐顺序:G1 → G2 → (等 AdSense)P2;E1/E2 顺手做掉。**
@@ -368,6 +368,97 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 > `no-adsense-placeholder-guard` **本来就没有门**(它显式声明 source-only),不是「解除」而是「确认无需解除」——原先的 todo 把它算进 6 个是笔误。
 
 **顺带修正的既有漂移:`tests/run.mjs` 的 skip-mode 清单是硬编码的,已经漂了。** 原清单列了 4 个**已删除**的 blog-* 守卫、4 个**其实没有门**的守卫(含本次解除门的 3 个),同时**漏列** 8 个真正带门的守卫(实测带门套件 **47** 个)。改为**从测试源码动态计算**(`process.env.RUN_BUILD_TESTS` 出现即算带门,注释先剥离),**清单从此不可能再漂**。
+
+### 7.6 E2 落地实况(2026-10-21):把「博客删除的收尾」做完
+
+**为什么先做这个:** master 的 CI 本来就是**红的** —— 那 10 个失败**不是** build-gated,Linux CI 上照样红。在一个红灯基线上继续叠加改动,等于每层楼都建在坏地基上。而审核窗口正好是修护栏的窗口。
+
+**根因只有一个:** `32a982e` 删掉博客集合/路由/渲染依赖时**没做收尾** —— 守卫还在读已删的文件、i18n 留下了死 key、判据还在断言一个**已经被故意废弃**的契约。
+
+| 套件 | 失败数 | 根因 | 新契约 |
+|---|---|---|---|
+| `a11y-scattered` | 1 | 手抄的 9 个组件清单里有已删的 `RelatedBlog.astro` → ENOENT | **全量扫描** `src/components/*.astro`:每个含 `<svg>` 的组件都要有 `aria-hidden` |
+| `ab-split` | 1 | 手抄的 4 个消费者里有已删的 `src/lib/blog.ts` → ENOENT | **从源码推导**:每个 import tools 注册表的模块都必须用规范相对路径 |
+| `last-modified-guard` | 1 | 硬编码 5 个抽查路径,含 2 个已删的博客 URL | **全量扫描** `dist/**/*.html` |
+| `translation-glossary-guard` | 2 | ① 断言 `src/content/blog` 存在 ② 8 个真孤儿 key | ① 博客 post 集合**从实际存在的 md 推导**(博客回来时自动重新要求 key)② 删掉 8 个死 key |
+| `translate-helper` | 2 | 测试键 `blog.try_now` 随博客一起消失,`translate()` 落到「返回 key 本身」兜底 | 改用真实存在、带具名占位符的 key `topic.guide.h2.what_is` |
+| `decision-support-audit` | 1 | import `../tmp/audit-decision-support.cjs` —— `tmp/` 被 gitignore ⇒ **CI 上必然缺** | L5 契约抽到 `tests/l5-tags.ts` 单一真相源,守卫与审计测试共用 |
+| `wrangler-bindings-contract` | 2 | 断言的 `r2_buckets`/`kv_namespaces` 段是**当初为解锁 CF Pages publish 而故意删掉的** | 新契约:绑定名必须在 wrangler.toml 里被记录(供 Dashboard 配置),但**段不能存在**、配置行不许有占位符 |
+
+**三条通用手法(全部用上了):**
+
+1. **别抄,去算。** 4 处手抄清单(组件 9 项 / 消费者 4 个 / dist 抽查 5 个 / 博客 slug 列表)全部改成从真相源推导。收益不只是「不再腐烂」,覆盖面同时变大了:a11y 从 9 个文件 → **全部 23 个组件**(含 `<svg>` 的 8 个);消费者从 4 个 → **全部 24 个**;Last-Modified 从 5 个 → **全部 438 个页面**。
+2. **判据要写清新契约,不能只把否定翻成肯定。** 例如 wrangler 那条不是「不要 `r2_buckets`」就完事,而是拆成三条各自独立的:绑定名要被记录 / 段不能存在 / 配置行不许有占位符。
+3. **变异台子验证。** **10 条变异全被指定的那条断言**杀掉。台子还揪出了台子作者自己的**两个真 bug**:① `[[r2_buckets]]` 是 TOML 的数组表语法,而第一版正则只认单括号 `[r2_buckets]` ⇒ **漏检**;② robots 的 wildcard 断言写成了全 body 正则,body 里还有 5 个爬虫各自的 `Allow: /` ⇒ 把 wildcard 换成 `Disallow: /` 它照样绿。**这两条靠「读测试」都读不出来 —— 只有问「这条断言能不能杀掉它声称要杀的东西」才会暴露。**
+
+**8 个真孤儿 key(逐个查证 0 引用后删除;其中 5 个同时还在另一份契约清单里,见 §7.8):**
+`nav.blog` / `breadcrumb.blog` / `related_blog.title` / `favorites.saved_count` / `eeat.reviewed_by` / `eeat.team` / `eeat.author_label` / `eeat.publisher_label`
+
+两个 locale 文件各删 8 行,5128 → 5120 键,en/zh 键集仍完全同步。删后**重建产物确认 8 个 key 一个都没漏进页面**(否则页面上会露出 key 字面量)。
+
+### 7.7 E2 顺带挖出的第 11 个失败:「半门」套件(2026-10-21)
+
+修完上表 10 个之后,全量复跑只剩 **1 个**失败:`privacy-policy: Chinese Supabase section present in dist` —— 而且它是**修完之后才出现**的。
+
+**根因不是我的改动,是这个套件自己漏了 P23b 的 skip-guard。** `tests/privacy-policy-sync.test.ts` 有两个测试:第一个带 `if (skipIfNoBuildTests()) return;`,**第二个没有** ⇒ 它在默认模式下照样执行,去读磁盘上**碰巧存在**的 `dist/`。于是:
+
+| dist/ 是谁构建的 | 结果 |
+|---|---|
+| 早先某次带 Supabase 环境变量的构建 | 通过(旧产物里有「数据同步（Supabase）」段) |
+| 本轮不带环境变量的 `astro build` | **失败**(没有 Supabase 段) |
+
+**「测试结果」取决于「上一次构建是谁做的」—— 这是非确定性,不是内容缺陷。** 修法:给第二个测试补上与第一个相同的 skip-guard(默认跳过;`RUN_BUILD_TESTS=1` 时读第一个测试用正确 env 构建出的产物)。
+
+**顺手全仓扫了同类缺陷**(扫描器:先剥注释,再找「文件级门」与「测试级门」的差集):
+
+> **半门套件:一个文件有 `RUN_BUILD_TESTS` 门,但只有部分 `test(...)` 块被门覆盖。**
+
+实测 47 个 build 依赖套件里**只有 1 个是半门**,就是上面这个;其余要么是**文件级** `process.exit(0)`(覆盖全部测试),要么每个测试各自带门。修完后复扫 = **0**。
+
+> 扫描器本身也返工了两次:第一版把「文件级门」误判成「无门」(42 个假阳性);第二版被注释里的 `test(` 和 `RegExp.prototype.test(` 骗到(`\btest\s*\(` 会匹配 `.test(`)。**每一次「扫描结果异常」都先怀疑扫描器** —— 这条已经吃过两次亏(见 agent memory「自建的校验器报 0 条时先怀疑解码器」)。
+
+### 7.8 E2 的连锁发现:失败的数量和位置 ≠ 原因的数量和位置 (2026-10-21)
+
+修完上两节,全量复跑从 10 个失败降到 1 个(robots + privacy-policy)。但**再跑一次,变成 6 个**,而且其中 3 个是我上一轮刚改的测试。追下去发现的是一条**三层因果链**:
+
+| 层 | 现象 | 真正的原因 |
+|---|---|---|
+| 1 | 6 个测试失败:robots ×2 / feedback-widget / last-modified / sitemap ×2 | —— |
+| 2 | `dist/ missing — run pnpm build first` | 构建**失败**了,`cleanDist()` 已把 dist/ 删掉却没重建 |
+| 3 | `build failed: ❌ i18n completeness check failed. Missing 5 key(s)` | **`pnpm build` 的 prebuild 步骤挂了** |
+
+**第 3 层才是根因,而它是我自己造成的:** 我删掉 8 个 i18n key 时,只问了一个守卫(孤儿 key 守卫说它们没人引用),**没问第二个守卫** —— `scripts/check-i18n-completeness.mjs` 的 `REQUIRED_KEYS` 硬编码清单里,其中 5 个还在:
+
+```
+eeat.reviewed_by / eeat.team / eeat.author_label / eeat.publisher_label / favorites.saved_count
+```
+
+逐个查证后确认:**这 5 个确实无人渲染**(EEAT 组件直接输出作者名 + `eeat.author_role.${role}`,从不打印「Author / Publisher / Reviewed by」标签;favorites 页也从不显示 saved-count)。**所以过时的是那份硬编码契约清单,不是数据。** 修法:从 `REQUIRED_KEYS` 里删掉这 5 条,并在脚本里写明原因。
+
+> **两个闸门对同一批 key 给出相反结论时,不能只信一个。** 而且**删数据之前必须先问:还有没有别的闸门依赖它。** 孤儿守卫只覆盖了「被引用」这一个维度,prebuild 的完整性检查覆盖的是「被声明为必需」—— 两者是**不同契约**,不是同一个真相源。
+
+**另一条独立发现:robots 守卫的源码解析器是坏的。**
+
+`ai-crawler-robots-txt-guard` 在 `dist/robots.txt` 不存在时(常态:该路由是 hybrid 模式的按需端点,`public/robots.txt` 也不存在),会退回去**用正则扫源码里的 `BODY` 数组**。而源码注释里有一个撇号:
+
+```js
+// crawlers, and any new AI crawler we haven't enumerated yet).
+```
+
+这个撇号被当成字符串引号,**吞掉了后面真正的 `'User-agent: *'` 和 `'Allow: /'` 两行** ⇒ 解析出的 body 悄悄少了 wildcard 规则 ⇒ 守卫对一份**完全正确**的 robots.txt 报红。修法:**不再解析源码,直接调用真实的路由处理器**(`GET()` 返回的 Response 就是线上吐出的字节)—— 没有解析、没有 dist/ 依赖、结果不取决于本地有没有残留构建。
+
+> **改完又被变异台子抓了一次:** 新写的「wildcard 有 `Allow: /`」断言用的是**全 body 正则**,而 body 里还有 5 个爬虫各自的 `Allow: /` ⇒ 把 wildcard 的 `Allow` 换成 `Disallow: /` 之后,这条断言**照样通过**。**断言的名字说的是「wildcard」,实际守的是「body 里任意一处」。** 改成块级判定(`isCrawlerAllowed(body, '*')` 解析 `User-agent: *` 自己的规则段)。
+>
+> 这就是台子的价值:它验证的是「**这个断言能不能杀掉它声称要杀的东西**」,而不是「这个测试现在是绿的」。
+
+**第三类:「读 dist/ 却不拥有 dist/」的测试。**
+
+系统扫了一遍:读 dist/ 的套件里,还有两个既**没有 build 门**、也**不自己构建** —— `feedback-widget-guard` 与 `last-modified-guard`。它们的结果取决于「本地碰巧有没有一份构建产物」:全新克隆上直接报 `dist/ missing — run pnpm build first`;CI 里因为 unit-test 步骤跑在 build 步骤**之前**,能不能过全看**排在它前面的套件有没有顺手构建过**。两个都改成仓库既有模式:**无 `RUN_BUILD_TESTS` 则跳过,需要时自己构建**。
+
+扫完的结论:**读 dist/ 的套件要么有门、要么自建**,不再有第三种。
+
+**遗留待拍板项(本轮未自行决定):**
+- **L5 标记目前是精确大小写匹配**(`decision-layer-coverage-guard` 用 `src.includes('🧭 Decision Question')`)。原审计脚本的测试断言的是「大小写不敏感」,而**没有任何实现曾是不敏感的** —— 那是草稿脚本与守卫之间的漂移。现在契约被钉死为精确匹配。若认为「引擎里写成小写也应被检出」(即守卫应更宽松),需要**同时**改 `tests/l5-tags.ts` 与守卫语义 —— 属产品决策,留给 user。
 
 ### 7.1 公式歧义(必须拍板) —— ✅ 已拍板(2026-10-21)
 
@@ -409,6 +500,7 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 4. **§5.2** 静态 137 模型 vs 交互 18 模型 —— 要不要统一?统一的话长尾模型名的 SEO 关键词面会缩 → ⏸ 未拍板。
 5. **分支命名** → ✅ **已定**:`feature/phase-3-playbook-6-fields` 承载 G1+G2+E1,按 §12.2「Phase 3 内的工作算小更新」直接 commit 在该分支上,不开 sub-branch。P2 另开 `feature/phase-2-p140e-seo`。
 6. `feat/i18n-drift-fix` / `feat/ai-cost-preset-chip-unification` 两个悬空分支 → ⏸ 未拍板。事实:**已被 squash 合入 master**(JSON 迁移 + 漂移检测 + pre-commit 接线都在 master 上),`git cherry` 判 `+` 只因 squash 后 patch-id 变了。真正没进 master 的只有 i18n 分支上的 2 个测试文件 → **建议只补这 2 个测试,然后删掉两个分支指针**。
+7. **L5 标记的大小写语义**(2026-10-22 新增)—— `tests/l5-tags.ts` 现钉死为**精确大小写**匹配,与 `decision-layer-coverage-guard` 的 `src.includes()` 一致。原审计脚本的测试断言「大小写不敏感」,而**没有任何实现曾是不敏感的**。若要让守卫更宽松(引擎里写成 `🧭 decision question:` 也算命中),需**同时**改 `tests/l5-tags.ts` 与守卫语义 → 属产品决策,留给 user。
 
 ---
 
@@ -446,6 +538,16 @@ node_modules\.bin\tsx.cmd --test tests/topic-content-coverage-guard.test.ts
 
 # 全量(Windows 下已修:分批 spawn,不再超命令行长度上限)
 node tests/run.mjs
+
+# E2 修完后:这 7 个套件必须全绿,且不再依赖任何 gitignored 文件
+node_modules\.bin\tsx.cmd --test tests/a11y-scattered.test.ts tests/ab-split.test.ts `
+  tests/last-modified-guard.test.ts tests/translation-glossary-guard.test.ts `
+  tests/translate-helper.test.ts tests/decision-support-audit.test.ts `
+  tests/wrangler-bindings-contract.test.ts
+
+# 8 个孤儿 key 删除后:两个 locale 键集仍同步,且没有漏进产物
+node -e "const en=require('./src/i18n/locales/en.json'),zh=require('./src/i18n/locales/zh.json');"
+node scripts/check-i18n-completeness.mjs
 
 # AI 定价新鲜度
 Get-Content src\data\ai-pricing.json | ConvertFrom-Json | Select-Object lastUpdated, source
