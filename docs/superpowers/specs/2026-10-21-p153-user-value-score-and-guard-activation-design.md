@@ -350,9 +350,10 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 | **E4** | ✅ **已完成(2026-10-22)**:把 **CI-mode**(RUN_BUILD_TESTS=1 + 无预建 dist/)跑成 **0 失败 / 0 跳过**(完整清单是 **12 条断言 / 10 个套件**,不是先前报的 7/6 —— 那次统计来自被截断的 artifact),其中**一条是线上真实缺陷**(中文页漏原始 i18n 键名) | 中 | CI 真正第一次能跑绿;**顺带修掉一个正在生产环境暴露给 AdSense 审核员看的破损文本** | 无 |
 | **E3** | 静态 / 交互模型集不一致(§5.2) | 中 | 首屏与交互一致 | 需产品决策 |
 | **E5** | ✅ **已完成(2026-10-22)**:CI run #290 **第一次跑到 Unit tests 步骤** ⇒ 发现「本地绿 ≠ CI 绿」的**第三种形态**(**gitignore 的生成物不在仓库里**),并给 `tests/run.mjs` 加 `::error::` 标注 | 小 | **CI 的失败从「不可见」变成「可见」**(此前 100 次红运行没人发现,是因为 TAP 输出根本不被 GitHub 解析) | 无 |
-| **E6** | ⏸ **待 user 拍板**:线上 og:image 全部 404(§7.17 的 A/B 两案) | 小 | 全站社交分享预览从坏变好 | 产品决策 |
-| **E7** | ⏸ **待 user 拍板**:`sync-pricing.yml` 只推 GitHub,CF Pages 的部署源 Gitee 收不到每周定价刷新(§7.18) | 中 | 线上 AI 定价不再停在「最后一次手工推送」那天 | 需在 runner 上配 Gitee SSH secret |
+| **E6** | ⏸ **待 user 拍板**:线上 og:image 全面修复 = **A**(CF Pages 构建命令 `pnpm build` → `pnpm build:full`,覆盖 200 个工具页)+ **B′**(生成一张真正的 1200×630 默认卡替换 1×1 占位符,覆盖 237 个非工具页)(§7.17;**原 B 案作废** —— `/og-default.png` 是 1×1 透明 PNG) | 小 | 全站 437 个页面的社交分享预览从坏变可看 | 产品决策(默认卡版式) + Dashboard 一个字段 |
+| **E7** | ❌ **作废(2026-10-22 12:45)**:原条目「sync-pricing 只推 GitHub ⇒ 线上定价不刷新」的前提是错的 —— 实测 **CF Pages 的部署源就是 GitHub**,定价刷新本来就会上线(§7.18 证据 ①②③) | — | — | 已作废,勿再捡起 |
 | **E8** | ⏸ **待 user 拍板**:在 `ci.yml` 加 `fetch-depth: 0`,让「CHANGELOG 提交计数」不变量在 CI 里**真的**把关(需同时把阈值从 `> 1` 放宽到 `> 5`,否则「两个 commit 不碰 CHANGELOG」就红)(§7.18) | 中 | 一条只在本机偶尔响的假闸门变成真闸门 | 工程决策:收紧 CI 失败语义 |
+| **E9** | ⏸ **待 user 拍板**:`sync-pricing.yml` 现在是**直推 master**,而 bot 用 `GITHUB_TOKEN` 推的提交**不触发 CI 却照样触发 CF 部署**(§7.18)⇒ 每周有一次「未经 CI 验证就上线」。可选:① 改成提 PR(需装 `gh` + 开 PR 权限);② 推完由人手动推一次拿判决;③ 接受现状(定价数据每周自动更新,风险低) | 中 | 消除「未经 CI 验证就上线」的窗口 | 工程决策 |
 
 **推荐顺序:G1 → G2 → (等 AdSense)P2;E1/E2 顺手做掉。**
 
@@ -469,6 +470,7 @@ eeat.reviewed_by / eeat.team / eeat.author_label / eeat.publisher_label / favori
 
 > **🟢 2026-10-22 12:24 更新:本节的第一句结论已被推翻,现在是绿的。**
 > CI run **`39721264626`**(head = `ff291f6`)= **success**,**11/11 步全绿**(Install / staticExamples / customFn / engine-coverage / tsc / **Unit tests ✅** / **Build ✅**)。这是 master 历史上第一次完整跑完全部步骤并成功。
+> 紧接着的 run **`39722688254`**(head = `9a01716`)= **success**,同样 11/11 全绿 ⇒ **连续两次绿**;同一天同 commit 树上的本地 CI-mode 复现也 0 失败(8 批 / 237 套件 / 1375 断言)。
 > 下面这段「它从未绿过」的记录保留,因为它记的是**那一刻的真实状态**与**为什么会红**;而「怎么修好的」见 §7.18(含一个必须知道的坑:run `39721264626` 绿,靠的是一条**在 CI 里结构性空转**的不变量没有被触发)。
 > **教训仍然成立且更重要:** 在拿到真实 CI 判决之前,任何「CI 绿了」的断言都不该写进 commit message —— 上一轮就是写了才被 §7.9 更正。
 
@@ -693,26 +695,38 @@ GitHub **不解析 TAP 输出** —— 一个失败的测试在 run 列表里只
 
 实测:从 `en.json` 抽掉 `eeat.title` ⇒ 3 条 `::error::` 标注,含失败测试名与「missing in en.json (referenced in src/components/EeatTrustBlock.astro)」;还原后 sha256 逐字节一致。
 
-### 7.17 生产站点的 og:image **全部 404**(既有缺陷;未在本轮擅自修改)
+### 7.17 生产站点的 og:image:200 页 404 + 237 页是 **1×1 占位图**(既有缺陷;未在本轮擅自修改)
 
-实测(2026-10-22,线上):
+> **🟡 2026-10-22 12:45 更正本节(本节原先的标题与 B 案描述都不准确,见下)。**
 
-```
-https://forgeflowkit.com/og/solopreneur-roas-calculator-en.png  =>  404
-```
+实测(2026-10-22,**线上 + 本地产物双向**):
 
-438 个页面的 `og:image` / `twitter:image` 指向 `/og/<slug>-<lang>.png`,而这些图**在生产环境根本不存在** —— 它们是 gitignore 的生成物,CF Pages 的构建命令只跑了 `pnpm build`,没有跑 `pnpm build:og`。
-
-**影响:** 全站的社交分享预览(Twitter/X / Slack / iMessage / Facebook)都是坏的;这本身就是「站点看起来没做完」的一类信号,与 AdSense 的「低价值内容」印象同向。
-
-**两个可选修法(属产品决策,留给 user,本轮不自行决定):**
-
-| | 做法 | 代价 |
+| 项 | 实测值 | 证据 |
 |---|---|---|
-| **A(推荐)** | 把 CF Pages 的构建命令从 `pnpm build` 改成 `pnpm build:full`(= `build:og && build`) | Dashboard 一个字段;per-page OG 图真正上线,meta 不用改;构建变慢(多生成 200 张图) |
-| **B** | 工具页的 `ogImage` 改用仓库里**已跟踪**的 `/og-default.png` | 仓库一行改动,立刻不 404;但所有页面共用同一张图,失去 per-page 定制 |
+| 线上 per-page 图 | **404** | `GET /og/solopreneur-openai-token-calculator-en.png` → `404` |
+| 线上 `/og-default.png` | **200,但只有 68 字节** | `GET /og-default.png` → `200 bytes=68` |
+| `/og-default.png` 真实尺寸 | **1×1 像素**透明 PNG | PNG IHDR:width=`0x00000001`、height=`0x00000001`;仓库副本 `public/og-default.png` 同样是 68 字节 |
+| 构建产物里 og:image 的分布 | **438 个 HTML**:200 个指向 `/og/<slug>-<lang>.png`、**237 个指向 `/og-default.png`**、1 个(404.html)没有 og:image | 扫 `dist` 全部 438 个 HTML 的 `og:image` |
+| per-page 图为什么没有 | 它们是 gitignore 的生成物(`public/og/`),而 CF Pages 的构建命令只跑了 `pnpm build`,**没跑 `pnpm build:og`** | `.gitignore` 有 `public/og/`;`package.json` 的 `build` ≠ `build:full` |
+| `/og-default.png` 为什么是 1×1 | 它是 2026-06-25 SEO 那轮**刻意造的占位符** | `docs/superpowers/specs/2026-06-25-seo-overhaul-design.md:481`「新建(占位 1×1 透明 PNG,避免 Phase 1 时 404)」;`2026-06-25-seo-schema-sitemap.md:398-414` 写明「1×1 transparent PNG placeholder (BaseLayout default ogImage **until Plan B ships real images**)」——**Plan B 一直没做** |
+
+**所以「全站 og:image 404」这个描述是错的。真实状况是分成两半:**
+
+- **200 个工具页**:og:image 指向 per-page 图 ⇒ 线上 **404** ⇒ 社交平台完全拿不到预览图。
+- **237 个非工具页**(home / category / guide / compare / about / terms 等):og:image 指向 `/og-default.png` ⇒ 线上 **200** ⇒ 但那是 **1×1 透明像素**,社交平台会渲染成一张**空白卡片**(而 404 至少是明确失败)。**「不 404」不等于「能看」** —— 这 237 页的分享预览同样是坏的,只是坏得更隐蔽。
+
+> ⚠️ **本节原先的 B 案是无效的。** 它写的是「工具页的 `ogImage` 改用仓库里已跟踪的 `/og-default.png`」—— 那张图是 1×1 占位符,改了以后 200 个工具页会从「404」变成「一张空白图」。**B 案必须先补一张真正的默认 OG 卡**(见 B′)。
+
+**三个可选修法(属产品决策,留给 user,本轮不自行决定):**
+
+| | 做法 | 覆盖 | 代价 |
+|---|---|---|---|
+| **A(推荐,必做)** | 把 CF Pages 的构建命令从 `pnpm build` 改成 `pnpm build:full`(= `build:og && build`) | 200 个工具页 | Dashboard 一个字段;meta 不用改;构建变慢(多生成 200 张图)。**可行性已实测**:`scripts/fonts/*.otf`(4 个,约 10 MB)是**已提交**的,runner 上不缺字体;`scripts/.twemoji-cache/` 是 gitignored,首次构建需访问 jsDelivr 拉 9 张 twemoji PNG(CF runner 有外网即可) |
+| **B′(推荐,配合 A)** | 用现成的 satori + resvg 管线**生成一张真正的 1200×630 默认 OG 卡**,替换掉 `public/og-default.png` 这个 1×1 占位符(可提交进仓库) | 237 个非工具页 | 要设计一张默认卡的版式(标题/品牌/渐变),并决定它进不进仓库(进仓库 ⇒ 不依赖构建) |
+| **C** | 非工具页也按页生成专属 OG 图(按 category / guide / compare 分) | 237 个非工具页 | 工作量最大,收益与 B′ 重叠 |
 
 > 注:topic guide / compare 页的 Article JSON-LD `image` 本轮加的就是 `${SITE_URL}/og-default.png`,与**它们** BaseLayout 的默认 og:image 一致 ✓(那两页没有 per-page OG 图)。工具页走的是 `ogImage={`/og/${slug}-${lang}.png`}`,所以只影响 200 个工具页。
+> **连带提醒**:上轮给 98 个 guide/compare 页补的 Article JSON-LD `image` 现在指向的正是那个 1×1 占位图 ⇒ 补 `image` 字段这件事**结构上是对的**(schema.org 要求 Article 有 image),但**指向的资产是占位符**,要在 B′ 里一并换掉。
 
 ### 7.18 合并 bot 自动提交打断「CHANGELOG 提交计数」不变量;且该不变量**在 CI 里结构性空转**
 
@@ -773,8 +787,20 @@ if (isShallowRepo) {
 
 #### 另外两个本轮实测到的部署链路事实
 
-1. **`sync-pricing.yml` 只推 GitHub。** 它的 `Commit and push` 步骤跑的是裸 `git push`,目标是 checkout 的默认远端 = `github.com` ⇒ **Gitee(`origin`,CF Pages 的部署源)永远收不到每周的定价刷新**。后果:线上工具页的 AI 定价与 `lastUpdated` 会一直停在「最后一次手工推送」那天的数据。修法是给该 workflow 加第二个远端并在 runner 上配置 Gitee SSH key(需要 secret,属部署侧改动),或把 CF Pages 的 git 集成改指 GitHub。**未擅自改**,见动作表 E7。
+1. **CF Pages 的部署源是 GitHub,不是 Gitee。** ⚠️ 本条**推翻了本节初稿的假设**(初稿写的是「CF Pages 从 Gitee 部署 ⇒ sync-pricing 只推 GitHub ⇒ 线上定价不刷新」)。实测证据三条,互相独立:
+
+   | 证据 | 内容 |
+   |---|---|
+   | ① | `b8cd076`(bot 用 `GITHUB_TOKEN` 推的提交,**GitHub Actions 没有为它触发任何 CI run**)却有 `Cloudflare Pages — Deployed successfully` 的 check-run(03:43:02Z)⇒ 部署由 **GitHub push webhook** 驱动,与 workflow 无关 |
+   | ② | `2a8f779`(当时只推了 Gitee,**从未上过 GitHub**)在 GitHub 上**没有任何** CF 部署记录 |
+   | ③ | 线上页面 `<meta http-equiv="last-modified" content="Thu, 22 Oct 2026 04:30:38 GMT">` 正好是 `9a01716` 那次 **GitHub** push 的 CF 部署时刻 |
+
+   ⇒ **推论:`sync-pricing.yml` 只推 GitHub 并不是缺陷** —— 它推的正是部署源,每周的定价刷新**会**上线(本轮 b8cd076 已于 03:43 部署)。初稿那个「线上定价不刷新」的结论**作废**。
+
+   ⇒ **反过来,真正要注意的是 Gitee 这条腿**:项目的 3-way push 约定里 Gitee 是 primary,但从**生产**角度看 GitHub 才是唯一要紧的那一路。任何「只推 Gitee 忘了推 GitHub」的提交**根本没上线过**。本轮第二轮的 3 个 commit(`6a1e75d` / `42d7e05` / `2a8f779`)就属于这种 —— 在 GitHub 上滞留了 2 个多小时才上线。
+
 2. **bot 用 `GITHUB_TOKEN` 推的 commit 不会触发新的 workflow run。** 实测:`b8cd076`(2026-10-22T03:41:34Z 推入)之后,GitHub 上**没有任何**以该 sha 为 head 的 CI run(最新 run 仍是 03:41:11 那个,head = `f749633`)。所以「Sync AI Pricing 绿了」**不等于**「那棵树被 CI 验证过」——bot 的提交需要**人**再推一次才拿到 CI 判决。本轮正是手动合并 + 手动推送才拿到 run `39721264626`。
+   —— 但注意:它**照样触发了 CF 部署**(见上一条证据①)。也就是说 **bot 的提交是「未经 CI 验证就上线」的**。这条对发布安全性有意义,已并入 E9。
 
 ### 7.1 公式歧义(必须拍板) —— ✅ 已拍板(2026-10-21)
 
@@ -817,8 +843,10 @@ if (isShallowRepo) {
 5. **分支命名** → ✅ **已定**:`feature/phase-3-playbook-6-fields` 承载 G1+G2+E1,按 §12.2「Phase 3 内的工作算小更新」直接 commit 在该分支上,不开 sub-branch。P2 另开 `feature/phase-2-p140e-seo`。
 6. `feat/i18n-drift-fix` / `feat/ai-cost-preset-chip-unification` 两个悬空分支 → ⏸ 未拍板。事实:**已被 squash 合入 master**(JSON 迁移 + 漂移检测 + pre-commit 接线都在 master 上),`git cherry` 判 `+` 只因 squash 后 patch-id 变了。真正没进 master 的只有 i18n 分支上的 2 个测试文件 → **建议只补这 2 个测试,然后删掉两个分支指针**。
 7. **L5 标记的大小写语义**(2026-10-22 新增)—— `tests/l5-tags.ts` 现钉死为**精确大小写**匹配,与 `decision-layer-coverage-guard` 的 `src.includes()` 一致。原审计脚本的测试断言「大小写不敏感」,而**没有任何实现曾是不敏感的**。若要让守卫更宽松(引擎里写成 `🧭 decision question:` 也算命中),需**同时**改 `tests/l5-tags.ts` 与守卫语义 → 属产品决策,留给 user。
-8. **`sync-pricing.yml` 要不要也推 Gitee**(2026-10-22 新增,§7.18)—— CF Pages 从 Gitee 部署,而该 workflow 只推 GitHub ⇒ 线上定价数据只在我手工推送时才更新。修法二选一:① 给 workflow 加第二个远端 + 在 runner 上配 Gitee SSH key(需 secret);② 把 CF Pages 的 git 集成改指 GitHub(那 workflow 就自动覆盖部署源)。**未擅自改**(要 secret / 要动 CF 配置)。⏸ 未拍板。
+8. ~~**`sync-pricing.yml` 要不要也推 Gitee**~~ → ❌ **前提错误,作废**(2026-10-22 12:45)。实测 **CF Pages 的部署源就是 GitHub**(三条独立证据见 §7.18),所以 `sync-pricing` 只推 GitHub **不是缺陷**,每周定价刷新本来就会上线。**原第 8 条作废。**
 9. **`ci.yml` 要不要 `fetch-depth: 0`**(2026-10-22 新增,§7.18)—— 加了之后「CHANGELOG 提交计数」不变量才在 CI 里真的把关,但要把阈值从 `> 1` 放宽到 `> 5`,否则「连续两个 commit 没碰 CHANGELOG」就红。⏸ 未拍板。
+10. **bot 提交「未经 CI 验证就上线」要不要堵**(2026-10-22 新增,§7.18 / E9)—— `sync-pricing` 直推 master,而 `GITHUB_TOKEN` 推的提交不触发 CI、却照样触发 CF 部署。⏸ 未拍板。
+11. **非工具页的默认 OG 卡长什么样**(2026-10-22 新增,§7.17 / E6 的 B′)—— `public/og-default.png` 是 2026-06-25 造的 1×1 透明占位符,从未被替换;237 个页面用它。⏸ 未拍板(版式属产品决策)。
 
 ---
 
