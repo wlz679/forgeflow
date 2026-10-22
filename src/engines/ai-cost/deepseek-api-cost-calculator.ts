@@ -177,15 +177,21 @@ function calculate(inputs: Record<string, string>): string[] {
     const bar = barChar.repeat(barLen);
     const isCheapest = c.key === cheapest.key;
     const badge = isCheapest ? ' 🏆' : '';
-    // P153: the label column is 28 wide, not 26. The client-side bar
-    // beautifier (src/pages/[lang]/[slug].astro) only recognises a row when
-    // the engine emitted AT LEAST TWO spaces between the label and the bar
-    // (regex `^(.+?)\s{2,}([█░]+)\s+[\$](\S+)`), and the engine emits
-    // pad(label, W) + ONE separator space. So a label of length L renders
-    // only while L < W. "Deepseek V4.1 Flash 1017" is 25 chars + the
-    // family icon and space = 27, which is >= 26 — at the old width its
-    // row silently lost the bar and the table just showed a bare name.
-    out.push(pad(label, 28) + ' ' + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost) + badge);
+    // P153: a label too long for the column used to lose its bar entirely.
+    //
+    // The client-side bar beautifier (src/pages/[lang]/[slug].astro) only
+    // recognises a row when the engine emitted AT LEAST TWO spaces between
+    // the label and the bar (regex `^(.+?)\s{2,}([█░]+)\s+[\$](\S+)`), and
+    // the engine emits pad(label, W) + ONE separator space. A label of
+    // length >= W therefore ended up with a single space, matched nothing,
+    // and the row was left as a bare name with no bar.
+    //
+    // The column is NOT widened to fit the longest label: widening it
+    // pushed the comparison page past its page-size budget. So the column
+    // stays at 26 and an overflowing label simply gets the two spaces the
+    // beautifier needs. Cost: one extra character per overflowing row.
+    const labelField = label.length >= 26 ? label + '  ' : pad(label, 26) + ' ';
+    out.push(labelField + pad(bar, BAR_WIDTH) + ' ' + fmt(c.monthlyCost) + badge);
   }
   out.push('');
   out.push('');
@@ -422,7 +428,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
-  "var M={'deepseek-v4.1-flash-1017':{i:0.15,o:0.6,n:'Deepseek V4.1 Flash 1017',f:'v4',cw:'1M',od:1},'deepseek-v4-flash':{i:0.3,o:1.2,n:'Deepseek V4Flash',f:'v4',cw:'1M',od:2},'deepseek-v4-pro':{i:1.32,o:3.96,n:'Deepseek V4Pro',f:'v4',cw:'1M',od:3},'deepseek-v4-pro-promo':{i:0.435,o:0.87,n:'V4 Pro (75% Promo)',f:'v4',cw:'1M',od:4},'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:5}};" +
+  "var M={'deepseek-v4.1-flash-1017':{i:0.15,o:0.6,n:'Deepseek V4.1 Flash 1017',f:'v4',cw:'1M',od:1},'deepseek-v4-flash':{i:0.3,o:1.2,n:'Deepseek V4 Flash',f:'v4',cw:'1M',od:2},'deepseek-v4-pro':{i:1.32,o:3.96,n:'Deepseek V4 Pro',f:'v4',cw:'1M',od:3},'deepseek-v4-pro-promo':{i:0.435,o:0.87,n:'V4 Pro (75% Promo)',f:'v4',cw:'1M',od:4},'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:5}};" +
 
   "var FI={v4:'\\u25C6',legacy:'\\u25C7'};" +
   "var FL={v4:'V4 Series',legacy:'Legacy'};" +
@@ -456,7 +462,7 @@ const customFn =
   "o.push('\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP2.repeat(54));" +
   "var BW=40;for(var i=0;i<all.length;i++){var c=all[i];var icon=FI[c.i.f];var label=icon+' '+c.i.n;" +
   "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.k===ch.k?'\\u2591':'\\u2588';var bd=c.k===ch.k?' \\u{1F3C6}':'';" +
-  "o.push(pd(label,28)+' '+pd(bc.repeat(bl),BW)+' '+fm(c.mc)+bd);}o.push('');o.push('');" +
+  "o.push((label.length>=26?label+'  ':pd(label,26)+' ')+pd(bc.repeat(bl),BW)+' '+fm(c.mc)+bd);}o.push('');o.push('');" +
   "o.push('\\u{1F4CB} Selected Model Details');o.push(SEP2.repeat(60));" +
   "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];var dc2=c.cpr*rpd;var ann=c.mc*12;" +
   "o.push(icon+' '+c.i.n+' ('+FL[c.i.f]+') | Context: '+c.i.cw);" +
@@ -536,7 +542,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // Single comprehensive example covering all 6 sections
-    '\n🔴 DeepSeek API Cost\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n◆ Deepseek V4.1 Flash 1017   █████                                    $1.35\n◆ Deepseek V4Flash           ███████████                              $2.70\n◆ Deepseek V4Pro             ████████████████████████████████████████ $9.90\n◆ V4 Pro (75% Promo)         ███████████                              $2.61\n◇ Deepseek R1                ████████████████████                     $4.94\n◇ Deepseek Chat              ██████                                   $1.47\n◇ Deepseek Reasoner          ██████                                   $1.47\n◇ Deepseek Coder             ░░░                                      $0.84 🏆\n◇ Deepseek V3                ██████████                               $2.46\n◇ Deepseek V3.2              ██████                                   $1.44\n◇ Deepseek Flash             ███████████                              $2.70\n◆ Deepseek V4Flash Vision Exp ███████████                              $2.70\n\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n◆ Deepseek V4Flash (V4 Series) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.30/1M → $0.0003/req\nOutput: 500     tokens × $1.20/1M → $0.0006/req\n────────────────────────────────────────────\nPer request:    $0.0009\nDaily (100):    $0.09\nMonthly (30d):  $2.70\nAnnual:         $32.40\n────────────────────────────────────────────\n\n◆ V4 Pro (75% Promo) (V4 Series) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.43/1M → $0.0004/req\nOutput: 500     tokens × $0.87/1M → $0.0004/req\n────────────────────────────────────────────\nPer request:    $0.0009\nDaily (100):    $0.09\nMonthly (30d):  $2.61\nAnnual:         $31.32\n────────────────────────────────────────────\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Deepseek Coder at $0.84/mo\n⭐ Best value (V4 standard): Deepseek V4.1 Flash 1017 at $1.35/mo\n💸 Switching from Deepseek V4Flash to V4 Pro (75% Promo) saves $0.09/mo ($1.08/yr)\n🌍 Deepseek Coder vs GPT-5 Nano: costs $0.09/month more (12% premium)\n🌍 Deepseek Coder vs Claude Haiku 3: saves $1.78/month (68% cheaper)\n🌍 Deepseek Coder vs Gemini 1.5 Flash: costs $0.17/month more (24% premium)\n💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.\n\n📅 Usage Scenarios (monthly cost at 100 reqs/day)\n\n◆ Deepseek V4Flash: 50→$1.35 · 100→$2.70 · 500→$13.50 · 1,000→$27.00 · 5,000→$135.00 · 10,000→$270.00\n◆ V4 Pro (75% Promo): 50→$1.30 · 100→$2.61 · 500→$13.05 · 1,000→$26.10 · 5,000→$130.50 · 10,000→$261.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Healthy cost spread (1.0x) across selected models.\n• 🟢 Micro-tier (under $5/mo) — V4 Pro (75% Promo) at $2.61/mo.\n• 💡 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~$2.65/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Deepseek Coder:  save $1.77/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $10.62/mo\n• Halve volume to 50 reqs/day:  $2.65/mo\n',
+    '\n🔴 DeepSeek API Cost\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n◆ Deepseek V4.1 Flash 1017  █████                                    $1.35\n◆ Deepseek V4 Flash        ███████████                              $2.70\n◆ Deepseek V4 Pro          ████████████████████████████████████████ $9.90\n◆ V4 Pro (75% Promo)       ███████████                              $2.61\n◇ Deepseek R1              ████████████████████                     $4.94\n◇ Deepseek Chat            ██████                                   $1.47\n◇ Deepseek Reasoner        ██████                                   $1.47\n◇ Deepseek Coder           ░░░                                      $0.84 🏆\n◇ Deepseek V3              ██████████                               $2.46\n◇ Deepseek V3.2            ██████                                   $1.44\n◇ Deepseek Flash           ███████████                              $2.70\n◆ Deepseek V4 Flash Vision Exp  ███████████                              $2.70\n\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n◆ Deepseek V4 Flash (V4 Series) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.30/1M → $0.0003/req\nOutput: 500     tokens × $1.20/1M → $0.0006/req\n────────────────────────────────────────────\nPer request:    $0.0009\nDaily (100):    $0.09\nMonthly (30d):  $2.70\nAnnual:         $32.40\n────────────────────────────────────────────\n\n◆ V4 Pro (75% Promo) (V4 Series) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.43/1M → $0.0004/req\nOutput: 500     tokens × $0.87/1M → $0.0004/req\n────────────────────────────────────────────\nPer request:    $0.0009\nDaily (100):    $0.09\nMonthly (30d):  $2.61\nAnnual:         $31.32\n────────────────────────────────────────────\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Deepseek Coder at $0.84/mo\n⭐ Best value (V4 standard): Deepseek V4.1 Flash 1017 at $1.35/mo\n💸 Switching from Deepseek V4 Flash to V4 Pro (75% Promo) saves $0.09/mo ($1.08/yr)\n🌍 Deepseek Coder vs GPT-5 Nano: costs $0.09/month more (12% premium)\n🌍 Deepseek Coder vs Claude Haiku 3: saves $1.78/month (68% cheaper)\n🌍 Deepseek Coder vs Gemini 1.5 Flash: costs $0.17/month more (24% premium)\n💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.\n\n📅 Usage Scenarios (monthly cost at 100 reqs/day)\n\n◆ Deepseek V4 Flash: 50→$1.35 · 100→$2.70 · 500→$13.50 · 1,000→$27.00 · 5,000→$135.00 · 10,000→$270.00\n◆ V4 Pro (75% Promo): 50→$1.30 · 100→$2.61 · 500→$13.05 · 1,000→$26.10 · 5,000→$130.50 · 10,000→$261.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Healthy cost spread (1.0x) across selected models.\n• 🟢 Micro-tier (under $5/mo) — V4 Pro (75% Promo) at $2.61/mo.\n• 💡 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~$2.65/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Deepseek Coder:  save $1.77/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $10.62/mo\n• Halve volume to 50 reqs/day:  $2.65/mo\n',
   ],
   faq: [
     { q: 'How much cheaper is DeepSeek than OpenAI?', a: 'DeepSeek V4.1 Flash 1017 at $0.15/$0.60 per 1M tokens is roughly 94% cheaper than GPT-4o ($2.50/$10) on a typical mixed workload. For 1,000 input + 500 output tokens at 100 reqs/day: DeepSeek V4.1 Flash 1017 costs about $1.35/month vs $22.50/month for GPT-4o. The cheapest DeepSeek model, Coder ($0.14/$0.28), costs about $0.84/month. V4 Pro at promo pricing ($0.435/$0.87) is still 88% cheaper than GPT-4o.' },

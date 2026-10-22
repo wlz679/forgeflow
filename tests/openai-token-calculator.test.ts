@@ -54,8 +54,9 @@ test('openai-token: multi-model compare mentions >=2 models (cheapest surfaced)'
   });
   assert.ok(out.length > 0, 'multi-model compare returns output');
   const all = out.join('\n');
-  // Engine strips dots from display names (e.g. "GPT 5Nano", "GPT 5Mini", "GPT 4o").
-  const mentions = ['GPT 5Nano', 'GPT 5Mini', 'GPT 4o']
+  // Display names keep the space after a version number: "GPT 5 Nano",
+  // "GPT 5 Mini". (P153: displayName() used to eat it and ship "GPT 5Nano".)
+  const mentions = ['GPT 5 Nano', 'GPT 5 Mini', 'GPT 4o']
     .filter(name => all.includes(name));
   assert.ok(mentions.length >= 2, `multi-model compare should mention >=2 models; got: ${mentions.join(', ')}`);
 });

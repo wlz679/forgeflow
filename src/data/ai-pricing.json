@@ -42,7 +42,7 @@
           "output": 2,
           "batchInput": 0.125,
           "batchOutput": 1,
-          "name": "GPT 5Mini",
+          "name": "GPT 5 Mini",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 8
@@ -52,7 +52,7 @@
           "output": 0.4,
           "batchInput": 0.025,
           "batchOutput": 0.2,
-          "name": "GPT 5Nano",
+          "name": "GPT 5 Nano",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 9
@@ -72,7 +72,7 @@
           "output": 1.6,
           "batchInput": 0.2,
           "batchOutput": 0.8,
-          "name": "GPT 4.1Mini",
+          "name": "GPT 4.1 Mini",
           "family": "gpt41",
           "contextWindow": "1M",
           "order": 11
@@ -82,7 +82,7 @@
           "output": 0.4,
           "batchInput": 0.05,
           "batchOutput": 0.2,
-          "name": "GPT 4.1Nano",
+          "name": "GPT 4.1 Nano",
           "family": "gpt41",
           "contextWindow": "1M",
           "order": 12
@@ -103,7 +103,7 @@
           "output": 4.4,
           "batchInput": 0.55,
           "batchOutput": 2.2,
-          "name": "O4Mini",
+          "name": "O4 Mini",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 14,
@@ -134,7 +134,7 @@
           "output": 30,
           "batchInput": 5,
           "batchOutput": 15,
-          "name": "GPT 4Turbo",
+          "name": "GPT 4 Turbo",
           "family": "legacy",
           "contextWindow": "128K",
           "order": 17
@@ -144,7 +144,7 @@
           "output": 1.5,
           "batchInput": 0.25,
           "batchOutput": 0.75,
-          "name": "GPT 3.5Turbo",
+          "name": "GPT 3.5 Turbo",
           "family": "legacy",
           "contextWindow": "16K",
           "order": 18
@@ -160,7 +160,7 @@
         "gpt-3.5-turbo-0125": {
           "input": 0.5,
           "output": 1.5,
-          "name": "GPT 3.5Turbo 0125",
+          "name": "GPT 3.5 Turbo 0125",
           "family": "legacy",
           "contextWindow": "16K",
           "order": 20
@@ -168,7 +168,7 @@
         "gpt-3.5-turbo-1106": {
           "input": 1,
           "output": 2,
-          "name": "GPT 3.5Turbo 1106",
+          "name": "GPT 3.5 Turbo 1106",
           "family": "legacy",
           "contextWindow": "16K",
           "order": 21
@@ -176,7 +176,7 @@
         "gpt-3.5-turbo-16k": {
           "input": 3,
           "output": 4,
-          "name": "GPT 3.5Turbo 16k",
+          "name": "GPT 3.5 Turbo 16k",
           "family": "legacy",
           "contextWindow": "16K",
           "order": 22
@@ -184,7 +184,7 @@
         "gpt-3.5-turbo-instruct": {
           "input": 1.5,
           "output": 2,
-          "name": "GPT 3.5Turbo Instruct",
+          "name": "GPT 3.5 Turbo Instruct",
           "family": "legacy",
           "contextWindow": "8K",
           "order": 23
@@ -192,7 +192,7 @@
         "gpt-3.5-turbo-instruct-0914": {
           "input": 1.5,
           "output": 2,
-          "name": "GPT 3.5Turbo Instruct 0914",
+          "name": "GPT 3.5 Turbo Instruct 0914",
           "family": "legacy",
           "contextWindow": "8K",
           "order": 24
@@ -232,7 +232,7 @@
         "gpt-4-1106-preview": {
           "input": 10,
           "output": 30,
-          "name": "GPT 41106Preview",
+          "name": "GPT 41106 Preview",
           "family": "legacy",
           "contextWindow": "128K",
           "order": 29
@@ -240,7 +240,7 @@
         "gpt-4-turbo-2024-04-09": {
           "input": 10,
           "output": 30,
-          "name": "GPT 4Turbo 20240409",
+          "name": "GPT 4 Turbo 20240409",
           "family": "legacy",
           "contextWindow": "128K",
           "order": 30
@@ -264,7 +264,7 @@
         "gpt-4.1-mini-2025-04-14": {
           "input": 0.4,
           "output": 1.6,
-          "name": "GPT 4.1Mini 20250414",
+          "name": "GPT 4.1 Mini 20250414",
           "family": "gpt41",
           "contextWindow": "1M",
           "order": 33
@@ -272,7 +272,7 @@
         "gpt-4.1-nano-2025-04-14": {
           "input": 0.1,
           "output": 0.4,
-          "name": "GPT 4.1Nano 20250414",
+          "name": "GPT 4.1 Nano 20250414",
           "family": "gpt41",
           "contextWindow": "1M",
           "order": 34
@@ -544,7 +544,7 @@
         "gpt-5.1-chat-latest": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5.1Chat Latest",
+          "name": "GPT 5.1 Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 68
@@ -560,7 +560,7 @@
         "gpt-5.2-chat-latest": {
           "input": 1.75,
           "output": 14,
-          "name": "GPT 5.2Chat Latest",
+          "name": "GPT 5.2 Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 70
@@ -568,7 +568,7 @@
         "gpt-5.3-chat-latest": {
           "input": 1.75,
           "output": 14,
-          "name": "GPT 5.3Chat Latest",
+          "name": "GPT 5.3 Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 71
@@ -576,7 +576,7 @@
         "gpt-5.2-pro": {
           "input": 21,
           "output": 168,
-          "name": "GPT 5.2Pro",
+          "name": "GPT 5.2 Pro",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 72
@@ -584,7 +584,7 @@
         "gpt-5.2-pro-2025-12-11": {
           "input": 21,
           "output": 168,
-          "name": "GPT 5.2Pro 20251211",
+          "name": "GPT 5.2 Pro 20251211",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 73
@@ -600,7 +600,7 @@
         "gpt-5.5-pro": {
           "input": 30,
           "output": 180,
-          "name": "GPT 5.5Pro",
+          "name": "GPT 5.5 Pro",
           "family": "gpt5",
           "contextWindow": "1M",
           "order": 75
@@ -608,7 +608,7 @@
         "gpt-5.5-pro-2026-04-23": {
           "input": 30,
           "output": 180,
-          "name": "GPT 5.5Pro 20260423",
+          "name": "GPT 5.5 Pro 20260423",
           "family": "gpt5",
           "contextWindow": "1M",
           "order": 76
@@ -632,7 +632,7 @@
         "gpt-5.4-pro": {
           "input": 30,
           "output": 180,
-          "name": "GPT 5.4Pro",
+          "name": "GPT 5.4 Pro",
           "family": "gpt5",
           "contextWindow": "1M",
           "order": 79
@@ -640,7 +640,7 @@
         "gpt-5.4-pro-2026-03-05": {
           "input": 30,
           "output": 180,
-          "name": "GPT 5.4Pro 20260305",
+          "name": "GPT 5.4 Pro 20260305",
           "family": "gpt5",
           "contextWindow": "1M",
           "order": 80
@@ -648,7 +648,7 @@
         "gpt-5.4-mini": {
           "input": 0.75,
           "output": 4.5,
-          "name": "GPT 5.4Mini",
+          "name": "GPT 5.4 Mini",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 81
@@ -656,7 +656,7 @@
         "gpt-5.4-mini-2026-03-17": {
           "input": 0.75,
           "output": 4.5,
-          "name": "GPT 5.4Mini 20260317",
+          "name": "GPT 5.4 Mini 20260317",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 82
@@ -664,7 +664,7 @@
         "gpt-5.4-nano": {
           "input": 0.2,
           "output": 1.25,
-          "name": "GPT 5.4Nano",
+          "name": "GPT 5.4 Nano",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 83
@@ -672,7 +672,7 @@
         "gpt-5.4-nano-2026-03-17": {
           "input": 0.2,
           "output": 1.25,
-          "name": "GPT 5.4Nano 20260317",
+          "name": "GPT 5.4 Nano 20260317",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 84
@@ -680,7 +680,7 @@
         "gpt-5-pro": {
           "input": 15,
           "output": 120,
-          "name": "GPT 5Pro",
+          "name": "GPT 5 Pro",
           "family": "gpt5",
           "contextWindow": "400K",
           "order": 85
@@ -688,7 +688,7 @@
         "gpt-5-pro-2025-10-06": {
           "input": 15,
           "output": 120,
-          "name": "GPT 5Pro 20251006",
+          "name": "GPT 5 Pro 20251006",
           "family": "gpt5",
           "contextWindow": "400K",
           "order": 86
@@ -704,7 +704,7 @@
         "gpt-5-chat": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5Chat",
+          "name": "GPT 5 Chat",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 88
@@ -712,7 +712,7 @@
         "gpt-5-chat-latest": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5Chat Latest",
+          "name": "GPT 5 Chat Latest",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 89
@@ -720,7 +720,7 @@
         "gpt-5-codex": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5Codex",
+          "name": "GPT 5 Codex",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 90
@@ -728,7 +728,7 @@
         "gpt-5.1-codex": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5.1Codex",
+          "name": "GPT 5.1 Codex",
           "family": "gpt5",
           "contextWindow": "400K",
           "order": 91
@@ -736,7 +736,7 @@
         "gpt-5.1-codex-max": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5.1Codex Max",
+          "name": "GPT 5.1 Codex Max",
           "family": "gpt5",
           "contextWindow": "400K",
           "order": 92
@@ -744,7 +744,7 @@
         "gpt-5.1-codex-mini": {
           "input": 0.25,
           "output": 2,
-          "name": "GPT 5.1Codex Mini",
+          "name": "GPT 5.1 Codex Mini",
           "family": "gpt5",
           "contextWindow": "400K",
           "order": 93
@@ -752,7 +752,7 @@
         "gpt-5.2-codex": {
           "input": 1.75,
           "output": 14,
-          "name": "GPT 5.2Codex",
+          "name": "GPT 5.2 Codex",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 94
@@ -760,7 +760,7 @@
         "gpt-5.3-codex": {
           "input": 1.75,
           "output": 14,
-          "name": "GPT 5.3Codex",
+          "name": "GPT 5.3 Codex",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 95
@@ -768,7 +768,7 @@
         "gpt-5-mini-2025-08-07": {
           "input": 0.25,
           "output": 2,
-          "name": "GPT 5Mini 20250807",
+          "name": "GPT 5 Mini 20250807",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 96
@@ -776,7 +776,7 @@
         "gpt-5-nano-2025-08-07": {
           "input": 0.05,
           "output": 0.4,
-          "name": "GPT 5Nano 20250807",
+          "name": "GPT 5 Nano 20250807",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 97
@@ -840,7 +840,7 @@
         "o1-pro": {
           "input": 150,
           "output": 600,
-          "name": "O1Pro",
+          "name": "O1 Pro",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 105
@@ -848,7 +848,7 @@
         "o1-pro-2025-03-19": {
           "input": 150,
           "output": 600,
-          "name": "O1Pro 20250319",
+          "name": "O1 Pro 20250319",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 106
@@ -864,7 +864,7 @@
         "o3-deep-research": {
           "input": 10,
           "output": 40,
-          "name": "O3Deep Research",
+          "name": "O3 Deep Research",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 108
@@ -872,7 +872,7 @@
         "o3-deep-research-2025-06-26": {
           "input": 10,
           "output": 40,
-          "name": "O3Deep Research 20250626",
+          "name": "O3 Deep Research 20250626",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 109
@@ -880,7 +880,7 @@
         "o3-mini": {
           "input": 1.1,
           "output": 4.4,
-          "name": "O3Mini",
+          "name": "O3 Mini",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 110
@@ -888,7 +888,7 @@
         "o3-mini-2025-01-31": {
           "input": 1.1,
           "output": 4.4,
-          "name": "O3Mini 20250131",
+          "name": "O3 Mini 20250131",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 111
@@ -896,7 +896,7 @@
         "o3-pro": {
           "input": 20,
           "output": 80,
-          "name": "O3Pro",
+          "name": "O3 Pro",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 112
@@ -904,7 +904,7 @@
         "o3-pro-2025-06-10": {
           "input": 20,
           "output": 80,
-          "name": "O3Pro 20250610",
+          "name": "O3 Pro 20250610",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 113
@@ -912,7 +912,7 @@
         "o4-mini-2025-04-16": {
           "input": 1.1,
           "output": 4.4,
-          "name": "O4Mini 20250416",
+          "name": "O4 Mini 20250416",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 114
@@ -920,7 +920,7 @@
         "o4-mini-deep-research": {
           "input": 2,
           "output": 8,
-          "name": "O4Mini Deep Research",
+          "name": "O4 Mini Deep Research",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 115
@@ -928,7 +928,7 @@
         "o4-mini-deep-research-2025-06-26": {
           "input": 2,
           "output": 8,
-          "name": "O4Mini Deep Research 20250626",
+          "name": "O4 Mini Deep Research 20250626",
           "family": "o-series",
           "contextWindow": "200K",
           "order": 116
@@ -968,7 +968,7 @@
         "gpt-5-search-api": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5Search Api",
+          "name": "GPT 5 Search Api",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 121
@@ -976,7 +976,7 @@
         "gpt-5-search-api-2025-10-14": {
           "input": 1.25,
           "output": 10,
-          "name": "GPT 5Search Api 20251014",
+          "name": "GPT 5 Search Api 20251014",
           "family": "gpt5",
           "contextWindow": "272K",
           "order": 122
@@ -1008,7 +1008,7 @@
         "gpt-5.6-sol": {
           "input": 4,
           "output": 20,
-          "name": "GPT 5.6Sol",
+          "name": "GPT 5.6 Sol",
           "family": "gpt5",
           "contextWindow": "922K",
           "order": 126
@@ -1016,7 +1016,7 @@
         "gpt-5.6-terra": {
           "input": 2,
           "output": 12,
-          "name": "GPT 5.6Terra",
+          "name": "GPT 5.6 Terra",
           "family": "gpt5",
           "contextWindow": "922K",
           "order": 127
@@ -1024,7 +1024,7 @@
         "gpt-5.6-luna": {
           "input": 0.2,
           "output": 1.2,
-          "name": "GPT 5.6Luna",
+          "name": "GPT 5.6 Luna",
           "family": "gpt5",
           "contextWindow": "922K",
           "order": 128
@@ -1040,7 +1040,7 @@
         "gpt-realtime-2.1-mini": {
           "input": 0.6,
           "output": 2.4,
-          "name": "GPT Realtime 2.1Mini",
+          "name": "GPT Realtime 2.1 Mini",
           "family": "legacy",
           "contextWindow": "128K",
           "order": 130
@@ -1048,7 +1048,7 @@
         "gpt-5.6-cyber": {
           "input": 12.5,
           "output": 75,
-          "name": "GPT 5.6Cyber",
+          "name": "GPT 5.6 Cyber",
           "family": "gpt5",
           "contextWindow": "400K",
           "order": 131
@@ -1056,7 +1056,7 @@
         "gpt-6-astra": {
           "input": 10,
           "output": 50,
-          "name": "GPT 6Astra",
+          "name": "GPT 6 Astra",
           "family": "gpt6",
           "contextWindow": "922K",
           "order": 2,
@@ -1066,7 +1066,7 @@
         "gpt-6-sol": {
           "input": 2,
           "output": 10,
-          "name": "GPT 6Sol",
+          "name": "GPT 6 Sol",
           "family": "gpt6",
           "contextWindow": "922K",
           "order": 3,
@@ -1076,7 +1076,7 @@
         "gpt-6-luna": {
           "input": 0.1,
           "output": 0.5,
-          "name": "GPT 6Luna",
+          "name": "GPT 6 Luna",
           "family": "gpt6",
           "contextWindow": "922K",
           "order": 4,
@@ -1102,7 +1102,7 @@
         "gpt-5.5-cyber": {
           "input": 12.5,
           "output": 75,
-          "name": "GPT 5.5Cyber",
+          "name": "GPT 5.5 Cyber",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 134
@@ -1110,7 +1110,7 @@
         "gpt-5.5-cyber-preview": {
           "input": 12.5,
           "output": 75,
-          "name": "GPT 5.5Cyber Preview",
+          "name": "GPT 5.5 Cyber Preview",
           "family": "gpt5",
           "contextWindow": "128K",
           "order": 135
@@ -1126,7 +1126,7 @@
         "gpt-6.1-sol": {
           "input": 2,
           "output": 10,
-          "name": "GPT 6.1Sol",
+          "name": "GPT 6.1 Sol",
           "family": "gpt6",
           "contextWindow": "922K",
           "order": 1,
@@ -1277,7 +1277,7 @@
         "claude-sonnet-4-5-20250929-v1:0": {
           "input": 3,
           "output": 15,
-          "name": "Claude Sonnet 45 20250929V1:0",
+          "name": "Claude Sonnet 45 20250929 V1:0",
           "family": "claude4x",
           "contextWindow": "200K",
           "order": 20
@@ -1423,7 +1423,7 @@
           "output": 9,
           "batchInput": 0.375,
           "batchOutput": 2.25,
-          "name": "Gemini 3.5Flash",
+          "name": "Gemini 3.5 Flash",
           "family": "flash35",
           "contextWindow": "1M",
           "order": 3,
@@ -1463,7 +1463,7 @@
           "output": 2.5,
           "batchInput": 0,
           "batchOutput": 0,
-          "name": "Gemini 2.5Flash",
+          "name": "Gemini 2.5 Flash",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 6,
@@ -1532,7 +1532,7 @@
         "gemini-2.5-flash-image": {
           "input": 0.3,
           "output": 2.5,
-          "name": "Gemini 2.5Flash Image",
+          "name": "Gemini 2.5 Flash Image",
           "family": "legacy",
           "contextWindow": "66K",
           "order": 13
@@ -1540,7 +1540,7 @@
         "gemini-3-pro-image-preview": {
           "input": 2,
           "output": 12,
-          "name": "Gemini 3Pro Image Preview",
+          "name": "Gemini 3 Pro Image Preview",
           "family": "flash3",
           "contextWindow": "131K",
           "order": 14
@@ -1548,7 +1548,7 @@
         "gemini-3.1-flash-image-preview": {
           "input": 0.5,
           "output": 3,
-          "name": "Gemini 3.1Flash Image Preview",
+          "name": "Gemini 3.1 Flash Image Preview",
           "family": "flash3",
           "contextWindow": "66K",
           "order": 15
@@ -1556,7 +1556,7 @@
         "gemini-3.1-flash-lite-preview": {
           "input": 0.25,
           "output": 1.5,
-          "name": "Gemini 3.1Flash Lite Preview",
+          "name": "Gemini 3.1 Flash Lite Preview",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 16
@@ -1564,7 +1564,7 @@
         "gemini-3.1-flash-lite": {
           "input": 0.25,
           "output": 1.5,
-          "name": "Gemini 3.1Flash Lite",
+          "name": "Gemini 3.1 Flash Lite",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 17
@@ -1572,7 +1572,7 @@
         "gemini-2.5-flash-lite": {
           "input": 0.1,
           "output": 0.4,
-          "name": "Gemini 2.5Flash Lite",
+          "name": "Gemini 2.5 Flash Lite",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 18
@@ -1580,7 +1580,7 @@
         "gemini-2.5-flash-lite-preview-09-2025": {
           "input": 0.1,
           "output": 0.4,
-          "name": "Gemini 2.5Flash Lite Preview 092025",
+          "name": "Gemini 2.5 Flash Lite Preview 092025",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 19
@@ -1588,7 +1588,7 @@
         "gemini-2.5-flash-preview-09-2025": {
           "input": 0.3,
           "output": 2.5,
-          "name": "Gemini 2.5Flash Preview 092025",
+          "name": "Gemini 2.5 Flash Preview 092025",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 20
@@ -1596,7 +1596,7 @@
         "gemini-live-2.5-flash-preview-native-audio-09-2025": {
           "input": 0.5,
           "output": 2,
-          "name": "Gemini Live 2.5Flash Preview Native Audio 092025",
+          "name": "Gemini Live 2.5 Flash Preview Native Audio 092025",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 21
@@ -1612,7 +1612,7 @@
         "gemini-2.5-pro": {
           "input": 1.25,
           "output": 10,
-          "name": "Gemini 2.5Pro",
+          "name": "Gemini 2.5 Pro",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 23
@@ -1628,7 +1628,7 @@
         "gemini-3.1-pro-preview": {
           "input": 2,
           "output": 12,
-          "name": "Gemini 3.1Pro Preview",
+          "name": "Gemini 3.1 Pro Preview",
           "family": "pro",
           "contextWindow": "1M",
           "order": 25
@@ -1636,7 +1636,7 @@
         "gemini-3.1-pro-preview-customtools": {
           "input": 2,
           "output": 12,
-          "name": "Gemini 3.1Pro Preview Customtools",
+          "name": "Gemini 3.1 Pro Preview Customtools",
           "family": "pro",
           "contextWindow": "1M",
           "order": 26
@@ -1644,7 +1644,7 @@
         "gemini-2.5-pro-preview-tts": {
           "input": 1,
           "output": 20,
-          "name": "Gemini 2.5Pro Preview Tts",
+          "name": "Gemini 2.5 Pro Preview Tts",
           "family": "legacy",
           "contextWindow": "8K",
           "order": 27
@@ -1652,7 +1652,7 @@
         "gemini-robotics-er-1.5-preview": {
           "input": 0.3,
           "output": 2.5,
-          "name": "Gemini Robotics Er 1.5Preview",
+          "name": "Gemini Robotics Er 1.5 Preview",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 28
@@ -1660,7 +1660,7 @@
         "gemini-2.5-computer-use-preview-10-2025": {
           "input": 1.25,
           "output": 10,
-          "name": "Gemini 2.5Computer Use Preview 102025",
+          "name": "Gemini 2.5 Computer Use Preview 102025",
           "family": "legacy",
           "contextWindow": "128K",
           "order": 29
@@ -1692,7 +1692,7 @@
         "gemini-2.5-flash-preview-tts": {
           "input": 0.5,
           "output": 10,
-          "name": "Gemini 2.5Flash Preview Tts",
+          "name": "Gemini 2.5 Flash Preview Tts",
           "family": "legacy",
           "contextWindow": "8K",
           "order": 33
@@ -1700,7 +1700,7 @@
         "gemini-3-flash-preview": {
           "input": 0.5,
           "output": 3,
-          "name": "Gemini 3Flash Preview",
+          "name": "Gemini 3 Flash Preview",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 34
@@ -1724,7 +1724,7 @@
         "gemini-2.5-flash-native-audio-latest": {
           "input": 0.5,
           "output": 2,
-          "name": "Gemini 2.5Flash Native Audio Latest",
+          "name": "Gemini 2.5 Flash Native Audio Latest",
           "family": "legacy",
           "contextWindow": "131K",
           "order": 37
@@ -1732,7 +1732,7 @@
         "gemini-2.5-flash-native-audio-preview-09-2025": {
           "input": 0.5,
           "output": 2,
-          "name": "Gemini 2.5Flash Native Audio Preview 092025",
+          "name": "Gemini 2.5 Flash Native Audio Preview 092025",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 38
@@ -1740,7 +1740,7 @@
         "gemini-2.5-flash-native-audio-preview-12-2025": {
           "input": 0.5,
           "output": 2,
-          "name": "Gemini 2.5Flash Native Audio Preview 122025",
+          "name": "Gemini 2.5 Flash Native Audio Preview 122025",
           "family": "legacy",
           "contextWindow": "131K",
           "order": 39
@@ -1748,7 +1748,7 @@
         "gemini-3.1-flash-live-preview": {
           "input": 0.75,
           "output": 4.5,
-          "name": "Gemini 3.1Flash Live Preview",
+          "name": "Gemini 3.1 Flash Live Preview",
           "family": "flash3",
           "contextWindow": "131K",
           "order": 40
@@ -1772,7 +1772,7 @@
         "gemini-3-pro-image": {
           "input": 2,
           "output": 12,
-          "name": "Gemini 3Pro Image",
+          "name": "Gemini 3 Pro Image",
           "family": "flash3",
           "contextWindow": "66K",
           "order": 43
@@ -1780,7 +1780,7 @@
         "gemini-3.1-flash-image": {
           "input": 0.5,
           "output": 3,
-          "name": "Gemini 3.1Flash Image",
+          "name": "Gemini 3.1 Flash Image",
           "family": "flash3",
           "contextWindow": "131K",
           "order": 44
@@ -1796,7 +1796,7 @@
         "gemini-3.5-flash-lite": {
           "input": 0.3,
           "output": 2.5,
-          "name": "Gemini 3.5Flash Lite",
+          "name": "Gemini 3.5 Flash Lite",
           "family": "flash35",
           "contextWindow": "1M",
           "order": 46
@@ -1804,7 +1804,7 @@
         "gemini-3.6-flash": {
           "input": 0.75,
           "output": 3.75,
-          "name": "Gemini 3.6Flash",
+          "name": "Gemini 3.6 Flash",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 47
@@ -1812,7 +1812,7 @@
         "gemini-robotics-er-2-preview": {
           "input": 1,
           "output": 5,
-          "name": "Gemini Robotics Er 2Preview",
+          "name": "Gemini Robotics Er 2 Preview",
           "family": "legacy",
           "contextWindow": "131K",
           "order": 48
@@ -1828,7 +1828,7 @@
         "gemini-robotics-er-2-streaming-preview": {
           "input": 1,
           "output": 5,
-          "name": "Gemini Robotics Er 2Streaming Preview",
+          "name": "Gemini Robotics Er 2 Streaming Preview",
           "family": "legacy",
           "contextWindow": "131K",
           "order": 50
@@ -1836,7 +1836,7 @@
         "gemini-3.7-flash": {
           "input": 0.75,
           "output": 3.75,
-          "name": "Gemini 3.7Flash",
+          "name": "Gemini 3.7 Flash",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 51
@@ -1844,7 +1844,7 @@
         "gemini-3.1-flash-tts-preview": {
           "input": 1,
           "output": 20,
-          "name": "Gemini 3.1Flash Tts Preview",
+          "name": "Gemini 3.1 Flash Tts Preview",
           "family": "flash3",
           "contextWindow": "8K",
           "order": 52
@@ -1852,7 +1852,7 @@
         "gemini-3.1-flash-lite-image": {
           "input": 0.25,
           "output": 1.5,
-          "name": "Gemini 3.1Flash Lite Image",
+          "name": "Gemini 3.1 Flash Lite Image",
           "family": "flash3",
           "contextWindow": "66K",
           "order": 53
@@ -1860,7 +1860,7 @@
         "gemini-3.5-live-translate-preview": {
           "input": 3.5,
           "output": 21,
-          "name": "Gemini 3.5Live Translate Preview",
+          "name": "Gemini 3.5 Live Translate Preview",
           "family": "flash35",
           "contextWindow": "131K",
           "order": 54
@@ -1868,7 +1868,7 @@
         "gemini-live-2.5-flash-native-audio": {
           "input": 0.5,
           "output": 2,
-          "name": "Gemini Live 2.5Flash Native Audio",
+          "name": "Gemini Live 2.5 Flash Native Audio",
           "family": "legacy",
           "contextWindow": "131K",
           "order": 55
@@ -1900,7 +1900,7 @@
         "gemini-3.8-flash": {
           "input": 0.75,
           "output": 3.75,
-          "name": "Gemini 3.8Flash",
+          "name": "Gemini 3.8 Flash",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 2,
@@ -1913,7 +1913,7 @@
         "gemini-3.8-flash-cyber": {
           "input": 1.5,
           "output": 7.5,
-          "name": "Gemini 3.8Flash Cyber",
+          "name": "Gemini 3.8 Flash Cyber",
           "family": "flash3",
           "contextWindow": "1M",
           "order": 59
@@ -1921,7 +1921,7 @@
         "gemini-3.8-live": {
           "input": 0.75,
           "output": 4.5,
-          "name": "Gemini 3.8Live",
+          "name": "Gemini 3.8 Live",
           "family": "flash3",
           "contextWindow": "131K",
           "order": 60
@@ -1929,7 +1929,7 @@
         "gemini-3.8-live-extended-thinking": {
           "input": 0.75,
           "output": 4.5,
-          "name": "Gemini 3.8Live Extended Thinking",
+          "name": "Gemini 3.8 Live Extended Thinking",
           "family": "flash3",
           "contextWindow": "131K",
           "order": 61
@@ -1937,7 +1937,7 @@
         "gemini-3.8-flash-tts": {
           "input": 0.5,
           "output": 9,
-          "name": "Gemini 3.8Flash Tts",
+          "name": "Gemini 3.8 Flash Tts",
           "family": "flash3",
           "contextWindow": "8K",
           "order": 62
@@ -1945,7 +1945,7 @@
         "gemini-3.8-flash-lite-tts": {
           "input": 0.5,
           "output": 6,
-          "name": "Gemini 3.8Flash Lite Tts",
+          "name": "Gemini 3.8 Flash Lite Tts",
           "family": "flash3",
           "contextWindow": "8K",
           "order": 63
@@ -1953,7 +1953,7 @@
         "gemini-3.5-transcribe": {
           "input": 2,
           "output": 12,
-          "name": "Gemini 3.5Transcribe",
+          "name": "Gemini 3.5 Transcribe",
           "family": "flash35",
           "contextWindow": "98K",
           "order": 64
@@ -1961,7 +1961,7 @@
         "gemini-3.5-transcribe-live": {
           "input": 3.5,
           "output": 21,
-          "name": "Gemini 3.5Transcribe Live",
+          "name": "Gemini 3.5 Transcribe Live",
           "family": "flash35",
           "contextWindow": "131K",
           "order": 65
@@ -1969,7 +1969,7 @@
         "gemini-omni-1.1-flash": {
           "input": 1.5,
           "output": 9,
-          "name": "Gemini Omni 1.1Flash",
+          "name": "Gemini Omni 1.1 Flash",
           "family": "legacy",
           "contextWindow": "1M",
           "order": 66
@@ -1985,7 +1985,7 @@
         "gemini-4-argon": {
           "input": 2,
           "output": 10,
-          "name": "Gemini 4Argon",
+          "name": "Gemini 4 Argon",
           "family": "gem4",
           "contextWindow": "1M",
           "order": 1,
@@ -2004,7 +2004,7 @@
         "deepseek-v4-flash": {
           "input": 0.3,
           "output": 1.2,
-          "name": "Deepseek V4Flash",
+          "name": "Deepseek V4 Flash",
           "family": "v4",
           "contextWindow": "1M",
           "order": 2
@@ -2012,7 +2012,7 @@
         "deepseek-v4-pro": {
           "input": 1.32,
           "output": 3.96,
-          "name": "Deepseek V4Pro",
+          "name": "Deepseek V4 Pro",
           "family": "v4",
           "contextWindow": "1M",
           "order": 3
@@ -2084,7 +2084,7 @@
         "deepseek-v4-flash-vision-exp": {
           "input": 0.3,
           "output": 1.2,
-          "name": "Deepseek V4Flash Vision Exp",
+          "name": "Deepseek V4 Flash Vision Exp",
           "family": "v4",
           "contextWindow": "1M",
           "order": 12

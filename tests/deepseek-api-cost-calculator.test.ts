@@ -51,8 +51,9 @@ test('deepseek-api-cost: multi-model compare mentions >=2 models (cheapest surfa
   });
   assert.ok(out.length > 0, 'multi-model compare returns output');
   const all = out.join('\n');
-  // Engine strips dots from display names (e.g. "Deepseek V4Flash", "Deepseek R1").
-  const mentions = ['Deepseek V4Flash', 'V4 Pro (75% Promo)', 'Deepseek R1']
+  // Display names keep the space after a version number: "Deepseek V4 Flash".
+  // (P153: displayName() used to eat it and ship "Deepseek V4Flash".)
+  const mentions = ['Deepseek V4 Flash', 'V4 Pro (75% Promo)', 'Deepseek R1']
     .filter(name => all.includes(name));
   assert.ok(mentions.length >= 2, `multi-model compare should mention >=2 models; got: ${mentions.join(', ')}`);
 });

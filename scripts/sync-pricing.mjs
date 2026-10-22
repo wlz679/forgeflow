@@ -200,18 +200,13 @@ const MANUAL_MODELS = {
     // 2026-10-22. Cheapest V4-series model we carry (V4 Flash is
     // $0.30/$1.20), so it leads the DeepSeek table.
     //
-    // `name` is set explicitly rather than derived. The script's own
-    // displayName() collapses "digit + space + word" into "digit + word"
-    // (its regex is /(\d+) (\w)/g), which turns this key into
-    // "Deepseek V4.1Flash 1017" — the same defect it already ships as
-    // "GPT 5Nano" and "Gemini 3.8Flash" on ~127 model names. Fixing that
-    // regex is a separate, wider change (it renames every affected model
-    // and touches test expectations and i18n keys), so this entry carries
-    // its own correct name until that lands.
+    // No `name` override: displayName() derives "Deepseek V4.1 Flash 1017"
+    // from this key. It used to need an explicit name because displayName()'s
+    // old regex ate the space after a digit ("V4.1Flash"); that regex is
+    // fixed above, so the name is derived like every other model's.
     'deepseek-v4.1-flash-1017': {
       input: 0.15,
       output: 0.6,
-      name: 'Deepseek V4.1 Flash 1017',
       contextTokens: 1_048_576,
     },
     // V4 Pro at its 75%-off promo price. Also absent from upstream
@@ -283,7 +278,16 @@ function displayName(litellmKey) {
       return p.charAt(0).toUpperCase() + p.slice(1);
     })
     .join(' ')
-    .replace(/(\d+) (\w)/g, '$1$2') // "3 5" → "3.5"? No, just keep space. We'll let humans read it.
+    // Collapse a version number's digit groups: "claude-3-5-sonnet" →
+    // "Claude 35 Sonnet", "claude-opus-5-5" → "Claude Opus 55", and the
+    // date suffixes "2025 03 19" → "20250319".
+    //
+    // The second group must be a DIGIT, not \w. With \w it also ate the
+    // letter after a space, which is why the site shipped "GPT 5Nano",
+    // "Gemini 3.8Flash", "Claude 3Opus", "Deepseek V4Flash" — 127 model
+    // names in the dataset had a missing space. Restricting it to \d keeps
+    // every intended collapse and stops the letter-eating.
+    .replace(/(\d+) (\d)/g, '$1$2')
     .replace(/^Gpt/, 'GPT');
 }
 
