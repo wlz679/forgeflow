@@ -41,6 +41,12 @@ const articleSchema = JSON.stringify({
   '@context': 'https://schema.org',
   '@type': 'Article',
   headline: title,
+  // P153: Article.image is a schema.org-recommended property (it is what
+  // makes an Article eligible for image rich results). The P93
+  // json-ld-field-guard requires it and the 98 guide/compare pages were
+  // failing it. Same URL BaseLayout emits as og:image / twitter:image
+  // (the layout default), so the structured data and the meta tags agree.
+  image: `${SITE_URL}/og-default.png`,
   articleSection: `${cat.name} / ${topic.title.en}`,
   about: { '@type': 'Thing', name: topic.title.en },
   mentions: topic.calculatorSlugs.map((slug) => ({

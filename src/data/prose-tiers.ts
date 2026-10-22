@@ -39,26 +39,71 @@ export const TIER_1_SLUGS: string[] = [
 ];
 
 export const TIER_2_SLUGS: string[] = [
-  // A (SaaS Metrics) — 1 mid-priority (2 promoted to Tier 1 extension in P140f-B2 wave A)
+  // P153: restored to the authoritative a41008e assignment (35 entries).
+  //
+  // The 15 P140f-B2 "letter X Tier 1 extension content fill" commits
+  // (2026-08-20/21) each removed 2 slugs from this list with the note
+  // "promote to Tier 1 extension" — but never added them to TIER_1_SLUGS.
+  // What they actually promoted was the TOPIC tier (src/data/topic-content.ts:
+  // 45 Tier 1 Topics = 15 anchors + 30 extensions), not the tool prose tier.
+  // Net effect: 30 tool prose files ended up in NO tier list, fell through
+  // to the tier-3 default in getTier(), and the 15/35/50 partition the guard
+  // asserts was broken (union was 70 of 100).
+  //
+  // Measured before restoring (P153): 29 of the 30 already meet the tier-2
+  // thresholds; only solopreneur-email-campaign-roi-calculator was short
+  // (zh H2 147 chars vs 150). Restoring the list re-applies the tier-2 bar
+  // to them — which is the bar the spec asked for.
+  // A (SaaS Metrics) — 3 mid-priority
+  'solopreneur-arr-multiple-valuation-calculator',       // was solopreneur-arr-multiple-calculator
+  'solopreneur-burn-rate-calculator',
   'solopreneur-churn-rate-calculator',
-  // B (AI Cost) — 2 mid-priority (2 promoted to Tier 1 extension in P140f-B2 wave B)
+  // B (AI Cost) — 4 mid-priority
   'solopreneur-claude-api-cost-calculator',
   'solopreneur-deepseek-api-cost-calculator',
-  // C (Valuation) — 2 mid-priority (2 promoted to Tier 1 extension in P140f-B2 wave C)
+  'solopreneur-ai-image-cost-calculator',                // was solopreneur-ai-image-generation-cost-calculator
+  'solopreneur-gpu-cloud-cost-calculator',               // B+1 over plan to meet 35 count
+  // C (Valuation) — 4 mid-priority
+  'solopreneur-equity-dilution-calculator',
   'solopreneur-ltv-calculator',                          // was solopreneur-ltv-cac-calculator
+  'solopreneur-unit-economics-calculator',               // was solopreneur-cac-payback-period-calculator
   'solopreneur-cac-calculator',                          // C+1 over plan to meet 35 count
-  // D (Freelance) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave D)
-  // E (Cost) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave E)
-  // F (Investment) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave F)
-  // H (Hiring) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave H)
-  // K (Knowledge) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave K)
-  // L (Legal) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave L)
-  // M (Marketing) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave M)
-  // O (Ops) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave O)
-  // P (Product) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave P)
-  // R (Retention) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave R)
-  // S (Sales) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave S)
-  // T (Support) — 0 (2 promoted to Tier 1 extension in P140f-B2 wave T)
+  // D (Freelance) — 2
+  'solopreneur-project-profitability-calculator',
+  'solopreneur-saas-pricing-planner',
+  // E (Cost) — 2
+  'solopreneur-meeting-cost-calculator',
+  'solopreneur-productivity-score',                      // was solopreneur-productivity-score-calculator
+  // F (Investment) — 2
+  'solopreneur-compound-interest-calculator',
+  'solopreneur-cap-rate-calculator',
+  // H (Hiring) — 2
+  'solopreneur-fully-loaded-employee-cost-calculator',
+  'solopreneur-attrition-cost-calculator',
+  // K (Knowledge) — 2
+  'solopreneur-article-freshness-calculator',
+  'solopreneur-search-effectiveness-calculator',
+  // L (Legal) — 2
+  'solopreneur-dsar-cost-calculator',                    // was solopreneur-dsar-processing-cost-calculator
+  'solopreneur-consent-revenue-impact-calculator',       // was solopreneur-cookie-consent-revenue-calculator
+  // M (Marketing) — 2
+  'solopreneur-ltv-by-channel-calculator',
+  'solopreneur-email-campaign-roi-calculator',
+  // O (Ops) — 2
+  'solopreneur-carrying-cost-calculator',                // was solopreneur-inventory-carrying-cost-calculator
+  'solopreneur-reorder-point-calculator',
+  // P (Product) — 2
+  'solopreneur-feature-adoption-calculator',
+  'solopreneur-stickiness-calculator',
+  // R (Retention) — 2
+  'solopreneur-grr-calculator',
+  'solopreneur-customer-health-score-calculator',
+  // S (Sales) — 2
+  'solopreneur-sales-velocity-calculator',
+  'solopreneur-acv-calculator',
+  // T (Support) — 2
+  'solopreneur-first-response-time-calculator',
+  'solopreneur-resolution-time-calculator',
 ];
 
 // Tier-3 (50) — remaining 50 engines (100 - 15 - 35 = 50). Derived as
