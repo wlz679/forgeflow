@@ -351,6 +351,8 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 | **E3** | 静态 / 交互模型集不一致(§5.2) | 中 | 首屏与交互一致 | 需产品决策 |
 | **E5** | ✅ **已完成(2026-10-22)**:CI run #290 **第一次跑到 Unit tests 步骤** ⇒ 发现「本地绿 ≠ CI 绿」的**第三种形态**(**gitignore 的生成物不在仓库里**),并给 `tests/run.mjs` 加 `::error::` 标注 | 小 | **CI 的失败从「不可见」变成「可见」**(此前 100 次红运行没人发现,是因为 TAP 输出根本不被 GitHub 解析) | 无 |
 | **E6** | ⏸ **待 user 拍板**:线上 og:image 全部 404(§7.17 的 A/B 两案) | 小 | 全站社交分享预览从坏变好 | 产品决策 |
+| **E7** | ⏸ **待 user 拍板**:`sync-pricing.yml` 只推 GitHub,CF Pages 的部署源 Gitee 收不到每周定价刷新(§7.18) | 中 | 线上 AI 定价不再停在「最后一次手工推送」那天 | 需在 runner 上配 Gitee SSH secret |
+| **E8** | ⏸ **待 user 拍板**:在 `ci.yml` 加 `fetch-depth: 0`,让「CHANGELOG 提交计数」不变量在 CI 里**真的**把关(需同时把阈值从 `> 1` 放宽到 `> 5`,否则「两个 commit 不碰 CHANGELOG」就红)(§7.18) | 中 | 一条只在本机偶尔响的假闸门变成真闸门 | 工程决策:收紧 CI 失败语义 |
 
 **推荐顺序:G1 → G2 → (等 AdSense)P2;E1/E2 顺手做掉。**
 
@@ -464,6 +466,11 @@ eeat.reviewed_by / eeat.team / eeat.author_label / eeat.publisher_label / favori
 - **L5 标记目前是精确大小写匹配**(`decision-layer-coverage-guard` 用 `src.includes('🧭 Decision Question')`)。原审计脚本的测试断言的是「大小写不敏感」,而**没有任何实现曾是不敏感的** —— 那是草稿脚本与守卫之间的漂移。现在契约被钉死为精确匹配。若认为「引擎里写成小写也应被检出」(即守卫应更宽松),需要**同时**改 `tests/l5-tags.ts` 与守卫语义 —— 属产品决策,留给 user。
 
 ### 7.9 🔴 更正:「master 的 CI 由红转绿」是错的 —— 它从未绿过 (2026-10-22)
+
+> **🟢 2026-10-22 12:24 更新:本节的第一句结论已被推翻,现在是绿的。**
+> CI run **`39721264626`**(head = `ff291f6`)= **success**,**11/11 步全绿**(Install / staticExamples / customFn / engine-coverage / tsc / **Unit tests ✅** / **Build ✅**)。这是 master 历史上第一次完整跑完全部步骤并成功。
+> 下面这段「它从未绿过」的记录保留,因为它记的是**那一刻的真实状态**与**为什么会红**;而「怎么修好的」见 §7.18(含一个必须知道的坑:run `39721264626` 绿,靠的是一条**在 CI 里结构性空转**的不变量没有被触发)。
+> **教训仍然成立且更重要:** 在拿到真实 CI 判决之前,任何「CI 绿了」的断言都不该写进 commit message —— 上一轮就是写了才被 §7.9 更正。
 
 E2 的 commit message 与本 spec §7 的动作表都写了「CI 已从红转绿 / master 的 CI 第一次是绿的」。**这句断言是错的**,2026-10-22 实测更正:
 
@@ -707,6 +714,68 @@ https://forgeflowkit.com/og/solopreneur-roas-calculator-en.png  =>  404
 
 > 注:topic guide / compare 页的 Article JSON-LD `image` 本轮加的就是 `${SITE_URL}/og-default.png`,与**它们** BaseLayout 的默认 og:image 一致 ✓(那两页没有 per-page OG 图)。工具页走的是 `ogImage={`/og/${slug}-${lang}.png`}`,所以只影响 200 个工具页。
 
+### 7.18 合并 bot 自动提交打断「CHANGELOG 提交计数」不变量;且该不变量**在 CI 里结构性空转**
+
+实测(2026-10-22):
+
+| 事实 | 值 | 证据 |
+|---|---|---|
+| `git rev-list --count HEAD`(合并后 `ff291f6`) | **1316** | 本地全历史 |
+| CHANGELOG 头声明 | **1314** | 合并前写的 |
+| 合并带入的 commit 数 | **2**(`b8cd076` bot 提交 + `ff291f6` merge commit) | `git log --oneline` |
+| meta-guard 判红阈值 | forward drift **> 1** | `tests/claude-md-invariant-guard.test.ts:251` |
+| 实际 drift | **2** ⇒ 判红 | 本地 CI-mode 复现(1375 断言 / 1 失败) |
+| 真实 CI run `39721264626` | **success**(11/11 步绿) | GitHub API |
+
+**同一棵树,两个环境两个结论** —— 这就是矛盾点。
+
+#### 为什么 CI 没红:那条不变量在 CI 里从来没被检查过
+
+`actions/checkout@v4` 默认 **`fetch-depth: 1`(浅克隆)**,于是:
+
+```
+$ git -C <depth-1 clone> rev-parse --is-shallow-repository   →  true
+$ git -C <depth-1 clone> rev-list --count HEAD                →  1
+$ git -C <full repo>       rev-list --count HEAD               →  1316
+```
+
+guard 算的是 `commitDrift = actual − stated`,**只在 `drift > 1` 时判红**。CI 里 `actual = 1`、`stated = 1314` ⇒ `drift = −1313` ⇒ **恒过**。也就是说:
+
+> **这条不变量在 CI(唯一需要它把关的地方)是结构性空转的 —— 它只在一台有完整历史的开发机上才偶尔响。**
+
+它**看起来**在核对「CHANGELOG 写的提交总数 = 仓库真实提交总数」,实际在 CI 里核对的是「1 ≤ 1316」。
+
+#### 本轮的修法:让它说「未测量」,而不是假装通过
+
+沿用本轮 `image-size-guard` 刚立的契约(有生成物就查、没有就明说 SKIP):
+
+```ts
+const isShallowRepo = git('git rev-parse --is-shallow-repository') === 'true';
+if (isShallowRepo) {
+  console.log(`[claude-md-invariant-guard] SKIP commit-count invariant — shallow checkout ... Nothing was measured.`);
+} else if (commitDrift > 1) { violations.push(...); }
+```
+
+**判红条件一字未改** —— 全历史下它仍然杀掉它声称要杀的东西;变的只是「没法测」时不再装作「测过了」。
+
+双路证明(`%TEMP%/ffk-verify-count-guard.mjs`,4/4 通过):
+
+| 路径 | 场景 | 期望 | 实测 |
+|---|---|---|---|
+| A | depth-1 克隆(= CI 的形状),CHANGELOG 写 1314(错的) | 不判红,但必须**显式 SKIP** | `status=0` + 打印 `SKIP commit-count invariant` + `Nothing was measured.` ✅ |
+| B | 全历史,CHANGELOG 写 1317(对的) | 绿,且**不**走 SKIP | `status=0` + `# pass 1` ✅ |
+| C | 全历史,CHANGELOG 改成 1310(变异) | **被杀掉**,且点名是提交计数不变量 | `status=1` + `CHANGELOG total commit count drift: says 1310 … forward drift 6` ✅ |
+| — | 还原纪律 | 变异后逐字节还原 | sha256 一致 ✅ |
+
+#### 若要让它在 CI 里**真的**把关(留给 user 决策)
+
+在 `ci.yml` 里加 `fetch-depth: 0` 即可让计数变真。但那会把失败条件从「drift > 1」变成「**每 ≤2 个 commit 必须碰一次 CHANGELOG**」——对一个日常会做批量提交的仓库,这条会变成新的日常噪声源。较合理的配套是同时把阈值放宽到 `> 5`(当初这条不变量就是为了抓 P130→P131 那种 off-by-5)。**本轮未擅自改**:一是这会把 CI 的失败语义整体收紧(属于工程决策),二是它会让「两个 commit 不碰 CHANGELOG」这种常态直接变红。
+
+#### 另外两个本轮实测到的部署链路事实
+
+1. **`sync-pricing.yml` 只推 GitHub。** 它的 `Commit and push` 步骤跑的是裸 `git push`,目标是 checkout 的默认远端 = `github.com` ⇒ **Gitee(`origin`,CF Pages 的部署源)永远收不到每周的定价刷新**。后果:线上工具页的 AI 定价与 `lastUpdated` 会一直停在「最后一次手工推送」那天的数据。修法是给该 workflow 加第二个远端并在 runner 上配置 Gitee SSH key(需要 secret,属部署侧改动),或把 CF Pages 的 git 集成改指 GitHub。**未擅自改**,见动作表 E7。
+2. **bot 用 `GITHUB_TOKEN` 推的 commit 不会触发新的 workflow run。** 实测:`b8cd076`(2026-10-22T03:41:34Z 推入)之后,GitHub 上**没有任何**以该 sha 为 head 的 CI run(最新 run 仍是 03:41:11 那个,head = `f749633`)。所以「Sync AI Pricing 绿了」**不等于**「那棵树被 CI 验证过」——bot 的提交需要**人**再推一次才拿到 CI 判决。本轮正是手动合并 + 手动推送才拿到 run `39721264626`。
+
 ### 7.1 公式歧义(必须拍板) —— ✅ 已拍板(2026-10-21)
 
 - **推荐:** `User Value Score = (功能价值 + UX + Advisor + Retention + Advocacy) ÷ 5`(算术平均)
@@ -748,6 +817,8 @@ https://forgeflowkit.com/og/solopreneur-roas-calculator-en.png  =>  404
 5. **分支命名** → ✅ **已定**:`feature/phase-3-playbook-6-fields` 承载 G1+G2+E1,按 §12.2「Phase 3 内的工作算小更新」直接 commit 在该分支上,不开 sub-branch。P2 另开 `feature/phase-2-p140e-seo`。
 6. `feat/i18n-drift-fix` / `feat/ai-cost-preset-chip-unification` 两个悬空分支 → ⏸ 未拍板。事实:**已被 squash 合入 master**(JSON 迁移 + 漂移检测 + pre-commit 接线都在 master 上),`git cherry` 判 `+` 只因 squash 后 patch-id 变了。真正没进 master 的只有 i18n 分支上的 2 个测试文件 → **建议只补这 2 个测试,然后删掉两个分支指针**。
 7. **L5 标记的大小写语义**(2026-10-22 新增)—— `tests/l5-tags.ts` 现钉死为**精确大小写**匹配,与 `decision-layer-coverage-guard` 的 `src.includes()` 一致。原审计脚本的测试断言「大小写不敏感」,而**没有任何实现曾是不敏感的**。若要让守卫更宽松(引擎里写成 `🧭 decision question:` 也算命中),需**同时**改 `tests/l5-tags.ts` 与守卫语义 → 属产品决策,留给 user。
+8. **`sync-pricing.yml` 要不要也推 Gitee**(2026-10-22 新增,§7.18)—— CF Pages 从 Gitee 部署,而该 workflow 只推 GitHub ⇒ 线上定价数据只在我手工推送时才更新。修法二选一:① 给 workflow 加第二个远端 + 在 runner 上配 Gitee SSH key(需 secret);② 把 CF Pages 的 git 集成改指 GitHub(那 workflow 就自动覆盖部署源)。**未擅自改**(要 secret / 要动 CF 配置)。⏸ 未拍板。
+9. **`ci.yml` 要不要 `fetch-depth: 0`**(2026-10-22 新增,§7.18)—— 加了之后「CHANGELOG 提交计数」不变量才在 CI 里真的把关,但要把阈值从 `> 1` 放宽到 `> 5`,否则「连续两个 commit 没碰 CHANGELOG」就红。⏸ 未拍板。
 
 ---
 

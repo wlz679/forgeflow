@@ -23,6 +23,10 @@
 //      matches `git rev-list --count HEAD` — tolerates forward drift ≤ 1
 //      commit (inherent from self-updating commits: the drift-close commit
 //      itself bumps git by 1). Real drift threshold is ≥ 2 (P130→P131 was 5).
+//      P153 §7.18: needs FULL history — CI checks out shallow (fetch-depth: 1),
+//      where the count reads 1 and the invariant cannot fire. A shallow
+//      checkout now reports "SKIP … Nothing was measured." instead of
+//      passing silently.
 //   6. CHANGELOG last-ship date (P132): header "最后更新: YYYY-MM-DD"
 //      matches `git log -1 --format=%cd --date=short` — tolerates forward
 //      lag ≤ 7 days (non-CHANGELOG commits don't force a date bump).
@@ -245,10 +249,29 @@ test('AGENTS.md invariant matrix matches reality (meta-guard)', () => {
   // Tolerate forward drift ≤ 1: any drift-close commit bumps git by 1
   // (the commit itself), creating inherent 1-drift. Real drift threshold
   // is ≥ 2 — P130→P131 was off-by-5.
+  //
+  // P153 §7.18: this invariant needs FULL history, and CI does not have it.
+  // actions/checkout@v4 defaults to fetch-depth: 1 (shallow), so
+  // `git rev-list --count HEAD` returns 1 instead of the real total — the
+  // forward-drift comparison is then trivially true (1 − 1314 = −1313) and
+  // the invariant is silently NOT checked in CI. Verified 2026-10-22 on a
+  // real depth-1 clone: rev-list → 1, is-shallow-repository → true.
+  // So detect the shallow case and say the invariant went unmeasured rather
+  // than letting a structurally-vacuous comparison read as a pass.
+  // (Same contract as tests/image-size-guard.test.ts: "SKIP … Nothing was
+  // measured." — a check that did not run must not look like a check that
+  // passed.)
+  const isShallowRepo = git('git rev-parse --is-shallow-repository') === 'true';
   const actualCommitCount = parseInt(git('git rev-list --count HEAD'), 10);
   const statedCommitCount = extractChangelogCommitCount();
   const commitDrift = actualCommitCount - statedCommitCount;
-  if (commitDrift > 1) {
+  if (isShallowRepo) {
+    console.log(
+      `[claude-md-invariant-guard] SKIP commit-count invariant — shallow checkout ` +
+      `(fetch-depth: 1): git reports ${actualCommitCount} commit(s), not the real ` +
+      `total. CHANGELOG.md states ${statedCommitCount}. Nothing was measured.`
+    );
+  } else if (commitDrift > 1) {
     violations.push(
       `CHANGELOG total commit count drift: says ${statedCommitCount}, ` +
       `git rev-list --count HEAD returns ${actualCommitCount} ` +
