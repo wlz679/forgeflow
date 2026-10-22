@@ -26,21 +26,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # P153: pin pnpm to the SAME major ci.yml uses (9). This step used to be
+      # `npm install -g pnpm`, which floats to the latest major and made this
+      # workflow a hostage to pnpm's release cadence: pnpm 12 fails
+      # `pnpm install --frozen-lockfile` with ERR_PNPM_IGNORED_BUILDS (10
+      # dependencies have build scripts; pnpm >=10 blocks them by default and
+      # pnpm >=12 turns "blocked" into a hard install failure). Verified
+      # 2026-10-22: pnpm 12.14.0 reproduces it on this very lockfile, pnpm 9
+      # installs it cleanly. The workflow had been red at this step since
+      # 2026-10-05 (runs 37320094551 / 39251857722 / 39707689389).
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Cache pnpm
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/share/pnpm/store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+          cache: 'pnpm'
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
