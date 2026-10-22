@@ -82,13 +82,54 @@ function getOgImages(): ImageInfo[] {
   return result;
 }
 
+// P153: the OG bundle is a GENERATED artifact, and `public/og/` is in
+// .gitignore (46.6 MB of PNGs — it cannot be committed). A fresh checkout
+// (CI, a new clone, a contributor) therefore has NO OG images at all, so
+// `dist/og/` is empty and the old assertion "at least one OG image in
+// dist/og/" failed on a checkout that simply never generated them.
+//
+// New contract (both halves are enforced, none of them is silently skipped):
+//   - If this checkout HAS generated OG images (public/og/ is not empty),
+//     then the build must have copied them into dist/og/ (same count), and
+//     every size budget must hold.
+//   - If this checkout has NONE, there is nothing to measure: the guard
+//     prints an explicit SKIP line saying what it did NOT check, and passes.
+//     A silent pass would be the "假装检查过" failure mode.
+//
+// The old message ("Expected at least one OG image in dist/og/. Run pnpm
+// build first.") pointed at the wrong remedy: `pnpm build` does NOT generate
+// OG images — `pnpm build:og` does, and only in a checkout that ran it.
+function getGeneratedOgImages(): ImageInfo[] {
+  const ogDir = resolve(root, 'public', 'og');
+  if (!existsSync(ogDir)) return [];
+  const result: ImageInfo[] = [];
+  for (const entry of readdirSync(ogDir, { withFileTypes: true })) {
+    if (entry.isFile() && entry.name.endsWith('.png')) {
+      const full = resolve(ogDir, entry.name);
+      result.push({ rel: entry.name, bytes: statSync(full).size });
+    }
+  }
+  return result;
+}
+
 test('no OG image exceeds per-image budget (500 KB)', () => {
   ensureBuilt();
+  const generated = getGeneratedOgImages();
+  if (generated.length === 0) {
+    console.log(
+      '[p108] SKIP per-image budget: this checkout has no generated OG bundle ' +
+        '(public/og/ is empty — the images are gitignored build artifacts, produced by ' +
+        '`pnpm build:og`). Nothing was measured.',
+    );
+    return;
+  }
   const images = getOgImages();
 
-  assert.ok(
-    images.length >= 1,
-    'Expected at least one OG image in dist/og/. Run pnpm build first.',
+  assert.equal(
+    images.length,
+    generated.length,
+    `dist/og/ holds ${images.length} PNG(s) but public/og/ holds ${generated.length} — ` +
+      `the build must copy every generated OG image into dist/ (astro copies public/ verbatim).`,
   );
 
   const violations: ImageInfo[] = [];
@@ -123,11 +164,22 @@ test('no OG image exceeds per-image budget (500 KB)', () => {
 
 test('total OG image bundle stays under budget (80 MB)', () => {
   ensureBuilt();
+  const generated = getGeneratedOgImages();
+  if (generated.length === 0) {
+    console.log(
+      '[p108] SKIP bundle budget: this checkout has no generated OG bundle ' +
+        '(public/og/ is empty — the images are gitignored build artifacts, produced by ' +
+        '`pnpm build:og`). Nothing was measured.',
+    );
+    return;
+  }
   const images = getOgImages();
 
-  assert.ok(
-    images.length >= 1,
-    'Expected at least one OG image in dist/og/. Run pnpm build first.',
+  assert.equal(
+    images.length,
+    generated.length,
+    `dist/og/ holds ${images.length} PNG(s) but public/og/ holds ${generated.length} — ` +
+      `the build must copy every generated OG image into dist/ (astro copies public/ verbatim).`,
   );
 
   let totalBytes = 0;
