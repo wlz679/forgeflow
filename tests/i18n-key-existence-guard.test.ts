@@ -40,6 +40,13 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
 import { getEngineSlugsFromEnginesDir, getEngineSlugsFromLocales } from './_locale-json';
+// P153: the comment stripper is now the shared one in tests/build-dep-suites.mjs.
+// This guard used to carry its own copy — a regex pair whose block-comment
+// half swallowed 40,718 characters of src/pages/[lang]/[slug].astro
+// (including the `t('engine_cost.*')` call sites), which is why it could
+// not see a missing key in exactly that region. Two copies of a
+// "strip the comments" routine is two chances to be wrong.
+import { stripComments } from './build-dep-suites.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -56,13 +63,6 @@ function walk(dir: string, out: string[] = []): string[] {
     else if (/\.(astro|ts|tsx|js|jsx|mjs)$/.test(entry.name)) out.push(full);
   }
   return out;
-}
-
-/** Strip comments so a key mentioned in a comment is not counted as used. */
-function stripComments(src: string): string {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
 }
 
 // An i18n key shape: dotted, lowercase-ish segments, e.g. tools.foo.title
