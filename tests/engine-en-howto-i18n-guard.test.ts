@@ -10,9 +10,11 @@ import { spawnSync } from 'node:child_process';
 import {
   buildSlugToHowToCount,
   escapeForHtml,
-  buildTranslationKeyRegex,
-  extractAllEngineSlugs,
 } from './_composite-i18n-walkers';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// the TS module with a regex and died with ENOENT once it was deleted.
+import { getTranslation, getEngineSlugsFromLocales } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -36,8 +38,7 @@ function ensureBuilt(): void {
 test('every en engine page renders all how_to_use steps (P131 split from P124 dim 5)', () => {
   ensureBuilt();
 
-  const translationsText = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
-  const allSlugs = extractAllEngineSlugs(translationsText);
+  const allSlugs = getEngineSlugsFromLocales();
   assert.equal(
     allSlugs.length,
     100,
@@ -51,14 +52,12 @@ test('every en engine page renders all how_to_use steps (P131 split from P124 di
     const howToCount = slugToHowToCount.get(slug) ?? 0;
     if (howToCount === 0) continue;
     for (let i = 0; i < howToCount; i++) {
-      const m = translationsText.match(
-        buildTranslationKeyRegex(`tools.${slug}.how_to_use.${i}`)
+      const howToRaw = getTranslation('en', `tools.${slug}.how_to_use.${i}`);
+      assert.ok(
+        typeof howToRaw === 'string',
+        `${slug}: missing how_to_use[${i}] translation key (engine defines ${howToCount} steps, but en.json has no tools.${slug}.how_to_use.${i})`
       );
-      assert(
-        m,
-        `${slug}: missing how_to_use[${i}] translation key (engine defines ${howToCount} steps, but translations.ts has no tools.${slug}.how_to_use.${i})`
-      );
-      const howToEn = escapeForHtml((m[1] ?? m[2] ?? '').replace(/\\(.)/g, '$1'));
+      const howToEn = escapeForHtml(howToRaw);
       const enPath = resolve(root, 'dist', 'en', slug, 'index.html');
       if (!existsSync(enPath)) {
         violations.push(`${slug}: dist/en/${slug}/index.html missing (build incomplete?)`);

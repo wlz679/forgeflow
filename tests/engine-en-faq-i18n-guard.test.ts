@@ -10,9 +10,12 @@ import { spawnSync } from 'node:child_process';
 import {
   buildSlugToFaqCount,
   escapeForHtml,
-  buildTranslationKeyRegex,
-  extractAllEngineSlugs,
 } from './_composite-i18n-walkers';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// `tools.<slug>.faq.N.q` out of the TS module with a regex and died with
+// ENOENT once the module was deleted.
+import { getTranslation, getEngineSlugsFromLocales } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -36,8 +39,7 @@ function ensureBuilt(): void {
 test('every en engine page renders all FAQ q + a entries (P131 split from P124 dim 4)', () => {
   ensureBuilt();
 
-  const translationsText = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
-  const allSlugs = extractAllEngineSlugs(translationsText);
+  const allSlugs = getEngineSlugsFromLocales();
   assert.equal(
     allSlugs.length,
     100,
@@ -51,22 +53,18 @@ test('every en engine page renders all FAQ q + a entries (P131 split from P124 d
     const faqCount = slugToFaqCount.get(slug) ?? 0;
     if (faqCount === 0) continue;
     for (let i = 0; i < faqCount; i++) {
-      const qMatch = translationsText.match(
-        buildTranslationKeyRegex(`tools.${slug}.faq.${i}.q`)
+      const qRaw = getTranslation('en', `tools.${slug}.faq.${i}.q`);
+      const aRaw = getTranslation('en', `tools.${slug}.faq.${i}.a`);
+      assert.ok(
+        typeof qRaw === 'string',
+        `${slug}: missing FAQ[${i}].q translation key (engine defines ${faqCount} FAQ entries, but en.json has no tools.${slug}.faq.${i}.q)`
       );
-      const aMatch = translationsText.match(
-        buildTranslationKeyRegex(`tools.${slug}.faq.${i}.a`)
+      assert.ok(
+        typeof aRaw === 'string',
+        `${slug}: missing FAQ[${i}].a translation key (engine defines ${faqCount} FAQ entries, but en.json has no tools.${slug}.faq.${i}.a)`
       );
-      assert(
-        qMatch,
-        `${slug}: missing FAQ[${i}].q translation key (engine defines ${faqCount} FAQ entries, but translations.ts has no tools.${slug}.faq.${i}.q)`
-      );
-      assert(
-        aMatch,
-        `${slug}: missing FAQ[${i}].a translation key (engine defines ${faqCount} FAQ entries, but translations.ts has no tools.${slug}.faq.${i}.a)`
-      );
-      const qEn = escapeForHtml((qMatch[1] ?? qMatch[2] ?? '').replace(/\\(.)/g, '$1'));
-      const aEn = escapeForHtml((aMatch[1] ?? aMatch[2] ?? '').replace(/\\(.)/g, '$1'));
+      const qEn = escapeForHtml(qRaw);
+      const aEn = escapeForHtml(aRaw);
       const enPath = resolve(root, 'dist', 'en', slug, 'index.html');
       if (!existsSync(enPath)) {
         violations.push(`${slug}: dist/en/${slug}/index.html missing (build incomplete?)`);

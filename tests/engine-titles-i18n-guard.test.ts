@@ -3,7 +3,7 @@
 // AND that translation appears in the corresponding dist page.
 //
 // Why this exists:
-//   P121 audited all 100 engine slugs vs src/i18n/translations.ts and confirmed
+//   P121 audited all 100 engine slugs vs the i18n locale JSON and confirmed
 //   100/100 are translated (en + zh). This guard makes that 100/100 invariant
 //   regression-proof:
 //     1. If a new engine is added without a tools.${slug}.title key → caught
@@ -19,6 +19,10 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// the TS module with a regex and died with ENOENT once it was deleted.
+import { getTranslation, getEngineSlugsFromEnginesDir } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -41,33 +45,20 @@ function ensureBuilt(): void {
 
 // Extract all 100 engine slugs from src/engines/**/*.ts (both quote styles).
 function getEngineSlugs(): string[] {
-  const { readdirSync } = require('node:fs') as typeof import('node:fs');
-  const enginesDir = resolve(root, 'src', 'engines');
-  const slugs = new Set<string>();
-  function walk(d: string): void {
-    for (const entry of readdirSync(d, { withFileTypes: true })) {
-      const full = resolve(d, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith('.ts')) {
-        const text = readFileSync(full, 'utf-8');
-        for (const m of text.matchAll(/^\s*slug:\s*['"](solopreneur-[a-z0-9-]+)['"]/gm)) {
-          slugs.add(m[1]);
-        }
-      }
-    }
-  }
-  walk(enginesDir);
-  return [...slugs].sort();
+  return getEngineSlugsFromEnginesDir();
 }
 
-// Extract tools.${slug}.title { en, zh } map from src/i18n/translations.ts.
+// Extract tools.${slug}.title { en, zh } map from the per-locale JSON files.
+// A title entry needs BOTH languages — the pre-P150 regex
+// (`'tools.X.title': { en: '...', zh: '...' }`) required both fields, so a
+// one-language entry counted as "missing" then and counts as missing now.
 function getTitleMap(): Record<string, { en: string; zh: string }> {
-  const text = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
   const map: Record<string, { en: string; zh: string }> = {};
-  // Match: 'tools.<slug>.title': { en: '<en>', zh: '<zh>' }
-  const re = /'tools\.(solopreneur-[a-z0-9-]+)\.title':\s*\{\s*en:\s*(?:'([^']*)'|"([^"]*)"),\s*zh:\s*(?:'([^']*)'|"([^"]*)")\s*\}/g;
-  for (const m of text.matchAll(re)) {
-    map[m[1]] = { en: m[2] ?? m[3], zh: m[4] ?? m[5] };
+  for (const slug of getEngineSlugs()) {
+    const en = getTranslation('en', `tools.${slug}.title`);
+    const zh = getTranslation('zh', `tools.${slug}.title`);
+    if (en === undefined || zh === undefined) continue;
+    map[slug] = { en, zh };
   }
   return map;
 }
@@ -88,7 +79,7 @@ function escapeForHtml(s: string): string {
   return s.replace(/&/g, '&amp;');
 }
 
-test('every engine slug has tools.${slug}.title in translations.ts (en + zh)', () => {
+test('every engine slug has tools.${slug}.title in the locale JSON (en + zh)', () => {
   const slugs = getEngineSlugs();
   assert.equal(
     slugs.length,
@@ -112,7 +103,7 @@ test('every engine slug has tools.${slug}.title in translations.ts (en + zh)', (
   }
 
   const violations = [
-    ...missing.map(s => `${s}: missing tools.${s}.title entry in translations.ts`),
+    ...missing.map(s => `${s}: missing tools.${s}.title entry in en.json/zh.json`),
     ...noZh.map(s => `${s}: tools.${s}.title has empty zh translation`),
   ];
 
@@ -123,7 +114,7 @@ test('every engine slug has tools.${slug}.title in translations.ts (en + zh)', (
       violations.slice(0, 20).map(v => `  - ${v}`).join('\n') +
       (violations.length > 20 ? `\n  ... and ${violations.length - 20} more` : '') +
       `\n\nAdd tools.${slugs.find(s => !titles[s]) ?? '???'}.title to ` +
-      `src/i18n/translations.ts and wire it through page template if missing.`
+      `src/i18n/locales/en.json + zh.json and wire it through page template if missing.`
   );
 });
 

@@ -15,9 +15,11 @@ import { spawnSync } from 'node:child_process';
 import {
   buildSlugToHowToCount,
   escapeForHtml,
-  buildTranslationKeyRegex,
-  extractAllEngineSlugs,
 } from './_composite-i18n-walkers';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// the TS module with a regex and died with ENOENT once it was deleted.
+import { getTranslation, getEngineSlugsFromLocales } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -41,8 +43,7 @@ function ensureBuilt(): void {
 test('every zh engine page renders all how_to_use steps (P131 split from P123 dim 5)', () => {
   ensureBuilt();
 
-  const translationsText = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
-  const allSlugs = extractAllEngineSlugs(translationsText);
+  const allSlugs = getEngineSlugsFromLocales();
   assert.equal(
     allSlugs.length,
     100,
@@ -56,14 +57,12 @@ test('every zh engine page renders all how_to_use steps (P131 split from P123 di
     const howToCount = slugToHowToCount.get(slug) ?? 0;
     if (howToCount === 0) continue; // engine has no how_to_use
     for (let i = 0; i < howToCount; i++) {
-      const m = translationsText.match(
-        buildTranslationKeyRegex(`tools.${slug}.how_to_use.${i}`)
+      const howToRaw = getTranslation('zh', `tools.${slug}.how_to_use.${i}`);
+      assert.ok(
+        typeof howToRaw === 'string',
+        `${slug}: missing how_to_use[${i}] translation key (engine defines ${howToCount} steps, but zh.json has no tools.${slug}.how_to_use.${i})`
       );
-      assert(
-        m,
-        `${slug}: missing how_to_use[${i}] translation key (engine defines ${howToCount} steps, but translations.ts has no tools.${slug}.how_to_use.${i})`
-      );
-      const howToZh = escapeForHtml(m[3] ?? m[4]);
+      const howToZh = escapeForHtml(howToRaw);
       const zhPath = resolve(root, 'dist', 'zh', slug, 'index.html');
       if (!existsSync(zhPath)) {
         violations.push(`${slug}: dist/zh/${slug}/index.html missing (build incomplete?)`);

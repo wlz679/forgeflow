@@ -21,6 +21,10 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// the TS module with a regex and died with ENOENT once it was deleted.
+import { getTranslation, getEngineSlugsFromEnginesDir } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -43,39 +47,21 @@ function ensureBuilt(): void {
 
 // Extract all 100 engine slugs from src/engines/**/*.ts (both quote styles).
 function getEngineSlugs(): string[] {
-  const { readdirSync } = require('node:fs') as typeof import('node:fs');
-  const enginesDir = resolve(root, 'src', 'engines');
-  const slugs = new Set<string>();
-  function walk(d: string): void {
-    for (const entry of readdirSync(d, { withFileTypes: true })) {
-      const full = resolve(d, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (entry.name.endsWith('.ts')) {
-        const text = readFileSync(full, 'utf-8');
-        for (const m of text.matchAll(/^\s*slug:\s*['"](solopreneur-[a-z0-9-]+)['"]/gm)) {
-          slugs.add(m[1]);
-        }
-      }
-    }
-  }
-  walk(enginesDir);
-  return [...slugs].sort();
+  return getEngineSlugsFromEnginesDir();
 }
 
-// Extract tools.${slug}.description { en, zh } map from src/i18n/translations.ts.
-// Descriptions can contain apostrophes (') in the value — use a balanced-brace
-// matcher instead of a literal '...' capture. (P121 title matcher worked because
-// titles are short and never contain unescaped apostrophes; descriptions can.)
+// Extract tools.${slug}.description { en, zh } map from the per-locale JSON
+// files. Pre-P150 this was scraped out of the TS module with a regex that
+// had to special-case apostrophes inside descriptions; reading JSON is
+// exact. A description entry needs BOTH languages, exactly like the old
+// regex (`'tools.X.description': { en: '...', zh: '...' }`) required both.
 function getDescriptionMap(): Record<string, { en: string; zh: string }> {
-  const text = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
   const map: Record<string, { en: string; zh: string }> = {};
-  // Match: 'tools.<slug>.description': { en: '<...>', zh: '<...>' }
-  // The value extends until the next "' }" close (single-quote then space then brace).
-  // Use a non-greedy match that allows internal apostrophes by requiring the
-  // closing pattern to be "' }" (quote, space, closing brace).
-  const re = /'tools\.(solopreneur-[a-z0-9-]+)\.description':\s*\{\s*en:\s*'((?:[^'\\]|\\.)*?)',\s*zh:\s*'((?:[^'\\]|\\.)*?)'\s*\}/g;
-  for (const m of text.matchAll(re)) {
-    map[m[1]] = { en: m[2], zh: m[3] };
+  for (const slug of getEngineSlugs()) {
+    const en = getTranslation('en', `tools.${slug}.description`);
+    const zh = getTranslation('zh', `tools.${slug}.description`);
+    if (en === undefined || zh === undefined) continue;
+    map[slug] = { en, zh };
   }
   return map;
 }
@@ -97,7 +83,7 @@ function escapeForHtml(s: string): string {
     .replace(/>/g, '&gt;');
 }
 
-test('every engine slug has tools.${slug}.description in translations.ts (en + zh)', () => {
+test('every engine slug has tools.${slug}.description in the locale JSON (en + zh)', () => {
   const slugs = getEngineSlugs();
   assert.equal(
     slugs.length,
@@ -121,7 +107,7 @@ test('every engine slug has tools.${slug}.description in translations.ts (en + z
   }
 
   const violations = [
-    ...missing.map(s => `${s}: missing tools.${s}.description entry in translations.ts`),
+    ...missing.map(s => `${s}: missing tools.${s}.description entry in en.json/zh.json`),
     ...emptyEn.map(s => `${s}: tools.${s}.description has empty en translation`),
     ...emptyZh.map(s => `${s}: tools.${s}.description has empty zh translation`),
   ];
@@ -133,7 +119,7 @@ test('every engine slug has tools.${slug}.description in translations.ts (en + z
       violations.slice(0, 20).map(v => `  - ${v}`).join('\n') +
       (violations.length > 20 ? `\n  ... and ${violations.length - 20} more` : '') +
       `\n\nAdd tools.${slugs.find(s => !descs[s]) ?? '???'}.description to ` +
-      `src/i18n/translations.ts and wire it through page template if missing.`
+      `src/i18n/locales/en.json + zh.json and wire it through page template if missing.`
   );
 });
 

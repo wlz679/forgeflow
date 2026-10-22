@@ -14,9 +14,11 @@ import { spawnSync } from 'node:child_process';
 import {
   buildSlugToFirstInput,
   escapeForHtml,
-  buildTranslationKeyRegex,
-  extractAllEngineSlugs,
 } from './_composite-i18n-walkers';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// the TS module with a regex and died with ENOENT once it was deleted.
+import { getTranslation, getEngineSlugsFromLocales } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -40,8 +42,7 @@ function ensureBuilt(): void {
 test('every en engine page renders the first input label (P131 split from P124 dim 3)', () => {
   ensureBuilt();
 
-  const translationsText = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
-  const allSlugs = extractAllEngineSlugs(translationsText);
+  const allSlugs = getEngineSlugsFromLocales();
   assert.equal(
     allSlugs.length,
     100,
@@ -54,12 +55,8 @@ test('every en engine page renders the first input label (P131 split from P124 d
   for (const slug of allSlugs) {
     const firstInputName = slugToFirstInput.get(slug);
     if (!firstInputName) continue;
-    const m = translationsText.match(
-      buildTranslationKeyRegex(`tools.${slug}.input.${firstInputName}.label`)
-    );
-    if (!m) continue;
-    // en value: group 1 (single-quoted) ?? group 2 (double-quoted), then strip JS escapes.
-    const inputLabelEn = (m[1] ?? m[2] ?? '').replace(/\\(.)/g, '$1');
+    const inputLabelEn = getTranslation('en', `tools.${slug}.input.${firstInputName}.label`);
+    if (inputLabelEn === undefined) continue;
     const enPath = resolve(root, 'dist', 'en', slug, 'index.html');
     if (!existsSync(enPath)) {
       violations.push(`${slug}: dist/en/${slug}/index.html missing (build incomplete?)`);

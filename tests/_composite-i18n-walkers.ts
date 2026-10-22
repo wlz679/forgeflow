@@ -6,8 +6,11 @@
 //   buildSlugToFaqCount()    — P128 (slug → FAQ entry count; extends coverage)
 //   buildSlugToHowToCount()  — P128 (slug → howToUse entry count; extends coverage)
 //   escapeForHtml()          — P123/P124 inline helper (HTML-escape for probe comparison)
-//   buildTranslationKeyRegex() — P129 (regex with 4 capture groups for '...' / "..." en/zh)
-//   extractAllEngineSlugs()  — P123/P124 inline helper (slug list from translations.ts)
+//
+// P153: `buildTranslationKeyRegex()` and `extractAllEngineSlugs()` were
+// removed — they scraped the deleted src/i18n/translations.ts and are now
+// replaced by tests/_locale-json.ts (getTranslation / getEngineSlugsFromLocales).
+// Keeping them would have left a second, dead way to read translations.
 //
 // Consumed by:
 //   - engine-zh-input-i18n-guard.test.ts  (firstInput)
@@ -17,7 +20,7 @@
 //   - engine-en-faq-i18n-guard.test.ts    (faqCount + escape-strip)
 //   - engine-en-howto-i18n-guard.test.ts  (howToCount + escape-strip)
 //
-// Build dependency: NONE (helpers only read src/engines/**/*.ts + translations.ts).
+// Build dependency: NONE (helpers only read src/engines/**/*.ts).
 // The 6 consuming test files still need RUN_BUILD_TESTS=1 + ensureBuilt().
 
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -132,37 +135,4 @@ export function escapeForHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
-}
-
-// Build regex to extract en + zh values from a translations.ts key entry.
-// Returns 4 capture groups: 1=enSingle-quoted, 2=enDouble-quoted,
-// 3=zhSingle-quoted, 4=zhDouble-quoted. Use `m[3] ?? m[4]` for zh and
-// `m[1] ?? m[2]` for en (P129 alternation pattern — closes the double-quote
-// silent-skip bug that P128's single-quote-only regex had).
-export function buildTranslationKeyRegex(key: string): RegExp {
-  return new RegExp(
-    `'${key.replace(/\./g, '\\.')}':\\s*\\{\\s*en:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)"),\\s*zh:\\s*(?:'((?:[^'\\\\]|\\\\.)*?)'|"((?:[^"\\\\]|\\\\.)*?)")`
-  );
-}
-
-// Extract all 100 engine slugs from translations.ts. Anchored on 'tools.'
-// prefix and sorted alphabetically for stable iteration.
-//
-// Note: uses imperative `exec` loop + array push (not matchAll iterator or
-// Set spread) because tsconfig.json excludes tests/_*.ts from `tsc --noEmit`,
-// and the consuming test files (engine-zh-*-i18n-guard.test.ts, etc.) are
-// compiled against `astro/tsconfigs/strict` which targets es5 — matchAll
-// iteration and Set spread require --downlevelIteration with es5 target.
-export function extractAllEngineSlugs(translationsText: string): string[] {
-  const slugRe = /^\s*'tools\.(solopreneur-[a-z0-9-]+)\./gm;
-  const seen = new Set<string>();
-  const slugs: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = slugRe.exec(translationsText)) !== null) {
-    if (!seen.has(m[1])) {
-      seen.add(m[1]);
-      slugs.push(m[1]);
-    }
-  }
-  return slugs.sort();
 }

@@ -71,17 +71,25 @@ function extractInputNames(text: string): string[] {
   return names;
 }
 
-/** Load translations.ts → Map<key, {en, zh}>. */
+/**
+ * Load the per-locale JSON files → Map<key, {en, zh}>.
+ *
+ * P153: this used to read `src/i18n/translations.ts` — a file deleted by the
+ * P150 migration to per-locale JSON (c16322b). The guard has been failing
+ * with ENOENT ever since, i.e. it has not checked anything at all. The
+ * locale JSONs are now the single source of truth (same as
+ * scripts/check-i18n-completeness.mjs and src/i18n/translate-helper.ts).
+ */
 function loadTranslations(): Map<string, { en: string; zh: string }> {
-  const text = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
-  // Groups: 1=key, 2=en-quote, 3=en-value, 4=zh-quote, 5=zh-value
-  const re = /['"]([^'"]+)['"]\s*:\s*\{\s*en:\s*(['"])((?:[^'\\\n]|\\.)*?)\2\s*,\s*zh:\s*(['"])((?:[^'\\\n]|\\.)*?)\4\s*\}/g;
+  const en = JSON.parse(
+    readFileSync(resolve(root, 'src', 'i18n', 'locales', 'en.json'), 'utf-8'),
+  ) as Record<string, string>;
+  const zh = JSON.parse(
+    readFileSync(resolve(root, 'src', 'i18n', 'locales', 'zh.json'), 'utf-8'),
+  ) as Record<string, string>;
   const map = new Map<string, { en: string; zh: string }>();
-  let m;
-  while ((m = re.exec(text)) !== null) {
-    const unescape = (s: string) =>
-      s.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-    map.set(m[1], { en: unescape(m[3]), zh: unescape(m[5]) });
+  for (const key of Object.keys(en)) {
+    map.set(key, { en: en[key] ?? '', zh: zh[key] ?? '' });
   }
   return map;
 }

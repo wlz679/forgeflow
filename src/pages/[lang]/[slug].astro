@@ -279,6 +279,31 @@ function translateCalcOutput(text: string, lang: Lang): string {
       out = out.split(en).join(localized);
     }
   }
+  // P153: P137 T2.7 planned NINE composite localization keys. Four are
+  // implemented by the patterns below (comparison_title, reqs_per_day,
+  // cheapest_prefix, at_per_month). The other five describe output shapes
+  // that NO engine emits today (a "Saving vs" line, a "Cheapest provider"
+  // line, a GPU total line, a training total line), so no pattern can match
+  // them yet.
+  //
+  // They stay in the dictionary on purpose — two other gates depend on them
+  // and they must agree:
+  //   - dead-i18n-keys-guard's WORKING_KEY_REQUIRED list requires all nine
+  //     (P137 task brief);
+  //   - translation-glossary-guard's orphan check requires every locale key
+  //     to appear somewhere in src/ — so the reservation is declared HERE,
+  //     next to the patterns that will consume it.
+  //
+  // Deleting a key without first asking which other gate depends on it is
+  // exactly how §7.8 happened (5 keys removed, one gate turned red).
+  const RESERVED_COMPOSITE_KEYS = [
+    'engine_cost.saving_prefix',
+    'engine_cost.saving_suffix',
+    'engine_cost.image_cheapest',
+    'engine_cost.gpu_total',
+    'engine_cost.training_total',
+  ];
+
   // P137 T2.7 — composite data-driven line patterns.
   // Each pattern: regex captures dynamic data; build() emits localized
   // prefix + captured data + localized suffix. Tier-1/2 above uses

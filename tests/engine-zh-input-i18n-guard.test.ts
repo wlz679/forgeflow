@@ -16,9 +16,11 @@ import { spawnSync } from 'node:child_process';
 import {
   buildSlugToFirstInput,
   escapeForHtml,
-  buildTranslationKeyRegex,
-  extractAllEngineSlugs,
 } from './_composite-i18n-walkers';
+// P153: translations moved from the deleted src/i18n/translations.ts to the
+// per-locale JSON files (P150, commit c16322b). This guard used to scrape
+// the TS module with a regex and died with ENOENT once it was deleted.
+import { getTranslation, getEngineSlugsFromLocales } from './_locale-json';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -42,8 +44,7 @@ function ensureBuilt(): void {
 test('every zh engine page renders the first input label (P131 split from P123 dim 3)', () => {
   ensureBuilt();
 
-  const translationsText = readFileSync(resolve(root, 'src', 'i18n', 'translations.ts'), 'utf-8');
-  const allSlugs = extractAllEngineSlugs(translationsText);
+  const allSlugs = getEngineSlugsFromLocales();
   assert.equal(
     allSlugs.length,
     100,
@@ -56,15 +57,11 @@ test('every zh engine page renders the first input label (P131 split from P123 d
   for (const slug of allSlugs) {
     const firstInputName = slugToFirstInput.get(slug);
     if (!firstInputName) continue; // engine has no inputs (rare)
-    const m = translationsText.match(
-      buildTranslationKeyRegex(`tools.${slug}.input.${firstInputName}.label`)
-    );
-    if (!m) {
+    const inputLabelZh = getTranslation('zh', `tools.${slug}.input.${firstInputName}.label`);
+    if (inputLabelZh === undefined) {
       // Missing input label key — out of scope for this test (covered by dead-keys-guard).
       continue;
     }
-    // zh value: group 3 (single-quoted) ?? group 4 (double-quoted).
-    const inputLabelZh = m[3] ?? m[4];
     const zhPath = resolve(root, 'dist', 'zh', slug, 'index.html');
     if (!existsSync(zhPath)) {
       violations.push(`${slug}: dist/zh/${slug}/index.html missing (build incomplete?)`);

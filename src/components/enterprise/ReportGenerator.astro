@@ -3,6 +3,21 @@
  * P5A-A.2 deferred: full modal markup for ReportGenerator.
  * Currently the toolbar uses inline prompt() — see EnterpriseToolbar.astro.
  * This file is reserved for the v2 UX upgrade.
+ *
+ * P153: the i18n keys this component owns are declared here so the
+ * dictionary and the component that will consume them are linked in source.
+ * The keys are already shipped in src/i18n/locales/{en,zh}.json (the
+ * enterprise-i18n-coverage-guard requires them), but until the modal markup
+ * lands nothing references them — without this declaration the
+ * translation-glossary-guard correctly reports them as orphans (a key with
+ * no owner in source). The v2 build must wire exactly these keys.
  */
+const RESERVED_I18N_KEYS = [
+  'enterprise.report.modal_title',
+  'enterprise.report.format',
+  'enterprise.report.success',
+  'enterprise.report.error',
+  'enterprise.report.toast',
+];
 ---
 <div id="report-generator" class="hidden" data-modal="report"></div>
