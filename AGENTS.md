@@ -170,7 +170,7 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 
 ## Defense-in-Depth (P110, 2026-07-27; P138 added Rendering dimension 2026-07-30; P140a added AdSense Compliance dimension 2026-07-31)
 
-**Test infrastructure that catches regressions across 8 user-visible dimensions.** All 47 build-dep CI guards live in `tests/`. Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
+**Test infrastructure that catches regressions across 8 user-visible dimensions.** All 49 build-dep suites live in `tests/` (plus 188 source-only suites — 237 in total). Run via `RUN_BUILD_TESTS=1 pnpm test:unit` (or `pnpm test:build`). Suites registered in `tests/run.mjs` skip-mode summary.
 
 | Dimension                   | Suite count                                      | Coverage                                                                                                                                                                                                                                                                     | Memory                                                         |
 | --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -185,7 +185,7 @@ Any future engine that wants the 3-band exemption must (a) cite the hard-breakpo
 | **Rendering (v3 section)**  | 1                                                | `v3-render-coverage-guard` (P138) — source-level invariants: dual `BIZ_CONFIG_MAP` equality + 100-tool coverage + 68 v3 wired. (Source-only; follows build-dep gate for summary consistency.)                                                                                | [`p138`](memory/p138-v3-render-batch-fix-shipped.md)           |
 | **AdSense Compliance**      | 2                                                | (P140a) `no-adsense-placeholder-guard` (source-only — prevents resurrection of the misleading AdUnit.astro literal-placeholder) + `content-prose-shape-guard` (build-dep — eagerly validates 4-H2 prose frontmatter via zod schema, prevents thin/missing editorial content) | [`p140a`](memory/p140a-adsense-scaffold-shipped.md)            |
 | **Build-dep source guards** | 8                                                | 4 codegen (i18n + examples + customfn + marker) + 4 i18n structural (categories + translations + glossary + engine count)                                                                                                                                                    | [`p47-p52`](memory/MEMORY.md#p47-p52-build-dep-deep-hardening) |
-| **Total**                   | **47 build-dep suites** + 9 source-only = **56** | 8 dimensions                                                                                                                                                                                                                                                                 |                                                                |
+| **Total**                   | **49 build-dep suites** + 188 source-only = **237** | 8 dimensions above list the guard matrix; the counts are every suite under `tests/`                                                                                                                             |                                                                |
 
 **Performance size triad complete (P96+P106+P107+P108):** HTML + JS + CSS + images. Each guard has 50–72% headroom from current baseline (e.g. JS max 65 KB ≤ 100 KB threshold).
 
@@ -200,7 +200,7 @@ pnpm dev                # Dev server (Astro, port 4321 default)
 pnpm build              # Production build (313+ static pages: 100 calcs × 2 langs + 15 category listings × 2 langs + 2 landing pages × 2 langs = ~314)
 pnpm preview            # Preview built app
 pnpm sync               # Update AI pricing from LiteLLM + regen engine data tables
-pnpm test:unit          # Unit tests (skips 6 build-dependent by default — P63 added category-en-cjk-guard)
+pnpm test:unit          # Unit tests (skips the 49 build-dependent suites by default — P63 added category-en-cjk-guard)
 pnpm test:build         # Build-dependent test wrapper (requires RUN_BUILD_TESTS=1)
 pnpm translate          # Translate wordpools (translate-wordpools.ts)
 ```

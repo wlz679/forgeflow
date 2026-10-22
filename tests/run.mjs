@@ -1,6 +1,11 @@
 import { spawnSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
 import { resolve, relative } from 'node:path';
+// P153: the build-dep suite list and the suite walk now live in
+// tests/build-dep-suites.mjs, shared with the claude-md-invariant-guard.
+// The guard used to parse this file's printed skip-mode list to learn the
+// build-dep count; when the list became computed (P153-E1) the guard's
+// parser found no literal and read 0. One implementation, two callers.
+import { computeBuildDepSuites, walkTestSuites } from './build-dep-suites.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 // P141-B3-T2: 动态递归扫描替代硬编码白名单 — 自动发现 subdir 里的 tests/
@@ -9,21 +14,7 @@ const root = resolve(import.meta.dirname, '..');
 // 允许 ^20.19.0,自写递归以兼容两个 major。P53b T17a 仍生效:传给 spawnSync
 // 的是相对 root 的 forward-slash 路径,Windows cmd.exe 的 8191-char cmdline
 // 限制靠相对路径绕开,长度基线 ~4400 chars / 190 files。
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist']);
-function walkTests(dir) {
-  const out = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (SKIP_DIRS.has(entry.name)) continue;
-    const full = resolve(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walkTests(full));
-    } else if (entry.isFile() && /\.test\.(ts|mjs)$/.test(entry.name)) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-const suites = walkTests(resolve(root, 'tests'));
+const suites = walkTestSuites(root);
 console.log(`Found ${suites.length} test suites via walk`);
 const tests = suites.map(f => relative(root, f).replaceAll('\\', '/'));
 if (!tests.length) {
@@ -95,15 +86,12 @@ for (let i = 0; i < tests.length; i += BATCH_SIZE) {
 // build-gated (P153-G1 removed the RUN_BUILD_TESTS gate from five
 // source-only guards), while omitting suites that really are gated. A
 // computed list cannot drift.
-function stripComments(src) {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/(^|[^:])\/\/.*$/gm, '$1');
-}
-const buildGated = suites
-  .filter((f) => stripComments(readFileSync(f, 'utf8')).includes('process.env.RUN_BUILD_TESTS'))
-  .map((f) => relative(root, f).replaceAll('\\', '/').replace(/^tests\//, ''))
-  .sort();
+//
+// P153: the computation itself now lives in tests/build-dep-suites.mjs so
+// the claude-md-invariant-guard counts exactly the same set (it used to
+// parse the printed list below, which stopped existing when E1 made it
+// computed).
+const buildGated = computeBuildDepSuites(root);
 
 if (!process.env.RUN_BUILD_TESTS) {
   console.log(`\n[skip-mode] RUN_BUILD_TESTS not set — ${buildGated.length} build-dependent suites skipped.`);

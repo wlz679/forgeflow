@@ -1,23 +1,23 @@
 #!/usr/bin/env node
-// P125 + P132 — CLAUDE.md / CHANGELOG.md invariant matrix guard (meta-guard).
+// P125 + P132 — AGENTS.md / CHANGELOG.md invariant matrix guard (meta-guard).
 // Single test asserts the documentation's numeric invariants match reality.
 // Catches the drift class we've seen multiple times this thread alone:
-//   - P121-P124 added 4 build-dep suites without updating CLAUDE.md (29 → 34)
+//   - P121-P124 added 4 build-dep suites without updating AGENTS.md (29 → 34)
 //   - P131 catch-up discovered P130's "Total commits: 803" claim was off by 5
 //     (actual 808); drift went undetected for one catch-up cycle
 //
-// Without this guard, future sessions silently leaving CLAUDE.md/CHANGELOG.md
+// Without this guard, future sessions silently leaving AGENTS.md/CHANGELOG.md
 // drifted wouldn't surface until a manual audit (P27/P28/P30/P31 cascade audit
 // pattern). This guard catches it on every PR.
 //
 // Seven invariants asserted:
-//   1. Build-dep suite count: CLAUDE.md "N build-dep suites" matches
+//   1. Build-dep suite count: AGENTS.md "N build-dep suites" matches
 //      tests/run.mjs skip-mode listing length
 //   2. Defense-in-Depth arithmetic: "N build-dep + N source-only = total"
 //      self-check (catches typos in the totals line)
-//   3. Engine count: CLAUDE.md "100 engines" matches
+//   3. Engine count: AGENTS.md "100 engines" matches
 //      tests/lib/engine-count.ts:EXPECTED_ENGINE_COUNT
-//   4. Category count: CLAUDE.md "15 categories" matches
+//   4. Category count: AGENTS.md "15 categories" matches
 //      count of category letter exports in src/data/categories.ts
 //   5. CHANGELOG total commit count (P132): header "Total commits: N"
 //      matches `git rev-list --count HEAD` — tolerates forward drift ≤ 1
@@ -26,7 +26,7 @@
 //   6. CHANGELOG last-ship date (P132): header "最后更新: YYYY-MM-DD"
 //      matches `git log -1 --format=%cd --date=short` — tolerates forward
 //      lag ≤ 7 days (non-CHANGELOG commits don't force a date bump).
-//   7. CLAUDE.md category names (P132): bullet list letters + names
+//   7. AGENTS.md category names (P132): bullet list letters + names
 //      match src/data/categories.ts (catches phantom letters like I/V from P46)
 //
 // Build dependency:
@@ -37,6 +37,9 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execSync } from 'node:child_process';
+// P153: shared with tests/run.mjs — one implementation of "which suites are
+// build-dependent", so the guard and the runner can never disagree.
+import { computeBuildDepSuites } from './build-dep-suites.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -54,49 +57,39 @@ function readText(relPath: string): string {
 }
 
 /** Extract first integer N that appears in a `... N build-dep suites ...` context. */
-function extractBuildDepSuiteCount(claudeMd: string): number {
+function extractBuildDepSuiteCount(agentsMd: string): number {
   // Match e.g. "33 build-dep suites" / "29 build-dep CI guards"
   const re = /\b(\d+)\s+build-dep\s+(?:CI\s+guards|suites|suite\s+count)\b/g;
-  const matches = [...claudeMd.matchAll(re)].map(m => parseInt(m[1], 10));
+  const matches = [...agentsMd.matchAll(re)].map(m => parseInt(m[1], 10));
   if (matches.length === 0) {
-    throw new Error(`No "N build-dep suites/CI guards" phrase found in CLAUDE.md`);
+    throw new Error(`No "N build-dep suites/CI guards" phrase found in AGENTS.md`);
   }
   // Use the FIRST match (intro paragraph typically has the count)
   return matches[0];
 }
 
 /** Extract first integer N that appears in a `... N source-only ...` context. */
-function extractSourceOnlyCount(claudeMd: string): number {
+function extractSourceOnlyCount(agentsMd: string): number {
   // Match e.g. "8 source-only"
   const re = /\b(\d+)\s+source-only\b/g;
-  const matches = [...claudeMd.matchAll(re)].map(m => parseInt(m[1], 10));
+  const matches = [...agentsMd.matchAll(re)].map(m => parseInt(m[1], 10));
   if (matches.length === 0) {
-    throw new Error(`No "N source-only" phrase found in CLAUDE.md`);
+    throw new Error(`No "N source-only" phrase found in AGENTS.md`);
   }
   return matches[0];
 }
 
-/** Count build-dep suite names listed in tests/run.mjs skip-mode summary. */
+/**
+ * Count the build-dependent suites.
+ *
+ * P153: this used to parse the hardcoded `console.log('[skip-mode]   a, b, c')`
+ * list out of tests/run.mjs. That list is now COMPUTED (P153-E1), so the
+ * parse found nothing and the guard compared AGENTS.md's number against 0.
+ * Both sides now count the same set, via the shared implementation in
+ * tests/build-dep-suites.mjs.
+ */
 function countRealBuildDepSuites(): number {
-  const runMjs = readText('tests/run.mjs');
-  // The skip-mode summary uses `console.log('[skip-mode]   <name1>, <name2>, ...');`
-  // Some lines have a single suite name; others have multiple comma-separated.
-  // Extract all `[skip-mode]` log content and split by comma.
-  const re = /console\.log\('\[skip-mode\]\s+([^']+)'\);/g;
-  const names = new Set<string>();
-  for (const m of runMjs.matchAll(re)) {
-    const line = m[1];
-    // Split by comma, trim each, skip empty/non-suite entries (like
-    // "Set RUN_BUILD_TESTS=1 ..." or "RUN_BUILD_TESTS not set — N ...").
-    for (const part of line.split(',')) {
-      const trimmed = part.trim();
-      // Only consider lowercase-hyphen identifiers (suite-name pattern).
-      if (/^[a-z][a-z0-9-]*$/.test(trimmed)) {
-        names.add(trimmed);
-      }
-    }
-  }
-  return names.size;
+  return computeBuildDepSuites(root).length;
 }
 
 /** Read EXPECTED_ENGINE_COUNT constant from tests/engine-count.ts. */
@@ -118,7 +111,7 @@ function countCategoryLetters(): number {
   return letters.size;
 }
 
-// ---- P132 invariants (CHANGELOG.md + CLAUDE.md category names) ----
+// ---- P132 invariants (CHANGELOG.md + AGENTS.md category names) ----
 
 /** Run a git command and return trimmed stdout. */
 function git(cmd: string): string {
@@ -162,7 +155,7 @@ function readCanonicalCategoryNames(): Map<string, string> {
   return map;
 }
 
-/** Extract category letter IDs from CLAUDE.md bullet list (e.g. `- **A — SaaS Metrics**`). */
+/** Extract category letter IDs from AGENTS.md bullet list (e.g. `- **A — SaaS Metrics**`). */
 function extractClaudeMdCategoryLetters(text: string): Set<string> {
   const re = /\*\*([A-Z])\s*—/g;
   const set = new Set<string>();
@@ -170,31 +163,34 @@ function extractClaudeMdCategoryLetters(text: string): Set<string> {
   return set;
 }
 
-test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
-  const claudeMd = readText('CLAUDE.md');
+test('AGENTS.md invariant matrix matches reality (meta-guard)', () => {
+  const agentsMd = readText('AGENTS.md');
   const violations: string[] = [];
 
   // Invariant 1: Build-dep suite count
-  const statedBuildDep = extractBuildDepSuiteCount(claudeMd);
+  const statedBuildDep = extractBuildDepSuiteCount(agentsMd);
   const realBuildDep = countRealBuildDepSuites();
   if (statedBuildDep !== realBuildDep) {
     violations.push(
-      `Build-dep suite count drift: CLAUDE.md says ${statedBuildDep}, ` +
+      `Build-dep suite count drift: AGENTS.md says ${statedBuildDep}, ` +
       `reality (tests/run.mjs skip-mode) says ${realBuildDep}`
     );
   }
 
   // Invariant 2: Defense-in-Depth arithmetic self-check
-  const statedSourceOnly = extractSourceOnlyCount(claudeMd);
-  const totalRe = /\b(\d+)\s+build-dep\s+suites\s*\+\s*(\d+)\s+source-only\s*=\s*(\d+)\b/;
-  const totalMatch = claudeMd.match(totalRe);
+  const statedSourceOnly = extractSourceOnlyCount(agentsMd);
+  // P153: tolerate markdown bold markers around the numbers ("**49 build-dep
+  // suites** + 188 source-only = **237**") — the table row is bold, and the
+  // old pattern could not see through the "**" that follows "suites".
+  const totalRe = /\b(\d+)\s+build-dep\s+suites\*{0,2}\s*\+\s*\*{0,2}\s*(\d+)\s+source-only\*{0,2}\s*=\s*\*{0,2}\s*(\d+)\b/;
+  const totalMatch = agentsMd.match(totalRe);
   if (totalMatch) {
     const a = parseInt(totalMatch[1], 10);
     const b = parseInt(totalMatch[2], 10);
     const total = parseInt(totalMatch[3], 10);
     if (a + b !== total) {
       violations.push(
-        `Defense-in-Depth arithmetic drift: CLAUDE.md says ` +
+        `Defense-in-Depth arithmetic drift: AGENTS.md says ` +
         `${a} build-dep + ${b} source-only = ${total}, but ${a}+${b}=${a + b}`
       );
     }
@@ -216,15 +212,15 @@ test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
   // Invariant 3: Engine count
   const realEngineCount = readEngineCount();
   const engineCountRe = /\b(\d+)\s+(?:engines|calculators)\b/g;
-  const engineCountMatches = [...claudeMd.matchAll(engineCountRe)]
+  const engineCountMatches = [...agentsMd.matchAll(engineCountRe)]
     .map(m => parseInt(m[1], 10))
     .filter(n => n >= 50 && n <= 200); // filter to plausible engine counts
   const statedEngineCount = engineCountMatches[0];
   if (statedEngineCount === undefined) {
-    violations.push(`Engine count not found in CLAUDE.md`);
+    violations.push(`Engine count not found in AGENTS.md`);
   } else if (statedEngineCount !== realEngineCount) {
     violations.push(
-      `Engine count drift: CLAUDE.md says ${statedEngineCount}, ` +
+      `Engine count drift: AGENTS.md says ${statedEngineCount}, ` +
       `tests/engine-count.ts says ${realEngineCount}`
     );
   }
@@ -232,15 +228,15 @@ test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
   // Invariant 4: Category count
   const realCategoryCount = countCategoryLetters();
   const categoryCountRe = /\b(\d+)\s+(?:categories|letters|category\s+letters)\b/g;
-  const categoryCountMatches = [...claudeMd.matchAll(categoryCountRe)]
+  const categoryCountMatches = [...agentsMd.matchAll(categoryCountRe)]
     .map(m => parseInt(m[1], 10))
     .filter(n => n >= 10 && n <= 25); // filter to plausible category counts
   const statedCategoryCount = categoryCountMatches[0];
   if (statedCategoryCount === undefined) {
-    violations.push(`Category count not found in CLAUDE.md`);
+    violations.push(`Category count not found in AGENTS.md`);
   } else if (statedCategoryCount !== realCategoryCount) {
     violations.push(
-      `Category count drift: CLAUDE.md says ${statedCategoryCount}, ` +
+      `Category count drift: AGENTS.md says ${statedCategoryCount}, ` +
       `src/data/categories.ts has ${realCategoryCount} letter IDs`
     );
   }
@@ -278,32 +274,32 @@ test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
     );
   }
 
-  // Invariant 7 (P132): CLAUDE.md category letters + names match src/data/categories.ts
+  // Invariant 7 (P132): AGENTS.md category letters + names match src/data/categories.ts
   // Catches phantom letters (P46 class: I/V never existed) and name mismatches.
   const canonicalNames = readCanonicalCategoryNames();
-  const claudeLetters = extractClaudeMdCategoryLetters(claudeMd);
+  const claudeLetters = extractClaudeMdCategoryLetters(agentsMd);
   const phantomLetters = [...claudeLetters].filter(l => !canonicalNames.has(l));
   const missingLetters = [...canonicalNames.keys()].filter(l => !claudeLetters.has(l));
   const missingNames: string[] = [];
   for (const [letter, name] of canonicalNames) {
-    if (!claudeMd.includes(name)) {
+    if (!agentsMd.includes(name)) {
       missingNames.push(`${letter}="${name}"`);
     }
   }
   const cat7Violations: string[] = [];
   if (phantomLetters.length > 0) {
     cat7Violations.push(
-      `Phantom letters in CLAUDE.md (not in src/data/categories.ts): ${phantomLetters.sort().join(', ')}`
+      `Phantom letters in AGENTS.md (not in src/data/categories.ts): ${phantomLetters.sort().join(', ')}`
     );
   }
   if (missingLetters.length > 0) {
     cat7Violations.push(
-      `CLAUDE.md missing category letters (in src/data/categories.ts but not in CLAUDE.md bullet list): ${missingLetters.sort().join(', ')}`
+      `AGENTS.md missing category letters (in src/data/categories.ts but not in AGENTS.md bullet list): ${missingLetters.sort().join(', ')}`
     );
   }
   if (missingNames.length > 0) {
     cat7Violations.push(
-      `CLAUDE.md category names don't match src/data/categories.ts: ${missingNames.join(', ')}`
+      `AGENTS.md category names don't match src/data/categories.ts: ${missingNames.join(', ')}`
     );
   }
   if (cat7Violations.length > 0) {
@@ -313,9 +309,9 @@ test('CLAUDE.md invariant matrix matches reality (meta-guard)', () => {
   assert.equal(
     violations.length,
     0,
-    `CLAUDE.md / CHANGELOG.md invariant matrix drift (${violations.length} violation(s)):\n` +
+    `AGENTS.md / CHANGELOG.md invariant matrix drift (${violations.length} violation(s)):\n` +
       violations.map(v => `  - ${v}`).join('\n') +
-      `\n\nFix: update CLAUDE.md / CHANGELOG.md to match reality, then re-run. ` +
+      `\n\nFix: update AGENTS.md / CHANGELOG.md to match reality, then re-run. ` +
       `This guard prevents documentation-drift (P121-P124 build-dep suites + ` +
       `P130→P131 commit count off-by-5 + P46 phantom I/V letters).`
   );
