@@ -29,17 +29,32 @@ const root = resolve(__dirname, '..');
 const enPath = resolve(root, 'src/i18n/locales/en.json');
 const zhPath = resolve(root, 'src/i18n/locales/zh.json');
 
+// P153-E2: this list had drifted into a SECOND, contradictory contract.
+// It still demanded five keys that nothing renders anywhere:
+//   eeat.reviewed_by / eeat.team / eeat.author_label / eeat.publisher_label
+//   favorites.saved_count
+// The E-E-A-T block (src/components/EeatTrustBlock.astro) renders the
+// author's name and `eeat.author_role.${role}` directly — it never prints
+// an "Author" / "Publisher" / "Reviewed by" label — and the favorites page
+// renders favorites.title / .subtitle / .empty.*, never a saved-count
+// string. Meanwhile the orphan-key guard (tests/translation-glossary-guard)
+// proved the same five keys were referenced by no t() call.
+//
+// Two gates disagreed about the same keys, and the build gate was the
+// stricter one, so deleting the keys broke `pnpm build` (its prebuild step
+// runs this check) — which wiped dist/ mid-suite and cascaded into a dozen
+// unrelated dist/-reading failures.
+//
+// The contract now lists only keys the site actually renders. If a future
+// component starts printing one of the removed labels, add it back here
+// AND wire it into a t() call — the two lists then agree again.
 const REQUIRED_KEYS = {
   eeat: [
     'eeat.title',
-    'eeat.reviewed_by',
     'eeat.last_reviewed',
     'eeat.sources',
     'eeat.suggest_improvement',
     'eeat.suggest_body',
-    'eeat.team',
-    'eeat.author_label',
-    'eeat.publisher_label',
     'eeat.contact_email',
   ],
   about: [
@@ -76,7 +91,6 @@ const REQUIRED_KEYS = {
   favorites: [
     'favorites.title',
     'favorites.subtitle',
-    'favorites.saved_count',
     'favorites.empty.title',
     'favorites.empty.body',
     'favorites.empty.browse',

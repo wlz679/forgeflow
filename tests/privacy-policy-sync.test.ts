@@ -42,6 +42,15 @@ test('privacy-policy: English Supabase section present in dist', () => {
 });
 
 test('privacy-policy: Chinese Supabase section present in dist', () => {
+  // P153-E2: this test was missing the P23b skip-guard that its sibling
+  // above has. Without RUN_BUILD_TESTS it therefore ran anyway and read
+  // whatever happened to be sitting in dist/ — which made the result depend
+  // on the last local build (e.g. a build without the Supabase env vars
+  // produces a page with no "数据同步（Supabase）" section, so the suite
+  // flipped to red the moment dist/ was rebuilt locally). With the guard,
+  // the suite is skipped by default and, when opted in, reads the build
+  // that the first test in this file performs with the right env.
+  if (skipIfNoBuildTests()) return; // P23b: gate build-dependent test
   buildWithEnv({
     PUBLIC_CLERK_PUBLISHABLE_KEY: 'pk_test_xyz',
     VITE_SUPABASE_URL: 'https://abc.supabase.co',

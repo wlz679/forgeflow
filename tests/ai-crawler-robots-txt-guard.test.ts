@@ -13,16 +13,31 @@
 // all 5 must be allowed in robots.txt. Default `User-agent: *` + `Allow: /`
 // counts as allowed; explicit per-crawler Allow is also accepted.
 //
-// Runs in default pnpm check (no RUN_BUILD_TESTS gate, no dist/ rebuild).
-
+// P153-E2: this guard used to read dist/robots.txt when it existed and
+// otherwise PARSE the source's BODY array with a quote-scanning regex.
+// Both paths were broken:
+//   - dist/robots.txt does not exist: the route is an on-demand Astro
+//     endpoint (output: 'hybrid', no `export const prerender`), and
+//     public/robots.txt does not exist either. So the parse path was the
+//     normal one.
+//   - the parse regex matched any single-quoted run, and the source's
+//     comments contain an apostrophe ("...any new AI crawler we haven't
+//     enumerated yet)"), which opened a phantom string that swallowed the
+//     real 'User-agent: *' and 'Allow: /' lines. The parsed body silently
+//     lost the wildcard rule, so the guard failed for a site whose
+//     robots.txt was correct.
+//
+// New contract: ask the route handler for the bytes it actually serves.
+// That is the ground truth — no parsing, no dist/ dependency, and the
+// result cannot depend on whether a local build happens to be lying around.
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { GET } from '../src/pages/robots.txt.ts';
 
 const ROOT = process.cwd();
 const ROBOTS_SRC = join(ROOT, 'src/pages/robots.txt.ts');
-const DIST_ROBOTS = join(ROOT, 'dist/robots.txt');
 
 // Major AI crawlers that must be allowed per P148-G S22.
 const AI_CRAWLERS = [
@@ -33,28 +48,46 @@ const AI_CRAWLERS = [
   'PerplexityBot',
 ];
 
-function readBody(): string {
-  // Prefer dist/robots.txt (the actually-served file) if it exists;
-  // otherwise parse src/pages/robots.txt.ts BODY template literal.
-  if (existsSync(DIST_ROBOTS)) {
-    return readFileSync(DIST_ROBOTS, 'utf8');
-  }
-  if (!existsSync(ROBOTS_SRC)) {
-    throw new Error(`Neither ${DIST_ROBOTS} nor ${ROBOTS_SRC} exists`);
-  }
-  // Parse the BODY = [ ... ].join('\n') template literal — best-effort extraction
-  const txt = readFileSync(ROBOTS_SRC, 'utf8');
-  const m = txt.match(/const BODY = \[([\s\S]*?)\]\.join\('\\n'\)/);
-  if (!m) throw new Error('Could not extract BODY from src/pages/robots.txt.ts');
-  // Each line is a quoted string — extract them and join.
-  const lines = [...m[1].matchAll(/'((?:[^'\\]|\\.)*)'/g)].map((line) => {
-    return line[1]
-      .replace(/\\\\/g, '\x00') // \\
-      .replace(/\\'/g, "'")
-      .replace(/\\n/g, '\n')
-      .replace(/\x00/g, '\\');
+/** The exact body the site serves at /robots.txt. */
+async function readBody(): Promise<string> {
+  // APIRoute may return a Response or a Promise<Response> — await both.
+  const res = await GET({} as Parameters<typeof GET>[0]);
+  return await res.text();
+}
+
+test('src/pages/robots.txt.ts exists', () => {
+  assert.ok(existsSync(ROBOTS_SRC), `Expected ${ROBOTS_SRC} to exist`);
+});
+
+test('robots.txt 的 wildcard 块（User-agent: *）允许抓取全部', async () => {
+  const body = await readBody();
+  assert.match(body, /User-agent:\s*\*/i, 'Expected wildcard User-agent: *');
+  // Block-scoped: the wildcard's OWN rules must allow the root and must not
+  // disallow it. A body-wide `/Allow:\s*\//` regex would also match the five
+  // per-crawler blocks, so it would keep passing even after the wildcard
+  // was turned into `Disallow: /` — the assertion would not be guarding the
+  // thing its name claims. (Found by the mutation harness.)
+  assert.ok(
+    isCrawlerAllowed(body, '*'),
+    'wildcard block must have "Allow: /" and no "Disallow: /"',
+  );
+});
+
+test('Sitemap directive is present', async () => {
+  const body = await readBody();
+  assert.match(body, /Sitemap:\s*https?:\/\//i, 'Expected Sitemap: <url> directive');
+});
+
+// Iterate over AI_CRAWLERS (test.each not available in this runner)
+for (const crawler of AI_CRAWLERS) {
+  test(`AI crawler ${crawler} is allowed`, async () => {
+    const body = await readBody();
+    assert.ok(
+      isCrawlerAllowed(body, crawler),
+      `Expected robots.txt to ALLOW ${crawler} ` +
+        `(explicit Allow, or wildcard User-agent: * + Allow: / with no Disallow: /)`
+    );
   });
-  return lines.join('\n');
 }
 
 function isCrawlerAllowed(body: string, crawler: string): boolean {
@@ -93,30 +126,3 @@ function isCrawlerAllowed(body: string, crawler: string): boolean {
   }
   return false;
 }
-
-test('src/pages/robots.txt.ts exists', () => {
-  assert.ok(existsSync(ROBOTS_SRC), `Expected ${ROBOTS_SRC} to exist`);
-});
-
-test('robots.txt has wildcard User-agent: * with Allow: /', () => {
-  const body = readBody();
-  assert.match(body, /User-agent:\s*\*/i, 'Expected wildcard User-agent: *');
-  assert.match(body, /Allow:\s*\//i, 'Expected Allow: / for wildcard');
-});
-
-// Iterate over AI_CRAWLERS (test.each not available in this runner)
-for (const crawler of AI_CRAWLERS) {
-  test(`AI crawler ${crawler} is allowed`, () => {
-    const body = readBody();
-    assert.ok(
-      isCrawlerAllowed(body, crawler),
-      `Expected robots.txt to ALLOW ${crawler} ` +
-        `(explicit Allow, or wildcard User-agent: * + Allow: / with no Disallow: /)`
-    );
-  });
-}
-
-test('Sitemap directive is present', () => {
-  const body = readBody();
-  assert.match(body, /Sitemap:\s*https?:\/\//i, 'Expected Sitemap: <url> directive');
-});

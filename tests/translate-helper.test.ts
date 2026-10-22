@@ -45,11 +45,15 @@ test('translate: missing key returns key itself (last fallback in chain)', () =>
 });
 
 test('translate: placeholder replacement uses {varname} syntax', () => {
-  // Real translation key with {tool} placeholder (matches existing usage
-  // pattern — e.g. blog.try_now).
+  // A real translation key with a named {placeholder}. P153-E2: this used
+  // to use `blog.try_now`, which was deleted with the blog (32a982e) — the
+  // key no longer exists, so translate() fell through to its last-resort
+  // "return the key itself" branch and the assertion was testing a
+  // non-existent entry rather than the placeholder machinery.
+  // topic.guide.h2.what_is = "What is {topic}?"
   assert.equal(
-    translate('blog.try_now', 'en', { tool: 'MRR' }),
-    'Try MRR Now →',
+    translate('topic.guide.h2.what_is', 'en', { topic: 'MRR' }),
+    'What is MRR?',
   );
 });
 
@@ -74,5 +78,5 @@ test('translate: both languages populated → no cross-language fallback', () =>
 test('translate: missing placeholder param leaves {varname} literal', () => {
   // If caller forgets a param, the template literal stays — mirrors the
   // behavior of helpers.ts fillTemplate.
-  assert.equal(translate('blog.try_now', 'en', {}), 'Try {tool} Now →');
+  assert.equal(translate('topic.guide.h2.what_is', 'en', {}), 'What is {topic}?');
 });

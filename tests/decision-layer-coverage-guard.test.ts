@@ -18,6 +18,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { L5_TAGS } from './l5-tags.ts';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -29,12 +30,10 @@ const TARGET_CALCS = [
   'src/engines/saas/burn-rate-calculator.ts',
 ];
 
-const REQUIRED_TAGS = [
-  '🧭 Decision Question',
-  '🧭 Recommendation',
-  '🧭 Key Uncertainty',
-  '🧭 Next Action',
-];
+// P153-E2: the tag list now lives in tests/l5-tags.ts — one definition for
+// the guard, the audit test and (by extension) any future consumer, so the
+// copies cannot drift apart the way the old three did.
+const REQUIRED_TAGS = L5_TAGS;
 
 test('5 calc 全部含 🧭 Decision Recommendation 4 子段', () => {
   for (const relPath of TARGET_CALCS) {

@@ -71,8 +71,18 @@ function getCategoryIds(): string[] {
 }
 
 // Extract blog slugs from src/content/blog/ filenames.
+//
+// P153-E2: the blog section was removed with the programmatic SEO blog
+// (32a982e), so src/content/blog no longer exists and this used to throw
+// ENOENT — the structural-invariants test died before it checked anything.
+// New contract: the set of blog posts that need translation keys is derived
+// from the posts that actually exist. If the blog is rebuilt (Phase 2), the
+// directory comes back and this starts requiring blog.${slug}.title /
+// .excerpt again — no edit to this file needed. If it stays absent, there
+// are no blog posts and therefore no blog keys to require.
 function getBlogSlugs(): string[] {
   const dir = resolve(root, 'src/content/blog');
+  if (!existsSync(dir)) return [];
   return readdirSync(dir)
     .filter(f => f.endsWith('.md'))
     .map(f => f.replace(/\.md$/, ''))
@@ -135,7 +145,7 @@ function getUsedKeys(): { exact: Set<string>; prefixes: Set<string> } {
   return { exact, prefixes };
 }
 
-test('translation glossary structural invariants (every tool/blog/category has expected keys)', () => {
+test('translation glossary structural invariants (每个 tool / 存在的 blog post / category 都有对应 key)', () => {
   const keys = parseTranslations();
   const toolSlugs = getToolSlugs();
   const categoryIds = getCategoryIds();
@@ -181,7 +191,7 @@ test('translation glossary structural invariants (every tool/blog/category has e
   );
 });
 
-test('no orphan translation keys (every key in translations.ts is referenced by a t() call)', () => {
+test('no orphan translation keys (每个 locale key 都被某个 t() 调用引用)', () => {
   const keys = parseTranslations();
   const { exact, prefixes } = getUsedKeys();
 
