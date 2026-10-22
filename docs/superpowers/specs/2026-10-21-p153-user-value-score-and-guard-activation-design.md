@@ -349,6 +349,8 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 | **E2** | ✅ **已完成(2026-10-21)**:补齐博客删除后遗留的测试引用 —— 实测范围比预估大(7 套件 / 10 条断言,根因是「博客删除没做收尾」) | 小→中 | 消除 10 个永久红的测试 | 无 |
 | **E4** | ✅ **已完成(2026-10-22)**:把 **CI-mode**(RUN_BUILD_TESTS=1 + 无预建 dist/)跑成 **0 失败 / 0 跳过**(完整清单是 **12 条断言 / 10 个套件**,不是先前报的 7/6 —— 那次统计来自被截断的 artifact),其中**一条是线上真实缺陷**(中文页漏原始 i18n 键名) | 中 | CI 真正第一次能跑绿;**顺带修掉一个正在生产环境暴露给 AdSense 审核员看的破损文本** | 无 |
 | **E3** | 静态 / 交互模型集不一致(§5.2) | 中 | 首屏与交互一致 | 需产品决策 |
+| **E5** | ✅ **已完成(2026-10-22)**:CI run #290 **第一次跑到 Unit tests 步骤** ⇒ 发现「本地绿 ≠ CI 绿」的**第三种形态**(**gitignore 的生成物不在仓库里**),并给 `tests/run.mjs` 加 `::error::` 标注 | 小 | **CI 的失败从「不可见」变成「可见」**(此前 100 次红运行没人发现,是因为 TAP 输出根本不被 GitHub 解析) | 无 |
+| **E6** | ⏸ **待 user 拍板**:线上 og:image 全部 404(§7.17 的 A/B 两案) | 小 | 全站社交分享预览从坏变好 | 产品决策 |
 
 **推荐顺序:G1 → G2 → (等 AdSense)P2;E1/E2 顺手做掉。**
 
@@ -643,6 +645,67 @@ CI-mode 全量复跑(dist 移走 + `RUN_BUILD_TESTS=1` + `SKIP_INDEXNOW=1` + `no
 - 4 条变异台子:4/4 被指定守卫杀掉、点名了键、还原后 sha256 逐字节一致、基线全绿
 
 > **这一轮 CI-mode 从 12 条失败到 0 条,中间只错了 1 次** —— 我把 5 个 `engine_cost.*` 键判成「死键」删掉,而 `dead-i18n-keys-guard` 的 `WORKING_KEY_REQUIRED` 要求它们存在(§7.13.3)。**判据的覆盖面决定结论的覆盖面**:「搜不到引用 + 没有引擎输出」这两条证据都成立,却漏了第三个维度(**某份契约清单要求它存在**)。
+
+### 7.15 CI 真跑到 Unit tests 了 —— 然后发现「本地绿 ≠ CI 绿」的**第三种**形态 (2026-10-22)
+
+推送后 CI run #290(真实 GitHub Actions / ubuntu-latest / Node 20 / pnpm 9):
+
+| 步骤 | 结果 |
+|---|---|
+| Install / staticExamples / customFn / engine-coverage / tsc | ✅ |
+| **Unit tests** | ❌ |
+| Build | skipped |
+
+**这是 master 的 CI 历史上第一次跑到 Unit tests 步骤** —— 此前 100 次运行都死在 `Install` 或 `Drift check (staticExamples)`。而同一份代码的本地 CI-mode 是 **0 失败 / 1375 断言**。**同一份代码,两个环境,两个结论。**
+
+差异定位(本地 vs CI):
+
+| 项 | 本地 | CI(全新 checkout) |
+|---|---|---|
+| `public/og/`(200 张 OG 图,46.6 MB) | 存在(之前跑过 `pnpm build:og`) | **不存在** —— `public/og/` 在 .gitignore 里,进不了仓库 |
+| ⇒ `dist/og/` | 200 张 | **空** |
+| ⇒ `image-size-guard` 的两条断言 | 过 | **必红** |
+
+**这不是「测试写错了」,是「守卫假设了一个仓库里根本不存在的东西」。** 而且旧失败信息还指错了 remedy:「Expected at least one OG image in dist/og/. **Run pnpm build first**」—— `pnpm build` 根本不生成 OG 图,`pnpm build:og` 才生成。
+
+新契约(两半都强制,**没有一半是悄悄跳过**):
+
+- 本 checkout **有**生成物(`public/og/` 非空)⇒ 构建必须把它们**全部**拷进 `dist/og/`(数量一致),且每一条预算都要成立;
+- 本 checkout **没有** ⇒ **明说**「SKIP: this checkout has no generated OG bundle (public/og/ is empty — the images are gitignored build artifacts, produced by `pnpm build:og`). **Nothing was measured.**」并通过。
+
+实测两态都验证过:有生成物 ⇒ 两条预算断言真跑;把 `public/og/` 移走 ⇒ 两条都打印 SKIP 且通过;`public/og/` 已还原。
+
+> **教训:** 「本地全绿」与「CI 全绿」之间还有**第三种**差异:**仓库里没有的生成物**。本地有 `public/og/`、`scripts/.twemoji-cache/`、`node_modules/`、`.astro/` —— 它们**都不在 git 里**;CI 的全新 checkout 只有 git 里的东西。**「守卫读的文件在我机器上存在」不等于「它在 CI 里存在」。**
+> 查法:凡是守卫读的是**生成目录**(而不是源码或已跟踪资源),都要先问一句「它在仓库里吗」。
+
+### 7.16 CI 的失败必须**可见**:`::error::` 标注 (2026-10-22)
+
+GitHub **不解析 TAP 输出** —— 一个失败的测试在 run 列表里只表现为「Process completed with exit code 1」,而 job log 需要**登录**才能看。**这就是「100 次连续红运行没人看见」的机制性原因:不是没人看,是看不见。**
+
+`tests/run.mjs` 现在在批次失败时输出 GitHub 工作流命令 `::error::`,内容是失败测试名 + 断言详情。这既是拿到「CI 到底哪条红」的钥匙(公开 API 可匿名读 annotations),也是一道**该早就有的护栏**:下一次有人把 CI 弄红了,失败原因会直接出现在 PR 的检查列表里。
+
+实测:从 `en.json` 抽掉 `eeat.title` ⇒ 3 条 `::error::` 标注,含失败测试名与「missing in en.json (referenced in src/components/EeatTrustBlock.astro)」;还原后 sha256 逐字节一致。
+
+### 7.17 生产站点的 og:image **全部 404**(既有缺陷;未在本轮擅自修改)
+
+实测(2026-10-22,线上):
+
+```
+https://forgeflowkit.com/og/solopreneur-roas-calculator-en.png  =>  404
+```
+
+438 个页面的 `og:image` / `twitter:image` 指向 `/og/<slug>-<lang>.png`,而这些图**在生产环境根本不存在** —— 它们是 gitignore 的生成物,CF Pages 的构建命令只跑了 `pnpm build`,没有跑 `pnpm build:og`。
+
+**影响:** 全站的社交分享预览(Twitter/X / Slack / iMessage / Facebook)都是坏的;这本身就是「站点看起来没做完」的一类信号,与 AdSense 的「低价值内容」印象同向。
+
+**两个可选修法(属产品决策,留给 user,本轮不自行决定):**
+
+| | 做法 | 代价 |
+|---|---|---|
+| **A(推荐)** | 把 CF Pages 的构建命令从 `pnpm build` 改成 `pnpm build:full`(= `build:og && build`) | Dashboard 一个字段;per-page OG 图真正上线,meta 不用改;构建变慢(多生成 200 张图) |
+| **B** | 工具页的 `ogImage` 改用仓库里**已跟踪**的 `/og-default.png` | 仓库一行改动,立刻不 404;但所有页面共用同一张图,失去 per-page 定制 |
+
+> 注:topic guide / compare 页的 Article JSON-LD `image` 本轮加的就是 `${SITE_URL}/og-default.png`,与**它们** BaseLayout 的默认 og:image 一致 ✓(那两页没有 per-page OG 图)。工具页走的是 `ogImage={`/og/${slug}-${lang}.png`}`,所以只影响 200 个工具页。
 
 ### 7.1 公式歧义(必须拍板) —— ✅ 已拍板(2026-10-21)
 
