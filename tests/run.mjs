@@ -64,16 +64,70 @@ const BATCH_SIZE = 30;
 const userArgs = process.argv.slice(2);
 let exitCode = 0;
 let batchNo = 0;
+// P153: capture each batch's output so a failure can be reported as a GitHub
+// Actions annotation (`::error::`). GitHub does NOT parse TAP output, so a
+// failing test used to be invisible in the run list — only "Process completed
+// with exit code 1" showed up, and the job log needs a signed-in session to
+// read. That invisibility is why 100 consecutive red CI runs went unnoticed
+// (P153 §7.9). The annotation carries the failing test names + the assertion
+// message, which is readable from the public API without authentication.
+function emitErrorAnnotation(message) {
+  // Workflow commands must be single-line; escape %, CR and LF.
+  const safe = String(message).replace(/%/g, '%25').replace(/\r/g, '').replace(/\n/g, ' ');
+  console.log(`::error::${safe}`);
+}
+function summarizeFailures(output) {
+  const lines = output.split('\n');
+  const failures = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = /^not ok \d+ - (.+)$/.exec(lines[i]);
+    if (!m) continue;
+    const name = m[1].trim();
+    // Collect the assertion detail that follows (TAP yaml block: `error: |-`
+    // plus indented lines). Skip the yaml keys that add no information.
+    const detail = [];
+    for (let j = i + 1; j < Math.min(i + 30, lines.length); j++) {
+      const l = lines[j];
+      if (/^(not ok|ok) \d+ - /.test(l)) break;
+      const t = l.trim();
+      if (!t) continue;
+      if (/^(duration_ms|code|name|operator|expected|actual|stack):/.test(t)) continue;
+      if (t === '...') continue;
+      detail.push(t);
+      if (detail.length >= 8) break;
+    }
+    failures.push({ name, detail: detail.join(' | ') });
+  }
+  return failures;
+}
 for (let i = 0; i < tests.length; i += BATCH_SIZE) {
   const batch = tests.slice(i, i + BATCH_SIZE);
   batchNo += 1;
   console.log(`[run] batch ${batchNo} (${batch.length} suites, ${i + 1}–${i + batch.length} of ${tests.length})`);
   const r = spawnSync(tsxBin, [...tsxArgs, ...userArgs, ...batch], {
     cwd: root,
-    stdio: 'inherit',
+    // stdout/stderr are piped (not inherited) so the output can be scanned for
+    // failures; the captured text is written back out when the batch ends.
+    stdio: ['inherit', 'pipe', 'pipe'],
+    encoding: 'utf-8',
+    maxBuffer: 64 * 1024 * 1024,
     shell: process.platform === 'win32',
   });
+  const out = r.stdout ?? '';
+  const err = r.stderr ?? '';
+  if (out) process.stdout.write(out);
+  if (err) process.stderr.write(err);
   const code = r.status ?? 1;
+  if (code !== 0) {
+    const failures = summarizeFailures(out);
+    emitErrorAnnotation(
+      `test batch ${batchNo} failed (suites ${i + 1}–${i + batch.length} of ${tests.length}, exit ${code})` +
+        (failures.length ? ` — ${failures.length} failing test(s)` : ' — no TAP "not ok" line found (see job log)'),
+    );
+    for (const f of failures.slice(0, 25)) {
+      emitErrorAnnotation(`FAIL ${f.name}${f.detail ? ' :: ' + f.detail : ''}`);
+    }
+  }
   if (code !== 0 && exitCode === 0) exitCode = code;
 }
 // P23b: skip-mode summary. When RUN_BUILD_TESTS is unset, the build-dependent
