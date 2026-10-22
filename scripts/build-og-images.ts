@@ -22,6 +22,7 @@ import { tools } from '../src/data/tools';
 import { categories } from '../src/data/categories';
 import ogSamplesRaw from '../src/data/og-samples.json';
 import { OgCard } from './templates/og-card';
+import { OgDefaultCard } from './templates/og-default-card';
 import { CATEGORY_PALETTE } from './templates/category-palette';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -36,10 +37,31 @@ const TWEMOJI_CACHE_DIR = join(ROOT, 'scripts', '.twemoji-cache');
 const LANGS = ['en', 'zh'] as const;
 type Lang = (typeof LANGS)[number];
 
+// P153-B′: the brand cards for every page that has no per-tool image
+// (home / category / guide / compare / about / terms / 404 — 237 pages
+// measured 2026-10-22). These two files are TRACKED in git, unlike
+// public/og/ which is a gitignored build artifact: that is the whole point,
+// because Cloudflare Pages runs `pnpm build` (not `pnpm build:full`) and a
+// tracked asset is served regardless of which build command runs.
+//
+//   public/og-default.png     → English card. Keeps the historical URL, so
+//     every already-published reference to it (including the Article JSON-LD
+//     `image` on 98 guide/compare pages) starts serving a real card with no
+//     rewrite.
+//   public/og-default-zh.png  → Chinese card for the zh locale.
+const DEFAULT_CARDS: { lang: Lang; file: string }[] = [
+  { lang: 'en', file: 'og-default.png' },
+  { lang: 'zh', file: 'og-default-zh.png' },
+];
+
 // CLI flags
 const args = new Set(process.argv.slice(2));
 const devMode = args.has('--dev');      // only render 1 image
 const checkMode = args.has('--check');  // verify all 64 exist, don't write
+// P153-B′: render ONLY the brand cards. The 200 per-tool cards take minutes
+// to rasterise, so iterating on the brand card without this flag means
+// waiting for the whole bundle every time.
+const defaultOnly = args.has('--default-only');
 const slugArg = [...args].find(a => a.startsWith('--slug='))?.split('=')[1];
 
 interface Sample {
@@ -144,6 +166,31 @@ function loadFont(filename: string): Buffer {
   return readFileSync(p);
 }
 
+// Single source of truth for the rasterisation parameters. Both the per-tool
+// cards and the brand cards go through here, so the two card families cannot
+// drift apart in size, font stack, or emoji handling.
+async function renderPng(element: React.ReactElement, graphemeImages: Record<string, string>): Promise<Buffer> {
+  const svg = await satori(element, {
+    width: 1200,
+    height: 630,
+    fonts: [
+      { name: 'Inter',         data: loadFont('Inter-Regular.otf'),     weight: 400, style: 'normal' },
+      { name: 'Inter',         data: loadFont('Inter-Bold.otf'),        weight: 700, style: 'normal' },
+      { name: 'Inter',         data: loadFont('Inter-Black.otf'),       weight: 900, style: 'normal' },
+      { name: 'Noto Sans SC',  data: loadFont('NotoSansSC-Regular.otf'), weight: 400, style: 'normal' },
+    ],
+    embedFont: true,
+    graphemeImages,
+  });
+
+  const png = new Resvg(svg, {
+    fitTo: { mode: 'width', value: 1200 },
+    font: { loadSystemFonts: false },
+  }).render().asPng();
+
+  return Buffer.from(png);
+}
+
 async function renderOne(slug: string, lang: Lang, graphemeImages: Record<string, string>): Promise<Buffer> {
   const tool = tools.find(t => t.slug === slug);
   if (!tool) throw new Error(`Unknown tool slug: ${slug}`);
@@ -172,28 +219,19 @@ async function renderOne(slug: string, lang: Lang, graphemeImages: Record<string
     url,
   });
 
-  const svg = await satori(element, {
-    width: 1200,
-    height: 630,
-    fonts: [
-      { name: 'Inter',         data: loadFont('Inter-Regular.otf'),     weight: 400, style: 'normal' },
-      { name: 'Inter',         data: loadFont('Inter-Bold.otf'),        weight: 700, style: 'normal' },
-      { name: 'Inter',         data: loadFont('Inter-Black.otf'),       weight: 900, style: 'normal' },
-      { name: 'Noto Sans SC',  data: loadFont('NotoSansSC-Regular.otf'), weight: 400, style: 'normal' },
-    ],
-    embedFont: true,
-    graphemeImages,
+  return renderPng(element, graphemeImages);
+}
+
+async function renderDefaultCard(lang: Lang, graphemeImages: Record<string, string>): Promise<Buffer> {
+  const element = React.createElement(OgDefaultCard, {
+    lang,
+    url: lang === 'zh' ? 'forgeflowkit.com/zh' : 'forgeflowkit.com/en',
   });
-
-  const png = new Resvg(svg, {
-    fitTo: { mode: 'width', value: 1200 },
-    font: { loadSystemFonts: false },
-  }).render().asPng();
-
-  return Buffer.from(png);
+  return renderPng(element, graphemeImages);
 }
 
 function buildTargets(): Array<{ slug: string; lang: Lang }> {
+  if (defaultOnly) return [];
   if (slugArg) {
     return LANGS.map(lang => ({ slug: slugArg, lang }));
   }
@@ -219,7 +257,21 @@ async function main() {
       if (sz < 10000) { console.log(`TOO SMALL: ${slug}-${lang}.png (${sz}b)`); small++; }
     }
     console.log(`\n${tools.length * LANGS.length} target images. Missing: ${missing}, TooSmall: ${small}`);
-    if (missing || small) process.exit(1);
+
+    // P153-B′: the brand cards are TRACKED (not gitignored like public/og/),
+    // so their absence is never "this checkout didn't build them" — it is a
+    // real defect that ships a blank card to every social scraper.
+    let defaultMissing = 0;
+    let defaultSmall = 0;
+    for (const { lang, file } of DEFAULT_CARDS) {
+      const p = join(ROOT, 'public', file);
+      if (!existsSync(p)) { console.log(`MISSING: public/${file} (${lang})`); defaultMissing++; continue; }
+      const sz = statSync(p).size;
+      if (sz < 10000) { console.log(`TOO SMALL: public/${file} (${sz}b) — a 1×1 placeholder is 68 bytes`); defaultSmall++; }
+    }
+    console.log(`${DEFAULT_CARDS.length} brand cards. Missing: ${defaultMissing}, TooSmall: ${defaultSmall}`);
+
+    if (missing || small || defaultMissing || defaultSmall) process.exit(1);
     return;
   }
 
@@ -262,6 +314,17 @@ async function main() {
     }
   }
   console.log(`Done. ${i} images written.`);
+
+  // P153-B′: brand cards. Rendered AFTER the per-tool cards and written to
+  // public/ (tracked) rather than public/og/ (gitignored) — see DEFAULT_CARDS.
+  console.log(`Rendering ${DEFAULT_CARDS.length} brand cards to public/ ...`);
+  for (const { lang, file } of DEFAULT_CARDS) {
+    const png = await renderDefaultCard(lang, graphemeImages);
+    const dest = join(ROOT, 'public', file);
+    writeFileSync(dest, new Uint8Array(png.buffer, png.byteOffset, png.byteLength));
+    console.log(`  public/${file} (${lang}) — ${(png.byteLength / 1024).toFixed(1)} KB`);
+  }
+  console.log('Done. Brand cards written.');
 }
 
 main().catch((err) => {

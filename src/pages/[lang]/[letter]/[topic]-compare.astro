@@ -21,7 +21,7 @@ import { categories } from '../../../data/categories';
 import { TOPIC_COMPARE_CONTENT } from '../../../data/topic-content';
 import { getCalculatorBySlug } from '../../../data/tools';
 import { t } from '../../../i18n';
-import { SITE_URL } from '../../../lib/site-config';
+import { SITE_URL, defaultOgImage } from '../../../lib/site-config';
 
 export function getStaticPaths() {
   const paths: { params: { lang: string; letter: string; topic: string }; props: { topic: Topic } }[] = [];
@@ -73,7 +73,10 @@ const articleSchema = JSON.stringify({
   // json-ld-field-guard requires it and the 98 guide/compare pages were
   // failing it. Same URL BaseLayout emits as og:image / twitter:image
   // (the layout default), so the structured data and the meta tags agree.
-  image: `${SITE_URL}/og-default.png`,
+  // P153-B′: the default card is now locale-aware (see defaultOgImage), and
+  // until the placeholder was replaced it was a 1×1 transparent PNG — the
+  // Article image pointed at a blank pixel.
+  image: `${SITE_URL}${defaultOgImage(lang)}`,
   articleSection: `${cat.name} / ${topic.title[lang]}`,
   about: { '@type': 'Thing', name: topic.title[lang] },
   mentions: topic.calculatorSlugs.map((slug) => ({

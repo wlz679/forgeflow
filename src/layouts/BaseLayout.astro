@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import { getLang, t } from '../i18n';
-import { SITE_URL } from '../lib/site-config';
+import { SITE_URL, defaultOgImage } from '../lib/site-config';
 import { tools } from '../data/tools';
 
 export interface Props {
@@ -11,8 +11,10 @@ export interface Props {
   schema?: string;
   pageType?: 'home' | 'tool' | 'article' | 'static';
 }
-const { title, description, ogImage = '/og-default.png', schema, pageType = 'static' } = Astro.props;
 const lang = getLang(Astro);
+// P153-B′: the default social card is locale-aware. `lang` must be resolved
+// BEFORE the destructuring so the default value can use it.
+const { title, description, ogImage = defaultOgImage(lang), schema, pageType = 'static' } = Astro.props;
 
 const ogType = { home: 'website', tool: 'product', article: 'article', static: 'website' }[pageType];
 
