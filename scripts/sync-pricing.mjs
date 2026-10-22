@@ -146,12 +146,84 @@ const CURATED = {
   },
   deepseek: {
     // DeepSeek has no batch tier — the deepseek engine emits no batch fields.
+    // `deepseek-v4.1-flash-1017` leads: newer than V4 Flash and cheaper
+    // ($0.15/$0.60 vs $0.30/$1.20). It is carried by MANUAL_MODELS, not by
+    // the upstream feed — see the table below.
     lead: [
-      'deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo',
+      'deepseek-v4.1-flash-1017', 'deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo',
       'deepseek-r1', 'deepseek-chat', 'deepseek-reasoner', 'deepseek-coder',
       'deepseek-v3', 'deepseek-v3.2',
     ],
     meta: {},
+  },
+};
+
+// ============================================================
+// Manual model table — first-party models the upstream feed lags on
+// ------------------------------------------------------------
+// LiteLLM is a community-maintained feed, and its first-party
+// `deepseek/…` namespace lags behind DeepSeek's own API catalogue: a
+// model can be live and billable on api.deepseek.com for weeks before
+// LiteLLM carries it. The same model usually reaches LiteLLM only under
+// reseller namespaces (`deepinfra/…`, `together_ai/…`, `fireworks_ai/…`,
+// `baseten/…`), and those carry the reseller's price, not DeepSeek's.
+// This site quotes first-party DeepSeek API prices, so reseller entries
+// must never be copied in — which leaves no upstream key to copy at all.
+//
+// `CURATED` cannot cover this gap either: its `meta` and `lead` loops
+// only annotate models that already exist (`models[key]`,
+// `cfg.lead.filter((k) => models[k])`), so curation can never introduce
+// a model.
+//
+// This table is the single source of truth for such models. `pnpm sync`
+// rebuilds the dataset from it on every run, so an entry here is
+// reproducible — unlike a hand-edit of the JSON, which the sync script
+// happens to preserve but nobody maintains.
+//
+// Per entry:
+//   input / output — list price per 1M tokens, first-party DeepSeek API.
+//   name           — optional; defaults to displayName(key).
+//   family         — optional; defaults to deriveFamily(key).
+//   contextTokens  — raw token count; the dataset label comes from
+//                    contextWindowLabel() (1,048,576 → "1M").
+//   contextWindow  — explicit label, for entries whose raw token count
+//                    we don't track (the label is all the dataset stores).
+//
+// Prices below are first-party DeepSeek list prices, cross-checked
+// against two independent trackers on the date noted per entry:
+//   modelgrep.com/pricing · ai-model-matrix.com
+// ============================================================
+const MANUAL_MODELS = {
+  deepseek: {
+    // DeepSeek V4.1 Flash 1017 — released 2026-10-17.
+    // $0.15 in / $0.60 out per 1M tokens, 1M context. Cross-checked
+    // 2026-10-22. Cheapest V4-series model we carry (V4 Flash is
+    // $0.30/$1.20), so it leads the DeepSeek table.
+    //
+    // `name` is set explicitly rather than derived. The script's own
+    // displayName() collapses "digit + space + word" into "digit + word"
+    // (its regex is /(\d+) (\w)/g), which turns this key into
+    // "Deepseek V4.1Flash 1017" — the same defect it already ships as
+    // "GPT 5Nano" and "Gemini 3.8Flash" on ~127 model names. Fixing that
+    // regex is a separate, wider change (it renames every affected model
+    // and touches test expectations and i18n keys), so this entry carries
+    // its own correct name until that lands.
+    'deepseek-v4.1-flash-1017': {
+      input: 0.15,
+      output: 0.6,
+      name: 'Deepseek V4.1 Flash 1017',
+      contextTokens: 1_048_576,
+    },
+    // V4 Pro at its 75%-off promo price. Also absent from upstream
+    // LiteLLM's `deepseek/` namespace — it used to survive only as a
+    // hand-edit in the JSON, which no script rebuilt. Moved here so the
+    // table is the single source of truth for it too.
+    'deepseek-v4-pro-promo': {
+      input: 0.435,
+      output: 0.87,
+      name: 'V4 Pro (75% Promo)',
+      contextWindow: '1M',
+    },
   },
 };
 
@@ -264,6 +336,35 @@ async function main() {
       };
       added++;
       log(`  + NEW ${provider}/${key}`);
+    }
+  }
+
+  // Manual models: injected after the LiteLLM loop so the table stays
+  // authoritative for its entries — if upstream ever carries the same
+  // key (or a reseller key that shortKey() maps onto it), the first-party
+  // price must win, not the reseller's.
+  for (const [provider, entries] of Object.entries(MANUAL_MODELS)) {
+    const providerData = data.llm?.[provider];
+    if (!providerData) { skipped++; continue; }
+
+    for (const [key, spec] of Object.entries(entries)) {
+      const model = {
+        input: spec.input,
+        output: spec.output,
+        name: spec.name || displayName(key),
+        family: spec.family || deriveFamily(key),
+        contextWindow: spec.contextWindow || contextWindowLabel(spec.contextTokens),
+      };
+      const existing = providerData.models[key];
+      if (existing) {
+        const before = JSON.stringify(existing);
+        Object.assign(existing, model);
+        if (before !== JSON.stringify(existing)) updated++;
+      } else {
+        providerData.models[key] = model;
+        added++;
+        log(`  + MANUAL ${provider}/${key}`);
+      }
     }
   }
 

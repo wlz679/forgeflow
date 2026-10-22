@@ -2007,7 +2007,7 @@
           "name": "Deepseek V4Flash",
           "family": "v4",
           "contextWindow": "1M",
-          "order": 1
+          "order": 2
         },
         "deepseek-v4-pro": {
           "input": 1.32,
@@ -2015,7 +2015,7 @@
           "name": "Deepseek V4Pro",
           "family": "v4",
           "contextWindow": "1M",
-          "order": 2
+          "order": 3
         },
         "deepseek-v4-pro-promo": {
           "input": 0.435,
@@ -2023,7 +2023,7 @@
           "name": "V4 Pro (75% Promo)",
           "family": "v4",
           "contextWindow": "1M",
-          "order": 3
+          "order": 4
         },
         "deepseek-r1": {
           "input": 0.55,
@@ -2031,7 +2031,7 @@
           "name": "Deepseek R1",
           "family": "legacy",
           "contextWindow": "66K",
-          "order": 4
+          "order": 5
         },
         "deepseek-chat": {
           "input": 0.28,
@@ -2039,7 +2039,7 @@
           "name": "Deepseek Chat",
           "family": "legacy",
           "contextWindow": "131K",
-          "order": 5
+          "order": 6
         },
         "deepseek-reasoner": {
           "input": 0.28,
@@ -2047,7 +2047,7 @@
           "name": "Deepseek Reasoner",
           "family": "legacy",
           "contextWindow": "131K",
-          "order": 6
+          "order": 7
         },
         "deepseek-coder": {
           "input": 0.14,
@@ -2055,7 +2055,7 @@
           "name": "Deepseek Coder",
           "family": "legacy",
           "contextWindow": "128K",
-          "order": 7
+          "order": 8
         },
         "deepseek-v3": {
           "input": 0.27,
@@ -2063,7 +2063,7 @@
           "name": "Deepseek V3",
           "family": "legacy",
           "contextWindow": "66K",
-          "order": 8
+          "order": 9
         },
         "deepseek-v3.2": {
           "input": 0.28,
@@ -2071,7 +2071,7 @@
           "name": "Deepseek V3.2",
           "family": "legacy",
           "contextWindow": "164K",
-          "order": 9
+          "order": 10
         },
         "deepseek-flash": {
           "input": 0.3,
@@ -2079,7 +2079,7 @@
           "name": "Deepseek Flash",
           "family": "legacy",
           "contextWindow": "1M",
-          "order": 10
+          "order": 11
         },
         "deepseek-v4-flash-vision-exp": {
           "input": 0.3,
@@ -2087,7 +2087,15 @@
           "name": "Deepseek V4Flash Vision Exp",
           "family": "v4",
           "contextWindow": "1M",
-          "order": 11
+          "order": 12
+        },
+        "deepseek-v4.1-flash-1017": {
+          "input": 0.15,
+          "output": 0.6,
+          "name": "Deepseek V4.1 Flash 1017",
+          "family": "v4",
+          "contextWindow": "1M",
+          "order": 1
         }
       }
     }

@@ -128,7 +128,7 @@ const ENGINES = [
     file: 'deepseek-api-cost-calculator.ts',
         subdir: 'ai-cost',
     provider: 'deepseek',
-    popularKeys: ['deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo', 'deepseek-r1'],
+    popularKeys: ['deepseek-v4.1-flash-1017', 'deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo', 'deepseek-r1'],
     tableStart: '"var M={" +',
     tableEndMarker: 'var FI=',
     fieldMap: (m) => {
@@ -158,7 +158,7 @@ const ENGINES = [
       openai: ['gpt-5-mini'],
       anthropic: ['claude-haiku-3'],
       google: ['gemini-1.5-flash'],
-      deepseek: ['deepseek-v4-flash'],
+      deepseek: ['deepseek-v4.1-flash-1017'],
     },
   },
   // Non-LLM engines
