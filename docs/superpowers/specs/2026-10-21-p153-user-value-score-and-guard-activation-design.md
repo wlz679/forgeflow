@@ -346,7 +346,8 @@ P152 §6.1 把「重建 5 篇决策博客」估为「中」成本。**实测后�
 | **G2** | ✅ **已完成(2026-10-21)**:User Value Score 落地(脚本 + JSON + 5 条断言的守卫) | 中 | p140f §15.2 的准入线落地 → **Phase 4/5 扩量前唯一缺的那道闸** | 公式已拍板(7.1) |
 | **P2** | Phase 2 重建 5 篇决策博客 | **大**(管道 + 文章 + 接线) | 路线图断层 + 深度内容 | 等 AdSense 批准 + 7.2 决策 |
 | **E1** | ✅ **已完成(2026-10-21)**:修 `tests/run.mjs` 的 Windows 命令行长度限制(分批 spawn) | 小 | `pnpm check` 在 Windows 上能跑完 | 无 |
-| **E2** | ✅ **已完成(2026-10-21)**:补齐博客删除后遗留的测试引用 —— 实测范围比预估大(7 套件 / 10 条断言,根因是「博客删除没做收尾」),CI 已从红转绿 | 小→中 | 消除 10 个永久红的测试;**master 的 CI 第一次是绿的** | 无 |
+| **E2** | ✅ **已完成(2026-10-21)**:补齐博客删除后遗留的测试引用 —— 实测范围比预估大(7 套件 / 10 条断言,根因是「博客删除没做收尾」) | 小→中 | 消除 10 个永久红的测试 | 无 |
+| **E4** | ✅ **已完成(2026-10-22)**:把 **CI-mode**(RUN_BUILD_TESTS=1 + 无预建 dist/)跑成 **0 失败 / 0 跳过**(完整清单是 **12 条断言 / 10 个套件**,不是先前报的 7/6 —— 那次统计来自被截断的 artifact),其中**一条是线上真实缺陷**(中文页漏原始 i18n 键名) | 中 | CI 真正第一次能跑绿;**顺带修掉一个正在生产环境暴露给 AdSense 审核员看的破损文本** | 无 |
 | **E3** | 静态 / 交互模型集不一致(§5.2) | 中 | 首屏与交互一致 | 需产品决策 |
 
 **推荐顺序:G1 → G2 → (等 AdSense)P2;E1/E2 顺手做掉。**
@@ -459,6 +460,189 @@ eeat.reviewed_by / eeat.team / eeat.author_label / eeat.publisher_label / favori
 
 **遗留待拍板项(本轮未自行决定):**
 - **L5 标记目前是精确大小写匹配**(`decision-layer-coverage-guard` 用 `src.includes('🧭 Decision Question')`)。原审计脚本的测试断言的是「大小写不敏感」,而**没有任何实现曾是不敏感的** —— 那是草稿脚本与守卫之间的漂移。现在契约被钉死为精确匹配。若认为「引擎里写成小写也应被检出」(即守卫应更宽松),需要**同时**改 `tests/l5-tags.ts` 与守卫语义 —— 属产品决策,留给 user。
+
+### 7.9 🔴 更正:「master 的 CI 由红转绿」是错的 —— 它从未绿过 (2026-10-22)
+
+E2 的 commit message 与本 spec §7 的动作表都写了「CI 已从红转绿 / master 的 CI 第一次是绿的」。**这句断言是错的**,2026-10-22 实测更正:
+
+| 事实 | 实测 |
+|---|---|
+| GitHub Actions 上 master 的**最近 100 次 CI 运行,成功 0 次** | `workflows/ci.yml/runs?branch=master&per_page=50` 两页全查 |
+| 2026-10-22 run `39707689461` | Install ✅ / staticExamples ✅ / customFn ✅ / engine-coverage ✅ / tsc ✅ / **Unit tests ❌** / Build skipped |
+| 历史运行(#275–#288)的失败步骤 | 全部是 `Install`(1 次)或 `Drift check (staticExamples)`(其余) |
+| ⇒ 推论 | **CI 的 Unit tests 步骤从来没有被跑到过** ⇒ 所有 build-dep 守卫的失败在 CI 上从没有人看见 |
+
+**我上一轮错在哪:** 我验证的是**本地** `node tests/run.mjs`,而且**没有设 `RUN_BUILD_TESTS`** ⇒ 49 个 build-dep 套件全部 early-return,「1354 条断言 / 0 失败」是**跳过态**的数字,不是覆盖态的数字。
+
+**本地「全绿」有两种形态,只有一种等价于 CI:**
+
+| 形态 | 命令 | 等价于 CI? |
+|---|---|---|
+| skip-mode | `node tests/run.mjs` | ❌ build-dep 套件静默跳过,断言数偏少 |
+| **CI-mode** | 移走 `dist/` + `$env:RUN_BUILD_TESTS='1'` + `node tests/run.mjs` | ✅ 与 CI 同条件(全新 checkout ⇒ 首个 build-dep 套件自己构建) |
+
+CI-mode 下实测 **7 条断言失败 / 6 个套件**,全部是这次才暴露的(之前被 staticExamples 挡在后面)。其中一条是**线上真实缺陷**(§7.10)。
+
+> **教训:** 「本地全绿」不蕴含「CI 全绿」。断言总数是判断自己在哪种形态的**最快信号** —— 同一个套件集合,skip-mode 与 CI-mode 的断言数不同。仓库自己的 `tests/run.mjs` 早就把这件事打印出来了(`[skip-mode] RUN_BUILD_TESTS not set — N build-dependent suites skipped.`),**那一行当时就在输出里,我没读**。
+
+### 7.10 线上真实缺陷:P150 迁移丢掉 9 个 i18n 键,中文页正在印原始键名 (2026-10-22)
+
+**线上实测**(`https://forgeflowkit.com/zh/solopreneur-claude-api-cost-calculator/`,SSR 部分):
+
+```
+engine_cost.comparison_title (100engine_cost.reqs_per_day)
+engine_cost.cheapest_prefixClaude Haiku 55engine_cost.at_per_month$1.05/mo
+```
+
+每页 12 处。这不是测试问题 —— **这是 AdSense 审核员打开中文页就能看到的破损文本**,而且发生在 2026-10-19 送审之后。
+
+| 层 | 事实 |
+|---|---|
+| 现象 | `translate()` 的兜底是 `locales[lang]?.[key] ?? locales.en?.[key] ?? key` ⇒ **缺键不报错,直接把键名印到页面上** |
+| 根因 | P150 迁移(c16322b)把 `src/i18n/translations.ts` 拆成 per-locale JSON 时**丢掉了 9 个 `engine_cost.*` 键**。迁移后的 zh.json 里 0 命中;迁移前的 translations.ts 里 9 个都在,值完整 |
+| 为什么没人发现 | 两个守卫**早就看见了它**:`dead-i18n-keys-guard` 的 WORKING_KEY_REQUIRED 清单点名 9 个;`ai-cost-t2-7` 的 zh-output 守卫点名 4 个 composite 行 —— **但两者都是 build-dep,CI 从没跑到过**(§7.9) |
+
+**修法:** 从迁移前的 `translations.ts` 取回原值,按原位置(两个 locale 文件里 `ai_cost.section.usage_scenarios_openai` 与 `saas.section.dashboard` 之间的那个空档)补回。**逐字节核对:9/9 与迁移前完全一致**;en/zh 键集 5129 对齐;新文件 no-BOM / LF / 无 U+FFFD。
+
+**补一个 source-only 守卫**(`tests/i18n-key-existence-guard.test.ts`):扫描 `src/` 里所有 `t('…')` / `translate('…')` **字面量**调用点,要求每个键在 en+zh 都存在;外加「两个 locale 键集相同」。它不带 build 门 ⇒ **`pnpm check` 每次都跑**。变异验证:从 zh.json 删掉一个被引用的键 ⇒ 守卫报错并点名该键 ⇒ **杀掉**;还原后基线绿。
+
+> **教训:** 「缺键」这件事最难的地方在于它**不抛异常**。迁移类改动的验收清单里必须包含「**旧文件里有的键，新文件里还在吗**」—— 而且是**逐个**比对，不是看键集总数(总数相等也可能一边多一边少)。
+
+### 7.11 另外 5 条失败:3 个指向已删除/已改名文件的守卫 + 1 个 JSON-LD 缺字段 + 1 个档位分区被破坏 (2026-10-22)
+
+| # | 套件 | 根因 | 修法 |
+|---|---|---|---|
+| 1 | `claude-md-invariant-guard` | 读 `CLAUDE.md` —— 该文件已被 CLAUDE.md→AGENTS.md 迁移**改名**,不存在 ⇒ 每次必挂;而且它的「build-dep 套件数」靠**解析 `tests/run.mjs` 打印的 skip 清单**,E1 已把那份清单改成**实算** ⇒ 它读到 0 | 改读 `AGENTS.md`;抽出 `tests/build-dep-suites.mjs` 作单一真相源,`run.mjs` 与守卫共用(「别抄,去算」);AGENTS.md 的数字同步为真实值(49 build-dep + 188 source-only = 237) |
+| 2 | `input-labels-i18n-audit` | 读已删除的 `src/i18n/translations.ts` ⇒ ENOENT ⇒ **这个守卫自 P150 起就没检查过任何东西** | 改读两个 locale JSON |
+| 3 | `json-ld-field-guard` | 98 个 guide/compare 页的 Article JSON-LD **从来没有 `image` 字段**(`git log -S 'image'` 查不到任何历史) | 补 `image: ${SITE_URL}/og-default.png` —— 与 BaseLayout 的 `og:image`/`twitter:image` 同一个 URL(结构化数据与 meta 一致) |
+| 4 | `tier-prose-completeness-guard`(档位数) | `TIER_2_SLUGS` 只剩 5 条:15 个 P140f-B2 提交各删 2 条(**从不加回 TIER_1**),三表并集只剩 70/100 | 恢复 `a41008e` 的权威 35 条分配。**先量后改**:实测这 30 个 slug 里 29 个本来就满足 tier-2 门槛,只有 1 个差 3 个字符 |
+| 5 | `tier-prose-completeness-guard`(正文长度) | 3 段中文偏薄:`roas-calculator.zh` H2[3] 151 < 255、H2[4] 204 < 255;`email-campaign-roi-calculator.zh` H2[3] 147 < 150 | 补写这 3 段(归因模型/增量 ROAS、边际效率、币种税费),不是放宽门槛 |
+
+> **教训:** 守卫指向**已删除或已改名的文件**时,它不会「自动失效」,它会**每次都红**。而如果 CI 前面还有别的红步骤,这条红就永远排在后面 —— 于是它看起来像「已知的既有红闸门」,而不是缺陷。**「已知红」和「一直没人跑到」是同一种现象。**
+
+### 7.12 Sync AI Pricing 工作流从 2026-10-05 起一直红:浮动 pnpm major (2026-10-22)
+
+失败步骤恒为 `Install deps`(`pnpm install --frozen-lockfile`):10-05(run 37320094551)、10-19(run 39251857722)、10-22(run 39707689389)三次同样。
+
+**根因(隔离目录里复现,不是推测):**
+
+```
+ERR_PNPM_IGNORED_BUILDS
+Ignored build scripts: browser-tabs-lock@1.3.0, bufferutil@4.1.0, core-js@3.47.0,
+esbuild@0.17.19/0.19.12/0.21.5/0.28.1, sharp@0.33.5, utf-8-validate@6.0.6, workerd@1.20250718.0
+```
+
+工作流用 `npm install -g pnpm` ⇒ 拿到 **latest = 12.14.0**。pnpm ≥10 默认不跑依赖的构建脚本,**pnpm ≥12 把「被拦截」变成安装硬失败**。而 `ci.yml` 用 `pnpm/action-setup@v4` + `version: 9`,它的 Install 步骤历史上一直成功 —— **同一个仓库,两个工作流,一个被钉住、一个漂移。**
+
+**排除项(都实测过):** pnpm 12 能装这份 lockfile(隔离目录 exit 0);Node 版本要求满足(pnpm 12 engines = `node >=18.*`,CI 是 Node 20);registry 可达。
+
+**修法:** 改用 `pnpm/action-setup@v4` + `version: 9`,与 `ci.yml` 一致。**去掉那一个浮动依赖。**
+
+> **教训:** 工具链里**浮动的 major**(`npm install -g pnpm`)等于把构建结果交给别人的发布节奏 —— 一次 pnpm 的行为变更就能让一个每周定时任务连续红三周,而仓库本身一行没动。
+
+### 7.13 CI-mode 全量清单的完整版:12 条失败 / 10 个套件(更正 §7.9 的「7 条 / 6 个套件」) (2026-10-22)
+
+§7.9 记的「CI-mode 下实测 7 条断言失败 / 6 个套件」**统计不完整** —— 当时读的是被截断的 artifact,**没读到 batch 3 / batch 4 的汇总行**。完整跑完 8 个批次后的实际清单:
+
+| # | 套件 | 断言数 | 根因 |
+|---|---|---|---|
+| 1 | `engine-descriptions-i18n-guard` | 2 | 读**已删除**的 `src/i18n/translations.ts` ⇒ ENOENT |
+| 2 | `engine-en-faq-i18n-guard` | 1 | 同上 |
+| 3 | `engine-en-howto-i18n-guard` | 1 | 同上 |
+| 4 | `engine-en-input-i18n-guard` | 1 | 同上 |
+| 5 | `engine-titles-i18n-guard` | 2 | 同上 |
+| 6 | `engine-zh-faq-i18n-guard` | 1 | 同上 |
+| 7 | `engine-zh-howto-i18n-guard` | 1 | 同上 |
+| 8 | `engine-zh-input-i18n-guard` | 1 | 同上 |
+| 9 | `enterprise-i18n-coverage-guard` | 1 | 12 个 `enterprise.*` 键在 P150 迁移时丢失 |
+| 10 | `translation-glossary-guard`(孤儿键) | 1 | 5 个 `engine_cost.*` 键**无人引用**(见 §7.13.3:它们是「模式未实现的预留键」,不是死键) |
+| | **合计** | **12** | **10 个套件** |
+
+> **教训(关于「计数」本身):** 失败的**清单**可以靠不完整的输出重建,但**计数**不能 —— 「7 条」和「12 条」都是真的,取决于读到几批。**报表类数字必须标注它的覆盖面**(读到哪一批、artifact 是否截断)。这与「CLEAN 和算出来的数字都先问它看了多少」是同一条。
+
+#### 7.13.1 8 个引擎守卫读的是一个已删除的文件 ⇒ 它们的契约自 P150 起一直是空转
+
+§7.11 的 `input-labels-i18n-audit` 是同一个毛病的**单例**;这次量出是 **8 个套件 / 10 条断言**。它们做的是同一件事:用正则从 `translations.ts` 里刨 `{ en, zh }` 对。
+
+**修法(别抄,去算):** 8 个守卫各写一份「怎么读翻译」就是 8 份会漂移的真相源副本 ⇒ 新建 **`tests/_locale-json.ts`** 作**单一真相源**(`getTranslation(lang, key)` / `getEngineSlugsFromLocales()` / `getEngineSlugsFromEnginesDir()`),8 个守卫全部改为调用它;同时**删掉** `_composite-i18n-walkers.ts` 里已无人使用的 `buildTranslationKeyRegex()` 与 `extractAllEngineSlugs()` —— 留着就等于留了第二种读翻译的方式。
+
+**换 slug 来源之前先量:** locale 派生 / `src/engines` 目录派生 / 旧 TS 派生,三者**实测是同一组 100 个 slug,双向零差异** ⇒ 换源不会让守卫变弱。
+
+#### 7.13.2 🔴 旧的孤儿键守卫是**自指的** —— 它从来不可能发现孤儿
+
+`translation-glossary-guard` 的「孤儿键」断言逻辑是:扫 `src/` 里出现的键字面量,与字典求差集。但 **P150 之前,字典 `src/i18n/translations.ts` 自己就躺在 `src/` 里** —— 每个键都以字面量出现在自己身上 ⇒ **每个键都算「被引用」** ⇒ 这条断言**结构上不可能失败**。
+
+P150 把字典搬成 `src/i18n/locales/{en,zh}.json`(扫描正则只覆盖 `.astro/.ts/.tsx/.js/.jsx/.mjs`,**不含 `.json`**)⇒ 自指消失 ⇒ 守卫**第一次真正生效**,立刻抓出 5 个真孤儿。
+
+> **这是 §7.11 那条失效模式的另一面:** 一个守卫可以因为「**读不到**」而失效(ENOENT 直接崩),也可以因为「**读到的是自己**」而失效。两种都表现为「它一直在跑、一直是绿的」。
+
+#### 7.13.3 「恢复键」这一步踩了两次:先误判成死键,再被另一个闸门推翻
+
+恢复 9 个 `engine_cost.*` 键时,孤儿键守卫立刻指出其中 5 个「无人引用」。**我第一轮的结论是「真死键,删掉」** —— 依据是全仓搜不到引用,且对应的输出形状(💡 Saving vs / 🎨 Cheapest provider / 💰 Total / 💼 Training total)**没有任何引擎在输出**,模板里也没有对应分支。
+
+**这个结论被随后的全量复跑推翻了。** 删掉那 5 个键之后,CI-mode 从 12 条失败降到 **1 条**,而这条正是:
+
+```
+not ok 90 - working i18n keys translate on their target pages
+  - engine_cost.saving_prefix: WORKING_KEY_REQUIRED entry references missing i18n locale key
+  - engine_cost.saving_suffix: ... (其余 3 个同形)
+```
+
+`dead-i18n-keys-guard` 的 `WORKING_KEY_REQUIRED` 清单里**也挂着这 9 个键** —— 它的注释写明:这 9 条是「P137 T2.7 composite 行的键名条目」,**契约要求它们存在**。两个闸门对同一批键给出相反结论:一个说「没人用,删掉」,一个说「必须存在」。
+
+**正解不是删键,也不是削弱守卫,而是弄清键的真实身份:** 它们是 **P137 T2.7 规划了 9 个 composite 本地化键、其中 4 个已实现、另 5 个对应的输出形状还没有引擎在产出**的**预留键**。
+
+| 键 | 身份 | 依据 |
+|---|---|---|
+| `engine_cost.{comparison_title, reqs_per_day, cheapest_prefix, at_per_month}` | **在用** | `[slug].astro` 的 4 个 `compositePatterns` 分支直接引用,且**线上中文页正在漏它们的原始键名**(§7.10) |
+| `engine_cost.{saving_prefix, saving_suffix, image_cheapest, gpu_total, training_total}` | **预留键(模式未实现)** | 契约要求它们存在(`WORKING_KEY_REQUIRED`);但没有任何引擎输出对应形状 ⇒ 现阶段没有分支会匹配到它们 |
+| 12 个 `enterprise.{scenario,template,report}.*` | **预留键(组件 deferred)** | 对应 3 个 **deferred 组件**(`SaveScenarioModal` / `TemplatePicker` / `ReportGenerator`),它们是空 div,注释写明 *reserved for the v2 UX upgrade*;工具栏的 `data-i18n` 属性在 `public/` 里**没有任何消费脚本** ⇒ 属性当前是惰性的,工具栏文本恒为英文 |
+
+**处置(两处都是同一个手法):** 把键从迁移前的 `translations.ts` 取回原值补进两个 locale 文件(值逐字节核对),**并把「这批键归我」写进将要消费它们的文件**:
+
+- 12 个 enterprise 键 → 各自的 owning 组件里声明 `RESERVED_I18N_KEYS`
+- 5 个 engine_cost 键 → `[slug].astro` 的 `compositePatterns` 旁边声明 `RESERVED_COMPOSITE_KEYS`
+
+孤儿守卫的规则是「键必须在源码里出现过」,**声明本身就是出现** —— 不需要额外白名单。owner 被删 ⇒ 键变孤儿 ⇒ 守卫变红 ⇒ 行为正确。**两个闸门于是同时成立,而不是互相抵消。**
+
+最终:两个 locale 文件 5120 → **5141** 键(+4 在用 +5 预留 +12 预留),en/zh 键集同步,no-BOM / LF / 无 U+FFFD。
+
+> **教训(这是 §7.8 的重演,值得单独记):**
+> **删数据之前必须先问:还有没有别的闸门依赖它。** 孤儿守卫只覆盖「被引用」这一个维度,`WORKING_KEY_REQUIRED` 覆盖的是「被声明为必需」—— 两者是**不同契约**,不是同一个真相源。
+> 更要注意的是**中间结论**:我基于「搜不到引用 + 没有引擎输出」判定了「死键」,这个推理**每一步都成立**,结论却是错的 —— 因为还有第三个维度(**某份契约清单要求它存在**)。
+> **「证据充分」不等于「结论正确」;判据的覆盖面决定了结论的覆盖面。**
+
+#### 7.13.4 补一条 source-only 判据:6 个 composite 守卫只看 locale 侧
+
+那 6 个 composite 守卫(faq / how_to_use / input × en+zh)的 slug 列表来自 **locale 的 `tools.<slug>.` 前缀** ⇒ **新加一个引擎却没写翻译时,这 6 个守卫根本不会看它**(标题/描述守卫会看,但它们是 build-dep,CI 从没跑到)。
+
+新增判据(source-only,`pnpm check` 每次都跑):**`src/engines` 的 slug 集合 == locale 的 `tools.<slug>.` 前缀集合**,双向。缺一边都报。
+
+#### 7.13.5 工具层面:变异台子**自己**先坏了一次 —— 「报全杀」时先怀疑观察器
+
+变异台子跑 4 条变异(分别抽掉 en/zh 里的 faq / title / how_to_use / description 键),**第一轮报「4/4 全杀」**,但打印出来的是 `suite exit=null`。
+
+`spawnSync('tsx.cmd')` 在 Windows 上不加 `shell: true` 会 EINVAL(**Node 拒绝直接 spawn `.cmd` shim** —— 仓库自己的 `tests/run.mjs` 就为此写了注释),`r.status` 返回 `null`,而我写的是 `status !== 0` ⇒ **null 被当成了「KILLED」**。**4 条变异「全杀」其实是「全没跑起来」。**
+
+修法:`shell: true` + **spawn 失败直接抛异常**(不让 `null` 参与判定)。修好后重跑:**4/4 被指定的那条守卫杀掉、错误信息点名了键、还原后 sha256 逐字节一致、基线全绿**。
+
+> **同族:** 「自建的校验器报 0 条时先怀疑解码器」的**孪生形态**是「自建的校验器报『全绿』时先怀疑它到底跑没跑」。判定条件必须**显式区分**「被杀掉」与「没跑起来」。
+
+### 7.14 最终验证(2026-10-22)
+
+CI-mode 全量复跑(dist 移走 + `RUN_BUILD_TESTS=1` + `SKIP_INDEXNOW=1` + `node tests/run.mjs`):
+
+| 批次 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 合计 |
+|---|---|---|---|---|---|---|---|---|---|
+| 断言数 | 182 | 178 | 199 | 59 | 230 | 159 | 233 | 135 | **1375** |
+| 失败 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | **0** |
+
+- 退出码 **0**;**0 skipped** —— build-dep 套件全部真跑了(不是跳过态的数字,§7.9 的教训)
+- `npx tsc --noEmit` exit 0;8 个 check 脚本全绿
+- 产物复核:438 页 HTML 的**可见文本**里 **0 个原始 i18n 键名**(扫出来的 5 个 token 全是误报:`data-i18n="..."` 的**属性值** ×4 与路径里的文件名 ×1)
+- 4 条变异台子:4/4 被指定守卫杀掉、点名了键、还原后 sha256 逐字节一致、基线全绿
+
+> **这一轮 CI-mode 从 12 条失败到 0 条,中间只错了 1 次** —— 我把 5 个 `engine_cost.*` 键判成「死键」删掉,而 `dead-i18n-keys-guard` 的 `WORKING_KEY_REQUIRED` 要求它们存在(§7.13.3)。**判据的覆盖面决定结论的覆盖面**:「搜不到引用 + 没有引擎输出」这两条证据都成立,却漏了第三个维度(**某份契约清单要求它存在**)。
 
 ### 7.1 公式歧义(必须拍板) —— ✅ 已拍板(2026-10-21)
 
