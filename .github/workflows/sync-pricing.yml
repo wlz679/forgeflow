@@ -1,14 +1,34 @@
 name: Sync AI Pricing
 
 # Weekly cron + manual trigger
-# Pulls latest LLM pricing from LiteLLM, regenerates engine customFn data tables,
-# and commits/pushes if anything changed.
+# Pulls latest LLM pricing from LiteLLM, regenerates engine customFn data
+# tables, and — since P153 §7.18 (E9) — opens a Pull Request against
+# master instead of pushing straight to master.
+#
+# Why a PR and not a direct push: a commit pushed with GITHUB_TOKEN does
+# NOT trigger a CI run (GitHub skips workflow runs for GITHUB_TOKEN
+# pushes), but it DOES trigger the Cloudflare Pages deploy webhook. The
+# old "commit + push to master" therefore shipped pricing to production
+# without ever being tested — one untested deploy per week. A PR gets a
+# normal CI run (ci.yml has a `pull_request:` trigger) and a human merge.
 
 on:
   schedule:
     - cron: '0 6 * * 1' # Every Monday 06:00 UTC = 14:00 Beijing
   workflow_dispatch: # Manual trigger
   push:
+    # P153 §7.18 (E9) — the branch filter is now load-bearing. This trigger
+    # has a `paths:` filter that matches `src/data/ai-pricing.json` and
+    # `scripts/sync-pricing.mjs` — exactly the files the bot itself
+    # commits. Since the bot now pushes to `chore/pricing-sync`, an
+    # unfiltered `push:` trigger would re-fire the workflow on the bot's
+    # own push (loop). Restricting `push:` to master means only a human
+    # landing a change on master re-runs the bot.
+    # Belt and braces: the job also carries
+    # `if: github.event_name != 'push' || github.ref == 'refs/heads/master'`.
+    # (GITHUB_TOKEN pushes do not trigger workflows at all — but we do not
+    # rely on that alone.)
+    branches: [master]
     paths:
       - 'src/data/ai-pricing.json'
       - 'scripts/sync-pricing.mjs'
@@ -18,13 +38,31 @@ on:
 
 jobs:
   sync:
+    # P153 §7.18 (E9) — belt-and-braces loop guard. The `push:` branch
+    # filter above already keeps the bot's own branch push out; this guard
+    # makes that safe even if that filter is ever widened. schedule and
+    # workflow_dispatch are exempt: they always run against master's tip.
+    if: github.event_name != 'push' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     timeout-minutes: 30    # mirror ci.yml:20 — avoid 6h default hang on stuck job
     permissions:
-      contents: write
+      contents: write         # push the bot branch
+      pull-requests: write    # open / update the PR (P153 §7.18 E9)
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Stable branch name: one open PR at a time, refreshed every week.
+      # See the "Commit pricing sync to bot branch" step for why reusing it
+      # is safe.
+      BOT_BRANCH: chore/pricing-sync
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history: the bot branch is rebuilt from master's tip, and
+          # `gh pr create` has to resolve master as the PR base. A shallow
+          # clone makes both the push and the base resolution needlessly
+          # fragile. ~59 MB .git as of 2026-10-22 — cheap for a weekly job.
+          fetch-depth: 0
 
       # P153: pin pnpm to the SAME major ci.yml uses (9). This step used to be
       # `npm install -g pnpm`, which floats to the latest major and made this
@@ -65,11 +103,82 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit and push
+      - name: Commit pricing sync to bot branch
+        id: commit
         if: steps.diff.outputs.changed == 'true'
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Rebuild the bot branch from master's tip (the commit checked out
+          # above) so the PR diff contains ONLY this week's pricing delta —
+          # not last week's commit on top of last week's commit.
+          git checkout -B "$BOT_BRANCH"
           git add src/data/ai-pricing.json src/engines/
-          git commit -m "chore(pricing): sync from LiteLLM + regen customFn + staticExamples ($(date -u +%Y-%m-%d))"
-          git push
+          MSG="chore(pricing): sync from LiteLLM + regen customFn + staticExamples ($(date -u +%Y-%m-%d)) - opens PR"
+          git commit -m "$MSG"
+          # --force (not --force-with-lease) is safe here: `chore/pricing-sync`
+          # is bot-owned. It only ever receives bot-generated pricing
+          # commits, is never hand-edited, and is rebuilt from master's tip
+          # on every run — so overwriting it discards nothing a human
+          # authored. --force-with-lease was rejected deliberately: the
+          # branch may not exist on the remote yet, and git's lease check
+          # then refuses the very first push of a brand-new branch.
+          #
+          # The push URL is built from GITHUB_SERVER_URL/GITHUB_REPOSITORY
+          # instead of the name `origin` on purpose: this repo uses a 3-way
+          # remote setup where the LOCAL `origin` is Gitee
+          # (git@gitee.com:wlz679/calcKit.git) and GitHub is the `github`
+          # remote, while in CI actions/checkout names the GitHub remote
+          # `origin`. Addressing the URL directly guarantees the branch
+          # lands in the SAME repo the PR is opened against
+          # (gh pr create --repo "$REPO"), whatever the remote is called.
+          # Auth: actions/checkout persists an extraheader credential for
+          # https://github.com/, which covers this URL.
+          git push --force "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git" "$BOT_BRANCH"
+          echo "message=$MSG" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update Pull Request
+        id: pr
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_PROMPT_DISABLED: '1'
+          REPO: ${{ github.repository }}
+          PR_TITLE: ${{ steps.commit.outputs.message }}
+          PR_BODY: |
+            🤖 **Automated pricing sync** — opened by `Sync AI Pricing`.
+
+            - Source: LiteLLM pricing snapshot + regenerated engine customFn
+              data tables and static examples.
+            - This PR is **not** merged automatically. It waits for a normal
+              `CI` run (ci.yml has a `pull_request:` trigger) and a human
+              merge, so nothing reaches production untested.
+            - The branch `chore/pricing-sync` is bot-owned and is force-pushed
+              on every sync; do not commit to it by hand.
+
+            Commit: ${{ steps.commit.outputs.message }}
+        run: |
+          set -euo pipefail
+          # Idempotency across weekly runs: the branch name is stable, so a
+          # PR for it usually already exists. `gh pr view <branch>` exits
+          # non-zero when there is none — that is the "create" path. When
+          # one exists we update its title/body instead of letting
+          # `gh pr create` fail with "a pull request already exists".
+          if EXISTING_URL="$(gh pr view "$BOT_BRANCH" --repo "$REPO" --json url --jq .url 2>/dev/null)"; then
+            echo "PR already exists — updating it: $EXISTING_URL"
+            gh pr edit "$BOT_BRANCH" --repo "$REPO" --title "$PR_TITLE" --body "$PR_BODY"
+            URL="$EXISTING_URL"
+          else
+            URL="$(gh pr create --repo "$REPO" --base master --head "$BOT_BRANCH" \
+              --title "$PR_TITLE" --body "$PR_BODY")"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "### 🤖 Pricing sync — PR opened" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "PR: $URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "PR: $URL"
+
+      - name: No pricing changes
+        if: steps.diff.outputs.changed != 'true'
+        run: |
+          echo "LiteLLM pricing and the regenerated tables are unchanged — no commit, no PR." >> "$GITHUB_STEP_SUMMARY"

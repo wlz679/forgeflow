@@ -20,13 +20,20 @@
 //   4. Category count: AGENTS.md "15 categories" matches
 //      count of category letter exports in src/data/categories.ts
 //   5. CHANGELOG total commit count (P132): header "Total commits: N"
-//      matches `git rev-list --count HEAD` — tolerates forward drift ≤ 1
-//      commit (inherent from self-updating commits: the drift-close commit
-//      itself bumps git by 1). Real drift threshold is ≥ 2 (P130→P131 was 5).
-//      P153 §7.18: needs FULL history — CI checks out shallow (fetch-depth: 1),
-//      where the count reads 1 and the invariant cannot fire. A shallow
-//      checkout now reports "SKIP … Nothing was measured." instead of
-//      passing silently.
+//      matches `git rev-list --count HEAD` — tolerates forward drift ≤ 5
+//      commits; only drift ≥ 6 fails.
+//      P153 §7.18 (E8): ci.yml now checks out FULL history (fetch-depth: 0),
+//      so this invariant finally runs where it matters (CI) instead of
+//      only on a dev machine that happened to hold the history. The
+//      tolerance moved 1 → 5 at the same time: with real history in CI, a
+//      tolerance of 1 means "every 2 commits must touch CHANGELOG.md",
+//      which is daily noise in a repo that ships in batches. 5 is the
+//      order of magnitude of the drift class this invariant was created
+//      for (P130→P131 was off by 5). Note the comparison is strict, so a
+//      drift of exactly 5 sits INSIDE the tolerance band — only ≥ 6 fails.
+//      A shallow checkout (fetch-depth: 1) still reads the count as 1 and
+//      the invariant cannot fire; such a checkout now reports
+//      "SKIP … Nothing was measured." instead of passing silently.
 //   6. CHANGELOG last-ship date (P132): header "最后更新: YYYY-MM-DD"
 //      matches `git log -1 --format=%cd --date=short` — tolerates forward
 //      lag ≤ 7 days (non-CHANGELOG commits don't force a date bump).
@@ -246,21 +253,27 @@ test('AGENTS.md invariant matrix matches reality (meta-guard)', () => {
   }
 
   // Invariant 5 (P132): CHANGELOG.md "Total commits: N" matches git.
-  // Tolerate forward drift ≤ 1: any drift-close commit bumps git by 1
-  // (the commit itself), creating inherent 1-drift. Real drift threshold
-  // is ≥ 2 — P130→P131 was off-by-5.
+  // Tolerate forward drift ≤ 5; only drift ≥ 6 is red.
   //
-  // P153 §7.18: this invariant needs FULL history, and CI does not have it.
-  // actions/checkout@v4 defaults to fetch-depth: 1 (shallow), so
-  // `git rev-list --count HEAD` returns 1 instead of the real total — the
-  // forward-drift comparison is then trivially true (1 − 1314 = −1313) and
-  // the invariant is silently NOT checked in CI. Verified 2026-10-22 on a
-  // real depth-1 clone: rev-list → 1, is-shallow-repository → true.
-  // So detect the shallow case and say the invariant went unmeasured rather
-  // than letting a structurally-vacuous comparison read as a pass.
-  // (Same contract as tests/image-size-guard.test.ts: "SKIP … Nothing was
-  // measured." — a check that did not run must not look like a check that
-  // passed.)
+  // P153 §7.18 (E8): this invariant needs FULL history, and until now CI
+  // did not have it. actions/checkout@v4 defaults to fetch-depth: 1
+  // (shallow), so `git rev-list --count HEAD` returned 1 instead of the
+  // real total — the forward-drift comparison was then trivially true
+  // (1 − 1314 = −1313) and the invariant was silently NOT checked in CI.
+  // Verified 2026-10-22 on a real depth-1 clone: rev-list → 1,
+  // is-shallow-repository → true. ci.yml now checks out with
+  // fetch-depth: 0, so the count is real in CI and this comparison finally
+  // has teeth. Because the CI clone is now full-history, the tolerance had
+  // to move 1 → 5: at 1, "two commits without a CHANGELOG touch" would be
+  // a red build on every batch commit. 5 matches the drift class this
+  // invariant was born for (P130→P131 was off by 5). The comparison is
+  // strict (drift > 5), so an exact-5 drift stays inside the band and only
+  // ≥ 6 fails.
+  //
+  // The shallow case is still detected and reported rather than silently
+  // passing: a check that did not run must not look like a check that
+  // passed (same contract as tests/image-size-guard.test.ts:
+  // "SKIP … Nothing was measured.").
   const isShallowRepo = git('git rev-parse --is-shallow-repository') === 'true';
   const actualCommitCount = parseInt(git('git rev-list --count HEAD'), 10);
   const statedCommitCount = extractChangelogCommitCount();
@@ -271,12 +284,13 @@ test('AGENTS.md invariant matrix matches reality (meta-guard)', () => {
       `(fetch-depth: 1): git reports ${actualCommitCount} commit(s), not the real ` +
       `total. CHANGELOG.md states ${statedCommitCount}. Nothing was measured.`
     );
-  } else if (commitDrift > 1) {
+  } else if (commitDrift > 5) {
     violations.push(
       `CHANGELOG total commit count drift: says ${statedCommitCount}, ` +
       `git rev-list --count HEAD returns ${actualCommitCount} ` +
-      `(forward drift ${commitDrift}; 1-drift tolerated as inherent from ` +
-      `self-updating commits)`
+      `(forward drift ${commitDrift}; drift ≤ 5 tolerated — P153 §7.18 E8 ` +
+      `widened the threshold from 1 to 5 now that ci.yml checks out full ` +
+      `history)`
     );
   }
 

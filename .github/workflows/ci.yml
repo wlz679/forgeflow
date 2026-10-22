@@ -20,6 +20,21 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          # P153 §7.18 (E8): the "CHANGELOG total commit count" invariant in
+          # tests/claude-md-invariant-guard.test.ts compares
+          # `git rev-list --count HEAD` against the number stated in
+          # CHANGELOG.md. actions/checkout@v4 defaults to fetch-depth: 1
+          # (shallow), where that command returns 1 — so the forward-drift
+          # comparison is trivially negative and the invariant is
+          # STRUCTURALLY VACUOUS in CI: it could never fire there, only on a
+          # dev machine that happened to hold the full history. fetch-depth: 0
+          # gives the runner the real history so the guard actually measures
+          # something (a shallow checkout still reports
+          # "SKIP … Nothing was measured." — that path stays for anyone
+          # running the suite against a shallow clone).
+          # Cost: a full-history clone (~59 MB .git as of 2026-10-22).
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
         with:
