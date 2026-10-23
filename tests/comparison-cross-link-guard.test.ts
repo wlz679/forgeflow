@@ -113,7 +113,17 @@ test('comparison-cross-link-guard: page render — each Comparison page has ≥1
     const topicId = match[1];
     const topic = TOPICS.find((t) => t.id === topicId);
     assert.ok(topic, `No TOPICS entry for ${topicId} (parsed from path)`);
-    const ownRelatedLinks = topic.relatedTopicIds.filter((rid) => html.includes(`/${rid}/`));
+    const ownRelatedLinks = topic.relatedTopicIds.filter((rid) =>
+      // P153: a related topic is linked as its PAGE VARIANT
+      // (`/<id>-guide/` or `/<id>-compare/`), because the topic routes are
+      // `[topic]-guide.astro` / `[topic]-compare.astro` — a bare `/${rid}/`
+      // is not a URL and 404s. Matching the variant explicitly means this
+      // guard also rejects the bare (dead) form, instead of accepting it
+      // the way it did before the link-integrity fix.
+      //
+      // "does the link open?" is covered separately by
+      // tests/internal-link-integrity-guard.test.ts.
+      new RegExp(`/${rid}-(?:guide|compare|benchmark)/`).test(html));
     assert.ok(
       ownRelatedLinks.length >= 1,
       `${pagePath} (${topicId}) has no cross-link to its own relatedTopicIds: ${topic.relatedTopicIds.join(', ')}`

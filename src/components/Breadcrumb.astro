@@ -3,6 +3,7 @@
 // hierarchy. Used on Topic Guide, Topic Benchmark, Calculator, and Letter pages.
 import { t, type Lang } from '../i18n';
 import { getTopicById } from '../data/topics';
+import { topicHref } from '../data/topic-links';
 import { categories } from '../data/categories';
 
 export interface BreadcrumbItem {
@@ -39,11 +40,15 @@ if (letter) {
 if (topicId) {
   const topic = getTopicById(topicId);
   if (topic && letter) {
-    const cat = categories.find((c) => c.id === letter);
-    if (cat) {
+    // P153: use the shared rule for "what is a Topic's URL" — the routes are
+    // `[topic]-guide.astro` / `[topic]-compare.astro`, so a bare topic id
+    // 404s. Measured 2026-10-23: this one line produced 188 broken link
+    // instances across the guide / benchmark / compare pages.
+    const topicUrl = topicHref(topic, lang);
+    if (topicUrl) {
       items.push({
         label: topic.title[lang],
-        href: `/${lang}/${cat.slug}/${topic.id}/`,
+        href: topicUrl,
       });
     }
   }

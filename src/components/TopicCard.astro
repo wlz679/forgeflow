@@ -2,8 +2,8 @@
 // P140f: Topic card component. Used in (1) letter page Topics grid,
 // (2) calculator page Related Topics section.
 import { t, type Lang } from '../i18n';
-import { categories } from '../data/categories';
 import type { Topic } from '../data/topics';
+import { topicHref } from '../data/topic-links';
 
 export interface Props {
   topic: Topic;
@@ -12,8 +12,10 @@ export interface Props {
 }
 
 const { topic, lang, variant = 'full' } = Astro.props;
-const cat = categories.find((c) => c.id === topic.letterId);
-const href = cat ? `/${lang}/${cat.slug}/${topic.id}/` : '#';
+// P153: the URL must carry the page-variant suffix — a bare topic id is not
+// a URL and 404s. The rule lives in src/data/topic-links.ts so this card and
+// the Breadcrumb can never disagree about it again.
+const href = topicHref(topic, lang) ?? '#';
 const isCompact = variant === 'compact';
 ---
 
