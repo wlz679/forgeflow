@@ -46,8 +46,20 @@ const EXPECTED_HEIGHT = 630;
 const MIN_CARD_BYTES = 10 * 1024; // the placeholder was 68 bytes
 const PLACEHOLDER_BYTES = 68;
 
-const EN_CARD = '/og-default.png';
+// The card the layout points at. The English filename is NEW
+// (og-default-en.png) on purpose: social platforms cache an og:image BY URL,
+// and /og-default.png served a 1×1 transparent PNG until 2026-10-22 — a
+// platform that fetched it back then may still be showing a blank card, and
+// that cache is not ours to invalidate. A URL no platform has seen is always
+// re-fetched.
+const EN_CARD = '/og-default-en.png';
 const ZH_CARD = '/og-default-zh.png';
+
+// The historical English URL. It is no longer what the layout points at, but
+// it is still published (with the same bytes) so that anything already
+// linking to it gets a real card instead of a 404 — and so that a platform
+// re-fetching it gets the real card rather than the 1×1 blank it used to be.
+const LEGACY_EN_CARD = '/og-default.png';
 
 // A card's URL path (`/og-default.png`) and its path on disk
 // (`public/og-default.png`) are different things. Astro serves `public/`
@@ -109,6 +121,12 @@ function isGitignored(relPath: string): boolean {
 for (const [locale, card] of [
   ['en', EN_CARD],
   ['zh', ZH_CARD],
+  // The historical English URL is no longer what the layout points at, but
+  // it is still published — so it must satisfy the same contract: a real
+  // card, tracked, and not gitignored. If it ever regressed to the 1×1
+  // placeholder, every platform that still had it cached would keep showing
+  // a blank card.
+  ['legacy-en', LEGACY_EN_CARD],
 ] as const) {
   test(`brand card for ${locale} is a real ${EXPECTED_WIDTH}x${EXPECTED_HEIGHT} image`, () => {
     const info = readPng(diskPath(card));
@@ -174,6 +192,18 @@ test('defaultOgImage() maps each locale to its own card', async () => {
   // Both the expected value and the actual value are literals here: the
   // point of this assertion is that the mapping is what we say it is, not
   // that it agrees with itself.
+  // The intent-carrying assertion comes FIRST on purpose. Pointing 'en' back
+  // at the historical filename is exactly the regression this guard has to
+  // catch, and if the plain equality check ran first it would abort the
+  // test before this one could fire — leaving the specific "why" untested
+  // and the mutation killed only by a sibling assertion.
+  assert.notEqual(
+    mod.defaultOgImage('en'),
+    LEGACY_EN_CARD,
+    "defaultOgImage('en') must NOT point at the historical filename: social platforms cache an " +
+      'og:image by URL, and the historical path served a 1x1 blank card until 2026-10-22. ' +
+      'Pointing at a URL no platform has seen is what forces a re-fetch.',
+  );
   assert.equal(mod.defaultOgImage('en'), EN_CARD, "defaultOgImage('en') must return the English card");
   assert.equal(mod.defaultOgImage('zh'), ZH_CARD, "defaultOgImage('zh') must return the Chinese card");
   assert.notEqual(
@@ -231,7 +261,7 @@ test('the layout actually uses the shared helper (it is not dead code)', () => {
 test('the brand card is copied into the build output', () => {
   // `public/` is copied verbatim by Astro, so the card reaches dist/ without
   // any extra wiring. Assert the file is where Astro will pick it up.
-  for (const card of [EN_CARD, ZH_CARD]) {
+  for (const card of [EN_CARD, ZH_CARD, LEGACY_EN_CARD]) {
     const abs = join(root, diskPath(card));
     assert.ok(existsSync(abs), `${diskPath(card)} must exist for Astro to copy it into dist/`);
     assert.ok(statSync(abs).size > MIN_CARD_BYTES, `${diskPath(card)} is too small to be a real card`);

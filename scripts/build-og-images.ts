@@ -45,17 +45,26 @@ type Lang = (typeof LANGS)[number];
 
 // P153-B′: the brand cards for every page that has no per-tool image
 // (home / category / guide / compare / about / terms / 404 — 237 pages
-// measured 2026-10-22). These two files are TRACKED in git, unlike
-// public/og/ which is a gitignored build artifact: that is the whole point,
-// because Cloudflare Pages runs `pnpm build` (not `pnpm build:full`) and a
-// tracked asset is served regardless of which build command runs.
+// measured 2026-10-22). These files are TRACKED in git, unlike public/og/
+// which is a gitignored build artifact: that is the whole point, because
+// Cloudflare Pages runs `pnpm build` (not `pnpm build:full`) and a tracked
+// asset is served regardless of which build command runs.
 //
-//   public/og-default.png     → English card. Keeps the historical URL, so
-//     every already-published reference to it (including the Article JSON-LD
-//     `image` on 98 guide/compare pages) starts serving a real card with no
-//     rewrite.
-//   public/og-default-zh.png  → Chinese card for the zh locale.
+//   public/og-default-en.png → the English card the layout points at.
+//
+//     The filename is NEW on purpose. Social platforms cache an og:image BY
+//     URL, and `/og-default.png` served a 1×1 transparent PNG until
+//     2026-10-22 — so any platform that fetched it back then may still be
+//     showing a blank card, and that cache is not ours to invalidate. A URL
+//     no platform has seen is always re-fetched.
+//
+//   public/og-default.png    → the historical URL, still generated with the
+//     same bytes so it keeps serving a real card instead of 404ing. Keeping
+//     it also means anything that already links to it gets the real card.
+//
+//   public/og-default-zh.png → Chinese card for the zh locale.
 const DEFAULT_CARDS: { lang: Lang; file: string }[] = [
+  { lang: 'en', file: 'og-default-en.png' },
   { lang: 'en', file: 'og-default.png' },
   { lang: 'zh', file: 'og-default-zh.png' },
 ];
