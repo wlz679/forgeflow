@@ -29,10 +29,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const FONTS_DIR = join(ROOT, 'scripts', 'fonts');
 const OUT_DIR = join(ROOT, 'public', 'og');
-// Twemoji PNG cache: buildGraphemeImages() fetches 9 PNGs from jsDelivr on
-// every prebuild. Cache to disk so subsequent builds (and offline runs of
-// pnpm check) don't need network. Pre-populate with `pnpm build:og` once.
-const TWEMOJI_CACHE_DIR = join(ROOT, 'scripts', '.twemoji-cache');
+// Twemoji PNGs are VENDORED in the repo (scripts/fonts/twemoji/), not
+// downloaded. They used to be fetched from jsDelivr on every build into
+// scripts/.twemoji-cache/ — and because that cache is gitignored, every fresh
+// runner started cold, so the build depended on reaching a CDN. A CDN hiccup
+// therefore blocked a production deploy outright.
+//
+// Vendoring makes the build hermetic. The files are byte-for-byte the ones
+// the CDN served, so the rendered cards are unchanged. Attribution:
+// scripts/fonts/twemoji/LICENSE.txt.
+const TWEMOJI_VENDOR_DIR = join(FONTS_DIR, 'twemoji');
 
 const LANGS = ['en', 'zh'] as const;
 type Lang = (typeof LANGS)[number];
@@ -110,54 +116,52 @@ function assertEmojiSet(): void {
   if (missing.length) {
     throw new Error(`Unmapped emoji in og-samples.json: ${[...new Set(missing)].join(', ')}. Add them to EMOJI_SET in scripts/build-og-images.ts.`);
   }
-}
 
-// Cache Twemoji PNGs as data URIs keyed by emoji codepoint (hex).
-// Fetched from jsDelivr CDN (Twemoji CC-BY 4.0).
-async function fetchWithRetry(url: string, attempts = 3): Promise<Response> {
-  for (let i = 0; i < attempts; i++) {
-    try {
-      const res = await fetch(url);
-      if (res.ok) return res;
-      if (i === attempts - 1) throw new Error(`HTTP ${res.status} for ${url}`);
-    } catch (err) {
-      if (i === attempts - 1) throw err;
-      // exponential backoff: 500ms, 1500ms, 4500ms
-      await new Promise(r => setTimeout(r, 500 * Math.pow(3, i)));
-    }
+  // Every emoji in the closed set needs a vendored PNG, otherwise the build
+  // would have to reach the network for it — and a build that cannot reach
+  // the network fails outright. Name the exact file to add.
+  const missingFiles: string[] = [];
+  for (const emoji of EMOJI_SET) {
+    const cps = [...emoji].map(c => c.codePointAt(0)!.toString(16)).filter(c => c !== 'fe0f');
+    const file = `${cps.join('-')}.png`;
+    if (!existsSync(join(TWEMOJI_VENDOR_DIR, file))) missingFiles.push(file);
   }
-  throw new Error(`Failed to fetch ${url} after ${attempts} attempts`);
+  if (missingFiles.length) {
+    throw new Error(
+      `Missing vendored twemoji PNG(s) in scripts/fonts/twemoji/: ${missingFiles.join(', ')}\n` +
+      `Copy them from https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/ ` +
+      `(see scripts/fonts/twemoji/LICENSE.txt for the attribution).`,
+    );
+  }
 }
 
-async function buildGraphemeImages(): Promise<Record<string, string>> {
+// Load the vendored Twemoji PNGs as data URIs keyed by emoji codepoint (hex).
+// No network: the PNGs live in scripts/fonts/twemoji/ (tracked in git).
+function buildGraphemeImages(): Record<string, string> {
   const out: Record<string, string> = {};
-  await Promise.all([...EMOJI_SET].map(async (emoji) => {
+  for (const emoji of EMOJI_SET) {
     const cps = [...emoji].map(c => c.codePointAt(0)!.toString(16)).filter(c => c !== 'fe0f');
     const filename = cps.join('-');
-    const buf = await loadTwemoji(filename);
+    const buf = loadTwemoji(filename);
     out[emoji] = `data:image/png;base64,${buf.toString('base64')}`;
-  }));
+  }
   return out;
 }
 
-// Load a Twemoji PNG from local cache, falling back to jsDelivr on miss.
-// Cache key is the hex codepoint filename (e.g. "1f3ac.png"); busting the
-// cache is `rm -rf scripts/.twemoji-cache/`.
-async function loadTwemoji(filename: string): Promise<Buffer> {
-  const cachePath = join(TWEMOJI_CACHE_DIR, `${filename}.png`);
-  if (existsSync(cachePath)) {
-    return readFileSync(cachePath);
+// Load a Twemoji PNG from the vendored copy.
+// File name is the hex codepoint (e.g. "1f3ac.png"); a missing file is a
+// hard error with the exact name to add — the build must never silently
+// fall back to the network.
+function loadTwemoji(filename: string): Buffer {
+  const p = join(TWEMOJI_VENDOR_DIR, `${filename}.png`);
+  if (!existsSync(p)) {
+    throw new Error(
+      `Vendored twemoji PNG not found: ${p}\n` +
+      `Copy it from https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${filename}.png ` +
+      `into scripts/fonts/twemoji/ (see scripts/fonts/twemoji/LICENSE.txt for the attribution).`,
+    );
   }
-  const url = `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/${filename}.png`;
-  const res = await fetchWithRetry(url);
-  const buf = Buffer.from(await res.arrayBuffer());
-  mkdirSync(TWEMOJI_CACHE_DIR, { recursive: true });
-  // P150 follow-up: Node 22+ @types/node tightened writeFileSync signature to
-  // string | ArrayBufferView. Buffer extends Uint8Array but TS treats it as a
-  // distinct type (entries() iterator mismatch). Wrap with a zero-copy
-  // Uint8Array view via the underlying ArrayBuffer.
-  writeFileSync(cachePath, new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength));
-  return buf;
+  return readFileSync(p);
 }
 
 function loadFont(filename: string): Buffer {
@@ -296,7 +300,7 @@ async function main() {
 
   mkdirSync(OUT_DIR, { recursive: true });
   console.log('Fetching Twemoji grapheme images...');
-  const graphemeImages = await buildGraphemeImages();
+  const graphemeImages = buildGraphemeImages();
 
   const targets = buildTargets();
   console.log(`Rendering ${targets.length} og:images to ${OUT_DIR}/ ...`);

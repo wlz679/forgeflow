@@ -1,0 +1,73 @@
+Twemoji graphics vendored into the repository
+=============================================
+
+Why these files are here
+------------------------
+`scripts/build-og-images.ts` renders the 200 per-tool social-preview cards
+plus the two brand cards with satori, and substitutes emoji with real PNG
+images (satori's bundled opentype.js cannot parse COLR/CBDT colour-emoji
+fonts). Those 12 PNGs used to be downloaded from a CDN on every build,
+which made the build depend on reaching the network — and a build that
+cannot reach the CDN fails outright, so a CDN hiccup would block a
+production deploy.
+
+They are vendored here so the build is hermetic. The files are byte-for-byte
+the ones the CDN served, so the rendered cards are unchanged.
+
+Which emoji, and what they are for
+----------------------------------
+The set is closed and asserted by `assertEmojiSet()` in
+`scripts/build-og-images.ts`:
+
+  1f3ac  clapper board   the ForgeFlowKit logo mark
+  26a0   warning sign    the "act now" family band / tip icon
+  2705   check mark      the "healthy" family band
+  1f4ca   bar chart      SaaS Metrics category badge
+  1f916   robot          AI Cost Tools category badge
+  1f48e   gem             Valuation & Exit category badge
+  1f4bc   briefcase      Freelance Pricing category badge
+  26a1   high voltage   Cost & Efficiency category badge
+  1f4c8   chart up       Investment & Real Estate category badge
+  1f7e0   orange circle  the "act now" health band
+  1f7e1   yellow circle  the "watch" health band
+  1f7e2   green circle   the "healthy" health band
+
+Adding an emoji to the set means adding its PNG here too; the build fails
+with the exact filename to add if it is missing.
+
+Licensing
+---------
+The files are taken verbatim from the `jdecked/twemoji` repository (the
+`assets/72x72/` directory), which the build previously fetched from
+`https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/72x72/`.
+That repository is distributed under the MIT License:
+
+  MIT License
+
+  Copyright (c) 2022-present Jason Sofonia & Justine De Caires
+  Copyright (c) 2014-2021 Twitter
+
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to
+  the following conditions:
+
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The upstream original of these graphics is Twitter's Twemoji
+(https://github.com/twitter/twemoji), whose graphics are published by
+Twitter, Inc. under CC-BY 4.0. Both notices are recorded here so the
+attribution is unambiguous regardless of which lineage a given file is
+traced through.
