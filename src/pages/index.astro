@@ -6,6 +6,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta http-equiv="refresh" content="0;url=/en/" />
+  <!-- ads.txt discovery — see the note in src/layouts/BaseLayout.astro. -->
+  <link rel="advertising" href="/ads.txt" />
   <script>
     const m = document.cookie.match(/\byt-lang=(zh|en)\b/);
     window.location.replace('/' + (m ? m[1] : 'en') + '/');

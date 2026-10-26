@@ -139,6 +139,25 @@ const orgSchema = JSON.stringify({
   <link rel="alternate" hreflang="en" href={`${SITE_URL}/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
   <link rel="alternate" hreflang="zh" href={`${SITE_URL}/zh${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
   <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/en${Astro.url.pathname.replace(/^\/(en|zh)/, '')}`} />
+  <!--
+    ads.txt discovery. AdSense's site list shows "Ads.txt status: Not found"
+    for this site even though https://forgeflowkit.com/ads.txt serves HTTP 200
+    with the correct AdSense line — measured 2026-10-26, right after the
+    2026-10-19 09:40 review submission (the dashboard row's own "last
+    updated" timestamp is that submission moment, i.e. the reading is a
+    snapshot from submission time, not a live check).
+
+    Google's documented remedy for exactly this is the IAB discovery link:
+    a `rel="advertising"` tag in the page head pointing at /ads.txt. It is a
+    head-only, non-visible tag — it adds no visible content, no layout
+    change, and nothing for a reviewer to see. It only tells the crawler
+    where the file is.
+
+    The file itself is already correct and tracked (public/ads.txt, added
+    2026-06-26 in e837f4e): `google.com, pub-3420554170441272, DIRECT,
+    f08c47fec0942fa0`, publisher id matching the AdSense script above.
+  -->
+  <link rel="advertising" href="/ads.txt" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:image" content={`${SITE_URL}${ogImage}`} />
