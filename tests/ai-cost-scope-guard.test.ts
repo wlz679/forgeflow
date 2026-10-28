@@ -40,6 +40,12 @@ const ENGINE_DIR = resolve(root, 'src', 'engines', 'ai-cost');
 const popular = JSON.parse(readFileSync(POPULAR_JSON, 'utf-8'));
 const codeGenSrc = readFileSync(CODEGEN, 'utf-8');
 
+// `JSON.parse` returns `any`, so `Object.values(...)` on it resolves to the
+// `values(o: {}): any[]` overload and the element type degrades to `unknown`
+// (TS18046). Pin the shapes once, here, so every assertion below is typed.
+const POPULAR_KEYS: Record<string, string[]> = popular.popularModelKeys;
+const FLAGSHIP_KEYS: Record<string, string> = popular.comparisonFlagshipKeys;
+
 /** Read an engine source with whole-line `//` comments removed. */
 function engineSource(file: string): string {
   return readFileSync(resolve(ENGINE_DIR, file), 'utf-8')
@@ -53,19 +59,19 @@ function engineSource(file: string): string {
 // ---------------------------------------------------------------------------
 
 test('P156: the interactive model set has the expected per-provider sizes', () => {
-  assert.equal(popular.popularModelKeys.openai.length, 18, 'openai interactive set should be 18 models');
-  assert.equal(popular.popularModelKeys.anthropic.length, 13, 'anthropic interactive set should be 13 models');
-  assert.equal(popular.popularModelKeys.google.length, 8, 'google interactive set should be 8 models');
-  assert.equal(popular.popularModelKeys.deepseek.length, 5, 'deepseek interactive set should be 5 models');
+  assert.equal(POPULAR_KEYS.openai.length, 18, 'openai interactive set should be 18 models');
+  assert.equal(POPULAR_KEYS.anthropic.length, 13, 'anthropic interactive set should be 13 models');
+  assert.equal(POPULAR_KEYS.google.length, 8, 'google interactive set should be 8 models');
+  assert.equal(POPULAR_KEYS.deepseek.length, 5, 'deepseek interactive set should be 5 models');
 });
 
 test('P156: the four provider calculators expose 44 models in total', () => {
-  const total = Object.values(popular.popularModelKeys).reduce((n, k) => n + k.length, 0);
+  const total = Object.values(POPULAR_KEYS).reduce((n, k) => n + k.length, 0);
   assert.equal(total, 44, `interactive set should total 44 models, got ${total}`);
 });
 
 test('P156: the comparison page compares exactly 4 flagship models', () => {
-  const flags = Object.entries(popular.comparisonFlagshipKeys);
+  const flags = Object.entries(FLAGSHIP_KEYS);
   assert.equal(flags.length, 4, `comparison should have 4 flagships, got ${flags.length}`);
   assert.deepEqual(
     flags.map(([p]) => p).sort(),
@@ -75,8 +81,8 @@ test('P156: the comparison page compares exactly 4 flagship models', () => {
 });
 
 test('P156: every comparison flagship is also in its provider interactive set', () => {
-  for (const [provider, key] of Object.entries<string>(popular.comparisonFlagshipKeys)) {
-    const list = popular.popularModelKeys[provider] ?? [];
+  for (const [provider, key] of Object.entries(FLAGSHIP_KEYS)) {
+    const list = POPULAR_KEYS[provider] ?? [];
     assert.ok(
       list.includes(key),
       `comparison flagship ${provider}/${key} is missing from the ${provider} interactive set — ` +
@@ -97,10 +103,8 @@ test('P156: the codegen script reads the shared list instead of redefining it', 
 });
 
 test('P156: the codegen script hard-codes NO model key of its own', () => {
-  const allKeys = Object.values<string[]>(popular.popularModelKeys).flat();
-  const codegenKeys = [
-    ...Object.values<string>(popular.comparisonFlagshipKeys),
-  ];
+  const allKeys = Object.values(POPULAR_KEYS).flat();
+  const codegenKeys = Object.values(FLAGSHIP_KEYS);
   const leaked = [...allKeys, ...codegenKeys].filter((key) =>
     codeGenSrc.includes(`'${key}'`) || codeGenSrc.includes(`"${key}"`),
   );

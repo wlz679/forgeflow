@@ -4,7 +4,7 @@
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
 > **最后更新:** 2026-10-28 (P155 结构修复 —— AdSense「低价位内容」的三处硬伤已修:①**198 个已删除的 `/blog/*` URL 全部 301 回对应工具页**(2,526 次展示 = 18.9% 的索引展示不再指向死链);②**history / favorites / recent 三个 localStorage 空壳页 noindex + 移出 sitemap**(实测 219 次展示,可见文字只有几百字符);③**根 `/` 从 821 字节的无标题跳转壳改成真正的品牌落地页**(title / description / canonical / hreflang(en+zh+x-default) / robots / 可见文字),并修掉一个真 bug:`yt-lang` cookie **全站从未被设置过** ⇒ 旧代码的 `m ? m[1] : "en"` 兜底是唯一生效的分支,**每个访客都被丢进英文首页**,现在改成「只有访客明确选过语言才自动跳转」。三处修复的**承重墙都踩过坑**:①`_redirects` 对 Pages Function 处理的请求**不生效**(Cloudflare 官方文档明写)⇒ 改用 **middleware**;②但 middleware **对预渲染路由不执行**,而 `/en/blog/*` 在本站没有页面、落进预渲染的 404 路由 ⇒ 实测 301 发不出去(404 且无 Location 头)⇒ 最终用 **`export const prerender = false` 的按需渲染路由**把这段 URL 面挂到 Function 上;③sitemap 的 filter **收到的是 URL 字符串**不是 `{url}` 对象(其 .d.ts: `filter?(page: string): boolean`),第一版读 `page.url` ⇒ `new URL(undefined)` 抛错 ⇒ 集成 catch 后**直接 return** ⇒ **dist/ 里一个 sitemap 文件都没有,而构建依然 exit 0** —— 已加 build-dep 守卫盯住产物本身。2.0 落点清单也同步**更正了数字**:早先写的「59 页」是**混用分母**算出来的(用图表表的 9,554 当分母去累加网页表的 13,383),口径统一后是 **P1 = 38 页 / P80 = 117 页**,并把 404 blog 的展示**归并**进它们的 301 目标页。端到端实测(`wrangler pages dev` 真 HTTP)**32/32 通过**。**bot 重跑**:仓库设置「Allow GitHub Actions to create and approve pull requests」开启后,给 PR 步骤补了两处加固 —— ①摘要里明确打印 `GH_TOKEN` 是否到位(token 来自 job 级 env:,一旦丢失,每个 gh 调用都只会抛一句无用的 auth 错误,这正是当初"查不出原因"的同一个形状);②API 回读改成带 sleep 的重试循环(5 次 × 3s),不再用一次查询去撞 PR 建好后的传播窗口(单次回读撞上它,会把一个真实存在的 PR 报成失败,下次跑又变成"PR 已存在"去更新它,看起来像在抽风)。「成功必须由 API 确认」这条性质没有放松。守卫 7 → 9 条断言,变异台子 11/11 KILLED。) **P156 追加**:把 AI cost 页的「模型集口径」统一了 —— 此前交互态白名单只写在 codegen 脚本里,而构建期 `calculate()` 遍历**全量数据集 245** ⇒ 静态正文写「Cost Comparison (138 Models)」/「Comparing 245 models across 4 providers」,用户碰一下计算器它就变成 18 / 4(**同一页两个数字,大的那个够不着**),而且每周定价 bot 同步一次差距就再大一点。现在白名单提到单一真相源 `src/data/ai-pricing-popular.json`(openai 18 / anthropic 13 / google 8 / deepseek 5 = **44**;对比页 4),五个引擎的构建期模型集与内联客户端表读同一份数据 ⇒ 静态文案与交互态**逐字一致**。对比页的关键洞察没丢(「最便宜」在 245 个里是 Gemini 1.5 Flash,而它正是四个旗舰之一)。顺带对 AdSense「低价位内容」有利:对比页整页 -28%、可见正文 -34%、静态块 -77%。
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1336 across 75 active days (2026-05-31 → 2026-10-28, ~21 weeks)
+> **Total commits:** 1337 across 75 active days (2026-05-31 → 2026-10-28, ~21 weeks)
 
 ---
 
@@ -23,7 +23,9 @@
 
 ### [P156] — AI cost 页「模型集口径」统一：静态正文不再比交互态多报 245 倍的模型 (2026-10-28)
 
-3 个原子提交。Scope: (engines) · (data) · (scripts) · (tests) · (docs)。**未改动任何价格计算公式**（成本算法一行未动）· Engines count unchanged (100)。完整说明见 `docs/superpowers/specs/2026-10-27-p155-adsense-low-value-content-and-pricing-bot-diagnosis.md` §5 信号 E 的收口段。
+2 个原子提交。Scope: (engines) · (data) · (scripts) · (tests) · (docs)。**未改动任何价格计算公式**（成本算法一行未动）· Engines count unchanged (100)。完整说明见 `docs/superpowers/specs/2026-10-27-p155-adsense-low-value-content-and-pricing-bot-diagnosis.md` §5 信号 E 的收口段。
+
+> **一个真教训（提交 2 的由来）**：第一个提交在 GitHub CI 上红了 —— 红在第 9 步「Type check」，**不是**红在单测。本地全量套件是 **247 套件 / 1456 断言 / 0 失败 / exit 0** 的绿的，但守卫文件里有一处 TS18046（`Object.values<string[]>(JSON.parse(...) 的 any)` 走的是 `values(o: {}): any[]` 重载 ⇒ 元素类型退化成 `unknown`）。两个原因叠在一起：**①** 我是在跑完类型检查**之后**才写的守卫文件，之后没重跑；**②** 本地套件用 tsx 跑，**tsx 不做类型检查** ⇒ 「本地全量绿」不等于「CI 会绿」。修法：把 JSON 的形状在守卫顶部一次性钉死（`POPULAR_KEYS` / `FLAGSHIP_KEYS`），并**在任何新增/修改 `.ts` 之后重跑权威命令 `pnpm exec tsc --noEmit`**（= ci.yml 第 9 步的原命令）。
 
 | # | What | Why it matters |
 |---|---|---|
