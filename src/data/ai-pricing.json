@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-22",
+  "lastUpdated": "2026-10-28",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1140,6 +1140,14 @@
           "family": "legacy",
           "contextWindow": "128K",
           "order": 137
+        },
+        "gpt-6.1-terra": {
+          "input": 1,
+          "output": 5,
+          "name": "GPT 6.1 Terra",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 138
         }
       }
     },
