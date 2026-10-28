@@ -186,6 +186,15 @@ jobs:
           # message — printing it here makes that visible without log access.
           echo "**token / repo permissions**" >> "$SUMMARY"
           echo '```' >> "$SUMMARY"
+          # `GH_TOKEN` is provided by the JOB-level `env:` block. If it ever
+          # goes missing, every `gh` call below fails with a generic auth
+          # error and the step dies with no usable reason — so say it plainly.
+          if [ -n "${GH_TOKEN:-}" ]; then
+            echo "GH_TOKEN: present (length ${#GH_TOKEN})"
+          else
+            echo "GH_TOKEN: *** MISSING *** — the job-level env: block did not provide it;"
+            echo "every gh call in this step will fail with an auth error."
+          fi
           gh auth status >> "$SUMMARY" 2>&1 || true
           gh api "repos/$REPO/actions/permissions" >> "$SUMMARY" 2>&1 || true
           gh api "repos/$REPO/actions/permissions/workflow" >> "$SUMMARY" 2>&1 || true
@@ -243,7 +252,24 @@ jobs:
           fi
 
           # --- 4. Verify — never report success on a guess ------------------------
-          VERIFY_URL="$(gh api "repos/$REPO/pulls?state=open&head=$HEAD_FILTER" --jq '.[0].html_url // empty' 2>>"$SUMMARY" || true)"
+          #
+          # A PR is normally visible through the API the instant it is created,
+          # but there IS a short propagation window. A single read-back that
+          # races it reports "PR not found" for a PR that does exist — and the
+          # next weekly run then says "a PR already exists" and updates it,
+          # which reads like flapping rather than like the race it is. So the
+          # read-back is retried a few times before it is called a failure.
+          # The property being protected is unchanged: **success is only ever
+          # reported after the API actually shows the PR.**
+          VERIFY_URL=""
+          for _attempt in 1 2 3 4 5; do
+            VERIFY_URL="$(gh api "repos/$REPO/pulls?state=open&head=$HEAD_FILTER" --jq '.[0].html_url // empty' 2>>"$SUMMARY" || true)"
+            if [ -n "$VERIFY_URL" ]; then
+              break
+            fi
+            echo "read-back attempt $_attempt: PR not visible yet — retrying in 3s" >> "$SUMMARY"
+            sleep 3
+          done
           if [ -z "$VERIFY_URL" ]; then
             echo "::error::PR #$PR_NUMBER was not found by the API after create/update — treating as failure"
             echo "**Verification failed:** PR #$PR_NUMBER is not visible via the API." >> "$SUMMARY"

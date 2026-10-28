@@ -202,3 +202,47 @@ test('the PR step leaves a manual pull-request link when creation fails', () => 
       'instead of the week\'s pricing delta being lost silently.',
   );
 });
+
+test('the PR step reports whether GH_TOKEN reached the runner', () => {
+  // `GH_TOKEN` comes from the JOB-level `env:` block. If it is ever dropped
+  // there, every `gh` call in this step dies with a generic auth error and
+  // the step gives no usable reason — which is exactly how the 2026-10-26
+  // failure became undiagnosable in the first place.
+  const script = prStepScript();
+  assert.match(
+    script,
+    /GH_TOKEN/,
+    'the PR step must check that GH_TOKEN actually reached the runner and say so ' +
+      'in the job summary',
+  );
+  assert.match(
+    script,
+    /GH_TOKEN:\s*\*\*\*\s*MISSING/,
+    'the summary must state loudly when GH_TOKEN is missing, not just that some ' +
+      'gh call failed',
+  );
+});
+
+test('the PR step retries the API read-back instead of trusting a single query', () => {
+  // A PR is normally visible through the API the instant it is created, but
+  // there IS a short propagation window. A single read-back that races it
+  // reports "PR not found" for a PR that actually exists — and the next
+  // weekly run then says "a PR already exists" and updates it, which reads
+  // like flapping rather than like the race it is.
+  //
+  // NOTE: the property being protected is unchanged — success is still only
+  // ever reported after the API actually shows the PR. This assertion only
+  // requires that the read-back is not a single-shot query.
+  const script = prStepScript();
+  assert.match(
+    script,
+    /for\s+_\w+\s+in\s+[\d\s]+;/,
+    'the API read-back must be retried a few times before it is called a failure',
+  );
+  assert.match(
+    script,
+    /sleep\s+\d+/,
+    'the retry loop must wait between attempts (a tight loop would race the ' +
+      'same way the single-shot query did)',
+  );
+});
