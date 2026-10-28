@@ -25,8 +25,14 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const PRICING_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing.json');
+// P156: the interactive model set lives in ONE place (src/data/ai-pricing-popular.json)
+// so this generator and the TypeScript engines can never disagree about which
+// models are selectable. Read it as JSON (not an import) because this file runs
+// on plain node without a TS loader.
+const POPULAR_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing-popular.json');
 
 const PRICING = JSON.parse(fs.readFileSync(PRICING_PATH, 'utf8'));
+const POPULAR = JSON.parse(fs.readFileSync(POPULAR_PATH, 'utf8'));
 const CHECK_MODE = process.argv.includes('--check');
 // P141-B1-T2: buildCustomFn-style model-shard render is the default codegen path
 // for LLM engines. `--legacy-codegen` opt-out (escape hatch) keeps the hand-minified
@@ -60,7 +66,9 @@ const ENGINES = [
     // Only include these models in customFn (default-selected + first preset).
     // Full list (120+ models) stays in PRICING.json but isn't bundled.
     // When user selects an unlisted model, customFn returns 0/no data (graceful degrade).
-    popularKeys: ['gpt-6.1-sol', 'gpt-6-astra', 'gpt-6-sol', 'gpt-6-luna', 'gpt-5.5', 'gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+    // P156: the list itself now lives in src/data/ai-pricing-popular.json so the
+    // build-time engine and this generator share one truth.
+    popularKeys: POPULAR.popularModelKeys.openai,
     tableStart: '"var M={};" +',
     tableEndMarker: 'Family icons',
     fieldMap: (m) => {
@@ -82,7 +90,7 @@ const ENGINES = [
     file: 'claude-api-cost-calculator.ts',
         subdir: 'ai-cost',
     provider: 'anthropic',
-    popularKeys: ['claude-fable-5', 'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5', 'claude-opus-5', 'claude-sonnet-5', 'claude-mythos-5', 'claude-opus-4-8', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'claude-opus-4-1', 'claude-haiku-3-5', 'claude-haiku-3'],
+    popularKeys: POPULAR.popularModelKeys.anthropic,
     tableStart: '"var M={" +',
     tableEndMarker: 'Family icons',
     fieldMap: (m) => {
@@ -104,7 +112,7 @@ const ENGINES = [
     file: 'gemini-api-cost-calculator.ts',
         subdir: 'ai-cost',
     provider: 'google',
-    popularKeys: ['gemini-4-argon', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3-flash', 'gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'],
+    popularKeys: POPULAR.popularModelKeys.google,
     tableStart: '"var M={" +',
     tableEndMarker: 'var FL=',
     fieldMap: (m) => {
@@ -128,7 +136,7 @@ const ENGINES = [
     file: 'deepseek-api-cost-calculator.ts',
         subdir: 'ai-cost',
     provider: 'deepseek',
-    popularKeys: ['deepseek-v4.1-flash-1017', 'deepseek-v4-flash', 'deepseek-v4-pro', 'deepseek-v4-pro-promo', 'deepseek-r1'],
+    popularKeys: POPULAR.popularModelKeys.deepseek,
     tableStart: '"var M={" +',
     tableEndMarker: 'var FI=',
     fieldMap: (m) => {
@@ -151,15 +159,13 @@ const ENGINES = [
     custom: true, // skip generic generator
     provider: 'all', // use all providers
     // Bundle filter: 1 model per provider (cheapest flagship) keeps cross-provider
-    // comparison useful without bundling all 188 models. The 4 flagship models are
+    // comparison useful without bundling all 245 models. The 4 flagship models are
     // the canonical "cheapest in each family" — users comparing providers usually
     // want to see this side-by-side.
-    popularKeys: {
-      openai: ['gpt-5-mini'],
-      anthropic: ['claude-haiku-3'],
-      google: ['gemini-1.5-flash'],
-      deepseek: ['deepseek-v4.1-flash-1017'],
-    },
+    // P156: the flagship list now lives in src/data/ai-pricing-popular.json.
+    popularKeys: Object.fromEntries(
+      Object.entries(POPULAR.comparisonFlagshipKeys).map(([pk, key]) => [pk, [key]]),
+    ),
   },
   // Non-LLM engines
   {
