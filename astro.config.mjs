@@ -31,6 +31,13 @@ function classifyUrl(url) {
 
 const SITE_URL = 'https://forgeflowkit.com';
 
+// P155: the per-user localStorage shells (history / favorites / recent).
+// They carry ~1.2 KB of visible text each and must never enter the sitemap —
+// measured 2026-10-27, /zh/history/ alone drew 179 impressions while ranking
+// for arbitrary queries. AdSense's "低价位内容" policy item ② is literally
+// "维护网站页面结构"; indexed empty shells are the cheapest thing to fix.
+const SHELL_PAGE_RE = /^\/(en|zh)\/(history|favorites|recent)\/?$/;
+
 // P149: Astro integration that walks dist/ after build and injects
 // <meta http-equiv="last-modified" content="<RFC1123>"> into every HTML file.
 // Source mtime comes from src/integrations/last-modified.mjs reverse-path-map.
@@ -124,6 +131,16 @@ export default defineConfig({
   integrations: [
     sitemap({
       entryLimit: 45000,
+      // P155: keep the per-user shells out of the sitemap (see SHELL_PAGE_RE).
+      //
+      // NOTE: @astrojs/sitemap's `filter` receives the URL **string**
+      // (`filter?(page: string): boolean` in its .d.ts; the integration does
+      // `pageUrls.filter(filter)` over a `string[]`). The first draft of this
+      // line read `page.url` — that is `undefined` on a string, so
+      // `new URL(undefined)` threw "Invalid URL" and the integration's catch
+      // block **returned without writing any sitemap at all**: the whole
+      // sitemap silently vanished from dist/. See tests/sitemap-shell-page-guard.
+      filter: (url) => !SHELL_PAGE_RE.test(new URL(url).pathname),
       serialize(item) {
         const c = classifyUrl(item.url);
         // P86: emit <xhtml:link rel="alternate" hreflang="..."> for every URL
@@ -133,7 +150,15 @@ export default defineConfig({
         const path = u.pathname;
         let enPath = path;
         let zhPath = path;
-        if (path.startsWith('/zh/') || path === '/zh') enPath = '/en' + path.slice(3);
+        // P155: the root is the language landing page — its en/zh alternates
+        // are the two localized homepages, and x-default is the root itself.
+        // Before this the root's hreflang set was en=zh=x-default=all "/" ,
+        // i.e. the domain's own home URL claimed to be every language.
+        const isRoot = path === '/' || path === '';
+        if (isRoot) {
+          enPath = '/en/';
+          zhPath = '/zh/';
+        } else if (path.startsWith('/zh/') || path === '/zh') enPath = '/en' + path.slice(3);
         else if (path.startsWith('/en/') || path === '/en') zhPath = '/zh' + path.slice(3);
         const enUrl = `${SITE_URL}${enPath}`;
         const zhUrl = `${SITE_URL}${zhPath}`;
@@ -152,7 +177,7 @@ export default defineConfig({
           links: [
             { lang: 'en', url: enUrl },
             { lang: 'zh', url: zhUrl },
-            { lang: 'x-default', url: enUrl },
+            { lang: 'x-default', url: isRoot ? `${SITE_URL}/` : enUrl },
           ],
         };
       },

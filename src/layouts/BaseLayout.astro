@@ -10,11 +10,20 @@ export interface Props {
   ogImage?: string;
   schema?: string;
   pageType?: 'home' | 'tool' | 'article' | 'static';
+  // P155: per-page robots directive. Defaults to 'index, follow'.
+  //
+  // Why it exists: the history / favorites / recent pages are per-user
+  // localStorage shells ("Recently Viewed (0)"). They were being indexed and
+  // ranking — measured 2026-10-27, /zh/history/ alone drew 179 impressions
+  // while carrying only ~1,263 characters of visible text. AdSense's
+  // "低价位内容" policy item ② is literally "维护网站页面结构"; indexed
+  // empty shells are the cheapest form of damage to fix.
+  robots?: string;
 }
 const lang = getLang(Astro);
 // P153-B′: the default social card is locale-aware. `lang` must be resolved
 // BEFORE the destructuring so the default value can use it.
-const { title, description, ogImage = defaultOgImage(lang), schema, pageType = 'static' } = Astro.props;
+const { title, description, ogImage = defaultOgImage(lang), schema, pageType = 'static', robots = 'index, follow' } = Astro.props;
 
 const ogType = { home: 'website', tool: 'product', article: 'article', static: 'website' }[pageType];
 
@@ -167,7 +176,7 @@ const orgSchema = JSON.stringify({
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={`${SITE_URL}${ogImage}`} />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content={robots} />
   <link rel="sitemap" href="/sitemap-index.xml" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <!-- P140a-T2: Google AdSense Auto Ads 入口脚本；客户端 slots 由 Auto Ads algorithm 自动插入，无需 <ins class="adsbygoogle"> 标签。 -->

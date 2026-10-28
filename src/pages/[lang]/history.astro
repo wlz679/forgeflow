@@ -26,7 +26,7 @@ const schemaJson = JSON.stringify({
   dateModified: new Date().toISOString().slice(0, 10),
 });
 ---
-<BaseLayout title={metaTitle} description={metaDescription}>
+<BaseLayout title={metaTitle} description={metaDescription} robots="noindex, follow">
   <Header lang={lang} />
   <main>
     <HistoryList lang={lang} />

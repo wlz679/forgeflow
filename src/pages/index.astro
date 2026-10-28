@@ -1,17 +1,78 @@
 ---
-// SSG can't read cookies — use client-side redirect with cookie check
+// P155 — 根 `/` 从「821 字节的无标题跳转壳」改成真正的品牌落地页。
+//
+// 为什么（全部实测，2026-10-27）
+// ------------------------------
+// 改之前根页的线上响应是 821 字节：`<meta http-equiv="refresh">` + 一段 JS，
+// **没有 `<title>`、没有 canonical、没有 robots、没有一行可见文字**。
+// 而 Search Console 里：
+//   - 品牌词 `forgeflowkit.com` 排名 **第 31.97 位**（自己的品牌词排第 32）
+//   - 全站**没有任何一条内链**指向 `https://forgeflowkit.com/`（抽查工具页/分类页全是 0）
+//   - 根页却在 sitemap 里（`<loc>https://forgeflowkit.com/</loc>`）
+// ⇒ 域名自己的首页是一张没有标题、没有任何内链的空壳，品牌词自然没有落地页。
+//
+// AdSense 在 2026-10-27 复审给出「低价位内容」，政策第 ② 条是「持续精选优质
+// 内容和**维护网站页面结构**」。这张空壳就是这一条最直观的证据。
+//
+// 改完之后根页有：title / description / canonical / hreflang(en+zh+x-default) /
+// robots / 可见文字 —— 域名根 URL 可以作为品牌落地页参与排名。
+//
+// 另外修掉一个真 bug：原来的 JS 是
+//     window.location.replace('/' + (m ? m[1] : 'en') + '/');
+// 而 `yt-lang` cookie **全站从未被设置过**（grep 全仓库只有这一处读取，没有
+// 任何写入）⇒ 每个访客都被强制丢进英文首页，中文用户也一样。改成：只有访客
+// 明确选过语言（cookie 存在）才自动跳转，否则留在语言选择页。
+const SITE_URL = 'https://forgeflowkit.com';
 ---
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0;url=/en/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForgeFlowKit — Free Business Calculators to Make Smarter Decisions</title>
+  <meta name="description" content="100 free calculators for solopreneurs, SaaS founders and indie hackers — MRR, burn rate, LTV/CAC, churn, AI API cost, ROI and more. No signup, no paywall." />
+  <link rel="canonical" href={`${SITE_URL}/`} />
+  <link rel="alternate" hreflang="en" href={`${SITE_URL}/en/`} />
+  <link rel="alternate" hreflang="zh" href={`${SITE_URL}/zh/`} />
+  <link rel="alternate" hreflang="x-default" href={`${SITE_URL}/`} />
+  <meta name="robots" content="index, follow" />
   <!-- ads.txt discovery — see the note in src/layouts/BaseLayout.astro. -->
   <link rel="advertising" href="/ads.txt" />
+  <link rel="icon" href="/favicon.svg" />
   <script>
+    // Only auto-redirect when the visitor has already picked a language.
+    // Before P155 this fell back to /en/ for everyone — and since the
+    // yt-lang cookie was never written anywhere, that fallback was the
+    // only behaviour: every visitor landed on the English homepage.
     const m = document.cookie.match(/\byt-lang=(zh|en)\b/);
-    window.location.replace('/' + (m ? m[1] : 'en') + '/');
+    if (m) window.location.replace('/' + m[1] + '/');
   </script>
 </head>
-<body></body>
+<body>
+  <main style="max-width:44rem;margin:0 auto;padding:4rem 1.5rem;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.6;color:#111827;">
+    <h1 style="font-size:2.25rem;margin:0 0 .75rem;">ForgeFlowKit</h1>
+    <p style="font-size:1.125rem;margin:0 0 2rem;color:#374151;">
+      100 free business calculators for solopreneurs, SaaS founders and indie hackers —
+      MRR, burn rate, LTV/CAC, churn, AI API cost, ROI and more. No signup, no paywall.
+    </p>
+    <p style="margin:0 0 1rem;font-weight:600;">Choose your language / 选择语言</p>
+    <ul style="list-style:none;padding:0;margin:0 0 2rem;display:flex;flex-wrap:wrap;gap:.75rem;">
+      <li>
+        <a href="/en/" hreflang="en" lang="en"
+           style="display:inline-block;padding:.75rem 1.25rem;border:1px solid #d1d5db;border-radius:.5rem;text-decoration:none;color:#111827;font-weight:600;">
+          English
+        </a>
+      </li>
+      <li>
+        <a href="/zh/" hreflang="zh" lang="zh"
+           style="display:inline-block;padding:.75rem 1.25rem;border:1px solid #d1d5db;border-radius:.5rem;text-decoration:none;color:#111827;font-weight:600;">
+          中文
+        </a>
+      </li>
+    </ul>
+    <p style="margin:0;font-size:.875rem;color:#6b7280;">
+      Free business calculators for solopreneurs and SaaS founders.
+    </p>
+  </main>
+</body>
 </html>
