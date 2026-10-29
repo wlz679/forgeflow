@@ -881,7 +881,7 @@ const engine: ToolEngine = {
     },
     {
       q: "Which model is cheapest?",
-      a: "GPT-5 Nano is the cheapest at $0.05/$0.40 per 1M input/output tokens. For simple classification, summarization, and high-volume Q&A, it can be 100x cheaper than GPT-5.5. GPT-4.1 Nano ($0.10/$0.40) is also excellent for budget workloads with a 1M context window.",
+      a: "GPT-5 Nano is the cheapest at {{live:openai/gpt-5-nano}} per 1M input/output tokens. For simple classification, summarization, and high-volume Q&A, it costs {{liveShareIn:openai/gpt-5-nano|openai/gpt-5.5}} of GPT-5.5 ({{live:openai/gpt-5.5}}) on input. GPT-4.1 Nano ({{live:openai/gpt-4.1-nano}}) is also excellent for budget workloads with a 1M context window.",
     },
     {
       q: "How can I reduce my API costs?",
@@ -903,7 +903,7 @@ const engine: ToolEngine = {
       q: "How does prompt caching work and how much can it save?",
       a: "OpenAI automatically caches prompt prefixes longer than 1024 tokens. Cached input tokens cost 50% less. Structure your prompts with a long, static system message or knowledge base at the beginning, and vary only the user query at the end. At 50% cache hit rate, input costs drop by 25%. At 80% hit rate, input costs drop by 40%. This calculator lets you model different cache hit rates to see the savings.",
     },
-    { q: "How do I estimate cost for a chat application?", a: "A typical chat turn uses 500-2,000 input tokens (system prompt + history + user message) plus 200-800 output tokens. For GPT-5 Nano at 100,000 conversations/month averaging 1,000 input + 500 output tokens, expect $5-15/month. Use our calculator to model your specific mix." },
+    { q: "How do I estimate cost for a chat application?", a: "A typical chat turn uses 500-2,000 input tokens (system prompt + history + user message) plus 200-800 output tokens. For GPT-5 Nano at 100,000 conversations/month averaging 1,000 input + 500 output tokens, expect {{liveMonthlyAt:openai/gpt-5-nano|100000}}/month. Use our calculator to model your specific mix." },
     { q: "What about system prompt overhead?", a: "A 1,000-token system prompt is charged on every request. If you send 10,000 requests/day, that is 10M tokens/day just for the system prompt. Move static instructions to caching (50% off) or trim them to the essentials. Long system prompts can dominate cost." },
     { q: "Should I use json_mode or tool_calling?", a: "Both add small overhead but improve reliability. json_mode enforces JSON structure at no extra cost. tool_calling adds ~50-200 tokens per call for tool definitions. For repeated tool use, switch to fine-tuned models or store tool definitions in cached context." },
     { q: "How does context window affect cost?", a: "Larger context windows (100K, 200K) charge input tokens even for unused context. Avoid pasting entire documents if you only need a section. Use RAG to retrieve only relevant chunks. Cache common prefixes to cut repeated system prompts." },

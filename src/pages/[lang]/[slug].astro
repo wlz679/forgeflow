@@ -13,6 +13,7 @@ import RecentViewed from '../../components/RecentViewed.astro';
 import PresetChips from '../../components/PresetChips.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
+import { resolveLiveTokens } from '../../lib/live-price';
 import { relatedTools } from '../../data/internal-links';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
@@ -487,9 +488,15 @@ const isGpu = slug === 'solopreneur-gpu-cloud-cost-calculator';
 const clientConfig = JSON.stringify(engine.clientConfig);
 
 // P140b T5: simplified translatedFaq — en uses engine.faq directly, zh falls back to en when missing
+//
+// P160: FAQ 里的每 1M token 价改成从 src/data/ai-pricing.json 派生（见 src/lib/live-price.ts）。
+// 手写的价格会每周被 bot 的同步漂移 —— 实测 8 个 AI 成本引擎的 FAQ 里 42 处「模型 + $X/$Y」
+// 里有 4 处已经漂了（Opus 4.8 差 3 倍、Gemini 2.5 Flash 输出差 8.33 倍）。
+// ⚠️ 解析必须发生在**这里**（而不是引擎里）：en 用 engine.faq、zh 用 i18n JSON ——
+// 两边的 token 都要被吃掉，而 translatedFaq 同时喂给 <FAQ> 和 JSON-LD，一次解析两处都对。
 const translatedFaq = engine.faq.map((item, i) => ({
-  q: lang === 'en' ? item.q : (t(`tools.${slug}.faq.${i}.q`, lang) || item.q),
-  a: lang === 'en' ? item.a : (t(`tools.${slug}.faq.${i}.a`, lang) || item.a),
+  q: resolveLiveTokens(lang === 'en' ? item.q : (t(`tools.${slug}.faq.${i}.q`, lang) || item.q)),
+  a: resolveLiveTokens(lang === 'en' ? item.a : (t(`tools.${slug}.faq.${i}.a`, lang) || item.a)),
 }));
 const translatedHowToUse = engine.howToUse.map((_, i) => t(`tools.${slug}.how_to_use.${i}`, lang));
 

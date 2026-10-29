@@ -11,6 +11,10 @@ import { strict as assert } from 'node:assert';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { buildWithEnv } from './_supabase-build-helper.ts';
+// P160: 引擎 FAQ 里的价格是从 src/data/ai-pricing.json 派生的 token
+// （{{live:provider/key}} 等），页面渲染时会被 resolveLiveTokens 解析掉。
+// ⇒ 拿**带 token 的源码**去 HTML 里找，永远找不到 ⇒ 必须先解析再比对。
+import { resolveLiveTokens } from '../src/lib/live-price';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -29,6 +33,21 @@ function walkEngines(d: string, out: string[]): void {
 const engineFiles: string[] = [];
 walkEngines(resolve(root, 'src', 'engines'), engineFiles);
 
+/**
+ * FAQ 条目的正则 —— **单引号和双引号都要匹配**。
+ *
+ * P160 修掉了一个覆盖盲区：旧版只匹配双引号（`q:\s*"..."`），于是
+ * **1322 条 FAQ 里只有 814 条被检查**，508 条（38%）从来没进过这个守卫。
+ * 单引号条目不是「不存在」，只是正则没看见 —— 而「没看见」等于「没保护」。
+ */
+const FAQ_ENTRY_RE =
+  /\{\s*q:\s*('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")\s*,\s*a:\s*('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")\s*,?\s*\}/g;
+
+/** TS 字面量 → 纯文本 */
+function unescapeTs(s: string): string {
+  return s.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+}
+
 const engineFaq: Record<string, { q: string; a: string }[]> = {};
 for (const file of engineFiles) {
   const text = readFileSync(file, 'utf-8');
@@ -37,12 +56,16 @@ for (const file of engineFiles) {
   const slug = slugMatch[1];
   const faqMatch = text.match(/faq:\s*\[([\s\S]*?)(?=\],\s*\n\s*howToUse|\],\s*\n\s*\};)/);
   if (!faqMatch) continue;
-  // Lazy alternation regex (P145 lesson) — handles \" and \' properly
-  const entries = [...faqMatch[1].matchAll(/q:\s*"((?:[^"\\]|\\.)*)",\s*a:\s*"((?:[^"\\]|\\.)*)"/g)];
-  engineFaq[slug] = entries.map(m => ({
-    q: m[1].replace(/\\(.)/g, '$1'),
-    a: m[2].replace(/\\(.)/g, '$1'),
-  }));
+  const entries: { q: string; a: string }[] = [];
+  FAQ_ENTRY_RE.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = FAQ_ENTRY_RE.exec(faqMatch[1])) !== null) {
+    entries.push({
+      q: unescapeTs(m[1]!.slice(1, -1)),
+      a: unescapeTs(m[2]!.slice(1, -1)),
+    });
+  }
+  engineFaq[slug] = entries;
 }
 
 const escapeForHtml = (s: string): string => s
@@ -71,9 +94,19 @@ test('every engine FAQ en text appears in dist HTML', () => {
       if (!entry) continue;
       for (const field of ['q', 'a'] as const) {
         const engText = entry[field];
-        const escaped = escapeForHtml(engText);
+        // P160: FAQ 里的价格是 token ⇒ 页面上的文本是**解析后**的
+        let resolved: string;
+        try {
+          resolved = resolveLiveTokens(engText);
+        } catch (e) {
+          violations.push(
+            `${slug}.faq.${i}.${field}: token 解析失败 —— ${e instanceof Error ? e.message : String(e)}`,
+          );
+          continue;
+        }
+        const escaped = escapeForHtml(resolved);
         if (!pageHtml.includes(escaped)) {
-          violations.push(`${slug}.faq.${i}.${field}: engine text (${engText.length} chars) not in HTML`);
+          violations.push(`${slug}.faq.${i}.${field}: engine text (${resolved.length} chars) not in HTML`);
         }
       }
     }

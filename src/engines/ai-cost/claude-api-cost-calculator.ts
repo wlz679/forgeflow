@@ -791,11 +791,11 @@ const engine: ToolEngine = {
   faq: [
     {
       q: 'How does Claude pricing compare to GPT-4o?',
-      a: 'Claude Opus 4.8 at $5/$25 per 1M tokens is 2× more expensive than GPT-4o ($2.50/$10) but offers a 1M context window and stronger safety. Claude Haiku 4.5 at $1/$5 is competitive with GPT-4o Mini ($0.15/$0.60). Claude Fable 5 at $10/$50 is Anthropic\'s most capable model, comparable to o3-level reasoning.',
+      a: 'Claude Opus 4.8 at {{live:anthropic/claude-opus-4-8}} per 1M tokens costs {{liveShareIn:anthropic/claude-opus-4-8|openai/gpt-4o}} of GPT-4o ({{live:openai/gpt-4o}}) on input and {{liveShareOut:anthropic/claude-opus-4-8|openai/gpt-4o}} on output, but offers a 1M context window and stronger safety. Claude Haiku 4.5 at {{live:anthropic/claude-haiku-4-5}} is competitive with GPT-4o Mini ({{live:openai/gpt-4o-mini}}). Claude Fable 5 at {{live:anthropic/claude-fable-5}} is Anthropic\'s most capable model, comparable to o3-level reasoning.',
     },
     {
       q: 'What is Prompt Caching and how much can it save?',
-      a: 'Claude\'s Prompt Caching lets you mark parts of your prompt as cacheable. Cache reads cost 10% of the standard input price (90% discount). Cache writes cost 1.25× (5-min TTL) or 2× (1-hour TTL). A 50K-token system prompt at 500 reqs/day can save ~$24,500/year. Break-even is just 2 cache reads for 5-min TTL.',
+      a: 'Claude\'s Prompt Caching lets you mark parts of your prompt as cacheable. Cache reads cost 10% of the standard input price (90% discount) — for Claude Sonnet 4.6 that is {{liveScaledIn:anthropic/claude-sonnet-4-6|0.1}} per 1M tokens instead of {{liveIn:anthropic/claude-sonnet-4-6}}. Cache writes cost 1.25× (5-min TTL) or 2× (1-hour TTL). A 50K-token system prompt at 500 reqs/day pays {{liveCostIn:anthropic/claude-sonnet-4-6|50000}} per request uncached, so the cache earns its keep within a couple of reads. Break-even is just 2 cache reads for 5-min TTL.',
     },
     {
       q: 'When should I use Batch API vs Real-time?',
@@ -803,7 +803,7 @@ const engine: ToolEngine = {
     },
     {
       q: 'Is Claude Fable 5 worth the premium?',
-      a: 'Fable 5 at $10/$50 is 2× Opus 4.8 pricing but delivers Mythos-class performance (~95% on SWE-bench Verified). It\'s worth it for: frontier coding tasks, multi-day autonomous agent runs, complex research requiring deepest reasoning. For everyday tasks, Opus 4.8 or Sonnet 4.6 offer better value.',
+      a: 'Fable 5 at {{live:anthropic/claude-fable-5}} costs {{liveShareMix:anthropic/claude-fable-5|anthropic/claude-opus-4-8}} of Opus 4.8\'s ({{live:anthropic/claude-opus-4-8}}) on a mixed workload but delivers Mythos-class performance (~95% on SWE-bench Verified). It\'s worth it for: frontier coding tasks, multi-day autonomous agent runs, complex research requiring deepest reasoning. For everyday tasks, Opus 4.8 or Sonnet 4.6 offer better value.',
     },
     {
       q: 'How does Claude\'s tokenizer affect costs?',
@@ -817,10 +817,10 @@ const engine: ToolEngine = {
       q: 'How do I estimate token counts for Claude?',
       a: 'As a rule of thumb: ~1.4 words/token for English prose, ~0.65 chars/token for CJK text. A typical 500-word English prompt uses ~350-400 tokens. Use the token estimator on this page for quick estimates, or Anthropic\'s token counting API for precise counts.',
     },
-    { q: "Why is Claude Sonnet priced higher than GPT-5?", a: "Claude Sonnet 4.6 ($3/$15) costs more than GPT-5 ($1.25/$10) but excels at code, long-context reasoning, and instruction-following. For production workloads where quality matters more than price-per-token, Sonnet often wins on cost-per-successful-completion. Track quality, not just token cost." },
-    { q: "What is the difference between Haiku, Sonnet, and Opus?", a: "Haiku 4.5 ($0.80/$4) — fast, cheap, for simple tasks. Sonnet 4.6 ($3/$15) — balanced, the workhorse for most production. Opus 4.8 ($15/$75) — premium reasoning, code, multi-step agents. Use tiered routing: Haiku for 70%, Sonnet for 25%, Opus for 5%." },
-    { q: "How does the 200K context window affect pricing?", a: "Claude charges by token, not by window size, but longer prompts cost more per request. A 200K prompt is $0.60 input vs $0.0003 for 1K. For long documents, use the Files API or batch processing to amortize. Always prefer fetching only relevant chunks." },
-    { q: "Is Claude prompt caching actually 90% off?", a: "Yes — cached reads cost $0.30/1M vs $3/1M fresh, a 90% discount. Cache hits have ~200ms latency penalty. Use for: system prompts, tool definitions, RAG-retrieved context that does not change between calls. Invalidates after 5 minutes of inactivity." },
+    { q: "Why is Claude Sonnet priced higher than GPT-5?", a: "Claude Sonnet 4.6 ({{live:anthropic/claude-sonnet-4-6}}) costs {{liveShareMix:anthropic/claude-sonnet-4-6|openai/gpt-5}} of GPT-5 ({{live:openai/gpt-5}}) on a mixed workload but excels at code, long-context reasoning, and instruction-following. For production workloads where quality matters more than price-per-token, Sonnet often wins on cost-per-successful-completion. Track quality, not just token cost." },
+    { q: "What is the difference between Haiku, Sonnet, and Opus?", a: "Haiku 4.5 ({{live:anthropic/claude-haiku-4-5}}) — fast, cheap, for simple tasks. Sonnet 4.6 ({{live:anthropic/claude-sonnet-4-6}}) — balanced, the workhorse for most production. Opus 4.8 ({{live:anthropic/claude-opus-4-8}}) — premium reasoning, code, multi-step agents. Use tiered routing: Haiku for 70%, Sonnet for 25%, Opus for 5%." },
+    { q: "How does the 200K context window affect pricing?", a: "Claude charges by token, not by window size, but longer prompts cost more per request. On Claude Sonnet 4.6, a 200K prompt is {{liveCostIn:anthropic/claude-sonnet-4-6|200000}} in input cost vs {{liveCostIn:anthropic/claude-sonnet-4-6|1000}} for 1K. For long documents, use the Files API or batch processing to amortize. Always prefer fetching only relevant chunks." },
+    { q: "Is Claude prompt caching actually 90% off?", a: "Yes — on Claude Sonnet 4.6, cached reads cost {{liveScaledIn:anthropic/claude-sonnet-4-6|0.1}} per 1M vs {{liveIn:anthropic/claude-sonnet-4-6}} fresh, a 90% discount. Cache hits have ~200ms latency penalty. Use for: system prompts, tool definitions, RAG-retrieved context that does not change between calls. Invalidates after 5 minutes of inactivity." },
     { q: "When should I use Claude over OpenAI or Gemini?", a: "Claude excels at: coding (Sonnet 4.6), long document analysis (200K context), agentic workflows (tool use), nuanced writing. OpenAI is better for: image generation, voice, ecosystem. Gemini is better for: free tier, multimodal (video), huge context. Pick per task, not brand loyalty." },
     { q: "What does the \"thinking\" model cost extra?", a: "Extended thinking modes (Claude Sonnet 4.6 with reasoning enabled) burn extra tokens for internal reasoning — typically 2-5x more output tokens than non-thinking. Reserved for hard problems. Budget separately for thinking-mode workloads; it can dominate monthly bills." },
     { q: "How do I batch-process with Claude?", a: "Anthropic Message Batches API offers 50% discount for async processing (under 24h turnaround). Use for: bulk classification, content pipelines, dataset labeling, overnight analytics. Not for: real-time chat. Submit up to 100K requests per batch." },

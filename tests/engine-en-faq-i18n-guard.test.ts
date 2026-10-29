@@ -16,8 +16,22 @@ import {
 // `tools.<slug>.faq.N.q` out of the TS module with a regex and died with
 // ENOENT once the module was deleted.
 import { getTranslation, getEngineSlugsFromLocales } from './_locale-json';
+// P160: 引擎 FAQ 里的价格是从 src/data/ai-pricing.json 派生的 token
+// （{{live:provider/key}} 等）。页面渲染时（src/pages/[lang]/[slug].astro 的
+// translatedFaq）会先 resolveLiveTokens，再把结果喂给 <FAQ> 和 JSON-LD。
+// ⇒ 本守卫必须**解析后再比对**，否则拿带 token 的原文去 HTML 里找，永远找不到。
+import { resolveLiveTokens } from '../src/lib/live-price';
 
 const root = resolve(import.meta.dirname, '..');
+
+/** 解析 token；解析失败时返回 null 并把原因带出来（不让整个套件炸掉） */
+function resolveOrExplain(raw: string): { ok: true; text: string } | { ok: false; error: string } {
+  try {
+    return { ok: true, text: resolveLiveTokens(raw) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
 
 // P23b: skip cleanly when build-dep gate not set.
 if (!process.env.RUN_BUILD_TESTS) {
@@ -63,8 +77,17 @@ test('every en engine page renders all FAQ q + a entries (P131 split from P124 d
         typeof aRaw === 'string',
         `${slug}: missing FAQ[${i}].a translation key (engine defines ${faqCount} FAQ entries, but en.json has no tools.${slug}.faq.${i}.a)`
       );
-      const qEn = escapeForHtml(qRaw);
-      const aEn = escapeForHtml(aRaw);
+      const qResolved = resolveOrExplain(qRaw);
+      const aResolved = resolveOrExplain(aRaw);
+      if (!qResolved.ok) {
+        violations.push(`${slug}: FAQ[${i}].q token 解析失败 —— ${qResolved.error}`);
+      }
+      if (!aResolved.ok) {
+        violations.push(`${slug}: FAQ[${i}].a token 解析失败 —— ${aResolved.error}`);
+      }
+      if (!qResolved.ok || !aResolved.ok) continue;
+      const qEn = escapeForHtml(qResolved.text);
+      const aEn = escapeForHtml(aResolved.text);
       const enPath = resolve(root, 'dist', 'en', slug, 'index.html');
       if (!existsSync(enPath)) {
         violations.push(`${slug}: dist/en/${slug}/index.html missing (build incomplete?)`);
