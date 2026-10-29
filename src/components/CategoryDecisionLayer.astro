@@ -1,0 +1,111 @@
+---
+// P159 — 2.0「灵魂改造」批次 1：分类页的「决策层」组件。
+//
+// 渲染两层（详见 src/data/category-decision-layers.ts 的设计说明）：
+//   L1 选型链路 —— 「先做 A，再做 B，最后校准 C」
+//   L2 工具取舍对照表 —— 「每个工具回答什么问题、什么时候不该用它」
+//
+// 两条硬约束（改这个组件前先读）：
+//   1. **不搬运主题页的基准表**（否则制造站内重复内容）。
+//   2. **不发布价格**（主题页基准表的价格目前与实时数据集已漂移，
+//      在改成派生之前，分类页一个字的价格都不发）。
+import { t, getLang } from '../i18n';
+import { getCalculatorBySlug } from '../data/tools';
+import type { CategoryDecisionLayer } from '../data/category-decision-layers';
+
+export interface Props {
+  categoryId: string;
+  layer: CategoryDecisionLayer;
+}
+
+const { categoryId, layer } = Astro.props;
+const lang = getLang(Astro);
+
+/** 工具标题走 i18n（tools.<slug>.title），与工具网格保持同一套译名 */
+const titleOf = (slug: string): string => {
+  const key = `tools.${slug}.title`;
+  const translated = t(key, lang);
+  // 与 [slug].astro 同样的兜底：键缺失时不要把原始 key 印到页面上
+  return translated === key ? (getCalculatorBySlug(slug)?.title ?? slug) : translated;
+};
+
+/** 只渲染真正存在于注册表里的工具 —— 守卫会另外核对覆盖率 */
+const chainSteps = layer.chain.map((step) => ({
+  ...step,
+  tools: step.slugs
+    .map((slug) => ({ slug, title: titleOf(slug) }))
+    .filter((x) => getCalculatorBySlug(x.slug)),
+}));
+
+const choiceRows = layer.choices
+  .map((row) => ({ ...row, title: titleOf(row.slug) }))
+  .filter((row) => getCalculatorBySlug(row.slug));
+---
+
+{chainSteps.length > 0 && (
+  <section class="mb-10" data-decision-layer={categoryId}>
+    <h2 class="text-2xl font-bold text-gray-900 mb-3">{t('category.decision_layer.chain.h2', lang)}</h2>
+    <p class="text-sm text-gray-700 leading-relaxed mb-5">{layer.chainIntro[lang]}</p>
+
+    <ol class="space-y-4">
+      {chainSteps.map((step, i) => (
+        <li class="p-5 bg-white border border-gray-200 rounded-xl">
+          <p class="text-xs font-semibold uppercase tracking-wide text-[#7C3AED] mb-2">
+            {t('category.decision_layer.step', lang, { n: i + 1 })}
+          </p>
+          <p class="text-sm text-gray-700 leading-relaxed mb-3">{step.purpose[lang]}</p>
+          {step.tools.length > 0 && (
+            <div class="flex flex-wrap gap-2">
+              {step.tools.map((tool) => (
+                <a
+                  href={`/${lang}/${tool.slug}/`}
+                  class="text-xs font-medium text-[#7C3AED] bg-purple-50 border border-purple-200 rounded-full px-3 py-1 hover:bg-purple-100"
+                >
+                  {tool.title} →
+                </a>
+              ))}
+            </div>
+          )}
+        </li>
+      ))}
+    </ol>
+  </section>
+)}
+
+{choiceRows.length > 0 && (
+  <section class="mb-10" data-decision-choices={categoryId}>
+    <h2 class="text-2xl font-bold text-gray-900 mb-3">{t('category.decision_layer.choices.h2', lang)}</h2>
+    <p class="text-sm text-gray-700 leading-relaxed mb-5">{t('category.decision_layer.choices.intro', lang)}</p>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border-collapse">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">
+              {t('category.decision_layer.choices.col.tool', lang)}
+            </th>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">
+              {t('category.decision_layer.choices.col.answers', lang)}
+            </th>
+            <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">
+              {t('category.decision_layer.choices.col.use_when', lang)}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {choiceRows.map((row) => (
+            <tr class="bg-white">
+              <td class="border border-gray-300 px-3 py-2 align-top">
+                <a href={`/${lang}/${row.slug}/`} class="font-medium text-[#7C3AED] hover:underline">
+                  {row.title}
+                </a>
+              </td>
+              <td class="border border-gray-300 px-3 py-2 align-top text-gray-700">{row.answers[lang]}</td>
+              <td class="border border-gray-300 px-3 py-2 align-top text-gray-700">{row.useWhen[lang]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)}

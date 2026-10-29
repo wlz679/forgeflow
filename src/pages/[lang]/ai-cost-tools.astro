@@ -7,12 +7,14 @@ import CategoryHero from '../../components/CategoryHero.astro';
 import CategoryFaq from '../../components/CategoryFaq.astro';
 import CategoryGuides from '../../components/CategoryGuides.astro';
 import CategoryOtherNav from '../../components/CategoryOtherNav.astro';
+import CategoryDecisionLayer from '../../components/CategoryDecisionLayer.astro';
 import { categories } from '../../data/categories';
 import { tools } from '../../data/tools';
 import { t, getLang } from '../../i18n';
 import { getTopicsByLetter } from '../../data/topics';
 import TopicCard from '../../components/TopicCard.astro';
 import { createCollectionPage, createBreadcrumb3 } from '../../lib/seo-factory';
+import { getCategoryDecisionLayer } from '../../data/category-decision-layers';
 
 export function getStaticPaths() {
   return [
@@ -82,6 +84,9 @@ const schema = JSON.stringify({
   ],
 });
 const letterTopics = getTopicsByLetter(CATEGORY_ID);
+// P159: 2.0 批次 1 —— 分类页的「决策层」（选型链路 + 工具取舍对照）。
+// 只有配置了决策层的类别才渲染；其余 11 个类别在样板形态确认后铺开。
+const decisionLayer = getCategoryDecisionLayer(CATEGORY_ID);
 // P147 C2: Comparison-tier Topics for letter page cross-link (B/C/M/R only).
 // Renders as a separate "X vs Y comparisons" grid below the Tier 1 topics grid.
 // Uses CATEGORY_ID (not a hardcoded 'B') so the filter stays in sync if the
@@ -109,6 +114,10 @@ const comparisonTopics = letterTopics.filter((t) => t.tier === 'comparison');
       <p class="text-sm text-gray-700 leading-relaxed mb-3">{t(`category.${CATEGORY_ID}.intro.2`, lang)}</p>
       <p class="text-sm text-gray-700 leading-relaxed">{t(`category.${CATEGORY_ID}.intro.3`, lang)}</p>
     </section>
+
+    {decisionLayer && (
+      <CategoryDecisionLayer categoryId={CATEGORY_ID} layer={decisionLayer} />
+    )}
 
     <section class="mb-10">
       <h2 class="text-2xl font-bold text-gray-900 mb-6">All {displayTools.length} {translatedName} Tools</h2>
