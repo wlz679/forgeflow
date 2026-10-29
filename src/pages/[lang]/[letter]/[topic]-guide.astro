@@ -10,6 +10,7 @@ import TopicCard from '../../../components/TopicCard.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
 import { TOPIC_GUIDE_CONTENT } from '../../../data/topic-content';
+import { resolveLiveTokensDeep } from '../../../lib/live-price';
 import { t } from '../../../i18n';
 import { SITE_URL, defaultOgImage } from '../../../lib/site-config';
 
@@ -65,7 +66,9 @@ const relatedTopics = topic.relatedTopicIds
   .map((id) => TOPICS.find((t) => t.id === id))
   .filter((t): t is Topic => Boolean(t));
 
-const guideContent = TOPIC_GUIDE_CONTENT[topic.id]?.[lang as 'en' | 'zh'];
+// P158: editorial content 的价格从 src/data/ai-pricing.json 派生（见 src/lib/live-price.ts）。
+// 手写的价格会每周被 bot 的同步漂移 —— guide 正文里的 keyConcepts / commonPitfalls 同样中过招。
+const guideContent = resolveLiveTokensDeep(TOPIC_GUIDE_CONTENT[topic.id]?.[lang as 'en' | 'zh']);
 const wc = guideContent ? guideContent.whatIs : '[CONTENT: ~200 字 plain-language definition + business context — editorial-fill via T3.x sub-batches]';
 const wm = guideContent ? guideContent.whyMatters : '[CONTENT: ~200 字 business impact + when to care]';
 const kc = guideContent ? guideContent.keyConcepts : '[CONTENT: ~300 字 — 3-5 numbered concepts/principles]';

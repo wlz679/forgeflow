@@ -15,10 +15,9 @@
 //   2. **不重复、不发价格**：
 //      · 决策层不得复制主题页基准表的 segment / metric 文本 —— 那等于站内
 //        自己制造重复内容，正是 P157 §10.1【C】刚证明要避开的那条线；
-//      · 决策层**不得出现任何价格** —— 主题页基准表里的价格目前是手写的
-//        静态值，与实时数据集已经漂移（实测 6 行漂移，最严重的一条输出价
-//        差 8.33 倍）。在价格改成从 ai-pricing.json 派生之前，分类页一个
-//        价都不许发。
+//      · 决策层**不得出现任何价格** —— 分类页是路由层，价格由工具页和主题页
+//        负责；在这里再写一份价格就会制造**第二个真相源**（P158 修掉的正是
+//        这种形状：主题页手写价格 vs 实时定价数据集，16 条基准行漂了 6 条）。
 //
 // ⚠️ 期望值全部是本文件里**独立写死**的字面量，不是从被测模块导出的常量。
 //
@@ -200,8 +199,9 @@ test('P159: no decision layer text contains a price', () => {
       assert.doesNotMatch(
         text,
         price,
-        `${categoryId}: the decision layer must not publish prices — the topic benchmark tables are ` +
-          `still hand-typed and have already drifted from the live dataset. Offending text: ${text.slice(0, 120)}`,
+        `${categoryId}: the decision layer must not publish prices — the category page routes to ` +
+          `the calculators and the topic page owns the benchmark table. A second copy of a price ` +
+          `is a second source of truth, which is the defect P158 had to fix. Offending text: ${text.slice(0, 120)}`,
       );
     }
   }
