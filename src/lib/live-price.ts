@@ -70,6 +70,12 @@
 //   {{liveGpuBlendBand:type|r|s}}                  → "61-84"（混合档相对按需的 % 区间）
 //   {{liveGpuCheapest:type|tier}}                  → "Vast.ai"（该型号/档位最便宜的供应商名）
 //   {{liveGpuPriceiest:type|tier}}                 → "GCP"（该型号/档位最贵的供应商名）
+//   {{liveGpuProviderRange:provider}}              → "$0.35-$2.20"（该供应商**跨型号**的按需区间）
+//   {{liveGpuStoragePerGB}}                        → "$0.10"（数据集 gpu.storagePerGB）
+//   {{liveGpuEgressPerGB}}                         → "$0.08"（数据集 gpu.egressPerGB）
+//
+// ⚠️ `liveGpuRange:<type>` 与 `liveGpuProviderRange:<provider>` 方向相反：
+//    前者 = 同一型号跨**供应商**的区间，后者 = 同一供应商跨**型号**的区间。
 //
 // ⚠️ provider 位可以是 **min / max** 两个假名 —— 表示「该型号 + 该档位下
 //    最便宜 / 最贵的供应商」。写死供应商名会在价格顺序反转后变成一句彻底错误
@@ -182,6 +188,10 @@ const TOKEN_KINDS = [
   'liveGpuBlendBand',
   'liveGpuCheapest',
   'liveGpuPriceiest',
+  // —— P162: GPU 引擎 FAQ 需要的 3 种 ——
+  'liveGpuProviderRange',
+  'liveGpuStoragePerGB',
+  'liveGpuEgressPerGB',
 ] as const;
 
 const TOKEN_KIND_PATTERN = TOKEN_KINDS.join('|');
@@ -221,6 +231,9 @@ export const GPU_TOKEN_KINDS = new Set<string>([
   'liveGpuBlendBand',
   'liveGpuCheapest',
   'liveGpuPriceiest',
+  'liveGpuProviderRange',
+  'liveGpuStoragePerGB',
+  'liveGpuEgressPerGB',
 ]);
 
 /** 无参 token：{{liveDate}} → 数据集的最后更新时间 */
@@ -680,6 +693,41 @@ function resolveGpuToken(kind: string, payload: string): string {
       providers.map((p) => gpuEffectiveRate(p, type, tier)),
       (v) => `$${formatPrice(v)}`,
     );
+  }
+
+  // —— P162: 某个供应商**跨型号**的区间（"vastai" → "$0.35-$2.20"）——
+  //
+  // ⚠️ 与 `liveGpuRange` 的方向相反，别弄混：
+  //    liveGpuRange:<type>       = 同一型号跨**供应商**的区间（A100 在 6 家的区间）
+  //    liveGpuProviderRange:<p>  = 同一供应商跨**型号**的区间（Vast.ai 的 6 个型号）
+  // FAQ 问的是「哪家最便宜 ⇒ 它便宜到什么程度」，答的是后者。
+  if (kind === 'liveGpuProviderRange') {
+    assertPartCount(kind, parts, 1);
+    const provider = gpuProvider(parts[0]!);
+    const rates = Object.values(provider.rates);
+    if (rates.length === 0) throw new UnknownGpuTypeError(parts[0]!, '*');
+    return formatBand(
+      rates,
+      (v) => `$${formatPrice(v)}`,
+    );
+  }
+
+  // —— P162: 存储 / 出口单价（数据集的 gpu.storagePerGB / gpu.egressPerGB）——
+  //
+  // ⚠️ 这两个值**是数据集拥有的**（引擎的 calculate() 就是读它们算账的）
+  //    ⇒ 编辑内容里的 "$0.10/GB" 必须派生，不能当「白名单里的手写例外」。
+  if (kind === 'liveGpuStoragePerGB' || kind === 'liveGpuEgressPerGB') {
+    assertPartCount(kind, parts, 1);
+    const gpu = (PRICING as any).gpu ?? {};
+    const value =
+      kind === 'liveGpuStoragePerGB' ? gpu.storagePerGB : gpu.egressPerGB;
+    if (typeof value !== 'number' || !(value > 0)) {
+      throw new Error(
+        `Malformed ${kind} token — the pricing dataset has no positive value for it ` +
+          `(got ${JSON.stringify(value)})`,
+      );
+    }
+    return `$${formatPrice(value)}`;
   }
 
   // —— 占比 / 倍数（两边各带型号 + 档位）——
