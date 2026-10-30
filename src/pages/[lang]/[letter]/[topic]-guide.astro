@@ -10,7 +10,7 @@ import TopicCard from '../../../components/TopicCard.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
 import { TOPIC_GUIDE_CONTENT } from '../../../data/topic-content';
-import { resolveLiveTokensDeep } from '../../../lib/live-price';
+import { resolveLiveTokens, resolveLiveTokensDeep } from '../../../lib/live-price';
 import { t } from '../../../i18n';
 import { SITE_URL, defaultOgImage } from '../../../lib/site-config';
 
@@ -35,7 +35,7 @@ const { topic } = Astro.props;
 const cat = categories.find((c) => c.id === topic.letterId)!;
 
 const title = `${topic.title[lang]} — Topic Guide`;
-const description = topic.description[lang];
+const description = resolveLiveTokens(topic.description[lang]);
 const canonical = `${SITE_URL}/${lang}/${cat.slug}/${topic.id}-guide/`;
 
 const articleSchema = JSON.stringify({

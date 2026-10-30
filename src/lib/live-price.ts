@@ -43,6 +43,38 @@
 //   {{liveScaledOut:provider/key|factor}}          → "$2.50"（factor × 输出价）
 //   {{liveMonthlyAt:provider/key|reqsPerDay}}      → "$1.35"（按 reqs/day 的月支出，1000 in + 500 out）
 //
+// P161 新增（GPU 段 —— 数据集 `gpu.providers`）
+// ------------------------------------------
+//   {{liveGpuProviderCount}}                       → "6"（数据集里的 GPU 云供应商家数）
+//   {{liveGpuProviderList}}                        → "RunPod, Vast.ai, Lambda Labs, AWS, GCP, Azure"
+//   {{liveGpuProviderName:provider}}               → "RunPod"（数据集里的显示名）
+//   {{liveGpuTypeList}}                            → "H200, H100, A100, L40S, RTX 4090, A6000"
+//   {{liveGpuTypeCount}}                           → "6"
+//   {{liveGpuRate:provider|type}}                   → "$2.49"（按需 $/GPU-小时）
+//   {{liveGpuSpot:provider|type}}                   → "$1.49"（现货 = rate × spotMult）
+//   {{liveGpuReserved:provider|type}}               → "$2.24"（预留 1 年 = rate × reservedMult）
+//   {{liveGpuRange:type}}                          → "$1.69-$4.20"（该型号按需价区间）
+//   {{liveGpuSpotRange:type}}                      → "$0.85-$2.50"（该型号现货价区间）
+//   {{liveGpuOffSpot}}                             → "30-60"（现货折扣 % 区间）
+//   {{liveGpuOffReserved}}                         → "10-30"（预留折扣 % 区间）
+//   {{liveGpuShare:A|type|tierA|B|type|tierB}}      → "10%"（A 的有效价是 B 的百分之多少）
+//   {{liveGpuRatio:A|type|tierA|B|type|tierB}}      → "10.1"（B 是 A 的多少倍）
+//
+// ⚠️ share / ratio 的 payload 顺序恒为「**便宜方在前**」（A 便宜、B 贵）：
+//    ratio 返回的是 **B ÷ A**（B 是 A 的多少倍），share 返回的是 **A ÷ B**（占 B 的百分之多少）。
+//    两个方向相反 —— 写反了会得到一句彻底错误却无人报错的话（P160 的同一教训）。
+//   {{liveGpuMonthly:provider|type|tier|gpus|hrs}} → "$7,171.20"（月账单）
+//   {{liveGpuMonthlyBlend:provider|type|r|s|gpus|hrs}} → "$6,023.81"（预留/现货混合月账单）
+//   {{liveGpuMonthlyRange:type|tier|gpus|hrs}}     → "$4,867.20-$12,096.00"
+//   {{liveGpuMonthlyBlendRange:type|r|s|gpus|hrs}} → "$3,455.52-$7,027.20"
+//   {{liveGpuBlendBand:type|r|s}}                  → "61-84"（混合档相对按需的 % 区间）
+//   {{liveGpuCheapest:type|tier}}                  → "Vast.ai"（该型号/档位最便宜的供应商名）
+//   {{liveGpuPriceiest:type|tier}}                 → "GCP"（该型号/档位最贵的供应商名）
+//
+// ⚠️ provider 位可以是 **min / max** 两个假名 —— 表示「该型号 + 该档位下
+//    最便宜 / 最贵的供应商」。写死供应商名会在价格顺序反转后变成一句彻底错误
+//    却无人报错的话（P160 的同一教训）。
+//
 // 用 liveName 而不是手写模型名的原因：模型会改名（gpt-5 → gpt-6-sol、
 // gemini-2.5-flash → gemini-4-argon …），手写的名字会悄悄过期。
 //
@@ -97,9 +129,99 @@ export const SCENARIO = {
   outputTokensPerRequest: 500,
 } as const;
 
-/** token 形态：{{kind:payload}}，payload 依 kind 而定 */
-const TOKEN_RE =
-  /\{\{(live|liveName|liveIn|liveOut|liveMonthly|liveRatioIn|liveRatioOut|liveBandIn|liveBandOut|liveRatioBandIn|liveRatioBandOut|liveBatch|liveBatchIn|liveBatchOut|liveShareIn|liveShareOut|liveShareMix|liveCostIn|liveCostOut|liveScaledIn|liveScaledOut|liveMonthlyAt|liveCostMix):([^{}]+)\}\}/g;
+/**
+ * 全部 token 种类的**单一真相源**。
+ *
+ * ⚠️ 为什么不是手写两遍正则：`TOKEN_RE`（解析用）和 `hasUnresolvedToken`（守卫用）
+ *   如果各写各的，少实现一种 token 时守卫会「看起来更绿」—— 这正是 P160 修过的
+ *   覆盖盲区（窄正则让守卫看起来比实际更绿）。所以两处都从这一个数组生成。
+ */
+const TOKEN_KINDS = [
+  'live',
+  'liveName',
+  'liveIn',
+  'liveOut',
+  'liveMonthly',
+  'liveRatioIn',
+  'liveRatioOut',
+  'liveBandIn',
+  'liveBandOut',
+  'liveRatioBandIn',
+  'liveRatioBandOut',
+  'liveBatch',
+  'liveBatchIn',
+  'liveBatchOut',
+  'liveShareIn',
+  'liveShareOut',
+  'liveShareMix',
+  'liveCostIn',
+  'liveCostOut',
+  'liveCostMix',
+  'liveScaledIn',
+  'liveScaledOut',
+  'liveMonthlyAt',
+  // —— P161: GPU 段 ——
+  'liveGpuProviderCount',
+  'liveGpuProviderList',
+  'liveGpuProviderName',
+  'liveGpuTypeList',
+  'liveGpuTypeCount',
+  'liveGpuRate',
+  'liveGpuSpot',
+  'liveGpuReserved',
+  'liveGpuRange',
+  'liveGpuSpotRange',
+  'liveGpuOffSpot',
+  'liveGpuOffReserved',
+  'liveGpuShare',
+  'liveGpuRatio',
+  'liveGpuMonthly',
+  'liveGpuMonthlyBlend',
+  'liveGpuMonthlyRange',
+  'liveGpuMonthlyBlendRange',
+  'liveGpuBlendBand',
+  'liveGpuCheapest',
+  'liveGpuPriceiest',
+] as const;
+
+const TOKEN_KIND_PATTERN = TOKEN_KINDS.join('|');
+
+/**
+ * token 形态：{{kind:payload}}。
+ *
+ * ⚠️ payload 对**参数类** token 是必填的，但**无参类**（{{liveGpuProviderCount}}）
+ *   没有冒号 —— 所以这一段里 payload 整体是可选的；参数类 token 少写 payload
+ *   会在解析时抛「Malformed」（而不是静默通过）。
+ */
+const TOKEN_RE = new RegExp(`\\{\\{(${TOKEN_KIND_PATTERN})(?::([^{}]+))?\\}\\}`, 'g');
+
+/**
+ * GPU 段的 token 种类（守卫用 —— 这些 token 的 payload 里**没有** provider/key，
+ * 所以 `referencedModels` 必须跳过它们，否则 LLM 守卫的「两个观察器对齐」会误报）。
+ */
+export const GPU_TOKEN_KINDS = new Set<string>([
+  'liveGpuProviderCount',
+  'liveGpuProviderList',
+  'liveGpuProviderName',
+  'liveGpuTypeList',
+  'liveGpuTypeCount',
+  'liveGpuRate',
+  'liveGpuSpot',
+  'liveGpuReserved',
+  'liveGpuRange',
+  'liveGpuSpotRange',
+  'liveGpuOffSpot',
+  'liveGpuOffReserved',
+  'liveGpuShare',
+  'liveGpuRatio',
+  'liveGpuMonthly',
+  'liveGpuMonthlyBlend',
+  'liveGpuMonthlyRange',
+  'liveGpuMonthlyBlendRange',
+  'liveGpuBlendBand',
+  'liveGpuCheapest',
+  'liveGpuPriceiest',
+]);
 
 /** 无参 token：{{liveDate}} → 数据集的最后更新时间 */
 const DATE_TOKEN_RE = /\{\{liveDate\}\}/g;
@@ -275,6 +397,383 @@ function bandOf(
   return { lo: Math.min(...prices), hi: Math.max(...prices) };
 }
 
+// ---------------------------------------------------------------------------
+// P161 —— GPU 段（数据集 `gpu.providers`）
+// ---------------------------------------------------------------------------
+//
+// 为什么 GPU 也要派生
+// ------------------
+// 实测（2026-10-30）：GPU 主题页的编辑内容里同时存在**三套**供应商口径
+// —— 正文列 10 家（6 专用 + 4 超大规模）、步骤写 7 家（多一个 CoreWeave）、
+// 数据集只有 6 家；而**三套档位折扣区间**也彼此矛盾：
+//
+//   现货折扣   数据集 30-60%   工具页 md 40-60%   主题页 50-70%
+//   预留折扣   数据集 10-30%   工具页 md 15-30%   主题页 30-60%
+//
+// 全部 GPU 单价区间也已脱节（H100 主题页写 $2.49-$12.40/hr，数据集是
+// $1.69-$4.20/hr）。根因和 P158/P160 一样：**同一个事实两个真相源**，
+// 而其中一个每周只被 bot 更新一次。
+//
+// ⇒ 修法：GPU 的供应商名单、单价、档位折扣、月账单全部从数据集派生。
+//
+// 档位语义（和数据集字段一一对应）：
+//   rates                    = 按需（on-demand）$/GPU-小时
+//   rates × spotMult         = 现货（spot / preemptible）
+//   rates × reservedMult     = 预留 1 年（reserved）
+//   blend(r, s)              = rates × (reservedMult × r + spotMult × s)
+//
+// ⚠️ `min` / `max` 是**假 provider 名**：表示该型号 + 该档位下最便宜 / 最贵的
+//    供应商。编辑写「最低价是 AWS 的 60%」时，归属必须跟着数据集走 ——
+//    写死供应商名会在价格顺序反转后变成一句彻底错误却无人报错的话。
+
+export type GpuTier = 'on' | 'spot' | 'reserved';
+
+export interface LiveGpuProvider {
+  key: string;
+  name: string;
+  rates: Record<string, number>;
+  spotMult: number;
+  reservedMult: number;
+  order: number;
+}
+
+/** 假 provider 名：该型号 / 该档位下最便宜 / 最贵的供应商 */
+export const GPU_MIN = 'min';
+export const GPU_MAX = 'max';
+
+export class UnknownGpuProviderError extends Error {
+  constructor(provider: string) {
+    super(
+      `Unknown GPU provider "${provider}" — it is not in src/data/ai-pricing.json (gpu.providers). ` +
+        'Editorial content may name a provider the dataset no longer carries; use the current key ' +
+        '(or {{liveGpuProviderList}}) instead of leaving a stale reference.',
+    );
+    this.name = 'UnknownGpuProviderError';
+  }
+}
+
+export class UnknownGpuTypeError extends Error {
+  constructor(provider: string, type: string) {
+    super(
+      `GPU type "${type}" is not offered by "${provider}" in src/data/ai-pricing.json ` +
+        '(gpu.providers.rates). Use one of: ' +
+        'H200 / H100 / A100 / L40S / RTX4090 / A6000.',
+    );
+    this.name = 'UnknownGpuTypeError';
+  }
+}
+
+/** 型号显示名（数据集的 key 里没有空格：RTX4090 → "RTX 4090"） */
+const GPU_TYPE_DISPLAY: Record<string, string> = { RTX4090: 'RTX 4090' };
+
+/** 数据集里的 GPU 供应商（按 order 排序 —— 这是页面上展示的顺序） */
+function gpuProviders(): LiveGpuProvider[] {
+  const raw = (PRICING as any).gpu?.providers ?? {};
+  return Object.entries(raw)
+    .map(([key, value]: [string, any]) => ({
+      key,
+      name: String(value.name ?? key),
+      rates: (value.rates ?? {}) as Record<string, number>,
+      spotMult: Number(value.spotMult ?? 1),
+      reservedMult: Number(value.reservedMult ?? 1),
+      order: Number(value.order ?? 999),
+    }))
+    .sort((a, b) => a.order - b.order);
+}
+
+function gpuProvider(key: string): LiveGpuProvider {
+  const found = gpuProviders().find((p) => p.key === key);
+  if (!found) throw new UnknownGpuProviderError(key);
+  return found;
+}
+
+/** 数据集里出现过的所有 GPU 型号（按供应商顺序的首次出现次序） */
+function gpuTypes(): string[] {
+  const out: string[] = [];
+  for (const p of gpuProviders()) {
+    for (const t of Object.keys(p.rates)) {
+      if (!out.includes(t)) out.push(t);
+    }
+  }
+  return out;
+}
+
+export function gpuTypeLabel(type: string): string {
+  return GPU_TYPE_DISPLAY[type] ?? type;
+}
+
+/** 档位倍率 */
+function tierMultiplier(
+  provider: LiveGpuProvider,
+  tier: GpuTier | { reserved: number; spot: number },
+): number {
+  if (tier === 'on') return 1;
+  if (tier === 'spot') return provider.spotMult;
+  if (tier === 'reserved') return provider.reservedMult;
+  const sum = tier.reserved + tier.spot;
+  if (Math.abs(sum - 1) > 1e-9) {
+    throw new Error(
+      `Malformed GPU blend — reserved + spot shares must sum to 1, got ${tier.reserved}+${tier.spot}`,
+    );
+  }
+  return provider.reservedMult * tier.reserved + provider.spotMult * tier.spot;
+}
+
+/** 某个供应商在某个型号 + 档位下的有效 $/GPU-小时 */
+function gpuEffectiveRate(
+  provider: LiveGpuProvider,
+  type: string,
+  tier: GpuTier | { reserved: number; spot: number },
+): number {
+  const base = provider.rates[type];
+  if (base === undefined) throw new UnknownGpuTypeError(provider.key, type);
+  return base * tierMultiplier(provider, tier);
+}
+
+/** 解析 provider 位：真实 key，或 min / max 两个假名 */
+function resolveGpuProvider(
+  key: string,
+  type: string,
+  tier: GpuTier | { reserved: number; spot: number },
+): LiveGpuProvider {
+  if (key !== GPU_MIN && key !== GPU_MAX) return gpuProvider(key);
+  const candidates = gpuProviders().filter((p) => p.rates[type] !== undefined);
+  if (candidates.length === 0) throw new UnknownGpuTypeError('*', type);
+  const sorted = candidates.slice().sort((a, b) => {
+    const ra = gpuEffectiveRate(a, type, tier);
+    const rb = gpuEffectiveRate(b, type, tier);
+    return key === GPU_MIN ? ra - rb : rb - ra;
+  });
+  return sorted[0]!;
+}
+
+/** 档位字符串 → 档位对象（只接受 on / spot / reserved） */
+function parseTier(kind: string, raw: string): GpuTier {
+  if (raw === 'on' || raw === 'spot' || raw === 'reserved') return raw;
+  throw new Error(`Malformed ${kind} token — tier must be on | spot | reserved, got "${raw}"`);
+}
+
+/** 混合档位（预留 r + 现货 s） */
+function parseBlend(kind: string, r: string, s: string): { reserved: number; spot: number } {
+  const reserved = Number(r);
+  const spot = Number(s);
+  if (!Number.isFinite(reserved) || !Number.isFinite(spot)) {
+    throw new Error(`Malformed ${kind} token — blend shares must be numbers, got "${r}" / "${s}"`);
+  }
+  return { reserved, spot };
+}
+
+/** 一组数字的区间（最小-最大；只有两个不同值时才带横杠） */
+function formatBand(values: number[], formatter: (v: number) => string): string {
+  if (values.length === 0) throw new Error('band token needs at least one value');
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  return lo === hi ? formatter(lo) : `${formatter(lo)}-${formatter(hi)}`;
+}
+
+/** 百分数（整数，四舍五入） */
+function formatPercent(value: number): string {
+  return String(Math.round(value));
+}
+
+/** 倍数（保留一位小数 —— 和整数版的 liveRatioIn 不同，GPU 价差要看得见小数） */
+function formatGpuRatio(value: number): string {
+  return (Math.round(value * 10) / 10).toFixed(1);
+}
+
+/** 某个型号 + 档位下的供应商（按有效价排序） */
+function gpuProvidersFor(type: string): LiveGpuProvider[] {
+  return gpuProviders().filter((p) => p.rates[type] !== undefined);
+}
+
+/** 月账单：GPU 数 × 每天小时数 × 30 天 × 有效单价 */
+function gpuMonthlyBill(
+  provider: LiveGpuProvider,
+  type: string,
+  tier: GpuTier | { reserved: number; spot: number },
+  gpus: number,
+  hoursPerDay: number,
+): number {
+  const rate = gpuEffectiveRate(provider, type, tier);
+  return gpus * hoursPerDay * 30 * rate;
+}
+
+function parseNumber(kind: string, raw: string): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) {
+    throw new Error(`Malformed ${kind} token — "${raw}" is not a number`);
+  }
+  return n;
+}
+
+function assertPartCount(kind: string, parts: string[], expected: number): void {
+  if (parts.length !== expected) {
+    throw new Error(
+      `Malformed ${kind} token — expected ${expected} payload part(s), got ${parts.length} ("${parts.join('|')}")`,
+    );
+  }
+}
+
+/**
+ * 解析一个 GPU token。抛错而不是静默留原文 —— 构建期失败比把
+ * `{{liveGpuRate:...}}` 原样发到线上好得多。
+ */
+function resolveGpuToken(kind: string, payload: string): string {
+  const parts = payload.split('|');
+
+  // —— 无参 ——
+  if (kind === 'liveGpuProviderCount') {
+    assertPartCount(kind, parts, 1);
+    return String(gpuProviders().length);
+  }
+  if (kind === 'liveGpuProviderList') {
+    assertPartCount(kind, parts, 1);
+    return gpuProviders().map((p) => p.name).join(', ');
+  }
+  if (kind === 'liveGpuTypeList') {
+    assertPartCount(kind, parts, 1);
+    return gpuTypes().map(gpuTypeLabel).join(', ');
+  }
+  if (kind === 'liveGpuProviderName') {
+    assertPartCount(kind, parts, 1);
+    return gpuProvider(parts[0]!).name;
+  }
+  if (kind === 'liveGpuTypeCount') {
+    assertPartCount(kind, parts, 1);
+    return String(gpuTypes().length);
+  }
+  if (kind === 'liveGpuOffSpot' || kind === 'liveGpuOffReserved') {
+    assertPartCount(kind, parts, 1);
+    const isSpot = kind === 'liveGpuOffSpot';
+    const discountOf = (p: LiveGpuProvider) =>
+      (isSpot ? 1 - p.spotMult : 1 - p.reservedMult) * 100;
+    const key = parts[0] ?? '';
+    // 无参 → 跨供应商的折扣区间（"30-60"）
+    if (key === '') {
+      return formatBand(gpuProviders().map(discountOf), formatPercent);
+    }
+    // 带 provider → 该供应商自己的折扣（min / max = 折扣最小 / 最大的那家）
+    if (key === GPU_MIN || key === GPU_MAX) {
+      const sorted = gpuProviders().slice().sort((a, b) => discountOf(a) - discountOf(b));
+      const picked = key === GPU_MIN ? sorted[0]! : sorted[sorted.length - 1]!;
+      return formatPercent(discountOf(picked));
+    }
+    return formatPercent(discountOf(gpuProvider(key)));
+  }
+
+  // —— 单价 / 单档位价 ——
+  if (kind === 'liveGpuRate' || kind === 'liveGpuSpot' || kind === 'liveGpuReserved') {
+    assertPartCount(kind, parts, 2);
+    const tier: GpuTier = kind === 'liveGpuSpot' ? 'spot' : kind === 'liveGpuReserved' ? 'reserved' : 'on';
+    const provider = resolveGpuProvider(parts[0]!, parts[1]!, tier);
+    return `$${formatPrice(gpuEffectiveRate(provider, parts[1]!, tier))}`;
+  }
+
+  // —— 区间 ——
+  if (kind === 'liveGpuRange' || kind === 'liveGpuSpotRange') {
+    assertPartCount(kind, parts, 1);
+    const tier: GpuTier = kind === 'liveGpuSpotRange' ? 'spot' : 'on';
+    const type = parts[0]!;
+    const providers = gpuProvidersFor(type);
+    if (providers.length === 0) throw new UnknownGpuTypeError('*', type);
+    return formatBand(
+      providers.map((p) => gpuEffectiveRate(p, type, tier)),
+      (v) => `$${formatPrice(v)}`,
+    );
+  }
+
+  // —— 占比 / 倍数（两边各带型号 + 档位）——
+  if (kind === 'liveGpuShare' || kind === 'liveGpuRatio') {
+    assertPartCount(kind, parts, 6);
+    const tierA = parseTier(kind, parts[2]!);
+    const tierB = parseTier(kind, parts[5]!);
+    const providerA = resolveGpuProvider(parts[0]!, parts[1]!, tierA);
+    const providerB = resolveGpuProvider(parts[3]!, parts[4]!, tierB);
+    const rateA = gpuEffectiveRate(providerA, parts[1]!, tierA);
+    const rateB = gpuEffectiveRate(providerB, parts[4]!, tierB);
+    if (rateB <= 0) throw new Error(`${kind} token references a zero-price provider: ${payload}`);
+    if (kind === 'liveGpuShare') {
+      return `${formatPercent((rateA / rateB) * 100)}%`;
+    }
+    return formatGpuRatio(rateB / rateA);
+  }
+
+  // —— 月账单 ——
+  if (kind === 'liveGpuMonthly') {
+    assertPartCount(kind, parts, 5);
+    const tier = parseTier(kind, parts[2]!);
+    const gpus = parseNumber(kind, parts[3]!);
+    const hoursPerDay = parseNumber(kind, parts[4]!);
+    const provider = resolveGpuProvider(parts[0]!, parts[1]!, tier);
+    return `$${formatMoneyExact(gpuMonthlyBill(provider, parts[1]!, tier, gpus, hoursPerDay))}`;
+  }
+  if (kind === 'liveGpuMonthlyBlend') {
+    assertPartCount(kind, parts, 6);
+    const blend = parseBlend(kind, parts[2]!, parts[3]!);
+    const gpus = parseNumber(kind, parts[4]!);
+    const hoursPerDay = parseNumber(kind, parts[5]!);
+    const provider = resolveGpuProvider(parts[0]!, parts[1]!, blend);
+    return `$${formatMoneyExact(gpuMonthlyBill(provider, parts[1]!, blend, gpus, hoursPerDay))}`;
+  }
+  if (kind === 'liveGpuMonthlyRange') {
+    assertPartCount(kind, parts, 4);
+    const tier = parseTier(kind, parts[1]!);
+    const gpus = parseNumber(kind, parts[2]!);
+    const hoursPerDay = parseNumber(kind, parts[3]!);
+    const type = parts[0]!;
+    const providers = gpuProvidersFor(type);
+    if (providers.length === 0) throw new UnknownGpuTypeError('*', type);
+    return formatBand(
+      providers.map((p) => gpuMonthlyBill(p, type, tier, gpus, hoursPerDay)),
+      (v) => `$${formatMoneyExact(v)}`,
+    );
+  }
+  if (kind === 'liveGpuMonthlyBlendRange') {
+    assertPartCount(kind, parts, 5);
+    const blend = parseBlend(kind, parts[1]!, parts[2]!);
+    const gpus = parseNumber(kind, parts[3]!);
+    const hoursPerDay = parseNumber(kind, parts[4]!);
+    const type = parts[0]!;
+    const providers = gpuProvidersFor(type);
+    if (providers.length === 0) throw new UnknownGpuTypeError('*', type);
+    return formatBand(
+      providers.map((p) => gpuMonthlyBill(p, type, blend, gpus, hoursPerDay)),
+      (v) => `$${formatMoneyExact(v)}`,
+    );
+  }
+
+  // —— 混合档相对按需的 % 区间 ——
+  if (kind === 'liveGpuBlendBand') {
+    assertPartCount(kind, parts, 3);
+    const blend = parseBlend(kind, parts[1]!, parts[2]!);
+    const type = parts[0]!;
+    const providers = gpuProvidersFor(type);
+    if (providers.length === 0) throw new UnknownGpuTypeError('*', type);
+    return formatBand(
+      providers.map((p) => {
+        const base = p.rates[type]!;
+        const effective = gpuEffectiveRate(p, type, blend);
+        return (effective / base) * 100;
+      }),
+      formatPercent,
+    );
+  }
+
+  // —— 最便宜 / 最贵的供应商名 ——
+  if (kind === 'liveGpuCheapest' || kind === 'liveGpuPriceiest') {
+    assertPartCount(kind, parts, 2);
+    const tier = parseTier(kind, parts[1]!);
+    const provider = resolveGpuProvider(
+      kind === 'liveGpuCheapest' ? GPU_MIN : GPU_MAX,
+      parts[0]!,
+      tier,
+    );
+    return provider.name;
+  }
+
+  throw new Error(`Unknown GPU token kind "${kind}"`);
+}
+
 /**
  * 解析一段文本里的所有 token。
  * 未知的 provider/key 会**抛错** —— 构建期失败，而不是把 `{{live:...}}` 原样发到线上。
@@ -282,7 +781,15 @@ function bandOf(
 export function resolveLiveTokens(text: string): string {
   if (!text || !text.includes('{{')) return text;
   const withDate = text.replace(DATE_TOKEN_RE, () => String((PRICING as any).lastUpdated ?? ''));
-  return withDate.replace(TOKEN_RE, (_match, kind: string, payload: string) => {
+  return withDate.replace(TOKEN_RE, (_match, kind: string, rawPayload?: string) => {
+    // 无参类 token（{{liveGpuProviderCount}}）没有冒号 ⇒ payload 是 undefined
+    const payload = rawPayload ?? '';
+
+    // —— GPU 段（数据集 gpu.providers）——
+    if (GPU_TOKEN_KINDS.has(kind)) {
+      return resolveGpuToken(kind, payload);
+    }
+
     // —— 比值类（A 比 B 便宜几倍）——
     if (kind === 'liveRatioIn' || kind === 'liveRatioOut') {
       const refs = resolveRefs(payload);
@@ -418,10 +925,11 @@ export function resolveLiveTokensDeep<T>(value: T): T {
 
 /** 这段文本里还有没有没解析掉的 token（守卫用） */
 export function hasUnresolvedToken(text: string): boolean {
+  // 无参类 token（{{liveGpuProviderCount}}）后面**没有冒号** —— 所以这里不能
+  // 要求 `kind:`，否则无参 token 会从守卫的视野里消失（P160 的覆盖盲区同款）。
   return (
-    /\{\{\s*(live|liveName|liveIn|liveOut|liveMonthly|liveRatioIn|liveRatioOut|liveBandIn|liveBandOut|liveRatioBandIn|liveRatioBandOut|liveBatch|liveBatchIn|liveBatchOut|liveShareIn|liveShareOut|liveShareMix|liveCostIn|liveCostOut|liveScaledIn|liveScaledOut|liveMonthlyAt|liveCostMix)\s*:/.test(
-      text,
-    ) || /\{\{liveDate\}\}/.test(text)
+    new RegExp(`\\{\\{\\s*(${TOKEN_KIND_PATTERN})\\s*(?::[^{}]*)?\\}\\}`).test(text) ||
+    /\{\{liveDate\}\}/.test(text)
   );
 }
 
@@ -449,6 +957,8 @@ export function referencedModels(text: string): Array<{ provider: string; key: s
   ]);
   for (const m of text.matchAll(TOKEN_RE)) {
     const kind = m[1]!;
+    // GPU 段的 token 引用的是「供应商 + 型号」，不是模型 —— 不进这个列表。
+    if (GPU_TOKEN_KINDS.has(kind)) continue;
     if (multiRefKinds.has(kind)) {
       for (const ref of m[2]!.split('|')) {
         const { provider, key } = splitRef(ref);

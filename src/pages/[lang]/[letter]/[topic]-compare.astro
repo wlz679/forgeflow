@@ -19,7 +19,7 @@ import TopicCard from '../../../components/TopicCard.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
 import { TOPIC_COMPARE_CONTENT } from '../../../data/topic-content';
-import { resolveLiveTokensDeep } from '../../../lib/live-price';
+import { resolveLiveTokens, resolveLiveTokensDeep } from '../../../lib/live-price';
 import { getCalculatorBySlug } from '../../../data/tools';
 import { t } from '../../../i18n';
 import { SITE_URL, defaultOgImage } from '../../../lib/site-config';
@@ -64,7 +64,7 @@ const relatedTopics = topic.relatedTopicIds
 // comparison" form which lost the editorial long-tail and created a
 // truncated / generic SERP snippet. Closes Phase 4 fable Minor #9.
 const title = `${content.heroTitle[lang]} — ${topic.title[lang]}`;
-const description = topic.description[lang];
+const description = resolveLiveTokens(topic.description[lang]);
 const canonical = `${SITE_URL}/${lang}/${cat.slug}/${topic.id}-compare/`;
 
 const articleSchema = JSON.stringify({

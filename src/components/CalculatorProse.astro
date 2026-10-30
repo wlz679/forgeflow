@@ -28,6 +28,9 @@
 // src/pages/[lang]/[slug].astro — that hookup is P140b-T4.
 
 import type { CollectionEntry } from 'astro:content';
+// P161: 工具页 prose 正文里的价格是从 src/data/ai-pricing.json 派生的 token
+// （{{liveGpuRate:...}} 等）—— 渲染前必须解析，否则 token 会原样印到页面上。
+import { resolveLiveTokens } from '../lib/live-price';
 
 export interface Props {
   entry: CollectionEntry<'tools'>;
@@ -272,7 +275,9 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-const sectionBody = extractSection(entry.body ?? '', variants);
+// P161: 先把 token 解析掉，再走 markdown → HTML。
+//     解析放在 markdown 转换**之前** —— 否则表格单元格里会出现转义后的 token。
+const sectionBody = resolveLiveTokens(extractSection(entry.body ?? '', variants));
 const sectionHtml = simpleMarkdownToHtml(sectionBody);
 ---
 

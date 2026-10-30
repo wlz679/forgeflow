@@ -422,7 +422,12 @@ test('P158: the guide, benchmark and compare templates all resolve live tokens',
     const src = readFileSync(resolve(root, rel), 'utf-8');
     assert.match(
       src,
-      /import\s*\{\s*resolveLiveTokensDeep\s*\}\s*from\s*'[^']*live-price'/,
+      // ⚠️ P161 放宽：允许 import 列表里有**多个**名字。
+      //    旧写法 `\{\s*resolveLiveTokensDeep\s*\}` 要求 import 列表里只有它一个 ——
+      //    P161 给三个主题页模板加上了 `resolveLiveTokens`（解析主题描述），
+      //    旧正则立刻匹配不上 ⇒ 全量套件红。
+      //    ⇒ 断言的意图是「这个模板引入了解析器」，不是「import 列表长什么样」。
+      /import\s*\{[^}]*resolveLiveTokensDeep[^}]*\}\s*from\s*'[^']*live-price'/,
       `${rel} must import resolveLiveTokensDeep from src/lib/live-price`,
     );
     assert.match(

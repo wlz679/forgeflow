@@ -4,6 +4,9 @@
 import { t, type Lang } from '../i18n';
 import type { Topic } from '../data/topics';
 import { topicHref } from '../data/topic-links';
+// P161: 主题描述里的供应商名单/家数是从 src/data/ai-pricing.json 派生的 token
+// （{{liveGpuProviderList}} 等）—— 渲染前必须解析，否则 token 会原样印到卡片上。
+import { resolveLiveTokens } from '../lib/live-price';
 
 export interface Props {
   topic: Topic;
@@ -17,6 +20,7 @@ const { topic, lang, variant = 'full' } = Astro.props;
 // the Breadcrumb can never disagree about it again.
 const href = topicHref(topic, lang) ?? '#';
 const isCompact = variant === 'compact';
+const description = resolveLiveTokens(topic.description[lang]);
 ---
 
 <a
@@ -27,7 +31,7 @@ const isCompact = variant === 'compact';
     {topic.title[lang]}
   </h3>
   {isCompact && (
-    <p class="text-xs text-gray-600 mt-1 line-clamp-2">{topic.description[lang]}</p>
+    <p class="text-xs text-gray-600 mt-1 line-clamp-2">{description}</p>
   )}
   <div class="flex gap-2 mt-2">
     <span class="text-xs text-[#7C3AED] font-medium">{t('topic.cta.read_guide', lang)} →</span>
