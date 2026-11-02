@@ -950,5 +950,159 @@ zh: "的价格是 GPT-4o 的 60%"
 3. **对比页的编辑主张过时**（模型 lineup / 质量分 / 延迟 / 上下文窗口）—— 属批次 2 内容刷新。
 4. **`customFn` 里那份手写价**（`"cheapest frontier-quality model at $0.50/$3.00"`，属 LLM 引擎的客户端函数）—— 与本批同形但属另一类引擎。
 
+---
+
+## 16. P163：价格主张覆盖面台账 + 图片 / 训练两个引擎的派生化
+
+> **用户已拍板**（2026-10-30 问卷，两题均选推荐项）：
+> - **范围** = 台账 + 图片/训练 FAQ 派生化 + `ai-pricing-popular.json` 规则，**一个批次做完**。
+> - **calc 层授权** = FAQ + prose + customFn **三处全部派生化**。
+>
+> ⇒ `src/engines/**` 本批可改（宪法要求拍板，已拍板）。
+
+### 16.1 ⭐ 取证：不是「又找到几处漂移」，而是**三个此前没人发现的缺陷**
+
+本批的目标原本只是「把 P162 §15.8 的 1、2、4 三条做掉」。取证时先撞见一个**矛盾**：
+
+> `node scripts/codegen-examples.mjs --check` 报 `✓ ai-image-generation-cost-calculator.ts: in sync`，
+> 但我直接跑 `engine.generate({provider:'dalle-3', imagesPerMonth:'100', ...})` 得到的尾段是
+> `Switch to Ideogram 3 ($0.04/img) to save $$4.00/mo with similar quality.`，
+> 而文件里 `staticExamples[0]` 的同一位置是
+> `At <100 imgs/mo, SD 4 API is 13x cheaper ($0.30 vs $8.00/mo).`
+>
+> ⇒ **两者不同，但 codegen 说一致。**
+
+**根因**（实测复现，见 `tmp/p163-probe-codegen-scan.ts`）：`codegen-examples.mjs` 只替换 `staticExamples` 数组的**第一个元素**（`parts = 1`），而 `ai-image-generation-cost-calculator.ts` 的 `staticExamples` 数组有**两个元素** —— 第 2 个（`ai-image-generation-cost-calculator.ts:491`）是**手写**的、codegen **不碰**、`--check` **也不校验** ⇒ 它是一块**没有任何守卫、任何工具都不管的死区**。
+
+⇒ 这正是「信号 W（覆盖面本身就是缺陷）」的**第二次复发**，而且这次复发的载体不是「守卫名单少一个引擎」，是「**codegen 的锚点只覆盖数组第 1 项**」—— 上一轮我以为「`staticExamples` 是 codegen 产物 ⇒ 自动跟随 ⇒ 不用管」（P162 §15.2 第 1 条的更正），**这个判断只对第 1 项成立**。
+
+**三个缺陷**（全部实测复现）：
+
+| # | 缺陷 | 位置 | 实测证据 |
+|---|---|---|---|
+| **D1** | ⭐ **`$$` 双美元号**（渲染层 bug，**用户可见**） | `ai-image-generation-cost-calculator.ts` 10 行 + `ai-training-cost-estimator.ts` 1 行 | `fmt(n)` 返回 `'$' + n.toFixed(2)`，调用处又拼了一个 `'$'` ⇒ 页面出现 `save $$4.00/mo`、`($$8.00 → $$4.00)`、`Data Processing: $$1000.00`。实测 dalle-3/100 张输出含 **8 处** `$$`；训练引擎默认示例含 `Data Processing: $$1000.00` |
+| **D2** | ⭐ **「13x cheaper」倍数是错的** | 图片引擎 prose（`:303`）+ customFn（`:451`）+ `staticExamples[1]`（`:491`） | 该分支写死 `0.04`（Ideogram 3）与 `0.003`（SD 4），`0.04/0.003 = 13.3` —— 但分支条件是 `p.perImage >= 0.04`，**Ideogram 3（0.04）恰好 13.3x 是巧合**；实测 `flux-pro`（$0.05）走同一分支 ⇒ 实际 `0.05/0.003 = 16.7x`，文案却说 13x ⇒ **对所有非 0.04 的 provider 都错**。且 `$$0.15 vs $$2.50` 里 flux 的 $2.50 = 50×0.05，倍数应为 **16.7x** |
+| **D3** | ⭐ **训练引擎的 Spot/Reserved 折扣与数据集不符** | `ai-training-cost-estimator.ts:137` + customFn `:258` | 手写 `40% off`（`totalCost * 0.6`）。数据集 `gpu` 段：现货带 **30-60%**、预留带 **10-30%** ⇒ 单一「40%」既不是现货带中位也不是预留带中位；P162 已在 GPU FAQ 把这两条带改正过，**训练引擎却还留着旧口径** ⇒ 同一份事实两处口径 |
+
+**D2 的倍数还有第二层错**：即使把 `0.04` 换成当前 provider 的真实单价，倍数也应该**由计算得出**（`p.perImage / 0.003`），不是写死 —— 写死的倍数在 provider 换档后必然失真。
+
+### 16.2 图片 / 训练引擎的手写价与数据集的对照（实测）
+
+| 入口 | 手写值 | 数据集真相源 | 判定 |
+|---|---|---|---|
+| 图片 7 家 `perImage` | $0.003 / $0.08 / $0.04 / $0.05 / — / — / — | `image.providers.*.perImage` | ✅ **全部一致**，但仍是手写 ⇒ 要派生 |
+| 图片订阅档 | `$10-$120/mo`、`$12-$49/mo`、`$30`、`$29` | `image.providers.*.subRange` + `image.subTiers` | ✅ 一致 ⇒ 派生 |
+| 图片 `advancedMult` | 1.3x / 1.8x（howToUse 措辞「1.3x-1.8x」） | `image.advancedMult` | ✅ 一致 ⇒ 派生 |
+| 图片无真相源 | Together $0.0008、Stability $0.003-0.02、FLUX schnell $0.003 | 数据集**没有**这三家 | ✗ ⇒ 定性化或白名单 |
+| 训练 5 种 GPU | $3.50 / $2.50 / $1.50 / $0.80 / $0.50 | `training.gpuTypes.*.hourlyRate` | ✅ 一致 ⇒ 派生 |
+| 训练存储 | $0.10/GB/mo | `gpu.storagePerGB` | ✅ 一致（引擎已读 `PRICING.gpu.storagePerGB`） |
+| 训练数据处理 | $1.5/GB（`dataProcessPerGB`） | `training.dataProcessPerGB` | ✅ 一致（引擎已读） |
+| 训练档位带 | 「40% off」 | `gpu.spotMult` / `gpu.reservedMult` | ✗ **D3** |
+| 训练无真相源 | 「$0.07/1M A100 effective」、「$3-25/1M training tokens」、「$1-2/hr GPU」 | 数据集无 | ✗ ⇒ 定性化 |
+
+⭐ **一个此前没被记录的事实**：**同一个 H200 型号在数据集里有两处真相源** ——
+`gpu.rates.H200 = {min:2.20, max:5.00}`（云 GPU 现货区间）vs
+`training.gpuTypes["H200-141GB"].hourlyRate = 3.5`（训练用的单值）。
+两者**不同语义、不同用途**（前者是跨供应商区间，后者是训练估算的基准单价）⇒ 训练 FAQ 该引哪一个**必须显式写下来**，否则下一个读代码的人会以为其中一处是漂移。
+
+### 16.3 ⭐ 修法（三件事，缺一不可）
+
+1. **台账**（`src/data/price-claim-surface-ledger.ts`）：把「哪些入口在讲价格、各自由谁看着」变成**数据**，并让守卫**双向**校验它 ——
+   - 正向：台账里的每个入口**必须**能被找到（文件存在 + 内容非空）。
+   - 反向：**扫描全仓**找出的每个「含价格主张的入口」，**必须**在台账里出现 ⇒ 漏登记就红。
+   - 这条是本批的**核心**：P161/P162 两次「撞见一个补一个」⇒ 这次改成「台账说了算」。
+
+2. **派生化**：`src/lib/live-price.ts` 新增 2 个 token 家族（`liveImage*` / `liveTraining*`），把图片/训练两个引擎的 FAQ（引擎源 + `en.json` + `zh.json`）与 prose 里的手写价换成 token ⇒ 跟 P160/P162 同形。
+
+3. **D1/D2/D3 修掉**：渲染层的 `$$`、写死的倍数、训练档位带 —— 这三条**不是**派生能解决的（`$$` 是代码 bug；倍数要由计算得出；档位带要改口径）⇒ 单独修 + 各自配一条守卫。
+
+**D1 的修法要点**：`fmt()` 已经带 `$`，调用处不该再拼 `$`。改法有两种 ——
+① 去掉调用处的 `'$'`；② 加一个不带 `$` 的 `fmtNum()`。**选 ②**，因为 `fmt()` 的返回值在**字符串拼接位置**被大量使用（表格列、bar 宽度对齐），改 `fmt()` 本身会波及 30+ 处；而 `fmtNum()` 让「要 `$` 的地方」显式化。customFn 侧同理：`fm` 带 `$`，新增 `fn`（不带 `$`）。
+
+### 16.4 范围界定
+
+| 项 | 处置 | 理由 |
+|---|---|---|
+| 图片引擎 FAQ 15 条 + prose | **派生** | 数据集有真相源 |
+| 训练引擎 FAQ 15 条 + prose | **派生** | 同上 |
+| `customFn`（两个引擎） | **派生 + 修 D1** | 用户授权了 calc 层三处全改 |
+| `staticExamples[1]`（图片） | **删掉或纳入 codegen** | 它是 codegen 管不到的死区；**首选删掉**（页面 `clientConfig.type === 'custom'` 时只渲染 `staticExamples[0]`，见 `[slug].astro:1349` ⇒ **第 2 项根本不上页面** ⇒ 是纯死代码 + 唯一的手写漂移源） |
+| `staticExamples[0]` | **不动**（codegen 产物） | P162 §15.2 已更正 |
+| 图片 3 家无真相源（Together / Stability / FLUX schnell） | **定性化** | 数据集没有 ⇒ 不写具体价 |
+| 训练 3 处无真相源 | **定性化** | 同上 |
+| 对比页内容刷新 | **不做** | 属批次 2，用户已选 A 档（不做对比页） |
+| `gemini-api-cost-calculator.ts:332` 的 `$0.50/$3.00` | **本批修** | 实测数据集 `gemini-3-flash` = `in:0.5, out:3` ⇒ **数值对但手写**；属 P162 §15.8 第 4 条「customFn 里那份手写价」，用户已授权 ⇒ 派生 |
+
+### 16.5 守卫（实测回填）
+
+**四个新守卫，全部 source-only**：
+
+| 守卫 | 断言数 | 守什么 |
+|---|---|---|
+| `tests/price-claim-surface-ledger-guard.test.ts` | **7** | 台账自身合法（id 唯一 / layer 合法 / file 与 guardedBy 存在）+ **入口级双向校验**（26 条期望 id 逐条钉死）+ 全仓文件级扫描 + 8 个引擎全覆盖 + 每个引擎都有 FAQ 层登记 |
+| `tests/image-training-faq-live-price-guard.test.ts` | **8** | FAQ 无手写单价（白名单 **4** 条逐条写「数据集为什么不拥有它」）+ token 的 provider/gpuKey 必须存在 + 三处同步（引擎源 / en.json / zh.json 逐条对齐）+ token 下限（图片 **24** / 训练 **25**，取实测值 ⇒ 删一个就红）+ 每种 token 真被实现（13 条写死期望值）+ **文本里用到的 kind 必须已实现** + 白名单不腐烂 + 渲染后无未解析 token |
+| `tests/price-render-defect-guard.test.ts` | **7** | D1 无 `$$` / D2 倍数非字面量 / **D2b 无数据集单价字面量** / **D2c 倍数除以 `*.perImage`** / D3 训练折扣带非单值 / D3b 折扣带 == 数据集实测 / **D3c full-FT 倍数由 `loraSpeedup` 派生** |
+| `tests/popular-models-rule-guard.test.ts` | **11** | `_rule` 契约字段齐全 / 完整划分（无孤儿）/ 互斥（无矛盾）/ 陈旧策展 / 陈旧排除 / flagship 在数据集且在交互态 / 每个排除 key 至少被一族命中 / 每族至少命中一个排除 key / 族 provider 合法且 reason 非空话 / glob 语义自测 |
+
+**变异台子 4 个，共 22 条变异，22/22 KILLED**：A 台账 **5/5** · B 渲染 **6/6** · C FAQ **6/6** · D popular **5/5**。每个台子：启动先还原（快照落盘 + SIGINT/SIGTERM/SIGHUP 处理器）· 锚点必须唯一（`split(from).length-1 === 1`）· 剔除 no-op · 收尾 sha256 逐字节校验。
+
+⚠️ **台子抓到的两个真缺口（都是「守卫看起来在测、实际没测到」）**：
+
+1. **台账的反向检查是文件级** ⇒ 同一个文件登记了 3 条（faq / prose / customFn）时，删掉其中 **1** 条，另外 2 条还在 ⇒ 文件级扫描照样通过 ⇒ **漏登记一个入口不会被发现**。⇒ 补**入口级**双向校验：守卫里写死 26 条期望 id，与台账逐条对账（少一条、多一条都红）。
+2. **D2c 的「必须存在 `/ x.perImage`」被另外两处除法满足**（`subLowest / p.perImage`、`subBasic / api.perImage`）⇒ 把倍数写死成常量（`const sd4Ratio = 13;`）仍然绿。⇒ 收紧成「**倍数计算本身**必须除以 `*.perImage`」（`Math.round(x / y.perImage)`）。
+
+⚠️ **另外抓到台子自己的一个 bug（值得单独记）**：`String.replace` 的**字符串**替换会把替换串里的 `$'` 解释成「匹配点之后的剩余文本」⇒ 变异后的文件被复制一倍以上、行被截断 ⇒ 表现为「守卫没抓住」，其实是**变异根本没生效**（守卫确实是对的）。⇒ 改用**函数式替换**（`replace(find, () => to)`），并加一条「替换文本必须出现在变异后文件里」的落点自检。**教训：台子出问题时，先怀疑台子** —— 否则会为了迁就一个假存活去改本来正确的守卫。
+
+### 16.6 `ai-pricing-popular.json` 显式规则（实测回填）
+
+`src/data/ai-pricing-popular.json` 决定「哪些模型进交互态」。现状：它是一个**纯清单**，没有任何文档说明「新模型进 `ai-pricing.json` 后**必须**决定是否进这里」⇒ 新模型会静默地只进数据集、不进交互态 ⇒ 用户在计算器里选不到 ⇒ 这是一个**流程洞**，不是代码 bug。
+
+**落地的三层结构**（不是两份清单）：
+
+1. `popularModelKeys` —— 已策展（进交互态）**44** 个（openai 18 / anthropic 13 / google 8 / deepseek 5），内容不变。
+2. `excludedModelKeys` —— **显式排除清单 201** 个（openai 120 / anthropic 15 / google 59 / deepseek 7），逐个 key 记录。**真相源**。
+3. `excludedFamilies` —— **42 个族**，每族 = `provider` + glob `pattern` + `reason`，说明「为什么这些模型不进交互态」。
+
+`_rule` 键（JSON 不支持注释 ⇒ 用键位）写明契约：**策展 ∪ 排除 = 数据集 245 个模型，且互斥** ⇒ 新模型进数据集而两边都没进 ⇒ 守卫红。
+
+⚠️ **与本节初稿的偏差（实测后调整）**：初稿写的是「`excludedModels` 逐个带理由」⇒ 实测 **201 条理由不现实**（151 个是现行模型，逐个写理由 = 噪声，且理由会互相重复）⇒ 改为「**显式 key 清单（真相源）+ 族规则（为什么）**」两层，族按**产品线 / 形态**归组（`gpt-5*` / `gemini-3*` / `*codex*` / `*-latest` / `*preview*` / `*image*` …），并做**双向校验**：每个排除 key 至少被一族命中（不许孤儿）× 每族至少命中一个排除 key（不许死族）。
+
+⚠️ **族可以同时命中已策展模型**（`gpt-5*` 会命中已策展的 `gpt-5` / `gpt-5-mini` / `gpt-5.5`）⇒ **策展优先**，`popularModelKeys` 说了算；这条语义写在 `_rule.rule` 里，不靠读者猜。
+
+### 16.7 维度 3 scan 声明（本节）
+
+- **信号 AA（`--check` 绿 ≠ 全覆盖，绿的是它锚定的那一处）**：P162 §15.2 我把 `staticExamples` 整体判成「codegen 产物，自动跟随」⇒ **这个结论只对数组第 1 项成立**；第 2 项是手写、codegen 不碰、`--check` 不校验 ⇒ **「CI 说同步」和「内容是对的」之间还隔着一个「codegen 的锚点范围」**。⇒ 教训升级：**凡是用「某个工具会自动同步」来免除自己的检查，必须先验证那个工具的锚点覆盖了全部对象**（锚点是 `staticExamples[` 后的**第一个**元素，不是整个数组）。
+- **信号 AB（渲染层 bug 不会被任何价格守卫抓到）**：D1 的 `$$` 是**代码 bug**，不是「真相源漂移」⇒ 价格守卫（查「有没有手写价」）对它**完全失明** ⇒ 断言必须按**失败模式**枚举，而不是按「对象」枚举（P161 §14.4 已列此原则，此处是新实例）。⇒ 新增一类守卫：`price-render-defect-guard` 专查渲染产物。
+- **信号 AC（写死的倍数 = 伪装成事实的巧合）**：D2 的「13x」在 Ideogram 3 上**恰好正确**（0.04/0.003 = 13.3），在 Flux Pro 上错（16.7x）⇒ 一个只在**默认输入**下正确的常数，会让人误以为它被验证过 ⇒ 倍数必须由计算得出。
+- **信号 AD（同一份事实的两处口径，前一处改了后一处没改）**：D3（训练引擎的 40% vs P162 已改正的 30-60% / 10-30%）是 P162 改正的**遗漏对** ⇒ 「改了一处」不等于「都改了」⇒ 需要台账 + 双向检查，而不是「我改过了」。
+- **信号 AE（写死的基线价 = 写死的倍数的上游）**：D2 的「13x」只是**症状**；上游是**基线单价本身也是手写的**（SD 4 `$0.003`、Ideogram 3 `$0.04`、DALL-E 3 `$0.08`，出现在 prose 的乘除、阈值比较和显示文本里，共 11 处）⇒ 只把倍数改成「由单价算出」，而单价仍是字面量 ⇒ 下一次 bot 刷新照样失真。⇒ **倍数与基线必须一起派生**（计划 §Task 3 Step 3 已写明「Task 4 派生化时把这两处 `0.003` 也换成派生值」，本批补做）。
+- **信号 AF（"存在某个除法" ≠ "那个除法就是倍数计算"）**：D2c 写成「源码里存在 `/ x.perImage`」⇒ 被**另外两处无关的除法**（`subLowest / p.perImage`、`subBasic / api.perImage`）满足 ⇒ 把倍数写死成常量仍然绿。⇒ **存在性断言必须限定在同一个表达式里**（「`Math.round(x / y.perImage)`」），否则它守的是一个形状而不是那件事。
+- **信号 AG（台子的 bug 会伪装成守卫的洞）**：变异台子用 `String.replace(find, to)` 施加变异，而替换串里的 `$'` 会被解释成「匹配点之后的剩余文本」⇒ 文件被复制一倍以上、行被截断 ⇒ 表现为「守卫没抓住」，实际是**变异根本没生效**。⇒ **台子出问题时先怀疑台子**（否则会为了迁就一个假存活去改本来正确的守卫）⇒ 用函数式替换 + 「替换文本必须出现在变异后文件里」的落点自检。
+
+### 16.8 P163 实施回填（实测）
+
+| 产物 | 实测 |
+|---|---|
+| 新 token 家族 | **16 种**（`liveImage*` 8 + `liveTraining*` 8）；**10 种**在引擎内容里被用到，另外 6 种（`liveImagePerImage` / `liveImageAdvMult` / `liveImageCheapest` / `liveTrainingGpuName` / `liveTrainingDataProcess` / `liveTrainingReservedOff`）已实现并被守卫逐条钉死，但**内容里还没用到**（留给后续批次） |
+| FAQ 派生化 | 图片 **9 条** FAQ / 训练 **8 条** FAQ；图片引擎 **24** 个 token、训练引擎 **25** 个（守卫下限取实测值 ⇒ 删一个就红） |
+| 手写价 | 图片引擎 **0** 处（残留只有 codegen 表格里的 `pi:` 与 codegen 产出的静态示例）、训练引擎 **0** 处；白名单 **4** 条（Together AI / Stability AI / FLUX schnell / 图库照片），每条写明「数据集为什么不拥有它」 |
+| 倍数实测 | ideogram-3 = **13x**、flux-pro = **17x**（写死的 "13x" 只在前者上恰好正确） |
+| 折扣带实测 | 现货 **30-60%**、预留 **10-30%**（跨 6 家供应商，`spotMult ∈ [0.4,0.7]`、`reservedMult ∈ [0.7,0.9]`） |
+| 台账 | **26 条**（topic-page 4 / engine-faq 8 / engine-prose 3 / engine-customfn 3 / engine-static-example 8） |
+| popular 规则 | 策展 **44** + 显式排除 **201** = 数据集 **245**；**42 族**；族可同时命中已策展模型 ⇒ 策展优先（写在 `_rule.rule` 里） |
+| 新守卫 | 4 个 source-only，共 **33 条**断言（台账 7 / FAQ 8 / 渲染缺陷 7 / popular 11） |
+| 变异台子 | 4 个，共 **22 条**变异，**22/22 KILLED**（A 5/5 · B 6/6 · C 6/6 · D 5/5）；收尾 sha256 逐字节校验 ⇒ 工作区已还原 |
+| 套件计数（**自己复算**） | **58 build-dep + 204 source-only = 262** |
+| 全量套件（CI 模式 `RUN_BUILD_TESTS=1 node tests/run.mjs`） | **262 套件 · 1605 断言 · 0 失败 · 0 跳过 · exit 0**（P162 时是 258 / 1572） |
+| 构建与静态检查 | `pnpm exec tsc --noEmit` exit 0 / `codegen-customfn --check` exit 0（No drift）/ `codegen-examples --check` exit 0（**100 引擎 in sync**）/ `astro build` exit 0 |
+
+⚠️ **一条计划外的连锁**：P163 给训练引擎新增了「标量表」这一第二个 codegen 表区 ⇒ `codegen-customfn.mjs` 的 `tableEndMarker` 从 **8** 个变成 **9** 个 ⇒ `tests/codegen-marker-presence.test.ts` 的 T3/T4/T5（钉死 8 个）红了。⇒ **加一个 codegen 表区 = 改一个「钉死的数量」** —— 这个守卫的作用正在于此：它让「多了一个表区」这件事**必须被显式承认**，而不是悄悄溜过去。
+
+⚠️ **一条计划外的文档漂移修复**：AGENTS.md 第 206 行的「any of the **9** dimensions」是 e5dc719 时期写的，此后维度数一路 9 → 15，它从没被跟着更新 ⇒ 本批顺手改成 **15**。（顺带把口径核实清楚：AGENTS.md 的「N dimensions」= 维度表行数 **− 4**，这个差值在连续 8 个 commit 里稳定成立 ⇒ 本批加 1 行维度 ⇒ 14 → 15 是**按既有约定算出来的**，不是估的；同时用脚本数出 Price Provenance 行里实际列出的 11 个套件名，与行首声明的 11 一致。）
+⚠️ **两个刻意的「不修」**（记录在案，避免下批次误以为漏了）：
+1. **训练引擎的 customFn 缺整个 What-If 段**（与 `calculate()` 不一致）—— 既有分歧，非本批引入；且它与「自定义函数」的产品形态有关，改它属于产品决策而非缺陷修复。
+2. **图片引擎 Health 带里的 `$0.05` 市场均价锚点** —— 数据集**不拥有**「市场均价」这个量（7 个 provider 的 perImage 中位数恰好是 0.05，但那是巧合不是字段）⇒ 属编辑判断，不是可派生的价格 ⇒ 保留手写。
+
+
 
 

@@ -74,6 +74,24 @@
 //   {{liveGpuStoragePerGB}}                        → "$0.10"（数据集 gpu.storagePerGB）
 //   {{liveGpuEgressPerGB}}                         → "$0.08"（数据集 gpu.egressPerGB）
 //
+// —— P163: 图片段 / 训练段（image.providers / training.gpuTypes）——
+//   {{liveImagePerImage:<provider>}}                → "$0.080"（该 provider 的单张价）
+//   {{liveImageSubRange:<provider>}}                → "$10-$120/mo"（订阅档位区间）
+//   {{liveImageSubTier:<provider>|<idx>}}           → "30"（订阅的第 N 档月费）
+//   {{liveImageAdvMult:<mode>}}                     → "1.3"（画质模式倍率）
+//   {{liveImageMonthly:<provider>|<images>}}       → "$3.00"（按张计费的月额）
+//   {{liveTrainingGpuRate:<gpuKey>}}                → "$1.50"（训练 GPU 小时价）
+//   {{liveTrainingGpuName:<gpuKey>}}                → "A100 80GB"（训练 GPU 显示名）
+//   {{liveTrainingStorage}}                         → "$0.10"（gpu.storagePerGB）
+//   {{liveTrainingStorageFor:<GB>}}                 → "$10.00"（某容量的月额）
+//   {{liveTrainingGpuCost:<gpuKey>|<hours>[|<count>]}}   → "$1,080.00"（该型号跑 N 小时的 GPU 成本）
+//   {{liveTrainingFullFtMult}}                     → "3"（全量微调相对 LoRA 的倍数）
+//   {{liveTrainingSpotOff}}                         → "30-60"（现货折扣带，跨 6 家供应商）
+//   {{liveTrainingReservedOff}}                     → "10-30"（预留折扣带）
+//
+// ⚠️ P163 的 token 返回值**已经带 $**（与 liveGpuStoragePerGB 同约定）——
+//    文案里不要再手写 '$'。
+//
 // ⚠️ `liveGpuRange:<type>` 与 `liveGpuProviderRange:<provider>` 方向相反：
 //    前者 = 同一型号跨**供应商**的区间，后者 = 同一供应商跨**型号**的区间。
 //
@@ -192,6 +210,24 @@ const TOKEN_KINDS = [
   'liveGpuProviderRange',
   'liveGpuStoragePerGB',
   'liveGpuEgressPerGB',
+  // —— P163: 图片段（image.providers / image.subTiers / image.advancedMult）——
+  'liveImagePerImage',
+  'liveImagePerImageTrim',
+  'liveImageSubRange',
+  'liveImageSubTier',
+  'liveImageAdvMult',
+  'liveImageCheapest',
+  'liveImageMonthly',
+  // —— P163: 训练段（training.gpuTypes / training.dataProcessPerGB）——
+  'liveTrainingGpuRate',
+  'liveTrainingGpuName',
+  'liveTrainingStorage',
+  'liveTrainingStorageFor',
+  'liveTrainingDataProcess',
+  'liveTrainingGpuCost',
+  'liveTrainingFullFtMult',
+  'liveTrainingSpotOff',
+  'liveTrainingReservedOff',
 ] as const;
 
 const TOKEN_KIND_PATTERN = TOKEN_KINDS.join('|');
@@ -234,6 +270,31 @@ export const GPU_TOKEN_KINDS = new Set<string>([
   'liveGpuProviderRange',
   'liveGpuStoragePerGB',
   'liveGpuEgressPerGB',
+]);
+
+/**
+ * P163: 图片段 / 训练段的 token 种类。
+ *
+ * 同样地，这些 token 的 payload 里没有 LLM 的 provider/key ⇒ `referencedModels`
+ * 必须跳过它们，否则 LLM 守卫的「两个观察器对齐」会误报。
+ */
+export const IMAGE_TRAINING_TOKEN_KINDS = new Set<string>([
+  'liveImagePerImage',
+  'liveImagePerImageTrim',
+  'liveImageSubRange',
+  'liveImageSubTier',
+  'liveImageAdvMult',
+  'liveImageCheapest',
+  'liveImageMonthly',
+  'liveTrainingGpuRate',
+  'liveTrainingGpuName',
+  'liveTrainingStorage',
+  'liveTrainingStorageFor',
+  'liveTrainingDataProcess',
+  'liveTrainingGpuCost',
+  'liveTrainingFullFtMult',
+  'liveTrainingSpotOff',
+  'liveTrainingReservedOff',
 ]);
 
 /** 无参 token：{{liveDate}} → 数据集的最后更新时间 */
@@ -823,6 +884,182 @@ function resolveGpuToken(kind: string, payload: string): string {
 }
 
 /**
+ * P163: 解析一个图片段 / 训练段 token。
+ *
+ * 约定（与 GPU token 家族一致）：
+ *   - 返回值**语言中立** —— 只给数字与单位，不带 "per month" / "张" 等文案，
+ *     由调用点的文案自己补。
+ *   - 未知 key **抛错** —— 构建期失败比把 `{{liveImagePerImage:xxx}}` 原样
+ *     发到线上好得多。
+ */
+function resolveImageTrainingToken(kind: string, payload: string): string {
+  const parts = payload.split('|');
+  const image = (PRICING as any).image ?? {};
+  const imageProviders = image.providers ?? {};
+  const subTiers = image.subTiers ?? {};
+  const advMult = image.advancedMult ?? {};
+  const training = (PRICING as any).training ?? {};
+  const trainGpuTypes = training.gpuTypes ?? {};
+
+  // —— 图片段 ——
+  if (kind === 'liveImagePerImage') {
+    assertPartCount(kind, parts, 1);
+    const p = imageProviders[parts[0]!];
+    if (!p || typeof p.perImage !== 'number') {
+      throw new Error(`Unknown image provider "${parts[0]}" — not in src/data/ai-pricing.json image.providers`);
+    }
+    // 3 位小数（与引擎 calculate() 的 p.perImage.toFixed(3) 一致）
+    return `$${p.perImage.toFixed(3)}`;
+  }
+  if (kind === 'liveImagePerImageTrim') {
+    // {{liveImagePerImageTrim:<provider>}} → 去掉末尾 0 的单张价
+    // ($0.08 而不是 $0.080 —— FAQ 正文里的读法)
+    assertPartCount(kind, parts, 1);
+    const p = imageProviders[parts[0]!];
+    if (!p || typeof p.perImage !== 'number') {
+      throw new Error(`Unknown image provider "${parts[0]}" — not in src/data/ai-pricing.json image.providers`);
+    }
+    const s = p.perImage.toFixed(3).replace(/0+$/, '').replace(/\.$/, '');
+    return `$${s}`;
+  }
+  if (kind === 'liveImageSubRange') {
+    assertPartCount(kind, parts, 1);
+    const p = imageProviders[parts[0]!];
+    if (!p || typeof p.subRange !== 'string' || !p.subRange) {
+      throw new Error(`Unknown image subscription provider "${parts[0]}" — no subRange in the dataset`);
+    }
+    return p.subRange;
+  }
+  if (kind === 'liveImageSubTier') {
+    assertPartCount(kind, parts, 2);
+    const tiers = subTiers[parts[0]!];
+    if (!tiers) {
+      throw new Error(`Unknown image subscription provider "${parts[0]}" — no subTiers in the dataset`);
+    }
+    const v = tiers[Number(parts[1])];
+    if (typeof v !== 'number') {
+      throw new Error(`Unknown image sub-tier index "${parts[1]}" for "${parts[0]}"`);
+    }
+    // 带 $ —— 订阅档位是「月费」，文案里通常直接写 "$30/mo"
+    return `$${v}`;
+  }
+  if (kind === 'liveImageAdvMult') {
+    assertPartCount(kind, parts, 1);
+    const v = advMult[parts[0]!];
+    if (typeof v !== 'number') {
+      throw new Error(`Unknown image quality mode "${parts[0]}" — not in image.advancedMult`);
+    }
+    return String(v);
+  }
+  if (kind === 'liveImageCheapest') {
+    assertPartCount(kind, parts, 1);
+    // payload = provider key ⇒ 返回该 provider 的显示名（最便宜的按张计费者）
+    const p = imageProviders[parts[0]!];
+    if (!p) {
+      throw new Error(`Unknown image provider "${parts[0]}" — not in src/data/ai-pricing.json image.providers`);
+    }
+    return String(p.name ?? parts[0]);
+  }
+  if (kind === 'liveImageMonthly') {
+    // {{liveImageMonthly:<provider>|<images>}} → 按张计费 provider 的月额
+    assertPartCount(kind, parts, 2);
+    const p = imageProviders[parts[0]!];
+    if (!p || typeof p.perImage !== 'number') {
+      throw new Error(`Unknown image provider "${parts[0]}" — not in src/data/ai-pricing.json image.providers`);
+    }
+    const images = Number(parts[1]);
+    if (!Number.isFinite(images) || images < 0) {
+      throw new Error(`Malformed liveImageMonthly token — image count must be a non-negative number, got "${parts[1]}"`);
+    }
+    return `$${formatPrice(p.perImage * images)}`;
+  }
+
+  // —— 训练段 ——
+  if (kind === 'liveTrainingGpuRate') {
+    assertPartCount(kind, parts, 1);
+    const g = trainGpuTypes[parts[0]!];
+    if (!g || typeof g.hourlyRate !== 'number') {
+      throw new Error(`Unknown training GPU "${parts[0]}" — not in src/data/ai-pricing.json training.gpuTypes`);
+    }
+    return `$${g.hourlyRate.toFixed(2)}`;
+  }
+  if (kind === 'liveTrainingGpuName') {
+    assertPartCount(kind, parts, 1);
+    const g = trainGpuTypes[parts[0]!];
+    if (!g) {
+      throw new Error(`Unknown training GPU "${parts[0]}" — not in src/data/ai-pricing.json training.gpuTypes`);
+    }
+    return String(g.name ?? parts[0]);
+  }
+  if (kind === 'liveTrainingStorage') {
+    assertPartCount(kind, parts, 1);
+    const v = (PRICING as any).gpu?.storagePerGB;
+    if (typeof v !== 'number') throw new Error('gpu.storagePerGB missing from the dataset');
+    return `$${v.toFixed(2)}`;
+  }
+  if (kind === 'liveTrainingStorageFor') {
+    // {{liveTrainingStorageFor:<GB>}} → 该容量的月额（单价 × GB）
+    assertPartCount(kind, parts, 1);
+    const v = (PRICING as any).gpu?.storagePerGB;
+    const gb = Number(parts[0]);
+    if (typeof v !== 'number') throw new Error('gpu.storagePerGB missing from the dataset');
+    if (!Number.isFinite(gb) || gb < 0) {
+      throw new Error(`Malformed liveTrainingStorageFor token — GB must be a non-negative number, got "${parts[0]}"`);
+    }
+    return `$${formatPrice(v * gb)}`;
+  }
+  if (kind === 'liveTrainingGpuCost') {
+    // {{liveTrainingGpuCost:<gpuKey>|<hours>[|<count>]}} → GPU 成本
+    // count 缺省 = 1；给了就乘上 GPU 数量。
+    if (parts.length < 2 || parts.length > 3) {
+      throw new Error(
+        `Malformed ${kind} token — expected 2 or 3 payload part(s), got ${parts.length} ("${parts.join('|')}")`,
+      );
+    }
+    const g = trainGpuTypes[parts[0]!];
+    if (!g || typeof g.hourlyRate !== 'number') {
+      throw new Error(`Unknown training GPU "${parts[0]}" — not in src/data/ai-pricing.json training.gpuTypes`);
+    }
+    const hours = Number(parts[1]);
+    if (!Number.isFinite(hours) || hours < 0) {
+      throw new Error(`Malformed liveTrainingGpuCost token — hours must be a non-negative number, got "${parts[1]}"`);
+    }
+    const count = parts.length > 2 ? Number(parts[2]) : 1;
+    if (!Number.isFinite(count) || count <= 0) {
+      throw new Error(`Malformed liveTrainingGpuCost token — GPU count must be a positive number, got "${parts[2]}"`);
+    }
+    return `$${formatPrice(g.hourlyRate * hours * count)}`;
+  }
+  if (kind === 'liveTrainingFullFtMult') {
+    // {{liveTrainingFullFtMult}} → 全量微调相对 LoRA 的倍数
+    // 数据集 training.loraSpeedup = 0.35（LoRA 只花全量 35% 的时间）
+    // ⇒ 全量 ≈ 1 / 0.35 ≈ 3 倍。
+    assertPartCount(kind, parts, 1);
+    const speedup = training.loraSpeedup;
+    if (typeof speedup !== 'number' || !(speedup > 0)) {
+      throw new Error('training.loraSpeedup missing or non-positive in the dataset');
+    }
+    return String(Math.round(1 / speedup));
+  }
+  if (kind === 'liveTrainingDataProcess') {
+    assertPartCount(kind, parts, 1);
+    const v = training.dataProcessPerGB;
+    if (typeof v !== 'number') throw new Error('training.dataProcessPerGB missing from the dataset');
+    return `$${v.toFixed(2)}`;
+  }
+  if (kind === 'liveTrainingSpotOff' || kind === 'liveTrainingReservedOff') {
+    assertPartCount(kind, parts, 1);
+    const providers = gpuProviders();
+    const mults = providers.map((p) => (kind === 'liveTrainingSpotOff' ? p.spotMult : p.reservedMult));
+    const offs = mults.map((m) => (1 - m) * 100);
+    // 折扣带的写法与 GPU 的 liveGpuOffSpot 一致：小的在前
+    return formatBand(offs, formatPercent);
+  }
+
+  throw new Error(`Unknown image/training token kind "${kind}"`);
+}
+
+/**
  * 解析一段文本里的所有 token。
  * 未知的 provider/key 会**抛错** —— 构建期失败，而不是把 `{{live:...}}` 原样发到线上。
  */
@@ -836,6 +1073,11 @@ export function resolveLiveTokens(text: string): string {
     // —— GPU 段（数据集 gpu.providers）——
     if (GPU_TOKEN_KINDS.has(kind)) {
       return resolveGpuToken(kind, payload);
+    }
+
+    // —— 图片段 / 训练段（P163）——
+    if (IMAGE_TRAINING_TOKEN_KINDS.has(kind)) {
+      return resolveImageTrainingToken(kind, payload);
     }
 
     // —— 比值类（A 比 B 便宜几倍）——
@@ -1007,6 +1249,9 @@ export function referencedModels(text: string): Array<{ provider: string; key: s
     const kind = m[1]!;
     // GPU 段的 token 引用的是「供应商 + 型号」，不是模型 —— 不进这个列表。
     if (GPU_TOKEN_KINDS.has(kind)) continue;
+    // P163：图片段 / 训练段的 token 引用的是图片供应商 / 训练 GPU —— 同样不是
+    // LLM 模型，不进这个列表（否则 LLM 守卫的「名实一致」会误报）。
+    if (IMAGE_TRAINING_TOKEN_KINDS.has(kind)) continue;
     if (multiRefKinds.has(kind)) {
       for (const ref of m[2]!.split('|')) {
         const { provider, key } = splitRef(ref);

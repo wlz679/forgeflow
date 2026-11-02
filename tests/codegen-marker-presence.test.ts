@@ -39,14 +39,19 @@ const EXAMPLES_SOURCE = fs.readFileSync(EXAMPLES_SCRIPT, 'utf8');
 
 // === Class B: tableEndMarker list (P50 ground truth, byte-for-byte) ===
 // Source line refs (verify against scripts/codegen-customfn.mjs if drifted):
-//   'var FL='                       — line 97  (openai-token-calculator)
-//   'Family icons'                  — line 53 / 75 (2 engines share; unique count = 1)
-//   'var FI='                       — line 121 (gemini-api-cost-calculator)
-//   'var ST='                       — line 157 (deepseek-api-cost-calculator)
-//   'var SCPG2='                    — line 176 (ai-api-cost-comparison)
-//   '"var MS={" +'                  — line 193 (ai-image-generation-cost-calculator)
-//   'var SCG='                      — line 207 (gpu-cloud-cost-calculator)
-//   'Provider initials + colors'    — line 138 (ai-training-cost-estimator)
+//   'var FL='                       — line 117 (openai-token-calculator)
+//   'Family icons'                  — line 73 / 95 (2 engines share; unique count = 1)
+//   'var FI='                       — line 141 (gemini-api-cost-calculator)
+//   'var ST='                       — line 175 (deepseek-api-cost-calculator)
+//   'var SCPG2='                    — line 194 (ai-api-cost-comparison)
+//   '"var MS={" +'                  — line 211 (ai-image-generation-cost-calculator)
+//   'var SCG='                      — line 225 (gpu-cloud-cost-calculator)
+//   'Provider initials + colors'    — line 158 (ai-training-cost-estimator 模型表)
+//   '"function fm2'                 — line 249 (ai-training-cost-estimator 标量表, P163 新增)
+//
+// ⚠️ P163：训练引擎现在有**两个**表区（模型表 + 标量表）⇒ 第 9 个 marker。
+//   标量表（SCG/DPCG/LES/SPMIN/SPMAX/RPMIN/RPMAX）由 codegen 从数据集注入，
+//   不再是引擎里的一份手写副本 ⇒ 训练引擎的 Spot/Reserved 折扣带不会与数据集漂移。
 const TABLE_END_MARKERS = [
   'var FL=',
   'Family icons',
@@ -56,6 +61,7 @@ const TABLE_END_MARKERS = [
   '"var MS={" +',
   'var SCG=',
   'Provider initials + colors',
+  '"function fm2',
 ];
 
 // === Class A: HTML comment markers ===
@@ -97,8 +103,8 @@ test('T2: HTML markers are unique (no accidental duplication)', () => {
 
 // ===== Class B: tableEndMarker (T3 + T4 + T5) =====
 
-// T3: codegen-customfn.mjs source contains all 8 expected tableEndMarker strings
-test('T3: scripts/codegen-customfn.mjs contains all 8 tableEndMarker values', () => {
+// T3: codegen-customfn.mjs source contains all 9 expected tableEndMarker strings
+test('T3: scripts/codegen-customfn.mjs contains all 9 tableEndMarker values', () => {
   for (const marker of TABLE_END_MARKERS) {
     assert.ok(
       CUSTOMFN_SOURCE.includes(marker),
@@ -108,8 +114,8 @@ test('T3: scripts/codegen-customfn.mjs contains all 8 tableEndMarker values', ()
   }
 });
 
-// T4: 8 unique marker values (not 7, not 9 — accounts for 'Family icons' dual-engine reuse)
-test('T4: codegen-customfn.mjs has exactly 8 unique tableEndMarker values', () => {
+// T4: 9 unique marker values (not 8, not 10 — accounts for 'Family icons' dual-engine reuse)
+test('T4: codegen-customfn.mjs has exactly 9 unique tableEndMarker values', () => {
   const matches = CUSTOMFN_SOURCE.match(/tableEndMarker:\s*'([^']+)'/g) || [];
   const unique = new Set(matches.map((m) => m.match(/'([^']+)'/)![1]));
   assert.equal(

@@ -36,6 +36,52 @@ import popular from './ai-pricing-popular.json';
 /** Models selectable on each provider calculator (44 in total). */
 export const POPULAR_MODEL_KEYS: Record<string, string[]> = popular.popularModelKeys;
 
+/**
+ * P163 — every dataset model that does NOT enter the interactive set (201).
+ *
+ * Before P163 this file was a pure list with no rule attached, so a new model
+ * in `ai-pricing.json` would silently land outside the interactive set: the
+ * visitor could not select it, and **nothing went red**. `popularModelKeys` +
+ * `excludedModelKeys` must be a complete partition of the dataset — the
+ * guard enforces it.
+ */
+export const EXCLUDED_MODEL_KEYS: Record<string, string[]> = popular.excludedModelKeys;
+
+/** P163 — one exclusion family: a provider + glob pattern + why. */
+export interface ExcludedFamily {
+  provider: string;
+  pattern: string;
+  reason: string;
+}
+
+/**
+ * P163 — why the excluded models are excluded, grouped by product line /
+ * modality (42 families).
+ *
+ * A family may also match a curated model; curation wins (`popularModelKeys`
+ * is checked first). The families are the documentation layer, the two key
+ * lists are the source of truth.
+ */
+export const EXCLUDED_FAMILIES: ExcludedFamily[] = popular.excludedFamilies;
+
+/** P163 — the rule contract itself, embedded in the JSON next to the data. */
+export const POPULAR_RULE = popular._rule;
+
+/**
+ * P163 — glob matcher used by the exclusion families.
+ *
+ * `*` matches ANY substring (including an empty one) and may appear in the
+ * middle of a pattern. This is NOT shell globbing: `gpt-4*` matches
+ * `gpt-4o-mini`, and `*-5-1` matches `claude-mythos-5-1`.
+ *
+ * Kept here (not in the guard) so the semantics is defined once, next to the
+ * data it describes. The guard pins the semantics with its own assertions.
+ */
+export function matchesExcludedFamily(pattern: string, key: string): boolean {
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, (c) => (c === '*' ? '\u0000' : '\\' + c));
+  return new RegExp('^' + escaped.replace(/\u0000/g, '.*') + '$').test(key);
+}
+
 /** One flagship per provider — the cross-provider side-by-side set (4). */
 export const COMPARISON_FLAGSHIP_KEYS: Record<string, string> = popular.comparisonFlagshipKeys;
 

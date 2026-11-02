@@ -236,6 +236,19 @@ const ENGINES = [
     },
     isTrainingModel: true,
   },
+  {
+    // P163 D3：训练引擎 customFn 的**标量常量**（存储单价 / 数据处理单价 /
+    // LoRA epoch 速度 / Spot 与 Reserved 折扣带）原先是手写副本 ——
+    // 数据集一刷新就漂。
+    //
+    // 这条配置让 codegen 从 ai-pricing.json 生成这段常量，
+    // 于是 customFn 与服务端 calculate() 读的是同一份真相源。
+    file: 'ai-training-cost-estimator.ts',
+    subdir: 'ai-cost',
+    tableStart: '"var SCG=',
+    tableEndMarker: '"function fm2',
+    isTrainingScalars: true,
+  },
 ];
 
 // ============================================================
@@ -303,6 +316,22 @@ function fmt(n) {
 function generateTable(engine) {
   // Determine the data source
   let entries;
+  if (engine.isTrainingScalars) {
+    // P163 D3：标量常量表（不是记录集合）—— 直接生成一行常量声明。
+    const providers = Object.values(PRICING.gpu.providers);
+    const spotMults = providers.map((p) => p.spotMult);
+    const reservedMults = providers.map((p) => p.reservedMult);
+    const spotMin = Math.min(...spotMults);
+    const spotMax = Math.max(...spotMults);
+    const resMin = Math.min(...reservedMults);
+    const resMax = Math.max(...reservedMults);
+    const line =
+      `"var SCG=${fmt(PRICING.gpu.storagePerGB)};var DPCG=${fmt(PRICING.training.dataProcessPerGB)};` +
+      `var LES=${fmt(PRICING.training.loraSpeedup)};` +
+      `var SPMIN=${fmt(spotMin)};var SPMAX=${fmt(spotMax)};` +
+      `var RPMIN=${fmt(resMin)};var RPMAX=${fmt(resMax)};" +`;
+    return '  ' + line;
+  }
   if (engine.isImage) entries = Object.entries(PRICING.image.providers);
   else if (engine.isGpu) entries = Object.entries(PRICING.gpu.providers);
   else if (engine.isTrainingGpu) entries = Object.entries(PRICING.training.gpuTypes);
@@ -474,6 +503,7 @@ for (const engine of ENGINES) {
     else if (engine.isGpu) count = Object.keys(PRICING.gpu.providers).length;
     else if (engine.isTrainingGpu) count = Object.keys(PRICING.training.gpuTypes).length;
     else if (engine.isTrainingModel) count = Object.keys(PRICING.training.modelSizes).length;
+    else if (engine.isTrainingScalars) count = Object.keys(PRICING.gpu.providers).length;
     else if (engine.custom) {
       const totalModels = Object.values(PRICING.llm).reduce((s, p) => s + Object.keys(p.models).length, 0);
       const filtered = engine.popularKeys

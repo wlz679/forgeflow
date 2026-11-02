@@ -1,4 +1,11 @@
 {
+  "_rule": {
+    "rule": "数据集里每个 LLM 模型要么在 popularModelKeys 里（进交互态，用户可选），要么在 excludedModelKeys 里（不进交互态）。两者必须构成对数据集模型的完整划分 —— 新模型进 ai-pricing.json 后必须做这个决定，否则 popular-models-rule-guard 会红。excludedFamilies 说明「为什么这些模型不进交互态」：每个排除 key 至少被一个族命中，每个族至少命中一个排除 key。族用 provider + pattern 表达（pattern 里的 * 匹配任意子串）。注意：族可能同时命中已策展模型，此时以 popularModelKeys 为准（策展优先）。",
+    "updatedAt": "2026-10-30",
+    "rationale": "P163 之前这个文件是一个纯清单，没有任何规则说明「新模型进数据集后必须决定是否进交互态」⇒ 新模型会静默地只进数据集、不进交互态 ⇒ 用户在计算器里根本选不到它，而且没有任何东西会红。这是一个流程洞，只能靠「规则 + 守卫」把它变成可执行契约。",
+    "curatedModelCount": 44,
+    "excludedModelCount": 201
+  },
   "popularModelKeys": {
     "openai": [
       "gpt-6.1-sol",
@@ -58,5 +65,428 @@
     "anthropic": "claude-haiku-3",
     "google": "gemini-1.5-flash",
     "deepseek": "deepseek-v4.1-flash-1017"
-  }
+  },
+  "excludedModelKeys": {
+    "openai": [
+      "gpt-4o-transcribe-diarize",
+      "gpt-3.5-turbo-0125",
+      "gpt-3.5-turbo-1106",
+      "gpt-3.5-turbo-16k",
+      "gpt-3.5-turbo-instruct",
+      "gpt-3.5-turbo-instruct-0914",
+      "gpt-4",
+      "gpt-4-0125-preview",
+      "gpt-4-0314",
+      "gpt-4-0613",
+      "gpt-4-1106-preview",
+      "gpt-4-turbo-2024-04-09",
+      "gpt-4-turbo-preview",
+      "gpt-4.1-2025-04-14",
+      "gpt-4.1-mini-2025-04-14",
+      "gpt-4.1-nano-2025-04-14",
+      "gpt-4o-2024-05-13",
+      "gpt-4o-2024-08-06",
+      "gpt-4o-2024-11-20",
+      "gpt-4o-audio-preview",
+      "gpt-4o-audio-preview-2024-12-17",
+      "gpt-4o-audio-preview-2025-06-03",
+      "gpt-audio",
+      "gpt-audio-1.5",
+      "gpt-audio-2025-08-28",
+      "gpt-audio-mini",
+      "gpt-audio-mini-2025-10-06",
+      "gpt-audio-mini-2025-12-15",
+      "gpt-4o-mini-2024-07-18",
+      "gpt-4o-mini-audio-preview",
+      "gpt-4o-mini-audio-preview-2024-12-17",
+      "gpt-4o-mini-realtime-preview",
+      "gpt-4o-mini-realtime-preview-2024-12-17",
+      "gpt-4o-mini-search-preview",
+      "gpt-4o-mini-search-preview-2025-03-11",
+      "gpt-4o-mini-transcribe",
+      "gpt-4o-mini-tts",
+      "gpt-4o-realtime-preview",
+      "gpt-4o-realtime-preview-2024-12-17",
+      "gpt-4o-realtime-preview-2025-06-03",
+      "gpt-4o-search-preview",
+      "gpt-4o-search-preview-2025-03-11",
+      "gpt-4o-transcribe",
+      "gpt-image-1.5",
+      "gpt-image-1.5-2025-12-16",
+      "gpt-image-2",
+      "gpt-image-2-2026-04-21",
+      "gpt-5.1",
+      "gpt-5.1-2025-11-13",
+      "gpt-5.1-chat-latest",
+      "gpt-5.2-2025-12-11",
+      "gpt-5.2-chat-latest",
+      "gpt-5.3-chat-latest",
+      "gpt-5.2-pro",
+      "gpt-5.2-pro-2025-12-11",
+      "gpt-5.5-2026-04-23",
+      "gpt-5.5-pro",
+      "gpt-5.5-pro-2026-04-23",
+      "gpt-5.4",
+      "gpt-5.4-2026-03-05",
+      "gpt-5.4-pro",
+      "gpt-5.4-pro-2026-03-05",
+      "gpt-5.4-mini",
+      "gpt-5.4-mini-2026-03-17",
+      "gpt-5.4-nano",
+      "gpt-5.4-nano-2026-03-17",
+      "gpt-5-pro",
+      "gpt-5-pro-2025-10-06",
+      "gpt-5-2025-08-07",
+      "gpt-5-chat",
+      "gpt-5-chat-latest",
+      "gpt-5-codex",
+      "gpt-5.1-codex",
+      "gpt-5.1-codex-max",
+      "gpt-5.1-codex-mini",
+      "gpt-5.2-codex",
+      "gpt-5.3-codex",
+      "gpt-5-mini-2025-08-07",
+      "gpt-5-nano-2025-08-07",
+      "gpt-realtime",
+      "gpt-realtime-1.5",
+      "gpt-realtime-2",
+      "gpt-realtime-mini",
+      "gpt-realtime-2025-08-28",
+      "o1",
+      "o1-2024-12-17",
+      "o1-pro",
+      "o1-pro-2025-03-19",
+      "o3-2025-04-16",
+      "o3-deep-research",
+      "o3-deep-research-2025-06-26",
+      "o3-mini",
+      "o3-mini-2025-01-31",
+      "o3-pro",
+      "o3-pro-2025-06-10",
+      "o4-mini-2025-04-16",
+      "o4-mini-deep-research",
+      "o4-mini-deep-research-2025-06-26",
+      "gpt-4o-mini-tts-2025-03-20",
+      "gpt-4o-mini-tts-2025-12-15",
+      "gpt-4o-mini-transcribe-2025-03-20",
+      "gpt-4o-mini-transcribe-2025-12-15",
+      "gpt-5-search-api",
+      "gpt-5-search-api-2025-10-14",
+      "gpt-realtime-mini-2025-10-06",
+      "gpt-realtime-mini-2025-12-15",
+      "gpt-5.6",
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gpt-5.6-luna",
+      "gpt-realtime-2.1",
+      "gpt-realtime-2.1-mini",
+      "gpt-5.6-cyber",
+      "gpt-daybreak-red-latest",
+      "gpt-daybreak-blue-latest",
+      "gpt-5.5-cyber",
+      "gpt-5.5-cyber-preview",
+      "gpt-rosalind-research",
+      "gpt-rosalind-discovery",
+      "gpt-6.1-terra"
+    ],
+    "anthropic": [
+      "claude-3-7-sonnet",
+      "claude-3-haiku",
+      "claude-3-opus",
+      "claude-4-opus",
+      "claude-4-sonnet",
+      "claude-sonnet-4-5",
+      "claude-sonnet-4-5-20250929-v1:0",
+      "claude-opus-4",
+      "claude-opus-4-5",
+      "claude-opus-4-6",
+      "claude-opus-4-7",
+      "claude-sonnet-4",
+      "claude-mythos-preview",
+      "claude-fable-5-1",
+      "claude-mythos-5-1"
+    ],
+    "google": [
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-001",
+      "gemini-2.0-flash-lite",
+      "gemini-2.0-flash-lite-001",
+      "gemini-2.5-flash-image",
+      "gemini-3-pro-image-preview",
+      "gemini-3.1-flash-image-preview",
+      "gemini-3.1-flash-lite-preview",
+      "gemini-3.1-flash-lite",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-flash-lite-preview-09-2025",
+      "gemini-2.5-flash-preview-09-2025",
+      "gemini-live-2.5-flash-preview-native-audio-09-2025",
+      "gemini-2.5-flash-lite-preview-06-17",
+      "gemini-2.5-pro",
+      "gemini-3-pro-preview",
+      "gemini-3.1-pro-preview",
+      "gemini-3.1-pro-preview-customtools",
+      "gemini-2.5-pro-preview-tts",
+      "gemini-robotics-er-1.5-preview",
+      "gemini-2.5-computer-use-preview-10-2025",
+      "deep-research-pro-preview-12-2025",
+      "gemini-flash-latest",
+      "gemini-flash-lite-latest",
+      "gemini-2.5-flash-preview-tts",
+      "gemini-3-flash-preview",
+      "gemini-gemma-2-27b-it",
+      "gemini-gemma-2-9b-it",
+      "gemini-2.5-flash-native-audio-latest",
+      "gemini-2.5-flash-native-audio-preview-09-2025",
+      "gemini-2.5-flash-native-audio-preview-12-2025",
+      "gemini-3.1-flash-live-preview",
+      "gemini-pro-latest",
+      "gemini-exp-1206",
+      "gemini-3-pro-image",
+      "gemini-3.1-flash-image",
+      "gemini-omni-flash-preview",
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash",
+      "gemini-robotics-er-2-preview",
+      "gemini-robotics-er-1.6-preview",
+      "gemini-robotics-er-2-streaming-preview",
+      "gemini-3.7-flash",
+      "gemini-3.1-flash-tts-preview",
+      "gemini-3.1-flash-lite-image",
+      "gemini-3.5-live-translate-preview",
+      "gemini-live-2.5-flash-native-audio",
+      "deep-research-preview-04-2026",
+      "deep-research-max-preview-04-2026",
+      "nano-banana-pro-preview",
+      "gemini-3.8-flash-cyber",
+      "gemini-3.8-live",
+      "gemini-3.8-live-extended-thinking",
+      "gemini-3.8-flash-tts",
+      "gemini-3.8-flash-lite-tts",
+      "gemini-3.5-transcribe",
+      "gemini-3.5-transcribe-live",
+      "gemini-omni-1.1-flash",
+      "gemini-nano-banana-2.1"
+    ],
+    "deepseek": [
+      "deepseek-chat",
+      "deepseek-reasoner",
+      "deepseek-coder",
+      "deepseek-v3",
+      "deepseek-v3.2",
+      "deepseek-flash",
+      "deepseek-v4-flash-vision-exp"
+    ]
+  },
+  "excludedFamilies": [
+    {
+      "provider": "openai",
+      "pattern": "gpt-3.5-turbo-*",
+      "reason": "gpt-3.5 家族的非精选版本（日期快照 / instruct 旧 completion 端点 / 16k 上下文变体）—— 已被 gpt-4o 与 gpt-5 系列取代"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-4*",
+      "reason": "gpt-4 / 4o / 4.1 / 4-turbo 家族 —— 当前只策展 gpt-4o、gpt-4o-mini、gpt-4.1、gpt-4.1-mini、gpt-4.1-nano、gpt-4-turbo；同族其余版本、快照与变体不进交互态"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-5*",
+      "reason": "gpt-5 家族 —— 当前只策展 gpt-5、gpt-5-mini、gpt-5-nano、gpt-5.2、gpt-5.5；同族其余小版本、pro/chat 档位与快照不进交互态"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-6*",
+      "reason": "gpt-6 家族 —— 当前只策展 gpt-6-sol、gpt-6-luna、gpt-6-astra、gpt-6.1-sol；同族其余版本不进交互态"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-audio*",
+      "reason": "音频转写 / 语音对话专用模型 —— 计价单位是音频 token，与交互态的「每 1M 文本 token」口径不可比"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-image*",
+      "reason": "图像生成模型 —— 计价单位是「张」而不是 token（图片成本有独立工具）"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-realtime*",
+      "reason": "实时语音模型 —— 计价单位与交互态文本 token 口径不同"
+    },
+    {
+      "provider": "openai",
+      "pattern": "*codex*",
+      "reason": "编码专用变体 —— 面向 agent 编码场景，交互态主打通用对话模型"
+    },
+    {
+      "provider": "openai",
+      "pattern": "*search*",
+      "reason": "检索增强变体 —— 与基础模型的 token 口径不可比"
+    },
+    {
+      "provider": "openai",
+      "pattern": "*cyber*",
+      "reason": "安全研究专用变体 —— 面向红队场景，不是通用生产力模型"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-daybreak-*",
+      "reason": "内部代号版本 —— 不对外作为可选模型"
+    },
+    {
+      "provider": "openai",
+      "pattern": "gpt-rosalind-*",
+      "reason": "内部代号版本 —— 不对外作为可选模型"
+    },
+    {
+      "provider": "openai",
+      "pattern": "o1*",
+      "reason": "o1 系列 —— 已被 o3 / o4-mini 取代"
+    },
+    {
+      "provider": "openai",
+      "pattern": "o3-*",
+      "reason": "o3 的 mini / pro / deep-research 档位与快照 —— 交互态只列 o3 本身"
+    },
+    {
+      "provider": "openai",
+      "pattern": "o4-mini-*",
+      "reason": "o4-mini 的日期快照与 deep-research 变体 —— 交互态只列 o4-mini 本身"
+    },
+    {
+      "provider": "anthropic",
+      "pattern": "claude-3-*",
+      "reason": "claude 3 家族 —— 已被 claude 4 / 5 取代"
+    },
+    {
+      "provider": "anthropic",
+      "pattern": "claude-4-*",
+      "reason": "claude 4 的 opus / sonnet 旧命名（claude-4-opus、claude-4-sonnet）—— 已被 claude-opus-4-8、claude-sonnet-4-6 等现行命名取代"
+    },
+    {
+      "provider": "anthropic",
+      "pattern": "claude-opus-4*",
+      "reason": "claude opus 4 家族 —— 当前只策展 claude-opus-4-8 与 claude-opus-4-1；同族其余小版本与快照不进交互态"
+    },
+    {
+      "provider": "anthropic",
+      "pattern": "claude-sonnet-4*",
+      "reason": "claude sonnet 4 家族 —— 当前只策展 claude-sonnet-4-6；同族其余小版本与快照不进交互态"
+    },
+    {
+      "provider": "anthropic",
+      "pattern": "claude-*-5-1",
+      "reason": "claude 5 家族的小版本（fable-5-1 / mythos-5-1）—— 当前只策展 claude-fable-5、claude-opus-5、claude-sonnet-5、claude-mythos-5 及其 -5-5 版"
+    },
+    {
+      "provider": "anthropic",
+      "pattern": "claude-mythos-preview",
+      "reason": "预览版 —— 预览模型不进交互态（价格与配额都可能变）"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-2.*",
+      "reason": "gemini 2.x 家族 —— 当前只策展 gemini-2.5-flash；2.0 的其余档位与 2.5 的 lite/pro/预览变体不进交互态"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-3*",
+      "reason": "gemini 3.x 家族 —— 当前只策展 gemini-3-flash、gemini-3.1-pro、gemini-3.5-flash、gemini-3.8-flash；同族其余小版本与档位不进交互态"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-live-*",
+      "reason": "实时多模态变体 —— 计价单位不同"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-exp-*",
+      "reason": "实验版模型 —— 不进交互态"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-gemma-*",
+      "reason": "gemma 开放权重模型 —— 与闭源 API 定价口径不同"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-robotics-er-*",
+      "reason": "机器人专用模型 —— 面向机器人场景，不是文本对话模型"
+    },
+    {
+      "provider": "google",
+      "pattern": "gemini-omni-*",
+      "reason": "全模态实验线 —— 尚未成为通用对话模型"
+    },
+    {
+      "provider": "google",
+      "pattern": "*nano-banana*",
+      "reason": "图像编辑模型 —— 计价单位是「张」"
+    },
+    {
+      "provider": "google",
+      "pattern": "deep-research-*",
+      "reason": "深度研究专用变体 —— 与基础模型不可比"
+    },
+    {
+      "provider": "google",
+      "pattern": "*computer-use*",
+      "reason": "计算机操作专用变体 —— 面向 agent 场景"
+    },
+    {
+      "provider": "google",
+      "pattern": "*image*",
+      "reason": "图像生成 / 编辑变体 —— 计价单位是「张」而不是 token（图片成本有独立工具）"
+    },
+    {
+      "provider": "google",
+      "pattern": "*tts*",
+      "reason": "语音合成变体 —— 计价单位是音频 token"
+    },
+    {
+      "provider": "google",
+      "pattern": "*transcribe*",
+      "reason": "转写变体 —— 计价单位是音频 token"
+    },
+    {
+      "provider": "google",
+      "pattern": "*preview*",
+      "reason": "预览版 —— 价格与配额都可能变，不进交互态"
+    },
+    {
+      "provider": "google",
+      "pattern": "*-latest",
+      "reason": "滚动别名 —— 指向某个具体版本，交互态用固定版本名更清晰"
+    },
+    {
+      "provider": "deepseek",
+      "pattern": "deepseek-v3*",
+      "reason": "v3 家族 —— 已被 v4 取代"
+    },
+    {
+      "provider": "deepseek",
+      "pattern": "deepseek-v4-flash-vision*",
+      "reason": "视觉变体 —— 交互态按同名文本模型计价"
+    },
+    {
+      "provider": "deepseek",
+      "pattern": "deepseek-reasoner",
+      "reason": "推理模式别名 —— 交互态按同名 chat 模型计价（reasoner 是同一模型开推理模式）"
+    },
+    {
+      "provider": "deepseek",
+      "pattern": "deepseek-coder",
+      "reason": "代码专用模型 —— 面向编码场景"
+    },
+    {
+      "provider": "deepseek",
+      "pattern": "deepseek-chat",
+      "reason": "通用别名 —— 指向具体版本，交互态用固定版本名"
+    },
+    {
+      "provider": "deepseek",
+      "pattern": "deepseek-flash",
+      "reason": "通用别名 —— 指向具体版本，交互态用固定版本名"
+    }
+  ]
 }

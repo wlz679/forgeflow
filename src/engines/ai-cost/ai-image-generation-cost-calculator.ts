@@ -20,6 +20,15 @@ const SUB_TIERS: Record<string, number[]> = PRICING.image.subTiers as any;
 const ADVANCED_MULT: Record<string, number> = PRICING.image.advancedMult as any;
 
 function fmt(n: number): string { return '$' + n.toFixed(2); }
+// P163 D1：fmt() 已带 '$'，调用处再拼一个就成 '$$'。
+// ⇒ 需要「不带 $ 的数字」时用 fmtNum()，需要 $ 时显式拼 '$' + fmtNum(...)。
+function fmtNum(n: number): string { return n.toFixed(2); }
+// P163：按张计价的单价需要 3 位小数（SD 4 是 $0.003），但要去掉尾随零
+// （$0.080 → $0.08，$0.003 保持 3 位）。数据集拥有这些单价 ⇒ 必须派生。
+function fmtPrice3(n: number): string {
+  const s = n.toFixed(3);
+  return s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s;
+}
 function lc(n: number): string { return n.toLocaleString(); }
 function pad(s: string, len: number): string { return s + ' '.repeat(Math.max(0, len - s.length)); }
 const SEP = '─';
@@ -249,16 +258,21 @@ function calculate(inputs: Record<string, string>): string[] {
   } else {
     const halfImgs = Math.max(1, Math.round(imgs / 2));
     const halfCost = halfImgs * perImageCost;
-    out.push('• Cut volume in half: Save $' + fmt(monthlyCost - halfCost) + '/mo ($' + fmt(monthlyCost) + ' → $' + fmt(halfCost) + ')');
+    out.push('• Cut volume in half: Save $' + fmtNum(monthlyCost - halfCost) + '/mo ($' + fmtNum(monthlyCost) + ' → $' + fmtNum(halfCost) + ')');
   }
   const sd4 = PROVIDERS['stable-diffusion-4'];
+  // P163：SD 4 / Ideogram 3 / DALL-E 3 的单价全部由数据集派生 ——
+  // 写死会在 bot 刷新价格后失真（实测：写死的 "13x" 只在 Ideogram 3 上恰好正确，
+  // Flux Pro 实为 16.7x；SD 4 的 $0.003 若变动，除数也要跟着变）。
+  const ideogram = PROVIDERS['ideogram-3'];
+  const dalle3 = PROVIDERS['dalle-3'];
   const sd4Cost = imgs * sd4.perImage;
   const currentCost = p.isSubscription ? bestTier : monthlyCost;
   const sd4Savings = currentCost - sd4Cost;
   if (sd4Savings > 0) {
-    out.push('• Switch to SD 4 API ($0.003/img): $' + fmt(sd4Cost) + '/mo  (saves $' + fmt(sd4Savings) + '/mo)');
+    out.push('• Switch to SD 4 API ($' + fmtPrice3(sd4.perImage) + '/img): $' + fmtNum(sd4Cost) + '/mo  (saves $' + fmtNum(sd4Savings) + '/mo)');
   } else {
-    out.push('• Switch to SD 4 API: $' + fmt(sd4Cost) + '/mo  (already cheaper)');
+    out.push('• Switch to SD 4 API: $' + fmtNum(sd4Cost) + '/mo  (already cheaper)');
   }
   if (!p.isSubscription) {
     const subAlt = sortedProviders.find(prov => prov.isSubscription);
@@ -266,22 +280,22 @@ function calculate(inputs: Record<string, string>): string[] {
       const subKey = Object.keys(PROVIDERS).find(k => PROVIDERS[k] === subAlt);
       const subBasic = subKey && SUB_TIERS[subKey] ? SUB_TIERS[subKey][0] : 10;
       if (subBasic < monthlyCost) {
-        out.push('• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): saves $' + fmt(monthlyCost - subBasic) + '/mo');
+        out.push('• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): saves $' + fmtNum(monthlyCost - subBasic) + '/mo');
       } else {
-        out.push('• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): +$' + fmt(subBasic - monthlyCost) + '/mo vs pay-per-image');
+        out.push('• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): +$' + fmtNum(subBasic - monthlyCost) + '/mo vs pay-per-image');
       }
     }
   } else {
     const cheapestApi = sortedProviders.filter(prov => !prov.isSubscription).sort((a, b) => a.perImage - b.perImage)[0];
     if (cheapestApi) {
       const altCost = imgs * cheapestApi.perImage;
-      out.push('• Drop subscription, go per-image (' + cheapestApi.name + '): $' + fmt(altCost) + '/mo  (vs $' + bestTier + '/mo)');
+      out.push('• Drop subscription, go per-image (' + cheapestApi.name + '): $' + fmtNum(altCost) + '/mo  (vs $' + bestTier + '/mo)');
     }
   }
   if (p.isSubscription) {
     out.push('• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $0 extra (sub is fixed)');
   } else {
-    out.push('• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $' + fmt(imgs * 2 * perImageCost) + '/mo');
+    out.push('• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $' + fmtNum(imgs * 2 * perImageCost) + '/mo');
   }
 
   // Section 6: Use-case recommendation (NEW)
@@ -290,20 +304,24 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push(SEP.repeat(50));
   out.push('• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)');
   out.push('• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)');
-  out.push('• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)');
+  out.push('• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($' + fmtPrice3(sd4.perImage) + '/image)');
   out.push('• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)');
   out.push('• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)');
   out.push('');
   out.push('💡 For your case (' + lc(imgs) + ' imgs/mo via ' + p.name + '):');
-  if (p.perImage >= 0.08 && imgs < 500) {
-    const altCost = imgs * 0.04;
-    out.push('   Switch to Ideogram 3 ($0.04/img) to save $' + fmt(monthlyCost - altCost) + '/mo with similar quality.');
-  } else if (p.perImage >= 0.04 && imgs < 100) {
-    const altCost = imgs * 0.003;
-    out.push('   At <100 imgs/mo, SD 4 API is 13x cheaper ($' + fmt(altCost) + ' vs $' + fmt(monthlyCost) + '/mo).');
+  if (p.perImage >= dalle3.perImage && imgs < 500) {
+    const altCost = imgs * ideogram.perImage;
+    out.push('   Switch to Ideogram 3 ($' + fmtPrice3(ideogram.perImage) + '/img) to save $' + fmtNum(monthlyCost - altCost) + '/mo with similar quality.');
+  } else if (p.perImage >= ideogram.perImage && imgs < 100) {
+    const altCost = imgs * sd4.perImage;
+    // P163 D2：倍数必须由当前单价算出 —— 写死的 "13x" 只在 Ideogram 3
+    // ($0.04) 上恰好正确，Flux Pro ($0.05) 实为 16.7x。
+    // 除数也必须是数据集单价（sd4.perImage），不是字面量 0.003。
+    const sd4Ratio = Math.round(perImageCost / sd4.perImage);
+    out.push('   At <100 imgs/mo, SD 4 API is ' + sd4Ratio + 'x cheaper ($' + fmtNum(altCost) + ' vs $' + fmtNum(monthlyCost) + '/mo).');
   } else if (p.isSubscription && imgs < 100) {
-    const altCost = imgs * 0.04;
-    out.push('   Subscription is underutilized. Per-image (Ideogram 3) would be ~$' + fmt(altCost) + '/mo.');
+    const altCost = imgs * ideogram.perImage;
+    out.push('   Subscription is underutilized. Per-image (Ideogram 3) would be ~$' + fmtNum(altCost) + '/mo.');
   } else {
     out.push('   Your current choice is well-matched to your volume and quality needs.');
   }
@@ -326,7 +344,7 @@ const customFn =
 
   "var ST={mj:[10,30,60,120],leo:[12,29,49]};" +
   "var AM={standard:1,hd:1.3,ultra:1.8};" +
-  "function fm(n){return '$'+n.toFixed(2)}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
+  "function fm(n){return '$'+n.toFixed(2)}function fn(n){return n.toFixed(2)}function fp3(n){var s=n.toFixed(3);return s.indexOf('.')>0?s.replace(/0+$/,'').replace(/\.$/,''):s}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
   "var SEP3='─';" +
   "var pk=inputs.provider||'dalle-3';var p=PS[pk]||PS['dalle-3'];" +
   "var im=Math.max(1,Math.min(1e6,cnn(parseInt(inputs.imagesPerMonth))||100));" +
@@ -422,34 +440,34 @@ const customFn =
   "o.push('');" +
   "o.push('🔄 What-If Scenarios:');o.push(SEP3.repeat(50));" +
   "if(p.is){o.push('• Cut volume to 50% ('+lc(Math.round(im/2))+' imgs/mo): Save $0/mo (subscription is fixed)');}" +
-  "else{var hi=Math.max(1,Math.round(im/2));var hc=hi*pic;o.push('• Cut volume in half: Save $'+fm(mc-hc)+'/mo ($'+fm(mc)+' → $'+fm(hc)+')');}" +
-  "var sdc=im*0.003;var cur=p.is?bt:mc;var sav=cur-sdc;" +
-  "if(sav>0){o.push('• Switch to SD 4 API ($0.003/img): $'+fm(sdc)+'/mo  (saves $'+fm(sav)+'/mo)');}" +
-  "else{o.push('• Switch to SD 4 API: $'+fm(sdc)+'/mo  (already cheaper)');}" +
+  "else{var hi=Math.max(1,Math.round(im/2));var hc=hi*pic;o.push('• Cut volume in half: Save $'+fn(mc-hc)+'/mo ($'+fn(mc)+' → $'+fn(hc)+')');}" +
+  "var sdc=im*PS['stable-diffusion-4'].pi;var cur=p.is?bt:mc;var sav=cur-sdc;" +
+  "if(sav>0){o.push('• Switch to SD 4 API ($'+fp3(PS['stable-diffusion-4'].pi)+'/img): $'+fn(sdc)+'/mo  (saves $'+fn(sav)+'/mo)');}" +
+  "else{o.push('• Switch to SD 4 API: $'+fn(sdc)+'/mo  (already cheaper)');}" +
   "if(!p.is){" +
   "var sa2=sp.filter(function(x){return x.is;})[0];" +
   "if(sa2){var sak2=Object.keys(PS).find(function(kk){return PS[kk]===sa2;})||'';" +
   "var ismj3=sak2.indexOf('midjourney')>=0;var sb2=ismj3?ST.mj[0]:ST.leo[0];" +
-  "if(sb2<mc){o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): saves $'+fm(mc-sb2)+'/mo');}" +
-  "else{o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): +$'+fm(sb2-mc)+'/mo vs pay-per-image');}" +
+  "if(sb2<mc){o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): saves $'+fn(mc-sb2)+'/mo');}" +
+  "else{o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): +$'+fn(sb2-mc)+'/mo vs pay-per-image');}" +
   "}else{" +
   "var cap=sp.filter(function(x){return !x.is;}).sort(function(a,b){return a.pi-b.pi;})[0];" +
-  "if(cap){var ac2=im*cap.pi;o.push('• Drop subscription, go per-image ('+cap.n+'): $'+fm(ac2)+'/mo  (vs $'+bt+'/mo)');}}" +
+  "if(cap){var ac2=im*cap.pi;o.push('• Drop subscription, go per-image ('+cap.n+'): $'+fn(ac2)+'/mo  (vs $'+bt+'/mo)');}}" +
   "}" +
   "if(p.is){o.push('• Double volume to '+lc(im*2)+' imgs/mo: $0 extra (sub is fixed)');}" +
-  "else{o.push('• Double volume to '+lc(im*2)+' imgs/mo: $'+fm(im*2*pic)+'/mo');}" +
+  "else{o.push('• Double volume to '+lc(im*2)+' imgs/mo: $'+fn(im*2*pic)+'/mo');}" +
   "o.push('');" +
   "o.push('🎯 Best Provider by Use Case:');o.push(SEP3.repeat(50));" +
   "o.push('• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)');" +
   "o.push('• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)');" +
-  "o.push('• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)');" +
+  "o.push('• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($'+fp3(PS['stable-diffusion-4'].pi)+'/image)');" +
   "o.push('• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)');" +
   "o.push('• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)');" +
   "o.push('');" +
   "o.push('💡 For your case ('+lc(im)+' imgs/mo via '+p.n+'):');" +
-  "if(p.pi>=0.08&&im<500){var ac3=im*0.04;o.push('   Switch to Ideogram 3 ($0.04/img) to save $'+fm(mc-ac3)+'/mo with similar quality.');}" +
-  "else if(p.pi>=0.04&&im<100){var ac3=im*0.003;o.push('   At <100 imgs/mo, SD 4 API is 13x cheaper ($'+fm(ac3)+' vs $'+fm(mc)+'/mo).');}" +
-  "else if(p.is&&im<100){var ac3=im*0.04;o.push('   Subscription is underutilized. Per-image (Ideogram 3) would be ~$'+fm(ac3)+'/mo.');}" +
+  "if(p.pi>=PS['dalle-3'].pi&&im<500){var ac3=im*PS['ideogram-3'].pi;o.push('   Switch to Ideogram 3 ($'+fp3(PS['ideogram-3'].pi)+'/img) to save $'+fn(mc-ac3)+'/mo with similar quality.');}" +
+  "else if(p.pi>=PS['ideogram-3'].pi&&im<100){var ac3=im*PS['stable-diffusion-4'].pi;o.push('   At <100 imgs/mo, SD 4 API is '+Math.round(pic/PS['stable-diffusion-4'].pi)+'x cheaper ($'+fn(ac3)+' vs $'+fn(mc)+'/mo).');}" +
+  "else if(p.is&&im<100){var ac3=im*PS['ideogram-3'].pi;o.push('   Subscription is underutilized. Per-image (Ideogram 3) would be ~$'+fn(ac3)+'/mo.');}" +
   "else{o.push('   Your current choice is well-matched to your volume and quality needs.');}" +
   "return o;";
 
@@ -487,23 +505,22 @@ const engine: ToolEngine = {
     { key: 'artistic',    emoji: '🖼️', fields: { provider: 'flux-pro',               imagesPerMonth: '800',  resolution: '2048×2048', batchSize: '2', advancedMode: 'hd'       } },
   ],
   staticExamples: [
-    '\n🎨 DALL-E 3 Cost Estimate\n\nQuality: Very High | Resolution: 1024×1024 | Batch: 1/gen\nPricing: Per-Image $0.080\n\n💰 Cost Summary\n──────────────────────────────────────────────────\nPer Image: $0.08\nMonthly Cost (100 images): $8.00\nAnnual Cost: $96.00\n\nDaily Avg: $0.27 (3 images/day)\n\n📊 All Providers — Monthly Cost at 100 images/mo\n──────────────────────────────────────────────────\n   DALL-E 4              ███████████████████████████████████   $12.00\n   DALL-E 3              ███████████████████████               $8.00\n   Midjourney V7 (sub)   █████████████████████████████         $10.00/mo\n✅ SD 4 (API)            █                                     $0.30\n   Ideogram 3            ████████████                          $4.00\n   Flux Pro              ███████████████                       $5.00\n   Leonardo AI (sub)     ███████████████████████████████████   $12.00/mo\n\n🩺 Cost Health:\n──────────────────────────────────────────────────\n• 🟡 Mid-market — $0.08/image is around the average.\n• ✅ Per-image is correct for 100 imgs/mo. Break-even: 125 imgs.\n\n📋 Subscription vs API — Price Comparison\n──────────────────────────────────────────────────\nVolume     | DALL-E 4       | DALL-E 3       | Midjourney V7  | SD 4 (API)     | Ideogram 3     | Flux Pro       | Leonardo AI   \n─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n50         | $6.00          | $4.00          | $10.00         | $0.15          | $2.00          | $2.50          | $12.00        \n200        | $24.00         | $16.00         | $10.00         | $0.60          | $8.00          | $10.00         | $12.00        \n500        | $60.00         | $40.00         | $30.00         | $1.50          | $20.00         | $25.00         | $29.00        \n1,000      | $120.00        | $80.00         | $30.00         | $3.00          | $40.00         | $50.00         | $29.00        \n5,000      | $600.00        | $400.00        | $120.00        | $15.00         | $200.00        | $250.00        | $49.00        \n\n⚖️ Break-Even: When Subscription Beats Per-Image\n──────────────────────────────────────────────────\n  DALL-E 4 → Midjourney V7 ($10/mo): 84 imgs/mo break-even\n  DALL-E 3 → Midjourney V7 ($10/mo): 125 imgs/mo break-even\n  SD 4 (API) → Midjourney V7 ($10/mo): 3,334 imgs/mo break-even\n  Ideogram 3 → Midjourney V7 ($10/mo): 250 imgs/mo break-even\n  Flux Pro → Midjourney V7 ($10/mo): 200 imgs/mo break-even\n  DALL-E 4 → Leonardo AI ($12/mo): 100 imgs/mo break-even\n  DALL-E 3 → Leonardo AI ($12/mo): 150 imgs/mo break-even\n  SD 4 (API) → Leonardo AI ($12/mo): 4,000 imgs/mo break-even\n  Ideogram 3 → Leonardo AI ($12/mo): 300 imgs/mo break-even\n  Flux Pro → Leonardo AI ($12/mo): 240 imgs/mo break-even\n\n📈 Volume Scenarios at Different Batch Sizes\n──────────────────────────────────────────────────\nBatch Size | Images/Mo | Cost/Mo    | Generations Needed\n──────────┼───────────┼────────────┼───────────────────\n1         │ 100       │ $8.00      │ 100 runs of 1 imgs each\n4         │ 100       │ $8.00      │ 25 runs of 4 imgs each\n8         │ 100       │ $8.00      │ 13 runs of 8 imgs each\n16        │ 100       │ $8.00      │ 7 runs of 16 imgs each\n32        │ 100       │ $8.00      │ 4 runs of 32 imgs each\n\n💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.\n\n🔄 What-If Scenarios:\n──────────────────────────────────────────────────\n• Cut volume in half: Save $$4.00/mo ($$8.00 → $$4.00)\n• Switch to SD 4 API ($0.003/img): $$0.30/mo  (saves $$7.70/mo)\n• Switch to Midjourney V7 ($10/mo): +$$2.00/mo vs pay-per-image\n• Double volume to 200 imgs/mo: $$16.00/mo\n\n🎯 Best Provider by Use Case:\n──────────────────────────────────────────────────\n• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)\n• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)\n• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)\n• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)\n• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)\n\n💡 For your case (100 imgs/mo via DALL-E 3):\n   Switch to Ideogram 3 ($0.04/img) to save $$4.00/mo with similar quality.',
-    '🔄 What-If Scenarios:\n──────────────────────────────────────────────────\n• Cut volume in half: Save $4.00/mo ($8.00 → $4.00)\n• Switch to SD 4 API ($0.003/img): $0.30/mo  (saves $7.70/mo)\n• Switch to Midjourney V7 ($10/mo): +$2.00/mo vs pay-per-image\n• Double volume to 200 imgs/mo: $16.00/mo\n\n🎯 Best Provider by Use Case:\n──────────────────────────────────────────────────\n• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)\n• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)\n• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)\n• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)\n• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)\n\n💡 For your case (100 imgs/mo via DALL-E 3):\n   At <100 imgs/mo, SD 4 API is 13x cheaper ($0.30 vs $8.00/mo).',
+    '\n🎨 DALL-E 3 Cost Estimate\n\nQuality: Very High | Resolution: 1024×1024 | Batch: 1/gen\nPricing: Per-Image $0.080\n\n💰 Cost Summary\n──────────────────────────────────────────────────\nPer Image: $0.08\nMonthly Cost (100 images): $8.00\nAnnual Cost: $96.00\n\nDaily Avg: $0.27 (3 images/day)\n\n📊 All Providers — Monthly Cost at 100 images/mo\n──────────────────────────────────────────────────\n   DALL-E 4              ███████████████████████████████████   $12.00\n   DALL-E 3              ███████████████████████               $8.00\n   Midjourney V7 (sub)   █████████████████████████████         $10.00/mo\n✅ SD 4 (API)            █                                     $0.30\n   Ideogram 3            ████████████                          $4.00\n   Flux Pro              ███████████████                       $5.00\n   Leonardo AI (sub)     ███████████████████████████████████   $12.00/mo\n\n🩺 Cost Health:\n──────────────────────────────────────────────────\n• 🟡 Mid-market — $0.08/image is around the average.\n• ✅ Per-image is correct for 100 imgs/mo. Break-even: 125 imgs.\n\n📋 Subscription vs API — Price Comparison\n──────────────────────────────────────────────────\nVolume     | DALL-E 4       | DALL-E 3       | Midjourney V7  | SD 4 (API)     | Ideogram 3     | Flux Pro       | Leonardo AI   \n─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n50         | $6.00          | $4.00          | $10.00         | $0.15          | $2.00          | $2.50          | $12.00        \n200        | $24.00         | $16.00         | $10.00         | $0.60          | $8.00          | $10.00         | $12.00        \n500        | $60.00         | $40.00         | $30.00         | $1.50          | $20.00         | $25.00         | $29.00        \n1,000      | $120.00        | $80.00         | $30.00         | $3.00          | $40.00         | $50.00         | $29.00        \n5,000      | $600.00        | $400.00        | $120.00        | $15.00         | $200.00        | $250.00        | $49.00        \n\n⚖️ Break-Even: When Subscription Beats Per-Image\n──────────────────────────────────────────────────\n  DALL-E 4 → Midjourney V7 ($10/mo): 84 imgs/mo break-even\n  DALL-E 3 → Midjourney V7 ($10/mo): 125 imgs/mo break-even\n  SD 4 (API) → Midjourney V7 ($10/mo): 3,334 imgs/mo break-even\n  Ideogram 3 → Midjourney V7 ($10/mo): 250 imgs/mo break-even\n  Flux Pro → Midjourney V7 ($10/mo): 200 imgs/mo break-even\n  DALL-E 4 → Leonardo AI ($12/mo): 100 imgs/mo break-even\n  DALL-E 3 → Leonardo AI ($12/mo): 150 imgs/mo break-even\n  SD 4 (API) → Leonardo AI ($12/mo): 4,000 imgs/mo break-even\n  Ideogram 3 → Leonardo AI ($12/mo): 300 imgs/mo break-even\n  Flux Pro → Leonardo AI ($12/mo): 240 imgs/mo break-even\n\n📈 Volume Scenarios at Different Batch Sizes\n──────────────────────────────────────────────────\nBatch Size | Images/Mo | Cost/Mo    | Generations Needed\n──────────┼───────────┼────────────┼───────────────────\n1         │ 100       │ $8.00      │ 100 runs of 1 imgs each\n4         │ 100       │ $8.00      │ 25 runs of 4 imgs each\n8         │ 100       │ $8.00      │ 13 runs of 8 imgs each\n16        │ 100       │ $8.00      │ 7 runs of 16 imgs each\n32        │ 100       │ $8.00      │ 4 runs of 32 imgs each\n\n💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.\n\n🔄 What-If Scenarios:\n──────────────────────────────────────────────────\n• Cut volume in half: Save $4.00/mo ($8.00 → $4.00)\n• Switch to SD 4 API ($0.003/img): $0.30/mo  (saves $7.70/mo)\n• Switch to Midjourney V7 ($10/mo): +$2.00/mo vs pay-per-image\n• Double volume to 200 imgs/mo: $16.00/mo\n\n🎯 Best Provider by Use Case:\n──────────────────────────────────────────────────\n• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)\n• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)\n• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)\n• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)\n• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)\n\n💡 For your case (100 imgs/mo via DALL-E 3):\n   Switch to Ideogram 3 ($0.04/img) to save $4.00/mo with similar quality.',
   ],
   faq: [
-    { q: 'Which AI image generator is cheapest in 2026?', a: 'Stable Diffusion 4 via API at $0.003/image is by far the cheapest — $3/mo for 1000 images. For subscription-based, Midjourney V7 at $10-120/mo and Leonardo AI at $12-49/mo become the cheapest at higher volumes (200+ images/month). DALL-E 3 ($0.08) and Ideogram 3 ($0.04) are the mid-range per-image options.' },
-    { q: 'Should I pay per image or use a subscription?', a: 'For under 100 images/month: pay-per-image (DALL-E 3 or SD 4) is cheapest. For 100-500/month: Midjourney Basic ($10/mo) or Ideogram 3. For 500-2000/month: Midjourney Pro ($30/mo) or Leonardo ($29/mo). For 5,000+/month: Midjourney Mega ($60-120/mo) or self-hosted SD 4. Subscriptions offer unlimited or high-volume relaxed generation.' },
+    { q: 'Which AI image generator is cheapest in 2026?', a: 'Stable Diffusion 4 via API at {{liveImagePerImageTrim:stable-diffusion-4}}/image is by far the cheapest — {{liveImageMonthly:stable-diffusion-4|1000}}/mo for 1000 images. For subscription-based, Midjourney V7 at {{liveImageSubRange:midjourney-v7}} and Leonardo AI at {{liveImageSubRange:leonardo}} become the cheapest at higher volumes (200+ images/month). DALL-E 3 ({{liveImagePerImageTrim:dalle-3}}) and Ideogram 3 ({{liveImagePerImageTrim:ideogram-3}}) are the mid-range per-image options.' },
+    { q: 'Should I pay per image or use a subscription?', a: 'For under 100 images/month: pay-per-image (DALL-E 3 or SD 4) is cheapest. For 100-500/month: Midjourney Basic ({{liveImageSubTier:midjourney-v7|0}}/mo) or Ideogram 3. For 500-2000/month: Midjourney Pro ({{liveImageSubTier:midjourney-v7|1}}/mo) or Leonardo ({{liveImageSubTier:leonardo|1}}/mo). For 5,000+/month: Midjourney Mega ({{liveImageSubTier:midjourney-v7|2}}-{{liveImageSubTier:midjourney-v7|3}}/mo) or self-hosted SD 4. Subscriptions offer unlimited or high-volume relaxed generation.' },
     { q: 'Which provider is best for text in images?', a: 'Ideogram 3 is the undisputed leader for text rendering in images (logos, signs, UI mockups). Flux Pro is excellent for text. DALL-E 4 has significantly improved text accuracy. Midjourney V7 still struggles with longer text strings. For any image requiring readable text, choose Ideogram 3 first.' },
     { q: 'Can I use AI-generated images commercially?', a: 'Yes, for all major platforms. DALL-E (OpenAI) and Midjourney grant full commercial rights to generated images. Stable Diffusion models vary by license — check the specific model. Leonardo AI grants commercial rights on paid plans. Always review the latest terms of service, especially for trademark use.' },
     { q: 'What resolution should I choose for my use case?', a: 'For web/social media: 1024x1024 is sufficient. For print/magazines: 2048x2048 or higher. For widescreen/banners: 1792x1024 (DALL-E). For mobile stories: 1024x1792 (DALL-E). Note: DALL-E 3/4 charge the same for all resolutions, making HD the default choice if quality matters.' },
     { q: 'How does Midjourney V7 compare to DALL-E 4?', a: 'Midjourney V7 produces more aesthetically pleasing, artistic images with superior lighting and composition — preferred by designers and artists. DALL-E 4 excels at following complex, multi-object prompts and renders text more accurately. For creative/artistic work, Midjourney wins. For precise, instruction-following commercial work, DALL-E 4 is better.' },
-    { q: 'What is the best provider for solopreneurs on a budget?', a: 'For absolute minimum cost: Stable Diffusion 4 API at $0.003/image (5000 images = $15/mo). For best quality/cost balance: Ideogram 3 at $0.04/image (500 images = $20/mo). For unlimited creative freedom: Midjourney V7 Basic at $10/mo. Most solopreneurs benefit from a combo: Midjourney for creative + Ideogram for text-heavy images.' },
-    { q: "What is the cheapest image generation API in 2026?", a: "Together AI ($0.0008/image for SDXL) and Stability AI direct ($0.003-$0.02) are the cheapest at SDXL quality. For premium DALL-E 3 quality: $0.04-0.08/image. For Flux Pro: $0.05/image. Cost varies 50-100x between providers at the same quality tier." },
-    { q: "How do I choose between SDXL, DALL-E, and Flux?", a: "SDXL: open-source, cheap, $0.001-0.01/image, good for high-volume. DALL-E 3: best instruction following, $0.04-0.08/image, premium quality. Flux Pro: best aesthetic + prompt adherence, $0.05/image. Pick based on volume + quality needs. SDXL for 1000s/day, DALL-E for premium creative." },
-    { q: "How do I reduce image generation costs?", a: "Batch jobs, use cheaper models for drafts, cache common prompts, downgrade to lower resolution when possible, use LoRA fine-tuning to specialize rather than re-prompting, use Black Forest Labs FLUX schnell for fast drafts ($0.003/image)." },
+    { q: 'What is the best provider for solopreneurs on a budget?', a: 'For absolute minimum cost: Stable Diffusion 4 API at {{liveImagePerImageTrim:stable-diffusion-4}}/image (5000 images = {{liveImageMonthly:stable-diffusion-4|5000}}/mo). For best quality/cost balance: Ideogram 3 at {{liveImagePerImageTrim:ideogram-3}}/image (500 images = {{liveImageMonthly:ideogram-3|500}}/mo). For unlimited creative freedom: Midjourney V7 Basic at {{liveImageSubTier:midjourney-v7|0}}/mo. Most solopreneurs benefit from a combo: Midjourney for creative + Ideogram for text-heavy images.' },
+    { q: "What is the cheapest image generation API in 2026?", a: "Together AI ($0.0008/image for SDXL) and Stability AI direct ($0.003-$0.02) are the cheapest at SDXL quality. For premium DALL-E 3 quality: {{liveImagePerImageTrim:dalle-3}}-{{liveImagePerImageTrim:dalle-4}}/image. For Flux Pro: {{liveImagePerImageTrim:flux-pro}}/image. Cost varies by an order of magnitude between providers at the same quality tier." },
+    { q: "How do I choose between SDXL, DALL-E, and Flux?", a: "SDXL: open-source, cheap, a fraction of a cent per image, good for high-volume. DALL-E 3: best instruction following, {{liveImagePerImageTrim:dalle-3}}-{{liveImagePerImageTrim:dalle-4}}/image, premium quality. Flux Pro: best aesthetic + prompt adherence, {{liveImagePerImageTrim:flux-pro}}/image. Pick based on volume + quality needs. SDXL for 1000s/day, DALL-E for premium creative." },
+    { q: "How do I reduce image generation costs?", a: "Batch jobs, use cheaper models for drafts, cache common prompts, downgrade to lower resolution when possible, use LoRA fine-tuning to specialize rather than re-prompting, use Black Forest Labs FLUX schnell for fast drafts." },
     { q: "What is the resolution-pricing tradeoff?", a: "Higher resolution = more compute = higher cost. 1024x1024 vs 512x512 is typically 4x the cost. For thumbnails and social previews, 512x512 is sufficient. For product photos and hero images, 1024x1024+ is required. Use 1024x1024 only when display demands it." },
-    { q: "Should I use image gen or stock photos?", a: "Stock photos: $0.10-5/image, predictable, often legally safer. Image gen: $0.001-0.10/image, customized, unique. For high-volume marketing visuals, image gen wins. For one-off hero images, brand-specific needs, or product photography, stock + Photoshop hybrid is often better." },
-    { q: "How do I estimate cost for a content pipeline?", a: "Sum (images_pipeline × cost_per_image). For 1000 blog posts/month at 1 hero + 3 inline images each = 4000 images. At $0.01/image (mid-tier): $40/month. At $0.05/image (premium): $200/month. Track images per article, optimize prompts to reduce retries." },
+    { q: "Should I use image gen or stock photos?", a: "Stock photos: $0.10-5/image, predictable, often legally safer. Image gen: a fraction of a cent per image, customized, unique. For high-volume marketing visuals, image gen wins. For one-off hero images, brand-specific needs, or product photography, stock + Photoshop hybrid is often better." },
+    { q: "How do I estimate cost for a content pipeline?", a: "Sum (images_pipeline × cost_per_image). For 1000 blog posts/month at 1 hero + 3 inline images each = 4000 images. At a mid-tier per-image price: {{liveImageMonthly:stable-diffusion-4|4000}}/month for 4000 images. At a premium per-image price: {{liveImageMonthly:dalle-4|4000}}/month for the same 4000 images. Track images per article, optimize prompts to reduce retries." },
     { q: "What is the difference between real-time and batch image gen?", a: "Real-time: 1-5s per image, for interactive UIs. Batch: 50-70% off, 1-24h turnaround, for bulk generation. Use batch for: product catalogs, content libraries, marketing assets. Reserve real-time for: user-facing apps, on-demand generation." },
     { q: "How do I handle image gen failures and retries?", a: "Most APIs have 5-10% failure rate (content filters, model errors, timeouts). Implement retry with exponential backoff (3-5 attempts). Track failure rate by prompt. For high-value outputs, generate 2-3 variants and pick the best. Budget +10-20% for retries." },
   ],

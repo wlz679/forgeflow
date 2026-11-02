@@ -29,10 +29,26 @@ const STORAGE_COST_PER_GB = PRICING.gpu.storagePerGB;
 // Data processing cost per GB
 const DATA_PROCESS_COST_PER_GB = PRICING.training.dataProcessPerGB;
 
+// P163 D3：Spot / Reserved 折扣是**带**（跨 6 家云 GPU 供应商），不是单一百分比。
+// 真相源：PRICING.gpu.providers[*].spotMult / reservedMult（价格乘数）。
+// 实测（2026-10-30）：spotMult ∈ [0.4, 0.7]（= 30-60% off），
+// reservedMult ∈ [0.7, 0.9]（= 10-30% off）。
+// ⇒ 旧的写死 "40% off"（totalCost * 0.6）既不是现货带也不是预留带的代表值。
+const GPU_PROVIDER_MULTS = Object.values(PRICING.gpu.providers as any) as Array<{
+  spotMult: number;
+  reservedMult: number;
+}>;
+const SPOT_MULT_MIN = Math.min(...GPU_PROVIDER_MULTS.map((p) => p.spotMult));
+const SPOT_MULT_MAX = Math.max(...GPU_PROVIDER_MULTS.map((p) => p.spotMult));
+const RESERVED_MULT_MIN = Math.min(...GPU_PROVIDER_MULTS.map((p) => p.reservedMult));
+const RESERVED_MULT_MAX = Math.max(...GPU_PROVIDER_MULTS.map((p) => p.reservedMult));
+
 // Epoch time multiplier — LoRA is faster per epoch
 const LORA_EPOCH_SPEEDUP = PRICING.training.loraSpeedup; // LoRA epoch takes 35% of full fine-tune time
 
 function fmt(n: number): string { return '$' + n.toFixed(2); }
+// P163 D1：fmt() 已带 '$'，调用处再拼一个就成 '$$'。
+function fmtNum(n: number): string { return n.toFixed(2); }
 function lc(n: number): string { return n.toLocaleString(); }
 function pad(s: string, len: number): string { return s + ' '.repeat(Math.max(0, len - s.length)); }
 const SEP = '─';
@@ -81,7 +97,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push(SEP.repeat(50));
   out.push('GPU Compute:  ' + pad(gpuCount + '× ' + gpu.name + ' @ ' + fmt(gpu.hourlyRate) + '/hr × ' + lc(totalGpuHours) + ' hrs', 45) + fmt(gpuCost));
   out.push('Cloud Storage: ' + pad(lc(cloudStorageGB) + ' GB @ $' + STORAGE_COST_PER_GB.toFixed(2) + '/GB/mo × ' + trainingMonths.toFixed(1) + ' mo', 45) + fmt(storageCost));
-  out.push('Data Processing:' + pad(' $' + fmt(dataProcessCost), 45) + fmt(dataProcessCost));
+  out.push('Data Processing:' + pad(' ' + fmt(dataProcessCost), 45) + fmt(dataProcessCost));
   out.push(SEP.repeat(50));
   out.push('Total Estimated Cost: ' + pad('', 23) + fmt(totalCost));
   out.push('');
@@ -129,12 +145,22 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push(SEP.repeat(50));
   const optimistic = totalCost * 0.7;
   const pessimistic = totalCost * 1.5;
-  const withReserved = totalCost * 0.6; // spot instance savings
+  // P163 D3：给出**带**而不是单一百分比 —— 乘数区间来自数据集
+  // （spotMult ∈ [0.4,0.7]、reservedMult ∈ [0.7,0.9]）。
+  const withSpotLow = totalCost * SPOT_MULT_MIN;
+  const withSpotHigh = totalCost * SPOT_MULT_MAX;
+  const withReservedLow = totalCost * RESERVED_MULT_MIN;
+  const withReservedHigh = totalCost * RESERVED_MULT_MAX;
+  const spotOffLow = Math.round((1 - SPOT_MULT_MAX) * 100);
+  const spotOffHigh = Math.round((1 - SPOT_MULT_MIN) * 100);
+  const reservedOffLow = Math.round((1 - RESERVED_MULT_MAX) * 100);
+  const reservedOffHigh = Math.round((1 - RESERVED_MULT_MIN) * 100);
   out.push('Optimistic (spot instances + optimizations):  ' + fmt(optimistic));
   out.push('Expected:                                      ' + fmt(totalCost));
   out.push('Pessimistic (on-demand + overhead):            ' + fmt(pessimistic));
   out.push('');
-  out.push('With Spot/Reserved Discount (40% off):          ' + fmt(withReserved));
+  out.push('With Spot Discount (' + spotOffLow + '-' + spotOffHigh + '% off):        ' + fmt(withSpotLow) + ' - ' + fmt(withSpotHigh));
+  out.push('With Reserved Discount (' + reservedOffLow + '-' + reservedOffHigh + '% off):     ' + fmt(withReservedLow) + ' - ' + fmt(withReservedHigh));
   out.push('');
 
   // Section 5: Multi-Run Scaling
@@ -177,16 +203,41 @@ function calculate(inputs: Record<string, string>): string[] {
   // 🔄 What-If Scenarios (v3)
   out.push('🔄 What-If Scenarios:');
   out.push(SEP.repeat(60));
+  // P163：full-FT 倍数由数据集派生（loraSpeedup = 0.35 ⇒ 1/0.35 ≈ 2.86 ⇒ 取整 3x），
+  // 与 FAQ 的 {{liveTrainingFullFtMult}} 同源 —— 写死的 3 会在数据集变动后与 FAQ 打架。
+  const FULL_FT_MULT = Math.round(1 / LORA_EPOCH_SPEEDUP);
   if (model.isLoRA) {
-    const fullCost = totalCost * 3;
-    out.push('• Switch to full fine-tune:  ' + fmt(fullCost) + '  (3x cost, but better quality)');
+    const fullCost = totalCost * FULL_FT_MULT;
+    out.push('• Switch to full fine-tune:  ' + fmt(fullCost) + '  (' + FULL_FT_MULT + 'x cost, but better quality)');
   } else {
-    const loraCost = totalCost / 3;
-    out.push('• Switch to LoRA fine-tuning:  ' + fmt(loraCost) + '  (1/3 cost, similar quality for most tasks)');
+    const loraCost = totalCost / FULL_FT_MULT;
+    out.push('• Switch to LoRA fine-tuning:  ' + fmt(loraCost) + '  (1/' + FULL_FT_MULT + ' cost, similar quality for most tasks)');
   }
   out.push('• Halve epochs to ' + Math.max(1, Math.floor(epochs / 2)) + ':  ' + fmt(totalCost / 2) + '  (may need more data to compensate)');
   out.push('• Double epochs to ' + (epochs * 2) + ':  ' + fmt(totalCost * 2) + '  (diminishing returns past 5)');
-  out.push('• Switch to cheaper GPU in same tier:  check RunPod/Vast.ai for 40-50% savings');
+  // P163 D3 同族：旧文案写死「RunPod/Vast.ai for 40-50% savings」。
+  // 实测（2026-10-30）：把 gpu.providers 的 A100 现货价与 training.gpuTypes
+  // 的 A100-80GB 基准（$1.50/hr）比，runpod = 47.3%、vastai = 54.0%
+  // ⇒ 「40-50%」上界被低估。改为按当前 GPU 型号实时算。
+  //
+  // 映射是**机械推导**的：训练 GPU key 的容量后缀去掉后就是 gpu.providers
+  // 的 rate key（A100-80GB → A100、H200-141GB → H200、L40S-48GB → L40S）。
+  // RTX-6000 在 providers 里没有对应项 ⇒ 回退到定性表述，不编数字。
+  const gpuBaseKey = gpuKey.replace(/-\d+GB$/, '');
+  const marketRates = Object.values(PRICING.gpu.providers as any)
+    .map((p: any) => p.rates[gpuBaseKey])
+    .filter((r): r is number => typeof r === 'number');
+  if (marketRates.length > 0) {
+    const cheapestMarket = Math.min(...marketRates);
+    const marketSavingPct = Math.round((1 - cheapestMarket / gpu.hourlyRate) * 100);
+    out.push(
+      '• Switch to cheaper GPU in same tier:  cheapest market rate for ' + gpu.name +
+      ' is $' + fmtNum(cheapestMarket) + '/hr vs $' + fmtNum(gpu.hourlyRate) +
+      '/hr baseline — save ~' + marketSavingPct + '%',
+    );
+  } else {
+    out.push('• Switch to cheaper GPU in same tier:  compare per-GPU-hour rates across cloud providers');
+  }
   out.push('');
 
   return out;
@@ -210,7 +261,8 @@ const customFn =
   "'180B':{h200:64,h100:128,n:'180B (full fine-tune)',isL:false,od:4}," +
   "'405B':{h200:128,h100:256,n:'405B (full train)',isL:false,od:5}};" +
 
-  "var SCG=0.1;var DPCG=1.5;var LES=0.35;" +
+  "var SCG=0.1;var DPCG=1.5;var LES=0.35;var SPMIN=0.4;var SPMAX=0.7;var RPMIN=0.7;var RPMAX=0.9;" +
+
   "function fm2(n){return '$'+n.toFixed(2)}function lc2(n){return n.toLocaleString()}function pd2(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
   "var SEP4='\\u2500';" +
   "var mk=inputs.modelSize||'7B';var m=MS[mk]||MS['7B'];" +
@@ -232,7 +284,7 @@ const customFn =
   "o.push('\\u{1F4B0} Cost Breakdown');o.push(SEP4.repeat(50));" +
   "o.push('GPU Compute:  '+pd2(gc2+'\\u00D7 '+g.n+' @ '+fm2(g.hr)+'/hr \\u00D7 '+lc2(tgh)+' hrs',45)+fm2(gpc));" +
   "o.push('Cloud Storage: '+pd2(lc2(csg)+' GB @ $'+SCG.toFixed(2)+'/GB/mo \\u00D7 '+tm.toFixed(1)+' mo',45)+fm2(sc));" +
-  "o.push('Data Processing:'+pd2(' $'+fm2(dpc),45)+fm2(dpc));" +
+  "o.push('Data Processing:'+pd2(' '+fm2(dpc),45)+fm2(dpc));" +
   "o.push(SEP4.repeat(50));" +
   "o.push('Total Estimated Cost: '+pd2('',23)+fm2(tc));o.push('');" +
   "o.push('\\u{1F4CA} Per-Epoch Tracking');o.push(SEP4.repeat(50));" +
@@ -255,7 +307,10 @@ const customFn =
   "o.push('Optimistic (spot instances + optimizations):  '+fm2(tc*0.7));" +
   "o.push('Expected:                                      '+fm2(tc));" +
   "o.push('Pessimistic (on-demand + overhead):            '+fm2(tc*1.5));" +
-  "o.push('');o.push('With Spot/Reserved Discount (40% off):          '+fm2(tc*0.6));o.push('');" +
+  "o.push('');" +
+  "o.push('With Spot Discount ('+Math.round((1-SPMAX)*100)+'-'+Math.round((1-SPMIN)*100)+'% off):        '+fm2(tc*SPMIN)+' - '+fm2(tc*SPMAX));" +
+  "o.push('With Reserved Discount ('+Math.round((1-RPMAX)*100)+'-'+Math.round((1-RPMIN)*100)+'% off):     '+fm2(tc*RPMIN)+' - '+fm2(tc*RPMAX));" +
+  "o.push('');" +
   "o.push('\\u{1F504} Multi-Run Scaling');o.push(SEP4.repeat(50));" +
   "var rns=[1,3,5,10,25,50];" +
   "var rh='Runs'.padEnd(8);for(var ri=0;ri<rns.length;ri++)rh+=' | '+pd2(lc2(rns[ri]),12);o.push(rh);" +
@@ -302,24 +357,24 @@ const engine: ToolEngine = {
     { key: 'pro-405b', emoji: '👑', fields: { modelSize: '405B', gpuType: 'H200-141GB', gpuCount: '128', trainingHours: '720', epochs: '1', cloudStorage: '5000', dataProcessCost: '2000' } },
   ],
   staticExamples: [
-    '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 8× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  8× A100 80GB @ $1.50/hr × 25.2 hrs           $302.40\nCloud Storage: 500 GB @ $0.10/GB/mo × 0.1 mo                $5.00\nData Processing: $$1000.00                                   $1000.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $1307.40\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $100.80\nPer Epoch Total:    $101.38\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $100.80        | $1101.38        \n2        | $201.60        | $1202.77        \n3        | $302.40        | $1304.15        \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $302.40        (23%)  █████\nStorage: $5.00          (0%)  \nData:    $1000.00       (76%)  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $915.18\nExpected:                                      $1307.40\nPessimistic (on-demand + overhead):            $1961.10\n\nWith Spot/Reserved Discount (40% off):          $784.44\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $1307.40     | $3922.20     | $6537.00     | $13074.00    | $32685.00    | $65370.00   \n\n💡 25.2 GPU-hours ≈ 20,160 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch to full fine-tune:  $3922.20  (3x cost, but better quality)\n• Halve epochs to 1:  $653.70  (may need more data to compensate)\n• Double epochs to 6:  $2614.80  (diminishing returns past 5)\n• Switch to cheaper GPU in same tier:  check RunPod/Vast.ai for 40-50% savings\n',
+    '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 8× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  8× A100 80GB @ $1.50/hr × 25.2 hrs           $302.40\nCloud Storage: 500 GB @ $0.10/GB/mo × 0.1 mo                $5.00\nData Processing: $1000.00                                    $1000.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $1307.40\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $100.80\nPer Epoch Total:    $101.38\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $100.80        | $1101.38        \n2        | $201.60        | $1202.77        \n3        | $302.40        | $1304.15        \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $302.40        (23%)  █████\nStorage: $5.00          (0%)  \nData:    $1000.00       (76%)  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $915.18\nExpected:                                      $1307.40\nPessimistic (on-demand + overhead):            $1961.10\n\nWith Spot Discount (30-60% off):        $522.96 - $915.18\nWith Reserved Discount (10-30% off):     $915.18 - $1176.66\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $1307.40     | $3922.20     | $6537.00     | $13074.00    | $32685.00    | $65370.00   \n\n💡 25.2 GPU-hours ≈ 20,160 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch to full fine-tune:  $3922.20  (3x cost, but better quality)\n• Halve epochs to 1:  $653.70  (may need more data to compensate)\n• Double epochs to 6:  $2614.80  (diminishing returns past 5)\n• Switch to cheaper GPU in same tier:  cheapest market rate for A100 80GB is $0.69/hr vs $1.50/hr baseline — save ~54%\n',
   ],
   faq: [
-    { q: 'How much does it cost to train a 7B model in 2026?', a: 'LoRA fine-tuning a 7B model: $50-500 on 2-4 H100 GPUs (4-24 hrs). Full fine-tuning: $500-5,000. Pre-training from scratch: $5,000-50,000+. With H200 GPUs, a 7B LoRA can complete in 2-4 hours at $3.50/hr/GPU — under $30 for a quick fine-tune. Budget GPU (RTX 6000 at $0.50/hr) can do a 7B LoRA for under $10.' },
+    { q: 'How much does it cost to train a 7B model in 2026?', a: 'LoRA fine-tuning a 7B model: {{liveTrainingGpuCost:H100-80GB|4|4}}-{{liveTrainingGpuCost:H100-80GB|24|4}} on 4 H100 GPUs (4-24 hrs). Full fine-tuning: roughly {{liveTrainingFullFtMult}}x that. Pre-training from scratch: orders of magnitude more. With H200 GPUs, a 7B LoRA can complete in 2-4 hours at {{liveTrainingGpuRate:H200-141GB}}/hr/GPU — under {{liveTrainingGpuCost:H200-141GB|4|2}} for a quick fine-tune on 2 GPUs. Budget GPU (RTX 6000 at {{liveTrainingGpuRate:RTX-6000}}/hr) can do a 7B LoRA for under {{liveTrainingGpuCost:RTX-6000|24|4}}.' },
     { q: 'LoRA vs Full Fine-Tuning — which should I choose?', a: 'LoRA (Low-Rank Adaptation) fine-tunes only ~1% of parameters, reducing GPU memory and cost by 60-80%. Best for: domain adaptation, style transfer, instruction following — most solopreneur use cases. Full fine-tuning updates all parameters and is needed for: teaching entirely new knowledge, major capability changes, or when LoRA underperforms. For 7B-13B models, LoRA is almost always the right first choice.' },
-    { q: 'Which GPU should I use for training?', a: 'H200 141GB (latest): best for 70B+ models, $3.50/hr. H100 80GB: 2-3x faster than A100 for LLMs, $2.50/hr. A100 80GB: standard choice, $1.50/hr — good availability. L40S 48GB: good for 7B-13B LoRA, $0.80/hr. RTX 6000 Ada: budget option for 7B LoRA, $0.50/hr. For most solopreneurs: A100 for anything serious, H100 for speed, RTX 6000 for budget experiments.' },
-    { q: 'How much does cloud storage add to training costs?', a: 'At $0.10/GB/month, storage is usually a minor cost. Dataset storage: 100GB of training data = ~$10/month. Model checkpoints: ~10-100GB per checkpoint. For short training runs (under 1 week), storage is negligible. For long-running experiments, factor in model checkpointing costs. Total storage for most training jobs: $5-50.' },
+    { q: 'Which GPU should I use for training?', a: 'H200 141GB (latest): best for 70B+ models, {{liveTrainingGpuRate:H200-141GB}}/hr. H100 80GB: 2-3x faster than A100 for LLMs, {{liveTrainingGpuRate:H100-80GB}}/hr. A100 80GB: standard choice, {{liveTrainingGpuRate:A100-80GB}}/hr — good availability. L40S 48GB: good for 7B-13B LoRA, {{liveTrainingGpuRate:L40S-48GB}}/hr. RTX 6000 Ada: budget option for 7B LoRA, {{liveTrainingGpuRate:RTX-6000}}/hr. For most solopreneurs: A100 for anything serious, H100 for speed, RTX 6000 for budget experiments.' },
+    { q: 'How much does cloud storage add to training costs?', a: 'At {{liveTrainingStorage}}/GB/month, storage is usually a minor cost. Dataset storage: 100GB of training data = {{liveTrainingStorageFor:100}}/month. Model checkpoints: ~10-100GB per checkpoint. For short training runs (under 1 week), storage is negligible. For long-running experiments, factor in model checkpointing costs. Total storage for most training jobs: {{liveTrainingStorageFor:50}}-{{liveTrainingStorageFor:500}}.' },
     { q: 'Should I train my own model or use an API?', a: 'For 99% of solopreneurs: use an API (DeepSeek V4 Flash, GPT-5 Mini, Claude Haiku). Only train if you need: specialized domain knowledge not in base models, data privacy/air-gap requirements, lower inference costs at high volume (100K+ requests/day), or a unique capability not offered by APIs. Start with prompt engineering + RAG before considering training.' },
-    { q: 'How do I reduce training costs?', a: 'Six proven techniques: (1) LoRA instead of full fine-tuning saves 65%+. (2) Spot/preemptible instances save 40-60%. (3) Gradient checkpointing saves 30-50% GPU memory. (4) Mixed precision (FP16/BF16) doubles throughput. (5) FlashAttention reduces memory by 2-8x. (6) Efficient data loading prevents GPU idle time. Combined, these can reduce costs by 80-90% vs naive full fine-tuning.' },
-    { q: 'What is the cost to train a 405B model?', a: 'Training a 405B model (e.g., Llama 4 scale) requires 128+ H200 GPUs running for weeks/months. Ballpark: 128 H200 GPUs × 720 hrs × $3.50/hr = ~$322K in GPU costs alone. With data processing, storage, and engineering overhead: $500K-$2M total. This is enterprise-only territory. Most solopreneurs should fine-tune existing 7B-70B open models instead.' },
-    { q: "How much does it cost to train a custom LLM?", a: "LLaMA-7B from scratch: ~$50K-200K on 8x A100 for 2-4 weeks. Fine-tuning 7B with LoRA: $50-500. Fine-tuning with full parameters: $1K-10K. RLHF: 5-10x base cost. OpenAI fine-tuning: $3/1M training tokens + 2x inference. Most production use cases only need LoRA fine-tuning." },
-    { q: "What is the difference between LoRA and full fine-tuning?", a: "LoRA (Low-Rank Adaptation): trains small adapter layers, ~1% of parameters, 35% of compute, ~$50-500 for 7B. Full fine-tuning: updates all weights, 100% compute, ~$1K-10K. LoRA quality is 90-95% of full FT for most tasks. Use LoRA unless you have a specific reason." },
+    { q: 'How do I reduce training costs?', a: 'Six proven techniques: (1) LoRA instead of full fine-tuning saves 65%+. (2) Spot/preemptible instances save {{liveTrainingSpotOff}}%. (3) Gradient checkpointing saves 30-50% GPU memory. (4) Mixed precision (FP16/BF16) doubles throughput. (5) FlashAttention reduces memory by 2-8x. (6) Efficient data loading prevents GPU idle time. Combined, these can reduce costs by 80-90% vs naive full fine-tuning.' },
+    { q: 'What is the cost to train a 405B model?', a: 'Training a 405B model (e.g., Llama 4 scale) requires 128+ H200 GPUs running for weeks/months. Ballpark: 128 H200 GPUs × 720 hrs × {{liveTrainingGpuRate:H200-141GB}}/hr = ~{{liveTrainingGpuCost:H200-141GB|720|128}} in GPU costs alone. With data processing, storage, and engineering overhead, the total is a multiple of that GPU figure. This is enterprise-only territory. Most solopreneurs should fine-tune existing 7B-70B open models instead.' },
+    { q: "How much does it cost to train a custom LLM?", a: "LLaMA-7B from scratch: a six-figure sum on 8x A100 for 2-4 weeks. Fine-tuning 7B with LoRA: {{liveTrainingGpuCost:H100-80GB|4|4}}-{{liveTrainingGpuCost:H100-80GB|24|4}}. Fine-tuning with full parameters: roughly {{liveTrainingFullFtMult}}x that. RLHF: 5-10x base cost. OpenAI fine-tuning: metered per training token, plus 2x inference. Most production use cases only need LoRA fine-tuning." },
+    { q: "What is the difference between LoRA and full fine-tuning?", a: "LoRA (Low-Rank Adaptation): trains small adapter layers, ~1% of parameters, 35% of compute, {{liveTrainingGpuCost:H100-80GB|4|4}}-{{liveTrainingGpuCost:H100-80GB|24|4}} for 7B. Full fine-tuning: updates all weights, 100% compute, roughly {{liveTrainingFullFtMult}}x that. LoRA quality is 90-95% of full FT for most tasks. Use LoRA unless you have a specific reason." },
 
     { q: "How long does fine-tuning take?", a: "LoRA on 7B with 100K examples: 4-8 hours on A100. Full fine-tuning 7B: 1-3 days. RLHF on 7B: 1-2 weeks. RLHF on 70B: 1-3 months. Use smaller models (1B-3B) for fast iteration: 1-3 hours. Always validate on a held-out set before scaling compute." },
-    { q: "How do I estimate training cost from dataset size?", a: "Tokens = dataset_examples × avg_tokens_per_example. Training cost = tokens × token_cost + GPU_hours × GPU_rate. For 100K examples × 1000 tokens = 100M tokens. LoRA cost: 100M × $0.07/1M (A100 effective) + setup overhead = $20-200. Full FT: 5-10x more." },
-    { q: "Should I use managed services or self-host?", a: "Managed (OpenAI, Anthropic, AWS Bedrock): $3-25/1M training tokens, no infra, fast to start. Self-host: $1-2/hour GPU, 50-300% cheaper at scale, full control. Use managed for: prototypes, <1M tokens, no custom infra team. Self-host for: production scale, data privacy, model customization." },
+    { q: "How do I estimate training cost from dataset size?", a: "Tokens = dataset_examples × avg_tokens_per_example. Training cost = tokens × token_cost + GPU_hours × GPU_rate. For 100K examples × 1000 tokens = 100M tokens. LoRA cost: 100M tokens × the A100 effective token rate + setup overhead. Full FT: 5-10x more." },
+    { q: "Should I use managed services or self-host?", a: "Managed (OpenAI, Anthropic, AWS Bedrock): metered per training token, no infra, fast to start. Self-host: a low single-digit hourly GPU rate, cheaper at scale, full control. Use managed for: prototypes, <1M tokens, no custom infra team. Self-host for: production scale, data privacy, model customization." },
     { q: "What is RLHF and when do I need it?", a: "RLHF (Reinforcement Learning from Human Feedback) trains models to be helpful/harmless via human preferences. Cost: 5-10x base fine-tuning. Use for: instruction-following, safety, alignment. Skip for: domain-specific tasks (extract, classify, summarize) — supervised fine-tuning is sufficient." },
-    { q: "How do I optimize training cost?", a: "Use LoRA instead of full FT. Use gradient checkpointing (saves 30% memory, +20% time). Use mixed precision (bf16/fp16). Use flash attention 2 (2-4x faster). Use smaller batch sizes with gradient accumulation. Use early stopping. Use cheaper GPU tiers (L4/A10G) when you can." },
+    { q: "How do I optimize training cost?", a: "Use LoRA instead of full FT. Use gradient checkpointing (saves 30% memory, +20% time). Use mixed precision (bf16/fp16). Use flash attention 2 (2-4x faster). Use smaller batch sizes with gradient accumulation. Use early stopping. Use cheaper GPU tiers when you can." },
   ],
   howToUse: [
     'Select your target model size (7B to 405B) — LoRA for 7B/13B, full fine-tune for larger models.',
