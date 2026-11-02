@@ -1,76 +1,10 @@
-// P159 — 2.0「灵魂改造」批次 1：分类页的「决策层」（Category Decision Layer）。
+// P165 —— 分类 B（AI Cost Tools）的决策层。
 //
-// 这是 D6 拍板的批次 1（分类页 19 页）的内容形态。第一版只做 1 个类别
-//（B / ai-cost-tools）做样板，跑通形态与验收判据后再铺其余 11 个类别。
-//
-// ── 这一层为什么必须存在 ──────────────────────────────────────────
-//
-// 实测（GSC 网页表，2026-07-26 → 2026-10-25）：
-//   分类页 19 页 = 1,789 展示 = 全站 13.4%，**0 点击**，加权排名 38.6。
-//   19 个分类页的正文词数中位只有 655（英文页 620）。
-//   组内「模板词」占比 **12.6%** —— 19 个分类页共用同一副「描述骨架」，
-//   是全站唯一带组内模板词的一类 ⇒ AdSense 最可能采样的那类页面。
-//
-// 所以分类页缺的不是「更多字」，而是**这一类工具该怎么组合使用**的答案。
-// 下面这两层正是那个答案：
-//
-//   L1 选型链路（chain）——「先做 A，再做 B，最后校准 C」
-//   L2 工具取舍对照（choices）——「每个工具回答什么问题、什么时候不该用它」
-//
-// ── 两条硬约束 ────────────────────────────────────────────────────
-//
-// 1. **不搬运主题页的基准表。** 那是站内自己制造重复内容，正是 §10.1【C】
-//    刚证明要避开的那条线。分类页给的是**决策层**，主题页给的是**基准表**。
-// 2. **不写价格。** 主题页基准表里的价格目前是手写的静态值，与实时数据集
-//    已经漂移（实测 6 行漂移，最严重的一条输出价差 8.33 倍）⇒ 在价格改成
-//    从 `src/data/ai-pricing.json` 派生之前，分类页**不发布任何价格**。
-//    ⇒ L3「阈值速查」层被这项工作阻塞，暂不实现（见规格文档 §11.4 —— 原写 §10.5，但该规格根本没有 §10.5，只有 §10.1–§10.4；P164 修正这条断链）。
-//
-// ── 数据形状 ──────────────────────────────────────────────────────
-//
-// 每个 step 的 slugs 可以有多个 —— 表示「这一步按你实际情况选一个」，
-// 不是「这些工具串起来都要跑一遍」。choices 必须覆盖该类别的**每一个**工具
-// （守卫钉住），否则用户会在对照表里找不到自己的工具。
+// 内容从 src/data/category-decision-layers.ts 原样迁来（内容未改）。
+import type { CategoryDecisionLayer } from './types';
 
-export type DecisionLang = 'en' | 'zh';
-
-export interface DecisionChainStep {
-  /**
-   * 这一步用到的工具（≥ 1）。
-   * 多个 = 「按你实际在用的那家 / 那类场景选一个」，不是「全部都要跑」。
-   */
-  slugs: string[];
-  /** 这一步在回答什么问题（页面独有的决策说明，不是工具简介的复述） */
-  purpose: Record<DecisionLang, string>;
-}
-
-export interface ToolChoiceRow {
-  /** 工具 slug —— 必须存在于 src/data/tools 注册表且属于该类别 */
-  slug: string;
-  /** 它回答什么问题 */
-  answers: Record<DecisionLang, string>;
-  /** 什么时候该用它（而不是别的那个） */
-  useWhen: Record<DecisionLang, string>;
-}
-
-export interface CategoryDecisionLayer {
-  /** 选型链路的一句话导语 */
-  chainIntro: Record<DecisionLang, string>;
-  /** L1：选型链路 */
-  chain: DecisionChainStep[];
-  /** L2：工具取舍对照表 */
-  choices: ToolChoiceRow[];
-}
-
-/**
- * 按类别 id 索引。目前只有 B —— 其余 11 个类别在样板形态确认后铺开。
- *
- * ⚠️ 类别 id 必须与 `src/data/categories.ts` 的 id 一致；
- *    守卫会穷举 tools 注册表核对「choices 覆盖该类别每一个工具」。
- */
-export const CATEGORY_DECISION_LAYERS: Record<string, CategoryDecisionLayer> = {
-  B: {
-    chainIntro: {
+export const B: CategoryDecisionLayer = {
+chainIntro: {
       en: 'These eight calculators answer four different questions, and mixing them up is the most common way AI bills go wrong. Work down the path below — each step feeds the next.',
       zh: '这 8 个计算器回答的是四个不同的问题，把它们用混是 AI 账单算错最常见的原因。按下面的路径走，每一步的结果都是下一步的输入。',
     },
@@ -203,10 +137,4 @@ export const CATEGORY_DECISION_LAYERS: Record<string, CategoryDecisionLayer> = {
         },
       },
     ],
-  },
 };
-
-/** 取某个类别的决策层；没有配置就返回 null（调用方据此不渲染该区块） */
-export function getCategoryDecisionLayer(categoryId: string): CategoryDecisionLayer | null {
-  return CATEGORY_DECISION_LAYERS[categoryId] ?? null;
-}

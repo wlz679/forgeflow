@@ -19,10 +19,20 @@
 //   · 分类页与该类别**全部**主题页（en + zh）的相似度 ≤ 12%；
 //   · 决策层确实把正文加厚了（信息量 ≥ 400 单位）。
 //
-// 相似度上限 12% 的来历：加决策层**之前**，实测分类页与同类别主题页的
-// 相似度最大只有 **0.31%**（en，5-gram Jaccard）。12% 给了 ~40 倍余量，
-// 但仍远低于「把主题页那张基准表搬过来」的量级（那会是 30%+）⇒ 一旦有人
-// 复制基准表，守卫会红。
+// 相似度上限 12% 的来历
+// ------------------
+// ⚠️ **P165 修正了这个数字的时效性。** 原来的注释写「加决策层**之前**，实测
+//    分类页与同类别主题页的相似度最大只有 **0.31%**（en，5-gram Jaccard）」
+//    —— 那是 **P159 当时、只量了样板分类 B** 的数（en 0.09% → 0.31%）。
+//    之后页面内容一直在变，那个数**今天已经复现不出来**。
+//
+// P165 在 **30 页**（15 分类 × 2 语言）上重新实测（口径与本守卫同尺子）：
+//   · **落地前**（把决策层两个 section 摘掉再算）：min 0.44% / 中位 1.67% / max 4.39%
+//   · **落地后**（整页）                ：min 0.37% / 中位 0.99% / max 2.26%
+// ⇒ 注意方向：**决策层让相似度在 30/30 页全部下降**（不是上升）——
+//   因为决策层带来的是**独有**内容，它扩大了 Jaccard 的分母而没有带来交集。
+//   ⇒ 12% 的上限仍然成立：今天的实测上限是 2.26%，离 12% 还有 ~5 倍余量；
+//   而「把主题页那张基准表搬过来」的量级是 **30%+** ⇒ 一定红。
 //
 // Build dependency:
 //   - RUN_BUILD_TESTS=1 required (P23b skip-guard pattern)
@@ -33,7 +43,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-import { CATEGORY_DECISION_LAYERS } from '../src/data/category-decision-layers.ts';
+import { CATEGORY_DECISION_LAYERS } from '../src/data/category-decision-layers/index.ts';
 import { categories } from '../src/data/categories.ts';
 import { TOPICS } from '../src/data/topics.ts';
 

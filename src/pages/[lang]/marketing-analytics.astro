@@ -4,10 +4,13 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ToolCard from '../../components/ToolCard.astro';
 import CategoryOtherNav from '../../components/CategoryOtherNav.astro';
+import CategoryDecisionLayer from '../../components/CategoryDecisionLayer.astro';
 import { categories } from '../../data/categories';
 import { tools } from '../../data/tools';
 import { t, getLang } from '../../i18n';
 import { getTopicsByLetter } from '../../data/topics';
+import { createCollectionPage, createBreadcrumb3 } from '../../lib/seo-factory';
+import { getCategoryDecisionLayer } from '../../data/category-decision-layers';
 import TopicCard from '../../components/TopicCard.astro';
 
 export function getStaticPaths() {
@@ -36,7 +39,35 @@ const categoryTools = tools
       translatedDescription: t(descKey, lang) !== descKey ? t(descKey, lang) : tool.description,
     };
   });
+// P165：这 9 个分类页原本是「lean 模板」，**没有任何分类页级 JSON-LD**
+// （只有站点级的 WebSite/SearchAction）⇒ 少 BreadcrumbList（面包屑富结果）与
+// ItemList（工具清单富结果）。这是与另外 6 个分类页之间的模板不一致，
+// 本批补成同形。
+const schema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@graph': [
+    createCollectionPage({
+      lang,
+      categorySlug: CATEGORY_SLUG,
+      categoryId: CATEGORY_ID,
+      categoryName: translatedName,
+      categoryDescription: translatedDesc,
+      tools: categoryTools.map((tool) => ({ slug: tool.slug, title: tool.translatedTitle })),
+    }),
+    createBreadcrumb3({
+      lang,
+      homeLabel: t('breadcrumb.home', lang),
+      categoryName: translatedName,
+      categorySlug: CATEGORY_SLUG,
+      currentPageName: translatedName,
+      currentPageSlug: CATEGORY_SLUG,
+    }),
+  ],
+});
 const letterTopics = getTopicsByLetter(CATEGORY_ID);
+// P165：2.0 批次 1 铺开 —— 分类页的「决策层」（选型链路 + 工具取舍对照）。
+// 只有配置了决策层的类别才渲染。
+const decisionLayer = getCategoryDecisionLayer(CATEGORY_ID);
 // P147 C2: Comparison-tier Topics for letter page cross-link (B/C/M/R only).
 // Renders as a separate "X vs Y comparisons" grid below the Tier 1 topics grid.
 // Uses CATEGORY_ID (not a hardcoded 'M') so the filter stays in sync if the
@@ -47,6 +78,7 @@ const comparisonTopics = letterTopics.filter((t) => t.tier === 'comparison');
 <BaseLayout
   title={`${translatedName} — ForgeFlowKit`}
   description={translatedDesc}
+  schema={schema}
   pageType="static"
 >
   <Header />
@@ -55,6 +87,10 @@ const comparisonTopics = letterTopics.filter((t) => t.tier === 'comparison');
       <h1 class="text-3xl font-bold text-gray-900 mb-3">{translatedName}</h1>
       <p class="text-sm text-gray-700 leading-relaxed">{translatedDesc}</p>
     </section>
+
+    {decisionLayer && (
+      <CategoryDecisionLayer categoryId={CATEGORY_ID} layer={decisionLayer} />
+    )}
 
     <section class="mb-10">
       <h2 class="text-2xl font-bold text-gray-900 mb-6">All {categoryTools.length} {translatedName} Tools</h2>
