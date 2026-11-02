@@ -75,7 +75,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release',
     '💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.',
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

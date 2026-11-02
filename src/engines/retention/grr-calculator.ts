@@ -117,12 +117,89 @@ function calculate(inputs: Record<string, string>): string[] {
   return [r];
 }
 
-// ============== customFn (minimal live calc) ==============
+// ============== customFn (live = static parity with calculate()) ==============
+//
+// P164: customFn 是服务端 calculate() 的**逐字节同形移植** —— 页面运行时用
+// new Function('inputs','pick','fill', body) 直接执行本函数体，客户端产出的
+// 文本与 calculate() 完全一致（换行、分隔线、emoji、千分位、空格逐字节对齐）。
+//
+// 移植规则：只去掉 TS 类型注解；把 clampNonNegative / retainedMRR / grr /
+// calcHealthBand / BAND_META 换成同文件内的局部实现；其余逻辑与文案原样保留。
+// customFn 内不引用任何模块作用域变量，也不含 import。
 
 const customFn =
-  "function calc(s,d,c){var r=s-d-c;var g=s===0?0:r/s;return[{ret:r,grr:g}];}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "return calc(cnn(parseFloat(inputs.startingMRR)||0),cnn(parseFloat(inputs.downgradeMRR)||0),cnn(parseFloat(inputs.churnedMRR)||0));";
+  "function cnn(x){return Number.isNaN(x)?0:Math.max(0,x);}\n" +
+  "function rmrr(s,d,c){return s-d-c;}\n" +
+  "function grrf(s,d,c){if(s===0)return 0;return rmrr(s,d,c)/s;}\n" +
+  "function bandOf(v){if(v>=0.95)return 'excellent';if(v>=0.90)return 'good';if(v>=0.80)return 'warning';return 'critical';}\n" +
+  "var BM={excellent:'\uD83D\uDFE2',good:'\uD83D\uDFE1',warning:'\uD83D\uDFE0',critical:'\uD83D\uDD34'};\n" +
+  "const startingMRR = cnn(parseFloat(inputs.startingMRR) || 0);\n" +
+  "const downgradeMRR = cnn(parseFloat(inputs.downgradeMRR) || 0);\n" +
+  "const churnedMRR = cnn(parseFloat(inputs.churnedMRR) || 0);\n" +
+  "if (startingMRR === 0 && downgradeMRR === 0 && churnedMRR === 0) {\n" +
+  "return [\n" +
+  "'\uD83D\uDCCA GRR Calculator\\n\\n\uD83D\uDCCA Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention \u2014 the pure retention signal. GRR \u2264 100% always.',\n" +
+  "];\n" +
+  "}\n" +
+  "const retained = rmrr(startingMRR, downgradeMRR, churnedMRR);\n" +
+  "const ratio = grrf(startingMRR, downgradeMRR, churnedMRR);\n" +
+  "const lostMRR = downgradeMRR + churnedMRR;\n" +
+  "const lostPct = startingMRR > 0 ? (lostMRR / startingMRR) * 100 : 0;\n" +
+  "const money = (n) => '$' + Math.round(n).toLocaleString('en-US');\n" +
+  "const pctInt = (n) => Math.round(n * 100).toString();\n" +
+  "const pct1 = (n) => n.toFixed(1);\n" +
+  "const band = bandOf(ratio);\n" +
+  "const healthEmoji = BM[band];\n" +
+  "const healthLabel =\n" +
+  "band === 'excellent'\n" +
+  "? 'Excellent \u2014 GRR \u2265 95%; best-in-class SaaS retention, minimal churn leakage'\n" +
+  ": band === 'good'\n" +
+  "? 'Good \u2014 GRR 90\u201395%; SaaS Capital median, healthy retention engine'\n" +
+  ": band === 'warning'\n" +
+  "? 'Warning \u2014 GRR 80\u201390%; high churn, mid-market median, intervention needed'\n" +
+  ": 'Critical \u2014 GRR < 80%; severe churn, unsustainable, urgent intervention';\n" +
+  "const grrHC = grrf(startingMRR, downgradeMRR, churnedMRR / 2);\n" +
+  "const grrZD = grrf(startingMRR, 0, churnedMRR);\n" +
+  "const grrHB = grrf(startingMRR, downgradeMRR / 2, churnedMRR / 2);\n" +
+  "const liftHC = grrHC - ratio;\n" +
+  "const liftZD = grrZD - ratio;\n" +
+  "const liftHB = grrHB - ratio;\n" +
+  "const targetRetained = 0.95 * startingMRR;\n" +
+  "const gapToExcellent = Math.max(0, targetRetained - retained);\n" +
+  "let gapToNext, nextTier;\n" +
+  "if (band === 'critical') { gapToNext = 0.80 * startingMRR - retained; nextTier = '\uD83D\uDFE0 Warning (80%)'; }\n" +
+  "else if (band === 'warning') { gapToNext = 0.90 * startingMRR - retained; nextTier = '\uD83D\uDFE1 Good (90%)'; }\n" +
+  "else if (band === 'good') { gapToNext = 0.95 * startingMRR - retained; nextTier = '\uD83D\uDFE2 Excellent (95%)'; }\n" +
+  "else { gapToNext = 0; nextTier = 'top tier maintained'; }\n" +
+  "const annualCompounded = startingMRR * Math.pow(1 - lostPct / 100, 12);\n" +
+  "let tip;\n" +
+  "if (band === 'critical') tip = 'GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage.';\n" +
+  "else if (band === 'warning') tip = 'GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.';\n" +
+  "else if (band === 'good') tip = 'GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR.';\n" +
+  "else tip = 'GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.';\n" +
+  "const r =\n" +
+  "'\uD83D\uDCCA GRR Calculator\\n\\n' +\n" +
+  "'\uD83E\uDE7A Health:\\n' +\n" +
+  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
+  "'\u2022 ' + healthEmoji + ' ' + healthLabel + '\\n' +\n" +
+  "'\u2022 GRR: ' + pctInt(ratio) + '%  \u00B7  Lost as % of start: ' + pct1(lostPct) + '%\\n' +\n" +
+  "'\u2022 Retained MRR: ' + money(retained) + '  \u00B7  Lost MRR (downgrade + churn): ' + money(lostMRR) + '\\n\\n' +\n" +
+  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
+  "'\uD83D\uDCCA Inputs Snapshot:\\n' +\n" +
+  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
+  "'\u2022 Starting MRR:           ' + money(startingMRR) + '\\n' +\n" +
+  "'\u2022 Downgrade MRR:         -' + money(downgradeMRR) + '\\n' +\n" +
+  "'\u2022 Churned MRR:           -' + money(churnedMRR) + '\\n' +\n" +
+  "'\u2022 Retained MRR:           ' + money(retained) + ' (starting - downgrade - churn)\\n' +\n" +
+  "'\u2022 GRR ratio: ' + ratio.toFixed(4) + ' (' + pctInt(ratio) + '%)  \u00B7  Lost as % of start: ' + pct1(lostPct) + '%\\n\\n' +\n" +
+  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
+  "'\uD83C\uDFAF Milestone:\\n' +\n" +
+  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
+  "'\u2022 Next tier: ' + nextTier + '\\n' +\n" +
+  "'\u2022 Gap: ' + money(Math.max(0, gapToNext)) + ' more retained MRR' +\n" +
+  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
+  "'\uD83D\uDCA1 Tip: ' + tip + '\\n';\n" +
+  "return [r];\n";
 
 // ============== Engine ==============
 

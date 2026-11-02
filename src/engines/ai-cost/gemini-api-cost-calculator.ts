@@ -1,7 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import PRICING from '../../data/ai-pricing.json';
-import { pickInteractiveModels } from '../../data/ai-pricing-popular';
+import { pickInteractiveModels, pickCrossProviderModels } from '../../data/ai-pricing-popular';
 
 interface ModelInfo {
   input: number;
@@ -37,12 +37,33 @@ const CACHE_READ_MULT = 0.1;
 
 const DEFAULT_SELECTED = ['gemini-3.5-flash', 'gemini-3.1-pro', 'gemini-3-flash', 'gemini-1.5-flash'];
 
-// Cross-provider comparison (cheapest from each)
-const CROSS_PROVIDER: Record<string, { input: number; output: number; name: string }> = {
-  openai: { input: 0.05, output: 0.4, name: 'GPT-5 Nano' },
-  claude: { input: 0.25, output: 1.25, name: 'Claude Haiku 3' },
-  deepseek: { input: 0.14, output: 0.28, name: 'DeepSeek V4 Flash' },
-};
+// P164: 跨供应商对比的代表模型。
+//
+// 「选哪个模型」与「展示名叫什么」是**编辑决定** —— 数据集的 name 字段有自己
+// 的大小写约定（`Deepseek V4 Flash`），站内编辑口径是 `DeepSeek V4 Flash`，
+// 所以展示名保留手写；但**价格一律从数据集派生**。
+//
+// 之前这张表是手写的，而且已经漂了：DeepSeek 那行手写 0.14/0.28，
+// 数据集里 deepseek-v4-flash 实际 **0.3 / 1.2**（差 2.1 倍 / 4.3 倍）⇒
+// 页面上「Gemini vs DeepSeek」的跨供应商对比一直在用错价。
+//
+// 这份清单放在 src/data/ai-pricing-popular.json 的 crossProviderModels 里
+// （**唯一一份**）—— 服务端两个引擎 + 客户端 codegen 三处共用它。
+const CROSS_PROVIDER: Record<string, { input: number; output: number; name: string }> =
+  Object.fromEntries(
+    pickCrossProviderModels('gemini').map((c) => [
+      c.key,
+      crossProviderModel(c.provider, c.model, c.label),
+    ]),
+  );
+
+/** 取数据集里某个模型的 per-1M 输入/输出价；展示名用编辑口径。 */
+function crossProviderModel(provider: string, key: string, label: string) {
+  const models = (PRICING.llm as unknown as Record<string, { models: Record<string, { input: number; output: number }> }>)[provider]?.models;
+  const m = models?.[key];
+  if (!m) throw new Error(`cross-provider model missing from dataset: ${provider}/${key}`);
+  return { input: m.input, output: m.output, name: label };
+}
 
 const PRESETS: Record<string, Record<string, string>> = {
   'Light Usage': {
@@ -329,7 +350,17 @@ function calculate(inputs: Record<string, string>): string[] {
     out.push('🌍 ' + cheapestGem.info.name + ' vs ' + prov.name + ': ' +
       (cheaper ? 'saves ' + fmt(savings) + '/month (' + pct + '% cheaper)' : 'costs ' + fmt(-savings) + '/month more'));
   }
-  out.push('💡 Gemini 3 Flash is the cheapest frontier-quality model at $0.50/$3.00 per 1M tokens. Context Caching saves 90% on repeated prompts for the newest 3 models.');
+  // P164: 这句里的模型名、价格、缓存模型数全部改为派生。
+  // 原句写死了 "Gemini 3 Flash" / "$0.50/$3.00" / "the newest 3 models" ——
+  // 前两个数值虽然此刻与数据集一致，但没有任何东西保证它们下次刷新还一致；
+  // 第三个**当时就是错的**：数据集里 supportsCache 的模型有 **5** 个
+  // （3.1-pro / 3-flash / 3.5-flash / 3.8-flash / 4-argon），两个 legacy 不支持。
+  const gf = MODELS['gemini-3-flash'];
+  const cacheModelCount = Object.values(MODELS).filter((m) => m.supportsCache).length;
+  out.push('💡 ' + gf.name + ' is the cheapest frontier-quality model at $' +
+    gf.input.toFixed(2) + '/$' + gf.output.toFixed(2) +
+    ' per 1M tokens. Context Caching saves 90% on repeated prompts for the ' +
+    cacheModelCount + ' models that support it.');
   out.push('');
 
   // Section 6: Usage Scenarios
@@ -402,12 +433,11 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
-  "var M={'gemini-4-argon':{i:2,o:10,bi:1,bo:5,n:'Gemini 4 Argon',f:'gem4',ic:'★',cw:'1M',od:1,sc:true,sb:true},'gemini-3.8-flash':{i:0.75,o:3.75,bi:0.375,bo:1.875,n:'Gemini 3.8 Flash',f:'flash3',ic:'◆',cw:'1M',od:2,sc:true,sb:true},'gemini-3.5-flash':{i:1.5,o:9,bi:0.375,bo:2.25,n:'Gemini 3.5 Flash',f:'flash35',ic:'●',cw:'1M',od:3,sc:true,sb:true},'gemini-3.1-pro':{i:2,o:12,bi:1,bo:6,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:4,sc:true,sb:true},'gemini-3-flash':{i:0.5,o:3,bi:0.25,bo:1.5,n:'Gemini 3 Flash',f:'flash3',ic:'◆',cw:'1M',od:5,sc:true,sb:true},'gemini-2.5-flash':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:6,sc:false,sb:false},'gemini-1.5-pro':{i:3.5,o:10.5,bi:0,bo:0,n:'Gemini 1.5 Pro',f:'legacy',ic:'◇',cw:'2M',od:7,sc:false,sb:false},'gemini-1.5-flash':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 1.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:8,sc:false,sb:false}};" +
+  "var M={'gemini-4-argon':{i:2,o:10,bi:1,bo:5,n:'Gemini 4 Argon',f:'gem4',ic:'★',cw:'1M',od:1,sc:true,sb:true},'gemini-3.8-flash':{i:0.75,o:3.75,bi:0.375,bo:1.875,n:'Gemini 3.8 Flash',f:'flash3',ic:'◆',cw:'1M',od:2,sc:true,sb:true},'gemini-3.5-flash':{i:1.5,o:9,bi:0.375,bo:2.25,n:'Gemini 3.5 Flash',f:'flash35',ic:'●',cw:'1M',od:3,sc:true,sb:true},'gemini-3.1-pro':{i:2,o:12,bi:1,bo:6,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:4,sc:true,sb:true},'gemini-3-flash':{i:0.5,o:3,bi:0.25,bo:1.5,n:'Gemini 3 Flash',f:'flash3',ic:'◆',cw:'1M',od:5,sc:true,sb:true},'gemini-2.5-flash':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:6,sc:false,sb:false},'gemini-1.5-pro':{i:3.5,o:10.5,bi:0,bo:0,n:'Gemini 1.5 Pro',f:'legacy',ic:'◇',cw:'2M',od:7,sc:false,sb:false},'gemini-1.5-flash':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 1.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:8,sc:false,sb:false}};\nvar XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},claude:{i:0.25,o:1.25,n:'Claude Haiku 3'},deepseek:{i:0.3,o:1.2,n:'DeepSeek V4 Flash'}};" +
 
   "var FL={flash35:'Gemini 3.5 Flash',pro:'Gemini 3.1 Pro',flash3:'Gemini 3 Flash',legacy:'Legacy'};" +
   "var DEF=['gemini-3.5-flash','gemini-3.1-pro','gemini-3-flash','gemini-1.5-flash'];" +
   "var CRM=0.1;" +
-  "var XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},claude:{i:0.25,o:1.25,n:'Claude Haiku 3'},deepseek:{i:0.14,o:0.28,n:'DeepSeek V4 Flash'}};" +
   "function fm(n){if(Math.abs(n)<0.01&&n!==0)return '$'+n.toFixed(4);return '$'+n.toFixed(2)}" +
   "function lc(n){return n.toLocaleString()}" +
   "function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
@@ -485,7 +515,8 @@ const customFn =
   "o.push('\\u{1F4BE} Context cache at '+cHR+'% hit rate saves ~'+fm(sv3)+'/mo on '+ref2.i.n);}" +
   "for(var pk in XP){var pv=XP[pk];var pm2=((iT/1e6)*pv.i+(oT/1e6)*pv.o)*rpm;var sv2=pm2-cheapestG.mc;var pct=pm2>0?Math.round((sv2/pm2)*100):0;" +
   "var cheaper=sv2>0;o.push('\\u{1F30D} '+cheapestG.i.n+' vs '+pv.n+': '+(cheaper?'saves '+fm(sv2)+'/month ('+pct+'% cheaper)':'costs '+fm(-sv2)+'/month more'));}" +
-  "o.push('\\u{1F4A1} Gemini 3 Flash is the cheapest frontier-quality model at $0.50/$3.00 per 1M tokens. Context Caching saves 90% on repeated prompts for the newest 3 models.');" +
+  "var gf3=M['gemini-3-flash'];var ccm=0;for(var kk in M){if(M[kk].sc)ccm++;}" +
+  "o.push('\\u{1F4A1} '+gf3.n+' is the cheapest frontier-quality model at $'+gf3.i.toFixed(2)+'/$'+gf3.o.toFixed(2)+' per 1M tokens. Context Caching saves 90% on repeated prompts for the '+ccm+' models that support it.');" +
   "o.push('');" +
   "o.push('\\u{1F4C5} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');o.push('');" +
   "var vols=[50,100,500,1000,5000,10000];" +
@@ -522,7 +553,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // All values verified against actual calculate() output with default inputs
-    '\n🤖 Gemini API Cost\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day | ⚡ Real-time\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n★ Gemini 4 Argon             ████████████████████████████████         $21.00\n◆ Gemini 3.8 Flash           ████████████                             $7.87\n● Gemini 3.5 Flash           ███████████████████████████              $18.00\n▲ Gemini 3.1 Pro             █████████████████████████████████████    $24.00\n◆ Gemini 3 Flash             █████████                                $6.00\n◇ Gemini 2.5 Flash           ███████                                  $4.65\n◇ Gemini 1.5 Pro             ████████████████████████████████████████ $26.25\n◇ Gemini 1.5 Flash           ░                                        $0.67 🏆\n\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n● Gemini 3.5 Flash (Gemini 3.5 Flash) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $1.50/1M → $0.0015/req\nOutput: 500     tokens × $9.00/1M → $0.0045/req\n  Batch Rate: $0.38/$2.25 per 1M tokens\n────────────────────────────────────────────\nPer request:    $0.0060\nDaily (100):    $0.60\nMonthly (30d):  $18.00\nAnnual:         $216.00\n────────────────────────────────────────────\n\n▲ Gemini 3.1 Pro (Gemini 3.1 Pro) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $2.00/1M → $0.0020/req\nOutput: 500     tokens × $12.00/1M → $0.0060/req\n  Batch Rate: $1.00/$6.00 per 1M tokens\n────────────────────────────────────────────\nPer request:    $0.0080\nDaily (100):    $0.80\nMonthly (30d):  $24.00\nAnnual:         $288.00\n────────────────────────────────────────────\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Gemini 1.5 Flash at $0.67/mo\n⭐ Best value (Gemini 3 series): Gemini 3 Flash at $6.00/mo\n💸 Switching from Gemini 3.1 Pro to Gemini 3.5 Flash saves $6.00/mo ($72.00/yr)\n🌍 Gemini 1.5 Flash vs GPT-5 Nano: saves $0.08/month (10% cheaper)\n🌍 Gemini 1.5 Flash vs Claude Haiku 3: saves $1.95/month (74% cheaper)\n🌍 Gemini 1.5 Flash vs DeepSeek V4 Flash: saves $0.17/month (20% cheaper)\n💡 Gemini 3 Flash is the cheapest frontier-quality model at $0.50/$3.00 per 1M tokens. Context Caching saves 90% on repeated prompts for the newest 3 models.\n\n📅 Usage Scenarios (monthly cost at 100 reqs/day)\n\n● Gemini 3.5 Flash: 50→$9.00 · 100→$18.00 · 500→$90.00 · 1,000→$180.00 · 5,000→$900.00 · 10,000→$1800.00\n▲ Gemini 3.1 Pro: 50→$12.00 · 100→$24.00 · 500→$120.00 · 1,000→$240.00 · 5,000→$1200.00 · 10,000→$2400.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Healthy cost spread (1.3x) across selected models.\n• 🟢 Low-volume tier — Gemini 3.5 Flash at $18.00/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Switch to batch pricing: save ~$21.00/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Gemini 1.5 Flash:  save $17.32/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $84.00/mo\n• Halve volume to 50 reqs/day:  $21.00/mo\n• Boost cache hit rate to 50%:  save ~$9.45/mo  ($42.00 → $32.55)\n',
+    '\n🤖 Gemini API Cost\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day | ⚡ Real-time\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n★ Gemini 4 Argon             ████████████████████████████████         $21.00\n◆ Gemini 3.8 Flash           ████████████                             $7.87\n● Gemini 3.5 Flash           ███████████████████████████              $18.00\n▲ Gemini 3.1 Pro             █████████████████████████████████████    $24.00\n◆ Gemini 3 Flash             █████████                                $6.00\n◇ Gemini 2.5 Flash           ███████                                  $4.65\n◇ Gemini 1.5 Pro             ████████████████████████████████████████ $26.25\n◇ Gemini 1.5 Flash           ░                                        $0.67 🏆\n\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n● Gemini 3.5 Flash (Gemini 3.5 Flash) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $1.50/1M → $0.0015/req\nOutput: 500     tokens × $9.00/1M → $0.0045/req\n  Batch Rate: $0.38/$2.25 per 1M tokens\n────────────────────────────────────────────\nPer request:    $0.0060\nDaily (100):    $0.60\nMonthly (30d):  $18.00\nAnnual:         $216.00\n────────────────────────────────────────────\n\n▲ Gemini 3.1 Pro (Gemini 3.1 Pro) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $2.00/1M → $0.0020/req\nOutput: 500     tokens × $12.00/1M → $0.0060/req\n  Batch Rate: $1.00/$6.00 per 1M tokens\n────────────────────────────────────────────\nPer request:    $0.0080\nDaily (100):    $0.80\nMonthly (30d):  $24.00\nAnnual:         $288.00\n────────────────────────────────────────────\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Gemini 1.5 Flash at $0.67/mo\n⭐ Best value (Gemini 3 series): Gemini 3 Flash at $6.00/mo\n💸 Switching from Gemini 3.1 Pro to Gemini 3.5 Flash saves $6.00/mo ($72.00/yr)\n🌍 Gemini 1.5 Flash vs GPT-5 Nano: saves $0.08/month (10% cheaper)\n🌍 Gemini 1.5 Flash vs Claude Haiku 3: saves $1.95/month (74% cheaper)\n🌍 Gemini 1.5 Flash vs DeepSeek V4 Flash: saves $2.02/month (75% cheaper)\n💡 Gemini 3 Flash is the cheapest frontier-quality model at $0.50/$3.00 per 1M tokens. Context Caching saves 90% on repeated prompts for the 5 models that support it.\n\n📅 Usage Scenarios (monthly cost at 100 reqs/day)\n\n● Gemini 3.5 Flash: 50→$9.00 · 100→$18.00 · 500→$90.00 · 1,000→$180.00 · 5,000→$900.00 · 10,000→$1800.00\n▲ Gemini 3.1 Pro: 50→$12.00 · 100→$24.00 · 500→$120.00 · 1,000→$240.00 · 5,000→$1200.00 · 10,000→$2400.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Healthy cost spread (1.3x) across selected models.\n• 🟢 Low-volume tier — Gemini 3.5 Flash at $18.00/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Switch to batch pricing: save ~$21.00/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Gemini 1.5 Flash:  save $17.32/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $84.00/mo\n• Halve volume to 50 reqs/day:  $21.00/mo\n• Boost cache hit rate to 50%:  save ~$9.45/mo  ($42.00 → $32.55)\n',
   ],
   faq: [
     { q: 'How does Gemini pricing compare to OpenAI/Claude?', a: 'Gemini 3 Flash at {{live:google/gemini-3-flash}} per 1M tokens costs {{liveShareIn:google/gemini-3-flash|openai/gpt-4o}} of GPT-4o ({{live:openai/gpt-4o}}) on input, while its output price is {{liveShareOut:google/gemini-3-flash|anthropic/claude-haiku-3}} of Claude Haiku 3\'s ({{live:anthropic/claude-haiku-3}}). Gemini 3.5 Flash at {{live:google/gemini-3.5-flash}} is {{liveShareIn:google/gemini-3.5-flash|openai/gpt-4o}} of GPT-4o on input. The biggest advantage is Gemini\'s 2M token context window on Pro models.' },

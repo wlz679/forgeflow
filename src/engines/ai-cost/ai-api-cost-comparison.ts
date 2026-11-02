@@ -371,6 +371,10 @@ const customFn =
   "}" +
   "o.push('');" +
   "o.push('Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek');" +
+  // P164: ratio 此前只在服务端 calculate() 里定义（const ratio = bottom3[0].monthlyCost / Math.max(top3[0].monthlyCost, 0.01)），
+  // customFn 侧从未定义 ⇒ 浏览器点「计算」抛 ReferenceError: ratio is not defined。
+  // 这里按同一语义补上：最贵 / 最便宜（ac 已按 mc 升序 ⇒ ac[0] 最便宜、ac[ac.length-1] 最贵）。
+  "var ratio=me.mc/Math.max(ch.mc,0.01);" +
   "if(ratio>=10)o.push('\\uD83D\\uDCA1 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.');else if(ratio>=3)o.push('\\uD83D\\uDCA1 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.');else o.push('\\uD83D\\uDCA1 Tip: Costs are similar across providers \\u2014 pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.');" +
   "return o;";
 

@@ -28,7 +28,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import PRICING from '../src/data/ai-pricing.json';
-import { resolveLiveTokens } from '../src/lib/live-price.ts';
+import { resolveLiveTokens, IMAGE_TRAINING_TOKEN_KINDS } from '../src/lib/live-price.ts';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -114,6 +114,16 @@ const TOKEN_EXPECTATIONS: Array<[string, string]> = [
   ['{{liveImageSubRange:midjourney-v7}}', '$10-$120/mo'],
   ['{{liveImageSubTier:midjourney-v7|1}}', '$30'],
   ['{{liveImageMonthly:stable-diffusion-4|1000}}', '$3.00'],
+  // —— P164 补齐的 3 种 ——
+  // ⚠️ 这 3 种在 src/lib/live-price.ts 里**早就实现了**，是这张表漏了它们。
+  //    漏项的后果不是「token 没实现」，而是**更隐蔽的**：守卫的「反向检查」
+  //    （FAQ 里用到的 kind 必须在表里）会把它们判成「未实现的 token」⇒
+  //    谁想把它们放进 FAQ 答案都会被守卫挡住，只能躲进**问句**（问句不被扫）。
+  //    ⇒ 于是「画质倍率要加价」这句话被塞进标题、正文却不回答它。
+  //    补齐这张表 + 加一条「表必须与实现同集合」的结构断言（见下）才能根治。
+  ['{{liveImageAdvMult:hd}}', '1.3'],
+  ['{{liveImageCheapest:stable-diffusion-4}}', 'SD 4 (API)'],
+  ['{{liveTrainingDataProcess}}', '$1.50'],
   ['{{liveTrainingGpuRate:A100-80GB}}', '$1.50'],
   ['{{liveTrainingGpuName:A100-80GB}}', 'A100 80GB'],
   ['{{liveTrainingStorage}}', '$0.10'],
@@ -186,12 +196,13 @@ test('三处同步：引擎源 / en.json / zh.json 的 FAQ 条数一致且 token
 });
 
 test('token 数量有下限（不靠删价格钻空子）', () => {
-  // ⚠️ 下限 = 2026-10-30 的**实测值**（图片 24 / 训练 25）——
+  // ⚠️ 下限 = 2026-11-02 的**实测值**（图片 27 / 训练 35）——
   //    故意与实测值取齐 ⇒ 删掉任何一个 token 都会红。
   //    「删价格」是绕过「手写单价」检查最省事的办法，这条下限就是它的封条。
+  //    （P164 上调：3 种 token 从问句搬回答案 + 训练 FAQ2 的 8 个 GPU 显示名派生化。）
   const expectations = [
-    { file: 'src/engines/ai-cost/ai-image-generation-cost-calculator.ts', min: 24 },
-    { file: 'src/engines/ai-cost/ai-training-cost-estimator.ts', min: 25 },
+    { file: 'src/engines/ai-cost/ai-image-generation-cost-calculator.ts', min: 27 },
+    { file: 'src/engines/ai-cost/ai-training-cost-estimator.ts', min: 35 },
   ];
   for (const { file, min } of expectations) {
     let n = 0;
@@ -206,6 +217,35 @@ test('每种 token 都真的被实现了（不只是列在清单里）', () => {
   for (const [token, expected] of TOKEN_EXPECTATIONS) {
     assert.equal(resolveLiveTokens(token), expected, `token ${token} 解析结果不对`);
   }
+});
+
+test('这张表必须与实现同集合（防止「实现了但没进表」的漏项再次发生）', () => {
+  // 为什么需要这条
+  // --------------
+  // P164 实测：liveImageAdvMult / liveImageCheapest / liveTrainingDataProcess
+  // 在 src/lib/live-price.ts 里**早就实现了**，但这张表里没有 ⇒
+  // 「反向检查」把它们判成「未实现的 token」⇒ 谁把它们放进 FAQ **答案**都会被守卫挡住，
+  // 只能躲进**问句**（问句不被扫 token kind）⇒ 于是「画质模式要加价」这句话
+  // 被塞进标题、正文却不回答它（编辑不自洽，且没有任何守卫会红）。
+  //
+  // ⇒ 表必须是「实现侧 kind 集合」的**完整镜像**，而不是手工维护的子集。
+  //   新增一种 token 而忘了进表 ⇒ 这条断言变红。
+  const tabled = new Set(TOKEN_EXPECTATIONS.map(([token]) => tokenKind(token)));
+  const implemented = new Set(IMAGE_TRAINING_TOKEN_KINDS);
+  const missing = [...implemented].filter((k) => !tabled.has(k)).sort();
+  const extra = [...tabled].filter((k) => !implemented.has(k)).sort();
+  assert.deepEqual(
+    missing,
+    [],
+    `这些 image/training token 已在 src/lib/live-price.ts 实现，却没进 TOKEN_EXPECTATIONS：` +
+      `${missing.join(', ')}\n` +
+      `⇒ 守卫会把它们误判成「未实现的 token」⇒ 谁用它们进 FAQ 答案都会被挡，只能躲进问句。`,
+  );
+  assert.deepEqual(
+    extra,
+    [],
+    `TOKEN_EXPECTATIONS 里有实现侧不存在的 kind：${extra.join(', ')} ⇒ 表已经腐烂（token 被删了？）`,
+  );
 });
 
 test('FAQ 文本里用到的每一种 token 都必须已被实现（反向：未实现的 token 会原样印到线上）', () => {

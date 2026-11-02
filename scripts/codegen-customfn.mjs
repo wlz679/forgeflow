@@ -93,6 +93,21 @@ const ENGINES = [
     popularKeys: POPULAR.popularModelKeys.anthropic,
     tableStart: '"var M={" +',
     tableEndMarker: 'Family icons',
+    // P164: 跨供应商对比的代表模型。
+    //
+    // 「选哪个模型」与「展示名叫什么」是**编辑决定** —— 数据集的 name 字段有
+    // 自己的大小写约定（`Deepseek Chat`），站内编辑口径是 `DeepSeek Chat`，
+    // 所以 label 保留手写；但**价格一律从数据集派生**。
+    //
+    // 之前这张表是手写的，而且已经漂了：DeepSeek Chat 手写 0.14/0.28，
+    // 数据集实际 0.28/0.42（差 2 倍 / 1.5 倍）⇒ 页面上跨供应商对比一直在
+    // 用错价。
+    // P164: 跨供应商对比的代表模型 —— **唯一一份**在
+    // src/data/ai-pricing-popular.json 的 crossProviderModels 里，
+    // 服务端那两个引擎也读它 ⇒ 这个脚本不许再写一遍模型 key
+    // （tests/ai-cost-scope-guard.test.ts 会红：交互集只能有一个真相源）。
+    // label 是编辑口径（数据集的 name 字段大小写约定不同），价格一律派生。
+    crossProvider: POPULAR.crossProviderModels.claude,
     fieldMap: (m) => {
       const parts = [
         `i:${fmt(m.input)}`,
@@ -115,6 +130,10 @@ const ENGINES = [
     popularKeys: POPULAR.popularModelKeys.google,
     tableStart: '"var M={" +',
     tableEndMarker: 'var FL=',
+    // P164: 跨供应商对比的代表模型 —— 见 claude 引擎那一条的注释。
+    // gemini 这边漂得更狠：DeepSeek V4 Flash 手写 0.14/0.28，数据集实际
+    // 0.3/1.2（差 2.1 倍 / 4.3 倍）。
+    crossProvider: POPULAR.crossProviderModels.gemini,
     fieldMap: (m) => {
       const parts = [
         `i:${fmt(m.input)}`,
@@ -360,6 +379,24 @@ function generateTable(engine) {
     const srcLines = openaiStyle
       ? [`var ${varName}={};`, ...sorted.map(([k]) => `${varName}['${k}']={${fieldByKey[k]}};`)]
       : [`var ${varName}={${sorted.map(([k]) => `'${k}':{${fieldByKey[k]}}`).join(',')}};`];
+    // P164: 跨供应商对比表（XP）—— 价格从数据集派生，展示名是编辑口径。
+    //
+    // 它必须和 M 表在**同一个表区**里，所以引擎文件里不再手写这张表；
+    // codegen 把它紧跟在 M 后面一起生成。这样「表区结束标记」的个数不变
+    // （不需要改 tests/codegen-marker-presence.test.ts 的钉死值）。
+    if (engine.crossProvider) {
+      const xpParts = engine.crossProvider.map((c) => {
+        const m = PRICING.llm[c.provider]?.models?.[c.model];
+        if (!m) {
+          throw new Error(
+            `[codegen-customfn] ${engine.file}: cross-provider model ` +
+              `${c.provider}/${c.model} is missing from ai-pricing.json`,
+          );
+        }
+        return `${c.key}:{i:${fmt(m.input)},o:${fmt(m.output)},n:'${c.label.replace(/'/g, "\\'")}'}`;
+      });
+      srcLines.push(`var XP={${xpParts.join(',')}};`);
+    }
     const src = srcLines.join('\n');
     // 防御性 verify:确保 src 真的可被 new Function 解析(否则 regenerate 后会让 customFn 整体失效)
     try {

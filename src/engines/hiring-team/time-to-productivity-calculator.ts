@@ -69,7 +69,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: Plan first 90-day OKRs to land at week 12; pair with our [Productivity Ramp Curve Calculator] (P11-3)',
     '💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs without 6mo management prep.'
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

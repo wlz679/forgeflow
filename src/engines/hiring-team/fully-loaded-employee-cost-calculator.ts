@@ -68,7 +68,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: re-benchmark benefits + tax components every Q2 — they drift with healthcare inflation',
     '💡 Tip: BLS ECEC tracks national avg ~1.30x — companies consistently >1.5x have bloated overhead (often equipment or management).'
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

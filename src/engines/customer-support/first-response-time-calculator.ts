@@ -101,6 +101,7 @@ const engine: ToolEngine = {
       "    '💡 Tip: T1 attainment <80% usually signals queue overflow OR shift coverage gap; check T1 headcount before changing the SLA target.'",
       "  ];",
       "}",
+      "return run(inputs, pick, fill);",
     ].join('\n'),
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)

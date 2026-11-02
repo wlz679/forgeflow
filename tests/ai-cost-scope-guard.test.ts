@@ -118,6 +118,75 @@ test('P156: the codegen script hard-codes NO model key of its own', () => {
 });
 
 // ---------------------------------------------------------------------------
+// 2b. P164 — the cross-provider comparison table
+// ---------------------------------------------------------------------------
+
+test('P164: 跨供应商对比表用到的模型必须在交互态清单里', () => {
+  // 为什么需要这条
+  // --------------
+  // 跨供应商对比表（XP）告诉用户「换成别家的模型能省多少」。它展示的模型
+  // 必须是**交互态里真实存在**的模型 —— 否则用户会在对比表里看到一个
+  // 交互态根本选不到的模型。
+  //
+  // 实测踩过：claude 引擎的 XP 行写的是 `deepseek-chat`，而它在
+  // `excludedModelKeys` 里（排除原因：「通用别名 —— 指向具体版本，
+  // 交互态用固定版本名」）⇒ 那张表展示的是一个**被自己策展排除掉**的模型。
+  //
+  // 而且这份清单必须**只有一份**：服务端两个引擎 + 客户端 codegen 三处共用
+  // `src/data/ai-pricing-popular.json` 的 crossProviderModels ⇒ 上面的
+  // 「codegen 不许硬编码模型 key」那条断言才成立。
+  const cross = (popular.crossProviderModels ?? {}) as Record<
+    string,
+    Array<{ key: string; provider: string; model: string; label: string }>
+  >;
+  const problems: string[] = [];
+  for (const [engine, entries] of Object.entries(cross)) {
+    const seen = new Set<string>();
+    for (const e of entries) {
+      if (!POPULAR_KEYS[e.provider]) {
+        problems.push(`${engine}/${e.key}: provider "${e.provider}" 不存在`);
+        continue;
+      }
+      if (!POPULAR_KEYS[e.provider].includes(e.model)) {
+        problems.push(
+          `${engine}/${e.key}: ${e.provider}/${e.model} 不在 popularModelKeys 里 ` +
+            `⇒ 对比表会展示一个交互态里没有的模型`,
+        );
+      }
+      if (seen.has(e.key)) problems.push(`${engine}: 行 key "${e.key}" 重复`);
+      seen.add(e.key);
+    }
+  }
+  assert.deepEqual(
+    problems,
+    [],
+    '跨供应商对比表引用了不在交互态清单里的模型：\n' + problems.join('\n'),
+  );
+});
+
+test('P164: 跨供应商对比表用到的模型必须真实存在于数据集', () => {
+  const cross = (popular.crossProviderModels ?? {}) as Record<
+    string,
+    Array<{ key: string; provider: string; model: string; label: string }>
+  >;
+  const pricing = JSON.parse(readFileSync(resolve(root, 'src', 'data', 'ai-pricing.json'), 'utf-8'));
+  const problems: string[] = [];
+  for (const [engine, entries] of Object.entries(cross)) {
+    for (const e of entries) {
+      const m = pricing.llm?.[e.provider]?.models?.[e.model];
+      if (!m) {
+        problems.push(`${engine}/${e.key}: ${e.provider}/${e.model} 不在 ai-pricing.json 里`);
+        continue;
+      }
+      if (typeof m.input !== 'number' || typeof m.output !== 'number') {
+        problems.push(`${engine}/${e.key}: ${e.provider}/${e.model} 没有 input/output 价`);
+      }
+    }
+  }
+  assert.deepEqual(problems, [], '跨供应商对比表引用了数据集里不存在的模型：\n' + problems.join('\n'));
+});
+
+// ---------------------------------------------------------------------------
 // 3. The static copy states the interactive count
 // ---------------------------------------------------------------------------
 

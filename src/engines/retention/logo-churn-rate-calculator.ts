@@ -135,13 +135,124 @@ function calculate(inputs: Record<string, string>): string[] {
   return [r];
 }
 
-// ============== customFn (minimal live calc) ==============
+// ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  "function lc(s,l){if(s===0)return 0;return l/s;}" +
-  "function rc(s,l){return s-l;}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "return [lc(cnn(parseFloat(inputs.startCustomers)||0),cnn(parseFloat(inputs.lostCustomers)||0)),rc(cnn(parseFloat(inputs.startCustomers)||0),cnn(parseFloat(inputs.lostCustomers)||0))];";
+  "function cnn(x){return Number.isNaN(x)?0:Math.max(0,x);}" +
+  "function bandfn(v){if(v>=0.2)return'critical';if(v>=0.1)return'warning';if(v>=0.05)return'good';return'excellent';}" +
+  "var startCustomers=cnn(parseFloat(inputs.startCustomers)||0);" +
+  "var lostCustomers=cnn(parseFloat(inputs.lostCustomers)||0);" +
+  "if(startCustomers===0&&lostCustomers===0){return['\uD83D\uDCCA Logo Churn Rate Calculator\\n\\n\uD83D\uDCCA Enter customers at period start and customers lost during period to see your logo churn rate \u2014 the count-based complement to GRR (revenue-based).',];}var retained=(startCustomers-lostCustomers);" +
+  "var ratio=(startCustomers===0?0:(lostCustomers)/startCustomers);" +
+  "var pctInt=function(n){return Math.round(n*100).toString();};" +
+  "var pct1=function(n){return n.toFixed(1);};" +
+  "var band=bandfn(ratio);" +
+  "var healthEmoji=(band==='excellent'?'\uD83D\uDFE2':band==='good'?'\uD83D\uDFE1':band==='warning'?'\uD83D\uDFE0':'\uD83D\uDD34');" +
+  "var healthLabel=band==='excellent'?'Excellent \u2014 Logo churn < 5%; best-in-class customer retention':band==='good'?'Good \u2014 Logo churn 5\u201310%; top-quartile mid-market retention':band==='warning'?'Warning \u2014 Logo churn 10\u201320%; high churn, intervention needed':'Critical \u2014 Logo churn \u2265 20%; severe churn, business model at risk';" +
+  "var churnHalveLoss=(startCustomers===0?0:(lostCustomers/2)/startCustomers);" +
+  "var churnZeroLoss=(startCustomers===0?0:(0)/startCustomers);" +
+  "var churnLose3=(startCustomers===0?0:(3)/startCustomers);" +
+  "var liftHL=ratio-churnHalveLoss;" +
+  "var liftZL=ratio;" +
+  "var liftL3=ratio-churnLose3;" +
+  "var targetLost=0.05*startCustomers;" +
+  "var gapToExcellent=Math.max(0,lostCustomers-targetLost);" +
+  "var gapToNext,nextTier;" +
+  "if(band==='critical'){gapToNext=lostCustomers-0.20*startCustomers;nextTier='\uD83D\uDFE0 Warning (20%)';}else if(band==='warning'){gapToNext=lostCustomers-0.10*startCustomers;nextTier='\uD83D\uDFE1 Good (10%)';}else if(band==='good'){gapToNext=lostCustomers-0.05*startCustomers;nextTier='\uD83D\uDFE2 Excellent (5%)';}else{gapToNext=0;nextTier='top tier maintained';}var annualCompounded=startCustomers*Math.pow(1-ratio,1);" +
+  "var tip;" +
+  "if(band==='critical')tip='Logo churn \u2265 20% means you are losing 1 in 5 customers per period. This is not a CS problem \u2014 it is a business model problem. Audit product-market fit, pricing, ICP definition. The cohort analysis question: which quarter\u2019s logo class is churning fastest and why?';" +
+  "else if(band==='warning')tip='Logo churn 10-20% is high for mid-market B2B SaaS. Diagnose by cohort, build save motion for top 20 at-risk accounts, and reassign CSM coverage. Often the highest-ROI lever is reducing churn on the bottom decile.';" +
+  "else if(band==='good')tip='Logo churn 5-10% is healthy mid-market retention. To push to Excellent (<5%), focus on tail of at-risk accounts and tighten ICP \u2014 sometimes fewer customers with better fit is the move.';" +
+  "else tip='Logo churn < 5% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby. Pair with GRR (P9-2) to make sure revenue retention matches logo retention.';" +
+  "var r='';" +
+  "r+='\uD83D\uDCCA Logo Churn Rate Calculator\\n\\n';" +
+  "r+='\uD83E\uDE7A Health:\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
+  "r+='\u2022 ';" +
+  "r+=healthEmoji;" +
+  "r+=' ';" +
+  "r+=healthLabel;" +
+  "r+='\\n';" +
+  "r+='\u2022 Logo churn: ';" +
+  "r+=pctInt(ratio);" +
+  "r+='%  \u00B7  Retained customers: ';" +
+  "r+=retained;" +
+  "r+='\\n';" +
+  "r+='\u2022 Lost customers: ';" +
+  "r+=lostCustomers;" +
+  "r+='  \u00B7  Started with: ';" +
+  "r+=startCustomers;" +
+  "r+='\\n\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
+  "r+='\uD83D\uDCCA Inputs Snapshot:\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
+  "r+='\u2022 Customers at period start: ';" +
+  "r+=startCustomers;" +
+  "r+='\\n';" +
+  "r+='\u2022 Customers lost:          -';" +
+  "r+=lostCustomers;" +
+  "r+='\\n';" +
+  "r+='\u2022 Retained customers:        ';" +
+  "r+=retained;" +
+  "r+='\\n';" +
+  "r+='\u2022 Logo churn %: ';" +
+  "r+=ratio.toFixed(4);" +
+  "r+=' (';" +
+  "r+=pctInt(ratio);" +
+  "r+='%)\\n\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
+  "r+='\uD83D\uDD04 What-If:\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
+  "r+='\u2022 Halve loss (';" +
+  "r+=(lostCustomers/2);" +
+  "r+=' instead of ';" +
+  "r+=lostCustomers;" +
+  "r+='): Churn ';" +
+  "r+=pctInt(churnHalveLoss);" +
+  "r+='% (-';" +
+  "r+=pct1(liftHL*100);" +
+  "r+='pp)\\n';" +
+  "r+='\u2022 Zero loss: Churn 0% (all ';" +
+  "r+=startCustomers;" +
+  "r+=' retained)\\n';" +
+  "r+='\u2022 Lose only 3: Churn ';" +
+  "r+=pctInt(churnLose3);" +
+  "r+='% (-';" +
+  "r+=pct1(liftL3*100);" +
+  "r+='pp)\\n\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
+  "r+='\u2696\uFE0F Break-Even:\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
+  "r+='\u2022 Target for \uD83D\uDFE2 Excellent: Logo churn < 5% (max ';" +
+  "r+=Math.round(targetLost);" +
+  "r+=' lost customers from ';" +
+  "r+=startCustomers;" +
+  "r+=')\\n';" +
+  "r+='\u2022 Current lost: ';" +
+  "r+=lostCustomers;" +
+  "r+='  \u00B7  Gap to \uD83D\uDFE2: ';" +
+  "r+=Math.round(gapToExcellent);" +
+  "r+=' fewer customers lost\\n';" +
+  "r+='\u2022 Action: reduce lost customers by ';" +
+  "r+=Math.round(gapToExcellent);" +
+  "r+=' (save play, ICP tightening, product-market fit)\\n\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
+  "r+='\uD83C\uDFAF Milestone:\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
+  "r+='\u2022 Next tier: ';" +
+  "r+=nextTier;" +
+  "r+='\\n';" +
+  "r+='\u2022 Gap to next tier: ';" +
+  "r+=Math.round(Math.max(0,gapToNext));" +
+  "r+=' fewer customers lost';" +
+  "r+=(band==='excellent'?' (already at top)':'');" +
+  "r+='\\n\\n';" +
+  "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
+  "r+='\uD83D\uDCA1 Tip: ';" +
+  "r+=tip;" +
+  "r+='\\n';" +
+  "return[r];"
+;
 
 // ============== Engine ==============
 

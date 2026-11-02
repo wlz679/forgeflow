@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-10-30 (P163 价格主张覆盖面台账 + 图片 / 训练两个引擎的价格派生化 + `popular` 显式规则 —— **图片与训练两个引擎是站内最后两个还在手写价格的入口**：FAQ（9 条 / 8 条）里每一条带价的答案都是手写，prose 里有**渲染层 bug**（`$$` 双美元号，图片 10 处 + 训练 1 处，**用户可见**）和**写死的倍数**（"13x cheaper" 在 Ideogram 3 上恰好正确，Flux Pro 实为 **16.7x**），训练引擎的 Spot/Reserved 折扣带被写死成单值（实为现货 **30-60%** / 预留 **10-30%**）。⭐ 更要紧的是**覆盖面本身是缺陷**：P160 的 FAQ 价格守卫只覆盖 **5 个 LLM 引擎**、P162 补了 GPU ⇒ **图片与训练两个引擎此前不在任何价格守卫内**（信号 W 第三次复发）。而 `ai-pricing-popular.json` 是一张**纯清单** —— 每周 bot 把新模型同步进数据集后**没有任何东西会红**，新模型静默地只进数据集、不进交互态，用户在计算器里根本选不到它。修法：`src/lib/live-price.ts` 新增 `liveImage*` / `liveTraining*` **16 种** token，两个引擎的 FAQ 全量派生并**同步三处**（引擎源 + `en.json` + `zh.json`）；新增**价格主张覆盖面台账**（**26 条**：哪些入口在讲价格、各自由谁看着）+ **`popular` 显式规则**（`_rule` 契约 + 策展 **44** + **显式排除 201** + **42 族**说明「为什么」）。四个新守卫（source-only **33 条**）+ 四个变异台子 **22/22 KILLED** ⇒ 套件 258 → **262**。⚠️ 变异台子抓到的三个真缺口：① 台账的反向检查是**文件级** ⇒ 同一文件登记 3 条时删掉 1 条不被发现 ⇒ 补**入口级**对账；② 「存在 `/ x.perImage`」被另外两处**无关**的除法满足 ⇒ 收紧成「**倍数计算本身**必须除以 `*.perImage`」；③ ⭐ **台子自己的 bug**：`String.replace` 的字符串替换把 `$'` 解释成「匹配点之后的剩余文本」⇒ 文件被复制、行被截断 ⇒ 表现为「守卫没抓住」，实际是**变异根本没生效** ⇒ 改用**函数式替换** + 落点自检（**教训：台子出问题时先怀疑台子**，否则会为了迁就一个假存活去改本来正确的守卫）。⭐ 另补做计划 §Task 3 承诺但未做的一段：**基线单价也一起派生**（SD 4 `$0.003` / Ideogram 3 `$0.04` / DALL-E 3 `$0.08` 共 **11 处**字面量 ⇒ 全部改为 `PROVIDERS[...].perImage`）—— 只把倍数改成「由单价算出」而单价仍是字面量，下次刷新照样失真。验证: tsc exit 0 / drift exit 0×2 / build exit 0 / 全量 **262 套件 · 1605 断言 · 0 失败 · 0 跳过 · exit 0**（P162 时是 258 / 1572）)
+> **最后更新:** 2026-11-02 (P164 定价 bot 的 PAT + **交互态契约** —— **100 个计算器里有 33 个的「计算」按钮在生产里是坏的**：静态示例是服务端渲染的 ⇒ 页面「看着正常」，**只有用户真去点才炸**；而 **CI 一直是绿的，因为守卫测的不是浏览器跑的那份东西**（`codegen-examples.mjs` 的 customFn 提取器只处理 `\uXXXX`，其它转义一律丢掉反斜杠保留字母 ⇒ `\n` 被读成字母 `n` ⇒ 它拼出来的根本不是浏览器执行的那份字符串）。5 类失败模式：真换行落在 JS 字符串内部（**7**）· 非法 Unicode 转义（**1**）· 只定义 `run()` 不在顶层调用（**21**）· 返回数字 / 对象而非字符串（**3**）· 执行期引用未定义变量（**1**）⇒ **7+1+21+3+1 = 33**。修法：customFn 是**函数体**（页面 `new Function(...)` 之后**直接调用**，不调 `run()`）⇒ 引擎侧追加顶层 `return run(inputs, pick, fill);`，3 个 retention 引擎**逐字节移植**服务端 `calculate()`（PASS 15 / FAIL 0）；⭐ **基线「33」可复算**：新增 `tests/scripts/contract-scan-at-ref.ts`（对**任意 git ref** 都能跑，HEAD = 67/100，WORKTREE = 100/100）。⭐ 本批修掉**四类假绿**：① **守卫必须取真值**（不能自己从源码再解析一遍）；② 价格台账的 `guardedBy` **只验证文件存在**、不验证「它真的看得见这一层」⇒ gemini 的 prose / customfn 两层是**假覆盖声明**（新建 `engine-prose-live-price-guard`）；③ 守卫自己的 `TOKEN_EXPECTATIONS` 表**漏了 3 种早已实现的 token** ⇒ 把人逼进「塞问句」的错误形态（产生一处编辑不自洽、且无守卫会红的内容）⇒ 补表 + 加一条「表 == 实现侧集合」的结构断言；④ ⭐ **「唯一真相源」只管住了主数据文件、没管住脚本** —— 跨供应商对比表把模型 key 写进了 codegen ⇒ P156 守卫当场变红（6 处泄漏）⇒ 配置下沉到 `ai-pricing-popular.json` 由**三处共用**，顺带下线一个**被策展排除的别名**（`deepseek-chat`）。⚠️ 5 个变异台子 **20/20 KILLED**，共抓到 4 个真缺口（都是「看起来在测、实际没测到」）。验证: tsc exit 0 / drift exit 0×2 / build exit 0 / 全量 **265 套件 · 1624 断言 · 0 失败 · 0 跳过 · exit 0**（P163 时是 262 / 1605）)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1342 across 75 active days (2026-05-31 → 2026-10-28, ~21 weeks)
+> **Total commits:** 1345 across 80 active days (2026-05-31 → 2026-11-02, ~22 weeks)
 
 ---
 
@@ -20,6 +20,38 @@
 ---
 
 ## [Unreleased]
+
+### [P164] — 定价 bot 的 PAT + **交互态契约**（33/100 个计算器在生产里点不动）+ 引擎 prose 派生化 + 6 种 token 落地 + D5 收口 (2026-11-02)
+
+1 个原子提交。scope: (ci) · (engines) · (i18n) · (lib) · (scripts) · (tests) · (docs)。**未改动任何价格计算公式**（数据集一个字节未动）、engines count unchanged (100)。完整说明见 `docs/superpowers/specs/2026-10-27-p155-adsense-low-value-content-and-pricing-bot-diagnosis.md` §17。
+
+> **一句话**：用户批准的「两件事」（定价 bot 不再停在 `action_required` + 后续批次待拍板清单）执行到位；执行中撞见一个更大的生产缺陷 —— **100 个计算器里有 33 个的「计算」按钮在生产里是坏的**，而 **CI 一直是绿的，因为守卫测的压根不是浏览器跑的那份东西**。
+
+| # | What | Why it matters |
+|---|---|---|
+| 1 | **取证：33 / 100 个计算器的交互态是坏的** | 5 类失败模式（每类都真实发生过，计数取自实测输出）：**M1** 真换行落在 JS 字符串内部 ⇒ `new Function` 抛异常（**7**）· **M2** 非法 Unicode 转义（**1**）· **M3** 只定义 `run()` 不在顶层调用 ⇒ 返回 `undefined` ⇒ 页面 `results[0]` 抛 TypeError（**21**）· **M4** 返回数字 / 对象而非字符串 ⇒ `esc()` 抛 TypeError（**3**）· **M5** 执行期引用未定义变量（**1**）。⭐ **静态示例是服务端渲染的 ⇒ 页面毫无异常信号** ⇒ 唯一有效的体检是跑浏览器那条路径。⭐ **基线「33」可复算**（不是口述）：`node node_modules/tsx/dist/cli.mjs tests/scripts/contract-scan-at-ref.ts HEAD` —— 工具已入库，任意 git ref 与 `WORKTREE` 可直接对比（HEAD = 67/100，WORKTREE = 100/100） |
+| 2 | **修法：把 customFn 的契约收紧成一个形状** | 页面的真实路径是 `new Function('inputs','pick','fill',body)` 之后**直接调用函数体** ⇒ body 必须自己执行并返回**非空字符串数组**。⇒ 引擎侧追加顶层 `return run(inputs, pick, fill);`（**21** 个）· 3 个 retention 引擎**逐字节移植**服务端 `calculate()`（判据 = `JSON.stringify` 逐字节相同；3 引擎 × 5 组输入 ⇒ **PASS 15 / FAIL 0**）· rent-vs-buy 的损坏段按**服务端权威文本**修 ⇒ 客户端与服务端逐字节同形（不是「语义等价即可」）。⚠️ **刻意不在 astro 侧加兼容 shim**：那样契约变成「两种 body 都合法」，新引擎照样会写成只有 `run()` 的形态（M3 那 21 个整整齐齐就是这么来的）⇒ 收紧在引擎侧，100 个引擎一个形状，且可被一条守卫强制 |
+| 3 | **⭐ 假绿来源：守卫测的不是被测物** | `scripts/codegen-examples.mjs` 的 customFn 提取器**只处理 `\uXXXX`**，其它转义一律丢掉反斜杠保留字母 ⇒ `\n` 被读成字母 `n` ⇒ 它拼出来的**根本不是浏览器执行的那份字符串** ⇒ **CI 绿了半年**。⇒ 守卫改为**取真值**（`getAllEngines()` 里的 `clientConfig.customFn`，**不做任何源码解析**）；`tests/scripts/test-customFn.mjs` 重写为真值探针（顺带修好「路径写死 `src/engines/<slug>.ts` ⇒ **对子目录里的引擎根本跑不了**」） |
+| 4 | **定价 bot 改用 PAT secret** | `action_required` 的成因：head 分支用 `GITHUB_TOKEN` 推 ⇒ 该 PR 的 workflow run 会等待维护者批准并报告 **0 个 job**（实测：PR #4，run `41377087077`，`status=completed` / `conclusion=action_required` / `jobs=0`）。⇒ `GH_TOKEN`、**checkout 的 `token`**、commit 作者身份全部改用 `secrets.PRICING_BOT_PAT`（回落 `secrets.GITHUB_TOKEN`）。⚠️ **push 必须用同一个 token** —— checkout 会为 `https://github.com/` 持久化 extrahead 凭据，push 步骤依赖它；用默认 `github.token` 的话即使 `gh` 拿着 PAT，分支**仍然是 GITHUB_TOKEN 推的** ⇒ 又落回 `action_required`。⚠️ **PAT 的创建与入库只能由用户操作**（另：已 pending 的那次 run 不会因为补了 secret 而自动重跑，仍需手工点一次 Approve） |
+| 5 | **gemini 引擎的 prose 派生化 + 跨供应商表 codegen 化** | 服务端 prose 与客户端 customFn 的**价格全部改为派生** ⇒ 两者**逐字节一致**。⭐ 实测**旧文案当时就是错的**：写「the newest 3 models」，而数据集里 `supportsCache` 的交互模型**有 5 个**。跨供应商表（XP）改为派生价格（**展示名手写 + 价格派生**）⇒ XP 与 M 表必须**同一表区** ⇒ `tableEndMarker` 仍为 **9** 个（加一个表区 = 改一个「钉死的数量」，`codegen-marker-presence` 的 T3/T4/T5 会红） |
+| 5b | **⭐ 全量套件抓到的真回归：「唯一真相源」没管住脚本** | 我把 XP 的模型清单写进了 `scripts/codegen-customfn.mjs` ⇒ **等于开了第二份清单** ⇒ P156 守卫当场变红（6 处模型 key 泄漏）。⇒ 清单**下沉到 `ai-pricing-popular.json` 的 `crossProviderModels`**，由**服务端两个引擎 + 客户端 codegen 三处共用**。⭐ 顺带挖出一个**内容错误**：claude 那张表的 DeepSeek 行用的是 `deepseek-chat` —— 而它在 `excludedModelKeys` 里（排除原因：「通用别名 —— 指向具体版本，交互态用固定版本名」）⇒ **对比表展示了一个被自己策展排除掉的模型**（交互态里够不着）⇒ 改用 `deepseek-v4-flash`。⇒ 新增 **2 条**守卫（XP 模型必须在交互态清单里 / 必须真实存在于数据集），变异台子 **3/3 KILLED** |
+| 6 | **⭐ 台账的假覆盖声明** | `engine-prose:gemini` / `engine-customfn:gemini` 两条的 `guardedBy` 指向的守卫**只读引擎源码里的 `faq: [...]` 数组**，不扫 `calculate()` 的 prose、也不扫 customFn 正文 ⇒ 这两层**当时无人看守**，而台账显示「已覆盖」。⇒ 新建 `engine-prose-live-price-guard`（E1–E4，含「服务端 prose 与客户端 customFn 的同一句**逐字节相同**」）并改指。⇒ **教训：台账守卫只验证「守卫文件存在」，不验证「它真的看得见这一层」** ⇒ 一条假的覆盖声明可以长期存在而 CI 全绿 |
+| 7 | **6 种「已实现未使用」的 token 落地 + ⭐ 守卫表的漏项** | P163 §16.8 留下 6 种「已实现、已钉死、但内容里没用」的 token；本批用进图片 / 训练 FAQ 并**同步三处**（引擎 .ts + `en.json` + `zh.json`）。⭐ 执行时撞到 `TOKEN_EXPECTATIONS` 只钉了 **13** 种（缺 `liveImageAdvMult` / `liveImageCheapest` / `liveTrainingDataProcess`）而这张表同时充当「**已实现清单**」⇒ 放进 FAQ **答案**会被误判成「未实现的 token」⇒ 只能躲进**问句**（问句不被扫 kind）⇒ 产生「问句问了、正文不答」的自相矛盾，且**没有任何守卫会红**。⇒ 补表 + **加一条结构断言（表的 kind 集合必须 == 实现侧 `IMAGE_TRAINING_TOKEN_KINDS`）** + 3 个 token 搬回答案并把画质倍率写进正文。图片答案 token 数 24 → **27**、训练 25 → **35**，**问句里 0 个 token** |
+| 8 | **D5 收口 + 一条断链修复** | D5 行改为「**部分已收口**」（L5 大小写语义已由 P153-E2 拍板并落地，契约在 `tests/l5-tags.ts`）；「Phase 2 A·B·C」在本规格**从未定义**（全文只有 D5 行自己提到，§10 只有 §10.1–§10.4）⇒ 其施工面已被 D6 取代。`src/data/category-decision-layers.ts` 的「见规格文档 §10.5」是**断链**（该规格根本没有 §10.5）⇒ 改为 §11.4 |
+| 9 | **本批新拍板（用户 2026-11-02）** | **批次 2（B2 主题页 22 页）= A：L1 选型链 + L2 基准解读层**（L1「先算 X → 再算 Y → 校准 Z」跨引擎链路 + L2「这张基准表怎么读」的阈值解读层；表已在页面上，只做解读不复制表）· **对比页内容刷新（模型 lineup / 质量分 / 延迟）= 单独一批 P165**（这三项是**编辑主张**且要动 compare 页形状 ⇒ 与「修坏掉的交互态」是两类风险） |
+
+⚠️ **本批的四个真缺口（都是「看起来在测、实际没测到」）**：
+1. **提取器的解码 bug** —— `codegen-examples.mjs` 把 `\n` 读成字母 `n` ⇒ 守卫拼出一个**假 body** ⇒ **CI 绿了半年**，而浏览器执行的是另一份字符串。⇒ 「守卫全绿」与「守卫真的在测」是两件事，后者只能靠**取真值**证明。
+2. **台账的 `guardedBy` 只验证文件存在** —— 不验证「它看得见这一层」⇒ 两条 gemini prose / customfn 入口长期无人看守却显示「已覆盖」。
+3. **守卫表自己会有漏项，而漏项会把人逼进错误形态** —— `TOKEN_EXPECTATIONS` 少 3 种 ⇒「放进答案」被挡 ⇒ 只能塞进问句 ⇒ **产生一处编辑不自洽、且没有任何守卫会红的内容**。⇒ 「表」必须被断言成「实现侧集合的完整镜像」，而不是手工维护的子集。
+4. **「唯一真相源」只管住了主数据文件，没管住脚本** —— XP 的模型清单写进了 codegen 脚本 ⇒ 开了第二份清单 ⇒ P156 守卫当场变红（6 处泄漏）。⇒ 真相源规则必须**管住所有消费方**。
+
+⚠️ **一个刻意的「不修」**（记录在案，避免下批次误以为漏了）：**训练引擎的 customFn 缺整个 What-If 段**（与 `calculate()` 不一致）—— 既有分歧，非本批引入；且它与「自定义函数」的产品形态有关，改它属于产品决策而非缺陷修复。
+
+**变异台子**：5 个台子，共 **20** 条变异、**20/20 KILLED**（customFn 契约 5/5 · PAT 9/9 · token 表 3/3 · XP 表 3/3）；每个台子**收尾无条件还原 + sha256 逐字节校验** ⇒ 工作区已还原。⚠️ 台子纪律又现了一次：XP 台子第二版有一条变异的锚点**命中 2 次** ⇒ 按纪律判为 **INVALID**（既不算 KILLED 也不算 SURVIVED）⇒ 收紧锚点后才重跑 ⇒ **非唯一锚点会让台子静默地测不到东西**。
+
+**套件计数变更**：58 build-dep ＋ 204 source-only = 262 → **58 build-dep ＋ 207 source-only = 265**（新增 3 个 source-only 套件：`customfn-contract-guard` / `engine-prose-live-price-guard` / `sync-pricing-pat-guard`；另在 `image-training-faq-live-price-guard` 补 1 条结构断言（8 → 9 条）、在 `ai-cost-scope-guard` 补 2 条（10 → 12 条））。
+
 
 ### [P163] — 价格主张覆盖面台账 + 图片 / 训练两个引擎的价格派生化 + `popular` 显式规则 (2026-10-30)
 

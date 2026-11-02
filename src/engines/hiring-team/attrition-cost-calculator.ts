@@ -75,7 +75,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review',
     '💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.'
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

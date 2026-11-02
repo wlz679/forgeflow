@@ -91,7 +91,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: At month ' + Math.round(mt / 2) + ' the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2)',
     '💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance).'
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

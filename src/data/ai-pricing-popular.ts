@@ -85,6 +85,48 @@ export function matchesExcludedFamily(pattern: string, key: string): boolean {
 /** One flagship per provider — the cross-provider side-by-side set (4). */
 export const COMPARISON_FLAGSHIP_KEYS: Record<string, string> = popular.comparisonFlagshipKeys;
 
+/**
+ * P164 — one entry of a provider calculator's cross-provider comparison table.
+ *
+ * `key` is the row key inside the generated `XP` table, `provider` + `model`
+ * locate the model in the dataset (its prices are DERIVED, never typed here),
+ * and `label` is the **editorial** display name (the dataset's own `name`
+ * field uses a different casing convention — `Deepseek V4 Flash` vs the site's
+ * `DeepSeek V4 Flash`).
+ */
+export interface CrossProviderModel {
+  key: string;
+  provider: string;
+  model: string;
+  label: string;
+}
+
+/**
+ * P164 — the representative models each provider calculator shows when it
+ * compares itself against the other providers.
+ *
+ * Why this lives here and not in the engine files: the same list is consumed
+ * by THREE places — the two build-time `calculate()` implementations and the
+ * codegen that writes the client-side `XP` table. Before P164 the build-time
+ * side and the codegen side each carried their own copy, so
+ * `scripts/codegen-customfn.mjs` ended up hard-coding model keys — which
+ * `tests/ai-cost-scope-guard.test.ts` forbids (the interactive set must live
+ * in exactly one place, or the bundled client table and the build-time engine
+ * silently diverge).
+ *
+ * Every `model` here must also be in `popularModelKeys`: showing a model that
+ * the curation explicitly excluded (e.g. `deepseek-chat`, a generic alias)
+ * would put a model in front of the user that the interactive set does not
+ * contain. The guard enforces that.
+ */
+export const CROSS_PROVIDER_MODELS: Record<string, CrossProviderModel[]> =
+  popular.crossProviderModels;
+
+/** The cross-provider comparison entries configured for one engine. */
+export function pickCrossProviderModels(engine: string): CrossProviderModel[] {
+  return CROSS_PROVIDER_MODELS[engine] ?? [];
+}
+
 /** Total selectable models across the four provider calculators. */
 export const INTERACTIVE_MODEL_COUNT = Object.values(POPULAR_MODEL_KEYS).reduce(
   (n, keys) => n + keys.length,

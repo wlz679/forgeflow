@@ -49,7 +49,25 @@ jobs:
       contents: write         # push the bot branch
       pull-requests: write    # open / update the PR (P153 §7.18 E9)
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # P164: prefer a personal access token over the built-in GITHUB_TOKEN.
+      #
+      # Why: a PR whose head branch was pushed with GITHUB_TOKEN gets a
+      # `pull_request` workflow run that sits in `action_required` — the run
+      # is created but waits for a maintainer to approve it, and it reports
+      # ZERO jobs. Measured on 2026-11-02: the weekly sync opened PR #4 and
+      # its CI never started (run 41377087077, status=completed,
+      # conclusion=action_required, jobs=0).
+      #
+      # A branch pushed with a PAT is not treated that way: the same
+      # `pull_request` event starts the CI run on its own. The sync itself
+      # does not care which token it holds, so the fallback keeps the weekly
+      # job working (and still opening the PR) when the secret is not set —
+      # only the CI-on-the-PR part then needs a manual click.
+      GH_TOKEN: ${{ secrets.PRICING_BOT_PAT || secrets.GITHUB_TOKEN }}
+      # 'pat' | 'github-token' — labels the job summary only. It never
+      # decides an auth outcome; it exists so that "the bot PR's CI did not
+      # run" is explainable from the summary without reading the job log.
+      GH_TOKEN_KIND: ${{ secrets.PRICING_BOT_PAT && 'pat' || 'github-token' }}
       # Stable branch name: one open PR at a time, refreshed every week.
       # See the "Commit pricing sync to bot branch" step for why reusing it
       # is safe.
@@ -63,6 +81,13 @@ jobs:
           # clone makes both the push and the base resolution needlessly
           # fragile. ~59 MB .git as of 2026-10-22 — cheap for a weekly job.
           fetch-depth: 0
+          # P164: the PUSH must use the same token as `gh`. actions/checkout
+          # persists an extraheader credential for https://github.com/ and the
+          # push step relies on it — with the default (`github.token`) the
+          # branch is a GITHUB_TOKEN push even when `gh` holds a PAT, and the
+          # PR's CI lands in `action_required` again. `github.token` is the
+          # fallback so the sync still works without the secret.
+          token: ${{ secrets.PRICING_BOT_PAT || github.token }}
 
       # P153: pin pnpm to the SAME major ci.yml uses (9). This step used to be
       # `npm install -g pnpm`, which floats to the latest major and made this
@@ -108,8 +133,24 @@ jobs:
         if: steps.diff.outputs.changed == 'true'
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # P164: author the commit as the PAT's own identity when a PAT is
+          # in use. A GITHUB_TOKEN push leaves the head commit authored by
+          # `github-actions[bot]` — the weakest case for the workflow engine's
+          # trust decision on that branch. Resolving the real identity keeps
+          # "who pushed this" and "who authored this" the same person.
+          # `gh api user` needs a user token: with the built-in GITHUB_TOKEN it
+          # answers 403, so this only runs on the PAT path.
+          BOT_AUTHOR_NAME="github-actions[bot]"
+          BOT_AUTHOR_EMAIL="github-actions[bot]@users.noreply.github.com"
+          if [ "${GH_TOKEN_KIND:-}" = "pat" ]; then
+            BOT_LOGIN="$(gh api user --jq .login 2>/dev/null || echo '')"
+            if [ -n "$BOT_LOGIN" ]; then
+              BOT_AUTHOR_NAME="$BOT_LOGIN"
+              BOT_AUTHOR_EMAIL="$BOT_LOGIN@users.noreply.github.com"
+            fi
+          fi
+          git config user.name "$BOT_AUTHOR_NAME"
+          git config user.email "$BOT_AUTHOR_EMAIL"
           # Rebuild the bot branch from master's tip (the commit checked out
           # above) so the PR diff contains ONLY this week's pricing delta —
           # not last week's commit on top of last week's commit.
@@ -194,6 +235,18 @@ jobs:
           else
             echo "GH_TOKEN: *** MISSING *** — the job-level env: block did not provide it;"
             echo "every gh call in this step will fail with an auth error."
+          fi
+          # P164: say WHICH token it is, and what that means for the PR's CI.
+          # On 2026-11-02 the sync opened PR #4 and its CI run reported
+          # `action_required` with zero jobs — nobody reading the summary
+          # could tell that the cause was the token, not the workflow.
+          echo "token kind: ${GH_TOKEN_KIND:-unknown}"
+          if [ "${GH_TOKEN_KIND:-}" = "pat" ]; then
+            echo "push credential: personal access token — the PR's CI run starts on its own."
+          else
+            echo "push credential: built-in GITHUB_TOKEN — the PR's CI run will sit in"
+            echo "'action_required' (a maintainer must approve it) and report zero jobs."
+            echo "Fix: add a repo secret named PRICING_BOT_PAT (a PAT with repo scope)."
           fi
           gh auth status >> "$SUMMARY" 2>&1 || true
           gh api "repos/$REPO/actions/permissions" >> "$SUMMARY" 2>&1 || true

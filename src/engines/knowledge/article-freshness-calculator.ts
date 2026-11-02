@@ -69,7 +69,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo',
     '💡 Tip: stale articles are the silent killer - ' + (stale*100/Math.max(1,total)).toFixed(0) + '% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.',
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

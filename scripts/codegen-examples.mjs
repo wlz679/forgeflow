@@ -250,6 +250,13 @@ function buildRunnerScript() {
     "",
     "async function main() {",
     "  const results: Record<string, string[]> = {};",
+    // P164: 同时把**真实**的 customFn 正文带出来。
+    // 旧实现是在 --check 里用一份源码提取器（extractCustomFnBody）从引擎文件里
+    // 「猜」出正文的 —— 那份提取器的转义解码有 bug（只处理 \uXXXX，其它转义一律
+    // 丢掉反斜杠保留字母），于是 `\n` 被读成字母 `n`，拼出来的根本不是浏览器
+    // 执行的那份东西 ⇒ 守卫一直绿，而 8 个引擎的交互态在生产里是坏的。
+    // 真值只有一个来源：引擎模块里的 clientConfig.customFn。
+    "  const customFns: Record<string, string | null> = {};",
     "",
   ];
   for (const { file, slug, subdir, defaultInputs } of ENGINES) {
@@ -259,10 +266,11 @@ function buildRunnerScript() {
     lines.push(`    const engine = getEngine('${slug}');`);
     lines.push(`    if (!engine) { console.error('No engine registered for ${slug}'); process.exit(1); }`);
     lines.push(`    results['${slug}'] = engine.generate(${JSON.stringify(defaultInputs)});`);
+    lines.push(`    customFns['${slug}'] = (engine as any).clientConfig?.customFn ?? null;`);
     lines.push(`  }`);
     lines.push("");
   }
-  lines.push("  process.stdout.write(JSON.stringify(results));");
+  lines.push("  process.stdout.write(JSON.stringify({ results, customFns }));");
   lines.push("}");
   lines.push("main().catch(e => { console.error(e); process.exit(1); });");
   return lines.join("\n");
@@ -289,7 +297,7 @@ if (result.status !== 0) {
   process.exit(1);
 }
 
-const results = JSON.parse(result.stdout);
+const { results, customFns } = JSON.parse(result.stdout);
 console.log(`[codegen-examples] Got results for ${Object.keys(results).length} engines.`);
 
 // Update each engine's staticExamples[0]
@@ -438,39 +446,15 @@ if (CHECK_MODE) {
   // (fill inputs → Generate) silently fails (page still renders staticExamples[0]
   // server-side but the dynamic result never computes).
   //
-  // Extract the customFn body the same way as tests/scripts/test-customFn.mjs,
-  // then try to construct the function. Surface any parse failures.
-  function extractCustomFnBody(src) {
-    const start = src.indexOf('const customFn');
-    if (start < 0) return null;
-    let i = src.indexOf('"', start);
-    if (i < 0) return null;
-    const parts = [];
-    while (i < src.length && src[i] === '"') {
-      let j = i + 1;
-      let cur = '';
-      while (j < src.length && src[j] !== '"') {
-        if (src[j] === '\\' && j + 1 < src.length) {
-          const c = src[j + 1];
-          if (c === 'u' && j + 5 < src.length) {
-            cur += String.fromCharCode(parseInt(src.slice(j + 2, j + 6), 16));
-            j += 6;
-          } else { cur += c; j += 2; }
-        } else { cur += src[j]; j++; }
-      }
-      parts.push(cur);
-      i = j + 1;
-      while (i < src.length && /[\s+]/.test(src[i])) i++;
-      if (src[i] === ';') break;
-    }
-    return parts.join('');
-  }
+  // P164: the body comes from the **real** engine module (customFns, collected by
+  // the tsx runner above) — NOT from a local extractor that re-parses the engine
+  // source. The old extractor had an escape-decoding bug, so it validated a body
+  // that was not the one the browser runs (measured: 8 engines were broken in
+  // production while this check stayed green). One source of truth, one check.
   const brokenCustomFn = [];
-  for (const { file, subdir } of ENGINES) {
-    const fp = path.join(ROOT, 'src', 'engines', subdir, file);
-    const src = fs.readFileSync(fp, 'utf8');
-    const body = extractCustomFnBody(src);
-    if (body === null) continue; // No customFn — e.g. wordpool engines
+  for (const { file, slug } of ENGINES) {
+    const body = customFns[slug];
+    if (typeof body !== 'string' || body.length === 0) continue; // No customFn — e.g. wordpool engines
     try {
       new Function('inputs', 'pick', 'fill', body);
     } catch (e) {

@@ -130,8 +130,13 @@ export const PRICE_CLAIM_SURFACES: PriceClaimSurface[] = [
     layer: 'engine-prose',
     file: 'src/engines/ai-cost/gemini-api-cost-calculator.ts',
     locator: 'cheapest frontier-quality model',
-    guardedBy: ['tests/engine-faq-live-price-guard.test.ts'],
-    note: 'P163：Gemini 3 Flash 的 $0.50/$3.00 改为派生（数据集实为 in=0.5 / out=3）',
+    // P164：原来写的是 tests/engine-faq-live-price-guard.test.ts —— 但那份守卫
+    // 只读引擎源码里的 `faq: [...]` 数组（readEngineFaq），**不扫 calculate() 的
+    // prose** ⇒ 覆盖声明是假的，这一层当时无人看守。
+    // 现在指向真正扫 prose 层的新守卫。
+    guardedBy: ['tests/engine-prose-live-price-guard.test.ts'],
+    note: 'P164：$价与「支持缓存的模型数」改为派生（gf.input/gf.output + cacheModelCount）；' +
+      '实测数据集里 supportsCache 的交互模型有 5 个，旧文案写死的「the newest 3 models」当时就是错的',
   },
   {
     id: 'engine-prose:image',
@@ -156,8 +161,10 @@ export const PRICE_CLAIM_SURFACES: PriceClaimSurface[] = [
     layer: 'engine-customfn',
     file: 'src/engines/ai-cost/gemini-api-cost-calculator.ts',
     locator: 'cheapest frontier-quality model',
-    guardedBy: ['tests/engine-faq-live-price-guard.test.ts'],
-    note: 'P163：customFn 里那份手写价改为派生（P162 §15.8 第 4 条）',
+    // P164：同上 —— engine-faq 那份守卫只读 faq 数组，看不见 customFn 正文。
+    guardedBy: ['tests/engine-prose-live-price-guard.test.ts'],
+    note: 'P164：customFn 里那份手写价改为派生（gf3.i/gf3.o + ccm 计数）；' +
+      '同一守卫同时校验「服务端 prose 与客户端 customFn 这一句逐字节相同」（live = static parity）',
   },
   {
     id: 'engine-customfn:image',

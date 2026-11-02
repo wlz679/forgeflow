@@ -92,7 +92,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: cost/article = ' + costPerArtStr + '/mo across ' + Math.round(articles).toLocaleString() + ' articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.',
     '💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.',
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

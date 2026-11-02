@@ -1,7 +1,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import PRICING from '../../data/ai-pricing.json';
-import { pickInteractiveModels } from '../../data/ai-pricing-popular';
+import { pickInteractiveModels, pickCrossProviderModels } from '../../data/ai-pricing-popular';
 
 // --- Model definitions ---
 interface ModelInfo {
@@ -83,12 +83,30 @@ const PRESETS: Record<string, Record<string, string>> = {
   },
 };
 
-// Cross-provider reference prices (cheapest from each, per 1M tokens)
-const CROSS_PROVIDER: Record<string, { input: number; output: number; name: string }> = {
-  openai: { input: 0.05, output: 0.4, name: 'GPT-5 Nano' },
-  deepseek: { input: 0.14, output: 0.28, name: 'DeepSeek Chat' },
-  gemini: { input: 0.075, output: 0.3, name: 'Gemini 1.5 Flash' },
-};
+// P164: 跨供应商对比的代表模型 —— 见 gemini 引擎同名的注释。
+//
+// 「展示哪几个模型」与「展示名叫什么」是**编辑决定** ⇒ 放在
+// src/data/ai-pricing-popular.json 的 crossProviderModels 里（**唯一一份**，
+// 服务端两个引擎 + 客户端 codegen 三处共用）；**价格一律从数据集派生**。
+//
+// 之前这张表是手写的，而且已经漂了：DeepSeek 那行手写 0.14/0.28，
+// 数据集里 deepseek-v4-flash 实际 **0.3 / 1.2**（差 2.1 倍 / 4.3 倍）⇒
+// 页面上「Claude vs DeepSeek」的跨供应商对比一直在用错价。
+const CROSS_PROVIDER: Record<string, { input: number; output: number; name: string }> =
+  Object.fromEntries(
+    pickCrossProviderModels('claude').map((c) => [
+      c.key,
+      crossProviderModel(c.provider, c.model, c.label),
+    ]),
+  );
+
+/** 取数据集里某个模型的 per-1M 输入/输出价；展示名用编辑口径。 */
+function crossProviderModel(provider: string, key: string, label: string) {
+  const models = (PRICING.llm as unknown as Record<string, { models: Record<string, { input: number; output: number }> }>)[provider]?.models;
+  const m = models?.[key];
+  if (!m) throw new Error(`cross-provider model missing from dataset: ${provider}/${key}`);
+  return { input: m.input, output: m.output, name: label };
+}
 
 // Helpers
 function fmt(n: number): string {
@@ -591,7 +609,7 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   // --- MODELS map (full keys, MUST match TS MODELS) ---
-  "var M={'claude-fable-5':{i:10,o:50,n:'Claude Fable 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:1},'claude-opus-5-5':{i:4,o:20,n:'Claude Opus 55',f:'claude5x',cw:'1M',mo:'128K',bi:2,bo:10,od:2},'claude-sonnet-5-5':{i:2,o:10,n:'Claude Sonnet 55',f:'claude5x',cw:'1M',mo:'128K',bi:1,bo:5,od:3},'claude-haiku-5-5':{i:0.1,o:0.5,n:'Claude Haiku 55',f:'claude5x',cw:'1M',mo:'128K',bi:0.05,bo:0.25,od:4},'claude-opus-5':{i:5,o:25,n:'Claude Opus 5',f:'claude5x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:5},'claude-sonnet-5':{i:2,o:10,n:'Claude Sonnet 5',f:'claude5x',cw:'1M',mo:'128K',bi:1,bo:5,od:6},'claude-mythos-5':{i:10,o:50,n:'Claude Mythos 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:7},'claude-opus-4-8':{i:5,o:25,n:'Claude Opus 48',f:'claude4x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:8},'claude-sonnet-4-6':{i:3,o:15,n:'Claude Sonnet 46',f:'claude4x',cw:'1M',mo:'64K',bi:1.5,bo:7.5,od:9},'claude-haiku-4-5':{i:1,o:5,n:'Claude Haiku 45',f:'claude4x',cw:'200K',mo:'64K',bi:0.5,bo:2.5,od:10},'claude-opus-4-1':{i:15,o:75,n:'Claude Opus 41',f:'claude4x',cw:'200K',mo:'32K',bi:7.5,bo:37.5,od:11},'claude-haiku-3-5':{i:0.8,o:4,n:'Claude Haiku 3.5',f:'lg',cw:'200K',mo:'8K',bi:0.4,bo:2,od:12},'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:13}};" +
+  "var M={'claude-fable-5':{i:10,o:50,n:'Claude Fable 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:1},'claude-opus-5-5':{i:4,o:20,n:'Claude Opus 55',f:'claude5x',cw:'1M',mo:'128K',bi:2,bo:10,od:2},'claude-sonnet-5-5':{i:2,o:10,n:'Claude Sonnet 55',f:'claude5x',cw:'1M',mo:'128K',bi:1,bo:5,od:3},'claude-haiku-5-5':{i:0.1,o:0.5,n:'Claude Haiku 55',f:'claude5x',cw:'1M',mo:'128K',bi:0.05,bo:0.25,od:4},'claude-opus-5':{i:5,o:25,n:'Claude Opus 5',f:'claude5x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:5},'claude-sonnet-5':{i:2,o:10,n:'Claude Sonnet 5',f:'claude5x',cw:'1M',mo:'128K',bi:1,bo:5,od:6},'claude-mythos-5':{i:10,o:50,n:'Claude Mythos 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:7},'claude-opus-4-8':{i:5,o:25,n:'Claude Opus 48',f:'claude4x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:8},'claude-sonnet-4-6':{i:3,o:15,n:'Claude Sonnet 46',f:'claude4x',cw:'1M',mo:'64K',bi:1.5,bo:7.5,od:9},'claude-haiku-4-5':{i:1,o:5,n:'Claude Haiku 45',f:'claude4x',cw:'200K',mo:'64K',bi:0.5,bo:2.5,od:10},'claude-opus-4-1':{i:15,o:75,n:'Claude Opus 41',f:'claude4x',cw:'200K',mo:'32K',bi:7.5,bo:37.5,od:11},'claude-haiku-3-5':{i:0.8,o:4,n:'Claude Haiku 3.5',f:'lg',cw:'200K',mo:'8K',bi:0.4,bo:2,od:12},'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:13}};\nvar XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},deepseek:{i:0.3,o:1.2,n:'DeepSeek V4 Flash'},gemini:{i:0.075,o:0.3,n:'Gemini 1.5 Flash'}};" +
 
   // Family icons
   "var FI={mythos:'\\u2726',claude5x:'\\u2605',claude4x:'\\u25B2',legacy:'\\u25C6'};" +
@@ -601,8 +619,6 @@ const customFn =
   // Caching constants
   "var CWM={};CWM['5min']=1.25;CWM['1hour']=2;" +
   "var CRM=0.1;" +
-  // Cross-provider
-  "var XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},deepseek:{i:0.14,o:0.28,n:'DeepSeek Chat'},gemini:{i:0.075,o:0.3,n:'Gemini 1.5 Flash'}};" +
   // Helpers
   "function fm(n){if(Math.abs(n)<0.01&&n!==0)return '$'+n.toFixed(4);return '$'+n.toFixed(2)}" +
   "function lc(n){return n.toLocaleString()}" +
@@ -786,7 +802,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // Single comprehensive example covering all 7 sections (same structure as calculate() output)
-    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n✦ Claude Fable 5           ███████████████████████████              $105.00\n★ Claude Opus 55           ███████████                              $42.00\n★ Claude Sonnet 55         █████                                    $21.00\n★ Claude Haiku 55          ░                                        $1.05 🏆\n★ Claude Opus 5            █████████████                            $52.50\n★ Claude Sonnet 5          █████                                    $21.00\n✦ Claude Mythos 5          ███████████████████████████              $105.00\n▲ Claude Opus 48           █████████████                            $52.50\n▲ Claude Sonnet 46         ████████                                 $31.50\n▲ Claude Haiku 45          ███                                      $10.50\n▲ Claude Opus 41           ████████████████████████████████████████ $157.50\n◆ Claude Haiku 3.5         ██                                       $8.40\n◆ Claude Haiku 3           █                                        $2.63\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n▲ Claude Sonnet 46 (Claude 4.x) | Context: 1M | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $3.00/1M → $0.0030/req\nOutput: 500     tokens × $15.00/1M → $0.0075/req\n————————————————————————————————————————————\nPer request:    $0.01\nDaily (100):    $1.05\nMonthly (30d):  $31.50\nAnnual:         $378.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0052/req ($15.75/mo) — save 50%\n\n▲ Claude Haiku 45 (Claude 4.x) | Context: 200K | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $1.00/1M → $0.0010/req\nOutput: 500     tokens × $5.00/1M → $0.0025/req\n————————————————————————————————————————————\nPer request:    $0.0035\nDaily (100):    $0.35\nMonthly (30d):  $10.50\nAnnual:         $126.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%\n\n✦ Claude Fable 5 (Mythos) | Context: 1M | Max Output: 128K\n————————————————————————————————————————————\nInput:  1,000   tokens × $10.00/1M → $0.01/req\nOutput: 500     tokens × $50.00/1M → $0.03/req\n————————————————————————————————————————————\nPer request:    $0.04\nDaily (100):    $3.50\nMonthly (30d):  $105.00\nAnnual:         $1260.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.02/req ($52.50/mo) — save 50%\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Claude Haiku 55 at $1.05/mo\n💸 Switching from Claude Fable 5 to Claude Haiku 45 saves $94.50/mo ($1134.00/yr)\n🌍 Claude Haiku 55 vs GPT-5 Nano: Claude costs $0.30 more/month (40% premium)\n🌍 Claude Haiku 55 vs DeepSeek Chat: Claude costs $0.21 more/month (25% premium)\n🌍 Claude Haiku 55 vs Gemini 1.5 Flash: Claude costs $0.38 more/month (56% premium)\n💡 Premium buys: 1M context, best-in-class safety, superior code generation\n\n📊 Usage Scenarios (monthly cost at 100 reqs/day)\n\n▲ Claude Sonnet 46 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00\n▲ Claude Haiku 45 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00\n✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟠 10x cost spread across selected models — review if every model needs to be premium.\n• 🟢 Low-volume tier — Claude Haiku 45 at $10.50/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Cache write multiplier is 1.25x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Claude Haiku 55:  save $9.45/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $294.00/mo\n• Halve volume to 50 reqs/day:  $73.50/mo\n• Boost cache hit rate to 50%:  save ~$33.08/mo  ($147.00 → $113.92)\n',
+    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n✦ Claude Fable 5           ███████████████████████████              $105.00\n★ Claude Opus 55           ███████████                              $42.00\n★ Claude Sonnet 55         █████                                    $21.00\n★ Claude Haiku 55          ░                                        $1.05 🏆\n★ Claude Opus 5            █████████████                            $52.50\n★ Claude Sonnet 5          █████                                    $21.00\n✦ Claude Mythos 5          ███████████████████████████              $105.00\n▲ Claude Opus 48           █████████████                            $52.50\n▲ Claude Sonnet 46         ████████                                 $31.50\n▲ Claude Haiku 45          ███                                      $10.50\n▲ Claude Opus 41           ████████████████████████████████████████ $157.50\n◆ Claude Haiku 3.5         ██                                       $8.40\n◆ Claude Haiku 3           █                                        $2.63\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n▲ Claude Sonnet 46 (Claude 4.x) | Context: 1M | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $3.00/1M → $0.0030/req\nOutput: 500     tokens × $15.00/1M → $0.0075/req\n————————————————————————————————————————————\nPer request:    $0.01\nDaily (100):    $1.05\nMonthly (30d):  $31.50\nAnnual:         $378.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0052/req ($15.75/mo) — save 50%\n\n▲ Claude Haiku 45 (Claude 4.x) | Context: 200K | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $1.00/1M → $0.0010/req\nOutput: 500     tokens × $5.00/1M → $0.0025/req\n————————————————————————————————————————————\nPer request:    $0.0035\nDaily (100):    $0.35\nMonthly (30d):  $10.50\nAnnual:         $126.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%\n\n✦ Claude Fable 5 (Mythos) | Context: 1M | Max Output: 128K\n————————————————————————————————————————————\nInput:  1,000   tokens × $10.00/1M → $0.01/req\nOutput: 500     tokens × $50.00/1M → $0.03/req\n————————————————————————————————————————————\nPer request:    $0.04\nDaily (100):    $3.50\nMonthly (30d):  $105.00\nAnnual:         $1260.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.02/req ($52.50/mo) — save 50%\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Claude Haiku 55 at $1.05/mo\n💸 Switching from Claude Fable 5 to Claude Haiku 45 saves $94.50/mo ($1134.00/yr)\n🌍 Claude Haiku 55 vs GPT-5 Nano: Claude costs $0.30 more/month (40% premium)\n🌍 Claude Haiku 55 vs DeepSeek V4 Flash: Claude saves $1.65/month (61% cheaper)\n🌍 Claude Haiku 55 vs Gemini 1.5 Flash: Claude costs $0.38 more/month (56% premium)\n💡 Premium buys: 1M context, best-in-class safety, superior code generation\n\n📊 Usage Scenarios (monthly cost at 100 reqs/day)\n\n▲ Claude Sonnet 46 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00\n▲ Claude Haiku 45 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00\n✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟠 10x cost spread across selected models — review if every model needs to be premium.\n• 🟢 Low-volume tier — Claude Haiku 45 at $10.50/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Cache write multiplier is 1.25x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Claude Haiku 55:  save $9.45/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $294.00/mo\n• Halve volume to 50 reqs/day:  $73.50/mo\n• Boost cache hit rate to 50%:  save ~$33.08/mo  ($147.00 → $113.92)\n',
   ],
   faq: [
     {

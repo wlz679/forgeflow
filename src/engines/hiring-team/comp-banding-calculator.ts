@@ -78,14 +78,15 @@ const engine: ToolEngine = {
     '🔄 What-If: at P75 ($' + p75.toLocaleString() + '), retention risk drops 40% (per Pave 2024)',
     '⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget $' + targetAt75.toLocaleString() + ' — vs current $' + base.toLocaleString() + ' = $' + (targetAt75 - base).toLocaleString() + ' delta',
     '🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)',
-    '💡 Tip: Pave / Levels.fyi / Carta publish role-level percentiles — refresh annually. Top-quartile retention is the goal.' + '\n\n🧭 Decision Recommendation\n' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '🧭 Decision Question: 单纯看 band midpoint 是陷阱，**核心问题是"候选人 market rate + 当前团队 equity + competitor 同岗位 pay + offer 速度 trade-off"**。top of band 可能意味着 hire 太晚。\n' +
-    '🧭 Recommendation: (1) **offer < band 25 百分位** → 极可能 lose candidate（除非强 equity/使命）；(2) **25-75 百分位** → 合理区间（适合大多数情况）；(3) **> 75 百分位** → 仅在 critical hire / replacement > 6 月时；(4) **> 95 百分位** → 重新评估 role 必要性或拆分。\n' +
-    '🧭 Key Uncertainty: (1) band 是 annualized base 不含 equity / bonus（total comp 可能 30-50% 高出）；(2) 不同 region 不可比（NYC senior ≠ Bangalore senior）；(3) competitor raise 数据滞后 6-12 月；(4) counter-offer 时机影响 retention。\n' +
+    '💡 Tip: Pave / Levels.fyi / Carta publish role-level percentiles — refresh annually. Top-quartile retention is the goal.' + '\\n\\n🧭 Decision Recommendation\\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n' +
+    '🧭 Decision Question: 单纯看 band midpoint 是陷阱，**核心问题是"候选人 market rate + 当前团队 equity + competitor 同岗位 pay + offer 速度 trade-off"**。top of band 可能意味着 hire 太晚。\\n' +
+    '🧭 Recommendation: (1) **offer < band 25 百分位** → 极可能 lose candidate（除非强 equity/使命）；(2) **25-75 百分位** → 合理区间（适合大多数情况）；(3) **> 75 百分位** → 仅在 critical hire / replacement > 6 月时；(4) **> 95 百分位** → 重新评估 role 必要性或拆分。\\n' +
+    '🧭 Key Uncertainty: (1) band 是 annualized base 不含 equity / bonus（total comp 可能 30-50% 高出）；(2) 不同 region 不可比（NYC senior ≠ Bangalore senior）；(3) competitor raise 数据滞后 6-12 月；(4) counter-offer 时机影响 retention。\\n' +
     '🧭 Next Action: (a) 跑 [Attrition Cost Calculator] 看 replacement 成本；(b) 跑 [Productivity Ramp Curve Calculator] 看 ramp 时间 ROI；(c) 跑 [Fully Loaded Employee Cost Calculator] 看全负荷 cost；(d) 决策前 verify 候选人 other competing offers。'
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

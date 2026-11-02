@@ -79,7 +79,8 @@ const engine: ToolEngine = {
     '🎯 Milestone: Refresh at year 4 anniversary; pair with our [Compensation Banding Calculator] (P11-4) for cash+equity total',
     '💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal.'
   ];
-}`,
+}
+return run(inputs, pick, fill);`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
