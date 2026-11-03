@@ -10,6 +10,7 @@ import TopicCard from '../../../components/TopicCard.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
 import { TOPIC_GUIDE_CONTENT } from '../../../data/topic-content';
+import { TOPIC_PRIORITY_CONTENT } from '../../../data/topic-priority';
 import { resolveLiveTokens, resolveLiveTokensDeep } from '../../../lib/live-price';
 import { t } from '../../../i18n';
 import { SITE_URL, defaultOgImage } from '../../../lib/site-config';
@@ -74,6 +75,9 @@ const wm = guideContent ? guideContent.whyMatters : '[CONTENT: ~200 字 business
 const kc = guideContent ? guideContent.keyConcepts : '[CONTENT: ~300 字 — 3-5 numbered concepts/principles]';
 const ha = guideContent ? guideContent.howToApply : '[CONTENT: ~300 字 practical steps]';
 const cp = guideContent ? guideContent.commonPitfalls : '[CONTENT: ~200 字 — 3-4 traps people fall into]';
+// P166: 「达标清单」—— 每一步的达标线；不达标就别往下走（与 howToApply 的
+// Step 编号链不同：这里给的是「什么算过了」）。数据不存在时整段不渲染。
+const readinessChecklist = resolveLiveTokensDeep(TOPIC_PRIORITY_CONTENT[topic.id]?.readinessChecklist?.[lang as 'en' | 'zh']);
 ---
 
 <BaseLayout title={title} description={description} schema={articleSchema} pageType="static">
@@ -110,6 +114,35 @@ const cp = guideContent ? guideContent.commonPitfalls : '[CONTENT: ~200 字 — 
         </ul>
       </div>
     </section>
+
+    {readinessChecklist && (
+      <section class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.readiness_checklist', lang)}</h2>
+        <p class="text-sm text-gray-700 leading-relaxed mb-4 whitespace-pre-line">{readinessChecklist.intro}</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-collapse">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.guide.checklist.step', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.guide.checklist.label', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.guide.checklist.gate', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.guide.checklist.block_if', lang)}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {readinessChecklist.items.map((item) => (
+                <tr class="bg-white">
+                  <td class="border border-gray-300 px-3 py-2 font-medium">{t('topic.guide.checklist.step_n', lang, { step: item.step })}</td>
+                  <td class="border border-gray-300 px-3 py-2">{item.label}</td>
+                  <td class="border border-gray-300 px-3 py-2">{item.gate}</td>
+                  <td class="border border-gray-300 px-3 py-2">{item.blockIf}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.guide.h2.common_pitfalls', lang)}</h2>

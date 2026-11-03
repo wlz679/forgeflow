@@ -8,6 +8,7 @@ import Breadcrumb from '../../../components/Breadcrumb.astro';
 import { TOPICS, type Topic } from '../../../data/topics';
 import { categories } from '../../../data/categories';
 import { TOPIC_BENCHMARK_CONTENT } from '../../../data/topic-content';
+import { TOPIC_PRIORITY_CONTENT } from '../../../data/topic-priority';
 import { resolveLiveTokens, resolveLiveTokensDeep } from '../../../lib/live-price';
 import { t } from '../../../i18n';
 import { SITE_URL } from '../../../lib/site-config';
@@ -55,6 +56,10 @@ const bib = benchContent ? benchContent.industryBenchmarks : 'Last updated: 2026
 const bhu = benchContent ? benchContent.howToUse : '[CONTENT: ~200 字 interpretation guidance]';
 const bsr = benchContent ? benchContent.sources : '[CONTENT: ~200 字 — source citations + methodology]';
 const brows = benchContent ? benchContent.rows : [];
+// P166: 「修复优先级表」—— 多个指标同时不达标时先修哪个（与 howToUse 的
+// 「单指标 → 单动作」不同：这里说的是多个指标之间的排序与联动）。
+// 数据不存在时整段不渲染 ⇒ 非试点页的产物字节不变。
+const fixPriority = resolveLiveTokensDeep(TOPIC_PRIORITY_CONTENT[topic.id]?.fixPriority?.[lang as 'en' | 'zh']);
 ---
 
 <BaseLayout title={title} description={description} schema={datasetSchema} pageType="static">
@@ -115,6 +120,37 @@ const brows = benchContent ? benchContent.rows : [];
         </ul>
       </div>
     </section>
+
+    {fixPriority && (
+      <section class="mb-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.fix_priority', lang)}</h2>
+        <p class="text-sm text-gray-700 leading-relaxed mb-4 whitespace-pre-line">{fixPriority.intro}</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border-collapse">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.benchmark.table.priority', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.benchmark.table.metric', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.benchmark.table.fix_first', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.benchmark.table.also_moves', lang)}</th>
+                <th class="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">{t('topic.benchmark.table.backfire', lang)}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fixPriority.rows.map((row) => (
+                <tr class="bg-white">
+                  <td class="border border-gray-300 px-3 py-2 font-medium">{row.priority}</td>
+                  <td class="border border-gray-300 px-3 py-2 font-medium">{row.metric}</td>
+                  <td class="border border-gray-300 px-3 py-2">{row.fixFirst}</td>
+                  <td class="border border-gray-300 px-3 py-2">{row.alsoMoves}</td>
+                  <td class="border border-gray-300 px-3 py-2">{row.backfire}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
 
     <section class="mb-8">
       <h2 class="text-xl font-bold text-gray-900 mb-3">{t('topic.benchmark.h2.sources', lang)}</h2>

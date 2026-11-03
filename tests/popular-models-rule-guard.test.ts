@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// P163 — `ai-pricing-popular.json` 显式规则守卫（source-only）。
+// P163 / P166 — `ai-pricing-popular.json` 显式规则守卫（source-only）。
 //
 // 为什么需要这个守卫
 // ------------------
@@ -13,10 +13,19 @@
 //   - 用户在计算器里根本选不到这个模型，交互态永久落后于市场。
 //
 // P163 的修法：把「决定」变成可执行契约。
-//   popularModelKeys   已策展（进交互态）—— 44
-//   excludedModelKeys  显式排除（不进交互态）—— 201
+//   popularModelKeys   已策展（进交互态）
+//   excludedModelKeys  显式排除（不进交互态）
 //   两个清单必须构成对数据集模型的**完整划分**。
-//   excludedFamilies   说明「为什么」—— 42 个族（provider + glob + reason）。
+//   excludedFamilies   说明「为什么」—— 每个族（provider + glob + reason）。
+//
+// P166 的修法（实测 2026-11-03）：P163 的守卫把 245/44/201/42 四个数**写死**了，
+// 而每周的定价 bot 会让数据集增删 ⇒ 每周 PR 必然红（实测 PR #4：数据集 245 → 247，
+// 两条写死计数的断言当场炸；那条 PR 的 CI run 又是 `action_required`，从没真跑起来
+// ⇒ 这个红灯从来没被人看见）。P166 起：
+//   · 计数从「精确相等」改成「**下限 floor**」（只挡灾难性塌缩）；
+//   · 完整性改由三条**恒等式**守：声明值 == 实际值 + 完整划分；
+//   · 「bot 有没有真的跑过」由 `_rule.datasetModelCount` 守；
+//   · 「bot 有没有被接进 workflow」由 tests/pricing-bot-wiring-guard.test.ts 守。
 //
 // 本守卫盯住这些失败模式（一条断言只守一件事）：
 //   1. `_rule` 契约本身缺失
@@ -48,14 +57,21 @@ type Llm = Record<string, LlmGroup>;
 
 const llm = (PRICING as unknown as { llm: Llm }).llm;
 
-/** 独立写死：数据集里 LLM 模型的总数 */
-const DATASET_MODEL_COUNT = 245;
-/** 独立写死：已策展（进交互态）模型数 */
-const CURATED_COUNT = 44;
-/** 独立写死：显式排除模型数 */
-const EXCLUDED_COUNT = 201;
-/** 独立写死：排除族数量 */
-const FAMILY_COUNT = 42;
+/**
+ * 独立写死的下限（不是期望值）。
+ *
+ * 为什么从「精确相等」改成「下限」：P166 起 bot 每周会自动增删**排除侧**，
+ * 数据集总数也会随 LiteLLM 增删 ⇒ 任何写死的精确值都会让**每周的 PR 必然红**
+ * （实测 PR #4 就是这么红的：数据集 245 → 247，两条写死计数的断言当场炸）。
+ *
+ * 下限只挡「灾难性塌缩」；真正的完整性由下面三条恒等式守：
+ *   · 策展 + 排除 == 数据集全集（完整划分）
+ *   · _rule.datasetModelCount == 数据集总数（bot 跑过了吗）
+ *   · _rule.<x>Count == 对应清单的实际长度（声明与实际一致吗）
+ */
+const DATASET_MODEL_COUNT_FLOOR = 200;
+const CURATED_COUNT_FLOOR = 44;
+const FAMILY_COUNT_FLOOR = 30;
 
 /** 独立写死：四个 provider */
 const PROVIDERS = ['anthropic', 'deepseek', 'google', 'openai'] as const;
@@ -72,6 +88,8 @@ interface PopularFile {
     rationale?: string;
     curatedModelCount?: number;
     excludedModelCount?: number;
+    datasetModelCount?: number;
+    autoCuration?: string;
   };
   popularModelKeys?: Record<string, string[]>;
   comparisonFlagshipKeys?: Record<string, string>;
@@ -98,13 +116,25 @@ function datasetTotal(): number {
   return PROVIDERS.reduce((n, p) => n + datasetKeys(p).length, 0);
 }
 
+/** 策展（进交互态）模型总数 —— 从清单实际长度算，不是写死的数 */
+function curatedTotal(): number {
+  return Object.values(popular).reduce((n, a) => n + a.length, 0);
+}
+
+/** 显式排除模型总数 —— 从清单实际长度算，不是写死的数 */
+function excludedTotal(): number {
+  return Object.values(excluded).reduce((n, a) => n + a.length, 0);
+}
+
+/** 被测文件里的 _rule 契约 */
+const rule = popularFile._rule ?? {};
+
 // ---------------------------------------------------------------------------
 // 1. 规则契约本身
 // ---------------------------------------------------------------------------
 
 test('P163: _rule 契约字段齐全（缺一个就说明「谁来决定」没写下来）', () => {
-  const rule = popularFile._rule;
-  assert.ok(rule, 'ai-pricing-popular.json 必须有 _rule 键');
+  assert.ok(popularFile._rule, 'ai-pricing-popular.json 必须有 _rule 键');
   assert.ok(
     typeof rule.rule === 'string' && rule.rule.length > 40,
     '_rule.rule 必须是一段说清「模型进不进交互态由谁决定」的文字',
@@ -117,8 +147,33 @@ test('P163: _rule 契约字段齐全（缺一个就说明「谁来决定」没�
     typeof rule.rationale === 'string' && rule.rationale.length > 40,
     '_rule.rationale 必须说明「为什么以前没有规则就是个洞」',
   );
-  assert.equal(rule.curatedModelCount, CURATED_COUNT, '_rule.curatedModelCount 与实际策展数不符');
-  assert.equal(rule.excludedModelCount, EXCLUDED_COUNT, '_rule.excludedModelCount 与实际排除数不符');
+});
+
+// ---------------------------------------------------------------------------
+// 1b. 声明值 == 实际值（bot 安全形态：不再拿写死数字当期望值）
+// ---------------------------------------------------------------------------
+
+test('P166: _rule 声明的策展数/排除数必须等于对应清单的实际长度', () => {
+  assert.equal(
+    rule.curatedModelCount,
+    curatedTotal(),
+    '_rule.curatedModelCount 与实际策展数不符 —— bot 跑完后必须刷新声明值',
+  );
+  assert.equal(
+    rule.excludedModelCount,
+    excludedTotal(),
+    '_rule.excludedModelCount 与实际排除数不符 —— bot 跑完后必须刷新声明值',
+  );
+});
+
+test('P166: _rule.datasetModelCount 必须等于数据集模型总数（bot 没跑就会红）', () => {
+  assert.equal(
+    rule.datasetModelCount,
+    datasetTotal(),
+    '数据集模型数变了但 popular.json 的 datasetModelCount 没跟上 —— ' +
+      '说明定价 bot 的策展步骤没跑（本周 PR 的 CI 会红）。' +
+      '本地修法：node scripts/curate-pricing-models.mjs',
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -159,17 +214,18 @@ test('P163: 同一个模型不能既已策展又被显式排除（矛盾）', ()
   );
 });
 
-test('P163: 已策展的模型数与已排除的模型数之和等于数据集模型总数', () => {
-  const curatedTotal = Object.values(popular).reduce((n, a) => n + a.length, 0);
-  const excludedTotal = Object.values(excluded).reduce((n, a) => n + a.length, 0);
-  assert.equal(curatedTotal, CURATED_COUNT, '已策展模型数变了');
-  assert.equal(excludedTotal, EXCLUDED_COUNT, '已排除模型数变了');
-  assert.equal(datasetTotal(), DATASET_MODEL_COUNT, '数据集里的 LLM 模型数变了');
+test('P166: 策展数 + 排除数 == 数据集模型总数（完整划分），且三个数都在下限之上', () => {
   assert.equal(
-    curatedTotal + excludedTotal,
-    DATASET_MODEL_COUNT,
+    curatedTotal() + excludedTotal(),
+    datasetTotal(),
     '策展 + 排除 必须等于数据集全集 —— 否则有模型两边都没有，或两边都有',
   );
+  assert.ok(datasetTotal() >= DATASET_MODEL_COUNT_FLOOR, '数据集模型数塌缩到下限以下');
+  assert.ok(
+    curatedTotal() >= CURATED_COUNT_FLOOR,
+    '交互态模型数塌缩到下限以下 —— 策展是人的决定，bot 永不削减它',
+  );
+  assert.ok(families.length >= FAMILY_COUNT_FLOOR, '排除族数量塌缩到下限以下');
 });
 
 // ---------------------------------------------------------------------------
@@ -265,7 +321,10 @@ test('P163: 每个排除族都必须命中至少一个被排除的模型（不�
 });
 
 test('P163: 排除族的 provider 必须合法且 reason 不能是空话', () => {
-  assert.equal(families.length, FAMILY_COUNT, '排除族数量变了');
+  assert.ok(
+    families.length >= FAMILY_COUNT_FLOOR,
+    '排除族数量塌缩到下限以下 —— 每个排除记录都要有族解释，族不该凭空消失',
+  );
   for (const f of families) {
     assert.ok(
       (PROVIDERS as readonly string[]).includes(f.provider),

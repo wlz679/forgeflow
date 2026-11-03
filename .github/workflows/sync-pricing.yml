@@ -31,7 +31,9 @@ on:
     branches: [master]
     paths:
       - 'src/data/ai-pricing.json'
+      - 'src/data/ai-pricing-popular.json'
       - 'scripts/sync-pricing.mjs'
+      - 'scripts/curate-pricing-models.mjs'
       - 'scripts/codegen-customfn.mjs'
       - 'scripts/codegen-examples.mjs'
       - '.github/workflows/sync-pricing.yml'
@@ -113,6 +115,33 @@ jobs:
       - name: Sync pricing from LiteLLM
         run: node scripts/sync-pricing.mjs
 
+      - name: Curate new models into the interactive set (P166)
+        id: curate
+        run: |
+          # P166: the sync above lands new models in ai-pricing.json, but
+          # ai-pricing-popular.json decides which models a visitor can actually
+          # SELECT. Without this step a new model silently enters the dataset
+          # and never enters the interactive set — and the only thing that went
+          # red was popular-models-rule-guard, whose hard-coded counts made
+          # every weekly PR fail (measured on PR #4: dataset 245 -> 247).
+          #
+          # The bot's rule (user-decided): new models are EXCLUDED by default;
+          # curation (popularModelKeys) is only ever a human decision, so the
+          # bot never touches that side.
+          #
+          # `set -e` is deliberately NOT used: the report must still land in the
+          # job summary before a non-zero exit aborts the job, so the status is
+          # captured explicitly and re-raised at the end.
+          set -uo pipefail
+          node scripts/curate-pricing-models.mjs
+          STATUS=$?
+          if [ -f tmp/p166-curation-report.md ]; then
+            cat tmp/p166-curation-report.md >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          exit $STATUS
+
       - name: Regenerate engine customFn data
         run: node scripts/codegen-customfn.mjs
 
@@ -122,7 +151,7 @@ jobs:
       - name: Check for changes
         id: diff
         run: |
-          if git diff --quiet src/data/ai-pricing.json src/engines/; then
+          if git diff --quiet src/data/ai-pricing.json src/data/ai-pricing-popular.json src/engines/; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -155,8 +184,16 @@ jobs:
           # above) so the PR diff contains ONLY this week's pricing delta —
           # not last week's commit on top of last week's commit.
           git checkout -B "$BOT_BRANCH"
-          git add src/data/ai-pricing.json src/engines/
+          git add src/data/ai-pricing.json src/data/ai-pricing-popular.json src/engines/
+          # P166: carry the curation summary into the commit message so a reviewer
+          # of the weekly PR can see, without opening the bot log, how many new
+          # models were auto-excluded (and whether any human decision is pending).
+          # The report is written by scripts/curate-pricing-models.mjs; if it is
+          # missing the summary degrades to "?" rather than failing the commit.
+          CURATED_ADDED="$(grep -m1 '^addedCount=' tmp/p166-curation-report.md 2>/dev/null | cut -d= -f2 || true)"
+          CURATED_ADDED="${CURATED_ADDED:-?}"
           MSG="chore(pricing): sync from LiteLLM + regen customFn + staticExamples ($(date -u +%Y-%m-%d)) - opens PR"
+          MSG="$MSG - curated-by-bot(+${CURATED_ADDED} excluded)"
           git commit -m "$MSG"
           # --force (not --force-with-lease) is safe here: `chore/pricing-sync`
           # is bot-owned. It only ever receives bot-generated pricing

@@ -4,7 +4,9 @@
     "updatedAt": "2026-11-02",
     "rationale": "P163 之前这个文件是一个纯清单，没有任何规则说明「新模型进数据集后必须决定是否进交互态」⇒ 新模型会静默地只进数据集、不进交互态 ⇒ 用户在计算器里根本选不到它，而且没有任何东西会红。这是一个流程洞，只能靠「规则 + 守卫」把它变成可执行契约。",
     "curatedModelCount": 44,
-    "excludedModelCount": 201
+    "excludedModelCount": 201,
+    "datasetModelCount": 245,
+    "autoCuration": "P166 起每周 bot 自动做「进不进交互态」的决定：新模型默认进排除侧，并保证每个排除记录都被一个排除族命中。策展侧（popularModelKeys）永远只由人改。"
   },
   "popularModelKeys": {
     "openai": [

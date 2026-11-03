@@ -58,6 +58,37 @@ export const PRICE_CLAIM_SURFACES: PriceClaimSurface[] = [
     note: '对比页模板层；P161 已把 GPU 基准行派生成 token',
   },
 
+  // ── 主题页新形态层（P166：修复优先级表 / 达标清单）────────────────────
+  // 为什么要登记：这三个文件是**新开的**价格表述入口（B 类主题讲模型单价，
+  // C / R 类主题讲 CAC / LTV / 回本周期这类经营阈值）。台账的契约是
+  // 「新增一个讲价格的入口，必须同时在本表加一行 —— 否则守卫会红」。
+  // ⭐ guardedBy 必须是**真的在看着它**的守卫，不能是一句空声明（P164 教训：
+  // 「一条假的覆盖声明可以长期存在而 CI 全绿」）。
+  {
+    id: 'topic-priority:llm-api-cost-optimization',
+    layer: 'topic-page',
+    file: 'src/data/topic-priority/llm-api-cost-optimization.ts',
+    locator: 'export const priority',
+    guardedBy: ['tests/topic-priority-content-guard.test.ts'],
+    note: 'P166 修复优先级表 / 达标清单；模型单价必须走 live token（守卫有一条专门的「每百万 token 的价格不许手写」断言）',
+  },
+  {
+    id: 'topic-priority:customer-acquisition-cost',
+    layer: 'topic-page',
+    file: 'src/data/topic-priority/customer-acquisition-cost.ts',
+    locator: 'export const priority',
+    guardedBy: ['tests/topic-priority-content-guard.test.ts'],
+    note: 'P166 修复优先级表 / 达标清单；CAC / LTV / 回本周期是经营阈值（用户自己的数字），允许手写但必须标口径',
+  },
+  {
+    id: 'topic-priority:net-revenue-retention',
+    layer: 'topic-page',
+    file: 'src/data/topic-priority/net-revenue-retention.ts',
+    locator: 'export const priority',
+    guardedBy: ['tests/topic-priority-content-guard.test.ts'],
+    note: 'P166 修复优先级表 / 达标清单；NRR / GRR / 流失率是经营指标（用户自己的数字），允许手写但必须标口径',
+  },
+
   // ── 引擎 FAQ（5 个 LLM 引擎，P160）─────────────────────────────────────
   {
     id: 'engine-faq:comparison',

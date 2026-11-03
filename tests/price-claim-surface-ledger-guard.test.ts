@@ -52,6 +52,10 @@ const EXPECTED_SURFACE_IDS = [
   'topic-guide:llm-api-cost-optimization',
   'topic-benchmark:llm-api-cost-optimization',
   'topic-page-template:compare',
+  // 主题页新形态层（P166：修复优先级表 / 达标清单）
+  'topic-priority:llm-api-cost-optimization',
+  'topic-priority:customer-acquisition-cost',
+  'topic-priority:net-revenue-retention',
   // 引擎 FAQ（8 个 AI 引擎）
   'engine-faq:comparison',
   'engine-faq:claude',
@@ -80,7 +84,7 @@ const EXPECTED_SURFACE_IDS = [
   'engine-static-example:comparison',
 ];
 
-test('台账必须登记这 26 个入口，一个都不能少（入口级漏登记检查）', () => {
+test('台账必须登记这 29 个入口，一个都不能少（入口级漏登记检查）', () => {
   const registered = new Set(PRICE_CLAIM_SURFACES.map((s) => s.id));
   const missing = EXPECTED_SURFACE_IDS.filter((id) => !registered.has(id));
   assert.deepEqual(
@@ -138,6 +142,9 @@ test('反向：全仓扫出的价格入口必须都在台账里登记', () => {
     'src/engines/ai-cost/ai-image-generation-cost-calculator.ts',
     'src/engines/ai-cost/ai-training-cost-estimator.ts',
     'src/data/topic-content.ts',
+    'src/data/topic-priority/llm-api-cost-optimization.ts',
+    'src/data/topic-priority/customer-acquisition-cost.ts',
+    'src/data/topic-priority/net-revenue-retention.ts',
     'src/pages/[lang]/[letter]/[topic]-compare.astro',
   ];
   for (const f of priceFiles) {
