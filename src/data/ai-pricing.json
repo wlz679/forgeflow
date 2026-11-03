@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-28",
+  "lastUpdated": "2026-11-03",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1148,6 +1148,22 @@
           "family": "gpt6",
           "contextWindow": "922K",
           "order": 138
+        },
+        "gpt-6-rosalind": {
+          "input": 15,
+          "output": 75,
+          "name": "GPT 6 Rosalind",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 139
+        },
+        "gpt-6-astra-law": {
+          "input": 10,
+          "output": 50,
+          "name": "GPT 6 Astra Law",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 140
         }
       }
     },
