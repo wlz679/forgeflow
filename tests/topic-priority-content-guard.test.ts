@@ -25,12 +25,29 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 
-import { TOPIC_PRIORITY_CONTENT, PILOT_PRIORITY_TOPICS } from '../src/data/topic-priority/index.ts';
+import { TOPIC_PRIORITY_CONTENT, PRIORITY_TOPICS } from '../src/data/topic-priority/index.ts';
 import { TOPIC_GUIDE_CONTENT } from '../src/data/topic-content.ts';
+import { TOPICS } from '../src/data/topics.ts';
 import { t } from '../src/i18n/index.ts';
+// 价格纪律分档的**唯一真相源**（tests/_topic-priority-policy.ts）：
+// 手写单价的形状 + 「哪些主题走严格档」都在那里 ⇒ 本文件不自己维护清单。
+import { MODEL_PRICE_TOPICS, isModelPriceTopic, handTypedPrices } from './_topic-priority-policy.ts';
 
-/** 独立写死：试点主题名单（1 个 B 类 + 1 个 C 类 + 1 个 R 类） */
-const EXPECTED_PILOT = ['llm-api-cost-optimization', 'customer-acquisition-cost', 'net-revenue-retention'];
+/**
+ * 期望名单 = **topics.ts 里 tier-1 的全部主题**（派生，不是手写清单）。
+ *
+ * ⭐ 为什么派生：P166 铺开 42 个主题后，手写 45 个 id 的清单必然与
+ *   `src/data/topic-priority/index.ts` 的名单形成**第二份真相源**
+ *   （P164 的教训：真相源只管住主数据文件、没管住脚本 ⇒ 开了第二份 ⇒ 既有守卫当场变红）。
+ *
+ * ⭐ 为什么这仍然是「独立」期望值：`topics.ts` **不是被测模块** ——
+ *   被测模块是 `src/data/topic-priority/`（本守卫读它）。拿另一个真相源来比，
+ *   比的是「名单对不对」，不是「内容对不对」⇒ 守的是**覆盖完整性**。
+ *
+ * ⚠️ 「comparison」层主题（4 个）**不做**新形态 —— 它们渲染的是 compare 页，
+ *   不是 benchmark / guide 页 ⇒ 不在名单里（断言里会显式排除）。
+ */
+const EXPECTED_TOPIC_IDS = TOPICS.filter((t) => t.tier === 1).map((t) => t.id).sort();
 
 /** 独立写死：修复优先级表最少行数 */
 const MIN_FIX_ROWS = 3;
@@ -83,20 +100,21 @@ function collectStrings(value: unknown): string[] {
 // 1. 名单与全集
 // ---------------------------------------------------------------------------
 
-test('P166: 试点名单与本文件写死的名单一致', () => {
+test('P166: 装配名单必须等于 topics.ts 的 tier-1 全集（不多不少）', () => {
   assert.deepEqual(
-    [...PILOT_PRIORITY_TOPICS].sort(),
-    [...EXPECTED_PILOT].sort(),
-    'src/data/topic-priority/index.ts 的 PILOT_PRIORITY_TOPICS 与守卫写死的名单不一致',
+    [...PRIORITY_TOPICS].sort(),
+    [...EXPECTED_TOPIC_IDS],
+    'src/data/topic-priority/index.ts 的 PRIORITY_TOPICS 与 topics.ts 的 tier-1 全集不一致 —— ' +
+      '要么漏铺了一个主题，要么多登记了一个',
   );
 });
 
-test('P166: 带新形态内容的主题集合必须与试点名单**集合相等**（不许多也不许少）', () => {
+test('P166: 带新形态内容的主题集合必须与装配名单**集合相等**（不许多也不许少）', () => {
   assert.deepEqual(
     Object.keys(TOPIC_PRIORITY_CONTENT).sort(),
-    [...EXPECTED_PILOT].sort(),
-    'TOPIC_PRIORITY_CONTENT 的主题集合与试点名单不相等 —— ' +
-      '要么多了一个没登记的主题，要么漏了一个（半铺开会让「试点」这个词失去意义）',
+    [...EXPECTED_TOPIC_IDS],
+    'TOPIC_PRIORITY_CONTENT 的主题集合与装配名单不相等 —— ' +
+      '要么多了一个没登记的主题，要么漏了一个（半铺开会让「全覆盖」这个词失去意义）',
   );
 });
 
@@ -104,9 +122,9 @@ test('P166: 带新形态内容的主题集合必须与试点名单**集合相等
 // 2-8. 数据形状
 // ---------------------------------------------------------------------------
 
-test('P166: 每个试点主题的 en 与 zh 都必须有 fixPriority 与 readinessChecklist', () => {
+test('P166: 每个主题的 en 与 zh 都必须有 fixPriority 与 readinessChecklist', () => {
   const missing: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     if (!p) {
       missing.push(id + '：整个主题缺失');
@@ -120,9 +138,9 @@ test('P166: 每个试点主题的 en 与 zh 都必须有 fixPriority 与 readine
   assert.deepEqual(missing, [], '缺失的新形态段（' + missing.length + ' 个）：\n' + missing.join('\n'));
 });
 
-test('P166: 修复优先级表至少 3 行（每个试点主题 × 每种语言）', () => {
+test('P166: 修复优先级表至少 3 行（每个主题 × 每种语言）', () => {
   const problems: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     if (!p) continue;
     for (const lang of LANGS) {
@@ -135,7 +153,7 @@ test('P166: 修复优先级表至少 3 行（每个试点主题 × 每种语言�
 
 test('P166: priority 必须是 1..N 连续且不重复', () => {
   const problems: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     if (!p) continue;
     for (const lang of LANGS) {
@@ -152,7 +170,7 @@ test('P166: priority 必须是 1..N 连续且不重复', () => {
 
 test('P166: 修复优先级表每行的字段都必须非空且达长度下限', () => {
   const problems: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     if (!p) continue;
     for (const lang of LANGS) {
@@ -177,9 +195,9 @@ test('P166: 修复优先级表每行的字段都必须非空且达长度下限',
   assert.deepEqual(problems, [], '字段为空或过短（' + problems.length + ' 处）：\n' + problems.join('\n'));
 });
 
-test('P166: 达标清单至少 4 项（每个试点主题 × 每种语言）', () => {
+test('P166: 达标清单至少 4 项（每个主题 × 每种语言）', () => {
   const problems: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     if (!p) continue;
     for (const lang of LANGS) {
@@ -192,7 +210,7 @@ test('P166: 达标清单至少 4 项（每个试点主题 × 每种语言）', (
 
 test('P166: 达标清单的 step 编号必须与该主题 howToApply 里的步骤编号集合相等', () => {
   const problems: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     const guide = TOPIC_GUIDE_CONTENT[id];
     if (!p || !guide) continue;
@@ -210,7 +228,7 @@ test('P166: 达标清单的 step 编号必须与该主题 howToApply 里的步�
 
 test('P166: 达标清单每项的 label / gate / blockIf 都必须非空且达长度下限', () => {
   const problems: string[] = [];
-  for (const id of EXPECTED_PILOT) {
+  for (const id of EXPECTED_TOPIC_IDS) {
     const p = TOPIC_PRIORITY_CONTENT[id];
     if (!p) continue;
     for (const lang of LANGS) {
@@ -244,29 +262,77 @@ test('P166: 达标清单每项的 label / gate / blockIf 都必须非空且达�
 // 9. 价格纪律（B 类主题）
 // ---------------------------------------------------------------------------
 
-test('P166: B 类主题必须真的用到 live token（否则「价格走派生」是空话）', () => {
-  const p = TOPIC_PRIORITY_CONTENT['llm-api-cost-optimization'];
-  assert.ok(p, 'llm-api-cost-optimization 的新形态内容缺失');
-  const texts = collectStrings(p);
-  const tokenHits = texts.reduce((n, s) => n + (s.match(/\{\{live/g) || []).length, 0);
-  assert.ok(tokenHits > 0, 'B 类主题的新形态内容里一个 live token 都没有 —— 价格会被 bot 每周漂移');
+test('P166: 严格档主题必须真的用到 live token（否则「价格走派生」是空话）', () => {
+  // ⚠️ 严格档主题来自 topics.ts 的 letterId 派生（不是手写清单）⇒
+  //    新增一个 B 类主题时它会自动进这条断言，不靠人记得加一行。
+  const strictTopics = Object.keys(TOPIC_PRIORITY_CONTENT).filter(isModelPriceTopic);
+  assert.ok(strictTopics.length > 0, '没有任何主题落在严格档 —— 分档规则坏了');
+  for (const topicId of strictTopics) {
+    const p = TOPIC_PRIORITY_CONTENT[topicId];
+    assert.ok(p, topicId + ' 的新形态内容缺失');
+    const texts = collectStrings(p);
+    const tokenHits = texts.reduce((n, s) => n + (s.match(/\{\{live/g) || []).length, 0);
+    assert.ok(tokenHits > 0, topicId + ' 落在严格档却一个 live token 都没有 —— 价格会被 bot 每周漂移');
+  }
 });
 
-test('P166: B 类主题里「每百万 token 的价格」必须由 live token 派生（不许手写）', () => {
-  const p = TOPIC_PRIORITY_CONTENT['llm-api-cost-optimization'];
-  assert.ok(p, 'llm-api-cost-optimization 的新形态内容缺失');
+test('P166: ⭐ 手写单价检测器本身必须是活的（自检，不是空转）', () => {
+  // ⭐ 为什么必须有这条：一个「检查违规」的断言，在**没有违规时本来就是绿的**
+  //   ⇒ 检测器坏了（永远返回空）时守卫照样绿。⇒ 必须单独造一个**已知违规**
+  //   的样本，断言检测器看得见它。变异台子 M5 正是靠这条抓住的。
+  //
+  // 样本 1：裸单价 ⇒ 必须被抓
+  assert.deepEqual(
+    handTypedPrices('the list price is $15 per request'),
+    ['$15'],
+    '手写单价检测器看不见裸单价 —— 检测器坏了',
+  );
+  // 样本 2：带 K/M/B 后缀的聚合支出 ⇒ 必须放行（P158 的同一条约定）
+  assert.deepEqual(
+    handTypedPrices('the yearly spend is $50K'),
+    [],
+    '带 K/M/B 后缀的聚合支出被误判成单价 —— 检测器过严会把编辑逼向错误形态',
+  );
+  // 样本 3：live token 里的数字不该被当成手写单价
+  assert.deepEqual(
+    handTypedPrices('list input is {{liveIn:openai/gpt-5}} per 1M tokens'),
+    [],
+    'live token 被误判成手写单价 —— 检测器没先剥掉 token',
+  );
+  // 样本 4：token 与手写价同时出现时，只报手写的那一个
+  assert.deepEqual(
+    handTypedPrices('list input is {{liveIn:openai/gpt-5}} but the old note said $12'),
+    ['$12'],
+    'token 与手写价混排时，检测器只认出了其中一种',
+  );
+});
+
+test('P166: 严格档主题不许有手写单价（不限于「每百万 token」语境）', () => {
+  // ⚠️ 旧版这条只查「带 1M / per million / 每百万字样」的句子 ⇒ 一句
+  //    "the list price is $15" 能溜过去。⇒ 现在查**整段**里所有手写单价。
+  //    形状与分档都来自共享真相源（P158 的同一条约定：不带 K/M/B 后缀 = 单价）。
   const problems: string[] = [];
-  for (const lang of LANGS) {
-    for (const s of collectStrings(p)) {
-      const isPerMillion = /1M|per million|每百万/i.test(s);
-      if (!isPerMillion) continue;
-      const withoutTokens = s.replace(/\{\{live[^}]*\}/g, '');
-      if (/\$\s?\d/.test(withoutTokens)) {
-        problems.push(lang + '：手写了每百万 token 的价格 => ' + s.slice(0, 90));
+  for (const topicId of Object.keys(TOPIC_PRIORITY_CONTENT)) {
+    if (!isModelPriceTopic(topicId)) continue;
+    const p = TOPIC_PRIORITY_CONTENT[topicId]!;
+    for (const lang of LANGS) {
+      for (const s of collectStrings(p)) {
+        for (const price of handTypedPrices(s)) {
+          problems.push(topicId + '/' + lang + '：手写单价 ' + price + ' => ' + s.slice(0, 90));
+        }
       }
     }
   }
   assert.deepEqual(problems, [], '手写价格会随每周的定价 bot 漂移：\n' + problems.join('\n'));
+});
+
+test('P166: 严格档集合必须由 topics.ts 派生（不是手写清单）', () => {
+  // 防「又开了第二份清单」：严格档里必须包含**全部** B 分类 tier-1 主题。
+  const bTier1 = TOPICS.filter((t) => t.letterId === 'B' && t.tier === 1).map((t) => t.id).sort();
+  assert.ok(bTier1.length > 0, 'topics.ts 里没有 B 分类 tier-1 主题 —— 分档规则坏了');
+  for (const id of bTier1) {
+    assert.ok(MODEL_PRICE_TOPICS.has(id), id + ' 是 B 分类主题（讲市场价）却不在严格档里 ⇒ 手写单价会漏过');
+  }
 });
 
 // ---------------------------------------------------------------------------

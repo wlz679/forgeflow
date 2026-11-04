@@ -33,16 +33,21 @@
 //    *.test.ts / *.test.mjs，带了会让套件计数漂移（266 → 267）。
 import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import {
-  PILOT_PRIORITY_TOPICS,
+  PRIORITY_TOPICS,
   TOPIC_PRIORITY_CONTENT,
 } from '../../src/data/topic-priority/index.ts';
 import { TOPIC_GUIDE_CONTENT } from '../../src/data/topic-content.ts';
 import { referencedModels } from '../../src/lib/live-price.ts';
+// 价格纪律分档的**唯一真相源**（tests/_topic-priority-policy.ts）——
+// 本文件不再自己维护一份清单（P164 的教训：开了第二份清单 ⇒ 既有守卫当场变红）。
+import { MODEL_PRICE_TOPICS, handTypedPrices } from '../_topic-priority-policy.ts';
 import PRICING from '../../src/data/ai-pricing.json';
 import type {
   TopicFixPriorityTable,
+  TopicPriorityContent,
   TopicReadinessChecklist,
 } from '../../src/data/topic-priority/types.ts';
 
@@ -66,23 +71,15 @@ interface PricingDataset {
 }
 const DATASET = PRICING as unknown as PricingDataset;
 
-/** 手写单价：$ + 数字，且**没有** K/M/B 后缀（P158 的同一条约定：带后缀的是聚合支出，编辑场景允许）。 */
-const HAND_PRICE_RE = /\$[ ]?\d+(?:[.,]\d+)?([KMBkmb])?/g;
 /** 「每 1M token」这种单价语境 —— 出现它就说明这段在讲单价。 */
 const UNIT_PRICE_RE = /1M|per million|每百万/i;
 const LIVE_TOKEN_RE = /\{\{live[^}]*\}\}/g;
 
-/**
- * **模型单价主题**（严格模式）：这些主题讲的是随定价 bot 每周漂移的模型单价
- * ⇒ 任何手写单价都是缺陷，必须走 live token。
- *
- * 其余主题（C / R 类）讲的是**用户自己的经营阈值**（CAC / LTV / 回本周期 /
- * NRR），不是数据集拥有的市场价 ⇒ 允许手写，但必须标口径。
- * ⚠️ 这条区分是必要的：把「任何 $ + 数字都判为手写单价」套到所有主题上，
- * 会逼着内容把金额写成 "USD 300-1,500" 这种别扭写法 —— 规则比需求更严，
- * 就会把编辑逼向错误形态（P161 的教训：判据要落在**要禁的那个形状**上）。
- */
-const MODEL_PRICE_TOPICS = new Set<string>(['llm-api-cost-optimization']);
+// ⭐ 手写单价的形状与「哪些主题走严格档」都**不在本文件**：
+//   · 形状（$ + 数字、无 K/M/B 后缀 = 手写）⇒ tests/_topic-priority-policy.ts
+//   · 分档（讲市场价的 B 分类 = 严格档）⇒ 同上，从 topics.ts 的 letterId 派生
+// 本文件只消费，不维护 —— P164 的教训：真相源只管住主数据文件、没管住脚本，
+// 等于开了第二份清单 ⇒ 既有守卫当场变红。
 
 function pad(s: string, width: number): string {
   let w = 0;
@@ -110,9 +107,8 @@ function priceProblems(text: string, strict: boolean): string[] {
   const out: string[] = [];
   if (!text) return out;
   if (strict) {
-    for (const m of text.matchAll(HAND_PRICE_RE)) {
-      if (m[1]) continue; // K/M/B 后缀 ⇒ 聚合支出，允许
-      out.push('手写单价 ' + m[0] + '（未走 live token）');
+    for (const price of handTypedPrices(text)) {
+      out.push('手写单价 ' + price + '（未走 live token）');
     }
   }
   const withoutTokens = text.replace(LIVE_TOKEN_RE, '');
@@ -311,13 +307,17 @@ function renderChecklist(
   return { status: segmentStatus(checklist.intro, items.length, allOk), lines, problems };
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const strict = process.argv.slice(2).indexOf('--strict') >= 0;
   const out: string[] = [];
   const p = (s: string): void => {
     out.push(s);
   };
+  // 内容问题（每个主题的字段长度 / step 对齐 / 价格纪律）
   const problems: string[] = [];
+  // 装配待办（铺开过程中 index.ts 还没重跑生成器 ⇒ 这里会临时不为空；
+  //   保留在问题计数里（--strict 仍然会因它而失败）。
+  const assembly: string[] = [];
 
   // —— ⑥ 名单 vs 磁盘上真正带 priority 内容的文件 ——
   let filesOnDisk: string[] = [];
@@ -329,7 +329,7 @@ function main(): void {
   } catch (e) {
     problems.push('读不到 src/data/topic-priority/ 目录：' + String(e));
   }
-  const pilotList = Array.from(PILOT_PRIORITY_TOPICS);
+  const pilotList = Array.from(PRIORITY_TOPICS);
   const pilotSet = new Set<string>(pilotList);
   const diskSet = new Set<string>(filesOnDisk);
   const contentKeys = Object.keys(TOPIC_PRIORITY_CONTENT);
@@ -343,8 +343,21 @@ function main(): void {
   // —— 逐主题逐形态逐语言渲染 ——
   const statuses: string[] = [];
   const topicBlocks: string[] = [];
-  for (const topic of pilotList) {
-    const content = TOPIC_PRIORITY_CONTENT[topic];
+  // ⭐ 遍历**磁盘上的全部文件**，不只遍历名单：
+  //   铺开时（42 个主题分批写、逐批装配），新落盘但还没登记进 index.ts 的
+  //   文件也能被验到 —— 否则「没登记」会被误报成「内容没问题」。
+  const scanList = filesOnDisk.length ? filesOnDisk : pilotList;
+  // ⭐ 从**磁盘直接 import** 每个主题文件（运行时真值）：
+  //   铺开过程中「新落盘但还没登记进 index.ts」的文件也能被验到
+  //   （之前只从 index.ts 取 ⇒ 未登记的文件被误报成「内容缺失」）。
+  const diskContent = new Map<string, TopicPriorityContent>();
+  for (const topic of filesOnDisk) {
+    const href = pathToFileURL(resolve(TOPIC_DIR, topic + '.ts')).href;
+    const mod = (await import(href)) as { priority: TopicPriorityContent };
+    diskContent.set(topic, mod.priority);
+  }
+  for (const topic of scanList) {
+    const content = diskContent.get(topic) ?? TOPIC_PRIORITY_CONTENT[topic];
     const guide = TOPIC_GUIDE_CONTENT[topic];
     const block: string[] = [];
     block.push('─'.repeat(78));
@@ -383,27 +396,27 @@ function main(): void {
   p('P166 —— 主题页新形态实测扫描（修复优先级表 / 达标清单）');
   p('='.repeat(78));
   p('数据层：src/data/topic-priority/');
-  p('试点名单（' + pilotList.length + '）：' + pilotList.join(' / '));
+  p('扫描范围（磁盘上的主题文件 ' + scanList.length + ' 个）：' + scanList.join(' / '));
   p('');
   p('【总览】');
-  p('  段总数：' + pilotList.length + ' 主题 × ' + LANGS.length + ' 语言 × 2 形态 = ' + statuses.length + ' 段');
+  p('  段总数：' + scanList.length + ' 主题 × ' + LANGS.length + ' 语言 × 2 形态 = ' + statuses.length + ' 段');
   p('  已填 ' + filled + ' 段 ｜ 半填 ' + half + ' 段 ｜ 待填（骨架）' + todo + ' 段');
-  p('  问题：' + problems.length + ' 条');
+  p('  内容问题：' + problems.length + ' 条 ｜ 装配待办：' + assembly.length + ' 条（铺开过程中正常，装配层由生成器重跑后归零）');
   p('');
   p('【名单与文件（⑥）】');
-  p('  index.ts 的 PILOT_PRIORITY_TOPICS：' + pilotList.join(' / '));
+  p('  index.ts 的 PRIORITY_TOPICS：' + pilotList.join(' / '));
   p('  磁盘上的主题文件（' + filesOnDisk.length + ' 个）      ：' + (filesOnDisk.join(' / ') || '（无）'));
   p('  TOPIC_PRIORITY_CONTENT 的键（' + contentKeys.length + ' 个）：' + (contentKeys.join(' / ') || '（无）'));
   p('  集合相等（名单 = 文件 = 注册表）：' +
     (missingFile.length === 0 && orphanFile.length === 0 && missingReg.length === 0 && extraReg.length === 0
       ? '[OK]'
       : '[错误]'));
-  if (missingFile.length) problems.push('名单里有、磁盘上没有文件：' + missingFile.join(', '));
-  if (orphanFile.length) problems.push('磁盘上有文件、名单里没有：' + orphanFile.join(', '));
-  if (missingReg.length) problems.push('文件有、TOPIC_PRIORITY_CONTENT 没登记：' + missingReg.join(', '));
-  if (extraReg.length) problems.push('TOPIC_PRIORITY_CONTENT 登记了名单外的主题：' + extraReg.join(', '));
+  if (missingFile.length) assembly.push('名单里有、磁盘上没有文件：' + missingFile.join(', '));
+  if (orphanFile.length) assembly.push('磁盘上有文件、名单里没有：' + orphanFile.join(', '));
+  if (missingReg.length) assembly.push('文件有、TOPIC_PRIORITY_CONTENT 没登记：' + missingReg.join(', '));
+  if (extraReg.length) assembly.push('TOPIC_PRIORITY_CONTENT 登记了名单外的主题：' + extraReg.join(', '));
   p('  装配顺序 = 名单顺序：' + (sameOrder ? '[OK]' : '[错误] ' + JSON.stringify(contentKeys)));
-  if (!sameOrder) problems.push('TOPIC_PRIORITY_CONTENT 的装配顺序与名单顺序不一致');
+  if (!sameOrder) assembly.push('TOPIC_PRIORITY_CONTENT 的装配顺序与名单顺序不一致');
   p('');
 
   for (const block of topicBlocks) {
@@ -411,7 +424,7 @@ function main(): void {
   }
   p('');
 
-  p('【问题清单】（' + problems.length + ' 条）');
+  p('【内容问题清单】（' + problems.length + ' 条）');
   if (problems.length === 0) {
     p('  （无）');
   } else {
@@ -420,10 +433,22 @@ function main(): void {
     });
   }
   p('');
+  p('【装配待办清单】（' + assembly.length + ' 条，铺开过程中正常；装配层由生成器重跑后归零）');
+  if (assembly.length === 0) {
+    p('  （无）');
+  } else {
+    assembly.forEach((pr, i) => {
+      p('  ' + (i + 1) + '. ' + pr);
+    });
+  }
+  p('');
   p('（骨架阶段「待填 + 字段缺失」是真实状态；内容填完后重跑，同一份报告会变成「已填 + 0 问题」）');
 
   process.stdout.write(out.join(NL) + NL);
-  if (strict && (problems.length > 0 || todo > 0 || half > 0)) process.exitCode = 1;
+  if (strict && (problems.length > 0 || assembly.length > 0 || todo > 0 || half > 0)) process.exitCode = 1;
 }
 
-main();
+main().catch((e) => {
+  console.error(e);
+  process.exitCode = 1;
+});

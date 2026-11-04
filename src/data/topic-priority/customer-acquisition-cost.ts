@@ -19,7 +19,7 @@ export const priority: TopicPriorityContent = {
   fixPriority: {
     en: {
       intro:
-        'Most CAC dashboards are wrong in the same three places, and the three errors hide each other: a blended number with no paid/blended split, an average that mixes good channels with dead ones, and a ratio computed on projected LTV. When several of these break at once, the order in which you fix them decides whether the quarter actually gets cheaper or only looks different on the dashboard. The order below runs from the metric that costs nothing to fix and invalidates the most downstream numbers, to the metric that is only a verdict and should be read last. Each row also names the metric it drags along, and the case where fixing it makes another metric worse. All amounts below are USD per customer for a quarterly window: CAC is fully-loaded blended CAC unless a row names paid CAC, and LTV is cohort-actual realised gross profit, never a projected lifetime.',
+        'Three CAC errors hide inside each other, and fixing them in the wrong order produces a quarter that looks cheaper without being cheaper. A blended number with no paid/blended split is the first: paid CAC usually runs two to three times blended, so a blended average flatters every decision you make with it, and the teams that quote blended are usually the teams whose sales salaries were never loaded into the numerator. The second is a channel average that mixes your best-performing source with a channel you have not touched since January, which is how a losing channel survives a budget review by hiding inside a healthy one. The third is a ratio computed on projected LTV, and it is the most expensive of the three because it turns every decision downstream into a bet on a retention curve nobody has observed yet. So the sequence below runs from the cheapest error to the most consequential: split blended from paid first, cut the channel average apart second, and only then divide by realised cohort gross profit. Below that sits the payback test, CAC divided by ARPU times gross margin, because payback is the number that connects a marketing decision to your bank balance, and an LTV:CAC ratio without payback next to it can be arithmetically correct and still describe a business that runs out of cash. Amounts are USD per customer over a quarterly window.',
       rows: [
         {
           priority: 1,
@@ -85,7 +85,7 @@ export const priority: TopicPriorityContent = {
     },
     zh: {
       intro:
-        '大多数 CAC 仪表盘都错在同样三个地方，而这三处错误会互相遮掩：综合数字里没拆出付费部分、均值把好渠道和坏渠道混在一起、比例算在预测 LTV 上。这三处同时爆掉时，先修哪一个决定了这一季是真的变便宜，还是只是报表换了样子。下面这张表按「修复成本从低到高、对下游数字的污染从大到小」排序：先修那个不花钱、却能让后面全部指标失真的口径，再修那个只应该被当作结论来读的指标。每一行都写清它会顺带带动哪个指标，以及在什么情况下修它会把另一个指标弄坏。下面所有金额口径统一为美元 / 每客户 / 每季度窗口：CAC 默认指全负荷综合 CAC（某一行明确写 paid 才是付费口径），LTV 一律取群组已实现的实际毛利，不是预测终身价值。',
+        'CAC 的三个错误互相遮掩，按错顺序修，会得到一个「看起来变便宜」的季度，而实际并没有变便宜。第一个是不拆综合与付费：付费 CAC 通常是综合的 2 到 3 倍，所以综合口径会把你的每一个决策都往乐观里带，而拿综合口径汇报的团队，多半是销售薪资根本没进过分母的团队。第二个是渠道均值把最有效的来源和一个从一月就没再碰过的渠道混在一起，于是亏钱渠道靠躲在健康渠道里活过了预算评审。第三个最贵：把比率算在预测 LTV 上，它会把后面每一个决定都变成一场对没人观测过的留存曲线的赌注。所以下面这组顺序从最便宜的错开始：先拆综合与付费，再把渠道均值拆开，最后才除以群组已实现的毛利。再往下压着回本测试 —— CAC 除以 ARPU 乘毛利率 —— 因为回本是把营销决定连到你银行账户上的那个数；一个旁边没有回本的 LTV:CAC 比率，可能算术正确，却描述着一家会没钱的生意。金额口径统一为美元 / 每客户 / 每季度窗口。',
       rows: [
         {
           priority: 1,
@@ -153,7 +153,7 @@ export const priority: TopicPriorityContent = {
   readinessChecklist: {
     en: {
       intro:
-        'The eight steps in the guide tell you what to do; this checklist tells you when a step is actually done, so you do not carry a number you cannot trust into the next one. Every gate is a quantity you can check today against your own finance system rather than a feeling. Work top to bottom: a step that fails blocks the steps after it, because a CAC computed on a partial spend base produces a ratio that looks precise and is wrong. When a gate fails, do not proceed and do not average it away - fix the gate, then re-run the steps above it, because every step downstream inherits the value you just corrected. Amounts referenced here are USD per customer for a quarterly window, with CAC read as fully-loaded blended CAC unless the gate says paid, and LTV read as cohort-actual realised gross profit.',
+        'The line that decides whether CAC work is real is not the CAC number but the numerator under it. Before any threshold here holds, sales salaries and commissions have to sit inside the denominator — exclude them and every ratio below flatters you by two to three times, which is the most common way a CAC dashboard stays green while the company loses money on each logo. Then the window has to be a closed quarter with a fixed spend base, because a CAC averaged over a period where spend and customer count came from different months is a ratio with no denominator. Next, paid and blended have to be reported separately, because scaling decisions apply to the paid number and only the paid number is comparable across periods. Only then does payback belong on the page: CAC divided by ARPU times gross margin, compared against the band that depends on your own gross margin rather than against a flat industry number. LTV belongs last and only as cohort-actual realised gross profit, never a projection, because a projected LTV will pass any ratio you set. And the quarterly re-benchmark is not a formality: category CAC drifts upward as a category matures, so a flat CAC is an efficiency win even when the absolute number looks worse than last year.',
       items: [
         {
           step: 1,
@@ -207,7 +207,7 @@ export const priority: TopicPriorityContent = {
     },
     zh: {
       intro:
-        '指南页那八步讲的是「做什么」，这份清单讲的是「每一步什么时候算真的做完了」，好让你不把一个不可信的数带进下一步。每条达标线都是今天就能对着自己财务系统核对的数量，不靠感觉。按从上往下的顺序做：某一步不达标就卡住后面，因为在一个不完整的支出基数上算出来的 CAC 会显得很精确，但它是错的。达标线没过时不要往下走，也不要用平均把它抹平 —— 先把这条线修过去，再把上面的步骤重跑一遍，因为后面每一步都继承了你刚改过的那个数。这里引用的金额口径统一为美元 / 每客户 / 每季度窗口；CAC 默认按全负荷综合 CAC 读，达标线写明付费时才按付费口径；LTV 一律按群组已实现毛利读。',
+        'CAC 这条工作是不是真的，第一个要看的不是 CAC 本身，而是它下面的分子。任何达标线成立之前，销售薪资和佣金必须进分母 —— 把它们拿掉，下面每个比率都会往好里偏两到三倍，这正是 CAC 仪表盘一路绿着、公司却在每个 logo 上亏钱的常见原因。然后窗口要闭成一个季度、支出口径要固定，因为把支出的月份和客户数的月份混在一起平均，得到的比率没有分母。再下一步是把付费与综合分开报，扩量决策只对得上付费口径，而只有付费口径能跨期比较。然后才轮到回本登场：CAC 除以 ARPU 乘毛利率，且要跟随你自己毛利率变化的区间比，而不是跟一个平的行业数字比。LTV 放在最后，且只能取群组已实现的实际毛利，绝不用预测值 —— 预测 LTV 会让你设的任何比率都通过。最后那条季度重对也不是走过场：品类成熟时 CAC 会往上漂，所以持平的 CAC 本身就是效率上的胜利，哪怕绝对值看起来比去年更差。',
       items: [
         {
           step: 1,

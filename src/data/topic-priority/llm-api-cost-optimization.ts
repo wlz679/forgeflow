@@ -28,7 +28,7 @@ export const priority: TopicPriorityContent = {
   fixPriority: {
     en: {
       intro:
-        'Five cost metrics usually fail together: cache hit rate, output tokens per request, model routing coverage, batch-migratable traffic share, and the price spread across providers. This table is not a list of optimisations; it is an order of operations for the week when several of them sit below target at the same time. Priority says which one to fix first, also moves names the second metric that changes as a direct side effect of that fix, and watch out names the condition under which the fix makes another metric worse. Unit prices come from the live pricing table (refreshed {{liveDate}}), so re-read the numbers every week instead of reusing figures from the previous week.',
+        'Five numbers decide an LLM bill: cache hit rate, output tokens per request, model routing coverage, batch-migratable traffic share, and the price spread between providers. They break in a fixed order. A prompt with no stable prefix can never hit cache no matter which provider serves it, and a request with no max_tokens cap can turn one call into ten thousand output tokens, so those two come before anything you would pay a vendor to negotiate. Caching is first because a stable prefix makes the second identical request a fraction of the first, and it is the only lever you can validate without re-running your evaluation set. Routing is second, because a lookup that reaches a frontier model is paying reasoning prices for a classification job, and coverage here means the share of requests that actually land on a cheaper model rather than the share you planned to send there. Batching is third, because only asynchronous traffic can accept a 24-hour window. Pruning context is last, because it is the only lever that touches answer quality. The last row is the one that moves without you: prices shift quarterly, so a model that was cheapest two quarters ago may not be cheapest now. Unit prices come from the live pricing table (refreshed {{liveDate}}), so re-read the numbers rather than reusing a figure from an earlier month.',
       rows: [
         {
           priority: 1,
@@ -94,7 +94,7 @@ export const priority: TopicPriorityContent = {
     },
     zh: {
       intro:
-        '缓存命中率、每请求输出 token 量、模型路由覆盖率、可迁移到批处理的流量占比、跨供应商价差 —— 这五个成本指标通常在同一周一起不达标。这张表不是优化手段的清单，而是「几个指标同时不达标时按什么顺序修」的决策表：优先级列说的是先修哪一个，「同时带动」列说的是这次修复会连带改变哪个指标，「反噬」列说的是在什么条件下这次修复会把另一个指标弄得更差。表里的单价全部来自实时价格表（{{liveDate}} 更新），所以每周都要重读数字，不要沿用上一周的结论。',
+        '一张 LLM 账单由五个数决定：缓存命中率、每请求输出 token 量、模型路由覆盖率、可迁移到批处理的流量占比、跨供应商价差。它们坏掉的顺序是固定的 —— 提示没有稳定前缀，缓存就永远命中不了，再好的供应商也救不回来；请求没设 max_tokens 上限，一次调用就能吐出一万输出 token。所以这组顺序从提示层你还能控的数，走到只能跟供应商重谈的那一个。缓存排第一，因为有稳定前缀之后，第二次同样的请求只花第一次的一个零头，而且它是唯一不用重跑评估集就能验证的杠杆。路由排第二，一个纯抽取任务走到旗舰模型上，等于拿推理价付分类的钱；而这里的覆盖率指的是真正落到便宜模型上的请求占比，不是你打算这么发的占比。批处理排第三，只有异步负载吃得住那段延迟。裁剪上下文排最后，因为它是唯一会碰到答案质量的杠杆。最后一行是你不动它、它自己也会动的那行：价格逐季漂，上一季度最便宜的模型这一季度未必最便宜。单价全部来自实时价格表（{{liveDate}} 更新），所以要重读数字，不要沿用一个月前的旧数。',
       rows: [
         {
           priority: 1,
@@ -162,7 +162,7 @@ export const priority: TopicPriorityContent = {
   readinessChecklist: {
     en: {
       intro:
-        'The six steps of the guide say what to do; this checklist says what counts as done. Each line is a quantity you can check today against your own logs, and the block-if column names the exact place the work stops when the line is not met. Work them in order: a gate that fails on an earlier step makes every later gate unverifiable, because the later steps are measured against a baseline that the earlier step was supposed to establish. The line for each step is a floor, not a target, and the numbers below are deliberately conservative so that a team with no instrumentation yet still knows when it is allowed to move on.',
+        'Instrument before you optimise. If you have not logged input tokens, output tokens, cache hits and model per request, every number below is a guess dressed as a measurement, and the first three lines decide whether the remaining lines are worth reading at all. Cache hit rate comes first because it is the cheapest lever to test and the easiest to fail silently: a prefix that varies with the user\'s name never hits, and an average hit rate can hide that. Then output tokens per request, where the fix is a max_tokens cap and a length instruction rather than a cheaper model, because truncated reasoning costs less than a smaller model that reasons longer. Then routing coverage, measured as the share of requests that really reach a non-frontier model. Then the batch share, which counts only traffic that tolerates a 24-hour window. Then price spread, the one row that changes without you changing anything. The prices behind that last row are read from the live pricing table (refreshed {{liveDate}}), and a threshold that compares a fixed figure against a moving price will pass for the wrong reason.',
       items: [
         {
           step: 1,
@@ -216,7 +216,7 @@ export const priority: TopicPriorityContent = {
     },
     zh: {
       intro:
-        '指南的六步说的是做什么，这张清单说的是什么算做完了。每一行都是今天就能对着自己的日志核对的数量，「不达标别往下走」那一列写的是这条线没过时具体卡在哪一步。按顺序做：前面某一步的线没过，后面每一步的达标线都无从核对 —— 因为后面几步都是拿前面那步建立起来的基线去量的。这六条线是地板而不是目标，数字刻意定得保守，让一个连埋点都还没有的团队也知道什么时候可以往下走。',
+        '先埋点，再优化。如果还没有逐请求记下输入 token、输出 token、缓存命中和模型，下面每一个数都是穿着测量外衣的猜测，而前三条恰好决定了后面几条值不值得看。缓存命中率排第一，因为它最便宜、最容易悄悄失灵：前缀里带上用户姓名的提示永远命中不了，而一个被平均过的命中率正好把这件事盖住。然后是每请求输出 token 量，办法是设 max_tokens 上限和缩短输出的指令，而不是换个更便宜的模型 —— 推理被截断，比换个小模型去推理更长便宜。然后是路由覆盖率，量法是真正落到非旗舰模型上的请求占比。然后是批处理占比，只算吃得下 24 小时窗口的流量。最后是跨供应商价差，这是唯一一行你什么都不做也会自己变的行。它背后的单价读自实时价格表（{{liveDate}} 更新），拿一个写死的数字去比一个会动的价格，达标线会因为错误的理由通过。',
       items: [
         {
           step: 1,

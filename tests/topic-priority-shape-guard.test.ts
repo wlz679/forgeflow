@@ -36,8 +36,12 @@ if (!process.env.RUN_BUILD_TESTS) {
 
 const LANGS = ['en', 'zh'] as const;
 
-/** 独立写死：试点主题名单 */
-const EXPECTED_PILOT = ['llm-api-cost-optimization', 'customer-acquisition-cost', 'net-revenue-retention'];
+/**
+ * 期望名单 = topics.ts 里 tier-1 的全部主题（派生，不是手写清单）。
+ * ⭐ 与 source-only 内容守卫同一口径 —— 两处都不手写 45 个 id
+ *    （P164 的教训：两份手写清单必然漂移 ⇒ 既有守卫当场变红）。
+ */
+const EXPECTED_TOPIC_IDS = TOPICS.filter((t) => t.tier === 1).map((t) => t.id);
 
 /** 独立写死：各语言的区块标题（必须与 i18n 一致 —— source-only 守卫另有一条核对） */
 const BENCH_HEADING = { en: 'What to fix first', zh: '先修哪个' } as const;
@@ -57,7 +61,7 @@ test('P166: 试点主题的基准页渲染出「修复优先级表」，指南�
   const violations: string[] = [];
 
   for (const lang of LANGS) {
-    for (const topicId of EXPECTED_PILOT) {
+    for (const topicId of EXPECTED_TOPIC_IDS) {
       const topic = TOPICS.find((x) => x.id === topicId);
       if (!topic) {
         violations.push(topicId + '：topics.ts 里没有这个主题');
@@ -154,36 +158,32 @@ test('P166: 试点主题的基准页渲染出「修复优先级表」，指南�
   );
 });
 
-test('P166: 非试点主题的页面不得出现新形态区块（新区段只随数据出现）', () => {
+test('P166: comparison 页不得出现新形态区块（新区段只挂在 benchmark / guide 模板上）', () => {
   buildWithEnv({});
 
   const violations: string[] = [];
-  const pilot = new Set<string>(EXPECTED_PILOT);
+
+  // ⚠️ P166 铺开后，「非试点页」这个集合已经空了（全部 tier-1 都铺了）⇒
+  //   旧断言会**永远绿** = 空转。⇒ 改成守真正的边界：
+  //   **comparison 层主题**（4 个）渲染的是 compare 页，不是 benchmark / guide 页
+  //   ⇒ 它们的产物里**不得**出现新区块。
+  const comparisonTopics = TOPICS.filter((x) => x.tier === 'comparison');
 
   for (const lang of LANGS) {
-    for (const topic of TOPICS.filter((x) => x.tier === 1)) {
-      if (pilot.has(topic.id)) continue;
+    for (const topic of comparisonTopics) {
       const cat = categories.find((cc) => cc.id === topic.letterId);
       const letterSlug = cat ? cat.slug : topic.letterId;
-
-      const benchPath = resolve(root, 'dist', lang, letterSlug, topic.id + '-benchmark', 'index.html');
-      if (!existsSync(benchPath)) {
-        violations.push(lang + '/' + topic.id + '-benchmark：产物缺失');
-      } else {
-        const html = readFileSync(benchPath, 'utf-8');
-        if (scopeAfterHeading(html, BENCH_HEADING[lang])) {
-          violations.push(lang + '/' + topic.id + '-benchmark：出现了「修复优先级表」区块，但该主题不在试点名单里');
-        }
+      const comparePath = resolve(root, 'dist', lang, letterSlug, topic.id + '-compare', 'index.html');
+      if (!existsSync(comparePath)) {
+        violations.push(lang + '/' + topic.id + '-compare：产物缺失');
+        continue;
       }
-
-      const guidePath = resolve(root, 'dist', lang, letterSlug, topic.id + '-guide', 'index.html');
-      if (!existsSync(guidePath)) {
-        violations.push(lang + '/' + topic.id + '-guide：产物缺失');
-      } else {
-        const html = readFileSync(guidePath, 'utf-8');
-        if (scopeAfterHeading(html, GUIDE_HEADING[lang])) {
-          violations.push(lang + '/' + topic.id + '-guide：出现了「达标清单」区块，但该主题不在试点名单里');
-        }
+      const html = readFileSync(comparePath, 'utf-8');
+      if (scopeAfterHeading(html, BENCH_HEADING[lang])) {
+        violations.push(lang + '/' + topic.id + '-compare：出现了「修复优先级表」区块（compare 页不该有）');
+      }
+      if (scopeAfterHeading(html, GUIDE_HEADING[lang])) {
+        violations.push(lang + '/' + topic.id + '-compare：出现了「达标清单」区块（compare 页不该有）');
       }
     }
   }
@@ -191,6 +191,6 @@ test('P166: 非试点主题的页面不得出现新形态区块（新区段只�
   assert.deepEqual(
     violations,
     [],
-    '非试点页不该出现新形态区块（' + violations.length + ' 处）：\n' + violations.map((v) => '  - ' + v).join('\n'),
+    'comparison 页不该出现新形态区块（' + violations.length + ' 处）：\n' + violations.map((v) => '  - ' + v).join('\n'),
   );
 });

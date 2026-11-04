@@ -18,7 +18,7 @@ export const priority: TopicPriorityContent = {
   fixPriority: {
     en: {
       intro:
-        'Retention metrics do not fail independently, so they cannot be fixed independently. When NRR, GRR, logo churn, expansion share and health scores are all below target in the same cohort, the order you repair them in decides whether a month of work compounds or cancels itself out. The table below is ordered by dependency, not by severity: gross retention first, because every later gain is multiplied by it; then the customer-count leak; then the expansion engine; then the leading health signal; and finally the cohort curve, which is the only view that tells you whether the first four repairs actually stuck. Skip a row only when the row above it has passed its own gate. One caliber for every number: percentages are computed on rolling 12-month MRR for board reporting or on a single closed calendar month for operating review, never on a blend of the two, always on one closed cohort of accounts that existed at period start. Amounts are monthly recurring revenue in USD — a point of GRR on a USD 100,000 starting MRR base is USD 1,000 a month — so the ordering logic holds at any scale, but how many accounts you can afford to touch scales with the size of that base.',
+        'Two retention numbers move for opposite reasons, and reading only one of them is how a retention programme ends up fixing the wrong half of the business. Gross retention measures whether the base held; net revenue retention adds whatever expanded on top. A company with a healthy GRR and a soft NRR has a retention programme that works and an expansion engine that does not, and the remedy is entirely different from the one a company with a leaking bucket needs. The rows below are sequenced by what multiplies what: gross retention first, because it multiplies every later gain; then the customer-count leak, which logo churn measures and which a strong GRR can hide; then the expansion engine, where upsell, cross-sell, seat growth and price increase contribute very different amounts and carry very different lead times; then the leading health signal, which is the one that can act inside the period rather than after it; and finally the cohort curve, the one view that shows whether the four repairs actually held. Skip a row only once the line above it has cleared its own check. Every percentage is computed on the accounts that were already on the books when the period opened, and each figure is taken either over a rolling twelve months for board reporting or over one closed calendar month that the operating team reads, never over a blend of the two.',
       rows: [
         {
           priority: 1,
@@ -74,7 +74,7 @@ export const priority: TopicPriorityContent = {
     },
     zh: {
       intro:
-        '留存指标从来不是各自独立地坏的，所以也不能各自独立地修。当同一批队列里的 NRR、GRR、logo 流失、扩张占比和健康分同时不达标时，动手顺序就决定了这份工作是复利还是互相抵消。下面这张表按依赖关系排序，不按严重程度排序：先修毛留存，因为后面每一分收益都要乘在它上面；再修客户数漏损；再修扩张引擎；再修领先的健康信号；最后看队列曲线——它是唯一能告诉你前面四步到底有没有真的生效的视图。只有上一行先过了自己的达标线，才允许跳到下一行。全部数字统一一套口径：百分比都算在滚动 12 个月的 MRR 上（董事会口径）或单个封闭自然月（运营口径），两者绝不混用，且都锚定在期初就存在的那一批封闭队列上。金额一律是美元计价的月度经常性收入——在 10 万美元起算 MRR 的基数上，毛留存一个百分点就是每月 1000 美元——所以排序逻辑在任何量级都成立，但你能负担得起的账户数量随这个基数的大小变。',
+        '两个留存数字为相反的原因而动，而只读其中一个，正是留存项目最后修错那一半的原因。毛留存量的是基本盘有没有守住，净收入留存再加上扩展的部分；一家 GRR 漂亮而 NRR 偏软的公司，是留存动作有效而扩展引擎没长出来，修法和漏桶的公司完全不同。下面几行按「谁乘谁」排序：先修毛留存，因为之后的每一分收益都要乘在它上面；再修客户数漏损，也就是 logo 流失量到的东西，而一个漂亮的 GRR 恰好会把它藏起来；再修扩展引擎，升级、交叉销售、席位增长和涨价贡献的量与提前量都差得很远；再修领先的健康信号，因为它是那种能在当期就动手而不是事后才知道的那个；最后是队列曲线，它是唯一能显示前面四步究竟落没落地的视图。上一行先过了自己的检查，才允许跳到下一行。这里的百分比都锚在期初就在册的那批客户队列上，要么按滚动十二个月算董事会看的口径，要么按单个封闭的日历月算运营口径，两者绝不混用。',
       rows: [
         {
           priority: 1,
@@ -132,7 +132,7 @@ export const priority: TopicPriorityContent = {
   readinessChecklist: {
     en: {
       intro:
-        'The seven steps of the retention workflow have one thing in common: every step can produce a number that looks finished while being unusable. A step is not done when the number exists; it is done when the number is comparable, reproducible and tied to one closed cohort. Use the gates below as stop-lines rather than as a scorecard: if a step fails its gate, the next step is measuring your assumptions instead of your business, so fix the gate first and only then move on. Every figure here is an operating metric rather than a market price, which is why each one carries its own definition — numerator, denominator, period, whether the window is a rolling twelve months or a single closed calendar month, which cohort it covers, and the dollar scale it assumes.',
+        'A retention figure is finished only when it can be reproduced by someone else, six months later, from the same cohort and the same window, and the seven checks below answer to that standard rather than to the standard of a number existing. Starting MRR, expansion, downgrade and churned MRR have to be pulled on one defined period and reconciled against the billing system, because a figure assembled from a spreadsheet that nobody can retrace becomes the number the board remembers even after the underlying definition changes. Gross retention and net retention are then computed separately, since the distance between them is the part of the business that depends on expansion and is therefore the part most often quietly overstated. Per-tier targets exist because an enterprise floor of ninety-five percent and an SMB floor of eighty-five percent describe two different books, and a blended figure hides both. Logo churn is tracked apart from revenue churn, since losing forty small accounts and losing four large ones produce the same revenue movement and completely different work.',
       items: [
         {
           step: 1,
@@ -194,7 +194,7 @@ export const priority: TopicPriorityContent = {
     },
     zh: {
       intro:
-        '留存流程的七步有一个共同点：每一步都能产出一个看起来完成、其实不能用的数字。一步算不算做完，不看数字有没有出来，而看它是否可比、可复现、并且挂在同一批封闭队列上。下面的达标线是停车线，不是记分卡：一步没达标，下一步量的是你的假设，不是你的生意——先把达标线修好，再往下走。这里写的都是经营指标而不是市场价，所以每个数字都自带定义：分子、分母、期间、窗口是滚动十二个月还是单个封闭自然月、覆盖哪一批队列，以及它假设的金额量级。',
+        '一个留存数字只有能被复算才算做完——半年后另一个人用同一批队列、同一个窗口能算出来同一个数——下面那七项检查是按这个标准写的，而不是拿「数字已经存在」当标准。起始 MRR、扩张、降级和流失 MRR 必须在一个明确期间里取出来，并和计费系统对得上，因为一个没人能回溯的表格数字，会变成董事会记住的那个数，哪怕底下的定义早就换了。然后毛留存和净留存要分开算，因为两者之间那段距离就是依赖扩展的那部分生意，也因此是最容易被悄悄报大的一段。分层的指标之所以要存在，是因为企业级 95% 的地板和 SMB 级 85% 的地板描述的是两本不同的账，而把两个层次揉成一个的数字把两边都藏了。logo 流失要单独跟收入流失分开看：丢四十个小客户和丢四个大客户，收入上的移动一模一样，要做的活却完全不同。',
       items: [
         {
           step: 1,
