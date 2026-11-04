@@ -3,6 +3,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import ToolCard from '../../components/ToolCard.astro';
+import CategoryHero from '../../components/CategoryHero.astro';
+import CategoryFaq from '../../components/CategoryFaq.astro';
+import CategoryGuides from '../../components/CategoryGuides.astro';
 import CategoryOtherNav from '../../components/CategoryOtherNav.astro';
 import CategoryDecisionLayer from '../../components/CategoryDecisionLayer.astro';
 import { categories } from '../../data/categories';
@@ -43,6 +46,17 @@ const categoryTools = tools
 // （只有站点级的 WebSite/SearchAction）⇒ 少 BreadcrumbList（面包屑富结果）与
 // ItemList（工具清单富结果）。这是与另外 6 个分类页之间的模板不一致，
 // 本批补成同形。
+// P167: 分类页的三块内容（介绍段 / 分类指南 / FAQ）。
+// 来源 = i18n locale 键（category.<字母>.faq.* / .guide.* / .intro.*）。
+const faqItems = [1,2,3,4,5].map(n => ({
+  q: t(`category.${CATEGORY_ID}.faq.q${n}.q`, lang),
+  a: t(`category.${CATEGORY_ID}.faq.q${n}.a`, lang),
+}));
+
+const manualGuides = [1,2,3].map(n => ({
+  title: t(`category.${CATEGORY_ID}.guide.${n}.title`, lang),
+  desc: t(`category.${CATEGORY_ID}.guide.${n}.desc`, lang),
+}));
 const schema = JSON.stringify({
   '@context': 'https://schema.org',
   '@graph': [
@@ -83,9 +97,17 @@ const comparisonTopics = letterTopics.filter((t) => t.tier === 'comparison');
 >
   <Header />
   <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
+    <CategoryHero
+      categoryName={translatedName}
+      categoryDesc={translatedDesc}
+      toolCount={categoryTools.length}
+    />
+
     <section class="mb-10">
-      <h1 class="text-3xl font-bold text-gray-900 mb-3">{translatedName}</h1>
-      <p class="text-sm text-gray-700 leading-relaxed">{translatedDesc}</p>
+      <h2 class="text-2xl font-bold text-gray-900 mb-3">{t(`category.${CATEGORY_ID}.intro.h2`, lang)}</h2>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">{t(`category.${CATEGORY_ID}.intro.1`, lang)}</p>
+      <p class="text-sm text-gray-700 leading-relaxed mb-3">{t(`category.${CATEGORY_ID}.intro.2`, lang)}</p>
+      <p class="text-sm text-gray-700 leading-relaxed">{t(`category.${CATEGORY_ID}.intro.3`, lang)}</p>
     </section>
 
     {decisionLayer && (
@@ -98,6 +120,9 @@ const comparisonTopics = letterTopics.filter((t) => t.tier === 'comparison');
         {categoryTools.map(t => <ToolCard slug={t.slug} title={t.translatedTitle} description={t.translatedDescription} />)}
       </div>
     </section>
+
+    <CategoryFaq categoryId={CATEGORY_ID} faqItems={faqItems} />
+    <CategoryGuides categoryId={CATEGORY_ID} manualGuides={manualGuides} />
 
 {letterTopics.length > 0 && (
       <section class="mb-10">

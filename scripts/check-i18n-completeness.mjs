@@ -48,6 +48,29 @@ const zhPath = resolve(root, 'src/i18n/locales/zh.json');
 // The contract now lists only keys the site actually renders. If a future
 // component starts printing one of the removed labels, add it back here
 // AND wire it into a t() call — the two lists then agree again.
+// P167: 分类清单**从 src/data/categories.ts 派生**（不再手写 ['A','B','C','D','E','F']）。
+//
+// * 为什么：那份手写清单是**第二份真相源** —— P167 把 9 个分类补成同形时，它会静默地
+//   少覆盖那 9 个分类（与 P164 的「开了第二份清单 ⇒ 既有守卫当场变红」同类）。
+//   而且它**已经漂移过一次**：下面 dynamic_category 段早就改用派生了，
+//   静态段却还写死 A-F ⇒ 同一个文件里两套分类清单。
+const catsSrc = readFileSync(resolve(root, 'src/data/categories.ts'), 'utf-8');
+const CATEGORY_IDS = [...catsSrc.matchAll(/\{\s*id:\s*'([^']+)'/g)].map((x) => x[1]);
+// ⭐ 派生式清单最危险的失效形态是**静默漏项** —— 分类 id 若不再是单个大写字母，
+//   上面那条正则会一个都匹配不到 ⇒ 门禁「全绿」而实际什么都没查。
+//   ⇒ 这里显式断言，发现 id 形态变了就**大声失败**，而不是安静地少查。
+if (CATEGORY_IDS.length === 0) {
+  throw new Error('从 src/data/categories.ts 派生出的分类清单是空的 —— 解析规则失效了？');
+}
+for (const id of CATEGORY_IDS) {
+  if (!/^[A-Z]$/.test(id)) {
+    throw new Error(
+      '分类 id 不是单个大写字母: ' + JSON.stringify(id) +
+      ' —— 分类清单的派生正则与 categories.ts 不同步了（门禁会静默漏查），请同步更新本文件。',
+    );
+  }
+}
+
 const REQUIRED_KEYS = {
   eeat: [
     'eeat.title',
@@ -73,7 +96,7 @@ const REQUIRED_KEYS = {
   ],
   category: (() => {
     const keys = [];
-    for (const id of ['A','B','C','D','E','F']) {
+    for (const id of CATEGORY_IDS) {
       keys.push(`category.${id}.intro.h2`);
       keys.push(`category.${id}.intro.1`, `category.${id}.intro.2`, `category.${id}.intro.3`);
       for (let n = 1; n <= 5; n++) {
@@ -139,13 +162,11 @@ const REQUIRED_KEYS = {
 const toolKeys = [];
 const categoryKeys = [];
 
-// Read categories
-const catsSrc = readFileSync(resolve(root, 'src/data/categories.ts'), 'utf-8');
-const catRe = /\{\s*id:\s*'([A-Z])'/g;
-let m;
-while ((m = catRe.exec(catsSrc)) !== null) {
-  categoryKeys.push(`category.${m[1]}.name`, `category.${m[1]}.desc`);
+// Read categories（P167：复用上面派生的同一份清单，不再第二次扫描源文件）
+for (const id of CATEGORY_IDS) {
+  categoryKeys.push(`category.${id}.name`, `category.${id}.desc`);
 }
+let m;
 
 // Read tools
 const toolsDir = resolve(root, 'src/data/tools');
@@ -261,4 +282,4 @@ if (missing.length > 0) {
 const total = Object.values(REQUIRED_KEYS).flat().length;
 const dynCount = REQUIRED_KEYS.dynamic_category.length + REQUIRED_KEYS.dynamic_tools.length;
 const engineCompleteCount = engineKeyEngines.length;
-console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{A-F}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/descs + ${engineCompleteCount} engineKey=true engines fully translated).`);
+console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{${CATEGORY_IDS.join(',')}}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/descs + ${engineCompleteCount} engineKey=true engines fully translated).`);
