@@ -1768,6 +1768,7 @@ P165 把 B2 定成「定位表 + 门槛清单」。**执行前取证把它改案
 - 变异台子 **6 / 6 KILLED**（还原逐字节校验通过）
 - 全量套件 **274 套件 · 0 失败**（62 build-dep + 212 source-only；exit 0 · TAP **1911** 条 `ok` · **0** 条 `not ok`）
 - **线上验收**（`tests/scripts/p167-verify-production.mjs`，**入库**）：生产站 15 分类页 × 2 语言 = **30 / 30 全部到位**（h1 + 介绍段 3 段 + FAQ 5 条（**F 分类 7** 条）+ 指南 3 张卡），exit 0
+- **线上验收 2**（`tests/scripts/p167-verify-card-titles.mjs`，**入库**）：卡片用**短名** + 带 `title` + 不再 `truncate`，而工具详情页 `<title>` / h1 **仍是长 SEO 名** —— 15 分类 × 2 语言 = **30 页** + 抽样 **6** 个详情页 = **全部达标**，exit 0。⭐ 两个必须**一起验** —— 只验其中一个抓不到「两处搞反了」。⚠️ 脚本第一版踩了 HTML 实体坑（`&` → `&amp;`）⇒ 30 页全 OK 却误报 1 个 FAIL ⇒ 已显式解码
 - 模板同形体检 `p167-category-page-shape.ts --strict` exit 0（**15 / 15 同形**）
 
 ### 19.18 维度 3 scan 声明（BD / BE / BF）

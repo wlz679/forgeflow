@@ -47,7 +47,7 @@
 1. **「显示名」与「检索名」是两个字段，混用就会两处都错** —— 卡片用 SEO 长名 ⇒ 85% 被截断；而 SEO 长名本身又有 66% 超 SERP 上限、97% 的年份尾巴是浪费。⇒ **一个字段想同时服务「给人扫」和「给搜索引擎」⇒ 两头都做不好**。
 2. ⭐ **用户的直觉往往指向对的方向但错的结论** —— 「短名就够了吧」问的是「长名还有用吗」，实测答案是「**长名有用（长尾检索面）但用错了位置，且它的尾巴是纯浪费**」⇒ ⭐ **要把用户的直觉翻译成「哪个字段用在哪」的具体问题，而不是直接接受或否定结论**。
 
-**验证**：tsc exit 0 · `codegen-customfn --check` exit 0 · `codegen-examples --check` exit 0（**100 引擎 in sync**）· `check-i18n-completeness.mjs` 通过（**686** 必需键）· `pnpm build` exit 0（**438** 页）· `tool-card-title-guard` **7/7** · 全站扫描：**130 个「短名≠长名」的工具标题 0 处泄漏**（全部渲染为短名）· 详情页 h1 与 `<title>` 实测**未变**（仍是长名）· 全量 **275 套件 · 0 失败**（62 build-dep + 213 source-only）。
+**验证**：tsc exit 0 · `codegen-customfn --check` exit 0 · `codegen-examples --check` exit 0（**100 引擎 in sync**）· `check-i18n-completeness.mjs` 通过（**686** 必需键）· `pnpm build` exit 0（**438** 页）· `tool-card-title-guard` **7/7** · 全站扫描：**130 个「短名≠长名」的工具标题 0 处泄漏**（全部渲染为短名）· 详情页 h1 与 `<title>` 实测**未变**（仍是长名）· 全量 **275 套件 · 0 失败**（62 build-dep + 213 source-only）· **线上 30 分类页 + 6 详情页全部达标**（卡片用短名 · 详情页 `<title>`/h1 仍是长名）。
 
 **套件计数变更**：62 build-dep ＋ 212 source-only = 274 → **62 build-dep ＋ 213 source-only = 275**（新增 1 个 source-only `tool-card-title-guard`）。**维度数**：22 → **23**（新增 Card Readability 维度）。
 
