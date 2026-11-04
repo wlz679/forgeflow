@@ -174,7 +174,10 @@ for (const file of readdirSync(toolsDir).filter(f => f.endsWith('.ts') && f !== 
   const content = readFileSync(resolve(toolsDir, file), 'utf-8');
   const slugRe = /slug:\s*'([^']+)'/g;
   while ((m = slugRe.exec(content)) !== null) {
-    toolKeys.push(`tools.${m[1]}.title`, `tools.${m[1]}.description`);
+    // P167: shortTitle 是**卡片用的短名**（ToolCard 读它渲染卡片标题）。
+    //   漏写时 t() 会返回键名本身 ⇒ 卡片标题会显示成字面量
+    //   "tools.xxx.shortTitle" ⇒ 必须纳入门禁。
+    toolKeys.push(`tools.${m[1]}.title`, `tools.${m[1]}.shortTitle`, `tools.${m[1]}.description`);
   }
 }
 
@@ -282,4 +285,4 @@ if (missing.length > 0) {
 const total = Object.values(REQUIRED_KEYS).flat().length;
 const dynCount = REQUIRED_KEYS.dynamic_category.length + REQUIRED_KEYS.dynamic_tools.length;
 const engineCompleteCount = engineKeyEngines.length;
-console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{${CATEGORY_IDS.join(',')}}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/descs + ${engineCompleteCount} engineKey=true engines fully translated).`);
+console.log(`✅ i18n completeness check passed (${total} required keys: eeat/about/category.{${CATEGORY_IDS.join(',')}}.*/header/favorites/recent/history + ${dynCount} dynamic: ${categoryKeys.length} category names/descs + ${toolKeys.length} tool titles/shortTitles/descs + ${engineCompleteCount} engineKey=true engines fully translated).`);

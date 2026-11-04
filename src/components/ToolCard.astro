@@ -3,6 +3,31 @@ import { getLang, t } from '../i18n';
 export interface Props { slug: string; title: string; description: string; }
 
 const lang = getLang(Astro);
+
+// P167 —— 卡片标题用**短名**，不用传入的 SEO 长名。
+//
+// 为什么要短名（用户 2026-11-04 截图反馈：「好多计算器的名字都是省略号……」）：
+//   · 传入的 `title` 是 **SEO 标题**（`tools.<slug>.title`），带关键词后缀，
+//     英文中位 **64** 字符、最长 77（如 "Affiliate Income Calculator — Free
+//     Commission + Conversion Forecast (2026)"）；
+//   · 在 4 列布局下单行约 31 字符 ⇒ **85% 的卡片标题被截断**；
+//   · 短名 `tools.<slug>.shortTitle`（P167 从同一标题机械派生，取 ' — ' 前缀）
+//     中位 **25** 字符、最长 40 ⇒ 两行内放得下。
+//
+// ⚠️ **SEO 长名没有被放弃**：工具详情页的 `<title>` / h1 / 面包屑 / RelatedTools
+//   仍然用长名 ⇒ 搜索引擎看到的标题一个字都没少。
+//   这里只改**给人扫的卡片**。
+//
+// ⭐ 为什么在组件里解析而不是在 16 个页面各写一遍：
+//   16 个页面里 9 个是 `displayTools.map(t => <ToolCard title={t.translatedTitle} …>)`、
+//   7 个是直接传 `categoryTools` —— 两种写法 ⇒ 在页面里改要改两处、且容易漏；
+//   在组件里解析 ⇒ **一处改动，16 个页面全部受益**，且以后新增页面自动生效。
+//
+// ⚠️ fallback：`t()` 在键缺失时返回键名本身 ⇒ 必须显式判断，否则卡片标题
+//   会显示成字面量 "tools.xxx.shortTitle"。
+const shortTitleKey = `tools.${Astro.props.slug}.shortTitle`;
+const shortTitleRaw = t(shortTitleKey, lang);
+const shortTitle = shortTitleRaw === shortTitleKey ? Astro.props.title : shortTitleRaw;
 ---
 
 <!-- P141-B2-T1: HTML invalid <a> 嵌套 <button> → 改为真正的 siblings (用 <div> wrapper) -->
@@ -31,7 +56,14 @@ const lang = getLang(Astro);
         </svg>
       </div>
     </div>
-    <h3 class="text-base font-semibold text-gray-900 group-hover:text-[#7C3AED] transition-colors duration-300 mb-2 truncate">{Astro.props.title}</h3>
+    <!-- P167: 标题原本用 `truncate`（单行 + 省略号）且**没有 title 属性** ⇒
+         实测 18% 的工具标题（18 / 100）在 4 列布局下被砍掉（如 "Affilate Income Calculat…"），
+         而 hover 也不显示全名（下面的描述反而有 title）。
+         ⇒ 改成 `line-clamp-2`：最多两行、完整可读，同时把 `title` 补上，
+            两行仍放不下时 hover 出原生 tooltip。
+         ⚠️ 纯视觉层改动：**DOM 里的文字一直就是完整的**（truncate 只是 overflow:hidden），
+            ⇒ 爬虫看到的文字没变，SEO/AdSense 判定不受影响；这是给人看的问题。 -->
+    <h3 class="text-base font-semibold text-gray-900 group-hover:text-[#7C3AED] transition-colors duration-300 mb-2 line-clamp-2" title={shortTitle}>{shortTitle}</h3>
     <p class="text-sm text-gray-500 line-clamp-2 group-hover:text-gray-600 transition-colors duration-300 mt-auto" title={Astro.props.description}>{Astro.props.description}</p>
   </a>
   <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#7C3AED] to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-b-xl"></div>
