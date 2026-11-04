@@ -1767,6 +1767,7 @@ P165 把 B2 定成「定位表 + 门槛清单」。**执行前取证把它改案
 - 体检工具 `--strict` exit 0（**0 个问题**）
 - 变异台子 **6 / 6 KILLED**（还原逐字节校验通过）
 - 全量套件 **274 套件 · 0 失败**（62 build-dep + 212 source-only；exit 0 · TAP **1911** 条 `ok` · **0** 条 `not ok`）
+- **线上验收**（`tests/scripts/p167-verify-production.mjs`，**入库**）：生产站 15 分类页 × 2 语言 = **30 / 30 全部到位**（h1 + 介绍段 3 段 + FAQ 5 条（**F 分类 7** 条）+ 指南 3 张卡），exit 0
 - 模板同形体检 `p167-category-page-shape.ts --strict` exit 0（**15 / 15 同形**）
 
 ### 19.18 维度 3 scan 声明（BD / BE / BF）
