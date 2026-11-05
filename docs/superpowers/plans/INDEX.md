@@ -33,7 +33,7 @@
 | `2026-08-18-p140c-eeat-completion.md` | P140c E-E-A-T Completion — single real reviewer identity (王立柱) + About page 3 sections (Editorial Standards / Our Reviewers / Methodology, Medium depth) + EeatTrustBlock wire to real data (P140b-T6 placeholder closed) + 2 CI guards (tier-prose-completeness + sources-quality) + 5 zh H2 threshold drift fix + P140b doc catch-up; 6 atomic commits | 2026-08-18 |
 | `2026-08-18-p140d-tier-threshold-tightening.md` | P140d Tier Threshold Tightening — C3 thresholds (+70%) + 31 H2 domain-specific expansions (22 T1 zh + 1 T1 en + 6 T2 zh + 2 T3 zh = +1480 chars; per-file subagent pattern); 5 conceptual commits + 33 branch commits on `feature/p140d-tier-threshold-tightening` | 2026-08-18 |
 | `2026-08-18-p140g-author-bio-pages.md` | P140g Author Bio Pages — per-reviewer detail pages [Background / Credentials / Categories Reviewed] + JSON-LD Person schema + about-card 'Read full bio →' link + build-dep render guard; 5 atomic commits + Minimal scope (no new data fields) | 2026-08-19 |
-| `2026-08-19-p141h-adsense-p0-fixes.md` | P141h AdSense P0 Audit Fixes — 2 i18n placeholder keys [renewal-rate-calculator] + prose-first refactor [sources + last reviewed] + new build-dep guard [placeholder leakage across all 100 engines]; 3 atomic commits on master; no spec/plan file (audit-driven targeted bug fix, not a planning-grade batch) | 2026-08-19 |
+| _(no plan file)_ | P141h AdSense P0 Audit Fixes — 2 i18n placeholder keys [renewal-rate-calculator] + prose-first refactor [sources + last reviewed] + new build-dep guard [placeholder leakage across all 100 engines]; 3 atomic commits on master; no spec/plan file (audit-driven targeted bug fix, not a planning-grade batch) — ship log: `memory/p141h-adsense-p0-fixes-shipped.md` | 2026-08-19 |
 | `2026-08-19-p141i-prose-p1-deepening.md` | P141i Prose P1 Deepening — CalculatorProse schema extended with 2 optional H2s [Assumptions + Common Mistakes] + 18 per-file prose expansions [9 engines × en + zh] with inline HEALTH_BANDS source citations + 1 new warn-only build-dep Test 7 in content-prose-shape-guard; 13 atomic commits on `feature/p141i-prose-p1-deepening`; closes ChatGPT "professional credibility" gap from P141h audit | 2026-08-19 |
 | `2026-08-19-p140f-batch-a-tier1-anchors.md` | P140f Batch A Tier 1 Anchor Topics — Topic data layer (15 Tier 1 anchor Topics) + 2 new components (Breadcrumb + TopicCard) + 2 new page templates (Topic Guide 6-section + Topic Benchmark 4-section data-table) generating 30 new pages + calculator page Related Topics section + 2 new build-dep guards; 7 atomic commits on `feature/p140f-batch-a-tier1-anchors`; closes nothing (P141j/P141i already closed rejection signals; first concrete deliver of v2.0 Topic Authority architecture) | 2026-08-19 |
 | `2026-08-20-p140f-phase2-tier1-extension.md` | P140f Phase 2 Tier 1 Extension — 30 new Tier 1 extension Topics (15 letters × 2 each) × 2 templates (Guide + Benchmark) = 60 new pages; promote 30 from prose-tiers.ts TIER_2_SLUGS; new build-dep guard topic-content-coverage-guard (per-field tiered min lengths); 17 atomic commits on master (Wave 0 + 15 letter waves + final ship), letter-by-letter direct-to-master cadence; closes #525/#528/#529/#530 pre-AdSense resubmit window (~2026-09-15); static pages 511 → 623 [+112 = 56 pages × 2 langs]; pnpm check unchanged; RUN_BUILD_TESTS=1 1267/1267/0 [51 build-dep suites, +1 new] | 2026-08-21 |
@@ -143,11 +143,139 @@
 
 ---
 
+## 9 · P48+ — 后续批次（P48 → P166）
+
+> ⚠️ **本节由 P167 一次性补登记**（此前 38 个文件未登记）。
+> 维护约定见文末；新增 plan 时请同步登记到对应批次段。
+
+### P48
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-20-p48-claude-md-lessons.md` | P48 — CLAUDE.md Operational Lessons Implementation Plan | 2026-07-20 |
+
+### P49
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-20-p49-engine-count-table.md` | P49 — Engine Count per Category Table Implementation Plan | 2026-07-20 |
+
+### P50
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-20-p50-codegen-customfn-drift-guard.md` | P50 — codegen-customfn drift guard — implementation plan | 2026-07-20 |
+
+### P51
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-21-p51-codegen-examples-mock-apply.md` | P51 — codegen-examples mock-apply drift guard — implementation plan | 2026-07-21 |
+
+### P52
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-21-p52-test-infra-hardening.md` | P52 — Test Infrastructure Hardening — Implementation Plan | 2026-07-21 |
+
+### P53
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-21-p53-p1-batch.md` | P53 — P1 Critical Batch + TS Sweep — Implementation Plan | 2026-07-21 |
+
+### P59
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-23-p59-engines-freelance-subdir-merge.md` | P59 — Engine Subdir Merge (Freelance D-category) Implementation Plan | 2026-07-23 |
+
+### P60
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-23-p60-engines-cost-subdir-fix.md` | P60 — Engine subdir fix (Cost E-category, saas-pricing-planner) Implementation Plan | 2026-07-23 |
+
+### P61
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-23-p61-m-category-fixes.md` | P61 M-Category Audit Fixes Implementation Plan | 2026-07-23 |
+
+### P62
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-24-p62-category-page-i18n-fix.md` | P62 Category Page i18n Fix Implementation Plan | 2026-07-24 |
+
+### P63
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-24-p63-ci-cjk-guard.md` | P63 CI CJK Guard Implementation Plan | 2026-07-24 |
+
+### P120–P129
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-28-p124-en-composite-i18n-guard.md` | P124: Engine EN-Page Composite i18n Guard Implementation Plan | 2026-07-28 |
+| `2026-07-28-p125-claude-md-invariant-matrix-guard.md` | P125: CLAUDE.md Invariant Matrix Guard Implementation Plan | 2026-07-28 |
+| `2026-07-28-p126-changelog-catchup-v6.md` | P126: CHANGELOG catch-up v6 (M22.0) Implementation Plan | 2026-07-28 |
+| `2026-07-28-p127-p123-latent-false-positive-fix.md` | P127: P123 Latent False-Positive Fix Implementation Plan | 2026-07-28 |
+| `2026-07-28-p128-faq-howtouse-coverage-extension.md` | P128: FAQ `q/a[1+]` + how_to_use `[1+]` Coverage Extension Implementation Plan | 2026-07-28 |
+| `2026-07-28-p129-missing-translation-assertion.md` | P129 Missing-Translation Assertion Implementation Plan (EXPANDED) | 2026-07-28 |
+
+### P130–P139
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-28-p130-changelog-catchup-v7.md` | P130 CHANGELOG catch-up v7 (M23.0) Implementation Plan | 2026-07-28 |
+| `2026-07-28-p131-single-test-split.md` | P131 Single-Test Split Implementation Plan | 2026-07-28 |
+| `2026-07-29-p137-tier2-round7-composite-data-driven-lines.md` | P137 — Tier-2 Round 7 Composite Data-Driven Lines | 2026-07-29 |
+
+### P140–P149
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-31-p140a-adsense-scaffold.md` | P140a — AdSense 骨架 + 内容 Schema 实施计划 | 2026-07-31 |
+| `2026-07-31-p140b-content-mass-write.md` | P140b — Calculator Content Mass-Write + E-E-A-T 深化实施计划 | 2026-07-31 |
+
+### P150–P159
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-08-28-p150-i18n-migration.md` | P150 i18n JSON Migration Implementation Plan | 2026-08-28 |
+| `2026-08-28-p150-p151-retrospective.md` | Sub-project A: P150 + P151 Retrospective Implementation Plan | 2026-08-28 |
+| `2026-08-28-p151-preset-chip.md` | P151 Preset Chip Unification Implementation Plan | 2026-08-28 |
+| `2026-08-31-p150-uc-advisor-phase1.md` | P150 User-Centric Advisor Phase 1 — Feedback Widget Implementation Plan | 2026-08-31 |
+| `2026-08-31-p150-uc-advisor-phase2.md` | P150 UC-advisor Phase 2 - Feedback Backend Implementation Plan | 2026-08-31 |
+| `2026-09-01-p151-dimension-1-audit.md` | P151 Dimension 1 Audit Implementation Plan | 2026-09-01 |
+| `2026-09-01-p151-l5-backfill-batch1.md` | P151 L5 Backfill Batch 1 Implementation Plan | 2026-09-01 |
+| `2026-09-01-p151-l5-backfill-batch2.md` | P151 L5 Backfill Batch 2 Implementation Plan | 2026-09-01 |
+
+### P160+
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-10-30-p162-gpu-engine-faq-provenance.md` | P162 GPU 引擎 FAQ 的价格单一真相源 — 实施计划 | 2026-10-30 |
+| `2026-10-30-p163-price-claim-ledger-and-image-training-derivation.md` | P163 — 价格主张覆盖面台账 + 图片/训练引擎派生化 Implementation Plan | 2026-10-30 |
+| `2026-11-03-p166-pricing-bot-closure-and-topic-priority-tables.md` | P166 Implementation Plan — 定价 bot 闭环 + 主题页「修复优先级表 / 达标清单」试点 | 2026-11-03 |
+
+### 其它
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-07-22-header-dropdown-mutex.md` | Header Dropdown Mutex — Implementation Plan | 2026-07-22 |
+| `2026-07-30-v3-render-66-engines-batch-fix.md` | P138 — V3 渲染层 66 引擎批量补齐 Implementation Plan | 2026-07-30 |
+| `2026-08-28-feat-merge-retro.md` | Feat Merge Retroactive Implementation Plan | 2026-08-28 |
+| `2026-08-28-meta-qoder-migration.md` | Meta: Qoder Migration + AGENTS.md Constitution Implementation Plan | 2026-08-28 |
+| `2026-08-31-last-modified-header.md` | Last-Modified + Sitemap lastmod Injection Implementation Plan (P149) | 2026-08-31 |
+
 ## 类别计数
 
 | 类别 | 数量 |
 |---|---|
-| 0 · Foundational / Schema / i18n / SEO / Deploy / Audit (pre-P) | 15 |
+| 0 · Foundational / Schema / i18n / SEO / Deploy / Audit (pre-P) | 27 |
 | 1 · P0 — Content Pages | 4 |
 | 2 · P1 — Schema / Blog Markdown | 2 |
 | 3 · P2 — LocalStorage trilogy | 3 |
@@ -155,9 +283,9 @@
 | 5 · P4-P16 — Calculator batches | 15 |
 | 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 14 |
 | 7 · Multi-language mirrors | 1 |
-| **索引 plan 文件总数** | **58** |
 | 8 · Excluded (pr-body) | 1 |
-| **目录文件总数** | **58** |
+| 9 · P48+ — 后续批次（P48 → P166） | 38 |
+| **目录文件总数** | **109** |
 
 ---
 

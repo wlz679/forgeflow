@@ -3,7 +3,7 @@
 > **目录索引** — `docs/` 树顶层 navigator，跨 3 个子目录。
 > **Sub-INDEX:** `superpowers/specs/INDEX.md` · `superpowers/plans/INDEX.md` · 项目级 `memory/INDEX.md`
 > **Project-wide source of truth:** `../CLAUDE.md`
-> **最后更新:** 2026-07-19（P36 batch）
+> **最后更新:** 2026-11-04（P167：去掉会漂的文件数 + 修坏链；子目录内容数见各 Section）
 
 ---
 
@@ -12,18 +12,18 @@
 ```
 docs/
 ├── INDEX.md (本文件)
-├── deploy/        # 部署 runbooks (1 file)
-├── i18n/          # 跨切割 ZH 术语 (1 file)
-└── superpowers/   # superpowers 框架: specs/ + plans/ (44 + 51 files)
+├── deploy/        # 部署 runbooks
+├── i18n/          # 跨切割 ZH 术语
+└── superpowers/   # superpowers 框架: specs/ + plans/ (见各自 INDEX.md)
 ```
 
 | 子目录 | INDEX 链接 | 文件数 |
 |---|---|---|
-| `deploy/` | (本文件 Section 1) | 1 |
-| `i18n/` | (本文件 Section 2) | 1 |
-| `superpowers/specs/` | [`specs/INDEX.md`](./superpowers/specs/INDEX.md) | 44 + 1 INDEX.md = 45 |
-| `superpowers/plans/` | [`plans/INDEX.md`](./superpowers/plans/INDEX.md) | 51 + 1 INDEX.md = 52 |
-| **总文件数** | | **100** (含 3 INDEX.md) |
+| `deploy/` | (本文件 Section 1) | 见 Section 1 |
+| `i18n/` | (本文件 Section 2) | 见 Section 2 |
+| `superpowers/specs/` | [`specs/INDEX.md`](./superpowers/specs/INDEX.md) | 见 specs/INDEX.md |
+| `superpowers/plans/` | [`plans/INDEX.md`](./superpowers/plans/INDEX.md) | 见 plans/INDEX.md |
+| **总文件数** | | 见各 sub-INDEX |
 
 ---
 
@@ -43,7 +43,7 @@ docs/
 |---|---|---|---|
 | `zh-terminology.md` | ForgeFlowKit ZH Terminology Glossary (Single source of truth for technical term ZH translation) | glossary | 2026-07-18 (P18-3) |
 
-> **Single source of truth**: 该 glossary 是 100 engines ZH 翻译的术语 anchor；P18-3 audit 后保持稳定。新术语添加应改文件 + 同步 user-global `p18-i18n-tooling-hardening.md` 索引。
+> **Single source of truth**: 该 glossary 是 100 engines ZH 翻译的术语 anchor；P18-3 audit 后保持稳定。新术语添加应改文件 + 同步 user-global 的 p18-i18n-tooling-hardening 索引。
 
 ---
 
@@ -51,8 +51,8 @@ docs/
 
 详见各 sub-INDEX（已由 P33/P34 建立）：
 
-- **`docs/superpowers/specs/INDEX.md`** — 44 spec files (P33 batch)
-- **`docs/superpowers/plans/INDEX.md`** — 51 plan files (P34 batch)
+- **`docs/superpowers/specs/INDEX.md`** — spec 文件导航
+- **`docs/superpowers/plans/INDEX.md`** — plan 文件导航
 
 P33/P34 已 ship 这两个 sub-INDEX；本顶层 INDEX 仅 cross-ref，不再重复列表。
 
@@ -63,9 +63,9 @@ P33/P34 已 ship 这两个 sub-INDEX；本顶层 INDEX 仅 cross-ref，不再重
 | INDEX | 位置 | 内容 | 起始 |
 |---|---|---|---|
 | `docs/INDEX.md` (本文件) | `docs/INDEX.md` (git-tracked) | 顶层 3 subdirs 导航 | 2026-07-19 (P36) |
-| `docs/superpowers/specs/INDEX.md` | (git-tracked) | 44 specs navigator | 2026-07-19 (P33) |
-| `docs/superpowers/plans/INDEX.md` | (git-tracked) | 51 plans navigator | 2026-07-19 (P34) |
-| `memory/INDEX.md` | `memory/INDEX.md` (git-tracked) | 41 ship logs navigator | 2026-07-19 (P35) |
+| `docs/superpowers/specs/INDEX.md` | (git-tracked) | specs navigator | 2026-07-19 (P33) |
+| `docs/superpowers/plans/INDEX.md` | (git-tracked) | plans navigator | 2026-07-19 (P34) |
+| `memory/INDEX.md` | `memory/INDEX.md` (git-tracked) | ship logs navigator | 2026-07-19 (P35) |
 | User-global `MEMORY.md` | `~/.claude/projects/.../memory/MEMORY.md` (gitignored) | 跨 session 单行 ship log 索引 | 2026-07-18 (P22b) |
 
 **Single source of truth invariant**: 5 个 INDEX 形成 "navigator pyramid" — 顶层 `docs/INDEX.md` → 3 sub-INDEX → 各 subdir 详细文件。Future AI session 找任何 doc 都从顶层 `docs/INDEX.md` 入手。

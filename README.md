@@ -19,7 +19,7 @@ ForgeFlowKit is a static single-page application (SPA) providing **100 free busi
 # Requires pnpm (enforced via preinstall). Node ^20.19.0 || >=22.13.0
 pnpm install      # Install dependencies
 pnpm dev          # Dev server (Astro, port 4321 default)
-pnpm build        # Production build → dist/ (~313 static pages: 100 calcs × 2 langs + 15 category listings × 2 langs + 2 landing pages × 2 langs)
+pnpm build        # Production build → dist/ (static site; page count grows with each content batch)
 pnpm preview      # Preview built app
 ```
 
@@ -28,7 +28,7 @@ pnpm preview      # Preview built app
 - `pnpm test:unit` / `pnpm test:build` — Run test suite (default skips build-dependent; `RUN_BUILD_TESTS=1` to opt in)
 - `pnpm translate` — Regenerate engine word pools
 
-See [`CLAUDE.md`](./CLAUDE.md) for the project's source-of-truth (architecture, commands, file conventions).
+See [`AGENTS.md`](./AGENTS.md) for the project's source-of-truth (architecture, commands, file conventions).
 
 ---
 
@@ -38,23 +38,21 @@ See [`CLAUDE.md`](./CLAUDE.md) for the project's source-of-truth (architecture, 
 
 | Letter | Category | Calculators |
 |---|---|---|
-| **B** | Business (financial / valuation) | LTV, CAC, MRR, ARR Multiple, Burn Multiple, Rule of 40, SAFE / Convertible Note, Break-even, Equity dilution |
-| **C** | Pricing | Hourly vs Fixed, Freelance Rate, Sponsorship Rate, Course Pricing, SaaS Pricing |
-| **D** | HR / Cost | Employee Cost (Fully-loaded), Ramp Time, Productivity Ramp, Attrition Cost |
-| **E** | Personal | Freelance Tax, Productivity Score |
-| **F** | Freelance | Hourly rate variants, proposal pricing, contract scoping |
-| **H** | Hiring / Team | Comp banding, equity refresh, team ramp curves |
-| **I** | Investment | Compound Interest, Mortgage, DSCR, Cap Rate |
-| **K** | Knowledge / Documentation | KB Coverage, Article Freshness, Search Effectiveness, Deflection Quality, Documentation ROI, Helpfulness Score |
-| **L** | Legal & Compliance | GDPR Fine, DSAR Cost, Consent Revenue, DPA Negotiation, Breach Notification, CMP ROI |
-| **M** | Marketing | ROAS, Funnel Step, Power User Curve, Cohort, Attribution, Cart Abandonment, Coupon Attribution |
-| **O** | Operations | Inventory Turnover, Supplier Scorecard, Capacity Planning |
-| **P** | Product Analytics | Funnel step-through, retention curves, NPS |
-| **R** | Retention | NRR, GRR, Renewal Rate, Cohort Retention |
-| **S** | Sales | Pipeline Value, Sales Velocity, ACV, Win Rate by Stage, Quota Attainment, Pipeline Coverage |
-| **T** | Customer Support | Cost Per Ticket, CSAT, Deflection Rate, FRT / SLA, Resolution Time |
-| **V** | Valuation | ARR Multiple, Rule of 40, SAFE conversion |
-| **AI** | AI Cost | OpenAI / Anthropic Claude / Google Gemini / DeepSeek token pricing, AI image gen cost, GPU cloud cost, AI training cost |
+| **A** | SaaS Metrics | 5 |
+| **B** | AI Cost Tools | 8 |
+| **C** | Valuation & Exit | 10 |
+| **D** | Freelance Pricing | 6 |
+| **E** | Cost & Efficiency | 5 |
+| **F** | Investment & Real Estate | 10 |
+| **H** | Hiring & Team | 6 |
+| **K** | Knowledge | 6 |
+| **L** | Legal & Compliance | 6 |
+| **M** | Marketing Analytics | 8 |
+| **O** | Operations | 6 |
+| **P** | Product Analytics | 6 |
+| **R** | Retention & Customer Success | 6 |
+| **S** | Sales | 6 |
+| **T** | Customer Support | 6 |
 
 Browse the live site at [forgeflowkit.com](https://forgeflowkit.com).
 
@@ -62,7 +60,7 @@ Browse the live site at [forgeflowkit.com](https://forgeflowkit.com).
 
 ## Internationalization (i18n)
 
-English (`en`) and Chinese (`zh`) supported throughout. All 100 calculators, 15 category listings, and 2 landing pages have full translations. Cross-references in `src/i18n/translations.ts`; ZH terminology anchored to `docs/i18n/zh-terminology.md` (single source of truth).
+English (`en`) and Chinese (`zh`) supported throughout. All 100 calculators, 15 category listings, and 2 landing pages have full translations. Cross-references live in `src/i18n/locales/{en,zh}.json`; ZH terminology anchored to `docs/i18n/zh-terminology.md` (single source of truth).
 
 ---
 
@@ -105,7 +103,7 @@ pnpm test:build            # Opt-in: RUN_BUILD_TESTS=1 wrapper for build-depende
 RUN_BUILD_TESTS=1 pnpm test:unit  # Same as pnpm test:build
 ```
 
-Test infrastructure includes ~1096+ passing assertions across:
+Test infrastructure (see `tests/` for the live suite count) covers:
 - Math correctness (per-calculator equation tests)
 - Schema coverage (JSON-LD, OpenGraph, AB split distribution)
 - Internal links (multi-dimensional recommendation)
@@ -119,8 +117,7 @@ Test infrastructure includes ~1096+ passing assertions across:
 
 ```
 .
-├── CLAUDE.md                 # AI session source of truth (architecture, conventions)
-├── AGENTS.md                 # gstack skills catalog (managed)
+├── AGENTS.md                 # AI session source of truth (architecture, conventions, dimension matrix) + gstack skills catalog
 ├── README.md                 # This file (human-facing entry point)
 ├── astro.config.mjs
 ├── package.json
@@ -139,9 +136,9 @@ Test infrastructure includes ~1096+ passing assertions across:
 │   ├── INDEX.md              # Top-level docs navigator
 │   ├── deploy/               # Production deployment runbooks
 │   ├── i18n/                 # ZH terminology glossary
-│   ├── superpowers/specs/    # Design specs (44 files, INDEX.md)
-│   └── superpowers/plans/    # Implementation plans (51 files, INDEX.md)
-└── memory/                   # Project-level ship logs (41 files, INDEX.md)
+│   ├── superpowers/specs/    # Design specs (see specs/INDEX.md)
+│   └── superpowers/plans/    # Implementation plans (see plans/INDEX.md)
+└── memory/                   # Project-level ship logs (see memory/INDEX.md)
 ```
 
 ---
@@ -150,13 +147,13 @@ Test infrastructure includes ~1096+ passing assertions across:
 
 This repository is owned and maintained by ForgeFlowKit. For bugs, suggestions, or partnership inquiries, see the [Contact](https://forgeflowkit.com/contact) page.
 
-If you're an AI session landing in this repo, **read `CLAUDE.md` first** — it documents the engine pattern, customFn parse-safety invariant, cascade audit pattern, and contributor workflow expectations.
+If you're an AI session landing in this repo, **read `AGENTS.md` first** — it documents the engine pattern, the defense-in-depth dimension matrix (each dimension points at its guarding suite), and contributor workflow expectations.
 
 ---
 
 ## License
 
-ISC — see [LICENSE](./LICENSE) for full text.
+ISC.
 
 ---
 

@@ -117,23 +117,6 @@
 
 ---
 
-## 类别计数
-
-| 类别 | 数量 |
-|---|---|
-| 0 · Foundational & Schema | 7 |
-| 1 · P0 — Content Pages | 1 |
-| 2 · P1 — Schema Factory / Blog Markdown | 3 |
-| 3 · P2 — LocalStorage trilogy | 3 |
-| 4 · P3 — Auth / Sync / Migration | 3 |
-| 5 · P4-P16 — Calculator batches | 19 |
-| 6 · P20+ — Tech Debt / Cleanup / Audit | 25 |
-| 7 · P140+ — AdSense Compliance + 2.0 | 18 |
-| 8 · Retro — 流程复盘 | 3 |
-| **总计** | **82** |
-
----
-
 ## 7 · P140+ — AdSense Compliance + 2.0 Strategy
 
 | 文件 | 标题 | 类别 | 日期 | 状态 |
@@ -166,6 +149,32 @@
 | `2026-08-28-feat-merge-retro-design.md` | Sub-project D: Retrospective Finishing — feat/preset-chip-cherrypick-p151 → master | retro | 2026-08-28 |
 | `2026-08-28-p150-p151-retrospective-design.md` | P150 + P151 Retrospective — Implicit Brainstorming Decisions | retro | 2026-08-28 |
 | `2026-08-28-writing-plans-retrospective-design.md` | Sub-project B: Retrospective Plan Docs | retro | 2026-08-28 |
+
+---
+
+## 9 · P155+ — AdSense 诊断与 2.0 收口（P155 → P167）
+
+> ⚠️ **本节由 P167 一次性补登记**（此前 P155 主规格未登记）。
+
+| 文件 | 标题 | 日期 |
+|---|---|---|
+| `2026-10-27-p155-adsense-low-value-content-and-pricing-bot-diagnosis.md` | P155 — AdSense「低价位内容」判定诊断 + 每周定价 bot 的 PR 步骤失败 | 2026-10-27 |
+
+## 类别计数
+
+| 类别 | 数量 |
+|---|---|
+| 0 · Foundational & Schema | 7 |
+| 1 · P0 — Content Pages | 1 |
+| 2 · P1 — Schema Factory / Blog Markdown | 3 |
+| 3 · P2 — LocalStorage 三件套（收藏 / 最近浏览 / 历史快照） | 3 |
+| 4 · P3 — Auth / Sync / Migration trilogy | 3 |
+| 5 · P4-P16 — Calculator 批次（100 个 engines 的 vertical 扩展） | 19 |
+| 6 · P20+ — Tech Debt / Cleanup / Cascade Audit | 25 |
+| 7 · P140+ — AdSense Compliance + 2.0 | 18 |
+| 8 · Retro — 流程复盘 | 3 |
+| 9 · P155+ — AdSense 诊断与 2.0 收口 | 1 |
+| **目录文件总数** | **84** |
 
 ---
 

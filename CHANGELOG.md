@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-11-04 (P167 **分类页三区块齐平** —— 全站 15 个分类页里有 **9 个**（H/K/L/M/O/P/R/S/T）**整段缺介绍段 + FAQ + 分类指南**，连 locale 键都不存在 ⇒ 这是**全站唯一一处「同类页面结构不一致」**，直接命中 AdSense 复审的「持续维护网站页面结构」判定。⭐ 本批把它们补成与另外 6 个 full 页**逐段同形**（以 `cost-efficiency.astro` 为基准，复用既有 `CategoryHero` / `CategoryFaq` / `CategoryGuides` 组件），并补上三道守卫防止「补成同形」退化成「补成同一副骨架」—— 因为「组内模板词占比 12.6%」正是 AdSense 判分类页低价值的那条线。⭐⭐ **本批最值得记的一条**：体检工具第一版只报「共用 5-gram 最多的分类」，实测 **T(137)/R(84)/S(69)/O(54)**（zh）看着像严重模板化，**但逐条查下来全是它们自己的术语**（「工单」「首响」「自助分流率」在三块里反复出现）—— 那是**术语一致性，是好事** ⇒ 根因是那个计数器把**分类内重复**和**跨分类共用**混在了一起 ⇒ **拆成两个口径** ⇒ ⭐ **一个会误导编辑的体检数字，比没有数字更糟**（它会把编辑推向「为了降低一个假指标而删掉正确的术语一致性」）。⚠️ **期望值不能写死「FAQ 恰好 5 条」**（实测 F 是 7 条 ⇒ 写死 5 会误杀 F）⇒ 判据是「**页面渲染的条数 == locale 里定义的条数**」（派生）+ 写死下限；断言必须**逐页**查（查全站平均值会把 9/15 的缺失稀释掉）。⚠️ **i18n 门禁里的手写分类清单是第二份真相源** ⇒ 改为从 `categories.ts` 派生 + 显式断言（派生式清单最危险的失效形态是**静默漏项**）。验证: tsc exit 0 · build exit 0（**438** 页）· 三守卫 **6/6** · 体检工具 **0 个问题** · 变异台子 **6/6 KILLED**（还原逐字节校验）· 全量 **274 套件 · 0 失败**。⭐ **页面级相似度不升反降**（en 8.27%→**8.16%**、zh 8.69%→**8.22%**）⇒ 新补的 9 份内容**没有**把页面推得更像 —— P166 那个失效形态没有重演)
+> **最后更新:** 2026-11-04 (P167 **文档漂移修正 + 文档新鲜度守卫** —— 用户问「是不是还有一些过期无用的文档？」⇒ 实测发现 **README 的分类表整张是错的**：它写着 17 个分类，其中 **I / V / AI** 是现实里**不存在**的幽灵字母（P46 审计早已判定它们是幻影），**漏了真实存在的 A**，每个分类的描述也错位（B 写成「Business」而真 B 是 AI Cost Tools）⇒ README 是**人类读者与新 AI session 的入口**，教错站点结构比不写更糟。⭐ **修法的关键决策：不写会漂的数字，而不是写对数字** —— 4 处数量断言（页数 313→437 / spec 44→83 / plan 51→108 / memory 41→179）改为**指向 INDEX 的指针** ⇒ 根治（下批次加文件也不会漂）。⭐ 四层 INDEX（「navigator pyramid」）的漂移**静默存在了 3 个月**（plans 漏 **38** / specs 漏 **1** / memory 漏 **138**，外加 1 个**从未存在过的 plan 文件** P141h）—— 因为没有任何东西在看它们 ⇒ 本批全部补齐（按批次号归组）并**加守卫**。⭐ **文档类守卫最容易变成「永远绿」**（正则写错 ⇒ 匹配 0 个 ⇒ 断言恒成立）⇒ 变异台子把 README / INDEX **真的改坏**看守卫是否红 ⇒ **12/12 KILLED**。⭐ **顺带修掉 3 张过期计数表**（plans 写 58 / 实际 108 · specs 写 82 / 实际 83 · memory 写 41 / 实际 180）。⚠️ 顺带修掉一处**既有**漂移（`score-user-value --check` 一直红 ⇒ `user-value-scores.json` 停在 P164 之前的旧值；重生成后 `ux` 值 / `score` / `admitted` **全都没变** ⇒ 零行为影响）。⚠️ 顺带扫出的死代码（**本批未删**，删文件是另一件事）：死文件 4 个（3 个 enterprise deferred modal + `reference-data.ts`）· 死导出 7 个 · 孤儿 i18n 键 1 个（`category.related_articles` —— **P165 重写组件时把它丢了**）。验证: tsc exit 0 · 新守卫 **7/7** · 变异台子 **12/12 KILLED** · 体检工具 **0 个问题** · 全量 **276 套件 · 0 失败**（62 build-dep + 214 source-only）)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1350 across 82 active days (2026-05-31 → 2026-11-04, ~22 weeks)
+> **Total commits:** 1358 across 82 active days (2026-05-31 → 2026-11-04, ~22 weeks)
 
 ---
 
@@ -20,6 +20,33 @@
 ---
 
 ## [Unreleased]
+
+### [P167] — 附：文档漂移修正（README 分类表整张是错的）+ 文档新鲜度守卫 (2026-11-04)
+
+第 4 个原子提交（接在同一里程碑之后）。scope: (docs) · (tests) · (scripts)。**未改动任何代码逻辑**（`src/` 下只有 README 相关的文档改动；`src/engines/**` 一个字节未动），engines count unchanged (100)。
+
+> **一句话**：用户问「是不是还有一些过期无用的文档？」⇒ 实测发现 **README 的分类表整张是错的** —— 它写着 17 个分类，其中 **I / V / AI** 是现实里**不存在**的幽灵字母（P46 审计早已判定它们是幻影），**漏了真实存在的 A**，而且每个分类的描述都错位（B 写成「Business」，真 B 是 AI Cost Tools）⇒ README 是**人类读者与新 AI session 的入口**，教错站点结构比不写更糟。⇒ 本批修正漂移并**加守卫**，因为这些漂移**静默存在了 3 个月**（INDEX 最后更新停在 2026-07-19 / 08-26）—— 没有任何东西在看它们。
+
+| # | What | Why it matters |
+|---|---|---|
+| 1 | **⭐ README 分类表整张重做** | 旧表 17 行（含幽灵 I / V / AI，漏真实存在的 A，描述全部错位）⇒ 新表按 `src/data/categories.ts` **派生**：15 行、字母 + 名称 + 工具数，与 AGENTS.md 的引擎计数表**逐条一致**（A=5 / B=8 / C=10 / D=6 / E=5 / F=10 / H/K/L/M/O/P/R/S/T=6） |
+| 2 | **⭐ README 不再写死「会随批次漂移」的数量** | 旧 README 写「~313 static pages」（现实 437）/ spec 44（现实 83）/ plan 51（现实 108）/ memory 41（现实 179）⇒ 改为**指向 INDEX 的指针**（「见 specs/INDEX.md」等）。⭐ 理由：**这些数字每批次都会变** ⇒ 写死就等于每批次都要改一次，改不动就必然漂 ⇒ **不写**才是根治 |
+| 3 | **⭐ 四层 INDEX 全部补登记** | 「navigator pyramid」的约定（顶层 `docs/INDEX.md` → 3 个 sub-INDEX）**被打破了 3 个月**：plans 漏 **38** · specs 漏 **1**（就是 P155 那份主规格）· memory 漏 **138** ⇒ 全部补齐，**按批次号归组**（P48–P166 共 17 段；memory P35–P167 共 47 段）。⭐ **顺带修掉 3 张过期计数表** —— 「类别计数」表是**现状断言**（不是历史记录）⇒ 它会漂：plans 写 **58**（实际 **108**）· specs 写 **82**（实际 **83**）· memory 写 **41**（实际 **180**）⇒ **导航文件在骗人**。⚠️ ⭐ **覆盖率守卫保证不了这个**：它只保证「每个文件都被登记」，**保证不了「登记了几条」写对了** ⇒ 计数表必须单设一条断言 |
+| 4 | **2 个真幽灵条目修正** | ① `plans/INDEX.md` 里的 `2026-08-19-p141h-adsense-p0-fixes.md` —— 该 plan **从未存在于 git 历史**（P141h 是 audit-driven 修复，CHANGELOG M25.0 + ship log 都在，就是没写 plan）⇒ 改成 `_(no plan file)_` 并指向真实 ship log，**不虚构文件** ② `docs/INDEX.md` 里指向 user-global memory 的 `p18-i18n-tooling-hardening.md` ⇒ 去掉 `.md` 后缀（它不是仓库文件） |
+| 5 | **⭐ 新守卫 `doc-freshness-guard`（source-only，7 条）** | ① **README 分类表 == 真实分类**（幽灵与漏列都红；分类**名**逐条对齐；分类数必须相等 —— 防止「表被整段删掉后只剩几行也看起来对」）② **README 不得写死会漂的数量** ③ **`docs/INDEX.md` 同样不得写死会漂的文件数**（顶层 navigator 与 README 同病）④ **README 里的链接与路径都必须存在**（P167 实测到 3 个坏链：`src/i18n/translations.ts` 已迁到 per-locale JSON / `./CLAUDE.md` 在 .gitignore 里只有本地有 / `./LICENSE` 根本不存在）⑤ **README 分类表的算子数 == 真实引擎数**（按 `src/data/tools/index.ts` 的 `categoryId` 分组 —— 与 `check-engine-count-by-category.mjs` **同口径** ⇒ 手写的第三列不会静默过期）⑥ **四层 INDEX 覆盖完整**（无漏登记、无幽灵；⭐ 「已登记」只认**表格首列的登记行** —— 散文里的行内提及**不算登记**：第一版用「全文任意反引号 .md」判定 ⇒ `memory/MEMORY.md` 在维护约定里被提一句就算「已登记」⇒ **一个真的漏登记的文件被放过** ⇒ 漏登记守卫**失明**）⑦ **INDEX 的类别计数表 == 各段实际登记数**（覆盖率保证不了「登记了几条」写对了）。⭐ **规则实现在 `tests/_doc-freshness-checks.ts`（与体检工具共用同一份）** —— 两边各写一份规则迟早会对不上 ⇒ 工具报「0 个问题」而守卫在红 ⇒ **体检数字会误导人**；⇒ 一份实现、两处调用 |
+| 6 | **⭐ 判据落在「要禁的形状」上** | ② 不是「README 必须写对数字」而是「**README 不该写会漂的数字**」⇒ 下个批次加 1 个文件**不会**让守卫红；幽灵判定必须排除**通配符**（`*-series-shipped.md` 是一类文件的说明）与**指向仓库外的引用** ⇒ 否则误报淹没真问题 |
+| 7 | **变异台子（入库）：12 / 12 KILLED** | 文档类守卫最容易变成「永远绿」（正则写错 ⇒ 匹配 0 个 ⇒ 断言恒成立）⇒ 台子把 README / INDEX **真的改坏**看守卫是否红：M1 加幽灵分类 · M2 删真实分类 · M3 写死易漂页数 · M4 删 plans 登记 · M5 加幽灵条目 · M6 删 memory 登记 · M7 加坏链 · M8 把分类表的算子数写错 · M9 删掉一条登记但该文件名在**散文**里被提过（专杀「已登记判定过松」）· M10 计数表第 9 段 38→39 且第 8 段 1→0（**合计不变** ⇒ 只触发「段计数」规则）· M11 只改「目录文件总数」行 · M12 计数表删整行 ⇒ **12/12 KILLED**。⭐ **变异要隔离规则**：否则一条变异同时触发多条规则 ⇒ 测不出是哪条在承重 |
+| 8 | **体检 + 补登记工具（均入库）** | `tests/scripts/p167-doc-drift-scan.ts`（漂移体检：INDEX 覆盖 + README 断言 + 分类表比对）· `tests/scripts/p167-index-regen.ts`（把「磁盘上有、INDEX 没列」的文件生成成表格行 —— ⭐ **只生成不自动改**：INDEX 的**分组**需要人判断，自动塞进「未分组」段会让索引失去导航价值）· `tests/scripts/p167-dead-code-scan.ts`（死代码 / 死导出 / 孤儿 i18n 键 / 字节级重复文件）· `tests/_doc-freshness-checks.ts`（守卫与体检工具**共用同一份规则** ⇒ 不可能对不上） |
+| 9 | **⭐ 顺带修掉一处既有漂移：`user-value-scores.json` 过期** | `pnpm check` 里的 `score-user-value --check` **一直红**（不是本批引入的）⇒ `solopreneur-ai-api-cost-comparison` 的 `ux.inputRatio` 停在 **2/3**，而真实值是 **4/7**（该引擎在 `1274de2`（P164 交互态修复）里加了输入项，但这份**生成物**没跟着重生成）。⭐ **只改诊断信号**：`ux` 值 **0.5** / `score` **0.3** / `admitted` **false** **全都没变** ⇒ 准入门槛结论**零影响**、页面上不可见 ⇒ 纯生成物刷新 |
+
+**顺带发现的死代码**（同批扫描，**本批未删** —— 删文件属另一件事，留待拍板）：
+- **死文件 4 个**：`src/components/enterprise/{SaveScenarioModal,TemplatePicker,ReportGenerator}.astro`（注释明写「P5A-A.2 deferred … reserved for the v2 UX upgrade」，当前工具栏用 inline `prompt()`）· `src/data/reference-data.ts`（只在 `src/data/INDEX.md` 提到，**无任何代码 import**）
+- **死导出 7 个**：`randomPickN` / `generateFromTemplates` / `generateCombinations`（`src/core/engines/helpers.ts` —— 93/100 引擎是 `custom` + 32 个有 `customFn` ⇒ templates/combinations 那条路没人走了）· `getTier1Topics` · `SLUG_REGEX_SOURCE` · `getSyncStatus`
+- **孤儿 i18n 键 1 个**：`category.related_articles`（en + zh）—— **P165 重写 `CategoryGuides.astro` 时把它丢了**（CHANGELOG 说 P72 时它在用，现在组件里只有 `category.guides_heading`）⇒ 页面上完全不出现这个标题
+
+**验证**：tsc exit 0 · 新守卫全绿（`doc-freshness-guard` **7/7**）· 变异台子 **12 / 12 KILLED** · 体检工具 **0 个问题** · `score-user-value --check` 重新转绿 · 全量 **276 套件 · 0 失败**（62 build-dep + 214 source-only）。
+
+**套件计数变更**：62 build-dep ＋ 213 source-only = 275 → **62 build-dep ＋ 214 source-only = 276**（新增 1 个 source-only `doc-freshness-guard`）。**维度数**：23 → **24**（新增 Document Freshness 维度）。
 
 ### [P167] — 附：工具卡标题可读性（卡片改用短名）+ 复审视角体检工具 + 「10/28 vs 现在」A/B 实测 (2026-11-04)
 
