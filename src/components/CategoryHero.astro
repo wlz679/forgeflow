@@ -1,14 +1,25 @@
 ---
 import { t, getLang } from '../i18n';
+import { getCategoryReviewDate } from '../lib/content-review-dates';
 
 export interface Props {
   categoryName: string;     // 'SaaS Metrics' (translated)
   categoryDesc: string;     // translated
   toolCount: number;
+  categoryId: string;       // 'A' | 'B' | ...（用于派生真实审阅日期）
 }
 
-const { categoryName, categoryDesc, toolCount } = Astro.props;
+const { categoryName, categoryDesc, toolCount, categoryId } = Astro.props;
 const lang = getLang(Astro);
+
+// ⭐ P168：**「最近审核」不再是写死的字面量，也不再只读 ToolMeta**。
+//   旧实现把一个固定日期硬编码在组件里 ⇒ 30 个分类页（15 分类 × 2 语言）
+//   在页面上显示同一个 4 个多月前的日期，而工具页用的是各自真实日期
+//   ⇒ 同一站点两套口径 ⇒ 审核员看到的是「这个站不维护」。
+//   现在改为**派生**，且真值源统一到 `src/lib/content-review-dates.ts`
+//   —— 它读的正是工具页所用的散文 frontmatter `data_reviewed_at`
+//   ⇒ 分类页与工具页永远同一口径，工具被复审后自动跟随（不会再次漂移）。
+const lastReviewed = getCategoryReviewDate(categoryId);
 ---
 
 <section class="mb-10 p-8 bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl">
@@ -16,6 +27,6 @@ const lang = getLang(Astro);
   <p class="text-sm text-gray-600 leading-relaxed max-w-2xl mb-4">{categoryDesc}</p>
   <div class="flex gap-4 text-xs text-gray-500">
     <span>🧮 {toolCount} {toolCount === 1 ? 'tool' : 'tools'}</span>
-    <span>📅 {t('eeat.last_reviewed', lang)}: 2026-06-22</span>
+    {lastReviewed && <span>📅 {t('eeat.last_reviewed', lang)}: {lastReviewed}</span>}
   </div>
 </section>

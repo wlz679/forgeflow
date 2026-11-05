@@ -2,9 +2,9 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-11-04 (P167 **文档漂移修正 + 文档新鲜度守卫** —— 用户问「是不是还有一些过期无用的文档？」⇒ 实测发现 **README 的分类表整张是错的**：它写着 17 个分类，其中 **I / V / AI** 是现实里**不存在**的幽灵字母（P46 审计早已判定它们是幻影），**漏了真实存在的 A**，每个分类的描述也错位（B 写成「Business」而真 B 是 AI Cost Tools）⇒ README 是**人类读者与新 AI session 的入口**，教错站点结构比不写更糟。⭐ **修法的关键决策：不写会漂的数字，而不是写对数字** —— 4 处数量断言（页数 313→437 / spec 44→83 / plan 51→108 / memory 41→179）改为**指向 INDEX 的指针** ⇒ 根治（下批次加文件也不会漂）。⭐ 四层 INDEX（「navigator pyramid」）的漂移**静默存在了 3 个月**（plans 漏 **38** / specs 漏 **1** / memory 漏 **138**，外加 1 个**从未存在过的 plan 文件** P141h）—— 因为没有任何东西在看它们 ⇒ 本批全部补齐（按批次号归组）并**加守卫**。⭐ **文档类守卫最容易变成「永远绿」**（正则写错 ⇒ 匹配 0 个 ⇒ 断言恒成立）⇒ 变异台子把 README / INDEX **真的改坏**看守卫是否红 ⇒ **12/12 KILLED**。⭐ **顺带修掉 3 张过期计数表**（plans 写 58 / 实际 108 · specs 写 82 / 实际 83 · memory 写 41 / 实际 180）。⚠️ 顺带修掉一处**既有**漂移（`score-user-value --check` 一直红 ⇒ `user-value-scores.json` 停在 P164 之前的旧值；重生成后 `ux` 值 / `score` / `admitted` **全都没变** ⇒ 零行为影响）。⚠️ 顺带扫出的死代码（**本批未删**，删文件是另一件事）：死文件 4 个（3 个 enterprise deferred modal + `reference-data.ts`）· 死导出 7 个 · 孤儿 i18n 键 1 个（`category.related_articles` —— **P165 重写组件时把它丢了**）。验证: tsc exit 0 · 新守卫 **7/7** · 变异台子 **12/12 KILLED** · 体检工具 **0 个问题** · 全量 **276 套件 · 0 失败**（62 build-dep + 214 source-only）)
+> **最后更新:** 2026-11-05 (P168 **AdSense「低价值内容」整改：审阅日期出处 + contact/terms 补厚 + B 类 FAQ 价格派生** —— 复审裁定为「低价值内容」⇒ 线上取证发现 **4 个硬伤仍挂在线上**：① 30 个分类页把「最近审核」**写死**成同一个 4 个多月前的日期（组件里硬编码，而工具页用各自真实日期 ⇒ **同一站点两套口径**）② %%BT%contact%%BT% 是空壳（en 157 / zh 76 字符）③ %%BT%terms%%BT% 太薄（en 719 / zh 229 字符）④ B 类 FAQ 手写 GPT-4o 单价 + 一个过期日期。⭐ **修法不是「把日期改对」而是「让日期变成派生值」** —— 新增 %%BT%src/lib/content-review-dates.ts%%BT% 作共享真值源 + %%BT%scripts/codegen-review-dates.mjs%%BT% 预生成 %%BT%src/data/review-dates.json%%BT%（与 %%BT%user-value-scores.json%%BT% 同模式，带 %%BT%--check%%BT% 且已接进 %%BT%pnpm check%%BT%）。⚠️ **本站的 worker 运行时没有 %%BT%node:fs%%BT%** ⇒ 「构建期直接读散文」物理上不通（构建直接失败：%%BT%Cannot bundle Node.js built-in "node:fs"%%BT%）⇒ 只能预生成。⭐ **真值源必须与工具页同一个** —— 第一版改法读 %%BT%ToolMeta.dataReviewedAt%%BT%（确实是派生）⇒ 但工具页用的是**散文 frontmatter**（%%BT%[slug].astro:87%%BT% 早就这么写，注释还写明 %%BT%ToolMeta%%BT%「落后约 5 周」）⇒ 分类页会显示 2026-06-22、同分类工具页显示 2026-07-31 ⇒ **同一个病原换了个地方**。⭐ 改完 30 个分类页的日期呈 **07-31 / 08-03 / 10-30 三档真实分布**（不再是同一个写死日期）；%%BT%contact%%BT% 补到 **510 词 / 794 汉字**、%%BT%terms%%BT% **455 词 / 733 汉字**；B 类 FAQ 的价格与日期改走**既有 live token 机制** ⇒ 解析后 = 数据集真值（"$2.50 … as of 2026-10-28"），全 dist **0 个未解析 token**。⭐ **新守卫 2 个**（%%BT%adsense-hardening-guard%%BT% source-only **15** 条 + %%BT%adsense-render-guard%%BT% build-dep **8** 条）⇒ **第 25 个维度「审阅日期出处」**；变异台子 **15/15 KILLED**（每条变异只许红一条断言，台子核对**失败断言的名字**）⇒ 台子当场抓到**我自己守卫的一个漏检**（判定口径只问「文件里出现过 %%BT%categoryId={CATEGORY_ID}%%BT% 吗」⇒ 被同页其它组件顶替 ⇒ 删掉 %%BT%<CategoryHero>%%BT% 那一行守卫仍绿 ⇒ 改为解析该元素的属性块后才杀掉）。⚠️ 产物级守卫做了**非空转实证**：故意改坏一个产物的日期 ⇒ **恰好 1 条**断言变红。验证: tsc exit 0 · 源级守卫 **15/15** · 产物级守卫 **8/8** · 变异台子 **15/15 KILLED** · 构建 **438 页** · 全量 **278 套件 · 0 失败**（63 build-dep + 215 source-only）)
 > **引擎数轨迹:** 30 (scaffold) → 32 → 38 → 44 → 50 → 56 → 62 → 68 → 74 → 86 → 92 → 98 → **100** (P16 lock)
-> **Total commits:** 1358 across 82 active days (2026-05-31 → 2026-11-04, ~22 weeks)
+> **Total commits:** 1361 across 83 active days (2026-05-31 → 2026-11-05, ~22 weeks)
 
 ---
 
@@ -20,6 +20,24 @@
 ---
 
 ## [Unreleased]
+
+### [P168] — AdSense「低价值内容」整改：审阅日期出处 + contact/terms 补厚 + B 类 FAQ 价格派生 (2026-11-05)
+
+第 1 个 P-series commit。scope: (content) · (tests) · (scripts) · (docs)。`src/engines/**` **一个字节未动**，engines count unchanged (100)。
+
+> **一句话**：AdSense 复审把站点判为「低价值内容」⇒ 线上取证发现 **4 个硬伤还挂在线上**（30 个分类页把「最近审核」写死成同一个 4 个多月前的日期 / `contact` 是空壳 / `terms` 太薄 / B 类 FAQ 手写单价 + 过期日期）⇒ 本批把它们改成**派生值**并**加两个守卫**钉住 —— 不是「把日期改对」，而是「让日期**不可能再写死**」。
+
+| # | What | Why it matters |
+|---|---|---|
+| 1 | **⭐ T1 · 分类页「最近审核」改为派生** | 旧实现把日期**硬编码**在 `CategoryHero.astro` 里 ⇒ 30 个分类页（15 分类 × 2 语言）显示同一个 **2026-06-22**，而工具页显示各自真实日期 ⇒ **同一站点两套口径** ⇒ 审核员看到的是「这个站不维护」。改后 30 页的日期呈 **07-31 / 08-03 / 10-30 三档真实分布** —— 这本身就是「在持续维护」的**真实信号**，比一个统一但假的日期强 |
+| 2 | **⭐⭐ 真值源必须与工具页同一个** | 第一版改法读 `ToolMeta.dataReviewedAt`（确实是派生、确实不再写死）⇒ **但同一个病原地不动**：工具页用的是**散文 frontmatter**（`[slug].astro:87` 早就这么写，注释还写明 `ToolMeta`「落后约 5 周」）⇒ 分类页会显示 2026-06-22、同分类工具页显示 2026-07-31 ⇒ 改掉硬编码 ≠ 改掉同一个病 |
+| 3 | **⭐⭐ worker 运行时没有 `node:fs` ⇒ 只能预生成** | 「构建期直接读散文」的模块让**构建直接失败**（`Cannot bundle Node.js built-in "node:fs"`）⇒ 改走本仓库**既有的生成物模式**：`scripts/codegen-review-dates.mjs` → `src/data/review-dates.json`（与 `user-value-scores.json` 同模式，带 `--check` 且已接进 `pnpm check`）⇒ 运行时只读 JSON（worker 与 tsx 测试都能用） |
+| 4 | **T2/T3 · `contact` / `terms` 补厚** | 新增 **53 个 i18n 键**（en/zh 各 5440 → **5473**）⇒ 实测产物：`contact` en **157 → 510 词** / zh **76 → 794 汉字**；`terms` en 719 字符 → **455 词** / zh 229 → **733 汉字**。这是裁定第 ① 条「提供真实、高质量的信息」的可测代理 |
+| 5 | **T4/T5 · 日期与价格都改成派生** | `about/terms` 的 JSON-LD `dateModified` == 派生全站日期（产物实测 **2026-10-30**）；B 类 FAQ 走**既有** live token 机制（`{{liveIn:openai/gpt-4o}}` + `{{liveDate}}`，在 `CategoryFaq.astro` 一处统一解析）⇒ 解析后 = **数据集真值**（"$2.50 … as of 2026-10-28"）⇒ 价格与日期都不可能再漂；全 `dist/` **0 个未解析 token** |
+| 6 | **⭐ 新守卫 2 个 ⇒ 第 25 个维度「审阅日期出处」** | `adsense-hardening-guard`（source-only **15** 条）+ `adsense-render-guard`（build-dep **8** 条）⇒ 守卫与体检**共用同一份实现**（`src/lib/content-review-dates.ts` + codegen 的同一个解析器）⇒ 「工具报 0 个问题而守卫在红」的错位不可能发生。⭐ **产物级守卫做了非空转实证**：故意改坏一个产物的日期 ⇒ **恰好 1 条**断言变红 |
+| 7 | **⭐ 变异台子 15/15 KILLED，并当场抓到我自己守卫的一个漏检** | M4（删掉分类页给 `<CategoryHero>` 传的 `categoryId`）**存活** ⇒ 根因是判定口径太松：断言问「这个文件里出现过 `categoryId={CATEGORY_ID}` 吗」，而同页的 `CategoryDecisionLayer` / `CategoryFaq` / `CategoryGuides` **也写同样的属性名** ⇒ 删掉目标那一行守卫照样绿 ⇒ 修正为解析 `<CategoryHero …/>` 的属性块。另：M14 第一版是**无效变异**（改 `Map` 初值被散文循环覆盖回去）；台子的还原在 Windows 上会撞 `UV_UNKNOWN(-4094)`（系统索引短暂独占）⇒ 还原加了重试 + 逐文件容错 + sha256 逐字节校验 |
+
+**验证**: `tsc` exit 0 · 源级守卫 **15/15** · 产物级守卫 **8/8** · 变异台子 **15/15 KILLED**（0 存活 / 0 未隔离）· 还原校验逐字节一致 · 构建 **438 页** · 全量 **278 套件 · 0 失败**（63 build-dep + 215 source-only）
 
 ### [P167] — 附：文档漂移修正（README 分类表整张是错的）+ 文档新鲜度守卫 (2026-11-04)
 

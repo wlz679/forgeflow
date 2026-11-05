@@ -1,0 +1,424 @@
+{
+  "version": 1,
+  "source": "src/content/tools/*.md frontmatter: category_id + data_reviewed_at",
+  "siteDate": "2026-10-30",
+  "categories": {
+    "A": "2026-07-31",
+    "B": "2026-10-30",
+    "C": "2026-07-31",
+    "D": "2026-07-31",
+    "E": "2026-08-03",
+    "F": "2026-08-03",
+    "H": "2026-07-31",
+    "K": "2026-07-31",
+    "L": "2026-08-03",
+    "M": "2026-07-31",
+    "O": "2026-07-31",
+    "P": "2026-07-31",
+    "R": "2026-07-31",
+    "S": "2026-07-31",
+    "T": "2026-07-31"
+  },
+  "tools": {
+    "solopreneur-activation-rate-calculator": {
+      "categoryId": "P",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-acv-calculator": {
+      "categoryId": "S",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-affiliate-income-calculator": {
+      "categoryId": "D",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-ai-api-cost-comparison": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-10-21"
+    },
+    "solopreneur-ai-image-cost-calculator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-ai-training-cost-estimator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-arr-multiple-valuation-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-article-freshness-calculator": {
+      "categoryId": "K",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-article-helpfulness-calculator": {
+      "categoryId": "K",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-attrition-cost-calculator": {
+      "categoryId": "H",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-breach-notification-cost-calculator": {
+      "categoryId": "L",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-break-even-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-brrrr-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-burn-multiple-rule-of-40-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-burn-rate-calculator": {
+      "categoryId": "A",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-cac-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-cap-rate-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-carrying-cost-calculator": {
+      "categoryId": "O",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-cart-abandonment-cost-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-churn-rate-calculator": {
+      "categoryId": "A",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-claude-api-cost-calculator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-10-21"
+    },
+    "solopreneur-cmp-roi-calculator": {
+      "categoryId": "L",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-cohort-retention-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-comp-banding-calculator": {
+      "categoryId": "H",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-compound-interest-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-consent-revenue-impact-calculator": {
+      "categoryId": "L",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-content-marketing-roi-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-cost-per-support-ticket-calculator": {
+      "categoryId": "T",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-coupon-attribution-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-course-pricing-calculator": {
+      "categoryId": "D",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-csat-calculator": {
+      "categoryId": "T",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-customer-health-score-calculator": {
+      "categoryId": "R",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-deepseek-api-cost-calculator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-10-21"
+    },
+    "solopreneur-deflection-quality-calculator": {
+      "categoryId": "K",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-deflection-rate-calculator": {
+      "categoryId": "T",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-documentation-roi-calculator": {
+      "categoryId": "K",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-dpa-cost-calculator": {
+      "categoryId": "L",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-dsar-cost-calculator": {
+      "categoryId": "L",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-dscr-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-email-campaign-roi-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-email-list-revenue-calculator": {
+      "categoryId": "D",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-employee-cost-calculator": {
+      "categoryId": "E",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-equity-dilution-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-equity-refresh-calculator": {
+      "categoryId": "H",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-expansion-revenue-calculator": {
+      "categoryId": "R",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-feature-adoption-calculator": {
+      "categoryId": "P",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-first-response-time-calculator": {
+      "categoryId": "T",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-freelance-rate-calculator": {
+      "categoryId": "D",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-freelance-tax-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-fulfillment-cost-calculator": {
+      "categoryId": "O",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-fully-loaded-employee-cost-calculator": {
+      "categoryId": "H",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-funnel-step-calculator": {
+      "categoryId": "P",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-funnel-value-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-gdpr-fine-calculator": {
+      "categoryId": "L",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-gemini-api-cost-calculator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-10-21"
+    },
+    "solopreneur-gpu-cloud-cost-calculator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-10-30"
+    },
+    "solopreneur-grr-calculator": {
+      "categoryId": "R",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-hourly-vs-fixed-calculator": {
+      "categoryId": "D",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-inventory-turnover-calculator": {
+      "categoryId": "O",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-kb-coverage-rate-calculator": {
+      "categoryId": "K",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-logo-churn-rate-calculator": {
+      "categoryId": "R",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-ltv-by-channel-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-ltv-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-market-size-estimator": {
+      "categoryId": "A",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-meeting-cost-calculator": {
+      "categoryId": "E",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-mortgage-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-mrr-calculator": {
+      "categoryId": "A",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-nrr-calculator": {
+      "categoryId": "R",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-openai-token-calculator": {
+      "categoryId": "B",
+      "dataReviewedAt": "2026-10-21"
+    },
+    "solopreneur-pipeline-coverage-calculator": {
+      "categoryId": "S",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-pipeline-value-calculator": {
+      "categoryId": "S",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-power-user-curve-calculator": {
+      "categoryId": "P",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-productivity-ramp-curve-calculator": {
+      "categoryId": "H",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-productivity-score": {
+      "categoryId": "E",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-project-profitability-calculator": {
+      "categoryId": "D",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-quota-attainment-calculator": {
+      "categoryId": "S",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-remote-vs-office-calculator": {
+      "categoryId": "E",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-renewal-rate-calculator": {
+      "categoryId": "R",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-rent-vs-buy-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-rental-yield-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-reorder-point-calculator": {
+      "categoryId": "O",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-resolution-time-calculator": {
+      "categoryId": "T",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-revenue-projector": {
+      "categoryId": "A",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-roas-calculator": {
+      "categoryId": "M",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-saas-pricing-planner": {
+      "categoryId": "E",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-saas-valuation-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-safe-convertible-note-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-sales-velocity-calculator": {
+      "categoryId": "S",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-search-effectiveness-calculator": {
+      "categoryId": "K",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-sponsorship-rate-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-stickiness-calculator": {
+      "categoryId": "P",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-stockout-cost-calculator": {
+      "categoryId": "O",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-stripe-fee-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-supplier-scorecard-calculator": {
+      "categoryId": "O",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-support-capacity-planning-calculator": {
+      "categoryId": "T",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-time-to-productivity-calculator": {
+      "categoryId": "H",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-time-to-value-calculator": {
+      "categoryId": "P",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-time-value-calculator": {
+      "categoryId": "F",
+      "dataReviewedAt": "2026-08-03"
+    },
+    "solopreneur-unit-economics-calculator": {
+      "categoryId": "C",
+      "dataReviewedAt": "2026-07-31"
+    },
+    "solopreneur-win-rate-by-stage-calculator": {
+      "categoryId": "S",
+      "dataReviewedAt": "2026-07-31"
+    }
+  }
+}

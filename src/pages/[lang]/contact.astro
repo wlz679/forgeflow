@@ -26,6 +26,11 @@ const contactSchema = JSON.stringify({
     },
   ],
 });
+
+const faq = [1, 2, 3, 4].map((n) => ({
+  q: t(`contact.faq.q${n}.q`, lang),
+  a: t(`contact.faq.q${n}.a`, lang),
+}));
 ---
 
 <BaseLayout title={title} description={description} schema={contactSchema} pageType="static">
@@ -36,6 +41,29 @@ const contactSchema = JSON.stringify({
       <p>{t('contact.p1', lang)}</p>
       <p>{t('contact.p2', lang)} <a href="mailto:hello@forgeflowkit.com" class="text-[#7C3AED] hover:text-[#6D28D9]">hello@forgeflowkit.com</a></p>
       <p>{t('contact.p3', lang)}</p>
+
+      <h2>{t('contact.channels_h', lang)}</h2>
+      <p>{t('contact.channels_intro', lang)}</p>
+      <h3>{t('contact.channel_email_h', lang)}</h3>
+      <p>{t('contact.channel_email_body', lang)}</p>
+      <h3>{t('contact.channel_tool_h', lang)}</h3>
+      <p>{t('contact.channel_tool_body', lang)}</p>
+      <h3>{t('contact.channel_response_h', lang)}</h3>
+      <p>{t('contact.channel_response_body', lang)}</p>
+
+      <h2>{t('contact.faq_h', lang)}</h2>
+      {faq.map((item) => (
+        <>
+          <h3>{item.q}</h3>
+          <p>{item.a}</p>
+        </>
+      ))}
+
+      <h2>{t('contact.scope_h', lang)}</h2>
+      <p>{t('contact.scope_body', lang)}</p>
+
+      <h2>{t('contact.partner_h', lang)}</h2>
+      <p>{t('contact.partner_body', lang)}</p>
     </div>
   </main>
   <Footer />

@@ -4,6 +4,7 @@ import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import { SITE_URL } from '../../lib/site-config';
 import { t } from '../../i18n';
+import { getSiteReviewDate } from '../../lib/content-review-dates';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -21,11 +22,25 @@ const termsSchema = JSON.stringify({
       url: `${SITE_URL}/${lang}/terms/`,
       name: title,
       description,
-      dateModified: '2026-01-01',
+      // P168：本批已重写条款正文 ⇒ 日期改为派生，不再写死。
+      dateModified: getSiteReviewDate(),
       inLanguage: lang,
     },
   ],
 });
+
+const sections = [
+  { h: 'legal.terms.scope_h', p: 'legal.terms.scope_p' },
+  { h: 'legal.terms.accept_h', p: 'legal.terms.accept_p' },
+  { h: 'legal.terms.use_h', p: 'legal.terms.use_p' },
+  { h: 'legal.terms.no_advice_h', p: 'legal.terms.no_advice_p' },
+  { h: 'legal.terms.responsibility_h', p: 'legal.terms.responsibility_p' },
+  { h: 'legal.terms.disclaimer_h', p: 'legal.terms.disclaimer_p' },
+  { h: 'legal.terms.ip_h', p: 'legal.terms.ip_p' },
+  { h: 'legal.terms.third_party_h', p: 'legal.terms.third_party_p' },
+  { h: 'legal.terms.changes_h', p: 'legal.terms.changes_p' },
+  { h: 'legal.terms.contact_h', p: 'legal.terms.contact_p' },
+];
 ---
 
 <BaseLayout title={title} description={description} schema={termsSchema} pageType="static">
@@ -34,14 +49,12 @@ const termsSchema = JSON.stringify({
     <h1 class="text-2xl font-extrabold mb-4">{t('legal.terms.h1', lang)}</h1>
     <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed space-y-4">
       <p>{t('legal.terms.last_updated', lang)}</p>
-      <h2>{t('legal.terms.accept_h', lang)}</h2>
-      <p>{t('legal.terms.accept_p', lang)}</p>
-      <h2>{t('legal.terms.use_h', lang)}</h2>
-      <p>{t('legal.terms.use_p', lang)}</p>
-      <h2>{t('legal.terms.disclaimer_h', lang)}</h2>
-      <p>{t('legal.terms.disclaimer_p', lang)}</p>
-      <h2>{t('legal.terms.ip_h', lang)}</h2>
-      <p>{t('legal.terms.ip_p', lang)}</p>
+      {sections.map((s) => (
+        <>
+          <h2>{t(s.h, lang)}</h2>
+          <p>{t(s.p, lang)}</p>
+        </>
+      ))}
     </div>
   </main>
   <Footer />

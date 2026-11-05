@@ -2401,3 +2401,113 @@ README 另有 4 处数量断言全部漂移：页数 **313 → 437** · spec **4
 ⇒ **修正**：新增第 7 条断言（各段计数 == 实际登记数 + 各段之和 + 非内容文件 == 目录 .md 总数 + 「目录文件总数」行 == 目录 .md 总数），并把 3 张表按实测重写（M10/M11/M12 分别隔离「段计数」「总数」「缺行」三种失败模式）。
 
 ⭐ **同族教训**：**一条断言只守一件事，但「一件事」本身可能藏两件事** —— 「INDEX 登记完整」听起来是一件事，其实是「有没有登记」+「登记了几条」两件事 ⇒ 只写前者 ⇒ 后者永远绿。
+
+## §19.24 P168 —— AdSense「低价值内容」整改：审阅日期出处 + contact/terms 补厚 + B 类 FAQ 价格派生（2026-11-05）
+
+### 19.24.0 背景与取证
+
+AdSense 复审把站点判为 **低价值内容（Low Value Content）**，三个子条件：① 提供真实、高质量的信息、工具或服务 ② 持续精选优质内容并维护网站页面结构 ③ 能够切实引起并持续吸引用户关注。
+
+⇒ 本批按用户拍板的 **B 档（补硬伤 + 启动批次 3）** 执行。**线上取证**（2026-11-04 跑的 11/04 最新版）发现 **4 个硬伤仍挂在线上**：
+
+| # | 硬伤 | 实测 | 位置 |
+|---|---|---|---|
+| ① | 30 个分类页的「最近审核」写死 | 全部显示同一个 **2026-06-22**（4 个多月前） | `src/components/CategoryHero.astro:19`（组件里硬编码） |
+| ② | `contact` 是空壳 | en **157** 字符 / zh **76** 字符 | `src/pages/[lang]/contact.astro` |
+| ③ | `terms` 太薄 | en **719** 字符 / zh **229** 字符 | `src/pages/[lang]/terms.astro` |
+| ④ | B 类 FAQ 手写单价 + 过期日期 | 「$2.50/1M input … as of **2026-06-22**」 | `category.B.faq.q1.a`（en + zh） |
+
+次要项：`about.astro:32` 写死 `dateModified: '2026-06-22'`；`about/authors/reviewer-founder` 仅 191 词。
+
+⭐ **这 4 个的共性**：它们都是**「页面上写着的、会随时间过期的东西」** —— 而写死的值会**变成谎话**。⇒ 修法不是「把数字改对」，而是**「让它们变成派生值」**。
+
+### 19.24.1 ⭐ T1 · 分类页「最近审核」改为派生 —— 以及「同一个病原换了个地方」
+
+第一版修法：分类页从 `ToolMeta.dataReviewedAt` 派生（取该分类工具的最大值）⇒ **确实是派生、确实不再写死**。
+
+⇒ 但**同一个病原地不动**：工具页显示的是**散文 frontmatter** 的 `data_reviewed_at`（`src/pages/[lang]/[slug].astro:87` 早就这么写了：`proseEntry?.data.data_reviewed_at ?? toolMeta.dataReviewedAt`，那里的注释还写明 `ToolMeta` 的日期「落后约 5 周」）。实测（2026-11-05）：
+
+| 来源 | 分布 |
+|---|---|
+| 散文 frontmatter（201 个文件） | 2026-07-31 ×158 / 08-03 ×30 / 10-21 ×10 / 10-30 ×2 |
+| `src/data/tools/*.ts` 的 `ToolMeta` | 2026-06-22 ×26 / 07-03 ×6 / 07-04 ×7 / … |
+
+⇒ 分类页会显示 `2026-06-22`，而**同分类的工具页显示 `2026-07-31`** ⇒ **「同一站点两套口径」这个病根本没治**。
+
+⇒ **修正**：真值源统一到散文。改完 30 个分类页的日期呈 **2026-07-31 / 08-03 / 10-30 三档真实分布**（不再是同一个写死日期）⇒ 这本身就是「这个站在持续维护」的**真实信号**，比一个统一但假的日期强。
+
+### 19.24.2 T2 · `contact` 补厚（空壳页 → 渠道说明 + FAQ + 能帮/不能帮 + 合作）
+
+新增 **33 个 i18n 键**（en/zh 各 5440 → **5473**）：
+
+- `contact.channels_h / channels_intro` · `channel_email_h / channel_email_body` · `channel_tool_h / channel_tool_body` · `channel_response_h / channel_response_body`
+- `contact.faq_h` + `contact.faq.q1–q4.q/a`（4 条 FAQ）
+- `contact.scope_h / scope_body`（能帮什么 / 不能帮什么）· `contact.partner_h / partner_body`（合作）
+
+实测产物：en **157 → 510 词** · zh **76 → 794 汉字**。
+
+### 19.24.3 T3 · `terms` 补厚（10 段条款）
+
+新增 **20 个 i18n 键**（`legal.terms.{scope,accept,use,no_advice,responsibility,disclaimer,ip,third_party,changes,contact}_{h,p}`）—— 适用范围 / 接受条款 / 使用规范 / 不构成专业意见 / 你的责任 / 免责 / 知识产权 / 第三方服务 / 条款变更 / 条款问题。
+
+实测产物：en **719 字符 → 455 词** · zh **229 → 733 汉字**。
+
+### 19.24.4 T4 · `about` / `terms` 的 `dateModified`
+
+两者都改成**派生值**（`getSiteReviewDate()` = 全站最新一次内容审阅日期）⇒ 产物实测 JSON-LD `dateModified = 2026-10-30`（en + zh 两页）⇒ 工具页显示的日期与 about/terms 声称的日期**同一个口径**。
+
+### 19.24.5 T5 · B 类 FAQ 的价格与日期 —— 走**既有**的 live token 机制
+
+⭐ **不另造一套插值**：本仓库已有 `src/lib/live-price.ts`（P158/P160 建的价格 token 系统）⇒ FAQ 文案改成 `{{liveIn:openai/gpt-4o}}` / `{{liveOut:openai/gpt-4o}}` / `{{liveDate}}`，并在 `CategoryFaq.astro`（**一处**，覆盖全部 15 个分类页的 FAQ）统一 `resolveLiveTokens` ⇒ 解析后 = 数据集真值：**「$2.50 per 1M input tokens and $10.00 per 1M output tokens as of 2026-10-28」** ⇒ 价格与日期**都不可能再漂**（数据集每周刷新 ⇒ 文案自动跟随）。
+
+⚠️ 顺带确认：全 `dist/` 扫描 **0 个未解析 token**。
+
+### 19.24.6 ⭐⭐ 真值源的形态：为什么必须**预生成**（本站的 worker 没有 `node:fs`）
+
+第一版把真值源实现成「构建期直接读散文」的模块（`src/lib/content-review-dates.ts` 用 `fs.readdirSync` + `readFileSync`）⇒ **构建直接失败**：
+
+`[commonjs--resolver] [plugin vite:resolve] Cannot bundle Node.js built-in "node:fs" imported from src/lib/content-review-dates.ts.`
+
+⇒ 根因：本站部署到 **Cloudflare worker**，运行时**没有 Node 内置模块** ⇒ 任何被 `.astro` 组件 import 的模块都不能碰文件系统。
+
+⇒ **修正**：走本仓库**既有的生成物模式**（`user-value-scores.json` / `og-samples.json`）：
+
+| 件 | 作用 |
+|---|---|
+| `scripts/codegen-review-dates.mjs` | 从散文 frontmatter 派生 `src/data/review-dates.json`；支持 `--check`（已接进 `pnpm check`） |
+| `src/data/review-dates.json` | 生成物：100 工具 × 15 分类 + 全站日期（**无时间戳** —— 有时间戳则 `--check` 永远红） |
+| `src/lib/content-review-dates.ts` | 运行时只读 JSON（**无 `node:fs`**）⇒ worker 与 tsx 测试都能用 |
+| 守卫第 12 条 | **生成物不许漂移** —— 守卫**直接调用 codegen 的同一个解析器**（`buildReviewDates()`）⇒ 两边不可能对不上 |
+
+实测：生成物 = 100 个工具 / 15 个分类 / 全站 `2026-10-30`。
+
+### 19.24.7 ⭐ 守卫（第 25 个维度「审阅日期出处」）与变异台子
+
+| 套件 | 形态 | 条数 | 守什么 |
+|---|---|---|---|
+| `adsense-hardening-guard` | source-only | **15** | 共享真值源导出齐全 · `CategoryHero` 走真值源且不自派生 · 15 分类页 + `CategoryHero` 无写死 ISO 日期 · 15 分类页都传 `categoryId` · `about/terms` 的 `dateModified` 是派生值 · B 类 FAQ 无手写价格/日期 · B 类 FAQ 解析后 == 数据集真值 · 旧字面量 `2026-06-22` 不得复现 · contact/terms 成文厚度（en 词数 / zh 汉字数，各 2 条）· 生成物不许漂移 · 派生日期的性质（分类级 + 工具级各 1 条） |
+| `adsense-render-guard` | build-dep | **8** | 30 分类页显示的日期 == 派生值 · contact/terms 产物厚度（4 条）· `about/terms` 的 JSON-LD `dateModified` == 派生全站日期 · 本批页面无未解析 live token · B 类 FAQ 显示数据集真值 |
+
+**变异台子** `tests/scripts/mutate-p168-adsense-hardening.mjs`：**15/15 KILLED**，每条变异**只许红一条断言**（台子核对**失败断言的名字**，不只是「有东西红了」），收尾**无条件还原 + sha256 逐字节校验**。
+
+⭐ **台子当场抓到我自己守卫的一个漏检**：M4（删掉分类页给 `<CategoryHero>` 传的 `categoryId`）**存活** ⇒ 根因是判定口径太松 —— 断言问的是「这个文件里出现过 `categoryId={CATEGORY_ID}` 吗」，而同一页的 `CategoryDecisionLayer` / `CategoryFaq` / `CategoryGuides` **也写同样的属性名** ⇒ 删掉目标那一行，守卫照样绿 ⇒ **修正**：改为解析 `<CategoryHero …/>` 的属性块。
+
+⭐ **产物级守卫的非空转实证**：故意把一个产物的日期改坏 ⇒ **恰好 1 条**断言变红（8 条里只红对应那条 ⇒ 既承重又隔离）；还原后 8/8 全绿。
+
+### 19.24.8 ⭐ 五条同族教训
+
+① **写死的日期会变成谎话**，而**「两套口径」是最隐蔽的一种** —— 改掉硬编码 ≠ 改掉同一个病（真值源必须与工具页**同一个**）。
+② **「构建期读文件」这条路可能物理上不通** —— worker 运行时没有 `node:fs` ⇒ 看到「需要读文件」先问「运行时有没有」。
+③ **判定口径要落在「要禁的那个形状」所在的那个元素上** —— 问「文件里出现过吗」会被同页其它组件顶替。
+④ **无效变异会让台子说谎** —— M14 第一版改的是 `Map` 的初值，被散文循环覆盖回去 ⇒ 台子报 SURVIVED，实际是**变异根本没生效**。
+⑤ **台子的还原本身也会失败** —— Windows 上刚被写过的文件会被系统索引短暂独占（`open()` 返回 `UV_UNKNOWN(-4094)`）⇒ 台子第一次跑就崩在还原步骤、**把变异留在仓库里** ⇒ 还原必须「重试 + 每文件独立容错 + 收尾无条件执行 + sha256 校验」。
+
+### 19.24.9 维度 3 scan
+
+> **维度 3 scan: 基于信号 ① AdSense 复审裁定（低价值内容，含 3 个子条件）· ② GSC 基线（2026-08-03 → 2026-11-02，92 天：22 点击 / 10,696 展示 / CTR 0.21%；**4,649 展示（32%）卡在「有排名没人点」**；索引率 58% → 45%；246 个未找到）· ③ 站内线上取证（4 个硬伤 + 次要项）**
+>
+> ⚠️ **本轮无法做实时外部市场扫描**（`web_search` 额度已耗尽，HTTP 402）⇒ 本声明基于**站内取证 + GSC 基线 + 复审裁定**，**不含**实时外部信号。⇒ 下一步（批次 3 决策支持、§19.20 标题瘦身）**需要在额度恢复后补一次真实的市场信号扫描**。
+
+### 19.24.10 验证
+
+`tsc` exit 0 · 源级守卫 **15/15** · 产物级守卫 **8/8** · 变异台子 **15/15 KILLED**（0 存活 / 0 未隔离）· 还原校验逐字节一致 · 构建 **438 页** · 全量 **278 套件 · 0 失败**（63 build-dep + 215 source-only）。

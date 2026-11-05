@@ -2,7 +2,7 @@
 
 > **数据层目录索引** — `src/data/` 下静态数据 + 类型定义 + 业务数据，按文件用途分组。
 > **总数验证:** `src/data/tools/` 中 `tools: ToolMeta[]` 聚合 100 unique slugs ↔ `src/engines/` 100 engine files (1:1 对应 + 1 filename/slug intentional divergence 详见 §底部)
-> **最后更新:** 2026-07-19 (P40 batch)
+> **最后更新:** 2026-11-05 (P168 — 新增 `review-dates.json` 生成物)
 
 ---
 
@@ -13,6 +13,7 @@ src/data/
 ├── INDEX.md (本文件)
 ├── ai-pricing.json          (1961 lines) — AI token / image gen / GPU / training 单 source of truth
 ├── og-samples.json          (1502 lines) — 100 engines 的 OG preview 示例数据 (en + zh)
+├── review-dates.json        (P168 生成物) — 100 工具 × 15 分类的「最近审核」日期，源自散文 frontmatter
 ├── categories.ts            (24 lines)   — ToolMeta 业务 category 枚举 (15 letter A/B/C/D/E/F/M/O/S/R/P/H/T/K/L)
 ├── application-categories.ts(16 lines)   — categoryId ↔ schema.org applicationCategory 映射
 ├── internal-links.ts        (56 lines)   — 自动 generate relatedTools 表 (per-tool 4 关联)
@@ -25,7 +26,7 @@ src/data/
 
 | 维度 | 总数 | 验证 |
 |---|---|---|
-| Top-level files (本目录) | 6 | `ls src/data/*.ts src/data/*.json` |
+| Top-level files (本目录) | 17 | `ls src/data/*.ts src/data/*.json \| wc -l`（上面的目录树只列了主干文件，不是全部） |
 | `tools/` files | 17 | 15 category + `index.ts` + `types.ts` |
 | `tools/` total entries | 100 | `grep -h "^\s*slug:" src/data/tools/*.ts \| wc -l` |
 | engines 一致性 | 100 ↔ 100 | `src/engines/` 100 engine files |
@@ -39,6 +40,7 @@ src/data/
 |---|---|---|---|
 | `ai-pricing.json` | 1961 | OpenAI / Claude / Gemini / DeepSeek token + 7 image gen + 6 GPU + training cost single source of truth | **weekly** (LiteLLM upstream via `pnpm sync`) |
 | `og-samples.json` | 1502 | 100 engines 的 OG 图预览数据 (headline / trend / unit / label × en + zh) | on engine add/amend |
+| `review-dates.json` | P168 | **生成物**（`scripts/codegen-review-dates.mjs`）：100 工具 + 15 分类的「最近审核」日期，源自 `src/content/tools/*.md` frontmatter 的 `category_id` + `data_reviewed_at`。分类页 / about / terms 的日期都从它派生 ⇒ 不再写死 | 散文 frontmatter 改动时（`pnpm check` 会红） |
 | `reference-data.ts` | 48 | 周期性 update 的 market benchmarks: freelance rates / SaaS churn / CPL / pricing tiers / platform revenue share | monthly/quarterly |
 | `categories.ts` | 24 | 业务 category 枚举 (15 letters: A SaaS Metrics / B AI Cost / C Valuation / D Freelance Pricing / E Cost & Efficiency / F Investment / M Marketing / O Operations / S Sales / R Retention / P Product Analytics / H Hiring / T Customer Support / K Knowledge / L Legal) | on category add |
 | `application-categories.ts` | 16 | ToolMeta.categoryId (A-F) ↔ schema.org applicationCategory 映射 (`BusinessApplication` / `DeveloperApplication` / `FinanceApplication`) | on schema update |

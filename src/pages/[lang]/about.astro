@@ -7,6 +7,7 @@ import { SITE_URL } from '../../lib/site-config';
 import { tools } from '../../data/tools';
 import { EDITORIAL, REVIEWERS } from '../../data/editorial';
 import { categories } from '../../data/categories';
+import { getSiteReviewDate } from '../../lib/content-review-dates';
 
 export function getStaticPaths() {
   return [{ params: { lang: 'en' } }, { params: { lang: 'zh' } }];
@@ -29,7 +30,11 @@ const aboutSchema = JSON.stringify({
       description,
       isPartOf: { '@id': `${SITE_URL}/#website` },
       inLanguage: lang,
-      dateModified: '2026-06-22',
+      // P168：派生自「全站最近一次内容审阅日期」，不再写死字面量
+      // （写死的旧日期与工具页的真实审阅日期对不上 ⇒ 同一站点两套口径）。
+      // P168：派生自「全站最近一次内容审阅日期」，不再写死字面量
+      // （写死的旧日期与工具页的真实审阅日期对不上 ⇒ 同一站点两套口径）。
+      dateModified: getSiteReviewDate(),
     },
   ],
 });
