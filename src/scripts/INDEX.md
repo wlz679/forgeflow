@@ -11,18 +11,20 @@
 ```
 src/scripts/
 ├── INDEX.md (本文件)
-└── 6 .client.ts 浏览器 init 层 — 按 P-series 分 2 section
+└── 7 .client.ts 浏览器 init 层 — 按 P-series 分 3 section
     ├── P2 LS-only trio (3):  favorites-init · recent-init · history-init
-    └── P3 cloud-sync trio (3): clerk-init · sync-init · migration
+    ├── P3 cloud-sync trio (3): clerk-init · sync-init · migration
+    └── P168 批次 3 (1):     decision-support
 ```
 
 | Section | Scripts | Total LOC | Avg LOC | Bundling |
 |---|---|---|---|---|
 | P2 LS-only trio | 3 | 905 | 301.7 | Client only (`.client.ts` suffix) |
 | P3 cloud-sync trio | 3 | 568 | 189.3 | Client only (`.client.ts` suffix) |
-| **Total** | **6** | **1473** | **245.5** | Client only |
+| P168 批次 3 | 1 | 61 | 61.0 | Client only (`.client.ts` suffix) |
+| **Total** | **7** | **1534** | **219.1** | Client only |
 
-> **Bundle invariant**: 全部 6 个脚本以 `.client.ts` 后缀命名 → Vite/Astro build 时从 SSR 树摇出，仅打包到客户端 bundle。修改这些脚本不会影响 SSR 渲染，但会改变客户端行为，需在浏览器 console 或交互测试中验证。
+> **Bundle invariant**: 全部 7 个脚本以 `.client.ts` 后缀命名 → Vite/Astro build 时从 SSR 树摇出，仅打包到客户端 bundle。修改这些脚本不会影响 SSR 渲染，但会改变客户端行为，需在浏览器 console 或交互测试中验证。
 
 ---
 

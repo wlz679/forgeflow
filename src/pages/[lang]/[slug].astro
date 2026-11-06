@@ -14,6 +14,8 @@ import PresetChips from '../../components/PresetChips.astro';
 import '../../engines';
 import { getEngine } from '../../core/engines/registry';
 import { resolveLiveTokens } from '../../lib/live-price';
+import DecisionSupport from '../../components/DecisionSupport.astro';
+import { hasDecisionLines, stripDecisionTip } from '../../lib/decision-support';
 import { relatedTools } from '../../data/internal-links';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
@@ -85,6 +87,27 @@ const proseFirstSourcesRich: { name: string; url: string }[] =
     : toolMeta.sourcesRich;
 const proseFirstDataReviewedAt: string =
   proseEntry?.data.data_reviewed_at ?? toolMeta.dataReviewedAt;
+
+// P168 —— 「🧭 算完之后」决策支持区块。
+// ⭐ 只有**已经写好了工具专属文案**的工具才渲染（靠 i18n 键是否存在来判定）
+//   ⇒ 批次 3 铺开时逐个加键即可，不需要维护任何「已激活工具」清单
+//   ⇒ 清单与内容不可能对不上（清单会漂，键不会）。
+const decisionGoalKey = `tools.${slug}.decision_goal`;
+const decisionRecommendationKey = `tools.${slug}.decision_recommendation`;
+const decisionConstraintKey = `tools.${slug}.decision_constraint`;
+const decisionNextToolKey = `tools.${slug}.decision_next_tool`;
+const decisionGoal = t(decisionGoalKey, lang);
+const decisionRecommendation = t(decisionRecommendationKey, lang);
+const decisionConstraint = t(decisionConstraintKey, lang);
+const decisionNextTool = t(decisionNextToolKey, lang);
+const decisionTextReady =
+  decisionGoal !== decisionGoalKey &&
+  decisionRecommendation !== decisionRecommendationKey &&
+  decisionConstraint !== decisionConstraintKey &&
+  decisionNextTool !== decisionNextToolKey;
+// 引擎的示例输出里必须真的有决策段落，否则区块没有「下一步」可显示
+const decisionSample = engine.staticExamples[0] ?? '';
+const decisionRender = decisionTextReady && hasDecisionLines(decisionSample);
 
 // P141i-T2: Extract optional H2 section body for conditional rendering.
 // Mirrors the internal extractSection logic in CalculatorProse.astro
@@ -1353,9 +1376,15 @@ const schema = JSON.stringify({
             // emoji-led section headers (e.g., "💰 Cost Breakdown") on zh
             // pages. Body content (numbers, model names) stays in English
             // — those are technical/universal.
+            // P168：决策支持区块接管 💡 Tip 之后，**卡片就收不到这条建议** ⇒ 零重复。
+            //   ⭐ 是**结构性**去重（文本里根本没有它），不是靠 preserveTip 开关
+            //     —— 开关会因某个分支没走到而失效，而失效时**看不出来**。
+            //   ⚠️ 必须**先剥离再翻译**：zh 的 translateCalcOutput 会把「💡 Tip:」
+            //     改写成「💡 提示:」⇒ 剥离必须发生在英文原文上。
+            const exWithoutTip = decisionRender ? stripDecisionTip(ex) : ex;
             const translatedEx = lang === 'zh' && engine.clientConfig.type === 'custom'
-              ? translateCalcOutput(ex, lang)
-              : ex;
+              ? translateCalcOutput(exWithoutTip, lang)
+              : exWithoutTip;
             // I2-review: v3 engines want the `💡 Tip:` line preserved so all
             // 5 body sections render as cards. Legacy engines keep the strip.
             return <ResultCard text={translatedEx} index={i} hideIndex={engine.clientConfig.type === 'custom'} preserveTip={bizConfigKey === 'BIZ_V3'} />;
@@ -1363,6 +1392,19 @@ const schema = JSON.stringify({
         </div>
 
         <div id="dynamic-results" class="space-y-3 hidden"></div>
+
+        {/* P168：决策支持区块 —— 静态部分（决策问题 / 适用边界 / 下一步工具）
+            直接 SSR 进 <main> 的可见正文（爬虫看得到）；「针对你这组数字」的
+            动态建议由客户端在用户点计算后填入。 */}
+        {decisionRender && (
+          <DecisionSupport
+            goal={decisionGoal}
+            recommendation={decisionRecommendation}
+            constraint={decisionConstraint}
+            nextTool={decisionNextTool}
+            sampleOutput={decisionSample}
+          />
+        )}
         {relatedTopics.length > 0 && (
           <section class="mb-8 mt-8 p-6 bg-gradient-to-br from-purple-50 to-sky-50 border border-purple-200 rounded-2xl">
             <h2 class="text-xl font-bold text-gray-900 mb-3">
@@ -1403,6 +1445,11 @@ const schema = JSON.stringify({
     <RecentViewed lang={lang} />
   </main>
   <FeedbackWidget pageKind="calc" slug={slug!} lang={lang} />
+  {/* P168：决策支持的客户端模块 —— 提取逻辑与服务端组件共用
+      src/lib/decision-support.ts（唯一实现）*/}
+  <script>
+    import '../../scripts/decision-support.client.ts';
+  </script>
   <Footer />
 </BaseLayout>
 
@@ -2067,6 +2114,14 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         var inputs = {};
         fd.forEach(function(v, k) { inputs[k] = v.toString(); });
         var results = generateFromConfig(config, inputs);
+        // P168：把引擎的原始输出交给「算完之后」区块的客户端模块 ——
+        //   提取逻辑住在 src/lib/decision-support.ts（与服务端组件共用一份）
+        //   ⇒ 这里只负责「交出去」，不重复实现提取。
+        try {
+          document.dispatchEvent(new CustomEvent('ffk:decision-result', {
+            detail: { raw: results && results.length ? String(results[0]) : '' }
+          }));
+        } catch (e) { /* 事件派发失败不影响计算结果 */ }
         var exportResult = config.type === 'custom' ? results[0] : results.join('\n\n');
         if (config.type === 'custom') { results = [results[0]]; }
 

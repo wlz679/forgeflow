@@ -1,0 +1,8 @@
+{
+  "layers": [
+    { "key": "decision_goal", "tag": "🧭 Decision Question" },
+    { "key": "decision_recommendation", "tag": "🧭 Recommendation" },
+    { "key": "decision_constraint", "tag": "🧭 Key Uncertainty" },
+    { "key": "decision_next_tool", "tag": "🧭 Next Action" }
+  ]
+}

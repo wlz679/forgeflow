@@ -184,13 +184,12 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
     result += "\n\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.";
   }
 
-  // 🧭 Decision Recommendation (P140f-7) — v2.0 灵魂 = Decision Support
-  result += "\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
-  result += "\n• 🧭 Decision Question: 8 月 runway 不是答案，**核心问题是\"赛道值不值得做 + 当前现金消耗速度是否匹配融资节奏\"**。Default Alive（cash > 18 月 runway）= 应该扩量抢市场；Default Dead（< 12 月）= 必须立刻做融资决策。";
-  result += "\n• 🧭 Recommendation: (1) **runway < 6 月** → 立刻融 / 找桥 / 砍预算三选一（融资窗口期 3-6 月，越拖越被动）；(2) **6-12 月** → 启动 Series A / Pre-A 流程 + 控制 burn multiple < 1.5x；(3) **12-18 月** → 优化 burn multiple < 1.0x（资本效率）；(4) **> 18 月 Default Alive** → 加预算抢市场（burn multiple < 0.5x 是 best-in-class）。**赛道判断**：burn multiple > 2x 持续 6 月 = 死赛道，再融也是烧钱。";
-  result += "\n• 🧭 Key Uncertainty: (1) 现金数字 = 当前银行余额 vs 含承诺但未到账（前者是真值）；(2) Net Burn 是否扣除一次性大额（如设备 / 罚款）；(3) 收入增速是否可持续（v1 没看 growth rate）。";
-  result += "\n• 🧭 Next Action: (a) 跑 [MRR Growth Rate Calculator] 看趋势；(b) 算 burn multiple（Net Burn / Net New ARR）= 决定赛道；(c) runway < 12 月 → 不优化产品，先做融资材料；(d) runway > 18 月 + burn multiple < 1.0 → 立刻加 30-50% 预算抢市场窗口期。";
 
+  // 🧭 Decision Recommendation —— P168 B3-0：**已迁到页面的「算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_* 四层，双语）
+  //   ⇒ 引擎只负责算，决策支持由区块独占 ⇒ 同页不再有两份决策建议。
+  //   ⚠️ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事
+  //     （实测同页逐字重叠 7.4%，其中一句话在同页出现 3 次）。
   return [result];
 }
 
@@ -214,7 +213,6 @@ const customFn =
   "if(nb>0&&cc>0){r+='\\n\\n\\u2696\\uFE0F Break-Even\\n──────────────────────────────────────────────────────';var ber=mr+nb;var gp=mr>0?((nb/mr)*100):0;if(gp>0)r+='\\n• \\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue ('+gp.toFixed(0)+'% growth) to hit break-even';else r+='\\n• \\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue (no revenue baseline)';r+='\\n• Or cut costs by '+fmt(nb)+'/mo (e.g., '+Math.round((nb/gb)*100)+'% of current gross burn)';r+='\\n• Break-even runway: \\u221E (no burn = no runway concern)';}else if(nb<=0){r+='\\n\\n\\u2696\\uFE0F Break-Even\\n──────────────────────────────────────────────────────';r+='\\n• \\uD83D\\uDFE2 Already at break-even — revenue ≥ expenses. Focus on reinvestment.';}" +
   "if(nb>0&&cc>0){r+='\\n\\n\\uD83C\\uDFAF Runway Milestones\\n──────────────────────────────────────────────────────';var mms=[6,12,18,24];for(var mi=0;mi<mms.length;mi++){var cn=mms[mi]*nb;var st;if(cc>=cn)st='\\uD83D\\uDFE2';else if(cc>=cn*0.7)st='\\uD83D\\uDFE1';else if(cc>=cn*0.4)st='\\uD83D\\uDFE0';else st='\\uD83D\\uDD34';r+='\\n• '+mms[mi]+'-month runway:  need $'+Math.round(cn).toLocaleString()+' cash  (you have: '+fmt(cc)+')  '+st;}}" +
   "if(nb>5)r+='\\n\\n\\uD83D\\uDCA1 Tip: Team costs are typically 50-70% of gross burn. If you need to extend runway fast, headcount is the biggest lever — but also the slowest to undo. Try cutting SaaS subscriptions and contractor hours first for immediate savings without firing.';else if(nb>0)r+='\\n\\n\\uD83D\\uDCA1 Tip: Burn multiple below 1.0\\u00D7 means you\\'re growing revenue faster than you burn. Below 0.5\\u00D7 is best-in-class — investors reward capital efficiency. Track it monthly.';else r+='\\n\\n\\uD83D\\uDCA1 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.';" +
-  "r+=`\\n\\n🧭 Decision Recommendation\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🧭 Decision Question: 8 月 runway 不是答案，**核心问题是\"赛道值不值得做 + 当前现金消耗速度是否匹配融资节奏\"**。Default Alive（cash > 18 月 runway）= 应该扩量抢市场；Default Dead（< 12 月）= 必须立刻做融资决策。\\n• 🧭 Recommendation: (1) **runway < 6 月** → 立刻融 / 找桥 / 砍预算三选一（融资窗口期 3-6 月，越拖越被动）；(2) **6-12 月** → 启动 Series A / Pre-A 流程 + 控制 burn multiple < 1.5x；(3) **12-18 月** → 优化 burn multiple < 1.0x（资本效率）；(4) **> 18 月 Default Alive** → 加预算抢市场（burn multiple < 0.5x 是 best-in-class）。**赛道判断**：burn multiple > 2x 持续 6 月 = 死赛道，再融也是烧钱。\\n• 🧭 Key Uncertainty: (1) 现金数字 = 当前银行余额 vs 含承诺但未到账（前者是真值）；(2) Net Burn 是否扣除一次性大额（如设备 / 罚款）；(3) 收入增速是否可持续（v1 没看 growth rate）。\\n• 🧭 Next Action: (a) 跑 [MRR Growth Rate Calculator] 看趋势；(b) 算 burn multiple（Net Burn / Net New ARR）= 决定赛道；(c) runway < 12 月 → 不优化产品，先做融资材料；(d) runway > 18 月 + burn multiple < 1.0 → 立刻加 30-50% 预算抢市场窗口期。`;" +
   "return [r];";
 
 const engine: ToolEngine = {
@@ -233,7 +231,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateBurnRate(inputs); },
   staticExamples: [
-    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\n\n🩺 Burn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.\n\n⚖️ Break-Even\n──────────────────────────────────────────────────────\n• 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.\n\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 8 月 runway 不是答案，**核心问题是"赛道值不值得做 + 当前现金消耗速度是否匹配融资节奏"**。Default Alive（cash > 18 月 runway）= 应该扩量抢市场；Default Dead（< 12 月）= 必须立刻做融资决策。\n• 🧭 Recommendation: (1) **runway < 6 月** → 立刻融 / 找桥 / 砍预算三选一（融资窗口期 3-6 月，越拖越被动）；(2) **6-12 月** → 启动 Series A / Pre-A 流程 + 控制 burn multiple < 1.5x；(3) **12-18 月** → 优化 burn multiple < 1.0x（资本效率）；(4) **> 18 月 Default Alive** → 加预算抢市场（burn multiple < 0.5x 是 best-in-class）。**赛道判断**：burn multiple > 2x 持续 6 月 = 死赛道，再融也是烧钱。\n• 🧭 Key Uncertainty: (1) 现金数字 = 当前银行余额 vs 含承诺但未到账（前者是真值）；(2) Net Burn 是否扣除一次性大额（如设备 / 罚款）；(3) 收入增速是否可持续（v1 没看 growth rate）。\n• 🧭 Next Action: (a) 跑 [MRR Growth Rate Calculator] 看趋势；(b) 算 burn multiple（Net Burn / Net New ARR）= 决定赛道；(c) runway < 12 月 → 不优化产品，先做融资材料；(d) runway > 18 月 + burn multiple < 1.0 → 立刻加 30-50% 预算抢市场窗口期。',
+    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\n\n🩺 Burn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.\n\n⚖️ Break-Even\n──────────────────────────────────────────────────────\n• 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.\n\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.',
   ],
   faq: [
     { q: "What is the difference between gross burn and net burn?", a: "Gross burn is total monthly operating expenses before revenue. Net burn = gross burn − monthly revenue. For example, if you spend $12K/month and earn $5K/month, gross burn is $12K, net burn is $7K. Track both — gross burn shows spending discipline, net burn shows how fast your bank account actually shrinks." },
@@ -267,14 +265,15 @@ const engine: ToolEngine = {
   engineKey: true,
   // P140f-p3-T6: 完整 6 字段 playbook (per P140f §4.3 + ADR-0005)
   // Goal 含"该不该"双关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
-  // 内容镜像 Phase 1 burn-rate 🧭 Decision Recommendation 4 子段 + ADR-0005 决策逻辑
+  // 内容 = 页面决策区块四层（en.json / zh.json 的 tools.<slug>.decision_*）的英文原文
+  // ⇒ 引擎输出里不再重复这一段（区块独占），两处改一处就会漂 ⇒ 守卫盯着。
   playbook: {
-    goal: '用户该不该现在启动融资 / 找桥 / 砍预算',
-    input: 'currentCash (≥0) + monthlyRevenue (≥0) + netBurnMonthly (≥0, 或 grossBurn + revenue 自动算)',
-    output: 'runway 月数 + 健康带 🟢>18月 / 🟡12-18月 / 🟠6-12月 / 🔴<6月 + Default Alive/Dead 状态 + burn multiple',
-    constraint: 'cash=0 时无意义; 收入 vs 实际 netBurn 需区分; Net Burn 扣除一次性大额 / 含承诺未到账',
-    tool: 'Phase 1 burn-rate-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
-    memory: 'OpenView 2024 SaaS runway benchmark + ICONIQ Growth 2024 burn multiple + YC default alive/dead 阈值',
+    goal: 'Should you raise capital now, cut costs, or keep investing in growth? Runway alone does not answer that - the decision depends on how much cash you hold, how fast you burn, and whether each new dollar of spend produces more than a dollar of new revenue. Use this calculator to decide which move comes next.',
+    input: 'currentCash (>=0) + monthlyRevenue (>=0) + teamCost / infraCost / marketingCost / opsCost (>=0 each) + optional netNewRevenue for the burn multiple',
+    output: 'runway in months + health band (green >18 mo / yellow 12-18 / orange 6-12 / red <6) + Default Alive/Dead verdict + burn multiple + break-even gap + cost-cut scenarios',
+    constraint: 'Unreliable when cash includes committed-but-unreceived money, when net burn contains a one-off item that will not repeat, when monthly revenue is a single good month rather than a 3-6 month average, or when you are pre-revenue (runway is then a worst case, not a forecast). Runway is a point-in-time number and moves every time you close the books.',
+    tool: 'MRR Calculator for the revenue trend, and Burn Multiple & Rule of 40 Calculator for whether each new dollar of spend buys more than a dollar of new revenue',
+    memory: 'OpenView 2024 SaaS runway benchmark + ICONIQ Growth 2024 burn multiple benchmark + YC default alive/dead thresholds',
   },
 };
 registerEngine(engine);

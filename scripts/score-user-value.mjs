@@ -51,6 +51,19 @@ const NON_CALCULATOR_ENGINE_FILES = new Set([
   'revenue-projector.ts',
 ]);
 
+// P168 B3-0：决策支持已从引擎输出**迁到页面的决策区块**（i18n 四层，双语）。
+// ⇒ 「这个工具输出的是决策建议还是数字」这个信号，现在有两个来源：
+//   ① 引擎输出（尚未迁移的工具，🧭 四段还在引擎里）
+//   ② 页面决策文案（已激活的工具，四层在 locale 里）
+//   两者都算 —— 否则迁移过的工具会被这个维度**误判成 0.5**。
+const DECISION_LAYERS = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'tests', 'l5-layers.json'), 'utf8').replace(/^\uFEFF/, ''),
+).layers;
+
+const LOCALE_EN = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'src', 'i18n', 'locales', 'en.json'), 'utf8').replace(/^\uFEFF/, ''),
+);
+
 const EMOJI = {
   decision: '\u{1F9ED}', // 🧭
   health: '\u{1FA7A}', // 🩺
@@ -100,8 +113,8 @@ function findEngines(dir) {
 }
 
 /** 维度 1 — 功能价值:输出的是「决策建议」还是「数字」? */
-function scoreFunctionalValue(src) {
-  const l5 = L5_TAGS.filter((t) => src.includes(t)).length;
+function scoreFunctionalValue(src, decisionLayers) {
+  const l5 = Math.max(L5_TAGS.filter((t) => src.includes(t)).length, decisionLayers);
   if (l5 === 4) return { value: 1, signals: { l5Tags: 4 } };
   if (/playbook\s*:/.test(src)) return { value: 0.5, signals: { l5Tags: l5 } };
   return { value: 0, signals: { l5Tags: l5 } };
@@ -140,8 +153,9 @@ function scoreRetention(src) {
 }
 
 /** 维度 5 — Advocacy:输出能不能被分享 / 带到别的工具。 */
-function scoreAdvocacy(src) {
-  const links = (src.match(CROSS_TOOL_RE) || []).length;
+function scoreAdvocacy(src, decisionProse) {
+  const links =
+    (src.match(CROSS_TOOL_RE) || []).length + (decisionProse.match(CROSS_TOOL_RE) || []).length;
   if (links >= 1) return { value: 1, signals: { crossToolLinks: links } };
   if (/Decision Report|decision report|report-builder|Report/i.test(src)) {
     return { value: 0.5, signals: { crossToolLinks: links } };
@@ -160,11 +174,15 @@ function scoreEngine(file) {
     ? slugMatch[1]
     : path.basename(file).replace(/-calculator\.ts$/, '').replace(/\.ts$/, '');
 
-  const functional = scoreFunctionalValue(src);
+  // P168 B3-0：页面决策区块的四层文案也参与信号判定
+  const decisionProse = DECISION_LAYERS.map((l) => LOCALE_EN['tools.' + slug + '.' + l.key] ?? '').join('\n');
+  const decisionLayers = DECISION_LAYERS.filter((l) => LOCALE_EN['tools.' + slug + '.' + l.key]).length;
+
+  const functional = scoreFunctionalValue(src, decisionLayers);
   const ux = scoreUx(src);
   const advisor = scoreAdvisor(src);
   const retention = scoreRetention(src);
-  const advocacy = scoreAdvocacy(src);
+  const advocacy = scoreAdvocacy(src, decisionProse);
 
   const dims = {
     functionalValue: functional.value,

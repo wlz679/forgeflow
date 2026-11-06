@@ -1,0 +1,68 @@
+---
+import { t, getLang } from '../i18n';
+import { extractDecisionLines } from '../lib/decision-support';
+
+export interface Props {
+  /** 决策问题（工具专属） */
+  goal: string;
+  /** 据此该怎么定（工具专属） */
+  recommendation: string;
+  /** 适用边界（工具专属） */
+  constraint: string;
+  /** 「下一步用哪个工具」（工具专属，静态） */
+  nextTool: string;
+  /** 引擎的示例输出（静态版，用来填 SSR 初始的决策建议） */
+  sampleOutput: string;
+}
+
+const { goal, recommendation, constraint, nextTool, sampleOutput } = Astro.props;
+const lang = getLang(Astro);
+
+// 静态（SSR）版：直接从引擎的示例输出里取决策建议 —— 与客户端**同一份实现**
+const sampleLines = extractDecisionLines(sampleOutput);
+const hasSample = Boolean(sampleLines.tip);
+---
+
+<section id="decision-support" class="mb-10 mt-8 p-6 bg-gradient-to-br from-purple-50 to-sky-50 border border-purple-200 rounded-2xl">
+  <h2 class="text-xl font-bold text-gray-900 mb-4">
+    🧭 {t('decision.after.title', lang)}
+  </h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+    <div class="bg-white/70 rounded-xl p-4 border border-purple-100">
+      <h3 class="text-sm font-bold text-gray-900 mb-1.5">{t('decision.question_h', lang)}</h3>
+      <p class="text-sm text-gray-700 leading-relaxed">{goal}</p>
+    </div>
+    <div class="bg-white/70 rounded-xl p-4 border border-purple-100">
+      <h3 class="text-sm font-bold text-gray-900 mb-1.5">{t('decision.recommendation_h', lang)}</h3>
+      <p class="text-sm text-gray-700 leading-relaxed">{recommendation}</p>
+    </div>
+  </div>
+
+  <div class="bg-white/70 rounded-xl p-4 border border-purple-100 mb-4">
+    <h3 class="text-sm font-bold text-gray-900 mb-1.5">{t('decision.constraint_h', lang)}</h3>
+    <p class="text-sm text-gray-700 leading-relaxed">{constraint}</p>
+  </div>
+
+  <div class="bg-white/70 rounded-xl p-4 border border-purple-100">
+    <h3 class="text-sm font-bold text-gray-900 mb-1.5">{t('decision.next_tool_h', lang)}</h3>
+    <p class="text-sm text-gray-700 leading-relaxed">{nextTool}</p>
+  </div>
+
+  <div class="bg-white rounded-xl p-4 border border-purple-100 mt-3">
+    <div class="flex items-center gap-2 mb-1.5">
+      <h3 class="text-sm font-bold text-gray-900">{t('decision.next_step_h', lang)}</h3>
+      <span
+        data-decision-example-badge
+        class="inline-block text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"
+      >{t('results.example', lang)}</span>
+    </div>
+    <div id="decision-next-step" class="text-sm text-gray-700 leading-relaxed space-y-2">
+      {hasSample ? (
+        <p>{sampleLines.tip}</p>
+      ) : (
+        <p class="text-gray-500">{t('decision.next_step_pending', lang)}</p>
+      )}
+    </div>
+  </div>
+</section>

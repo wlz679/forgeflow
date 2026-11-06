@@ -18,7 +18,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { L5_TAGS } from './l5-tags.ts';
+import { L5_LAYERS, L5_TAGS } from './l5-tags.ts';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -35,19 +35,47 @@ const TARGET_CALCS = [
 // copies cannot drift apart the way the old three did.
 const REQUIRED_TAGS = L5_TAGS;
 
-test('5 calc 全部含 🧭 Decision Recommendation 4 子段', () => {
+test('5 calc 全部含 🧭 Decision Recommendation 4 子段（或已迁进页面决策层）', () => {
+  // ⭐ P168 B3-0：决策支持**可以住在两个地方** ——
+  //   ① 引擎输出里的 🧭 四段（未迁移的工具）
+  //   ② 页面的决策层 i18n 键（已迁移的工具：burn-rate 已整段迁出引擎）
+  // ⇒ 判据是「**这个工具的决策建议层齐不齐**」，不是「引擎源码里有没有那四个字符串」
+  //   （后者会把「迁走了」误判成「退化了」—— 而迁移正是我们要的形态）。
+  const locale = JSON.parse(
+    readFileSync(resolve(root, 'src/i18n/locales/en.json'), 'utf8').replace(/^\uFEFF/, ''),
+  ) as Record<string, string>;
   for (const relPath of TARGET_CALCS) {
     const src = readFileSync(resolve(root, relPath), 'utf8');
-    for (const tag of REQUIRED_TAGS) {
-      assert.ok(
-        src.includes(tag),
-        `${relPath} 缺失决策标签: "${tag}"`
-      );
-    }
+    const slug = (src.match(/\bslug\s*:\s*['"]([^'"]+)['"]/) ?? [])[1] ?? '';
+    const missing = L5_LAYERS.filter(
+      (l) =>
+        !src.includes(l.tag) &&
+        typeof locale['tools.' + slug + '.' + l.key] !== 'string',
+    );
+    assert.equal(
+      missing.length,
+      0,
+      `${relPath} 缺失决策层: ${missing.map((m) => m.tag).join(', ')}`,
+    );
   }
 });
 
 test('guard 元数据正确（5 calc × 4 标签）', () => {
   assert.equal(TARGET_CALCS.length, 5);
   assert.equal(REQUIRED_TAGS.length, 4);
+  // 契约只有一份（tests/l5-layers.json）⇒ 标签表与键映射不可能各自漂。
+  // ⚠️ 期望值**独立写死字面量** —— 若从同一份 JSON 派生，那是同义反复
+  //   （断言恒真 ⇒ 守卫测不到任何东西）。这里写死 ⇒ 契约被改动时它会红。
+  assert.deepEqual(L5_LAYERS.map((l) => l.key), [
+    'decision_goal',
+    'decision_recommendation',
+    'decision_constraint',
+    'decision_next_tool',
+  ]);
+  assert.deepEqual(L5_LAYERS.map((l) => l.tag), [
+    '🧭 Decision Question',
+    '🧭 Recommendation',
+    '🧭 Key Uncertainty',
+    '🧭 Next Action',
+  ]);
 });

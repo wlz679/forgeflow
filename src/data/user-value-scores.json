@@ -2422,7 +2422,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 3
+          "boundaryMarkers": 4
         },
         "retention": {
           "snapshot": false,
@@ -2430,7 +2430,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 3
+          "crossToolLinks": 2
         }
       },
       "reviewedAt": "2026-10-21"

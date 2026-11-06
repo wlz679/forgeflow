@@ -15,12 +15,34 @@
 // exact, case-sensitive format contract: the L5 block is a rendering
 // convention, and the guard's job is to confirm the canonical spelling is
 // present, not to accept near-misses.
-export const L5_TAGS = [
-  '🧭 Decision Question',
-  '🧭 Recommendation',
-  '🧭 Key Uncertainty',
-  '🧭 Next Action',
-] as const;
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+/**
+ * 决策层契约的一个层：**页面 i18n 键后缀** ↔ **引擎输出里的标记**。
+ */
+export interface L5Layer {
+  /** 页面决策层的 i18n 键后缀（`tools.<slug>.<key>`） */
+  key: string;
+  /** 引擎输出里的标记（🧭 Xxx） */
+  tag: string;
+}
+
+/**
+ * ⭐ 决策层契约的**唯一真值**在 `tests/l5-layers.json` —— TS 守卫与 .mjs 脚本都读它。
+ *
+ * 为什么是 JSON 而不是 TS：`scripts/score-user-value.mjs` 是**纯 JS**
+ * （用裸 node 跑，不能 import .ts）⇒ 契约放 TS 里它读不到 ⇒ 必然复制一份
+ * ⇒ 必然漂。P153-E2 记过：契约抄三份、抄出三种匹配语义（大小写敏感 / 正则 / includes）。
+ * ⇒ 一份 JSON + 两个读者 ⇒ 不可能对不上。
+ */
+const LAYER_FILE = resolve(import.meta.dirname, 'l5-layers.json');
+export const L5_LAYERS: readonly L5Layer[] = JSON.parse(
+  readFileSync(LAYER_FILE, 'utf8'),
+).layers;
+
+/** 引擎输出里的四个 L5 标记（顺序 == 契约顺序） */
+export const L5_TAGS: readonly string[] = L5_LAYERS.map((l) => l.tag);
 
 /** Does `text` carry the given L5 tag? Exact, case-sensitive match. */
 export function hasL5Tag(text: string, tag: string): boolean {

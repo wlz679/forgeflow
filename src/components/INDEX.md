@@ -11,11 +11,11 @@
 ```
 src/components/
 ├── INDEX.md (本文件)
-└── 18 .astro 组件 — 按用途分 5 tier
+└── 19 .astro 组件 — 按用途分 5 tier
     ├── Layout tier (2):     Header.astro · Footer.astro
     ├── List tier (2):       ToolCard.astro · CategoryOtherNav.astro
     ├── Category tier (4):   CategoryHero · CategoryGuides · CategoryFaq · CategorySection
-    ├── Tool-page tier (8):  ResultCard · RelatedTools · RecentViewed · HistoryList · HowToUse · FAQ · EeatTrustBlock · CopyButton
+    ├── Tool-page tier (9):  ResultCard · RelatedTools · RecentViewed · HistoryList · HowToUse · FAQ · EeatTrustBlock · CopyButton · DecisionSupport
     └── Utility tier (1):    SearchBar.astro
 ```
 
@@ -24,9 +24,9 @@ src/components/
 | Layout (per-page) | 2 | 159 | 79.5 |
 | List rendering | 2 | 58 | 29 |
 | Category-specific | 4 | 112 | 28 |
-| Tool-page widget | 8 | 277 | 34.6 |
+| Tool-page widget | 9 | 347 | 38.6 |
 | Utility | 1 | 25 | 12.5 |
-| **Total** | **18** | **631** | **35.1** |
+| **Total** | **19** | **701** | **36.9** |
 
 ---
 
@@ -54,7 +54,7 @@ src/components/
 
 | Component | LOC | Props |
 |---|---|---|
-| `CategoryHero.astro` | 21 | `{ categoryName, categoryDesc, toolCount }` — hero with category metadata + tool count |
+| `CategoryHero.astro` | 32 | `{ categoryId, categoryName, categoryDesc, toolCount }` — hero with category metadata + tool count + **派生的「最近审核」日期**（P168：真值源 `src/lib/content-review-dates.ts`，与工具页同一口径） |
 | `CategoryGuides.astro` | 22 | `{ categoryId, manualGuides[] }` — 3 manual guides |
 | `CategoryFaq.astro` | 26 | `{ categoryId, faqItems[] }` — 5 pre-translated FAQ items per category |
 | `CategorySection.astro` | 20 | `{ id, name, description, tools[] }` — sectioned tool grouping within category page (wraps `ToolCard` list) |
@@ -75,6 +75,7 @@ These 4 components are rendered ONLY on category landing pages (`src/pages/[lang
 | `FAQ.astro` | 26 | `{ items[] }` — collapsible Q+A list | 1 |
 | `EeatTrustBlock.astro` | 51 | `{ reviewedBy, dataReviewedAt, sources[], author }` — EEAT trust signals per content-depth spec | 1 |
 | `CopyButton.astro` | 24 | `{ text }` — clipboard copy button with `data-copy` hook + label i18n. Used ONLY inside `ResultCard`. | 0 (transitively via `ResultCard`) |
+| `DecisionSupport.astro` | 78 | `{ goal, recommendation, constraint, nextTool, sampleOutput }` — P168 批次 3 的「🧭 算完之后」区块：**四层静态内容**（决策问题 / 据此该怎么定 / 适用边界 / 下一步工具，SSR 进 `<main>` 可见正文）+ 一层动态建议（容器 `#decision-next-step`，由 `src/scripts/decision-support.client.ts` 在用户点计算后填入引擎刚算出的 💡 Tip）。⭐ **决策支持只有这一个家** —— 引擎输出里的 🧭 决策四段已整段迁进 i18n（双语），否则同页会出现两处决策建议（实测逐字重叠 7.4%）。**只渲染已激活的工具**（判定 = 四个 i18n 键是否存在） | 1 (`[lang]/[slug].astro`) |
 
 **CopyButton caveat**: 0 direct consumer files because grep searches for `components/CopyButton` literal; actual usage is `import CopyButton from './CopyButton.astro'` inside `ResultCard.astro`. INDEX records consumer count via transitive scan to avoid this grep trap.
 
