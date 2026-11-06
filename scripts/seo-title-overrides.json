@@ -1,0 +1,70 @@
+{
+  "solopreneur-affiliate-income-calculator": {
+    "en": "Affiliate Income Calculator — Conversion Forecast",
+    "zh": "联盟收入计算器 — 按佣金与转化率预测"
+  },
+  "solopreneur-article-freshness-calculator": {
+    "en": "Article Freshness Calculator — Update Priority",
+    "zh": "文章时效性计算器 — 识别过期内容与更新优先级"
+  },
+  "solopreneur-breach-notification-cost-calculator": {
+    "en": "Data Breach Notification Cost Calculator — Response Cost",
+    "zh": "数据泄露通知成本计算器 — 按记录数测算响应成本"
+  },
+  "solopreneur-break-even-calculator": {
+    "en": "Break-Even Calculator — Fixed Costs + Time to Breakeven",
+    "zh": "盈亏平衡计算器 — 测算成本、收入与回本时间"
+  },
+  "solopreneur-comp-banding-calculator": {
+    "en": "Compensation Banding Calculator — Market Band",
+    "zh": "薪酬区间计算器 — 对比薪资百分位与市场档位"
+  },
+  "solopreneur-content-marketing-roi-calculator": {
+    "en": "Content Marketing ROI Calculator — Attributed Revenue",
+    "zh": "内容营销 ROI 计算器 — 追踪 SEO 起量周期与收入"
+  },
+  "solopreneur-course-pricing-calculator": {
+    "en": "Course Pricing Calculator — Enrollment + Revenue Plan",
+    "zh": "课程定价计算器 — 按价格与招生量预测收入"
+  },
+  "solopreneur-email-list-revenue-calculator": {
+    "en": "Email List Revenue Calculator — Conversion Forecast",
+    "zh": "邮件列表收入计算器 — 按订阅数与转化率预测"
+  },
+  "solopreneur-equity-dilution-calculator": {
+    "en": "Equity Dilution Calculator — Post-Money Ownership",
+    "zh": "股权稀释计算器 — 对比投前与投后持股"
+  },
+  "solopreneur-freelance-tax-calculator": {
+    "en": "Freelance Tax Calculator — Quarterly Set-Aside",
+    "zh": "自由职业税计算器 — 预估税额与季度预留"
+  },
+  "solopreneur-kb-coverage-rate-calculator": {
+    "en": "KB Coverage Rate Calculator — Deflection Tracker",
+    "zh": "知识库覆盖率计算器 — 发现内容缺口与分流机会"
+  },
+  "solopreneur-mortgage-calculator": {
+    "en": "Mortgage Calculator — Monthly Payment + Amortization",
+    "zh": "房贷计算器 — 测算月供、利息与还款计划"
+  },
+  "solopreneur-pipeline-value-calculator": {
+    "en": "Pipeline Value Calculator — Free Weighted Deal Forecast",
+    "zh": "销售管道价值计算器 — 加权预测成交金额"
+  },
+  "solopreneur-project-profitability-calculator": {
+    "en": "Project Profitability Calculator — Hourly Rate + Breakeven",
+    "zh": "项目利润计算器 — 测算利润率、时薪与盈亏平衡"
+  },
+  "solopreneur-supplier-scorecard-calculator": {
+    "en": "Supplier Scorecard Calculator — Quality + Cost Score",
+    "zh": "供应商评分卡计算器 — 按质量、交付与成本评分"
+  },
+  "solopreneur-time-to-productivity-calculator": {
+    "en": "Time to Productivity Calculator — Role Complexity",
+    "zh": "新员工上手时间计算器 — 按岗位预测爬坡周期"
+  },
+  "solopreneur-time-value-calculator": {
+    "en": "Time Value Calculator — Hourly + Time Waste Cost",
+    "zh": "时间价值计算器 — 换算时薪、分钟价值与浪费成本"
+  }
+}
