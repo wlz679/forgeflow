@@ -5,7 +5,7 @@
 //   Phase 1 5 calc 必须含 🧭 Decision Recommendation 4 子段（v2.0 L5 决策支持灵魂）。
 //   这是 v2.0 灵魂 first-class 化，任何 calc 回退到只有数字（无决策）必须被检出。
 //
-// 5 工具：csat / roas / cac / churn-rate (saas) / burn-rate
+// 7 工具：csat / roas / cac / churn-rate (saas) / burn-rate / ltv-by-channel / gdpr-fine
 // 4 标签：Decision Question / Recommendation / Key Uncertainty / Next Action
 // Source-level：直接 grep .ts 文件字符串字面量（与 P138 v3-render-coverage-guard 同模式）。
 //
@@ -28,6 +28,10 @@ const TARGET_CALCS = [
   'src/engines/valuation/cac-calculator.ts',
   'src/engines/saas/churn-rate-calculator.ts',
   'src/engines/saas/burn-rate-calculator.ts',
+  // P168 B3-1：迁出决策支持的工具也进清单（判据是「引擎输出 ∪ 页面 i18n 键」，
+  //   所以迁出后仍然必须**齐** —— 迁走不等于可以少一层）
+  'src/engines/marketing/ltv-by-channel-calculator.ts',
+  'src/engines/legal-compliance/gdpr-fine-calculator.ts',
 ];
 
 // P153-E2: the tag list now lives in tests/l5-tags.ts — one definition for
@@ -35,7 +39,7 @@ const TARGET_CALCS = [
 // copies cannot drift apart the way the old three did.
 const REQUIRED_TAGS = L5_TAGS;
 
-test('5 calc 全部含 🧭 Decision Recommendation 4 子段（或已迁进页面决策层）', () => {
+test('7 calc 全部含 🧭 Decision Recommendation 4 子段（或已迁进页面决策层）', () => {
   // ⭐ P168 B3-0：决策支持**可以住在两个地方** ——
   //   ① 引擎输出里的 🧭 四段（未迁移的工具）
   //   ② 页面的决策层 i18n 键（已迁移的工具：burn-rate 已整段迁出引擎）
@@ -60,8 +64,8 @@ test('5 calc 全部含 🧭 Decision Recommendation 4 子段（或已迁进页�
   }
 });
 
-test('guard 元数据正确（5 calc × 4 标签）', () => {
-  assert.equal(TARGET_CALCS.length, 5);
+test('guard 元数据正确（7 calc × 4 标签）', () => {
+  assert.equal(TARGET_CALCS.length, 7);
   assert.equal(REQUIRED_TAGS.length, 4);
   // 契约只有一份（tests/l5-layers.json）⇒ 标签表与键映射不可能各自漂。
   // ⚠️ 期望值**独立写死字面量** —— 若从同一份 JSON 派生，那是同义反复

@@ -16,9 +16,12 @@
 //   ⑦ ⭐ **英文页不得出现中文决策段** —— 实测发现 19 个引擎的 🧭 决策段
 //      整段是中文（还带 markdown 星号），直接渲染在英文页上
 //   ⑧ 引擎的 playbook 6 字段对激活工具不得是占位模板
-//   ⑨ ⭐ **客户端与服务端取到的建议必须一致**（live = static parity）：
-//      customFn 是浏览器真正执行的那份，运行时输出是 SSR 那份 —— 两者漂了
-//      用户看到的建议就会与静态示例对不上
+//   ⑨ ⭐ **customFn 与 generate 的建议必须一致**（两套实现不许漂）：
+//      customFn 是浏览器真正执行的那份，generate 是 TS 实现 —— 同一组输入下
+//      两者漂了，用户看到的建议就会与静态示例对不上。
+//      ⚠️ 判据用的是 **generate**，不是 staticExamples[0]：后者是 codegen 用
+//      另一组示例输入生成的缓存，它的 Tip 自然落在别的分支（burn-rate 实测）。
+//   ⑩ ⭐ **决策建议必须随输入变化**（动态层不能是常量建议）
 //
 // P153-G1: source-only guard —— 不需要 pnpm build。
 
@@ -39,8 +42,10 @@ import {
   PLACEHOLDER_MARKER,
   activatedSlugs,
   loadEngines,
+  probeInputs,
   readLocale,
   rendersDecisionBlock,
+  tipFromCustomOutput,
 } from './_decision-support-fixture.ts';
 import {
   DECISION_MARKERS,
@@ -221,30 +226,39 @@ test('P168 激活工具：英文页的决策建议不得含中文（实测 19 �
   assert.deepEqual(problems, [], problems.join(' | '));
 });
 
-test('P168 ⭐ 客户端与服务端取到的建议必须一致（live = static parity）', async () => {
+test('P168 ⭐ customFn 与 generate 的建议必须一致（两套实现不许漂）', async () => {
   const engines = await loadEngines();
   const bySlug = new Map(engines.map((e) => [e.slug, e]));
   const problems: string[] = [];
   for (const slug of activatedSlugs(locales as any)) {
     const engine = bySlug.get(slug);
     if (!engine) continue;
-    const serverTip = extractDecisionLines(engine.staticExamples?.[0] ?? '').tip;
-    // 客户端真正执行的是 clientConfig.customFn —— 用真实输入跑一遍
+    // ⭐ 服务端这一侧用 **generate**（TS 实现），不是 staticExamples[0]：
+    //   staticExamples 是 codegen 用**另一组示例输入**生成的缓存，
+    //   它的 Tip 自然落在别的分支 ⇒ 拿它跟默认输入的客户端比是**错的口径**
+    //   （实测 burn-rate：server="Default alive..." / client="Team costs..."）
+    //   ⇒ 真正的不变量是「**同一组输入**下，两套实现给出同一句话」。
+    const inputs = probeInputs(engine);
+    let serverTip = '';
+    try {
+      const r = engine.generate(inputs);
+      serverTip = extractDecisionLines((Array.isArray(r) ? r.map(String) : [String(r)]).join('\n')).tip;
+    } catch (e) {
+      problems.push(slug + ' 的 generate 执行失败：' + (e as Error).message);
+      continue;
+    }
+    // 客户端真正执行的是 clientConfig.customFn —— 用**同一组输入**跑一遍
     const customFn = engine.clientConfig?.customFn;
     if (!customFn) continue;
     let clientTip = '';
     try {
       const fn = new Function('inputs', 'pick', 'fill', customFn);
-      const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+      const pick = (arr: string[]) => arr[0];
       const fill = (tpl: string, v: Record<string, string>) =>
         tpl.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '{' + k + '}');
-      const inputs: Record<string, string> = {};
-      for (const inp of engine.inputs ?? []) {
-        const fallback = String(inp.default ?? ((inp.placeholder ?? '0').replace(/[^0-9.]/g, '') || '0'));
-        inputs[inp.name] = fallback;
-      }
       const out = fn(inputs, pick, fill);
-      clientTip = extractDecisionLines(Array.isArray(out) ? String(out[0] ?? '') : '').tip;
+      // ⭐ 扫**全部**输出元素（gdpr-fine / cac 的 customFn 返回多元素数组）
+      clientTip = tipFromCustomOutput(out);
     } catch (e) {
       problems.push(slug + ' 的 customFn 执行失败：' + (e as Error).message);
       continue;
@@ -254,6 +268,93 @@ test('P168 ⭐ 客户端与服务端取到的建议必须一致（live = static 
         slug + ' 服务端与客户端的建议不一致：\n  server: ' + serverTip.slice(0, 80) +
         '\n  client: ' + clientTip.slice(0, 80),
       );
+    }
+  }
+  assert.deepEqual(problems, [], problems.join(' | '));
+});
+
+test('P168 激活工具：决策建议必须**随输入变化**（动态层不能是常量建议）', async () => {
+  // ⭐ 守的是不变量：「动态层放的是**针对你这组数字**的建议」。
+  //   若 Tip 是写死的常量，它对任何输入都只会说同一句话 ⇒
+  //   区块标题写着「这组数字的下一步」，说的却跟你的数字无关 ⇒ 名不副实。
+  //
+  // ⭐ 判据刻意**宽松**：逐个把某个 number 型输入 ×2，只要**有一次** Tip 变了就算过。
+  //   只有「所有输入都改了、建议还一字不变」才判红 ⇒ 真常量才会红。
+  //
+  // ⚠️ pick 必须**确定性**（取第 0 个）—— 否则随机词池会让两次跑本来就不同，
+  //   这条守卫就变成了永远绿。
+  const engines = await loadEngines();
+  const bySlug = new Map(engines.map((e) => [e.slug, e]));
+  const problems: string[] = [];
+  for (const slug of activatedSlugs(locales as any)) {
+    const engine: any = bySlug.get(slug);
+    if (!engine) continue;
+    const fn = engine.clientConfig?.customFn;
+    if (!fn) continue;
+    const f = new Function('inputs', 'pick', 'fill', fn);
+    const pick = (arr: string[]) => arr[0];
+    const fill = (tpl: string, v: Record<string, string>) =>
+      tpl.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? '{' + k + '}');
+    const base = probeInputs(engine);
+    const run = (inputs: Record<string, string>) => {
+      try {
+        return tipFromCustomOutput(f(inputs, pick, fill));
+      } catch {
+        return '';
+      }
+    };
+    const baseTip = run(base);
+    if (!baseTip) {
+      problems.push(slug + ' 跑不出决策建议 ⇒ 动态层是空的');
+      continue;
+    }
+    let changed = false;
+    for (const inp of engine.inputs ?? []) {
+      if ((inp.type ?? 'number') !== 'number') continue;
+      const v = Number(base[inp.name]);
+      if (!isFinite(v) || v === 0) continue;
+      // ⭐ 扰动要够「狠」：×2 对**比例型**分支条件无效
+      //   （burn-rate 的分支看的是净烧钱占比；探针实测「全部输入 ×2」也不触发）
+      //   ⇒ 依次试 ×10 / 归零 / +10000，任一命中即算「随输入变化」。
+      for (const nv of [String(v * 10), '0', String(v + 10000)]) {
+        const t = run({ ...base, [inp.name]: nv });
+        if (t && t !== baseTip) { changed = true; break; }
+      }
+      if (changed) break;
+    }
+    if (!changed) {
+      problems.push(slug + ' 的决策建议不随任何输入变化 ⇒ 它是常量建议（动态层名不副实）');
+    }
+  }
+  assert.deepEqual(problems, [], problems.join(' | '));
+});
+
+test('P168 locale：每个工具的四个决策键必须**成组**齐（缺一个就要红）', () => {
+  // ⭐⭐ 为什么不能只查「激活清单」
+  //   激活清单是**自指**的：locale 少一个键 ⇒ 该工具「不算激活」
+  //   ⇒ 守卫压根不去查它 ⇒ **永远绿**。
+  //   （实测：变异 M16 删掉 gdpr-fine 的 decision_goal 之后，
+  //     「四个静态键都在、非占位、有长度下限」那条**依然绿** ——
+  //      因为那个工具已经「不被检查」了。）
+  // ⇒ 改成扫**全部** tools.*.decision_* 键 ⇒ 按 slug 分组 ⇒ 每组必须正好 4 个。
+  //
+  // ⚠️ 期望值**独立写死**（不从 tests/l5-layers.json 派生 ⇒ 否则是同义反复）。
+  const REQUIRED = ['decision_goal', 'decision_recommendation', 'decision_constraint', 'decision_next_tool'];
+  const problems: string[] = [];
+  for (const lang of LANGS) {
+    const groups = new Map<string, Set<string>>();
+    for (const key of Object.keys(locales[lang])) {
+      const m = /^tools\.([^.]+)\.(decision_\w+)$/.exec(key);
+      if (!m) continue;
+      const slug = m[1];
+      if (!groups.has(slug)) groups.set(slug, new Set<string>());
+      groups.get(slug)!.add(m[2]);
+    }
+    for (const [slug, keys] of groups) {
+      const missing = REQUIRED.filter((k) => !keys.has(k));
+      if (missing.length) problems.push(lang + '/' + slug + ' 少了决策键：' + missing.join(', '));
+      const extra = [...keys].filter((k) => !REQUIRED.includes(k));
+      if (extra.length) problems.push(lang + '/' + slug + ' 有多余的决策键：' + extra.join(', '));
     }
   }
   assert.deepEqual(problems, [], problems.join(' | '));

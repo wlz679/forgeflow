@@ -38,6 +38,10 @@ const TARGETS = [
   'src/i18n/locales/en.json',
   'src/i18n/locales/zh.json',
   'src/engines/saas/burn-rate-calculator.ts',
+  // P168 B3-1：三个迁出决策支持的引擎
+  'src/engines/marketing/ltv-by-channel-calculator.ts',
+  'src/engines/legal-compliance/gdpr-fine-calculator.ts',
+  'src/engines/valuation/cac-calculator.ts',
 ];
 
 // ⭐⭐ **崩溃安全**：把快照写到磁盘 —— 台子被硬杀（运行时中断 / 断电 / Ctrl-C）时
@@ -60,6 +64,23 @@ function recoverFromDiskBackup() {
     obj = JSON.parse(readFileSync(BACKUP_FILE, 'utf8'));
   } catch (e) {
     return false;
+  }
+  // ⭐⭐⭐ **快照闸门**：快照存的是「**上次跑台子那一刻**」的内容，
+  //   不是「仓库真值」⇒ 自动恢复会把「上次跑台子之后的正常改动」一起回滚掉。
+  //   ⚠️ 实测踩过：P168 B3-1 跑台子时，旧的（B3-0 时期的）快照把
+  //   **新加的 24 个 locale 键整个吞掉了** —— 而那是我刚写好、还没提交的工作。
+  //   ⇒ 宁可**停下来报告**，也不要静默回滚别人的改动。
+  //   ⇒ 空快照（{}）表示「明确无需恢复」，直接跳过。
+  const snapFiles = Object.keys(obj);
+  if (snapFiles.length === 0) return false;
+  if (!process.env.P168_ALLOW_RECOVER) {
+    console.log('⛔ 发现台子快照，但**没有** P168_ALLOW_RECOVER ⇒ 拒绝自动恢复。');
+    console.log('   原因：快照是「上次跑台子那一刻」的内容 ⇒ 自动恢复会把');
+    console.log('   「上次跑台子之后的正常改动」一起回滚掉（实测吞掉过 24 个 locale 键）。');
+    console.log('   ⇒ 先 git status 核对工作区；确认后再跑：');
+    console.log('     $env:P168_ALLOW_RECOVER=1; node tests/scripts/mutate-p168-decision-support.mjs');
+    console.log('   或把该快照文件覆盖成 {} 表示「确认无需恢复」。');
+    process.exit(1);
   }
   let restored = 0;
   for (const [f, b64] of Object.entries(obj)) {
@@ -163,7 +184,15 @@ function runGuard(which) {
   const files =
     which === 'build'
       ? ['tests/decision-support-build-guard.test.ts']
-      : ['tests/decision-support-guard.test.ts'];
+      : [
+          'tests/decision-support-guard.test.ts',
+          // ⭐ P168 B3-1：同族的 P151 L5 守卫也归这条链路管 —— 它们守的是
+          //   「这个工具的决策层齐不齐」。迁移型改动会撞上它们（旧判据钉的是
+          //   「引擎输出里有没有那四个字符串」⇒ 实现细节），所以台子必须能跑到，
+          //   否则「迁移后它们还绿吗」这件事没人验。
+          'tests/exp-p151-l5-gdpr-fine.test.ts',
+          'tests/exp-p151-l5-ltv-by-channel.test.ts',
+        ];
   try {
     const out = execFileSync(
       'node',
@@ -211,6 +240,10 @@ const MUTATIONS = [
     guard: 'source',
     desc: '提取器改成「抓最后一行」（破坏检测器自检）',
     expect: 'P168 提取器自检：没有决策建议的输出必须返回空（不是随便抓一行）',
+    // ⚠️ allowExtra：提取器是**所有**断言的公共依赖 ⇒ 它一坏，
+    //   parity 与「随输入变化」也会一起红 ⇒ 天然多红，不是「没隔离」。
+    //   （跟 M1 删掉一个导出同理：那个导出也被别的断言用。）
+    allowExtra: true,
     apply: () => {
       const p = join(ROOT, 'src/lib/decision-support.ts');
       const s = readFileSync(p, 'utf8');
@@ -285,15 +318,18 @@ const MUTATIONS = [
     id: 'M7',
     guard: 'source',
     desc: '客户端 customFn 与服务端输出不再一致',
-    expect: 'P168 ⭐ 客户端与服务端取到的建议必须一致（live = static parity）',
+    expect: 'P168 ⭐ customFn 与 generate 的建议必须一致（两套实现不许漂）',
     apply: () => {
       const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
       const s = readFileSync(p, 'utf8');
-      // 只改 customFn（客户端执行的那份）里的 Tip 文案，运行时那份不动
-      const needle = 'Default alive is just the start.';
+      // 只改 customFn（客户端执行的那份）里的 Tip 文案，运行时那份不动。
+      // ⚠️ 必须改**基准输入下真的会走到的那个分支**（第 1 档：净烧钱占比高）：
+      //   改第 3 档（Default alive）在默认输入下走不到 ⇒ 变异根本不生效 ⇒
+      //   台子会报「SURVIVED」，而那其实是「变异无效」不是「守卫测不到」。
+      const needle = 'Team costs are typically 50-70% of gross burn.';
       const i = s.indexOf(needle, s.indexOf('const customFn'));
       if (i < 0) throw new Error('锚点未命中');
-      const out = s.slice(0, i) + 'Default alive is just the start（客户端）。' + s.slice(i + needle.length);
+      const out = s.slice(0, i) + 'Team costs are typically 50-70% of gross burn（客户端）。' + s.slice(i + needle.length);
       if (out === s) throw new Error('锚点未命中');
       writeWithRetry(p, out);
     },
@@ -440,7 +476,178 @@ const MUTATIONS = [
       writeWithRetry(p, out);
     },
   },
-];
+  {
+    id: 'M15',
+    guard: 'source',
+    desc: 'cac 的运行时输出里又写回了 🧭 决策段',
+    expect: 'P168 激活工具：引擎输出里**不得**再有 🧭 决策段（区块已接管 ⇒ 再写就是同页重复）',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/valuation/cac-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      const anchor = '  results.push(mainResult);';
+      if (s.indexOf(anchor) < 0) throw new Error('锚点未命中');
+      const out = s.replace(
+        anchor,
+        "  mainResult += '" + '\\n\\n🧭 Decision Recommendation\\nprobe' + "';" + NL + anchor,
+      );
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M16',
+    guard: 'source',
+    desc: 'gdpr-fine 的 decision_goal 键被删掉（决策层少一层）',
+    // ⚠️ allowExtra 的理由（**不是**为了让台子好看）：
+    //   「决策层齐不齐」这个不变量**被两处守** ——
+    //     ① decision-support-guard 的「locale 四个决策键必须成组齐」（扫全部键）
+    //     ② exp-p151-l5-gdpr-fine（逐工具查这一行的决策层）
+    //   ⇒ 删掉 gdpr 的一个键，**两条断言都会红** —— 这是「同一个不变量被两处守」的
+    //   必然结果，不是「变异打偏了」。
+    //   ⇒ 隔离纪律在这里的落点：M16 认领 ②（同族那条），M22 认领 ①（burn-rate
+    //      没有同族测试 ⇒ 严格只红一条）。⇒ 两条断言**各有专属变异**。
+    allowExtra: true,
+    expect: 'P151 L5: gdpr-fine Decision Recommendation block has 4 sub-sections',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/en.json');
+      const s = readFileSync(p, 'utf8');
+      const re = /^\s*"tools\.solopreneur-gdpr-fine-calculator\.decision_goal":.*\r?\n/m;
+      if (!re.test(s)) throw new Error('锚点未命中');
+      const out = s.replace(re, '');
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M22',
+    guard: 'source',
+    desc: 'burn-rate 的 decision_goal 键被删掉（只有 locale 成组齐那条守它 ⇒ 严格 1 红）',
+    expect: 'P168 locale：每个工具的四个决策键必须**成组**齐（缺一个就要红）',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/en.json');
+      const s = readFileSync(p, 'utf8');
+      const re = /^\s*"tools\.solopreneur-burn-rate-calculator\.decision_goal":.*\r?\n/m;
+      if (!re.test(s)) throw new Error('锚点未命中');
+      const out = s.replace(re, '');
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M17',
+    guard: 'source',
+    desc: 'cac 的 customFn Tip 与 generate 的不一致（两套实现漂了）',
+    expect: 'P168 ⭐ customFn 与 generate 的建议必须一致（两套实现不许漂）',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/valuation/cac-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      // ⭐ 锚点带 pbm（customFn 的变量名）⇒ 只会命中 customFn 那一份，
+      //   generate 用的是 paybackMonths ⇒ 两边不会一起改（一起改就漂不出来了）
+      const anchor = "pbm.toFixed(1) + ' months, fast enough to compound.";
+      if (s.indexOf(anchor) < 0) throw new Error('锚点未命中');
+      const out = s.replace(
+        anchor,
+        "pbm.toFixed(1) + ' months, fast enough to compound right now.",
+      );
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M18',
+    guard: 'source',
+    desc: 'ltv-by-channel 的 customFn 里又写回了 🧭 决策段',
+    expect: 'P168 激活工具：引擎输出里**不得**再有 🧭 决策段（区块已接管 ⇒ 再写就是同页重复）',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/marketing/ltv-by-channel-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      const anchor = 'const customFn =';
+      if (s.indexOf(anchor) < 0) throw new Error('锚点未命中');
+      const out = s.replace(
+        anchor,
+        anchor + NL + '  "var r2probe=\'x Decision Recommendation\';" +',
+      );
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M19',
+    guard: 'source',
+    desc: 'cac 的动态 Tip 退化成常量（动态层名不副实）',
+    expect: 'P168 激活工具：决策建议必须**随输入变化**（动态层不能是常量建议）',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/valuation/cac-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ **两处一起改**：只改一处会连带触发「两套实现不许漂」那条断言
+      //   ⇒ 一条变异红两条 ⇒ 违反隔离纪律。
+      //   两处改成**逐字相同**的常量 ⇒ parity 仍绿，只有「随输入变化」那条红。
+      const CONST =
+        'Your CAC pays back fast enough to compound. Keep concentrating the budget on the channel with the lowest cost per customer.';
+      // ① generate：整块 if/else ⇒ 一个常量
+      const reGen = /  let cacTip: string;[\s\S]*?\n  \}\n/;
+      if (!reGen.test(s)) throw new Error('锚点未命中（generate 分支块）');
+      let out = s.replace(reGen, "  const cacTip = '" + CONST + "';\n");
+      // ② customFn：var tipTxt = ...; ⇒ 同一个常量
+      const reCf = /^  "var tipTxt = .*$/m;
+      if (!reCf.test(out)) throw new Error('锚点未命中（customFn tipTxt）');
+      out = out.replace(reCf, '  "var tipTxt = \'' + CONST + '\';" +');
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+
+  {
+    id: 'M20',
+    guard: 'source',
+    desc: 'ltv-by-channel 的 decision_next_tool 链接指向**不存在的工具**（悬空引用）',
+    expect: 'P151 L5: ltv-by-channel Decision Recommendation block has 4 sub-sections',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/en.json');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ 锚点必须**限定在 ltv 的 decision_next_tool 那一行**里 ——
+      //   否则会命中别处同名工具的 title/shortTitle（实测 '[CAC Calculator]'
+      //   在本文件里出现了多次，第一次命中的是 cac-calculator 的 title）。
+      const key = '"tools.solopreneur-ltv-by-channel-calculator.decision_next_tool"';
+      const ki = s.indexOf(key);
+      if (ki < 0) throw new Error('锚点未命中（key）');
+      const tail = s.slice(ki);
+      const ti = tail.indexOf('[CAC Calculator]');
+      if (ti < 0) throw new Error('锚点未命中（token）');
+      const out =
+        s.slice(0, ki) +
+        tail.slice(0, ti) +
+        '[CAC Calcluator]' +
+        tail.slice(ti + '[CAC Calculator]'.length);
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M21',
+    guard: 'source',
+    desc: 'gdpr-fine 的 decision_next_tool 链接全被剥掉（没有下一步工具了）',
+    expect: 'P151 L5: gdpr-fine Decision Recommendation block has 4 sub-sections',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/en.json');
+      const s = readFileSync(p, 'utf8');
+      const key = '"tools.solopreneur-gdpr-fine-calculator.decision_next_tool"';
+      const ki = s.indexOf(key);
+      if (ki < 0) throw new Error('锚点未命中（key）');
+      let out = s;
+      for (const t of [
+        '[DPA Negotiation Cost Calculator]',
+        '[Cookie Consent Revenue Impact Calculator]',
+        '[DSAR Processing Cost Calculator]',
+      ]) {
+        const tail = out.slice(out.indexOf(key));
+        const ti = tail.indexOf(t);
+        if (ti < 0) throw new Error('锚点未命中（token ' + t + '）');
+        const abs = out.indexOf(key) + ti;
+        out = out.slice(0, abs) + t.slice(1, -1) + out.slice(abs + t.length);
+      }
+      writeWithRetry(p, out);
+    },
+  },];
 
 // ⭐ 迭代开关：`node tests/scripts/mutate-p168-decision-support.mjs M13,M14`
 //   只跑指定的变异（调试单条时省时间）；不带参数就是跑满全部。

@@ -64,6 +64,11 @@ const LOCALE_EN = JSON.parse(
   fs.readFileSync(path.join(ROOT, 'src', 'i18n', 'locales', 'en.json'), 'utf8').replace(/^\uFEFF/, ''),
 );
 
+// P168 B3-1：中文决策文案（边界的措辞在中文层最自然）⇒ advisor 维度要一起读
+const LOCALE_ZH = JSON.parse(
+  fs.readFileSync(path.join(ROOT, 'src', 'i18n', 'locales', 'zh.json'), 'utf8').replace(/^\uFEFF/, ''),
+);
+
 const EMOJI = {
   decision: '\u{1F9ED}', // 🧭
   health: '\u{1FA7A}', // 🩺
@@ -135,8 +140,14 @@ function scoreUx(src) {
 }
 
 /** 维度 3 — Advisor:有没有告诉用户「什么时候不该用它」。 */
-function scoreAdvisor(src) {
-  const hits = BOUNDARY_MARKERS.reduce((n, m) => n + (src.split(m).length - 1), 0);
+function scoreAdvisor(src, decisionProse) {
+  // ⭐ P168 B3-1：边界措辞随决策支持一起搬到了**页面决策层**
+  //   （源 🧭 Key Uncertainty 段里的「陷阱」「不该用」现在在 locale 的
+  //     decision_constraint 层）⇒ 不加第二个来源的话，
+  //     迁出过的工具会因为「引擎里没有边界词」被**误判**成没有 advisor 能力。
+  const hits =
+    BOUNDARY_MARKERS.reduce((n, m) => n + (src.split(m).length - 1), 0) +
+    BOUNDARY_MARKERS.reduce((n, m) => n + (decisionProse.split(m).length - 1), 0);
   if (hits >= 2) return { value: 1, signals: { boundaryMarkers: hits } };
   if (hits >= 1) return { value: 0.5, signals: { boundaryMarkers: hits } };
   return { value: 0, signals: { boundaryMarkers: hits } };
@@ -177,10 +188,16 @@ function scoreEngine(file) {
   // P168 B3-0：页面决策区块的四层文案也参与信号判定
   const decisionProse = DECISION_LAYERS.map((l) => LOCALE_EN['tools.' + slug + '.' + l.key] ?? '').join('\n');
   const decisionLayers = DECISION_LAYERS.filter((l) => LOCALE_EN['tools.' + slug + '.' + l.key]).length;
+  // ⭐ advisor 维度的第二个来源：页面决策层的「适用边界」层（en + zh 都算 ——
+  //   边界措辞在中文层最自然，而 BOUNDARY_MARKERS 本就是中文词表 + caveat）。
+  const constraintProse = [
+    LOCALE_EN['tools.' + slug + '.decision_constraint'] ?? '',
+    LOCALE_ZH['tools.' + slug + '.decision_constraint'] ?? '',
+  ].join('\n');
 
   const functional = scoreFunctionalValue(src, decisionLayers);
   const ux = scoreUx(src);
-  const advisor = scoreAdvisor(src);
+  const advisor = scoreAdvisor(src, constraintProse);
   const retention = scoreRetention(src);
   const advocacy = scoreAdvocacy(src, decisionProse);
 

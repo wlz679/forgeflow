@@ -260,6 +260,7 @@
 | `2026-10-30-p162-gpu-engine-faq-provenance.md` | P162 GPU 引擎 FAQ 的价格单一真相源 — 实施计划 | 2026-10-30 |
 | `2026-10-30-p163-price-claim-ledger-and-image-training-derivation.md` | P163 — 价格主张覆盖面台账 + 图片/训练引擎派生化 Implementation Plan | 2026-10-30 |
 | `2026-11-03-p166-pricing-bot-closure-and-topic-priority-tables.md` | P166 Implementation Plan — 定价 bot 闭环 + 主题页「修复优先级表 / 达标清单」试点 | 2026-11-03 |
+| `2026-11-06-p168-b3-1-decision-support-migration.md` | P168 批次 3 B3-1 —— 决策支持迁出到区块独占（3 个异类引擎：ltv-by-channel / gdpr-fine / cac） | 2026-11-06 |
 
 ### 其它
 
@@ -284,8 +285,8 @@
 | 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 14 |
 | 7 · Multi-language mirrors | 1 |
 | 8 · Excluded (pr-body) | 1 |
-| 9 · P48+ — 后续批次（P48 → P166） | 38 |
-| **目录文件总数** | **109** |
+| 9 · P48+ — 后续批次（P48 → P166） | 39 |
+| **目录文件总数** | **110** |
 
 ---
 

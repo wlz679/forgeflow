@@ -59,7 +59,22 @@ function calculateCAC(inputs: Record<string, string>): string[] {
     }
   }
 
-  mainResult += '\n💡 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.';
+  // P168 B3-1：💡 Tip 改成**真动态**（按回本周期分 4 档 + 缺输入兜底）
+  //   —— 原先是一条写死的常量建议，对任何输入都只说同一句话 ⇒ 动态层名不副实。
+  //   ⚠️ customFn 里必须写**逐字相同**的一份（守卫「两套实现不许漂」守着这条）。
+  let cacTip: string;
+  if (avgRevenuePerCustomer <= 0) {
+    cacTip = 'Your CAC is ' + fmt(cac) + ', but without average revenue per customer there is no payback period to judge it against. Add that input to see whether acquisition recovers its cost, and break the number down by channel in the meantime — a blended average is what hides the expensive line.';
+  } else if (paybackMonths <= 6) {
+    cacTip = 'Your CAC pays back in ' + paybackMonths.toFixed(1) + ' months, fast enough to compound. Keep concentrating the budget on the channel with the lowest cost per customer — payback this quick only compounds while the money stays concentrated.';
+  } else if (paybackMonths <= 12) {
+    cacTip = 'CAC pays back in ' + paybackMonths.toFixed(1) + ' months, inside the 12-month benchmark. Hold total spend steady and shift the marginal dollar toward your cheapest channel; payback this healthy improves fastest when you move weight, not when you add volume.';
+  } else if (paybackMonths <= 18) {
+    cacTip = 'CAC pays back in ' + paybackMonths.toFixed(1) + ' months, past the 12-month ideal, so every new customer ties up cash for longer than it should. Fix the channel mix before you add budget — a smaller spend that pays back faster beats a bigger spend that does not.';
+  } else {
+    cacTip = 'CAC takes ' + paybackMonths.toFixed(1) + ' months to pay back, long enough to strain cash flow even when the customer is worth acquiring. Cut the worst channels first and re-run this before you scale spend.';
+  }
+  mainResult += '\n💡 Tip: ' + cacTip;
 
   // 🩺 CAC Health (v3)
   if (cac <= 0) {
@@ -119,12 +134,11 @@ function calculateCAC(inputs: Record<string, string>): string[] {
     }
   }
 
-  // 🧭 Decision Recommendation (P140f-5) — v2.0 灵魂 = Decision Support
-  mainResult += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-  mainResult += '\n• 🧭 Decision Question: $' + Math.round(cac) + ' CAC 单独看意义不大；**LTV:CAC 比例 + 渠道 breakdown** 才是决定"获客是否值得"的依据。';
-  mainResult += '\n• 🧭 Recommendation: 必须满足 (1) **LTV:CAC ≥ 3.0**（回本周期 ≤ 12 月）+ (2) **Payback ≤ 12 月**；(3) 拆分后最差渠道 LTV:CAC ≥ 2.0 才算"值得"。LTV:CAC < 2 = 烧钱停投；2-3 = 谨慎优化；3-5 = 健康扩量；> 5 = 抢占窗口期大幅加预算。';
-  mainResult += '\n• 🧭 Key Uncertainty: (1) $' + Math.round(cac) + ' 是 mix CAC 还是单一渠道？mix 算的掩盖了 LinkedIn $500 这种坏渠道；(2) LTV 用的是历史 12 月还是预测 24 月？历史 < 预测 = 高估健康度。';
-  mainResult += '\n• 🧭 Next Action: (a) 算 LTV:CAC 真实比例（用 [LTV Calculator]）；(b) 按 channel 拆 CAC；(c) 砍掉 LTV:CAC < 2 的渠道，把预算移到 ≥ 5 的渠道。';
+  // P168 B3-1：**🧭 四段已迁到页面的「🧭 算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_goal /
+  //     decision_recommendation / decision_constraint / decision_next_tool，双语）
+  //   ⇒ 引擎只负责算；**决策支持由区块独占** ⇒ 同页不再有两份决策建议。
+  //   ⚠️ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事。
 
   results.push(mainResult);
 
@@ -188,12 +202,12 @@ const customFn =
   "else if(pbm<=12)mr6+='\\uD83D\\uDFE1 GOOD: CAC payback in '+pbm.toFixed(1)+' months is within the 12-month benchmark. Keep optimizing channel mix.\\n';" +
   "else if(pbm<=18)mr6+='\\uD83D\\uDFE1 WARNING: '+pbm.toFixed(1)+' months payback is above the 12-month ideal. Review your acquisition channels for efficiency.\\n';" +
   "else mr6+='\\uD83D\\uDD34 CRITICAL: '+pbm.toFixed(1)+' months payback is too long. Your cash flow is strained. Cut underperforming channels immediately.\\n';}" +
-  "mr6+='\\n\\uD83D\\uDCA1 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.';var results=[mr6];" +
+  "var tipTxt = arc <= 0 ? 'Your CAC is ' + '$' + Math.round(cac2).toLocaleString() + ', but without average revenue per customer there is no payback period to judge it against. Add that input to see whether acquisition recovers its cost, and break the number down by channel in the meantime — a blended average is what hides the expensive line.' : pbm <= 6 ? 'Your CAC pays back in ' + pbm.toFixed(1) + ' months, fast enough to compound. Keep concentrating the budget on the channel with the lowest cost per customer — payback this quick only compounds while the money stays concentrated.' : pbm <= 12 ? 'CAC pays back in ' + pbm.toFixed(1) + ' months, inside the 12-month benchmark. Hold total spend steady and shift the marginal dollar toward your cheapest channel; payback this healthy improves fastest when you move weight, not when you add volume.' : pbm <= 18 ? 'CAC pays back in ' + pbm.toFixed(1) + ' months, past the 12-month ideal, so every new customer ties up cash for longer than it should. Fix the channel mix before you add budget — a smaller spend that pays back faster beats a bigger spend that does not.' : 'CAC takes ' + pbm.toFixed(1) + ' months to pay back, long enough to strain cash flow even when the customer is worth acquiring. Cut the worst channels first and re-run this before you scale spend.';" +
+  "mr6+='\\n\\uD83D\\uDCA1 Tip: ' + tipTxt;var results=[mr6];" +
   "var ss5=[{l:'Cut spend 50%',mk:ms*0.5,sk:ss*0.5},{l:'Cut spend 25%',mk:ms*0.75,sk:ss*0.75},{l:'Current',mk:ms,sk:ss},{l:'Increase spend 25%',mk:ms*1.25,sk:ss*1.25},{l:'Double spend',mk:ms*2,sk:ss*2}];" +
   "for(var i=0;i<ss5.length;i++){var st=ss5[i].mk+ss5[i].sk;var sc2=nc2>0&&ts>0?Math.round(nc2*(st/ts)):nc2;var cacS=sc2>0?st/sc2:0;var pbS=gpc>0?cacS/gpc:0;results.push(ss5[i].l+': $'+Math.round(st).toLocaleString()+' total spend, '+sc2+' customers, CAC '+fmt4(cacS)+(arc>0?', Payback '+pbS.toFixed(1)+' mo':''));}" +
   "if(arc>0&&cac2>0){var tl2=cac2*3;var ln2=gpc*12;var lcn2=ln2/cac2;var bl2='\\n\\n\\u2696\\uFE0F Break-Even\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';if(lcn2>=3)bl2+='\\n\\u2022 \\uD83D\\uDFE2 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 already above the 3:1 break-even. Healthy to scale spend.';else if(lcn2>=1){bl2+='\\n\\u2022 \\uD83D\\uDFE1 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 above 1:1 (not losing money) but below 3:1 ideal.\\n\\u2022 To reach 3:1 at current 12-mo LTV ($'+Math.round(ln2).toLocaleString()+'):  target CAC = $'+Math.round(tl2).toLocaleString();}else bl2+='\\n\\u2022 \\uD83D\\uDD34 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 losing money per customer. Stop scaling spend until ratio \\u2265 1:1.';if(pbm>0)bl2+='\\n\\u2022 Payback break-even:  \\u2264 12 months. Your payback = '+pbm.toFixed(1)+' mo.';mr6+=bl2;}" +
   "if(cac2>0&&gpc>0){mr6+='\\n\\n\\uD83C\\uDFAF CAC Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';mr6+='\\n\\u2022 \\u2264 6 months payback:  CAC \\u2264 $'+Math.round(gpc*6).toLocaleString();mr6+='\\n\\u2022 \\u2264 12 months payback:  CAC \\u2264 $'+Math.round(gpc*12).toLocaleString();mr6+='\\n\\u2022 \\u2264 18 months payback:  CAC \\u2264 $'+Math.round(gpc*18).toLocaleString();if(nc2>0&&ts>0){var tc3=gpc*12;var b4=Math.round(tc3*100);mr6+='\\n\\u2022 To acquire 100 customers at 12-mo payback:  budget $'+b4.toLocaleString();}}" +
-  "mr6+=`\\n\\n🧭 Decision Recommendation\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🧭 Decision Question: $${Math.round(cac2)} CAC 单独看意义不大；**LTV:CAC 比例 + 渠道 breakdown** 才是决定\\\"获客是否值得\\\"的依据。\\n• 🧭 Recommendation: 必须满足 (1) **LTV:CAC ≥ 3.0**（回本周期 ≤ 12 月）+ (2) **Payback ≤ 12 月**；(3) 拆分后最差渠道 LTV:CAC ≥ 2.0 才算\\\"值得\\\"。LTV:CAC < 2 = 烧钱停投；2-3 = 谨慎优化；3-5 = 健康扩量；> 5 = 抢占窗口期大幅加预算。\\n• 🧭 Key Uncertainty: (1) $${Math.round(cac2)} 是 mix CAC 还是单一渠道？mix 算的掩盖了 LinkedIn $500 这种坏渠道；(2) LTV 用的是历史 12 月还是预测 24 月？历史 < 预测 = 高估健康度。\\n• 🧭 Next Action: (a) 算 LTV:CAC 真实比例（用 [LTV Calculator]）；(b) 按 channel 拆 CAC；(c) 砍掉 LTV:CAC < 2 的渠道，把预算移到 ≥ 5 的渠道。`;" +
   "return results;";
 
 const engine: ToolEngine = {
@@ -216,7 +230,7 @@ const engine: ToolEngine = {
     return calculateCAC(inputs);
   },
   staticExamples: [
-    '🎯 Customer Acquisition Cost (CAC)\n\n• Marketing Spend: $5,000 (62.5% of total)\n• Sales Spend: $3,000 (37.5% of total)\n• Total Acquisition Spend: $8,000\n• New Customers Acquired: 100\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Results:\n\n• Customer Acquisition Cost (CAC): $80 per customer\n\n\n💡 Tip: Break down CAC by channel. You might have an overall CAC of $200, but LinkedIn ads might be $500/customer while SEO content might be $50/customer. Shift budget to your most efficient channels.\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 CAC $80 is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut CAC in half:  $40  (assumes same spend, better conversion)\n• Double acquisition:  100 → 200 customers at $40/customer\n• Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+\n• Reduce spend 20%:  Same customers → $64 CAC (if conversion maintained)\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: $80 CAC 单独看意义不大；**LTV:CAC 比例 + 渠道 breakdown** 才是决定"获客是否值得"的依据。\n• 🧭 Recommendation: 必须满足 (1) **LTV:CAC ≥ 3.0**（回本周期 ≤ 12 月）+ (2) **Payback ≤ 12 月**；(3) 拆分后最差渠道 LTV:CAC ≥ 2.0 才算"值得"。LTV:CAC < 2 = 烧钱停投；2-3 = 谨慎优化；3-5 = 健康扩量；> 5 = 抢占窗口期大幅加预算。\n• 🧭 Key Uncertainty: (1) $80 是 mix CAC 还是单一渠道？mix 算的掩盖了 LinkedIn $500 这种坏渠道；(2) LTV 用的是历史 12 月还是预测 24 月？历史 < 预测 = 高估健康度。\n• 🧭 Next Action: (a) 算 LTV:CAC 真实比例（用 [LTV Calculator]）；(b) 按 channel 拆 CAC；(c) 砍掉 LTV:CAC < 2 的渠道，把预算移到 ≥ 5 的渠道。\nCut spend 50%: $4,000 total spend, 50 customers, CAC $80\nCut spend 25%: $6,000 total spend, 75 customers, CAC $80\nCurrent: $8,000 total spend, 100 customers, CAC $80\nIncrease spend 25%: $10,000 total spend, 125 customers, CAC $80\nDouble spend: $16,000 total spend, 200 customers, CAC $80',
+    '🎯 Customer Acquisition Cost (CAC)\n\n• Marketing Spend: $5,000 (62.5% of total)\n• Sales Spend: $3,000 (37.5% of total)\n• Total Acquisition Spend: $8,000\n• New Customers Acquired: 100\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Results:\n\n• Customer Acquisition Cost (CAC): $80 per customer\n\n\n💡 Tip: Your CAC is $80, but without average revenue per customer there is no payback period to judge it against. Add that input to see whether acquisition recovers its cost, and break the number down by channel in the meantime — a blended average is what hides the expensive line.\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 CAC $80 is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut CAC in half:  $40  (assumes same spend, better conversion)\n• Double acquisition:  100 → 200 customers at $40/customer\n• Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+\n• Reduce spend 20%:  Same customers → $64 CAC (if conversion maintained)\nCut spend 50%: $4,000 total spend, 50 customers, CAC $80\nCut spend 25%: $6,000 total spend, 75 customers, CAC $80\nCurrent: $8,000 total spend, 100 customers, CAC $80\nIncrease spend 25%: $10,000 total spend, 125 customers, CAC $80\nDouble spend: $16,000 total spend, 200 customers, CAC $80',
     'Cut spend 50%: $4,000 total spend, 20 customers, CAC $200, Payback 5.0 mo',
     'Cut spend 25%: $6,000 total spend, 30 customers, CAC $200, Payback 5.0 mo',
     'Current: $8,000 total spend, 40 customers, CAC $200, Payback 5.0 mo',
@@ -248,13 +262,13 @@ const engine: ToolEngine = {
   engineKey: true,
   // P140f-p3-T4: 完整 6 字段 playbook (per P140f §4.3 + ADR-0003)
   // Goal 含"该不该"+"继续"+"获取"三关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
-  // 内容镜像 Phase 1 cac 🧭 Decision Recommendation 4 子段 + ADR-0003 决策逻辑
+  // P168 B3-1：🧭 四段已迁到页面的「🧭 算完之后」区块（这里只留 ADR-0003 的决策逻辑要点）
   playbook: {
     goal: '用户该不该继续从当前渠道获取客户',
     input: 'marketingSpend (≥0) + salesSpend (≥0) + newCustomers (≥0) + avgRevenuePerCustomer (≥0) + grossMargin (0-100)',
     output: 'CAC ($/客户) + 健康带 🟢$80 / 🟡$80-300 / 🟠$300-700 / 🔴$700+ + LTV:CAC 比例 + 渠道拆分建议',
     constraint: 'newCustomers = 0 时 CAC 无意义 (Infinity); mix CAC vs single-channel 差异大; LTV 历史 vs 预测需区分',
-    tool: 'Phase 1 cac-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'SaaS Capital 2024 + ChartMogul 2024 + OpenView 2024 (SMB/mid-market/enterprise CAC 区间)',
   },
 };

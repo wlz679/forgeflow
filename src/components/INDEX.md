@@ -75,7 +75,7 @@ These 4 components are rendered ONLY on category landing pages (`src/pages/[lang
 | `FAQ.astro` | 26 | `{ items[] }` — collapsible Q+A list | 1 |
 | `EeatTrustBlock.astro` | 51 | `{ reviewedBy, dataReviewedAt, sources[], author }` — EEAT trust signals per content-depth spec | 1 |
 | `CopyButton.astro` | 24 | `{ text }` — clipboard copy button with `data-copy` hook + label i18n. Used ONLY inside `ResultCard`. | 0 (transitively via `ResultCard`) |
-| `DecisionSupport.astro` | 78 | `{ goal, recommendation, constraint, nextTool, sampleOutput }` — P168 批次 3 的「🧭 算完之后」区块：**四层静态内容**（决策问题 / 据此该怎么定 / 适用边界 / 下一步工具，SSR 进 `<main>` 可见正文）+ 一层动态建议（容器 `#decision-next-step`，由 `src/scripts/decision-support.client.ts` 在用户点计算后填入引擎刚算出的 💡 Tip）。⭐ **决策支持只有这一个家** —— 引擎输出里的 🧭 决策四段已整段迁进 i18n（双语），否则同页会出现两处决策建议（实测逐字重叠 7.4%）。**只渲染已激活的工具**（判定 = 四个 i18n 键是否存在） | 1 (`[lang]/[slug].astro`) |
+| `DecisionSupport.astro` | 78 | `{ goal, recommendation, constraint, nextTool, sampleOutput }` — P168 批次 3 的「🧭 算完之后」区块：**四层静态内容**（决策问题 / 据此该怎么定 / 适用边界 / 下一步工具，SSR 进 `<main>` 可见正文）+ 一层动态建议（容器 `#decision-next-step`，由 `src/scripts/decision-support.client.ts` 在用户点计算后填入引擎刚算出的 💡 Tip）。⭐ **决策支持只有这一个家** —— 引擎输出里的 🧭 决策四段已整段迁进 i18n（双语），否则同页会出现两处决策建议（实测逐字重叠 7.4%）。**只渲染已激活的工具**（判定 = 四个 i18n 键是否存在 ⇒ 不维护「已激活清单」，清单会漂、键不会）。⭐ **迁出 = 三件事**（翻译进 locale + 从引擎删除 + 补真动态 Tip）—— P168 B3-1 已迁 4 个工具（burn-rate / ltv-by-channel / gdpr-fine / cac），实测同页逐字重叠 en 0.00% / zh 0.00% ⇒ 零重复是**结构性**的 | 1 (`[lang]/[slug].astro`) |
 
 **CopyButton caveat**: 0 direct consumer files because grep searches for `components/CopyButton` literal; actual usage is `import CopyButton from './CopyButton.astro'` inside `ResultCard.astro`. INDEX records consumer count via transitive scan to avoid this grep trap.
 

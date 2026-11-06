@@ -196,3 +196,43 @@ export function blockCardOverlap(html: string): number {
   const hit = b.filter((x) => c.has(x)).length;
   return (hit / b.length) * 100;
 }
+
+/**
+ * 用引擎的 default / placeholder 造一组**可用的**输入。
+ *
+ * ⭐⭐ 为什么不能用 `placeholder.replace(/[^0-9.]/g, '')`
+ *   "e.g. 1000" 会变成 "..1000" ⇒ `Number("..1000")` = NaN
+ *   ⇒ customFn 认为输入无效 ⇒ 输出「请填写输入」的提示文本
+ *   ⇒ 提取不到 💡 Tip ⇒ 「客户端与服务端一致」这条守卫**两边都空、假绿**。
+ *   （实测：ltv-by-channel / gdpr-fine / cac 三个引擎都踩到了，
+ *     只有 placeholder 不带 "e.g." 的 burn-rate 是好的。）
+ * ⇒ 改成「取第一段数字」：`/\d+(?:\.\d+)?/`。
+ *
+ * ⚠️ 这属于**修测量工具**，不是放宽判据 —— 修之前那条守卫压根没在测东西。
+ */
+export function probeInputs(engine: any): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const inp of engine?.inputs ?? []) {
+    if (inp.default !== undefined && inp.default !== null && String(inp.default) !== '') {
+      out[inp.name] = String(inp.default);
+      continue;
+    }
+    const ph = String(inp.placeholder ?? '');
+    const num = ph.match(/\d+(?:\.\d+)?/);
+    out[inp.name] = num ? num[0] : '0';
+  }
+  return out;
+}
+
+/**
+ * 从 customFn 的输出里提取 💡 Tip —— **扫全部元素**。
+ *
+ * ⭐ 为什么不能只看 `out[0]`
+ *   有的引擎的 customFn 返回**多元素数组**（gdpr-fine 7 个、cac 6 个），
+ *   Tip 排在中间而不是第 0 个 ⇒ 只扫 out[0] 会得到空串
+ *   ⇒ parity 守卫又是「两边都空、假绿」。
+ */
+export function tipFromCustomOutput(out: unknown): string {
+  const arr = Array.isArray(out) ? out.map(String) : [String(out)];
+  return extractDecisionLines(arr.join('\n')).tip;
+}

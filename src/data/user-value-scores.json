@@ -1432,7 +1432,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 3
         },
         "retention": {
           "snapshot": true,
@@ -1440,7 +1440,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 12
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -1650,7 +1650,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -2828,10 +2828,10 @@
     "solopreneur-cac-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 0.5,
+      "advisor": 1,
       "retention": 0.5,
       "advocacy": 1,
-      "score": 0.8,
+      "score": 0.9,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -2842,7 +2842,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 1
+          "boundaryMarkers": 6
         },
         "retention": {
           "snapshot": false,
@@ -2850,7 +2850,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 3
+          "crossToolLinks": 1
         }
       },
       "reviewedAt": "2026-10-21"
