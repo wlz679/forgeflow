@@ -3,7 +3,8 @@
 > **目录索引** — 所有 implementation plans 按类别分组，按日期升序。
 > **Specs:** 参见 `../specs/INDEX.md`（44 个 spec 文件索引）。
 > **Excluded:** `pr-body-2026-06-24-audit-polish.md` 是 PR description 模板（非 plan），不在本 INDEX。
-> **最后更新:** 2026-08-26（Phase 5-A v2.5 Enterprise — client-side Enterprise layer (storage + 3 managers + report-builder + toast) + 3 features (A1 Saved Scenarios / A2 Decision Templates / A3 Decision Reports) + EnterpriseToolbar + 4 components + 15 i18n keys × 2 langs; 7 tasks on `feature/phase-5-v2.5-enterprise-ai-native`; 19 new tests; pnpm check 1280→1298 (+18); 9/01 AdSense unaffected (feature branch only); P5A-A.2 modal polish + P5B AI Native + P5C OS docs deferred per user "拆分 3 个 sub-projects" decision）
+> **最后更新:** 2026-11-06（登记 P168 批次 3 B3-2 实施计划 —— 工具页 `<title>` 瘦身 + 中文保留审计；Section 9 计数 39→40、目录文件总数 110→111）
+> **上次更新:** 2026-08-26（Phase 5-A v2.5 Enterprise — client-side Enterprise layer (storage + 3 managers + report-builder + toast) + 3 features (A1 Saved Scenarios / A2 Decision Templates / A3 Decision Reports) + EnterpriseToolbar + 4 components + 15 i18n keys × 2 langs; 7 tasks on `feature/phase-5-v2.5-enterprise-ai-native`; 19 new tests; pnpm check 1280→1298 (+18); 9/01 AdSense unaffected (feature branch only); P5A-A.2 modal polish + P5B AI Native + P5C OS docs deferred per user "拆分 3 个 sub-projects" decision）
 
 ---
 
@@ -261,6 +262,7 @@
 | `2026-10-30-p163-price-claim-ledger-and-image-training-derivation.md` | P163 — 价格主张覆盖面台账 + 图片/训练引擎派生化 Implementation Plan | 2026-10-30 |
 | `2026-11-03-p166-pricing-bot-closure-and-topic-priority-tables.md` | P166 Implementation Plan — 定价 bot 闭环 + 主题页「修复优先级表 / 达标清单」试点 | 2026-11-03 |
 | `2026-11-06-p168-b3-1-decision-support-migration.md` | P168 批次 3 B3-1 —— 决策支持迁出到区块独占（3 个异类引擎：ltv-by-channel / gdpr-fine / cac） | 2026-11-06 |
+| `2026-11-06-p168-b3-2-title-slimming-and-zh-audit.md` | P168 批次 3 B3-2 —— 工具页 `<title>` 瘦身（新增 `tools.<slug>.seoTitle`）+ 中文保留审计（keep_all） | 2026-11-06 |
 
 ### 其它
 
@@ -285,8 +287,8 @@
 | 6 · P17b+ — Tech Debt / Cleanup / Audit (含 v2-strategy) | 14 |
 | 7 · Multi-language mirrors | 1 |
 | 8 · Excluded (pr-body) | 1 |
-| 9 · P48+ — 后续批次（P48 → P166） | 39 |
-| **目录文件总数** | **110** |
+| 9 · P48+ — 后续批次（P48 → P166） | 40 |
+| **目录文件总数** | **111** |
 
 ---
 
