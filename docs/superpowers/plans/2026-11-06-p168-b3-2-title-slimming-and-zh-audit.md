@@ -654,7 +654,7 @@ function failedAssertions(out) {
   }
   return names;
 }
-
+```
 
 **变异定义（4 条）与主循环**：
 
@@ -900,7 +900,7 @@ if (!existsSync(probe)) {
   const ok = title.length <= 60 && og.includes(long) && og.includes('ForgeFlowKit') && html.includes(long);
   console.log(ok ? '\n✓ 边界达标：只有 <title> 变短' : '\n✗ 边界被破坏');
 }
-
+```
 
 ---
 
@@ -1003,7 +1003,7 @@ function overlapRatio(a: string, b: string): number {
   for (const g of ga) if (gb.has(g)) hit++;
   return (hit / ga.size) * 100;
 }
-
+```
 
 **主流程与输出（续写同一个文件）**：
 
