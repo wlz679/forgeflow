@@ -1,11 +1,11 @@
 {
   "_rule": {
     "rule": "数据集里每个 LLM 模型要么在 popularModelKeys 里（进交互态，用户可选），要么在 excludedModelKeys 里（不进交互态）。两者必须构成对数据集模型的完整划分 —— 新模型进 ai-pricing.json 后必须做这个决定，否则 popular-models-rule-guard 会红。excludedFamilies 说明「为什么这些模型不进交互态」：每个排除 key 至少被一个族命中，每个族至少命中一个排除 key。族用 provider + pattern 表达（pattern 里的 * 匹配任意子串）。注意：族可能同时命中已策展模型，此时以 popularModelKeys 为准（策展优先）。crossProviderModels 是「跨供应商对比表」用到的代表模型（P164 新增）：它只决定**展示哪几个模型**与**展示名叫什么**（编辑口径），价格一律从 ai-pricing.json 派生；它引用的每个 model 都必须在 popularModelKeys 里 —— 展示一个被显式排除的模型（比如 deepseek-chat 这种「通用别名」）会让用户在对比表里看到一个交互态里根本不存在的模型。",
-    "updatedAt": "2026-11-02",
+    "updatedAt": "2026-11-09",
     "rationale": "P163 之前这个文件是一个纯清单，没有任何规则说明「新模型进数据集后必须决定是否进交互态」⇒ 新模型会静默地只进数据集、不进交互态 ⇒ 用户在计算器里根本选不到它，而且没有任何东西会红。这是一个流程洞，只能靠「规则 + 守卫」把它变成可执行契约。",
     "curatedModelCount": 44,
-    "excludedModelCount": 201,
-    "datasetModelCount": 245,
+    "excludedModelCount": 205,
+    "datasetModelCount": 249,
     "autoCuration": "P166 起每周 bot 自动做「进不进交互态」的决定：新模型默认进排除侧，并保证每个排除记录都被一个排除族命中。策展侧（popularModelKeys）永远只由人改。"
   },
   "popularModelKeys": {
@@ -201,7 +201,10 @@
       "gpt-5.5-cyber-preview",
       "gpt-rosalind-research",
       "gpt-rosalind-discovery",
-      "gpt-6.1-terra"
+      "gpt-6.1-terra",
+      "gpt-6-rosalind",
+      "gpt-6-cyber",
+      "gpt-6-astra-law"
     ],
     "anthropic": [
       "claude-3-7-sonnet",
@@ -279,7 +282,8 @@
       "gemini-3.5-transcribe",
       "gemini-3.5-transcribe-live",
       "gemini-omni-1.1-flash",
-      "gemini-nano-banana-2.1"
+      "gemini-nano-banana-2.1",
+      "gemini-omni-1.2-flash"
     ],
     "deepseek": [
       "deepseek-chat",
