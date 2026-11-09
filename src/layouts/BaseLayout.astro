@@ -19,11 +19,16 @@ export interface Props {
   // "低价位内容" policy item ② is literally "维护网站页面结构"; indexed
   // empty shells are the cheapest form of damage to fix.
   robots?: string;
+  // P168 B3-2：社交卡片的标题**独立于** <title>。
+  // 工具页的 <title> 换成了短版 seoTitle（≤60 字符，SEO 友好），
+  // 但 og:title / twitter:title 保留**长名** —— 分享卡片不截断，长名信息量更大。
+  // ⭐ 缺省时回落 title ⇒ 其它页面（分类页 / 主题页 / 静态页 / 首页）零影响。
+  ogTitle?: string;
 }
 const lang = getLang(Astro);
 // P153-B′: the default social card is locale-aware. `lang` must be resolved
 // BEFORE the destructuring so the default value can use it.
-const { title, description, ogImage = defaultOgImage(lang), schema, pageType = 'static', robots = 'index, follow' } = Astro.props;
+const { title, description, ogImage = defaultOgImage(lang), schema, pageType = 'static', robots = 'index, follow', ogTitle } = Astro.props;
 
 const ogType = { home: 'website', tool: 'product', article: 'article', static: 'website' }[pageType];
 
@@ -167,13 +172,13 @@ const orgSchema = JSON.stringify({
     f08c47fec0942fa0`, publisher id matching the AdSense script above.
   -->
   <link rel="advertising" href="/ads.txt" />
-  <meta property="og:title" content={title} />
+  <meta property="og:title" content={ogTitle ?? title} />
   <meta property="og:description" content={description} />
   <meta property="og:image" content={`${SITE_URL}${ogImage}`} />
   <meta property="og:type" content={ogType} />
   <meta property="og:locale" content={lang === 'zh' ? 'zh_CN' : 'en_US'} />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content={title} />
+  <meta name="twitter:title" content={ogTitle ?? title} />
   <meta name="twitter:description" content={description} />
   <meta name="twitter:image" content={`${SITE_URL}${ogImage}`} />
   <meta name="robots" content={robots} />

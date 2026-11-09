@@ -55,7 +55,15 @@ const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).fi
 const relatedTopics = TOPICS.filter((t) => t.calculatorSlugs.includes(slug!));
 const toolTitle = t(`tools.${slug}.title`, lang);
 const toolDescription = t(`tools.${slug}.description`, lang);
-const metaTitle = `${toolTitle} — ForgeFlowKit`;
+// ⭐ P168 B3-2：<title> 用**短版 seoTitle**（≤60 字符）⇒ 全部落在 SERP 展示区内。
+//   ⚠️ 缺键时**回落长名**（t() 缺键返回键名本身 ⇒ 必须判等）——
+//   否则缺一个键就会让页面标题变成字面量 "tools.xxx.seoTitle"。
+//   空串/纯空白同样回落（locale 里写了空值 ⇒ 标题不能是空的）。
+const seoTitleKey = `tools.${slug}.seoTitle`;
+const seoTitleRaw = t(seoTitleKey, lang);
+const seoTitle = seoTitleRaw === seoTitleKey || !seoTitleRaw.trim() ? toolTitle : seoTitleRaw;
+// og:title / twitter:title 保留**长名**（分享卡片不截断 ⇒ 长名的检索面更完整）
+const ogTitle = `${toolTitle} — ForgeFlowKit`;
 
 // P140b-T4 fix: distinguish "zh entry missing → fallback to en" from "both missing".
 // Original code used `if (!proseEntry && lang === 'zh')` which only fired when BOTH
@@ -568,7 +576,7 @@ const schema = JSON.stringify({
 });
 ---
 
-<BaseLayout title={metaTitle} description={toolDescription} schema={schema} pageType="tool" ogImage={`/og/${slug}-${lang}.png`}>
+<BaseLayout title={seoTitle} ogTitle={ogTitle} description={toolDescription} schema={schema} pageType="tool" ogImage={`/og/${slug}-${lang}.png`}>
   <Header />
   <main class="max-w-6xl mx-auto px-4 py-8 flex-1">
     <nav class="text-sm text-gray-400 mb-6" aria-label="Breadcrumb">

@@ -1,10 +1,18 @@
 // P167 —— 线上验收：工具卡标题**用短名**且**不被截断**，而工具详情页
-// 的 `<title>` / h1 **仍是长 SEO 名**。
+// 的 h1 **仍是长 SEO 名**。
 //
 // 为什么这两个必须一起验：
 //   · 卡片用短名 = 人能一眼扫懂（用户 2026-11-04 反馈的那件事）；
 //   · 详情页用长名 = 搜索引擎看到的标题一个字都没少（**不能为了好看把 SEO 砍掉**）。
 //   ⇒ 只验其中一个都抓不到「两处搞反了」这个缺陷。
+//
+// ⚠️ P168 B3-2 之后，详情页的 `<title>` **不再**是长名（换成了 ≤60 字符的
+//    seoTitle）—— 但 h1 / og:title / JSON-LD name **仍然是长名**。
+//    ⇒ 下面的详情页检查接受 `<title>` 的**两种形态**（见 detailState）：
+//      ① 「长名」      = B3-2 还没上线（线上跑的还是旧产物）
+//      ② 「seoTitle」  = B3-2 已上线
+//    两种形态都**不是 FAIL**；h1 含长名则是**两种状态下的硬要求**。
+//    （脚本必须对「部署前 / 部署后」两种线上状态诚实判定，而不是只给一个 ✓/✗。）
 //
 // 跑法（网络可达即可，从仓库根跑）：
 //   node tests/scripts/p167-verify-card-titles.mjs
@@ -87,8 +95,12 @@ for (const lang of ['en', 'zh']) {
   }
 }
 
-// —— 详情页：<title> / h1 必须是长名 ——
+// —— 详情页：h1 必须含长名（硬要求）；<title> 允许两种形态 ——
+//   ① 'long'  = <title> 含长名        ⇒ B3-2 还没上线
+//   ② 'seo'   = <title> == locale 的 seoTitle ⇒ B3-2 已上线
+//   其它一律 'unknown' ⇒ FAIL（说明线上出现第三种形态）
 let detailBad = 0;
+const detailStates = { long: 0, seo: 0, unknown: 0 };
 const sample = tools.filter((t) => en['tools.' + t.slug + '.title'].includes(' — ')).slice(0, 6);
 for (const t of sample) {
   const url = 'https://forgeflowkit.com/en/' + t.slug + '/';
@@ -100,19 +112,40 @@ for (const t of sample) {
     detailBad++;
     continue;
   }
-  const title = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || '';
-  const h1 = ((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || '').replace(/<[^>]+>/g, '').trim();
+  // ⚠️ 产物里的 `&` 会被转义成 `&amp;` ⇒ 必须先解码再比对（复用上面已有的 decodeEntities）。
+  const title = decodeEntities(((html.match(/<title>([^<]*)<\/title>/) || [])[1] || '').trim());
+  const h1 = decodeEntities(
+    ((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/) || [])[1] || '').replace(/<[^>]+>/g, '').trim(),
+  );
+  const og = decodeEntities(((html.match(/og:title" content="([^"]*)"/) || [])[1] || '').trim());
   const long = en['tools.' + t.slug + '.title'];
-  const ok = title.includes(long) && h1.includes(long);
+  const seo = en['tools.' + t.slug + '.seoTitle'] || '';
+  const h1Ok = h1.includes(long);
+  // og:title 必须仍是长名（分享卡片不截断）—— P168 B3-2 的核心不变量「只改 <title>」。
+  const ogOk = og.includes(long);
+  const state = title.includes(long) ? 'long' : seo && title === seo ? 'seo' : 'unknown';
+  detailStates[state]++;
+  const ok = h1Ok && ogOk && state !== 'unknown';
   if (!ok) detailBad++;
+  const stateLabel =
+    state === 'long' ? '长名（未上线）' : state === 'seo' ? 'seoTitle（已上线）' : '未知形态 ✗';
   rows.push(
     (ok ? '[OK]  ' : '[FAIL]') +
     ' 详情页 ' + t.slug.slice(0, 34).padEnd(34) +
-    (ok ? ' <title>/h1 均为长名 ✓' : ' <title>=' + title.slice(0, 40) + '  h1=' + h1.slice(0, 40)),
+    ' <title>=' + stateLabel +
+    '  h1=' + (h1Ok ? '长名 ✓' : '非长名 ✗') +
+    '  og:title=' + (ogOk ? '长名 ✓' : '非长名 ✗') +
+    (ok ? '' : '  <title>=' + title.slice(0, 40) + '  h1=' + h1.slice(0, 40)),
   );
 }
 
 console.log(rows.join(String.fromCharCode(10)));
 console.log('');
+console.log(
+  '详情页 <title> 形态：长名（未上线） ' + detailStates.long +
+  ' · seoTitle（已上线） ' + detailStates.seo +
+  ' · 未知 ' + detailStates.unknown +
+  '  ⇒ 两种形态都算达标（h1 含长名是硬要求）',
+);
 console.log('分类页 ' + CATEGORIES.length * 2 + ' 个 + 详情页 ' + sample.length + ' 个：' + (bad + detailBad === 0 ? '全部达标 ✓' : '失败 ' + (bad + detailBad) + ' 个'));
 if (bad + detailBad > 0) process.exitCode = 1;
