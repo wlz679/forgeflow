@@ -11,7 +11,11 @@
  *
  * 规则（只做机械派生，不改写任何词组）
  *   1. stripYear —— 只剥结尾的 4 位年份括号；术语括号（NRR）/（GRR）/（DAU-MAU）/（CSAT）/（ACV）等一律保留
- *   2. en 自动稿 —— 剥低检索价值前缀词（Free / Online / Instant），再按 ' + ' 分组累加到 <= 60
+ *   2. en 自动稿 —— **整组丢弃**低检索价值组（Free / Online / Instant 开头），
+ *      其余词组**逐字保留**并按 ' + ' 累加到 <= 60（放不下的组整组跳过）
+ *      ⚠️ **绝不改写词组**：把 "Free Blended" 改成 "Blended" 会产出悬垂修饰语
+ *        （"CAC Calculator — Blended" 读不通），而「至少保留一组逐字」的判据
+ *        **抓不到这一类缺陷**（其它组逐字 ⇒ 判据照样绿）⇒ 必须在生成阶段就避免。
  *   3. zh 自动稿 —— 只剥年份，关键词段一字不动
  *   4. 人工覆盖表优先（覆盖值优先于规则稿）
  *
@@ -29,6 +33,8 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const SEP = ' \u2014 ';                       // ' — '
 const MAX_LEN = 60;
+// ⭐ 期望值**独立写死**（不可从同一份真值派生 ⇒ 同义反复）
+const EXPECTED_SLUG_COUNT = 100;
 const LOW_VALUE_PREFIX = ['Free ', 'Online ', 'Instant '];
 const YEAR_TAIL = /\s*[\uff08(]\d{4}[\uff09)]\s*$/;   // 只认结尾的 4 位年份
 const YEAR_ANY = /[\uff08(]\d{4}[\uff09)]/;             // 任意位置的 4 位年份括号
@@ -75,21 +81,19 @@ const valueGroups = (value) => {
   return splitGroups(value.slice(i + SEP.length));
 };
 
-/** en 自动稿：剥年份 → 剥低检索价值前缀词 → 按 ' + ' 分组累加到 <= 60 */
+/** en 自动稿：剥年份 → 整组丢弃低检索价值组 → 其余词组逐字保留，按 ' + ' 累加到 <= 60 */
 function enDraft(title) {
   const s = stripYear(title);
   const i = s.indexOf(SEP);
   if (i < 0) return s;                        // 本来就没有关键词段
   const head = s.slice(0, i);
-  let kw = s.slice(i + SEP.length);
-  for (const lv of LOW_VALUE_PREFIX) {
-    if (kw.startsWith(lv)) { kw = kw.slice(lv.length); break; }
-  }
   const kept = [];
-  for (const p of splitGroups(kw)) {
-    const cand = head + SEP + [...kept, p].join(' + ');
-    if (cand.length > MAX_LEN) break;
-    kept.push(p);
+  for (const g of splitGroups(s.slice(i + SEP.length))) {
+    // ⭐ 低检索价值组**整组丢弃** —— 不剥它的前缀（剥了就是改写词组）
+    if (LOW_VALUE_PREFIX.some((lv) => g.startsWith(lv))) continue;
+    const cand = head + SEP + [...kept, g].join(' + ');
+    if (cand.length > MAX_LEN) continue;      // 放不下 ⇒ 整组跳过，后面的短组仍可保留
+    kept.push(g);
   }
   return kept.length ? head + SEP + kept.join(' + ') : head;
 }
@@ -107,15 +111,35 @@ const slugs = Object.keys(en)
   .filter((k) => /^tools\.[^.]+\.title$/.test(k))
   .map((k) => k.split('.')[1])
   .sort();
+const zhSlugs = Object.keys(zh)
+  .filter((k) => /^tools\.[^.]+\.title$/.test(k))
+  .map((k) => k.split('.')[1])
+  .sort();
 
 if (slugs.length === 0) fail('没找到任何 tools.<slug>.title 键');
+// ⭐ 条数断言：slug 列表由 **en 自己的键集**派生 ⇒ 缺一个键时「缺键检查」是死分支，
+//   只剩 `length === 0` 这条永远为真的断言 ⇒ 会**静默**产出 99 条候选并 exit 0。
+if (slugs.length !== EXPECTED_SLUG_COUNT) {
+  fail('en 的 tools.<slug>.title 键数应为 ' + EXPECTED_SLUG_COUNT + '，实际 ' + slugs.length);
+}
+if (zhSlugs.length !== slugs.length) {
+  fail('en/zh 的 tools.<slug>.title 键数不一致：en ' + slugs.length + ' vs zh ' + zhSlugs.length);
+}
+const onlyEn = slugs.filter((s) => !zhSlugs.includes(s));
+const onlyZh = zhSlugs.filter((s) => !slugs.includes(s));
+if (onlyEn.length || onlyZh.length) {
+  fail('en/zh 的 slug 集合不一致：只在 en ' + JSON.stringify(onlyEn) + ' · 只在 zh ' + JSON.stringify(onlyZh));
+}
 
 const out = { en: {}, zh: {}, manual: {} };
 for (const slug of slugs) {
   const enTitle = en['tools.' + slug + '.title'];
   const zhTitle = zh['tools.' + slug + '.title'];
-  if (typeof enTitle !== 'string' || typeof zhTitle !== 'string') {
-    fail('en/zh 缺少 tools.' + slug + '.title');
+  if (typeof enTitle !== 'string' || !enTitle.trim()) {
+    fail('en 缺少 tools.' + slug + '.title，或它是空串');
+  }
+  if (typeof zhTitle !== 'string' || !zhTitle.trim()) {
+    fail('zh 缺少 tools.' + slug + '.title，或它是空串');
   }
   out.en[slug] = enDraft(enTitle);
   out.zh[slug] = zhDraft(zhTitle);
