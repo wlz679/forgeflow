@@ -29,14 +29,48 @@ const zh = JSON.parse(readFileSync('src/i18n/locales/zh.json', 'utf8'));
  *    （如 "Burn Multiple &amp; Rule of 40 Calculator"）⇒ 不解码就会误报「非短名」。
  *    （本脚本第一版就踩了这个 ⇒ 线上 30 页全 OK 却报了 1 个 FAIL。）
  */
+const NAMED_ENTITIES = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+};
+
+/**
+ * ⚠️ 必须**单趟**解码，且要覆盖**数字实体**。
+ *
+ * 为什么单趟：逐个 replace 的写法会**二次解码** —— 文本里的字面量「&amp;#38;」
+ * 先被解成「&#38;」，再被数字实体那一趟解成「&」⇒ 把作者写的字面量改掉了。
+ *
+ * 为什么必须支持数字实体：**产物里同一个 & 的编码取决于它所在的上下文** ——
+ *   · 文本节点（title / h1 / 面包屑）⇒ 「&amp;」
+ *   · **属性值**（og:title / twitter:title 的 content="…"）⇒ 「&#38;」（数字实体）
+ * 实测（dist/en/solopreneur-burn-multiple-rule-of-40-calculator/index.html）：
+ *   <title>Burn Multiple &amp; Rule of 40 Calculator</title>
+ *   <meta property="og:title" content="Burn Multiple &#38; Rule of 40 Calculator — ForgeFlowKit">
+ * ⇒ 只认「&amp;」的解码器会让 **og:title 比对必然失败**（og.includes(long) === false）
+ *    ⇒ 对一个**构建正确**的页面误报 FAIL。
+ */
 function decodeEntities(s) {
-  return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
+  return s.replace(
+    /&(#x[0-9a-fA-F]+|#[0-9]+|[a-zA-Z][a-zA-Z0-9]*);/g,
+    (match, body) => {
+      if (body[0] === '#') {
+        const isHex = body[1] === 'x' || body[1] === 'X';
+        const code = isHex ? parseInt(body.slice(2), 16) : parseInt(body.slice(1), 10);
+        if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return match;
+        try {
+          return String.fromCodePoint(code);
+        } catch {
+          return match;
+        }
+      }
+      const named = NAMED_ENTITIES[body.toLowerCase()];
+      return named === undefined ? match : named;
+    },
+  );
 }
 
 function cardTitles(html) {

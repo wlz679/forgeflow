@@ -201,3 +201,20 @@ test('P168 B3-2 ⑥：⭐ 边界 —— og:title / twitter:title 仍是长名（
     '[slug].astro 没有把 ogTitle 传给 BaseLayout（ogTitle={ogTitle}）⇒ BaseLayout 会回落到 <title>（短版）',
   );
 });
+
+test('P168 B3-2 ⑦：⭐ <title> 必须用 seoTitle（绑定 + 缺键/空串回落长名）', () => {
+  const page = readFileSync(resolve(SRC, 'pages/[lang]/[slug].astro'), 'utf8');
+  // ⚠️⭐ 为什么要有 ⑦：⑥ 只守 **og/twitter 边界** ⇒ **守不到 <title> 本身**。
+  //   整枝 review 实测：把 title={seoTitle} 改回 title={toolTitle} ⇒
+  //   ⑥ 的 4 条子断言**全绿** ⇒ 整个瘦身效果静默丢失，CI 零信号。
+  //   ⇒ 本批的**主交付物**（<title> 变短）必须有一条断言直接钉住。
+  assert.ok(
+    /<BaseLayout\b[^>]*\btitle=\{seoTitle\}/.test(page),
+    '[slug].astro 没有把 title={seoTitle} 传给 BaseLayout ⇒ <title> 回落成长名 ⇒ 整个瘦身效果丢失（⑥ 只守 og/twitter 边界，守不到这一条）',
+  );
+  // 回落：t() 缺键时返回**键名本身** ⇒ 必须判等；空串/纯空白同样回落。
+  assert.ok(
+    /seoTitleRaw\s*===\s*seoTitleKey\s*\|\|\s*!\s*seoTitleRaw\.trim\(\)\s*\?\s*toolTitle\s*:\s*seoTitleRaw/.test(page),
+    '[slug].astro 的 seoTitle 缺键/空串回落被去掉了 ⇒ 缺一个键就会让页面标题变成字面量 "tools.xxx.seoTitle"（或空标题）',
+  );
+});

@@ -45,6 +45,8 @@ const TARGETS = [
   'src/i18n/locales/en.json',
   'src/i18n/locales/zh.json',
   'src/layouts/BaseLayout.astro',
+  // ⭐ T7 要改 <title> 的绑定 ⇒ 必须进还原清单，否则收尾的 sha256 校验漏掉它
+  'src/pages/[lang]/[slug].astro',
 ];
 
 function sha256(buf) {
@@ -227,8 +229,8 @@ function failedAssertions(out) {
 }
 
 /**
- * 从守卫源码里解析出 6 条断言的名字（**不手抄** —— 守卫改名时台子不会误判）
- * 用 ①…⑥ 标记定位，避免依赖顺序。
+ * 从守卫源码里解析出 7 条断言的名字（**不手抄** —— 守卫改名时台子不会误判）
+ * 用 ①…⑦ 标记定位，避免依赖顺序。
  */
 function guardAssertionNames() {
   const src = readFileSync(GUARD, 'utf8');
@@ -336,12 +338,54 @@ const MUTATIONS = [
       );
     },
   },
+  {
+    id: 'T7',
+    desc: '[slug].astro 的 <title> 绑定回退成长名（title={toolTitle}）⇒ 整个瘦身效果静默丢失',
+    marker: '⑦',
+    apply: () => {
+      patchTarget('src/pages/[lang]/[slug].astro', (s) =>
+        s.replace(
+          /<BaseLayout\b[^>]*\btitle=\{seoTitle\}/,
+          (m) => m.replace('title={seoTitle}', 'title={toolTitle}'),
+        ),
+      );
+    },
+  },
 ];
 
+// ⭐⭐⭐ **负对照**（negative control）—— 台子自己的「隔离判定」也要被证明有效。
+//   没有它，「KILLED N」这句话本身可以是**假绿**：假如隔离检查写错了
+//   （比如只看「有没有红」而不看「红了哪几条」），台子照样会把每条变异都报成 KILLED。
+//   ⇒ 负对照**故意让两条断言同时红** ⇒ 台子必须报 RED-BUT-NOT-ISOLATED
+//      并且把整轮 exitCode 置 1 ⇒ 证明它**抓得住**未隔离。
+const NEGATIVE_CONTROL_MUTATION = {
+  id: 'NEG',
+  desc: '负对照：同时破坏两条断言（② 超长 + ③ 残留年份）',
+  apply: () => {
+    patchTarget('src/i18n/locales/en.json', (s) =>
+      s.replace(
+        /("tools\.solopreneur-cac-calculator\.seoTitle":\s*")([^"]*)(")/,
+        (m, a, val, b) => a + val + ' X'.repeat(40) + b,
+      ),
+    );
+    patchTarget('src/i18n/locales/zh.json', (s) =>
+      s.replace(
+        /("tools\.solopreneur-burn-rate-calculator\.seoTitle":\s*")([^"]*)(")/,
+        (m, a, val, b) => a + val + '（2026）' + b,
+      ),
+    );
+  },
+};
+
 // ⭐ 迭代开关：node tests/scripts/mutate-p168-title-seo.mjs T1,T3
-const ONLY = process.argv[2]
+const ONLY = process.argv[2] && !process.argv[2].startsWith('--')
   ? process.argv[2].split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
   : null;
+
+// ⭐ 负对照开关：node tests/scripts/mutate-p168-title-seo.mjs --negative-control
+//   （或 $env:P168_NEGATIVE_CONTROL=1）⇒ 只跑负对照那一条变异。
+const NEGATIVE_CONTROL =
+  process.argv.includes('--negative-control') || process.env.P168_NEGATIVE_CONTROL === '1';
 
 let killed = 0;
 let survived = 0;
@@ -363,43 +407,81 @@ try {
     console.log('基线绿 ✓');
     console.log('');
 
-    for (const m of MUTATIONS) {
-      if (ONLY && !ONLY.includes(m.id)) continue;
-      const expect = assertionName(m.marker);
-      // ⭐ 还原失败必须立刻停下：否则上一轮的变异会叠加到下一轮，
-      //   台子就变成了「在污染的仓库上测」—— 结论全部作废。
-      const restoreErrs = restoreAll();
-      if (restoreErrs.length) {
-        console.log('还原失败，台子停止：' + restoreErrs.join(', '));
-        exitCode = 1;
-        break;
-      }
+    if (NEGATIVE_CONTROL) {
+      // ===== ⭐⭐ 负对照模式（--negative-control）=====
+      console.log('【负对照模式】故意让**两条**断言同时红 ⇒ 台子必须报 RED-BUT-NOT-ISOLATED 并把整轮 exitCode 置 1。');
+      console.log('   理由：「KILLED N」这句话本身可以是**假绿** —— 若隔离检查写错了');
+      console.log('   （只看「有没有红」而不看「红了哪几条」），台子照样会把每条变异都报成 KILLED。');
+      console.log('');
+      const neg = NEGATIVE_CONTROL_MUTATION;
       try {
-        m.apply();
+        neg.apply();
       } catch (e) {
-        console.log('[' + m.id + '] INVALID — ' + e.message);
-        invalid++;
-        continue;
+        console.log('[NEG] INVALID — ' + e.message);
+        exitCode = 1;
       }
-      const res = runGuard();
-      if (!res.ok) {
-        const failed = failedAssertions(res.out);
-        // ⭐ 隔离规则：必须**恰好一条**失败，且**名字等于**期望的那条。
-        if (failed.length === 1 && failed[0] === expect) {
-          killed++;
-          console.log('[' + m.id + '] KILLED ✓ — ' + m.desc);
-          console.log('        失败断言：' + failed[0]);
+      if (exitCode === 0) {
+        const res = runGuard();
+        const failed = res.ok ? [] : failedAssertions(res.out);
+        // ⭐ 判定：必须看到**≥ 2 条**失败（这就是「未隔离」的形状）。
+        if (!res.ok && failed.length >= 2) {
+          notIsolated++; // 复用台子自己的计数 ⇒ 整轮 exitCode 会变成 1
+          console.log('[NEG] RED-BUT-NOT-ISOLATED ✓ — ' + neg.desc);
+          console.log('        失败的断言（' + failed.length + ' 条）：' + failed.join(' / '));
+          const harnessExit = survived || invalid || notIsolated ? 1 : 0;
+          if (harnessExit === 1) {
+            console.log('');
+            console.log('✅ 负对照 OK —— 台子确实识别出了未隔离（并且会把整轮 exitCode 置 1）⇒ 隔离判定本身有效。');
+          } else {
+            console.log('');
+            console.log('❌ 负对照失败 —— 台子识别出了未隔离却没有把 exitCode 置 1。');
+            exitCode = 1;
+          }
         } else {
-          notIsolated++;
-          console.log(
-            '[' + m.id + '] RED-BUT-NOT-ISOLATED — ' + m.desc +
-              '（失败的断言：' + (failed.join(' / ') || '(未识别)') +
-              '；期望：' + expect + '）',
-          );
+          console.log('[NEG] ❌ 负对照失败 —— 故意让两条断言同时红，台子却只看到 ' + failed.length + ' 条失败（期望 ≥ 2）');
+          console.log('        ⇒ 隔离判定可能失效（它可能只看「有没有红」而不看「红了哪几条」）。');
+          exitCode = 1;
         }
-      } else {
-        survived++;
-        console.log('[' + m.id + '] ✗ SURVIVED — ' + m.desc + '（守卫没红 ⇒ 判据抓不到）');
+      }
+    } else {
+      for (const m of MUTATIONS) {
+        if (ONLY && !ONLY.includes(m.id)) continue;
+        const expect = assertionName(m.marker);
+        // ⭐ 还原失败必须立刻停下：否则上一轮的变异会叠加到下一轮，
+        //   台子就变成了「在污染的仓库上测」—— 结论全部作废。
+        const restoreErrs = restoreAll();
+        if (restoreErrs.length) {
+          console.log('还原失败，台子停止：' + restoreErrs.join(', '));
+          exitCode = 1;
+          break;
+        }
+        try {
+          m.apply();
+        } catch (e) {
+          console.log('[' + m.id + '] INVALID — ' + e.message);
+          invalid++;
+          continue;
+        }
+        const res = runGuard();
+        if (!res.ok) {
+          const failed = failedAssertions(res.out);
+          // ⭐ 隔离规则：必须**恰好一条**失败，且**名字等于**期望的那条。
+          if (failed.length === 1 && failed[0] === expect) {
+            killed++;
+            console.log('[' + m.id + '] KILLED ✓ — ' + m.desc);
+            console.log('        失败断言：' + failed[0]);
+          } else {
+            notIsolated++;
+            console.log(
+              '[' + m.id + '] RED-BUT-NOT-ISOLATED — ' + m.desc +
+                '（失败的断言：' + (failed.join(' / ') || '(未识别)') +
+                '；期望：' + expect + '）',
+            );
+          }
+        } else {
+          survived++;
+          console.log('[' + m.id + '] ✗ SURVIVED — ' + m.desc + '（守卫没红 ⇒ 判据抓不到）');
+        }
       }
     }
   }
@@ -431,7 +513,14 @@ try {
 }
 
 console.log('');
-console.log('KILLED ' + killed + ' · SURVIVED ' + survived + ' · INVALID ' + invalid + ' · 未隔离 ' + notIsolated);
-if (survived || invalid || notIsolated) exitCode = 1;
+if (NEGATIVE_CONTROL) {
+  // ⭐ 负对照模式**自己**的退出码：证明成立 ⇒ 0（证明失败 ⇒ 已在上面置 1）。
+  //   注意与正常模式相反：正常模式里「出现未隔离」是**失败**（exit 1）；
+  //   负对照模式里「成功识别出未隔离」才是**成功**（exit 0）。
+  console.log('负对照：未隔离被识别 = ' + (notIsolated ? '是 ✓' : '否 ✗'));
+} else {
+  console.log('KILLED ' + killed + ' · SURVIVED ' + survived + ' · INVALID ' + invalid + ' · 未隔离 ' + notIsolated);
+  if (survived || invalid || notIsolated) exitCode = 1;
+}
 process.exitCode = exitCode;
 

@@ -3015,8 +3015,8 @@ AdSense 复审把站点判为 **低价值内容（Low Value Content）**，三�
 | `tsc --noEmit` | exit 0 |
 | `codegen-examples` / `codegen-customfn` / `check-i18n-completeness` / `check-engine-count-by-category` / `score-user-value` / `codegen-review-dates` | 全部 exit 0 |
 | 构建 | **438** 页 |
-| `title-seo-guard` | **6 / 6** |
-| 变异台子 `mutate-p168-title-seo.mjs` | **6 / 6 KILLED**（0 存活 / 0 INVALID / 0 未隔离）；含**负对照**（故意红两条 ⇒ 报 RED-BUT-NOT-ISOLATED + exit 1）；还原 sha256 逐字节一致 |
+| `title-seo-guard` | **7 / 7**（①…⑥ + **⑦ 主交付物本身：`<title>` 绑定与回落**） |
+| 变异台子 `mutate-p168-title-seo.mjs` | **7 / 7 KILLED**（0 存活 / 0 INVALID / 0 未隔离）；**负对照已入库可复算**（`--negative-control` ⇒ 故意让两条断言同时红 ⇒ 报 RED-BUT-NOT-ISOLATED + 整轮 exitCode 置 1；该模式自身 exit 0 = 证明成立）；还原 sha256 逐字节一致 |
 | 套件总数 | 280 → **281**（新增 1 个 source-only）；维度数 26 → **27** |
 
 **维度 3 scan: 基于信号 ① GSC 92 天实测（en 侧 `<title>` 中位 64 / 最长 77 / **61% 超 60** ⇒ SERP 截断是实打实的展示损失；zh 侧 CTR 是 en 的 **2.59 倍** ⇒ 中文是资产）② 站内源码取证（`title` 被 `tool-card-title-guard.test.ts:130` 硬钉住 ⇒ 短标题必须走新字段）③ AdSense 复审裁定的「提供真实、高质量的信息」④ 用户 2026-11-09 的提问「我的网站是给外国人看的，需不需要把中文内容全部删掉？」⇒ 先审计再决定，审计结论是**不删**。⚠️ 本轮仍无法做实时外部市场扫描（`web_search` 额度耗尽，HTTP 402）⇒ **不含实时外部信号**。
