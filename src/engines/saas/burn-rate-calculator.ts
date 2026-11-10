@@ -177,11 +177,11 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
 
   // 💡 Tip (v3)
   if (netBurn > 5) {
-    result += "\n\n💡 Tip: Team costs are typically 50-70% of gross burn. If you need to extend runway fast, headcount is the biggest lever — but also the slowest to undo. Try cutting SaaS subscriptions and contractor hours first for immediate savings without firing.";
+    result += "\n\n💡 Tip: " + JSON.stringify({ code: 'burn_high_burn', params: {} });
   } else if (netBurn > 0) {
-    result += "\n\n💡 Tip: Burn multiple below 1.0× means you're growing revenue faster than you burn. Below 0.5× is best-in-class — investors reward capital efficiency. Track it monthly.";
+    result += "\n\n💡 Tip: " + JSON.stringify({ code: 'burn_positive_burn', params: {} });
   } else {
-    result += "\n\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.";
+    result += "\n\n💡 Tip: " + JSON.stringify({ code: 'burn_cashflow_positive', params: {} });
   }
 
 
@@ -212,7 +212,7 @@ const customFn =
   "if(nb>0&&cc>0){var cuts=[0.1,0.2,0.3];var orw=cc/nb;r+='\\n\\uD83D\\uDD04 Cost-Cut Scenarios\\n';for(var ci=0;ci<cuts.length;ci++){var cut=cuts[ci];var sv=gb*cut;var rnb=nb-sv;var pl=Math.round(cut*100)+'%';if(rnb<=0){r+='• Cut '+pl+': Save '+fmt(sv)+'/mo — \\u2705 Cash-flow positive!\\n';}else{var nrw=cc/rnb;var ext=nrw-orw;r+='• Cut '+pl+': Save '+fmt(sv)+'/mo — Net burn '+fmt(rnb)+'/mo — Runway '+nrw.toFixed(1)+' mo (+'+ext.toFixed(1)+' extra)\\n';}}}" +
   "if(nb>0&&cc>0){r+='\\n\\n\\u2696\\uFE0F Break-Even\\n──────────────────────────────────────────────────────';var ber=mr+nb;var gp=mr>0?((nb/mr)*100):0;if(gp>0)r+='\\n• \\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue ('+gp.toFixed(0)+'% growth) to hit break-even';else r+='\\n• \\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue (no revenue baseline)';r+='\\n• Or cut costs by '+fmt(nb)+'/mo (e.g., '+Math.round((nb/gb)*100)+'% of current gross burn)';r+='\\n• Break-even runway: \\u221E (no burn = no runway concern)';}else if(nb<=0){r+='\\n\\n\\u2696\\uFE0F Break-Even\\n──────────────────────────────────────────────────────';r+='\\n• \\uD83D\\uDFE2 Already at break-even — revenue ≥ expenses. Focus on reinvestment.';}" +
   "if(nb>0&&cc>0){r+='\\n\\n\\uD83C\\uDFAF Runway Milestones\\n──────────────────────────────────────────────────────';var mms=[6,12,18,24];for(var mi=0;mi<mms.length;mi++){var cn=mms[mi]*nb;var st;if(cc>=cn)st='\\uD83D\\uDFE2';else if(cc>=cn*0.7)st='\\uD83D\\uDFE1';else if(cc>=cn*0.4)st='\\uD83D\\uDFE0';else st='\\uD83D\\uDD34';r+='\\n• '+mms[mi]+'-month runway:  need $'+Math.round(cn).toLocaleString()+' cash  (you have: '+fmt(cc)+')  '+st;}}" +
-  "if(nb>5)r+='\\n\\n\\uD83D\\uDCA1 Tip: Team costs are typically 50-70% of gross burn. If you need to extend runway fast, headcount is the biggest lever — but also the slowest to undo. Try cutting SaaS subscriptions and contractor hours first for immediate savings without firing.';else if(nb>0)r+='\\n\\n\\uD83D\\uDCA1 Tip: Burn multiple below 1.0\\u00D7 means you\\'re growing revenue faster than you burn. Below 0.5\\u00D7 is best-in-class — investors reward capital efficiency. Track it monthly.';else r+='\\n\\n\\uD83D\\uDCA1 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.';" +
+  "if(nb>5)r+='\\n\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify({code:'burn_high_burn',params:{}});else if(nb>0)r+='\\n\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify({code:'burn_positive_burn',params:{}});else r+='\\n\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify({code:'burn_cashflow_positive',params:{}});" +
   "return [r];";
 
 const engine: ToolEngine = {
@@ -231,7 +231,7 @@ const engine: ToolEngine = {
   clientConfig: { type: "custom", wordPools: {}, customFn },
   generate(inputs: Record<string, string>): string[] { return calculateBurnRate(inputs); },
   staticExamples: [
-    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\n\n🩺 Burn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.\n\n⚖️ Break-Even\n──────────────────────────────────────────────────────\n• 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.\n\n💡 Tip: Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, content, hiring) to compound the advantage before competitors catch up.',
+    '🔥 Cash Flow Health Check\n\n💸 Burn Summary\n• Gross Burn:    $0/mo\n• Net Burn:      $-20,000/mo  (Gross − Revenue)\n• Annual Burn:   $-240,000/yr\n\n⏳ Runway\n• Current Cash:      $500,000\n• Status:            ✅ Cash-flow positive! No burn concern.\n\n💀 Default Alive/Dead Status\n• Status:  ✅ Default Alive: cash-flow positive\n\n\n🩺 Burn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — ensure cash > 0 and net burn > 0.\n\n⚖️ Break-Even\n──────────────────────────────────────────────────────\n• 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.\n\n💡 Tip: {"code":"burn_cashflow_positive","params":{}}',
   ],
   faq: [
     { q: "What is the difference between gross burn and net burn?", a: "Gross burn is total monthly operating expenses before revenue. Net burn = gross burn − monthly revenue. For example, if you spend $12K/month and earn $5K/month, gross burn is $12K, net burn is $7K. Track both — gross burn shows spending discipline, net burn shows how fast your bank account actually shrinks." },

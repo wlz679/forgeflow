@@ -1,6 +1,7 @@
 ---
 import { t, getLang } from '../i18n';
 import { extractDecisionLines } from '../lib/decision-support';
+import { decisionTipTemplatesJson, renderDecisionTip } from '../lib/decision-tip-templates';
 
 export interface Props {
   /** 决策问题（工具专属） */
@@ -21,6 +22,12 @@ const lang = getLang(Astro);
 // 静态（SSR）版：直接从引擎的示例输出里取决策建议 —— 与客户端**同一份实现**
 const sampleLines = extractDecisionLines(sampleOutput);
 const hasSample = Boolean(sampleLines.tip);
+// ⭐ 有建议码 ⇒ 用 locale 模板渲染；没有 ⇒ 原样（兼容旧式英文句子）
+const sampleText = sampleLines.tipCode
+  ? renderDecisionTip(sampleLines.tipCode, sampleLines.tipParams, lang)
+  : sampleLines.tip;
+// ⭐ 客户端要用同一批模板（客户端 bundle 不带 locale ⇒ 由服务端注入）
+const tipTemplatesJson = decisionTipTemplatesJson(lang);
 ---
 
 <section id="decision-support" class="mb-10 mt-8 p-6 bg-gradient-to-br from-purple-50 to-sky-50 border border-purple-200 rounded-2xl">
@@ -57,9 +64,9 @@ const hasSample = Boolean(sampleLines.tip);
         class="inline-block text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"
       >{t('results.example', lang)}</span>
     </div>
-    <div id="decision-next-step" class="text-sm text-gray-700 leading-relaxed space-y-2">
+    <div id="decision-next-step" data-tip-templates={tipTemplatesJson} class="text-sm text-gray-700 leading-relaxed space-y-2">
       {hasSample ? (
-        <p>{sampleLines.tip}</p>
+        <p>{sampleText}</p>
       ) : (
         <p class="text-gray-500">{t('decision.next_step_pending', lang)}</p>
       )}

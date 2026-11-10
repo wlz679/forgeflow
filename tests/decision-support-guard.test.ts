@@ -223,6 +223,16 @@ test('P168 激活工具：英文页的决策建议不得含中文（实测 19 �
       problems.push(slug + ' 的决策建议在英文页上是中文：' + tip.slice(0, 60));
     }
   }
+  // ⭐ P168（本批）：建议码形态下，英文页的建议**来自 en.json 的 decision_tip.* 模板**
+  //   ⇒ 这条不变量现在也必须守 locale 那一侧，否则它对已迁移的 4 个工具**完全变空**
+  //     （引擎里只剩一段 JSON，天然查不出中文）。
+  for (const key of Object.keys(locales.en)) {
+    if (!key.startsWith('decision_tip.')) continue;
+    const v = locales.en[key];
+    if (/[\u4e00-\u9fff]/.test(v)) {
+      problems.push(key + ' 的英文模板里含中文：' + v.slice(0, 60));
+    }
+  }
   assert.deepEqual(problems, [], problems.join(' | '));
 });
 

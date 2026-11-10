@@ -2127,7 +2127,7 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
         //   ⇒ 这里只负责「交出去」，不重复实现提取。
         try {
           document.dispatchEvent(new CustomEvent('ffk:decision-result', {
-            detail: { raw: results && results.length ? String(results[0]) : '' }
+            detail: { raw: results && results.length ? results.join('\n') : '' }
           }));
         } catch (e) { /* 事件派发失败不影响计算结果 */ }
         var exportResult = config.type === 'custom' ? results[0] : results.join('\n\n');

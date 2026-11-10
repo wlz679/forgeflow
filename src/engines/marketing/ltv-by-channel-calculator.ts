@@ -191,24 +191,40 @@ function calculate(inputs: Record<string, string>): string[] {
   // Tip
   let tip: string;
   if (finiteRatios.length === 0) {
-    tip = 'Enter at least one channel with conversion count to see recommendations.';
+    tip = JSON.stringify({ code: 'ltv_no_data', params: {} });
   } else if (winner && loser && winner.id === loser.id) {
-    tip = 'Only one channel has data. Add 2-4 more channels for actionable comparison and reallocation insights.';
+    tip = JSON.stringify({ code: 'ltv_single_channel', params: {} });
   } else if (winner && loser) {
     const winnerRatio = winner.ratio;
     const loserRatio = loser.ratio;
     if (winnerRatio >= 3 && loserRatio < 1) {
-      tip = 'Strong winner (' + winner.id + ', ' + winnerRatio.toFixed(1) + 'x) vs weak loser (' + loser.id + ', ' + loserRatio.toFixed(1) + 'x). Shift budget: ' +
-        'double down on ' + winner.id + ' with lookalike audiences, pause or rework ' + loser.id + ' creatives.';
+      tip = JSON.stringify({
+        code: 'ltv_strong_winner',
+        params: {
+          winner: winner.id,
+          winnerRatio: winnerRatio.toFixed(1),
+          loser: loser.id,
+          loserRatio: loserRatio.toFixed(1),
+        },
+      });
     } else if (winnerRatio >= 3 && loserRatio >= 1) {
-      tip = 'Both channels healthy, but ' + winner.id + ' is ' + (winnerRatio / loserRatio).toFixed(1) + 'x more efficient. Shift 20-30% of ' + loser.id + ' budget to ' + winner.id + '.';
+      tip = JSON.stringify({
+        code: 'ltv_both_healthy',
+        params: {
+          winner: winner.id,
+          ratio: (winnerRatio / loserRatio).toFixed(1),
+          loser: loser.id,
+        },
+      });
     } else if (winnerRatio < 3 && loserRatio < 1) {
-      tip = 'No channel is in the 🟢 band. Audit both creatives and targeting before scaling — your CAC is structurally high.';
+      tip = JSON.stringify({ code: 'ltv_no_green', params: {} });
     } else {
-      tip = 'Channels cluster in similar ratios. Differentiate with new creative angles (video, UGC, founder-led) before reallocating.';
+      tip = JSON.stringify({ code: 'ltv_similar_ratios', params: {} });
     }
   } else {
-    tip = 'Add more channel data for comparison insights.';
+    // ⭐ P168：这条 else 实测**不可达**（finiteRatios.length > 0 ⇒ winner/loser 必然存在），
+    //   穷举 1296 组渠道组合从未出现 ⇒ 与 ltv_no_data 合并，避免产生永远跑不到的建议码。
+    tip = JSON.stringify({ code: 'ltv_no_data', params: {} });
   }
 
   // Build table rows
@@ -300,9 +316,7 @@ const customFn =
   "var ms='';" +
   "if(winner&&isFinite(winner.cac)){var sRev=winner.conversions*2*winner.ltv;var sProf=sRev-winner.spend*2;ms='Scaling '+winner.id+' 2x (same ratio):\\n  \\u2022 Revenue: '+money(sRev)+'\\n  \\u2022 Profit (after ad cost): '+money(sProf);}else{ms='Enter data to project scaling outcomes.';}" +
   "var tip='';" +
-  "if(finiteRatios.length===0){tip='Enter at least one channel with conversion count to see recommendations.';}" +
-  "else if(winner&&loser&&winner.id===loser.id){tip='Only one channel has data. Add 2-4 more channels for actionable comparison and reallocation insights.';}" +
-  "else if(winner&&loser){var wr=winner.ratio;var lr=loser.ratio;if(wr>=3&&lr<1){tip='Strong winner ('+winner.id+', '+wr.toFixed(1)+'x) vs weak loser ('+loser.id+', '+lr.toFixed(1)+'x). Shift budget: double down on '+winner.id+' with lookalike audiences, pause or rework '+loser.id+' creatives.';}else if(wr>=3&&lr>=1){tip='Both channels healthy, but '+winner.id+' is '+(wr/lr).toFixed(1)+'x more efficient. Shift 20-30% of '+loser.id+' budget to '+winner.id+'.';}else if(wr<3&&lr<1){tip='No channel is in the \\uD83D\\uDFE2 band. Audit both creatives and targeting before scaling \\u2014 your CAC is structurally high.';}else{tip='Channels cluster in similar ratios. Differentiate with new creative angles (video, UGC, founder-led) before reallocating.';}}else{tip='Add more channel data for comparison insights.';}" +
+  "if(finiteRatios.length===0){tip=JSON.stringify({code:'ltv_no_data',params:{}});}else if(winner&&loser&&winner.id===loser.id){tip=JSON.stringify({code:'ltv_single_channel',params:{}});}else if(winner&&loser){var wr=winner.ratio;var lr=loser.ratio;if(wr>=3&&lr<1){tip=JSON.stringify({code:'ltv_strong_winner',params:{winner:winner.id,winnerRatio:wr.toFixed(1),loser:loser.id,loserRatio:lr.toFixed(1)}});}else if(wr>=3&&lr>=1){tip=JSON.stringify({code:'ltv_both_healthy',params:{winner:winner.id,ratio:(wr/lr).toFixed(1),loser:loser.id}});}else if(wr<3&&lr<1){tip=JSON.stringify({code:'ltv_no_green',params:{}});}else{tip=JSON.stringify({code:'ltv_similar_ratios',params:{}});}}else{tip=JSON.stringify({code:'ltv_no_data',params:{}});}" +
   "var tr=ranked.map(function(c,i){var e=hBand(c.ratio);var cs=isFinite(c.cac)?money0(c.cac):'\\u221E (no conv)';var rs=isFinite(c.cac)?c.ratio.toFixed(2)+'x':'\\u2014';var rk=i===0?'\\uD83C\\uDFC6 ':'   ';return rk+e+' '+c.id+'  \\u00B7  spend '+money(c.spend)+' \\u00B7 conv '+c.conversions+' \\u00B7 LTV '+money(c.ltv)+' \\u00B7 CAC '+cs+' \\u00B7 '+rs;}).join('\\n');" +
   "var r2='';" +
   "r2+='\\u23F0 LTV by Channel Calculator\\n\\n';" +
@@ -400,7 +414,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ LTV by Channel Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively\n• Winner: Ch1 (25.00x)  ·  Loser: Ch4 (13.33x)\n• Blended CAC: $32.90  ·  Blended LTV:CAC: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x\n   🟢 Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x\n   🟢 Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x\n   🟢 Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x\n   🟢 Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x\n\n• Total spend:  $5,100\n• Total conv:   155\n• Blended CAC:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nShift 25% from Ch4 → Ch1:\n  • Ch1: ratio 25.00x → 19.23x (CAC rises)\n  • Ch4: ratio 13.33x → 17.78x (improves if convs stay)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTo push Ch4 from 13.33x to 🟢 (≥3.0x):\n  • Target CAC: $400.00 (currently $30.00)\n  • Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nScaling Ch1 2x (same ratio):\n  • Revenue: $50,000\n  • Profit (after ad cost): $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Both channels healthy, but Ch1 is 1.9x more efficient. Shift 20-30% of Ch4 budget to Ch1.\n'],
+  staticExamples: ['⏰ LTV by Channel Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively\n• Winner: Ch1 (25.00x)  ·  Loser: Ch4 (13.33x)\n• Blended CAC: $32.90  ·  Blended LTV:CAC: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x\n   🟢 Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x\n   🟢 Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x\n   🟢 Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x\n   🟢 Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x\n\n• Total spend:  $5,100\n• Total conv:   155\n• Blended CAC:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nShift 25% from Ch4 → Ch1:\n  • Ch1: ratio 25.00x → 19.23x (CAC rises)\n  • Ch4: ratio 13.33x → 17.78x (improves if convs stay)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTo push Ch4 from 13.33x to 🟢 (≥3.0x):\n  • Target CAC: $400.00 (currently $30.00)\n  • Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nScaling Ch1 2x (same ratio):\n  • Revenue: $50,000\n  • Profit (after ad cost): $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"ltv_both_healthy","params":{"winner":"Ch1","ratio":"1.9","loser":"Ch4"}}\n'],
   faq: [
     { q: 'How many channels should I compare?', a: 'Up to 5 — typical solopreneurs use 3-4 (Google Ads, Meta, TikTok, Email). Empty fields are skipped; only fill channels with data.' },
     { q: 'What is a good LTV:CAC ratio?', a: '3:1 is the textbook benchmark (🟢). 1:1 means you break even (🟡). Below 1:1 means losing money (🔴). World-class SaaS targets 5:1+' },

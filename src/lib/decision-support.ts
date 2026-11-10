@@ -32,6 +32,10 @@ export const DECISION_MARKERS = {
 export interface DecisionLines {
   /** 「💡 Tip」那一行的正文（不含标记本身） */
   tip: string;
+  /** ⭐ 结构化建议码（非结构化输出时为 ''） */
+  tipCode: string;
+  /** ⭐ 结构化建议的参数（非结构化输出时为 {}） */
+  tipParams: Record<string, string>;
 }
 
 /**
@@ -47,7 +51,13 @@ export interface DecisionLines {
  *   用户会 literally 看到星号包裹的粗体符号。
  */
 export function extractDecisionLines(output: string): DecisionLines {
-  return { tip: findLine(output, DECISION_MARKERS.tip) };
+  const tip = findLine(output, DECISION_MARKERS.tip);
+  const parsed = parseDecisionTip(tip);
+  return {
+    tip,
+    tipCode: parsed ? parsed.code : '',
+    tipParams: parsed ? parsed.params : {},
+  };
 }
 
 /** 输出里是否带得了决策建议（决定页面要不要渲染这个区块） */
@@ -74,6 +84,59 @@ export function stripDecisionTip(output: string): string {
     .split('\n')
     .filter((line) => !line.includes(marker))
     .join('\n');
+}
+
+/** 解析出来的结构化建议（code + 参数） */
+export interface DecisionTip {
+  /** 语义码，如 'burn_high_burn'；与 locale 的 decision_tip.<code> 对应 */
+  code: string;
+  /** 插值参数（值一律按字符串处理） */
+  params: Record<string, string>;
+}
+
+/**
+ * 把「💡 Tip:」后面的文本解析成结构化建议。
+ *
+ * ⭐ 引擎输出的是 JSON：{"code":"burn_high_burn","params":{"ratio":"0.42"}}
+ *   ⇒ 解析失败（不是 JSON / 没有 code）时返回 null，由调用方决定回退。
+ * ⭐ **参数值一律 String()**：locale 的占位符插值是纯文本替换，
+ *   数字与字符串没有区别 ⇒ 避免 3.2 与 "3.2" 两种写法在两侧不一致。
+ */
+export function parseDecisionTip(tip: string): DecisionTip | null {
+  const raw = (tip || '').trim();
+  if (!raw.startsWith('{')) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+  const obj = parsed as Record<string, unknown>;
+  const code = typeof obj.code === 'string' ? obj.code.trim() : '';
+  if (!code) return null;
+  const params: Record<string, string> = {};
+  const src = (obj.params ?? {}) as Record<string, unknown>;
+  if (src && typeof src === 'object' && !Array.isArray(src)) {
+    for (const [k, v] of Object.entries(src)) {
+      if (v === null || v === undefined) continue;
+      params[k] = String(v);
+    }
+  }
+  return { code, params };
+}
+
+/**
+ * 模板插值：{param} → 值（全部出现都替换）。
+ *
+ * ⭐ 服务端与客户端**共用这一份实现** ⇒ 两边不可能漂。
+ */
+export function fillTemplate(tmpl: string, params: Record<string, string>): string {
+  if (!tmpl) return '';
+  return Object.entries(params).reduce(
+    (s, [k, v]) => s.replaceAll('{' + k + '}', String(v)),
+    tmpl,
+  );
 }
 
 function findLine(output: string, marker: string): string {

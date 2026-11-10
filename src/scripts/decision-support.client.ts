@@ -16,7 +16,7 @@
 //   客户端的结果卡片**本来就**会剥掉 💡 Tip 那一行 ⇒ 建议搬到这里，
 //   而不是被两边各显示一次。
 
-import { extractDecisionLines } from '../lib/decision-support';
+import { extractDecisionLines, fillTemplate } from '../lib/decision-support';
 
 /** 决策区块里「针对你这组数字」那块的容器 id */
 const BOX_ID = 'decision-next-step';
@@ -28,11 +28,29 @@ interface DecisionResultDetail {
   raw: string;
 }
 
+/** 从 DOM 读服务端注入的模板表（客户端 bundle 不带 locale） */
+function readTemplates(box: HTMLElement): Record<string, string> {
+  const raw = box.dataset.tipTemplates;
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
 function render(box: HTMLElement, raw: string): void {
   const lines = extractDecisionLines(raw);
   if (!lines.tip) return;
+  let text = lines.tip;
+  if (lines.tipCode) {
+    const tmpl = readTemplates(box)[lines.tipCode];
+    // ⭐ 模板缺失 ⇒ 保留原文（守卫负责让缺键在 CI 里变红）
+    if (tmpl) text = fillTemplate(tmpl, lines.tipParams);
+  }
 
-  box.innerHTML = '<p>' + escapeHtml(lines.tip) + '</p>';
+  box.innerHTML = '<p>' + escapeHtml(text) + '</p>';
   // 「示例」徽章只在展示示例数据时成立 ⇒ 换成用户自己的数字后要去掉
   const badge = box.parentElement?.querySelector('[data-decision-example-badge]');
   if (badge) badge.remove();

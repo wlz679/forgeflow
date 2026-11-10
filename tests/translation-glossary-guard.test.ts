@@ -191,6 +191,18 @@ test('translation glossary structural invariants (每个 tool / 存在的 blog p
   );
 });
 
+// ⭐⭐ P168：**动态查表**的键前缀（键名在运行时才拼出来 ⇒ 源码里没有字面量 t() 调用）
+//   `decision_tip.<code>` —— 决策建议模板：键名 = 引擎吐出的建议码
+//   （src/lib/decision-tip-templates.ts 用 DECISION_TIP_KEY_PREFIX + code 拼出来）
+//
+// ⚠️ 豁免一条守卫必须有一条**更强**的守卫接手，否则就是「把检查删了」：
+//   这条守卫的作用是「不让死键在 locale 里发胖」；
+//   而 decision_tip.* 的**死键**由另一条**更强**的不变量守着 ——
+//   `decision-tip-i18n-guard` 的「建议码守恒（唯一不变量）」断言
+//   「locale 模板集合 == 源码建议码集合」⇒ **多一个模板就是死模板**，必红。
+//   ⇒ 这里放行不会削弱覆盖率，只是把「死键」的判定交给更精确的那条。
+const DYNAMIC_KEY_PREFIXES = ['decision_tip.'];
+
 test('no orphan translation keys (每个 locale key 都被某个 t() 调用引用)', () => {
   const keys = parseTranslations();
   const { exact, prefixes } = getUsedKeys();
@@ -203,6 +215,11 @@ test('no orphan translation keys (每个 locale key 都被某个 t() 调用引�
   function isUsed(key: string): boolean {
     if (exact.has(key)) return true;
     for (const prefix of prefixes) {
+      if (key.startsWith(prefix)) return true;
+    }
+    // ⭐ 动态查表的前缀（见 DYNAMIC_KEY_PREFIXES 的说明）：
+    //   键名运行时才拼出来 ⇒ 源码里没有字面量 t() 调用 ⇒ 不能用「有没有 t()」判它死没死。
+    for (const prefix of DYNAMIC_KEY_PREFIXES) {
       if (key.startsWith(prefix)) return true;
     }
     return false;

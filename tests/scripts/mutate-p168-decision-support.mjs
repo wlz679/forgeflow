@@ -31,9 +31,14 @@ import { join } from 'node:path';
 
 const ROOT = process.cwd();
 const NL = String.fromCharCode(10);
+// ⚠️ 源码里的反斜杠 n 是**两个字符**（反斜杠 + n），不是换行符
+//   ⇒ 锚点必须用这个，别用 NL（否则永远锚不中 ⇒ 变异被判 INVALID）。
+const BS = '\\n';
 
 const TARGETS = [
   'src/lib/decision-support.ts',
+  // P168：建议模板的服务端模块（本批新增）
+  'src/lib/decision-tip-templates.ts',
   'src/pages/[lang]/[slug].astro',
   'src/i18n/locales/en.json',
   'src/i18n/locales/zh.json',
@@ -186,6 +191,8 @@ function runGuard(which) {
       ? ['tests/decision-support-build-guard.test.ts']
       : [
           'tests/decision-support-guard.test.ts',
+          // ⭐ P168（本批）：决策建议「建议码 + locale 模板」的主守卫
+          'tests/decision-tip-i18n-guard.test.ts',
           // ⭐ P168 B3-1：同族的 P151 L5 守卫也归这条链路管 —— 它们守的是
           //   「这个工具的决策层齐不齐」。迁移型改动会撞上它们（旧判据钉的是
           //   「引擎输出里有没有那四个字符串」⇒ 实现细节），所以台子必须能跑到，
@@ -219,6 +226,12 @@ function failedAssertions(out) {
   }
   return names;
 }
+
+// P168（本批）：译文质量变异用的三个字面量（独立写死，不从 locale 读 ⇒
+//   变异自己不会跟着漂）
+const ZH_VALUE = "团队成本通常占总烧钱的 50–70%。你需要快速延长跑道时，人数是最大的杠杆——但也是最难撤销的。先砍 SaaS 订阅和外包工时，能立刻省下钱而不必裁员。";
+const EN_VALUE = "Team costs are typically 50-70% of gross burn. If you need to extend runway fast, headcount is the biggest lever — but also the slowest to undo. Try cutting SaaS subscriptions and contractor hours first for immediate savings without firing.";
+const SHORT_ZH = "团队成本通常占总烧钱的 50–70%。";
 
 const MUTATIONS = [
   {
@@ -303,13 +316,12 @@ const MUTATIONS = [
   {
     id: 'M6',
     guard: 'source',
-    desc: '英文页的决策建议改回中文',
+    desc: '英文页的决策建议改回中文（建议码形态下，英文文案在 en.json 的 decision_tip.*）',
     expect: 'P168 激活工具：英文页的决策建议不得含中文（实测 19 个引擎整段是中文）',
     apply: () => {
-      const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
+      const p = join(ROOT, 'src/i18n/locales/en.json');
       const s = readFileSync(p, 'utf8');
-      const needle = 'Default alive is just the start.';
-      const out = s.split(needle).join('默认活着只是开始。');
+      const out = s.replace(JSON.stringify(EN_VALUE), JSON.stringify('默认活着只是开始。'));
       if (out === s) throw new Error('锚点未命中');
       writeWithRetry(p, out);
     },
@@ -317,19 +329,19 @@ const MUTATIONS = [
   {
     id: 'M7',
     guard: 'source',
-    desc: '客户端 customFn 与服务端输出不再一致',
+    desc: '客户端 customFn 与服务端输出不再一致（customFn 吐了另一个建议码）',
     expect: 'P168 ⭐ customFn 与 generate 的建议必须一致（两套实现不许漂）',
     apply: () => {
       const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
       const s = readFileSync(p, 'utf8');
-      // 只改 customFn（客户端执行的那份）里的 Tip 文案，运行时那份不动。
+      // 只改 customFn（客户端执行的那份）里的建议码，运行时那份不动 ⇒ 两套实现漂了。
       // ⚠️ 必须改**基准输入下真的会走到的那个分支**（第 1 档：净烧钱占比高）：
       //   改第 3 档（Default alive）在默认输入下走不到 ⇒ 变异根本不生效 ⇒
       //   台子会报「SURVIVED」，而那其实是「变异无效」不是「守卫测不到」。
-      const needle = 'Team costs are typically 50-70% of gross burn.';
+      const needle = "'burn_high_burn'";
       const i = s.indexOf(needle, s.indexOf('const customFn'));
       if (i < 0) throw new Error('锚点未命中');
-      const out = s.slice(0, i) + 'Team costs are typically 50-70% of gross burn（客户端）。' + s.slice(i + needle.length);
+      const out = s.slice(0, i) + "'burn_positive_burn'" + s.slice(i + needle.length);
       if (out === s) throw new Error('锚点未命中');
       writeWithRetry(p, out);
     },
@@ -337,8 +349,12 @@ const MUTATIONS = [
   {
     id: 'M8',
     guard: 'build',
-    desc: '卡片不再剥离 Tip ⇒ 建议重复出现两次',
-    expect: 'P168 产物：⭐ 零重复 —— 全页恰好出现一次决策建议',
+    desc: '卡片不再剥离 Tip ⇒ 建议在卡片与决策区块各有一家',
+    // ⭐⭐ 认领的是「结果卡片里**没有**决策建议」那条，**不是**「零重复」那条：
+    //   「零重复」数的是**渲染后的文案**（区块里那份）
+    //   ⇒ 卡片里若没剥离建议，多出来的是**建议码 JSON** ⇒ 那条根本数不到 ⇒ 对 M8 隐形
+    //   （实测 SURVIVED ⇒ 补了第二条检测轴，并把 M8 指向它）。
+    expect: 'P168 产物：⭐ 结果卡片里**没有**决策建议（卡片剥离了它 ⇒ 建议只有区块一个家）',
     apply: () => {
       const p = join(ROOT, 'src/pages/[lang]/[slug].astro');
       const s = readFileSync(p, 'utf8');
@@ -405,15 +421,16 @@ const MUTATIONS = [
       const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
       const s = readFileSync(p, 'utf8');
       const probe = '• 🧭 Decision Question: Variant probe.';
-      // 运行时那份
-      let out = s.replace(
-        'result += "' + '\\n\\n💡 Tip: Default alive is just the start.',
-        'result += "' + '\\n\\n' + probe + '\\n💡 Tip: Default alive is just the start.',
-      );
-      // 缓存示例那份（SSR 卡片读的是它）
-      out = out.replace(
-        '\\n💡 Tip: Default alive is just the start.',
-        '\\n' + probe + '\\n💡 Tip: Default alive is just the start.',
+      // ⚠️ 锚点必须打在**默认输入真的会走到的那个分支**上：
+      //   守卫查运行时输出时用的是 generate({})（空输入 ⇒ netBurn 是 NaN）
+      //   ⇒ NaN > 5 与 NaN > 0 都是 false ⇒ 走的是 **else 分支**（burn_cashflow_positive）
+      //   ⇒ 打在前两个分支上变异根本不生效，台子会误报「SURVIVED」。
+      // ⚠️ 建议码形态下锚点必须是**新的形态**（旧的英文句子锚点已随本批改码而失效 ⇒ M12 曾 INVALID）。
+      const needle = 'result += "' + BS + BS + '💡 Tip: " + JSON.stringify({ code: \'burn_cashflow_positive\', params: {} });';
+      if (s.indexOf(needle) < 0) throw new Error('锚点未命中');
+      const out = s.replace(
+        needle,
+        'result += "' + BS + BS + probe + BS + '💡 Tip: " + JSON.stringify({ code: \'burn_cashflow_positive\', params: {} });',
       );
       if (out === s) throw new Error('锚点未命中');
       writeWithRetry(p, out);
@@ -455,21 +472,22 @@ const MUTATIONS = [
       const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
       const s = readFileSync(p, 'utf8');
       const probe = '• 🧭 Decision Question: Variant probe.';
-      // 运行时那份
-      let out = s.replace(
-        'result += "' + '\\n\\n💡 Tip: Default alive is just the start.',
-        'result += "' + '\\n\\n' + probe + '\\n💡 Tip: Default alive is just the start.',
-      );
+      // ⭐ 本条只改**静态示例**（SSR 卡片读的就是它）⇒ 运行时那份不动
+      //   （旧锚点是建议码改造前的英文句子 ⇒ 已失效 ⇒ M14 实测 INVALID）。
+      let out = s;
       // ⚠️ 静态示例那份（SSR 卡片读的是它）：
       //   锚点必须**在 staticExamples: 之后**找 —— 否则第一次替换改过的运行时
       //   会先命中，静态示例根本没被改 ⇒ 卡片里看不到 🧭 段 ⇒ 变异「存活」是假的
+      // ⚠️ 建议码形态下锚点必须是**新的形态**（旧的英文句子锚点已随本批改码而失效 ⇒ M14 曾 INVALID）。
       const cut = out.indexOf('staticExamples:');
       if (cut < 0) throw new Error('锚点未命中：staticExamples');
       const head = out.slice(0, cut);
       const tail = out.slice(cut);
+      const staticNeedle = BS + BS + '💡 Tip: {"code":"burn_cashflow_positive","params":{}}';
+      if (tail.indexOf(staticNeedle) < 0) throw new Error('锚点未命中：静态示例');
       const outTail = tail.replace(
-        '\\n💡 Tip: Default alive is just the start.',
-        '\\n' + probe + '\\n💡 Tip: Default alive is just the start.',
+        staticNeedle,
+        BS + BS + probe + BS + '💡 Tip: {"code":"burn_cashflow_positive","params":{}}',
       );
       if (outTail === tail) throw new Error('锚点未命中：静态示例');
       out = head + outTail;
@@ -541,14 +559,17 @@ const MUTATIONS = [
     apply: () => {
       const p = join(ROOT, 'src/engines/valuation/cac-calculator.ts');
       const s = readFileSync(p, 'utf8');
-      // ⭐ 锚点带 pbm（customFn 的变量名）⇒ 只会命中 customFn 那一份，
-      //   generate 用的是 paybackMonths ⇒ 两边不会一起改（一起改就漂不出来了）
-      const anchor = "pbm.toFixed(1) + ' months, fast enough to compound.";
-      if (s.indexOf(anchor) < 0) throw new Error('锚点未命中');
-      const out = s.replace(
-        anchor,
-        "pbm.toFixed(1) + ' months, fast enough to compound right now.",
-      );
+      // ⭐ 锚点限定在 **customFn 之后**（customFn 里是 code:'xxx'（无空格），
+      //   generate 里是 code: 'xxx'（带空格）⇒ 两边不会一起改 ⇒ 漂得出来）
+      // ⚠️ 建议码形态下锚点必须是**新的形态**（旧的英文句子锚点已随本批改码而失效 ⇒ M17 实测 INVALID）。
+      // ⚠️ 换成的码必须是**已经存在**的另一个码 ⇒ 码集合不变 ⇒ 守恒那条断言仍然绿
+      //   ⇒ 这条变异只红「两套实现不许漂」那一条。
+      const anchor = "code:'cac_payback_fast'";
+      const from = s.indexOf('const customFn');
+      if (from < 0) throw new Error('锚点未命中：customFn');
+      const i = s.indexOf(anchor, from);
+      if (i < 0) throw new Error('锚点未命中');
+      const out = s.slice(0, i) + "code:'cac_payback_within_12'" + s.slice(i + anchor.length);
       if (out === s) throw new Error('锚点未命中');
       writeWithRetry(p, out);
     },
@@ -576,6 +597,14 @@ const MUTATIONS = [
     guard: 'source',
     desc: 'cac 的动态 Tip 退化成常量（动态层名不副实）',
     expect: 'P168 激活工具：决策建议必须**随输入变化**（动态层不能是常量建议）',
+    // ⚠️⚠️ allowExtra 的理由是**逻辑蕴含**，不是「变异打偏」：
+    //   守恒断言里的「探针码集」是**跑出来的**（探针拿 5 组输入跑引擎、看它吐出哪些码）
+    //   ⇒ 「Tip 是常量」⇒ 探针只会跑出**一个**码 ⇒ 守恒断言**必然**一起红。
+    //   ⇒ 这**不是** M16/M22 那种「同一个不变量被两处守」（那种可以拆成两条专属变异），
+    //      而是「任何让 Tip 变常量的写法都会让探针码集塌成 1 个」⇒ **拆不开**。
+    //   ⇒ 「守恒那条单独红」由 **M28** 覆盖（两套实现同步改码 ⇒ 探针仍能跑出 5 个码
+    //      ⇒ 只红守恒一条）⇒ 两条断言**各有专属变异**。
+    allowExtra: true,
     apply: () => {
       const p = join(ROOT, 'src/engines/valuation/cac-calculator.ts');
       const s = readFileSync(p, 'utf8');
@@ -647,18 +676,149 @@ const MUTATIONS = [
       }
       writeWithRetry(p, out);
     },
+  },
+  {
+    id: 'M23',
+    guard: 'source',
+    desc: '建议码解析器不再拒绝「没有 code 的 JSON」',
+    expect: 'P168 建议码解析器：只认结构化 JSON，其它一律 null（不得「猜」）',
+    apply: () => {
+      const p = join(ROOT, 'src/lib/decision-support.ts');
+      const s = readFileSync(p, 'utf8');
+      const out = s.replace("  if (!code) return null;" + NL, '');
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M24',
+    guard: 'source',
+    desc: '模板插值只替换第一处（replaceAll → replace）',
+    expect: 'P168 模板插值：{param} 全部出现都替换（与 translate-helper 同一口径）',
+    apply: () => {
+      const p = join(ROOT, 'src/lib/decision-support.ts');
+      const s = readFileSync(p, 'utf8');
+      const out = s.replace("s.replaceAll('{' + k + '}', String(v))", "s.replace('{' + k + '}', String(v))");
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M25',
+    guard: 'source',
+    desc: 'renderDecisionTip 不再拦「不存在的建议码」⇒ 键名被渲染到页面上',
+    expect: 'P168 模板模块：不存在的建议码返回空串（不得把键名渲染到页面上）',
+    apply: () => {
+      const p = join(ROOT, 'src/lib/decision-tip-templates.ts');
+      const s = readFileSync(p, 'utf8');
+      const out = s.replace("  if (tmpl === key) return '';" + NL, '');
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M26',
+    guard: 'source',
+    desc: 'zh 模板被换成英文原文（没翻）',
+    expect: 'P168 译文质量（一）：zh 模板不是英文原文、不是占位',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/zh.json');
+      const s = readFileSync(p, 'utf8');
+      const out = s.replace(JSON.stringify(ZH_VALUE), JSON.stringify(EN_VALUE));
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M27',
+    guard: 'source',
+    desc: 'zh 模板被砍掉大半（保真度）',
+    expect: 'P168 译文质量（二）：zh 模板厚度达标（中文 ≥ 英文 × 0.55）',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/zh.json');
+      const s = readFileSync(p, 'utf8');
+      const out = s.replace(JSON.stringify(ZH_VALUE), JSON.stringify(SHORT_ZH));
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M28',
+    guard: 'source',
+    desc: 'burn-rate 的建议码写错（TS 侧与 customFn 侧同时改 ⇒ 两套实现不漂）',
+    expect: 'P168 建议码守恒（唯一不变量）：源码 == 探针 == 登记 == locale(en+zh)，且无死模板',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      const out = s.split("'burn_high_burn'").join("'burn_positive_burn'");
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M29',
+    guard: 'source',
+    desc: '客户端 raw 退回只取 results[0]（gdpr 的 Tip 在最后一个元素里 ⇒ 抓不到）',
+    expect: 'P168 接线：派给客户端的 raw 必须包含全部结果（gdpr 的 Tip 在最后一个元素里）',
+    apply: () => {
+      const p = join(ROOT, 'src/pages/[lang]/[slug].astro');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ 源码里是字面量 \n（**两个字符**）⇒ 锚点必须用 BS，不能用 NL
+      //   （旧锚点用了真换行 ⇒ 永远锚不中 ⇒ M29 实测 INVALID）。
+      const out = s.replace(
+        "detail: { raw: results && results.length ? results.join('" + BS + "') : '' }",
+        "detail: { raw: results && results.length ? String(results[0]) : '' }",
+      );
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
   },];
+
+// ⭐⭐⭐ **负对照**（negative control）—— 台子自己的「隔离判定」也要被证明有效。
+//   故意让**两条**断言同时红：
+//     ① 守恒断言（burn-rate 的建议码写错 ⇒ 探针/源码/登记/locale 四者不再相等）
+//     ② 译文质量（一）（zh 模板被换成英文原文 ⇒ 没翻）
+//   ⇒ 台子必须报 RED-BUT-NOT-ISOLATED（一次变异红了两条 ⇒ 没隔离）。
+const NEGATIVE_CONTROL_MUTATION = {
+  id: 'NEG',
+  guard: 'source',
+  desc: '负对照：同时破坏两条断言（守恒 + 译文质量一）',
+  apply: () => {
+    const p = join(ROOT, 'src/engines/saas/burn-rate-calculator.ts');
+    const s = readFileSync(p, 'utf8');
+    const out = s.split("'burn_high_burn'").join("'burn_positive_burn'");
+    if (out === s) throw new Error('锚点未命中');
+    writeWithRetry(p, out);
+    const q = join(ROOT, 'src/i18n/locales/zh.json');
+    const t = readFileSync(q, 'utf8');
+    const out2 = t.replace(JSON.stringify(ZH_VALUE), JSON.stringify(EN_VALUE));
+    if (out2 === t) throw new Error('锚点未命中');
+    writeWithRetry(q, out2);
+  },
+};
 
 // ⭐ 迭代开关：`node tests/scripts/mutate-p168-decision-support.mjs M13,M14`
 //   只跑指定的变异（调试单条时省时间）；不带参数就是跑满全部。
-const ONLY = process.argv[2]
-  ? process.argv[2].split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
-  : null;
+const ONLY =
+  process.argv[2] && !process.argv[2].startsWith('--')
+    ? process.argv[2].split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
+    : null;
+
+// ⭐ 负对照开关：node tests/scripts/mutate-p168-decision-support.mjs --negative-control
+//   （或 $env:P168_NEGATIVE_CONTROL=1）⇒ 只跑负对照那一条变异。
+//   ⭐⭐ 台子自己的「隔离判定」也要被证明有效 —— 没有它，「KILLED N」本身可以是假绿。
+const NEGATIVE_CONTROL =
+  process.argv.includes('--negative-control') || process.env.P168_NEGATIVE_CONTROL === '1';
 
 let killed = 0;
 let survived = 0;
 let invalid = 0;
 let notIsolated = 0;
+// ⚠️ negOk 必须声明在 **try 块之外**：
+//   退出码那行在 try/finally **之后**（模块顶层）
+//   ⇒ 声明在 try 块内的话，负对照模式跑到最后会抛 ReferenceError: negOk is not defined
+//   ⇒ 「该模式自身 exit 0 = 证明成立」这条契约直接失效（实测踩到）。
+let negOk = false;
 
 try {
   for (const which of ['source', 'build']) {
@@ -672,7 +832,8 @@ try {
   console.log('基线绿 ✓（source + build）');
   console.log('');
 
-  for (const m of MUTATIONS) {
+  const mutationsToRun = NEGATIVE_CONTROL ? [NEGATIVE_CONTROL_MUTATION] : MUTATIONS;
+  for (const m of mutationsToRun) {
     if (ONLY && !ONLY.includes(m.id)) continue;
     // ⭐ 还原失败必须立刻停下：否则上一轮的变异会叠加到下一轮，
     //   台子就变成了「在污染的仓库上测」—— 结论全部作废。
@@ -712,6 +873,12 @@ try {
           '[' + m.id + '] RED-BUT-NOT-ISOLATED — ' + m.desc +
             '（失败的断言：' + (failed.join(' / ') || '(未识别)') + '）',
         );
+        if (NEGATIVE_CONTROL) {
+          negOk = failed.length >= 2;
+          console.log(negOk
+            ? '✅ 负对照 OK —— 台子确实识别出了未隔离（一次变异红 ' + failed.length + ' 条）⇒ 隔离判定本身有效。'
+            : '❌ 负对照失败 —— 只看到 ' + failed.length + ' 条失败（期望 ≥ 2）⇒ 隔离判定可能失效');
+        }
       }
     } else {
       survived++;
@@ -742,4 +909,5 @@ try {
 
 console.log('');
 console.log('KILLED ' + killed + ' · SURVIVED ' + survived + ' · INVALID ' + invalid + ' · 未隔离 ' + notIsolated);
-process.exitCode = survived > 0 ? 1 : 0;
+// ⭐ 负对照模式：**该模式自身 exit 0 = 证明成立**（它证明的是「台子抓得住未隔离」）。
+process.exitCode = NEGATIVE_CONTROL ? (negOk ? 0 : 1) : (survived > 0 ? 1 : 0);

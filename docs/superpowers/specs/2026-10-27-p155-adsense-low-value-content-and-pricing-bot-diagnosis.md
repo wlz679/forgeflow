@@ -3039,3 +3039,110 @@ AdSense 复审把站点判为 **低价值内容（Low Value Content）**，三�
 ⭐ 第三行**实证了「同一个 `&` 的编码取决于它所在的上下文」**：文本节点用 `&amp;`、属性值用数字实体 `&#38;` ⇒ 只认 `&amp;` 的解码器会让 p167 线上验收脚本对**构建正确的页面**误报 FAIL。
 
 **推送记录**：两端远端 HEAD 均已用 `git ls-remote` 复核 = `ccee575`（0 behind）。⚠️ 推 GitHub 用的是 **URL 而非 remote 名** ⇒ 本地 `github/master` 跟踪 ref 不会更新 ⇒ **`git ls-remote` 才是权威复核**（`git status` 里的「behind」可能是假象）。
+
+### 19.29 zh 决策区块动态层英文缺陷：「建议码 + locale 模板」（2026-11-10）
+
+#### 19.29.0 定位
+
+用户 2026-11-06 拍板「记为独立缺陷，下一轮处理」的那条缺陷：**zh 页「🧭 算完之后」区块的动态层显示英文**（静态 4 层是中文 ⇒ 同一块区块里两种语言，更刺眼）。
+
+线上确认：`https://forgeflowkit.com/zh/solopreneur-burn-rate-calculator/` 的「针对你这组数字的下一步 / 示例」显示 `Default alive is just the start. Reinvest excess cash into gr...`。
+
+机制（取证）：
+- 引擎输出里写的是一条**英文建议**（`💡 Tip: <英文句子>`），**随输入分支变化**（burn-rate 3 档 / ltv 7 档 / gdpr 4 档 / cac 5 档 = 19 条）。
+- `stripDecisionTip` 把这一行从结果卡片**结构性剥离**（零重复）⇒ 建议**只在决策区块里出现一次**。
+- `extractDecisionLines` 抽出它，`DecisionSupport.astro`（SSR）与 `decision-support.client.ts`（客户端）渲染它 ⇒ **正文永远是英文**。
+- zh 侧唯一的翻译入口 `translateCalcOutput` 只翻 emoji 段标题（8 个 AI cost 引擎），**不翻正文**；这 4 个工具也不走那条路。
+
+#### 19.29.1 影响面实测：4 个工具，不是 100 个
+
+激活判定 = 「i18n 键存在 **且** `hasDecisionLines(staticExamples[0])`」⇒ 实测（`tmp/verify-activation.ts`）：locale 里有 `decision_goal` 键的工具 = **4**（burn-rate / cac / gdpr-fine / ltv-by-channel，locale 键数 16 = 4×4），且 4 个的 `staticExamples[0]` 都含 Tip ⇒ **4 个都渲染决策区块**。
+
+⇒ **线上影响面 = 4 个工具**（不是 100 个）。
+
+#### 19.29.2 分支穷举与一个死分支
+
+穷举扫描（`tmp/sweep-tips.ts`）：
+
+| 引擎 | 观察到的 tip 文案 | 归并后的建议码 |
+|---|---|---|
+| burn-rate | 3 | 3（无参数） |
+| gdpr-fine | 4 档 | 4（各带 1 个参数 `{ratio}`） |
+| cac | 5 | 5（各带 1 个参数） |
+| ltv-by-channel | **49**（1296 组渠道组合） | **6**（2 条带多参数）+ **1 条一次都没出现** |
+
+⚠️ ltv 的 `Add more channel data for comparison insights.` 是**死分支**（`finiteRatios.length > 0` ⇒ `winner`/`loser` 必然都存在 ⇒ 外层 `else` 不可达）⇒ **与 `ltv_no_data` 合并**（语义同为「先去填数据」），**不新增建议码、不新增模板**。
+
+⚠️ gdpr 的敞口比例 `ratio = (finePct/100) × 行业系数 × 违规次数`，**与营收无关** ⇒ 换营收不换档（探针必须换 `max_fine_pct` / `violations_per_year`）。
+
+⇒ 最终 **18 个建议码**（burn 3 + gdpr 4 + cac 5 + ltv 6）。
+
+#### 19.29.3 形态定案（用户 2026-11-10 拍板 A）
+
+三个候选：**A** 结构化建议码 + locale 模板（**拍板**）／**B** 不碰引擎、决策层按英文模板正则反查参数／**C** 引擎发码但保留英文句子。
+
+**A 的理由**：
+1. **无正则、无模式漂移** —— 码是有限枚举 ⇒ 守卫可做成集合相等断言。
+2. **英文文案只在 locale 一处** ⇒ 改措辞不动引擎、不用重生成示例。
+3. **与 B3-0/B3-1 的范式一致** —— 静态 4 层就是「en.json + zh.json 各一份、引擎里没有」；动态层推广同一形态。
+4. **降级是内建的** —— `translate()` 的 zh→en 回退 ⇒ 缺 zh 键时页面显示**英文**，不是空块也不是裸 code；守卫另外让缺键在 CI 里变红。
+5. **客户端 bundle 不被 locale 拖爆** —— `en.json` **970KB** + `zh.json` **944KB** ⇒ 模板查找留在服务端（`src/lib/decision-tip-templates.ts`），客户端只拿服务端注入的模板表（DOM 属性）；纯逻辑模块 `decision-support.ts` **刻意不 import locale**（有守卫钉住）。
+
+#### 19.29.4 守恒：三个视角必须相等
+
+**引擎源码里的建议码集合 == 运行时探针跑出来的集合 == locale 的模板集合（en + zh）。**
+
+⚠️ 最初拆成「每引擎守恒」+「全局守恒」**两条**断言 ⇒ §19.26.9 的老教训再次命中：**同一个不变量被两处守 ⇒ 一次变异必然红两条** ⇒ **合成一条**（源码 / 运行时探针 / 登记清单 / locale 模板四个视角）。
+
+⇒ 探针输入**全部是穷举扫描出来的实测值**（不是推测）⇒ 登记在 `tests/_decision-tip-probe.ts`（**入库，可复算**），配套工具 `tests/scripts/p168-decision-tip-probe.ts`。
+
+#### 19.29.5 顺带修掉的第二个缺陷：gdpr 的客户端动态层形同虚设
+
+`solopreneur-gdpr-fine-calculator` 的 `generate()` 返回 **6 个元素**、Tip 在**最后一个**；而派给客户端的 raw 只取 `results[0]` ⇒ 客户端**永远抓不到 Tip** ⇒ 用户点「计算」后动态层还停在示例内容。
+
+⇒ 改成 `results.join('\n')`（客户端只从中提取 Tip、只渲染 Tip ⇒ 不影响卡片）。
+
+#### 19.29.6 守卫的探针会随形态过期 —— 以及它暴露出的「两条检测轴互不相交」
+
+`tests/decision-support-build-guard.test.ts` 原先拿**引擎原始 tip**当探针（数「全页出现几次」）⇒ 建议码形态下页面显示的是**渲染后的模板**，而引擎原始 tip 现在是一段 JSON ⇒ 不改探针会误报「决策建议出现 0 次」。
+
+⇒ 探针改为**按语言取渲染结果**（en 英文 / zh 中文）。
+
+⚠️ 由此暴露一条**更深的**问题：**变异 M8「卡片不再剥离 Tip」SURVIVED** —— 因为卡片里多出来的是**决策码 JSON**，而探针数的是**渲染后的文案** ⇒ 两条检测轴**互不相交** ⇒ 该缺陷对验收门**完全隐形**。
+
+⇒ 补第二条轴：**结果卡片里不得出现决策建议**（卡片剥离了它 ⇒ 建议只有区块一个家）。
+
+#### 19.29.7 维度 3 scan 声明
+
+基于信号 ① **仓库内穷举扫描**（4 个引擎的 Tip 分支全量；ltv 1296 组渠道组合）② **既有 P168 决策层契约**（i18n 键存在即激活 ⇒ 激活清单不会漂）③ **B3-0/B3-1 的迁出范式**（翻译 + 从引擎删除 + 搬进 locale）④ 用户 2026-11-10 的两个拍板（形态 A + 只修动态层）。
+
+⚠️ 本轮**不含实时外部信号**（`web_search` 额度耗尽，HTTP 402）。
+
+#### 19.29.8 遗留（不在本批）
+
+- zh 页**结果卡片整段英文**（92 个业务引擎的输出正文）—— 量级远大于本批，单独排期。
+- 其余约 **15 个**引擎的中文 🧭 决策段迁出（spec §19.24 批次表）。
+- 决策支持按分类铺开（B3-2 表）与补齐（B3-3 表）。
+#### 19.29.9 验收（实测，非推算）
+
+| 项 | 结果 |
+|---|---|
+| `tsc --noEmit` | exit 0 |
+| `codegen-examples` / `codegen-customfn` / `check-i18n-completeness` / `check-engine-count-by-category` / `score-user-value` / `codegen-review-dates` | 全部 exit 0 |
+| 构建 | **438** 页 |
+| 源码级守卫（decision-support-guard 12 + decision-tip-i18n-guard 15 + 同族 P151 L5 2） | **29/29** |
+| 产物级守卫（decision-support-build-guard） | **8/8** |
+| 探针工具 `tests/scripts/p168-decision-tip-probe.ts` | **18/18**（**入库可复算**） |
+| 变异台子 `tests/scripts/mutate-p168-decision-support.mjs` | **29/29 KILLED**（0 存活 / 0 INVALID / 0 未隔离） |
+| 负对照（同一台子 `--negative-control`） | 报 RED-BUT-NOT-ISOLATED（一次变异红 **2** 条）且**该模式自身 exit 0** |
+| 还原校验 | sha256 **逐字节一致** |
+| 台子残留自检 `tests/scripts/p168-harness-residue-check.mjs` | **9/9 干净** |
+| 产物级实测（4 工具 × 2 语言 = 8） | zh 动态层**中文**（含参数插值）/ en **英文** / 卡片**无建议码** / 模板已注入 —— **8/8** |
+| 全量套件 | **282** 套件 10 批全部 `# fail 0`（首轮抓到 **2** 处真实缺陷 —— `translation-glossary-guard` 的孤儿键误判 / `plans/INDEX.md` 计数表未同步 —— 均已修并复跑全绿） |
+
+**全量套件首轮抓到两处真实缺陷（已修 + 单跑复绿）**：
+
+1. ⭐⭐ **`translation-glossary-guard` 把 18 个 `decision_tip.*` 键判成「孤儿键」** —— 那条守卫的口径是「每个 locale key 都被某个字面量 `t()` 调用引用」，而建议码模板是**运行时按码查表**（`DECISION_TIP_KEY_PREFIX + code`）⇒ 源码里根本没有字面量 `t('decision_tip.…')`。⇒ 修法不是删检查，而是在守卫里显式登记**动态查表的键前缀**，并写明**由谁接手**：这批键的「死键」由 `decision-tip-i18n-guard` 的**建议码守恒**（locale 模板集合 == 源码建议码集合 ⇒ 多一个模板就是死模板，必红）**更强地**守着 ⇒ 豁免不削弱覆盖率，只把判定交给更精确的那条。⚠️ 计划里「不需要加白名单」的判断**只核了 `dead-i18n-keys-guard`**（build-dep、扫产物文案、不枚举源码未用键）⇒ **漏了这条** ⇒ 教训：**「某个守卫不会误判」的断言，要落到「所有会枚举源码键的守卫」上，不能只查一个名字**。
+2. ⚠️ **`plans/INDEX.md` 的「类别计数表」没跟着改** —— 我只改了文件头部的说明行（写了「Section 9 计数 40→41、总数 111→112」）⇒ 但**计数表本身**还是 40 / 111 ⇒ `doc-freshness-guard` 判「段计数漂移 + 总数漂移」。⇒ 教训：**头部说明行不算更新，表里的数字才是被校验的那份** —— 两个地方写着同一个数字时，改一处不改另一处 = 漂移。
+
+**维度 3 scan 声明见 §19.29.7**（本批不含实时外部信号：`web_search` 额度耗尽，HTTP 402）。

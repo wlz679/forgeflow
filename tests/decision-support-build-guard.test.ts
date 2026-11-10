@@ -32,6 +32,9 @@ import {
   readLocale,
 } from './_decision-support-fixture.ts';
 import { extractDecisionLines } from '../src/lib/decision-support.ts';
+// ⭐ P168（本批）：建议码形态下，页面显示的是**渲染后的模板**（en 英文 / zh 中文）
+//   ⇒ 探针必须按语言取渲染结果，不能再拿引擎原始 tip（那现在是一段 JSON）
+import { renderDecisionTip } from '../src/lib/decision-tip-templates.ts';
 
 const ROOT = process.cwd();
 
@@ -62,8 +65,12 @@ test('P168 产物：激活工具的页面（en + zh）都渲染出决策区块�
   const problems: string[] = [];
   for (const slug of activated) {
     const engine = bySlug.get(slug);
-    const sampleTip = extractDecisionLines(engine?.staticExamples?.[0] ?? '').tip;
+    const sampleLines = extractDecisionLines(engine?.staticExamples?.[0] ?? '');
     for (const lang of LANGS) {
+      // ⭐ 探针 = 按语言渲染后的那条建议（建议码形态下不再是引擎原始 tip）
+      const sampleTip = sampleLines.tipCode
+        ? renderDecisionTip(sampleLines.tipCode, sampleLines.tipParams, lang)
+        : sampleLines.tip;
       const rel = lang + '/' + slug + '/index.html';
       if (!existsSync(join(ROOT, 'dist', rel))) { problems.push(rel + ' 产物缺失'); continue; }
       const html = page(rel);
@@ -94,10 +101,14 @@ test('P168 产物：⭐ 零重复 —— 全页恰好出现一次决策建议', 
   const bySlug = new Map(engines.map((e) => [e.slug, e]));
   const problems: string[] = [];
   for (const slug of activatedSlugs(locales as any)) {
-    const sampleTip = extractDecisionLines(bySlug.get(slug)?.staticExamples?.[0] ?? '').tip;
-    if (!sampleTip) continue;
-    const probe = sampleTip.slice(0, 50);
+    const sampleLines = extractDecisionLines(bySlug.get(slug)?.staticExamples?.[0] ?? '');
     for (const lang of LANGS) {
+      // ⭐ 探针 = 按语言渲染后的那条建议（建议码形态下不再是引擎原始 tip）
+      const sampleTip = sampleLines.tipCode
+        ? renderDecisionTip(sampleLines.tipCode, sampleLines.tipParams, lang)
+        : sampleLines.tip;
+      if (!sampleTip) continue;
+      const probe = sampleTip.slice(0, 50);
       const rel = lang + '/' + slug + '/index.html';
       if (!existsSync(join(ROOT, 'dist', rel))) continue;
       const html = page(rel);
@@ -107,6 +118,43 @@ test('P168 产物：⭐ 零重复 —— 全页恰好出现一次决策建议', 
       const count = mainText.split(probe).length - 1;
       if (count !== 1) {
         problems.push(rel + ' 决策建议出现 ' + count + ' 次（应为 1 次：卡片与决策区块只能有一个家）');
+      }
+    }
+  }
+  assert.deepEqual(problems, [], problems.join(' | '));
+});
+
+test('P168 产物：⭐ 结果卡片里**没有**决策建议（卡片剥离了它 ⇒ 建议只有区块一个家）', async () => {
+  // ⭐⭐ **与「全页恰好出现一次」互不相交的第二条轴**：
+  //   那条数的是**渲染后的文案**（区块里那份）
+  //   ⇒ 卡片里若没剥离建议，多出来的是**决策码 JSON**（引擎原始 tip）
+  //   ⇒ 两条轴各查一件事，缺一条就有一类缺陷对验收门**完全隐形**。
+  //
+  // ⚠️⚠️ 探针必须落在**原始 HTML**上，不能拿「解标签后的文本」去比：
+  //   建议码是 JSON（{"code":"burn_high_burn"}）⇒ Astro 把 `"` 转义成 `&quot;`
+  //   ⇒ 拿「未转义的原文」比「只解了 &amp; 的文本」**永远比不上**
+  //   ⇒ 第一版就是这么写的 ⇒ 变异 M8 实测 SURVIVED（守卫对这条缺陷完全失明）。
+  // ⇒ 改用两个**不会被 HTML 转义**的标记：💡 Tip / 💡 提示 的标记词 + 建议码标识符。
+  const engines = await loadEngines();
+  const bySlug = new Map(engines.map((e) => [e.slug, e]));
+  const problems: string[] = [];
+  for (const slug of activatedSlugs(locales as any)) {
+    const lines = extractDecisionLines(bySlug.get(slug)?.staticExamples?.[0] ?? '');
+    if (!lines.tip) continue;
+    for (const lang of LANGS) {
+      const rel = lang + '/' + slug + '/index.html';
+      if (!existsSync(join(ROOT, 'dist', rel))) continue;
+      const html = page(rel);
+      const card = html.match(/<div id="static-results"[\s\S]*?(?=<div id="dynamic-results")/);
+      if (!card) { problems.push(rel + ' 取不到结果卡片'); continue; }
+      const cardHtml = card[0];
+      // ① 建议的标记词（en / zh 两种；emoji 与 ASCII 不会被 HTML 转义）
+      if (cardHtml.includes('💡 Tip') || cardHtml.includes('💡 提示')) {
+        problems.push(rel + ' 的结果卡片里还有 💡 Tip 行 ⇒ 建议在卡片与决策区块各有一家');
+      }
+      // ② 建议码本身（标识符是纯 ASCII ⇒ 不会被转义）
+      if (lines.tipCode && cardHtml.includes(lines.tipCode)) {
+        problems.push(rel + ' 的结果卡片里还有建议码 ' + lines.tipCode);
       }
     }
   }
