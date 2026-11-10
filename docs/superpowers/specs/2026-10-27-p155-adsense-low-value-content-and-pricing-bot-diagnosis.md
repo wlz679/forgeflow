@@ -3146,3 +3146,21 @@ AdSense 复审把站点判为 **低价值内容（Low Value Content）**，三�
 2. ⚠️ **`plans/INDEX.md` 的「类别计数表」没跟着改** —— 我只改了文件头部的说明行（写了「Section 9 计数 40→41、总数 111→112」）⇒ 但**计数表本身**还是 40 / 111 ⇒ `doc-freshness-guard` 判「段计数漂移 + 总数漂移」。⇒ 教训：**头部说明行不算更新，表里的数字才是被校验的那份** —— 两个地方写着同一个数字时，改一处不改另一处 = 漂移。
 
 **维度 3 scan 声明见 §19.29.7**（本批不含实时外部信号：`web_search` 额度耗尽，HTTP 402）。
+#### 19.29.10 上线事实与线上实测（2026-11-10）
+
+**⛔ 部署事实**：推 GitHub master = **上线**（部署触发器在 **CF Dashboard webhook**，不在 CI）⇒ push 后**约 4 分钟**生效。本批实测：两端推送完成（`a43e697..8ba84e2`）⇒ 约 4 分钟后线上页面已是新版本。
+
+**线上实测**（浏览器直连线上 URL，非本地产物）：
+
+| 页面 | 「🧭 算完之后」动态层 | 判定 |
+|---|---|---|
+| `/zh/solopreneur-burn-rate-calculator/` | 「默认活着」只是起点。把多余现金再投入增长实验（付费获客、内容、招人），在竞争对手追上来之前把优势复利放大。 | ✅ 中文 |
+| `/zh/solopreneur-ltv-by-channel-calculator/` | 两个渠道都健康，但 Ch1 的效率高出 1.9 倍。把 Ch4 预算的 20–30% 挪给 Ch1。 | ✅ 中文 |
+| `/zh/solopreneur-gdpr-fine-calculator/` | 年度敞口占营收 6.40%，高到很可能触及罚款档位上限。立刻上报给 C 级负责人和法务，并把预期罚款作为预算科目入账，而不是一个可以等的风险。 | ✅ 中文 |
+| `/zh/solopreneur-cac-calculator/` | 你的 CAC 是 $80，但没有每客户平均收入就算不出回本周期，没法判断。补上这个输入就能看获客是否收回成本；在此之前先把数字按渠道拆开——被平均数掩盖的正是那条最贵的渠道。 | ✅ 中文 |
+| `/en/solopreneur-burn-rate-calculator/` | Default alive is just the start. Reinvest excess cash into growth experiments (paid acquisition, …) | ✅ 英文（逐字未变，无回归） |
+
+⭐ `data-tip-templates` 已注入线上页面（en/zh 各 18 条模板）。
+
+⭐⭐ **本地浏览器端到端**（填一组会切分支的数字 → 点「生成」）：zh/burn-rate 的动态层由 SSR 示例的「默认活着」切到 **`burn_high_burn` 分支的中文**（「团队成本通常占总烧钱的 50–70%……先砍 SaaS 订阅和外包工时，能立刻省下钱而不必裁员。」）⇒ 证明「**按码查表 + 参数插值**」在真实浏览器里成立，而不只是 SSR 静态值正确（⇒ 客户端那条路径也被验到了，不只是服务端）。
+
