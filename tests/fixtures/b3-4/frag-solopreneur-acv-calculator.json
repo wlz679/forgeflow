@@ -1,0 +1,101 @@
+{
+  "slug": "solopreneur-acv-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "A single ACV number hides the two things that actually decide the business: whether that revenue costs less than a third of what a customer is worth, and whether it holds across every segment you sell to. A large average is often just a few enterprise contracts sitting next to a base of very small accounts, which is a completely different company from one where every customer is worth the same. Use this calculator to work out which of the two you actually run before you set a price, a quota, or a hiring plan around it.",
+      "zh": "一个 ACV 数字把真正要紧的两件事藏起来了：这份收入是不是低于客户价值的 1/3，以及它在各个客群上是否都站得住。平均值高，往往只是少数几个大客户合同旁边压着一堆小额账号 —— 那和每个客户价值都一样的生意，是完全不同的两种生意：扩张路径、销售方式、获客成本全都不一样。先用这个计算器确认你到底是哪一种，再据此定价、定指标、定招人计划。"
+    },
+    "decision_recommendation": {
+      "en": "Match the operating model to the band, not the other way round. Below $2,000 a year you are in micro-transaction territory: keep the motion self-serve and hunt for expansion paths such as tier upgrades, annual prepay discounts, and bundle attach, because a single sale will never move the needle. Between $2,000 and $10,000 you need a standardised onboarding and a hard CAC ceiling of one third of ACV. Between $10,000 and $50,000 you can afford a customer success manager and should be actively testing expansion. Above $50,000 you are selling enterprise: named sponsors, quarterly executive reviews, and a renewal process that watches for discount creep.",
+      "zh": "先看落在哪一档，再配运营模式，别反过来。(1) 低于 $2,000 是微交易区间：保持自助式成交，把力气放在扩张路径上 —— 升级套餐、年付预付折扣、捆绑附加，因为单笔成交永远改变不了大局。(2) $2,000–$10,000 要有标准化 onboarding，并把 CAC 硬压在 ACV 的 1/3 以内。(3) $10,000–$50,000 养得起 CSM，应该主动测试 expansion。(4) 高于 $50,000 就是企业级生意：指定高管对接、季度业务复盘，并在续约时盯住折扣滑坡。"
+    },
+    "decision_constraint": {
+      "en": "Four assumptions can move the real answer away from this figure. First, whether the number is ARR or total contract value: the same contract looks very different once you annualise a three-year deal. Second, the expansion rate you assumed, which is usually a five-point estimate in either direction and compounds for every year you keep it. Third, contract length and renewal rate, which decide whether the revenue stream is worth what it looks like today. Fourth, discounts and promotions, which are not in this figure at all and quietly move realised ACV.",
+      "zh": "有四个前提会把真实数字推离这个估算。第一，这个数到底是 ARR 还是合同总额：同一份合同，把三年期折成年之后完全是两回事。第二，你假设的 expansion rate —— 它通常是 ±5 个百分点的估计误差，而且每多沿用一年都在放大。第三，合同长度与续约率，它们决定这份收入流今天看着值不值。第四，折扣与促销根本没算进来，却悄悄挪动了实际 ACV。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Pipeline Coverage Calculator] to check whether the pipeline can actually deliver this ACV, run [MRR Calculator] to confirm that the monthly and annual numbers tell the same story, and run [Net Revenue Retention (NRR) Calculator] to separate expansion from churn. Before you commit, compare retention between your high-ACV and low-ACV accounts cohort by cohort: if the big accounts churn faster, the average is flattering you.",
+      "zh": "先跑 [销售管道覆盖率计算器] 看管道能不能真的撑起这个 ACV，再跑 [MRR 计算器] 确认月度和年度口径讲的是同一个故事，然后跑 [净收入留存率（NRR）计算器] 把扩张和流失拆开。拍板之前，按 cohort 对比高 ACV 与低 ACV 客户的留存差异：如果大客户流失更快，这个平均值就是在粉饰你。"
+    }
+  },
+  "tips": [
+    {
+      "code": "acv_micro_transaction",
+      "en": "Annual contract value of {acv} ({monthly} a month) puts you in micro-transaction territory: high volume, low value. One sale will not move the needle, so focus on expansion paths instead, such as tier upgrades, annual prepay discounts, and bundle attach. Your expansion-adjusted value is {expanded} a year, and that is the number worth growing.",
+      "zh": "年合同价值 {acv}（每月 {monthly}）落在微交易区间：单量高、单值低。单笔成交改变不了大局，那就把力气放在扩张路径上 —— 升级套餐、年付预付折扣、捆绑附加。扩张调整后是每年 {expanded}，那才是值得增长的数。",
+      "params": {
+        "acv": "{acv}",
+        "monthly": "{monthly}",
+        "expanded": "{expanded}"
+      }
+    },
+    {
+      "code": "acv_smb_tier",
+      "en": "Annual contract value of {acv} ({monthly} a month) is SMB-tier pricing. To reach the mid-market band, package features into higher tiers and gate usage-based features, then audit the pricing page: most SMB products leave 30–50% of ACV on the table through underpriced annual plans and missing enterprise-only modules. Your expansion-adjusted value is {expanded} a year.",
+      "zh": "年合同价值 {acv}（每月 {monthly}）属于 SMB 档定价。要爬到中端市场，就把功能打包成更高档、把用量型功能设成门槛，然后审一遍定价页：多数 SMB 产品靠年付定价偏低、缺企业专属模块，白扔掉 30–50% 的 ACV。扩张调整后是每年 {expanded}。",
+      "params": {
+        "acv": "{acv}",
+        "monthly": "{monthly}",
+        "expanded": "{expanded}"
+      }
+    },
+    {
+      "code": "acv_mid_market",
+      "en": "Annual contract value of {acv} ({monthly} a month) is the mid-market sweet spot. To move into enterprise, invest in procurement-ready features such as SSO, SOC2, and audit logs, plus security review templates and named customer success support, and make sure deal size growth is not bought with a sales cycle your team cannot sustain. Your expansion-adjusted value is {expanded} a year.",
+      "zh": "年合同价值 {acv}（每月 {monthly}）正是中端市场的甜点区。要往企业级走，先把采购就绪的功能做出来：SSO、SOC2、审计日志，再配上安全评审模板和指定 CSM，同时确认 deal size 的增长不是用团队撑不住的销售周期换来的。扩张调整后是每年 {expanded}。",
+      "params": {
+        "acv": "{acv}",
+        "monthly": "{monthly}",
+        "expanded": "{expanded}"
+      }
+    },
+    {
+      "code": "acv_enterprise_grade",
+      "en": "Annual contract value of {acv} ({monthly} a month) is enterprise-grade and worth protecting. Keep SLA delivery, executive sponsor relationships, and quarterly business reviews in place, and watch for discount creep at renewal: expansion revenue from upsell and cross-sell should be the main growth lever, not price increases on the existing base. Your expansion-adjusted value is {expanded} a year.",
+      "zh": "年合同价值 {acv}（每月 {monthly}）是企业级合同，值得守。SLA 交付、高管对接关系、季度业务复盘都要维持住，续约时盯紧折扣滑坡：靠加价去涨存量是最差的做法，增长的主力应该是 upsell 与 cross-sell 带来的扩张收入。扩张调整后是每年 {expanded}。",
+      "params": {
+        "acv": "{acv}",
+        "monthly": "{monthly}",
+        "expanded": "{expanded}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "acv_micro_transaction",
+      "inputs": {
+        "totalContractValue": "10000",
+        "contractLength": "12",
+        "numCustomers": "12",
+        "expansionRate": "0"
+      }
+    },
+    {
+      "code": "acv_smb_tier",
+      "inputs": {
+        "totalContractValue": "60000",
+        "contractLength": "12",
+        "numCustomers": "12",
+        "expansionRate": "0"
+      }
+    },
+    {
+      "code": "acv_mid_market",
+      "inputs": {
+        "totalContractValue": "300000",
+        "contractLength": "12",
+        "numCustomers": "12",
+        "expansionRate": "10"
+      }
+    },
+    {
+      "code": "acv_enterprise_grade",
+      "inputs": {
+        "totalContractValue": "1200000",
+        "contractLength": "12",
+        "numCustomers": "12",
+        "expansionRate": "10"
+      }
+    }
+  ]
+}

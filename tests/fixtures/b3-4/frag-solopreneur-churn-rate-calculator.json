@@ -1,0 +1,88 @@
+{
+  "slug": "solopreneur-churn-rate-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Monthly churn of 5% looks healthy on the dashboard, but it annualises to 46%, and that means the customer base empties out in roughly two years if nothing changes. The decision this calculator has to support is not which number looks worse, it is where the next dollar goes: rescuing customers you already have, or acquiring new ones, and which of the two returns more. Use it to price that choice against your own numbers rather than against a benchmark chart.",
+      "zh": "月流失 5% 在看板上表面是「健康」的，但年化就是 46% —— 什么都不做的话，两年左右客户基数就清零了。这个计算器要支撑的决策，不是哪个数字更难看，而是下一笔钱该花在救现有客户，还是花在获新客，以及哪一个回报更高。用它拿你自己的数字去算这笔账，而不是拿行业基准图去比，也不要拿单一指标下结论。"
+    },
+    "decision_recommendation": {
+      "en": "Read the churn band and act on it. (1) Monthly churn of 3% or less is the healthy line, because that annualises to under 30%, while 5% is already burning through the bottom of the base. (2) Rescuing a churned customer is only worth the effort when it costs no more than 3 times CAC; above that, let them go. (3) Logo churn and revenue churn have to fall together to count as progress, because when only one of them falls you are mostly losing low-value customers.",
+      "zh": "先看流失率落在哪一档，再决定动作。(1) 月流失 ≤ 3% 才是健康线，因为年化不到 30%；而 5% 已经在烧客户基数的底，再高就是几何级失血。(2) 救一个流失客户的成本不超过 3 倍 CAC 才值得救，超过这个数就放他走，别把预算砸在救不回的人身上。(3) Logo Churn 和 Revenue Churn 必须同时下降才算有进展 —— 只有一个降，多半只是低价值用户在流失，那不是真的改善。"
+    },
+    "decision_constraint": {
+      "en": "Two assumptions move the real number away from this estimate. (1) Whether the 5% is a cohort rate or an aggregate one changes the story entirely: a cohort monthly churn blended with all incoming traffic mixes long-tenured accounts with brand-new ones and hides which segment is actually leaking. (2) Whether you separate voluntary churn, where the customer cancels, from involuntary churn, where the card fails, decides where the effort goes, because failed payments are usually recoverable with a retry and cancellations usually are not.",
+      "zh": "有两个前提会把真实数字推离这个估算。第一，5% 到底是 cohort 口径还是 aggregate 口径，故事完全不同：把 cohort 月流失和所有新进流量混在一起算，等于把老客户和新客户揉成一团，看不出到底是哪一段在漏。第二，有没有把主动流失（用户自己 cancel）和被动流失（payment fail）分开，决定了力气该往哪使 —— 支付失败大多能用自动重试救回来，主动 cancel 大多救不回来。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Logo Churn Rate Calculator] to split logo churn from revenue churn into two separate lines, and run [Cohort Retention Calculator] to get the cohort monthly churn that the aggregate number hides. Price the rescue effort against [CAC Calculator] before you promise to win customers back. And when monthly churn is above 5%, move the budget out of acquisition and into retention, using [Customer Health Score Calculator] to pick the accounts worth saving first.",
+      "zh": "先跑 [客户流失率计算器] 把 logo churn 和 revenue churn 拆成两条线，再跑 [队列留存计算器] 算 cohort 月流失 —— aggregate 那个数字会把它盖住。动手捞客户之前，先用 [CAC 计算器] 给救援成本定个价。月流失超过 5% 的时候，把预算从获客挪到留存，并用 [客户健康评分计算器] 挑出最值得先救的那批账号。"
+    }
+  },
+  "tips": [
+    {
+      "code": "churn_rate_healthy",
+      "en": "Monthly logo churn of {monthly} annualises to {annual}, which is inside the healthy band: you are losing {lost} of {base} customers a month and the base is still growing. Churn compounds against you, so keep the retention work steady and put the marginal dollar into acquisition instead — the cheapest churn reduction left is usually to stop acquiring customers who leave in month one.",
+      "zh": "月度客户流失率 {monthly}，年化 {annual}，落在健康档：每个月流失 {lost} 位客户（客户基数 {base} 位），基数还在涨。流失是负复利，所以保持现在的留存投入，把边际预算放到获客上 —— 继续压流失最划算的一招，通常是别再获取那些第一个月就走的客户。",
+      "params": {
+        "monthly": "{monthly}",
+        "annual": "{annual}",
+        "lost": "{lost}",
+        "base": "{base}"
+      }
+    },
+    {
+      "code": "churn_rate_average",
+      "en": "Monthly logo churn of {monthly} annualises to {annual}. That is typical for SaaS, but it compounds: {lost} of {base} customers disappear every month before a single new one arrives. Cutting churn from 5% to 3% a month is usually easier and more profitable than doubling acquisition, so fix churn first — start with onboarding, then a day 30, 60 and 90 customer success cadence.",
+      "zh": "月度客户流失率 {monthly}，年化 {annual}。这在 SaaS 里算常态，但它会复利：每个月还没等到新客，{base} 位客户里就先少了 {lost} 位。把月流失从 5% 压到 3%，通常比把获客翻倍更容易、也更赚钱，所以先修流失 —— 从 onboarding 开始，再加 30/60/90 天的客户成功节奏。",
+      "params": {
+        "monthly": "{monthly}",
+        "annual": "{annual}",
+        "lost": "{lost}",
+        "base": "{base}"
+      }
+    },
+    {
+      "code": "churn_rate_high",
+      "en": "Monthly logo churn of {monthly} annualises to {annual}, so {lost} of {base} customers leave every month and the base empties out over roughly two years if nothing changes. Pause the acquisition budget and move it into retention: split voluntary cancels from failed payments first, because failed payments are mostly recoverable with automatic retries while cancellations usually are not.",
+      "zh": "月度客户流失率 {monthly}，年化 {annual} —— 每个月 {base} 位客户里要走掉 {lost} 位，不做改变的话，两年左右客户基数就清空了。先暂停获客预算，把它挪到留存上：第一步是把主动 cancel 和支付失败分开，因为支付失败大多能靠自动重试救回来，而主动 cancel 大多救不回来。",
+      "params": {
+        "monthly": "{monthly}",
+        "annual": "{annual}",
+        "lost": "{lost}",
+        "base": "{base}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "churn_rate_healthy",
+      "inputs": {
+        "customersStart": "1000",
+        "customersLost": "15",
+        "newCustomers": "25",
+        "avgRevenuePerCustomer": "50",
+        "expansionRevenue": "800"
+      }
+    },
+    {
+      "code": "churn_rate_average",
+      "inputs": {
+        "customersStart": "500",
+        "customersLost": "15",
+        "newCustomers": "20",
+        "avgRevenuePerCustomer": "50",
+        "expansionRevenue": "400"
+      }
+    },
+    {
+      "code": "churn_rate_high",
+      "inputs": {
+        "customersStart": "200",
+        "customersLost": "15",
+        "newCustomers": "10",
+        "avgRevenuePerCustomer": "60",
+        "expansionRevenue": "200"
+      }
+    }
+  ]
+}

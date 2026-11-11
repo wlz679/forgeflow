@@ -104,11 +104,23 @@ function calculate(inputs: Record<string, string>): string[] {
   else if (band === 'good') { gapToNext = 80 - score; nextTier = '🟢 Excellent 80'; }
   else { gapToNext = 0; nextTier = 'top tier maintained'; }
 
-  let tip: string;
-  if (band === 'critical') tip = 'Score under 40 is critical regardless of preset. Emergency save play: executive sponsor pairing, dedicated CSM, usage audit.';
-  else if (band === 'warning') tip = preset === 'service-led' ? 'Service-led: focus on closing open tickets and reducing response time.' : preset === 'product-led' ? 'Product-led: focus on adoption depth via power users.' : preset === 'sales-led' ? 'Sales-led: schedule exec business review to align on renewal.' : 'Balanced: audit all 5 signals and identify the lowest normalized score.';
-  else if (band === 'good') tip = preset === 'service-led' ? 'Good score. Maintain ticket response quality; do not let support slip.' : preset === 'product-led' ? 'Good score. Push to Excellent via adoption depth; identify expansion-ready users.' : preset === 'sales-led' ? 'Good score. Schedule exec review to align on expansion and renewal.' : 'Good balanced score. Push to Excellent by improving the lowest normalized signal.';
-  else tip = preset === 'service-led' ? 'Excellent score. Maintain service quality; review quarterly.' : preset === 'product-led' ? 'Excellent score. Identify expansion-ready users for upsell motion.' : preset === 'sales-led' ? 'Excellent score. Lock in renewal with multi-year contract discussion.' : 'Excellent balanced score. Maintain the engine: monitor usage trends and protect champion relationships.';
+  // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面那套 Health band，
+  //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+  //   最弱信号取自**已算好的** normalized 数组（不改任何计算逻辑）。
+  const signalLabels = ['Product Usage', 'NPS', 'Support Tickets', 'Engagement', 'Contract Value'];
+  let weakestIdx = 0;
+  for (let i = 1; i < normalized.length; i++) if (normalized[i] < normalized[weakestIdx]) weakestIdx = i;
+  const tipParams = {
+    score: pct1(score),
+    weakest: signalLabels[weakestIdx],
+    weakestScore: pct1(normalized[weakestIdx]),
+  };
+  let tipObj: { code: string; params: Record<string, string> };
+  if (band === 'critical') tipObj = { code: 'healthscore_critical', params: tipParams };
+  else if (band === 'warning') tipObj = { code: 'healthscore_at_risk', params: tipParams };
+  else if (band === 'good') tipObj = { code: 'healthscore_monitor', params: tipParams };
+  else tipObj = { code: 'healthscore_excellent', params: tipParams };
+  const tipJson = JSON.stringify(tipObj);
 
   let r =
   '📊 Customer Health Score Calculator\n\n' +
@@ -144,14 +156,13 @@ function calculate(inputs: Record<string, string>): string[] {
   '• Next tier: ' + nextTier + '\n' +
   '• Gap to next tier: ' + pct1(Math.max(0, gapToNext)) + ' points' + (band === 'excellent' ? ' already at top' : '') + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-  '💡 Tip: ' + tip + '\n';
+  '💡 Tip: ' + tipJson + '\n';
 
-  // P151 batch3: L5 Decision Recommendation
-  r += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 health score 是陷阱，**核心问题是"该保存还是扩张 + 哪个信号在拖分 + 干预 ROI 哪个最高"**。单一 score 不告诉你要做什么。\n' +
-    '• 🧭 Recommendation: (1) **score < 40** → 立即 exec sponsor pairing + 应急 CSM 介入；(2) **40-60** → audit 最差信号（看 tip），top 1 优先修复；(3) **60-80** → push weakest signal 到下一档；(4) **> 80** → 锁定 renewal + 探 expansion。\n' +
-    '• 🧭 Key Uncertainty: (1) preset 权重选择 bias score（product-led 偏 usage）；(2) 5 个信号采集时间窗可能错位；(3) 自报告数据（survey NPS）有 bias；(4) high-value contract 不一定 = 健康。\n' +
-    '• 🧭 Next Action: (a) 跑 [NRR Calculator] 看健康与扩张关联；(b) 跑 [Churn Rate Calculator] 看 cohort 流失；(c) 跑 [Expansion Revenue Calculator] 看 upsell 潜力；(d) 决策前 CSM 做 qualitative call 验证 score 信号。';
+  // P168 B3-4：**🧭 四段已迁到页面的「🧭 算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_goal /
+  //     decision_recommendation / decision_constraint / decision_next_tool，双语）
+  //   ⇒ 引擎只负责算；**决策支持由区块独占** ⇒ 同页不再有两份决策建议。
+  //   ⚠ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事。
 
   return [r];
 }
@@ -179,6 +190,12 @@ const customFn =
   "s+='  • Engagement:       ' + sgs[3].toFixed(1) + ' (× ' + wt[3].toFixed(2) + ')\\n';" +
   "s+='  • Contract Value:   ' + sgs[4].toFixed(1) + ' (× ' + wt[4].toFixed(2) + ')\\n\\n';" +
   "s+='💡 Top Lever: ' + (wt[0]>=0.30?'Lean into product-usage diagnostics — DAU/MAU, feature adoption.':wt[1]>=0.30?'Survey NPS drivers — onboarding, support resolution, perceived value.':'Audit your support load — tickets drag the score most.');" +
+  // P168 B3-4：customFn 侧与运行时侧**逐字一致**（同一组输入 ⇒ 同一条建议）
+  "var sgn=['Product Usage','NPS','Support Tickets','Engagement','Contract Value'];" +
+  "var wi=0;for(var q=1;q<5;q++){if(sgs[q]<sgs[wi])wi=q;}" +
+  "var tipP={score:sc.toFixed(1),weakest:sgn[wi],weakestScore:sgs[wi].toFixed(1)};" +
+  "var tipO=sc>=80?{code:'healthscore_excellent',params:tipP}:(sc>=60?{code:'healthscore_monitor',params:tipP}:(sc>=40?{code:'healthscore_at_risk',params:tipP}:{code:'healthscore_critical',params:tipP}));" +
+  "s+='\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify(tipO);" +
   "return [s];";
 
 const engine: ToolEngine = {
@@ -205,17 +222,17 @@ const engine: ToolEngine = {
     'https://www.gainsight.com/blog/customer-health-score/',
     'https://www.churnzero.com/customer-health-score/',
   ],
-  staticExamples: ['📊 Customer Health Score Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — Score 60–80; monitor closely, engagement check\n• Health Score: 73.0 / 100  ·  Preset: balanced\n• Sub-scores: Product 75.0 · NPS 70.0 · Support 80.0 · Engagement 80.0 · Contract 60.0\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Product Usage:    75 → 75.0 normalized\n• NPS:              40 → 70.0 normalized\n• Support Tickets:  5 → 80.0 normalized\n• Engagement:       80 → 80.0 normalized\n• Contract Value:   60 → 60.0 normalized\n• Weights: Product 20% · NPS 20% · Support 20% · Engagement 20% · Contract 20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• NPS 40→70: Score 76.0 (+3.0)\n• Product Usage 75→90: Score 76.0 (+3.0)\n• Support Tickets 5→2: Score 75.4 (+2.4)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: Score ≥ 80\n• Current score: 73.0  ·  Gap to 🟢: 7.0 points\n• Action: raise Product Usage to 100 OR improve any other signal by 7.0 normalized points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent 80\n• Gap to next tier: 7.0 points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Good balanced score. Push to Excellent by improving the lowest normalized signal.\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 health score 是陷阱，**核心问题是"该保存还是扩张 + 哪个信号在拖分 + 干预 ROI 哪个最高"**。单一 score 不告诉你要做什么。\n• 🧭 Recommendation: (1) **score < 40** → 立即 exec sponsor pairing + 应急 CSM 介入；(2) **40-60** → audit 最差信号（看 tip），top 1 优先修复；(3) **60-80** → push weakest signal 到下一档；(4) **> 80** → 锁定 renewal + 探 expansion。\n• 🧭 Key Uncertainty: (1) preset 权重选择 bias score（product-led 偏 usage）；(2) 5 个信号采集时间窗可能错位；(3) 自报告数据（survey NPS）有 bias；(4) high-value contract 不一定 = 健康。\n• 🧭 Next Action: (a) 跑 [NRR Calculator] 看健康与扩张关联；(b) 跑 [Churn Rate Calculator] 看 cohort 流失；(c) 跑 [Expansion Revenue Calculator] 看 upsell 潜力；(d) 决策前 CSM 做 qualitative call 验证 score 信号。'],
+  staticExamples: ['📊 Customer Health Score Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — Score 60–80; monitor closely, engagement check\n• Health Score: 73.0 / 100  ·  Preset: balanced\n• Sub-scores: Product 75.0 · NPS 70.0 · Support 80.0 · Engagement 80.0 · Contract 60.0\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Product Usage:    75 → 75.0 normalized\n• NPS:              40 → 70.0 normalized\n• Support Tickets:  5 → 80.0 normalized\n• Engagement:       80 → 80.0 normalized\n• Contract Value:   60 → 60.0 normalized\n• Weights: Product 20% · NPS 20% · Support 20% · Engagement 20% · Contract 20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• NPS 40→70: Score 76.0 (+3.0)\n• Product Usage 75→90: Score 76.0 (+3.0)\n• Support Tickets 5→2: Score 75.4 (+2.4)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: Score ≥ 80\n• Current score: 73.0  ·  Gap to 🟢: 7.0 points\n• Action: raise Product Usage to 100 OR improve any other signal by 7.0 normalized points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent 80\n• Gap to next tier: 7.0 points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"healthscore_monitor","params":{"score":"73.0","weakest":"Contract Value","weakestScore":"60.0"}}\n'],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该现在干预这个客户，还是先看是哪一项信号在拖分',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,

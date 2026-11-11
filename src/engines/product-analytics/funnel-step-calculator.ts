@@ -40,7 +40,7 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 
 // customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
-const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var steps = []; for (var i = 1; i <= 5; i++) { var v = cnn(Number(inputs['step' + i])); if (v > 0) steps.push(v); } if (steps.length < 2) return ['At least 2 step counts required.']; var e2e = steps[steps.length - 1] / steps[0]; var band = e2e >= 0.40 ? 'Excellent' : e2e >= 0.25 ? 'Good' : e2e >= 0.15 ? 'Warning' : 'Critical'; var emoji = e2e >= 0.40 ? 'GREEN' : e2e >= 0.25 ? 'YELLOW' : e2e >= 0.15 ? 'ORANGE' : 'RED'; var dropIdx = 0, maxDelta = 0; for (var j = 1; j < steps.length; j++) { var d = steps[j-1] - steps[j]; if (d > maxDelta) { maxDelta = d; dropIdx = j-1; } } var stepRate = []; for (var k = 1; k < steps.length; k++) stepRate.push((steps[k]/steps[k-1]*100).toFixed(1) + '%'); return ['FUNNEL ' + emoji + ' ' + band + ' (' + (e2e*100).toFixed(1) + '% end-to-end)','SNAPSHOT: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Biggest drop: Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' (lost ' + maxDelta + ' users)','WHATIF: if biggest drop step improves by +10%, e2e lifts to ' + ((steps[steps.length - 1] + maxDelta*0.5) / steps[0] * 100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (40% e2e), need final step >= ' + Math.ceil(steps[0] * 0.4).toLocaleString() + ' (currently ' + steps[steps.length-1].toLocaleString() + ')','MILESTONE: optimize Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' first; a 20% retention gain there lifts funnel to ' + ((steps[steps.length - 1] + maxDelta*0.2) / steps[0] * 100).toFixed(1) + '%','TIP: PM rule of thumb - in-product funnels lose the most users at the value-discovery step. Pair with Activation Rate Calculator to measure post-funnel commitment.', '\\n\\n🧭 DECISION RECOMMENDATION\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n🧭 Decision Question: 单纯看 e2e conversion 是陷阱，**核心问题是\"最大 leak 在哪一步 + 那一步的修复 ROI 是不是最高\"**。优化小 leak 步骤不如聚焦最大 drop 步骤。\\n🧭 Recommendation: (1) **e2e < 10%** → 系统性 onboard 问题，audit UX 全链路；(2) **10-25%** → 优化 biggest drop 步骤（修复 ROI 最高）；(3) **25-40%** → A/B test 现有 funnel；(4) **> 40%** → 防御性 monitor + 扩张 acquisition。\\n🧭 Key Uncertainty: (1) biggest drop 步骤不等于最低 % conversion（绝对 vs 相对）；(2) attribution window 影响 step counts；(3) multi-path funnel 中 80/20 法则（top 3 path 占 80% users）；(4) cohort 效应（新用户 ≠ 老用户行为）。\\n🧭 Next Action: (a) 跑 [Activation Rate Calculator] 看 funnel 后 commit 度；(b) 跑 [Cohort Retention Calculator] 看 cohort 稳定性；(c) 跑 [Feature Adoption Calculator] 看每个 step 的 adoption；(d) 决策前先 session recording 分析 biggest drop 步骤。']; } return run(inputs, pick, fill);";
+const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var steps = []; for (var i = 1; i <= 5; i++) { var v = cnn(Number(inputs['step' + i])); if (v > 0) steps.push(v); } if (steps.length < 2) return ['At least 2 step counts required.']; var e2e = steps[steps.length - 1] / steps[0]; var band = e2e >= 0.40 ? 'Excellent' : e2e >= 0.25 ? 'Good' : e2e >= 0.15 ? 'Warning' : 'Critical'; var emoji = e2e >= 0.40 ? 'GREEN' : e2e >= 0.25 ? 'YELLOW' : e2e >= 0.15 ? 'ORANGE' : 'RED'; var dropIdx = 0, maxDelta = 0; for (var j = 1; j < steps.length; j++) { var d = steps[j-1] - steps[j]; if (d > maxDelta) { maxDelta = d; dropIdx = j-1; } } var stepRate = []; for (var k = 1; k < steps.length; k++) stepRate.push((steps[k]/steps[k-1]*100).toFixed(1) + '%'); var tipP={e2e:(e2e*100).toFixed(1)+'%',lost:maxDelta.toLocaleString(),dropFrom:String(dropIdx+1),dropTo:String(dropIdx+2)}; var tipO=e2e>=0.40?{code:'funnelstep_excellent',params:tipP}:(e2e>=0.25?{code:'funnelstep_healthy',params:tipP}:(e2e>=0.15?{code:'funnelstep_warning',params:tipP}:{code:'funnelstep_critical',params:tipP})); return ['FUNNEL ' + emoji + ' ' + band + ' (' + (e2e*100).toFixed(1) + '% end-to-end)','SNAPSHOT: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Biggest drop: Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' (lost ' + maxDelta + ' users)','WHATIF: if biggest drop step improves by +10%, e2e lifts to ' + ((steps[steps.length - 1] + maxDelta*0.5) / steps[0] * 100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (40% e2e), need final step >= ' + Math.ceil(steps[0] * 0.4).toLocaleString() + ' (currently ' + steps[steps.length-1].toLocaleString() + ')','MILESTONE: optimize Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' first; a 20% retention gain there lifts funnel to ' + ((steps[steps.length - 1] + maxDelta*0.2) / steps[0] * 100).toFixed(1) + '%','💡 Tip: '+JSON.stringify(tipO)]; } return run(inputs, pick, fill);";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-funnel-step-calculator',
@@ -62,11 +62,11 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该先修漏斗里掉得最狠的那一步，还是继续往后面加功能',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs) {
@@ -85,19 +85,32 @@ const engine: ToolEngine = {
     for (let i = 1; i < steps.length; i++) stepRates.push(fmtPct(steps[i] / steps[i - 1]));
     const targetFinal = Math.ceil(steps[0] * HEALTH_BANDS.good.threshold);
     const liftedFinal = steps[steps.length - 1] + maxDelta * 0.5;
+    // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面那套 Funnel Health band，
+    //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+    const tipParams = {
+      e2e: fmtPct(e2e),
+      lost: maxDelta.toLocaleString(),
+      dropFrom: String(dropIdx + 1),
+      dropTo: String(dropIdx + 2),
+    };
+    let tipObj: { code: string; params: Record<string, string> };
+    if (band === 'excellent') tipObj = { code: 'funnelstep_excellent', params: tipParams };
+    else if (band === 'good') tipObj = { code: 'funnelstep_healthy', params: tipParams };
+    else if (band === 'warning') tipObj = { code: 'funnelstep_warning', params: tipParams };
+    else tipObj = { code: 'funnelstep_critical', params: tipParams };
     return [
       'Funnel Health: ' + bandInfo.label + ' (' + fmtPct(e2e) + ' end-to-end)',
       'Snapshot: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Step rates: ' + stepRates.join(' - ') + '. Biggest drop: Step ' + (dropIdx + 1) + ' -> Step ' + (dropIdx + 2) + ' (lost ' + maxDelta.toLocaleString() + ' users)',
       'What-If: if biggest drop step improves by +10% retention, e2e lifts to ' + fmtPct(liftedFinal / steps[0]),
       'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' e2e), need final step >= ' + targetFinal.toLocaleString() + ' (currently ' + steps[steps.length - 1].toLocaleString() + ')',
       'Milestone: optimize Step ' + (dropIdx + 1) + ' -> Step ' + (dropIdx + 2) + ' first; a 20% retention gain there lifts funnel to ' + fmtPct((steps[steps.length - 1] + maxDelta * 0.2) / steps[0]),
-      'Tip: PM rule of thumb - in-product funnels lose the most users at the value-discovery step. Pair with Activation Rate Calculator to measure post-funnel commitment.',
-      // P151 batch3: L5 Decision Recommendation
-      '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 e2e conversion 是陷阱，**核心问题是"最大 leak 在哪一步 + 那一步的修复 ROI 是不是最高"**。优化小 leak 步骤不如聚焦最大 drop 步骤。\n• 🧭 Recommendation: (1) **e2e < 10%** → 系统性 onboard 问题，audit UX 全链路；(2) **10-25%** → 优化 biggest drop 步骤（修复 ROI 最高）；(3) **25-40%** → A/B test 现有 funnel；(4) **> 40%** → 防御性 monitor + 扩张 acquisition。\n• 🧭 Key Uncertainty: (1) biggest drop 步骤不等于最低 % conversion（绝对 vs 相对）；(2) attribution window 影响 step counts；(3) multi-path funnel 中 80/20 法则（top 3 path 占 80% users）；(4) cohort 效应（新用户 ≠ 老用户行为）。\n• 🧭 Next Action: (a) 跑 [Activation Rate Calculator] 看 funnel 后 commit 度；(b) 跑 [Cohort Retention Calculator] 看 cohort 稳定性；(c) 跑 [Feature Adoption Calculator] 看每个 step 的 adoption；(d) 决策前先 session recording 分析 biggest drop 步骤。',
+      // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面那套 Funnel Health band，
+      //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+      '💡 Tip: ' + JSON.stringify(tipObj),
     ];
   },
   staticExamples: [
-    'Funnel Health: 🟠 Warning (21.0% end-to-end)\nSnapshot: 5 steps 1000 -> 800 -> 500 -> 320 -> 210. Step rates: 80.0% - 62.5% - 64.0% - 65.6%. Biggest drop: Step 2 -> Step 3 (lost 300 users)\nWhat-If: if biggest drop step improves by +10% retention, e2e lifts to 36.0%\nBreak-Even: to hit Good (25.0% e2e), need final step >= 250 (currently 210)\nMilestone: optimize Step 2 -> Step 3 first; a 20% retention gain there lifts funnel to 27.0%\nTip: PM rule of thumb - in-product funnels lose the most users at the value-discovery step. Pair with Activation Rate Calculator to measure post-funnel commitment.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 e2e conversion 是陷阱，**核心问题是"最大 leak 在哪一步 + 那一步的修复 ROI 是不是最高"**。优化小 leak 步骤不如聚焦最大 drop 步骤。\n• 🧭 Recommendation: (1) **e2e < 10%** → 系统性 onboard 问题，audit UX 全链路；(2) **10-25%** → 优化 biggest drop 步骤（修复 ROI 最高）；(3) **25-40%** → A/B test 现有 funnel；(4) **> 40%** → 防御性 monitor + 扩张 acquisition。\n• 🧭 Key Uncertainty: (1) biggest drop 步骤不等于最低 % conversion（绝对 vs 相对）；(2) attribution window 影响 step counts；(3) multi-path funnel 中 80/20 法则（top 3 path 占 80% users）；(4) cohort 效应（新用户 ≠ 老用户行为）。\n• 🧭 Next Action: (a) 跑 [Activation Rate Calculator] 看 funnel 后 commit 度；(b) 跑 [Cohort Retention Calculator] 看 cohort 稳定性；(c) 跑 [Feature Adoption Calculator] 看每个 step 的 adoption；(d) 决策前先 session recording 分析 biggest drop 步骤。',
+    'Funnel Health: 🟠 Warning (21.0% end-to-end)\nSnapshot: 5 steps 1000 -> 800 -> 500 -> 320 -> 210. Step rates: 80.0% - 62.5% - 64.0% - 65.6%. Biggest drop: Step 2 -> Step 3 (lost 300 users)\nWhat-If: if biggest drop step improves by +10% retention, e2e lifts to 36.0%\nBreak-Even: to hit Good (25.0% e2e), need final step >= 250 (currently 210)\nMilestone: optimize Step 2 -> Step 3 first; a 20% retention gain there lifts funnel to 27.0%\n💡 Tip: {"code":"funnelstep_warning","params":{"e2e":"21.0%","lost":"300","dropFrom":"2","dropTo":"3"}}',
   ],
   faq: [
     { q: 'What is an in-product funnel vs a marketing funnel?', a: 'Marketing funnels track impressions -> leads -> customers (P6). In-product funnels track event-to-event within the product - e.g. signup -> first_action -> second_action -> conversion. PMs use in-product funnels to find where users get stuck.' },

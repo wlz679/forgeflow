@@ -53,7 +53,18 @@ function page(rel: string): string {
 
 function textOf(html: string): string {
   const m = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
-  return (m ? m[1] : html).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&');
+  return (m ? m[1] : html)
+    .replace(/<[^>]+>/g, ' ')
+    // ⭐ 必须解码实体：Astro 把文案里的 `>` `<` `"` 转义成 `&gt;` `&lt;` `&quot;`
+    //   ⇒ 只解 `&amp;` 的话，就是拿**解码后的页面文本**去比 **locale 原文** ⇒ 比不上
+    //   （实测：stockout-cost 的 zh 文案前 40 字含 `>` ⇒ 产物级断言假红）。
+    //   ⚠️ 顺序：`&amp;` 必须**最后**解（否则 `&amp;gt;` 会被误解成 `>`）。
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&');
 }
 
 test('P168 产物：激活工具的页面（en + zh）都渲染出决策区块，且三块静态内容都在', async () => {
@@ -243,5 +254,54 @@ test('P168 产物：非激活工具**不渲染**决策区块', async () => {
     }
   }
   assert.ok(checked > 50, '检查的工具页太少（' + checked + '），断言可能没在测');
+  assert.deepEqual(problems, [], problems.join(' | '));
+});
+
+test('P168 产物：⭐ 英文页不得出现中文（扫全部 100 个工具页 · 产物级）', async () => {
+  // ⭐⭐ 本批（B3-4）要补的**守卫盲区**：
+  //   旧断言「英文页不得含中文」只遍历**已激活**工具（4 个）
+  //   ⇒ 那 15 个「英文页渲染中文决策段」的工具页对它**完全隐形**。
+  //   ⇒ 本条改成**产物级 + 扫全部 100 个工具页**，不再依赖激活清单。
+  //
+  // ⚠️ **表示层必须与被测层一致**：判据落在**最终产物**（用户看到的那张卡片 /
+  //   那个决策区块），不是引擎源码，也不是 locale 源码。
+  //
+  // ⚠️ **与既有断言互不相交**（一条变异只红一条断言的隔离纪律）：
+  //   ① 「结果卡片里不再有 🧭 决策段」负责**🧭 Decision 段**本身 ⇒
+  //      本条**剔除** 🧭 Decision 段再查中文（那 82 个尚未迁移的工具仍合法地
+  //      在卡片里显示英文 🧭 段 —— 迁出它们是后续批次，不在本批范围）。
+  //   ② 「英文页的决策建议不得含中文」是**源码级**（查引擎 tip 与 en 模板）
+  //      ⇒ 本条查**产物里的区块正文**（四层静态文案），键集合不同 ⇒ 不相交。
+  const engines = await loadEngines();
+  const problems: string[] = [];
+  let cardChecked = 0;
+  let blockChecked = 0;
+  for (const engine of engines) {
+    const rel = 'en/' + engine.slug + '/index.html';
+    if (!existsSync(join(ROOT, 'dist', rel))) continue;
+    const html = page(rel);
+    // ① 结果卡片（剔除 🧭 Decision 段）
+    const card = html.match(/<div id="static-results"[\s\S]*?(?=<div id="dynamic-results")/);
+    if (!card) { problems.push(rel + ' 取不到结果卡片'); continue; }
+    cardChecked++;
+    const cardText = textOf(card[0].split('🧭 Decision')[0]);
+    if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(cardText)) {
+      const hit = cardText.match(/[\u3400-\u4dbf\u4e00-\u9fff][\s\S]{0,40}/);
+      problems.push(rel + ' 的英文页结果卡片里有中文：' + (hit ? hit[0] : ''));
+    }
+    // ② 决策区块（四层静态文案来自 en.json ⇒ 必须英文）
+    const blk = html.match(/<section id="decision-support"[\s\S]*?<\/section>/);
+    if (!blk) continue;
+    blockChecked++;
+    const blkText = textOf(blk[0]);
+    if (/[\u3400-\u4dbf\u4e00-\u9fff]/.test(blkText)) {
+      const hit = blkText.match(/[\u3400-\u4dbf\u4e00-\u9fff][\s\S]{0,40}/);
+      problems.push(rel + ' 的英文页决策区块里有中文：' + (hit ? hit[0] : ''));
+    }
+  }
+  // ⭐ 期望值**独立写死**：这条断言的价值就在于「覆盖全部工具页」，
+  //   若只扫到几十页 ⇒ 它又退化成「只查已激活工具」的老形态 ⇒ 必须红。
+  assert.ok(cardChecked >= 90, '只扫到 ' + cardChecked + ' 个英文工具页（期望 ≥ 90），断言没覆盖全量');
+  assert.ok(blockChecked > 0, '一个决策区块都没测到 ⇒ 断言可能没在测');
   assert.deepEqual(problems, [], problems.join(' | '));
 });

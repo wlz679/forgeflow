@@ -1,0 +1,130 @@
+{
+  "slug": "solopreneur-csat-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Reading the CSAT score on its own is a trap: that single average is the least useful number on the card. What actually decides anything is whether the score reflects a real problem, whether enough customers answered for the number to mean anything, and whether it is hiding a segment split — one unhappy enterprise account sitting next to a delighted small customer produces an average that describes neither of them. Use this tool to decide whether you are looking at a satisfaction problem or at a sampling artefact, because those two call for completely different responses.",
+      "zh": "只看 CSAT 分数是个陷阱：卡面上那个平均值，反而是最没用的东西。真正能决定结论的是三件事：这个分数是否反映真实问题、有多少客户作答让它站得住、以及它有没有把客群差异平均掉 —— 一个不满的企业客户和一个满意的小客户，加起来的平均值两边都不像。用这个工具判断你手上到底是一个满意度问题，还是一个抽样假象，因为这两种情况要做的动作完全不同。"
+    },
+    "decision_recommendation": {
+      "en": "Read the score band and act on it. Below 60% the problem is systemic, so audit the top three pain points immediately — the FAQ, the process, or the product itself — instead of coaching individual agents. Between 60% and 75% the causes are mostly procedural, so work on the contact-reason flow and on agent training. Between 75% and 85% you are in maintenance mode: keep the current setup and watch for cohort drift, because satisfaction erodes long before anyone files a complaint. Above 85% the score is an asset, so put the surplus into brand and referral rather than into more support headcount.",
+      "zh": "先看分数落在哪一档，再决定动作。低于 60% 就是系统性问题，立刻去审计最痛的三件事 —— FAQ、流程、还是产品本身 —— 而不是先去辅导某个客服。60% 到 75% 之间，问题大多出在流程上，所以该做的是优化 contact reason 流程 + 客服培训。75% 到 85% 之间属于维护阶段：保持现状，同时盯住 cohort 漂移 —— 满意度下滑总是比客户投诉更早出现；高于 85% 时这个分数就是资产了，把多出来的预算投到品牌和转介给上，而不是继续堆客服人头。"
+    },
+    "decision_constraint": {
+      "en": "Four things sit outside this number and can move it further than any change you make. First, response rate shapes the score distribution: if only 10% of customers answer, the sample is dominated by the customers with something to say, and the true value can sit 10 percentage points either side of what you measured. Second, expectations differ by segment, so an enterprise account and a small-business account are not comparable on one average. Third, seasonality is real — scores dip naturally in the holiday season. Fourth, channel differences are not comparable either: a chat rating and an email rating measure different amounts of effort.",
+      "zh": "有四件事在这个数字之外，而它们对分数的影响可能比你做的任何改动都大。第一，响应率会塑造分数分布：只有 10% 的客户作答时，样本几乎被「有话要说」的客户主导，真实值可能比你测到的低或高 10 个百分点。第二，不同客群的期望值不同，企业客户和小微客户没法用同一个平均值来比。第三，季节性是真实存在的 —— 节日季分数天然更低。第四，渠道之间也不可比：聊天里的评分和邮件里的评分，衡量的是不同的费力程度。"
+    },
+    "decision_next_tool": {
+      "en": "Run [First Response Time SLA Calculator] to see how response delay is feeding the score, run [Resolution Time Calculator] to see how long resolution takes, and run [Support Capacity Planning Calculator] to find where staffing is the real bottleneck. Then, before you decide anything, split the customer base into segments and compare CSAT inside each one, because an average across a very unhappy enterprise cohort and a very happy small-business cohort contains nothing you can act on.",
+      "zh": "先跑 [首次响应 SLA 计算器]，看响应延迟在多大程度上拖累了分数；跑 [解决时间计算器]，看解决时长；再用 [支持容量规划计算器] 找出人力的真正瓶颈在哪。然后在做任何决策之前，把客户分群、逐群对比 CSAT —— 一个非常不满的企业客群和一个非常满意的小微客群，混在一起的平均值里没有任何你能落地的东西。"
+    }
+  },
+  "tips": [
+    {
+      "code": "csat_biased_sample",
+      "en": "At a {responseRate}% response rate, a {csat}% score drawn from {sampleSize} responses is a biased sample: only the happiest and the angriest customers answer, and the ±{margin}pp confidence band says how little you actually know. Do not act on the score yet — fix collection first with a post-resolution email and an optional one-question micro-survey, then re-read the {csat}% against your {target}% target.",
+      "zh": "响应率只有 {responseRate}% 时，{sampleSize} 份回答给出的 {csat}% 是个有偏样本：回应的往往只有最满意和最愤怒的那批人，而 ±{margin}pp 的置信区间恰恰说明你其实知道的很少。先别拿这个分数做决策 —— 先把收集端修好：解决后发一封邮件，再加一个可选的单题微调研，然后拿重新采到的 {csat}% 去对 {target}% 的目标。",
+      "params": {
+        "csat": "{csat}",
+        "target": "{target}",
+        "responseRate": "{responseRate}",
+        "sampleSize": "{sampleSize}",
+        "margin": "{margin}"
+      }
+    },
+    {
+      "code": "csat_excellent",
+      "en": "A {csat}% CSAT against a {target}% target, drawn from {sampleSize} responses with a ±{margin}pp margin of error and a {responseRate}% response rate, is a genuinely strong result. Spend the surplus on brand and referral rather than on more support headcount, and keep the survey honest, because the fastest way to lose a {csat}% score is to start asking only the customers who are happy.",
+      "zh": "{csat}% 的 CSAT 对 {target}% 的目标，样本 {sampleSize} 份、置信区间 ±{margin}pp、响应率 {responseRate}%，这是一个实打实的好成绩。把多出来的资源投到品牌和转介给上，而不是继续堆客服人头；同时守住调研的诚实度 —— 把 {csat}% 弄丢的最快方式，就是开始只问那些满意的老客户。",
+      "params": {
+        "csat": "{csat}",
+        "target": "{target}",
+        "responseRate": "{responseRate}",
+        "sampleSize": "{sampleSize}",
+        "margin": "{margin}"
+      }
+    },
+    {
+      "code": "csat_good",
+      "en": "A {csat}% CSAT against a {target}% target, from {sampleSize} responses with a ±{margin}pp margin and a {responseRate}% response rate, sits in the healthy band. Hold the current setup and watch for cohort drift, because satisfaction erodes long before a customer complains, and re-read the trend after every product release instead of only the quarterly average.",
+      "zh": "{csat}% 的 CSAT 对 {target}% 的目标，来自 {sampleSize} 份回答、±{margin}pp 的置信区间、{responseRate}% 的响应率，落在健康区间。保持现有配置，同时盯住 cohort 漂移 —— 满意度的下滑总是比客户投诉更早出现；每次产品发布之后都要重新看趋势，而不是只看季度平均。",
+      "params": {
+        "csat": "{csat}",
+        "target": "{target}",
+        "responseRate": "{responseRate}",
+        "sampleSize": "{sampleSize}",
+        "margin": "{margin}"
+      }
+    },
+    {
+      "code": "csat_warning",
+      "en": "A {csat}% CSAT against a {target}% target, from {sampleSize} responses with a ±{margin}pp margin and a {responseRate}% response rate, is below the mid-market SaaS benchmark. Look at what is actually driving it: response delay and resolution time are the two usual suspects, so check both before you change anything about the survey, and pull the score apart by segment so one unhappy tier does not drag the whole average down.",
+      "zh": "{csat}% 的 CSAT 对 {target}% 的目标，来自 {sampleSize} 份回答、±{margin}pp 的置信区间、{responseRate}% 的响应率，低于中型 SaaS 的市场水平。先看真正的原因：响应延迟和解决时长是最常见的两个熟奇人，在动调研之前先把这两项查清楚；同时把分数按客群拆开看，别让一个不满的层级把整体平均拖下去。",
+      "params": {
+        "csat": "{csat}",
+        "target": "{target}",
+        "responseRate": "{responseRate}",
+        "sampleSize": "{sampleSize}",
+        "margin": "{margin}"
+      }
+    },
+    {
+      "code": "csat_critical",
+      "en": "A {csat}% CSAT against a {target}% target, from {sampleSize} responses with a ±{margin}pp margin and a {responseRate}% response rate, is a systemic failure, not a coaching problem. Audit the top three pain points now — the FAQ, the process, or the product itself — and escalate rather than optimising the survey, because a score this low says something in the product or the policy is broken for a large share of your customers.",
+      "zh": "{csat}% 的 CSAT 对 {target}% 的目标，来自 {sampleSize} 份回答、±{margin}pp 的置信区间、{responseRate}% 的响应率，这是系统性失灵，不是客服话术问题。现在就去审计最痛的三件事 —— FAQ、流程、还是产品本身 —— 该升级就升级，别把力气花在优化调研上：低到这种程度的分数说明，对相当大一部分客户来说，产品或政策里确实有东西坏了。",
+      "params": {
+        "csat": "{csat}",
+        "target": "{target}",
+        "responseRate": "{responseRate}",
+        "sampleSize": "{sampleSize}",
+        "margin": "{margin}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "csat_biased_sample",
+      "inputs": {
+        "csat_pct": "87",
+        "response_rate": "12",
+        "sample_size": "200",
+        "target_csat": "90"
+      }
+    },
+    {
+      "code": "csat_critical",
+      "inputs": {
+        "csat_pct": "62",
+        "response_rate": "40",
+        "sample_size": "350",
+        "target_csat": "90"
+      }
+    },
+    {
+      "code": "csat_warning",
+      "inputs": {
+        "csat_pct": "75",
+        "response_rate": "38",
+        "sample_size": "260",
+        "target_csat": "90"
+      }
+    },
+    {
+      "code": "csat_good",
+      "inputs": {
+        "csat_pct": "87",
+        "response_rate": "35",
+        "sample_size": "200",
+        "target_csat": "90"
+      }
+    },
+    {
+      "code": "csat_excellent",
+      "inputs": {
+        "csat_pct": "93",
+        "response_rate": "41",
+        "sample_size": "520",
+        "target_csat": "90"
+      }
+    }
+  ]
+}

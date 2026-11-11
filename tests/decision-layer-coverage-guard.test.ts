@@ -23,15 +23,28 @@ import { L5_LAYERS, L5_TAGS } from './l5-tags.ts';
 const root = resolve(import.meta.dirname, '..');
 
 const TARGET_CALCS = [
+  // P168 B3-1：迁出决策支持的工具也进清单（判据是「引擎输出 ∪ 页面 i18n 键」，
+  //   所以迁出后仍然必须**齐** —— 迁走不等于可以少一层）
+  // P168 B3-4：再迁 15 个工具（本批）
   'src/engines/customer-support/csat-calculator.ts',
   'src/engines/marketing/roas-calculator.ts',
   'src/engines/valuation/cac-calculator.ts',
   'src/engines/saas/churn-rate-calculator.ts',
   'src/engines/saas/burn-rate-calculator.ts',
-  // P168 B3-1：迁出决策支持的工具也进清单（判据是「引擎输出 ∪ 页面 i18n 键」，
-  //   所以迁出后仍然必须**齐** —— 迁走不等于可以少一层）
   'src/engines/marketing/ltv-by-channel-calculator.ts',
   'src/engines/legal-compliance/gdpr-fine-calculator.ts',
+  'src/engines/cost/employee-cost-calculator.ts',
+  'src/engines/investment/equity-dilution-calculator.ts',
+  'src/engines/freelance/freelance-rate-calculator.ts',
+  'src/engines/real-estate/rent-vs-buy-calculator.ts',
+  'src/engines/valuation/saas-valuation-calculator.ts',
+  'src/engines/sales/acv-calculator.ts',
+  'src/engines/hiring-team/comp-banding-calculator.ts',
+  'src/engines/retention/customer-health-score-calculator.ts',
+  'src/engines/product-analytics/funnel-step-calculator.ts',
+  'src/engines/ai-cost/gpu-cloud-cost-calculator.ts',
+  'src/engines/knowledge/kb-coverage-rate-calculator.ts',
+  'src/engines/operations/stockout-cost-calculator.ts',
 ];
 
 // P153-E2: the tag list now lives in tests/l5-tags.ts — one definition for
@@ -65,7 +78,7 @@ test('7 calc 全部含 🧭 Decision Recommendation 4 子段（或已迁进页�
 });
 
 test('guard 元数据正确（7 calc × 4 标签）', () => {
-  assert.equal(TARGET_CALCS.length, 7);
+  assert.equal(TARGET_CALCS.length, 19);
   assert.equal(REQUIRED_TAGS.length, 4);
   // 契约只有一份（tests/l5-layers.json）⇒ 标签表与键映射不可能各自漂。
   // ⚠️ 期望值**独立写死字面量** —— 若从同一份 JSON 派生，那是同义反复

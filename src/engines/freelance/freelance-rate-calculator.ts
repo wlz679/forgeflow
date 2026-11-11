@@ -50,6 +50,17 @@ function calculateFreelanceRate(inputs: Record<string, string>): string[] {
       ? '🟡 Below market — clients see you as a bargain. Test raising rates.'
       : '🟠 Entry-level — focus on building portfolio to justify higher rates.';
 
+  // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面 Market Position 那套 band，
+  //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+  const tipJson =
+    rateVsMarket >= 1.5
+      ? JSON.stringify({ code: 'freelance_rate_premium', params: {} })
+      : rateVsMarket >= 1.0
+      ? JSON.stringify({ code: 'freelance_rate_market', params: {} })
+      : rateVsMarket >= 0.7
+      ? JSON.stringify({ code: 'freelance_rate_below_market', params: {} })
+      : JSON.stringify({ code: 'freelance_rate_entry', params: {} });
+
   const utilization = billableHrs > 1200 ? '🟢' : billableHrs > 900 ? '🟡' : '🟠';
   const expenseRatio = annualIncome > 0 ? (expenses / annualIncome) * 100 : 0;
   const profitMargin = annualIncome > 0 ? (profit / annualIncome) * 100 : 0;
@@ -110,7 +121,7 @@ function calculateFreelanceRate(inputs: Record<string, string>): string[] {
     '• Cut expenses 25%:  Save ' + fmt(expenses * 0.25) + '/yr → break-even drops to ' + fmt2((expenses * 0.75) / Math.max(billableHrs, 1)) + '/hr\n' +
     '• +200 billable hrs/yr:  Same rate → ' + fmt(hourlyRate * (billableHrs + 200)) + '/yr gross (was ' + fmt(hourlyRate * billableHrs) + ')\n' +
     '• Move to expert tier (2x):  $' + fmt(expertRate) + '/hr → ' + fmt(expertRate * billableHrs) + '/yr gross\n\n' +
-    '💡 Tip: Most freelancers undercharge by 30-50%. If you win every proposal, your rate is too low — aim to lose 20-30% on price. Doubling your rate and losing half your clients keeps revenue flat but reclaims half your time. Charge by project (outcomes), not hours — clients buy results, not time.',
+    '💡 Tip: ' + tipJson,
   );
 
   const scenarios = [
@@ -128,14 +139,11 @@ function calculateFreelanceRate(inputs: Record<string, string>): string[] {
     );
   }
 
-  // P151 L5: Decision Recommendation 4-section block
-  results.push(
-    '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 hourly rate 是陷阱，**核心问题是"rate 是否匹配 experience + niche + 区域市场价 + 模式选择 (hourly vs project)"**。Market rate 偏离 25% 以上都要重新审视。\n' +
-    '• 🧭 Recommendation: (1) **rate < 市场 25 百分位** → 低于市场价（疑经验不足 或 在低价抢单，长期伤害 brand）；(2) **25-75 百分位** → 合理区间（适合大多数 freelancer）；(3) **> 75 百分位** → 需强 portfolio / niche 支撑（否则 client 会 churn）；(4) **> 95 百分位** → 顶级 expert，需限定 niche + referral-only。\n' +
-    '• 🧭 Key Uncertainty: (1) 市场 rate 按地区/行业差异 2-5x（同 title 跨 region 完全不同）；(2) hourly vs project mode 切换（project mode  hidden scope creep）；(3) client 议价能力（大客户 vs 尾尾小客户）；(4) upsell 加价空间（retainer vs one-off）。\n' +
-    '• 🧭 Next Action: (a) 跑 [Project Profitability Calculator] 看项目级 margin；(b) 跑 [Hourly vs Fixed Calculator] 选计费模式（决定 risk 分配）；(c) 跑 [Course Pricing Calculator] 看 IP 化空间（突破 rate 上限）；(d) 决策前 benchmark 3-5 个 peer 的真实接单率。'
-  );
+  // P168 B3-4：**🧭 四段已迁到页面的「🧭 算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_goal /
+  //     decision_recommendation / decision_constraint / decision_next_tool，双语）
+  //   ⇒ 引擎只负责算；**决策支持由区块独占** ⇒ 同页不再有两份决策建议。
+  //   ⚠️ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事。
 
   return results;
 }
@@ -170,6 +178,7 @@ const customFn =
   "else if(rvm>=1.0)rh='\\uD83D\\uDFE2 Market-rate \\u2014 competitive for your skill level.';" +
   "else if(rvm>=0.7)rh='\\uD83D\\uDFE1 Below market \\u2014 clients see you as a bargain. Test raising rates.';" +
   "else rh='\\uD83D\\uDFE0 Entry-level \\u2014 focus on building portfolio to justify higher rates.';" +
+  "var tj = rvm>=1.5 ? JSON.stringify({code:'freelance_rate_premium',params:{}}) : rvm>=1.0 ? JSON.stringify({code:'freelance_rate_market',params:{}}) : rvm>=0.7 ? JSON.stringify({code:'freelance_rate_below_market',params:{}}) : JSON.stringify({code:'freelance_rate_entry',params:{}});" +
   "var ut=bh>1200?'\\uD83D\\uDFE2':bh>900?'\\uD83D\\uDFE1':'\\uD83D\\uDFE0';" +
   "var er=ai>0?(ex/ai)*100:0;" +
   "var pm=ai>0?(pr/ai)*100:0;" +
@@ -230,7 +239,7 @@ const customFn =
   "r+='\\u2022 Cut expenses 25%:  Save '+fmt(ex*0.25)+'/yr \\u2192 break-even drops to '+fmt2((ex*0.75)/Math.max(bh,1))+'/hr\\n';" +
   "r+='\\u2022 +200 billable hrs/yr:  Same rate \\u2192 '+fmt(hr*(bh+200))+'/yr gross (was '+fmt(hr*bh)+')\\n';" +
   "r+='\\u2022 Move to expert tier (2x):  $'+fmt(xr)+'/hr \\u2192 '+fmt(xr*bh)+'/yr gross\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Most freelancers undercharge by 30-50%. If you win every proposal, your rate is too low \\u2014 aim to lose 20-30% on price. Doubling your rate and losing half your clients keeps revenue flat but reclaims half your time. Charge by project (outcomes), not hours \\u2014 clients buy results, not time.';" +
+  "r+='\\uD83D\\uDCA1 Tip: '+tj;" +
   "results.push(r);" +
   "var scs=[{l:'Junior (60%)',m:0.6},{l:'Mid (100%)',m:1.0},{l:'Skilled (125%)',m:1.25},{l:'Premium (150%)',m:1.5},{l:'Expert (200%)',m:2.0}];" +
   "for(var i=0;i<scs.length;i++){" +
@@ -238,7 +247,6 @@ const customFn =
   "var rt=Math.ceil(br*s.m);" +
   "results.push(s.l+': $'+rt+'/hr \\u2192 $'+(rt*8).toLocaleString()+'/day | $'+Math.round(rt*8*5*4.33).toLocaleString()+'/mo | $'+Math.round(rt*bh).toLocaleString()+'/yr at '+loc(bh)+' hrs');" +
   "}" +
-  "results.push('\\n\\n\\uD83E\\uDDED Decision Recommendation\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\uD83E\\uDDED Decision Question: 单纯看 hourly rate 是陷阱，**核心问题是\"rate 是否匹配 experience + niche + 区域市场价 + 模式选择 (hourly vs project)\"**。Market rate 偏离 25% 以上都要重新审视。\\n\\uD83E\\uDDED Recommendation: (1) **rate < 市场 25 百分位** \\u2192 低于市场价（疑经验不足 或 在低价抢单，长期伤害 brand）；(2) **25-75 百分位** \\u2192 合理区间（适合大多数 freelancer）；(3) **> 75 百分位** \\u2192 需强 portfolio / niche 支撑（否则 client 会 churn）；(4) **> 95 百分位** \\u2192 顶级 expert，需限定 niche + referral-only。\\n\\uD83E\\uDDED Key Uncertainty: (1) 市场 rate 按地区/行业差异 2-5x（同 title 跨 region 完全不同）；(2) hourly vs project mode 切换（project mode  hidden scope creep）；(3) client 议价能力（大客户 vs 尾尾小客户）；(4) upsell 加价空间（retainer vs one-off）。\\n\\uD83E\\uDDED Next Action: (a) 跑 [Project Profitability Calculator] 看项目级 margin；(b) 跑 [Hourly vs Fixed Calculator] 选计费模式（决定 risk 分配）；(c) 跑 [Course Pricing Calculator] 看 IP 化空间（突破 rate 上限）；(d) 决策前 benchmark 3-5 个 peer 的真实接单率。');" +
   "return results;";
 
 const engine: ToolEngine = {
@@ -259,18 +267,18 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该马上提价，还是先靠多做几个客户把收入缺口补上',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs: Record<string, string>): string[] {
     return calculateFreelanceRate(inputs);
   },
   staticExamples: [
-    '💼 Freelance Rate Calculator\n\n💰 Target Rate Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target Annual Net:    $80,000/yr\n• Business Expenses:   $10,000/yr  (12.5% of target)\n• Desired Profit:      $20,000/yr  (25.0% margin)\n• Billable Hours:      1,200 hrs/yr\n• Required Hourly Rate: $75.00/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Rate Multipliers:\n• 1x base rate:        $75/hr\n• 1.25x skilled:       $94/hr  (proven track record)\n• 1.5x premium:        $113/hr  (specialized niche)\n• 2x expert:           $150/hr  (top-tier authority)\n\n• Daily Rate (8 hrs):   $600/day\n• Weekly Rate (5 days): $3,000/wk\n• Monthly Rate:         $12,990/mo\n• Yearly Rate:          $155,880/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Market Position:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Market-rate — competitive for your skill level.\n• 🟡 Billable utilization: 1,200 hrs/yr  (industry: 900-1,400)\n• 🟢 Expenses at 12.5% of income — lean operation.\n• 🟡 Profit margin 25.0% — workable, room to grow.\n\n🎯 Rate Ladder (market context):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Junior:       $45/hr  (entry, building portfolio)\n• Mid-Level:    $75/hr  (3-5 yrs, market median)\n• Senior:       $120/hr  (6-10 yrs, specialist)\n• Expert:       $188/hr  (10+ yrs, top authority)\n• Your rate:    $75/hr  (100.0% of market median)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even Rate:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Break-even (expenses only): $8.33/hr\n• Break-even + profit:        $75.00/hr  (your required rate)\n• At current billable hrs (1,200), every $10/hr raise adds $12,000/yr\n• To hit $120,000/yr net: raise to $100.00/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise rate 20%:  $$90/hr → $108,000/yr gross\n• Raise rate 50%:  $$113/hr → $135,600/yr gross\n• Cut expenses 25%:  Save $2,500/yr → break-even drops to $6.25/hr\n• +200 billable hrs/yr:  Same rate → $105,000/yr gross (was $90,000)\n• Move to expert tier (2x):  $$150/hr → $180,000/yr gross\n\n💡 Tip: Most freelancers undercharge by 30-50%. If you win every proposal, your rate is too low — aim to lose 20-30% on price. Doubling your rate and losing half your clients keeps revenue flat but reclaims half your time. Charge by project (outcomes), not hours — clients buy results, not time.\nJunior (60%): $45/hr → $360/day | $7,794/mo | $54,000/yr at 1,200 hrs\nMid (100%): $75/hr → $600/day | $12,990/mo | $90,000/yr at 1,200 hrs\nSkilled (125%): $94/hr → $752/day | $16,281/mo | $112,800/yr at 1,200 hrs\nPremium (150%): $113/hr → $904/day | $19,572/mo | $135,600/yr at 1,200 hrs\nExpert (200%): $150/hr → $1,200/day | $25,980/mo | $180,000/yr at 1,200 hrs\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 hourly rate 是陷阱，**核心问题是"rate 是否匹配 experience + niche + 区域市场价 + 模式选择 (hourly vs project)"**。Market rate 偏离 25% 以上都要重新审视。\n• 🧭 Recommendation: (1) **rate < 市场 25 百分位** → 低于市场价（疑经验不足 或 在低价抢单，长期伤害 brand）；(2) **25-75 百分位** → 合理区间（适合大多数 freelancer）；(3) **> 75 百分位** → 需强 portfolio / niche 支撑（否则 client 会 churn）；(4) **> 95 百分位** → 顶级 expert，需限定 niche + referral-only。\n• 🧭 Key Uncertainty: (1) 市场 rate 按地区/行业差异 2-5x（同 title 跨 region 完全不同）；(2) hourly vs project mode 切换（project mode  hidden scope creep）；(3) client 议价能力（大客户 vs 尾尾小客户）；(4) upsell 加价空间（retainer vs one-off）。\n• 🧭 Next Action: (a) 跑 [Project Profitability Calculator] 看项目级 margin；(b) 跑 [Hourly vs Fixed Calculator] 选计费模式（决定 risk 分配）；(c) 跑 [Course Pricing Calculator] 看 IP 化空间（突破 rate 上限）；(d) 决策前 benchmark 3-5 个 peer 的真实接单率。',
+    '💼 Freelance Rate Calculator\n\n💰 Target Rate Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target Annual Net:    $80,000/yr\n• Business Expenses:   $10,000/yr  (12.5% of target)\n• Desired Profit:      $20,000/yr  (25.0% margin)\n• Billable Hours:      1,200 hrs/yr\n• Required Hourly Rate: $75.00/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Rate Multipliers:\n• 1x base rate:        $75/hr\n• 1.25x skilled:       $94/hr  (proven track record)\n• 1.5x premium:        $113/hr  (specialized niche)\n• 2x expert:           $150/hr  (top-tier authority)\n\n• Daily Rate (8 hrs):   $600/day\n• Weekly Rate (5 days): $3,000/wk\n• Monthly Rate:         $12,990/mo\n• Yearly Rate:          $155,880/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Market Position:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Market-rate — competitive for your skill level.\n• 🟡 Billable utilization: 1,200 hrs/yr  (industry: 900-1,400)\n• 🟢 Expenses at 12.5% of income — lean operation.\n• 🟡 Profit margin 25.0% — workable, room to grow.\n\n🎯 Rate Ladder (market context):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Junior:       $45/hr  (entry, building portfolio)\n• Mid-Level:    $75/hr  (3-5 yrs, market median)\n• Senior:       $120/hr  (6-10 yrs, specialist)\n• Expert:       $188/hr  (10+ yrs, top authority)\n• Your rate:    $75/hr  (100.0% of market median)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even Rate:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Break-even (expenses only): $8.33/hr\n• Break-even + profit:        $75.00/hr  (your required rate)\n• At current billable hrs (1,200), every $10/hr raise adds $12,000/yr\n• To hit $120,000/yr net: raise to $100.00/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise rate 20%:  $$90/hr → $108,000/yr gross\n• Raise rate 50%:  $$113/hr → $135,600/yr gross\n• Cut expenses 25%:  Save $2,500/yr → break-even drops to $6.25/hr\n• +200 billable hrs/yr:  Same rate → $105,000/yr gross (was $90,000)\n• Move to expert tier (2x):  $$150/hr → $180,000/yr gross\n\n💡 Tip: {"code":"freelance_rate_market","params":{}}\nJunior (60%): $45/hr → $360/day | $7,794/mo | $54,000/yr at 1,200 hrs\nMid (100%): $75/hr → $600/day | $12,990/mo | $90,000/yr at 1,200 hrs\nSkilled (125%): $94/hr → $752/day | $16,281/mo | $112,800/yr at 1,200 hrs\nPremium (150%): $113/hr → $904/day | $19,572/mo | $135,600/yr at 1,200 hrs\nExpert (200%): $150/hr → $1,200/day | $25,980/mo | $180,000/yr at 1,200 hrs',
     'Junior (60%): $53/hr → $424/day | $9,179/mo | $63,600/yr at 1200 hrs',
     'Mid (100%): $89/hr → $712/day | $15,417/mo | $106,800/yr at 1200 hrs',
     'Skilled (125%): $112/hr → $896/day | $19,395/mo | $134,400/yr at 1200 hrs',

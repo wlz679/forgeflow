@@ -1,0 +1,112 @@
+{
+  "slug": "solopreneur-roas-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "A 3.2x ROAS looks acceptable on a dashboard, but once gross margin, customer acquisition cost, and returns come out of it, whether it is actually worth continuing to spend is a different question. The ratio never answers that on its own: a 3.2x return can be a healthy channel or a slow leak of cash, and the whole difference lives in your margin and in what it costs you to buy the customer.",
+      "zh": "3.2 倍 ROAS 在看板上像模像样，但把毛利、获客成本和退货从里面扣掉之后，还值不值得继续投就是另一个问题了。比率本身回答不了：一个 3.2 倍可以是健康渠道，也可以是慢慢漏钱的口子，区别全在毛利和你买一个客户要花多少钱上。先分清这两种情况，再谈加不加预算。"
+    },
+    "decision_recommendation": {
+      "en": "Spend is worth scaling only when three conditions hold at the same time. First, net ROAS must be at least 1.0x, so the money coming back beats the money going out after margin. Second, customer acquisition cost must stay at or below one third of lifetime value. Third, the 90-day cohort LTV to CAC ratio must reach 3.0. If any one of them fails, do not scale: push ROAS back towards 4.0x first. If all three hold, add 25–50% to the budget and take the market window while it is open.",
+      "zh": "只有三个条件同时成立，这笔钱才值得加。(1) 净 ROAS 必须 ≥ 1.0x，也就是扣掉毛利之后，回来的钱仍然多于花出去的钱；(2) 获客成本 CAC 必须 ≤ LTV 的 1/3；(3) 90 天 cohort 的 LTV/CAC 必须 ≥ 3.0。三个条件里任何一个不满足 → 不扩量，先把 ROAS 优化回 4.0x 再投；三个都满足 → 加预算 25-50%，趁市场窗口还开着的时候抢进去，而且钱要压在已经跑通的那部分受众上，别摊平。"
+    },
+    "decision_constraint": {
+      "en": "The number you measured depends on the window you measured it in. A 3.2x read on 28-day click attribution is not the truth for high-ticket products, where 90 days is what actually pays back and where lead generation and B2B SaaS budgets default to 90 days. Choosing the wrong attribution window does not change performance, it changes the measurement, and a decision built on the wrong window is built on nothing. Returns, discounts, and agency fees also sit outside this ratio.",
+      "zh": "你量到的那个数，取决于你用哪个窗口量的。28 天点击归因下的 3.2 倍，对高客单产品来说不是真相 —— 那类产品要 90 天才回本，lead gen 和 B2B SaaS 的归因默认也是 90 天。归因窗口选错不会改变投放表现，只会改变测量结果；建在错误窗口上的决策，等于建在空气上。退货、折扣和代理费也都不在这个比率里。"
+    },
+    "decision_next_tool": {
+      "en": "Before you move budget, price the customer with [CAC Calculator] and the revenue with [LTV Calculator], then check the accounts with [Customer Health Score Calculator] so you know which customers the extra spend should land on. Re-run this calculator on a 90-day window before you trust a 28-day reading, and check cohort retention for the segment you plan to scale into.",
+      "zh": "加预算之前，先用 [CAC 计算器] 给客户定价、用 [LTV 计算器] 给收入定价，再用 [客户健康评分计算器] 看账号健康度 —— 这样才知道多出来的钱该砸在谁身上。在信任 28 天口径之前，先用 90 天窗口把这个计算器重跑一遍，并确认准备放量的那个客群段在 cohort 里的留存。"
+    }
+  },
+  "tips": [
+    {
+      "code": "roas_critical",
+      "en": "ROAS of {roas}x means you are losing money on every ad dollar. Audit creatives, audience targeting, and channel mix before anything else, then relaunch with a small $500–$1,000 test budget to find a combination that works, because scaling a losing channel only loses faster.",
+      "zh": "ROAS {roas} 意味着每一块钱广告费都在亏。先审创意、受众定向和渠道组合，然后拿 $500–$1,000 的小额测试预算重开一轮，找到能跑通的组合 —— 亏损渠道放量只会亏得更快。",
+      "params": {
+        "roas": "{roas}"
+      }
+    },
+    {
+      "code": "roas_excellent",
+      "en": "ROAS of {roas}x is excellent: scale confidently, increase budget two to three times, and expand into lookalike audiences or adjacent channels. Keep a creative refresh cadence so the audience does not fatigue, and watch that the extra spend keeps the same margin rather than buying worse traffic.",
+      "zh": "ROAS {roas} 是优秀档：放心扩量，预算加 2–3 倍，同时扩到相似受众或相邻渠道。记得保持创意刷新节奏，别让受众疲劳；同时盯住新增花费是不是买来了更差的流量，毛利不能被稀释。",
+      "params": {
+        "roas": "{roas}"
+      }
+    },
+    {
+      "code": "roas_good",
+      "en": "ROAS of {roas}x is profitable but not optimal. Test new creatives, audience segments, and landing pages; a 30% improvement in conversion rate would take ROAS from 3.0x to 3.9x on the same spend, which is far cheaper than buying more traffic into a funnel you have not fixed yet.",
+      "zh": "ROAS {roas} 是赚钱但不够好的档。换新的创意、受众分层和落地页做测试；转化率提升 30% 就能在同样花费下把 ROAS 从 3.0 倍推到 3.9 倍 —— 这比往还没修好的漏斗里买更多流量便宜得多。",
+      "params": {
+        "roas": "{roas}"
+      }
+    },
+    {
+      "code": "roas_warning_thin_margin",
+      "en": "ROAS of {roas}x is in the warning band and gross margin is only {grossMargin}%, so this ratio is thinner than it looks. You need two fixes at once, not one: raise margin through pricing, cost of goods, or packaging, and improve click-through and conversion in the funnel. Fixing only one of them leaves you sitting in the same band.",
+      "zh": "ROAS {roas} 落在警告档，而毛利只有 {grossMargin}%，这个比率比看上去薄。你需要同时修两件事，而不是一件：一边通过定价、成本或包装把毛利提上去，一边把漏斗的点击率和转化率做上去。只修一个，出不了这个档。",
+      "params": {
+        "roas": "{roas}",
+        "grossMargin": "{grossMargin}"
+      }
+    },
+    {
+      "code": "roas_warning_funnel",
+      "en": "ROAS of {roas}x is in the 1.0–2.0x warning band. Audit the funnel from click-through to conversion: a 30–50% improvement is typical after re-targeting and landing page testing. Also confirm that your {attributionWindow} attribution window matches your real buying cycle, because the wrong window makes a healthy channel look weak.",
+      "zh": "ROAS {roas} 落在 1.0–2.0 倍的警告档。审计漏斗（点击率 → 转化率）：重定向和落地页测试之后，30–50% 的提升是常见水平。同时确认 {attributionWindow} 的归因窗口和你真实的决策周期一致 —— 窗口选错，健康渠道也会被看成不行。",
+      "params": {
+        "roas": "{roas}",
+        "attributionWindow": "{attributionWindow}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "roas_critical",
+      "inputs": {
+        "adSpend": "5000",
+        "revenue": "4000",
+        "grossMargin": "60",
+        "attributionWindow": "28d"
+      }
+    },
+    {
+      "code": "roas_excellent",
+      "inputs": {
+        "adSpend": "5000",
+        "revenue": "20000",
+        "grossMargin": "60",
+        "attributionWindow": "28d"
+      }
+    },
+    {
+      "code": "roas_good",
+      "inputs": {
+        "adSpend": "5000",
+        "revenue": "15000",
+        "grossMargin": "60",
+        "attributionWindow": "28d"
+      }
+    },
+    {
+      "code": "roas_warning_thin_margin",
+      "inputs": {
+        "adSpend": "5000",
+        "revenue": "7500",
+        "grossMargin": "40",
+        "attributionWindow": "28d"
+      }
+    },
+    {
+      "code": "roas_warning_funnel",
+      "inputs": {
+        "adSpend": "5000",
+        "revenue": "7500",
+        "grossMargin": "60",
+        "attributionWindow": "28d"
+      }
+    }
+  ]
+}

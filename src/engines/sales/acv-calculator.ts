@@ -161,20 +161,33 @@ function calculate(inputs: Record<string, string>): string[] {
     nextTier = 'top tier maintained';
   }
 
-  // Tip: band-driven contextual advice
+  // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面 Health 那套 band，
+  //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+  // P168 B3-4：💡 Tip 改成**建议码**（语义码 + 参数）—— 英文句子搬进 locale，
+  //   zh 页的动态层才会是中文（照 B3-3 已上线的形态 A）。
+  //   ⚠️ **分支条件与阈值一个都不改**（分支 = 上面 Health 那套 band）。
+  //   ⚠️ customFn 里必须写**逐字相同**的一份（守卫「两套实现不许漂」守着这条）。
   let tip: string;
   if (band === 'critical') {
-    tip =
-      'ACV < $2,000/year is micro-transaction territory — high volume, low value. Focus on upsell paths: tier upgrades, annual prepay discounts, product bundle attach. A single sale is unlikely to move the needle; you need a flywheel of expansion revenue or a pricing re-architecture.';
+    tip = JSON.stringify({
+      code: 'acv_micro_transaction',
+      params: { acv: money(annual), monthly: moneyExact(monthlyDisplay), expanded: money(expanded) },
+    });
   } else if (band === 'warning') {
-    tip =
-      'ACV $2,000–$10,000/year is SMB-tier pricing. To reach mid-market sweet spot, package features into higher tiers and gate usage-based features. Audit pricing page; most SMB products leave 30–50% of ACV on the table via underpriced annual plans and missing enterprise-only modules.';
+    tip = JSON.stringify({
+      code: 'acv_smb_tier',
+      params: { acv: money(annual), monthly: moneyExact(monthlyDisplay), expanded: money(expanded) },
+    });
   } else if (band === 'good') {
-    tip =
-      'ACV $10,000–$50,000/year is the mid-market sweet spot. To reach enterprise, invest in procurement-ready features (SSO, SOC2, audit logs), security review templates, and named CSM support. Pair with sales velocity (P8-2) to ensure deal size growth isn\'t coupled with cycle compression you can\'t sustain.';
+    tip = JSON.stringify({
+      code: 'acv_mid_market',
+      params: { acv: money(annual), monthly: moneyExact(monthlyDisplay), expanded: money(expanded) },
+    });
   } else {
-    tip =
-      'ACV ≥ $50,000/year is enterprise-grade — protect it. Maintain SLA delivery, executive sponsor relationships, and quarterly business reviews. Watch for discount creep at renewal; expansion revenue (upsell + cross-sell) should be the primary growth lever, not price increases on the base.';
+    tip = JSON.stringify({
+      code: 'acv_enterprise_grade',
+      params: { acv: money(annual), monthly: moneyExact(monthlyDisplay), expanded: money(expanded) },
+    });
   }
 
   let r =
@@ -216,12 +229,11 @@ function calculate(inputs: Record<string, string>): string[] {
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
 
-  // P151 batch3: L5 Decision Recommendation
-  r += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 ACV 数字是陷阱，**核心问题是"ACV vs CAC 比 + 客户分群差异 + 合同长度 trade-off + expansion 上行"**。高 ACV 客户 ≠ 都健康。\n' +
-    '• 🧭 Recommendation: (1) **ACV < $2K** → 重新评估 ICP（应聚焦 self-serve / PLG）；(2) **$2K-10K** → 标准化 onboarding + 控 CAC < 1/3 ACV；(3) **$10K-50K** → 建 CSM + 探 expansion；(4) **> $50K** → enterprise 模式 + 季度 exec review。\n' +
-    '• 🧭 Key Uncertainty: (1) ACV 是 ARR 还是 TCV（区别巨大）；(2) expansion rate 假设 ±5pp 误差；(3) 合同长度 + renewal rate 影响 NPV；(4) discount / promo 未计入。\n' +
-    '• 🧭 Next Action: (a) 跑 [Pipeline Coverage Calculator] 看 sales pipeline 质量；(b) 跑 [MRR Calculator] 看 MRR vs ARR 一致性；(c) 跑 [NRR Calculator] 看扩张/流失净值；(d) 决策前 cohort 分析 high vs low ACV 客户留存差异。';
+  // P168 B3-4：**🧭 四段已迁到页面的「🧭 算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_goal /
+  //     decision_recommendation / decision_constraint / decision_next_tool，双语）
+  //   ⇒ 引擎只负责算；**决策支持由区块独占** ⇒ 同页不再有两份决策建议。
+  //   ⚠️ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事。
 
   return [r];
 }
@@ -267,10 +279,10 @@ const customFn =
   "else if(bd==='good'){gn=50000-annual;nt='\\uD83D\\uDFE2 Excellent ($50,000)';}" +
   "else{gn=0;nt='top tier maintained';}" +
   "var tip='';" +
-  "if(bd==='critical'){tip='ACV < $2,000/year is micro-transaction territory \\u2014 high volume, low value. Focus on upsell paths: tier upgrades, annual prepay discounts, product bundle attach. A single sale is unlikely to move the needle; you need a flywheel of expansion revenue or a pricing re-architecture.';}" +
-  "else if(bd==='warning'){tip='ACV $2,000\\u2013$10,000/year is SMB-tier pricing. To reach mid-market sweet spot, package features into higher tiers and gate usage-based features. Audit pricing page; most SMB products leave 30\\u201350% of ACV on the table via underpriced annual plans and missing enterprise-only modules.';}" +
-  "else if(bd==='good'){tip='ACV $10,000\\u2013$50,000/year is the mid-market sweet spot. To reach enterprise, invest in procurement-ready features (SSO, SOC2, audit logs), security review templates, and named CSM support. Pair with sales velocity (P8-2) to ensure deal size growth isn\\u2019t coupled with cycle compression you can\\u2019t sustain.';}" +
-  "else{tip='ACV \\u2265 $50,000/year is enterprise-grade \\u2014 protect it. Maintain SLA delivery, executive sponsor relationships, and quarterly business reviews. Watch for discount creep at renewal; expansion revenue (upsell + cross-sell) should be the primary growth lever, not price increases on the base.';}" +
+  "if(bd==='critical'){tip=JSON.stringify({code:'acv_micro_transaction',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
+  "else if(bd==='warning'){tip=JSON.stringify({code:'acv_smb_tier',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
+  "else if(bd==='good'){tip=JSON.stringify({code:'acv_mid_market',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
+  "else{tip=JSON.stringify({code:'acv_enterprise_grade',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
   "var r2='';" +
   "r2+='\\uD83D\\uDE80 ACV Calculator\\n\\n';" +
   "r2+='\\uD83E\\uDE7A Health:\\n';" +
@@ -352,16 +364,16 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该用这个 ACV 去做容量与定价决策，还是先把客户结构拆开看',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
   staticExamples: [
-    '🚀 ACV Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — ACV $10,000–$50,000/year; mid-market sweet spot\n• Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year\n• Expansion-adjusted (10%): $27,500/year\n• Formula: $300,000 ÷ 12 customers ÷ 12 months × 12 × (1 + 10%) = $27,500/year\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total contract value: $300,000\n• Contract length: 12 months\n• Number of customers: 12\n• Annual expansion rate: 10%\n• Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)\n• Contract length 12→24 months: $12,500/year base (-50.0%)\n• Customers 12→24: $12,500/year base (-50.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $50,000/year ACV\n• Gap to 🟢: $25,000/year\n• Path A — raise total contract value by $300,000 (same customers, larger deals)\n• Path B — reduce to ~6 or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($50,000)\n• Gap to next tier: $25,000 (before expansion)\n• At current pace: ~$27,500/year per-customer revenue (with 10% expansion)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ACV $10,000–$50,000/year is the mid-market sweet spot. To reach enterprise, invest in procurement-ready features (SSO, SOC2, audit logs), security review templates, and named CSM support. Pair with sales velocity (P8-2) to ensure deal size growth isn\'t coupled with cycle compression you can\'t sustain.\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 ACV 数字是陷阱，**核心问题是"ACV vs CAC 比 + 客户分群差异 + 合同长度 trade-off + expansion 上行"**。高 ACV 客户 ≠ 都健康。\n• 🧭 Recommendation: (1) **ACV < $2K** → 重新评估 ICP（应聚焦 self-serve / PLG）；(2) **$2K-10K** → 标准化 onboarding + 控 CAC < 1/3 ACV；(3) **$10K-50K** → 建 CSM + 探 expansion；(4) **> $50K** → enterprise 模式 + 季度 exec review。\n• 🧭 Key Uncertainty: (1) ACV 是 ARR 还是 TCV（区别巨大）；(2) expansion rate 假设 ±5pp 误差；(3) 合同长度 + renewal rate 影响 NPV；(4) discount / promo 未计入。\n• 🧭 Next Action: (a) 跑 [Pipeline Coverage Calculator] 看 sales pipeline 质量；(b) 跑 [MRR Calculator] 看 MRR vs ARR 一致性；(c) 跑 [NRR Calculator] 看扩张/流失净值；(d) 决策前 cohort 分析 high vs low ACV 客户留存差异。',
+    '🚀 ACV Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — ACV $10,000–$50,000/year; mid-market sweet spot\n• Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year\n• Expansion-adjusted (10%): $27,500/year\n• Formula: $300,000 ÷ 12 customers ÷ 12 months × 12 × (1 + 10%) = $27,500/year\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total contract value: $300,000\n• Contract length: 12 months\n• Number of customers: 12\n• Annual expansion rate: 10%\n• Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)\n• Contract length 12→24 months: $12,500/year base (-50.0%)\n• Customers 12→24: $12,500/year base (-50.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $50,000/year ACV\n• Gap to 🟢: $25,000/year\n• Path A — raise total contract value by $300,000 (same customers, larger deals)\n• Path B — reduce to ~6 or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($50,000)\n• Gap to next tier: $25,000 (before expansion)\n• At current pace: ~$27,500/year per-customer revenue (with 10% expansion)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"acv_mid_market","params":{"acv":"$25,000","monthly":"$2,083.33","expanded":"$27,500"}}\n',
   ],
   faq: [
     { q: 'What is ACV (Average Contract Value)?', a: 'ACV is the average annualized revenue per customer contract. It is computed as total contract value divided by contract length (annualized), or equivalently total revenue divided by customer count for a given period. ACV is the fundamental SaaS pricing metric — it tells you how much each customer is worth on a per-year basis, separate from new vs expansion revenue.' },

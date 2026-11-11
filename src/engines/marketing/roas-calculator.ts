@@ -113,26 +113,29 @@ function calculate(inputs: Record<string, string>): string[] {
   const annualNetProfit = netProfit * 12;
 
   // Tip: band-driven contextual advice
+  // P168 B3-4：Tip 改成**建议码**（语义码 + 参数）—— 英文句子搬进 locale，
+  //   zh 页的动态层才会是中文（照 B3-3 已上线的形态 A）。
+  //   ⚠️ **分支条件与阈值一个都不改**（只把每支的文案换成对应的码）。
+  //   ⚠️ customFn 里必须写**逐字相同**的一份（守卫「两套实现不许漂」守着这条）。
   let tip: string;
   if (roas < 1.0) {
-    tip =
-      'You are losing money per ad dollar. Audit creatives, audience targeting, and channel mix immediately. Pause and re-launch with a $500–$1,000 test budget to find winning combinations before scaling further.';
+    tip = JSON.stringify({ code: 'roas_critical', params: { roas: roas.toFixed(2) } });
   } else if (roas >= HEALTH_BANDS.excellent) {
-    tip =
-      'Excellent ROAS. Scale confidently — increase budget 2–3x and expand to lookalike audiences or adjacent channels (Meta if on Google, TikTok if on Meta, etc.). Maintain creative refresh cadence to avoid audience fatigue.';
+    tip = JSON.stringify({ code: 'roas_excellent', params: { roas: roas.toFixed(2) } });
   } else if (roas >= HEALTH_BANDS.good[0]) {
-    tip =
-      'Profitable but suboptimal. Test new creatives, audience segments, and landing pages. A 30% conversion-rate improvement could push ROAS from 3.0x to 3.9x at same spend.';
+    tip = JSON.stringify({ code: 'roas_good', params: { roas: roas.toFixed(2) } });
   } else {
     // 1.0-2.0 range
     if (grossMargin < 50) {
-      tip =
-        'ROAS is in the warning band with thin margin. Either improve margin (pricing, COGS, packaging) or improve funnel CTR/CVR — you need both to safely leave this band.';
+      tip = JSON.stringify({
+        code: 'roas_warning_thin_margin',
+        params: { roas: roas.toFixed(2), grossMargin: grossMargin.toFixed(1) },
+      });
     } else {
-      tip =
-        'In the 1.0–2.0x warning band. Audit the funnel (CTR → CVR) — a 30–50% improvement is typical after re-targeting and landing page testing. Verify attribution window (' +
-        attributionWindow +
-        ') matches your consideration cycle.';
+      tip = JSON.stringify({
+        code: 'roas_warning_funnel',
+        params: { roas: roas.toFixed(2), attributionWindow: attributionWindow },
+      });
     }
   }
 
@@ -170,13 +173,13 @@ function calculate(inputs: Record<string, string>): string[] {
     '• 12-month projection:        revenue = ' + money(annualRevenue) + ' · net profit = ' + money(annualNetProfit) + '\n' +
     '• (Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n\n' +
-    '🧭 Decision Recommendation\n' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 3.2x ROAS 看起来"还行"，但扣除 Gross Margin + CAC + 退货率后**真正值不值得继续投放**？\n' +
-    '• 🧭 Recommendation: 必须满足 3 个条件才算"值得投"：(1) **Net ROAS ≥ 1.0x**（扣毛利后不亏）；(2) **CAC ≤ LTV × 0.33**；(3) **90 天 cohort LTV/CAC ≥ 3.0**。任一不满足 → 不扩量，先优化 ROAS 到 4.0x 再投；3 个都满足 → 加预算 25-50% 抢占市场窗口期。\n' +
-    '• 🧭 Key Uncertainty: 3.2x 是 28d click attribution，但高客单产品 90d 才回本（lead gen / B2B SaaS 90d attribution 默认）；28d 测出 3.2x ≠ 真值；attribution window 选错 = 决策错。\n' +
-    '• 🧭 Next Action: 立刻检查 (a) Gross Margin 是多少？(b) 切到 90d attribution 后 ROAS 多少？(c) 90d cohort LTV/CAC 是多少？任一不达标 → 不加预算。';
+    '💡 Tip: ' + tip + '\n';
+
+  // P168 B3-4：**🧭 四段已迁到页面的「🧭 算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_goal /
+  //     decision_recommendation / decision_constraint / decision_next_tool，双语）
+  //   ⇒ 引擎只负责算；**决策支持由区块独占** ⇒ 同页不再有两份决策建议。
+  //   ⚠️ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事。
 
   // P140f-4: L5 Decision Recommendation (per ADR-0002) — v2.0 灵魂 = Decision Support
   return [r];
@@ -214,10 +217,10 @@ const customFn =
   "var s2rev=rev*2;var s2sp=as*2;var s2pf=s2rev*(gm/100)-s2sp;" +
   "var annR=rev*12;var annNP=np*12;" +
   "var tip='';" +
-  "if(roas<1){tip='You are losing money per ad dollar. Audit creatives, audience targeting, and channel mix immediately. Pause and re-launch with a $500\\u2013$1,000 test budget to find winning combinations before scaling further.';}" +
-  "else if(roas>=4){tip='Excellent ROAS. Scale confidently \\u2014 increase budget 2\\u20133x and expand to lookalike audiences or adjacent channels (Meta if on Google, TikTok if on Meta, etc.). Maintain creative refresh cadence to avoid audience fatigue.';}" +
-  "else if(roas>=2){tip='Profitable but suboptimal. Test new creatives, audience segments, and landing pages. A 30% conversion-rate improvement could push ROAS from 3.0x to 3.9x at same spend.';}" +
-  "else{if(gm<50){tip='ROAS is in the warning band with thin margin. Either improve margin (pricing, COGS, packaging) or improve funnel CTR/CVR \\u2014 you need both to safely leave this band.';}else{tip='In the 1.0\\u20132.0x warning band. Audit the funnel (CTR \\u2192 CVR) \\u2014 a 30\\u201350% improvement is typical after re-targeting and landing page testing. Verify attribution window ('+aw+') matches your consideration cycle.';}}" +
+  "if(roas<1){tip=JSON.stringify({code:'roas_critical',params:{roas:roas.toFixed(2)}});}" +
+  "else if(roas>=4){tip=JSON.stringify({code:'roas_excellent',params:{roas:roas.toFixed(2)}});}" +
+  "else if(roas>=2){tip=JSON.stringify({code:'roas_good',params:{roas:roas.toFixed(2)}});}" +
+  "else{if(gm<50){tip=JSON.stringify({code:'roas_warning_thin_margin',params:{roas:roas.toFixed(2),grossMargin:gm.toFixed(1)}});}else{tip=JSON.stringify({code:'roas_warning_funnel',params:{roas:roas.toFixed(2),attributionWindow:aw}});}}" +
   "var r2='';" +
   "r2+='\\u23F0 ROAS Calculator\\n\\n';" +
   "r2+='\\uD83E\\uDE7A Health:\\n';" +
@@ -252,8 +255,7 @@ const customFn =
   "r2+='\\u2022 12-month projection:        revenue = '+money(annR)+' \\u00B7 net profit = '+money(annNP)+'\\n';" +
   "r2+='\\u2022 (Assumes constant ratio \\u2014 actual scaling often degrades 10\\u201330% as audience saturates)\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "r2+=`\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 3.2x ROAS 看起来\"还行\"，但扣除 Gross Margin + CAC + 退货率后**真正值不值得继续投放**？\n• 🧭 Recommendation: 必须满足 3 个条件才算\"值得投\"：(1) **Net ROAS ≥ 1.0x**（扣毛利后不亏）；(2) **CAC ≤ LTV × 0.33**；(3) **90 天 cohort LTV/CAC ≥ 3.0**。任一不满足 → 不扩量，先优化 ROAS 到 4.0x 再投；3 个都满足 → 加预算 25-50% 抢占市场窗口期。\n• 🧭 Key Uncertainty: 3.2x 是 28d click attribution，但高客单产品 90d 才回本（lead gen / B2B SaaS 90d attribution 默认）；28d 测出 3.2x ≠ 真值；attribution window 选错 = 决策错。\n• 🧭 Next Action: 立刻检查 (a) Gross Margin 是多少？(b) 切到 90d attribution 后 ROAS 多少？(c) 90d cohort LTV/CAC 是多少？任一不达标 → 不加预算。`;" +
+  "r2+='\\uD83D\\uDCA1 Tip: '+\ntip+'\\n';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -303,7 +305,7 @@ const engine: ToolEngine = {
   calculate,
   generate: calculate,
   staticExamples: [
-    '⏰ ROAS Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — ROAS ≥ 4.0x; profitable and scalable\n• Gross ROAS: 4.00x  ·  Net profit margin: 140.0%\n• Attribution: 28d  ·  Effective cost per $1K revenue: $250\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Ad spend:     $5,000\n• Revenue:      $20,000\n• Gross margin: 60.0%\n• Net profit:   $7,000  (after ad cost)\n• Attribution:  28d\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• +20% revenue: ROAS = 4.80x · net profit = $9,400\n• −20% spend:   ROAS = 5.00x · net profit = $8,000\n• Both:         ROAS = 6.00x (compound gain)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Break-even revenue: $8,333  (at 60% margin → ROAS = 1.67x)\n• Revenue lift needed: -58.3% to break even on net profit\n• Or raise gross margin to 25.0% on current revenue to break even\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Scale 2x at current ratio: revenue = $40,000 · profit = $14,000/period\n• 12-month projection:        revenue = $240,000 · net profit = $84,000\n• (Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Excellent ROAS. Scale confidently — increase budget 2–3x and expand to lookalike audiences or adjacent channels (Meta if on Google, TikTok if on Meta, etc.). Maintain creative refresh cadence to avoid audience fatigue.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 3.2x ROAS 看起来"还行"，但扣除 Gross Margin + CAC + 退货率后**真正值不值得继续投放**？\n• 🧭 Recommendation: 必须满足 3 个条件才算"值得投"：(1) **Net ROAS ≥ 1.0x**（扣毛利后不亏）；(2) **CAC ≤ LTV × 0.33**；(3) **90 天 cohort LTV/CAC ≥ 3.0**。任一不满足 → 不扩量，先优化 ROAS 到 4.0x 再投；3 个都满足 → 加预算 25-50% 抢占市场窗口期。\n• 🧭 Key Uncertainty: 3.2x 是 28d click attribution，但高客单产品 90d 才回本（lead gen / B2B SaaS 90d attribution 默认）；28d 测出 3.2x ≠ 真值；attribution window 选错 = 决策错。\n• 🧭 Next Action: 立刻检查 (a) Gross Margin 是多少？(b) 切到 90d attribution 后 ROAS 多少？(c) 90d cohort LTV/CAC 是多少？任一不达标 → 不加预算。',
+    '⏰ ROAS Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — ROAS ≥ 4.0x; profitable and scalable\n• Gross ROAS: 4.00x  ·  Net profit margin: 140.0%\n• Attribution: 28d  ·  Effective cost per $1K revenue: $250\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Ad spend:     $5,000\n• Revenue:      $20,000\n• Gross margin: 60.0%\n• Net profit:   $7,000  (after ad cost)\n• Attribution:  28d\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• +20% revenue: ROAS = 4.80x · net profit = $9,400\n• −20% spend:   ROAS = 5.00x · net profit = $8,000\n• Both:         ROAS = 6.00x (compound gain)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Break-even revenue: $8,333  (at 60% margin → ROAS = 1.67x)\n• Revenue lift needed: -58.3% to break even on net profit\n• Or raise gross margin to 25.0% on current revenue to break even\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Scale 2x at current ratio: revenue = $40,000 · profit = $14,000/period\n• 12-month projection:        revenue = $240,000 · net profit = $84,000\n• (Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"roas_excellent","params":{"roas":"4.00"}}\n',
   ],
   faq: [
     { q: 'What is a good ROAS?', a: 'A "good" ROAS depends on your gross margin. At 50% margin, ROAS ≥ 2.0x is break-even; ROAS ≥ 3.0x is comfortably profitable. At 70% margin, ROAS ≥ 1.5x is break-even. Most solopreneurs target 4.0x+ for sustainable scaling.' },
@@ -331,11 +333,11 @@ const engine: ToolEngine = {
   // Goal 含"该不该"+"投放"双关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
   // 内容镜像 Phase 1 roas 🧭 Decision Recommendation 4 子段 + ADR-0002 决策逻辑
   playbook: {
-    goal: '用户该不该继续在当前渠道投放广告',
+    goal: '用户该不该继续加投这个广告渠道，还是先把落地页与人群修一遍',
     input: 'adSpend (≥0) + revenue (≥0) + grossMargin (0-100) + attributionWindow',
     output: 'ROAS ratio + 健康带 🟢≥4.0x / 🟡2.0-4.0x / 🟠1.0-2.0x / 🔴<1.0x + Net ROAS %',
     constraint: 'adSpend = 0 时 ROAS 无意义 (Infinity); 28d attribution 可能低估 B2B 高客单 ROAS',
-    tool: 'Phase 1 roas-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'Meta 7d click / Google Ads 28d click / B2B 90d attribution 行业基准',
   },
 };

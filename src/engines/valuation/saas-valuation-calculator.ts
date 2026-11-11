@@ -53,7 +53,24 @@ function calculateValuation(inputs: Record<string, string>): string[] {
     mainResult += '💪 Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.\n\n';
   }
 
-  mainResult += '💡 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.';
+  // ---- Tip (P168 decision code) ----
+  // Bands reuse the existing Break-Even Multiple thresholds (baseMultiple < 5 / < 10 / else),
+  // so the advice can never disagree with the break-even band shown further down.
+  const valTipParams = {
+    multiple: baseMultiple.toFixed(1) + 'x',
+    valuation: fmt(valuationBase),
+    growth: pct(growthRate),
+    margin: pct(profitMargin),
+  };
+  let valTip: { code: string; params: Record<string, string> };
+  if (baseMultiple < 5) {
+    valTip = { code: 'saasval_floor', params: valTipParams };
+  } else if (baseMultiple < 10) {
+    valTip = { code: 'saasval_median', params: valTipParams };
+  } else {
+    valTip = { code: 'saasval_premium', params: valTipParams };
+  }
+  mainResult += '💡 Tip: ' + JSON.stringify(valTip);
 
   // 🔄 What-If Scenarios
   if (annualRevenue > 0) {
@@ -146,15 +163,6 @@ function calculateValuation(inputs: Record<string, string>): string[] {
 
   results.push(mainResult);
 
-  // P151 batch3: L5 Decision Recommendation
-  results.push(
-    '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 ARR × multiple 是陷阱，**核心问题是"当前 growth/margin 是否支持 current multiple + 该 raise 还是 hold"**。multiples 在不同时期波动大。\n' +
-    '• 🧭 Recommendation: (1) **multiple < 4x** → 高 risk，看能否加速 growth 重 rating；(2) **4-6x** → 合理 SaaS 范围，考虑保守估值；(3) **6-10x** → 健康范围，可向投资人 pitch growth；(4) **> 10x** → 高 growth 期，估值 + fund raise 窗口期。\n' +
-    '• 🧭 Key Uncertainty: (1) growth rate 在 exit 后通常 drop 30-50%；(2) multiple 在 public comps 主导，受 sentiment 影响；(3) profit margin 差异 → 高 margin 可拿 premium；(4) growth + margin 组合决定 multiple，不是单一。\n' +
-    '• 🧭 Next Action: (a) 跑 [ARR Multiple Valuation Calculator] 看不同 multiple 下估值；(b) 跑 [Rule of 40 Calculator] 看 growth + margin 健康度；(c) 跑 [Burn Multiple Calculator] 看 capital efficiency；(d) 决策前用 3 个 comp 公司的 recent valuation 比对。'
-  );
-
   // 5 comparison scenarios at different multiples
   const multipleScenarios = [
     { label: 'Distressed Sale (2x)', multiple: 2 },
@@ -209,7 +217,9 @@ const customFn =
   "if(gr2>=50)mr4+='\\uD83D\\uDE80 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\\n\\n';" +
   "else if(gr2>=20)mr4+='\\uD83D\\uDCC8 Solid growth trajectory. Improving your growth rate from '+pct2(gr2)+' to 30%+ could increase your valuation multiple by 2-3x.\\n\\n';" +
   "else mr4+='\\uD83D\\uDCAA Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.\\n\\n';" +
-  "mr4+='\\uD83D\\uDCA1 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too \\u2014 profitable SaaS companies get 1-3x premium.';" +
+  "var vtp={multiple:bm.toFixed(1)+'x',valuation:fmt2(vb),growth:pct2(gr2),margin:pct2(pm)};" +
+  "var vto=bm<5?{code:'saasval_floor',params:vtp}:(bm<10?{code:'saasval_median',params:vtp}:{code:'saasval_premium',params:vtp});" +
+  "mr4+='\\uD83D\\uDCA1 Tip: '+JSON.stringify(vto);" +
   "if(ar2>0){" +
   "var rg=Math.min(150,gr2+30);" +
   "var rm=rg>=100?10:rg>=50?8:rg>=30?7:5.5;" +
@@ -244,18 +254,18 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该按这个估值区间去谈融资，还是先把 ARR 的质量修到能站得住',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs: Record<string, string>): string[] {
     return calculateValuation(inputs);
   },
   staticExamples: [
-    '💰 SaaS Valuation Estimate\n\n• Annual Revenue (ARR): $0\n• YoY Growth Rate: 100.0%\n• Profit Margin: 0.0%\n• Annual Profit: $0\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Valuation Range (Revenue Multiple):\n\n• Conservative (8.0x): $0\n• Base Case (10.0x): $0\n• Optimistic (15.0x): $0\n\n• Estimated Exit Value: $0\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n\n💡 Tip: SaaS companies typically sell for 3-10x ARR. Growth rate is the #1 driver of multiples. A company growing 100% YoY can command 10-20x, while a flat company might sell for 2-3x. Profitability matters too — profitable SaaS companies get 1-3x premium.\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — enter ARR and multiple to see scenarios.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 ARR × multiple 是陷阱，**核心问题是"当前 growth/margin 是否支持 current multiple + 该 raise 还是 hold"**。multiples 在不同时期波动大。\n• 🧭 Recommendation: (1) **multiple < 4x** → 高 risk，看能否加速 growth 重 rating；(2) **4-6x** → 合理 SaaS 范围，考虑保守估值；(3) **6-10x** → 健康范围，可向投资人 pitch growth；(4) **> 10x** → 高 growth 期，估值 + fund raise 窗口期。\n• 🧭 Key Uncertainty: (1) growth rate 在 exit 后通常 drop 30-50%；(2) multiple 在 public comps 主导，受 sentiment 影响；(3) profit margin 差异 → 高 margin 可拿 premium；(4) growth + margin 组合决定 multiple，不是单一。\n• 🧭 Next Action: (a) 跑 [ARR Multiple Valuation Calculator] 看不同 multiple 下估值；(b) 跑 [Rule of 40 Calculator] 看 growth + margin 健康度；(c) 跑 [Burn Multiple Calculator] 看 capital efficiency；(d) 决策前用 3 个 comp 公司的 recent valuation 比对。\nDistressed Sale (2x): $0 ARR × 2x = $0 valuation\nFlat Growth (4x): $0 ARR × 4x = $0 valuation\nSteady Growth (6x): $0 ARR × 6x = $0 valuation\nHigh Growth (10x): $0 ARR × 10x = $0 valuation\nHyper-Growth (15x): $0 ARR × 15x = $0 valuation',
+    '💰 SaaS Valuation Estimate\n\n• Annual Revenue (ARR): $1,000,000\n• YoY Growth Rate: 100.0%\n• Profit Margin: 20.0%\n• Annual Profit: $200,000\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Valuation Range (Revenue Multiple):\n\n• Conservative (8.0x): $8,000,000\n• Base Case (10.0x): $10,000,000\n• Optimistic (15.0x): $15,000,000\n\n• Estimated Exit Value: $3,000,000\n\n━━━━━━━━━━━━━━━━━━━━\n\n🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.\n\n💡 Tip: {"code":"saasval_premium","params":{"multiple":"10.0x","valuation":"$10,000,000","growth":"100.0%","margin":"20.0%"}}\n\n🔄 What-If Scenarios\n• If growth → 130% YoY:  multiple 10.0x  → $10,000,000 (vs $10,000,000)\n• If margin → 30%:  multiple 10.5x  → $10,500,000\n• Distress floor (2x):  $2,000,000  (asset-only sale)\n\n\n🩺 Valuation Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Mid-stage ($1.0M ARR). Series A-B range. Multiple: 8-20x. Growth rate is the #1 multiple driver.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Double ARR (next 12 months at 100% growth):  $$1,000,000 → $$2,000,000  | Valuation $$20,000,000\n• Boost multiple 50% (better growth/profitability story):  Valuation $$15,000,000  (no ARR change)\n• Reach profitability (typically +30% multiple):  Valuation $$13,000,000\n• At current growth (100% YoY) in 2 years:  ARR $$4,000,000  | Valuation $$40,000,000  (+$$30,000,000)\n\n⚖️ Break-Even Multiple\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Premium multiple 10.0x. Maintain growth and margin to justify.\n\n🎯 Valuation Milestones\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $1M ARR:  ✅ reached  (current: $1.0M)\n• $10M ARR:  3.3 years  (at 100% YoY growth)\n• $100M ARR:  6.6 years  (at 100% YoY growth)\nDistressed Sale (2x): $1,000,000 ARR × 2x = $2,000,000 valuation\nFlat Growth (4x): $1,000,000 ARR × 4x = $4,000,000 valuation\nSteady Growth (6x): $1,000,000 ARR × 6x = $6,000,000 valuation\nHigh Growth (10x): $1,000,000 ARR × 10x = $10,000,000 valuation\nHyper-Growth (15x): $1,000,000 ARR × 15x = $15,000,000 valuation',
     'Distressed Sale (2x): $200,000 ARR × 2x = $400,000 valuation',
     'Flat Growth (4x): $200,000 ARR × 4x = $800,000 valuation',
     'Steady Growth (6x): $200,000 ARR × 6x = $1,200,000 valuation',

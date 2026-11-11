@@ -202,7 +202,7 @@
           "sections": 3
         },
         "advisor": {
-          "boundaryMarkers": 5
+          "boundaryMarkers": 3
         },
         "retention": {
           "snapshot": true,
@@ -210,7 +210,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 6
+          "crossToolLinks": 2
         }
       },
       "reviewedAt": "2026-10-21"
@@ -262,7 +262,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 5
+          "boundaryMarkers": 2
         },
         "retention": {
           "snapshot": false,
@@ -270,7 +270,7 @@
           "projection": true
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -442,7 +442,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 2
         },
         "retention": {
           "snapshot": true,
@@ -450,7 +450,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 6
         }
       },
       "reviewedAt": "2026-10-21"
@@ -668,10 +668,10 @@
     "solopreneur-freelance-rate-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0.5,
       "retention": 1,
       "advocacy": 1,
-      "score": 1,
+      "score": 0.9,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -682,7 +682,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 1
         },
         "retention": {
           "snapshot": true,
@@ -690,7 +690,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -802,7 +802,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 2
         },
         "retention": {
           "snapshot": true,
@@ -810,7 +810,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 11
+          "crossToolLinks": 5
         }
       },
       "reviewedAt": "2026-10-21"
@@ -968,10 +968,10 @@
     "solopreneur-equity-dilution-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0.5,
       "retention": 1,
       "advocacy": 1,
-      "score": 1,
+      "score": 0.9,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -982,7 +982,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 3
+          "boundaryMarkers": 1
         },
         "retention": {
           "snapshot": true,
@@ -990,7 +990,7 @@
           "projection": true
         },
         "advocacy": {
-          "crossToolLinks": 6
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -1208,10 +1208,10 @@
     "solopreneur-kb-coverage-rate-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0.5,
       "retention": 1,
       "advocacy": 1,
-      "score": 1,
+      "score": 0.9,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -1222,7 +1222,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 1
         },
         "retention": {
           "snapshot": true,
@@ -1230,7 +1230,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 12
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -1658,11 +1658,11 @@
     "solopreneur-roas-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 0,
+      "advisor": 1,
       "retention": 1,
-      "advocacy": 0,
-      "score": 0.6,
-      "admitted": false,
+      "advocacy": 1,
+      "score": 1,
+      "admitted": true,
       "signals": {
         "functionalValue": {
           "l5Tags": 4
@@ -1672,7 +1672,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 0
+          "boundaryMarkers": 3
         },
         "retention": {
           "snapshot": true,
@@ -1680,7 +1680,7 @@
           "projection": true
         },
         "advocacy": {
-          "crossToolLinks": 0
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -1808,10 +1808,10 @@
     "solopreneur-stockout-cost-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0,
       "retention": 1,
       "advocacy": 1,
-      "score": 1,
+      "score": 0.8,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -1822,7 +1822,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 0
         },
         "retention": {
           "snapshot": true,
@@ -1830,7 +1830,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -1928,10 +1928,10 @@
     "solopreneur-funnel-step-calculator": {
       "functionalValue": 1,
       "ux": 0.5,
-      "advisor": 1,
+      "advisor": 0,
       "retention": 1,
       "advocacy": 1,
-      "score": 0.9,
+      "score": 0.7,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -1939,10 +1939,10 @@
         },
         "ux": {
           "inputRatio": 1,
-          "sections": 0
+          "sections": 1
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 0
         },
         "retention": {
           "snapshot": true,
@@ -1950,7 +1950,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -2182,7 +2182,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 4
+          "boundaryMarkers": 2
         },
         "retention": {
           "snapshot": true,
@@ -2190,7 +2190,7 @@
           "projection": true
         },
         "advocacy": {
-          "crossToolLinks": 9
+          "crossToolLinks": 2
         }
       },
       "reviewedAt": "2026-10-21"
@@ -2228,10 +2228,10 @@
     "solopreneur-customer-health-score-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0,
       "retention": 1,
       "advocacy": 1,
-      "score": 1,
+      "score": 0.8,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -2242,7 +2242,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 3
+          "boundaryMarkers": 0
         },
         "retention": {
           "snapshot": true,
@@ -2250,7 +2250,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 6
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -2438,10 +2438,10 @@
     "solopreneur-churn-rate-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0.5,
       "retention": 0.5,
-      "advocacy": 0,
-      "score": 0.7,
+      "advocacy": 1,
+      "score": 0.8,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -2452,7 +2452,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 2
+          "boundaryMarkers": 1
         },
         "retention": {
           "snapshot": false,
@@ -2460,7 +2460,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 0
+          "crossToolLinks": 4
         }
       },
       "reviewedAt": "2026-10-21"
@@ -2572,7 +2572,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 3
+          "boundaryMarkers": 4
         },
         "retention": {
           "snapshot": true,
@@ -2580,7 +2580,7 @@
           "projection": false
         },
         "advocacy": {
-          "crossToolLinks": 6
+          "crossToolLinks": 3
         }
       },
       "reviewedAt": "2026-10-21"
@@ -2888,10 +2888,10 @@
     "solopreneur-saas-valuation-calculator": {
       "functionalValue": 1,
       "ux": 1,
-      "advisor": 1,
+      "advisor": 0.5,
       "retention": 0.5,
       "advocacy": 1,
-      "score": 0.9,
+      "score": 0.8,
       "admitted": true,
       "signals": {
         "functionalValue": {
@@ -2902,7 +2902,7 @@
           "sections": 5
         },
         "advisor": {
-          "boundaryMarkers": 5
+          "boundaryMarkers": 1
         },
         "retention": {
           "snapshot": false,
@@ -2910,7 +2910,7 @@
           "projection": true
         },
         "advocacy": {
-          "crossToolLinks": 6
+          "crossToolLinks": 2
         }
       },
       "reviewedAt": "2026-10-21"

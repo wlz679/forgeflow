@@ -66,15 +66,15 @@ const engine: ToolEngine = {
   var altMatched = altCoverage * total;
   var lift = Math.max(0, altMatched - matched);
   var atCost24 = lift * 24;
-  var needArticles = articles > 0 ? Math.ceil(Math.max(0, total * 0.85 - matched) / Math.max(1, total / articles)) : 0;
+  var needArticles = articles > 0 ? Math.ceil(Math.max(0, total * 0.85 - matched) / Math.max(1, total / articles)) : 0;\n  var tipParams = { coverage: (coverage*100).toFixed(1), gapPct: (gapR*100).toFixed(1), gapTickets: gap.toFixed(0), total: total.toFixed(0), articles: articles.toFixed(0) };
+  var tipJson = coverage >= 0.85 ? JSON.stringify({ code: 'kbcover_excellent', params: tipParams }) : coverage >= 0.60 ? JSON.stringify({ code: 'kbcover_good', params: tipParams }) : coverage >= 0.40 ? JSON.stringify({ code: 'kbcover_warning', params: tipParams }) : JSON.stringify({ code: 'kbcover_critical', params: tipParams });
   return [
     '🩺 KB Coverage Health: ' + emoji + ' ' + band + ' (' + (coverage*100).toFixed(1) + '% coverage · ' + (gapR*100).toFixed(1) + '% gap · ' + gap.toLocaleString() + ' tickets/mo without KB)',
     '📊 Snapshot: ' + matched.toLocaleString() + ' of ' + total.toLocaleString() + ' tickets matched (' + (coverage*100).toFixed(1) + '%) · ' + articles.toLocaleString() + ' articles in KB',
     '🔄 What-If: if coverage climbs to 85% (Excellent), ~' + Math.round(lift).toLocaleString() + ' more tickets/mo find KB (at ~$24/ticket = ~$' + Math.round(atCost24).toLocaleString() + '/mo saved)',
     '⚖️ Break-Even: to hit ≥85% (Excellent), need ~' + Math.round(lift).toLocaleString() + ' more matched tickets OR ~' + needArticles + ' net new articles',
     '🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics',
-    '💡 Tip: tickets without KB match = KB candidate list. Run this monthly and feed gaps to writers. Pair with our [Deflection Rate Calculator] (P12-5) to project $ impact.',
-    '\\n\\n🧭 Decision Recommendation\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🧭 Decision Question: 单纯看 coverage % 是陷阱，**核心问题是"coverage 是否覆盖 top 20% ticket topics + 内容新鲜度 + 搜索可发现性"**。50% coverage 在错误 topic 上 = 0 实际 deflection。\\n• 🧭 Recommendation: (1) **coverage < 30% + top topics 缺失** → 立即 audit ticket data + 写 top 10 articles；(2) **30-60% + 内容陈旧** → 重写 top 20 articles；(3) **60-80%** → 优化 search + cross-link；(4) **> 80%** → 专注 deflection quality 而非 coverage 数字。\\n• 🧭 Key Uncertainty: (1) coverage 按 ticket volume vs article count 算差异巨大；(2) 文章发布 ≠ article 可发现（搜索 ranking 也很关键）；(3) 行业更新使旧文章快速过时；(4) 长尾 topics 永远不值得补（专注 top 80%）。\\n• 🧭 Next Action: (a) 跑 [Search Effectiveness Calculator] 看 findability；(b) 跑 [Article Freshness Calculator] 看文章新鲜度；(c) 跑 [Deflection Quality Calculator] 看实际 deflection 效果；(d) 决策前先 analyze ticket volume 排序 top topics。'
+    '💡 Tip: ' + tipJson,
   ];
 }
 return run(inputs, pick, fill);`,
@@ -82,11 +82,11 @@ return run(inputs, pick, fill);`,
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该继续扩写知识库，还是先把高工单量的那些主题补上',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs) {
@@ -103,19 +103,34 @@ return run(inputs, pick, fill);`,
     const lift = Math.max(0, altMatched - matched);
     const atCost24 = lift * 24;
     const needArticles = articles > 0 ? Math.ceil(Math.max(0, total * altCoverage - matched) / Math.max(1, total / articles)) : 0;
+    // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 下面 Health 那套 band 边界，
+    //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+    const tipParams = {
+      coverage: (coverage * 100).toFixed(1),
+      gapPct: (gapR * 100).toFixed(1),
+      gapTickets: gap.toFixed(0),
+      total: total.toFixed(0),
+      articles: articles.toFixed(0),
+    };
+    const tipJson =
+      coverage >= HEALTH_BANDS.excellent.threshold
+        ? JSON.stringify({ code: 'kbcover_excellent', params: tipParams })
+        : coverage >= HEALTH_BANDS.good.threshold
+        ? JSON.stringify({ code: 'kbcover_good', params: tipParams })
+        : coverage >= HEALTH_BANDS.warning.threshold
+        ? JSON.stringify({ code: 'kbcover_warning', params: tipParams })
+        : JSON.stringify({ code: 'kbcover_critical', params: tipParams });
     return [
       '🩺 KB Coverage Health: ' + bandInfo.label + ' (' + fmtPct(coverage) + ' coverage · ' + fmtPct(gapR) + ' gap · ' + fmtInt(gap) + ' tickets/mo without KB)',
       '📊 Snapshot: ' + fmtInt(matched) + ' of ' + fmtInt(total) + ' tickets matched (' + fmtPct(coverage) + ') · ' + fmtInt(articles) + ' articles in KB',
       '🔄 What-If: if coverage climbs to ' + fmtPct(altCoverage) + ' (Excellent), ~' + fmtInt(lift) + ' more tickets/mo find KB (at ~$24/ticket = ~$' + fmtInt(atCost24) + '/mo saved)',
       '⚖️ Break-Even: to hit ' + fmtPct(HEALTH_BANDS.excellent.threshold) + ' (Excellent), need ~' + fmtInt(lift) + ' more matched tickets OR ~' + needArticles + ' net new articles',
       '🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics',
-      '💡 Tip: tickets without KB match = KB candidate list. Run this monthly and feed gaps to writers. Pair with our [Deflection Rate Calculator] (P12-5) to project $ impact.',
-      // P151 batch2: L5 Decision Recommendation
-      '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 coverage % 是陷阱，**核心问题是"coverage 是否覆盖 top 20% ticket topics + 内容新鲜度 + 搜索可发现性"**。50% coverage 在错误 topic 上 = 0 实际 deflection。\n• 🧭 Recommendation: (1) **coverage < 30% + top topics 缺失** → 立即 audit ticket data + 写 top 10 articles；(2) **30-60% + 内容陈旧** → 重写 top 20 articles；(3) **60-80%** → 优化 search + cross-link；(4) **> 80%** → 专注 deflection quality 而非 coverage 数字。\n• 🧭 Key Uncertainty: (1) coverage 按 ticket volume vs article count 算差异巨大；(2) 文章发布 ≠ article 可发现（搜索 ranking 也很关键）；(3) 行业更新使旧文章快速过时；(4) 长尾 topics 永远不值得补（专注 top 80%）。\n• 🧭 Next Action: (a) 跑 [Search Effectiveness Calculator] 看 findability；(b) 跑 [Article Freshness Calculator] 看文章新鲜度；(c) 跑 [Deflection Quality Calculator] 看实际 deflection 效果；(d) 决策前先 analyze ticket volume 排序 top topics。',
+      '💡 Tip: ' + tipJson,
     ];
   },
   staticExamples: [
-    '🩺 KB Coverage Health: Good (70.0% coverage · 30.0% gap · 1,500 tickets/mo without KB)\n📊 Snapshot: 3,500 of 5,000 tickets matched (70.0%) · 500 articles in KB\n🔄 What-If: if coverage climbs to 85.0% (Excellent), ~750 more tickets/mo find KB (at ~$24/ticket = ~$18,000/mo saved)\n⚖️ Break-Even: to hit 85.0% (Excellent), need ~750 more matched tickets OR ~75 net new articles\n🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics\n💡 Tip: tickets without KB match = KB candidate list. Run this monthly and feed gaps to writers. Pair with our [Deflection Rate Calculator] (P12-5) to project $ impact.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 coverage % 是陷阱，**核心问题是"coverage 是否覆盖 top 20% ticket topics + 内容新鲜度 + 搜索可发现性"**。50% coverage 在错误 topic 上 = 0 实际 deflection。\n• 🧭 Recommendation: (1) **coverage < 30% + top topics 缺失** → 立即 audit ticket data + 写 top 10 articles；(2) **30-60% + 内容陈旧** → 重写 top 20 articles；(3) **60-80%** → 优化 search + cross-link；(4) **> 80%** → 专注 deflection quality 而非 coverage 数字。\n• 🧭 Key Uncertainty: (1) coverage 按 ticket volume vs article count 算差异巨大；(2) 文章发布 ≠ article 可发现（搜索 ranking 也很关键）；(3) 行业更新使旧文章快速过时；(4) 长尾 topics 永远不值得补（专注 top 80%）。\n• 🧭 Next Action: (a) 跑 [Search Effectiveness Calculator] 看 findability；(b) 跑 [Article Freshness Calculator] 看文章新鲜度；(c) 跑 [Deflection Quality Calculator] 看实际 deflection 效果；(d) 决策前先 analyze ticket volume 排序 top topics。',
+    '🩺 KB Coverage Health: Good (70.0% coverage · 30.0% gap · 1,500 tickets/mo without KB)\n📊 Snapshot: 3,500 of 5,000 tickets matched (70.0%) · 500 articles in KB\n🔄 What-If: if coverage climbs to 85.0% (Excellent), ~750 more tickets/mo find KB (at ~$24/ticket = ~$18,000/mo saved)\n⚖️ Break-Even: to hit 85.0% (Excellent), need ~750 more matched tickets OR ~75 net new articles\n🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics\n💡 Tip: {"code":"kbcover_good","params":{"coverage":"70.0","gapPct":"30.0","gapTickets":"1500","total":"5000","articles":"500"}}',
   ],
   faq: [
     { q: 'What is KB coverage rate?', a: 'Coverage rate = (tickets with a matching KB article) / (total inbound tickets). It measures the breadth of your KB content vs. the real questions customers ask. TSIA 2024 reports mid-market B2B SaaS at 50-75% coverage; >85% indicates a mature KB.' },

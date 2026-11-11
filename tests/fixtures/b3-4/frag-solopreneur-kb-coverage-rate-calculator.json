@@ -1,0 +1,109 @@
+{
+  "slug": "solopreneur-kb-coverage-rate-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Reading the coverage percentage on its own is a trap. What actually decides anything is whether the covered articles match the topics that generate the tickets, whether those articles are still current, and whether a customer can find them at all — 50% coverage spread across the wrong topics deflects nothing. Use this tool to find out whether your knowledge base is missing content, out of date, or simply undiscoverable, because each of those three needs a different fix.",
+      "zh": "只看覆盖率是个陷阱。真正能决定结论的是三件事：被覆盖的文章是不是对应真正产生工单的那些主题、这些文章是不是还跟得上产品变化、以及客户到底能不能搜到它们 —— 50% 的覆盖率如果长在错误的主题上，实际分流效果就是零。用这个工具判断你的知识库到底是缺内容、过期了，还是根本搜不到，因为这三种情况的修法完全不同。"
+    },
+    "decision_recommendation": {
+      "en": "Read the coverage band and act on it. Below 30% with the top topics still missing, audit the ticket data today and write the top 10 articles first — breadth before polish. Between 30% and 60% with stale content, rewrite the top 20 articles rather than adding more, because an outdated article is worse than no article: it ranks, it gets clicked, and it still does not answer the question. Between 60% and 80%, the remaining work is findability rather than volume: improve search and cross-link the articles you already have. Above 80%, stop optimising the coverage number and spend the effort on deflection quality instead, because the last stretch of coverage is the most expensive per article and the least worth chasing.",
+      "zh": "先看覆盖率落在哪一档，再决定动作。低于 30%、而高频主题仍然没有对应文章时，今天就去审计工单数据，先把前 10 篇文章写出来 —— 先补广度，再谈打磨。30% 到 60% 之间、而内容陈旧时，应该重写前 20 篇文章而不是继续加新的：过期的文章比没有文章更糟，它会被搜到、被点开，然后依然答不上问题。60% 到 80% 之间，剩下的活儿是可发现性而不是数量：把已有文章的搜索和交叉链接做好。高于 80% 时，就别再优化覆盖率这个数字了，把精力投到分流质量上 —— 覆盖率最后那一段是每篇文章最贵、也最不值得追的部分。"
+    },
+    "decision_constraint": {
+      "en": "Four caveats travel with this coverage number. First, the denominator decides the meaning: coverage measured against ticket volume and coverage measured against article count describe completely different worlds. Second, publishing an article is not the same as making it findable, because search ranking decides whether anyone ever reaches it. Third, industry and product updates make articles go stale fast, so a number that was accurate last quarter can be optimistic today. Fourth, the long tail is never worth filling: the top 80% of topics carries most of the volume, so a coverage target of 100% is a target you should refuse to chase.",
+      "zh": "这个覆盖率数字要带着四个限定条件一起看。第一，分母决定含义：按工单量算的覆盖率，和按文章数算的覆盖率，讲的是完全不同的两个世界。第二，文章发布不等于文章能被找到，因为有没有人真的搜到它，取决于搜索排序。第三，行业和产品更新让文章很快过期，上个季度还准确的数字，今天可能已经偏乐观。第四，长尾永远不值得补：前 80% 的主题承担了大部分流量，所以 100% 覆盖率这种目标，你应该拒绝去追。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Search Effectiveness Calculator] to see whether customers can actually find the articles you already published, run [Article Freshness Calculator] to see how much of the library has gone stale, and run [Deflection Quality Calculator] to check that the tickets which do match an article are really being resolved by it. Then, before you decide anything, sort the tickets by volume and take the top topics, because that ordering is the writing backlog — everything below it is a distraction.",
+      "zh": "先跑 [搜索有效性计算器]，看客户到底能不能找到你已经发布的文章；跑 [文章时效性计算器]，看这套库有多少已经过期；再用 [自助分流质量计算器] 确认那些确实匹配到文章的工单，到底是不是真的被文章解决了。然后在做任何决策之前，先按工单量排序、取出最高频的那些主题 —— 这个顺序就是写作待办清单，再往下的都是干扰。"
+    }
+  },
+  "tips": [
+    {
+      "code": "kbcover_critical",
+      "en": "Your {articles} articles cover only {coverage}% of the {total} tickets that arrive each month, leaving {gapTickets} tickets a month unmatched ({gapPct}% of everything). Treat that unmatched volume as the writing backlog: write the top 10 articles for the highest-volume topics first and re-run this every month. Coverage this low also caps every deflection number you report, so fix the upstream gap before you quote the downstream result — run [Self-Service Deflection Rate Calculator] to see how many of those tickets a live article would have absorbed.",
+      "zh": "你的 {articles} 篇文章只覆盖了每月 {total} 张工单里的 {coverage}%，还有 {gapTickets} 张工单（占全部的 {gapPct}%）找不到对应文章。把这些没有匹配上的工单量直接当成写作待办清单：先按工单量把最高频的主题写成前 10 篇文章，然后每月重跑一次。这么低的覆盖率同时也压住了你对外报的每一个分流数字 —— 先把上游的缺口补上，再去引用下游的结果：用 [自助分流率计算器] 看看其中多少张工单本来能被一篇现成的文章接住。",
+      "params": {
+        "coverage": "{coverage}",
+        "gapPct": "{gapPct}",
+        "gapTickets": "{gapTickets}",
+        "total": "{total}",
+        "articles": "{articles}"
+      }
+    },
+    {
+      "code": "kbcover_warning",
+      "en": "Your {articles} articles cover {coverage}% of the {total} monthly tickets, so {gapTickets} tickets a month ({gapPct}%) still reach a human. Coverage is only half done, and adding more of the same will not close it: rewrite the top 20 articles first, because stale content is what actually blocks the search, then work on search ranking and cross-links. Re-audit quarterly, since every product launch adds 50 to 100 new ticket topics, and pair it with [Self-Service Deflection Rate Calculator] to put a dollar figure on the remaining gap.",
+      "zh": "你的 {articles} 篇文章覆盖了每月 {total} 张工单中的 {coverage}%，每月仍有 {gapTickets} 张工单（{gapPct}%）落到人工手上。覆盖率只做了一半，而且再照原样加文章补不上：先把前 20 篇文章重写一遍，因为真正卡住搜索的是内容陈旧，然后再做搜索排序和交叉链接。每季度重新审一次 —— 每次产品上线都会新增 50 到 100 个工单主题；同时用 [自助分流率计算器] 给剩下的缺口标一个具体的金额。",
+      "params": {
+        "coverage": "{coverage}",
+        "gapPct": "{gapPct}",
+        "gapTickets": "{gapTickets}",
+        "total": "{total}",
+        "articles": "{articles}"
+      }
+    },
+    {
+      "code": "kbcover_good",
+      "en": "Your {articles} articles cover {coverage}% of the {total} monthly tickets, with {gapTickets} tickets a month ({gapPct}%) still unmatched. Breadth is adequate now, so the next lever is findability: audit the search ranking, cross-link the articles that answer the same topic, and check freshness before you add anything new. Run this monthly, feed the remaining gap straight to the writers, and pair it with [Self-Service Deflection Rate Calculator] to put a dollar figure on what the leftover tickets are costing you.",
+      "zh": "你的 {articles} 篇文章覆盖了每月 {total} 张工单中的 {coverage}%，还有每月 {gapTickets} 张（{gapPct}%）没有匹配上。广度已经够了，下一个杠杆是可发现性：审一遍搜索排序，把回答同一主题的文章互相交叉链接，并且在新增文章之前先查新鲜度。每月跑一次，把剩下的缺口直接交给写手；同时用 [自助分流率计算器] 给剩下这些工单标一个金额，看看它们每月到底花了多少钱。",
+      "params": {
+        "coverage": "{coverage}",
+        "gapPct": "{gapPct}",
+        "gapTickets": "{gapTickets}",
+        "total": "{total}",
+        "articles": "{articles}"
+      }
+    },
+    {
+      "code": "kbcover_excellent",
+      "en": "Your {articles} articles cover {coverage}% of the {total} monthly tickets, leaving only {gapTickets} tickets a month ({gapPct}%) without a match. Coverage is no longer your constraint, so stop counting articles and start measuring what happens after the match: whether the article actually resolved the ticket and whether the customer found it without asking for help. Re-audit the gap every quarter, because product launches keep adding 50 to 100 new ticket topics that your current library does not cover, and run [Self-Service Deflection Rate Calculator] to track the dollar value of the deflection you have already earned.",
+      "zh": "你的 {articles} 篇文章覆盖了每月 {total} 张工单中的 {coverage}%，只剩每月 {gapTickets} 张（{gapPct}%）没有匹配。覆盖率已经不是你的约束了，别再数文章，去看匹配之后发生了什么：文章到底有没有把工单解决掉，客户有没有在不求助的情况下找到它。每季度重新审一次缺口 —— 产品上线一直在新增 50 到 100 个工单主题，而你现在的内容库并没有覆盖它们；同时用 [自助分流率计算器] 追踪你已经挣到的这部分分流值多少钱。",
+      "params": {
+        "coverage": "{coverage}",
+        "gapPct": "{gapPct}",
+        "gapTickets": "{gapTickets}",
+        "total": "{total}",
+        "articles": "{articles}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "kbcover_critical",
+      "inputs": {
+        "monthly_tickets": "5000",
+        "tickets_with_kb_match": "1200",
+        "total_articles": "180",
+        "industry_benchmark": "SaaS"
+      }
+    },
+    {
+      "code": "kbcover_warning",
+      "inputs": {
+        "monthly_tickets": "5000",
+        "tickets_with_kb_match": "2500",
+        "total_articles": "320",
+        "industry_benchmark": "SaaS"
+      }
+    },
+    {
+      "code": "kbcover_good",
+      "inputs": {
+        "monthly_tickets": "5000",
+        "tickets_with_kb_match": "3500",
+        "total_articles": "500",
+        "industry_benchmark": "SaaS"
+      }
+    },
+    {
+      "code": "kbcover_excellent",
+      "inputs": {
+        "monthly_tickets": "5000",
+        "tickets_with_kb_match": "4400",
+        "total_articles": "620",
+        "industry_benchmark": "SaaS"
+      }
+    }
+  ]
+}

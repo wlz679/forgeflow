@@ -121,6 +121,21 @@ const TIP_CASES: { slug: string; codes: string[] }[] = [
   { slug: 'solopreneur-gdpr-fine-calculator', codes: ['gdpr_escalate', 'gdpr_full_programme', 'gdpr_manageable', 'gdpr_mature'] },
   { slug: 'solopreneur-cac-calculator', codes: ['cac_no_revenue', 'cac_payback_fast', 'cac_payback_past_12', 'cac_payback_slow', 'cac_payback_within_12'] },
   { slug: 'solopreneur-ltv-by-channel-calculator', codes: ['ltv_both_healthy', 'ltv_no_data', 'ltv_no_green', 'ltv_similar_ratios', 'ltv_single_channel', 'ltv_strong_winner'] },
+  { slug: 'solopreneur-churn-rate-calculator', codes: ["churn_rate_healthy","churn_rate_average","churn_rate_high"] },
+  { slug: 'solopreneur-employee-cost-calculator', codes: ["employee_cost_lean","employee_cost_standard","employee_cost_high","employee_cost_excessive"] },
+  { slug: 'solopreneur-equity-dilution-calculator', codes: ["dilution_healthy","dilution_aggressive","dilution_excessive"] },
+  { slug: 'solopreneur-freelance-rate-calculator', codes: ["freelance_rate_premium","freelance_rate_market","freelance_rate_below_market","freelance_rate_entry"] },
+  { slug: 'solopreneur-rent-vs-buy-calculator', codes: ["rentbuy_buy","rentbuy_close","rentbuy_rent"] },
+  { slug: 'solopreneur-saas-valuation-calculator', codes: ["saasval_floor","saasval_median","saasval_premium"] },
+  { slug: 'solopreneur-acv-calculator', codes: ["acv_micro_transaction","acv_smb_tier","acv_mid_market","acv_enterprise_grade"] },
+  { slug: 'solopreneur-comp-banding-calculator', codes: ["comp_banding_below_p25","comp_banding_p25_to_p50","comp_banding_p50_to_p75","comp_banding_top_quartile"] },
+  { slug: 'solopreneur-csat-calculator', codes: ["csat_biased_sample","csat_excellent","csat_good","csat_warning","csat_critical"] },
+  { slug: 'solopreneur-customer-health-score-calculator', codes: ["healthscore_critical","healthscore_at_risk","healthscore_monitor","healthscore_excellent"] },
+  { slug: 'solopreneur-funnel-step-calculator', codes: ["funnelstep_critical","funnelstep_warning","funnelstep_healthy","funnelstep_excellent"] },
+  { slug: 'solopreneur-gpu-cloud-cost-calculator', codes: ["gpu_cloud_on_demand","gpu_cloud_spot","gpu_cloud_reserved"] },
+  { slug: 'solopreneur-kb-coverage-rate-calculator', codes: ["kbcover_critical","kbcover_warning","kbcover_good","kbcover_excellent"] },
+  { slug: 'solopreneur-roas-calculator', codes: ["roas_critical","roas_excellent","roas_good","roas_warning_thin_margin","roas_warning_funnel"] },
+  { slug: 'solopreneur-stockout-cost-calculator', codes: ["stockout_critical","stockout_serious","stockout_measurable","stockout_excellent"] },
 ];
 
 test('P168 建议码守恒（唯一不变量）：源码 == 探针 == 登记 == locale(en+zh)，且无死模板', () => {
@@ -160,6 +175,21 @@ const ENGINE_FILES: Record<string, string> = {
   'solopreneur-ltv-by-channel-calculator': 'src/engines/marketing/ltv-by-channel-calculator.ts',
   'solopreneur-gdpr-fine-calculator': 'src/engines/legal-compliance/gdpr-fine-calculator.ts',
   'solopreneur-cac-calculator': 'src/engines/valuation/cac-calculator.ts',
+  'solopreneur-acv-calculator': "src/engines/sales/acv-calculator.ts",
+  'solopreneur-churn-rate-calculator': "src/engines/saas/churn-rate-calculator.ts",
+  'solopreneur-comp-banding-calculator': "src/engines/hiring-team/comp-banding-calculator.ts",
+  'solopreneur-csat-calculator': "src/engines/customer-support/csat-calculator.ts",
+  'solopreneur-customer-health-score-calculator': "src/engines/retention/customer-health-score-calculator.ts",
+  'solopreneur-employee-cost-calculator': "src/engines/cost/employee-cost-calculator.ts",
+  'solopreneur-equity-dilution-calculator': "src/engines/investment/equity-dilution-calculator.ts",
+  'solopreneur-freelance-rate-calculator': "src/engines/freelance/freelance-rate-calculator.ts",
+  'solopreneur-funnel-step-calculator': "src/engines/product-analytics/funnel-step-calculator.ts",
+  'solopreneur-gpu-cloud-cost-calculator': "src/engines/ai-cost/gpu-cloud-cost-calculator.ts",
+  'solopreneur-kb-coverage-rate-calculator': "src/engines/knowledge/kb-coverage-rate-calculator.ts",
+  'solopreneur-rent-vs-buy-calculator': "src/engines/real-estate/rent-vs-buy-calculator.ts",
+  'solopreneur-roas-calculator': "src/engines/marketing/roas-calculator.ts",
+  'solopreneur-saas-valuation-calculator': "src/engines/valuation/saas-valuation-calculator.ts",
+  'solopreneur-stockout-cost-calculator': "src/engines/operations/stockout-cost-calculator.ts"
 };
 
 /** 引擎源码里出现的建议码字面量（'code': 'xxx' 形式，TS 侧与 customFn 侧都算） */

@@ -1,0 +1,85 @@
+{
+  "slug": "solopreneur-freelance-rate-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Reading the hourly rate on its own is a trap. What actually decides anything is whether the rate matches your experience, your niche, the market price in your region, and the billing model you have chosen (hourly against project). Any gap of more than 25% from the market rate deserves a second look, in either direction. Use this tool to judge the rate against those four things instead of reporting a number.",
+      "zh": "光看一个时薪数字是个陷阱。真正能决定结果的是：费率是否匹配你的经验、你的细分赛道、你所在区域的市场价，以及你选的计费模式（时薪还是按项目）。跟市场价偏离超过 25%，无论偏高还是偏低，都值得重新审视一遍。用这个工具把这四件事一起判断，而不是只报一个数字。"
+    },
+    "decision_recommendation": {
+      "en": "Read the percentile band and act on it. (1) Below the 25th percentile of the market: your rate is under market, which usually means you are short on experience or you are buying work with price, and both damage the brand over time. (2) Between the 25th and 75th percentile: a sound band that fits most freelancers, so hold the rate here while you build the case for the next step. (3) Above the 75th percentile: the rate needs a strong portfolio or a defensible niche behind it, otherwise clients churn instead of staying. (4) Above the 95th percentile: you are a top-tier expert, so narrow the niche and work by referral only.",
+      "zh": "先看自己落在哪个百分位区间，再决定动作。(1) 低于市场 25 百分位：费率在市场价以下，通常意味着经验还不够，或者你在用低价抢单 —— 这两种情况长期都会伤害品牌。(2) 25 到 75 百分位：这是合理区间，适合大多数自由职业者；先把费率稳住，同时攒下一步的筹码。(3) 高于 75 百分位：这个费率需要拿得出手的 portfolio 或者站得住的细分赛道来支撑，否则客户会流失而不是留下。(4) 高于 95 百分位：你已经是顶级专家，应当把赛道收窄，以转介绍为主。"
+    },
+    "decision_constraint": {
+      "en": "Four uncertainties sit outside this number. (1) Market rates vary by 2-5x across regions and industries, so the same job title pays completely differently on the other side of a border. (2) The choice between hourly and project pricing is a risk allocation in itself: a fixed project price hides scope creep. (3) Clients negotiate from different leverage depending on their size, so a large client has more of it than a stream of small ones. (4) The room to raise the price on an existing client, whether the work is a retainer or a one-off, decides what the rate is really worth.",
+      "zh": "有四个不确定性不在这个数字里。第一，市场费率按地区和行业能差 2 到 5 倍，同一个职位名换个区域完全是两回事。第二，时薪还是按项目报价，本身就是一次风险分配：固定的项目价格会把范围蔓延藏起来。第三，客户的谈判筹码看体量，大客户的筹码比一串小客户多。第四，老客户能不能加价、是一份长期 retainer 还是一次性活，决定了这个费率真正值多少 —— 同样的费率，放在长期关系里和放在一锤子买卖里，值的钱并不一样。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Project Profitability Calculator] to see the margin on a real project rather than on a year of hours. Run [Hourly vs Fixed Rate Calculator] to settle the billing model, because that choice decides who carries the risk. Run [Course Pricing Calculator] to see how much of your expertise can be turned into a product, which is the one route past a rate ceiling. Before you commit, benchmark three to five peers and check the win rate they actually get.",
+      "zh": "先跑 [项目利润计算器]，看一个真实项目的利润率，而不是一年工时的平均数；再跑 [时薪vs固定报价计算器] 把计费模式定下来，因为这一步决定了风险归谁；用 [课程定价计算器] 看看你的经验能产品化多少，那是突破费率上限最直接的一条路。定下来之前，先找三到五个同行 benchmark 一下，看看他们真实的接单率。"
+    }
+  },
+  "tips": [
+    {
+      "code": "freelance_rate_premium",
+      "en": "At 1.5x the market median or better you are priced with the top tier, and most freelancers still undercharge by 30-50%, so that gap is not yours to close. The risk runs the other way: a premium rate with nothing behind it is where clients churn. Hold the rate, narrow the niche, and let the portfolio show outcomes rather than hours, because clients buy results, not time.",
+      "zh": "费率到了市场中位数的 1.5 倍以上，你就是按顶尖专家的价在收费 —— 而大多数自由职业者其实还少收 30-50%，所以这个缺口不是你要补的。真正的风险在反面：撑不起这个溢价的费率，才是客户流失的起点。费率先别降，把赛道收窄，让 portfolio 展示结果而不是工时 —— 客户买的是结果，不是时间。",
+      "params": {}
+    },
+    {
+      "code": "freelance_rate_market",
+      "en": "Most freelancers undercharge by 30-50%, and at the market median you are at that median rather than above it. If you win every proposal, your rate is too low, so aim to lose 20-30% on price. Doubling your rate and losing half your clients keeps revenue flat but reclaims half your time. Charge by project (outcomes), not hours, because clients buy results, not time.",
+      "zh": "大多数自由职业者少收 30-50%，而你现在只是站在市场中位数上，并没有高出去。如果每一份提案你都中标，说明你的费率还是太低 —— 目标是让 20-30% 的提案因为价格丢掉。把费率翻倍、同时丢掉一半客户，收入不变，却能多拿回一半的时间。按项目（按结果）报价，而不是按小时 —— 客户买的是结果，不是时间。",
+      "params": {}
+    },
+    {
+      "code": "freelance_rate_below_market",
+      "en": "Clients see you as a bargain, and most freelancers undercharge by 30-50%, so the gap you are about to close is smaller than it feels. Test raising rates: if you win every proposal your rate is too low, and the healthy target is to lose 20-30% on price. Doubling your rate and losing half your clients keeps revenue flat but reclaims half your time. Charge by project (outcomes), not hours, because clients buy results, not time.",
+      "zh": "客户把你当成便宜货，而大多数自由职业者本来就少收 30-50% —— 也就是说，你要补的缺口比你感觉到的要小。先试着提价：如果每一份提案你都中标，说明费率太低，健康的目标是让 20-30% 的提案因为价格丢掉。把费率翻倍、同时丢掉一半客户，收入不变，却能多拿回一半的时间。按项目（按结果）报价，而不是按小时 —— 客户买的是结果，不是时间。",
+      "params": {}
+    },
+    {
+      "code": "freelance_rate_entry",
+      "en": "You are charging entry-level money while most freelancers undercharge by 30-50%, so price is not the only gap: the portfolio has to carry the next rate first. If you win every proposal, your rate is too low, so aim to lose 20-30% on price instead of winning all of them. Doubling your rate and losing half your clients keeps revenue flat but reclaims half your time. Charge by project (outcomes), not hours, because clients buy results, not time.",
+      "zh": "你现在收的是入门价，而大多数自由职业者本来就少收 30-50% —— 所以差距不只是价格：下一档费率得先有 portfolio 撑着。如果每一份提案你都中标，说明费率太低；别再追求全中，让 20-30% 的提案因为价格丢掉才是健康状态。把费率翻倍、同时丢掉一半客户，收入不变，却能多拿回一半的时间。按项目（按结果）报价，而不是按小时 —— 客户买的是结果，不是时间。",
+      "params": {}
+    }
+  ],
+  "probes": [
+    {
+      "code": "freelance_rate_entry",
+      "inputs": {
+        "annualIncome": "0",
+        "expenses": "0",
+        "billableHrs": "0",
+        "profit": "0"
+      }
+    },
+    {
+      "code": "freelance_rate_market",
+      "inputs": {
+        "annualIncome": "8000",
+        "expenses": "1000",
+        "billableHrs": "120",
+        "profit": "2000"
+      }
+    },
+    {
+      "code": "freelance_rate_premium",
+      "inputs": {
+        "annualIncome": "160000",
+        "expenses": "10000",
+        "billableHrs": "1200",
+        "profit": "20000"
+      }
+    },
+    {
+      "code": "freelance_rate_below_market",
+      "inputs": {
+        "annualIncome": "80000",
+        "expenses": "20000",
+        "billableHrs": "1200",
+        "profit": "20000"
+      }
+    }
+  ]
+}

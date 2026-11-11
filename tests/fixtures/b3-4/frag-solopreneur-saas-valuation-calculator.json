@@ -1,0 +1,82 @@
+{
+  "slug": "solopreneur-saas-valuation-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "ARR times a multiple is the easy part, and it is also the trap: revenue multiples swing with market sentiment and change with the vintage of the public comparables you benchmark against. The question that actually decides anything is whether the growth rate and profit margin you have today support the multiple the formula gives you, and whether that means you should raise capital now or hold. This calculator prices the state you are in; the decision sits in the combination of growth and margin, not in the multiple on its own.",
+      "zh": "ARR 乘一个倍数是最简单的一步，也正是陷阱：收入倍数会随市场情绪波动，公开可比公司的年份一变，口径也跟着变。真正决定结论的是，当前这份增长和利润率撑不撑得住公式给出的那个倍数，以及因此你现在该去融资，还是先按住不动。这个计算器算的是你当下这组数；决策落在增长与利润率的组合上，而不是落在倍数本身。"
+    },
+    "decision_recommendation": {
+      "en": "Read the multiple band and act on it. (1) Below 4x is the high-risk band, so the question becomes whether faster growth can re-rate the business. (2) Between 4x and 6x is a normal SaaS range, which argues for a conservative valuation. (3) Between 6x and 10x is a healthy range, where you can pitch the growth story to investors. (4) Above 10x is the high-growth window, the one where the valuation and a fund raise happen at the same time.",
+      "zh": "先看倍数落在哪一档，再决定动作。(1) 低于 4 倍属于高风险档，问题就变成能不能靠加速增长把评级拉回来。(2) 4 到 6 倍是 SaaS 的正常区间，估值要按保守口径给，别拿最高倍数去谈。(3) 6 到 10 倍是健康区间，可以拿增长故事去跟投资人讲。(4) 高于 10 倍是高增长窗口期，估值和融资的时机正好对上，这时候要防的是增长掉下来，而不是估值不够高。"
+    },
+    "decision_constraint": {
+      "en": "Four assumptions move the real number away from this estimate. (1) The growth rate usually drops 30% to 50% after an exit, so the multiple you are pricing today may not be the one you collect. (2) Multiples are anchored to public comparables and move with market sentiment. (3) Profit margin differences are priced: a higher margin earns a premium. (4) The combination of growth and margin decides the multiple, not either number on its own.",
+      "zh": "有四个假设会把真实数字推离这个估算。第一，退出之后增长率通常会掉 30% 到 50%，所以今天按这个倍数估的价，未必是最后能收到的价。第二，倍数锚在公开可比公司上，会跟着市场情绪走。第三，利润率的差异是要被定价的：利润率更高就能拿到溢价。第四，决定倍数的是增长和利润率的组合，不是其中任何单独一个数。"
+    },
+    "decision_next_tool": {
+      "en": "Run [ARR Multiple Valuation Calculator] to see the valuation at a different multiple, and run [Burn Multiple & Rule of 40 Calculator] to check both the Rule of 40 health score and the capital efficiency behind it. Before you commit to a number, compare the result against the recent valuations of three comparable companies.",
+      "zh": "先跑 [ARR 倍数估值计算器]，看换一个倍数时估值会是多少；再跑 [烧钱倍数与 40 法则计算器]，一次看清 40 法则的健康度和背后的资本效率。真正拍板之前，拿 3 家可比公司近期的估值来对一遍，并且确认口径是同一年。"
+    }
+  },
+  "tips": [
+    {
+      "code": "saasval_floor",
+      "en": "At a {multiple} base multiple your {valuation} valuation sits below the 5x floor where the market median starts, so treat it as a floor case rather than a price. SaaS companies typically sell for 3-10x ARR and growth rate is the number one driver: at {growth} YoY growth with a {margin} margin, accelerating growth is the only reliable way to re-rate. Cut costs until the margin moves first, because a margin gain is priced and a growth promise is not.",
+      "zh": "在 {multiple} 的基准倍数下，{valuation} 这个估值落在 5 倍的门槛以下 —— 5 倍才是市场中位数的起点，所以它该被当成地板价，而不是价格。SaaS 公司通常按 ARR 的 3 到 10 倍成交，而增长率是第一驱动力：以 {growth} 的年增长、{margin} 的利润率来看，能重新定价的可靠办法只有把增长拉起来。先从成本下手把利润率推上去，因为利润率会被定价，增长承诺不会。",
+      "params": {
+        "multiple": "{multiple}",
+        "valuation": "{valuation}",
+        "growth": "{growth}",
+        "margin": "{margin}"
+      }
+    },
+    {
+      "code": "saasval_median",
+      "en": "At a {multiple} base multiple your {valuation} valuation sits in the 5-8x market median, which is a normal SaaS range rather than a premium. SaaS companies typically sell for 3-10x ARR and growth rate is the number one driver: at {growth} YoY growth with a {margin} margin, pushing growth towards 50% or getting the margin above 30% moves you a whole band, which is worth far more than a rounding error.",
+      "zh": "在 {multiple} 的基准倍数下，{valuation} 这个估值落在 5-8 倍的市场中位数区间 —— 属于 SaaS 的正常区间，不是溢价。SaaS 公司通常按 ARR 的 3 到 10 倍成交，增长率是第一驱动力：以 {growth} 的年增长、{margin} 的利润率来看，把增长推向 50%、或者把利润率推过 30%，才能把你送上一整档，那比修一个小数点值钱得多。",
+      "params": {
+        "multiple": "{multiple}",
+        "valuation": "{valuation}",
+        "growth": "{growth}",
+        "margin": "{margin}"
+      }
+    },
+    {
+      "code": "saasval_premium",
+      "en": "At a {multiple} base multiple your {valuation} valuation is in the premium band, the one where the valuation and a fund raise happen at the same time. SaaS companies typically sell for 3-10x ARR and growth rate is the number one driver: at {growth} YoY growth with a {margin} margin, the risk is no longer the number but the story behind it, so keep the growth rate and the margin that justify {multiple} intact before you raise.",
+      "zh": "在 {multiple} 的基准倍数下，{valuation} 这个估值已经进了溢价区间 —— 估值和融资同时发生的窗口就在这一档。SaaS 公司通常按 ARR 的 3 到 10 倍成交，增长率是第一驱动力：以 {growth} 的年增长、{margin} 的利润率来看，这时候的风险不再是数字，而是数字背后的故事，所以在融资之前，先把能撑住 {multiple} 的增长和利润率守住。",
+      "params": {
+        "multiple": "{multiple}",
+        "valuation": "{valuation}",
+        "growth": "{growth}",
+        "margin": "{margin}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "saasval_floor",
+      "inputs": {
+        "annualRevenue": "500000",
+        "growthRate": "5",
+        "profitMargin": "5"
+      }
+    },
+    {
+      "code": "saasval_median",
+      "inputs": {
+        "annualRevenue": "1000000",
+        "growthRate": "50",
+        "profitMargin": "25"
+      }
+    },
+    {
+      "code": "saasval_premium",
+      "inputs": {
+        "annualRevenue": "5000000",
+        "growthRate": "120",
+        "profitMargin": "35"
+      }
+    }
+  ]
+}

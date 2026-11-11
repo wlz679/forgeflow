@@ -1,0 +1,109 @@
+{
+  "slug": "solopreneur-funnel-step-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Reading the end-to-end conversion rate on its own is a trap, because it answers only the average question and hides the one that matters: which step leaks the most users, and whether repairing that step has the highest return of any fix you could make. A step that loses 30 users is worth less than a step that loses 300, even when the two convert at a similar rate. Use this tool to pick the one step worth fixing first, not just to report how many users made it to the end.",
+      "zh": "只看端到端转化率是个陷阱：它只回答了「平均」这一个问题，却把真正要紧的那个藏了起来 —— 最大 leak 落在哪一步，以及修那一步的 ROI 是不是最高。同样掉 30 个人的步骤，不如掉 300 个人的步骤值钱，哪怕两者的转化率看起来差不多。先修哪一步，看的是掉了多少人，而不是平均转化率。用这个工具挑出最该先修的那一步，而不是只报一个「多少人走到了最后」。"
+    },
+    "decision_recommendation": {
+      "en": "Act on the band the end-to-end rate lands in. (1) Below 15%: this is a systemic onboarding failure rather than one leaky step, so audit the UX from the first event to the last. (2) Between 15% and 25%: fix the biggest drop step, because that is where the repair return is highest, a 20% retention gain there lifts the whole funnel further than the same gain on a smaller step, and it usually costs one focused sprint. (3) Between 25% and 40%: the funnel works, so A/B test the existing steps instead of redesigning them. (4) Above 40%: monitor defensively and push acquisition, because the constraint has moved from conversion to top of funnel.",
+      "zh": "按端到端转化率落到的档位直接给动作。(1) 低于 15%：这是系统性的 onboarding 问题，不是某一步漏水 —— 从第一个事件一路 audit 到最后一个事件，把整条链路的 UX 过一遍。(2) 15% 到 25% 之间：修最大的那一步，因为修复 ROI 就在这里最高 —— 这一步多留住 20% 的用户，对整体漏斗的拉动比在小步骤上多留住 20% 更大，而且通常一个专注的 sprint 就够了。(3) 25% 到 40% 之间：漏斗本身是通的，这时候该对现有步骤做 A/B test，而不是推倒重做。(4) 高于 40%：进入防御性 monitor，把获客预算压上去，因为瓶颈已经从转化率换成了漏斗顶部的流量。"
+    },
+    "decision_constraint": {
+      "en": "Four things can make this funnel look different from the reality. (1) The biggest drop is measured in absolute users, so it is not always the step with the worst percentage: a step that loses 20 users out of 30 and a step that loses 300 users out of 5000 both convert at about two thirds, but only one of them deserves a sprint. (2) The attribution window changes the step counts themselves, so a different window can move the biggest drop to a different step. (3) Most products have a few dominant paths that carry around 80% of users, so the funnel you measured may be a blend of very different journeys. (4) Cohorts behave differently: new users in a funnel are not the same as returning users, and a change that helps one often does nothing for the other.",
+      "zh": "有四件事会让这个漏斗看起来和真实情况不一样。(1) biggest drop 是按绝对人数算的，所以它未必是百分比最差的那一步：30 人掉 20、5000 人掉 300，这两步的转化率都差不多是三分之二，但只有一步值得你占一个 sprint。(2) attribution window 会直接改掉每一步的计数，换一个时间窗，最大漏点可能就换到别的地方去了。(3) 大多数产品的用户高度集中在少数几条主路径上，80/20 法则里前三条路径往往就占了 80% 的用户，所以你量到的可能只是几条差异很大的旅程混在一起的结果。(4) cohort 效应存在：漏斗里的新用户和回访用户不是一回事，能改善新用户的改动，对老用户往往一点用都没有。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Activation Rate Calculator] to see how strongly users commit after the funnel ends, run [Cohort Retention Calculator] to check whether the cohorts behind these step counts are stable, and run [Feature Adoption Calculator] to see which features each step depends on. Before you commit to a fix, watch session recordings for the biggest drop step, because the step counts show you where users disappear and the recordings show you why.",
+      "zh": "先跑 [激活率计算器] 看漏斗走完之后用户的 commit 程度；再跑 [队列留存计算器] 看这些 step 计数背后的 cohort 稳不稳定；然后跑 [功能采用率计算器] 看每一步各自依赖哪些功能。拍板修哪一步之前，先看最大漏点那一步的 session recording，因为 step 计数只告诉你用户在哪里消失，录像才告诉你为什么。"
+    }
+  },
+  "tips": [
+    {
+      "code": "funnelstep_critical",
+      "en": "Only {e2e} of the users who enter your funnel reach the final event, and the biggest leak is Step {dropFrom} to Step {dropTo}, which loses {lost} users. That is not a leaky step, it is a broken path: audit the whole journey before you touch a single step, because fixing one step of a broken path still leaves the users stranded.",
+      "zh": "从入口走到最后一个事件的用户只有 {e2e}，而最大的漏点是第 {dropFrom} 步到第 {dropTo} 步，这一步就掉了 {lost} 个用户。这已经不是某一步漏水，而是整条链路断了：先做全链路 audit，再动单步，因为路径都断了的时候，只修其中一步，用户照样走不出去。",
+      "params": {
+        "e2e": "{e2e}",
+        "lost": "{lost}",
+        "dropFrom": "{dropFrom}",
+        "dropTo": "{dropTo}"
+      }
+    },
+    {
+      "code": "funnelstep_warning",
+      "en": "End-to-end conversion is {e2e}, and the biggest leak is Step {dropFrom} to Step {dropTo}, which loses {lost} users. That step carries the highest repair return in this funnel, so start there: a 20% retention gain on it lifts the whole funnel further than the same gain on a smaller step, and the fix usually costs one focused sprint rather than a redesign.",
+      "zh": "端到端转化率 {e2e}，最大的漏点是第 {dropFrom} 步到第 {dropTo} 步，掉了 {lost} 个用户。这一步是整条漏斗里修复 ROI 最高的，就从它开始：这一步多留住 20% 的用户，对整体漏斗的拉动比在小步骤上多留住 20% 更大，而且通常一个专注的 sprint 就够，不必推倒重做。",
+      "params": {
+        "e2e": "{e2e}",
+        "lost": "{lost}",
+        "dropFrom": "{dropFrom}",
+        "dropTo": "{dropTo}"
+      }
+    },
+    {
+      "code": "funnelstep_healthy",
+      "en": "End-to-end conversion is {e2e}, and the biggest leak is Step {dropFrom} to Step {dropTo}, which loses {lost} users. The funnel works, so do not redesign it: A/B test what is already there, one change at a time, and treat the biggest drop step as the first candidate, because it has the most users to win back.",
+      "zh": "端到端转化率 {e2e}，最大的漏点是第 {dropFrom} 步到第 {dropTo} 步，掉了 {lost} 个用户。漏斗本身是通的，所以别急着推倒重做：对现有步骤做 A/B test，一次只改一个；最大漏点那一步应该是第一个候选，因为它能赢回的人最多。",
+      "params": {
+        "e2e": "{e2e}",
+        "lost": "{lost}",
+        "dropFrom": "{dropFrom}",
+        "dropTo": "{dropTo}"
+      }
+    },
+    {
+      "code": "funnelstep_excellent",
+      "en": "End-to-end conversion is {e2e}, and the biggest leak is Step {dropFrom} to Step {dropTo}, which still loses {lost} users, because a good funnel has leaks too and they are just cheaper. Monitor defensively and push acquisition, because the constraint now sits at the top of the funnel rather than in conversion, and keep the biggest drop step on the experiment backlog even while the overall {e2e} looks comfortable.",
+      "zh": "端到端转化率 {e2e}，最大的漏点仍然是第 {dropFrom} 步到第 {dropTo} 步，掉了 {lost} 个用户，好漏斗也有漏点，只是漏得便宜。这时候该做的是防御性 monitor，把获客压上去，因为瓶颈已经从转化率换到了漏斗顶部的流量；而且即便整体 {e2e} 看着舒服，最大漏点那一步还是值得留在实验清单里。",
+      "params": {
+        "e2e": "{e2e}",
+        "lost": "{lost}",
+        "dropFrom": "{dropFrom}",
+        "dropTo": "{dropTo}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "funnelstep_warning",
+      "inputs": {
+        "step1": "100",
+        "step2": "80",
+        "step3": "50",
+        "step4": "32",
+        "step5": "21"
+      }
+    },
+    {
+      "code": "funnelstep_healthy",
+      "inputs": {
+        "step1": "0",
+        "step2": "800",
+        "step3": "500",
+        "step4": "320",
+        "step5": "210"
+      }
+    },
+    {
+      "code": "funnelstep_excellent",
+      "inputs": {
+        "step1": "100",
+        "step2": "800",
+        "step3": "500",
+        "step4": "320",
+        "step5": "210"
+      }
+    },
+    {
+      "code": "funnelstep_critical",
+      "inputs": {
+        "step1": "2000",
+        "step2": "800",
+        "step3": "500",
+        "step4": "320",
+        "step5": "210"
+      }
+    }
+  ]
+}

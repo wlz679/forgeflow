@@ -1,0 +1,91 @@
+{
+  "slug": "solopreneur-rent-vs-buy-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "A monthly payment is a trap: it is the smallest number in the decision and the least relevant one. What actually decides rent versus buy is how long you will stay, what you expect the market to do, whether you need to be able to move, and the costs nobody puts on the invoice — repairs, property tax, insurance, and the return you would have earned on the down payment instead. Change the horizon and the same inputs flip the answer, so treat the stay length as your first input, not your last.",
+      "zh": "月供是个陷阱：它是整个决策里最小的那个数字，也是最不相关的那个。真正决定租还是买的是：你打算住多久、你预期市场怎么走、你需不需要随时能搬走，以及那些没人算进账单的成本 —— 维修、房产税、保险，以及首付本来可以拿去做的那笔投资的时间价值。持有期一变，同一组输入的答案就翻转，所以把持有期当成第一个输入，而不是最后一个。"
+    },
+    "decision_recommendation": {
+      "en": "Read the stay horizon as the decision, because it decides everything else. Under three years, rent: closing costs and market risk swallow every bit of upside, and you are paying for flexibility you may not need. Between three and seven years the outcome turns on the market — compare expected appreciation against rent inflation, and assume neither is generous. Between seven and fifteen years buying is usually the cheaper option, because principal paydown and appreciation both work in your favour while your rent keeps inflating. Beyond fifteen years, buying with leverage becomes a wealth tool rather than a housing decision, provided the market is stable enough for you to hold through a bad stretch.",
+      "zh": "持有期就是这个决策本身，因为它决定了其余一切。三年以内，直接租：过户成本和市场风险会吞掉全部上行，而你为一份可能根本用不上的灵活性付了钱。三到七年之间，结果取决于市场 —— 把预期涨幅和租金涨幅放在一起比，并且对两者都不要给太乐观的假设。七到十五年，买通常更划算：本金摊还和资产上涨同时替你工作，而你的房租还在继续涨。十五年以上，在市场足够稳定、能扛过一段下行周期的前提下，买入加杠杆就是一个财富工具，而不再是居住决策。"
+    },
+    "decision_constraint": {
+      "en": "Four caveats travel with this comparison. First, an appreciation rate is an average, and averages are not your particular house: the neighbourhood, the schools and the local job market decide whether this specific property appreciates at all. Second, maintenance, property tax and insurance together run at roughly 1% to 3% of the home's value every year, and none of them show up in a mortgage payment. Third, leverage is a two-edged instrument, and 2008 is the lesson everybody remembers. Fourth, liquidity is poor: selling typically takes six to twelve months, and in a weak market it takes longer and costs more, which is the opposite of what a rent payment buys you.",
+      "zh": "这组对比有四个必须一起带上的限定条件。第一，涨幅是一个平均数，而平均数不等于你那套房：小区、学校和本地就业市场才决定这套具体的房子会不会涨。第二，维护、房产税和保险合计大约是房价每年 1% 到 3%，而这些钱在月供里一个字都没提。第三，杠杆是把双刃剑，2008 年的教训谁都记得。第四，流动性很差：卖房通常要六到十二个月，行情弱的时候更久、代价也更高 —— 而这恰恰是交租金买不到的东西。"
+    },
+    "decision_next_tool": {
+      "en": "See the real payment with [Mortgage Calculator] before you compare anything else, and check the yield side with [Cap Rate Calculator] if you might buy to rent rather than to live in it. If that is the plan, [DSCR Calculator (Debt Service Coverage Ratio)] tells you whether the rent actually covers the debt. Then stress test the decision with a single question: if the price fell 30% tomorrow, could you still make the payments and hold the property?",
+      "zh": "先用 [房贷计算器] 看清真实月供，再去比较别的；如果你打算买来出租而不是自住，用 [资本化率计算器] 看收益率那一侧。真要走 buy-to-rent 这条路，就用 [DSCR 计算器（偿债覆盖率）] 判断租金到底够不够覆盖债务。最后用一个问题给这个决策做压力测试：如果明天房价跌 30%，你还扛得住月供、还愿意继续持有吗？"
+    }
+  },
+  "tips": [
+    {
+      "code": "rentbuy_buy",
+      "en": "Buying is the cheaper option here: it costs you {savings} less than renting across your {years}-year stay, and the two options cross over at {breakeven}. That only holds if you actually stay, so treat the break-even as your minimum commitment, and confirm you can carry the payment through a 30% drop in the price before you sign.",
+      "zh": "在这种情况下买更便宜：{years} 年的持有期里，买比租少花 {savings}，两条曲线的交叉点在 {breakeven}。但这只在你真的住得下去的前提下成立 —— 把这个盈亏平衡点当成你的最短承诺，并且在签字前先确认：房价再跌 30%，你依然扛得住月供。",
+      "params": {
+        "savings": "$45,421",
+        "years": "7",
+        "breakeven": "3.7 years"
+      }
+    },
+    {
+      "code": "rentbuy_close",
+      "en": "This one is close: over your {years}-year stay the two options are only {savings} apart, and they cross over at {breakeven}. Small changes flip it, so re-run the comparison with your own appreciation and rent-inflation assumptions, then pick the option with the lower monthly commitment while keeping yourself free to move.",
+      "zh": "这一组是胶着：{years} 年的持有期里，两个选项只差 {savings}，交叉点在 {breakeven}。一点点改动就会翻转结论 —— 用你自己的涨幅和租金涨幅假设再跑一遍，然后选月供更低的那一个，同时给自己保留搬走的自由。",
+      "params": {
+        "savings": "$12,000",
+        "years": "7",
+        "breakeven": "5.4 years"
+      }
+    },
+    {
+      "code": "rentbuy_rent",
+      "en": "Renting is the cheaper option here: it saves you {savings} against buying over your {years}-year stay, and buying only catches up at {breakeven}. Selling costs of roughly 6% and closing costs of roughly 3% eat the upside in a short stay, while renting keeps the down payment working for you and the move reversible.",
+      "zh": "在这种情况下租更划算：{years} 年的持有期里，租比买省下 {savings}，而买要等到 {breakeven} 才追平。短持有期里，约 6% 的卖房成本加约 3% 的过户成本会吞掉全部上行；而租房让首付继续替你干活，也把「搬走」这件事留成可选项。",
+      "params": {
+        "savings": "$60,000",
+        "years": "3",
+        "breakeven": "12.0 years"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "rentbuy_close",
+      "inputs": {
+        "monthlyRent": "200",
+        "homePrice": "50000",
+        "downPayment": "10000",
+        "mortgageRate": "0.65",
+        "yearsToStay": "0.7",
+        "annualAppreciation": "0.3",
+        "annualRentIncrease": "0.3"
+      }
+    },
+    {
+      "code": "rentbuy_buy",
+      "inputs": {
+        "monthlyRent": "2000",
+        "homePrice": "500000",
+        "downPayment": "100000",
+        "mortgageRate": "6.5",
+        "yearsToStay": "7",
+        "annualAppreciation": "3",
+        "annualRentIncrease": "3"
+      }
+    },
+    {
+      "code": "rentbuy_rent",
+      "inputs": {
+        "monthlyRent": "200000",
+        "homePrice": "50000000",
+        "downPayment": "10000000",
+        "mortgageRate": "650",
+        "yearsToStay": "700",
+        "annualAppreciation": "300",
+        "annualRentIncrease": "300"
+      }
+    }
+  ]
+}

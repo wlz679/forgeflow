@@ -126,19 +126,23 @@ function calculate(inputs: Record<string, string>): string[] {
   const annualSavings50 = savingsFrom50;
 
   // Tip: band-driven contextual advice
+  // P168 B3-4：**建议文案已迁到页面 i18n**（decision_tip.<code>）
+  //   ⇒ 引擎只输出结构化建议码 + 参数，页面负责渲染成完整建议。
+  const tipParams = {
+    cost: money(tc),
+    pct: cpct.toFixed(2) + '%',
+    immediate: money(lir),
+    ltv: money(ll),
+  };
   let tip: string;
   if (band === 'critical') {
-    tip =
-      '≥ 15% revenue loss to stockouts is critical. Switch to multi-supplier (reduces single-point-of-failure risk), implement safety stock buffers based on demand std dev (use reorder point calculator), and audit the top 3 SKUs by lost sales weekly.';
+    tip = JSON.stringify({ code: 'stockout_critical', params: tipParams });
   } else if (band === 'warning') {
-    tip =
-      '10–15% is serious. Tighten reorder points using service-level Z-scores (90–95% SL), increase safety stock by 30%, and pre-position inventory at 2 fulfillment centers if shipping time is a stockout driver.';
+    tip = JSON.stringify({ code: 'stockout_serious', params: tipParams });
   } else if (band === 'good') {
-    tip =
-      '5–10% is measurable but not catastrophic. Improve win-back flows (recovery rate ↑ to 25% saves 15% of lost LTV), set up low-stock alerts at 2-week reorder point, and review top-20 SKUs monthly for stockout patterns.';
+    tip = JSON.stringify({ code: 'stockout_measurable', params: tipParams });
   } else {
-    tip =
-      'Excellent stockout control. To maintain, monitor service-level Z-scores quarterly, keep safety stock tuned to demand std dev, and run a "lost sales audit" every 6 months to verify the model still matches reality.';
+    tip = JSON.stringify({ code: 'stockout_excellent', params: tipParams });
   }
 
   let r =
@@ -178,13 +182,8 @@ function calculate(inputs: Record<string, string>): string[] {
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
 
-  // P151 L5: Decision Recommendation 4-section block
-  r += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 stockout cost 是陷阱，**核心问题是"stockout cost / carrying cost 比值 + 频次"是否支持加 safety stock**。比值 < 1 = 多备货不划算；> 2 = 必须加。\n' +
-    '• 🧭 Recommendation: (1) **stockout cost > 2x carrying cost** → 加 safety stock（保守 20-30% buffer）；(2) **1x-2x** → 维持现状 + 监控 lead time；(3) **< 1x** → 刈库存释放 working capital；(4) **高频发生 (> 3 次/季)** → 重新审 supplier lead time + 找 backup；(5) **高 stockout + 高 carrying** → 库存策略全面 audit（多半是 SKU mix 问题）。\n' +
-    '• 🧭 Key Uncertainty: (1) lost sale ≠ lost customer（LTV 视角，长期客户可能再来）；(2) recovery rate 取决于品类（必需品 80%+、非必需 30-50%）；(3) supplier lead time 在 peak season 实际延长 2-3x；(4) 季节性波动未折现会让 stockout cost 偏离 2x。\n' +
-    '• 🧭 Next Action: (a) 跑 [Inventory Turnover Calculator] 看 turn 健康度；(b) 跑 [Reorder Point Calculator] 设自动化 reorder trigger；(c) 跑 [Supplier Scorecard Calculator] 优化 lead time + reliability；(d) 决策前用上 6 月真实 data 校准 lost sale assumption。';
-
+  // P168 B3-4：🧭 决策支持已迁到页面 i18n（tools.<slug>.decision_* 四层，双语）
+  //   ⇒ 引擎只负责算，决策建议由页面的「算完之后」区块独占 ⇒ 同页不再有两份。
   return [r];
 }
 
@@ -216,11 +215,12 @@ const customFn =
   "var rr25=25;var ll25=ll(lirV,lcr,ltv,rr25);var tc25=tc(lirV,ll25);var savRec=tcV-tc25;" +
   "var costDay=lpd+lpd*(lcr/100)*ltv*(1-rr/100);var targetTc=rev*0.05;var maxDays=costDay>0?targetTc/costDay:Infinity;" +
   "var annSav50=sav50;" +
+  "var tipP={cost:money(tcV),pct:pct.toFixed(2)+'%',immediate:money(lirV),ltv:money(llV)};" +
   "var tip='';" +
-  "if(bd==='critical'){tip='\\u2265 15% revenue loss to stockouts is critical. Switch to multi-supplier (reduces single-point-of-failure risk), implement safety stock buffers based on demand std dev (use reorder point calculator), and audit the top 3 SKUs by lost sales weekly.';}" +
-  "else if(bd==='warning'){tip='10\\u201315% is serious. Tighten reorder points using service-level Z-scores (90\\u201395% SL), increase safety stock by 30%, and pre-position inventory at 2 fulfillment centers if shipping time is a stockout driver.';}" +
-  "else if(bd==='good'){tip='5\\u201310% is measurable but not catastrophic. Improve win-back flows (recovery rate \\u2191 to 25% saves 15% of lost LTV), set up low-stock alerts at 2-week reorder point, and review top-20 SKUs monthly for stockout patterns.';}" +
-  "else{tip='Excellent stockout control. To maintain, monitor service-level Z-scores quarterly, keep safety stock tuned to demand std dev, and run a \\u201Clost sales audit\\u201D every 6 months to verify the model still matches reality.';}" +
+  "if(bd==='critical'){tip=JSON.stringify({code:'stockout_critical',params:tipP});}" +
+  "else if(bd==='warning'){tip=JSON.stringify({code:'stockout_serious',params:tipP});}" +
+  "else if(bd==='good'){tip=JSON.stringify({code:'stockout_measurable',params:tipP});}" +
+  "else{tip=JSON.stringify({code:'stockout_excellent',params:tipP});}" +
   "var r2='';" +
   "r2+='\\u23F0 Stockout Cost Calculator\\n\\n';" +
   "r2+='\\uD83E\\uDE7A Health:\\n';" +
@@ -257,7 +257,6 @@ const customFn =
   "r2+='\\u2022 Compounded over 3 years: '+money(annSav50*1.08*3-annSav50*3)+' (vs $0 reinvested)\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "r2+='\\n\\n\\uD83E\\uDDED Decision Recommendation\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\uD83E\\uDDED Decision Question: 单纯看 stockout cost 是陷阱，**核心问题是\"stockout cost / carrying cost 比值 + 频次\"是否支持加 safety stock**。比值 < 1 = 多备货不划算；> 2 = 必须加。\\n\\uD83E\\uDDED Recommendation: (1) **stockout cost > 2x carrying cost** \\u2192 加 safety stock（保守 20-30% buffer）；(2) **1x-2x** \\u2192 维持现状 + 监控 lead time；(3) **< 1x** \\u2192 刈库存释放 working capital；(4) **高频发生 (> 3 次/季)** \\u2192 重新审 supplier lead time + 找 backup；(5) **高 stockout + 高 carrying** \\u2192 库存策略全面 audit（多半是 SKU mix 问题）。\\n\\uD83E\\uDDED Key Uncertainty: (1) lost sale ≠ lost customer（LTV 视角，长期客户可能再来）；(2) recovery rate 取决于品类（必需品 80%+、非必需 30-50%）；(3) supplier lead time 在 peak season 实际延长 2-3x；(4) 季节性波动未折现会让 stockout cost 偏离 2x。\\n\\uD83E\\uDDED Next Action: (a) 跑 [Inventory Turnover Calculator] 看 turn 健康度；(b) 跑 [Reorder Point Calculator] 设自动化 reorder trigger；(c) 跑 [Supplier Scorecard Calculator] 优化 lead time + reliability；(d) 决策前用上 6 月真实 data 校准 lost sale assumption。';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -303,15 +302,15 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该为这次断货补更多库存，还是先修需求预测',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Stockout Cost Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier\n• Total stockout cost: $275,000/year  ·  45.83% of annual revenue\n• Lost immediate: $5,000  ·  Lost LTV: $270,000  ·  Recovery captures: $30,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lost sales per day:       $1,000\n• Stockout duration:        5 days  ·  cumulative: $5,000\n• Customer loss rate:       30.0%  ·  applies to $5,000 = $1,500 lost-customers\n• Customer LTV:             $200\n• Recovery rate:            10.0%  ·  recaptures $30,000\n• Annual revenue:           $600,000\n• Stockout cost / revenue:  45.83%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut stockout days by 50%: total cost = $137,500 (22.92%)  ·  annual savings = $137,500\n• Raise recovery rate to 25%: total cost = $230,000  ·  additional savings = $45,000\n• Combined (50% less days + 25% recovery): see Milestone below\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Max stockout days for 🟢 (< 5% of revenue): 0.5 days\n• Current vs target: reduce stockout days by 4.5 to hit 🟢\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 12-mo savings if stockout cut 50%: $137,500\n• Reinvested at 8% return: $11,000/yr additional\n• Compounded over 3 years: $33,000 (vs $0 reinvested)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ≥ 15% revenue loss to stockouts is critical. Switch to multi-supplier (reduces single-point-of-failure risk), implement safety stock buffers based on demand std dev (use reorder point calculator), and audit the top 3 SKUs by lost sales weekly.\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 stockout cost 是陷阱，**核心问题是"stockout cost / carrying cost 比值 + 频次"是否支持加 safety stock**。比值 < 1 = 多备货不划算；> 2 = 必须加。\n• 🧭 Recommendation: (1) **stockout cost > 2x carrying cost** → 加 safety stock（保守 20-30% buffer）；(2) **1x-2x** → 维持现状 + 监控 lead time；(3) **< 1x** → 刈库存释放 working capital；(4) **高频发生 (> 3 次/季)** → 重新审 supplier lead time + 找 backup；(5) **高 stockout + 高 carrying** → 库存策略全面 audit（多半是 SKU mix 问题）。\n• 🧭 Key Uncertainty: (1) lost sale ≠ lost customer（LTV 视角，长期客户可能再来）；(2) recovery rate 取决于品类（必需品 80%+、非必需 30-50%）；(3) supplier lead time 在 peak season 实际延长 2-3x；(4) 季节性波动未折现会让 stockout cost 偏离 2x。\n• 🧭 Next Action: (a) 跑 [Inventory Turnover Calculator] 看 turn 健康度；(b) 跑 [Reorder Point Calculator] 设自动化 reorder trigger；(c) 跑 [Supplier Scorecard Calculator] 优化 lead time + reliability；(d) 决策前用上 6 月真实 data 校准 lost sale assumption。'],
+  staticExamples: ['⏰ Stockout Cost Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier\n• Total stockout cost: $275,000/year  ·  45.83% of annual revenue\n• Lost immediate: $5,000  ·  Lost LTV: $270,000  ·  Recovery captures: $30,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lost sales per day:       $1,000\n• Stockout duration:        5 days  ·  cumulative: $5,000\n• Customer loss rate:       30.0%  ·  applies to $5,000 = $1,500 lost-customers\n• Customer LTV:             $200\n• Recovery rate:            10.0%  ·  recaptures $30,000\n• Annual revenue:           $600,000\n• Stockout cost / revenue:  45.83%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut stockout days by 50%: total cost = $137,500 (22.92%)  ·  annual savings = $137,500\n• Raise recovery rate to 25%: total cost = $230,000  ·  additional savings = $45,000\n• Combined (50% less days + 25% recovery): see Milestone below\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Max stockout days for 🟢 (< 5% of revenue): 0.5 days\n• Current vs target: reduce stockout days by 4.5 to hit 🟢\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 12-mo savings if stockout cut 50%: $137,500\n• Reinvested at 8% return: $11,000/yr additional\n• Compounded over 3 years: $33,000 (vs $0 reinvested)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"stockout_critical","params":{"cost":"$275,000","pct":"45.83%","immediate":"$5,000","ltv":"$270,000"}}\n'],
   faq: [
     { q: 'How much revenue do stockouts typically cost?', a: 'Studies show 5–15% of annual revenue for typical ecommerce businesses. Above 15% is critical — indicates either poor demand forecasting, weak supplier relationships, or systemic SKU count too high. Below 5% is excellent — indicates strong safety stock + supplier reliability.' },
     { q: 'What percentage of stockout customers defect forever?', a: 'Industry data: 30–60% of customers who experience a stockout will not return. This is the invisible cost — lost immediate revenue plus lost lifetime value. Win-back campaigns can recover 10–25% but the rest defect to competitors.' },

@@ -102,8 +102,24 @@ function calculateChurn(inputs: Record<string, string>): string[] {
       '• Involuntary (~40%): ~' + loc(involuntaryEst) + ' customers — fix with dunning emails\n\n';
   }
 
-  // ---- Tip ----
-  mainResult += '💡 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively — fix it first.';
+  // ---- Tip (P168 decision code) ----
+  // Bands reuse the existing Health thresholds (monthlyLogoChurn <= 0.02 / <= 0.05),
+  // so the advice can never disagree with the health band shown above.
+  const churnTipParams = {
+    monthly: pct(monthlyLogoChurn),
+    annual: pct(annualLogoChurn),
+    lost: loc(customersLost),
+    base: loc(customersStart),
+  };
+  let churnTip: { code: string; params: Record<string, string> };
+  if (monthlyLogoChurn <= 0.02) {
+    churnTip = { code: 'churn_rate_healthy', params: churnTipParams };
+  } else if (monthlyLogoChurn <= 0.05) {
+    churnTip = { code: 'churn_rate_average', params: churnTipParams };
+  } else {
+    churnTip = { code: 'churn_rate_high', params: churnTipParams };
+  }
+  mainResult += '💡 Tip: ' + JSON.stringify(churnTip);
 
   // 🩺 Churn Health (v3)
   const annualChurnPct = Math.round((1 - Math.pow(1 - monthlyLogoChurn, 12)) * 100);
@@ -161,13 +177,6 @@ function calculateChurn(inputs: Record<string, string>): string[] {
       mainResult += '\n• ' + labels[i] + ' monthly:  lose ' + monthlyLost + ' cust/mo  |  annual ' + (annual * 100).toFixed(1) + '%  |  3-yr retention ' + threeYearRetained.toFixed(0) + '%';
     }
   }
-
-  // 🧭 Decision Recommendation (P140f-6) — v2.0 灵魂 = Decision Support
-  mainResult += '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-  mainResult += '\n• 🧭 Decision Question: 月流失 5% 表面"健康"，但年化 46% = **2 年后用户清零**，必须立即判断"救老客"vs"获新客"哪个 ROI 更高。';
-  mainResult += '\n• 🧭 Recommendation: (1) **月流失 ≤ 3%** 才算健康（月年化 < 30%）；5% 已经在烧底；(2) 救流失客户成本 ≤ 3 × CAC 才值得救（否则让流失）；(3) Logo Churn + Revenue Churn **同时**下降才有效，单一改善是 "low-value 用户流失"。';
-  mainResult += '\n• 🧭 Key Uncertainty: (1) 5% 是 cohort 还是 aggregate？cohort 月流失 vs aggregate 流量混合 = 不同故事；(2) 是否区分主动流失（cancel）和被动流失（payment fail）？payment fail 大概率能救，cancel 大概率救不了。';
-  mainResult += '\n• 🧭 Next Action: (a) 拆 logo churn + revenue churn 两条线；(b) 算 cohort 月流失；(c) 区分主动 vs 被动流失，**先打 payment fail 自动 retry**（低投入高回收）；(d) 月流失 > 5% → 暂停所有获客预算，把预算移到 [Customer Success] 留存。';
 
   results.push(mainResult);
 
@@ -248,13 +257,14 @@ const customFn =
   "else mr3+='\\uD83D\\uDD34 HIGH: Over 5% monthly logo churn means you are losing ~46%+ of customers annually. Address this urgently.\\n';" +
   "mr3+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "if(cl>0){var ve=Math.round(cl*0.6);var ie=Math.round(cl*0.4);mr3+='\\uD83D\\uDD0D Churn Attribution ('+locn(cl)+' customers lost)\\n';mr3+='\\u2022 Voluntary (~60%): ~'+locn(ve)+' customers \\u2014 fix with better onboarding\\n';mr3+='\\u2022 Involuntary (~40%): ~'+locn(ie)+' customers \\u2014 fix with dunning emails\\n\\n';}" +
-  "mr3+='\\uD83D\\uDCA1 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively \\u2014 fix it first.';" +
+  "var tipP={monthly:pctn(mlc),annual:pctn(alc),lost:locn(cl),base:locn(cs)};" +
+  "var tipO=mlc<=0.02?{code:'churn_rate_healthy',params:tipP}:(mlc<=0.05?{code:'churn_rate_average',params:tipP}:{code:'churn_rate_high',params:tipP});" +
+  "mr3+='\\uD83D\\uDCA1 Tip: '+JSON.stringify(tipO);" +
   "var results=[mr3];" +
   "var chs=[{l:'Best Case (1% churn)',cr:0.01},{l:'Good (2% churn)',cr:0.02},{l:'Average (3% churn)',cr:0.03},{l:'Warning (5% churn)',cr:0.05},{l:'Critical (8% churn)',cr:0.08}];" +
   "for(var i=0;i<chs.length;i++){var lost=Math.round(cs*chs[i].cr);var end=cs-lost+nc;var ann=1-Math.pow(1-chs[i].cr,12);var revLost=lost*ar;var sgrr=((1-chs[i].cr)*100).toFixed(1);var line=chs[i].l+': Lose '+lost+' cust/mo | Annual churn '+pctn(ann)+' | GRR '+sgrr+'% | End with '+end+' customers';if(ar>0)line+=' | Lose '+fmtn(revLost)+'/mo';results.push(line);}" +
   "if(cs>0){mr3+='\\n\\n\\u2696\\uFE0F Break-Even\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var ben=Math.round(cs*mlc);if(nc>=ben)mr3+='\\n\\u2022 \\uD83D\\uDFE2 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding enough to grow (current: '+nc+').';else if(nc>0)mr3+='\\n\\u2022 \\uD83D\\uDFE1 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding '+nc+', short by '+(ben-nc)+'. Customer base is shrinking.';else mr3+='\\n\\u2022 \\uD83D\\uDD34 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding 0. Base erodes by '+ben+' customers/mo.';if(mlc>0&&nc>0){var ncr=cs>0?(nc/cs)*100:0;mr3+='\\n\\u2022 Your acquisition rate:  '+ncr.toFixed(1)+'%/mo  vs churn:  '+(mlc*100).toFixed(1)+'%/mo';}}" +
   "if(cs>0){mr3+='\\n\\n\\uD83C\\uDFAF Churn Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var tcs=[0.01,0.02,0.03,0.05];var tls=['Best-in-class (1%)','Strong (2%)','Healthy (3%)','Warning (5%)'];for(var ti=0;ti<tcs.length;ti++){var an=1-Math.pow(1-tcs[ti],12);var ml=Math.round(cs*tcs[ti]);var tr=Math.pow(1-tcs[ti],36)*100;mr3+='\\n\\u2022 '+tls[ti]+' monthly:  lose '+ml+' cust/mo  |  annual '+(an*100).toFixed(1)+'%  |  3-yr retention '+tr.toFixed(0)+'%';}}" +
-  "mr3+=`\\n\\n🧭 Decision Recommendation\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• 🧭 Decision Question: 月流失 5% 表面\\\"健康\\\"，但年化 46% = **2 年后用户清零**，必须立即判断\\\"救老客\\\"vs\\\"获新客\\\"哪个 ROI 更高。\\n• 🧭 Recommendation: (1) **月流失 ≤ 3%** 才算健康（月年化 < 30%）；5% 已经在烧底；(2) 救流失客户成本 ≤ 3 × CAC 才值得救（否则让流失）；(3) Logo Churn + Revenue Churn **同时**下降才有效，单一改善是 \\\"low-value 用户流失\\\"。\\n• 🧭 Key Uncertainty: (1) 5% 是 cohort 还是 aggregate？cohort 月流失 vs aggregate 流量混合 = 不同故事；(2) 是否区分主动流失（cancel）和被动流失（payment fail）？payment fail 大概率能救，cancel 大概率救不了。\\n• 🧭 Next Action: (a) 拆 logo churn + revenue churn 两条线；(b) 算 cohort 月流失；(c) 区分主动 vs 被动流失，**先打 payment fail 自动 retry**（低投入高回收）；(d) 月流失 > 5% → 暂停所有获客预算，把预算移到 [Customer Success] 留存。`;" +
   "return results;";
 
 const engine: ToolEngine = {
@@ -277,7 +287,7 @@ const engine: ToolEngine = {
     return calculateChurn(inputs);
   },
   staticExamples: [
-    '📉 Logo & Revenue Churn Analysis\n\n• Customers at Start: 0\n• New Customers Added: 0\n• Customers Lost: 0\n• Customers at End: 0\n• Net Growth: +0 (0.0%)\n\n━━━━━━━━━━━━━━━━━━━━\n\n👥 Logo Churn (Customer Headcount)\n• Monthly Logo Churn: 0.0%\n• Annual Logo Churn: 0.0%\n\n━━━━━━━━━━━━━━━━━━━━\n\n🟢 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.\n\n━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Reducing churn from 5% to 3% monthly is often easier and more profitable than doubling your new customer acquisition. Churn compounds negatively — fix it first.\n\n🩺 Churn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 HEALTHY: Monthly logo churn 0.0% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ⚠️ Cannot model — enter start customer count and monthly revenue to see scenarios.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 月流失 5% 表面"健康"，但年化 46% = **2 年后用户清零**，必须立即判断"救老客"vs"获新客"哪个 ROI 更高。\n• 🧭 Recommendation: (1) **月流失 ≤ 3%** 才算健康（月年化 < 30%）；5% 已经在烧底；(2) 救流失客户成本 ≤ 3 × CAC 才值得救（否则让流失）；(3) Logo Churn + Revenue Churn **同时**下降才有效，单一改善是 "low-value 用户流失"。\n• 🧭 Key Uncertainty: (1) 5% 是 cohort 还是 aggregate？cohort 月流失 vs aggregate 流量混合 = 不同故事；(2) 是否区分主动流失（cancel）和被动流失（payment fail）？payment fail 大概率能救，cancel 大概率救不了。\n• 🧭 Next Action: (a) 拆 logo churn + revenue churn 两条线；(b) 算 cohort 月流失；(c) 区分主动 vs 被动流失，**先打 payment fail 自动 retry**（低投入高回收）；(d) 月流失 > 5% → 暂停所有获客预算，把预算移到 [Customer Success] 留存。\nBest Case (1% churn): Lose 0 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 0 customers\nGood (2% churn): Lose 0 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 0 customers\nAverage (3% churn): Lose 0 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 0 customers\nWarning (5% churn): Lose 0 cust/mo | Annual churn 46.0% | GRR 95.0% | End with 0 customers\nCritical (8% churn): Lose 0 cust/mo | Annual churn 63.2% | GRR 92.0% | End with 0 customers',
+    '📉 Logo & Revenue Churn Analysis\n\n• Customers at Start: 1,000\n• New Customers Added: 25\n• Customers Lost: 15\n• Customers at End: 1,010\n• Net Growth: +10 (1.0%)\n\n━━━━━━━━━━━━━━━━━━━━\n\n👥 Logo Churn (Customer Headcount)\n• Monthly Logo Churn: 1.5%\n• Annual Logo Churn: 16.6%\n\n💰 Revenue Churn\n• Gross Revenue Churn (before expansion): 1.5%\n• Net Revenue Churn (after expansion): -0.1%\n• Monthly Revenue Lost to Churn: $750\n• Annual Revenue Lost to Churn: $9,000\n\n📈 GRR / NRR\n• GRR = 98.5% — 🟢 Healthy\n• NRR = 100.1% — 🟡 Positive\n\n━━━━━━━━━━━━━━━━━━━━\n\n🟢 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.\n\n━━━━━━━━━━━━━━━━━━━━\n\n🔍 Churn Attribution (15 customers lost)\n• Voluntary (~60%): ~9 customers — fix with better onboarding\n• Involuntary (~40%): ~6 customers — fix with dunning emails\n\n💡 Tip: {"code":"churn_rate_healthy","params":{"monthly":"1.5%","annual":"16.6%","lost":"15","base":"1,000"}}\n\n🩺 Churn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 HEALTHY: Monthly logo churn 1.5% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut churn in half:  Save 8 cust/mo | $400/mo in retained revenue\n• Double acquisition:  From 25 to 50 new/mo (assumes linear growth)\n• Combined:  Cut churn 50% + add 50% more:  net +8 cust/mo\n• Industry best (1% monthly):  Lose only 10 cust/mo (vs current 15)  | $500/mo\n\n⚖️ Break-Even\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Break-even new customers/mo:  15  — you\'re adding enough to grow (current: 25).\n• Your acquisition rate:  2.5%/mo  vs churn:  1.5%/mo\n\n🎯 Churn Milestones\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Best-in-class (1%) monthly:  lose 10 cust/mo  |  annual 11.4%  |  3-yr retention 70%\n• Strong (2%) monthly:  lose 20 cust/mo  |  annual 21.5%  |  3-yr retention 48%\n• Healthy (3%) monthly:  lose 30 cust/mo  |  annual 30.6%  |  3-yr retention 33%\n• Warning (5%) monthly:  lose 50 cust/mo  |  annual 46.0%  |  3-yr retention 16%\nBest Case (1% churn): Lose 10 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 1015 customers | Lose $500/mo\nGood (2% churn): Lose 20 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 1005 customers | Lose $1,000/mo\nAverage (3% churn): Lose 30 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 995 customers | Lose $1,500/mo\nWarning (5% churn): Lose 50 cust/mo | Annual churn 46.0% | GRR 95.0% | End with 975 customers | Lose $2,500/mo\nCritical (8% churn): Lose 80 cust/mo | Annual churn 63.2% | GRR 92.0% | End with 945 customers | Lose $4,000/mo',
     'Best Case (1% churn): Lose 5 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 520 customers | Lose $250/mo',
     'Good (2% churn): Lose 10 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 515 customers | Lose $500/mo',
     'Average (3% churn): Lose 15 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 510 customers | Lose $750/mo',
@@ -316,11 +326,11 @@ const engine: ToolEngine = {
   // Goal 含"决策"+"该不该"+"救"三关键词 → 通过 T1 zod refine 校验 (决策/decision/该不该/是否)
   // 内容镜像 Phase 1 churn-rate 🧭 Decision Recommendation 4 子段 + ADR-0004 决策逻辑
   playbook: {
-    goal: '用户该不该投入资源救流失客户',
+    goal: '用户该不该按当前流失率干预留存，还是先接受这个水平把现金花在增长上',
     input: 'customersStart (≥0) + newCustomers (≥0) + customersLost (≥0) + monthlyRevenue (≥0)',
     output: '月流失 % + 年化 % + 健康带 🟢<2% / 🟡2-3% / 🟠3-5% / 🔴>5% + Logo vs Revenue Churn 双轨',
     constraint: 'customersStart = 0 时无法算; cohort vs aggregate 影响真值; 主动 vs 被动流失 (payment fail) 区别',
-    tool: 'Phase 1 churn-rate-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'Recurly 20-40% 被动流失 baseline + ChartMogul cohort benchmark + Stripe SaaS 流失分布',
   },
 };

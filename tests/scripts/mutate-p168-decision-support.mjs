@@ -47,6 +47,22 @@ const TARGETS = [
   'src/engines/marketing/ltv-by-channel-calculator.ts',
   'src/engines/legal-compliance/gdpr-fine-calculator.ts',
   'src/engines/valuation/cac-calculator.ts',
+  // P168 B3-4：本批迁出决策支持的 15 个引擎
+  'src/engines/saas/churn-rate-calculator.ts',
+  'src/engines/ai-cost/gpu-cloud-cost-calculator.ts',
+  'src/engines/valuation/saas-valuation-calculator.ts',
+  'src/engines/freelance/freelance-rate-calculator.ts',
+  'src/engines/cost/employee-cost-calculator.ts',
+  'src/engines/investment/equity-dilution-calculator.ts',
+  'src/engines/real-estate/rent-vs-buy-calculator.ts',
+  'src/engines/marketing/roas-calculator.ts',
+  'src/engines/operations/stockout-cost-calculator.ts',
+  'src/engines/sales/acv-calculator.ts',
+  'src/engines/retention/customer-health-score-calculator.ts',
+  'src/engines/product-analytics/funnel-step-calculator.ts',
+  'src/engines/hiring-team/comp-banding-calculator.ts',
+  'src/engines/customer-support/csat-calculator.ts',
+  'src/engines/knowledge/kb-coverage-rate-calculator.ts',
 ];
 
 // ⭐⭐ **崩溃安全**：把快照写到磁盘 —— 台子被硬杀（运行时中断 / 断电 / Ctrl-C）时
@@ -199,6 +215,21 @@ function runGuard(which) {
           //   否则「迁移后它们还绿吗」这件事没人验。
           'tests/exp-p151-l5-gdpr-fine.test.ts',
           'tests/exp-p151-l5-ltv-by-channel.test.ts',
+          // P168 B3-4：13 个同族测试的判据迁到更高抽象层 ⇒ 也要进台子
+          //   （否则「迁移后它们还绿吗」这件事没人验）
+          'tests/exp-p151-l5-saas-valuation.test.ts',
+          'tests/exp-p151-l5-funnel-step.test.ts',
+          'tests/exp-p151-l5-equity-dilution.test.ts',
+          'tests/exp-p151-l5-customer-health-score.test.ts',
+          'tests/exp-p151-l5-acv.test.ts',
+          'tests/exp-p151-l5-rent-vs-buy.test.ts',
+          'tests/exp-p151-l5-kb-coverage-rate.test.ts',
+          'tests/exp-p151-l5-gpu-cloud-cost.test.ts',
+          'tests/exp-p151-l5-csat.test.ts',
+          'tests/exp-p151-l5-comp-banding.test.ts',
+          'tests/exp-p151-l5-stockout-cost.test.ts',
+          'tests/exp-p151-l5-freelance-rate.test.ts',
+          'tests/exp-p151-l5-employee-cost.test.ts',
         ];
   try {
     const out = execFileSync(
@@ -772,7 +803,111 @@ const MUTATIONS = [
       if (out === s) throw new Error('锚点未命中');
       writeWithRetry(p, out);
     },
-  },];
+  },
+  // ══════════ P168 B3-4（本批：15 个引擎的决策段迁出 + 建议码化）══════════
+  {
+    id: 'M30',
+    guard: 'source',
+    desc: 'churn-rate 的 customFn 建议码与 generate 不一致（两套实现漂了）',
+    expect: 'P168 ⭐ customFn 与 generate 的建议必须一致（两套实现不许漂）',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/saas/churn-rate-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ 锚点必须打在 **customFn 侧**的写法（`code:'xxx'` 无空格）
+      //   —— generate 侧是 `code: 'xxx'`（有空格）⇒ 两边不会一起改 ⇒ 漂得出来。
+      // ⚠️ 分支必须选**默认输入真的会走到**的那一档
+      //   （实测 probeInputs(churn-rate) → churn_rate_average）
+      //   ⇒ 打在没有输入会走到的分支上 ⇒ 变异 SURVIVED（看起来像守卫失明，实则打偏）。
+      const anchor = "code:'churn_rate_average'";
+      const from = s.indexOf('const customFn');
+      if (from < 0) throw new Error('锚点未命中：customFn');
+      const i = s.indexOf(anchor, from);
+      if (i < 0) throw new Error('锚点未命中');
+      const out = s.slice(0, i) + "code:'churn_rate_healthy'" + s.slice(i + anchor.length);
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M31',
+    guard: 'source',
+    desc: 'csat 的引擎里又写回了 🧭 决策段（区块已接管 ⇒ 再写就是同页重复）',
+    expect: 'P168 激活工具：引擎输出里**不得**再有 🧭 决策段（区块已接管 ⇒ 再写就是同页重复）',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/customer-support/csat-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ 锚点带**尾逗号** ⇒ 只命中 generate 侧（customFn 侧是 `+ tipJson` 换行收尾）
+      //   ⇒ 两套实现不会一起被改 ⇒ parity 那条不会连带红（一条变异只红一条）。
+      const anchor = "'💡 Tip: ' + tipJson,";
+      const i = s.indexOf(anchor);
+      if (i < 0) throw new Error('锚点未命中');
+      const repl =
+        "'💡 Tip: ' + tipJson + '" + BS + "🧭 Decision Recommendation" + BS +
+        "• 🧭 Decision Question: probe',";
+      const out = s.slice(0, i) + repl + s.slice(i + anchor.length);
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M32',
+    guard: 'source',
+    desc: 'kb-coverage-rate 的 decision_next_tool 引用指向**不存在的工具**（悬空引用）',
+    expect: 'P151 L5: kb-coverage-rate Decision Recommendation block has 4 sub-sections',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/en.json');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ 锚点必须**限定在 kb 的 decision_next_tool 那一行**里
+      //   —— 别的工具也引用 [Article Freshness Calculator]（第一次命中会改错地方）。
+      const key = '"tools.solopreneur-kb-coverage-rate-calculator.decision_next_tool"';
+      const ki = s.indexOf(key);
+      if (ki < 0) throw new Error('锚点未命中（key）');
+      const tail = s.slice(ki);
+      const ti = tail.indexOf('[Article Freshness Calculator]');
+      if (ti < 0) throw new Error('锚点未命中（token）');
+      const out =
+        s.slice(0, ki) + tail.slice(0, ti) + '[Article Freshness Calcluator]' +
+        tail.slice(ti + '[Article Freshness Calculator]'.length);
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M33',
+    guard: 'source',
+    desc: 'churn-rate 的建议码写错（TS 侧与 customFn 侧同时改 ⇒ 两套实现不漂）',
+    expect: 'P168 建议码守恒（唯一不变量）：源码 == 探针 == 登记 == locale(en+zh)，且无死模板',
+    apply: () => {
+      const p = join(ROOT, 'src/engines/saas/churn-rate-calculator.ts');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ **两侧一起改**（带空格与不带空格两种写法都要换）
+      //   ⇒ parity 仍绿 ⇒ 只有「守恒」那一条红（码集合少了一个 ⇒ 源码/探针/登记/locale 四者不再相等）。
+      let out = s.split("'churn_rate_average'").join("'churn_rate_healthy'");
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+  {
+    id: 'M34',
+    guard: 'build',
+    desc: 'csat 的英文页决策层被换成中文（英文页出现中文 ⇒ 产物级断言必须抓住）',
+    expect: 'P168 产物：⭐ 英文页不得出现中文（扫全部 100 个工具页 · 产物级）',
+    apply: () => {
+      const p = join(ROOT, 'src/i18n/locales/en.json');
+      const s = readFileSync(p, 'utf8');
+      // ⚠️ build 级变异 ⇒ 台子会**先重建产物**再跑守卫
+      //   （build 守卫读的是 dist/ ⇒ 不重建就读到上一轮旧产物 ⇒ 变异会被误判成 SURVIVED）。
+      const re = /^(\s*)"tools\.solopreneur-csat-calculator\.decision_goal":\s*".*",\r?\n/m;
+      if (!re.test(s)) throw new Error('锚点未命中');
+      const zh =
+        '"tools.solopreneur-csat-calculator.decision_goal": ' +
+        '"只看这一个满意度分数是个陷阱。真正决定结论的是两件事：这份分数是否真的反映了客户遇到的问题，以及有多少客户愿意回答。单一分数会误导你 —— 顶级客户可能因为一次严重故障打低分，低价值客户却随手给高分。先把回复率拉起来，再按客户分群拆开看这两件事。",';
+      const out = s.replace(re, '$1' + zh + '\n');
+      if (out === s) throw new Error('锚点未命中');
+      writeWithRetry(p, out);
+    },
+  },
+];
 
 // ⭐⭐⭐ **负对照**（negative control）—— 台子自己的「隔离判定」也要被证明有效。
 //   故意让**两条**断言同时红：

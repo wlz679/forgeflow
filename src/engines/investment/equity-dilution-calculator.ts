@@ -32,6 +32,17 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
   const pct1 = (n: number) => n.toFixed(1);
   const loc = (n: number) => n.toLocaleString();
 
+  // P168 B3-4：💡 Tip 改成**建议码**（复用本引擎 🩺 Founder Health 的 dilution 三档 band）
+  //   —— 原先是一条写死的英文建议，对任何输入都只说同一句话 ⇒ 动态层名不副实。
+  //   ⚠️ customFn 里必须写**逐字相同**的一份（守卫「两套实现不许漂」守着这条）。
+  const dilutionTipParams = { dilution: pct2(dilutionPct), founderStake: pct2(founderOwnershipAfter) };
+  const dilutionTip =
+    dilutionPct <= 20
+      ? { code: 'dilution_healthy', params: dilutionTipParams }
+      : dilutionPct <= 35
+      ? { code: 'dilution_aggressive', params: dilutionTipParams }
+      : { code: 'dilution_excessive', params: dilutionTipParams };
+
   results.push(
     '📊 Equity Dilution Calculator\n\n' +
     '🏢 Pre-Money Valuation:  ' + fmt(preMoneyValuation) + '\n' +
@@ -98,13 +109,7 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
     '• Smaller rounds, twice:  Two $' + Math.round(investmentAmount / 2).toLocaleString() + ' rounds → similar total dilution but more milestone-based\n' +
     '• Negotiate valuation +25%:  Pre $' + Math.round(preMoneyValuation * 1.25).toLocaleString() + ' → Dilution drops to ' + (preMoneyValuation * 1.25 + investmentAmount > 0 ? pct2(investmentAmount / (preMoneyValuation * 1.25 + investmentAmount) * 100) : '0.00') + '%\n' +
     '• Keep smaller option pool (5%):  Founder at ' + pct2(founderShares / (totalSharesAfter + totalSharesAfter * (5 / (100 - 5))) * 100) + '% vs current ' + pct2(founderOwnershipWithPool) + '%\n\n' +
-    '💡 Tip: The price you negotiate today sets the floor for your next round. A low pre-money means you dilute more AND set a low anchor for the next raise. Even a 25% higher valuation saves you ~' + pct2(investmentAmount > 0 ? (investmentAmount / (preMoneyValuation * 1.25 + investmentAmount)) * 100 - investorOwnershipPct : 0) + '% dilution and signals momentum to future investors.',
-    // P151 batch3: L5 Decision Recommendation
-    '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 dilution % 是陷阱，**核心问题是"该拿多少 + term sheet 控制权 + future dilution 上行 + valuation 是否合理"**。当前 dilution ≠ 长期 dilution。\n' +
-    '• 🧭 Recommendation: (1) **dilation > 40%** → 拒绝，重新估值（pre-money 高估）；(2) **25-40%** → 协商 valuation / option pool / SAFE vs priced；(3) **10-25%** → 合理 range，verify 控制权保留；(4) **< 10%** → 太小，可能是 bridge 或估值低。\n' +
-    '• 🧭 Key Uncertainty: (1) future dilution from option pool + down round（常 +20-30%）；(2) SAFE vs priced round 对 next round 影响不同；(3) 投资人 liquidation preference 决定 exit 时实际分配；(4) board seat + veto rights 比 % 更重要。\n' +
-    '• 🧭 Next Action: (a) 跑 [Burn Multiple Calculator] 看 capital efficiency；(b) 跑 [Rule of 40 Calculator] 看 growth 健康度；(c) 跑 [Unit Economics Calculator] 看 LTV/CAC；(d) 决策前做 4 年 exit scenario model + 引入 trusted advisor review term sheet。'
+    '💡 Tip: ' + JSON.stringify(dilutionTip)
   );
 
   const exitScenarios = [exitValuation * 0.5, exitValuation, exitValuation * 2, exitValuation * 5, exitValuation * 10];
@@ -201,7 +206,9 @@ const customFn =
   "r+='\\u2022 Smaller rounds, twice:  Two $'+Math.round(inv/2).toLocaleString()+' rounds \\u2192 similar total dilution but more milestone-based\\n';" +
   "r+='\\u2022 Negotiate valuation +25%:  Pre $'+Math.round(pmv*1.25).toLocaleString()+' \\u2192 Dilution drops to '+(pmv*1.25+inv>0?pct2(inv/(pmv*1.25+inv)*100):'0.00')+'%\\n';" +
   "r+='\\u2022 Keep smaller option pool (5%):  Founder at '+pct2(fs/(tsa+tsa*(5/(100-5)))*100)+'% vs current '+pct2(foPool)+'%\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: The price you negotiate today sets the floor for your next round. A low pre-money means you dilute more AND set a low anchor for the next raise. Even a 25% higher valuation saves you ~'+pct2(inv>0?(inv/(pmv*1.25+inv))*100-ioPct:0)+'% dilution and signals momentum to future investors.';" +
+  "var dtP={dilution:pct2(dil),founderStake:pct2(foPct)};" +
+  "var dtT=JSON.stringify(dil<=20?{code:'dilution_healthy',params:dtP}:dil<=35?{code:'dilution_aggressive',params:dtP}:{code:'dilution_excessive',params:dtP});" +
+  "r+='\\uD83D\\uDCA1 Tip: '+dtT;" +
   "results.push(r);" +
   "var exs=[ev*0.5,ev,ev*2,ev*5,ev*10];" +
   "for(var i=0;i<exs.length;i++){" +
@@ -229,18 +236,18 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该接受这一轮的投资条款，还是先调整估值再谈',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs: Record<string, string>): string[] {
     return calculateEquityDilution(inputs);
   },
   staticExamples: [
-    '📊 Equity Dilution Calculator\n\n🏢 Pre-Money Valuation:  $5,000,000\n💰 Investment Amount:    $1,000,000\n🏗️ Founder Shares (initial): 10,000,000\n💵 Price Per Share:      0.50\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Cap Table Snapshot:\n• Post-Money Valuation:  $6,000,000\n• Total Shares (after): 12,000,000\n• Founder Ownership:    83.33%  (10,000,000 shares)\n• Investor Ownership:  16.67%  (2,000,000 shares)\n• Option Pool (10%):    10.00%  (1,333,333 shares reserved)\n• Founder (after pool): 75.00%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Dilution per Round:\n• Founder Dilution:      16.67%  (pre-investment: 100%, post: 83.33%)\n• Dilution per $1K:    0.02 pp\n• Investor $/pp:        $60,000\n• Pool Impact:         ~8.33% additional from option pool\n• Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Founder Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Founder retains 83.33% — strong control after this round.\n• 🟢 Round dilutes only 16.67% — within healthy seed/Series A range.\n• 🟢 Price/share 0.50 sets floor for next round.\n\n🎯 Exit Value by Round:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAssuming $50,000,000 exit (10x pre-money):\n• Founder Take:           $41,666,667  (83.33%)\n• Investor Take:         $8,333,333\n• With Option Pool:    Founder $37,500,001  (75.00%)\n• Break-Even Multiplier:  1200000.0x  (min exit for VC to clear 1% return)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Dilution Threshold:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Loss of majority control at 50% stake\n• Founders below 20% typically lose board seats\n• Current founder stake: 83.33%\n• 🟢 Above 50% — you control major decisions.\n• Acceptable next round: Dilution <25% to retain 62.50% stake\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise half ($500,000):  Dilution 9.09%  → Founder keeps 90.91%\n• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round\n• Smaller rounds, twice:  Two $500,000 rounds → similar total dilution but more milestone-based\n• Negotiate valuation +25%:  Pre $6,250,000 → Dilution drops to 13.79%\n• Keep smaller option pool (5%):  Founder at 79.17% vs current 75.00%\n\n💡 Tip: The price you negotiate today sets the floor for your next round. A low pre-money means you dilute more AND set a low anchor for the next raise. Even a 25% higher valuation saves you ~-2.87% dilution and signals momentum to future investors.\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 dilution % 是陷阱，**核心问题是"该拿多少 + term sheet 控制权 + future dilution 上行 + valuation 是否合理"**。当前 dilution ≠ 长期 dilution。\n• 🧭 Recommendation: (1) **dilation > 40%** → 拒绝，重新估值（pre-money 高估）；(2) **25-40%** → 协商 valuation / option pool / SAFE vs priced；(3) **10-25%** → 合理 range，verify 控制权保留；(4) **< 10%** → 太小，可能是 bridge 或估值低。\n• 🧭 Key Uncertainty: (1) future dilution from option pool + down round（常 +20-30%）；(2) SAFE vs priced round 对 next round 影响不同；(3) 投资人 liquidation preference 决定 exit 时实际分配；(4) board seat + veto rights 比 % 更重要。\n• 🧭 Next Action: (a) 跑 [Burn Multiple Calculator] 看 capital efficiency；(b) 跑 [Rule of 40 Calculator] 看 growth 健康度；(c) 跑 [Unit Economics Calculator] 看 LTV/CAC；(d) 决策前做 4 年 exit scenario model + 引入 trusted advisor review term sheet。\nExit @ $25,000,000: Founder $20,833,333 (83.33%) | Investor $4,166,667 (16.67%)\nExit @ $50,000,000: Founder $41,666,667 (83.33%) | Investor $8,333,333 (16.67%)\nExit @ $100,000,000: Founder $83,333,333 (83.33%) | Investor $16,666,667 (16.67%)\nExit @ $250,000,000: Founder $208,333,333 (83.33%) | Investor $41,666,667 (16.67%)\nExit @ $500,000,000: Founder $416,666,667 (83.33%) | Investor $83,333,333 (16.67%)',
+    '📊 Equity Dilution Calculator\n\n🏢 Pre-Money Valuation:  $5,000,000\n💰 Investment Amount:    $1,000,000\n🏗️ Founder Shares (initial): 10,000,000\n💵 Price Per Share:      0.50\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Cap Table Snapshot:\n• Post-Money Valuation:  $6,000,000\n• Total Shares (after): 12,000,000\n• Founder Ownership:    83.33%  (10,000,000 shares)\n• Investor Ownership:  16.67%  (2,000,000 shares)\n• Option Pool (10%):    10.00%  (1,333,333 shares reserved)\n• Founder (after pool): 75.00%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Dilution per Round:\n• Founder Dilution:      16.67%  (pre-investment: 100%, post: 83.33%)\n• Dilution per $1K:    0.02 pp\n• Investor $/pp:        $60,000\n• Pool Impact:         ~8.33% additional from option pool\n• Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Founder Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Founder retains 83.33% — strong control after this round.\n• 🟢 Round dilutes only 16.67% — within healthy seed/Series A range.\n• 🟢 Price/share 0.50 sets floor for next round.\n\n🎯 Exit Value by Round:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAssuming $50,000,000 exit (10x pre-money):\n• Founder Take:           $41,666,667  (83.33%)\n• Investor Take:         $8,333,333\n• With Option Pool:    Founder $37,500,001  (75.00%)\n• Break-Even Multiplier:  1200000.0x  (min exit for VC to clear 1% return)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Dilution Threshold:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Loss of majority control at 50% stake\n• Founders below 20% typically lose board seats\n• Current founder stake: 83.33%\n• 🟢 Above 50% — you control major decisions.\n• Acceptable next round: Dilution <25% to retain 62.50% stake\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise half ($500,000):  Dilution 9.09%  → Founder keeps 90.91%\n• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round\n• Smaller rounds, twice:  Two $500,000 rounds → similar total dilution but more milestone-based\n• Negotiate valuation +25%:  Pre $6,250,000 → Dilution drops to 13.79%\n• Keep smaller option pool (5%):  Founder at 79.17% vs current 75.00%\n\n💡 Tip: {"code":"dilution_healthy","params":{"dilution":"16.67","founderStake":"83.33"}}\nExit @ $25,000,000: Founder $20,833,333 (83.33%) | Investor $4,166,667 (16.67%)\nExit @ $50,000,000: Founder $41,666,667 (83.33%) | Investor $8,333,333 (16.67%)\nExit @ $100,000,000: Founder $83,333,333 (83.33%) | Investor $16,666,667 (16.67%)\nExit @ $250,000,000: Founder $208,333,333 (83.33%) | Investor $41,666,667 (16.67%)\nExit @ $500,000,000: Founder $416,666,667 (83.33%) | Investor $83,333,333 (16.67%)',
     'Exit @ $25,000,000: Founder $20,833,333 (83.33%) | Investor $4,166,667 (16.67%)',
     'Exit @ $50,000,000: Founder $41,666,667 (83.33%) | Investor $8,333,333 (16.67%)',
     'Exit @ $100,000,000: Founder $83,333,333 (83.33%) | Investor $16,666,667 (16.67%)',

@@ -1,0 +1,76 @@
+{
+  "slug": "solopreneur-equity-dilution-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "A dilution percentage on its own is a trap: it tells you what this round costs you, not what the round is worth taking. Three things actually decide that — how much money you genuinely need, what control the term sheet hands the investor, how much further dilution is still coming from option pool refreshes and down rounds, and whether the pre-money valuation is defensible in the first place. The dilution you sign today is not the dilution you own at exit.",
+      "zh": "单看稀释比例是个陷阱：它只告诉你这一轮让你付出了多少，而不是这一轮值不值得接。真正能下结论的是三件事——你到底需要多少钱、条款给了投资人多少控制权、期权池扩容和 down round 之后还剩多少未来稀释，以及这个 pre-money 估值本身站不站得住。今天签字时的稀释率，不等于你退出时真正持有的比例。"
+    },
+    "decision_recommendation": {
+      "en": "Read the dilution number as a set of moves rather than a score. Above 40% you should refuse and reprice the round, because the pre-money is most likely overstated and no milestone justifies handing over that much of the company in one go. Between 25% and 40% the deal is still negotiable: work the valuation, push the option pool to post-money so it does not dilute you before the money arrives, and decide between a SAFE and a priced round with the next round in mind. Between 10% and 25% this is a normal range for seed and Series A, so spend your negotiating capital on control instead — verify that you keep board seats, veto rights over the decisions that matter, and a founder stake that still carries the company. Below 10% the round is suspiciously small, which usually means a bridge, a placeholder valuation, or an investor who has not really committed, so find out which before you sign.",
+      "zh": "稀释比例要当成一组动作来读，而不是一个分数。超过 40% 就该拒绝并重新定价：pre-money 大概率被高估了，没有任何里程碑值得一次交出这么多公司。落在 25% 到 40% 之间还有得谈——压估值、把期权池挪到 post-money（别让它在钱到账前就先稀释你），并想清楚这一轮走 SAFE 还是定价轮，以及它对下一轮的影响。10% 到 25% 是种子轮和 A 轮的正常区间，这时候别再纠结比例，把谈判筹码花在控制权上：确认你还有董事席位、对关键事项的否决权，以及一个仍然能控住公司的持股比例。低于 10% 则这轮小得可疑——多半是过桥融资、占位估值，或者投资人其实没打算真投，签字前先问清楚是哪一种。"
+    },
+    "decision_constraint": {
+      "en": "Four things quietly break this number. First, future dilution is not in today's figure at all: a refreshed option pool plus one down round routinely takes another 20% to 30% off the founder stake, and it arrives later, quietly, when you have far less room to resist it. Second, a SAFE and a priced round hit the next round differently, because the conversion price is set later and usually at a discount. Third, liquidation preference decides how the exit pot is actually split, so 16% on paper can be worth far less than 16% of the proceeds. Fourth, board seats and veto rights carry more weight than the percentage itself: control is what you are really negotiating, and this table cannot show it to you.",
+      "zh": "有四件事会在暗中破坏这个数字。第一，未来稀释根本不在今天的数字里：一次期权池扩容加一次 down round，通常再削掉 20% 到 30% 的创始人股份，而且它来得晚，来的时候你已经没有多少拒绝的余地。第二，SAFE 和定价轮对下一轮的影响不同，因为转换价是之后才定的，而且通常带折扣。第三，清算优先权决定了退出时的实际分配，所以账面上 16% 的股份，可能远不值 16% 的退出款。第四，董事席位和否决权比百分比本身更重要：你真正在谈的是控制权，而这张表里根本看不到它。"
+    },
+    "decision_next_tool": {
+      "en": "Check that the capital is actually doing work with [Burn Multiple & Rule of 40 Calculator], which reads capital efficiency and growth health in one place, and confirm the customer economics sitting behind the valuation with [Unit Economics Calculator]. Model the conversion mechanics before you accept them with [SAFE / Convertible Note Calculator]. Then, before signing anything, build a four-year exit scenario model and have a trusted advisor read the term sheet with you — the dilution table on this page is an input to that decision, not the decision itself.",
+      "zh": "先用 [烧钱倍数与 40 法则计算器] 确认这笔钱有没有真的产生效率（资本效率与增长健康度一个工具里一起看），再用 [单位经济学计算器] 确认估值背后的客户经济性。用 [SAFE / 可转债计算器] 把换算机制先算明白，再去接受条款。签字之前，做一份四年期的退出情景模型，并请一位你信得过的顾问和你一起逐条看 term sheet —— 这张表上的稀释数字只是那个决策的输入，不是决策本身。"
+    }
+  },
+  "tips": [
+    {
+      "code": "dilution_healthy",
+      "en": "This round dilutes you by {dilution}%, leaving {founderStake}% of the company in your hands — a healthy seed or Series A outcome. The price you negotiate today still becomes the floor for the next round, so a higher pre-money buys you less dilution later as well as more of today's round.",
+      "zh": "本轮让你稀释 {dilution}%，手上还剩 {founderStake}% —— 对种子轮或 A 轮来说属于健康区间。但今天谈定的价格就是下一轮的底价，pre-money 抬高一档，既少让出这一轮的股份，也少让出下一轮的。",
+      "params": {
+        "dilution": "16.67",
+        "founderStake": "83.33"
+      }
+    },
+    {
+      "code": "dilution_aggressive",
+      "en": "This round dilutes you by {dilution}%, leaving {founderStake}% — aggressive, but workable at a later stage. Before you sign, work three things: the valuation, whether the option pool sits pre-money or post-money, and whether this is a SAFE or a priced round. A refreshed pool on its own can add another 20% to 30% of future dilution that never appears in this table.",
+      "zh": "本轮让你稀释 {dilution}%，手上还剩 {founderStake}% —— 偏激进，但在后期轮次还能接受。签字前先把三件事谈掉：估值、期权池放 pre-money 还是 post-money、以及这一轮走 SAFE 还是定价轮。单是一次期权池扩容，就能再叠上 20% 到 30% 的未来稀释，而这部分不会出现在这张表里。",
+      "params": {
+        "dilution": "30.00",
+        "founderStake": "70.00"
+      }
+    },
+    {
+      "code": "dilution_excessive",
+      "en": "This round dilutes you by {dilution}%, leaving only {founderStake}% — that is excessive, and no milestone justifies it. Renegotiate the valuation or raise less. Remember that a down round plus a refreshed option pool can take another 20% to 30% off you, and that founders sitting below 20% usually lose their board seats next.",
+      "zh": "本轮让你稀释 {dilution}%，手上只剩 {founderStake}% —— 过度了，没有任何里程碑值得这个价。要么重新谈估值，要么少融一点。别忘了 down round 加一次期权池扩容还能再削掉 20% 到 30%，而持股低于 20% 的创始人，下一步通常就是丢掉董事席位。",
+      "params": {
+        "dilution": "45.00",
+        "founderStake": "55.00"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "dilution_healthy",
+      "inputs": {
+        "companyValuation": "0",
+        "investmentAmount": "0",
+        "founderShares": "0"
+      }
+    },
+    {
+      "code": "dilution_excessive",
+      "inputs": {
+        "companyValuation": "500000",
+        "investmentAmount": "1000000",
+        "founderShares": "10000000"
+      }
+    },
+    {
+      "code": "dilution_aggressive",
+      "inputs": {
+        "companyValuation": "2500000",
+        "investmentAmount": "1000000",
+        "founderShares": "10000000"
+      }
+    }
+  ]
+}

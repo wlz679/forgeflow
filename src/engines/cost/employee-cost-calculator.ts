@@ -33,6 +33,16 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
   const monthlyCost = totalAnnualCost / 12;
   const trueMultiplier = annualSalary > 0 ? totalAnnualCost / annualSalary : 0;
   const firstYearCost = totalAnnualCost * 1.15;
+  // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 下面 Cost Health 那套 band，
+  //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+  const tipJson =
+    trueMultiplier <= 1.4
+      ? JSON.stringify({ code: 'employee_cost_lean', params: { multiplier: trueMultiplier.toFixed(1) } })
+      : trueMultiplier <= 1.8
+      ? JSON.stringify({ code: 'employee_cost_standard', params: { multiplier: trueMultiplier.toFixed(1) } })
+      : trueMultiplier <= 2.2
+      ? JSON.stringify({ code: 'employee_cost_high', params: { multiplier: trueMultiplier.toFixed(1) } })
+      : JSON.stringify({ code: 'employee_cost_excessive', params: { multiplier: trueMultiplier.toFixed(1) } });
   const ongoingCost = totalAnnualCost;
   const contractorCost = annualSalary * 1.05;
   const fullTimeBreakEven = contractorCost > totalAnnualCost;
@@ -116,7 +126,7 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
     '• Increase training budget ($5K):  Total → $' + loc(totalAnnualCost + 5000) + '  (better retention)\n' +
     '• Hire in Asia instead:                 ~$' + loc(annualSalary * 0.4) + '/yr  (40% of US cost)\n' +
     '• Remote (anywhere):                         ~$' + loc(annualSalary * 0.7) + '/yr  (saves office overhead)\n\n' +
-    '💡 Tip: Budget rule of thumb: total employee cost = base salary × ' + trueMultiplier.toFixed(1) + ' for this role. Round up to 1.7x when planning headcount budgets to absorb benefits, taxes, onboarding, and the productivity ramp.',
+    '💡 Tip: ' + tipJson,
   );
 
   const salaries = [40000, 60000, 80000, 120000, 180000];
@@ -131,14 +141,11 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
     );
   }
 
-  // P151 L5: Decision Recommendation 4-section block
-  results.push(
-    '\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 🧭 Decision Question: 单纯看 base salary 是陷阱，**核心问题是"完全负荷成本 / 月产出"是否低于市场价 + 该不该为 ramp time 买单**。cost ratio (fully-loaded / base) > 3x 说明有 hidden cost 漏算。\n' +
-    '• 🧭 Recommendation: (1) **cost ratio > 3x** → 必有 hidden cost 漏算（benefits/PTO/equipment/training），立即重新审 inputs；(2) **2x-3x** → 重新审 ramp time 假设；(3) **< 2x** → 合理区间，立即 hire；**FT 决策**：fully-loaded > $15K/mo 且 ramp > 6 月 → 先试 3-6 月 contractor。\n' +
-    '• 🧭 Key Uncertainty: (1) ramp time 真实值 vs 假设值（差异 2-3x）；(2) 隐性 cost (PTO/equipment/培训/管理 overhead) 是否计入；(3) contractor rate 不能按 12 月年化（无 PTO/benefits 但 billable rate 高 1.5-2x）。\n' +
-    '• 🧭 Next Action: (a) 跑 [Productivity Ramp Calculator] 看 ramp 曲线；(b) 跑 [Attrition Cost Calculator] 算全生命周期 cost；(c) FT 谈判前先跑 [Freelance Rate Calculator] 看 market reference；(d) 决策前 verify offer 包含 fully-loaded breakdown。',
-  );
+  // P168 B3-4：**🧭 四段已迁到页面的「🧭 算完之后」区块**
+  //   （src/i18n/locales/{en,zh}.json 的 tools.<slug>.decision_goal /
+  //     decision_recommendation / decision_constraint / decision_next_tool，双语）
+  //   ⇒ 引擎只负责算；**决策支持由区块独占** ⇒ 同页不再有两份决策建议。
+  //   ⚠️ 引擎里**不要**再写这段：区块与卡片会同时渲染同一件事。
 
   return results;
 }
@@ -192,6 +199,7 @@ const customFn =
   "else if(tm<=1.8)r+='\\u2022 \\uD83D\\uDFE2 Standard multiplier ('+tm.toFixed(2)+'x) \\u2014 typical for full-time staff.\\n';" +
   "else if(tm<=2.2)r+='\\u2022 \\uD83D\\uDFE0 High multiplier ('+tm.toFixed(2)+'x) \\u2014 review overhead/benefits ratio.\\n';" +
   "else r+='\\u2022 \\uD83D\\uDD34 Excessive multiplier ('+tm.toFixed(2)+'x) \\u2014 likely heavy overhead or benefits.\\n';" +
+  "var tj = tm<=1.4 ? JSON.stringify({code:'employee_cost_lean',params:{multiplier:tm.toFixed(1)}}) : tm<=1.8 ? JSON.stringify({code:'employee_cost_standard',params:{multiplier:tm.toFixed(1)}}) : tm<=2.2 ? JSON.stringify({code:'employee_cost_high',params:{multiplier:tm.toFixed(1)}}) : JSON.stringify({code:'employee_cost_excessive',params:{multiplier:tm.toFixed(1)}});" +
   "if(sal>=150000)r+='\\u2022 \\u26A0\\uFE0F Senior hire at $'+loc(sal)+'/yr \\u2014 clear ROI must be established.\\n';" +
   "else if(sal>=80000)r+='\\u2022 \\uD83D\\uDFE2 Mid-level hire at $'+loc(sal)+'/yr \\u2014 standard team member.\\n';" +
   "else r+='\\u2022 \\uD83D\\uDFE2 Junior hire at $'+loc(sal)+'/yr \\u2014 low-risk entry-level role.\\n';" +
@@ -222,7 +230,7 @@ const customFn =
   "r+='\\u2022 Increase training budget ($5K):  Total \\u2192 $'+loc(tac+5000)+'  (better retention)\\n';" +
   "r+='\\u2022 Hire in Asia instead:                 ~$'+loc(sal*0.4)+'/yr  (40% of US cost)\\n';" +
   "r+='\\u2022 Remote (anywhere):                         ~$'+loc(sal*0.7)+'/yr  (saves office overhead)\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Budget rule of thumb: total employee cost = base salary \\u00d7 '+tm.toFixed(1)+' for this role. Round up to 1.7x when planning headcount budgets to absorb benefits, taxes, onboarding, and the productivity ramp.';" +
+  "r+='\uD83D\uDCA1 Tip: '+tj;" +
   "var results=[r];" +
   "var salaries=[40000,60000,80000,120000,180000];" +
   "for(var i=0;i<salaries.length;i++){" +
@@ -233,7 +241,6 @@ const customFn =
   "var t=s+b+e+o;" +
   "results.push('Comparison: $'+loc(s)+' salary \\u2192 Total $'+loc(t)+'/yr ($'+fmt(t/12)+'/mo) | Multiplier '+(t/s).toFixed(2)+'x');" +
   "}" +
-  "results.push('\\n\\n\\uD83E\\uDDED Decision Recommendation\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\uD83E\\uDDED Decision Question: 单纯看 base salary 是陷阱，**核心问题是\"完全负荷成本 / 月产出\"是否低于市场价 + 该不该为 ramp time 买单**。cost ratio (fully-loaded / base) > 3x 说明有 hidden cost 漏算。\\n\\uD83E\\uDDED Recommendation: (1) **cost ratio > 3x** \\u2192 必有 hidden cost 漏算（benefits/PTO/equipment/training），立即重新审 inputs；(2) **2x-3x** \\u2192 重新审 ramp time 假设；(3) **< 2x** \\u2192 合理区间，立即 hire；**FT 决策**：fully-loaded > $15K/mo 且 ramp > 6 月 \\u2192 先试 3-6 月 contractor。\\n\\uD83E\\uDDED Key Uncertainty: (1) ramp time 真实值 vs 假设值（差异 2-3x）；(2) 隐性 cost (PTO/equipment/培训/管理 overhead) 是否计入；(3) contractor rate 不能按 12 月年化（无 PTO/benefits 但 billable rate 高 1.5-2x）。\\n\\uD83E\\uDDED Next Action: (a) 跑 [Productivity Ramp Calculator] 看 ramp 曲线；(b) 跑 [Attrition Cost Calculator] 算全生命周期 cost；(c) FT 谈判前先跑 [Freelance Rate Calculator] 看 market reference；(d) 决策前 verify offer 包含 fully-loaded breakdown。');" +
   "return results;";
 
 const engine: ToolEngine = {
@@ -253,18 +260,18 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该按这个完全负荷成本招这个岗位，还是先换一种用工方式',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs: Record<string, string>): string[] {
     return calculateEmployeeCost(inputs);
   },
   staticExamples: [
-    '💼 Employee Cost Calculator\n\n📍 Location: United States\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 True Cost Breakdown:\n• Base Salary:                $80,000/yr  (61.5% of total)\n• Benefits (30%):          $24,000/yr  (18.4%)\n• Employer Tax (7.6%):      $6,120/yr  (4.7%)\n• Overhead (25%):           $20,000/yr  (15.4%)\n• Total Annual Cost:        $130,120/yr\n• Monthly Cost:                $10,843.33/mo\n• True Cost Multiplier:    1.63x base salary\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n• Loaded vs Base Ratio:    1.63x  (1.2-1.8x typical)\n• First-Year Cost (incl. onboarding):   $149,638\n• Ongoing Annual Cost:        $130,120\n• Year-1 Premium:                $19,518  (15.0% ramp-up)\n• Benefits per Hour:           $11.54  (over 2,080 work hours/yr)\n• Effective Hourly Cost:    $62.56/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Cost Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Standard multiplier (1.63x) — typical for full-time staff.\n• 🟢 Mid-level hire at $80,000/yr — standard team member.\n• 🟢 Benefits ratio (30%) is competitive.\n\n🎯 Annual Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Year 1 (with onboarding):    $149,638\n• Year 2 (full productivity):  $130,120  (-13.0%)\n• Year 3 (with 3% raise):           $134,024  (+3%)\n• Year 5 (with 3%/yr raises):    $146,451\n• 5-Year Total:                            $840,463\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Full-Time vs Contractor Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Contractor cheaper at $84,000/yr — consider contractor for short-term needs.\n• Full-Time Annual Cost:          $130,120\n• Contractor Equivalent:            $84,000/yr  (no benefits/tax overhead)\n• Savings with Full-Time:           $-46,120/yr  (vs contractor)\n• Break-Even Point:                  ~12 months at this salary\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Add 10% performance bonus:   Total → $143,132  (Multiplier 1.79x)\n• Cut benefits to 20%:                Save $8,000/yr  (Total → $122,120)\n• Increase training budget ($5K):  Total → $135,120  (better retention)\n• Hire in Asia instead:                 ~$32,000/yr  (40% of US cost)\n• Remote (anywhere):                         ~$56,000/yr  (saves office overhead)\n\n💡 Tip: Budget rule of thumb: total employee cost = base salary × 1.6 for this role. Round up to 1.7x when planning headcount budgets to absorb benefits, taxes, onboarding, and the productivity ramp.\nComparison: $40,000 salary → Total $65,060/yr ($5,421.67/mo) | Multiplier 1.63x\nComparison: $60,000 salary → Total $97,590/yr ($8,132.50/mo) | Multiplier 1.63x\nComparison: $80,000 salary → Total $130,120/yr ($10,843.33/mo) | Multiplier 1.63x\nComparison: $120,000 salary → Total $195,180/yr ($16,265.00/mo) | Multiplier 1.63x\nComparison: $180,000 salary → Total $292,770/yr ($24,397.50/mo) | Multiplier 1.63x\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 base salary 是陷阱，**核心问题是"完全负荷成本 / 月产出"是否低于市场价 + 该不该为 ramp time 买单**。cost ratio (fully-loaded / base) > 3x 说明有 hidden cost 漏算。\n• 🧭 Recommendation: (1) **cost ratio > 3x** → 必有 hidden cost 漏算（benefits/PTO/equipment/training），立即重新审 inputs；(2) **2x-3x** → 重新审 ramp time 假设；(3) **< 2x** → 合理区间，立即 hire；**FT 决策**：fully-loaded > $15K/mo 且 ramp > 6 月 → 先试 3-6 月 contractor。\n• 🧭 Key Uncertainty: (1) ramp time 真实值 vs 假设值（差异 2-3x）；(2) 隐性 cost (PTO/equipment/培训/管理 overhead) 是否计入；(3) contractor rate 不能按 12 月年化（无 PTO/benefits 但 billable rate 高 1.5-2x）。\n• 🧭 Next Action: (a) 跑 [Productivity Ramp Calculator] 看 ramp 曲线；(b) 跑 [Attrition Cost Calculator] 算全生命周期 cost；(c) FT 谈判前先跑 [Freelance Rate Calculator] 看 market reference；(d) 决策前 verify offer 包含 fully-loaded breakdown。',
+    '💼 Employee Cost Calculator\n\n📍 Location: United States\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 True Cost Breakdown:\n• Base Salary:                $80,000/yr  (61.5% of total)\n• Benefits (30%):          $24,000/yr  (18.4%)\n• Employer Tax (7.6%):      $6,120/yr  (4.7%)\n• Overhead (25%):           $20,000/yr  (15.4%)\n• Total Annual Cost:        $130,120/yr\n• Monthly Cost:                $10,843.33/mo\n• True Cost Multiplier:    1.63x base salary\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n• Loaded vs Base Ratio:    1.63x  (1.2-1.8x typical)\n• First-Year Cost (incl. onboarding):   $149,638\n• Ongoing Annual Cost:        $130,120\n• Year-1 Premium:                $19,518  (15.0% ramp-up)\n• Benefits per Hour:           $11.54  (over 2,080 work hours/yr)\n• Effective Hourly Cost:    $62.56/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Cost Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Standard multiplier (1.63x) — typical for full-time staff.\n• 🟢 Mid-level hire at $80,000/yr — standard team member.\n• 🟢 Benefits ratio (30%) is competitive.\n\n🎯 Annual Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Year 1 (with onboarding):    $149,638\n• Year 2 (full productivity):  $130,120  (-13.0%)\n• Year 3 (with 3% raise):           $134,024  (+3%)\n• Year 5 (with 3%/yr raises):    $146,451\n• 5-Year Total:                            $840,463\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Full-Time vs Contractor Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Contractor cheaper at $84,000/yr — consider contractor for short-term needs.\n• Full-Time Annual Cost:          $130,120\n• Contractor Equivalent:            $84,000/yr  (no benefits/tax overhead)\n• Savings with Full-Time:           $-46,120/yr  (vs contractor)\n• Break-Even Point:                  ~12 months at this salary\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Add 10% performance bonus:   Total → $143,132  (Multiplier 1.79x)\n• Cut benefits to 20%:                Save $8,000/yr  (Total → $122,120)\n• Increase training budget ($5K):  Total → $135,120  (better retention)\n• Hire in Asia instead:                 ~$32,000/yr  (40% of US cost)\n• Remote (anywhere):                         ~$56,000/yr  (saves office overhead)\n\n💡 Tip: {"code":"employee_cost_standard","params":{"multiplier":"1.6"}}\nComparison: $40,000 salary → Total $65,060/yr ($5,421.67/mo) | Multiplier 1.63x\nComparison: $60,000 salary → Total $97,590/yr ($8,132.50/mo) | Multiplier 1.63x\nComparison: $80,000 salary → Total $130,120/yr ($10,843.33/mo) | Multiplier 1.63x\nComparison: $120,000 salary → Total $195,180/yr ($16,265.00/mo) | Multiplier 1.63x\nComparison: $180,000 salary → Total $292,770/yr ($24,397.50/mo) | Multiplier 1.63x',
     '',
     '',
     '',

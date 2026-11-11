@@ -72,18 +72,18 @@ const engine: ToolEngine = {
   var band = pct >= 75 ? 'Excellent' : pct >= 50 ? 'Good' : pct >= 25 ? 'Warning' : 'Critical';
   var emoji = pct >= 75 ? '🟢' : pct >= 50 ? '🟡' : pct >= 25 ? '🟠' : '🔴';
   var targetAt75 = p75;
+  var tipParams = { pct: pct.toFixed(0), base: '$' + Math.round(base).toLocaleString(), p50: '$' + Math.round(p50).toLocaleString(), p75: '$' + Math.round(p75).toLocaleString() };
+  var tip = band === 'Excellent' ? JSON.stringify({ code: 'comp_banding_top_quartile', params: tipParams })
+    : band === 'Good' ? JSON.stringify({ code: 'comp_banding_p50_to_p75', params: tipParams })
+    : band === 'Warning' ? JSON.stringify({ code: 'comp_banding_p25_to_p50', params: tipParams })
+    : JSON.stringify({ code: 'comp_banding_below_p25', params: tipParams });
   return [
     '🩺 Comp Banding: ' + emoji + ' ' + band + ' (P' + pct.toFixed(0) + ')',
     '📊 Snapshot: ' + role + ' at $' + base.toLocaleString() + ' vs P25 $' + p25.toLocaleString() + ' / P50 $' + p50.toLocaleString() + ' / P75 $' + p75.toLocaleString(),
     '🔄 What-If: at P75 ($' + p75.toLocaleString() + '), retention risk drops 40% (per Pave 2024)',
     '⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget $' + targetAt75.toLocaleString() + ' — vs current $' + base.toLocaleString() + ' = $' + (targetAt75 - base).toLocaleString() + ' delta',
     '🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)',
-    '💡 Tip: Pave / Levels.fyi / Carta publish role-level percentiles — refresh annually. Top-quartile retention is the goal.' + '\\n\\n🧭 Decision Recommendation\\n' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n' +
-    '🧭 Decision Question: 单纯看 band midpoint 是陷阱，**核心问题是"候选人 market rate + 当前团队 equity + competitor 同岗位 pay + offer 速度 trade-off"**。top of band 可能意味着 hire 太晚。\\n' +
-    '🧭 Recommendation: (1) **offer < band 25 百分位** → 极可能 lose candidate（除非强 equity/使命）；(2) **25-75 百分位** → 合理区间（适合大多数情况）；(3) **> 75 百分位** → 仅在 critical hire / replacement > 6 月时；(4) **> 95 百分位** → 重新评估 role 必要性或拆分。\\n' +
-    '🧭 Key Uncertainty: (1) band 是 annualized base 不含 equity / bonus（total comp 可能 30-50% 高出）；(2) 不同 region 不可比（NYC senior ≠ Bangalore senior）；(3) competitor raise 数据滞后 6-12 月；(4) counter-offer 时机影响 retention。\\n' +
-    '🧭 Next Action: (a) 跑 [Attrition Cost Calculator] 看 replacement 成本；(b) 跑 [Productivity Ramp Curve Calculator] 看 ramp 时间 ROI；(c) 跑 [Fully Loaded Employee Cost Calculator] 看全负荷 cost；(d) 决策前 verify 候选人 other competing offers。'
+    '💡 Tip: ' + tip
   ];
 }
 return run(inputs, pick, fill);`,
@@ -91,11 +91,11 @@ return run(inputs, pick, fill);`,
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该按这个薪资带开价，还是先调整职级与市场定位',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs) {
@@ -108,19 +108,31 @@ return run(inputs, pick, fill);`,
     const band = calcHealthBand(pct);
     const bandInfo = HEALTH_BANDS[band];
     const deltaToP75 = p75 - base;
+    // P168 B3-4：💡 Tip 改成**建议码**（语义码 + 参数）—— 英文句子搬进 locale，
+    //   zh 页的动态层才会是中文。⚠️ **分支条件与阈值一个都不改**（分支 = 上面 Health 那套 band）。
+    //   ⚠️ customFn 里必须写**逐字相同**的一份（守卫「两套实现不许漂」守着这条）。
+    const tipParams = { pct: pct.toFixed(0), base: fmtMoney(base), p50: fmtMoney(p50), p75: fmtMoney(p75) };
+    let tip: string;
+    if (band === 'excellent') {
+      tip = JSON.stringify({ code: 'comp_banding_top_quartile', params: tipParams });
+    } else if (band === 'good') {
+      tip = JSON.stringify({ code: 'comp_banding_p50_to_p75', params: tipParams });
+    } else if (band === 'warning') {
+      tip = JSON.stringify({ code: 'comp_banding_p25_to_p50', params: tipParams });
+    } else {
+      tip = JSON.stringify({ code: 'comp_banding_below_p25', params: tipParams });
+    }
     return [
       '🩺 Comp Banding: ' + bandInfo.label + ' (P' + pct.toFixed(0) + ')',
       '📊 Snapshot: ' + role + ' at ' + fmtMoney(base) + ' · Below P75 by ' + fmtMoney(Math.max(0, p75 - base)) + ' · Above P50 by ' + fmtMoney(Math.max(0, base - p50)),
       '🔄 What-If: at P75 (' + fmtMoney(p75) + '), retention risk drops 40% (per Pave 2024)',
       '⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget ' + fmtMoney(p75) + ' — vs current ' + fmtMoney(base) + ' = ' + fmtMoney(deltaToP75) + ' delta',
       '🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)',
-      '💡 Tip: Pave / Levels.fyi / Carta publish role-level percentiles — refresh annually. Top-quartile retention is the goal.',
-      // P151 batch2: L5 Decision Recommendation
-      '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 band midpoint 是陷阱，**核心问题是"候选人 market rate + 当前团队 equity + competitor 同岗位 pay + offer 速度 trade-off"**。top of band 可能意味着 hire 太晚。\n• 🧭 Recommendation: (1) **offer < band 25 百分位** → 极可能 lose candidate（除非强 equity/使命）；(2) **25-75 百分位** → 合理区间（适合大多数情况）；(3) **> 75 百分位** → 仅在 critical hire / replacement > 6 月时；(4) **> 95 百分位** → 重新评估 role 必要性或拆分。\n• 🧭 Key Uncertainty: (1) band 是 annualized base 不含 equity / bonus（total comp 可能 30-50% 高出）；(2) 不同 region 不可比（NYC senior ≠ Bangalore senior）；(3) competitor raise 数据滞后 6-12 月；(4) counter-offer 时机影响 retention。\n• 🧭 Next Action: (a) 跑 [Attrition Cost Calculator] 看 replacement 成本；(b) 跑 [Productivity Ramp Curve Calculator] 看 ramp 时间 ROI；(c) 跑 [Fully Loaded Employee Cost Calculator] 看全负荷 cost；(d) 决策前 verify 候选人 other competing offers。',
+      '💡 Tip: ' + tip,
     ];
   },
   staticExamples: [
-    '🩺 Comp Banding: 🟡 Good (P54)\n📊 Snapshot: Senior Software Engineer at $160,000 · Below P75 by $25,000 · Above P50 by $5,000\n🔄 What-If: at P75 ($185,000), retention risk drops 40% (per Pave 2024)\n⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget $185,000 — vs current $160,000 = $25,000 delta\n🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)\n💡 Tip: Pave / Levels.fyi / Carta publish role-level percentiles — refresh annually. Top-quartile retention is the goal.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 band midpoint 是陷阱，**核心问题是"候选人 market rate + 当前团队 equity + competitor 同岗位 pay + offer 速度 trade-off"**。top of band 可能意味着 hire 太晚。\n• 🧭 Recommendation: (1) **offer < band 25 百分位** → 极可能 lose candidate（除非强 equity/使命）；(2) **25-75 百分位** → 合理区间（适合大多数情况）；(3) **> 75 百分位** → 仅在 critical hire / replacement > 6 月时；(4) **> 95 百分位** → 重新评估 role 必要性或拆分。\n• 🧭 Key Uncertainty: (1) band 是 annualized base 不含 equity / bonus（total comp 可能 30-50% 高出）；(2) 不同 region 不可比（NYC senior ≠ Bangalore senior）；(3) competitor raise 数据滞后 6-12 月；(4) counter-offer 时机影响 retention。\n• 🧭 Next Action: (a) 跑 [Attrition Cost Calculator] 看 replacement 成本；(b) 跑 [Productivity Ramp Curve Calculator] 看 ramp 时间 ROI；(c) 跑 [Fully Loaded Employee Cost Calculator] 看全负荷 cost；(d) 决策前 verify 候选人 other competing offers。',
+    '🩺 Comp Banding: 🟡 Good (P54)\n📊 Snapshot: Senior Software Engineer at $160,000 · Below P75 by $25,000 · Above P50 by $5,000\n🔄 What-If: at P75 ($185,000), retention risk drops 40% (per Pave 2024)\n⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget $185,000 — vs current $160,000 = $25,000 delta\n🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)\n💡 Tip: {"code":"comp_banding_p50_to_p75","params":{"pct":"54","base":"$160,000","p50":"$155,000","p75":"$185,000"}}',
   ],
   faq: [
     { q: 'Where do I get P25/P50/P75 market data?', a: 'Three primary sources: (1) Pave — paid comp database with role-level cuts by company size, geo, and industry. (2) Levels.fyi — free for tech roles, especially engineering. (3) Carta — for startup-stage equity + cash data. For non-tech roles, BLS OES wage data by occupation is a fallback.' },

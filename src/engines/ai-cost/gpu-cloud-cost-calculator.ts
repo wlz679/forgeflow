@@ -205,6 +205,19 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Tip
   out.push('\u{1F4A1} ' + prov.name + ' spot instances save ' + Math.round((1 - prov.spotMult) * 100) + '% but can be interrupted. Reserved instances save ' + Math.round((1 - prov.reservedMult) * 100) + '% with 1-year commitment. Cheapest provider for ' + GPU_NAMES[gpuKey] + ': ' + cheapest.name + ' at ' + fmt(cheapest.cost) + '/mo.');
+  // P168 B3-4：💡 Tip 改成**建议码**（语义码 + 参数）—— 英文句子搬进 locale，
+  //   zh 页的动态层才会是中文。⚠️ 分支用**已有的 pricingTier**，不引入第二套阈值。
+  //   ⚠️ customFn 里必须写**逐字相同**的一份（守卫「两套实现不许漂」守着这条）。
+  const tipParams = { monthly: fmt(monthlyCost), rate: fmt(effectiveRate), hours: String(hoursPerDay), gpus: String(gpuCount) };
+  let tip: string;
+  if (pricingTier === 'spot') {
+    tip = JSON.stringify({ code: 'gpu_cloud_spot', params: tipParams });
+  } else if (pricingTier === 'reserved') {
+    tip = JSON.stringify({ code: 'gpu_cloud_reserved', params: tipParams });
+  } else {
+    tip = JSON.stringify({ code: 'gpu_cloud_on_demand', params: tipParams });
+  }
+  out.push('💡 Tip: ' + tip);
 
   // 🩺 Cost Health (v3)
   out.push('');
@@ -247,12 +260,6 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // P151 L5: Decision Recommendation 4-section block
-  out.push('\n\n🧭 Decision Recommendation');
-  out.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  out.push('• 🧭 Decision Question: 单纯看 GPU hourly rate 是陷阱，**核心问题是"实际 workload cost / 月 + idle time 浪费率 + vendor lock-in 风险"**。最便宜 ≠ 最划算。');
-  out.push('• 🧭 Recommendation: (1) **rate < 中位数 30%** → 警惕 hidden cost（data egress / API gateway fee / 抢占 spot 不可靠）；(2) **中位数 ±20%** → 安全选型；(3) **> 中位数 30%** → 仅在 SLA / 合规硬性要求时付溢价；(4) **多 vendor 分散** → 降低 lock-in 但增加 ops 复杂度。');
-  out.push('• 🧭 Key Uncertainty: (1) 不同 vendor pricing model 不一样（per-second vs per-hour vs reserved）；(2) GPU 类型差异大（A100 vs H100 vs L40S 不可比）；(3) data egress fee 可能吞掉 savings；(4) spot preempt 频率影响 production workload。');
-  out.push('• 🧭 Next Action: (a) 跑 [OpenAI Token Calculator] 看 API vs 自托管 cost 对比；(b) 跑 [AI Training Cost Estimator] 看训练全周期 cost；(c) 跑 [Claude API Cost Calculator] 看主力模型成本曲线；(d) 决策前做 30 天 proof-of-concept 验证 vendor SLA。');
 
   return out;
 }
@@ -325,12 +332,12 @@ const customFn =
   "for(var si3=0;si3<SS2.length;si3++){var sz=SS2[si3];var sc3=sz*SCPG2;var tt=mc2+sc3+eE2;o.push(pd3(lc3(sz)+' GB',14)+' | '+pd3(fm3(sc3),12)+' | '+fm3(tt));}" +
   "o.push('');}" +
   "o.push('\\u{1F4A1} '+p2.n+' spot instances save '+Math.round((1-p2.sm)*100)+'% but can be interrupted. Reserved instances save '+Math.round((1-p2.rm)*100)+'% with 1-year commitment. Cheapest provider for '+GN[gk2]+': '+ch2.n+' at '+fm3(ch2.c)+'/mo.');" +
-  "o.push('\\n\\n\\uD83E\\uDDED Decision Recommendation');" +
-  "o.push('\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501');" +
-  "o.push('\\u2022 \\uD83E\\uDDED Decision Question: 单纯看 GPU hourly rate 是陷阱，**核心问题是\"实际 workload cost / 月 + idle time 浪费率 + vendor lock-in 风险\"**。最便宜 ≠ 最划算。');" +
-  "o.push('\\u2022 \\uD83E\\uDDED Recommendation: (1) **rate < 中位数 30%** \\u2192 警惕 hidden cost（data egress / API gateway fee / 抢占 spot 不可靠）；(2) **中位数 ±20%** \\u2192 安全选型；(3) **> 中位数 30%** \\u2192 仅在 SLA / 合规硬性要求时付溢价；(4) **多 vendor 分散** \\u2192 降低 lock-in 但增加 ops 复杂度。');" +
-  "o.push('\\u2022 \\uD83E\\uDDED Key Uncertainty: (1) 不同 vendor pricing model 不一样（per-second vs per-hour vs reserved）；(2) GPU 类型差异大（A100 vs H100 vs L40S 不可比）；(3) data egress fee 可能吞掉 savings；(4) spot preempt 频率影响 production workload。');" +
-  "o.push('\\u2022 \\uD83E\\uDDED Next Action: (a) 跑 [OpenAI Token Calculator] 看 API vs 自托管 cost 对比；(b) 跑 [AI Training Cost Estimator] 看训练全周期 cost；(c) 跑 [Claude API Cost Calculator] 看主力模型成本曲线；(d) 决策前做 30 天 proof-of-concept 验证 vendor SLA。');" +
+  "var tipP={monthly:fm3(mc2),rate:fm3(eR),hours:String(hpd2),gpus:String(gc3)};" +
+  "var tip='';" +
+  "if(pt==='spot'){tip=JSON.stringify({code:'gpu_cloud_spot',params:tipP});}" +
+  "else if(pt==='reserved'){tip=JSON.stringify({code:'gpu_cloud_reserved',params:tipP});}" +
+  "else{tip=JSON.stringify({code:'gpu_cloud_on_demand',params:tipP});}" +
+  "o.push('💡 Tip: ' + tip);" +
   "return o;";
 
 const engine: ToolEngine = {
@@ -349,11 +356,11 @@ const engine: ToolEngine = {
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   playbook: {
-    goal: '用户该不该用此计算器的结果作为决策依据',
+    goal: '用户该不该继续按当前 GPU 规格付费，还是先换成更便宜但够用的配置',
     input: 'engine 定义的 inputs 字段',
     output: 'engine 定义的 generate() 返回数组',
     constraint: 'apply 引擎 inputs 时受实际场景约束',
-    tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs) { return calculate(inputs); },
@@ -368,7 +375,7 @@ const engine: ToolEngine = {
     { key: 'pro-8h100',          emoji: '👑', fields: { provider: 'runpod',     gpuType: 'H100',    gpuCount: '8', hoursPerDay: '24', pricingTier: 'on-demand', includeStorage: 'yes' } },
   ],
   staticExamples: [
-    '\n🖥️ RunPod GPU Cost — On-Demand\n\nGPU: 1× A100 80GB | Base Rate: $0.79/hr\nUsage: 8 hrs/day → 8 GPU-hrs/day\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nDaily GPU Cost (8 hrs):   $6.32\nMonthly GPU Cost (30 days): $189.60\nAnnual GPU Cost:            $2275.20\n\nStorage + Networking:\n  Storage (500GB SSD): $50.00/mo\n  Est. Egress (50GB):   $4.00/mo\n  Total Monthly:        $243.60\n\n📊 Multi-Provider Comparison — 1× A100 80GB\n──────────────────────────────────────────────────\nRunPod             ████████                              $189.60/mo\nVast.ai            ░░░░░░░                               $165.60/mo\nLambda Labs        ███████████                           $264.00/mo\nAWS                ███████████████████████████████████   $840.00/mo\nGCP                ████████████████████████████          $672.00/mo\nAzure              ██████████████████████████████        $720.00/mo\n\n📊 Pricing Tier Comparison for RunPod\n──────────────────────────────────────────────────\nTier                   | Monthly     | Annual        | Savings vs On-Demand\n───────────────────────────────────────────────────────────────────────────\nSpot (save 40%)        | $113.76        | $1365.12         | Save $75.84/mo (40%)\nOn-Demand              | $189.60        | $2275.20         | —\nReserved 1yr (save 15%) | $161.16        | $1933.92         | Save $28.44/mo (15%)\n\n🔄 Multi-GPU Scaling (RunPod, A100 80GB)\n──────────────────────────────────────────────────\nGPUs     | 1×               | 2×               | 4×               | 8×               | 16×              | 32×              | 64×             \n─────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼───────────────\nMonthly  | $189.60          | $379.20          | $758.40          | $1516.80         | $3033.60         | $6067.20         | $12134.40       \n\n💾 Storage & Networking Add-Ons\n──────────────────────────────────────────────────\nStorage (SSD): $0.10/GB/month\nNetwork Egress: $0.08/GB\n\nStorage        | Cost/Mo   | With GPU Total/Mo\n──────────────────────────────────────────────\n100 GB         | $10.00       | $203.60\n500 GB         | $50.00       | $243.60\n1,000 GB       | $100.00      | $293.60\n5,000 GB       | $500.00      | $693.60\n\n💡 RunPod spot instances save 40% but can be interrupted. Reserved instances save 15% with 1-year commitment. Cheapest provider for A100 80GB: Vast.ai at $165.60/mo.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Micro-tier — under $1/hr. Perfect for inference, small training jobs.\n• 🟢 Storage + egress is only 7% of total — well-optimized.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• You\'re already on the cheapest provider for A100 80GB!\n• Switch to spot instances:  save ~$81.44/mo  (40% off, but interruptible)\n• 1-year reserved:  save ~$30.54/mo  (guaranteed capacity)\n• Halve hours:  $101.80/mo  (workload at off-peak?)\n• Double hours:  $407.20/mo\n\n\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 GPU hourly rate 是陷阱，**核心问题是"实际 workload cost / 月 + idle time 浪费率 + vendor lock-in 风险"**。最便宜 ≠ 最划算。\n• 🧭 Recommendation: (1) **rate < 中位数 30%** → 警惕 hidden cost（data egress / API gateway fee / 抢占 spot 不可靠）；(2) **中位数 ±20%** → 安全选型；(3) **> 中位数 30%** → 仅在 SLA / 合规硬性要求时付溢价；(4) **多 vendor 分散** → 降低 lock-in 但增加 ops 复杂度。\n• 🧭 Key Uncertainty: (1) 不同 vendor pricing model 不一样（per-second vs per-hour vs reserved）；(2) GPU 类型差异大（A100 vs H100 vs L40S 不可比）；(3) data egress fee 可能吞掉 savings；(4) spot preempt 频率影响 production workload。\n• 🧭 Next Action: (a) 跑 [OpenAI Token Calculator] 看 API vs 自托管 cost 对比；(b) 跑 [AI Training Cost Estimator] 看训练全周期 cost；(c) 跑 [Claude API Cost Calculator] 看主力模型成本曲线；(d) 决策前做 30 天 proof-of-concept 验证 vendor SLA。',
+    '\n🖥️ RunPod GPU Cost — On-Demand\n\nGPU: 1× A100 80GB | Base Rate: $0.79/hr\nUsage: 8 hrs/day → 8 GPU-hrs/day\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nDaily GPU Cost (8 hrs):   $6.32\nMonthly GPU Cost (30 days): $189.60\nAnnual GPU Cost:            $2275.20\n\nStorage + Networking:\n  Storage (500GB SSD): $50.00/mo\n  Est. Egress (50GB):   $4.00/mo\n  Total Monthly:        $243.60\n\n📊 Multi-Provider Comparison — 1× A100 80GB\n──────────────────────────────────────────────────\nRunPod             ████████                              $189.60/mo\nVast.ai            ░░░░░░░                               $165.60/mo\nLambda Labs        ███████████                           $264.00/mo\nAWS                ███████████████████████████████████   $840.00/mo\nGCP                ████████████████████████████          $672.00/mo\nAzure              ██████████████████████████████        $720.00/mo\n\n📊 Pricing Tier Comparison for RunPod\n──────────────────────────────────────────────────\nTier                   | Monthly     | Annual        | Savings vs On-Demand\n───────────────────────────────────────────────────────────────────────────\nSpot (save 40%)        | $113.76        | $1365.12         | Save $75.84/mo (40%)\nOn-Demand              | $189.60        | $2275.20         | —\nReserved 1yr (save 15%) | $161.16        | $1933.92         | Save $28.44/mo (15%)\n\n🔄 Multi-GPU Scaling (RunPod, A100 80GB)\n──────────────────────────────────────────────────\nGPUs     | 1×               | 2×               | 4×               | 8×               | 16×              | 32×              | 64×             \n─────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼────────────────┼───────────────\nMonthly  | $189.60          | $379.20          | $758.40          | $1516.80         | $3033.60         | $6067.20         | $12134.40       \n\n💾 Storage & Networking Add-Ons\n──────────────────────────────────────────────────\nStorage (SSD): $0.10/GB/month\nNetwork Egress: $0.08/GB\n\nStorage        | Cost/Mo   | With GPU Total/Mo\n──────────────────────────────────────────────\n100 GB         | $10.00       | $203.60\n500 GB         | $50.00       | $243.60\n1,000 GB       | $100.00      | $293.60\n5,000 GB       | $500.00      | $693.60\n\n💡 RunPod spot instances save 40% but can be interrupted. Reserved instances save 15% with 1-year commitment. Cheapest provider for A100 80GB: Vast.ai at $165.60/mo.\n💡 Tip: {"code":"gpu_cloud_on_demand","params":{"monthly":"$189.60","rate":"$0.79","hours":"8","gpus":"1"}}\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Micro-tier — under $1/hr. Perfect for inference, small training jobs.\n• 🟢 Storage + egress is only 7% of total — well-optimized.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• You\'re already on the cheapest provider for A100 80GB!\n• Switch to spot instances:  save ~$81.44/mo  (40% off, but interruptible)\n• 1-year reserved:  save ~$30.54/mo  (guaranteed capacity)\n• Halve hours:  $101.80/mo  (workload at off-peak?)\n• Double hours:  $407.20/mo\n',
   ],
   faq: [
     { q: 'Which cloud provider is cheapest for GPUs in 2026?', a: '{{liveGpuProviderName:vastai}} offers the lowest prices ({{liveGpuProviderRange:vastai}}/hr) through a peer-to-peer marketplace, followed by {{liveGpuProviderName:runpod}} ({{liveGpuProviderRange:runpod}}/hr) and {{liveGpuProviderName:lambdalabs}} ({{liveGpuProviderRange:lambdalabs}}/hr). The enterprise clouds charge more for the same GPU: for an A100, {{liveGpuProviderName:aws}} is {{liveGpuRatio:vastai|A100|on|aws|A100|on}}x {{liveGpuProviderName:vastai}}, {{liveGpuProviderName:gcp}} is {{liveGpuRatio:vastai|A100|on|gcp|A100|on}}x and {{liveGpuProviderName:azure}} is {{liveGpuRatio:vastai|A100|on|azure|A100|on}}x — in exchange they add enterprise SLAs, global networking, and reserved/committed-use discounts worth {{liveGpuOffReserved}}%.' },

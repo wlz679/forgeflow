@@ -1,0 +1,113 @@
+{
+  "slug": "solopreneur-stockout-cost-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Stockout cost on its own is a trap: a number that looks alarming does not tell you whether to hold more stock, because the comparison that actually matters is stockout cost against carrying cost, plus how often the stockout happens. Below a ratio of 1 the extra inventory costs more than the outage does, above 2 you are under-stocked and safety stock is not optional. This calculator sizes the damage; use it to decide whether to buy more stock, not to admire a large number.",
+      "zh": "单看缺货成本是个陷阱：一个看起来吓人的数字，并不能告诉你该不该多备货，因为真正该比的是「缺货成本 ÷ 持有成本」这个比值，再加上缺货发生的频次。比值 < 1 时多备的货比停售还亏；> 2 时就是备货不足，safety stock 不是可选项。这个计算器负责把损失算清楚，你要用它决定「要不要多进点货」，而不是盯着一个大数字发愣。"
+    },
+    "decision_recommendation": {
+      "en": "Read stockout cost against carrying cost rather than on its own, then pick the matching move. (1) When stockout cost is more than 2 times carrying cost, add safety stock, and start conservative with a 20-30% buffer. (2) Between 1 and 2 times, keep the current policy and watch supplier lead time. (3) Below 1 time, cut inventory and release the working capital. (4) When stockouts happen more than 3 times a quarter, re-examine supplier lead time and line up a backup supplier. (5) When stockout cost and carrying cost are both high, audit the whole inventory strategy, because that pairing usually points at a SKU mix problem.",
+      "zh": "要拿缺货成本和持有成本对比着看，再选动作，别只看绝对值。(1) 缺货成本 > 持有成本的 2 倍 → 加 safety stock，起点保守一点，按 20-30% 的 buffer 来。(2) 落在 1x-2x 之间 → 维持现状，重点监控 supplier lead time。(3) < 1x → 砍库存，把占用的 working capital 释放出来。(4) 发生频次高（每季度 > 3 次）→ 重新审一遍 supplier lead time，同时找 backup 供应商。(5) 缺货成本和持有成本同时都很高 → 库存策略要全面 audit —— 这种组合多半是 SKU mix 出问题了。"
+    },
+    "decision_constraint": {
+      "en": "Four assumptions can move the real number away from this estimate. (1) A lost sale is not the same as a lost customer: from an LTV point of view a long-term customer may well come back, so the customer loss rate you feed in swings the answer hard. (2) Recovery rate depends on category, running 80% or more for essentials and only 30-50% for non-essentials. (3) Supplier lead time actually stretches 2-3x in peak season, so a normal-season estimate understates the outage. (4) Seasonal swings are not discounted here, which can push the stockout cost away from the 2x threshold you are comparing it against.",
+      "zh": "有四个前提会让真实数字偏离这个估算。(1) lost sale ≠ lost customer：从 LTV 视角看，长期客户可能还会回来，所以你填的「客户流失率」会大幅改变结论。(2) recovery rate 取决于品类 —— 必需品能到 80% 以上，非必需只有 30-50%。(3) supplier lead time 在旺季实际会拉长到 2-3 倍，拿平季数据去估会低估缺货损失。(4) 季节性波动没有折现，会让缺货成本偏离你正在对比的 2x 这条线。四个都往乐观的方向偏，结论就会偏保守。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Inventory Turnover Calculator] to see how fast your turn is, run [Reorder Point Calculator] to set an automatic reorder trigger, and run [Supplier Scorecard Calculator] to improve lead time and reliability. Then calibrate the lost sale assumption against six months of real data before you make the call.",
+      "zh": "先跑 [库存周转率计算器] 看 turn 健康度，再跑 [补货点计算器] 设自动化 reorder trigger，最后跑 [供应商评分卡计算器] 优化 lead time 和 reliability。真正拍板之前，用最近 6 个月的真实 data 把 lost sale 的假设校准一遍，别拿拍脑袋的数去决定加不加 safety stock。"
+    }
+  },
+  "tips": [
+    {
+      "code": "stockout_critical",
+      "en": "Stockouts are costing you {cost} a year, which is {pct} of annual revenue, and that is critical. Switch to a multi-supplier setup so no single point of failure can empty your shelves again, set safety stock buffers from demand standard deviation, and audit the top 3 SKUs by lost sales every week. Of the damage, {immediate} is revenue lost on the shelf and {ltv} is lifetime value from customers who defect for good.",
+      "zh": "缺货一年让你损失 {cost}，占年收入的 {pct}，这已经是 critical 了。赶紧换成多供应商，别让单点故障再把货架清空；按需求标准差设 safety stock buffer；每周审计按缺货销售额排的前 3 个 SKU。这笔账里，{immediate} 是货架上直接丢掉的收入，{ltv} 是彻底流失客户的终身价值。",
+      "params": {
+        "cost": "{cost}",
+        "pct": "{pct}",
+        "immediate": "{immediate}",
+        "ltv": "{ltv}"
+      }
+    },
+    {
+      "code": "stockout_serious",
+      "en": "Stockouts are costing you {cost} a year, {pct} of annual revenue, and that is serious enough to fix now. Tighten your reorder points with service-level Z-scores for a 90-95% service level, raise safety stock by 30%, and pre-position inventory at two fulfilment centres if shipping time is what drives your stockouts. Of that total, {immediate} is lost shelf revenue and {ltv} is lifetime value you will never get back.",
+      "zh": "缺货一年让你损失 {cost}，占年收入 {pct}，这个量级必须现在就动手。用 90-95% 服务水平的 Z 分数把补货点收紧，safety stock 加 30%；如果缺货是配送慢引起的，就在两个履约中心预先铺货。这笔损失里，{immediate} 是货架上丢掉的收入，{ltv} 是再也回不来的客户终身价值。",
+      "params": {
+        "cost": "{cost}",
+        "pct": "{pct}",
+        "immediate": "{immediate}",
+        "ltv": "{ltv}"
+      }
+    },
+    {
+      "code": "stockout_measurable",
+      "en": "Stockouts are costing you {cost} a year, {pct} of annual revenue: measurable, not catastrophic. Improve your win-back flow, because pushing the recovery rate to 25% saves roughly 15% of the lost lifetime value; set low-stock alerts at the two-week reorder point; and review the top 20 SKUs every month for stockout patterns. Of the {cost} total, {immediate} is lost shelf revenue and {ltv} is lost lifetime value.",
+      "zh": "缺货一年让你损失 {cost}，占年收入 {pct}：可量化，但还不致命。把 win-back 流程做扎实 —— recovery rate 提到 25% 能省下大约 15% 的流失终身价值；在两周补货点设低库存预警；每月复盘销售额前 20 的 SKU 有没有缺货规律。这 {cost} 里，{immediate} 是货架上丢掉的收入，{ltv} 是流失掉的终身价值。",
+      "params": {
+        "cost": "{cost}",
+        "pct": "{pct}",
+        "immediate": "{immediate}",
+        "ltv": "{ltv}"
+      }
+    },
+    {
+      "code": "stockout_excellent",
+      "en": "Stockouts are costing you {cost} a year, only {pct} of annual revenue, and most of that is shelf revenue rather than lifetime value: {immediate} lost immediately against {ltv} of lifetime value. Hold this position by monitoring service-level Z-scores every quarter, keeping safety stock tuned to demand standard deviation, and running a lost sales audit every six months to confirm the model still matches reality.",
+      "zh": "缺货一年只让你损失 {cost}，占年收入 {pct}，而且主要是货架收入而不是终身价值：{immediate} 是当场丢掉的，{ltv} 是终身价值那一部分。保持住这个状态：每季度复查服务水平的 Z 分数，safety stock 继续按需求标准差调，每半年做一次 lost sales audit，确认模型还跟得上现实。",
+      "params": {
+        "cost": "{cost}",
+        "pct": "{pct}",
+        "immediate": "{immediate}",
+        "ltv": "{ltv}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "stockout_excellent",
+      "inputs": {
+        "lostSalesPerDay": "100",
+        "avgStockoutDays": "0.5",
+        "lostCustomerRate": "3",
+        "customerLTV": "20",
+        "annualRevenue": "60000",
+        "recoveryRate": "1"
+      }
+    },
+    {
+      "code": "stockout_measurable",
+      "inputs": {
+        "lostSalesPerDay": "500",
+        "avgStockoutDays": "2.5",
+        "lostCustomerRate": "15",
+        "customerLTV": "100",
+        "annualRevenue": "300000",
+        "recoveryRate": "5"
+      }
+    },
+    {
+      "code": "stockout_critical",
+      "inputs": {
+        "lostSalesPerDay": "1000",
+        "avgStockoutDays": "5",
+        "lostCustomerRate": "30",
+        "customerLTV": "200",
+        "annualRevenue": "600000",
+        "recoveryRate": "10"
+      }
+    },
+    {
+      "code": "stockout_serious",
+      "inputs": {
+        "lostSalesPerDay": "250",
+        "avgStockoutDays": "5",
+        "lostCustomerRate": "30",
+        "customerLTV": "200",
+        "annualRevenue": "600000",
+        "recoveryRate": "10"
+      }
+    }
+  ]
+}

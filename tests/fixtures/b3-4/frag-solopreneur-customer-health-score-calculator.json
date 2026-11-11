@@ -1,0 +1,109 @@
+{
+  "slug": "solopreneur-customer-health-score-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Reading a single health score on its own is a trap, because the score never tells you whether to save the account or expand it, which signal is dragging the number down, or which intervention buys the most. One composite number across five signals hides all three questions. Use this tool to decide between saving and expanding, and to name the one signal worth repairing first, not just to report a number between 0 and 100.",
+      "zh": "只看一个 health score 是个陷阱：这个数字不会告诉你该保存还是该扩张、哪个信号在拖分、哪一项干预的 ROI 最高。五个信号压成一个 0 到 100 的综合分，等于把这三个问题一起藏了起来。用这个工具判断「保存还是扩张」，并指出最值得先修的那一个信号，而不是复述一个分数。"
+    },
+    "decision_recommendation": {
+      "en": "Act on the band the score lands in, because each band needs a different move. (1) Below 40: run the emergency save play now, pair the account with an executive sponsor and put a dedicated CSM on it, because waiting for the renewal date costs you the account. (2) Between 40 and 60: audit the five normalized signals and repair the single lowest one first, because the points are being lost there; do not run five workstreams at once, take the top one. (3) Between 60 and 80: push the weakest signal up into the next band instead of polishing everything, and watch the score week over week, because accounts drift out of a good band without any single signal looking bad. (4) Above 80: lock in the renewal and then look for expansion revenue inside the accounts that are already healthy, because saving a healthy account buys far less than growing one.",
+      "zh": "按分数落到的档位直接给动作，因为每一档要做的动作都不一样。(1) 低于 40：立刻上应急 save play —— 把这个账户挂上 exec sponsor，配一个专职 CSM 介入；等续约窗口再动，账户大概率已经没了。(2) 40 到 60 之间：把五个归一化信号过一遍，优先修最低的那一个，因为丢分就丢在那里；不要同时铺开五条线，先做 top 1。(3) 60 到 80 之间：把最弱的信号推进下一档，而不是五项一起打磨，并按周盯着分数，因为账户滑档往往不是因为哪一项突然变差，而是几项一起慢慢退。(4) 高于 80：先把 renewal 锁住，再去已经健康的账户里找扩展收入，因为救一个健康账户的回报，远低于让一个健康账户变大。"
+    },
+    "decision_constraint": {
+      "en": "Four things can move the real number away from this score. (1) The weight preset you chose biases the result: a product-led preset leans on usage and flatters product-led accounts, a sales-led preset leans on contract value, and the same account can score several points apart under two presets. (2) The five signals are often collected over different time windows, so last week's usage sits next to last quarter's ticket count in the same average. (3) NPS is self-reported, so it carries response bias and often lags the behaviour it is supposed to track. (4) A high-value contract is not the same thing as a healthy account: the biggest accounts usually have the most seats to go quiet quietly.",
+      "zh": "有四件事会把真实情况推离这个分数。第一，preset 权重本身就会带偏结果：product-led 偏 usage，会把产品驱动型的账户抬高；sales-led 偏 contract value；同一个账户换两个 preset，分数能差好几分。第二，五个信号常常是在不同时间窗里采的，上周的 usage 和上季度的工单数被放进了同一个平均里。第三，NPS 是自报告数据，既带回答偏差，也常常滞后于它本该反映的行为。第四，合同金额大不等于账户健康：越大的账户通常有越多席位可以悄悄安静下来。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Net Revenue Retention (NRR) Calculator] to see whether account health and expansion revenue actually move together, run [Churn Rate Calculator] to see the cohort churn sitting behind this account, and run [Expansion Revenue Calculator] to size the upsell potential of the accounts that are already healthy. Before you commit to a save play, have the CSM make a qualitative call with the account to check the signals behind the score.",
+      "zh": "先跑 [净收入留存率（NRR）计算器] 看账户健康与扩展收入到底是不是一起动；再跑 [流失率计算器] 看这个账户背后的 cohort 流失；然后跑 [扩展收入计算器] 给已经健康的账户估一下 upsell 潜力。拍板做 save play 之前，让 CSM 先和客户做一次定性沟通，验证分数背后那几个信号。"
+    }
+  },
+  "tips": [
+    {
+      "code": "healthscore_critical",
+      "en": "A health score of {score} is critical, and no weight preset can pull an account this far below the 40-point line. Run the emergency save play now: pair the account with an executive sponsor, put a dedicated CSM on it, and audit usage before anything else. The weakest signal here is {weakest} at {weakestScore} out of 100, so start there, and re-score in two weeks instead of waiting for the renewal date.",
+      "zh": "健康分只有 {score}，已经掉到 40 分线以下，换哪个权重 preset 都拉不回来。立刻上应急 save play：把账户挂上 exec sponsor、配一个专职 CSM 介入，先做一次 usage audit，其他的都往后排。这里最弱的信号是 {weakest}（{weakestScore} / 100），就从这一项开始动手，两周后重新算一次分，而不是等到续约才复盘。",
+      "params": {
+        "score": "{score}",
+        "weakest": "{weakest}",
+        "weakestScore": "{weakestScore}"
+      }
+    },
+    {
+      "code": "healthscore_at_risk",
+      "en": "A health score of {score} puts this account in the at-risk band, so a save play now is much cheaper than a win-back later. The weakest signal is {weakest} at {weakestScore} out of 100: repair that one first, and repair it only if it carries real weight in your preset, because a signal weighted at 10% will not move the score even after you fix it. Fix the highest-weighted weak signal, then re-score after two weeks to confirm the number moved.",
+      "zh": "健康分 {score} 落在 at-risk 档，这时候做 save play 比事后 win-back 便宜得多。最弱的信号是 {weakest}（{weakestScore} / 100），先修这一项，但要看它在你的 preset 里占多少权重：权重只有 10% 的信号，修好了分数也几乎不动。所以真正要修的是权重最高的那一项弱信号，两周后重新算一次分，确认分数真的动了。",
+      "params": {
+        "score": "{score}",
+        "weakest": "{weakest}",
+        "weakestScore": "{weakestScore}"
+      }
+    },
+    {
+      "code": "healthscore_monitor",
+      "en": "A health score of {score} is in the healthy band, so this account is worth protecting rather than rescuing. The weakest signal is {weakest} at {weakestScore} out of 100, and pushing that one signal into the next band beats spreading the effort across all five. Watch it weekly, because accounts slide down out of a good band without any single signal looking bad, and a healthy account is where expansion revenue comes from.",
+      "zh": "健康分 {score} 落在 healthy 档，这个账户值得守住，不需要抢救。最弱的信号是 {weakest}（{weakestScore} / 100）—— 把这一项推进下一档，比把力气平摊到五个信号上更有效。按周盯着它，因为账户滑档往往不是哪一项突然变差，而是几项一起慢慢退；而健康的账户，正是扩展收入的来源。",
+      "params": {
+        "score": "{score}",
+        "weakest": "{weakest}",
+        "weakestScore": "{weakestScore}"
+      }
+    },
+    {
+      "code": "healthscore_excellent",
+      "en": "A health score of {score} is excellent, so this account is a candidate for expansion rather than for rescue. The weakest signal is {weakest} at {weakestScore} out of 100, and that is the one to protect so the account does not quietly drift back down. Lock in the renewal before you start the upsell conversation, because a healthy account lost at renewal costs more than the expansion you were going to sell it.",
+      "zh": "健康分 {score} 落在 excellent 档，这个账户该谈的是扩张，不是抢救。最弱的信号是 {weakest}（{weakestScore} / 100）—— 守住这一项，账户就不会悄悄退档。谈 upsell 之前先把 renewal 锁住，因为一个健康账户如果在续约时丢掉，损失比本来能卖出的那笔扩展收入还大。别把扩张机会留到下一个续约周期再谈。",
+      "params": {
+        "score": "{score}",
+        "weakest": "{weakest}",
+        "weakestScore": "{weakestScore}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "healthscore_critical",
+      "inputs": {
+        "productUsage": "7.5",
+        "nps": "4",
+        "supportTickets": "0.5",
+        "engagement": "8",
+        "contractValue": "6",
+        "weightPreset": "balanced"
+      }
+    },
+    {
+      "code": "healthscore_at_risk",
+      "inputs": {
+        "productUsage": "18.75",
+        "nps": "10",
+        "supportTickets": "1.25",
+        "engagement": "20",
+        "contractValue": "15",
+        "weightPreset": "balanced"
+      }
+    },
+    {
+      "code": "healthscore_monitor",
+      "inputs": {
+        "productUsage": "75",
+        "nps": "40",
+        "supportTickets": "5",
+        "engagement": "80",
+        "contractValue": "60",
+        "weightPreset": "balanced"
+      }
+    },
+    {
+      "code": "healthscore_excellent",
+      "inputs": {
+        "productUsage": "150",
+        "nps": "80",
+        "supportTickets": "10",
+        "engagement": "160",
+        "contractValue": "120",
+        "weightPreset": "balanced"
+      }
+    }
+  ]
+}

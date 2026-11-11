@@ -1,0 +1,109 @@
+{
+  "slug": "solopreneur-comp-banding-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Looking only at where the offer sits against the band midpoint is the trap: what actually decides whether you can hire is the candidate's market rate, the equity you can put on top of it, what a competitor pays for the same seat, and how fast you are willing to move. Aiming at the top of the band can itself be a warning sign, because it often means the hire has been waiting too long. Use this calculator to see where the offer really sits against P25, P50, and P75 before you decide whether to move on the number or on the timing.",
+      "zh": "只看报价落在 band 的哪个位置是陷阱：真正决定你能不能招到人的，是候选人的市场报价、你能在上面加多少 equity、同岗位竞品给多少，以及你愿意多快做决定。把自己定位在 band 顶端本身可能就是个警报 —— 它往往说明这个位子已经等太久了。先用这个计算器看清报价相对 P25 / P50 / P75 真实落在哪，再决定是调数字还是调节奏。它给不了你候选人手上还有哪些 offer，但它能告诉你：现在这个报价，在市场里到底算贵还是算便宜。"
+    },
+    "decision_recommendation": {
+      "en": "Act on the percentile, and know which offer you are making. (1) Below P25 you will very likely lose the candidate unless the equity or the mission carries it. (2) Between P25 and P75 is a reasonable range that works for most situations. (3) Above P75 only makes sense for a critical hire, or when the replacement has been open for more than six months. (4) Above P95 means you should step back and ask whether the role is still needed at all, or whether it should be split into two.",
+      "zh": "按分位决定动作，也要清楚你开的是哪一种 offer。(1) 低于 P25 极可能丢掉候选人，除非强 equity 或使命能撑住。(2) 25 到 75 百分位是合理区间，适合大多数情况。(3) 高于 75 百分位只在 critical hire、或者这个位子空缺超过 6 个月时才成立。(4) 高于 95 百分位就该回头重新评估这个岗位还有没有必要，或者干脆拆成两个岗。另外每一步动手之前，先确认这四个分位取的是同一个岗位、同一个地区、同一个 level 的数据 —— 拿别的岗位的分位来比，结论会整个反过来。"
+    },
+    "decision_constraint": {
+      "en": "Four assumptions move the real number away from this percentile. (1) The band is annualised base salary only, with no equity and no bonus: total compensation can sit 30 to 50 percent above it. (2) Different regions are not comparable, because a senior engineer in New York is not the same seat as a senior engineer in Bangalore. (3) Competitor raise data lags reality by six to twelve months, so the band may already be stale. (4) The timing of a counter-offer changes how much it actually costs you to lose the person.",
+      "zh": "有四个前提会把真实数字推离这个分位。第一，band 只算年化 base，不含 equity 和 bonus —— total comp 可能比它高出 30 到 50%。第二，不同区域不可比：纽约的 senior 和班加罗尔的 senior 不是同一个位子。第三，竞品的调薪数据滞后现实 6 到 12 个月，band 可能已经过期。第四，反要价的时机，会实质改变你失去这个人要付多少代价。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Attrition Cost Calculator] to price what replacing this hire would cost, run [Productivity Ramp Curve Calculator] to see how long the new person takes to pay back, and run [Fully-Loaded Employee Cost Calculator] to get the fully loaded cost of the seat rather than the base salary alone. Before you send the offer, verify the other competing offers actually on the table.",
+      "zh": "先跑 [离职成本计算器] 给「招不到就得替换」这件事定价，再跑 [生产力爬坡曲线计算器] 看新人多久能回本，最后跑 [全职员工成本计算器] 拿到这个位子的全负荷成本，而不是只看 base salary。offer 发出去之前，先确认候选人手上到底还有哪些 competing offer。"
+    }
+  },
+  "tips": [
+    {
+      "code": "comp_banding_below_p25",
+      "en": "An offer of {base} lands at P{pct} of the market band, below the P25 line, against a P50 of {p50} and a P75 of {p75}. That is where candidates walk away: unless strong equity or the mission carries the offer, you are likely to lose this person. Move to at least P25 before you spend more of the hiring process, and refresh the percentiles every year, because Pave, Levels.fyi, and Carta data drifts about five percent a year.",
+      "zh": "报价 {base} 落在市场分位的 P{pct}，在 P25 线以下（市场 P50 是 {p50}、P75 是 {p75}）。这正是候选人转身的位置：除非强 equity 或使命能撑住这个报价，否则大概率会丢人。在你继续投入招聘流程之前，先把报价拉到至少 P25；另外每年刷新一次分位数据 —— Pave / Levels.fyi / Carta 的数据一年大约漂 5%。",
+      "params": {
+        "pct": "{pct}",
+        "base": "{base}",
+        "p50": "{p50}",
+        "p75": "{p75}"
+      }
+    },
+    {
+      "code": "comp_banding_p25_to_p50",
+      "en": "An offer of {base} lands at P{pct}, in the P25 to P50 range against a P50 of {p50} and a P75 of {p75}. That is a defensible position below the median and works for most hires, but you are paying less than the market middle, so expect counter-offer pressure the moment the candidate's current employer makes a move. Refresh the percentiles every year, because Pave, Levels.fyi, and Carta data drifts about five percent a year.",
+      "zh": "报价 {base} 落在 P{pct}，处于 P25 到 P50 之间（市场 P50 是 {p50}、P75 是 {p75}）。这是市场中位偏下的合理位置，大多数招聘都能用，但你付得比市场中位数低 —— 候选人的现任雇主一旦出手，反要价压力会立刻上来。另外每年刷新一次分位数据 —— Pave / Levels.fyi / Carta 的数据一年大约漂 5%。",
+      "params": {
+        "pct": "{pct}",
+        "base": "{base}",
+        "p50": "{p50}",
+        "p75": "{p75}"
+      }
+    },
+    {
+      "code": "comp_banding_p50_to_p75",
+      "en": "An offer of {base} lands at P{pct}, between the P50 of {p50} and the P75 of {p75}. You are paying at or above the median and still short of the top quartile, which is the normal competitive range for most hires. Refresh the percentiles every year, because Pave, Levels.fyi, and Carta data drifts about five percent a year, and keep top-quartile retention as the real goal rather than the median.",
+      "zh": "报价 {base} 落在 P{pct}，介于 P50（{p50}）和 P75（{p75}）之间。你付得在中位数或以上，但还没到前四分位 —— 这是大多数招聘的正常竞争区间。另外每年刷新一次分位数据 —— Pave / Levels.fyi / Carta 的数据一年大约漂 5%；真正的目标是把留人做到前四分位，而不是停在市场中位数。",
+      "params": {
+        "pct": "{pct}",
+        "base": "{base}",
+        "p50": "{p50}",
+        "p75": "{p75}"
+      }
+    },
+    {
+      "code": "comp_banding_top_quartile",
+      "en": "An offer of {base} lands at P{pct}, at or above the P75 of {p75}, with the market median at {p50}. You are paying top-quartile money: expect it to hold retention, and treat it as an investment in ramp time rather than a cost. Refresh the percentiles every year, because Pave, Levels.fyi, and Carta data drifts about five percent a year, and check the other offers in play before you assume the money is what closed the candidate.",
+      "zh": "报价 {base} 落在 P{pct}，达到或超过 P75（{p75}），市场 P50 是 {p50}。你付的是前四分位的钱：留人效果会明显不一样，这笔钱应该当成对爬坡时间的投资，而不是成本。另外每年刷新一次分位数据 —— Pave / Levels.fyi / Carta 的数据一年大约漂 5%；在把功劳归给钱之前，先确认是不是还有别的 competing offer 在起作用。",
+      "params": {
+        "pct": "{pct}",
+        "base": "{base}",
+        "p50": "{p50}",
+        "p75": "{p75}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "comp_banding_below_p25",
+      "inputs": {
+        "role_title": "Senior Engineer",
+        "base_salary": "100000",
+        "market_p25": "130000",
+        "market_p50": "155000",
+        "market_p75": "185000"
+      }
+    },
+    {
+      "code": "comp_banding_p25_to_p50",
+      "inputs": {
+        "role_title": "Senior Engineer",
+        "base_salary": "140000",
+        "market_p25": "130000",
+        "market_p50": "155000",
+        "market_p75": "185000"
+      }
+    },
+    {
+      "code": "comp_banding_p50_to_p75",
+      "inputs": {
+        "role_title": "Senior Engineer",
+        "base_salary": "160000",
+        "market_p25": "130000",
+        "market_p50": "155000",
+        "market_p75": "185000"
+      }
+    },
+    {
+      "code": "comp_banding_top_quartile",
+      "inputs": {
+        "role_title": "Senior Engineer",
+        "base_salary": "190000",
+        "market_p25": "130000",
+        "market_p50": "155000",
+        "market_p75": "185000"
+      }
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "slug": "solopreneur-gpu-cloud-cost-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Looking only at the GPU hourly rate is the trap, because the rate is not the cost. What actually decides the bill is what the workload costs per month once idle time, data egress, and storage are counted, and how exposed you are to being locked into one vendor. The cheapest number on the page is not necessarily the cheapest way to run the job. Use this calculator to compare what you would really pay each month, so you are comparing workloads rather than sticker prices.",
+      "zh": "只看 GPU 的小时单价是陷阱，因为单价不等于成本。真正决定账单的是：算上闲置时间、数据流出和存储之后，你的 workload 每月实际花多少，以及你被锁在单一 vendor 上的风险有多大。页面上最便宜的那个数，不一定是跑这个活最划算的方式。用这个计算器比较每个月的真实支出 —— 你要比的是 workload，不是价目表。"
+    },
+    "decision_recommendation": {
+      "en": "Judge the offer against the market, not against your current vendor. (1) A rate more than 30 percent below the median is a warning: look for hidden costs such as data egress, API gateway fees, and unreliable preemptible capacity. (2) Within 20 percent of the median is the safe choice. (3) More than 30 percent above the median is a premium you pay only when an SLA or a compliance requirement forces it. (4) Spreading across several vendors lowers lock-in but raises operational complexity, so treat it as a deliberate trade rather than a default.",
+      "zh": "拿报价去和市场比，而不是和你现在的 vendor 比。(1) 低于中位数 30% 以上要警惕：查隐藏成本 —— data egress、API 网关费、抢占式容量不可靠。(2) 在中位数 ±20% 以内是安全选型。(3) 高于中位数 30% 是溢价，只在 SLA 或合规硬性要求时付。(4) 多 vendor 分散能降低锁定风险，但会增加运维复杂度 —— 这是要有意识做的取舍，不是默认做法。另外比价之前先确认各家报的是同一块卡、同一档计价方式、同一套存储与网络费用，否则这个中位数本身就没有可比性。"
+    },
+    "decision_constraint": {
+      "en": "Four things move the real cost away from this estimate. (1) Vendors do not price the same way: some bill per second, some per hour, some on a reserved basis, so two quotes can look comparable and be different contracts. (2) GPU types are not interchangeable, because an A100, an H100, and an L40S do the same job at very different speeds and prices. (3) Data egress fees can quietly eat the savings that made the cheap vendor look cheap. (4) The frequency of spot preemption decides whether a preemptible price is even usable for a production workload.",
+      "zh": "有四件事会把真实成本推离这个估算。(1) 各 vendor 的计价方式不一样：有的按秒、有的按小时、有的走预留，同两个报价看起来可比，背后的合同却不是一回事。(2) GPU 型号不可互换 —— A100、H100、L40S 干同一件事的速度和价格差得很远。(3) 数据流出费会悄悄吃掉那些让便宜 vendor 显得便宜的节省。(4) 抢占的频率决定了这个抢占价对你的生产负载到底能不能用。"
+    },
+    "decision_next_tool": {
+      "en": "Run [OpenAI Token Calculator] to compare the API route against running your own GPUs, run [AI Training Cost Estimator] to price the full training cycle rather than a single hour, and run [Claude API Cost Calculator] to see the cost curve of the model you actually depend on. Before you commit, run a 30-day proof of concept to verify the vendor's SLA against your own workload.",
+      "zh": "先跑 [OpenAI Token 计算器] 看走 API 和自托管 GPU 两条路的成本对比，再跑 [AI 训练成本估算器] 算完整训练周期而不是单个小时，最后跑 [Claude API 成本计算器] 看你真正依赖的那个模型的成本曲线。真正定下来之前，做一轮 30 天的 proof-of-concept，拿 vendor 承诺的 SLA 跟你自己的 workload 对一次。"
+    }
+  },
+  "tips": [
+    {
+      "code": "gpu_cloud_on_demand",
+      "en": "On-demand at {rate} an hour for {gpus} GPUs running {hours} hours a day comes to {monthly} a month. On-demand is the safe default: nothing is interrupted and you can stop whenever you want. The flexibility is not free, so if the workload is steady rather than spiky, compare it against reserved before you settle.",
+      "zh": "按需付费每小时 {rate}、{gpus} 张 GPU、每天跑 {hours} 小时，折合每月 {monthly}。按需是稳妥的默认值：不会被抢占，随时可以停。灵活不是白给的，所以如果负载是平稳而不是波动的，先跟预留档比一比再定。",
+      "params": {
+        "monthly": "{monthly}",
+        "rate": "{rate}",
+        "hours": "{hours}",
+        "gpus": "{gpus}"
+      }
+    },
+    {
+      "code": "gpu_cloud_spot",
+      "en": "Spot at {rate} an hour for {gpus} GPUs running {hours} hours a day costs {monthly} a month, and that discount only survives if the machines are not preempted. Keep production workloads on on-demand or reserved, and use spot for batch jobs, training runs, and anything with a checkpoint you can resume.",
+      "zh": "抢占式每小时 {rate}、{gpus} 张 GPU、每天跑 {hours} 小时，每月 {monthly} —— 但这个折扣的前提是机器不被抢占。生产负载请留在按需或预留档；抢占式留给批处理、训练，以及任何能从检查点续跑的任务。",
+      "params": {
+        "monthly": "{monthly}",
+        "rate": "{rate}",
+        "hours": "{hours}",
+        "gpus": "{gpus}"
+      }
+    },
+    {
+      "code": "gpu_cloud_reserved",
+      "en": "A reserved commitment at {rate} an hour for {gpus} GPUs running {hours} hours a day comes to {monthly} a month, and capacity is guaranteed for the term. Reserved is the right call when the workload genuinely runs continuously: check that the contract term matches how long the job really runs before you sign it.",
+      "zh": "预留承诺每小时 {rate}、{gpus} 张 GPU、每天跑 {hours} 小时，每月 {monthly}，在承诺期内容量有保障。当负载确实是持续不断的时候，预留才是对的选择；但签字之前先确认合同期限和你这个任务真实运行的时长对得上。",
+      "params": {
+        "monthly": "{monthly}",
+        "rate": "{rate}",
+        "hours": "{hours}",
+        "gpus": "{gpus}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "gpu_cloud_on_demand",
+      "inputs": {
+        "provider": "runpod",
+        "gpuType": "A100",
+        "gpuCount": "4",
+        "hoursPerDay": "8",
+        "pricingTier": "on-demand",
+        "includeStorage": "yes"
+      }
+    },
+    {
+      "code": "gpu_cloud_spot",
+      "inputs": {
+        "provider": "runpod",
+        "gpuType": "A100",
+        "gpuCount": "4",
+        "hoursPerDay": "8",
+        "pricingTier": "spot",
+        "includeStorage": "yes"
+      }
+    },
+    {
+      "code": "gpu_cloud_reserved",
+      "inputs": {
+        "provider": "runpod",
+        "gpuType": "A100",
+        "gpuCount": "4",
+        "hoursPerDay": "8",
+        "pricingTier": "reserved",
+        "includeStorage": "yes"
+      }
+    }
+  ]
+}

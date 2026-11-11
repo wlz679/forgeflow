@@ -1,0 +1,89 @@
+{
+  "slug": "solopreneur-employee-cost-calculator",
+  "layers": {
+    "decision_goal": {
+      "en": "Reading the base salary on its own is a trap. What actually decides the outcome is whether the fully-loaded cost per month of output sits below the market rate for that work, and whether the ramp-up time is worth paying for. A cost ratio above 3x between fully-loaded cost and base salary means hidden costs are missing from the inputs you entered. Use this tool to price what a hire really costs per productive month, not what the offer letter says.",
+      "zh": "只看 base salary 是个陷阱。真正决定结论的是两件事：完全负荷成本摊到每个月的产出，是否低于这份工作的市场价；以及 ramp time 这段时间要不要由你来买单。如果完全负荷成本与 base salary 的比值超过 3 倍，说明你的输入里漏算了隐性成本。用这个工具算「每产出一个有效月份，雇一个人到底要花多少钱」，而不是念一遍 offer letter 上的数字。"
+    },
+    "decision_recommendation": {
+      "en": "Read the cost ratio band and act on it. (1) Above 3x: hidden costs are missing from your inputs, namely benefits, paid time off, equipment and training, so rebuild the inputs before you take the decision any further. (2) Between 2x and 3x: the ramp-time assumption is what needs a second look. (3) Below 2x: a sound band, so hire. And for the full-time versus contractor call itself: when the fully-loaded cost runs above $15,000 a month and the ramp takes more than 6 months, run a 3-6 month contractor engagement first.",
+      "zh": "先看完全负荷成本倍数落在哪一档，再决定动作。(1) 高于 3 倍：输入里一定漏了隐性成本 —— 福利、带薪休假、设备、培训 —— 先把输入重新算一遍，再谈下一步。(2) 2 倍到 3 倍之间：要重新审视的是 ramp time 的假设。(3) 低于 2 倍：属于合理区间，可以招。至于要不要用全职：完全负荷成本每月超过 $15,000、而 ramp 又超过 6 个月时，先签 3 到 6 个月的 contractor。"
+    },
+    "decision_constraint": {
+      "en": "Three assumptions move the real number away from this estimate. (1) The gap between the ramp time you assumed and the ramp time you actually get is often 2-3x, and the number you start with is the optimistic one. (2) Hidden costs, namely paid time off, equipment, training and management overhead, may or may not sit inside the inputs you entered. (3) A contractor rate cannot be annualised across 12 months as if it were a salary: there is no paid time off and no benefits, but the billable rate sits 1.5-2x higher.",
+      "zh": "有三个假设会把真实数字推离这个估算。第一，假设的 ramp time 和真实的 ramp time 常常差 2 到 3 倍，而且一开始填的那个数偏乐观。第二，隐性成本 —— 带薪休假、设备、培训、管理 overhead —— 未必在你填的输入里。第三，contractor 的费率不能像 base salary 那样按 12 个月年化：它没有带薪休假、没有福利，但它的计费费率要高 1.5 到 2 倍。这三条假设都不在计算器的公式里，只能靠你对岗位的了解补上。"
+    },
+    "decision_next_tool": {
+      "en": "Run [Productivity Ramp Curve Calculator] to see the ramp curve itself, because that curve decides how many months of salary you are paying for output. Run [Attrition Cost Calculator] to price the full lifecycle cost instead of one year of it. Before you negotiate a full-time offer, run [Freelance Rate Calculator] for the market reference rate. And before you decide, check that the offer breaks the fully-loaded cost down line by line.",
+      "zh": "先跑 [生产力爬坡曲线计算器] 看 ramp 曲线本身 —— 这条曲线决定你要为产出付多少个月的工资。再跑 [离职成本计算器]，算的是全生命周期成本，而不是一年的成本。谈全职 offer 之前，先跑 [自由职业费率计算器] 拿一个市场参考价。拍板之前，还要确认 offer 里把完全负荷成本逐项列清了。"
+    }
+  },
+  "tips": [
+    {
+      "code": "employee_cost_lean",
+      "en": "Budget rule of thumb: total employee cost = base salary × {multiplier} for this role. That sits inside the 1.2-1.8x band that is typical for full-time staff, so you can budget at the true multiplier instead of rounding up to 1.7x, but keep onboarding and the productivity ramp in the plan because they are not inside the salary.",
+      "zh": "预算的经验法则：这个岗位的总员工成本 = base salary × {multiplier}。这个倍数落在全职岗位常见的 1.2-1.8x 区间内，所以按真实倍数做预算就行，不必再往上取整到 1.7x —— 但入职成本和生产力爬坡期要单独排进计划，因为它们不在这份薪资里。",
+      "params": {
+        "multiplier": "{multiplier}"
+      }
+    },
+    {
+      "code": "employee_cost_standard",
+      "en": "Budget rule of thumb: total employee cost = base salary × {multiplier} for this role. Round up to 1.7x when planning headcount budgets, so the budget absorbs benefits, taxes, onboarding and the productivity ramp instead of running out in the middle of the first quarter.",
+      "zh": "预算的经验法则：这个岗位的总员工成本 = base salary × {multiplier}。做人力预算时往上取到 1.7x，让这笔预算把福利、税费、入职和生产力爬坡期都吃下去，而不是在第一个季度中途就花光。",
+      "params": {
+        "multiplier": "{multiplier}"
+      }
+    },
+    {
+      "code": "employee_cost_high",
+      "en": "Budget rule of thumb: total employee cost = base salary × {multiplier} for this role. That is above the 1.7x most headcount plans assume, so budget at {multiplier} rather than at 1.7x and use the difference to cover benefits, taxes, onboarding and the productivity ramp. Review the overhead and benefits ratio before you sign, because a multiplier this high usually means one of those lines is bigger than you assumed.",
+      "zh": "预算的经验法则：这个岗位的总员工成本 = base salary × {multiplier}。这已经高过多数人力预算默认的 1.7x，所以按 {multiplier} 做预算，而不是按 1.7x，多出来的部分用来覆盖福利、税费、入职和生产力爬坡期。签字之前先复查 overhead 与福利占比 —— 倍数这么高，通常意味着其中某一项比你以为的大。",
+      "params": {
+        "multiplier": "{multiplier}"
+      }
+    },
+    {
+      "code": "employee_cost_excessive",
+      "en": "Budget rule of thumb: total employee cost = base salary × {multiplier} for this role. At this level the 1.7x rule of thumb no longer describes the role: {multiplier} of base salary means hidden costs are missing from the inputs, namely benefits, paid time off, equipment and training. Rebuild the fully-loaded number line by line, and budget onboarding and the productivity ramp on top of what is left.",
+      "zh": "预算的经验法则：这个岗位的总员工成本 = base salary × {multiplier}。到这个程度，1.7x 那条经验法则已经描述不了这个岗位：{multiplier} 倍的 base salary 说明输入里漏了隐性成本 —— 福利、带薪休假、设备、培训。把完全负荷成本逐项重算一遍，再在剩下的基础上加上入职和生产力爬坡期的预算。",
+      "params": {
+        "multiplier": "{multiplier}"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "code": "employee_cost_lean",
+      "inputs": {
+        "annualSalary": "0",
+        "benefitsPercentage": "0",
+        "location": "us"
+      }
+    },
+    {
+      "code": "employee_cost_standard",
+      "inputs": {
+        "annualSalary": "20000",
+        "benefitsPercentage": "7.5",
+        "location": "us"
+      }
+    },
+    {
+      "code": "employee_cost_high",
+      "inputs": {
+        "annualSalary": "160000",
+        "benefitsPercentage": "60",
+        "location": "us"
+      }
+    },
+    {
+      "code": "employee_cost_excessive",
+      "inputs": {
+        "annualSalary": "400000",
+        "benefitsPercentage": "150",
+        "location": "us"
+      }
+    }
+  ]
+}

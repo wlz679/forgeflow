@@ -57,7 +57,7 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var csat = cnn(Number(inputs.csat_pct) || 0);\n  var rr = cnn(Number(inputs.response_rate) || 0);\n  var n = cnn(Number(inputs.sample_size) || 0);\n  var tgt = cnn(Number(inputs.target_csat) || 0);\n  var m = n > 0 ? 1.96 * Math.sqrt((csat/100) * (1 - csat/100) / n) * 100 : 0;\n  var ciLow = csat - m;\n  var ciHigh = csat + m;\n  var gap = tgt - csat;\n  var band = csat >= 90 ? 'Excellent' : csat >= 80 ? 'Good' : csat >= 70 ? 'Warning' : 'Critical';\n  var emoji = csat >= 90 ? '🟢' : csat >= 80 ? '🟡' : csat >= 70 ? '🟠' : '🔴';\n  var ifCsat = Math.min(100, csat + 3);\n  var ifBand = ifCsat >= 90 ? 'Excellent' : ifCsat >= 80 ? 'Good' : ifCsat >= 70 ? 'Warning' : 'Critical';\n  var ifEmoji = ifCsat >= 90 ? '🟢' : ifCsat >= 80 ? '🟡' : ifCsat >= 70 ? '🟠' : '🔴';\n  var ifM = n > 0 ? 1.96 * Math.sqrt((ifCsat/100) * (1 - ifCsat/100) / n) * 100 : 0;\n  var rrWarning = rr < 20 ? ' · ⚠️ Response rate <20% = biased sample' : '';\n  return [\n    '🩺 CSAT Health: ' + emoji + ' ' + band + ' (' + csat.toFixed(1) + '% CSAT · ' + m.toFixed(1) + 'pp margin · ' + rr.toFixed(1) + '% response rate)',\n    '📊 Snapshot: ' + n.toLocaleString() + ' responses · 95% CI [' + ciLow.toFixed(1) + '%, ' + ciHigh.toFixed(1) + '%] · target ' + tgt.toFixed(1) + '% · gap ' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp' + rrWarning,\n    '🔄 What-If: if CSAT climbs to ' + ifCsat.toFixed(1) + '% (+3pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and margin tightens to ' + ifM.toFixed(1) + 'pp',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',\n    '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',\n    '💡 Tip: Response rate <20% = biased sample (only happy/angry respond); incentivize responses with post-resolution email + optional micro-survey.',\n    `\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 客户真实满意度足够支撑 NRR ≥ 110%（健康扩张）吗？还是表面好看实际是低响应样本假象？\n• 🧭 Recommendation: 看 2 个数：(1) **响应率 ≥ 30%** 才信 CSAT 数字；(2) **目标 gap ≤ 0pp** + **过去 3 月趋势 ≤ -2pp** 才算稳定。任一不满足 → 不应基于 CSAT 单独决策，需结合 NRR / Churn 验证。\n• 🧭 Key Uncertainty: 响应率 < 20% = 严重有偏样本（只有最满意/最愤怒的人回），CSAT 实际可能是 ±10pp 真值；CSAT 是滞后指标（看上一季度体验），不代表未来留存。\n• 🧭 Next Action: 立刻检查 (a) 上月响应率 ≥ 30% 吗？(b) 目标 gap 是多少？(c) 最近 3 月 NRR 趋势是否扩张？任一不通过 → 不扩大 ARR 投入，先做留存。`\n  ];\n} return run(inputs, pick, fill);",
+    customFn: "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {\n  var csat = cnn(Number(inputs.csat_pct) || 0);\n  var rr = cnn(Number(inputs.response_rate) || 0);\n  var n = cnn(Number(inputs.sample_size) || 0);\n  var tgt = cnn(Number(inputs.target_csat) || 0);\n  var m = n > 0 ? 1.96 * Math.sqrt((csat/100) * (1 - csat/100) / n) * 100 : 0;\n  var ciLow = csat - m;\n  var ciHigh = csat + m;\n  var gap = tgt - csat;\n  var band = csat >= 90 ? 'Excellent' : csat >= 80 ? 'Good' : csat >= 70 ? 'Warning' : 'Critical';\n  var emoji = csat >= 90 ? '🟢' : csat >= 80 ? '🟡' : csat >= 70 ? '🟠' : '🔴';\n  var ifCsat = Math.min(100, csat + 3);\n  var ifBand = ifCsat >= 90 ? 'Excellent' : ifCsat >= 80 ? 'Good' : ifCsat >= 70 ? 'Warning' : 'Critical';\n  var ifEmoji = ifCsat >= 90 ? '🟢' : ifCsat >= 80 ? '🟡' : ifCsat >= 70 ? '🟠' : '🔴';\n  var ifM = n > 0 ? 1.96 * Math.sqrt((ifCsat/100) * (1 - ifCsat/100) / n) * 100 : 0;\n  var rrWarning = rr < 20 ? ' · ⚠️ Response rate <20% = biased sample' : '';\n  var tipParams = { csat: csat.toFixed(1), target: tgt.toFixed(1), responseRate: rr.toFixed(1), sampleSize: n.toFixed(0), margin: m.toFixed(1) };\n  var tipJson = rr < 20 ? JSON.stringify({ code: 'csat_biased_sample', params: tipParams }) : csat >= 90 ? JSON.stringify({ code: 'csat_excellent', params: tipParams }) : csat >= 80 ? JSON.stringify({ code: 'csat_good', params: tipParams }) : csat >= 70 ? JSON.stringify({ code: 'csat_warning', params: tipParams }) : JSON.stringify({ code: 'csat_critical', params: tipParams });\n  return [\n    '🩺 CSAT Health: ' + emoji + ' ' + band + ' (' + csat.toFixed(1) + '% CSAT · ' + m.toFixed(1) + 'pp margin · ' + rr.toFixed(1) + '% response rate)',\n    '📊 Snapshot: ' + n.toLocaleString() + ' responses · 95% CI [' + ciLow.toFixed(1) + '%, ' + ciHigh.toFixed(1) + '%] · target ' + tgt.toFixed(1) + '% · gap ' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp' + rrWarning,\n    '🔄 What-If: if CSAT climbs to ' + ifCsat.toFixed(1) + '% (+3pp), band moves to ' + ifEmoji + ' ' + ifBand + ' and margin tightens to ' + ifM.toFixed(1) + 'pp',\n    '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',\n    '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',\n    '💡 Tip: ' + tipJson\n  ];\n} return run(inputs, pick, fill);",
   },
   generate(inputs) {
     const csat = clampNonNegative(Number(inputs.csat_pct) || 0);
@@ -74,19 +74,36 @@ const engine: ToolEngine = {
     const ifM = marginOfError(ifCsat, n);
     const gapSign = gap >= 0 ? '+' : '';
     const rrWarning = rr < 20 ? ' · ⚠️ Response rate <20% = biased sample' : '';
+    // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 下面 Health 那套 band 边界 + 响应率 20% 阈值，
+    //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
+    const tipParams = {
+      csat: csat.toFixed(1),
+      target: target.toFixed(1),
+      responseRate: rr.toFixed(1),
+      sampleSize: n.toFixed(0),
+      margin: (n > 0 ? m : 0).toFixed(1),
+    };
+    const tipJson =
+      rr < 20
+        ? JSON.stringify({ code: 'csat_biased_sample', params: tipParams })
+        : csat >= HEALTH_BANDS.excellent.threshold
+        ? JSON.stringify({ code: 'csat_excellent', params: tipParams })
+        : csat >= HEALTH_BANDS.good.threshold
+        ? JSON.stringify({ code: 'csat_good', params: tipParams })
+        : csat >= HEALTH_BANDS.warning.threshold
+        ? JSON.stringify({ code: 'csat_warning', params: tipParams })
+        : JSON.stringify({ code: 'csat_critical', params: tipParams });
     return [
       '🩺 CSAT Health: ' + bandInfo.label + ' (' + fmtPct(csat) + ' CSAT · ' + m.toFixed(1) + 'pp margin · ' + fmtPct(rr) + ' response rate)',
       '📊 Snapshot: ' + fmtMoney(n) + ' responses · 95% CI [' + ci.low.toFixed(1) + '%, ' + ci.high.toFixed(1) + '%] · target ' + fmtPct(target) + ' · gap ' + gapSign + gap.toFixed(1) + 'pp' + rrWarning,
       '🔄 What-If: if CSAT climbs to ' + fmtPct(ifCsat) + ' (+3pp), band moves to ' + HEALTH_BANDS[ifBand].label + ' and margin tightens to ' + ifM.toFixed(1) + 'pp',
       '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',
       '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',
-      '💡 Tip: Response rate <20% = biased sample (only happy/angry respond); incentivize responses with post-resolution email + optional micro-survey.',
-      // P151 batch2: upgraded L5 content (≥50 chars per section) — supersedes P140f-3 shorter version
-      '\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 CSAT score 是陷阱，**核心问题是"score 是否反映真实问题 + response rate + 客户分群"**。单一 score 误导（顶级客户低分 vs 低价值客户高分）。\n• 🧭 Recommendation: (1) **CSAT < 60%** → 系统性问题，立即 audit top 3 痛点（FAQ / 流程 / 产品）；(2) **60-75%** → 优化 contact reason 流程 + agent training；(3) **75-85%** → 维护 + 监控 cohort 漂移；(4) **> 85%** → 扩张投入 brand / referral。\n• 🧭 Key Uncertainty: (1) response rate 影响 score 分布（只 10% 客户响应会 bias）；(2) 不同 segment 期望值不同（enterprise > SMB）；(3) 季节性波动（holiday season 自然低）；(4) channel 差异（chat vs email CSAT 不可比）。\n• 🧭 Next Action: (a) 跑 [First Response Time Calculator] 看响应延迟影响；(b) 跑 [Resolution Time Calculator] 看解决时长；(c) 跑 [Support Capacity Planning Calculator] 看 staffing 瓶颈；(d) 决策前 segment 客户分群对比 CSAT。',
+      '💡 Tip: ' + tipJson,
     ];
   },
   staticExamples: [
-    '🩺 CSAT Health: 🟡 Good (87.0% CSAT · 4.7pp margin · 35.0% response rate)\n📊 Snapshot: 200 responses · 95% CI [82.3%, 91.7%] · target 90.0% · gap -3.0pp\n🔄 What-If: if CSAT climbs to 90.0% (+3pp), band moves to 🟢 Excellent and margin tightens to 4.2pp\n⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need 3.0pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT\n🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS\n💡 Tip: Response rate <20% = biased sample (only happy/angry respond); incentivize responses with post-resolution email + optional micro-survey.\n\n🧭 Decision Recommendation\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🧭 Decision Question: 单纯看 CSAT score 是陷阱，**核心问题是"score 是否反映真实问题 + response rate + 客户分群"**。单一 score 误导（顶级客户低分 vs 低价值客户高分）。\n• 🧭 Recommendation: (1) **CSAT < 60%** → 系统性问题，立即 audit top 3 痛点（FAQ / 流程 / 产品）；(2) **60-75%** → 优化 contact reason 流程 + agent training；(3) **75-85%** → 维护 + 监控 cohort 漂移；(4) **> 85%** → 扩张投入 brand / referral。\n• 🧭 Key Uncertainty: (1) response rate 影响 score 分布（只 10% 客户响应会 bias）；(2) 不同 segment 期望值不同（enterprise > SMB）；(3) 季节性波动（holiday season 自然低）；(4) channel 差异（chat vs email CSAT 不可比）。\n• 🧭 Next Action: (a) 跑 [First Response Time Calculator] 看响应延迟影响；(b) 跑 [Resolution Time Calculator] 看解决时长；(c) 跑 [Support Capacity Planning Calculator] 看 staffing 瓶颈；(d) 决策前 segment 客户分群对比 CSAT。',
+    '🩺 CSAT Health: 🟡 Good (87.0% CSAT · 4.7pp margin · 35.0% response rate)\n📊 Snapshot: 200 responses · 95% CI [82.3%, 91.7%] · target 90.0% · gap -3.0pp\n🔄 What-If: if CSAT climbs to 90.0% (+3pp), band moves to 🟢 Excellent and margin tightens to 4.2pp\n⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need 3.0pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT\n🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS\n💡 Tip: {"code":"csat_good","params":{"csat":"87.0","target":"90.0","responseRate":"35.0","sampleSize":"200","margin":"4.7"}}',
   ],
   faq: [
     { q: 'What is CSAT?', a: 'CSAT (Customer Satisfaction Score) is the percentage of customers who rate their support interaction positively (typically 4 or 5 on a 5-point scale). It is a per-interaction metric — distinct from NPS, which measures relationship.' },
@@ -122,12 +139,12 @@ const engine: ToolEngine = {
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验
   // 内容镜像 Phase 1 csat 🧭 Decision Recommendation 4 子段 + ADR-0001 决策逻辑
   playbook: {
-    goal: '用户该不该信任自己的 CSAT 数字作为留存决策依据',
+    goal: '用户该不该把 CSAT 当成留存的先行指标去追，还是先修回复率与客户分群',
     input: 'csat_pct (0-100) + response_rate (0-100) + sample_size (≥0) + target_csat (0-100)',
     output: '健康带 🟢≥90 / 🟡80-90 / 🟠70-80 / 🔴<70 + 95% CI 边界 + 响应率偏差警告',
 
     constraint: '样本 < 100 视为低置信; 响应率 < 20% 视为有偏样本; CSAT 是滞后指标',
-    tool: 'Phase 1 csat-calculator.ts 🧭 Decision Recommendation (4 子段镜像)',
+    tool: '页面的「🧭 算完之后」决策区块（决策支持已由区块独占）',
     memory: 'CustomerGauge 2024 + Gainsight CS Benchmarks + Zendesk CX 2024',
   },
 };
