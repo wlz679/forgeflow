@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-11-09",
+  "lastUpdated": "2026-11-11",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1443,6 +1443,22 @@
           "maxOutput": "128K",
           "batchInput": 0.05,
           "batchOutput": 0.25
+        },
+        "claude-mythos-5-2": {
+          "input": 8,
+          "output": 40,
+          "name": "Claude Mythos 52",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "order": 29
+        },
+        "claude-fable-5-2": {
+          "input": 8,
+          "output": 40,
+          "name": "Claude Fable 52",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "order": 30
         }
       }
     },
@@ -2034,6 +2050,14 @@
           "family": "legacy",
           "contextWindow": "131K",
           "order": 68
+        },
+        "gemini-4-carbon": {
+          "input": 2,
+          "output": 10,
+          "name": "Gemini 4 Carbon",
+          "family": "gem4",
+          "contextWindow": "1M",
+          "order": 69
         }
       }
     },
