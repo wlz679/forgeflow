@@ -15,6 +15,10 @@
     "en": "Break-Even Calculator — Fixed Costs + Time to Breakeven",
     "zh": "盈亏平衡计算器 — 测算成本、收入与回本时间"
   },
+  "solopreneur-churn-rate-calculator": {
+    "en": "Churn Rate Calculator — Revenue Churn Tracker",
+    "zh": "订阅流失率计算器 — 免费追踪客户与收入流失"
+  },
   "solopreneur-comp-banding-calculator": {
     "en": "Compensation Banding Calculator — Market Band",
     "zh": "薪酬区间计算器 — 对比薪资百分位与市场档位"
@@ -25,7 +29,7 @@
   },
   "solopreneur-course-pricing-calculator": {
     "en": "Course Pricing Calculator — Enrollment + Revenue Plan",
-    "zh": "课程定价计算器 — 按价格与招生量预测收入"
+    "zh": "课时费计算器 — 按价格与招生量预测收入"
   },
   "solopreneur-email-list-revenue-calculator": {
     "en": "Email List Revenue Calculator — Conversion Forecast",
@@ -35,13 +39,33 @@
     "en": "Equity Dilution Calculator — Post-Money Ownership",
     "zh": "股权稀释计算器 — 对比投前与投后持股"
   },
+  "solopreneur-freelance-rate-calculator": {
+    "en": "Freelance Rate Calculator — Project Rate Planner",
+    "zh": "独立开发者时薪计算器 — 按时薪与项目价测算"
+  },
   "solopreneur-freelance-tax-calculator": {
     "en": "Freelance Tax Calculator — Quarterly Set-Aside",
     "zh": "自由职业税计算器 — 预估税额与季度预留"
   },
+  "solopreneur-funnel-step-calculator": {
+    "en": "Multi-Stage Funnel Conversion Calculator",
+    "zh": "多阶段漏斗转化率计算器"
+  },
+  "solopreneur-gemini-api-cost-calculator": {
+    "en": "Google Gemini API Cost Calculator",
+    "zh": "Gemini API 成本计算器"
+  },
+  "solopreneur-hourly-vs-fixed-calculator": {
+    "en": "Hourly vs Fixed Rate Calculator — Freelancer Billing Method",
+    "zh": "自由职业者计费方式计算器 — 时薪vs固定报价"
+  },
   "solopreneur-kb-coverage-rate-calculator": {
     "en": "KB Coverage Rate Calculator — Deflection Tracker",
     "zh": "知识库覆盖率计算器 — 发现内容缺口与分流机会"
+  },
+  "solopreneur-logo-churn-rate-calculator": {
+    "en": "Logo Churn Rate Calculator — Retention",
+    "zh": "客户流失率计算器 — 订阅流失率 + 会员流失率 + 追踪客户流失与留存"
   },
   "solopreneur-mortgage-calculator": {
     "en": "Mortgage Calculator — Monthly Payment + Amortization",
@@ -54,6 +78,10 @@
   "solopreneur-project-profitability-calculator": {
     "en": "Project Profitability Calculator — Hourly Rate + Breakeven",
     "zh": "项目利润计算器 — 测算利润率、时薪与盈亏平衡"
+  },
+  "solopreneur-saas-pricing-planner": {
+    "en": "SaaS Pricing Planner — Margin + Revenue Model",
+    "zh": "SaaS 定价规划器 — 混合定价成本 + 服务套餐收入 + 免费测算套餐、毛利与收入"
   },
   "solopreneur-supplier-scorecard-calculator": {
     "en": "Supplier Scorecard Calculator — Quality + Cost Score",

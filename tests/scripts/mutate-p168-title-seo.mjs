@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-// P168 B3-2 —— title-seo-guard 的变异台子（6 条变异，每条只红一条断言）。
+// P168 B3-2 / B3-5 —— title-seo-guard + title-query-alignment-guard 的变异台子
+// （8 条变异，每条只红一条断言）。
 //
 // 为什么需要它
 // ------------
-// 守卫 tests/title-seo-guard.test.ts 有 6 条断言（①键齐全 ②长度 ③无年份/品牌
-// ④词组完整 ⑤en/zh 结构对齐 ⑥og:title 边界）。
+// 守卫 tests/title-seo-guard.test.ts 有 7 条断言（①键齐全 ②长度 ③无年份/品牌
+// ④词组完整 ⑤en/zh 结构对齐 ⑥og:title 边界 ⑦<title> 绑定），
+// tests/title-query-alignment-guard.test.ts 另有 1 条（★查询词命中）。
 // 「断言存在」不等于「断言承重」：判据写太松 ⇒ 真实缺陷抓不到；断言之间职责没切干净
 // ⇒ 一条变异污染多条 ⇒ 看红灯时分不清是哪条规则被破坏。
 // ⇒ 本台子把源文件**真的改坏**，看守卫是否红，并且要求**每条变异只红一条断言**
@@ -38,6 +40,10 @@ const TMP = join(ROOT, 'tmp');
 const SNAPSHOT = join(TMP, 'title-seo-harness-backup.json');
 const GUARD_REL = 'tests/title-seo-guard.test.ts';
 const GUARD = join(ROOT, GUARD_REL);
+// ⭐ P168 B3-5：新增「查询词 ↔ 标题」守卫（独立文件，职责不同 ⇒ 不能混进 title-seo-guard）
+//   ⇒ 台子必须**同时**跑两个守卫文件，否则 T8 变异不会被任何断言看见。
+const GUARD_REL_2 = 'tests/title-query-alignment-guard.test.ts';
+const GUARD_2 = join(ROOT, GUARD_REL_2);
 
 // ⭐ 还原目标清单：台子会临时改写的**每一个**文件都必须在这里 ——
 //   收尾的 sha256 逐字节校验是「这些文件一个都没被留下改动」的凭据。
@@ -209,7 +215,7 @@ function runGuard() {
   try {
     const out = execFileSync(
       'node',
-      ['node_modules/tsx/dist/cli.mjs', '--test', '--test-concurrency=1', GUARD_REL],
+      ['node_modules/tsx/dist/cli.mjs', '--test', '--test-concurrency=1', GUARD_REL, GUARD_REL_2],
       { encoding: 'utf8', cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] },
     );
     return { ok: true, out };
@@ -233,7 +239,10 @@ function failedAssertions(out) {
  * 用 ①…⑦ 标记定位，避免依赖顺序。
  */
 function guardAssertionNames() {
-  const src = readFileSync(GUARD, 'utf8');
+  const src = [GUARD, GUARD_2]
+    .filter((p) => existsSync(p))
+    .map((p) => readFileSync(p, 'utf8'))
+    .join('\n');
   const names = [];
   const re = /test\(\s*'((?:[^'\\]|\\.)*)'/g;
   let m;
@@ -347,6 +356,19 @@ const MUTATIONS = [
         s.replace(
           /<BaseLayout\b[^>]*\btitle=\{seoTitle\}/,
           (m) => m.replace('title={seoTitle}', 'title={toolTitle}'),
+        ),
+      );
+    },
+  },
+  {
+    id: 'T8',
+    desc: 'zh 的流失率 seoTitle 丢掉查询词「订阅流失率」⇒ 标题不再命中用户真实查询（排名进前 10 却 0 点击）',
+    marker: 'B3-5',
+    apply: () => {
+      patchTarget('src/i18n/locales/zh.json', (s) =>
+        s.replace(
+          '"tools.solopreneur-churn-rate-calculator.seoTitle": "订阅流失率计算器 — 免费追踪客户与收入流失"',
+          '"tools.solopreneur-churn-rate-calculator.seoTitle": "流失率计算器 — 免费追踪客户与收入流失"',
         ),
       );
     },
