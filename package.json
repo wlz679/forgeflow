@@ -11,7 +11,7 @@
     "build:full": "pnpm build:og && pnpm build",
     "prebuild": "pnpm check:i18n",
     "dev": "astro dev",
-    "build": "astro build && node scripts/indexnow-submit.mjs",
+    "build": "node scripts/ensure-git-history.mjs && astro build && node scripts/indexnow-submit.mjs",
     "preview": "astro preview",
     "indexnow:check": "node scripts/indexnow-submit.mjs --check",
     "sync": "node scripts/sync-pricing.mjs && node scripts/codegen-customfn.mjs && node scripts/codegen-examples.mjs",

@@ -41,7 +41,7 @@ const ART_REL = 'dist/sitemap-0.xml';
 const ART = join(ROOT, ART_REL);
 
 // 还原目标清单：台子会临时改写的每一个文件都必须在这里
-const TARGETS = [SRC_REL, ART_REL];
+const TARGETS = [SRC_REL, ART_REL, 'package.json'];
 
 const NEGATIVE = process.argv.includes('--negative-control');
 const onlyArg = process.argv.find((a) => /^M\d+(,M\d+)*$/.test(a)) || '';
@@ -192,7 +192,7 @@ function guardAssertionNames() {
 }
 
 const ASSERTIONS = guardAssertionNames();
-const MARK = { artifact: '产物层', address: '寻址层', truth: '真相源' };
+const MARK = { artifact: '产物层', address: '寻址层', truth: '真相源', build: '构建环境' };
 
 function assertName(marker) {
   const hit = ASSERTIONS.filter((n) => n.indexOf(marker) >= 0);
@@ -265,6 +265,23 @@ const MUTATIONS = [
     expect: MARK.truth,
     apply: applyM4,
   },
+  {
+    id: 'M5',
+    desc: '构建层：把 ensure-git-history.mjs 从 build 脚本里摘掉（CF 浅克隆 ⇒ lastmod 全部退化成部署时间）',
+    layer: 'build',
+    expect: MARK.build,
+    apply: () => {
+      const p = join(ROOT, 'package.json');
+      const src = readFileSync(p, 'utf8');
+      const after = replaceOnce(src, 'node scripts/ensure-git-history.mjs && ', '');
+      try {
+        JSON.parse(after.replace(/^\uFEFF/, ''));
+      } catch (err) {
+        throw new Error('变异后 JSON 非法: ' + (err && err.message));
+      }
+      writeWithRetry(p, after);
+    },
+  },
 ];
 
 // 负对照：故意让两条断言同时红 ⇒ 台子必须报 RED-BUT-NOT-ISOLATED
@@ -309,6 +326,7 @@ for (const m of list) {
   restoreAll();
   const beforeSrc = readFileSync(SRC);
   const beforeArt = readFileSync(ART);
+  const beforePkg = readFileSync(join(ROOT, 'package.json'));
   try {
     m.apply();
   } catch (e) {
@@ -316,7 +334,8 @@ for (const m of list) {
     results.push({ id: m.id, status: 'INVALID' });
     continue;
   }
-  const changed = !readFileSync(SRC).equals(beforeSrc) || !readFileSync(ART).equals(beforeArt);
+  const changed = !readFileSync(SRC).equals(beforeSrc) || !readFileSync(ART).equals(beforeArt) ||
+    !readFileSync(join(ROOT, 'package.json')).equals(beforePkg);
   if (!changed) {
     console.log('\n' + m.id + ' INVALID — 文件内容没变');
     results.push({ id: m.id, status: 'INVALID' });

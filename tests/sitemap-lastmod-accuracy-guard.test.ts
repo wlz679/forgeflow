@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, existsSync, readdirSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { resolve, join, relative } from 'node:path';
 
 // ⭐ 本套件是 **build-dep**：断言 1 要读 dist/sitemap-0.xml（构建产物）。
@@ -150,3 +150,59 @@ test('P168 B3-6：⭐ 真相源 —— 工具页的 lastmod 必须等于「local
     '，但「locale + 工具注册表 + 引擎」中最新的 git 变更时间是 ' + new Date(expected).toISOString() +
     '⇒ 真相源不是 git 内容时间（退回 mtime 或构建时刻了？）');
 });
+// ============================================================
+// 断言 4（source-only）· 构建环境层 · 「真相源在构建环境里必须拿得到」
+// ============================================================
+test('P168 B3-6：⭐ 构建环境必须提供**完整**的 git 历史（浅克隆会让 lastmod 全部退化成部署时间）', () => {
+  // ⭐⭐ 为什么这条断言必须有（2026-11-11 **线上实测**）：
+  //   Cloudflare Pages 用 `--depth 1` 浅克隆 ⇒ 构建期 `git log -1 -- <path>`
+  //   对**每个**文件都只返回**同一个** HEAD 提交 ⇒ 线上 431 个 lastmod **全部相同**
+  //   ⇒ **每次部署依然是在告诉 Google「431 个页面全是新的」**。
+  //   ⭐ 而本地（完整历史）是 **5 种**取值 ⇒ **本地测绿 ≠ 线上生效**
+  //   ⇒ 这条断言必须**行为化**地验证「浅克隆能被补成完整克隆」，不能只 grep 字符串。
+  const pkg = JSON.parse(
+    readFileSync(resolve(root, 'package.json'), 'utf8').replace(/^\uFEFF/, ''),
+  ) as { scripts: Record<string, string> };
+  const build = pkg.scripts.build;
+  const ensureAt = build.indexOf('ensure-git-history');
+  const astroAt = build.indexOf('astro build');
+  assert.ok(ensureAt >= 0, 'package.json 的 build 脚本没有调用 ensure-git-history.mjs');
+  assert.ok(astroAt >= 0, 'package.json 的 build 脚本里找不到 astro build');
+  assert.ok(ensureAt < astroAt,
+    'ensure-git-history.mjs 必须在 astro build **之前**（sitemap 的 lastmod 是在构建期生成的）');
+  assert.ok(existsSync(resolve(root, 'scripts/ensure-git-history.mjs')), 'scripts/ensure-git-history.mjs 不存在');
+
+  // ---- 行为验证：真的造一个 --depth 1 的浅克隆，跑脚本，看它变完整 ----
+  const fx = resolve(root, 'tmp/b3-6-shallow-fixture');
+  rmSync(fx, { recursive: true, force: true });
+  mkdirSync(resolve(fx, 'work'), { recursive: true });
+  const gitOut = (args: string[], cwd: string) =>
+    execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  // 造一个 origin 仓库（2 个提交）
+  gitOut(['init', '-q', '--bare', 'origin.git'], fx);
+  gitOut(['init', '-q'], resolve(fx, 'work'));
+  writeFileSync(resolve(fx, 'work', 'a.txt'), 'v1\n');
+  gitOut(['add', '.'], resolve(fx, 'work'));
+  gitOut(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-m', 'c1'], resolve(fx, 'work'));
+  writeFileSync(resolve(fx, 'work', 'a.txt'), 'v2\n');
+  gitOut(['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '-am', 'c2'], resolve(fx, 'work'));
+  gitOut(['remote', 'add', 'origin', resolve(fx, 'origin.git')], resolve(fx, 'work'));
+  gitOut(['push', '-q', 'origin', 'HEAD:master'], resolve(fx, 'work'));
+  gitOut(['symbolic-ref', 'HEAD', 'refs/heads/master'], resolve(fx, 'origin.git'));
+  // 浅克隆（**file:// 才认 --depth**）
+  gitOut(['clone', '-q', '--depth', '1', 'file://' + resolve(fx, 'origin.git'), 'shallow'], fx);
+  const shallowDir = resolve(fx, 'shallow');
+  assert.equal(gitOut(['rev-parse', '--is-shallow-repository'], shallowDir).trim(), 'true',
+    '夹具没造出浅克隆 ⇒ 这条断言测不到东西');
+  // 跑脚本
+  execFileSync('node', [resolve(root, 'scripts/ensure-git-history.mjs')], { cwd: shallowDir, stdio: 'ignore' });
+  assert.equal(gitOut(['rev-parse', '--is-shallow-repository'], shallowDir).trim(), 'false',
+    'ensure-git-history.mjs 没有把浅克隆补成完整克隆 ⇒ 线上 lastmod 会全部退化成部署时间');
+
+  // ---- 失败开放：非 git 目录里跑必须 exit 0（否则无 git 的环境里构建会挂） ----
+  const notGit = resolve(fx, 'not-git');
+  mkdirSync(notGit, { recursive: true });
+  const r = spawnSync('node', [resolve(root, 'scripts/ensure-git-history.mjs')], { cwd: notGit, encoding: 'utf8' });
+  assert.equal(r.status, 0, '在非 git 目录里跑必须 exit 0（失败开放），实际 ' + r.status);
+});
+
