@@ -107,133 +107,18 @@ calc_out.<alias>.row.<key>    B-2 行码（工具独有，如 calc_out.mrr.row.p
 
 ⚠️ **alias 必须全局唯一**（守卫 G2 会断言 100 个工具的 alias 两两不同）。
 
-### 0.5 ⭐⭐ 三条判据 → 三个独立断言 + 一个产物层断言（一条变异只红一条）
+### 0.5 ⭐⭐ 五条 source-only 判据 → 五个独立断言 + 一个产物层断言（一条变异只红一条）
 
 | # | 判据 | 落在哪层 | 专属变异 |
 |---|---|---|---|
 | **G1** | locale 键的**译文质量**：zh ≠ en · 非占位 · **中文信息量 ≥ 英文 × 0.7** | source-only | P1 / P5 |
 | **G2** | **模板表守恒（双向）**：引擎源码声明的 token 集合 == locale 的 `calc_out.*` 键集合 | source-only | P2 / P4 |
 | **G3** | **两份实现一致**：`customFn` 声明的 token 集合 == `calculate()` 声明的 token 集合 | source-only | P3 |
-| **G2b** | **`# P168 批次 3 · B3-7：zh 页结果卡片英文化 —— 引擎吐「标签码 + 值」，zh 侧查 locale 拼装（试点 10 个工具）实施计划
-
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
-> ℹ️ **本计划 2026-11-12 起草 · 待执行。** 上游设计规格：`docs/superpowers/specs/2026-11-12-p168-b3-7-zh-calc-output-i18n-design.md`（commit `26f8f89`，已获用户逐节认可）。
-> ℹ️ **本计划对 spec 有一处「精确化补全」**（spec §2.3 的 B-2 行码尾部语法未定义完整）—— 见 **§0.3「对 spec 的唯一一处补全」**，其余完全按 spec 执行。
-
-**Goal:** 让 **10 个试点工具** 的 zh 页结果卡片（**首屏静态卡片 + 点「计算」后的动态卡片**）**全中文**，并建立一套可复用的机制与守卫，使后续铺开到其余 90 个引擎成为「重复劳动」而非「重新设计」。
-
-**Architecture:** 引擎不再吐英文句子，而是吐**「语义码 + 值」**：`$calc_out.label.starting_mrr|Starting MRR      $12,000`。服务端与客户端**共用同一份纯逻辑渲染器**（`src/lib/calc-output-i18n.ts`），服务端查 locale 渲静态卡片、客户端查**服务端注入的模板子集**渲动态卡片 ⇒ 不会出现「静态中文、动态英文」的分裂。**token 自带英文兜底** ⇒ locale 缺键时降级到英文而不是显示裸 token。
-
-**Tech Stack:** Node 20 · Astro 5 · `node:test` · 本仓库既有 `src/lib/decision-support.ts`（B3-4 的「建议码 + locale 模板」已验证形态）/ `src/lib/decision-tip-templates.ts` / `src/scripts/decision-support.client.ts` / `tests/_decision-support-fixture.ts`。
-
----
-
-## 0. 执行前必读
-
-### 0.1 本批要解决的缺陷（实测规模见 spec §0.2）
-
-zh 页（`/zh/<slug>/`）的**结果卡片**整段是英文：页面框架（导航 / 按钮 / 决策区块 / FAQ）是中文，卡片里的**计算结果正文却是英文** ⇒ 同一页两种语言。
-
-| # | 实测事实 | 依据 |
-|---|---|---|
-| 1 | **100/100** 引擎输出正文零中文 | `engine.generate()` + `staticExamples[0]` 全量跑 |
-| 2 | 产物层**静态卡片**：**75/100 页**仍有整行英文，共 **2048 行** | 解析 `dist/zh/*/index.html` 的 `#static-results` |
-| 3 | 产物层**动态卡片**：**100/100** 零中文；**1227/1905 行（64.4%）**整行英文 | 同上 |
-| 4 | **86.6%** 的残留行是「`标签: 值`」形态；不同标签 **1091 种**，≥2 工具共用的 **58 种** | 标签切分统计 |
-| 5 | ⭐⭐ `translateCalcOutput` **只在 SSR 静态路径（`:1394`）被调用**；客户端动态路径（`:2120~2185`）**根本没有翻译环节** | `src/pages/[lang]/[slug].astro` |
-| 6 | 「去数字后」的英文形状 **1451 种**，其中 **1233 种只出现一次** ⇒ 逐条字面量对照表不可行 | 归一化统计 |
-
-### 0.2 本批的边界（明确不做）
-
-| 不做 | 理由 |
-|---|---|
-| 铺开到其余 90 个引擎 | 形态未验证；本批只为验证形态 + 攒每引擎耗时数据 |
-| 清理 `translateCalcOutput` 的 129 个死键 | 与 `dead-i18n-keys-guard` 有依赖（§19.34 的「删键让别的门禁变红」教训） |
-| 改任何引擎的**计算逻辑 / 阈值 / 输入定义** | 宪法：本批只碰「输出形态」 |
-| 动 `staticExamples` 的生成机制 | `codegen-examples.mjs` 自动重生成即可 |
-
-### 0.3 ⭐ 对 spec 的唯一一处补全（spec §2.3 的 B-2 语法精确化）
-
-**spec 原文的 B-2 行码形态**：
-
-``
-• $calc_out.mrr.row.path_a|Path A — raise total contract value by {total} (same customers, larger deals) {total} $300,000 {note}
-``
-
-⚠️ **问题**：尾部 `{total} $300,000 {note}` 的**分隔规则没有定义完整**（`{note}` 后面跟什么？值与名怎么切？值里带空格怎么办？）。直接实现会产生歧义解析。
-
-⭐ **本计划把它精确化为：「紧跟 code 的可选 JSON params」**：
-
-``
-• $calc_out.mrr.row.path_a{"total":"$300,000"}|Path A — raise total contract value by $300,000 (same customers, larger deals)
-``
-
-| 段 | 含义 | 约束 |
-|---|---|---|
-| `$` | token 前缀（避开 locale 里已有的 **97 个 `{param}` 键**，两者正交） | 引擎输出里 `$` 只以 `$数字` 形式出现 ⇒ 零误判 |
-| `code` | 语义码 = **locale 键名**（渲染时去掉 `$` 即为键 ⇒ 一个正则同时完成「找 token」与「查键」，不需要第二张映射表） | ≥2 段、全小写、段内只允许 `[a-z0-9_]` |
-| `params` | 可选 JSON 对象（紧跟 code，**无空格**） | 值里不得出现 `{` `}`（正则用 `[^{}]*` 界定）；**可以**出现 \`|` |
-| `fallback` | \`|` 之后的英文原文（= 兜底文本） | **不得含 \`|`**（`beautifySections` 用 \`|` 分隔维度行）；**可以**含 `$数字`（金额）与 `{param}` |
-
-⭐ **为什么这样比 spec 原形态更好**：
-1. **无歧义** —— JSON 自带边界，不需要额外的分隔规则；
-2. **与仓库既有约定同源** —— B3-4 的 `decision_tip` 已经是「码 + JSON params」；
-3. **兜底仍可用** —— 删掉 en 键只会让页面退回**可读的英文**，不会显示裸 token；
-4. **params 与 fallback 的值一致** —— 引擎用同一个变量同时生成 `params.total` 与 fallback 里的 `$300,000` ⇒ 两侧不可能漂。
-
-⭐ **本批的最终 token 协议**：
-
-``
-TOKEN    := '$' CODE [ PARAMS ] [ '|' FALLBACK ]
-CODE     := [a-z][a-z0-9_]* ( '.' [a-z][a-z0-9_]* )+          -- ≥2 段
-PARAMS   := '{' JSON_OBJECT '}'                              -- 可选
-FALLBACK := 任意文本，不含 '|'
-
-正则：
-  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|])*))?/g
-``
-
-⚠️ **正则两处关键**：
-- `(?!\$[a-z])` —— 遇到 `$` **+ 字母**才停、遇到 `$` **+ 数字**继续吃 ⇒ `raise to $300,000` 不会被截断；
-- `[a-z][a-z0-9_]*` 起头 ⇒ `$12,000`（数字开头）**不匹配** ⇒ 金额安全。
-
-### 0.4 locale 键命名（三层）
-
-``
-calc_out.label.<key>          B-1 共享标签（跨工具共用，如 calc_out.label.starting_mrr）
-calc_out.section.<key>        章节标题（共享，如 calc_out.section.mrr_snapshot）
-calc_out.<alias>.row.<key>    B-2 行码（工具独有，如 calc_out.mrr.row.path_a）
-``
-
-⭐ **`<alias>` = 工具 slug 去掉 `solopreneur-` 前缀与 `-calculator` 后缀**，连字符换下划线：
-
-| 工具 slug | alias |
-|---|---|
-| `solopreneur-mrr-calculator` | `mrr` |
-| `solopreneur-rent-vs-buy-calculator` | `rent_vs_buy` |
-| `solopreneur-brrr-calculator` | `brrrr` |
-| `solopreneur-coupon-attribution-calculator` | `coupon_attribution` |
-| `solopreneur-saas-valuation-calculator` | `saas_valuation` |
-| `solopreneur-acv-calculator` | `acv` |
-| `solopreneur-funnel-step-calculator` | `funnel_step` |
-| `solopreneur-activation-rate-calculator` | `activation_rate` |
-| `solopreneur-stickiness-calculator` | `stickiness` |
-| `solopreneur-project-profitability-calculator` | `project_profitability` |
-
-⚠️ **alias 必须全局唯一**（守卫 G2 会断言 100 个工具的 alias 两两不同）。
-
-### 0.5 ⭐⭐ 三条判据 → 三个独立断言 + 一个产物层断言（一条变异只红一条）
-
-| # | 判据 | 落在哪层 | 专属变异 |
-|---|---|---|---|
-| **G1** | locale 键的**译文质量**：zh ≠ en · 非占位 · **中文信息量 ≥ 英文 × 0.7** | source-only | P1 / P5 |
-| **G2** | **模板表守恒（双向）**：引擎源码声明的 token 集合 == locale 的 `calc_out.*` 键集合 | source-only | P2 / P4 |
-| **G3** | **两份实现一致**：`customFn` 声明的 token 集合 == `calculate()` 声明的 token 集合 | source-only | P3 |
- 只出现在 token 或金额形态**（token 协议不被误用） | source-only | — |
+| **G2b** | **token 协议边界**：引擎源码里 `$` + 小写字母必须都是合法 token（`$` + 数字等非字母形态不在本判据范围） | source-only | — |
+| **G2c** | **token 字面量符合协议**：引擎源码里 token 的 code 合法（小写点分段）+ fallback 不含半角 `|` | source-only | — |
 | **G4** | **产物层无残留 token**：zh 试点页 `#static-results` 里不出现 `$calc_out.` | build-dep | — |
 
-⭐ **「zh 卡片全中文」为什么不需要第 5 条断言**：它由三条断言**链式推出** ——
+⭐ **「zh 卡片全中文」为什么不需要再加一条「无整行英文」的产物层断言**：它由三条断言**链式推出** ——
 **G2**（引擎吐的每个 token 都有 locale 键） + **G1**（每个键的 zh 是真译文、不是英文） + **G4**（没有 token 残留到产物） ⇒ **渲染出来的每一行都是中文**。
 ⇒ 所以**不要**再加一条「无整行英文」的产物层断言 —— 那会让「删一个 locale 键」这条变异同时红两条（G2 + 它），违反隔离纪律。
 
@@ -262,7 +147,7 @@ SSR 静态层：renderCalcOutput(英文/token 文本) → 中文   -- 爬虫看�
 
 - **宪法（AGENTS.md）**：本批**只碰「输出形态」** —— 不改任何引擎的**计算逻辑 / 阈值 / 输入定义**；不改 Roadmap / Phase；不新建工具。
 - **判据落在不变量上**：代理指标 ≠ 真效果（禁止用「有几种取值」「大概翻译了」当判据）。
-- **一个不变量只守一处**：G1/G2/G3/G4 各守一处，不重复设防。
+- **一个不变量只守一处**：G1/G2/G2b/G2c/G3/G4 各守一处，不重复设防。
 - **一条变异只红一条断言**：台子必须核对**失败断言的名字**，不只是「有东西红了」。
 - **产物层 ≠ 源码层**：源码层变异**不重建产物**（产物是陈旧的）⇒ 源码层变异只跑 source-only 断言。
 - **验收数字必须入库为可复算工具**（`tests/scripts/`，文件名**不能**带 `.test.ts`，否则 `walkTestSuites` 计数漂移）。
@@ -288,7 +173,7 @@ SSR 静态层：renderCalcOutput(英文/token 文本) → 中文   -- 爬虫看�
    ↓
 ⑥ node scripts/codegen-examples.mjs（重生成 staticExamples[0]）+ --check
    ↓
-⑦ 守卫 G1/G2/G3/G4 + 变异台子 P1~P5 + 体检脚本
+⑦ 守卫 G1/G2/G2b/G2c/G3/G4 + 变异台子 P1~P5 + 体检脚本
    ↓
 ⑧ 全量验收（tsc / 构建 / 守卫 / 台子 / 全量套件）
    ↓
@@ -517,14 +402,14 @@ export const renderCalcOutput: RenderCalcOutput = (text, templates) => {
 };
 ```
 
-### Step 4: 实现三条 source-only 判据（G1 / G2 / G2b / G3）
+### Step 4: 五条 source-only 判据（G1 / G2 / G2b / G2c / G3）
 
 ⭐ **为什么放在这一步**：Task 6~15 的引擎任务要靠 G2/G3 验收（跑守卫看它从红变绿）⇒ 守卫必须先于引擎任务存在。
 
-⚠️ **这四条判据已在 Task 1 落盘**（commit `8b12caa` —— 实现者顺带完成）⇒ **本 Task 不要重复追加**；本 Task 只追加自己的 2 条（alias / 模板子集）。下面这段是**已落盘的参考实现**，用于核对与补测：
+⚠️ **这五条判据已在 Task 1 落盘**（`8b12caa` 实现 + `48f5876` 评审修复轮：新增 **G2c**、G2b 改名）⇒ **本 Task 不要重复追加**；本 Task 只追加自己的 2 条（alias / 模板子集）。下面这段是**已落盘的参考实现**，用于核对与补测：
 
 ```ts
-// ═══ P168 B3-7 的四条 source-only 判据 ═══
+// ═══ P168 B3-7 的五条 source-only 判据 ═══
 // （本段需要的 import：readdirSync / readFileSync 来自 'node:fs'；resolve 来自 'node:path'；
 //   infoUnits / readLocale / MIN_ZH_TO_EN_RATIO / ROOT 来自 './_decision-support-fixture.ts'）
 
@@ -671,7 +556,9 @@ test('P168 B3-7 G3：customFn 声明的 token 集合 == calculate() 声明的 to
 ```
 
 ⚠️ **G3 的覆盖面**：断言「custom 引擎数 ≥ 10」—— 若某个引擎的布局被改到 splitEngineRegions 切不出来，会被静默跳过 ⇒ 用这条断言兜住。
-⚠️ **G2b 是独立的第四条断言**（spec §2.3 要求的「输出里除 '$' + 数字与 token 外，无其它 '$' 出现」）—— 它与 G2 是**不同不变量** ⇒ 单独一条测试。
+⚠️ **G2b 是独立的一条断言**（收窄后只守 token 协议边界：引擎源码里 '$' + 字母必须都是 token）—— 它与 G2 是**不同不变量** ⇒ 单独一条测试。
+⚠️ **G2c 是评审修复轮新增的一条断言**（`48f5876`）：token 字面量的 code 必须匹配 `^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$`，且 fallback 不含半角 `|` ⇒ 顺带堵住大写/畸形 code 与退化裸 `$calc_out`。
+⚠️ **G2c 的已知边界**（评审修复轮实测）：fallback 提取是**静态近似** —— 以**调用实参**形式给出的 fallback（如 `tk('code','A | B')`）**不被源码层检查** ⇒ 那一类由 runtime 净化兜底（`makeToken`/`tk` 把 fallback 里的半角 `|` 换成全角 `｜`）。
 ⚠️ **守卫文件里不要出现 `process.env.RUN_BUILD_TESTS`** —— 它必须保持 source-only（build-dep 判定靠这个字符串）。
 
 ### Step 5: 跑测试
@@ -694,7 +581,7 @@ git commit -m "feat(i18n): P168 B3-7 —— 计算结果 token 协议与纯逻�
 
 ---
 
-## Task 2: 服务端模板模块 + 三条 source-only 判据（G1 / G2 / G2b / G3）
+## Task 2: 服务端模板模块 + 两条追加断言（alias 唯一 / 模板子集）
 
 **Files:**
 - Create: `src/lib/calc-output-templates.ts`
@@ -1709,7 +1596,7 @@ git commit -m "test(i18n): P168 B3-7 —— 变异台子 P1~P5 + 体检脚本（
 
 ### Step 1: 写文档
 
-- **AGENTS.md §19.35**：写「B3-7 zh 结果卡片语义码化」的规格段（形态 / token 协议 / locale 键命名 / 四条判据 / 试点清单 / 铺开外推）。
+- **AGENTS.md §19.35**：写「B3-7 zh 结果卡片语义码化」的规格段（形态 / token 协议 / locale 键命名 / 五条判据 / 试点清单 / 铺开外推）。
 - **AGENTS.md 维度矩阵**：加一行「Calc Output i18n（结果卡片语义码 + locale 模板）」，注明「10/100 工具已迁 · 其余 90 待铺开」。
 - **CHANGELOG.md**：写 B3-7 段，必须含**实测数字**（英文行数 426 → 0 · locale 键数 · 注入体积 · 台子 5/5 · 套件数）。
 - **plans/INDEX.md**：Section 9 的 P160+ 表格加一行 + 更新两处计数 + 更新「最后更新」行。
