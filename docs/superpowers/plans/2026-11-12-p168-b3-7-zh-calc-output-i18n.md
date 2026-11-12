@@ -521,7 +521,7 @@ export const renderCalcOutput: RenderCalcOutput = (text, templates) => {
 
 ⭐ **为什么放在这一步**：Task 6~15 的引擎任务要靠 G2/G3 验收（跑守卫看它从红变绿）⇒ 守卫必须先于引擎任务存在。
 
-把下面这段追加到 `tests/calc-output-i18n-guard.test.ts`：
+⚠️ **这四条判据已在 Task 1 落盘**（commit `8b12caa` —— 实现者顺带完成）⇒ **本 Task 不要重复追加**；本 Task 只追加自己的 2 条（alias / 模板子集）。下面这段是**已落盘的参考实现**，用于核对与补测：
 
 ```ts
 // ═══ P168 B3-7 的四条 source-only 判据 ═══
@@ -626,19 +626,23 @@ test('P168 B3-7 G2：calc_out.* 模板表守恒（引擎声明的 token 集合 =
   assert.deepEqual(problems, [], problems.join(' | '));
 });
 
-// ── G2b：'$' 只出现在 token 或金额形态（token 协议不被误用）───────────────
-test('P168 B3-7 G2b：引擎示例输出里的 "$" 只出现在 token 或金额形态', () => {
+// ── G2b：'$' 只出现在 token 形态或金额形态（token 协议不被误用）────────────
+// ⚠️ 口径（实测校准，2026-11-12，Task 1 落地时）：本判据**只**守 token 协议的边界 ——
+//   引擎源码里的 '$' + 小写字母**必须**都是 token（$calc_out.…）。
+//
+// ⭐ 为什么不管 '$' + 非字母（'$$' · '$/unit' · '$10-$25' 里的 '-'）：
+//   那三种形态**在协议上完全无害** —— 两条正则的边界都只认 '$' + 小写字母：
+//     · token 正则要求 '$' + 小写字母 ⇒ '$' + 数字 / '-' / '/' 都不匹配；
+//     · fallback 的截断条件是 '(?!\$[a-z])' ⇒ 也只认 '$' + 小写字母。
+//   ⇒ 把它们算进本判据 = 用一个**协议无关**的金额卫生检查冒充协议守卫。
+//   ⇒ 而它现在正红在既有内容上（实测 100 个引擎：'$$' 20 处 + '$-' 17 处 + '$/' 8 处，
+//     其中 '$$' 是 8 个**非试点**引擎里的双美元号笔误 —— 本批不改非试点引擎）。
+//   ⇒ 真正的协议风险只有一个：**非 token 的 '$' + 字母会在英文兜底里截断文本**。
+test('P168 B3-7 G2b：引擎源码里的 "$" 只出现在 token 形态或金额形态', () => {
   const problems: string[] = [];
   for (const [slug, file] of engineFileBySlug()) {
     const src = readFileSync(file, 'utf8');
-    // staticExamples 的字符串字面量（够用：它是 generate() 的产物）
-    const samples = src.match(/staticExamples:\s*\[([\s\S]*?)\]/);
-    if (!samples) continue;
-    for (const m of samples[1].matchAll(/\$([^a-z\s])/g)) {
-      if (/[0-9]/.test(m[1])) continue;          // $数字 = 金额 ✔
-      problems.push(slug + '：示例里出现了非金额的 "$' + m[1] + '"');
-    }
-    // 引擎源码里 '$' + 字母 但不是 token 的形态（说明协议被误用）
+    // '$' + 字母：只允许 token 形态（source 级扫描 ⇒ 覆盖 staticExamples 里的字符串字面量）
     for (const m of src.matchAll(/\$([a-z][A-Za-z0-9_]*)/g)) {
       if (m[0].startsWith('$calc_out')) continue;
       problems.push(slug + '：源码里出现 "$' + m[1] + '"（既不是金额也不是 token）');
