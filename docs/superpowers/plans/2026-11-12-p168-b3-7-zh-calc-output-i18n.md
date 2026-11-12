@@ -450,15 +450,32 @@ export const CALC_OUTPUT_TOKEN_RE =
 export type RenderCalcOutput = (text: string, templates: Record<string, string>) => string;
 
 /**
+ * token 构造器的**唯一实现**（JS 源码字符串）。
+ *
+ * ⭐ 为什么是「源码字符串」而不是一个 TS 函数
+ *   客户端的 customFn 是**一段 JS 源码字符串**（`new Function('inputs','pick','fill', body)`），
+ *   它**不能 import** ⇒ 若服务端用 TS 函数、客户端另写一份 JS 拼装 ⇒ **两份实现会漂**。
+ *   ⇒ 这里把实现写成**一段 JS 源码**，两端都用它：
+ *     · 服务端：`makeToken` 由它求值得来（下面）；
+ *     · 客户端：每个引擎的 customFn 把它**前置**进函数体（计划 Task 6~15 Step 3）。
+ *   ⇒ 真正的一份实现，且**不改 `new Function` 的签名** ⇒ 既有守卫
+ *     （customfn-contract-guard / decision-support-guard）零改动、继续绿。
+ */
+export const CALC_OUTPUT_MAKE_TOKEN_JS =
+  'function tk(c,f,p){return "$"+c+(p&&Object.keys(p).length?JSON.stringify(p):"")+"|"+f}';
+
+/**
  * 构造一个 token（引擎侧用）。
  *
  * ⭐ params 的值与 fallback 里出现的金额**必须来自同一个变量**
  *   ⇒ 英文兜底与中文模板不可能漂。
  */
-export function makeToken(code: string, fallback: string, params?: Record<string, string>): string {
-  const p = params && Object.keys(params).length > 0 ? JSON.stringify(params) : '';
-  return '$' + code + p + '|' + fallback;
-}
+export const makeToken: (code: string, fallback: string, params?: Record<string, string>) => string =
+  new Function('return ' + CALC_OUTPUT_MAKE_TOKEN_JS)() as (
+    code: string,
+    fallback: string,
+    params?: Record<string, string>,
+  ) => string;
 
 /** 抽出文本里出现的全部 token code（守恒断言用） */
 export function extractTokenCodes(text: string): string[] {
@@ -1241,6 +1258,9 @@ git commit -m "feat(i18n): P168 B3-7 —— 页面接线（静态渲染 + 动态
 
 > ⭐ **这 10 个 Task 结构完全相同、文件互不重叠 ⇒ 必须用 `dispatching-parallel-agents` / `subagent-driven-development` 并行执行**（宪法与 Superpowers 流程要求：2 个以上独立任务必须并行）。
 > ⚠️ **每个 Task 只允许改自己那一个引擎文件**（locale 文件是共享文件 ⇒ 见下方「locale 冲突处理」）。
+>
+> ⚠️⚠️ **并行阶段的 git 纪律**：10 个 subagent **并发**改不同引擎文件，但 **git index 是共享资源** ⇒ 并发 `git add` / `git commit` 会互相污染（一个 agent 可能把别人的文件一起提交）。
+> ⇒ ⭐ **并行阶段 subagent 不做任何 git 操作**；控制器在全部 10 个 Task 完成后**逐个**提交（每个引擎一个 commit，diff 只含那一个引擎文件）。
 
 **Task 6**: `solopreneur-mrr-calculator`（长叙述 60 行 · **有 customFn 双实现** · alias `mrr`）
 **Task 7**: `solopreneur-rent-vs-buy-calculator`（长叙述 87 行 · **Comparison 形态** · alias `rent_vs_buy`）
@@ -1299,45 +1319,34 @@ result += '• ' + makeToken('calc_out.mrr.row.whatif_churn_drop',
 
 ### Step 3: 同步 token 化客户端实现（`customFn`）
 
-⚠️ **customFn 是一个 JS 源码字符串** ⇒ 它**不能 import** `makeToken` ⇒ 必须在字符串里自带等价的拼装逻辑。
+⚠️ **customFn 是一段 JS 源码字符串** ⇒ 它**不能 import** `makeToken` ⇒ token 构造器必须**前置进函数体**。
 
-⭐⭐ **解法（关键）**：**把 `makeToken` 作为第 4 个参数传给 customFn**。
+⭐⭐ **解法（关键）**：从 `src/lib/calc-output-i18n.ts` 导入 `CALC_OUTPUT_MAKE_TOKEN_JS`（**唯一实现**的 JS 源码字符串），把它**前置**到 customFn 正文的最前面。
 
-- 改 `src/pages/[lang]/[slug].astro` 的 `new Function('inputs','pick','fill', config.customFn)` → `new Function('inputs','pick','fill','tok', config.customFn)`
-- 改同一处调用点：
+- 引擎文件顶部加 import：
 
-```js
-var fn = new Function('inputs', 'pick', 'fill', 'tok', config.customFn);
-return fn(inputs, pick, fill, calcOutMakeToken);
+```ts
+import { CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 ```
 
-- 在同一个内联脚本里定义 `calcOutMakeToken`（**与服务端同一套语义**）：
-
-```js
-// P168 B3-7：与 src/lib/calc-output-i18n.ts 的 makeToken 同语义。
-//   ⚠️ 这是**第二处字面实现** —— 但它只有一行拼接（拼字符串），
-//     真正的「解析 + 查表 + 插值」仍然只有服务端那份（客户端模块 import 它）。
-//     守卫 G3 断言两份实现吐**同一个 token 集合** ⇒ 拼法漂移会被抓到。
-function calcOutMakeToken(code, fallback, params) {
-  var p = (params && Object.keys(params).length) ? JSON.stringify(params) : '';
-  return '$' + code + p + '|' + fallback;
-}
-```
-
-- 在引擎的 customFn 字符串里用它：
+- customFn 的第一段拼上这个常量：
 
 ```ts
 const customFn =
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var cnn=function(x){return Math.max(0,x)};" +
   ...
-  "r+='• '+tok('calc_out.mrr.row.whatif_churn_drop','If churn drops '+pct(churnRate)+' → '+pct(newChurn)+':',{from:pct(churnRate),to:pct(newChurn)})+'\\n';" +
+  "r+='• '+tk('calc_out.mrr.row.whatif_churn_drop','If churn drops '+pct(churnRate)+' → '+pct(newChurn)+':',{from:pct(churnRate),to:pct(newChurn)})+'\\n';" +
   ...
 ```
 
-⚠️ **`tok` 是 `new Function` 的第 4 个参数名** ⇒ customFn 字符串里可以直接用。
+⭐ **前置为什么安全**：`new Function('inputs','pick','fill', body)` 的 body 里 `function tk(...){...}` 是**函数声明** ⇒ 在 body 里被提升（hoisted）⇒ customFn 正文任何位置都能调用 `tk` ✔。
+⭐ **`new Function` 的签名不变**（仍是 3 个参数）⇒ `tests/customfn-contract-guard.test.ts`（用 3 参数**执行**全部 100 个引擎的 customFn）与 `tests/decision-support-guard.test.ts` **零改动、继续绿** ✔✔
+⭐ **只有一份实现**：服务端的 `makeToken` 也是由 `CALC_OUTPUT_MAKE_TOKEN_JS` 求值得来的 ⇒ 两端不可能漂 ✔（不需要额外的守卫）。
 
-⚠️⚠️ **`codegen-examples.mjs --check` 会做 `new Function('inputs','pick','fill', body)` 的解析检查** —— 少了 `tok` 参数**不会**报错（`tok` 只是未声明标识符，不是语法错误）⇒ 该检查仍然有效 ✔。
-⚠️ 但 `codegen-examples.mjs` **不执行** customFn ⇒ 不受影响 ✔。
+⚠️ **`customfn-contract-guard` 的 M4/M5 会用空输入执行 customFn** ⇒ token 化的 customFn 在空输入下也必须正常返回（token 只是字符串，不影响计算）✔。
+⚠️⚠️ **`codegen-examples.mjs --check` 的 `new Function('inputs','pick','fill', body)` 解析检查** —— `tk` 是函数声明 ⇒ 解析通过 ✔。
+⚠️ **`codegen-customfn.mjs` 只重生成 AI cost 引擎的 customFn** ⇒ 本批 10 个引擎不受影响 ✔。
 
 ### Step 4: 输出 locale 键清单（**不直接改 locale 文件**）
 
