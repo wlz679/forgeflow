@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { readFileSync, existsSync, readdirSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
+import { readFileSync, existsSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { resolve, join, relative } from 'node:path';
 
@@ -12,17 +12,6 @@ const RUN_BUILD = process.env.RUN_BUILD_TESTS;
 const root = resolve(import.meta.dirname, '..');
 
 /** 递归列出仓库相对路径 */
-function listRel(dirAbs: string, rootDir: string): string[] {
-  const out: string[] = [];
-  if (!existsSync(dirAbs)) return out;
-  for (const e of readdirSync(dirAbs, { withFileTypes: true })) {
-    const full = join(dirAbs, e.name);
-    if (e.isDirectory()) out.push(...listRel(full, rootDir));
-    else out.push(relative(rootDir, full).replace(/\\/g, '/'));
-  }
-  return out;
-}
-
 /**
  * 建「文件 → 最后一次**内容**变更时间」的表（**一次** git 调用）。
  *
@@ -39,19 +28,31 @@ function listRel(dirAbs: string, rootDir: string): string[] {
  *   （实测 `src/i18n/locales/en.json` 的 mtime = 构建时刻，git 内容变更 = 更早）
  *   ⇒ 用 mtime 等于每次部署都骗 Google「页面全新」。
  */
-function gitTimeTable(): Map<string, number> {
-  const out = execFileSync('git', ['log', '--format=%ct', '--name-only', '--', 'src/'], {
+/**
+ * 「碰过 src/ 的全部提交时间戳」（**一次** git 调用）。
+ *
+ * ⭐⭐ 为什么 allowed 集合从「src 文件级 git 时间」换成「碰过 src/ 的提交时间戳」：
+ *   B3-6c 之后 lastmod 可能是**行级** blame 时间（某个键块里最后被改的那一行的提交时间）
+ *   ⇒ 它**不等于**任何文件的 git log -1 时间 ⇒ 老的文件级集合会把正确实现判红。
+ *   行级时间仍然是**某个提交**的时间 ⇒ 用「碰过 src/ 的提交时间戳」当集合，
+ *   既覆盖文件级也覆盖行级。
+ *
+ * ⚠️ 强度没有塌：构建时刻**不是**任何提交的时间戳
+ *   ⇒ 「每次部署都刷新全部 lastmod」这个 B3-6 的线上症状照样被挡住。
+ *
+ * ⚠️ 为什么用一次调用而不是「每个文件一次 git log」：
+ *   实测前者 141 KB / < 1 秒；后者需要 1000+ 次进程 spawn（实测单条断言 61 秒）。
+ */
+function srcCommitTimes(): Set<number> {
+  const out = execFileSync('git', ['log', '--format=%ct', '--', 'src/'], {
     cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
   });
-  const map = new Map<string, number>();
-  let cur: number | null = null;
+  const set = new Set<number>();
   for (const raw of out.split('\n')) {
     const line = raw.trim();
-    if (!line) continue;
-    if (/^\d+$/.test(line)) { cur = Number(line) * 1000; continue; }
-    if (cur !== null && !map.has(line)) map.set(line, cur);
+    if (/^\d+$/.test(line)) set.add(Number(line) * 1000);
   }
-  return map;
+  return set;
 }
 
 /** 载入被测实现（.mjs 无类型声明 ⇒ 用动态 import，运行时真解析） */
@@ -83,7 +84,7 @@ test('P168 B3-6：⭐ 产物层 —— sitemap 的 lastmod 必须等于某个内
   }));
   assert.ok(entries.length > 100, 'sitemap 条目太少（' + entries.length + '）');
 
-  const allowed = new Set<number>([...gitTimeTable().values()]);
+  const allowed = srcCommitTimes();
   const bad = entries.filter((e) => !Number.isFinite(e.t) || !allowed.has(e.t));
   const msg =
     'sitemap 里 ' + bad.length + ' / ' + entries.length + ' 个 URL 的 lastmod 不是任何内容源文件的 git 变更时间' +
@@ -124,32 +125,23 @@ test('P168 B3-6：⭐ 寻址层 —— 同一页面的各种路径形态必须�
 });
 
 // ============================================================
-// 断言 3（source-only）· 真相源层 · 「用的是 git 内容时间，不是 mtime」
+// ⛔ P168 B3-6c（2026-11-11）—— 本文件**不再**断言 lastmod 的「真相源」
 // ============================================================
-test('P168 B3-6：⭐ 真相源 —— 工具页的 lastmod 必须等于「locale + 工具注册表 + 引擎」中最新的 git 变更时间', async () => {
-  const mod = await loadImpl();
-  // ⭐ 期望值**独立**枚举（守卫自己列文件、自己调 git），不复用实现的取数逻辑
-  //   ⇒ 实现若换了源文件集合 / 退回 mtime / 退回构建时刻，本条会红。
-  //
-  // ⚠️ 动态路由页（`[lang]/[slug].astro`）**每次构建都被触碰**
-  //   （实测 src/pages 下 32 个 .astro，只有它被刷新）
-  //   ⇒ 工具页必须取**内容数据源**的时间，而不是路由源文件的时间。
-  const table = gitTimeTable();
-  const cands = [
-    'src/i18n/locales/en.json',
-    'src/data/tools/index.ts',
-    ...listRel(resolve(root, 'src/engines'), root),
-  ];
-  const times = cands.map((p) => table.get(p)).filter((t): t is number => typeof t === 'number');
-  assert.ok(times.length > 50, '候选源文件太少（' + times.length + '）⇒ git 表可能没建起来');
-  const expected = Math.max(...times);
-  const actual = mod.getMtimeForHtmlPath('/en/solopreneur-acv-calculator');
-  assert.ok(actual !== null, '工具页 lastmod 解析失败');
-  assert.equal((actual as Date).getTime(), expected,
-    '工具页 lastmod = ' + (actual as Date).toISOString() +
-    '，但「locale + 工具注册表 + 引擎」中最新的 git 变更时间是 ' + new Date(expected).toISOString() +
-    '⇒ 真相源不是 git 内容时间（退回 mtime 或构建时刻了？）');
-});
+//
+// 被删掉的那条断言是：工具页的 lastmod 必须等于「locale + 工具注册表 + 引擎」中最新的 git 变更时间。
+//
+// ⭐⭐ 为什么必须**删掉**而不是改松：
+//   B3-6c 把工具页的真相源从「族级」降到「单工具级」——
+//   工具 X 的 lastmod 现在等于「**X 的**引擎 + **X 的** prose + **X 的**注册表条目块 +
+//   **X 在 locale 里的专属键块」里最新的 git 内容时间，
+//   **不再**等于「locale + 注册表 + 全部引擎」的族级最大值。
+//   ⇒ 留着这条断言 = 断言一个**已经不对的**口径（它会要求所有工具页都报同一个值）。
+//
+// ⇒ 它的位置是 tests/sitemap-lastmod-granularity-guard.test.ts
+//   （逐工具口径 + 源集合逐条比对 + 纯净性 + 逐工具时间）。
+//
+// ⭐ 「一个不变量只守一处」：族级真相源已经**不存在**了 ⇒ 这里不留残骸。
+
 // ============================================================
 // 断言 4（source-only）· 构建环境层 · 「真相源在构建环境里必须拿得到」
 // ============================================================

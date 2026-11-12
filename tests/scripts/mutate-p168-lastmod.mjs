@@ -33,8 +33,10 @@ import { join, resolve } from 'node:path';
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const TMP = join(ROOT, 'tmp');
 const SNAPSHOT = join(TMP, 'lastmod-harness-backup.json');
-const GUARD_REL = 'tests/sitemap-lastmod-accuracy-guard.test.ts';
-const GUARD = join(ROOT, GUARD_REL);
+const GUARDS = [
+  'tests/sitemap-lastmod-accuracy-guard.test.ts',
+  'tests/sitemap-lastmod-granularity-guard.test.ts',
+];
 const SRC_REL = 'src/integrations/last-modified.mjs';
 const SRC = join(ROOT, SRC_REL);
 const ART_REL = 'dist/sitemap-0.xml';
@@ -157,21 +159,26 @@ function replaceOnce(src, needle, repl) {
 
 // 跑守卫（build-dep ⇒ 必须带 RUN_BUILD_TESTS=1 才会激活产物层断言）
 function runGuard() {
-  try {
-    const out = execFileSync(
-      'node',
-      ['node_modules/tsx/dist/cli.mjs', '--test', '--test-concurrency=1', GUARD_REL],
-      {
-        encoding: 'utf8', cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'],
-        env: { ...process.env, RUN_BUILD_TESTS: '1' },
-      },
-    );
-    return { ok: true, out };
-  } catch (e) {
-    return { ok: false, out: String(e.stdout ?? '') + String(e.stderr ?? '') };
+  // P168 B3-6c：守卫拆成两个文件（产物/寻址/构建环境层 ＋ 粒度·真相源层）
+  // ⇒ 逐个文件跑，**不**合并成一次 tsx 调用 ——
+  //   合并时 node 会把子测试缩进输出，failedAssertions 的行首匹配会失效。
+  let out = '';
+  for (const rel of GUARDS) {
+    try {
+      out += execFileSync(
+        'node',
+        ['node_modules/tsx/dist/cli.mjs', '--test', '--test-concurrency=1', rel],
+        {
+          encoding: 'utf8', cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'],
+          env: { ...process.env, RUN_BUILD_TESTS: '1' },
+        },
+      );
+    } catch (e) {
+      out += String(e.stdout ?? '') + String(e.stderr ?? '');
+    }
   }
+  return { ok: true, out };
 }
-
 function failedAssertions(out) {
   const names = [];
   for (const line of out.split(/\r?\n/)) {
@@ -183,16 +190,17 @@ function failedAssertions(out) {
 
 // 从守卫源码里解析断言名（不手抄 ⇒ 守卫改名时台子不会误判）
 function guardAssertionNames() {
-  const src = readFileSync(GUARD, 'utf8');
   const names = [];
-  const re = /test\(\s*'((?:[^'\\]|\\.)*)'/g;
-  let m;
-  while ((m = re.exec(src)) !== null) names.push(m[1].replace(/\\'/g, "'").replace(/\\\\/g, '\\'));
+  for (const rel of GUARDS) {
+    const src = readFileSync(join(ROOT, rel), 'utf8');
+    const re = /test\(\s*'((?:[^'\\]|\\.)*)'/g;
+    let m;
+    while ((m = re.exec(src)) !== null) names.push(m[1].replace(/\\'/g, "'").replace(/\\\\/g, '\\'));
+  }
   return names;
 }
-
 const ASSERTIONS = guardAssertionNames();
-const MARK = { artifact: '产物层', address: '寻址层', truth: '真相源', build: '构建环境' };
+const MARK = { artifact: '产物层', address: '寻址层', truth: '真相源', build: '构建环境', granularity: '粒度' };
 
 function assertName(marker) {
   const hit = ASSERTIONS.filter((n) => n.indexOf(marker) >= 0);
@@ -230,10 +238,74 @@ function applyM3() {
 }
 
 function applyM4() {
+  // 真相源从 git 内容变更时间退回文件 mtime（mtime 会被 checkout/构建刷新）
   const src = readFileSync(SRC, 'utf8');
-  const needle = "    const out = execFileSync('git', ['log', '-1', '--format=%ct', '--', relPath], {\n      cwd: _repoRoot,\n      encoding: 'utf8',\n      stdio: ['ignore', 'pipe', 'ignore'],\n    }).trim();";
-  const repl = "    const out = String(Math.floor(fs.statSync(path.join(_repoRoot, relPath)).mtimeMs / 1000));";
+  const needle = '  let result = tableVal ? new Date(tableVal) : null;';
+  const repl = '  let result = fs.statSync(path.join(repo, relPath)).mtime;';
   writeWithRetry(SRC, replaceOnce(src, needle, repl));
+}
+
+function applyM6() {
+  // 工具页退回「族级」口径（locale + 注册表 + 全部引擎）—— B3-6c 要消灭的行为
+  const src = readFileSync(SRC, 'utf8');
+  const needle = [
+    '  const refs = getToolSourceRefs(slug, lang);',
+    '  let best = null;',
+    '  for (const r of refs) {',
+    '    const t = r.kind === \'file\' ? gitContentTime(r.file) : gitLineMaxTime(r.file, r.lines);',
+    '    if (t && (!best || t > best)) best = t;',
+    '  }',
+    '  return best;',
+  ].join('\n');
+  const repl = '    return familyToolTime(lang);';
+  writeWithRetry(SRC, replaceOnce(src, needle, repl));
+}
+
+function applyM7() {
+  // locale 行集合改成 min..max **区间**语义（把邻居工具的键吞进来）
+  // —— 这正是 B3-6c 取证阶段自己踩过的坑，必须能被抓到。
+  const src = readFileSync(SRC, 'utf8');
+  const needle = [
+    '    if (!map.has(m[1])) map.set(m[1], []);',
+    '    map.get(m[1]).push(i + 1);',
+    '  }',
+    '  return map;',
+  ].join('\n');
+  const repl = [
+    '    if (!map.has(m[1])) map.set(m[1], []);',
+    '    map.get(m[1]).push(i + 1);',
+    '  }',
+    '  for (const [k, v] of map) {',
+    '    const lo = Math.min(...v);',
+    '    const hi = Math.max(...v);',
+    '    const all = [];',
+    '    for (let j = lo; j <= hi; j++) all.push(j);',
+    '    map.set(k, all);',
+    '  }',
+    '  return map;',
+  ].join('\n');
+  writeWithRetry(SRC, replaceOnce(src, needle, repl));
+}
+
+function applyM8() {
+  // 源集合里删掉「注册表条目块」这一项
+  const src = readFileSync(SRC, 'utf8');
+  const needle = [
+    '  for (const r of registryLineMap().get(slug) || []) {',
+    '    refs.push({ file: r.file, kind: \'lines\', lines: r.lines });',
+    '  }',
+  ].join('\n');
+  writeWithRetry(SRC, replaceOnce(src, needle, ''));
+}
+
+function applyM9() {
+  // 源集合里删掉「locale 专属键块」这一项
+  const src = readFileSync(SRC, 'utf8');
+  const needle = [
+    '  const loc = localeLineMap(lang).get(slug);',
+    '  if (loc) refs.push({ file: \'src/i18n/locales/\' + lang + \'.json\', kind: \'lines\', lines: loc });',
+  ].join('\n');
+  writeWithRetry(SRC, replaceOnce(src, needle, ''));
 }
 
 const MUTATIONS = [
@@ -281,6 +353,34 @@ const MUTATIONS = [
       }
       writeWithRetry(p, after);
     },
+  },
+  {
+    id: 'M6',
+    desc: '源码层：工具页退回「族级」口径（locale + 注册表 + 全部引擎）',
+    layer: 'source',
+    expect: MARK.granularity,
+    apply: applyM6,
+  },
+  {
+    id: 'M7',
+    desc: '源码层：locale 行集合改成 min..max 区间语义（吞掉邻居工具的键）',
+    layer: 'source',
+    expect: MARK.granularity,
+    apply: applyM7,
+  },
+  {
+    id: 'M8',
+    desc: '源码层：源集合里删掉「注册表条目块」这一项',
+    layer: 'source',
+    expect: MARK.granularity,
+    apply: applyM8,
+  },
+  {
+    id: 'M9',
+    desc: '源码层：源集合里删掉「locale 专属键块」这一项',
+    layer: 'source',
+    expect: MARK.granularity,
+    apply: applyM9,
   },
 ];
 
