@@ -29,7 +29,17 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT_DEFAULT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// P168 B3-2 收尾：--check（漂移闸门）与 --root（让守卫能在 tmp/ 夹具里跑，不碰真实 locale）
+const ARGV = process.argv.slice(2);
+const CHECK = ARGV.includes('--check');
+const rootEq = ARGV.find((a) => a.startsWith('--root='));
+const rootPos = ARGV.indexOf('--root');
+const ROOT_ARG = rootEq
+  ? rootEq.slice('--root='.length)
+  : (rootPos >= 0 && ARGV[rootPos + 1] ? ARGV[rootPos + 1] : '');
+const ROOT = ROOT_ARG ? resolve(ROOT_ARG) : ROOT_DEFAULT;
 
 const SEP = ' \u2014 ';                       // ' — '
 const MAX_LEN = 60;
@@ -205,4 +215,37 @@ for (const slug of slugs) {
   }
 }
 
+if (CHECK) {
+  // ============================================================
+  // --check：locale 的 seoTitle 必须与生成器输出**完全一致**
+  // ============================================================
+  //
+  // ⭐ 漂移不变量是什么：locale 里每个 tools.<slug>.seoTitle
+  //   必须等于「生成器按规则稿 + 人工覆盖表算出来的值」。
+  //   ⇒ 任何手改 seoTitle 的动作都必须登记进 scripts/seo-title-overrides.json
+  //   ⇒ 否则 CI 会红。（B3-5 就是手改 GSC 对齐后的 8 条，已登记为覆盖表。）
+  //
+  // ⭐ 判据为什么不是「locale 里有没有 seoTitle 键」：
+  //   那种判据是**存在性**——B3-2 的 100 个键全在，闸门照样绿，
+  //   但值已经漂了 ⇒ 闸门必须比**值**。
+  const drift = [];
+  for (const slug of slugs) {
+    const key = 'tools.' + slug + '.seoTitle';
+    if (en[key] !== out.en[slug]) {
+      drift.push('en ' + slug + ': locale=' + JSON.stringify(en[key]) + ' 生成器=' + JSON.stringify(out.en[slug]));
+    }
+    if (zh[key] !== out.zh[slug]) {
+      drift.push('zh ' + slug + ': locale=' + JSON.stringify(zh[key]) + ' 生成器=' + JSON.stringify(out.zh[slug]));
+    }
+  }
+  if (drift.length > 0) {
+    console.error('[seo-titles] 漂移 ' + drift.length + ' 处：locale 的 seoTitle 与生成器输出不一致');
+    for (const d of drift.slice(0, 20)) console.error('  · ' + d);
+    if (drift.length > 20) console.error('  … 还有 ' + (drift.length - 20) + ' 处');
+    console.error('[seo-titles] 修法：把期望值登记进 scripts/seo-title-overrides.json（人工覆盖优先），或重跑生成器');
+    process.exit(1);
+  }
+  console.log('[seo-titles] PASSED — ' + slugs.length + ' 个工具的 en/zh seoTitle 与生成器输出完全一致');
+  process.exit(0);
+}
 process.stdout.write(JSON.stringify(out, null, 2) + '\n');

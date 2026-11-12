@@ -346,7 +346,7 @@ function srcCommitTimes(): Set<number> {
 
 ---
 
-## Task 4: B3-2 Minor 2 —— `solopreneur-claude-api-cost-calculator.seoTitle` 键归位（**在 commit 2 执行**）
+## Task 4: B3-2 Minor 2 —— `solopreneur-claude-api-cost-calculator.seoTitle` 键归位
 
 **Files:**
 - Modify: `src/i18n/locales/en.json`
@@ -364,7 +364,7 @@ function srcCommitTimes(): Set<number> {
 
 ---
 
-## Task 5: B3-2 Minor 1 —— `generate-seo-titles.mjs` 加 `--check` 漂移闸门（**在 commit 2 执行**）
+## Task 5: B3-2 Minor 1 —— `generate-seo-titles.mjs` 加 `--check` 漂移闸门
 
 **Files:**
 - Modify: `scripts/generate-seo-titles.mjs`
@@ -396,7 +396,7 @@ T3 的夹具：`tmp/` 下复制 `src/i18n/locales/{en,zh}.json` + `scripts/seo-t
 ## Task 6: 文档同步
 
 **Files:**
-- Modify: `AGENTS.md` —— ① 新维度行「Lastmod Granularity（lastmod 逐工具粒度）」；② 规格新增 **§19.34**；③ 套件计数 **284 → 285**（build-dep 65 不变，source-only **219 → 220**；commit 2 再到 **286** / source-only **221**）。
+- Modify: `AGENTS.md` —— ① 新维度行「Lastmod Granularity（lastmod 逐工具粒度）」；② 规格新增 **§19.34**；③ 套件计数 **284 → 286**（build-dep 65 不变，source-only **219 → 221**）。
 - Modify: `docs/superpowers/specs/**` —— 按仓库惯例，规格正文写在 AGENTS.md §19.34。
 - Modify: `CHANGELOG.md` —— B3-6c 段 + B3-2 收尾段（含实测数字）。
 - Modify: `docs/superpowers/plans/INDEX.md` —— 登记本计划文档（文件总数 +1）。
@@ -457,14 +457,14 @@ cmd.exe /c "set RUN_BUILD_TESTS=1&&node tests\run.mjs"
 |---|---|
 | tsc | exit 0 |
 | 构建 | **438** 页（`injected=438 skipped=0 failed=0`）· 431 个 URL 提交 indexnow 成功（200） |
-| 体检 ① 取值分布 | 200 个工具页 **4 种**取值（156 / 26 / 10 / 8）—— 族级是 **1 种**；⚠️ B3-2 收尾的 `seoTitle` 键归位**提交后**会变 5 种（154 / 26 / 10 / 8 / 2）—— 归位那一行被 blame 归属到**归位那次提交** ⇒ claude 的 2 页独立成一桶 |
+| 体检 ① 取值分布 | 200 个工具页 **5 种**取值（154 / 26 / 10 / 8 / 2）—— 族级是 **1 种**；⚠️ 这是**键归位提交之后**的分布（B3-6c 单独落地时是 **4 种**：156 / 26 / 10 / 8）—— 归位那一行在提交后被 blame 归属到**归位那次提交** ⇒ claude 的 2 页独立成一桶 |
 | 体检 ② 引擎爆炸半径 | **改一个引擎 ⇒ 受影响 2 个页面**（该工具自己的 en+zh）—— 族级是 **200** |
 | 体检 ③ 产物层双通道 | 工具页 **200/200** + 全站 **431/431** 条与实现**逐条一致**，**0 不一致** |
 | 体检 ④ 源集合纯净性 | 引擎引用数 ≠ 1 **0** · 混入 `index.ts` **0** · locale 行归属错 **0** |
 | 体检 ⑤ 主导来源（en 页） | 引擎 **93** · prose **7** |
-| 守卫 | 粒度 **1/1** · accuracy **3/3** · 结构 **2/2** · 文档不变量 **1/1** |
+| 守卫 | 粒度 **1/1** · accuracy **3/3** · 结构 **2/2** · B3-2 闸门 **4/4** · 文档不变量 **1/1** |
 | 变异台子 | **9/9 KILLED**（M1~M9，每条精确红 1 条）+ 负对照成立 + 还原 sha256 一致 |
-| 全量套件 | **285**（build-dep **65** + source-only **220**），10 批全部 `# fail 0` |
+| 全量套件 | **286**（build-dep **65** + source-only **221**），10 批全部 `# fail 0` |
 
 ### ⚠️ 执行差异（与本计划初稿的出入）
 
