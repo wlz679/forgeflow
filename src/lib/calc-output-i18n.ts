@@ -16,6 +16,15 @@
 //   ⇒ 若 locale 缺键，没有任何地方能拿到兜底文本 ⇒ 页面会显示裸 token。
 //   ⇒ 把英文原文塞进 token ⇒ 缺键时降级到「可读的英文」而不是裸码。
 //
+// ⭐ 两道净化安全网（在 makeToken 内置 ⇒ 服务端与客户端同一份）
+//   ① **param 值里的花括号**：协议规定 params JSON 的值里不得有 { }
+//      ⇒ 一旦写进去，params 组匹配失败 ⇒ **整个 token 退化成裸码**
+//      ⇒ makeToken 兜底去掉值里的 { 与 }（其它字符原样）。
+//   ② **fallback 里的半角 '|'**：token 的 fallback 段以第一个 | 结束
+//      ⇒ fallback 里再有 | ⇒ 尾部会漏成孤儿尾巴（中文模板 + 孤儿英文）。
+//      ⇒ makeToken 兜底把半角 | 换成全角 ｜（U+FF5C：视觉等价，
+//      且不破坏 beautifySections 的 ' | ' 维度切分 —— 它只认半角）。
+//
 // ⭐ 渲染顺序：先 beautify（看到 token 里的英文兜底，区块识别与英文页一致）
 //   → 再替换 token（出中文）。反过来会让 en/zh 两页结构分叉。
 
@@ -30,6 +39,11 @@ export const CALC_OUTPUT_KEY_PREFIX = 'calc_out.';
  *   2) params    —— 可选 JSON，紧跟 code（值里不得有 { }）
  *   3) fallback  —— 第一个 | 之后；遇到 $ + 字母才停、$ + 数字继续吃
  *      （否则 'raise to $300,000' 会被截断）
+ *
+ * ⚠️⚠️ 它带 'g' ⇒ **是有状态的**（lastIndex 会随调用前进）
+ *   ⇒ 直接拿它做 .test(x) / .exec(x)，**第二次调用多半得到不同结果**（常见是 false）。
+ *   ⇒ 调用方请**克隆**它（new RegExp(CALC_OUTPUT_TOKEN_RE.source, 'g')），
+ *     或直接用 renderCalcOutput / extractTokenCodes（两个 helper 内部都克隆了）。
  */
 export const CALC_OUTPUT_TOKEN_RE =
   /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|])*))?/g;
@@ -48,15 +62,31 @@ export type RenderCalcOutput = (text: string, templates: Record<string, string>)
  *     · 客户端：每个引擎的 customFn 把它**前置**进函数体（计划 Task 6~15 Step 3）。
  *   ⇒ 真正的一份实现，且**不改 `new Function` 的签名** ⇒ 既有守卫
  *     （customfn-contract-guard / decision-support-guard）零改动、继续绿。
+ *
+ * ⭐ 两道净化安全网（都在这里 ⇒ 两端同一份 ⇒ 不会漂）
+ *   ① **param 值里的花括号**：协议规定 params JSON 的值里不得有 { }
+ *      ⇒ 一旦写进去，params 组匹配失败 ⇒ **整个 token 退化成裸码**
+ *      （页面会直接显示 '$calc_out.label.x{"a":"{b}"}|fb'）。
+ *      ⇒ 这里兜底去掉值里的 { 与 }（其它字符原样）。
+ *   ② **fallback 里的半角 '|'**：token 的 fallback 段以第一个 | 结束
+ *      ⇒ fallback 里再有 | ⇒ 尾部漏成孤儿尾巴（中文模板 + 孤儿英文）。
+ *      ⇒ 这里兜底把半角 | 换成全角 ｜（U+FF5C：视觉等价，
+ *      且不破坏 beautifySections 的 ' | ' 维度切分 —— 它只认半角）。
+ *      ⚠️ 这只是**兜底**：真正常见的 ' | ' 是维度行分隔
+ *      ⇒ token 化时应当**整行包成一个行码**，而不是把 ' | ' 塞进 fallback。
  */
 export const CALC_OUTPUT_MAKE_TOKEN_JS =
-  'function tk(c,f,p){return "$"+c+(p&&Object.keys(p).length?JSON.stringify(p):"")+"|"+f}';
+  'function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k]).replace(/[{}]/g,"")});return "$"+c+(Object.keys(q).length?JSON.stringify(q):"")+"|"+String(f).replace(/\\|/g,"\uFF5C")}';
 
 /**
  * 构造一个 token（引擎侧用）。
  *
  * ⭐ params 的值与 fallback 里出现的金额**必须来自同一个变量**
  *   ⇒ 英文兜底与中文模板不可能漂。
+ *
+ * ⭐ params 的值**不得含花括号**（协议规定）—— makeToken 会兜底去掉
+ *   （否则 params 组匹配失败 ⇒ 整个 token 退化成裸码）。
+ *   fallback 里的半角竖线同理：makeToken 会兜底换成全角 ｜。
  */
 export const makeToken: (code: string, fallback: string, params?: Record<string, string>) => string =
   new Function('return ' + CALC_OUTPUT_MAKE_TOKEN_JS)() as (
@@ -98,7 +128,13 @@ export const renderCalcOutput: RenderCalcOutput = (text, templates) => {
     }
     let tmpl = templates ? templates[code] : undefined;
     if (typeof tmpl !== 'string' || tmpl.length === 0) {
-      tmpl = typeof fallback === 'string' && fallback.length > 0 ? fallback : m;
+      if (typeof fallback === 'string') {
+        // 有 '|' 分段：兜底为空（makeToken(code,'')）⇒ 不吐半成品，也不吐裸码
+        tmpl = fallback.length > 0 ? fallback : '';
+      } else {
+        // 连 '|' 分段都没有（手写/畸形 token）⇒ 保留原文，让守卫在 CI 里变红
+        tmpl = m;
+      }
     }
     return tmpl.replace(/\{(\w+)\}/g, (_, k: string) => (params[k] != null ? params[k] : '{' + k + '}'));
   });
