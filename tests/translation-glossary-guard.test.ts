@@ -201,7 +201,17 @@ test('translation glossary structural invariants (每个 tool / 存在的 blog p
 //   `decision-tip-i18n-guard` 的「建议码守恒（唯一不变量）」断言
 //   「locale 模板集合 == 源码建议码集合」⇒ **多一个模板就是死模板**，必红。
 //   ⇒ 这里放行不会削弱覆盖率，只是把「死键」的判定交给更精确的那条。
-const DYNAMIC_KEY_PREFIXES = ['decision_tip.'];
+//
+// ⭐⭐ P168 B3-7：**`calc_out.<code>`** —— 结果卡片模板表：键名 = 引擎吐出的语义码
+//   （src/lib/calc-output-templates.ts 用 toolAlias + code 在运行时拼出来查表）
+//   ⇒ 源码里同样**没有**字面量 t() 调用 ⇒ 本守卫会把它误判成孤儿（实测 2026-11-13：
+//     全量套件 batch 10 报 1 条失败 = 417 个 calc_out.* 全被判成孤儿）。
+//   而 calc_out.* 的**死键**由另一条**更强**的不变量接着守 ——
+//   `calc-output-i18n-guard` 的 **G2（双向模板表守恒）**：
+//   「引擎声明的 token 集合 == locale 的 calc_out.* 键集合」**双向**比对，且扫全部 100 个引擎
+//   ⇒ 多一个 locale 键（死键）必红、引擎吐一个没落库的码（缺键）也必红。
+//   ⇒ 这里放行不削弱覆盖率，只是把「死键」判定交给更精确的那条。
+const DYNAMIC_KEY_PREFIXES = ['decision_tip.', 'calc_out.'];
 
 test('no orphan translation keys (每个 locale key 都被某个 t() 调用引用)', () => {
   const keys = parseTranslations();

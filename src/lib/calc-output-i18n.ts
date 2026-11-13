@@ -17,9 +17,11 @@
 //   ⇒ 把英文原文塞进 token ⇒ 缺键时降级到「可读的英文」而不是裸码。
 //
 // ⭐ 两道净化安全网（在 makeToken 内置 ⇒ 服务端与客户端同一份）
-//   ① **param 值里的花括号**：协议规定 params JSON 的值里不得有 { }
-//      ⇒ 一旦写进去，params 组匹配失败 ⇒ **整个 token 退化成裸码**
-//      ⇒ makeToken 兜底去掉值里的 { 与 }（其它字符原样）。
+//   ① **param 值里的花括号**：params 组是 \{[^{}]*\} ⇒ 值里出现 { 或 } 会让整组匹配失败
+//      ⇒ **整个 token 退化成裸码**。
+//      ⇒ ⭐ 修法（2026-11-12 复核轮）：**不删**（删掉会改数据 —— 公式片段 / JSON 样例 / 代码
+//      里的花括号会消失，用户看到的值 ≠ 引擎算出的值）⇒ 改为在 **JSON 文本层**把 { } 转义成
+//      \u007b / \u007d ⇒ token 结构保住，JSON.parse 还原后**值一字不差**。
 //   ② **fallback 里的半角 '|'**：token 的 fallback 段以第一个 | 结束
 //      ⇒ fallback 里再有 | ⇒ 尾部会漏成孤儿尾巴（中文模板 + 孤儿英文）。
 //      ⇒ makeToken 兜底把半角 | 换成全角 ｜（U+FF5C：视觉等价，
@@ -32,6 +34,28 @@
 export const CALC_OUTPUT_KEY_PREFIX = 'calc_out.';
 
 /**
+ * tip 行标记（**语言无关**）—— 见 isCalcOutputTipLine。
+ *
+ * ⭐ 为什么必须语言无关（2026-11-13 实测踩坑）
+ *   zh 页的 translateCalcOutput 会把「💡 Tip:」改写成「💡 提示:」
+ *   ⇒ 只认英文标记的过滤器在 zh 上**失配** ⇒ zh 卡片多出一条 en 没有的 tip 行
+ *     （实测 16 页，其中 mrr / project_profitability 是 B3-7 试点），
+ *   ⇒ 且 data-calc-output-raw 里的**英文原文**被正确过滤 ⇒ SSR 与客户端
+ *     beautify 的行结构不一致（hydration 后 tip 消失 ⇒ 布局跳动）。
+ *
+ * ⭐ 覆盖三种形态：英文（引擎原文）、中文半角冒号（translateCalcOutput 的产物）、
+ *   中文全角冒号（token 化的 tip 模板用全角「：」）。
+ */
+export const CALC_OUTPUT_TIP_MARKERS = ['💡 Tip:', '💡 提示:', '💡 提示：'];
+
+/** 这一行是不是「建议行」（💡 Tip / 💡 提示）—— 语言无关 */
+export function isCalcOutputTipLine(line: string): boolean {
+  if (!line) return false;
+  return CALC_OUTPUT_TIP_MARKERS.some((m) => line.includes(m));
+}
+
+
+/**
  * token 正则（全局）。
  *
  * 分三组：
@@ -40,13 +64,19 @@ export const CALC_OUTPUT_KEY_PREFIX = 'calc_out.';
  *   3) fallback  —— 第一个 | 之后；遇到 $ + 字母才停、$ + 数字继续吃
  *      （否则 'raise to $300,000' 会被截断）
  *
+ * ⚠️⚠️ **fallback 不跨行**（2026-11-12 实测修复）：字符类是 `[^|\n\r]`，**不是** `[^|]`。
+ *   实测（旧写法）：`$calc_out.label.x|A\nB\nC` 的 fallback 捕获成 `"A\nB\nC"`
+ *   ⇒ ① 缺 locale 键时**英文兜底吞掉后面整段文本**（用户看到大段英文且内容丢失）；
+ *      ② beautifySections 靠 fallback 里的英文识别区块 ⇒ 跨行吞并会让**卡片区块识别错位**。
+ *   ⇒ fallback 只能是**一行**的英文短语（协议本来就是这个要求）⇒ 排除换行不损失任何合法场景。
+ *
  * ⚠️⚠️ 它带 'g' ⇒ **是有状态的**（lastIndex 会随调用前进）
  *   ⇒ 直接拿它做 .test(x) / .exec(x)，**第二次调用多半得到不同结果**（常见是 false）。
  *   ⇒ 调用方请**克隆**它（new RegExp(CALC_OUTPUT_TOKEN_RE.source, 'g')），
  *     或直接用 renderCalcOutput / extractTokenCodes（两个 helper 内部都克隆了）。
  */
 export const CALC_OUTPUT_TOKEN_RE =
-  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|])*))?/g;
+  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|\n\r])*)\|)?/g;
 
 /** 渲染结果卡片的文本：命中模板用模板，缺键降级到英文兜底 */
 export type RenderCalcOutput = (text: string, templates: Record<string, string>) => string;
@@ -64,10 +94,10 @@ export type RenderCalcOutput = (text: string, templates: Record<string, string>)
  *     （customfn-contract-guard / decision-support-guard）零改动、继续绿。
  *
  * ⭐ 两道净化安全网（都在这里 ⇒ 两端同一份 ⇒ 不会漂）
- *   ① **param 值里的花括号**：协议规定 params JSON 的值里不得有 { }
- *      ⇒ 一旦写进去，params 组匹配失败 ⇒ **整个 token 退化成裸码**
- *      （页面会直接显示 '$calc_out.label.x{"a":"{b}"}|fb'）。
- *      ⇒ 这里兜底去掉值里的 { 与 }（其它字符原样）。
+ *   ① **param 值里的花括号**：params 组是 \{[^{}]*\} ⇒ 值里出现 { 或 } 会让整组匹配失败
+ *      ⇒ **整个 token 退化成裸码**（页面会直接显示 '$calc_out.label.x{"a":"{b}"}|fb'）。
+ *      ⇒ ⭐ 这里**在 JSON 文本层**把 { } 转义成 \u007b / \u007d
+ *      ⇒ token 结构保住，且 JSON.parse 还原后**值一字不差**（不是删掉，是转义）。
  *   ② **fallback 里的半角 '|'**：token 的 fallback 段以第一个 | 结束
  *      ⇒ fallback 里再有 | ⇒ 尾部漏成孤儿尾巴（中文模板 + 孤儿英文）。
  *      ⇒ 这里兜底把半角 | 换成全角 ｜（U+FF5C：视觉等价，
@@ -76,7 +106,7 @@ export type RenderCalcOutput = (text: string, templates: Record<string, string>)
  *      ⇒ token 化时应当**整行包成一个行码**，而不是把 ' | ' 塞进 fallback。
  */
 export const CALC_OUTPUT_MAKE_TOKEN_JS =
-  'function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k]).replace(/[{}]/g,"")});return "$"+c+(Object.keys(q).length?JSON.stringify(q):"")+"|"+String(f).replace(/\\|/g,"\uFF5C")}';
+  'function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\u007b").replace(/[}]/g,"\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\|/g,"\uFF5C")+"|"}';
 
 /**
  * 构造一个 token（引擎侧用）。

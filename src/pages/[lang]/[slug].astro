@@ -16,6 +16,9 @@ import { getEngine } from '../../core/engines/registry';
 import { resolveLiveTokens } from '../../lib/live-price';
 import DecisionSupport from '../../components/DecisionSupport.astro';
 import { hasDecisionLines, stripDecisionTip } from '../../lib/decision-support';
+// P168 B3-7：结果卡片的「语义码 + 值」渲染（服务端侧）。
+import { renderCalcOutput } from '../../lib/calc-output-i18n';
+import { calcOutputTemplates, calcOutputTemplatesJson, toolAlias } from '../../lib/calc-output-templates';
 import { relatedTools } from '../../data/internal-links';
 import { tools } from '../../data/tools';
 import { categories } from '../../data/categories';
@@ -50,6 +53,17 @@ if (redirects[slug!]) return Astro.redirect(`/${lang}/${redirects[slug!]}`);
 
 const engine = getEngine(slug!);
 if (!engine) return Astro.redirect(`/${lang}/`);
+
+// P168 B3-7：结果卡片的「语义码 + 值」渲染。
+//   ⭐ 只有**本工具真的吐 token** 时才注入模板表 ——
+//     否则 90 个未 token 化的工具每个页面都要多带几十 KB 的无用模板。
+//   ⭐ 用 getLang(Astro) 而不是 Astro.params.lang —— 后者是 string|undefined。
+const pageLang = getLang(Astro);
+const calcOutAlias = toolAlias(slug!);
+const engineSampleText = (engine.staticExamples ?? []).join('\n');
+const hasCalcOutTokens = engineSampleText.includes('$calc_out.');
+const calcOutTemplates = hasCalcOutTokens ? calcOutputTemplates(pageLang, calcOutAlias) : {};
+const calcOutTemplatesJson = hasCalcOutTokens ? calcOutputTemplatesJson(pageLang, calcOutAlias) : '';
 
 const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
 const relatedTopics = TOPICS.filter((t) => t.calculatorSlugs.includes(slug!));
@@ -1375,7 +1389,7 @@ const schema = JSON.stringify({
         {engine.dataLastUpdated && (
           <span class="inline-block text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full mb-3 ml-2" title="Pricing data synced weekly via GitHub Actions">📅 Data updated: {engine.dataLastUpdated}</span>
         )}
-        <div id="static-results" class="space-y-3">
+        <div id="static-results" class="space-y-3" data-calc-output-templates={calcOutTemplatesJson}>
           {(engine.clientConfig.type === 'custom'
             ? [engine.staticExamples[0]]
             : engine.staticExamples
@@ -1390,12 +1404,20 @@ const schema = JSON.stringify({
             //   ⚠️ 必须**先剥离再翻译**：zh 的 translateCalcOutput 会把「💡 Tip:」
             //     改写成「💡 提示:」⇒ 剥离必须发生在英文原文上。
             const exWithoutTip = decisionRender ? stripDecisionTip(ex) : ex;
+            // P168 B3-7：⭐ 顺序是「先 token 渲染、再 translateCalcOutput」——
+            //   token 渲染把英文换成了中文 ⇒ translateCalcOutput 对已 token 化的引擎
+            //   自动降级为 no-op（整串匹配命中不了）⇒ 试点外的 90 个引擎行为不变。
+            //   ⭐ 反过来（先 translate 再 render）会让 translateCalcOutput 把 token
+            //     **内部**的英文兜底也替换掉 ⇒ 兜底被污染。
+            const renderedEx = hasCalcOutTokens ? renderCalcOutput(exWithoutTip, calcOutTemplates) : exWithoutTip;
             const translatedEx = lang === 'zh' && engine.clientConfig.type === 'custom'
-              ? translateCalcOutput(exWithoutTip, lang)
-              : exWithoutTip;
+              ? translateCalcOutput(renderedEx, lang)
+              : renderedEx;
             // I2-review: v3 engines want the `💡 Tip:` line preserved so all
             // 5 body sections render as cards. Legacy engines keep the strip.
-            return <ResultCard text={translatedEx} index={i} hideIndex={engine.clientConfig.type === 'custom'} preserveTip={bizConfigKey === 'BIZ_V3'} />;
+            // P168 B3-7：rawText = **token 原文**（未经 token 渲染）——
+            //   客户端 beautify 靠它识别区块（SSR 已渲成中文 ⇒ textContent 是中文 ⇒ 失配）。
+            return <ResultCard text={translatedEx} rawText={hasCalcOutTokens ? exWithoutTip : undefined} index={i} hideIndex={engine.clientConfig.type === 'custom'} preserveTip={bizConfigKey === 'BIZ_V3'} />;
           })}
         </div>
 
@@ -1457,6 +1479,11 @@ const schema = JSON.stringify({
       src/lib/decision-support.ts（唯一实现）*/}
   <script>
     import '../../scripts/decision-support.client.ts';
+  </script>
+  {/* P168 B3-7：结果卡片的 token → 模板替换（客户端）。
+      渲染逻辑住在 src/lib/calc-output-i18n.ts（与服务端同一份实现）。*/}
+  <script>
+    import '../../scripts/calc-output.client.ts';
   </script>
   <Footer />
 </BaseLayout>
@@ -2029,7 +2056,13 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
       if (calcConfig) {
         var staticMono = staticResults.querySelector('.font-mono');
         if (staticMono) {
-          var stext = staticMono.textContent || '';
+          // P168 B3-7：⭐ 优先用 **token 文本**（data-calc-output-raw）beautify ——
+          //   SSR 已把卡片渲成中文 ⇒ textContent 是中文 ⇒ beautifySections 靠英文标记
+          //   （Context: / Rate: / Per Request: …）识别区块会失配 ⇒ zh 页结构与 en 页分叉。
+          //   token 里带英文兜底 ⇒ 区块识别与英文页一致；
+          //   替换 token 放在 beautify **之后**（由 src/scripts/calc-output.client.ts 做）。
+          var rawAttr = staticMono.getAttribute('data-calc-output-raw');
+          var stext = rawAttr || staticMono.textContent || '';
           staticMono.classList.remove('font-mono', 'whitespace-pre-line', 'bg-gray-50/50');
           staticMono.classList.add('space-y-5');
           staticMono.innerHTML = beautifySections(stext, calcConfig);
@@ -2182,6 +2215,14 @@ var copyLabel = document.getElementById('copy-all')?.dataset.copyAllLabel || 'Co
             monoDiv.innerHTML = beautifySections(textDyn, calcConfig);
           }
         }
+
+        // P168 B3-7：⭐ 在 beautify **之后**派发 ——
+        //   beautifySections 靠 token 里的**英文兜底**识别区块
+        //   （Context: / Rate: / Per Request: …）⇒ 先替换 token 会让 en/zh 结构分叉。
+        //   ⚠️ 事件名必须与 src/scripts/calc-output.client.ts 的 CALC_OUTPUT_RENDERED_EVENT 一致。
+        document.dispatchEvent(new CustomEvent('ffk:calc-output-rendered', {
+          detail: { container: dynamicResults }
+        }));
 
         dynamicResults.classList.remove('hidden');
         staticResults.classList.add('hidden');
