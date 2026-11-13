@@ -6,6 +6,8 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-7：结果 token 化 —— 服务端与客户端共用**同一份** token 构造器（逐字节相同 ⇒ 不可能漂）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.20, label: '🟢 Excellent', message: 'Social-app tier stickiness - users return daily. World-class.' },
@@ -30,8 +32,48 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 
+/** P168 B3-7：服务端输出（token 化）—— 定义在 customFn 声明**之前** ⇒ G3 的「服务端区」能看到全部行码；
+ *  fallback 与 params 取**同一个变量** ⇒ 英文兜底与中文模板不可能漂。 */
+function stickinessOutput(inputs: Record<string, string>): string[] {
+  let dau = clampNonNegative(Number(inputs['DAU']));
+  const mau = clampNonNegative(Number(inputs['MAU']));
+  if (mau <= 0) return [makeToken('calc_out.stickiness.row.error_mau_zero', 'MAU must be > 0.')];
+  if (dau > mau) dau = mau;
+  const s = stickiness(dau, mau);
+  const band = calcHealthBand(s);
+  const daysPerWeek = (s * 7).toFixed(1), targetDAU = Math.ceil(mau * HEALTH_BANDS.good.threshold);
+  const lifted = dau + (mau - dau) * 0.05, pct = fmtPct(s);
+  const bandRow =
+    band === 'excellent' ? makeToken('calc_out.stickiness.row.band_excellent', HEALTH_BANDS.excellent.label + ' (' + pct + ' — users return ~' + daysPerWeek + ' days/week)', { pct, days: daysPerWeek }) : band === 'good' ? makeToken('calc_out.stickiness.row.band_good', HEALTH_BANDS.good.label + ' (' + pct + ' — users return ~' + daysPerWeek + ' days/week)', { pct, days: daysPerWeek }) :
+    band === 'warning' ? makeToken('calc_out.stickiness.row.band_warning', HEALTH_BANDS.warning.label + ' (' + pct + ' — users return ~' + daysPerWeek + ' days/week)', { pct, days: daysPerWeek }) : makeToken('calc_out.stickiness.row.band_critical', HEALTH_BANDS.critical.label + ' (' + pct + ' — users return ~' + daysPerWeek + ' days/week)', { pct, days: daysPerWeek });
+  return [
+    makeToken('calc_out.label.stickiness', 'Stickiness') + ': ' + bandRow,
+    makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken('calc_out.stickiness.row.snapshot_detail', fmtInt(dau) + ' of ' + fmtInt(mau) + ' MAU users are daily-active. ' + fmtInt(mau - dau) + ' MAU users are not active today.', { dau: fmtInt(dau), mau: fmtInt(mau), inactive: fmtInt(mau - dau) }),
+    makeToken('calc_out.stickiness.row.whatif_retain_5pct', 'What-If: if you retain +5% of non-daily MAU as daily (via push/email/re-engagement), stickiness rises to ' + fmtPct(lifted / mau), { lifted: fmtPct(lifted / mau) }),
+    makeToken('calc_out.stickiness.row.break_even_dau', 'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' stickiness), need DAU of at least ' + targetDAU.toLocaleString() + ' (currently ' + fmtInt(dau) + ')', { threshold: fmtPct(HEALTH_BANDS.good.threshold), target: targetDAU.toLocaleString(), current: fmtInt(dau) }),
+    makeToken('calc_out.stickiness.row.milestone_frequency', 'Milestone: stickiness rarely moves without improving onboarding or core-loop frequency. Target +5pp over the next 60 days via notifications and re-engagement campaigns.'),
+    makeToken('calc_out.stickiness.row.tip_churn_leading', 'Tip: Stickiness is the leading indicator of churn — pair with the GRR Calculator (P9 retention batch) to confirm the relationship in your data.'),
+  ];
+}
+
 // customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
-const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var dau = cnn(Number(inputs['DAU'])); var mau = cnn(Number(inputs['MAU'])); if (mau <= 0) return ['MAU must be > 0.']; if (dau > mau) dau = mau; var s = dau / mau; var band = s >= 0.20 ? 'Excellent' : s >= 0.13 ? 'Good' : s >= 0.05 ? 'Warning' : 'Critical'; var emoji = s >= 0.20 ? 'GREEN' : s >= 0.13 ? 'YELLOW' : s >= 0.05 ? 'ORANGE' : 'RED'; var daysPerWeek = (s * 7).toFixed(1); var targetDAU = Math.ceil(mau * 0.13); return ['STICKINESS ' + emoji + ' ' + band + ' (' + (s*100).toFixed(1) + '% - users return ~' + daysPerWeek + ' days/week)','SNAPSHOT: ' + fmtInt(dau) + ' of ' + fmtInt(mau) + ' MAU users are daily-active. ' + fmtInt(mau - dau) + ' MAU users are not active today.','WHATIF: if you retain +5% more MAU as DAU (e.g. via push notifications), stickiness rises to ' + ((dau + (mau-dau)*0.05) / mau * 100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (13% stickiness), need DAU of at least ' + targetDAU.toLocaleString() + ' (currently ' + fmtInt(dau) + ')','MILESTONE: stickiness rarely moves without improving onboarding or core-loop frequency - target +5pp over next 60 days via notifications and re-engagement','TIP: Stickiness is the leading indicator of churn - pair with the GRR Calculator (P9) to confirm.']; function fmtInt(n) { return Math.round(n).toLocaleString(); } } return run(inputs, pick, fill);";
+// P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）⇒ 两端逐字节相同。
+//   ⚠️ 客户端与服务端**逐字一致**（措辞 / 数字格式 / emoji / 破折号 / 空格数），一律以服务端为准。
+const customFn =
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+  "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {" +
+  "var HEALTH_BANDS={excellent:{threshold:0.20,label:'🟢 Excellent'},good:{threshold:0.13,label:'🟡 Good'},warning:{threshold:0.05,label:'🟠 Warning'},critical:{threshold:0,label:'🔴 Critical'}};" +
+  "function fmtPct(x){return (x*100).toFixed(1)+'%'}function fmtInt(n){return Math.round(n).toLocaleString()}" +
+  "var dau=cnn(Number(inputs['DAU'])),mau=cnn(Number(inputs['MAU']));" +
+  "if(mau<=0)return [tk('calc_out.stickiness.row.error_mau_zero','MAU must be > 0.')];if(dau>mau)dau=mau;var s=dau/mau;" +
+  "var band=s>=HEALTH_BANDS.excellent.threshold?'excellent':s>=HEALTH_BANDS.good.threshold?'good':s>=HEALTH_BANDS.warning.threshold?'warning':'critical';" +
+  "var daysPerWeek=(s*7).toFixed(1);var targetDAU=Math.ceil(mau*HEALTH_BANDS.good.threshold);var lifted=dau+(mau-dau)*0.05;var pct=fmtPct(s);" +
+  "var bandRow=band==='excellent'?tk('calc_out.stickiness.row.band_excellent',HEALTH_BANDS.excellent.label+' ('+pct+' — users return ~'+daysPerWeek+' days/week)',{pct:pct,days:daysPerWeek}):band==='good'?tk('calc_out.stickiness.row.band_good',HEALTH_BANDS.good.label+' ('+pct+' — users return ~'+daysPerWeek+' days/week)',{pct:pct,days:daysPerWeek}):band==='warning'?tk('calc_out.stickiness.row.band_warning',HEALTH_BANDS.warning.label+' ('+pct+' — users return ~'+daysPerWeek+' days/week)',{pct:pct,days:daysPerWeek}):tk('calc_out.stickiness.row.band_critical',HEALTH_BANDS.critical.label+' ('+pct+' — users return ~'+daysPerWeek+' days/week)',{pct:pct,days:daysPerWeek});" +
+  "return [tk('calc_out.label.stickiness','Stickiness')+': '+bandRow," +
+  "tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.stickiness.row.snapshot_detail',fmtInt(dau)+' of '+fmtInt(mau)+' MAU users are daily-active. '+fmtInt(mau-dau)+' MAU users are not active today.',{dau:fmtInt(dau),mau:fmtInt(mau),inactive:fmtInt(mau-dau)}),tk('calc_out.stickiness.row.whatif_retain_5pct','What-If: if you retain +5% of non-daily MAU as daily (via push/email/re-engagement), stickiness rises to '+fmtPct(lifted/mau),{lifted:fmtPct(lifted/mau)})," +
+  "tk('calc_out.stickiness.row.break_even_dau','Break-Even: to hit Good ('+fmtPct(HEALTH_BANDS.good.threshold)+' stickiness), need DAU of at least '+targetDAU.toLocaleString()+' (currently '+fmtInt(dau)+')',{threshold:fmtPct(HEALTH_BANDS.good.threshold),target:targetDAU.toLocaleString(),current:fmtInt(dau)}),tk('calc_out.stickiness.row.milestone_frequency','Milestone: stickiness rarely moves without improving onboarding or core-loop frequency. Target +5pp over the next 60 days via notifications and re-engagement campaigns.')," +
+  "tk('calc_out.stickiness.row.tip_churn_leading','Tip: Stickiness is the leading indicator of churn — pair with the GRR Calculator (P9 retention batch) to confirm the relationship in your data.')];}" +
+  "return run(inputs, pick, fill);";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-stickiness-calculator',
@@ -59,28 +101,9 @@ const engine: ToolEngine = {
     tool: 'Phase 1 引擎自身的 🧭 Decision Recommendation (如已 ship) 或未来扩展',
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
-  generate(inputs) {
-    let dau = clampNonNegative(Number(inputs['DAU']));
-    const mau = clampNonNegative(Number(inputs['MAU']));
-    if (mau <= 0) return ['MAU must be > 0.'];
-    if (dau > mau) dau = mau;
-    const s = stickiness(dau, mau);
-    const band = calcHealthBand(s);
-    const bandInfo = HEALTH_BANDS[band];
-    const daysPerWeek = (s * 7).toFixed(1);
-    const targetDAU = Math.ceil(mau * HEALTH_BANDS.good.threshold);
-    const lifted = dau + (mau - dau) * 0.05;
-    return [
-      'Stickiness: ' + bandInfo.label + ' (' + fmtPct(s) + ' — users return ~' + daysPerWeek + ' days/week)',
-      'Snapshot: ' + fmtInt(dau) + ' of ' + fmtInt(mau) + ' MAU users are daily-active. ' + fmtInt(mau - dau) + ' MAU users are not active today.',
-      'What-If: if you retain +5% of non-daily MAU as daily (via push/email/re-engagement), stickiness rises to ' + fmtPct(lifted / mau),
-      'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' stickiness), need DAU of at least ' + targetDAU.toLocaleString() + ' (currently ' + fmtInt(dau) + ')',
-      'Milestone: stickiness rarely moves without improving onboarding or core-loop frequency. Target +5pp over the next 60 days via notifications and re-engagement campaigns.',
-      'Tip: Stickiness is the leading indicator of churn — pair with the GRR Calculator (P9 retention batch) to confirm the relationship in your data.',
-    ];
-  },
+  generate(inputs) { return stickinessOutput(inputs); },
   staticExamples: [
-    'Stickiness: 🟡 Good (13.0% — users return ~0.9 days/week)\nSnapshot: 650 of 5,000 MAU users are daily-active. 4,350 MAU users are not active today.\nWhat-If: if you retain +5% of non-daily MAU as daily (via push/email/re-engagement), stickiness rises to 17.3%\nBreak-Even: to hit Good (13.0% stickiness), need DAU of at least 650 (currently 650)\nMilestone: stickiness rarely moves without improving onboarding or core-loop frequency. Target +5pp over the next 60 days via notifications and re-engagement campaigns.\nTip: Stickiness is the leading indicator of churn — pair with the GRR Calculator (P9 retention batch) to confirm the relationship in your data.',
+    '$calc_out.label.stickiness|Stickiness|: $calc_out.stickiness.row.band_good{"pct":"13.0%","days":"0.9"}|🟡 Good (13.0% — users return ~0.9 days/week)|\n$calc_out.label.snapshot|Snapshot|: $calc_out.stickiness.row.snapshot_detail{"dau":"650","mau":"5,000","inactive":"4,350"}|650 of 5,000 MAU users are daily-active. 4,350 MAU users are not active today.|\n$calc_out.stickiness.row.whatif_retain_5pct{"lifted":"17.3%"}|What-If: if you retain +5% of non-daily MAU as daily (via push/email/re-engagement), stickiness rises to 17.3%|\n$calc_out.stickiness.row.break_even_dau{"threshold":"13.0%","target":"650","current":"650"}|Break-Even: to hit Good (13.0% stickiness), need DAU of at least 650 (currently 650)|\n$calc_out.stickiness.row.milestone_frequency|Milestone: stickiness rarely moves without improving onboarding or core-loop frequency. Target +5pp over the next 60 days via notifications and re-engagement campaigns.|\n$calc_out.stickiness.row.tip_churn_leading|Tip: Stickiness is the leading indicator of churn — pair with the GRR Calculator (P9 retention batch) to confirm the relationship in your data.|',
   ],
   faq: [
     { q: 'Why is 13% the bar for Good?', a: 'Mixpanel 2024 Product Benchmarks: high-engagement B2B SaaS achieves 13-20% DAU/MAU. 20%+ is social-app tier (Slack, Discord). 5% is SaaS median. Below 5% is "users opened it once" tier.' },
