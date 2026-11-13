@@ -2,6 +2,9 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-7：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置同一份实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // ACV (Average Contract Value) Calculator (P8-3) — Business v3 standard (6+ emoji sections)
@@ -85,6 +88,24 @@ export function calcHealthBand(value: number): 'excellent' | 'good' | 'warning' 
   return 'critical';
 }
 
+// ============== P168 B3-7：兜底文案常量（服务端 / 客户端**共用同一份**）==============
+// ⭐ 为什么抽成常量：兜底文本必须**逐字节相同**（服务端 makeToken / 客户端 tk）
+//   ⇒ 同一份常量插进两端 ⇒ 不可能漂。
+// ⚠️ locale.en 的对应模板必须与这些常量**逐字相同**（否则兜底与模板分叉 ⇒ 英文页变字）。
+const HEALTH_BAND_TEXT = {
+  excellent: 'Excellent — ACV ≥ $50,000/year; enterprise-grade contracts',
+  good: 'Good — ACV $10,000–$50,000/year; mid-market sweet spot',
+  warning: 'Warning — ACV $2,000–$10,000/year; SMB pricing tier',
+  critical: 'Critical — ACV < $2,000/year; micro-transaction, focus on upsell',
+} as const;
+
+const NEXT_TIER_TEXT = {
+  warning: '🟠 Warning ($2,000)',
+  good: '🟡 Good ($10,000)',
+  excellent: '🟢 Excellent ($50,000)',
+  top: 'top tier maintained',
+} as const;
+
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
@@ -108,14 +129,16 @@ function calculate(inputs: Record<string, string>): string[] {
   // Health band (applied to annualACV)
   const band = calcHealthBand(annual);
   const healthEmoji = BAND_META[band];
+  // P168 B3-7：Health 档位文案 → **语义码**（4 档都是字面量 code ⇒ 静态守卫认得出）
+  //   ⚠️ 兜底 = 英文原文**逐字相同** ⇒ 英文页一个字都不变。
   const healthLabel =
     band === 'excellent'
-      ? 'Excellent — ACV ≥ $50,000/year; enterprise-grade contracts'
+      ? makeToken('calc_out.acv.row.health_excellent', HEALTH_BAND_TEXT.excellent)
       : band === 'good'
-      ? 'Good — ACV $10,000–$50,000/year; mid-market sweet spot'
+      ? makeToken('calc_out.acv.row.health_good', HEALTH_BAND_TEXT.good)
       : band === 'warning'
-      ? 'Warning — ACV $2,000–$10,000/year; SMB pricing tier'
-      : 'Critical — ACV < $2,000/year; micro-transaction, focus on upsell';
+      ? makeToken('calc_out.acv.row.health_warning', HEALTH_BAND_TEXT.warning)
+      : makeToken('calc_out.acv.row.health_critical', HEALTH_BAND_TEXT.critical);
 
   // What-If scenarios
   const expanded20 = expansionAdjustedACV(annual, 20);
@@ -149,16 +172,16 @@ function calculate(inputs: Record<string, string>): string[] {
   let nextTier: string;
   if (band === 'critical') {
     gapToNext = 2000 - annual;
-    nextTier = '🟠 Warning ($2,000)';
+    nextTier = makeToken('calc_out.acv.row.next_tier_warning', NEXT_TIER_TEXT.warning);
   } else if (band === 'warning') {
     gapToNext = 10000 - annual;
-    nextTier = '🟡 Good ($10,000)';
+    nextTier = makeToken('calc_out.acv.row.next_tier_good', NEXT_TIER_TEXT.good);
   } else if (band === 'good') {
     gapToNext = 50000 - annual;
-    nextTier = '🟢 Excellent ($50,000)';
+    nextTier = makeToken('calc_out.acv.row.next_tier_excellent', NEXT_TIER_TEXT.excellent);
   } else {
     gapToNext = 0;
-    nextTier = 'top tier maintained';
+    nextTier = makeToken('calc_out.acv.row.top_tier_maintained', NEXT_TIER_TEXT.top);
   }
 
   // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面 Health 那套 band，
@@ -190,42 +213,125 @@ function calculate(inputs: Record<string, string>): string[] {
     });
   }
 
+  // P168 B3-7：**整行 token**（一行一个语义码；数值走 params ⇒ 中文模板自己拼）
+  //   ⚠️ 兜底与 params 取**同一个变量** ⇒ 英文兜底与中文模板不可能漂。
+  //   ⚠️ code 必须是**字面量**（静态守卫只认字面量）⇒ 不许拼接。
+  const tkHealthAcvSummary = makeToken(
+    'calc_out.acv.row.health_acv_summary',
+    'Base ACV: ' + money(base) + '  ·  Monthly: ' + moneyExact(monthlyDisplay) + '/month  ·  Annual: ' + money(annual) + '/year',
+    { base: money(base), monthly: moneyExact(monthlyDisplay), annual: money(annual) },
+  );
+  const tkExpansionAdjusted = makeToken(
+    'calc_out.acv.row.expansion_adjusted',
+    'Expansion-adjusted (' + expansionRate + '%): ' + money(expanded) + '/year',
+    { rate: String(expansionRate), expanded: money(expanded) },
+  );
+  const tkFormula = makeToken(
+    'calc_out.acv.row.formula',
+    'Formula: ' + money(totalContractValue) + ' ÷ ' + numCustomers + ' customers ÷ ' + contractLength + ' months × 12 × (1 + ' + expansionRate + '%) = ' + money(expanded) + '/year',
+    { tcv: money(totalContractValue), cust: String(numCustomers), months: String(contractLength), rate: String(expansionRate), expanded: money(expanded) },
+  );
+  const tkContractLength = makeToken(
+    'calc_out.acv.row.contract_length',
+    'Contract length: ' + contractLength + ' months',
+    { months: String(contractLength) },
+  );
+  const tkInputsAcvSummary = makeToken(
+    'calc_out.acv.row.inputs_acv_summary',
+    'Base ACV: ' + money(base) + '  ·  Monthly: ' + moneyExact(monthlyDisplay) + '  ·  Annual: ' + money(annual) + '  ·  Expansion-adjusted: ' + money(expanded),
+    { base: money(base), monthly: moneyExact(monthlyDisplay), annual: money(annual), expanded: money(expanded) },
+  );
+  const tkWhatifExpansion = makeToken(
+    'calc_out.acv.row.whatif_expansion_rate_20',
+    'Expansion rate ' + expansionRate + '%→20%: ' + money(expanded20) + '/year (' + (expanded20LiftPct >= 0 ? '+' : '') + expanded20LiftPct.toFixed(1) + '% vs current expanded)',
+    { rate: String(expansionRate), expanded20: money(expanded20), lift: (expanded20LiftPct >= 0 ? '+' : '') + expanded20LiftPct.toFixed(1) + '%' },
+  );
+  const tkWhatifContract = makeToken(
+    'calc_out.acv.row.whatif_contract_length_24',
+    'Contract length ' + contractLength + '→24 months: ' + money(annualAt24) + '/year base (' + (contractShiftPct >= 0 ? '+' : '') + contractShiftPct.toFixed(1) + '%)',
+    { months: String(contractLength), annual24: money(annualAt24), shift: (contractShiftPct >= 0 ? '+' : '') + contractShiftPct.toFixed(1) },
+  );
+  const tkWhatifCustomers = makeToken(
+    'calc_out.acv.row.whatif_customers_24',
+    'Customers ' + numCustomers + '→24: ' + money(annualAt24Cust) + '/year base (' + (custShiftPct >= 0 ? '+' : '') + custShiftPct.toFixed(1) + '%)',
+    { cust: String(numCustomers), annual24c: money(annualAt24Cust), shift: (custShiftPct >= 0 ? '+' : '') + custShiftPct.toFixed(1) },
+  );
+  const tkPathA = makeToken(
+    'calc_out.acv.row.path_a_raise_contract_value',
+    'Path A — raise total contract value by ' + money(totalCVLiftNeeded) + ' (same customers, larger deals)',
+    { amount: money(totalCVLiftNeeded) },
+  );
+  const tkPathB = makeToken(
+    'calc_out.acv.row.path_b_reduce_customers',
+    'Path B — reduce to ~' + numCustForExcellent + ' or fewer customers (each ≥ $50K target; fewer, higher-value contracts)',
+    { n: String(numCustForExcellent) },
+  );
+  const tkNote = makeToken(
+    'calc_out.acv.row.note_more_customers_lower_acv',
+    'Note: adding more customers at the same per-customer value reduces per-customer ACV',
+  );
+  const tkAtCurrentPace = makeToken(
+    'calc_out.acv.row.at_current_pace',
+    'At current pace: ~' + money(expanded) + '/year per-customer revenue (with ' + expansionRate + '% expansion)',
+    { expanded: money(expanded), rate: String(expansionRate) },
+  );
+  // 「(already at top)」/「(before expansion)」是**行尾补充** ⇒ 单独一个行码（前导空格留在 token 之外）
+  const tkGapSuffix =
+    band === 'excellent'
+      ? makeToken('calc_out.acv.row.gap_already_at_top', '(already at top)')
+      : makeToken('calc_out.acv.row.gap_before_expansion', '(before expansion)');
+
+  // P168 B3-7：**共享 section / label 键**（跨工具共享 ⇒ 只包标签文本，冒号与对齐空格留在 token 之外）
+  const tkTitle = makeToken('calc_out.section.acv_calculator', '🚀 ACV Calculator');
+  const tkHealthSection = makeToken('calc_out.section.health', '🩺 Health:');
+  const tkInputsSection = makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:');
+  const tkWhatIfSection = makeToken('calc_out.section.what_if', '🔄 What-If:');
+  const tkBreakEvenSection = makeToken('calc_out.section.break_even', '⚖️ Break-Even:');
+  const tkMilestoneSection = makeToken('calc_out.section.milestone', '🎯 Milestone:');
+  const tkLabelTotalContractValue = makeToken('calc_out.label.total_contract_value', 'Total contract value');
+  const tkLabelNumberOfCustomers = makeToken('calc_out.label.number_of_customers', 'Number of customers');
+  const tkLabelAnnualExpansionRate = makeToken('calc_out.label.annual_expansion_rate', 'Annual expansion rate');
+  const tkLabelTargetForExcellent = makeToken('calc_out.label.target_for_excellent', 'Target for 🟢 Excellent');
+  const tkLabelGapToExcellent = makeToken('calc_out.label.gap_to_excellent', 'Gap to 🟢');
+  const tkLabelNextTier = makeToken('calc_out.label.next_tier', 'Next tier');
+  const tkLabelGapToNextTier = makeToken('calc_out.label.gap_to_next_tier', 'Gap to next tier');
+
   let r =
-    '🚀 ACV Calculator\n\n' +
-    '🩺 Health:\n' +
+    tkTitle + '\n\n' +
+    tkHealthSection + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Base ACV: ' + money(base) + '  ·  Monthly: ' + moneyExact(monthlyDisplay) + '/month  ·  Annual: ' + money(annual) + '/year\n' +
-    '• Expansion-adjusted (' + expansionRate + '%): ' + money(expanded) + '/year\n' +
-    '• Formula: ' + money(totalContractValue) + ' ÷ ' + numCustomers + ' customers ÷ ' + contractLength + ' months × 12 × (1 + ' + expansionRate + '%) = ' + money(expanded) + '/year\n\n' +
+    '• ' + tkHealthAcvSummary + '\n' +
+    '• ' + tkExpansionAdjusted + '\n' +
+    '• ' + tkFormula + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    tkInputsSection + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Total contract value: ' + money(totalContractValue) + '\n' +
-    '• Contract length: ' + contractLength + ' months\n' +
-    '• Number of customers: ' + numCustomers + '\n' +
-    '• Annual expansion rate: ' + expansionRate + '%\n' +
-    '• Base ACV: ' + money(base) + '  ·  Monthly: ' + moneyExact(monthlyDisplay) + '  ·  Annual: ' + money(annual) + '  ·  Expansion-adjusted: ' + money(expanded) + '\n\n' +
+    '• ' + tkLabelTotalContractValue + ': ' + money(totalContractValue) + '\n' +
+    '• ' + tkContractLength + '\n' +
+    '• ' + tkLabelNumberOfCustomers + ': ' + numCustomers + '\n' +
+    '• ' + tkLabelAnnualExpansionRate + ': ' + expansionRate + '%\n' +
+    '• ' + tkInputsAcvSummary + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    tkWhatIfSection + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Expansion rate ' + expansionRate + '%→20%: ' + money(expanded20) + '/year (' + (expanded20LiftPct >= 0 ? '+' : '') + expanded20LiftPct.toFixed(1) + '% vs current expanded)\n' +
-    '• Contract length ' + contractLength + '→24 months: ' + money(annualAt24) + '/year base (' + (contractShiftPct >= 0 ? '+' : '') + contractShiftPct.toFixed(1) + '%)\n' +
-    '• Customers ' + numCustomers + '→24: ' + money(annualAt24Cust) + '/year base (' + (custShiftPct >= 0 ? '+' : '') + custShiftPct.toFixed(1) + '%)\n\n' +
+    '• ' + tkWhatifExpansion + '\n' +
+    '• ' + tkWhatifContract + '\n' +
+    '• ' + tkWhatifCustomers + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    tkBreakEvenSection + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target for 🟢 Excellent: ' + money(targetAnnual) + '/year ACV\n' +
-    '• Gap to 🟢: ' + money(gapToExcellent) + '/year\n' +
-    '• Path A — raise total contract value by ' + money(totalCVLiftNeeded) + ' (same customers, larger deals)\n' +
-    '• Path B — reduce to ~' + numCustForExcellent + ' or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n' +
-    '• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n' +
+    '• ' + tkLabelTargetForExcellent + ': ' + money(targetAnnual) + '/year ACV\n' +
+    '• ' + tkLabelGapToExcellent + ': ' + money(gapToExcellent) + '/year\n' +
+    '• ' + tkPathA + '\n' +
+    '• ' + tkPathB + '\n' +
+    '• ' + tkNote + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    tkMilestoneSection + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + money(Math.max(0, gapToNext)) + (band === 'excellent' ? ' (already at top)' : ' (before expansion)') + '\n' +
-    '• At current pace: ~' + money(expanded) + '/year per-customer revenue (with ' + expansionRate + '% expansion)\n\n' +
+    '• ' + tkLabelNextTier + ': ' + nextTier + '\n' +
+    '• ' + tkLabelGapToNextTier + ': ' + money(Math.max(0, gapToNext)) + ' ' + tkGapSuffix + '\n' +
+    '• ' + tkAtCurrentPace + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
 
@@ -241,6 +347,9 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
+  // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function bACV(t,n){if(n<=0)return 0;return t/n;}" +
   "function mACV(b,l){if(l<=0)return 0;return b/l;}" +
   "function aACV(m){return Math.round(m*12);}" +
@@ -260,7 +369,7 @@ const customFn =
   "function moneyExact(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}" +
   "var bd=band(annual);" +
   "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 ACV \\u2265 $50,000/year; enterprise-grade contracts':bd==='good'?'Good \\u2014 ACV $10,000\\u2013$50,000/year; mid-market sweet spot':bd==='warning'?'Warning \\u2014 ACV $2,000\\u2013$10,000/year; SMB pricing tier':'Critical \\u2014 ACV < $2,000/year; micro-transaction, focus on upsell';" +
+  "var hl=bd==='excellent'?tk('calc_out.acv.row.health_excellent','" + HEALTH_BAND_TEXT.excellent + "'):bd==='good'?tk('calc_out.acv.row.health_good','" + HEALTH_BAND_TEXT.good + "'):bd==='warning'?tk('calc_out.acv.row.health_warning','" + HEALTH_BAND_TEXT.warning + "'):tk('calc_out.acv.row.health_critical','" + HEALTH_BAND_TEXT.critical + "');" +
   "var exp20=eACV(annual,20);" +
   "var exp20pct=expd>0?((exp20-expd)/expd)*100:0;" +
   "var ann24=aACV(mACV(base,24));" +
@@ -274,51 +383,83 @@ const customFn =
   "var ncForExc=tcv>0?Math.floor(tcv/tgt):0;" +
   "var fcNeed=Math.max(0,nc-ncForExc);" +
   "var gn,nt;" +
-  "if(bd==='critical'){gn=2000-annual;nt='\\uD83D\\uDFE0 Warning ($2,000)';}" +
-  "else if(bd==='warning'){gn=10000-annual;nt='\\uD83D\\uDFE1 Good ($10,000)';}" +
-  "else if(bd==='good'){gn=50000-annual;nt='\\uD83D\\uDFE2 Excellent ($50,000)';}" +
-  "else{gn=0;nt='top tier maintained';}" +
+  "if(bd==='critical'){gn=2000-annual;nt=tk('calc_out.acv.row.next_tier_warning','" + NEXT_TIER_TEXT.warning + "');}" +
+  "else if(bd==='warning'){gn=10000-annual;nt=tk('calc_out.acv.row.next_tier_good','" + NEXT_TIER_TEXT.good + "');}" +
+  "else if(bd==='good'){gn=50000-annual;nt=tk('calc_out.acv.row.next_tier_excellent','" + NEXT_TIER_TEXT.excellent + "');}" +
+  "else{gn=0;nt=tk('calc_out.acv.row.top_tier_maintained','" + NEXT_TIER_TEXT.top + "');}" +
   "var tip='';" +
   "if(bd==='critical'){tip=JSON.stringify({code:'acv_micro_transaction',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
   "else if(bd==='warning'){tip=JSON.stringify({code:'acv_smb_tier',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
   "else if(bd==='good'){tip=JSON.stringify({code:'acv_mid_market',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
   "else{tip=JSON.stringify({code:'acv_enterprise_grade',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
+  // P168 B3-7：params 表达式用**服务端同名变量**（客户端变量是短名 ⇒ 这里做别名）
+  "var totalContractValue=tcv;var contractLength=cl;var numCustomers=nc;var expansionRate=er;" +
+  "var monthlyDisplay=moDisp;var expanded=expd;var expanded20=exp20;var expanded20LiftPct=exp20pct;" +
+  "var annualAt24=ann24;var contractShiftPct=csPct;var annualAt24Cust=ann24c;var custShiftPct=custPct;" +
+  "var targetAnnual=tgt;var gapToExcellent=gap;var totalCVLiftNeeded=tcvLift;var numCustForExcellent=ncForExc;" +
+  "var gapToNext=gn;var nextTier=nt;" +
+  "var tkHealthAcvSummary=tk('calc_out.acv.row.health_acv_summary','Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(monthlyDisplay)+'/month  \\u00B7  Annual: '+money(annual)+'/year',{base:money(base),monthly:moneyExact(monthlyDisplay),annual:money(annual)});" +
+  "var tkExpansionAdjusted=tk('calc_out.acv.row.expansion_adjusted','Expansion-adjusted ('+expansionRate+'%): '+money(expanded)+'/year',{rate:String(expansionRate),expanded:money(expanded)});" +
+  "var tkFormula=tk('calc_out.acv.row.formula','Formula: '+money(totalContractValue)+' \\u00F7 '+numCustomers+' customers \\u00F7 '+contractLength+' months \\u00D7 12 \\u00D7 (1 + '+expansionRate+'%) = '+money(expanded)+'/year',{tcv:money(totalContractValue),cust:String(numCustomers),months:String(contractLength),rate:String(expansionRate),expanded:money(expanded)});" +
+  "var tkContractLength=tk('calc_out.acv.row.contract_length','Contract length: '+contractLength+' months',{months:String(contractLength)});" +
+  "var tkInputsAcvSummary=tk('calc_out.acv.row.inputs_acv_summary','Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(monthlyDisplay)+'  \\u00B7  Annual: '+money(annual)+'  \\u00B7  Expansion-adjusted: '+money(expanded),{base:money(base),monthly:moneyExact(monthlyDisplay),annual:money(annual),expanded:money(expanded)});" +
+  "var tkWhatifExpansion=tk('calc_out.acv.row.whatif_expansion_rate_20','Expansion rate '+expansionRate+'%\\u219220%: '+money(expanded20)+'/year ('+(expanded20LiftPct>=0?'+':'')+expanded20LiftPct.toFixed(1)+'% vs current expanded)',{rate:String(expansionRate),expanded20:money(expanded20),lift:(expanded20LiftPct>=0?'+':'')+expanded20LiftPct.toFixed(1)+'%'});" +
+  "var tkWhatifContract=tk('calc_out.acv.row.whatif_contract_length_24','Contract length '+contractLength+'\\u219224 months: '+money(annualAt24)+'/year base ('+(contractShiftPct>=0?'+':'')+contractShiftPct.toFixed(1)+'%)',{months:String(contractLength),annual24:money(annualAt24),shift:(contractShiftPct>=0?'+':'')+contractShiftPct.toFixed(1)});" +
+  "var tkWhatifCustomers=tk('calc_out.acv.row.whatif_customers_24','Customers '+numCustomers+'\\u219224: '+money(annualAt24Cust)+'/year base ('+(custShiftPct>=0?'+':'')+custShiftPct.toFixed(1)+'%)',{cust:String(numCustomers),annual24c:money(annualAt24Cust),shift:(custShiftPct>=0?'+':'')+custShiftPct.toFixed(1)});" +
+  "var tkPathA=tk('calc_out.acv.row.path_a_raise_contract_value','Path A \\u2014 raise total contract value by '+money(totalCVLiftNeeded)+' (same customers, larger deals)',{amount:money(totalCVLiftNeeded)});" +
+  "var tkPathB=tk('calc_out.acv.row.path_b_reduce_customers','Path B \\u2014 reduce to ~'+numCustForExcellent+' or fewer customers (each \\u2265 $50K target; fewer, higher-value contracts)',{n:String(numCustForExcellent)});" +
+  "var tkNote=tk('calc_out.acv.row.note_more_customers_lower_acv','Note: adding more customers at the same per-customer value reduces per-customer ACV');" +
+  "var tkAtCurrentPace=tk('calc_out.acv.row.at_current_pace','At current pace: ~'+money(expanded)+'/year per-customer revenue (with '+expansionRate+'% expansion)',{expanded:money(expanded),rate:String(expansionRate)});" +
+  "var tkGapSuffix=bd==='excellent'?tk('calc_out.acv.row.gap_already_at_top','(already at top)'):tk('calc_out.acv.row.gap_before_expansion','(before expansion)');" +
+  "var tkTitle=tk('calc_out.section.acv_calculator','\\uD83D\\uDE80 ACV Calculator');" +
+  "var tkHealthSection=tk('calc_out.section.health','\\uD83E\\uDE7A Health:');" +
+  "var tkInputsSection=tk('calc_out.section.inputs_snapshot','\\uD83D\\uDCCA Inputs Snapshot:');" +
+  "var tkWhatIfSection=tk('calc_out.section.what_if','\\uD83D\\uDD04 What-If:');" +
+  "var tkBreakEvenSection=tk('calc_out.section.break_even','\\u2696\\uFE0F Break-Even:');" +
+  "var tkMilestoneSection=tk('calc_out.section.milestone','\\uD83C\\uDFAF Milestone:');" +
+  "var tkLabelTotalContractValue=tk('calc_out.label.total_contract_value','Total contract value');" +
+  "var tkLabelNumberOfCustomers=tk('calc_out.label.number_of_customers','Number of customers');" +
+  "var tkLabelAnnualExpansionRate=tk('calc_out.label.annual_expansion_rate','Annual expansion rate');" +
+  "var tkLabelTargetForExcellent=tk('calc_out.label.target_for_excellent','Target for \\uD83D\\uDFE2 Excellent');" +
+  "var tkLabelGapToExcellent=tk('calc_out.label.gap_to_excellent','Gap to \\uD83D\\uDFE2');" +
+  "var tkLabelNextTier=tk('calc_out.label.next_tier','Next tier');" +
+  "var tkLabelGapToNextTier=tk('calc_out.label.gap_to_next_tier','Gap to next tier');" +
   "var r2='';" +
-  "r2+='\\uD83D\\uDE80 ACV Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
+  "r2+=tkTitle+'\\n\\n';" +
+  "r2+=tkHealthSection+'\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(moDisp)+'/month  \\u00B7  Annual: '+money(annual)+'/year\\n';" +
-  "r2+='\\u2022 Expansion-adjusted ('+er+'%): '+money(expd)+'/year\\n';" +
-  "r2+='\\u2022 Formula: '+money(tcv)+' \\u00F7 '+nc+' customers \\u00F7 '+cl+' months \\u00D7 12 \\u00D7 (1 + '+er+'%) = '+money(expd)+'/year\\n\\n';" +
+  "r2+='\\u2022 '+tkHealthAcvSummary+'\\n';" +
+  "r2+='\\u2022 '+tkExpansionAdjusted+'\\n';" +
+  "r2+='\\u2022 '+tkFormula+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
+  "r2+=tkInputsSection+'\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Total contract value: '+money(tcv)+'\\n';" +
-  "r2+='\\u2022 Contract length: '+cl+' months\\n';" +
-  "r2+='\\u2022 Number of customers: '+nc+'\\n';" +
-  "r2+='\\u2022 Annual expansion rate: '+er+'%\\n';" +
-  "r2+='\\u2022 Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(moDisp)+'  \\u00B7  Annual: '+money(annual)+'  \\u00B7  Expansion-adjusted: '+money(expd)+'\\n\\n';" +
+  "r2+='\\u2022 '+tkLabelTotalContractValue+': '+money(totalContractValue)+'\\n';" +
+  "r2+='\\u2022 '+tkContractLength+'\\n';" +
+  "r2+='\\u2022 '+tkLabelNumberOfCustomers+': '+numCustomers+'\\n';" +
+  "r2+='\\u2022 '+tkLabelAnnualExpansionRate+': '+expansionRate+'%\\n';" +
+  "r2+='\\u2022 '+tkInputsAcvSummary+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
+  "r2+=tkWhatIfSection+'\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Expansion rate '+er+'%\\u219220%: '+money(exp20)+'/year ('+(exp20pct>=0?'+':'')+exp20pct.toFixed(1)+'% vs current expanded)\\n';" +
-  "r2+='\\u2022 Contract length '+cl+'\\u219224 months: '+money(ann24)+'/year base ('+(csPct>=0?'+':'')+csPct.toFixed(1)+'%)\\n';" +
-  "r2+='\\u2022 Customers '+nc+'\\u219224: '+money(ann24c)+'/year base ('+(custPct>=0?'+':'')+custPct.toFixed(1)+'%)\\n\\n';" +
+  "r2+='\\u2022 '+tkWhatifExpansion+'\\n';" +
+  "r2+='\\u2022 '+tkWhatifContract+'\\n';" +
+  "r2+='\\u2022 '+tkWhatifCustomers+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
+  "r2+=tkBreakEvenSection+'\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Target for \\uD83D\\uDFE2 Excellent: '+money(tgt)+'/year ACV\\n';" +
-  "r2+='\\u2022 Gap to \\uD83D\\uDFE2: '+money(gap)+'/year\\n';" +
-  "r2+='\\u2022 Path A \\u2014 raise total contract value by '+money(tcvLift)+' (same customers, larger deals)\\n';" +
-  "r2+='\\u2022 Path B \\u2014 reduce to ~'+ncForExc+' or fewer customers (each \\u2265 $50K target; fewer, higher-value contracts)\\n';" +
-  "r2+='\\u2022 Note: adding more customers at the same per-customer value reduces per-customer ACV\\n\\n';" +
+  "r2+='\\u2022 '+tkLabelTargetForExcellent+': '+money(targetAnnual)+'/year ACV\\n';" +
+  "r2+='\\u2022 '+tkLabelGapToExcellent+': '+money(gapToExcellent)+'/year\\n';" +
+  "r2+='\\u2022 '+tkPathA+'\\n';" +
+  "r2+='\\u2022 '+tkPathB+'\\n';" +
+  "r2+='\\u2022 '+tkNote+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
+  "r2+=tkMilestoneSection+'\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Next tier: '+nt+'\\n';" +
-  "r2+='\\u2022 Gap to next tier: '+money(Math.max(0,gn))+(bd==='excellent'?' (already at top)':' (before expansion)')+'\\n';" +
-  "r2+='\\u2022 At current pace: ~'+money(expd)+'/year per-customer revenue (with '+er+'% expansion)\\n\\n';" +
+  "r2+='\\u2022 '+tkLabelNextTier+': '+nextTier+'\\n';" +
+  "r2+='\\u2022 '+tkLabelGapToNextTier+': '+money(Math.max(0,gapToNext))+' '+tkGapSuffix+'\\n';" +
+  "r2+='\\u2022 '+tkAtCurrentPace+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
   "return [r2];";
@@ -373,7 +514,7 @@ const engine: ToolEngine = {
   },
   generate: calculate,
   staticExamples: [
-    '🚀 ACV Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — ACV $10,000–$50,000/year; mid-market sweet spot\n• Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year\n• Expansion-adjusted (10%): $27,500/year\n• Formula: $300,000 ÷ 12 customers ÷ 12 months × 12 × (1 + 10%) = $27,500/year\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total contract value: $300,000\n• Contract length: 12 months\n• Number of customers: 12\n• Annual expansion rate: 10%\n• Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)\n• Contract length 12→24 months: $12,500/year base (-50.0%)\n• Customers 12→24: $12,500/year base (-50.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $50,000/year ACV\n• Gap to 🟢: $25,000/year\n• Path A — raise total contract value by $300,000 (same customers, larger deals)\n• Path B — reduce to ~6 or fewer customers (each ≥ $50K target; fewer, higher-value contracts)\n• Note: adding more customers at the same per-customer value reduces per-customer ACV\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($50,000)\n• Gap to next tier: $25,000 (before expansion)\n• At current pace: ~$27,500/year per-customer revenue (with 10% expansion)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"acv_mid_market","params":{"acv":"$25,000","monthly":"$2,083.33","expanded":"$27,500"}}\n',
+    '$calc_out.section.acv_calculator|🚀 ACV Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 $calc_out.acv.row.health_good|Good — ACV $10,000–$50,000/year; mid-market sweet spot|\n• $calc_out.acv.row.health_acv_summary{"base":"$25,000","monthly":"$2,083.33","annual":"$25,000"}|Base ACV: $25,000  ·  Monthly: $2,083.33/month  ·  Annual: $25,000/year|\n• $calc_out.acv.row.expansion_adjusted{"rate":"10","expanded":"$27,500"}|Expansion-adjusted (10%): $27,500/year|\n• $calc_out.acv.row.formula{"tcv":"$300,000","cust":"12","months":"12","rate":"10","expanded":"$27,500"}|Formula: $300,000 ÷ 12 customers ÷ 12 months × 12 × (1 + 10%) = $27,500/year|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.total_contract_value|Total contract value|: $300,000\n• $calc_out.acv.row.contract_length{"months":"12"}|Contract length: 12 months|\n• $calc_out.label.number_of_customers|Number of customers|: 12\n• $calc_out.label.annual_expansion_rate|Annual expansion rate|: 10%\n• $calc_out.acv.row.inputs_acv_summary{"base":"$25,000","monthly":"$2,083.33","annual":"$25,000","expanded":"$27,500"}|Base ACV: $25,000  ·  Monthly: $2,083.33  ·  Annual: $25,000  ·  Expansion-adjusted: $27,500|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.acv.row.whatif_expansion_rate_20{"rate":"10","expanded20":"$30,000","lift":"+9.1%"}|Expansion rate 10%→20%: $30,000/year (+9.1% vs current expanded)|\n• $calc_out.acv.row.whatif_contract_length_24{"months":"12","annual24":"$12,500","shift":"-50.0"}|Contract length 12→24 months: $12,500/year base (-50.0%)|\n• $calc_out.acv.row.whatif_customers_24{"cust":"12","annual24c":"$12,500","shift":"-50.0"}|Customers 12→24: $12,500/year base (-50.0%)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.target_for_excellent|Target for 🟢 Excellent|: $50,000/year ACV\n• $calc_out.label.gap_to_excellent|Gap to 🟢|: $25,000/year\n• $calc_out.acv.row.path_a_raise_contract_value{"amount":"$300,000"}|Path A — raise total contract value by $300,000 (same customers, larger deals)|\n• $calc_out.acv.row.path_b_reduce_customers{"n":"6"}|Path B — reduce to ~6 or fewer customers (each ≥ $50K target; fewer, higher-value contracts)|\n• $calc_out.acv.row.note_more_customers_lower_acv|Note: adding more customers at the same per-customer value reduces per-customer ACV|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.next_tier|Next tier|: $calc_out.acv.row.next_tier_excellent|🟢 Excellent ($50,000)|\n• $calc_out.label.gap_to_next_tier|Gap to next tier|: $25,000 $calc_out.acv.row.gap_before_expansion|(before expansion)|\n• $calc_out.acv.row.at_current_pace{"expanded":"$27,500","rate":"10"}|At current pace: ~$27,500/year per-customer revenue (with 10% expansion)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"acv_mid_market","params":{"acv":"$25,000","monthly":"$2,083.33","expanded":"$27,500"}}\n',
   ],
   faq: [
     { q: 'What is ACV (Average Contract Value)?', a: 'ACV is the average annualized revenue per customer contract. It is computed as total contract value divided by contract length (annualized), or equivalently total revenue divided by customer count for a given period. ACV is the fundamental SaaS pricing metric — it tells you how much each customer is worth on a per-year basis, separate from new vs expansion revenue.' },
