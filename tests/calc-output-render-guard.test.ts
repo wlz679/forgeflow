@@ -18,9 +18,27 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { PILOT, staticCard, isEnglishLine, hasBareToken } from './scripts/p168-card-text.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
+
+// ⭐ CI 的「Unit tests」步骤跑在「Build」步骤**之前** ⇒ 全新 checkout 里**没有 dist/**
+//   ⇒ 守卫必须**自己**构建（仓库既有约定：a11y-guard / breadcrumb-list-guard /
+//   canonical-url-guard / category-page-schema-guard 都是这么做的）。
+//   ⚠️ 2026-11-13 实测：本守卫最初没写这段 ⇒ 本地绿（dist 已存在）但 **CI 必红**
+//   （10 个试点全部报「产物不存在」）⇒ **本地绿 ≠ CI 绿**，产物层守卫必须自建。
+function ensureBuilt(): void {
+  const probe = resolve(ROOT, 'dist', 'zh', 'solopreneur-mrr-calculator', 'index.html');
+  if (existsSync(probe)) return;
+  console.log('[p168-b3-7] dist/ missing — running pnpm build...');
+  const r = spawnSync('pnpm', ['build'], {
+    cwd: ROOT,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+  assert.equal(r.status, 0, 'pnpm build failed with status ' + r.status);
+}
 
 function cardOf(lang: string, slug: string): string[] | null {
   const p = resolve(ROOT, 'dist', lang, slug, 'index.html');
@@ -33,6 +51,7 @@ test('P168 B3-7 产物层：zh 卡片不得残留裸 token / en 与 zh 结构一
     t.skip('build-dep：需要 RUN_BUILD_TESTS=1 与已构建的 dist/');
     return;
   }
+  ensureBuilt();
   const problems: string[] = [];
   let checked = 0;
   let totalZh = 0;
