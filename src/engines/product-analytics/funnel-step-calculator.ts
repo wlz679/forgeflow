@@ -6,6 +6,7 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+import { CALC_OUTPUT_MAKE_TOKEN_JS, makeToken } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.40, label: '🟢 Excellent', message: 'End-to-end conversion is strong — every step is pulling weight.' },
@@ -13,6 +14,20 @@ export const HEALTH_BANDS = {
   warning:   { threshold: 0.15, label: '🟠 Warning',   message: 'Material drop-offs detected — focus on the biggest delta step.' },
   critical:  { threshold: 0,    label: '🔴 Critical',  message: 'Severe leakage — most users never reach the final event.' },
 };
+
+/**
+ * P168 B3-7：band 有**四个分支** ⇒ token code 必须来自**字面量映射表**。
+ *
+ * ⛔ 协议禁止动态拼码（`'calc_out.funnel_step.row.band_' + band`）：
+ *   拼接前缀会被静态守卫当成一个 locale 里不存在的「伪 code」
+ *   （实测：这样写会让 locale 键 `band_excellent` 等 4 个全部变成死键）。
+ */
+const BAND_TOKEN_CODE = {
+  excellent: 'calc_out.funnel_step.row.band_excellent',
+  good: 'calc_out.funnel_step.row.band_good',
+  warning: 'calc_out.funnel_step.row.band_warning',
+  critical: 'calc_out.funnel_step.row.band_critical',
+} as const;
 
 export function funnelEndToEnd(steps: number[]): number {
   if (steps.length < 2) return 0;
@@ -40,7 +55,9 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 
 // customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
-const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var steps = []; for (var i = 1; i <= 5; i++) { var v = cnn(Number(inputs['step' + i])); if (v > 0) steps.push(v); } if (steps.length < 2) return ['At least 2 step counts required.']; var e2e = steps[steps.length - 1] / steps[0]; var band = e2e >= 0.40 ? 'Excellent' : e2e >= 0.25 ? 'Good' : e2e >= 0.15 ? 'Warning' : 'Critical'; var emoji = e2e >= 0.40 ? 'GREEN' : e2e >= 0.25 ? 'YELLOW' : e2e >= 0.15 ? 'ORANGE' : 'RED'; var dropIdx = 0, maxDelta = 0; for (var j = 1; j < steps.length; j++) { var d = steps[j-1] - steps[j]; if (d > maxDelta) { maxDelta = d; dropIdx = j-1; } } var stepRate = []; for (var k = 1; k < steps.length; k++) stepRate.push((steps[k]/steps[k-1]*100).toFixed(1) + '%'); var tipP={e2e:(e2e*100).toFixed(1)+'%',lost:maxDelta.toLocaleString(),dropFrom:String(dropIdx+1),dropTo:String(dropIdx+2)}; var tipO=e2e>=0.40?{code:'funnelstep_excellent',params:tipP}:(e2e>=0.25?{code:'funnelstep_healthy',params:tipP}:(e2e>=0.15?{code:'funnelstep_warning',params:tipP}:{code:'funnelstep_critical',params:tipP})); return ['FUNNEL ' + emoji + ' ' + band + ' (' + (e2e*100).toFixed(1) + '% end-to-end)','SNAPSHOT: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Biggest drop: Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' (lost ' + maxDelta + ' users)','WHATIF: if biggest drop step improves by +10%, e2e lifts to ' + ((steps[steps.length - 1] + maxDelta*0.5) / steps[0] * 100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (40% e2e), need final step >= ' + Math.ceil(steps[0] * 0.4).toLocaleString() + ' (currently ' + steps[steps.length-1].toLocaleString() + ')','MILESTONE: optimize Step ' + (dropIdx+1) + ' -> Step ' + (dropIdx+2) + ' first; a 20% retention gain there lifts funnel to ' + ((steps[steps.length - 1] + maxDelta*0.2) / steps[0] * 100).toFixed(1) + '%','💡 Tip: '+JSON.stringify(tipO)]; } return run(inputs, pick, fill);";
+const customFn =
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+  "var cnn=function(x){return Math.max(0,x)};var BANDT={excellent:'calc_out.funnel_step.row.band_excellent',good:'calc_out.funnel_step.row.band_good',warning:'calc_out.funnel_step.row.band_warning',critical:'calc_out.funnel_step.row.band_critical'};function run(inputs, pick, fill) { var steps = []; for (var i = 1; i <= 5; i++) { var v = cnn(Number(inputs['step' + i])); if (v > 0) steps.push(v); } if (steps.length < 2) return [tk('calc_out.funnel_step.row.error_steps_required','At least 2 step counts required.')]; var e2e = steps[steps.length - 1] / steps[0]; var band = e2e >= 0.40 ? 'Excellent' : e2e >= 0.25 ? 'Good' : e2e >= 0.15 ? 'Warning' : 'Critical'; var bandCode = band.toLowerCase(); var emoji = e2e >= 0.40 ? '🟢' : e2e >= 0.25 ? '🟡' : e2e >= 0.15 ? '🟠' : '🔴'; var goodTh = 0.25; var dropIdx = 0, maxDelta = 0; for (var j = 1; j < steps.length; j++) { var d = steps[j-1] - steps[j]; if (d > maxDelta) { maxDelta = d; dropIdx = j-1; } } var stepRate = []; for (var k = 1; k < steps.length; k++) stepRate.push((steps[k]/steps[k-1]*100).toFixed(1) + '%'); var tipP={e2e:(e2e*100).toFixed(1)+'%',lost:maxDelta.toLocaleString(),dropFrom:String(dropIdx+1),dropTo:String(dropIdx+2)}; var tipO=e2e>=0.40?{code:'funnelstep_excellent',params:tipP}:(e2e>=0.25?{code:'funnelstep_healthy',params:tipP}:(e2e>=0.15?{code:'funnelstep_warning',params:tipP}:{code:'funnelstep_critical',params:tipP})); return [tk('calc_out.label.funnel_health','Funnel Health')+': '+tk(BANDT[bandCode],emoji+' '+band+' ('+(e2e*100).toFixed(1)+'% end-to-end)',{pct:(e2e*100).toFixed(1)+'%'}),tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.funnel_step.row.snapshot_steps',steps.length+' steps '+steps.join(' -> '),{count:String(steps.length),chain:steps.join(' -> ')})+'. '+tk('calc_out.label.step_rates','Step rates')+': '+stepRate.join(' - ')+'. '+tk('calc_out.funnel_step.row.biggest_drop','Biggest drop: Step '+(dropIdx+1)+' -> Step '+(dropIdx+2)+' (lost '+maxDelta.toLocaleString()+' users)',{from:String(dropIdx+1),to:String(dropIdx+2),lost:maxDelta.toLocaleString()}),tk('calc_out.funnel_step.row.whatif_drop_step','What-If: if biggest drop step improves by +10% retention, e2e lifts to '+((steps[steps.length-1]+maxDelta*0.5)/steps[0]*100).toFixed(1)+'%',{lifted:((steps[steps.length-1]+maxDelta*0.5)/steps[0]*100).toFixed(1)+'%'}),tk('calc_out.funnel_step.row.break_even_final','Break-Even: to hit Good ('+(goodTh*100).toFixed(1)+'% e2e), need final step >= '+Math.ceil(steps[0]*goodTh).toLocaleString()+' (currently '+steps[steps.length-1].toLocaleString()+')',{threshold:(goodTh*100).toFixed(1)+'%',target:Math.ceil(steps[0]*goodTh).toLocaleString(),current:steps[steps.length-1].toLocaleString()}),tk('calc_out.funnel_step.row.milestone_optimize_drop','Milestone: optimize Step '+(dropIdx+1)+' -> Step '+(dropIdx+2)+' first; a 20% retention gain there lifts funnel to '+((steps[steps.length-1]+maxDelta*0.2)/steps[0]*100).toFixed(1)+'%',{from:String(dropIdx+1),to:String(dropIdx+2),lifted:((steps[steps.length-1]+maxDelta*0.2)/steps[0]*100).toFixed(1)+'%'}),'💡 Tip: '+JSON.stringify(tipO)]; } return run(inputs, pick, fill);";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-funnel-step-calculator',
@@ -75,7 +92,7 @@ const engine: ToolEngine = {
       const v = clampNonNegative(Number(inputs['step' + i]));
       if (v > 0) steps.push(v);
     }
-    if (steps.length < 2) return ['At least 2 step counts required.'];
+    if (steps.length < 2) return [makeToken('calc_out.funnel_step.row.error_steps_required', 'At least 2 step counts required.')];
     const e2e = funnelEndToEnd(steps);
     const dropIdx = biggestDrop(steps);
     const maxDelta = steps[dropIdx] - steps[dropIdx + 1];
@@ -99,18 +116,42 @@ const engine: ToolEngine = {
     else if (band === 'warning') tipObj = { code: 'funnelstep_warning', params: tipParams };
     else tipObj = { code: 'funnelstep_critical', params: tipParams };
     return [
-      'Funnel Health: ' + bandInfo.label + ' (' + fmtPct(e2e) + ' end-to-end)',
-      'Snapshot: ' + steps.length + ' steps ' + steps.join(' -> ') + '. Step rates: ' + stepRates.join(' - ') + '. Biggest drop: Step ' + (dropIdx + 1) + ' -> Step ' + (dropIdx + 2) + ' (lost ' + maxDelta.toLocaleString() + ' users)',
-      'What-If: if biggest drop step improves by +10% retention, e2e lifts to ' + fmtPct(liftedFinal / steps[0]),
-      'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' e2e), need final step >= ' + targetFinal.toLocaleString() + ' (currently ' + steps[steps.length - 1].toLocaleString() + ')',
-      'Milestone: optimize Step ' + (dropIdx + 1) + ' -> Step ' + (dropIdx + 2) + ' first; a 20% retention gain there lifts funnel to ' + fmtPct((steps[steps.length - 1] + maxDelta * 0.2) / steps[0]),
+      makeToken('calc_out.label.funnel_health', 'Funnel Health') + ': ' + makeToken(
+        BAND_TOKEN_CODE[band],
+        bandInfo.label + ' (' + fmtPct(e2e) + ' end-to-end)',
+        { pct: fmtPct(e2e) },
+      ),
+      makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken(
+        'calc_out.funnel_step.row.snapshot_steps',
+        steps.length + ' steps ' + steps.join(' -> '),
+        { count: String(steps.length), chain: steps.join(' -> ') },
+      ) + '. ' + makeToken('calc_out.label.step_rates', 'Step rates') + ': ' + stepRates.join(' - ') + '. ' + makeToken(
+        'calc_out.funnel_step.row.biggest_drop',
+        'Biggest drop: Step ' + (dropIdx + 1) + ' -> Step ' + (dropIdx + 2) + ' (lost ' + maxDelta.toLocaleString() + ' users)',
+        { from: String(dropIdx + 1), to: String(dropIdx + 2), lost: maxDelta.toLocaleString() },
+      ),
+      makeToken(
+        'calc_out.funnel_step.row.whatif_drop_step',
+        'What-If: if biggest drop step improves by +10% retention, e2e lifts to ' + fmtPct(liftedFinal / steps[0]),
+        { lifted: fmtPct(liftedFinal / steps[0]) },
+      ),
+      makeToken(
+        'calc_out.funnel_step.row.break_even_final',
+        'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' e2e), need final step >= ' + targetFinal.toLocaleString() + ' (currently ' + steps[steps.length - 1].toLocaleString() + ')',
+        { threshold: fmtPct(HEALTH_BANDS.good.threshold), target: targetFinal.toLocaleString(), current: steps[steps.length - 1].toLocaleString() },
+      ),
+      makeToken(
+        'calc_out.funnel_step.row.milestone_optimize_drop',
+        'Milestone: optimize Step ' + (dropIdx + 1) + ' -> Step ' + (dropIdx + 2) + ' first; a 20% retention gain there lifts funnel to ' + fmtPct((steps[steps.length - 1] + maxDelta * 0.2) / steps[0]),
+        { from: String(dropIdx + 1), to: String(dropIdx + 2), lifted: fmtPct((steps[steps.length - 1] + maxDelta * 0.2) / steps[0]) },
+      ),
       // P168 B3-4：💡 Tip 改成**语义码**（分支条件 = 上面那套 Funnel Health band，
       //   不引入第二套阈值）⇒ 模板在 locale 的 decision_tip.<code> 里，动态层随输入变。
       '💡 Tip: ' + JSON.stringify(tipObj),
     ];
   },
   staticExamples: [
-    'Funnel Health: 🟠 Warning (21.0% end-to-end)\nSnapshot: 5 steps 1000 -> 800 -> 500 -> 320 -> 210. Step rates: 80.0% - 62.5% - 64.0% - 65.6%. Biggest drop: Step 2 -> Step 3 (lost 300 users)\nWhat-If: if biggest drop step improves by +10% retention, e2e lifts to 36.0%\nBreak-Even: to hit Good (25.0% e2e), need final step >= 250 (currently 210)\nMilestone: optimize Step 2 -> Step 3 first; a 20% retention gain there lifts funnel to 27.0%\n💡 Tip: {"code":"funnelstep_warning","params":{"e2e":"21.0%","lost":"300","dropFrom":"2","dropTo":"3"}}',
+    '$calc_out.label.funnel_health|Funnel Health|: $calc_out.funnel_step.row.band_warning{"pct":"21.0%"}|🟠 Warning (21.0% end-to-end)|\n$calc_out.label.snapshot|Snapshot|: $calc_out.funnel_step.row.snapshot_steps{"count":"5","chain":"1000 -> 800 -> 500 -> 320 -> 210"}|5 steps 1000 -> 800 -> 500 -> 320 -> 210|. $calc_out.label.step_rates|Step rates|: 80.0% - 62.5% - 64.0% - 65.6%. $calc_out.funnel_step.row.biggest_drop{"from":"2","to":"3","lost":"300"}|Biggest drop: Step 2 -> Step 3 (lost 300 users)|\n$calc_out.funnel_step.row.whatif_drop_step{"lifted":"36.0%"}|What-If: if biggest drop step improves by +10% retention, e2e lifts to 36.0%|\n$calc_out.funnel_step.row.break_even_final{"threshold":"25.0%","target":"250","current":"210"}|Break-Even: to hit Good (25.0% e2e), need final step >= 250 (currently 210)|\n$calc_out.funnel_step.row.milestone_optimize_drop{"from":"2","to":"3","lifted":"27.0%"}|Milestone: optimize Step 2 -> Step 3 first; a 20% retention gain there lifts funnel to 27.0%|\n💡 Tip: {"code":"funnelstep_warning","params":{"e2e":"21.0%","lost":"300","dropFrom":"2","dropTo":"3"}}',
   ],
   faq: [
     { q: 'What is an in-product funnel vs a marketing funnel?', a: 'Marketing funnels track impressions -> leads -> customers (P6). In-product funnels track event-to-event within the product - e.g. signup -> first_action -> second_action -> conversion. PMs use in-product funnels to find where users get stuck.' },
