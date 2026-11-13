@@ -6,6 +6,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-7：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同。label 只包标签、row 包整行+{param}。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.40, label: '🟢 Excellent', message: 'Strong onboarding — most signups reach the aha-moment within the period.' },
@@ -30,8 +33,72 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 
-// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
-const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var s = cnn(Number(inputs['signups'])); var a = cnn(Number(inputs['activated'])); if (s <= 0) return ['Signups must be > 0.']; if (a > s) a = s; var rate = a / s; var band = rate >= 0.40 ? 'Excellent' : rate >= 0.25 ? 'Good' : rate >= 0.15 ? 'Warning' : 'Critical'; var emoji = rate >= 0.40 ? 'GREEN' : rate >= 0.25 ? 'YELLOW' : rate >= 0.15 ? 'ORANGE' : 'RED'; var days = inputs['period_days'] || '7'; var nonActivated = Math.max(0, s - a); var targetA = Math.ceil(s * 0.25); return ['ACTIVATION ' + emoji + ' ' + band + ' (' + (rate*100).toFixed(1) + '% within ' + days + ' days)','SNAPSHOT: ' + fmtInt(a) + ' of ' + fmtInt(s) + ' signups reached the aha-moment in ' + days + ' days. Non-activated: ' + fmtInt(nonActivated),'WHATIF: reducing time-to-value by 1 day typically lifts activation by +5 to +10 percentage points','BREAKEVEN: to hit GOOD (25% activation), need at least ' + targetA.toLocaleString() + ' activated signups (currently ' + fmtInt(a) + ')','MILESTONE: focus on the activation event itself (what does aha look like for YOUR product?) — narrowing the definition often reveals leaks','TIP: Activation is downstream of TTV - pair with the Time-to-Value Calculator.']; function fmtInt(n) { return Math.round(n).toLocaleString(); } } return run(inputs, pick, fill);";
+/** 结果卡片（服务端）—— P168 B3-7 token 化；与下面的 customFn **逐字镜像**。 */
+function calculateActivation(inputs: Record<string, string>): string[] {
+  const signups = clampNonNegative(Number(inputs['signups']));
+  let activated = clampNonNegative(Number(inputs['activated']));
+  if (signups <= 0) return [makeToken('calc_out.activation_rate.row.error_signups_zero', 'Signups must be > 0.')];
+  if (activated > signups) activated = signups;
+  const rate = activationRate(activated, signups);
+  const band = calcHealthBand(rate);
+  const days = inputs['period_days'] || '7';
+  const nonActivated = Math.max(0, signups - activated);
+  const targetActivated = Math.ceil(signups * HEALTH_BANDS.good.threshold);
+  const ratePct = fmtPct(rate);
+  // ⚠️ band 决定 code 后缀 ⇒ 4 个 band code 必须**逐个写出字面量**（拼字符串的话
+  //   G2 的「模板表守恒」看不到它们 ⇒ locale 落库后仍会红）。
+  const bandFallback = HEALTH_BANDS[band].label + ' (' + ratePct + ' within ' + days + ' days)';
+  const bandParams = { rate: ratePct, days: String(days) };
+  const bandRow = band === 'excellent' ? makeToken('calc_out.activation_rate.row.activation_excellent', bandFallback, bandParams)
+    : band === 'good' ? makeToken('calc_out.activation_rate.row.activation_good', bandFallback, bandParams)
+    : band === 'warning' ? makeToken('calc_out.activation_rate.row.activation_warning', bandFallback, bandParams)
+    : makeToken('calc_out.activation_rate.row.activation_critical', bandFallback, bandParams);
+  return [
+    makeToken('calc_out.label.activation', 'Activation') + ': ' + bandRow,
+    makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken('calc_out.activation_rate.row.snapshot_detail', fmtInt(activated) + ' of ' + fmtInt(signups) + ' signups reached the aha-moment in ' + days + ' days.', { activated: fmtInt(activated), signups: fmtInt(signups), days: String(days) }) + ' ' + makeToken('calc_out.label.non_activated', 'Non-activated') + ': ' + fmtInt(nonActivated),
+    makeToken('calc_out.activation_rate.row.whatif_reduce_ttv', 'What-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)'),
+    makeToken('calc_out.activation_rate.row.break_even_target', 'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' activation), need at least ' + targetActivated.toLocaleString() + ' activated signups (currently ' + fmtInt(activated) + ')', { target_pct: fmtPct(HEALTH_BANDS.good.threshold), target: targetActivated.toLocaleString(), current: fmtInt(activated) }),
+    makeToken('calc_out.activation_rate.row.milestone_aha_definition', 'Milestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions'),
+    makeToken('calc_out.activation_rate.row.tip_downstream_ttv', 'Tip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.'),
+  ];
+}
+
+// customFn: 浏览器侧的同一份计算（P168 B3-7：与服务端 calculateActivation **逐字镜像**）。
+// ⚠️ 客户端原本与服务端**漂移**：emoji 被写成 GREEN/YELLOW 单词、Break-Even 写 25%（服务端 25.0%）、
+//    What-If / Milestone / Tip 三整句不同 ⇒ 一律以**服务端**为准。
+// ⭐ cnn 镜像服务端的 clampNonNegative（含 NaN → 0）⇒ 两端在空输入下也一致。
+const customFn =
+  // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+  "var cnn=function(x){return isNaN(x)?0:Math.max(0,x)};" +
+  "function fmtPct(x){return (x*100).toFixed(1)+'%'}" +
+  "function fmtInt(n){return Math.round(n).toLocaleString()}" +
+  "var HEALTH_BANDS={excellent:{threshold:0.40,label:'🟢 Excellent'},good:{threshold:0.25,label:'🟡 Good'},warning:{threshold:0.15,label:'🟠 Warning'},critical:{threshold:0,label:'🔴 Critical'}};" +
+  "function run(inputs, pick, fill) {" +
+  "  var signups=cnn(Number(inputs['signups']));" +
+  "  var activated=cnn(Number(inputs['activated']));" +
+  "  if (signups<=0) return [tk('calc_out.activation_rate.row.error_signups_zero','Signups must be > 0.')];" +
+  "  if (activated>signups) activated=signups;" +
+  "  var rate=activated>=signups?1.0:activated/signups;" +
+  "  var band=rate>=HEALTH_BANDS.excellent.threshold?'excellent':rate>=HEALTH_BANDS.good.threshold?'good':rate>=HEALTH_BANDS.warning.threshold?'warning':'critical';" +
+  "  var bandInfo=HEALTH_BANDS[band];" +
+  "  var days=inputs['period_days']||'7';" +
+  "  var nonActivated=Math.max(0,signups-activated);" +
+  "  var targetActivated=Math.ceil(signups*HEALTH_BANDS.good.threshold);" +
+  "  var ratePct=fmtPct(rate);" +
+  "  var bandFallback=bandInfo.label+' ('+ratePct+' within '+days+' days)';" +
+  "  var bandParams={rate:ratePct,days:String(days)};" +
+  "  var bandRow=band==='excellent'?tk('calc_out.activation_rate.row.activation_excellent',bandFallback,bandParams):band==='good'?tk('calc_out.activation_rate.row.activation_good',bandFallback,bandParams):band==='warning'?tk('calc_out.activation_rate.row.activation_warning',bandFallback,bandParams):tk('calc_out.activation_rate.row.activation_critical',bandFallback,bandParams);" +
+  "  return [" +
+  "    tk('calc_out.label.activation','Activation')+': '+bandRow," +
+  "    tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.activation_rate.row.snapshot_detail',fmtInt(activated)+' of '+fmtInt(signups)+' signups reached the aha-moment in '+days+' days.',{activated:fmtInt(activated),signups:fmtInt(signups),days:String(days)})+' '+tk('calc_out.label.non_activated','Non-activated')+': '+fmtInt(nonActivated)," +
+  "    tk('calc_out.activation_rate.row.whatif_reduce_ttv','What-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)')," +
+  "    tk('calc_out.activation_rate.row.break_even_target','Break-Even: to hit Good ('+fmtPct(HEALTH_BANDS.good.threshold)+' activation), need at least '+targetActivated.toLocaleString()+' activated signups (currently '+fmtInt(activated)+')',{target_pct:fmtPct(HEALTH_BANDS.good.threshold),target:targetActivated.toLocaleString(),current:fmtInt(activated)})," +
+  "    tk('calc_out.activation_rate.row.milestone_aha_definition','Milestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions')," +
+  "    tk('calc_out.activation_rate.row.tip_downstream_ttv','Tip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.')," +
+  "  ];" +
+  "} return run(inputs, pick, fill);";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-activation-rate-calculator',
@@ -63,27 +130,10 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate(inputs) {
-    const signups = clampNonNegative(Number(inputs['signups']));
-    let activated = clampNonNegative(Number(inputs['activated']));
-    if (signups <= 0) return ['Signups must be > 0.'];
-    if (activated > signups) activated = signups;
-    const rate = activationRate(activated, signups);
-    const band = calcHealthBand(rate);
-    const bandInfo = HEALTH_BANDS[band];
-    const days = inputs['period_days'] || '7';
-    const nonActivated = Math.max(0, signups - activated);
-    const targetActivated = Math.ceil(signups * HEALTH_BANDS.good.threshold);
-    return [
-      'Activation: ' + bandInfo.label + ' (' + fmtPct(rate) + ' within ' + days + ' days)',
-      'Snapshot: ' + fmtInt(activated) + ' of ' + fmtInt(signups) + ' signups reached the aha-moment in ' + days + ' days. Non-activated: ' + fmtInt(nonActivated),
-      'What-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)',
-      'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' activation), need at least ' + targetActivated.toLocaleString() + ' activated signups (currently ' + fmtInt(activated) + ')',
-      'Milestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions',
-      'Tip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.',
-    ];
+    return calculateActivation(inputs);
   },
   staticExamples: [
-    'Activation: 🟡 Good (30.0% within 7 days)\nSnapshot: 150 of 500 signups reached the aha-moment in 7 days. Non-activated: 350\nWhat-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)\nBreak-Even: to hit Good (25.0% activation), need at least 125 activated signups (currently 150)\nMilestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions\nTip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.',
+    '$calc_out.label.activation|Activation|: $calc_out.activation_rate.row.activation_good{"rate":"30.0%","days":"7"}|🟡 Good (30.0% within 7 days)|\n$calc_out.label.snapshot|Snapshot|: $calc_out.activation_rate.row.snapshot_detail{"activated":"150","signups":"500","days":"7"}|150 of 500 signups reached the aha-moment in 7 days.| $calc_out.label.non_activated|Non-activated|: 350\n$calc_out.activation_rate.row.whatif_reduce_ttv|What-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)|\n$calc_out.activation_rate.row.break_even_target{"target_pct":"25.0%","target":"125","current":"150"}|Break-Even: to hit Good (25.0% activation), need at least 125 activated signups (currently 150)|\n$calc_out.activation_rate.row.milestone_aha_definition|Milestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions|\n$calc_out.activation_rate.row.tip_downstream_ttv|Tip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.|',
   ],
   faq: [
     { q: 'What is the "aha-moment"?', a: 'The product action that correlates with retention — e.g. for Slack it was "team sends 2000 messages", for Dropbox "user installs on 2nd device". Defining this accurately is the hardest part of activation.' },
