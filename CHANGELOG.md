@@ -2,7 +2,7 @@
 
 > **ForgeFlowKit release timeline** — 所有 notable changes 都记录在这里。
 > **Format**: 改编自 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)，按 P-series milestone 分段（而非按日期），因为单日可能涵盖多个 P-series commits 而单个 P-series 跨多日。
-> **最后更新:** 2026-11-12 (P168 **批次 3 · B3-6c：工具页 `lastmod` 降到「单工具级」** —— ⭐⭐ **B3-6 换对了真相源，但粒度还是族级**：实测 **200 个工具页（100 工具 × en/zh）的 `lastmod` 只有 1 种取值**（= locale 文件的 git 时间）⇒ 改一个引擎也会告诉 Google「全部 200 个工具页都更新了」⇒ 抓取预算照样被摊薄。⭐ **真相源升级为「工具的专属源集合」**：`max(该工具的引擎文件, 该工具的 prose, 该工具的注册表条目块, 该工具在 locale 里的专属键块)` —— 前两项是独占文件（文件级 git 时间），后两项是**多工具共用文件** ⇒ 必须**按行切块 + `git blame` 取每行最后改动时间**。⭐⭐ **「块」= 行集合，不是 min..max 区间** —— 实测 locale 是**多段式布局**（100/100 工具的键都跨几百行散布）⇒ 区间语义会把邻居工具的键吞进来（取证阶段的第一版探针就是这么错的，结论已作废）。⭐ **效果（实测）**：200 个工具页 **1 种取值 → 5 种**（B3-6c 单独落地时 4 种；B3-2 收尾的 `seoTitle` 键归位把 claude 的 2 页拆成独立一桶）；**改一个引擎 ⇒ 受影响页面 200 → 2**（该工具自己的 en+zh）。⚠️ **性能事故（计划里漏算的）**：每文件一次 `git log` 要 **36.27 秒**（318 次 spawn）⇒ 改成**一次调用建时间表**后降到 **2.90 秒**（B3-6「同族教训五」第二次承重）。⭐ **新守卫 `sitemap-lastmod-granularity-guard`**（source-only · **1 个测试** · 三段：源集合**逐条**比对 + 纯净性 + 逐工具时间）—— ⭐ **判据必须比「源集合」而不能只比时间**（删掉注册表源**不改变任何工具的时间** ⇒ 只比时间的话守卫全绿 ⇒ 变异测不到东西）；⚠️ **族级真相源断言 3 是删掉不是改松**（那个口径已不存在）⇒ 断言 1 的 allowed 集合换成「碰过 `src/` 的提交时间戳」（行级 blame 时间不等于任何文件的 `git log -1` 时间）。⭐ **B3-2 收尾两个 Minor**：`seoTitle` 键归位（claude 的那个键被放进了 **openai** 的键段里 ⇒「紧邻 title」从 **99/100 → 100/100**，en+zh 各 1 处）+ `generate-seo-titles.mjs` 加 `--check` 漂移闸门（**实测今天 0 漂移 ⇒ 开箱即绿**）与 `--root`（守卫在 `tmp/` 夹具里造漂移，**不碰真实 locale**），接进 `pnpm check`。验证: tsc exit 0 · 构建 **438** 页（`injected=438 skipped=0 failed=0`）· 体检工具 `tests/scripts/b3-6c-granularity-audit.mjs` **已入库**：① 200 页 **5 种**取值 ② 改一个引擎受影响 **2** 页（族级 200）③ 产物层 **431/431** 条与实现逐条一致、**0 不一致** ④ 源集合纯净性 **0 问题** ⑤ 主导来源 引擎 93 / prose 7 · 守卫 **4/4**（粒度 1 + accuracy 3）· B3-2 闸门守卫 **4/4** · 变异台子 **9/9 KILLED**（每条精确红 1 条）+ 负对照 + 还原 sha256 一致 · 全量套件 **286**（build-dep **65** + source-only **221**）。⚠️ 本批的验收指标本地测不出来 —— 索引率恢复需**上线后 2~4 周**窗口复查)
+> **最后更新:** 2026-11-13 (P168 **批次 3 · B3-7：zh 页结果卡片改成「语义码 + locale 模板」** —— zh 页（`/zh/<slug>/`）的结果卡片整段是英文：引擎吐英文句子，页面再翻译。本批改成**引擎吐「语义码 + 值」**（`$calc_out.label.x|Starting MRR|`），**中文模板进 locale**（`calc_out.*` 命名空间 = 共享 label/section + 工具独有 row），服务端/客户端查表拼装 ⇒ 改措辞不动引擎、zh 缺键自动回退英文。⭐ **试点 10 个工具**（mrr / rent_vs_buy / brrrr / project_profitability / coupon_attribution / saas_valuation / acv / funnel_step / activation_rate / stickiness）⇒ **417 个 locale 键**（共享 184 · 工具行码 233），跨引擎合并 **0 硬冲突**。⭐⭐ **兜底必须有明确边界，否则 label 根本做不到「只包标签」** —— 原设计的兜底段是「吃到行尾」的贪心正则 ⇒ 实测 `$calc_out.label.x|A\nB\nC` 的兜底捕获成 `"A\nB\nC"` ⇒ ① 缺 locale 键时**英文兜底吞掉后面整段文本**；② **token 无法只包标签** ⇒ locale 的裸标签模板会把**数值一起替换掉** ⇒ **页面上数字消失**（en/zh 页都丢）⇒ **用户拍板改格式**：兜底以**收尾终止符 `|`** 收住（`$code|兜底|`）⇒ 兜底 = 两个 `|` 之间 ⇒ 边界明确 ⇒ label 可以只包标签（冒号/对齐空格/数值留在 token 之外，locale 模板保持裸标签、可跨引擎复用）；row 仍是整行 + `{param}`。⭐⭐ **四条新不变量**（全部 source-only + 可复算工具）：**G6「服务端输出 ≡ 客户端 customFn 输出」（同输入）** —— 实测**全仓 100 个引擎里 55 个**两侧输出不一致（`saas_valuation` 客户端**少输出 21 行**、`funnel_step` 把盈亏平衡阈值**写死成 40%** 而服务端是 25.0%）⇒ **同一页两处内容矛盾** ⇒ 本批只保 10 个试点（**55 个另立批次**）；**G8「兜底渲染 ≡ locale.en 模板渲染」** —— token 自带英文兜底 ⇒ 兜底渲染 = 原始英文输出；locale.en 必须逐字等于源码原文 ⇒ 模板渲染 = 同一个英文输出 ⇒ **两者必须逐字节相同** ⇒ 一次性抓住「值消失」「模板与兜底措辞不一致」「占位符错位」「兜底被截断」四类缺陷；**G9「英文页零变化」** —— 兜底渲染 == HEAD 的 `staticExamples[0]` ⇒ 实测当场抓到 rent_vs_buy 的两处真实回归（① `padEnd(10)` 的对齐空格在 token 化时被丢弃 ② verdict 多出一个空格）⇒ **已修** ⇒ 10/10 试点「未记录差异 = 0」；**G1b「占位符后的 `%` 不得在 zh 侧丢失」** —— en 是 `{rate}%`、zh 是 `{rate}` ⇒ zh 仍 ≠ en、厚度也够 ⇒ **G1 照样绿** ⇒ 实测 coupon_attribution 的两条公式行就是这样漏了单位 ⇒ 新增。⚠️ 同族教训一：⭐⭐ **params 表达式必须在「服务端与客户端」两侧作用域都能求值** —— token 是**引擎侧构造**的 ⇒ params 的值在**求值那一刻**就固定 ⇒ 两端各自构造自己的 token ⇒ 实测 activation_rate 服务端叫 `activated`/`signups`、客户端叫 `a`/`s`，服务端模块级 helper（`fmtPct`/`HEALTH_BANDS`/`maybeNeg`/`dateLabel`）**客户端根本没有** ⇒ 浏览器端 ReferenceError（**用户点「计算」才炸**，静态页看着正常）。⚠️ 同族教训二：⭐⭐ **G8 有一个盲区：「兜底渲染 ≡ locale.en 模板渲染」发现不了「两边一起错」** ⇒ 必须另有一条**与源码原文**比对的不变量（G9）⇒ 且**一个 code 覆盖不了空格数不同的两行**（原文 `Stay 5 years:` 是 2 空格、`Stay 10/15 years:` 是 1 空格）⇒ 必须拆成 3 个 code，否则 `locale.en` 就不逐字等于源码原文。⚠️ 同族教训三：⭐⭐ **别用正则/括号扫描批量改「子 agent 产出的文件」** —— 那些文件里大量是字符串字面量（TS 双引号串里嵌 JS 单引号串）⇒ 任何「按字符扫边界」的脚本都会在撇号/转义上错位 ⇒ 实测把一个 470 行的引擎文件改成 **5,471 行、`const engine` 重复 37 份** ⇒ 只能回滚重做 ⇒ **改 agent 的产出就让它自己改**，控制器只做验收。⚠️ 同族教训四：⭐⭐ **「一个不变量只守一处」也意味着「别让某条判据在缺数据时真空绿」** —— 新判据若在「数据还没落库」时键数为 0 ⇒ 它什么都没查却绿 ⇒ 必须加**前置断言**（键数 > 0）。⚠️ 同族教训五：⭐ **协议里的例句会直接变成 agent 的产出** —— 协议原文的 label 例句把冒号与对齐空格写进了兜底 ⇒ 两个 agent 都照着写 ⇒ 数值一起被包进 token ⇒ **协议里的每一条例句都要当代码审**。⭐ **验收工具全部入库可复算**：`tests/scripts/p168-server-client-parity.ts`（G6）、`tests/scripts/p168-render-parity.ts`（G8）、`tests/scripts/p168-en-page-parity.ts`（G9）、`tests/scripts/p168-render-sample.ts`（en/zh 渲染并排抽样 = 目视验收的取样器）、`tests/scripts/p168-calc-output-audit.mjs`（数字体检）、`scripts/write-calc-out-locale.mjs`（文本插入落库，**+408 / -0** ⇒ diff 完全可审计）。验证: tsc exit 0 · 构建 **438** 页（`injected=438 skipped=0 failed=0`）· 守卫 **25/25**（G1~G3 + G1b + G2b + G2c + G7）+ G6 / G8 / G9 三个独立守卫 · 变异台子 **7/7 KILLED**（每条精确红 1 条）+ 负对照 + 还原 sha256 一致 · 产物层守卫 **2/2** · 全量套件 **290** 套件 10 批全部 `# fail 0`。⚠️ 本批的验收指标本地测不出来 —— **zh 页的中文卡片对 GSC 的实际影响需**上线后 2~4 周**窗口复查)
 >
 > **上次更新:** 2026-11-11 (P168 **批次 3 · B3-6：sitemap `lastmod` 真实性修复（每次部署都告诉 Google「431 个页面全新」）** —— ⭐⭐ **索引率从 65% 跌到 41.8% 的根因不是内容质量，而是「每次部署都把 431 个页面重新推成新页面」**：GSC 覆盖率逐日序列实测「未编入」**85 天只降过 1 次**（上升时点全对应新页面发布）⇒ 不是内容被降级 ⇒ 是**抓取预算被打散**。⭐⭐ **根因实测**：`getMtimeForHtmlPath` **100% 返回 null** ⇒ 431 个 `lastmod` **全部**等于构建时刻（**两层根因**：路径形态不匹配 + 动态路由无法反推）⇒ 修法是**换真相源**（`git log -1 --format=%ct`，**不是** mtime —— 实测 locale 的 mtime = 构建时刻而 git 内容变更更早，且 Astro 构建会触碰 `[lang]/[slug].astro`）+ **换寻址**（`normalizeHtmlKey` 双向归一 + 动态路由回退到**内容数据源**）。⭐⭐ **最有力的直接证据是「跨构建不变」**：完整重建**两次**，431 个 `lastmod` 的取值集合**逐字节相同** ⇒ lastmod 已与构建时刻彻底解耦（**修好之前这一项必然失败**）。⭐ **新守卫 `sitemap-lastmod-accuracy-guard`**（**独立文件** —— 旧守卫只查「meta tag 在不在」⇒ 全站同一时刻也照样过 ⇒ 恒真式盲区）+ **3 层断言**（产物层 / 寻址层 / 真相源层）+ 变异台子 **4/4 KILLED**（每条精确红 1 条）+ **负对照已入库可复算**。⚠️ **旧守卫里那条「lastmod 在 7 天内」当年正是在给 bug 背书** —— 它要求「lastmod ≈ 现在」⇒ **只有「每次部署刷新全部」才能满足**；修好后 431 个 URL 里 **192 个**的真实内容时间在 7 天之外 ⇒ **内容没变的页面如实报旧时间**才是正确行为 ⇒ 该断言**删掉**（**覆盖没丢**：值层判据移交新守卫且更强，全部 431 条 vs 原来抽 20 条）。⚠️ **同一个 bug 会有最后一个漏网点** —— 体检工具抓到 438 个 HTML 里**唯 1 个**不合格（`dist/404.html`）⇒ 补 `/404` 分支。
 ⚠️⚠️⭐⭐ **上线后的线上核验揭穿的一件事：「本地测绿」≠「线上生效」** —— 线上 sitemap 的 431 个 lastmod **全部相同**
@@ -39,6 +39,59 @@
 ---
 
 ## [Unreleased]
+
+### [P168] — 批次 3 · B3-7：zh 页结果卡片英文化 —— 引擎吐「语义码 + 值」，zh 侧查 locale 拼装（试点 10 个工具）（2026-11-13）
+
+**Scope**: `[engines]` `[i18n]` `[lib]` `[scripts]` `[components]` `[tests]` `[docs]`
+
+> **一句话**：⭐⭐ **「让中文页显示中文」不是给英文句子配个翻译表；引擎该吐的是语义码，而且语义码的兜底必须有明确边界。**
+
+#### 做了什么
+
+- `src/lib/calc-output-i18n.ts`（**新**）：唯一的 token 实现（`CALC_OUTPUT_TOKEN_RE` / `CALC_OUTPUT_MAKE_TOKEN_JS` / `makeToken` / `renderCalcOutput` / `extractTokenCodes`）—— 服务端与客户端**同一份**（客户端把它前置进 customFn 的函数体，`new Function` 签名不变 ⇒ 既有 customFn 契约守卫零改动、继续绿）。
+- `src/lib/calc-output-templates.ts`（**新**）：服务端按 `(lang, alias)` 裁出「共享 label/section + 本工具 row」的模板子集 ⇒ 客户端 bundle **不带** 1.9MB 的 locale。
+- `src/scripts/calc-output.client.ts`（**新**）：动态卡片渲染后复用共享渲染器 + 派发 `ffk:calc-output-rendered`。
+- `src/pages/[lang]/[slug].astro`：11 处接线（静态卡片**先** `renderCalcOutput` **再** `translateCalcOutput`；模板子集注入 `#static-results` 的 data 属性；动态路径同样渲染）。
+- `src/components/ResultCard.astro`：新增 `rawText` prop → `data-calc-output-raw`。
+- `src/i18n/locales/{en,zh}.json`：**+417 / -0**（纯新增，diff 完全可审计）—— 共享 **184** + 工具行码 **233**；落库用**文本插入 + 语义锚点**（紧跟 `decision_tip.*`），不用 `JSON.stringify` 整文件重排。
+- **10 个试点引擎** token 化（服务端 `generate()` + 客户端 `customFn` **两侧**）：mrr / rent_vs_buy / brrrr / project_profitability / coupon_attribution / saas_valuation / acv / funnel_step / activation_rate / stickiness。
+- **守卫**：`tests/calc-output-i18n-guard.test.ts`（G1 译文质量 / G1b 单位不丢 / G2 模板表守恒 / G2b '$' 形态 / G2c 字面量协议 / G3 两份实现一致 / G7 兜底边界）、`tests/calc-output-parity-guard.test.ts`（**G6** 服务端≡客户端）、`tests/calc-output-render-parity-guard.test.ts`（**G8** 兜底≡locale.en 模板）、`tests/calc-output-en-parity-guard.test.ts`（**G9** 英文页零变化）、`tests/calc-output-render-guard.test.ts`（G4 产物层：**G4b** en/zh 卡片行数一致 + **G4c** 无整行英文 + 非真空绿断言）、G11（tip 标记语言无关）、`tests/translation-glossary-guard.test.ts`（calc_out.* 动态键豁免 ⇒ 死键判定交给 G2 双向守恒）。
+- **可复算工具（全部入库）**：`tests/scripts/p168-server-client-parity.ts`（G6）、`tests/scripts/p168-render-parity.ts`（G8）、`tests/scripts/p168-en-page-parity.ts`（G9）、`tests/scripts/p168-engine-check.ts`（**单引擎作用域闸门** —— 并行改造时每个 agent 只看自己那一行）、`tests/scripts/p168-render-sample.ts`（en/zh 并排抽样 = 目视验收取样器）、`tests/scripts/p168-calc-output-audit.mjs`、`tests/scripts/p168-card-text.mjs`（共享卡片提取器：按引号状态扫描标签结束 + 只取 data-history-result 元素）、`tests/scripts/p168-card-parity.mjs`（产物层 parity 表，--check 可当门禁）、`scripts/write-calc-out-locale.mjs`。
+- **变异台子** `tests/scripts/mutate-p168-calc-output.mjs`：P1~P9（每条精确红 1 条 + 负对照 + 还原 sha256 逐字节校验）。
+
+#### 实测数字
+
+- **tsc**：`npx tsc --noEmit` → exit 0。
+- **构建**：`pnpm build`（`SKIP_INDEXNOW=1`）→ **438 页**（`injected=438 skipped=0 failed=0`）。
+- **locale**：`+417 / -0`（en 417 / zh 417）—— 共享 label/section **184** + 工具行码 **233**（比上轮 +7：brrrr **3** 条 + coupon_attribution **4** 条 tip 行码）⇒ diff 全是新增行。
+- **源码级守卫**：`calc-output-i18n-guard` **26/26**（8 条协议单测 + G1 / G1b / G2 / G2b / G2c / G3 / G7 + **G11** tip 标记语言无关）· G6 **2/2** · G8 **2/2** · G9 **2/2** · customfn-contract **5/5** · decision-support **12/12** · decision-tip-i18n **15/15**。
+- **产物层守卫**（`RUN_BUILD_TESTS=1`）：`calc-output-render-guard` **1/1**（G4 无裸 token + **G4b en/zh 卡片行数一致** + **G4c 无整行英文** + 非真空绿断言：每页 ≥1 行且总行数 ≥250）。
+- **单引擎闸门**：`p168-engine-check.ts` **10/10 ✔ 不通过 0**（① locale 缺键 ② 死键 ③ 服务端 ≡ 客户端 ④ 兜底 ≡ locale.en 模板 ⑤ 英文页零变化）。
+- **产物层 parity**：`p168-card-parity.mjs` **10/10 全绿**（en 行数 == zh 行数 · 裸 token **0** · 整行英文 **0**）。
+- **体检**（`p168-calc-output-audit.mjs`）：① zh 卡片整行英文 **0**（10 个试点全部 0）② token 覆盖率 activation_rate / stickiness **100%** · funnel_step **83.3%** · mrr **80.8%** · project_profitability **69.7%** · rent_vs_buy **64%** · brrrr **62.7%** · saas_valuation **61.1%** · coupon_attribution **54.4%** · acv **53.1%** ③ locale 键 **417**（共享 184 · row 233）④ 试点合计新增 **417** · 平均每引擎 **41.7** ⇒ 外推 90 个引擎约 **3753** 键 ⑤ 注入体积 **14612 ~ 19032** 字节/页。
+- **变异台子**：`mutate-p168-calc-output.mjs` **P1~P9 全部 KILLED**（每条精确红 1 条；P3 红 2 条、P4 红 2 条 —— 合法的一变异多不变量）+ 负对照全绿 + 还原 sha256 逐字节一致。
+- **全量套件**：**291 套件 / 10 批全部 # fail 0**（exit 0）—— 首轮唯一 1 条失败 = batch 10 的「no orphan translation keys」把 417 个 calc_out.* 全判成孤儿 ⇒ 按「豁免必须有更强不变量接手」修掉（G2 双向守恒 + 负对照实测）⇒ 复跑全绿。
+
+
+#### ⚠️ 同族教训
+
+1. ⭐⭐ **兜底必须有明确边界，否则 label 根本做不到「只包标签」** —— 旧兜底段是「吃到行尾」的贪心正则 ⇒ ① 缺 locale 键时**英文兜底吞掉后面整段文本**；② **token 无法只包标签** ⇒ locale 的裸标签模板会把**数值一起替换掉** ⇒ **页面上数字消失**（en/zh 都丢）⇒ **用户拍板改格式**：兜底以**收尾终止符 `|`** 收住（`$code|兜底|`）。
+2. ⭐⭐ **「label 只包标签 / row 包整行」是硬分工，混用就丢数据** ⇒ 新增 **G8** 把这条钉住（它一次性抓住「值消失」「模板与兜底措辞不一致」「占位符错位」「兜底被截断」四类缺陷）。
+3. ⭐⭐ **「静态卡片」与「动态卡片」是同一份结果的两次渲染，而实测它们经常不一样** —— 实测**全仓 100 个引擎里 55 个**两侧输出不一致 ⇒ **同一页两处内容矛盾** ⇒ 新增 **G6**；本批只保 10 个试点（**55 个另立批次**）。
+4. ⭐ **params 表达式必须在「服务端与客户端」两侧作用域都能求值** —— 实测 activation_rate 服务端叫 `activated`/`signups`、客户端叫 `a`/`s` ⇒ 浏览器端 ReferenceError（**用户点「计算」才炸**）。
+5. ⭐⭐ **别用正则/括号扫描批量改「子 agent 产出的文件」** —— 实测把一个 470 行的引擎文件改成 **5,471 行、`const engine` 重复 37 份** ⇒ 只能回滚重做 ⇒ **改 agent 的产出就让它自己改**，控制器只做验收。
+6. ⭐⭐ **G8 有一个盲区：「两边一起错」它发现不了** ⇒ 必须另有一条与源码原文比对的不变量：**G9「英文页零变化」** ⇒ 实测当场抓到 rent_vs_buy 的两处真实回归（对齐空格丢失 / verdict 多一个空格）。
+7. ⭐ **「zh ≠ en」与「厚度达标」都抓不住「单位丢失」** ⇒ 新增 **G1b**（占位符后的 `%` 不得在 zh 侧丢失）。
+8. ⭐⭐ **「一个不变量只守一处」也意味着「别让某条判据在缺数据时真空绿」** ⇒ 新判据必须加**前置断言**。
+9. ⭐⭐ **守卫绿灯不等于判据成立 —— 必须回头验证「它切的那一刀切对了吗」** —— G3 的服务端区切分曾把 engine 对象里的 `generate()` 排除在外 ⇒ 服务端集合**恒为空** ⇒ **G3 对绝大多数引擎什么都没比就绿了** ⇒ 已修（区域口径 + 检测器自检 + 非真空绿断言 + 变异 P8）。
+10. ⭐⭐ **语义码必须来自字面量，禁止动态拼码** —— 实测 `'calc_out.funnel_step.row.band_' + band` ⇒ 拼接前缀被当成一个 code ⇒ 伪 code + 4 个死键 ⇒ 协议改成「用**字面量映射表**」；配套：**提取 code 前必须先剥注释**。
+11. ⭐⭐ **并行改造必须有「单引擎作用域」的闸门** —— 全局守卫把多个试点的问题**汇总**成一条断言 ⇒ 并行 agent 互相看到对方的红 ⇒ 会去改**不属于自己**的引擎 ⇒ 修法：`tests/scripts/p168-engine-check.ts` 把同一条不变量**按引擎拆开**。
+12. ⭐⭐ **给「孤儿键守卫」加豁免，必须先有一条更强的不变量接手死键判定** —— `tests/translation-glossary-guard.test.ts` 的「no orphan translation keys」靠「源码里有没有字面量 t('key')」判死键 ⇒ 而 `calc_out.<code>` 是**运行时拼出来**的查表键（`calcOutputTemplates(lang, alias)`）⇒ 源码里根本没有 `t()` 调用 ⇒ **417 个键全被判成孤儿**（实测全量套件 batch 10 报 1 条失败）。⇒ 修法：把 `calc_out.` 加进该守卫的 `DYNAMIC_KEY_PREFIXES`（与既有 `decision_tip.` 同一模式）⇒ **死键判定交给 G2（双向模板表守恒：引擎声明的 token 集合 == locale 的 calc_out.* 键集合，双向比对 + 扫全部 100 个引擎）** ⇒ 放行不削弱覆盖率。⚠️ 配套：**豁免必须配负对照实测** —— 塞一个死的 `calc_out.__neg_dead_key__` ⇒ G2 精确报红「locale 有 calc_out.__neg_dead_key__，但没有任何引擎声明它（死键）」⇒ 还原后 sha256 逐字节一致 ⇒ **豁免没有变成覆盖漏洞**。
+
+> 完整 12 条教训见 `AGENTS.md` 的「P168 note（批次 3 · B3-7 · 2026-11-13）」；实施期的规格修正见 `docs/superpowers/specs/2026-11-12-p168-b3-7-zh-calc-output-i18n-design.md` §10。
+
+**维度 3 scan: 基于信号 ① Google 对多语言页面的指引**（zh 与 en 是**两个独立市场**，各有各的搜索意图；zh 页给中文用户看，就必须给中文内容）**② 本仓库实测**（2026-11-12：zh 页 75/100 的结果卡片整段英文 2048 行、动态层 100/100 零中文；主规格 §19.30.6 早就把它记成「量级远大于本批，单独排期」⇒ 现在量级已量清）**③ 业界同证**（B3-4 的「建议码 + locale 模板」形态已在本站验证可行，19 个工具已迁）⇒ 三条信号共同指向「**动态文案要可翻译，就先给它一个稳定的语义码**」⇒ 因此修法是**换输出形态**，不是加词表。
+
 
 ### [P168] — 批次 3 · B3-6c：工具页 `lastmod` 降到「单工具级」｜+ B3-2 收尾两个 Minor（2026-11-11）
 

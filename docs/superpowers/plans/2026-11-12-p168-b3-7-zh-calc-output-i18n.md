@@ -75,7 +75,7 @@ PARAMS   := '{' JSON_OBJECT '}'                              -- 可选
 FALLBACK := 任意文本，不含 '|'
 
 正则：
-  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|])*))?/g
+  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|\n\r])*)\|)?/g
 ``
 
 ⚠️ **正则两处关键**：
@@ -329,7 +329,16 @@ export const CALC_OUTPUT_KEY_PREFIX = 'calc_out.';
  *      （否则 'raise to $300,000' 会被截断）
  */
 export const CALC_OUTPUT_TOKEN_RE =
-  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|])*))?/g;
+  /\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|\n\r])*)\|)?/g;
+> ⭐⭐ **2026-11-13 token 格式已改（用户拍板）**：兜底段以**收尾终止符 `|`** 收住。
+> - token 形态：`$code{params}|兜底|`（`makeToken` / `tk` **自动补**收尾 `|`；**字面量写法必须自己补**）。
+> - 旧格式（兜底吃到行尾）**贪心** ⇒ token 后面的文本会被吞 ⇒ label token 做不到「只包标签」
+>   ⇒ 标签模板替换时**数值一起消失**（en/zh 页都丢）。
+> - ⇒ **label token 只包标签**（冒号 / 对齐空格 / 数值在 token 之外，locale 模板保持裸标签）；
+>   **row token 仍是整行**（数值用 params 插值，locale 模板 = 整行 + `{param}`）。
+> - 新增不变量：**G8**（兜底渲染 ≡ locale.en 模板渲染）——测量工具 `tests/scripts/p168-render-parity.ts`，
+>   守卫 `tests/calc-output-render-parity-guard.test.ts`。
+
 
 /** 渲染结果卡片的文本：命中模板用模板，缺键降级到英文兜底 */
 export type RenderCalcOutput = (text: string, templates: Record<string, string>) => string;
@@ -1373,6 +1382,29 @@ cmd.exe /c "node scripts\\codegen-examples.mjs --check"
 Expected: `--check PASSED: all 100 engines in sync and clean.`
 
 ⚠️ **若不 PASSED**：说明某个引擎的 `staticExamples[0]` 与 `generate()` 不一致 ⇒ 多半是本批改坏的 ⇒ 修引擎，不要改 `--check`。
+
+---
+
+## 实施期实测修正（2026-11-13）
+
+> ⭐ 本节记录**实施期发现并已修正**的规格/计划漏洞；详细推导见 spec §10，教训全文见 `AGENTS.md` 的 B3-7 note。
+
+| # | 发现（实测） | 修正 |
+|---|---|---|
+| 1 | **兜底吃到行尾** ⇒ ① 缺 locale 键时英文兜底吞掉后续整段文本 ② **token 做不到「只包标签」** ⇒ 裸标签模板把**数值一起替换掉** ⇒ **页面上数字消失** | **用户拍板**：兜底以**收尾终止符 `|`** 收住（`$code|兜底|`）⇒ 核心模块 + G2c + 协议三处同步；`makeToken`/`tk` 自动补收尾 `|` |
+| 2 | **动态拼码**（`'calc_out.x.row.band_' + band`）⇒ 拼接前缀被当成一个 code ⇒ 伪 code + 4 个死键 | 协议新增：**code 必须来自字符串字面量**；有分支时用**字面量映射表** ⇒ 扫描器直接认表里的字面量 |
+| 3 | ⭐⭐ **G3 的服务端区切分切错** ⇒ 服务端 token 集合**恒为空** ⇒ **G3 对绝大多数引擎真空绿** | 服务端区 = **整个文件去掉 customFn 声明**；补**检测器自检** + **非真空绿断言** |
+| 4 | **token code 提取没剥注释** ⇒ 注释里的 code 被当成「已声明」 | `tokenCodesIn` 先过 `stripComments`；G2 内加**检测器自检** |
+| 5 | ⭐ **全局守卫把多试点的问题汇总成一条断言** ⇒ 并行 agent 互相看到对方的红 ⇒ 会去改**不属于自己**的引擎 | 新增 **`tests/scripts/p168-engine-check.ts`**（单引擎作用域闸门，**入库可复算**） |
+| 6 | **locale 落库实数是 +410 / -0**（不是计划里写的 +408） | 以实测为准（共享 184 + 工具行码 226） |
+| 7 | **变异台子** 从 P1~P5 扩到 **P1~P8**（P6 收尾终止符 / P7 只改客户端文案 / P8 服务端区切回旧口径） | 台子与守卫同步更新 |
+| 8 | ⭐⭐ **zh 卡片比 en 多一条 tip 行**（实测 16 页）⇒ 根因：`translateCalcOutput` 把「💡 Tip:」改写成「💡 提示:」，而 `ResultCard` 的过滤器**只认英文标记** ⇒ 连带 SSR 与客户端 beautify 行结构不一致 | 标记清单与判定抽到 `src/lib/calc-output-i18n.ts`（`CALC_OUTPUT_TIP_MARKERS` / `isCalcOutputTipLine`，覆盖中英文 + 半角/全角冒号）+ 新增 **G11** 单测 + 变异 **P9** |
+| 9 | ⭐⭐ **产物层守卫 G4 从未执行过**（需 `RUN_BUILD_TESTS=1`）且提取口径错（把 `data-calc-output-raw` 的 token 原文与 `data-calc-output-templates` 的英文 locale 值算进「卡片文本」） | 新增 `tests/scripts/p168-card-text.mjs`（剥属性 + 只取文本节点）；**G4 重写**为 G4（无裸 token）+ G4b（en/zh 行数一致）+ G4c（无整行英文）+ 非真空绿断言；新增 `tests/scripts/p168-card-parity.mjs` |
+| 10 | ⭐ **体检脚本自己也要被体检**：旧体检把 HTML 标签当「英文行」数 ⇒ `rent_vs_buy 44/223` 假阳性（真相 0）⇒ 排查方向跑偏 | 体检改用共享 helper（提取口径修正）+ 英文判据收紧为「≥3 个英文词且 CJK ≤2」；**代理指标必须先证明提取口径对** |
+| 11 | ⭐ **brrrr(3) / coupon_attribution(4) 的 tip 正文是硬编码英文** ⇒ zh 卡片仍有英文段落 | 7 条 tip 整行 token 化（code 用字面量、`💡 Tip: ` 前缀留在 token 内 ⇒ en 页零变化）；locale **+7 / -0**；客户端 `tk(...)` 的 code 必须用**裸单引号**（`tk(\'...\')` 会让 G3 匹配不到） |
+| 12 | ⭐⭐ **孤儿键守卫把 417 个 `calc_out.*` 全判成孤儿** ⇒ 全量套件 batch 10 报 1 条失败 | 根因：`calc_out.<code>` 是**运行时拼出来**的查表键（`calcOutputTemplates(lang, alias)`）⇒ 源码里没有字面量 `t()` 调用 ⇒ 那条守卫靠「有没有 `t()`」判死键失效 ⇒ 把 `calc_out.` 加进 `DYNAMIC_KEY_PREFIXES`（与 `decision_tip.` 同模式）⇒ 死键判定交给 **G2 双向模板表守恒**（引擎 token 集合 == locale 键集合，双向 + 全 100 引擎）；配**负对照**（塞死键 ⇒ G2 精确报红 + sha256 逐字节还原） |
+
+⚠️ **Step 3 的 codegen 会重写全部 100 个引擎的 `staticExamples`** —— 实测**只有已改动的引擎会被改**（其余 92 个幂等）⇒ 仍需在**并行阶段结束后**统一跑一次，避免与 agent 的编辑撞车。
 
 ### Step 5: 跑守卫，G2 应转绿
 
