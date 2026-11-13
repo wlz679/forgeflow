@@ -15,7 +15,7 @@
 //   ② locale 里该 alias 的每个 row.* 键都被引擎声明      （= G2 方向二，本工具的增量）
 //   ③ 服务端 generate() 输出 === 客户端 customFn 输出      （= G6）
 //   ④ token 兜底渲染 === locale.en 模板渲染              （= G8）
-//   ⑤ token 兜底渲染 === HEAD 的 staticExamples[0]        （= G9，英文页零变化）
+//   ⑤ token 兜底渲染 === **基线提交**的 staticExamples[0]   （= G9，英文页零变化；基线钉死在 token 化之前）
 
 import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
@@ -27,7 +27,7 @@ import { renderCalcOutput } from '../../src/lib/calc-output-i18n.ts';
 import { toolAlias } from '../../src/lib/calc-output-templates.ts';
 import { stripComments } from '../build-dep-suites.mjs';
 import { codegenDefaults, syntheticInputs, browserPick, browserFill } from './p168-server-client-parity.ts';
-import { PILOT_FILES, ALLOWED_DIFFS, normalizeDates } from './p168-en-page-parity.ts';
+import { PILOT_FILES, ALLOWED_DIFFS, normalizeDates, BASELINE_SHA } from './p168-en-page-parity.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const NL = String.fromCharCode(10);
@@ -69,7 +69,7 @@ function loadLocale(lang: 'en' | 'zh'): Record<string, string> {
 function headStaticExample(file: string): string | null {
   let src: string;
   const rel = file.startsWith(ROOT) ? file.slice(ROOT.length + 1).split('\\').join('/') : file;
-  try { src = execSync('git show HEAD:' + rel, { encoding: 'utf8', maxBuffer: 1 << 28 }); }
+  try { src = execSync('git show ' + BASELINE_SHA + ':' + rel, { encoding: 'utf8', maxBuffer: 1 << 28 }); }
   catch { return null; }
   const m = src.match(/staticExamples:\s*\[\s*'((?:[^'\\]|\\.)*)'/);
   if (!m) return null;

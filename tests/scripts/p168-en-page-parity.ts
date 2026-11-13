@@ -8,9 +8,15 @@
 //
 // ⭐⭐ 为什么需要它（B3-7 的产品承诺：zh 页改中文，**英文页一个字都不改**）：
 //   · 静态卡片 = `engine.staticExamples[0]`（codegen 用**服务端 generate()** 生成）。
-//   · HEAD 版的 `staticExamples[0]` = **token 化之前**的英文输出。
+//   · **基线提交**版的 `staticExamples[0]` = **token 化之前**的英文输出。
 //   · 现在版的 token 自带**英文兜底** ⇒ 兜底渲染 = token 化后的英文输出。
-//   ⇒ **兜底渲染 == HEAD 的 staticExamples[0]** ⇒ 英文页逐字不变。
+//   ⇒ **兜底渲染 == 基线的 staticExamples[0]** ⇒ 英文页逐字不变。
+//
+// ⭐⭐ 为什么基线必须钉在**固定 SHA** 而不是 HEAD（2026-11-13 实测踩坑）：
+//   HEAD 会随本批提交前进 ⇒ 一提交，基线就变成「**已 token 化**的版本」
+//   ⇒ 基线里全是 `$calc_out.…` token 原文 ⇒ 与「渲染后的英文」必然不等
+//   ⇒ **G9 提交后必红**（本地未提交时反而绿 ⇒ 又一个「本地绿 ≠ CI 绿」）。
+//   ⇒ 基线 = token 化**之前**的最后一个提交，并用「基线里不得出现 token」自证。
 //
 // ⚠️ 这条判据**补上了 G8 的盲区**：G8 只比「兜底渲染 vs locale.en 模板渲染」
 //   ⇒ 两边一起错时它照样绿 ⇒ 它发现不了「兜底本身与源码原文不同」。
@@ -59,10 +65,19 @@ export interface EnParityRow {
   diffs: string[];
 }
 
-function headStaticExample(file: string): string | null {
+/**
+ * ⭐⭐ 基线提交：**B3-7 引擎 token 化之前**的最后一个提交。
+ *   ⚠️ 不得改成 HEAD —— 一提交，基线就变成「已 token 化」的版本
+ *   ⇒ G9 变成「token 化 vs token 化」（真空绿）或「token 原文 vs 渲染后」（必然红）。
+ *   ⚠️ 2026-11-13 实测：本地未提交时 G9 绿、**提交后立刻红** ⇒ CI 必红。
+ */
+export const BASELINE_SHA = 'd3b3c1d';
+
+/** 取基线提交里该引擎的 staticExamples[0]（token 化之前的英文输出） */
+export function baselineStaticExample(file: string): string | null {
   let src: string;
   try {
-    src = execSync('git show HEAD:' + file, { encoding: 'utf8', maxBuffer: 1 << 28 });
+    src = execSync('git show ' + BASELINE_SHA + ':' + file, { encoding: 'utf8', maxBuffer: 1 << 28 });
   } catch {
     return null;
   }
@@ -89,8 +104,8 @@ export function measureEnParity(slugs: string[]): EnParityRow[] {
     const file = PILOT_FILES[slug];
     const e = engines.find((x) => x.slug === slug);
     if (!e || !file) continue;
-    const head = headStaticExample(file);
-    if (head === null) continue;
+    const head = baselineStaticExample(file);
+    if (head === null) { rows.push({ slug, same: false, allowed: false, headChars: 0, nowChars: 0, diffs: ['基线取不到（浅克隆，或 ' + BASELINE_SHA + ' 不在历史里）'] }); continue; }
     const raw = (e.generate ?? e.calculate).call(e, defaults[slug]);
     const text = Array.isArray(raw) ? raw.map(String).join(NL) : String(raw);
     const now = renderCalcOutput(text, {});
