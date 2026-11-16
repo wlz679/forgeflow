@@ -1692,7 +1692,15 @@ const schema = JSON.stringify({
           if (s.indexOf('Savings Insights') >= 0 || s.indexOf('Savings vs') >= 0) {
             var slines = s.split('\n').filter(function(l){ return l.trim() && l.indexOf('───') < 0 && l.indexOf('━━') < 0; });
             html += '<div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-3">';
-            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">💰 Savings Insights</h4>';
+            // P168 B3-8：标题取**原文那一行**（不自己造文案）——
+            //   原文是 token 原文 ⇒ 保留 token ⇒ src/scripts/calc-output.client.ts 会把它换成 zh 模板；
+            //   ⚠️ 硬编码英文标题会**覆盖** zh 翻译（实测 zh 页显示「💰 Savings Insights」）。
+            var savingsTitle = '';
+            for (var sti = 0; sti < slines.length; sti++) {
+              if (slines[sti].indexOf('Savings Insights') >= 0) { savingsTitle = slines[sti].trim(); break; }
+            }
+            if (!savingsTitle && slines.length) savingsTitle = slines[0].trim();
+            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">' + esc(savingsTitle) + '</h4>';
             for (var sli = 0; sli < slines.length; sli++) {
               var sl = slines[sli].trim();
               if (!sl || sl.indexOf('Savings Insights') >= 0) continue;
@@ -1718,7 +1726,13 @@ const schema = JSON.stringify({
           if (s.indexOf('Usage Scenarios') >= 0) {
             var ulines = s.split('\n').filter(function(l){ return l.trim() && l.indexOf('───') < 0 && l.indexOf('━━') < 0; });
             html += '<div class="mb-3">';
-            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">📊 Usage Scenarios (monthly costs)</h4>';
+            // P168 B3-8：标题取**原文那一行**（不自己造文案）—— 同上。
+            var usageTitle = '';
+            for (var uti = 0; uti < ulines.length; uti++) {
+              if (ulines[uti].indexOf('Usage Scenarios') >= 0) { usageTitle = ulines[uti].trim(); break; }
+            }
+            if (!usageTitle && ulines.length) usageTitle = ulines[0].trim();
+            html += '<h4 class="text-sm font-bold text-gray-800 mb-2">' + esc(usageTitle) + '</h4>';
             html += '<div class="space-y-1">';
             for (var uli = 0; uli < ulines.length; uli++) {
               var ul = ulines[uli].trim();

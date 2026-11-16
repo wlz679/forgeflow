@@ -2,6 +2,11 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-8：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Sales Velocity Calculator (P8-2) — Business v3 standard (6+ emoji sections)
@@ -91,14 +96,15 @@ function calculate(inputs: Record<string, string>): string[] {
   // Health band
   const band = calcHealthBand(daily);
   const healthEmoji = BAND_META[band];
+  // ── P168 B3-8：健康度四档 → 语义码（4 档都是**字面量 code** ⇒ 静态守卫认得出）──
   const healthLabel =
     band === 'excellent'
-      ? 'Excellent — revenue throughput ≥ $5,000/day; sales engine humming'
+      ? makeToken('calc_out.sales_velocity.row.health_excellent', 'Excellent — revenue throughput ≥ $5,000/day; sales engine humming')
       : band === 'good'
-      ? 'Good — productive sales engine; room to compress cycle or lift win rate'
+      ? makeToken('calc_out.sales_velocity.row.health_good', 'Good — productive sales engine; room to compress cycle or lift win rate')
       : band === 'warning'
-      ? 'Warning — slow velocity; pipeline needs more volume or faster cycle'
-      : 'Critical — sales engine stalling; urgent funnel audit needed';
+      ? makeToken('calc_out.sales_velocity.row.health_warning', 'Warning — slow velocity; pipeline needs more volume or faster cycle')
+      : makeToken('calc_out.sales_velocity.row.health_critical', 'Critical — sales engine stalling; urgent funnel audit needed');
 
   // What-If: boost win rate 25%→30% AND compress cycle 45→30 days
   const wr30Daily = dailyVelocity(openOpps, avgDealSize, 30, cycleDays);
@@ -121,70 +127,147 @@ function calculate(inputs: Record<string, string>): string[] {
   let nextTier: string;
   if (band === 'critical') {
     gapToNext = 500 - daily;
-    nextTier = '🟠 Warning ($500)';
+    nextTier = makeToken('calc_out.sales_velocity.row.next_tier_warning', '🟠 Warning ($500)');
   } else if (band === 'warning') {
     gapToNext = 2000 - daily;
-    nextTier = '🟡 Good ($2,000)';
+    nextTier = makeToken('calc_out.sales_velocity.row.next_tier_good', '🟡 Good ($2,000)');
   } else if (band === 'good') {
     gapToNext = 5000 - daily;
-    nextTier = '🟢 Excellent ($5,000)';
+    nextTier = makeToken('calc_out.sales_velocity.row.next_tier_excellent', '🟢 Excellent ($5,000)');
   } else {
     gapToNext = 0;
-    nextTier = 'top tier maintained';
+    nextTier = makeToken('calc_out.sales_velocity.row.top_tier_maintained', 'top tier maintained');
   }
 
-  // Tip: band-driven contextual advice
+  // ── P168 B3-8：tip 行**整行**令牌化（「💡 Tip:」标记在兜底内 ⇒ 语言无关过滤仍命中）──
   let tip: string;
   if (band === 'critical') {
-    tip =
-      'Daily velocity < $500 is a critical sales engine stall — at this pace you will not cover quota. Audit the funnel end-to-end: lead quality (MQL→SQL conversion), qualification rigor, sales playbook adherence, win/loss reasons. Even a 2× cycle compression or doubling win rate is the minimum viable move.';
+    tip = makeToken('calc_out.sales_velocity.row.tip_critical', '💡 Tip: Daily velocity < $500 is a critical sales engine stall — at this pace you will not cover quota. Audit the funnel end-to-end: lead quality (MQL→SQL conversion), qualification rigor, sales playbook adherence, win/loss reasons. Even a 2× cycle compression or doubling win rate is the minimum viable move.');
   } else if (band === 'warning') {
-    tip =
-      'Daily velocity $500–$2,000 is below productive. The two fastest levers are win rate (better qualification, stronger close skills) and cycle compression (faster follow-up, fewer proposal revisions). Doubling open opps without improving win rate or cycle just inflates pipeline noise — fix the conversion engine first.';
+    tip = makeToken('calc_out.sales_velocity.row.tip_warning', '💡 Tip: Daily velocity $500–$2,000 is below productive. The two fastest levers are win rate (better qualification, stronger close skills) and cycle compression (faster follow-up, fewer proposal revisions). Doubling open opps without improving win rate or cycle just inflates pipeline noise — fix the conversion engine first.');
   } else if (band === 'good') {
-    tip =
-      'Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.';
+    tip = makeToken('calc_out.sales_velocity.row.tip_good', '💡 Tip: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.');
   } else {
-    tip =
-      'Excellent velocity — sales engine is generating ≥ $5K/day. Maintain cadence; protect top performers from burnout and avoid pipeline complacency. Watch for stale late-stage deals (>1.5× cycle) that quietly slip, and rebalance marketing spend toward channels that consistently fill the top of funnel with qualified opps.';
+    tip = makeToken('calc_out.sales_velocity.row.tip_excellent', '💡 Tip: Excellent velocity — sales engine is generating ≥ $5K/day. Maintain cadence; protect top performers from burnout and avoid pipeline complacency. Watch for stale late-stage deals (>1.5× cycle) that quietly slip, and rebalance marketing spend toward channels that consistently fill the top of funnel with qualified opps.');
   }
 
+  // ── P168 B3-8：运行时数值 → 局部字符串变量 ─────────────────────────────────
+  //   ⭐ fallback 与 params 取**同一个变量** ⇒ 英文兜底与中文模板不可能漂。
+  const dailyStr = moneyExact(daily);
+  const monthlyStr = moneyExact(monthly);
+  const annualStr = moneyExact(annual);
+  const openOppsStr = String(openOpps);
+  const dealSizeStr = money(avgDealSize);
+  const winRatePctStr = winRate + '%';
+  const cycleDaysStr = String(cycleDays);
+  const winRate30DailyStr = money(wr30Daily);
+  const winRate30LiftStr = (wr30LiftPct >= 0 ? '+' : '') + wr30LiftPct.toFixed(1) + '%';
+  const cycle30DailyStr = money(cy30Daily);
+  const cycle30LiftStr = (cy30LiftPct >= 0 ? '+' : '') + cy30LiftPct.toFixed(1) + '%';
+  const combinedDailyStr = money(dailyVelocity(openOpps, avgDealSize, 30, 30));
+  const winRateNeededStr = winRateNeeded.toFixed(1);
+  const cycleDaysNeededStr = String(Math.max(1, Math.ceil(cycleDaysNeeded)));
+  const moreOppsStr = String(daily > 0 ? Math.ceil((5000 - daily) / (avgDealSize * (winRate / 100) / cycleDays)) : 0);
+  const gapToNextStr = money(Math.max(0, gapToNext));
+
+  // ── P168 B3-8：带运行时数值的整行 → makeToken(code, fallback, params) ─────
+  //   ⚠️ code 必须是**字面量**（静态守卫只认字面量）⇒ 不许拼字符串。
+  //   ⚠️ 兜底里不得出现半角 '|'（维度行分隔符）—— 本批的行已逐行拆开，无 '|'。
+  const tkVelocitySummary = makeToken(
+    'calc_out.sales_velocity.row.velocity_summary',
+    'Daily velocity: ' + dailyStr + '/day  ·  Monthly: ' + monthlyStr + '  ·  Annual: ' + annualStr,
+    { daily: dailyStr, monthly: monthlyStr, annual: annualStr },
+  );
+  const tkFormula = makeToken(
+    'calc_out.sales_velocity.row.formula',
+    'Formula: (opps × deal size × win rate) ÷ cycle = (' + openOppsStr + ' × ' + dealSizeStr + ' × ' + winRatePctStr + ') ÷ ' + cycleDaysStr + ' days',
+    { opps: openOppsStr, deal: dealSizeStr, win: winRatePctStr, cycle: cycleDaysStr },
+  );
+  const tkSalesCycle = makeToken(
+    'calc_out.sales_velocity.row.sales_cycle',
+    'Sales cycle: ' + cycleDaysStr + ' days',
+    { days: cycleDaysStr },
+  );
+  const tkWhatIfWinRate = makeToken(
+    'calc_out.sales_velocity.row.whatif_win_rate_30',
+    'Win rate ' + winRatePctStr + '→30%: ' + winRate30DailyStr + '/day (' + winRate30LiftStr + ' lift)',
+    { win: winRatePctStr, daily: winRate30DailyStr, lift: winRate30LiftStr },
+  );
+  const tkWhatIfCycle = makeToken(
+    'calc_out.sales_velocity.row.whatif_cycle_30',
+    'Cycle ' + cycleDaysStr + '→30 days: ' + cycle30DailyStr + '/day (' + cycle30LiftStr + ' lift)',
+    { cycle: cycleDaysStr, daily: cycle30DailyStr, lift: cycle30LiftStr },
+  );
+  const tkWhatIfCombined = makeToken(
+    'calc_out.sales_velocity.row.whatif_combined',
+    'Combined (win rate 30% AND cycle 30d): ' + combinedDailyStr + '/day',
+    { daily: combinedDailyStr },
+  );
+  const tkPathA = makeToken(
+    'calc_out.sales_velocity.row.break_even_path_a',
+    'Path A — lift win rate to ' + winRateNeededStr + '% (cycle unchanged)',
+    { rate: winRateNeededStr },
+  );
+  const tkPathB = makeToken(
+    'calc_out.sales_velocity.row.break_even_path_b',
+    'Path B — compress cycle to ' + cycleDaysNeededStr + ' days (win rate unchanged)',
+    { days: cycleDaysNeededStr },
+  );
+  const tkPathC = makeToken(
+    'calc_out.sales_velocity.row.break_even_path_c',
+    'Path C — add ' + moreOppsStr + ' more open opps (everything else unchanged)',
+    { opps: moreOppsStr },
+  );
+  const tkAtCurrentPace = makeToken(
+    'calc_out.sales_velocity.row.at_current_pace',
+    'At current pace: ~' + annualStr + '/year revenue contribution',
+    { annual: annualStr },
+  );
+  // 「(already at top)」是**行尾补充** ⇒ 单独一个行码（前导空格留在 token 之外）
+  const tkGapSuffix =
+    band === 'excellent'
+      ? ' ' + makeToken('calc_out.sales_velocity.row.gap_already_at_top', '(already at top)')
+      : '';
+
+  // ── P168 B3-8：输出行逐行令牌化 ──────────────────────────────────────────
+  //   · 章节标题 / 标签 ⇒ **字面量 token**（冒号与对齐空格留在 token 之外）
+  //   · 带运行时数值的整行 ⇒ makeToken（fallback 与 params 同源）
   const r =
-    '🚀 Sales Velocity Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.sales_velocity_calculator|🚀 Sales Velocity Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Daily velocity: ' + moneyExact(daily) + '/day  ·  Monthly: ' + moneyExact(monthly) + '  ·  Annual: ' + moneyExact(annual) + '\n' +
-    '• Formula: (opps × deal size × win rate) ÷ cycle = (' + openOpps + ' × ' + money(avgDealSize) + ' × ' + winRate + '%) ÷ ' + cycleDays + ' days\n\n' +
+    '• ' + tkVelocitySummary + '\n' +
+    '• ' + tkFormula + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Open opportunities: ' + openOpps + '\n' +
-    '• Average deal size: ' + money(avgDealSize) + '\n' +
-    '• Win rate: ' + winRate + '%\n' +
-    '• Sales cycle: ' + cycleDays + ' days\n' +
-    '• Daily / Monthly / Annual velocity: ' + moneyExact(daily) + ' / ' + moneyExact(monthly) + ' / ' + moneyExact(annual) + '\n\n' +
+    '• $calc_out.label.open_opportunities|Open opportunities|: ' + openOppsStr + '\n' +
+    '• $calc_out.label.average_deal_size|Average deal size|: ' + dealSizeStr + '\n' +
+    '• $calc_out.label.win_rate|Win rate|: ' + winRatePctStr + '\n' +
+    '• ' + tkSalesCycle + '\n' +
+    '• $calc_out.label.daily_monthly_annual_velocity|Daily / Monthly / Annual velocity|: ' + dailyStr + ' / ' + monthlyStr + ' / ' + annualStr + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Win rate ' + winRate + '%→30%: ' + money(wr30Daily) + '/day (' + (wr30LiftPct >= 0 ? '+' : '') + wr30LiftPct.toFixed(1) + '% lift)\n' +
-    '• Cycle ' + cycleDays + '→30 days: ' + money(cy30Daily) + '/day (' + (cy30LiftPct >= 0 ? '+' : '') + cy30LiftPct.toFixed(1) + '% lift)\n' +
-    '• Combined (win rate 30% AND cycle 30d): ' + money(dailyVelocity(openOpps, avgDealSize, 30, 30)) + '/day\n\n' +
+    '• ' + tkWhatIfWinRate + '\n' +
+    '• ' + tkWhatIfCycle + '\n' +
+    '• ' + tkWhatIfCombined + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target for 🟢 Excellent: $5,000/day\n' +
-    '• Path A — lift win rate to ' + winRateNeeded.toFixed(1) + '% (cycle unchanged)\n' +
-    '• Path B — compress cycle to ' + Math.max(1, Math.ceil(cycleDaysNeeded)) + ' days (win rate unchanged)\n' +
-    '• Path C — add ' + (daily > 0 ? Math.ceil((5000 - daily) / (avgDealSize * (winRate / 100) / cycleDays)) : 0) + ' more open opps (everything else unchanged)\n\n' +
+    '• $calc_out.label.target_for_excellent|Target for 🟢 Excellent|: $5,000/day\n' +
+    '• ' + tkPathA + '\n' +
+    '• ' + tkPathB + '\n' +
+    '• ' + tkPathC + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + money(Math.max(0, gapToNext)) + (band === 'excellent' ? ' (already at top)' : '') + '\n' +
-    '• At current pace: ~' + moneyExact(annual) + '/year revenue contribution\n\n' +
+    '• $calc_out.label.next_tier|Next tier|: ' + nextTier + '\n' +
+    '• $calc_out.label.gap_to_next_tier|Gap to next tier|: ' + gapToNextStr + tkGapSuffix + '\n' +
+    '• ' + tkAtCurrentPace + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -192,6 +275,9 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
+  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function dvRaw(o,d,w,c){if(c<=0)return 0;return (o*d*(w/100))/c;}" +
   "function dv(o,d,w,c){return Math.round(dvRaw(o,d,w,c)*100)/100;}" +
   "function mv(d){return Math.round(d*30*100)/100;}" +
@@ -210,7 +296,7 @@ const customFn =
   "function moneyExact(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}" +
   "var bd=band(daily);" +
   "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 revenue throughput \\u2265 $5,000/day; sales engine humming':bd==='good'?'Good \\u2014 productive sales engine; room to compress cycle or lift win rate':bd==='warning'?'Warning \\u2014 slow velocity; pipeline needs more volume or faster cycle':'Critical \\u2014 sales engine stalling; urgent funnel audit needed';" +
+  "var hl=bd==='excellent'?tk('calc_out.sales_velocity.row.health_excellent','Excellent \\u2014 revenue throughput \\u2265 $5,000/day; sales engine humming'):bd==='good'?tk('calc_out.sales_velocity.row.health_good','Good \\u2014 productive sales engine; room to compress cycle or lift win rate'):bd==='warning'?tk('calc_out.sales_velocity.row.health_warning','Warning \\u2014 slow velocity; pipeline needs more volume or faster cycle'):tk('calc_out.sales_velocity.row.health_critical','Critical \\u2014 sales engine stalling; urgent funnel audit needed');" +
   "var wr30=dv(o,d,30,c);" +
   "var cy30=dv(o,d,w,30);" +
   "var wr30pct=daily>0?((wr30-daily)/daily)*100:0;" +
@@ -218,51 +304,78 @@ const customFn =
   "var wrn=(o*d)>0?(5000*c)/(o*d)*100:0;" +
   "var cyn=daily>0?(o*d*(w/100))/5000:0;" +
   "var gn,nt;" +
-  "if(bd==='critical'){gn=500-daily;nt='\\uD83D\\uDFE0 Warning ($500)';}" +
-  "else if(bd==='warning'){gn=2000-daily;nt='\\uD83D\\uDFE1 Good ($2,000)';}" +
-  "else if(bd==='good'){gn=5000-daily;nt='\\uD83D\\uDFE2 Excellent ($5,000)';}" +
-  "else{gn=0;nt='top tier maintained';}" +
+  "if(bd==='critical'){gn=500-daily;nt=tk('calc_out.sales_velocity.row.next_tier_warning','\\uD83D\\uDFE0 Warning ($500)');}" +
+  "else if(bd==='warning'){gn=2000-daily;nt=tk('calc_out.sales_velocity.row.next_tier_good','\\uD83D\\uDFE1 Good ($2,000)');}" +
+  "else if(bd==='good'){gn=5000-daily;nt=tk('calc_out.sales_velocity.row.next_tier_excellent','\\uD83D\\uDFE2 Excellent ($5,000)');}" +
+  "else{gn=0;nt=tk('calc_out.sales_velocity.row.top_tier_maintained','top tier maintained');}" +
+  "var dailyStr=moneyExact(daily);" +
+  "var monthlyStr=moneyExact(mo);" +
+  "var annualStr=moneyExact(yr);" +
+  "var openOppsStr=String(o);" +
+  "var dealSizeStr=money(d);" +
+  "var winRatePctStr=w+'%';" +
+  "var cycleDaysStr=String(c);" +
+  "var winRate30DailyStr=money(wr30);" +
+  "var winRate30LiftStr=(wr30pct>=0?'+':'')+wr30pct.toFixed(1)+'%';" +
+  "var cycle30DailyStr=money(cy30);" +
+  "var cycle30LiftStr=(cy30pct>=0?'+':'')+cy30pct.toFixed(1)+'%';" +
+  "var combinedDailyStr=money(dv(o,d,30,30));" +
+  "var winRateNeededStr=wrn.toFixed(1);" +
+  "var cycleDaysNeededStr=String(Math.max(1,Math.ceil(cyn)));" +
+  "var moreOppsStr=String(daily>0?Math.ceil((5000-daily)/(d*(w/100)/c)):0);" +
+  "var gapToNextStr=money(Math.max(0,gn));" +
+  "var gapSuffix=bd==='excellent'?' '+tk('calc_out.sales_velocity.row.gap_already_at_top','(already at top)'):'';" +
+  "var tkVelocitySummary=tk('calc_out.sales_velocity.row.velocity_summary','Daily velocity: '+dailyStr+'/day  \\u00B7  Monthly: '+monthlyStr+'  \\u00B7  Annual: '+annualStr,{daily:dailyStr,monthly:monthlyStr,annual:annualStr});" +
+  "var tkFormula=tk('calc_out.sales_velocity.row.formula','Formula: (opps \\u00D7 deal size \\u00D7 win rate) \\u00F7 cycle = ('+openOppsStr+' \\u00D7 '+dealSizeStr+' \\u00D7 '+winRatePctStr+') \\u00F7 '+cycleDaysStr+' days',{opps:openOppsStr,deal:dealSizeStr,win:winRatePctStr,cycle:cycleDaysStr});" +
+  "var tkSalesCycle=tk('calc_out.sales_velocity.row.sales_cycle','Sales cycle: '+cycleDaysStr+' days',{days:cycleDaysStr});" +
+  "var tkWhatIfWinRate=tk('calc_out.sales_velocity.row.whatif_win_rate_30','Win rate '+winRatePctStr+'\\u219230%: '+winRate30DailyStr+'/day ('+winRate30LiftStr+' lift)',{win:winRatePctStr,daily:winRate30DailyStr,lift:winRate30LiftStr});" +
+  "var tkWhatIfCycle=tk('calc_out.sales_velocity.row.whatif_cycle_30','Cycle '+cycleDaysStr+'\\u219230 days: '+cycle30DailyStr+'/day ('+cycle30LiftStr+' lift)',{cycle:cycleDaysStr,daily:cycle30DailyStr,lift:cycle30LiftStr});" +
+  "var tkWhatIfCombined=tk('calc_out.sales_velocity.row.whatif_combined','Combined (win rate 30% AND cycle 30d): '+combinedDailyStr+'/day',{daily:combinedDailyStr});" +
+  "var tkPathA=tk('calc_out.sales_velocity.row.break_even_path_a','Path A \\u2014 lift win rate to '+winRateNeededStr+'% (cycle unchanged)',{rate:winRateNeededStr});" +
+  "var tkPathB=tk('calc_out.sales_velocity.row.break_even_path_b','Path B \\u2014 compress cycle to '+cycleDaysNeededStr+' days (win rate unchanged)',{days:cycleDaysNeededStr});" +
+  "var tkPathC=tk('calc_out.sales_velocity.row.break_even_path_c','Path C \\u2014 add '+moreOppsStr+' more open opps (everything else unchanged)',{opps:moreOppsStr});" +
+  "var tkAtCurrentPace=tk('calc_out.sales_velocity.row.at_current_pace','At current pace: ~'+annualStr+'/year revenue contribution',{annual:annualStr});" +
   "var tip='';" +
-  "if(bd==='critical'){tip='Daily velocity < $500 is a critical sales engine stall \\u2014 at this pace you will not cover quota. Audit the funnel end-to-end: lead quality (MQL\\u2192SQL conversion), qualification rigor, sales playbook adherence, win/loss reasons. Even a 2\\u00D7 cycle compression or doubling win rate is the minimum viable move.';}" +
-  "else if(bd==='warning'){tip='Daily velocity $500\\u2013$2,000 is below productive. The two fastest levers are win rate (better qualification, stronger close skills) and cycle compression (faster follow-up, fewer proposal revisions). Doubling open opps without improving win rate or cycle just inflates pipeline noise \\u2014 fix the conversion engine first.';}" +
-  "else if(bd==='good'){tip='Daily velocity $2,000\\u2013$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps \\u00D7 size \\u00D7 win rate \\u00F7 cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5\\u20132\\u00D7 lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.';}" +
-  "else{tip='Excellent velocity \\u2014 sales engine is generating \\u2265 $5K/day. Maintain cadence; protect top performers from burnout and avoid pipeline complacency. Watch for stale late-stage deals (>1.5\\u00D7 cycle) that quietly slip, and rebalance marketing spend toward channels that consistently fill the top of funnel with qualified opps.';}" +
+  "if(bd==='critical'){tip=tk('calc_out.sales_velocity.row.tip_critical','\\uD83D\\uDCA1 Tip: Daily velocity < $500 is a critical sales engine stall \\u2014 at this pace you will not cover quota. Audit the funnel end-to-end: lead quality (MQL\\u2192SQL conversion), qualification rigor, sales playbook adherence, win/loss reasons. Even a 2\\u00D7 cycle compression or doubling win rate is the minimum viable move.');}" +
+  "else if(bd==='warning'){tip=tk('calc_out.sales_velocity.row.tip_warning','\\uD83D\\uDCA1 Tip: Daily velocity $500\\u2013$2,000 is below productive. The two fastest levers are win rate (better qualification, stronger close skills) and cycle compression (faster follow-up, fewer proposal revisions). Doubling open opps without improving win rate or cycle just inflates pipeline noise \\u2014 fix the conversion engine first.');}" +
+  "else if(bd==='good'){tip=tk('calc_out.sales_velocity.row.tip_good','\\uD83D\\uDCA1 Tip: Daily velocity $2,000\\u2013$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps \\× size \\u00D7 win rate \\u00F7 cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5\\u20132\\u00D7 lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.');}" +
+  "else{tip=tk('calc_out.sales_velocity.row.tip_excellent','\\uD83D\\uDCA1 Tip: Excellent velocity \\u2014 sales engine is generating \\u2265 $5K/day. Maintain cadence; protect top performers from burnout and avoid pipeline complacency. Watch for stale late-stage deals (>1.5\\u00D7 cycle) that quietly slip, and rebalance marketing spend toward channels that consistently fill the top of funnel with qualified opps.');}" +
   "var r2='';" +
-  "r2+='\\uD83D\\uDE80 Sales Velocity Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
+  "r2+='$calc_out.section.sales_velocity_calculator|\\uD83D\\uDE80 Sales Velocity Calculator|\\n\\n';" +
+  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Daily velocity: '+moneyExact(daily)+'/day  \\u00B7  Monthly: '+moneyExact(mo)+'  \\u00B7  Annual: '+moneyExact(yr)+'\\n';" +
-  "r2+='\\u2022 Formula: (opps \\u00D7 deal size \\u00D7 win rate) \\u00F7 cycle = ('+o+' \\u00D7 '+money(d)+' \\u00D7 '+w+'%) \\u00F7 '+c+' days\\n\\n';" +
+  "r2+='\\u2022 '+tkVelocitySummary+'\\n';" +
+  "r2+='\\u2022 '+tkFormula+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
+  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Open opportunities: '+o+'\\n';" +
-  "r2+='\\u2022 Average deal size: '+money(d)+'\\n';" +
-  "r2+='\\u2022 Win rate: '+w+'%\\n';" +
-  "r2+='\\u2022 Sales cycle: '+c+' days\\n';" +
-  "r2+='\\u2022 Daily / Monthly / Annual velocity: '+moneyExact(daily)+' / '+moneyExact(mo)+' / '+moneyExact(yr)+'\\n\\n';" +
+  "r2+='\\u2022 $calc_out.label.open_opportunities|Open opportunities|: '+openOppsStr+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.average_deal_size|Average deal size|: '+dealSizeStr+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.win_rate|Win rate|: '+winRatePctStr+'\\n';" +
+  "r2+='\\u2022 '+tkSalesCycle+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.daily_monthly_annual_velocity|Daily / Monthly / Annual velocity|: '+dailyStr+' / '+monthlyStr+' / '+annualStr+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
+  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Win rate '+w+'%\\u219230%: '+money(wr30)+'/day ('+(wr30pct>=0?'+':'')+wr30pct.toFixed(1)+'% lift)\\n';" +
-  "r2+='\\u2022 Cycle '+c+'\\u219230 days: '+money(cy30)+'/day ('+(cy30pct>=0?'+':'')+cy30pct.toFixed(1)+'% lift)\\n';" +
-  "r2+='\\u2022 Combined (win rate 30% AND cycle 30d): '+money(dv(o,d,30,30))+'/day\\n\\n';" +
+  "r2+='\\u2022 '+tkWhatIfWinRate+'\\n';" +
+  "r2+='\\u2022 '+tkWhatIfCycle+'\\n';" +
+  "r2+='\\u2022 '+tkWhatIfCombined+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
+  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Target for \\uD83D\\uDFE2 Excellent: $5,000/day\\n';" +
-  "r2+='\\u2022 Path A \\u2014 lift win rate to '+wrn.toFixed(1)+'% (cycle unchanged)\\n';" +
-  "r2+='\\u2022 Path B \\u2014 compress cycle to '+Math.max(1,Math.ceil(cyn))+' days (win rate unchanged)\\n';" +
-  "r2+='\\u2022 Path C \\u2014 add '+(daily>0?Math.ceil((5000-daily)/(d*(w/100)/c)):0)+' more open opps (everything else unchanged)\\n\\n';" +
+  "r2+='\\u2022 $calc_out.label.target_for_excellent|Target for \\uD83D\\uDFE2 Excellent|: $5,000/day\\n';" +
+  "r2+='\\u2022 '+tkPathA+'\\n';" +
+  "r2+='\\u2022 '+tkPathB+'\\n';" +
+  "r2+='\\u2022 '+tkPathC+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
+  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Next tier: '+nt+'\\n';" +
-  "r2+='\\u2022 Gap to next tier: '+money(Math.max(0,gn))+(bd==='excellent'?' (already at top)':'')+'\\n';" +
-  "r2+='\\u2022 At current pace: ~'+moneyExact(yr)+'/year revenue contribution\\n\\n';" +
+  "r2+='\\u2022 $calc_out.label.next_tier|Next tier|: '+nt+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.gap_to_next_tier|Gap to next tier|: '+gapToNextStr+gapSuffix+'\\n';" +
+  "r2+='\\u2022 '+tkAtCurrentPace+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
+  "r2+=tip+'\\n';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -314,7 +427,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['🚀 Sales Velocity Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — productive sales engine; room to compress cycle or lift win rate\n• Daily velocity: $2,777.78/day  ·  Monthly: $83,333.33  ·  Annual: $1,013,888.89\n• Formula: (opps × deal size × win rate) ÷ cycle = (20 × $25,000 × 25%) ÷ 45 days\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Open opportunities: 20\n• Average deal size: $25,000\n• Win rate: 25%\n• Sales cycle: 45 days\n• Daily / Monthly / Annual velocity: $2,777.78 / $83,333.33 / $1,013,888.89\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Win rate 25%→30%: $3,333/day (+20.0% lift)\n• Cycle 45→30 days: $4,167/day (+50.0% lift)\n• Combined (win rate 30% AND cycle 30d): $5,000/day\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $5,000/day\n• Path A — lift win rate to 45.0% (cycle unchanged)\n• Path B — compress cycle to 25 days (win rate unchanged)\n• Path C — add 16 more open opps (everything else unchanged)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($5,000)\n• Gap to next tier: $2,222\n• At current pace: ~$1,013,888.89/year revenue contribution\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.\n'],
+  staticExamples: ['$calc_out.section.sales_velocity_calculator|🚀 Sales Velocity Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 $calc_out.sales_velocity.row.health_good|Good — productive sales engine; room to compress cycle or lift win rate|\n• $calc_out.sales_velocity.row.velocity_summary{"daily":"$2,777.78","monthly":"$83,333.33","annual":"$1,013,888.89"}|Daily velocity: $2,777.78/day  ·  Monthly: $83,333.33  ·  Annual: $1,013,888.89|\n• $calc_out.sales_velocity.row.formula{"opps":"20","deal":"$25,000","win":"25%","cycle":"45"}|Formula: (opps × deal size × win rate) ÷ cycle = (20 × $25,000 × 25%) ÷ 45 days|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.open_opportunities|Open opportunities|: 20\n• $calc_out.label.average_deal_size|Average deal size|: $25,000\n• $calc_out.label.win_rate|Win rate|: 25%\n• $calc_out.sales_velocity.row.sales_cycle{"days":"45"}|Sales cycle: 45 days|\n• $calc_out.label.daily_monthly_annual_velocity|Daily / Monthly / Annual velocity|: $2,777.78 / $83,333.33 / $1,013,888.89\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.sales_velocity.row.whatif_win_rate_30{"win":"25%","daily":"$3,333","lift":"+20.0%"}|Win rate 25%→30%: $3,333/day (+20.0% lift)|\n• $calc_out.sales_velocity.row.whatif_cycle_30{"cycle":"45","daily":"$4,167","lift":"+50.0%"}|Cycle 45→30 days: $4,167/day (+50.0% lift)|\n• $calc_out.sales_velocity.row.whatif_combined{"daily":"$5,000"}|Combined (win rate 30% AND cycle 30d): $5,000/day|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.target_for_excellent|Target for 🟢 Excellent|: $5,000/day\n• $calc_out.sales_velocity.row.break_even_path_a{"rate":"45.0"}|Path A — lift win rate to 45.0% (cycle unchanged)|\n• $calc_out.sales_velocity.row.break_even_path_b{"days":"25"}|Path B — compress cycle to 25 days (win rate unchanged)|\n• $calc_out.sales_velocity.row.break_even_path_c{"opps":"16"}|Path C — add 16 more open opps (everything else unchanged)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.next_tier|Next tier|: $calc_out.sales_velocity.row.next_tier_excellent|🟢 Excellent ($5,000)|\n• $calc_out.label.gap_to_next_tier|Gap to next tier|: $2,222\n• $calc_out.sales_velocity.row.at_current_pace{"annual":"$1,013,888.89"}|At current pace: ~$1,013,888.89/year revenue contribution|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.sales_velocity.row.tip_good|💡 Tip: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.|\n'],
   faq: [
     { q: 'What is sales velocity?', a: 'Sales velocity measures how fast your pipeline generates revenue. Formula: (number of opportunities × average deal size × win rate) ÷ sales cycle length (days). The result is dollars of revenue generated per day — the fundamental sales productivity metric for B2B SaaS and consultative sales.' },
     { q: 'What is a good sales velocity?', a: 'For B2B SaaS, daily velocity ≥ $5,000 is excellent (corresponds to ~$1.8M/year throughput). $2,000–$5,000/day is good (mid-market). Below $500/day is critical — the sales engine is stalling and you will not hit quota.' },

@@ -45,6 +45,22 @@ export const PILOT_FILES: Record<string, string> = Object.fromEntries(TOKENIZED.
 export const ALLOWED_DIFFS: Record<string, string[]> = {
   // mrr：`🔄 What-If Scenarios` → `🔄 What-If Scenarios:`（全仓主流写法带冒号；计划已记录）
   'solopreneur-mrr-calculator': ['🔄 What-If Scenarios:'],
+  // P168 B3-8 Task 7：saas-valuation 的**双美元号**修复（`$$1,000,000` → `$1,000,000`，4 行）
+  //   —— 根因：`fmt()` 自带 '$'，调用处又拼了一个 '$' ⇒ 页面出现 `$$`。
+  //   ⚠️ 白名单用 `$$` 作标记：修复后该页**已无任何 `$$`** ⇒ 未来任何含 `$$` 的差异
+  //      只能是「双美元号又回来了」，正是这条白名单要拦的 ⇒ 不会顺带放过别的改动。
+  'solopreneur-saas-valuation-calculator': ['$$'],
+  // P168 B3-8 Task 7：freelance-rate 的**双美元号**修复（`$$90/hr` → `$90/hr`，3 行）
+  //   —— 同一根因（`fmt()` 自带 '$'，调用处又拼了一个 '$'）。
+  //   ⚠️ 同样用 `$$` 作标记：修复后该页已无任何 `$$` ⇒ 未来含 `$$` 的差异只能是「双美元号又回来了」。
+  'solopreneur-freelance-rate-calculator': ['$$'],
+  // P168 B3-8 §0.5：**rental-yield 服务端数值 bug 修复**（用户 2026-11-16 拍板「改服务端」）。
+  //   根因：`cashOnCashReturn` 的分子 `annualCashFlow(inputs)` 用的是 `inputs.loanAmount` ⇒
+  //        「100% 全款」场景下**贷款没置零** ⇒ 算成「带杠杆现金流 ÷ 全款投资额」= 1.08%（口径不一致）。
+  //   客户端把贷款置 0 ⇒ 无杠杆 CoC = NOI ÷ (房价×1.03) = 6.89% ⇒ **客户端是对的**。
+  //   修法：`coc100Down` 补 `loanAmount: 0` ⇒ 服务端与客户端一致。
+  //   ⚠️ 标记用整段短语 `CoC → 6.89%`（不是光一个 `6.89%`）⇒ 将来这行若因别的原因再变，白名单不匹配 ⇒ CI 变红 ⇒ 强制复审。
+  'solopreneur-rental-yield-calculator': ['CoC → 6.89%'],
 };
 
 export interface EnParityRow {
@@ -143,12 +159,16 @@ export function measureEnParity(slugs: string[]): EnParityRow[] {
 }
 
 if (resolve(process.argv[1] ?? '') === resolve(import.meta.dirname, 'p168-en-page-parity.ts')) {
+  // ⭐ 别名用下划线、slug 用连字符 ⇒ 过滤两边都要归一化（否则「sales_velocity」匹配不到）
+  const norm = (x: string) => x.replace(/^solopreneur-/, '').replace(/-calculator$/, '').replace(/-/g, '_');
   const args = process.argv.slice(2);
   const named = args.filter((a) => !a.startsWith('--'));
   const slugs = named.length
-    ? PILOT_SLUGS.filter((s) => named.some((n) => s.includes(n.replace(/^solopreneur-/, '').replace(/-calculator$/, ''))))
+    ? PILOT_SLUGS.filter((s) => named.some((n) => norm(s).includes(norm(n))))
     : PILOT_SLUGS;
   const rows = measureEnParity(slugs);
+  // ⭐ 防真空绿
+  if (rows.length === 0) { console.log('没有匹配到任何引擎（过滤条件写错了？）· 期望至少 1 个'); process.exit(1); }
   let bad = 0;
   for (const r of rows) {
     if (r.same) { console.log('✔ ' + r.slug + ' ⇒ 英文页逐字不变（' + r.nowChars + ' 字符）'); continue; }

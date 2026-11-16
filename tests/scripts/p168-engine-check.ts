@@ -17,7 +17,6 @@
 //   ④ token 兜底渲染 === locale.en 模板渲染              （= G8）
 //   ⑤ token 兜底渲染 === **基线提交**的 staticExamples[0]   （= G9，英文页零变化；基线钉死在 token 化之前）
 
-import { execSync } from 'node:child_process';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -27,7 +26,10 @@ import { renderCalcOutput } from '../../src/lib/calc-output-i18n.ts';
 import { toolAlias } from '../../src/lib/calc-output-templates.ts';
 import { stripComments } from '../build-dep-suites.mjs';
 import { codegenDefaults, syntheticInputs, browserPick, browserFill } from './p168-server-client-parity.ts';
-import { PILOT_FILES, ALLOWED_DIFFS, normalizeDates, BASELINE_SHA } from './p168-en-page-parity.ts';
+// ⭐ P168 B3-8（Important 2）：基线**真相源统一到 G9 工具** —— 不再自己实现一遍 `git show`
+//   ⇒ 否则一旦按 Task 8 重钉 B3-8 基线，G9 用新 SHA 而本工具仍用 d3b3c1d
+//   ⇒ 同一引擎两个基准 ⇒ 对「有意的修复」报假红。
+import { PILOT_FILES, ALLOWED_DIFFS, normalizeDates, baselineStaticExample, baselineShaFor } from './p168-en-page-parity.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const NL = String.fromCharCode(10);
@@ -66,14 +68,8 @@ function loadLocale(lang: 'en' | 'zh'): Record<string, string> {
 }
 
 /** ⚠️ git show 必须用**仓库相对路径**（绝对路径会被 git 当成 pathspec 而报 'exists on disk, but not in HEAD'） */
-function headStaticExample(file: string): string | null {
-  let src: string;
-  const rel = file.startsWith(ROOT) ? file.slice(ROOT.length + 1).split('\\').join('/') : file;
-  try { src = execSync('git show ' + BASELINE_SHA + ':' + rel, { encoding: 'utf8', maxBuffer: 1 << 28 }); }
-  catch { return null; }
-  const m = src.match(/staticExamples:\s*\[\s*'((?:[^'\\]|\\.)*)'/);
-  if (!m) return null;
-  return m[1].replace(/\\n/g, NL).replace(/\\'/g, "'");
+function relPath(file: string): string {
+  return file.startsWith(ROOT) ? file.slice(ROOT.length + 1).split('\\').join('/') : file;
 }
 
 export interface EngineCheck {
@@ -110,7 +106,8 @@ export function checkEngine(slug: string): EngineCheck | null {
   } catch { }
   const fallback = renderCalcOutput(serverText, {});
   const template = renderCalcOutput(serverText, en);
-  const head = headStaticExample(file);
+  // ⭐ 分组基线（试点 d3b3c1d / 本批 5c1c789）—— 与 G9 守卫**同一个**函数、同一个 SHA
+  const head = baselineStaticExample(relPath(file), baselineShaFor(slug));
   const diffs: string[] = [];
   if (head !== null) {
     const A = normalizeDates(head).split(NL), B = normalizeDates(fallback).split(NL);
@@ -130,7 +127,15 @@ const targets = aliases.length
   : engines.filter((e) => PILOT_FILES[e.slug]);
 let bad = 0;
 for (const e of targets) {
-  const c = checkEngine(e.slug);
+  let c: EngineCheck | null = null;
+  try {
+    c = checkEngine(e.slug);
+  } catch (err: any) {
+    // ⭐ baselineShaFor 对「不在已令牌化清单里」的 slug **抛错**（拼错的 slug 必须暴露）
+    bad++;
+    console.log('✗ ' + e.slug + '：' + String(err && err.message));
+    continue;
+  }
   if (!c) { console.log('? 找不到引擎 ' + e.slug); continue; }
   const ok = c.missing.length === 0 && c.dead.length === 0 && c.parity && c.render && c.enpage;
   if (!ok) bad++;

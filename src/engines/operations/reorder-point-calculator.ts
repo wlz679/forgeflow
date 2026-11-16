@@ -2,6 +2,11 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-8：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Reorder Point Calculator (P7-4) — Business v3 standard (6+ emoji sections)
@@ -76,8 +81,8 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: zero demand or lead time → prompt
   if (avgDailyDemand === 0 || leadTimeDays === 0) {
     return [
-      '⏰ Reorder Point Calculator\n\n' +
-        '📊 Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.',
+      '$calc_out.section.reorder_point_calculator|⏰ Reorder Point Calculator|\n\n' +
+        makeToken('calc_out.reorder_point.row.enter_inputs_required', '📊 Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.'),
     ];
   }
 
@@ -89,14 +94,15 @@ function calculate(inputs: Record<string, string>): string[] {
   // Health band
   const band = calcHealthBand(serviceLevel);
   const healthEmoji = BAND_META[band];
+  // ── P168 B3-8：健康度四档 —— 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出）──
   const healthLabel =
     band === 'excellent'
-      ? 'Excellent — service level ≥ 95%; reorder point accounts for demand variability'
+      ? makeToken('calc_out.reorder_point.row.health_excellent', 'Excellent — service level ≥ 95%; reorder point accounts for demand variability')
       : band === 'good'
-      ? 'Good — 90% service level; typical retail, raise to 95% for high-margin / critical SKU'
+      ? makeToken('calc_out.reorder_point.row.health_good', 'Good — 90% service level; typical retail, raise to 95% for high-margin / critical SKU')
       : band === 'warning'
-      ? 'Warning — 85% service level; risky; 15% of cycles will stockout'
-      : 'Critical — < 85% service level; default risk tolerance; reorder point too low';
+      ? makeToken('calc_out.reorder_point.row.health_warning', 'Warning — 85% service level; risky; 15% of cycles will stockout')
+      : makeToken('calc_out.reorder_point.row.health_critical', 'Critical — < 85% service level; default risk tolerance; reorder point too low');
 
   // What-If: lead time doubles (safety stock grows with sqrt)
   const leadTimeDoubled = leadTimeDays * 2;
@@ -122,57 +128,99 @@ function calculate(inputs: Record<string, string>): string[] {
   const annualStockoutAvoided = inventoryHeadroom * monthlyOrderFreq * 12;
 
   // Tip: band-driven contextual advice
+  // ── P168 B3-8：tip 行整行令牌化（「💡 Tip:」标记在 fallback 内 ⇒ 语言无关过滤仍命中）──
   let tip: string;
   if (band === 'critical') {
-    tip =
-      '< 85% service level will stockout 15%+ of cycles. Raise SL to 95% immediately (typical for most SKUs), or to 99% for high-margin / critical / perishable inventory. Cost of safety stock is far less than cost of stockouts (use P7-3 to compare).';
+    tip = makeToken('calc_out.reorder_point.row.tip_critical', '💡 Tip: < 85% service level will stockout 15%+ of cycles. Raise SL to 95% immediately (typical for most SKUs), or to 99% for high-margin / critical / perishable inventory. Cost of safety stock is far less than cost of stockouts (use P7-3 to compare).');
   } else if (band === 'warning') {
-    tip =
-      '85% service level means ~15% of cycles will stockout. For most SKUs, 95% SL is the right target — the safety-stock cost increase (≈30% more buffer) is small relative to the stockout cost avoided.';
+    tip = makeToken('calc_out.reorder_point.row.tip_warning', '💡 Tip: 85% service level means ~15% of cycles will stockout. For most SKUs, 95% SL is the right target — the safety-stock cost increase (≈30% more buffer) is small relative to the stockout cost avoided.');
   } else if (band === 'good') {
-    tip =
-      '90% service level is solid retail. To upgrade to 🟢, increase to 95% SL (typically +25% safety stock buffer). Reserve 99% SL for high-margin / critical / perishable SKUs only.';
+    tip = makeToken('calc_out.reorder_point.row.tip_good', '💡 Tip: 90% service level is solid retail. To upgrade to 🟢, increase to 95% SL (typically +25% safety stock buffer). Reserve 99% SL for high-margin / critical / perishable SKUs only.');
   } else {
-    tip =
-      '95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.';
+    tip = makeToken('calc_out.reorder_point.row.tip_excellent', '💡 Tip: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.');
   }
 
+  // ── P168 B3-8：输出行逐行令牌化 ─────────────────────────────────────────
+  //   · 章节标题 / 标签 ⇒ **字面量 token**（对齐空格留在 token 之外）
+  //   · 带运行时数值的整行 ⇒ makeToken(code, fallback, params)（fallback 与 params 同源）
+  const tkHealthSummary = makeToken(
+    'calc_out.reorder_point.row.health_summary',
+    'Service level: ' + serviceLevel + '%  ·  Z-score: ' + z.toFixed(2) + '  ·  Reorder point: ' + Math.round(rop) + ' units',
+    { sl: String(serviceLevel), z: z.toFixed(2), rop: String(Math.round(rop)) },
+  );
+  const tkLeadTimeAndSafetyStock = makeToken(
+    'calc_out.reorder_point.row.lead_time_and_safety_stock',
+    'Lead-time demand: ' + Math.round(ltd) + ' units  ·  Safety stock: ' + Math.round(ss) + ' units',
+    { ltd: String(Math.round(ltd)), ss: String(Math.round(ss)) },
+  );
+  const tkWhatIfLeadTimeDoubles = makeToken(
+    'calc_out.reorder_point.row.whatif_lead_time_doubles',
+    'Lead time doubles: ROP = ' + Math.round(ropDoubled) + ' units  ·  safety stock grows by ' + Math.round(ssDelta) + ' units (√2 factor)',
+    { rop: String(Math.round(ropDoubled)), delta: String(Math.round(ssDelta)) },
+  );
+  const tkWhatIfServiceLevel99 = makeToken(
+    'calc_out.reorder_point.row.whatif_service_level_99',
+    'Service level raised to 99% (Z=' + z99.toFixed(2) + '): ROP = ' + Math.round(rop99) + ' units  ·  safety stock grows by ' + Math.round(ssIncrease99) + ' units',
+    { z: z99.toFixed(2), rop: String(Math.round(rop99)), delta: String(Math.round(ssIncrease99)) },
+  );
+  const tkCurrentVsTarget =
+    slGap > 0
+      ? makeToken('calc_out.reorder_point.row.current_vs_target_raise', 'Current vs target: raise SL by ' + slGap + 'pp to hit 🟢', { gap: String(slGap) })
+      : slGap === 0
+      ? makeToken('calc_out.reorder_point.row.current_vs_target_at_target', 'Current vs target: at target')
+      : makeToken('calc_out.reorder_point.row.current_vs_target_above_target', 'Current vs target: already above target');
+  const tkInventoryHeadroom = makeToken(
+    'calc_out.reorder_point.row.inventory_headroom',
+    'Inventory headroom (safety stock): ' + Math.round(inventoryHeadroom) + ' units above lead-time demand',
+    { headroom: String(Math.round(inventoryHeadroom)) },
+  );
+  const tkOrderFrequency = makeToken(
+    'calc_out.reorder_point.row.order_frequency',
+    'Order frequency: ~' + monthlyOrderFreq.toFixed(1) + ' orders/month  ·  ~' + Math.round(monthlyOrderFreq * 12) + ' orders/year',
+    { monthly: monthlyOrderFreq.toFixed(1), yearly: String(Math.round(monthlyOrderFreq * 12)) },
+  );
+  const tkAnnualStockoutAvoided = makeToken(
+    'calc_out.reorder_point.row.annual_stockout_avoided',
+    'Annual stockout risk avoided: ' + Math.round(annualStockoutAvoided) + ' units not stocked out',
+    { units: String(Math.round(annualStockoutAvoided)) },
+  );
+
   const r =
-    '⏰ Reorder Point Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.reorder_point_calculator|⏰ Reorder Point Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Service level: ' + serviceLevel + '%  ·  Z-score: ' + z.toFixed(2) + '  ·  Reorder point: ' + Math.round(rop) + ' units\n' +
-    '• Lead-time demand: ' + Math.round(ltd) + ' units  ·  Safety stock: ' + Math.round(ss) + ' units\n\n' +
+    '• ' + tkHealthSummary + '\n' +
+    '• ' + tkLeadTimeAndSafetyStock + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Avg daily demand:        ' + avgDailyDemand + ' units/day\n' +
-    '• Supplier lead time:      ' + leadTimeDays + ' days\n' +
-    '• Service level:           ' + serviceLevel + '%  (Z = ' + z.toFixed(2) + ')\n' +
-    '• Demand std deviation:    ' + demandStdDev + ' units/day\n' +
-    '• Review period:           ' + reviewPeriod + ' days\n' +
-    '• Lead-time demand:        ' + Math.round(ltd) + ' units\n' +
-    '• Safety stock:            ' + Math.round(ss) + ' units\n' +
-    '• Reorder point:           ' + Math.round(rop) + ' units\n\n' +
+    '• $calc_out.label.avg_daily_demand|Avg daily demand|:        ' + avgDailyDemand + ' units/day\n' +
+    '• $calc_out.label.supplier_lead_time|Supplier lead time|:      ' + leadTimeDays + ' days\n' +
+    '• $calc_out.label.service_level|Service level|:           ' + serviceLevel + '%  (Z = ' + z.toFixed(2) + ')\n' +
+    '• $calc_out.label.demand_std_deviation|Demand std deviation|:    ' + demandStdDev + ' units/day\n' +
+    '• $calc_out.label.review_period|Review period|:           ' + reviewPeriod + ' days\n' +
+    '• $calc_out.label.lead_time_demand|Lead-time demand|:        ' + Math.round(ltd) + ' units\n' +
+    '• $calc_out.label.safety_stock|Safety stock|:            ' + Math.round(ss) + ' units\n' +
+    '• $calc_out.label.reorder_point|Reorder point|:           ' + Math.round(rop) + ' units\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Lead time doubles: ROP = ' + Math.round(ropDoubled) + ' units  ·  safety stock grows by ' + Math.round(ssDelta) + ' units (√2 factor)\n' +
-    '• Service level raised to 99% (Z=' + z99.toFixed(2) + '): ROP = ' + Math.round(rop99) + ' units  ·  safety stock grows by ' + Math.round(ssIncrease99) + ' units\n\n' +
+    '• ' + tkWhatIfLeadTimeDoubles + '\n' +
+    '• ' + tkWhatIfServiceLevel99 + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Min service level for 🟢: ' + minSLForExcellent + '%\n' +
-    '• Current vs target: ' + (slGap > 0 ? 'raise SL by ' + slGap + 'pp to hit 🟢' : slGap === 0 ? 'at target' : 'already above target') + '\n\n' +
+    '• $calc_out.label.min_service_level_for_excellent|Min service level for 🟢|: ' + minSLForExcellent + '%\n' +
+    '• ' + tkCurrentVsTarget + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Inventory headroom (safety stock): ' + Math.round(inventoryHeadroom) + ' units above lead-time demand\n' +
-    '• Order frequency: ~' + monthlyOrderFreq.toFixed(1) + ' orders/month  ·  ~' + Math.round(monthlyOrderFreq * 12) + ' orders/year\n' +
-    '• Annual stockout risk avoided: ' + Math.round(annualStockoutAvoided) + ' units not stocked out\n\n' +
+    '• ' + tkInventoryHeadroom + '\n' +
+    '• ' + tkOrderFrequency + '\n' +
+    '• ' + tkAnnualStockoutAvoided + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -180,6 +228,9 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
+  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var ZS={90:1.28,95:1.65,99:2.33};" +
   "function zScore(sl){return ZS[sl]!=null?ZS[sl]:1.65;}" +
   "function ltd(d,l){return d*l;}" +
@@ -192,59 +243,59 @@ const customFn =
   "var sl=parseInt(inputs.serviceLevel||'95',10);" +
   "var dsd=cnn(parseFloat(inputs.demandStdDev)||0);" +
   "var rp=Math.max(1,parseFloat(inputs.reviewPeriod)||7);" +
-  "if(add===0||ltd2===0){return['\\u23F0 Reorder Point Calculator\\n\\n\\uD83D\\uDCCA Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.'];}" +
+  "if(add===0||ltd2===0){return['$calc_out.section.reorder_point_calculator|\\u23F0 Reorder Point Calculator|\\n\\n'+tk('calc_out.reorder_point.row.enter_inputs_required','\\uD83D\\uDCCA Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.')];}" +
   "var z=zScore(sl);" +
   "var ltdV=ltd(add,ltd2);" +
   "var ssV=ss(z,dsd,ltd2,rp);" +
   "var ropV=rop(ltdV,ssV);" +
   "var bd=band(sl);" +
   "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 service level \\u2265 95%; reorder point accounts for demand variability':bd==='good'?'Good \\u2014 90% service level; typical retail, raise to 95% for high-margin / critical SKU':bd==='warning'?'Warning \\u2014 85% service level; risky; 15% of cycles will stockout':'Critical \\u2014 < 85% service level; default risk tolerance; reorder point too low';" +
+  "var hl=bd==='excellent'?tk('calc_out.reorder_point.row.health_excellent','Excellent \\u2014 service level \\u2265 95%; reorder point accounts for demand variability'):bd==='good'?tk('calc_out.reorder_point.row.health_good','Good \\u2014 90% service level; typical retail, raise to 95% for high-margin / critical SKU'):bd==='warning'?tk('calc_out.reorder_point.row.health_warning','Warning \\u2014 85% service level; risky; 15% of cycles will stockout'):tk('calc_out.reorder_point.row.health_critical','Critical \\u2014 < 85% service level; default risk tolerance; reorder point too low');" +
   "var lt2=ltd2*2;var ltdD=ltd(add,lt2);var ssD=ss(z,dsd,lt2,rp);var ropD=rop(ltdD,ssD);var ssDelta=ssD-ssV;" +
   "var z99=zScore(99);var ss99=ss(z99,dsd,ltd2,rp);var rop99=rop(ltdV,ss99);var ssInc99=ss99-ssV;" +
   "var minSL=95;var slGap=minSL-sl;" +
   "var invH=ssV;var moFreq=30/rp;var annStkout=invH*moFreq*12;" +
   "var tip='';" +
-  "if(bd==='critical'){tip='< 85% service level will stockout 15%+ of cycles. Raise SL to 95% immediately (typical for most SKUs), or to 99% for high-margin / critical / perishable inventory. Cost of safety stock is far less than cost of stockouts (use P7-3 to compare).';}" +
-  "else if(bd==='warning'){tip='85% service level means ~15% of cycles will stockout. For most SKUs, 95% SL is the right target \\u2014 the safety-stock cost increase (\\u224830% more buffer) is small relative to the stockout cost avoided.';}" +
-  "else if(bd==='good'){tip='90% service level is solid retail. To upgrade to \\uD83D\\uDFE2, increase to 95% SL (typically +25% safety stock buffer). Reserve 99% SL for high-margin / critical / perishable SKUs only.';}" +
-  "else{tip='95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.';}" +
+  "if(bd==='critical'){tip=tk('calc_out.reorder_point.row.tip_critical','\\uD83D\\uDCA1 Tip: < 85% service level will stockout 15%+ of cycles. Raise SL to 95% immediately (typical for most SKUs), or to 99% for high-margin / critical / perishable inventory. Cost of safety stock is far less than cost of stockouts (use P7-3 to compare).');}" +
+  "else if(bd==='warning'){tip=tk('calc_out.reorder_point.row.tip_warning','\\uD83D\\uDCA1 Tip: 85% service level means ~15% of cycles will stockout. For most SKUs, 95% SL is the right target \\u2014 the safety-stock cost increase (\\u224830% more buffer) is small relative to the stockout cost avoided.');}" +
+  "else if(bd==='good'){tip=tk('calc_out.reorder_point.row.tip_good','\\uD83D\\uDCA1 Tip: 90% service level is solid retail. To upgrade to \\uD83D\\uDFE2, increase to 95% SL (typically +25% safety stock buffer). Reserve 99% SL for high-margin / critical / perishable SKUs only.');}" +
+  "else{tip=tk('calc_out.reorder_point.row.tip_excellent','\\uD83D\\uDCA1 Tip: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.');}" +
   "var r2='';" +
-  "r2+='\\u23F0 Reorder Point Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r2+='$calc_out.section.reorder_point_calculator|\\u23F0 Reorder Point Calculator|\\n\\n';" +
+  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n';" +
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Service level: '+sl+'%  \\u00B7  Z-score: '+z.toFixed(2)+'  \\u00B7  Reorder point: '+Math.round(ropV)+' units\\n';" +
-  "r2+='\\u2022 Lead-time demand: '+Math.round(ltdV)+' units  \\u00B7  Safety stock: '+Math.round(ssV)+' units\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Avg daily demand:        '+add+' units/day\\n';" +
-  "r2+='\\u2022 Supplier lead time:      '+ltd2+' days\\n';" +
-  "r2+='\\u2022 Service level:           '+sl+'%  (Z = '+z.toFixed(2)+')\\n';" +
-  "r2+='\\u2022 Demand std deviation:    '+dsd+' units/day\\n';" +
-  "r2+='\\u2022 Review period:           '+rp+' days\\n';" +
-  "r2+='\\u2022 Lead-time demand:        '+Math.round(ltdV)+' units\\n';" +
-  "r2+='\\u2022 Safety stock:            '+Math.round(ssV)+' units\\n';" +
-  "r2+='\\u2022 Reorder point:           '+Math.round(ropV)+' units\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Lead time doubles: ROP = '+Math.round(ropD)+' units  \\u00B7  safety stock grows by '+Math.round(ssDelta)+' units (\\u221A2 factor)\\n';" +
-  "r2+='\\u2022 Service level raised to 99% (Z='+z99.toFixed(2)+'): ROP = '+Math.round(rop99)+' units  \\u00B7  safety stock grows by '+Math.round(ssInc99)+' units\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Min service level for \\uD83D\\uDFE2: '+minSL+'%\\n';" +
-  "r2+='\\u2022 Current vs target: '+(slGap>0?'raise SL by '+slGap+'pp to hit \\uD83D\\uDFE2':slGap===0?'at target':'already above target')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Inventory headroom (safety stock): '+Math.round(invH)+' units above lead-time demand\\n';" +
-  "r2+='\\u2022 Order frequency: ~'+moFreq.toFixed(1)+' orders/month  \\u00B7  ~'+Math.round(moFreq*12)+' orders/year\\n';" +
-  "r2+='\\u2022 Annual stockout risk avoided: '+Math.round(annStkout)+' units not stocked out\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.health_summary','Service level: '+sl+'%  \\u00B7  Z-score: '+z.toFixed(2)+'  \\u00B7  Reorder point: '+Math.round(ropV)+' units',{sl:String(sl),z:z.toFixed(2),rop:String(Math.round(ropV))})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.lead_time_and_safety_stock','Lead-time demand: '+Math.round(ltdV)+' units  \\u00B7  Safety stock: '+Math.round(ssV)+' units',{ltd:String(Math.round(ltdV)),ss:String(Math.round(ssV))})+'\\n\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.avg_daily_demand|Avg daily demand|:        '+add+' units/day\\n';" +
+  "r2+='\\u2022 $calc_out.label.supplier_lead_time|Supplier lead time|:      '+ltd2+' days\\n';" +
+  "r2+='\\u2022 $calc_out.label.service_level|Service level|:           '+sl+'%  (Z = '+z.toFixed(2)+')\\n';" +
+  "r2+='\\u2022 $calc_out.label.demand_std_deviation|Demand std deviation|:    '+dsd+' units/day\\n';" +
+  "r2+='\\u2022 $calc_out.label.review_period|Review period|:           '+rp+' days\\n';" +
+  "r2+='\\u2022 $calc_out.label.lead_time_demand|Lead-time demand|:        '+Math.round(ltdV)+' units\\n';" +
+  "r2+='\\u2022 $calc_out.label.safety_stock|Safety stock|:            '+Math.round(ssV)+' units\\n';" +
+  "r2+='\\u2022 $calc_out.label.reorder_point|Reorder point|:           '+Math.round(ropV)+' units\\n\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.whatif_lead_time_doubles','Lead time doubles: ROP = '+Math.round(ropD)+' units  \\u00B7  safety stock grows by '+Math.round(ssDelta)+' units (\\u221A2 factor)',{rop:String(Math.round(ropD)),delta:String(Math.round(ssDelta))})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.whatif_service_level_99','Service level raised to 99% (Z='+z99.toFixed(2)+'): ROP = '+Math.round(rop99)+' units  \\u00B7  safety stock grows by '+Math.round(ssInc99)+' units',{z:z99.toFixed(2),rop:String(Math.round(rop99)),delta:String(Math.round(ssInc99))})+'\\n\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.min_service_level_for_excellent|Min service level for \\uD83D\\uDFE2|: '+minSL+'%\\n';" +
+  "r2+='\\u2022 '+(slGap>0?tk('calc_out.reorder_point.row.current_vs_target_raise','Current vs target: raise SL by '+slGap+'pp to hit \\uD83D\\uDFE2',{gap:String(slGap)}):slGap===0?tk('calc_out.reorder_point.row.current_vs_target_at_target','Current vs target: at target'):tk('calc_out.reorder_point.row.current_vs_target_above_target','Current vs target: already above target'))+'\\n\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.inventory_headroom','Inventory headroom (safety stock): '+Math.round(invH)+' units above lead-time demand',{headroom:String(Math.round(invH))})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.order_frequency','Order frequency: ~'+moFreq.toFixed(1)+' orders/month  \\u00B7  ~'+Math.round(moFreq*12)+' orders/year',{monthly:moFreq.toFixed(1),yearly:String(Math.round(moFreq*12))})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.annual_stockout_avoided','Annual stockout risk avoided: '+Math.round(annStkout)+' units not stocked out',{units:String(Math.round(annStkout))})+'\\n\\n';" +
+  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+=tip+'\\n';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -303,7 +354,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Reorder Point Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — service level ≥ 95%; reorder point accounts for demand variability\n• Service level: 95%  ·  Z-score: 1.65  ·  Reorder point: 723 units\n• Lead-time demand: 700 units  ·  Safety stock: 23 units\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Avg daily demand:        50 units/day\n• Supplier lead time:      14 days\n• Service level:           95%  (Z = 1.65)\n• Demand std deviation:    10 units/day\n• Review period:           7 days\n• Lead-time demand:        700 units\n• Safety stock:            23 units\n• Reorder point:           723 units\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lead time doubles: ROP = 1433 units  ·  safety stock grows by 10 units (√2 factor)\n• Service level raised to 99% (Z=2.33): ROP = 733 units  ·  safety stock grows by 10 units\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Min service level for 🟢: 95%\n• Current vs target: at target\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Inventory headroom (safety stock): 23 units above lead-time demand\n• Order frequency: ~4.3 orders/month  ·  ~51 orders/year\n• Annual stockout risk avoided: 1200 units not stocked out\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.\n'],
+  staticExamples: ['$calc_out.section.reorder_point_calculator|⏰ Reorder Point Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 $calc_out.reorder_point.row.health_excellent|Excellent — service level ≥ 95%; reorder point accounts for demand variability|\n• $calc_out.reorder_point.row.health_summary{"sl":"95","z":"1.65","rop":"723"}|Service level: 95%  ·  Z-score: 1.65  ·  Reorder point: 723 units|\n• $calc_out.reorder_point.row.lead_time_and_safety_stock{"ltd":"700","ss":"23"}|Lead-time demand: 700 units  ·  Safety stock: 23 units|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.avg_daily_demand|Avg daily demand|:        50 units/day\n• $calc_out.label.supplier_lead_time|Supplier lead time|:      14 days\n• $calc_out.label.service_level|Service level|:           95%  (Z = 1.65)\n• $calc_out.label.demand_std_deviation|Demand std deviation|:    10 units/day\n• $calc_out.label.review_period|Review period|:           7 days\n• $calc_out.label.lead_time_demand|Lead-time demand|:        700 units\n• $calc_out.label.safety_stock|Safety stock|:            23 units\n• $calc_out.label.reorder_point|Reorder point|:           723 units\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.reorder_point.row.whatif_lead_time_doubles{"rop":"1433","delta":"10"}|Lead time doubles: ROP = 1433 units  ·  safety stock grows by 10 units (√2 factor)|\n• $calc_out.reorder_point.row.whatif_service_level_99{"z":"2.33","rop":"733","delta":"10"}|Service level raised to 99% (Z=2.33): ROP = 733 units  ·  safety stock grows by 10 units|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.min_service_level_for_excellent|Min service level for 🟢|: 95%\n• $calc_out.reorder_point.row.current_vs_target_at_target|Current vs target: at target|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.reorder_point.row.inventory_headroom{"headroom":"23"}|Inventory headroom (safety stock): 23 units above lead-time demand|\n• $calc_out.reorder_point.row.order_frequency{"monthly":"4.3","yearly":"51"}|Order frequency: ~4.3 orders/month  ·  ~51 orders/year|\n• $calc_out.reorder_point.row.annual_stockout_avoided{"units":"1200"}|Annual stockout risk avoided: 1200 units not stocked out|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.reorder_point.row.tip_excellent|💡 Tip: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.|\n'],
   faq: [
     { q: 'What is a good service level for inventory?', a: '95% is the recommended baseline for most SKUs — only 5% of cycles will stockout. 99% is reserved for high-margin, critical, or perishable items. 90% is typical retail but accepts 10% stockout risk.' },
     { q: 'How does demand variability affect safety stock?', a: 'Higher demand variability (larger std dev) → more safety stock needed. Safety stock grows linearly with std dev but only as √lead time. So doubling lead time increases safety stock by ~41%, not 100%.' },

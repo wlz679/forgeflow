@@ -2,8 +2,14 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import '../src/engines/investment/time-value-calculator.ts';
 import { getEngine } from '../src/core/engines/registry.ts';
+// ⭐ P168 B3-8：引擎输出现在是**token 串**（`$calc_out.…|英文原文|`）
+//   ⇒ 直接拿它匹配英文正则会失配（标签与值之间多了 '|'）
+//   ⇒ 断言改为对**英文兜底渲染**后的文本匹配（renderCalcOutput(text, {}) = 用 token 自带的英文兜底）
+//   ⇒ 断言意图不变：仍然是「英文页上用户看到的数值正确」。
+import { renderCalcOutput } from '../src/lib/calc-output-i18n.ts';
 
 const engine = getEngine('solopreneur-time-value-calculator');
+const enCard = (lines: string[]): string => renderCalcOutput(lines.join('\n'), {});
 
 // Test 1: canonical — $100K income, 40 hr/wk, 48 wk/yr
 //   totalHours = 1920; hourlyRate = 52.08
@@ -16,8 +22,8 @@ test('time-value: canonical $100K / 40hr / 48wk → ~$52/hr', () => {
   });
   assert.ok(Array.isArray(r));
   assert.ok(r.length > 0);
-  assert.match(r[0], /Effective \$?\/Hour:\s+\$52\.08/);
-  assert.match(r[0], /Daily Rate \(8 hrs\):\s+\$416\.67/);
+  assert.match(enCard(r), /Effective \$?\/Hour:\s+\$52\.08/);
+  assert.match(enCard(r), /Daily Rate \(8 hrs\):\s+\$416\.67/);
 });
 
 // Test 2: zero hours
@@ -28,7 +34,7 @@ test('time-value: zero hours → $0/hr', () => {
     weeksPerYear: '48',
   });
   assert.ok(Array.isArray(r));
-  assert.match(r[0], /Effective \$?\/Hour:\s+\$0\.00/);
+  assert.match(enCard(r), /Effective \$?\/Hour:\s+\$0\.00/);
 });
 
 // Test 3: zero income
@@ -39,7 +45,7 @@ test('time-value: zero income → $0/hr', () => {
     weeksPerYear: '48',
   });
   assert.ok(Array.isArray(r));
-  assert.match(r[0], /Effective \$?\/Hour:\s+\$0\.00/);
+  assert.match(enCard(r), /Effective \$?\/Hour:\s+\$0\.00/);
 });
 
 // Defensive test (P16-4 Layer 2): negative inputs clamp to 0

@@ -13,6 +13,12 @@
 //   G4b en / zh 卡片行数必须一致（结构 parity —— zh 多一条 tip 行就是典型）
 //   G4c zh 卡片不得有整行英文（≥2 个 ≥3 字母的英文词且无 CJK）
 //   + 非真空绿断言：卡片必须真的取到内容（提取器坏了 ⇒ 立刻红）
+//
+// ⭐ P168 B3-8：**G13 就是上面这条 G4c**，不另立门户（一个不变量只守一处）
+//   ⇒ 覆盖范围由 PILOT（p168-card-text.mjs ⇒ TOKENIZED）决定：
+//     B3-7 试点 10 + B3-8 本批 15 = 25 个已令牌化引擎
+//   ⇒ 本批 15 个引擎尚未 token 化 ⇒ G4c 必然红（实测 zh 侧 314 行整行英文）
+//     ⇒ 等 Task 3~8 把引擎改成中文后自然转绿
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';

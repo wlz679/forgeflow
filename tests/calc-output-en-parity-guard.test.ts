@@ -26,7 +26,7 @@
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { ALLOWED_DIFFS, measureEnParity, normalizeDates, BASELINE_SHA, baselineStaticExample, baselineShaFor, PILOT_FILES } from './scripts/p168-en-page-parity.ts';
+import { ALLOWED_DIFFS, measureEnParity, normalizeDates, BASELINE_SHA, baselineStaticExample, baselineShaFor, PILOT_FILES, stripPricingBanner } from './scripts/p168-en-page-parity.ts';
 import { PILOT_SLUGS } from './scripts/p168-server-client-parity.ts';
 // P168 B3-8：「已令牌化引擎清单」的**单一真相源**（试点 10 + 本批 15 = 25）
 import { TOKENIZED } from './scripts/p168-tokenized-engines.mjs';
@@ -51,7 +51,18 @@ test('P168 B3-7 G9 检测器自检：未记录的差异必须被抓出来', () =
   );
   // ② 白名单必须只覆盖「已记录的有意改动」
   assert.ok(ALLOWED_DIFFS['solopreneur-mrr-calculator'], 'mrr 的有意改动没登记');
-  assert.equal(Object.keys(ALLOWED_DIFFS).length, 1, '白名单里有未登记的引擎');
+  // ⭐ P168 B3-8：白名单条目会随批次增长（B3-8 新增 $$ 修复与 rental-yield 数值修复）
+  //   ⇒ 不能把**数量**写死 ⇒ 改成两条更强的判据：
+  //     · 白名单里的每个 slug 都必须是**已令牌化引擎**（不许登记不存在的引擎）；
+  //     · 白名单里的每个标记都必须**真的出现在**该引擎当前的差异里（不许白名单养肥）。
+  for (const slug of Object.keys(ALLOWED_DIFFS)) {
+    assert.ok(PILOT_SLUGS.includes(slug), '白名单里有未登记的引擎：' + slug);
+    const row = measureEnParity([slug])[0];
+    assert.ok(row, slug + '：白名单里的引擎测不到');
+    for (const marker of ALLOWED_DIFFS[slug]) {
+      assert.ok(row.diffs.some((d) => d.includes(marker)), slug + '：白名单标记「' + marker + '」在当前差异里找不到（白名单过期？）');
+    }
+  }
 });
 
 test('P168 B3-7 G9 基线自检：基线必须钉在 token 化之前（不得用 HEAD）', () => {
@@ -68,6 +79,17 @@ test('P168 B3-7 G9 基线自检：基线必须钉在 token 化之前（不得用
     assert.ok(head !== null, slug + '：基线 ' + sha + ' 取不到（浅克隆？）');
     assert.ok(!head.includes('$calc_out.'), slug + '：基线里出现了 token ⇒ 基线不是 token 化之前的版本');
   }
+});
+
+test('P168 B3-8 stripPricingBanner 检测器自检：只删 pricing 那一行，且渲染后仍能删', () => {
+  const NL2 = String.fromCharCode(10);
+  const withBanner = ['📅 Pricing last updated: 2026-11-09 (data synced weekly)', '🔴 Real-time Pricing', 'Input: 1,000 tokens'].join(NL2);
+  assert.equal(stripPricingBanner(withBanner), ['🔴 Real-time Pricing', 'Input: 1,000 tokens'].join(NL2));
+  // 渲染后（token 已替换成英文兜底）仍要能删掉
+  const afterRender = '$calc_out.section.x|Pricing last updated: 2026-11-09|'.replace(/\$calc_out\.section\.x\|Pricing last updated: 2026-11-09\|/, '📅 Pricing last updated: 2026-11-09');
+  assert.ok(stripPricingBanner(afterRender).indexOf('Pricing last updated') < 0, '渲染后没删掉 pricing 行');
+  // 其它行不许被误删
+  assert.ok(stripPricingBanner('📅 Usage Scenarios').indexOf('Usage Scenarios') >= 0, '误删了别的 📅 开头行');
 });
 
 test('P168 B3-8 真相源自检：TOKENIZED 必须覆盖 25 个引擎且分组基线不同', () => {

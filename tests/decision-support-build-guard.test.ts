@@ -30,6 +30,7 @@ import {
   blockCardOverlap,
   loadEngines,
   readLocale,
+  tipCodeRegex,
 } from './_decision-support-fixture.ts';
 import { extractDecisionLines } from '../src/lib/decision-support.ts';
 // ⭐ P168（本批）：建议码形态下，页面显示的是**渲染后的模板**（en 英文 / zh 中文）
@@ -164,7 +165,16 @@ test('P168 产物：⭐ 结果卡片里**没有**决策建议（卡片剥离了�
         problems.push(rel + ' 的结果卡片里还有 💡 Tip 行 ⇒ 建议在卡片与决策区块各有一家');
       }
       // ② 建议码本身（标识符是纯 ASCII ⇒ 不会被转义）
-      if (lines.tipCode && cardHtml.includes(lines.tipCode)) {
+      //   ⚠️⚠️ **必须按「词边界」匹配**（2026-11-16 实测假红）：建议码是**标识符**，
+      //     而本批的 token 名里**含建议码前缀**（`calc_out.section.freelance_rate_market_position`
+      //     里有 `freelance_rate_market`）⇒ 子串匹配会把「token 名」误判成「建议码」
+      //     ⇒ 实测 en/zh 的 freelance-rate 各假红 1 条（真缺陷在段外：customFn 源码里）。
+      //   ⇒ 边界 `(?<![A-Za-z0-9_])` + `(?![A-Za-z0-9_])`：
+      //     · `freelance_rate_market_position` ⇒ **不命中**（后面是 `_`）
+      //     · `{"code":"freelance_rate_market"}` ⇒ **命中**（前后是引号）
+      //   ⇒ 探针语义的自检在 tests/decision-tip-code-probe.test.ts（source-only，
+      //     因为本文件顶部有 build-dep 的 skip-guard ⇒ 自检放这里会被一起跳过 ⇒ 真空绿）。
+      if (lines.tipCode && tipCodeRegex(lines.tipCode).test(cardHtml)) {
         problems.push(rel + ' 的结果卡片里还有建议码 ' + lines.tipCode);
       }
     }

@@ -2,6 +2,11 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-8：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Quota Attainment Calculator (P8-5) — Business v3 standard (6+ emoji sections)
@@ -75,6 +80,21 @@ export function calcHealthBand(pct: number): 'excellent' | 'good' | 'warning' | 
   return 'critical';
 }
 
+/**
+ * 健康度档位名（'good' / 'excellent' / …）—— **运行时可变的英文词**
+ *   ⇒ 单独令牌化（放进 params 的话 zh 侧会漏出英文 'good'）
+ * ⚠️ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）。
+ */
+function quotaBandToken(band: string): string {
+  return band === 'excellent'
+    ? makeToken('calc_out.quota_attainment.row.band_excellent', 'excellent')
+    : band === 'good'
+    ? makeToken('calc_out.quota_attainment.row.band_good', 'good')
+    : band === 'warning'
+    ? makeToken('calc_out.quota_attainment.row.band_warning', 'warning')
+    : makeToken('calc_out.quota_attainment.row.band_critical', 'critical');
+}
+
 // ============== calculate() ==============
 
 function calculate(inputs: Record<string, string>): string[] {
@@ -85,8 +105,8 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: all inputs zero → prompt to enter values
   if (annualQuota === 0 && monthsElapsed === 0 && actualRevenue === 0) {
     return [
-      '🎯 Quota Attainment Calculator\n\n' +
-        '🎯 Enter your annual quota (USD), months elapsed so far this year, and actual revenue closed to see your attainment %, monthly pace projection, and year-end forecast.',
+      '$calc_out.section.quota_attainment_calculator|🎯 Quota Attainment Calculator|\n\n' +
+        makeToken('calc_out.quota_attainment.row.enter_inputs_required', '🎯 Enter your annual quota (USD), months elapsed so far this year, and actual revenue closed to see your attainment %, monthly pace projection, and year-end forecast.'),
     ];
   }
 
@@ -102,14 +122,15 @@ function calculate(inputs: Record<string, string>): string[] {
   // Health band
   const band = calcHealthBand(pct);
   const healthEmoji = BAND_META[band];
+  // ⚠️ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
   const healthLabel =
     band === 'excellent'
-      ? 'Excellent — quota hit or exceeded; overachieving'
+      ? makeToken('calc_out.quota_attainment.row.health_excellent', 'Excellent — quota hit or exceeded; overachieving')
       : band === 'good'
-      ? 'Good — 80%–100% of quota; on track'
+      ? makeToken('calc_out.quota_attainment.row.health_good', 'Good — 80%–100% of quota; on track')
       : band === 'warning'
-      ? 'Warning — 50%–80% of quota; behind expected pace'
-      : 'Critical — < 50% of quota; urgent catch-up needed';
+      ? makeToken('calc_out.quota_attainment.row.health_warning', 'Warning — 50%–80% of quota; behind expected pace')
+      : makeToken('calc_out.quota_attainment.row.health_critical', 'Critical — < 50% of quota; urgent catch-up needed');
 
   // Formatters
   const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
@@ -156,78 +177,123 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Milestone: gap to next tier
   let gapToNext: number;
-  let nextTier: string;
+  let nextTierToken: string;
   if (band === 'critical') {
     gapToNext = 50 - pct;
-    nextTier = '🟠 Warning (50%)';
+    nextTierToken = makeToken('calc_out.quota_attainment.row.next_tier_warning', '🟠 Warning (50%)');
   } else if (band === 'warning') {
     gapToNext = 80 - pct;
-    nextTier = '🟡 Good (80%)';
+    nextTierToken = makeToken('calc_out.quota_attainment.row.next_tier_good', '🟡 Good (80%)');
   } else if (band === 'good') {
     gapToNext = 100 - pct;
-    nextTier = '🟢 Excellent (100%)';
+    nextTierToken = makeToken('calc_out.quota_attainment.row.next_tier_excellent', '🟢 Excellent (100%)');
   } else {
     gapToNext = 0;
-    nextTier = 'top tier maintained';
+    nextTierToken = makeToken('calc_out.quota_attainment.row.next_tier_top', 'top tier maintained');
   }
+  const gapToNextToken =
+    band === 'excellent'
+      ? makeToken('calc_out.quota_attainment.row.gap_to_next_tier_top', '0pp (already at top)')
+      : makeToken('calc_out.quota_attainment.row.gap_to_next_tier_pp', String(Math.round(gapToNext)) + 'pp', { pp: String(Math.round(gapToNext)) });
 
   // Tip: band-driven + onTrack-aware (per spec)
+  // ⚠️ tip 行整行令牌化（「💡 Tip:」标记在 fallback 内 ⇒ 语言无关过滤仍命中）
+  //   ⚠️ 每个分支**单独写出 code 字面量**（分支可达性靠默认输入走不到 ⇒ 必须写全）
   let tip: string;
   if (band === 'critical') {
-    tip =
-      'Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band — pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to 🟠 is > 30pp, consider a quota reset conversation with leadership now — not at year-end. A pipeline review is overdue.';
+    tip = makeToken('calc_out.quota_attainment.row.tip_critical', '💡 Tip: Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band — pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to 🟠 is > 30pp, consider a quota reset conversation with leadership now — not at year-end. A pipeline review is overdue.');
   } else if (band === 'warning') {
     if (isOnTrack) {
-      tip =
-        'Warning band (50%–80%) but mathematically on track — the gap is closable if you hit the required monthly pace. Execute with discipline: keep your daily/weekly close cadence, prioritize late-stage deals (Negotiation, Closing) over new logo acquisition, and run a weekly forecast call to catch slippage early. The danger zone is letting the monthly pace slip below required for 2+ consecutive months — once that happens, the math breaks down quickly.';
+      tip = makeToken('calc_out.quota_attainment.row.tip_warning_on_track', '💡 Tip: Warning band (50%–80%) but mathematically on track — the gap is closable if you hit the required monthly pace. Execute with discipline: keep your daily/weekly close cadence, prioritize late-stage deals (Negotiation, Closing) over new logo acquisition, and run a weekly forecast call to catch slippage early. The danger zone is letting the monthly pace slip below required for 2+ consecutive months — once that happens, the math breaks down quickly.');
     } else {
-      tip =
-        'Warning band (50%–80%) and off pace — the closing rate is not enough to hit quota. Course-correct now: identify the 2–3 deals most likely to close in the next 30 days and allocate AE time to them. Cut non-essential activities. Re-forecast with leadership this week, not at quarter-end. Pair with sales velocity (P8-2) to see whether the bottleneck is volume, size, or win rate.';
+      tip = makeToken('calc_out.quota_attainment.row.tip_warning_off_pace', '💡 Tip: Warning band (50%–80%) and off pace — the closing rate is not enough to hit quota. Course-correct now: identify the 2–3 deals most likely to close in the next 30 days and allocate AE time to them. Cut non-essential activities. Re-forecast with leadership this week, not at quarter-end. Pair with sales velocity (P8-2) to see whether the bottleneck is volume, size, or win rate.');
     }
   } else if (band === 'good') {
-    tip =
-      'Good 80%–100% — close to hitting quota. Maintain cadence; do not let late-year fatigue erode the close rate. A 5pp drop from 95% to 90% is the difference between a board-deck win and a tough Q4 conversation. To push into 🟢, look for upside: 1–2 stretch deals, an expansion/upsell motion on existing accounts, or a year-end promotion to close hesitant buyers.';
+    tip = makeToken('calc_out.quota_attainment.row.tip_good', '💡 Tip: Good 80%–100% — close to hitting quota. Maintain cadence; do not let late-year fatigue erode the close rate. A 5pp drop from 95% to 90% is the difference between a board-deck win and a tough Q4 conversation. To push into 🟢, look for upside: 1–2 stretch deals, an expansion/upsell motion on existing accounts, or a year-end promotion to close hesitant buyers.');
   } else {
     // excellent
-    tip =
-      'Excellent — quota hit or exceeded. You are in the overachiever zone; consider negotiating next year\'s quota up by 20–30% (sandbagging hurts comp plan credibility and slows hiring), and identify which deal motions worked so you can replicate them. If you are well over 100% (e.g. 120%+), investigate whether the bar was set too low or you had one-time tailwinds — both matter for next year\'s plan.';
+    tip = makeToken('calc_out.quota_attainment.row.tip_excellent', '💡 Tip: Excellent — quota hit or exceeded. You are in the overachiever zone; consider negotiating next year\'s quota up by 20–30% (sandbagging hurts comp plan credibility and slows hiring), and identify which deal motions worked so you can replicate them. If you are well over 100% (e.g. 120%+), investigate whether the bar was set too low or you had one-time tailwinds — both matter for next year\'s plan.');
   }
+
+  // ── P168 B3-8：输出行逐行令牌化 ─────────────────────────────────────────
+  //   · 章节标题 / 标签 ⇒ **字面量 token**（对齐空格留在 token 之外）
+  //   · 带运行时数值的整行 ⇒ makeToken(code, fallback, params)（fallback 与 params 同源）
+  //   ⚠️ 复合值（金额 + 单位 / 百分比）先落成**局部 const** ⇒ params 与 fallback 引用
+  //      同一个标识符（否则 params 的表达式不是 fallback 的子串 ⇒ 源码模板推导失败）
+  const sAttainmentPct = pctInt(pct);
+  const sCurrentPace = moneyPerMonth(currentPacePerMonth) + '/mo';
+  const sRequiredPace = moneyPerMonth(reqPerMonth) + '/mo';
+  const sPaceGap = (paceGap >= 0 ? '+' : '') + moneyPerMonth(paceGap) + '/mo (' + (paceGapPct >= 0 ? '+' : '') + Math.round(paceGapPct) + '%)';
+  const sMaintainAdded = money(currentPacePerMonth * remainingMonths);
+  const sMaintainTotal = moneyK(ifMaintainTotal);
+  const sMaintainPct = pctInt(ifMaintainPct);
+  const sRequiredAdded = money(reqPerMonth * remainingMonths);
+  const sRequiredTotal = moneyK(ifRequiredTotal);
+  const sRequiredPct = pctInt(ifRequiredPct);
+  const sAccelPace = moneyPerMonth(acceleratePerMonth) + '/mo';
+  const sAccelAdded = money(acceleratePerMonth * remainingMonths);
+  const sAccelTotal = moneyK(ifAccelTotal);
+  const sAccelPct = pctInt(ifAccelPct);
+  const sYearEnd = moneyK(actualRevenue + currentPacePerMonth * 12);
+  const sYearEndPct = pctInt(attainmentPct(actualRevenue + currentPacePerMonth * 12, annualQuota));
+
+  const whatIfMaintain = makeToken(
+    'calc_out.quota_attainment.row.whatif_maintain_pace',
+    'If maintain current pace (' + sCurrentPace + ') for ' + remainingMonths + ' mo: +' + sMaintainAdded + ' → ' + sMaintainTotal + ' total = ' + sMaintainPct,
+    { pace: sCurrentPace, months: String(remainingMonths), added: sMaintainAdded, total: sMaintainTotal, pct: sMaintainPct },
+  );
+  const whatIfRequired = makeToken(
+    'calc_out.quota_attainment.row.whatif_required_pace',
+    'If hit required pace (' + sRequiredPace + ') for ' + remainingMonths + ' mo: +' + sRequiredAdded + ' → ' + sRequiredTotal + ' total = ' + sRequiredPct,
+    { required: sRequiredPace, months: String(remainingMonths), added: sRequiredAdded, total: sRequiredTotal, pct: sRequiredPct },
+  );
+  const whatIfAccelerate = makeToken(
+    'calc_out.quota_attainment.row.whatif_accelerate_20',
+    'If accelerate 20% to ' + sAccelPace + ' for ' + remainingMonths + ' mo: +' + sAccelAdded + ' → ' + sAccelTotal + ' total = ' + sAccelPct,
+    { pace: sAccelPace, months: String(remainingMonths), added: sAccelAdded, total: sAccelTotal, pct: sAccelPct },
+  );
 
   // Assemble 6-section output
   const r =
-    '🎯 Quota Attainment Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.quota_attainment_calculator|🎯 Quota Attainment Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Attainment: ' + pctInt(pct) + '  ·  On track: ' + (isOnTrack ? '✅ yes' : '❌ no') + '\n' +
-    '• Projected year-end: ' + money(projected) + '  ·  Gap to quota: ' + money(Math.max(0, gapVal)) + '\n\n' +
+    '• ' + (isOnTrack
+      ? makeToken('calc_out.quota_attainment.row.attainment_on_track', 'Attainment: ' + sAttainmentPct + '  ·  On track: ✅ yes', { pct: sAttainmentPct })
+      : makeToken('calc_out.quota_attainment.row.attainment_off_track', 'Attainment: ' + sAttainmentPct + '  ·  On track: ❌ no', { pct: sAttainmentPct })) + '\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.projected_year_end', 'Projected year-end: ' + money(projected) + '  ·  Gap to quota: ' + money(Math.max(0, gapVal)), { projected: money(projected), gap: money(Math.max(0, gapVal)) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Annual quota: ' + money(annualQuota) + '  ·  Months elapsed: ' + monthsElapsed + ' of 12\n' +
-    '• Revenue closed: ' + money(actualRevenue) + '  ·  Remaining: ' + remainingMonths + ' months\n' +
-    '• Expected at-pace: ' + money(expected) + '  ·  Behind/ahead: ' + money(behindPace) + ' (' + (behindPace >= 0 ? 'behind' : 'ahead') + ')\n' +
-    '• Current pace: ' + moneyPerMonth(currentPacePerMonth) + '/mo  ·  Required pace: ' + moneyPerMonth(reqPerMonth) + '/mo  ·  Gap: ' + (paceGap >= 0 ? '+' : '') + moneyPerMonth(paceGap) + '/mo (' + (paceGapPct >= 0 ? '+' : '') + Math.round(paceGapPct) + '%)\n\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.annual_quota_months', 'Annual quota: ' + money(annualQuota) + '  ·  Months elapsed: ' + monthsElapsed + ' of 12', { quota: money(annualQuota), months: String(monthsElapsed) }) + '\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.revenue_closed_remaining', 'Revenue closed: ' + money(actualRevenue) + '  ·  Remaining: ' + remainingMonths + ' months', { closed: money(actualRevenue), remaining: String(remainingMonths) }) + '\n' +
+    '• ' + (behindPace >= 0
+      ? makeToken('calc_out.quota_attainment.row.expected_at_pace_behind', 'Expected at-pace: ' + money(expected) + '  ·  Behind/ahead: ' + money(behindPace) + ' (behind)', { expected: money(expected), amount: money(behindPace) })
+      : makeToken('calc_out.quota_attainment.row.expected_at_pace_ahead', 'Expected at-pace: ' + money(expected) + '  ·  Behind/ahead: ' + money(behindPace) + ' (ahead)', { expected: money(expected), amount: money(behindPace) })) + '\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.pace_comparison', 'Current pace: ' + sCurrentPace + '  ·  Required pace: ' + sRequiredPace + '  ·  Gap: ' + sPaceGap, { pace: sCurrentPace, required: sRequiredPace, gap: sPaceGap }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• If maintain current pace (' + moneyPerMonth(currentPacePerMonth) + '/mo) for ' + remainingMonths + ' mo: +' + money(currentPacePerMonth * remainingMonths) + ' → ' + moneyK(ifMaintainTotal) + ' total = ' + pctInt(ifMaintainPct) + ' (' + ifMaintainBand + ')\n' +
-    '• If hit required pace (' + moneyPerMonth(reqPerMonth) + '/mo) for ' + remainingMonths + ' mo: +' + money(reqPerMonth * remainingMonths) + ' → ' + moneyK(ifRequiredTotal) + ' total = ' + pctInt(ifRequiredPct) + ' (' + ifRequiredBand + ', onTrack)\n' +
-    '• If accelerate 20% to ' + moneyPerMonth(acceleratePerMonth) + '/mo for ' + remainingMonths + ' mo: +' + money(acceleratePerMonth * remainingMonths) + ' → ' + moneyK(ifAccelTotal) + ' total = ' + pctInt(ifAccelPct) + ' (' + ifAccelBand + ')\n\n' +
+    '• ' + whatIfMaintain + ' (' + quotaBandToken(ifMaintainBand) + ')\n' +
+    '• ' + whatIfRequired + ' (' + quotaBandToken(ifRequiredBand) + ', onTrack)\n' +
+    '• ' + whatIfAccelerate + ' (' + quotaBandToken(ifAccelBand) + ')\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target for on-track at month ' + monthsElapsed + ': ' + money(breakevenAtPace) + ' closed (expected at-pace)\n' +
-    '• Gap to at-pace: ' + money(breakevenGap) + (breakevenGap === 0 ? ' (on pace ✅)' : ' behind') + '\n' +
-    '• Target for full quota: ' + money(breakevenForQuota) + '  ·  Required: ' + moneyPerMonth(reqPerMonth) + '/mo for ' + remainingMonths + ' remaining months\n\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.break_even_target_on_track', 'Target for on-track at month ' + monthsElapsed + ': ' + money(breakevenAtPace) + ' closed (expected at-pace)', { month: String(monthsElapsed), target: money(breakevenAtPace) }) + '\n' +
+    '• ' + (breakevenGap === 0
+      ? makeToken('calc_out.quota_attainment.row.break_even_gap_to_at_pace_on_pace', 'Gap to at-pace: ' + money(breakevenGap) + ' (on pace ✅)', { gap: money(breakevenGap) })
+      : makeToken('calc_out.quota_attainment.row.break_even_gap_to_at_pace_behind', 'Gap to at-pace: ' + money(breakevenGap) + ' behind', { gap: money(breakevenGap) })) + '\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.break_even_target_full_quota', 'Target for full quota: ' + money(breakevenForQuota) + '  ·  Required: ' + sRequiredPace + ' for ' + remainingMonths + ' remaining months', { quota: money(breakevenForQuota), required: sRequiredPace, months: String(remainingMonths) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + (band === 'excellent' ? '0pp (already at top)' : Math.round(gapToNext) + 'pp') + '\n' +
-    '• At current pace, year-end: ' + moneyK(actualRevenue + currentPacePerMonth * 12) + ' (' + pctInt(attainmentPct(actualRevenue + currentPacePerMonth * 12, annualQuota)) + ')\n\n' +
+    '• $calc_out.label.next_tier|Next tier|: ' + nextTierToken + '\n' +
+    '• $calc_out.label.gap_to_next_tier|Gap to next tier|: ' + gapToNextToken + '\n' +
+    '• ' + makeToken('calc_out.quota_attainment.row.at_current_pace_year_end', 'At current pace, year-end: ' + sYearEnd + ' (' + sYearEndPct + ')', { total: sYearEnd, pct: sYearEndPct }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -235,7 +301,12 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
+  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function aP(ar,aq){if(aq<=0)return 0;return(ar/aq)*100;}" +
+  // 健康度档位名（运行时可变的英文词 ⇒ 单独令牌化 ⇒ zh 能翻译）
+  "function bandTok(b){return b==='excellent'?tk('calc_out.quota_attainment.row.band_excellent','excellent'):b==='good'?tk('calc_out.quota_attainment.row.band_good','good'):b==='warning'?tk('calc_out.quota_attainment.row.band_warning','warning'):tk('calc_out.quota_attainment.row.band_critical','critical');}" +
   "function eAP(aq,me){return aq*(me/12);}" +
   "function gP(aq,ar){return aq-ar;}" +
   "function rPM(gv,rm){if(rm<=0)return 0;return gv/rm;}" +
@@ -247,7 +318,7 @@ const customFn =
   "var me=cnn(Math.min(12,parseFloat(inputs.monthsElapsed)||0));" +
   "var ar=cnn(parseFloat(inputs.actualRevenue)||0);" +
   "if(aq===0&&me===0&&ar===0){" +
-    "return['\\uD83C\\uDFAF Quota Attainment Calculator\\n\\n\\uD83C\\uDFAF Enter your annual quota (USD), months elapsed so far this year, and actual revenue closed to see your attainment %, monthly pace projection, and year-end forecast.'];" +
+    "return['$calc_out.section.quota_attainment_calculator|\\uD83C\\uDFAF Quota Attainment Calculator|\\n\\n'+tk('calc_out.quota_attainment.row.enter_inputs_required','\\uD83C\\uDFAF Enter your annual quota (USD), months elapsed so far this year, and actual revenue closed to see your attainment %, monthly pace projection, and year-end forecast.')];" +
   "}" +
   "var pct=aP(ar,aq);" +
   "var exp=eAP(aq,me);" +
@@ -258,7 +329,7 @@ const customFn =
   "var isOT=oT(pj,aq);" +
   "var bd=band(pct);" +
   "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 quota hit or exceeded; overachieving':bd==='good'?'Good \\u2014 80%\\u2013100% of quota; on track':bd==='warning'?'Warning \\u2014 50%\\u201380% of quota; behind expected pace':'Critical \\u2014 < 50% of quota; urgent catch-up needed';" +
+  "var hl=bd==='excellent'?tk('calc_out.quota_attainment.row.health_excellent','Excellent \\u2014 quota hit or exceeded; overachieving'):bd==='good'?tk('calc_out.quota_attainment.row.health_good','Good \\u2014 80%\\u2013100% of quota; on track'):bd==='warning'?tk('calc_out.quota_attainment.row.health_warning','Warning \\u2014 50%\\u201380% of quota; behind expected pace'):tk('calc_out.quota_attainment.row.health_critical','Critical \\u2014 < 50% of quota; urgent catch-up needed');" +
   "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
   "function moneyK(n){var r=Math.round(n);if(r>=1000000)return '$'+(r/1000000).toFixed(r%1000000===0?0:2)+'M';if(r>=1000)return '$'+Math.round(r/1000)+'K';return '$'+r.toLocaleString('en-US');}" +
   "function moneyPM(n){var r=Math.round(n);if(r>=1000)return '$'+Math.round(r/1000)+'K';return '$'+r.toLocaleString('en-US');}" +
@@ -278,56 +349,78 @@ const customFn =
   "var ifAT=ar+apm*rm;" +
   "var ifAP=aP(ifAT,aq);" +
   "var ifAB=band(ifAP);" +
+  "var sCurPace=moneyPM(cpm)+'/mo';" +
+  "var sReqPace=moneyPM(rpm)+'/mo';" +
+  "var sPaceGap=(pg>=0?'+':'')+moneyPM(pg)+'/mo ('+(pgp>=0?'+':'')+Math.round(pgp)+'%)';" +
+  "var sMaintAdd=money(cpm*rm);var sMaintTotal=moneyK(ifMT);var sMaintPct=pctI(ifMP);" +
+  "var sReqAdd=money(rpm*rm);var sReqTotal=moneyK(ifRT);var sReqPct=pctI(ifRP);" +
+  "var sAccPace=moneyPM(apm)+'/mo';var sAccAdd=money(apm*rm);var sAccTotal=moneyK(ifAT);var sAccPct=pctI(ifAP);" +
+  "var sYearEnd=moneyK(ar+cpm*12);var sYearEndPct=pctI(aP(ar+cpm*12,aq));" +
   "var beap=exp;" +
   "var beg=Math.max(0,beap-ar);" +
   "var befq=aq;" +
+  "var sAttPct=pctI(pct);" +
+  "var tkAtt=isOT?tk('calc_out.quota_attainment.row.attainment_on_track','Attainment: '+sAttPct+'  \\u00B7  On track: \\u2705 yes',{pct:sAttPct}):tk('calc_out.quota_attainment.row.attainment_off_track','Attainment: '+sAttPct+'  \\u00B7  On track: \\u274C no',{pct:sAttPct});" +
+  "var tkProj=tk('calc_out.quota_attainment.row.projected_year_end','Projected year-end: '+money(pj)+'  \\u00B7  Gap to quota: '+money(Math.max(0,gv)),{projected:money(pj),gap:money(Math.max(0,gv))});" +
+  "var tkQuota=tk('calc_out.quota_attainment.row.annual_quota_months','Annual quota: '+money(aq)+'  \\u00B7  Months elapsed: '+me+' of 12',{quota:money(aq),months:String(me)});" +
+  "var tkRev=tk('calc_out.quota_attainment.row.revenue_closed_remaining','Revenue closed: '+money(ar)+'  \\u00B7  Remaining: '+rm+' months',{closed:money(ar),remaining:String(rm)});" +
+  "var tkExp=bp>=0?tk('calc_out.quota_attainment.row.expected_at_pace_behind','Expected at-pace: '+money(exp)+'  \\u00B7  Behind/ahead: '+money(bp)+' (behind)',{expected:money(exp),amount:money(bp)}):tk('calc_out.quota_attainment.row.expected_at_pace_ahead','Expected at-pace: '+money(exp)+'  \\u00B7  Behind/ahead: '+money(bp)+' (ahead)',{expected:money(exp),amount:money(bp)});" +
+  "var tkPace=tk('calc_out.quota_attainment.row.pace_comparison','Current pace: '+sCurPace+'  \\u00B7  Required pace: '+sReqPace+'  \\u00B7  Gap: '+sPaceGap,{pace:sCurPace,required:sReqPace,gap:sPaceGap});" +
+  "var tkMaint=tk('calc_out.quota_attainment.row.whatif_maintain_pace','If maintain current pace ('+sCurPace+') for '+rm+' mo: +'+sMaintAdd+' \\u2192 '+sMaintTotal+' total = '+sMaintPct,{pace:sCurPace,months:String(rm),added:sMaintAdd,total:sMaintTotal,pct:sMaintPct});" +
+  "var tkReq=tk('calc_out.quota_attainment.row.whatif_required_pace','If hit required pace ('+sReqPace+') for '+rm+' mo: +'+sReqAdd+' \\u2192 '+sReqTotal+' total = '+sReqPct,{required:sReqPace,months:String(rm),added:sReqAdd,total:sReqTotal,pct:sReqPct});" +
+  "var tkAcc=tk('calc_out.quota_attainment.row.whatif_accelerate_20','If accelerate 20% to '+sAccPace+' for '+rm+' mo: +'+sAccAdd+' \\u2192 '+sAccTotal+' total = '+sAccPct,{pace:sAccPace,months:String(rm),added:sAccAdd,total:sAccTotal,pct:sAccPct});" +
+  "var tkBeTarget=tk('calc_out.quota_attainment.row.break_even_target_on_track','Target for on-track at month '+me+': '+money(beap)+' closed (expected at-pace)',{month:String(me),target:money(beap)});" +
+  "var tkBeGap=beg===0?tk('calc_out.quota_attainment.row.break_even_gap_to_at_pace_on_pace','Gap to at-pace: '+money(beg)+' (on pace \\u2705)',{gap:money(beg)}):tk('calc_out.quota_attainment.row.break_even_gap_to_at_pace_behind','Gap to at-pace: '+money(beg)+' behind',{gap:money(beg)});" +
+  "var tkBeFull=tk('calc_out.quota_attainment.row.break_even_target_full_quota','Target for full quota: '+money(befq)+'  \\u00B7  Required: '+sReqPace+' for '+rm+' remaining months',{quota:money(befq),required:sReqPace,months:String(rm)});" +
+  "var tkYearEnd=tk('calc_out.quota_attainment.row.at_current_pace_year_end','At current pace, year-end: '+sYearEnd+' ('+sYearEndPct+')',{total:sYearEnd,pct:sYearEndPct});" +
   "var gn,nt;" +
-  "if(bd==='critical'){gn=50-pct;nt='\\uD83D\\uDFE0 Warning (50%)';}" +
-  "else if(bd==='warning'){gn=80-pct;nt='\\uD83D\\uDFE1 Good (80%)';}" +
-  "else if(bd==='good'){gn=100-pct;nt='\\uD83D\\uDFE2 Excellent (100%)';}" +
-  "else{gn=0;nt='top tier maintained';}" +
+  "if(bd==='critical'){gn=50-pct;nt=tk('calc_out.quota_attainment.row.next_tier_warning','\\uD83D\\uDFE0 Warning (50%)');}" +
+  "else if(bd==='warning'){gn=80-pct;nt=tk('calc_out.quota_attainment.row.next_tier_good','\\uD83D\\uDFE1 Good (80%)');}" +
+  "else if(bd==='good'){gn=100-pct;nt=tk('calc_out.quota_attainment.row.next_tier_excellent','\\uD83D\\uDFE2 Excellent (100%)');}" +
+  "else{gn=0;nt=tk('calc_out.quota_attainment.row.next_tier_top','top tier maintained');}" +
+  "var gnt=bd==='excellent'?tk('calc_out.quota_attainment.row.gap_to_next_tier_top','0pp (already at top)'):tk('calc_out.quota_attainment.row.gap_to_next_tier_pp',String(Math.round(gn))+'pp',{pp:String(Math.round(gn))});" +
   "var tip='';" +
-  "if(bd==='critical'){tip='Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band \\u2014 pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to \\uD83D\\uDFE0 is > 30pp, consider a quota reset conversation with leadership now \\u2014 not at year-end. A pipeline review is overdue.';}" +
+  "if(bd==='critical'){tip=tk('calc_out.quota_attainment.row.tip_critical','\\uD83D\\uDCA1 Tip: Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band \\u2014 pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to \\uD83D\\uDFE0 is > 30pp, consider a quota reset conversation with leadership now \\u2014 not at year-end. A pipeline review is overdue.');}" +
   "else if(bd==='warning'){" +
-    "if(isOT){tip='Warning band (50%\\u201380%) but mathematically on track \\u2014 the gap is closable if you hit the required monthly pace. Execute with discipline: keep your daily/weekly close cadence, prioritize late-stage deals (Negotiation, Closing) over new logo acquisition, and run a weekly forecast call to catch slippage early. The danger zone is letting the monthly pace slip below required for 2+ consecutive months \\u2014 once that happens, the math breaks down quickly.';}" +
-    "else{tip='Warning band (50%\\u201380%) and off pace \\u2014 the closing rate is not enough to hit quota. Course-correct now: identify the 2\\u20133 deals most likely to close in the next 30 days and allocate AE time to them. Cut non-essential activities. Re-forecast with leadership this week, not at quarter-end. Pair with sales velocity (P8-2) to see whether the bottleneck is volume, size, or win rate.';}" +
+    "if(isOT){tip=tk('calc_out.quota_attainment.row.tip_warning_on_track','\\uD83D\\uDCA1 Tip: Warning band (50%\\u201380%) but mathematically on track \\u2014 the gap is closable if you hit the required monthly pace. Execute with discipline: keep your daily/weekly close cadence, prioritize late-stage deals (Negotiation, Closing) over new logo acquisition, and run a weekly forecast call to catch slippage early. The danger zone is letting the monthly pace slip below required for 2+ consecutive months \\u2014 once that happens, the math breaks down quickly.');}" +
+    "else{tip=tk('calc_out.quota_attainment.row.tip_warning_off_pace','\\uD83D\\uDCA1 Tip: Warning band (50%\\u201380%) and off pace \\u2014 the closing rate is not enough to hit quota. Course-correct now: identify the 2\\u20133 deals most likely to close in the next 30 days and allocate AE time to them. Cut non-essential activities. Re-forecast with leadership this week, not at quarter-end. Pair with sales velocity (P8-2) to see whether the bottleneck is volume, size, or win rate.');}" +
   "}" +
-  "else if(bd==='good'){tip='Good 80%\\u2013100% \\u2014 close to hitting quota. Maintain cadence; do not let late-year fatigue erode the close rate. A 5pp drop from 95% to 90% is the difference between a board-deck win and a tough Q4 conversation. To push into \\uD83D\\uDFE2, look for upside: 1\\u20132 stretch deals, an expansion/upsell motion on existing accounts, or a year-end promotion to close hesitant buyers.';}" +
-  "else{tip='Excellent \\u2014 quota hit or exceeded. You are in the overachiever zone; consider negotiating next year\\u2019s quota up by 20\\u201330% (sandbagging hurts comp plan credibility and slows hiring), and identify which deal motions worked so you can replicate them. If you are well over 100% (e.g. 120%+), investigate whether the bar was set too low or you had one-time tailwinds \\u2014 both matter for next year\\u2019s plan.';}" +
+  "else if(bd==='good'){tip=tk('calc_out.quota_attainment.row.tip_good','\\uD83D\\uDCA1 Tip: Good 80%\\u2013100% \\u2014 close to hitting quota. Maintain cadence; do not let late-year fatigue erode the close rate. A 5pp drop from 95% to 90% is the difference between a board-deck win and a tough Q4 conversation. To push into \\uD83D\\uDFE2, look for upside: 1\\u20132 stretch deals, an expansion/upsell motion on existing accounts, or a year-end promotion to close hesitant buyers.');}" +
+  "else{tip=tk('calc_out.quota_attainment.row.tip_excellent','\\uD83D\\uDCA1 Tip: Excellent \\u2014 quota hit or exceeded. You are in the overachiever zone; consider negotiating next year\\'s quota up by 20\\u201330% (sandbagging hurts comp plan credibility and slows hiring), and identify which deal motions worked so you can replicate them. If you are well over 100% (e.g. 120%+), investigate whether the bar was set too low or you had one-time tailwinds \\u2014 both matter for next year\\'s plan.');}" +
   "var r2='';" +
-  "r2+='\\uD83C\\uDFAF Quota Attainment Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
+  "r2+='$calc_out.section.quota_attainment_calculator|\\uD83C\\uDFAF Quota Attainment Calculator|\\n\\n';" +
+  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Attainment: '+pctI(pct)+'  \\u00B7  On track: '+(isOT?'\\u2705 yes':'\\u274C no')+'\\n';" +
-  "r2+='\\u2022 Projected year-end: '+money(pj)+'  \\u00B7  Gap to quota: '+money(Math.max(0,gv))+'\\n\\n';" +
+  "r2+='\\u2022 '+tkAtt+'\\n';" +
+  "r2+='\\u2022 '+tkProj+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
+  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Annual quota: '+money(aq)+'  \\u00B7  Months elapsed: '+me+' of 12\\n';" +
-  "r2+='\\u2022 Revenue closed: '+money(ar)+'  \\u00B7  Remaining: '+rm+' months\\n';" +
-  "r2+='\\u2022 Expected at-pace: '+money(exp)+'  \\u00B7  Behind/ahead: '+money(bp)+' ('+(bp>=0?'behind':'ahead')+')\\n';" +
-  "r2+='\\u2022 Current pace: '+moneyPM(cpm)+'/mo  \\u00B7  Required pace: '+moneyPM(rpm)+'/mo  \\u00B7  Gap: '+(pg>=0?'+':'')+moneyPM(pg)+'/mo ('+(pgp>=0?'+':'')+Math.round(pgp)+'%)\\n\\n';" +
+  "r2+='\\u2022 '+tkQuota+'\\n';" +
+  "r2+='\\u2022 '+tkRev+'\\n';" +
+  "r2+='\\u2022 '+tkExp+'\\n';" +
+  "r2+='\\u2022 '+tkPace+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
+  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 If maintain current pace ('+moneyPM(cpm)+'/mo) for '+rm+' mo: +'+money(cpm*rm)+' \\u2192 '+moneyK(ifMT)+' total = '+pctI(ifMP)+' ('+ifMB+')\\n';" +
-  "r2+='\\u2022 If hit required pace ('+moneyPM(rpm)+'/mo) for '+rm+' mo: +'+money(rpm*rm)+' \\u2192 '+moneyK(ifRT)+' total = '+pctI(ifRP)+' ('+ifRB+', onTrack)\\n';" +
-  "r2+='\\u2022 If accelerate 20% to '+moneyPM(apm)+'/mo for '+rm+' mo: +'+money(apm*rm)+' \\u2192 '+moneyK(ifAT)+' total = '+pctI(ifAP)+' ('+ifAB+')\\n\\n';" +
+  "r2+='\\u2022 '+tkMaint+' ('+bandTok(ifMB)+')\\n';" +
+  "r2+='\\u2022 '+tkReq+' ('+bandTok(ifRB)+', onTrack)\\n';" +
+  "r2+='\\u2022 '+tkAcc+' ('+bandTok(ifAB)+')\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
+  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Target for on-track at month '+me+': '+money(beap)+' closed (expected at-pace)\\n';" +
-  "r2+='\\u2022 Gap to at-pace: '+money(beg)+(beg===0?' (on pace \\u2705)':' behind')+'\\n';" +
-  "r2+='\\u2022 Target for full quota: '+money(befq)+'  \\u00B7  Required: '+moneyPM(rpm)+'/mo for '+rm+' remaining months\\n\\n';" +
+  "r2+='\\u2022 '+tkBeTarget+'\\n';" +
+  "r2+='\\u2022 '+tkBeGap+'\\n';" +
+  "r2+='\\u2022 '+tkBeFull+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
+  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Next tier: '+nt+'\\n';" +
-  "r2+='\\u2022 Gap to next tier: '+(bd==='excellent'?'0pp (already at top)':Math.round(gn)+'pp')+'\\n';" +
-  "r2+='\\u2022 At current pace, year-end: '+moneyK(ar+cpm*12)+' ('+pctI(aP(ar+cpm*12,aq))+')\\n\\n';" +
+  "r2+='\\u2022 $calc_out.label.next_tier|Next tier|: '+nt+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.gap_to_next_tier|Gap to next tier|: '+gnt+'\\n';" +
+  "r2+='\\u2022 '+tkYearEnd+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
+  "r2+=tip+'\\n';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -378,7 +471,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['🎯 Quota Attainment Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — < 50% of quota; urgent catch-up needed\n• Attainment: 40%  ·  On track: ✅ yes\n• Projected year-end: $1,000,000  ·  Gap to quota: $600,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Annual quota: $1,000,000  ·  Months elapsed: 6 of 12\n• Revenue closed: $400,000  ·  Remaining: 6 months\n• Expected at-pace: $500,000  ·  Behind/ahead: $100,000 (behind)\n• Current pace: $67K/mo  ·  Required pace: $100K/mo  ·  Gap: $-16,667/mo (-20%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• If maintain current pace ($67K/mo) for 6 mo: +$400,000 → $800K total = 80% (good)\n• If hit required pace ($100K/mo) for 6 mo: +$600,000 → $1M total = 100% (excellent, onTrack)\n• If accelerate 20% to $120K/mo for 6 mo: +$720,000 → $1.12M total = 112% (excellent)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for on-track at month 6: $500,000 closed (expected at-pace)\n• Gap to at-pace: $100,000 behind\n• Target for full quota: $1,000,000  ·  Required: $100K/mo for 6 remaining months\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟠 Warning (50%)\n• Gap to next tier: 10pp\n• At current pace, year-end: $1.20M (120%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band — pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to 🟠 is > 30pp, consider a quota reset conversation with leadership now — not at year-end. A pipeline review is overdue.\n'],
+  staticExamples: ['$calc_out.section.quota_attainment_calculator|🎯 Quota Attainment Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 $calc_out.quota_attainment.row.health_critical|Critical — < 50% of quota; urgent catch-up needed|\n• $calc_out.quota_attainment.row.attainment_on_track{"pct":"40%"}|Attainment: 40%  ·  On track: ✅ yes|\n• $calc_out.quota_attainment.row.projected_year_end{"projected":"$1,000,000","gap":"$600,000"}|Projected year-end: $1,000,000  ·  Gap to quota: $600,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.quota_attainment.row.annual_quota_months{"quota":"$1,000,000","months":"6"}|Annual quota: $1,000,000  ·  Months elapsed: 6 of 12|\n• $calc_out.quota_attainment.row.revenue_closed_remaining{"closed":"$400,000","remaining":"6"}|Revenue closed: $400,000  ·  Remaining: 6 months|\n• $calc_out.quota_attainment.row.expected_at_pace_behind{"expected":"$500,000","amount":"$100,000"}|Expected at-pace: $500,000  ·  Behind/ahead: $100,000 (behind)|\n• $calc_out.quota_attainment.row.pace_comparison{"pace":"$67K/mo","required":"$100K/mo","gap":"$-16,667/mo (-20%)"}|Current pace: $67K/mo  ·  Required pace: $100K/mo  ·  Gap: $-16,667/mo (-20%)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.quota_attainment.row.whatif_maintain_pace{"pace":"$67K/mo","months":"6","added":"$400,000","total":"$800K","pct":"80%"}|If maintain current pace ($67K/mo) for 6 mo: +$400,000 → $800K total = 80%| ($calc_out.quota_attainment.row.band_good|good|)\n• $calc_out.quota_attainment.row.whatif_required_pace{"required":"$100K/mo","months":"6","added":"$600,000","total":"$1M","pct":"100%"}|If hit required pace ($100K/mo) for 6 mo: +$600,000 → $1M total = 100%| ($calc_out.quota_attainment.row.band_excellent|excellent|, onTrack)\n• $calc_out.quota_attainment.row.whatif_accelerate_20{"pace":"$120K/mo","months":"6","added":"$720,000","total":"$1.12M","pct":"112%"}|If accelerate 20% to $120K/mo for 6 mo: +$720,000 → $1.12M total = 112%| ($calc_out.quota_attainment.row.band_excellent|excellent|)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.quota_attainment.row.break_even_target_on_track{"month":"6","target":"$500,000"}|Target for on-track at month 6: $500,000 closed (expected at-pace)|\n• $calc_out.quota_attainment.row.break_even_gap_to_at_pace_behind{"gap":"$100,000"}|Gap to at-pace: $100,000 behind|\n• $calc_out.quota_attainment.row.break_even_target_full_quota{"quota":"$1,000,000","required":"$100K/mo","months":"6"}|Target for full quota: $1,000,000  ·  Required: $100K/mo for 6 remaining months|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.next_tier|Next tier|: $calc_out.quota_attainment.row.next_tier_warning|🟠 Warning (50%)|\n• $calc_out.label.gap_to_next_tier|Gap to next tier|: $calc_out.quota_attainment.row.gap_to_next_tier_pp{"pp":"10"}|10pp|\n• $calc_out.quota_attainment.row.at_current_pace_year_end{"total":"$1.20M","pct":"120%"}|At current pace, year-end: $1.20M (120%)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.quota_attainment.row.tip_critical|💡 Tip: Attainment < 50% means you are at serious risk of missing quota. This is the urgent-action band — pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to 🟠 is > 30pp, consider a quota reset conversation with leadership now — not at year-end. A pipeline review is overdue.|\n'],
   faq: [
     { q: 'What is quota attainment?', a: 'Quota attainment is the percentage of your sales quota (target) achieved in a given period — usually a year. Calculated as (actual revenue / quota) × 100. A 100% attainment means you hit your number exactly; 120% means you exceeded by 20%; 80% means you are 20% short.' },
     { q: 'How is "on track" calculated?', a: 'On track means the gap between actual revenue and quota can still be closed in the remaining months at a feasible monthly pace. We compute requiredPerMonth = gap / remainingMonths. If you can hit that pace, you are on track. The required pace scales with how much time is left — early in the year, the bar is low; late in the year, it climbs sharply.' },

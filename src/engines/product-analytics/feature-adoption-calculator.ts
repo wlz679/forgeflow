@@ -6,6 +6,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-8：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.40, label: '🟢 Excellent', message: 'Broad feature appeal — the feature is core to the user experience.' },
@@ -30,8 +33,41 @@ export function calcHealthBand(rate: number): 'excellent' | 'good' | 'warning' |
 function fmtPct(x: number): string { return (x * 100).toFixed(1) + '%'; }
 function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 
-// customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
-const customFn = "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) { var fu = cnn(Number(inputs['feature_users'])); var au = cnn(Number(inputs['active_users'])); if (au <= 0) return ['Total active users must be > 0.']; if (fu > au) fu = au; var adoption = fu / au; var band = adoption >= 0.40 ? 'Excellent' : adoption >= 0.20 ? 'Good' : adoption >= 0.10 ? 'Warning' : 'Critical'; var emoji = adoption >= 0.40 ? 'GREEN' : adoption >= 0.20 ? 'YELLOW' : adoption >= 0.10 ? 'ORANGE' : 'RED'; var denom = inputs['WAU_vs_MAU'] || 'WAU'; var nonAdopters = Math.max(0, au - fu); var targetFu = Math.ceil(au * 0.20); var l10 = Math.min(au, fu + (au - fu) * 0.10); return ['FEATURE ' + emoji + ' ' + band + ' (' + (adoption*100).toFixed(1) + '% adoption)','SNAPSHOT: ' + fmtInt(fu) + ' of ' + fmtInt(au) + ' ' + denom + ' users used this feature. Non-adopters: ' + fmtInt(nonAdopters),'WHATIF: if 10% of non-adopters convert, adoption rises to ' + (l10/au*100).toFixed(1) + '%','BREAKEVEN: to hit GOOD (20% adoption), need at least ' + targetFu.toLocaleString() + ' feature users (currently ' + fmtInt(fu) + ')','MILESTONE: lifting adoption by +10 percentage points over the next quarter requires ' + fmtInt(Math.ceil(au * (adoption + 0.10) - fu)) + ' more feature users','TIP: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted.']; function fmtInt(n) { return Math.round(n).toLocaleString(); } } return run(inputs, pick, fill);";
+// customFn: 浏览器侧的同一份计算（P168 B3-8：与服务端 generate **逐字镜像**）。
+// ⚠️ 客户端原本与服务端**漂移**：emoji 写成 GREEN/YELLOW 文字、Break-Even 写 20%（服务端 20.0%）、
+//    What-If / Milestone / Tip 三整句不同 ⇒ 一律以**服务端**为准。
+const customFn =
+  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+  "var cnn=function(x){return Math.max(0,x)};" +
+  "function fmtPct(x){return (x*100).toFixed(1)+'%'}" +
+  "function fmtInt(n){return Math.round(n).toLocaleString()}" +
+  "var HEALTH_BANDS={excellent:{threshold:0.40,label:'🟢 Excellent'},good:{threshold:0.20,label:'🟡 Good'},warning:{threshold:0.10,label:'🟠 Warning'},critical:{threshold:0,label:'🔴 Critical'}};" +
+  "var featureUsers=cnn(Number(inputs['feature_users']));" +
+  "var activeUsers=cnn(Number(inputs['active_users']));" +
+  "if (activeUsers <= 0) return [tk('calc_out.feature_adoption.row.error_active_users_zero','Total active users must be > 0.')];" +
+  "if (featureUsers > activeUsers) featureUsers = activeUsers;" +
+  "var adoption=featureUsers/activeUsers;" +
+  "var band=adoption>=0.40?'excellent':adoption>=0.20?'good':adoption>=0.10?'warning':'critical';" +
+  "var bandInfo=HEALTH_BANDS[band];" +
+  "var denom=inputs['WAU_vs_MAU']||'WAU';" +
+  "var nonAdopters=Math.max(0,activeUsers-featureUsers);" +
+  "var targetFu=Math.ceil(activeUsers*HEALTH_BANDS.good.threshold);" +
+  "var l10=Math.min(activeUsers,featureUsers+nonAdopters*0.10);" +
+  "var needMore=Math.max(0,Math.ceil(activeUsers*(adoption+0.10))-featureUsers);" +
+  "var ratePct=fmtPct(adoption);" +
+  "var bandFallback=bandInfo.label+' ('+ratePct+' adoption)';" +
+  "var bandParams={pct:ratePct};" +
+  "var bandRow=band==='excellent'?tk('calc_out.feature_adoption.row.band_excellent',bandFallback,bandParams):band==='good'?tk('calc_out.feature_adoption.row.band_good',bandFallback,bandParams):band==='warning'?tk('calc_out.feature_adoption.row.band_warning',bandFallback,bandParams):tk('calc_out.feature_adoption.row.band_critical',bandFallback,bandParams);" +
+  "return [" +
+  "  tk('calc_out.label.feature_adoption','Feature Adoption')+': '+bandRow," +
+  "  tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.feature_adoption.row.snapshot_detail',fmtInt(featureUsers)+' of '+fmtInt(activeUsers)+' '+denom+' users used this feature. Non-adopters: '+fmtInt(nonAdopters),{feature_users:fmtInt(featureUsers),active_users:fmtInt(activeUsers),denom:denom,non_adopters:fmtInt(nonAdopters)})," +
+  "  tk('calc_out.feature_adoption.row.whatif_convert_10pct','What-If: if 10% of non-adopters convert this quarter, adoption rises to '+fmtPct(l10/activeUsers),{lifted:fmtPct(l10/activeUsers)})," +
+  "  tk('calc_out.feature_adoption.row.break_even_target','Break-Even: to hit Good ('+fmtPct(HEALTH_BANDS.good.threshold)+' adoption), need at least '+targetFu.toLocaleString()+' feature users (currently '+fmtInt(featureUsers)+')',{target_pct:fmtPct(HEALTH_BANDS.good.threshold),target:targetFu.toLocaleString(),current:fmtInt(featureUsers)})," +
+  "  tk('calc_out.feature_adoption.row.milestone_plus_10pp','Milestone: lifting adoption by +10 percentage points requires '+fmtInt(needMore)+' more feature users (target '+fmtInt(Math.ceil(activeUsers*(adoption+0.10)))+' from '+fmtInt(featureUsers)+')',{more:fmtInt(needMore),target:fmtInt(Math.ceil(activeUsers*(adoption+0.10))),current:fmtInt(featureUsers)})," +
+  "  tk('calc_out.feature_adoption.row.tip_activation_pairing','Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look \"stuck\" but require different interventions.')," +
+  "];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-feature-adoption-calculator',
@@ -65,7 +101,7 @@ const engine: ToolEngine = {
   generate(inputs) {
     const fu = clampNonNegative(Number(inputs['feature_users']));
     const au = clampNonNegative(Number(inputs['active_users']));
-    if (au <= 0) return ['Total active users must be > 0.'];
+    if (au <= 0) return [makeToken('calc_out.feature_adoption.row.error_active_users_zero', 'Total active users must be > 0.')];
     const cappedFu = Math.min(fu, au);
     const adoption = featureAdoption(cappedFu, au);
     const band = calcHealthBand(adoption);
@@ -75,17 +111,26 @@ const engine: ToolEngine = {
     const targetFu = Math.ceil(au * HEALTH_BANDS.good.threshold);
     const liftedAdoption10 = Math.min(au, cappedFu + nonAdopters * 0.10) / au;
     const needMore = Math.max(0, Math.ceil(au * (adoption + 0.10)) - cappedFu);
+    // ⚠️ band 决定 code 后缀 ⇒ 4 个 band code 必须**逐个写出字面量**（拼字符串 ⇒ 静态扫描器认不出）
+    const ratePct = fmtPct(adoption);
+    const bandFallback = bandInfo.label + ' (' + ratePct + ' adoption)';
+    const bandParams = { pct: ratePct };
+    const bandRow =
+      band === 'excellent' ? makeToken('calc_out.feature_adoption.row.band_excellent', bandFallback, bandParams)
+      : band === 'good' ? makeToken('calc_out.feature_adoption.row.band_good', bandFallback, bandParams)
+      : band === 'warning' ? makeToken('calc_out.feature_adoption.row.band_warning', bandFallback, bandParams)
+      : makeToken('calc_out.feature_adoption.row.band_critical', bandFallback, bandParams);
     return [
-      'Feature Adoption: ' + bandInfo.label + ' (' + fmtPct(adoption) + ' adoption)',
-      'Snapshot: ' + fmtInt(cappedFu) + ' of ' + fmtInt(au) + ' ' + denom + ' users used this feature. Non-adopters: ' + fmtInt(nonAdopters),
-      'What-If: if 10% of non-adopters convert this quarter, adoption rises to ' + fmtPct(liftedAdoption10),
-      'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' adoption), need at least ' + targetFu.toLocaleString() + ' feature users (currently ' + fmtInt(cappedFu) + ')',
-      'Milestone: lifting adoption by +10 percentage points requires ' + fmtInt(needMore) + ' more feature users (target ' + fmtInt(Math.ceil(au * (adoption + 0.10))) + ' from ' + fmtInt(cappedFu) + ')',
-      'Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look "stuck" but require different interventions.',
+      makeToken('calc_out.label.feature_adoption', 'Feature Adoption') + ': ' + bandRow,
+      makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken('calc_out.feature_adoption.row.snapshot_detail', fmtInt(cappedFu) + ' of ' + fmtInt(au) + ' ' + denom + ' users used this feature. Non-adopters: ' + fmtInt(nonAdopters), { feature_users: fmtInt(cappedFu), active_users: fmtInt(au), denom: denom, non_adopters: fmtInt(nonAdopters) }),
+      makeToken('calc_out.feature_adoption.row.whatif_convert_10pct', 'What-If: if 10% of non-adopters convert this quarter, adoption rises to ' + fmtPct(liftedAdoption10), { lifted: fmtPct(liftedAdoption10) }),
+      makeToken('calc_out.feature_adoption.row.break_even_target', 'Break-Even: to hit Good (' + fmtPct(HEALTH_BANDS.good.threshold) + ' adoption), need at least ' + targetFu.toLocaleString() + ' feature users (currently ' + fmtInt(cappedFu) + ')', { target_pct: fmtPct(HEALTH_BANDS.good.threshold), target: targetFu.toLocaleString(), current: fmtInt(cappedFu) }),
+      makeToken('calc_out.feature_adoption.row.milestone_plus_10pp', 'Milestone: lifting adoption by +10 percentage points requires ' + fmtInt(needMore) + ' more feature users (target ' + fmtInt(Math.ceil(au * (adoption + 0.10))) + ' from ' + fmtInt(cappedFu) + ')', { more: fmtInt(needMore), target: fmtInt(Math.ceil(au * (adoption + 0.10))), current: fmtInt(cappedFu) }),
+      makeToken('calc_out.feature_adoption.row.tip_activation_pairing', 'Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look "stuck" but require different interventions.'),
     ];
   },
   staticExamples: [
-    'Feature Adoption: 🟡 Good (25.0% adoption)\nSnapshot: 750 of 3,000 WAU users used this feature. Non-adopters: 2,250\nWhat-If: if 10% of non-adopters convert this quarter, adoption rises to 32.5%\nBreak-Even: to hit Good (20.0% adoption), need at least 600 feature users (currently 750)\nMilestone: lifting adoption by +10 percentage points requires 300 more feature users (target 1,050 from 750)\nTip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look "stuck" but require different interventions.',
+    '$calc_out.label.feature_adoption|Feature Adoption|: $calc_out.feature_adoption.row.band_good{"pct":"25.0%"}|🟡 Good (25.0% adoption)|\n$calc_out.label.snapshot|Snapshot|: $calc_out.feature_adoption.row.snapshot_detail{"feature_users":"750","active_users":"3,000","denom":"WAU","non_adopters":"2,250"}|750 of 3,000 WAU users used this feature. Non-adopters: 2,250|\n$calc_out.feature_adoption.row.whatif_convert_10pct{"lifted":"32.5%"}|What-If: if 10% of non-adopters convert this quarter, adoption rises to 32.5%|\n$calc_out.feature_adoption.row.break_even_target{"target_pct":"20.0%","target":"600","current":"750"}|Break-Even: to hit Good (20.0% adoption), need at least 600 feature users (currently 750)|\n$calc_out.feature_adoption.row.milestone_plus_10pp{"more":"300","target":"1,050","current":"750"}|Milestone: lifting adoption by +10 percentage points requires 300 more feature users (target 1,050 from 750)|\n$calc_out.feature_adoption.row.tip_activation_pairing|Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look "stuck" but require different interventions.|',
   ],
   faq: [
     { q: 'WAU or MAU — which denominator?', a: 'WAU shows feature engagement among weekly-active users (stickier test). MAU shows overall reach. Use WAU for engagement-decisions; MAU for reach-decisions.' },

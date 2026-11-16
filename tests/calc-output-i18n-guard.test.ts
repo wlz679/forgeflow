@@ -445,23 +445,33 @@ interface TokenLiteral {
  *   例：const a = '$calc_out.label.x'; const b = 'x | y | z';
  *   ⇒ a 的 fallback 被算成 " y | z" ⇒ CI 假红（复核轮实测）。
  */
+/** 从 open 处找同款引号的**配对闭引号**（处理反斜杠转义）；找不到返回 -1 */
+function findClosingQuote(src: string, open: number, quote: string): number {
+  let j = open + 1;
+  while (j < src.length) {
+    if (src[j] === '\\') { j += 2; continue; }
+    if (src[j] === quote) return j;
+    j++;
+  }
+  return -1;
+}
+
 function enclosingLiteral(src: string, pos: number): { start: number; end: number } | null {
   const QUOTES = "'\"`";
   let i = pos - 1;
   while (i >= 0) {
     const c = src[i];
     if (c === '\\') { i -= 2; continue; }
-    if (QUOTES.includes(c)) break;
+    if (QUOTES.includes(c)) {
+      const j = findClosingQuote(src, i, c);
+      if (j < 0) return null;
+      // ⭐ 只有当 pos **落在**这个引号区间里，它才是本 token 所属字面量的配对开引号
+      //   （否则这个引号是「字面量内部嵌着的另一种引号」⇒ 继续往前找）
+      if (pos > i && pos <= j) return { start: i, end: j };
+      i--;
+      continue;
+    }
     i--;
-  }
-  if (i < 0) return null;
-  const q = src[i];
-  let j = i + 1;
-  while (j < src.length) {
-    const c = src[j];
-    if (c === '\\') { j += 2; continue; }
-    if (c === q) return { start: i, end: j };
-    j++;
   }
   return null;
 }
@@ -478,6 +488,12 @@ function tokenLiteralsIn(text: string): TokenLiteral[] {
   const out: TokenLiteral[] = [];
   // ⭐ 先剥注释：注释里写的 $calc_out 不是输出 ⇒ 不该被当成 token 字面量
   const src = stripComments(text);
+  // ⭐ 2026-11-16：字面量边界按**配对**算（不是「最近的引号」）
+  //   旧实现往前找最近的引号 ⇒ 字面量**内部**含另一种引号时找错边界：
+  //     · staticExamples 里的 \"stuck\" ⇒ 把 fallback 的收尾 | 判到边界外 ⇒ 误报「没有收尾终止符」；
+  //     · makeToken 双引号实参里的 you're ⇒ 同理。
+  //   ⭐ 用「向前找候选 + 验证 pos 落在区间内」而不是全局扫描表：
+  //     全局扫描会被**正则字面量**里的引号带偏（实测 coupon_attribution 的 3 个 health_* 误报）。
 
   // ① 直接字面量：$code [params] [| fallback]
   //   ⭐ 只认 calc_out 命名空间：引擎里确实有 $X / $Y / $Z 这类**变量名**
@@ -501,17 +517,34 @@ function tokenLiteralsIn(text: string): TokenLiteral[] {
     if (pipe < 0 || (limit >= 0 && pipe > limit)) { out.push({ code, fallback: null, form: 'literal', terminated: true }); continue; }
     // ⭐ 2026-11-13 新格式：兜底段以**收尾的 |** 结束 ⇒ 第二个 | 就是兜底结尾。
     //   没有第二个 | ⇒ 这是**旧格式**（兜底一路吃到行尾）⇒ terminated=false，由 G2c 报错。
+    //
+    // ⭐ 2026-11-16：判「收尾 |」改用**行级**（协议规定 fallback 不跨行）
+    //   理由：字面量边界在「字面量内部含另一种引号」时可能算不准
+    //   （实测：staticExamples 里的 \"stuck\"、makeToken 双引号实参里的 you're）
+    //   ⇒ 拿边界判「收尾 | 在不在界内」会假红。
+    //   行级判据是协议自带的（fallback 不跨行）⇒ 不依赖边界算得准不准。
     const pipe2 = src.indexOf('|', pipe + 1);
-    if (pipe2 < 0 || (limit >= 0 && pipe2 > limit)) {
+    const lineEnd = src.indexOf('\n', pipe);
+    if (pipe2 < 0 || (lineEnd >= 0 && pipe2 > lineEnd)) {
       out.push({ code, fallback: null, form: 'literal', terminated: false });
       continue;
     }
+    // 收尾 | 也必须落在同一个字面量内（防跨字面量捏造）
+    if (limit >= 0 && pipe2 > limit) { out.push({ code, fallback: null, form: 'literal', terminated: true }); continue; }
     out.push({ code, fallback: src.slice(pipe + 1, pipe2), form: 'literal', terminated: true });
   }
 
   // ② 构造器调用
   const call = /\b(?:tk|tok|makeToken)\s*\(/g;
   while ((m = call.exec(src)) !== null) {
+    // ⭐ 2026-11-16：跳过**位于 TS 字符串内部**的调用（客户端 customFn 就是这种）
+    //   原因：customFn 是**一段 JS 源码字符串**，它的转义层级与 TS 文件不同
+    //   （TS 层的 \\\\ 是「一个字面反斜杠」，JS 层才组成 \\'）
+    //   ⇒ 按 TS 文件字符流切实参会切错（实测：fallback 被切到几十行之后，把后面的 | 也吃进来）
+    //   ⇒ 假红「fallback 里有半角 |」。
+    //   ⚠️ 漏检风险可控：customFn 的 fallback 与服务端**逐字相同**（G6 守恒）
+    //     ⇒ 服务端那一侧照样会被形态①/形态② 抓到。
+    if (enclosingLiteral(src, m.index) !== null) continue;
     const openParen = m.index + m[0].length - 1;
     const args = splitCallArgs(src, openParen);
     const rawCode = (args[0] ?? '').trim();
@@ -562,6 +595,12 @@ test('P168 B3-7 G2c：引擎里的 token 字面量符合协议（code 形态合�
   assert.equal(terminated.length, 1, '检测器没认出字面量：' + JSON.stringify(terminated));
   assert.equal(terminated[0].terminated, true, '检测器没认出已收尾的 token 字面量');
   assert.equal(terminated[0].fallback, 'Fallback', '兜底提取错了：' + JSON.stringify(terminated[0]));
+  // ⭐ 检测器自检 4：**字面量内部含另一种引号**时，边界必须仍然配对
+  //   （2026-11-16 实测：staticExamples 里的 \"stuck\" 曾让 fallback 的收尾 | 判到边界外 ⇒ 假红）
+  const mixed = tokenLiteralsIn('const s = \'$calc_out.label.a|Fallback with "quoted" text|\';');
+  assert.equal(mixed.length, 1, '检测器没认出字面量：' + JSON.stringify(mixed));
+  assert.equal(mixed[0].terminated, true, '检测器没认出已收尾的 token 字面量');
+  assert.equal(mixed[0].fallback, 'Fallback with "quoted" text', '兜底提取错了：' + JSON.stringify(mixed[0]));
   assert.deepEqual(problems, [], problems.join(' | ') + '（共检查 ' + seen + ' 个 token 字面量）');
 });
 

@@ -86,6 +86,24 @@ export const MIN_ZH_TO_EN_RATIO = 0.7;
 export const MAX_BLOCK_CARD_OVERLAP = 2;
 
 /**
+ * 建议码按**词边界**匹配（标识符语义，不是子串语义）。
+ *
+ * ⭐ 为什么必须带边界（2026-11-16 实测假红）：
+ *   建议码形如 `freelance_rate_market`，而 P168 B3-8 的 token 名里**含建议码前缀**
+ *   （`calc_out.section.freelance_rate_market_position`）⇒ 子串匹配会把
+ *   「token 名」误判成「卡片里还有建议码」⇒ en/zh 各假红 1 条。
+ *
+ * ⭐ 为什么放在**共享夹具**里（而不是守卫文件里）：
+ *   守卫文件是 build-dep（顶部有 skip-guard ⇒ 无 build 时整个文件 process.exit(0)）
+ *   ⇒ 探针自检若 import 它 ⇒ source-only 模式下**会被一起跳过 ⇒ 真空绿**。
+ *   ⇒ 探针放这里（无 skip-guard）⇒ 自检可以独立成 source-only 套件。
+ */
+export function tipCodeRegex(code: string): RegExp {
+  const esc = code.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('(?<![A-Za-z0-9_])' + esc + '(?![A-Za-z0-9_])');
+}
+
+/**
  * 工具页两两相似度的上限（%）。
  *
  * ⭐ **不能用分类页的 10%**：分类页与工具页的基线差一个量级。

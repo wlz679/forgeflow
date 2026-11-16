@@ -3,6 +3,9 @@ import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
 import { pickFlagshipModels } from '../../data/ai-pricing-popular';
+// P168 B3-8：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // --- Provider & Model definitions ---
 interface ModelInfo {
@@ -110,7 +113,12 @@ function calculate(inputs: Record<string, string>): string[] {
   const maxCost = mostExpensive.monthlyCost;
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-8：⭐「📅 Pricing last updated」这一行**从卡片正文里去掉** ——
+  //   · 页面用**徽章**显示同一个日期（dataLastUpdated → 「📅 Data updated」）
+  //   · codegen 写 staticExamples[0] 时也会过滤掉它（"UI badge covers it"）
+  //   ⇒ 留在正文里只会与徽章重复。
+  //   ⚠️ 这里**保留空元素**（而不是删这一行）⇒ out 数组结构与之前逐字一致
+  //   ⇒ staticExamples[0] 仍以 '\n' 开头 ⇒ 英文页零变化（G9 不需要白名单）。
   out.push('');
 
   // ================================================================
@@ -118,14 +126,20 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   const modeEmoji = pricingMode === 'batch' ? '⚡' : '🔴';
   const modeLabel = pricingMode === 'batch' ? 'Batch Pricing (50% off)' : 'Real-time Pricing';
-  out.push(modeEmoji + ' ' + modeLabel);
+  out.push(
+    pricingMode === 'batch'
+      ? '$calc_out.section.ai_api_cost_comparison_batch|⚡ Batch Pricing (50% off)|'
+      : '$calc_out.section.ai_api_cost_comparison_realtime|🔴 Real-time Pricing|',
+  );
   out.push('');
   out.push(
-    'Input: ' + lc(inTokens) + ' tokens/req | ' +
-    'Output: ' + lc(outTokens) + ' tokens/req | ' +
-    'Volume: ' + lc(reqsPerDay) + ' reqs/day (' + lc(reqsPerMonth) + ' reqs/month)',
+    makeToken('calc_out.ai_api_cost_comparison.row.input_tokens', 'Input: ' + lc(inTokens) + ' tokens/req', { tokens: lc(inTokens) }) +
+    ' | ' +
+    makeToken('calc_out.ai_api_cost_comparison.row.output_tokens', 'Output: ' + lc(outTokens) + ' tokens/req', { tokens: lc(outTokens) }) +
+    ' | ' +
+    makeToken('calc_out.ai_api_cost_comparison.row.volume', 'Volume: ' + lc(reqsPerDay) + ' reqs/day (' + lc(reqsPerMonth) + ' reqs/month)', { reqs: lc(reqsPerDay), monthly: lc(reqsPerMonth) }),
   );
-  out.push('Comparing ' + ALL_MODELS.length + ' models across ' + Object.keys(PROVIDERS).length + ' providers');
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.comparing_models', 'Comparing ' + ALL_MODELS.length + ' models across ' + Object.keys(PROVIDERS).length + ' providers', { models: String(ALL_MODELS.length), providers: String(Object.keys(PROVIDERS).length) }));
   out.push('');
 
   // ================================================================
@@ -133,36 +147,36 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   const cheapestProvName = PROVIDERS[cheapest.model.provider].name;
   const cheapestInitial = PROVIDER_INITIAL[cheapest.model.provider];
-  out.push('🏆 Cheapest Model Overall');
+  out.push('$calc_out.section.ai_api_cost_comparison_cheapest|🏆 Cheapest Model Overall|');
   out.push(SEP.repeat(50));
   out.push(
-    '  [' + cheapestInitial + '] ' + cheapest.model.name +
-    ' (' + cheapestProvName + ')' +
-    ' — ' + fmt(cheapest.monthlyCost) + '/month',
+    '  ' + makeToken('calc_out.ai_api_cost_comparison.row.cheapest_model', '[' + cheapestInitial + '] ' + cheapest.model.name + ' (' + cheapestProvName + ') — ' + fmt(cheapest.monthlyCost) + '/month', { model: cheapest.model.name, provider: cheapestProvName, cost: fmt(cheapest.monthlyCost), initial: cheapestInitial }),
   );
   out.push(
-    '  Rate: ' + fmt(cheapest.model.input) + '/' + fmt(cheapest.model.output) +
-    ' per 1M tokens | Context: ' + cheapest.model.contextWindow,
+    '  ' + makeToken('calc_out.ai_api_cost_comparison.row.cheapest_rate', 'Rate: ' + fmt(cheapest.model.input) + '/' + fmt(cheapest.model.output) + ' per 1M tokens', { input: fmt(cheapest.model.input), output: fmt(cheapest.model.output) }) +
+    ' | ' +
+    makeToken('calc_out.ai_api_cost_comparison.row.cheapest_context', 'Context: ' + cheapest.model.contextWindow, { context: cheapest.model.contextWindow }),
   );
   out.push(
-    '  Per request: ' + fmt(cheapest.costPerReq) +
-    ' | Daily: ' + fmt(cheapest.costPerReq * reqsPerDay) +
-    ' | Monthly: ' + fmt(cheapest.monthlyCost),
+    '  ' + makeToken('calc_out.ai_api_cost_comparison.row.per_request', 'Per request: ' + fmt(cheapest.costPerReq), { cost: fmt(cheapest.costPerReq) }) +
+    ' | ' +
+    makeToken('calc_out.ai_api_cost_comparison.row.daily_cost', 'Daily: ' + fmt(cheapest.costPerReq * reqsPerDay), { cost: fmt(cheapest.costPerReq * reqsPerDay) }) +
+    ' | ' +
+    makeToken('calc_out.ai_api_cost_comparison.row.monthly_cost', 'Monthly: ' + fmt(cheapest.monthlyCost), { cost: fmt(cheapest.monthlyCost) }),
   );
   // Savings vs most expensive
   const savedVsMax = mostExpensive.monthlyCost - cheapest.monthlyCost;
   const pctSaved = mostExpensive.monthlyCost > 0
     ? Math.round((savedVsMax / mostExpensive.monthlyCost) * 100) : 0;
   out.push(
-    '  Savings vs ' + mostExpensive.model.name + ': ' +
-    fmt(savedVsMax) + '/month (' + pctSaved + '% cheaper)',
+    '  ' + makeToken('calc_out.ai_api_cost_comparison.row.savings_vs_max', 'Savings vs ' + mostExpensive.model.name + ': ' + fmt(savedVsMax) + '/month (' + pctSaved + '% cheaper)', { model: mostExpensive.model.name, saved: fmt(savedVsMax), pct: String(pctSaved) }),
   );
   out.push('');
 
   // ================================================================
   // Section 3: Bar Chart — All models, sorted by cost
   // ================================================================
-  out.push('📊 Full Model Comparison (' + lc(reqsPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.model_comparison_header', '📊 Full Model Comparison (' + lc(reqsPerDay) + ' reqs/day)', { reqs: lc(reqsPerDay) }));
   out.push(SEP.repeat(54));
   const BAR_WIDTH = 36;
   for (const c of allCosts) {
@@ -196,7 +210,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 4: Provider Summary
   // ================================================================
-  out.push('🔍 Provider Summary');
+  out.push('$calc_out.section.ai_api_cost_comparison_provider_summary|🔍 Provider Summary|');
   out.push(SEP.repeat(50));
   for (const [provKey, prov] of Object.entries(PROVIDERS)) {
     const provCosts = allCosts.filter((c) => c.model.provider === provKey);
@@ -204,9 +218,9 @@ function calculate(inputs: Record<string, string>): string[] {
     const provMostExpensive = provCosts[provCosts.length - 1];
     const initial = PROVIDER_INITIAL[provKey];
     out.push(
-      '  [' + initial + '] ' + prov.name + ': ' +
-      provCheapest.model.name + ' (cheapest) at ' + fmt(provCheapest.monthlyCost) + '/month' +
-      ' | Range: ' + fmt(provCheapest.monthlyCost) + ' – ' + fmt(provMostExpensive.monthlyCost) + '/month',
+      '  ' + makeToken('calc_out.ai_api_cost_comparison.row.provider_cheapest', '[' + initial + '] ' + prov.name + ': ' + provCheapest.model.name + ' (cheapest) at ' + fmt(provCheapest.monthlyCost) + '/month', { provider: prov.name, model: provCheapest.model.name, cost: fmt(provCheapest.monthlyCost), initial: initial }) +
+      ' | ' +
+      makeToken('calc_out.ai_api_cost_comparison.row.provider_range', 'Range: ' + fmt(provCheapest.monthlyCost) + ' – ' + fmt(provMostExpensive.monthlyCost) + '/month', { min: fmt(provCheapest.monthlyCost), max: fmt(provMostExpensive.monthlyCost) })
     );
   }
   out.push('');
@@ -214,7 +228,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 5: Usage Scenarios — Top 5 cheapest at 6 volume tiers
   // ================================================================
-  out.push('📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes');
+  out.push('$calc_out.section.ai_api_cost_comparison_usage_scenarios|📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes|');
   out.push('');
 
   const top5 = allCosts.slice(0, 5); // top 5 cheapest at current volume
@@ -222,9 +236,16 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Build a table: rows = models, columns = tiers
   // Header row: "Model" | "50" | "100" | ...
-  let headerRow = 'Model'.padEnd(22);
+  let headerRow = '$calc_out.ai_api_cost_comparison.row.table_model|Model|' + ' '.repeat(17);
   for (const t of tiers) {
-    headerRow += ' | ' + lc(t) + ' reqs/day'.padEnd(14);
+    headerRow += ' | ' + (
+      t === 50 ? makeToken('calc_out.ai_api_cost_comparison.row.tier_50', lc(t) + ' reqs/day', { tier: lc(t) }) :
+      t === 100 ? makeToken('calc_out.ai_api_cost_comparison.row.tier_100', lc(t) + ' reqs/day', { tier: lc(t) }) :
+      t === 500 ? makeToken('calc_out.ai_api_cost_comparison.row.tier_500', lc(t) + ' reqs/day', { tier: lc(t) }) :
+      t === 1000 ? makeToken('calc_out.ai_api_cost_comparison.row.tier_1000', lc(t) + ' reqs/day', { tier: lc(t) }) :
+      t === 5000 ? makeToken('calc_out.ai_api_cost_comparison.row.tier_5000', lc(t) + ' reqs/day', { tier: lc(t) }) :
+      makeToken('calc_out.ai_api_cost_comparison.row.tier_10000', lc(t) + ' reqs/day', { tier: lc(t) })
+    ) + ' '.repeat(5);
   }
   out.push(headerRow);
 
@@ -247,40 +268,40 @@ function calculate(inputs: Record<string, string>): string[] {
   // Legend
   out.push('');
   out.push(
-    'Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek',
+    makeToken('calc_out.ai_api_cost_comparison.row.legend', 'Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek'),
   );
   out.push('');
 
   // 🩺 Cost Health (v3)
-  out.push('🩺 Cost Health:');
+  out.push('$calc_out.section.ai_api_cost_comparison_cost_health|🩺 Cost Health:|');
   out.push(SEP.repeat(60));
   const top3 = allCosts.slice(0, 3);
   const bottom3 = allCosts.slice(-3).reverse();
-  out.push('• 🏆 Cheapest overall: ' + top3[0].model.name + ' at ' + fmt(top3[0].monthlyCost) + '/mo (' + top3[0].model.provider + ')');
-  out.push('• 💸 Most expensive in this comparison: ' + bottom3[0].model.name + ' at ' + fmt(bottom3[0].monthlyCost) + '/mo');
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.health_cheapest', '• 🏆 Cheapest overall: ' + top3[0].model.name + ' at ' + fmt(top3[0].monthlyCost) + '/mo (' + top3[0].model.provider + ')', { model: top3[0].model.name, cost: fmt(top3[0].monthlyCost), provider: top3[0].model.provider }));
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.health_most_expensive', '• 💸 Most expensive in this comparison: ' + bottom3[0].model.name + ' at ' + fmt(bottom3[0].monthlyCost) + '/mo', { model: bottom3[0].model.name, cost: fmt(bottom3[0].monthlyCost) }));
   const ratio = bottom3[0].monthlyCost / Math.max(top3[0].monthlyCost, 0.01);
-  if (ratio >= 50) out.push('• 🔴 ' + ratio.toFixed(0) + 'x cost spread — ' + bottom3[0].model.name + ' is 50x+ the cheapest. For most workloads, the cheapest model will suffice.');
-  else if (ratio >= 10) out.push('• 🟠 ' + ratio.toFixed(0) + 'x cost spread — review whether premium features justify the cost.');
-  out.push('• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don\'t pick purely on price.');
+  if (ratio >= 50) out.push(makeToken('calc_out.ai_api_cost_comparison.row.health_spread_50x', '• 🔴 ' + ratio.toFixed(0) + 'x cost spread — ' + bottom3[0].model.name + ' is 50x+ the cheapest. For most workloads, the cheapest model will suffice.', { ratio: ratio.toFixed(0), model: bottom3[0].model.name }));
+  else if (ratio >= 10) out.push(makeToken('calc_out.ai_api_cost_comparison.row.health_spread_10x', '• 🟠 ' + ratio.toFixed(0) + 'x cost spread — review whether premium features justify the cost.', { ratio: ratio.toFixed(0) }));
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.health_tradeoffs', '• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don\'t pick purely on price.'));
   out.push('');
 
   // 🔄 What-If Scenarios (v3)
-  out.push('🔄 What-If Scenarios:');
+  out.push('$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|');
   out.push(SEP.repeat(60));
   // Compare each provider's cheapest
-  out.push('• Switch all workloads to cheapest:  save vs current ' + fmt(top3[0].monthlyCost) + '/mo (already optimal)');
-  out.push('• Double volume to ' + lc(reqsPerDay * 2) + ' reqs/day:  cheapest becomes ' + fmt(top3[0].monthlyCost * 2) + '/mo');
-  out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqsPerDay / 2))) + ' reqs/day:  save proportionally');
-  out.push('• If you only need cheap inference: pick ' + top3[0].model.name + ' (cheapest) and route 80% of traffic there');
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.whatif_switch_cheapest', '• Switch all workloads to cheapest:  save vs current ' + fmt(top3[0].monthlyCost) + '/mo (already optimal)', { cost: fmt(top3[0].monthlyCost) }));
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.whatif_double_volume', '• Double volume to ' + lc(reqsPerDay * 2) + ' reqs/day:  cheapest becomes ' + fmt(top3[0].monthlyCost * 2) + '/mo', { reqs: lc(reqsPerDay * 2), cost: fmt(top3[0].monthlyCost * 2) }));
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.whatif_halve_volume', '• Halve volume to ' + lc(Math.max(1, Math.floor(reqsPerDay / 2))) + ' reqs/day:  save proportionally', { reqs: lc(Math.max(1, Math.floor(reqsPerDay / 2))) }));
+  out.push(makeToken('calc_out.ai_api_cost_comparison.row.whatif_cheap_inference', '• If you only need cheap inference: pick ' + top3[0].model.name + ' (cheapest) and route 80% of traffic there', { model: top3[0].model.name }));
   out.push('');
 
   // 💡 Tip (v3)
   if (ratio >= 10) {
-    out.push('💡 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.');
+    out.push(makeToken('calc_out.ai_api_cost_comparison.row.tip_spread_10x', '💡 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.'));
   } else if (ratio >= 3) {
-    out.push('💡 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.');
+    out.push(makeToken('calc_out.ai_api_cost_comparison.row.tip_spread_3x', '💡 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.'));
   } else {
-    out.push('💡 Tip: Costs are similar across providers — pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.');
+    out.push(makeToken('calc_out.ai_api_cost_comparison.row.tip_similar_costs', '💡 Tip: Costs are similar across providers — pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.'));
   }
   out.push('');
 
@@ -289,6 +310,10 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // --- customFn: exact sync of calculate(), minified JS ---
 const customFn =
+  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+
   // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
   "var cnn=function(x){return Math.max(0,x)};" +
   // PROVIDERS data
@@ -319,50 +344,53 @@ const customFn =
   "ac.sort(function(a,b){return a.mc-b.mc;});" +
   "var ch=ac[0];var me=ac[ac.length-1];var mx=me.mc;" +
   // Output
+  // Output
   "var o=[];" +
-  // Section 1: Header
-  "var mem=pm==='batch'?'\\u26A1':'\\u{1F534}';" +
-  "var ml=pm==='batch'?'Batch Pricing (50% off)':'Real-time Pricing';" +
-  "o.push(mem+' '+ml);o.push('');" +
-  "o.push('Input: '+lc(iT)+' tokens/req | Output: '+lc(oT)+' tokens/req | Volume: '+lc(rpd)+' reqs/day ('+lc(rpm)+' reqs/month)');" +
+  // Section 1: Header（⭐ pricing banner 从正文去掉：页面用徽章显示日期）
+  "o.push('');" +
+  "o.push(pm==='batch'?'$calc_out.section.ai_api_cost_comparison_batch|\\u26A1 Batch Pricing (50% off)|':'$calc_out.section.ai_api_cost_comparison_realtime|\\uD83D\\uDD34 Real-time Pricing|');" +
+  "o.push('');" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.input_tokens','Input: '+lc(iT)+' tokens/req',{tokens:lc(iT)})+' | '+tk('calc_out.ai_api_cost_comparison.row.output_tokens','Output: '+lc(oT)+' tokens/req',{tokens:lc(oT)})+' | '+tk('calc_out.ai_api_cost_comparison.row.volume','Volume: '+lc(rpd)+' reqs/day ('+lc(rpm)+' reqs/month)',{reqs:lc(rpd),monthly:lc(rpm)}));" +
   "var pkCount=0;for(var k in P)pkCount++;" +
-  "o.push('Comparing '+AM.length+' models across '+pkCount+' providers');" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.comparing_models','Comparing '+AM.length+' models across '+pkCount+' providers',{models:String(AM.length),providers:String(pkCount)}));" +
   "o.push('');" +
   // Section 2: Cheapest Finder
   "var chpn=P[ch.m.pr].n;var chi=PI[ch.m.pr];" +
-  "o.push('\\u{1F3C6} Cheapest Model Overall');" +
+  "o.push('$calc_out.section.ai_api_cost_comparison_cheapest|\\uD83C\\uDFC6 Cheapest Model Overall|');" +
   "o.push(SEP.repeat(50));" +
-  "o.push('  ['+chi+'] '+ch.m.n+' ('+chpn+') \\u2014 '+fm(ch.mc)+'/month');" +
-  "o.push('  Rate: '+fm(ch.m.i)+'/'+fm(ch.m.o)+' per 1M tokens | Context: '+ch.m.cw);" +
-  "o.push('  Per request: '+fm(ch.cpr)+' | Daily: '+fm(ch.cpr*rpd)+' | Monthly: '+fm(ch.mc));" +
+  "o.push('  '+tk('calc_out.ai_api_cost_comparison.row.cheapest_model','['+chi+'] '+ch.m.n+' ('+chpn+') \\u2014 '+fm(ch.mc)+'/month',{model:ch.m.n,provider:chpn,cost:fm(ch.mc),initial:chi}));" +
+  "o.push('  '+tk('calc_out.ai_api_cost_comparison.row.cheapest_rate','Rate: '+fm(ch.m.i)+'/'+fm(ch.m.o)+' per 1M tokens',{input:fm(ch.m.i),output:fm(ch.m.o)})+' | '+tk('calc_out.ai_api_cost_comparison.row.cheapest_context','Context: '+ch.m.cw,{context:ch.m.cw}));" +
+  "o.push('  '+tk('calc_out.ai_api_cost_comparison.row.per_request','Per request: '+fm(ch.cpr),{cost:fm(ch.cpr)})+' | '+tk('calc_out.ai_api_cost_comparison.row.daily_cost','Daily: '+fm(ch.cpr*rpd),{cost:fm(ch.cpr*rpd)})+' | '+tk('calc_out.ai_api_cost_comparison.row.monthly_cost','Monthly: '+fm(ch.mc),{cost:fm(ch.mc)}));" +
   "var sv=me.mc-ch.mc;var ps=me.mc>0?Math.round((sv/me.mc)*100):0;" +
-  "o.push('  Savings vs '+me.m.n+': '+fm(sv)+'/month ('+ps+'% cheaper)');" +
+  "o.push('  '+tk('calc_out.ai_api_cost_comparison.row.savings_vs_max','Savings vs '+me.m.n+': '+fm(sv)+'/month ('+ps+'% cheaper)',{model:me.m.n,saved:fm(sv),pct:String(ps)}));" +
   "o.push('');" +
   // Section 3: Bar Chart
-  "o.push('\\u{1F4CA} Full Model Comparison ('+lc(rpd)+' reqs/day)');" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.model_comparison_header','\\uD83D\\uDCCA Full Model Comparison ('+lc(rpd)+' reqs/day)',{reqs:lc(rpd)}));" +
   "o.push(SEP.repeat(54));" +
   "var BW=36;" +
   "for(var i=0;i<ac.length;i++){" +
   "var c=ac[i];var ini=PI[c.m.pr];var label='['+ini+'] '+c.m.n;" +
   "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;" +
-  "var bc=c.m.k===ch.m.k?'\\u2591':'\\u2588';var bar=bc.repeat(bl);var bd=c.m.k===ch.m.k?' \\u{1F3C6}':'';" +
+  "var bc=c.m.k===ch.m.k?'\\u2591':'\\u2588';var bar=bc.repeat(bl);var bd=c.m.k===ch.m.k?' \\uD83C\\uDFC6':'';" +
   "o.push((label.length>=24?label+'  ':pd(label,24)+' ')+pd(bar,BW)+' '+fm(c.mc)+bd);" +
   "}" +
   "o.push('');" +
   // Section 4: Provider Summary
-  "o.push('\\u{1F50D} Provider Summary');" +
+  "o.push('$calc_out.section.ai_api_cost_comparison_provider_summary|\\uD83D\\uDD0D Provider Summary|');" +
   "o.push(SEP.repeat(50));" +
   "for(var pk2 in P){var prov=P[pk2];" +
   "var pcs=ac.filter(function(c){return c.m.pr===pk2;});" +
   "var pcch=pcs[0];var pcme=pcs[pcs.length-1];var ini2=PI[pk2];" +
-  "o.push('  ['+ini2+'] '+prov.n+': '+pcch.m.n+' (cheapest) at '+fm(pcch.mc)+'/month | Range: '+fm(pcch.mc)+' \\u2013 '+fm(pcme.mc)+'/month');" +
+  "o.push('  '+tk('calc_out.ai_api_cost_comparison.row.provider_cheapest','['+ini2+'] '+prov.n+': '+pcch.m.n+' (cheapest) at '+fm(pcch.mc)+'/month',{provider:prov.n,model:pcch.m.n,cost:fm(pcch.mc),initial:ini2})+' | '+tk('calc_out.ai_api_cost_comparison.row.provider_range','Range: '+fm(pcch.mc)+' \\u2013 '+fm(pcme.mc)+'/month',{min:fm(pcch.mc),max:fm(pcme.mc)}));" +
   "}" +
   "o.push('');" +
   // Section 5: Usage Scenarios
-  "o.push('\\u{1F4C5} Usage Scenarios \\u2014 Top 5 Cheapest Models at Different Volumes');" +
+  "o.push('$calc_out.section.ai_api_cost_comparison_usage_scenarios|\\uD83D\\uDCC5 Usage Scenarios \\u2014 Top 5 Cheapest Models at Different Volumes|');" +
   "o.push('');" +
   "var top5=ac.slice(0,5);var tiers=[50,100,500,1000,5000,10000];" +
-  "var hr='Model'.padEnd(22);for(var i=0;i<tiers.length;i++)hr+=' | '+lc(tiers[i])+' reqs/day'.padEnd(14);o.push(hr);" +
+  "var hr='$calc_out.ai_api_cost_comparison.row.table_model|Model|'+' '.repeat(17);" +
+  "for(var i=0;i<tiers.length;i++){var t=tiers[i];hr+=' | '+(t===50?tk('calc_out.ai_api_cost_comparison.row.tier_50',lc(t)+' reqs/day',{tier:lc(t)}):t===100?tk('calc_out.ai_api_cost_comparison.row.tier_100',lc(t)+' reqs/day',{tier:lc(t)}):t===500?tk('calc_out.ai_api_cost_comparison.row.tier_500',lc(t)+' reqs/day',{tier:lc(t)}):t===1000?tk('calc_out.ai_api_cost_comparison.row.tier_1000',lc(t)+' reqs/day',{tier:lc(t)}):t===5000?tk('calc_out.ai_api_cost_comparison.row.tier_5000',lc(t)+' reqs/day',{tier:lc(t)}):tk('calc_out.ai_api_cost_comparison.row.tier_10000',lc(t)+' reqs/day',{tier:lc(t)}))+' '.repeat(5);}" +
+  "o.push(hr);" +
   "var sr=''.padEnd(22,SEP);for(var i=0;i<tiers.length;i++)sr+='-+-'.padEnd(15,SEP);o.push(sr);" +
   "for(var i=0;i<top5.length;i++){" +
   "var e=top5[i];var ini3=PI[e.m.pr];var lab='['+ini3+'] '+e.m.n;var row=pd(lab,22);" +
@@ -370,13 +398,37 @@ const customFn =
   "o.push(row);" +
   "}" +
   "o.push('');" +
-  "o.push('Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek');" +
-  // P164: ratio 此前只在服务端 calculate() 里定义（const ratio = bottom3[0].monthlyCost / Math.max(top3[0].monthlyCost, 0.01)），
-  // customFn 侧从未定义 ⇒ 浏览器点「计算」抛 ReferenceError: ratio is not defined。
-  // 这里按同一语义补上：最贵 / 最便宜（ac 已按 mc 升序 ⇒ ac[0] 最便宜、ac[ac.length-1] 最贵）。
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.legend','Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek'));" +
+  "o.push('');" +
+  // 🩺 Cost Health (v3)
+  "var top3=ac.slice(0,3);var bottom3=ac.slice(-3).reverse();" +
   "var ratio=me.mc/Math.max(ch.mc,0.01);" +
-  "if(ratio>=10)o.push('\\uD83D\\uDCA1 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.');else if(ratio>=3)o.push('\\uD83D\\uDCA1 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.');else o.push('\\uD83D\\uDCA1 Tip: Costs are similar across providers \\u2014 pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.');" +
-  "return o;";
+  "o.push('$calc_out.section.ai_api_cost_comparison_cost_health|\\uD83E\\uDE7A Cost Health:|');" +
+  "o.push(SEP.repeat(60));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.health_cheapest','\\u2022 \\uD83C\\uDFC6 Cheapest overall: '+top3[0].m.n+' at '+fm(top3[0].mc)+'/mo ('+top3[0].m.pr+')',{model:top3[0].m.n,cost:fm(top3[0].mc),provider:top3[0].m.pr}));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.health_most_expensive','\\u2022 \\uD83D\\uDCB8 Most expensive in this comparison: '+bottom3[0].m.n+' at '+fm(bottom3[0].mc)+'/mo',{model:bottom3[0].m.n,cost:fm(bottom3[0].mc)}));" +
+  "if(ratio>=50)o.push(tk('calc_out.ai_api_cost_comparison.row.health_spread_50x','\\u2022 \\uD83D\\uDD34 '+ratio.toFixed(0)+'x cost spread \\u2014 '+bottom3[0].m.n+' is 50x+ the cheapest. For most workloads, the cheapest model will suffice.',{ratio:ratio.toFixed(0),model:bottom3[0].m.n}));" +
+  "else if(ratio>=10)o.push(tk('calc_out.ai_api_cost_comparison.row.health_spread_10x','\\u2022 \\uD83D\\uDFE0 '+ratio.toFixed(0)+'x cost spread \\u2014 review whether premium features justify the cost.',{ratio:ratio.toFixed(0)}));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.health_tradeoffs','\\u2022 \\u2139\\uFE0F Each model has trade-offs (context window, speed, capabilities). Don\\'t pick purely on price.'));" +
+  "o.push('');" +
+  // 🔄 What-If Scenarios (v3)
+  "o.push('$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|');" +
+  "o.push(SEP.repeat(60));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.whatif_switch_cheapest','\\u2022 Switch all workloads to cheapest:  save vs current '+fm(top3[0].mc)+'/mo (already optimal)',{cost:fm(top3[0].mc)}));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.whatif_double_volume','\\u2022 Double volume to '+lc(rpd*2)+' reqs/day:  cheapest becomes '+fm(top3[0].mc*2)+'/mo',{reqs:lc(rpd*2),cost:fm(top3[0].mc*2)}));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.whatif_halve_volume','\\u2022 Halve volume to '+lc(Math.max(1,Math.floor(rpd/2)))+' reqs/day:  save proportionally',{reqs:lc(Math.max(1,Math.floor(rpd/2)))}));" +
+  "o.push(tk('calc_out.ai_api_cost_comparison.row.whatif_cheap_inference','\\u2022 If you only need cheap inference: pick '+top3[0].m.n+' (cheapest) and route 80% of traffic there',{model:top3[0].m.n}));" +
+  "o.push('');" +
+  // 💡 Tip (v3)
+  "if(ratio>=10)o.push(tk('calc_out.ai_api_cost_comparison.row.tip_spread_10x','\\uD83D\\uDCA1 Tip: A 10x+ cost spread between models means the cheapest is probably good enough for 80% of workloads. Route simple queries (summarization, classification, extraction) to it; only escalate complex queries to premium models. Most teams overspend by 5x by sending everything to GPT-5/Claude Opus.'));" +
+  "else if(ratio>=3)o.push(tk('calc_out.ai_api_cost_comparison.row.tip_spread_3x','\\uD83D\\uDCA1 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.'));" +
+  "else o.push(tk('calc_out.ai_api_cost_comparison.row.tip_similar_costs','\\uD83D\\uDCA1 Tip: Costs are similar across providers \\u2014 pick based on capabilities, context window, or latency, not price. Most production AI apps spend more on retries from rate limits than they save on per-token pricing.'));" +
+  "o.push('');" +
+  // P168 B3-8：⭐ 返回**整份输出**的单元素数组 —— 与全仓 93 个业务引擎的 `return [r]` 一致。
+  //   页面（src/pages/[lang]/[slug].astro:2171-2172）对 custom 型引擎**只渲染 results[0]**
+  //   ⇒ 返回多元素数组时动态卡片只剩第一行（历史缺陷：7 个 AI cost 引擎都是这个形态）。
+  //   ⚠️ o.join('\n') 与服务端 out.join('\n') **逐字相同** ⇒ G6（两端逐字一致）不受影响。
+  "return [o.join('\\n')];"
 
 const engine: ToolEngine = {
   slug: 'solopreneur-ai-api-cost-comparison',
@@ -411,7 +463,7 @@ const engine: ToolEngine = {
     { key: 'batch',         emoji: '⚡', fields: { inputTokens: '3000', outputTokens: '5000', requestsPerDay: '10000', pricingMode: 'batch'    } },
   ],
   staticExamples: [
-    '\n🔴 Real-time Pricing\n\nInput: 1,000 tokens/req | Output: 500 tokens/req | Volume: 100 reqs/day (3,000 reqs/month)\nComparing 4 models across 4 providers\n\n🏆 Cheapest Model Overall\n──────────────────────────────────────────────────\n  [G] Gemini 1.5 Flash (Google) — $0.67/month\n  Rate: $0.07/$0.30 per 1M tokens | Context: 1M\n  Per request: $0.0002 | Daily: $0.02 | Monthly: $0.67\n  Savings vs GPT 5 Mini: $3.08/month (82% cheaper)\n\n📊 Full Model Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n[G] Gemini 1.5 Flash     ░░░░░░                               $0.67 🏆\n[D] Deepseek V4.1 Flash 1017  █████████████                        $1.35\n[A] Claude Haiku 3       █████████████████████████            $2.63\n[O] GPT 5 Mini           ████████████████████████████████████ $3.75\n\n🔍 Provider Summary\n──────────────────────────────────────────────────\n  [O] OpenAI: GPT 5 Mini (cheapest) at $3.75/month | Range: $3.75 – $3.75/month\n  [A] Anthropic: Claude Haiku 3 (cheapest) at $2.63/month | Range: $2.63 – $2.63/month\n  [G] Google: Gemini 1.5 Flash (cheapest) at $0.67/month | Range: $0.67 – $0.67/month\n  [D] DeepSeek: Deepseek V4.1 Flash 1017 (cheapest) at $1.35/month | Range: $1.35 – $1.35/month\n\n📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes\n\nModel                  | 50 reqs/day      | 100 reqs/day      | 500 reqs/day      | 1,000 reqs/day      | 5,000 reqs/day      | 10,000 reqs/day     \n──────────────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────\n[G] Gemini 1.5 Flash   | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        \n[D] Deepseek V4.1 Flash 1017 | $0.67          | $1.35          | $6.75          | $13.50         | $67.50         | $135.00       \n[A] Claude Haiku 3     | $1.31          | $2.63          | $13.13         | $26.25         | $131.25        | $262.50       \n[O] GPT 5 Mini         | $1.88          | $3.75          | $18.75         | $37.50         | $187.50        | $375.00       \n\nLegend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🏆 Cheapest overall: Gemini 1.5 Flash at $0.67/mo (google)\n• 💸 Most expensive in this comparison: GPT 5 Mini at $3.75/mo\n• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don\'t pick purely on price.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch all workloads to cheapest:  save vs current $0.67/mo (already optimal)\n• Double volume to 200 reqs/day:  cheapest becomes $1.35/mo\n• Halve volume to 50 reqs/day:  save proportionally\n• If you only need cheap inference: pick Gemini 1.5 Flash (cheapest) and route 80% of traffic there\n\n💡 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.\n',
+    '\n$calc_out.section.ai_api_cost_comparison_realtime|🔴 Real-time Pricing|\n\n$calc_out.ai_api_cost_comparison.row.input_tokens{"tokens":"1,000"}|Input: 1,000 tokens/req| | $calc_out.ai_api_cost_comparison.row.output_tokens{"tokens":"500"}|Output: 500 tokens/req| | $calc_out.ai_api_cost_comparison.row.volume{"reqs":"100","monthly":"3,000"}|Volume: 100 reqs/day (3,000 reqs/month)|\n$calc_out.ai_api_cost_comparison.row.comparing_models{"models":"4","providers":"4"}|Comparing 4 models across 4 providers|\n\n$calc_out.section.ai_api_cost_comparison_cheapest|🏆 Cheapest Model Overall|\n──────────────────────────────────────────────────\n  $calc_out.ai_api_cost_comparison.row.cheapest_model{"model":"Gemini 1.5 Flash","provider":"Google","cost":"$0.67","initial":"G"}|[G] Gemini 1.5 Flash (Google) — $0.67/month|\n  $calc_out.ai_api_cost_comparison.row.cheapest_rate{"input":"$0.07","output":"$0.30"}|Rate: $0.07/$0.30 per 1M tokens| | $calc_out.ai_api_cost_comparison.row.cheapest_context{"context":"1M"}|Context: 1M|\n  $calc_out.ai_api_cost_comparison.row.per_request{"cost":"$0.0002"}|Per request: $0.0002| | $calc_out.ai_api_cost_comparison.row.daily_cost{"cost":"$0.02"}|Daily: $0.02| | $calc_out.ai_api_cost_comparison.row.monthly_cost{"cost":"$0.67"}|Monthly: $0.67|\n  $calc_out.ai_api_cost_comparison.row.savings_vs_max{"model":"GPT 5 Mini","saved":"$3.08","pct":"82"}|Savings vs GPT 5 Mini: $3.08/month (82% cheaper)|\n\n$calc_out.ai_api_cost_comparison.row.model_comparison_header{"reqs":"100"}|📊 Full Model Comparison (100 reqs/day)|\n──────────────────────────────────────────────────────\n[G] Gemini 1.5 Flash     ░░░░░░                               $0.67 🏆\n[D] Deepseek V4.1 Flash 1017  █████████████                        $1.35\n[A] Claude Haiku 3       █████████████████████████            $2.63\n[O] GPT 5 Mini           ████████████████████████████████████ $3.75\n\n$calc_out.section.ai_api_cost_comparison_provider_summary|🔍 Provider Summary|\n──────────────────────────────────────────────────\n  $calc_out.ai_api_cost_comparison.row.provider_cheapest{"provider":"OpenAI","model":"GPT 5 Mini","cost":"$3.75","initial":"O"}|[O] OpenAI: GPT 5 Mini (cheapest) at $3.75/month| | $calc_out.ai_api_cost_comparison.row.provider_range{"min":"$3.75","max":"$3.75"}|Range: $3.75 – $3.75/month|\n  $calc_out.ai_api_cost_comparison.row.provider_cheapest{"provider":"Anthropic","model":"Claude Haiku 3","cost":"$2.63","initial":"A"}|[A] Anthropic: Claude Haiku 3 (cheapest) at $2.63/month| | $calc_out.ai_api_cost_comparison.row.provider_range{"min":"$2.63","max":"$2.63"}|Range: $2.63 – $2.63/month|\n  $calc_out.ai_api_cost_comparison.row.provider_cheapest{"provider":"Google","model":"Gemini 1.5 Flash","cost":"$0.67","initial":"G"}|[G] Google: Gemini 1.5 Flash (cheapest) at $0.67/month| | $calc_out.ai_api_cost_comparison.row.provider_range{"min":"$0.67","max":"$0.67"}|Range: $0.67 – $0.67/month|\n  $calc_out.ai_api_cost_comparison.row.provider_cheapest{"provider":"DeepSeek","model":"Deepseek V4.1 Flash 1017","cost":"$1.35","initial":"D"}|[D] DeepSeek: Deepseek V4.1 Flash 1017 (cheapest) at $1.35/month| | $calc_out.ai_api_cost_comparison.row.provider_range{"min":"$1.35","max":"$1.35"}|Range: $1.35 – $1.35/month|\n\n$calc_out.section.ai_api_cost_comparison_usage_scenarios|📅 Usage Scenarios — Top 5 Cheapest Models at Different Volumes|\n\n$calc_out.ai_api_cost_comparison.row.table_model|Model|                  | $calc_out.ai_api_cost_comparison.row.tier_50{"tier":"50"}|50 reqs/day|      | $calc_out.ai_api_cost_comparison.row.tier_100{"tier":"100"}|100 reqs/day|      | $calc_out.ai_api_cost_comparison.row.tier_500{"tier":"500"}|500 reqs/day|      | $calc_out.ai_api_cost_comparison.row.tier_1000{"tier":"1,000"}|1,000 reqs/day|      | $calc_out.ai_api_cost_comparison.row.tier_5000{"tier":"5,000"}|5,000 reqs/day|      | $calc_out.ai_api_cost_comparison.row.tier_10000{"tier":"10,000"}|10,000 reqs/day|     \n──────────────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────-+-────────────\n[G] Gemini 1.5 Flash   | $0.34          | $0.67          | $3.38          | $6.75          | $33.75         | $67.50        \n[D] Deepseek V4.1 Flash 1017 | $0.67          | $1.35          | $6.75          | $13.50         | $67.50         | $135.00       \n[A] Claude Haiku 3     | $1.31          | $2.63          | $13.13         | $26.25         | $131.25        | $262.50       \n[O] GPT 5 Mini         | $1.88          | $3.75          | $18.75         | $37.50         | $187.50        | $375.00       \n\n$calc_out.ai_api_cost_comparison.row.legend|Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek|\n\n$calc_out.section.ai_api_cost_comparison_cost_health|🩺 Cost Health:|\n────────────────────────────────────────────────────────────\n$calc_out.ai_api_cost_comparison.row.health_cheapest{"model":"Gemini 1.5 Flash","cost":"$0.67","provider":"google"}|• 🏆 Cheapest overall: Gemini 1.5 Flash at $0.67/mo (google)|\n$calc_out.ai_api_cost_comparison.row.health_most_expensive{"model":"GPT 5 Mini","cost":"$3.75"}|• 💸 Most expensive in this comparison: GPT 5 Mini at $3.75/mo|\n$calc_out.ai_api_cost_comparison.row.health_tradeoffs|• ℹ️ Each model has trade-offs (context window, speed, capabilities). Don\'t pick purely on price.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n────────────────────────────────────────────────────────────\n$calc_out.ai_api_cost_comparison.row.whatif_switch_cheapest{"cost":"$0.67"}|• Switch all workloads to cheapest:  save vs current $0.67/mo (already optimal)|\n$calc_out.ai_api_cost_comparison.row.whatif_double_volume{"reqs":"200","cost":"$1.35"}|• Double volume to 200 reqs/day:  cheapest becomes $1.35/mo|\n$calc_out.ai_api_cost_comparison.row.whatif_halve_volume{"reqs":"50"}|• Halve volume to 50 reqs/day:  save proportionally|\n$calc_out.ai_api_cost_comparison.row.whatif_cheap_inference{"model":"Gemini 1.5 Flash"}|• If you only need cheap inference: pick Gemini 1.5 Flash (cheapest) and route 80% of traffic there|\n\n$calc_out.ai_api_cost_comparison.row.tip_spread_3x|💡 Tip: A 3x cost spread means model choice matters. Default to the cheapest that meets your quality bar (run a 50-prompt eval), then upgrade specific workloads only when quality drops. Track quality per task, not per model.|\n',
     '[D] V4 Flash: 50→$0.18 · 100→$0.37 · 500→$1.84 · 1,000→$3.68 · 5,000→$18.45 · 10,000→$36.90',
     '[O] GPT-5 Nano: 50→$0.23 · 100→$0.45 · 500→$2.25 · 1,000→$4.50 · 5,000→$22.50 · 10,000→$45.00',
     '[G] Gemini 1.5 Flash: 50→$0.22 · 100→$0.45 · 500→$2.25 · 1,000→$4.50 · 5,000→$22.50 · 10,000→$45.00',

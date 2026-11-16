@@ -46,8 +46,13 @@ export const B3_8_BATCH = [
 
 export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH];
 
-/** 按 slug 取基线 SHA（未知 slug 回落到 B3-8 的基线） */
+/** 按 slug 取基线 SHA（未知 slug **抛错**，不能静默回落）
+ *
+ * ⚠️ 静默回落会让**拼错的 slug** 拿到别人的基线而不报错
+ *   ⇒ G9 与 engine-check 拿到的「基线」其实不是引擎自己的那个
+ *   ⇒ 比对结果不可信却看不出原因。 */
 export function baselineFor(slug) {
   const hit = TOKENIZED.find((e) => e.slug === slug);
-  return hit ? hit.baseline : '5c1c789';
+  if (!hit) throw new Error('未知 slug，没有基线：' + slug);
+  return hit.baseline;
 }

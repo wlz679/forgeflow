@@ -2,6 +2,11 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-8：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Stockout Cost Calculator (P7-3) — Business v3 standard (6+ emoji sections)
@@ -76,8 +81,8 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: missing sales input or revenue → prompt
   if (lostSalesPerDay === 0 || annualRevenue === 0) {
     return [
-      '⏰ Stockout Cost Calculator\n\n' +
-        '📊 Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.',
+      '$calc_out.section.stockout_cost_calculator|⏰ Stockout Cost Calculator|\n\n' +
+        makeToken('calc_out.stockout_cost.row.enter_inputs_required', '📊 Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.'),
     ];
   }
 
@@ -86,19 +91,24 @@ function calculate(inputs: Record<string, string>): string[] {
   const tc = totalCost(lir, ll);
   const cpct = costPctOfRevenue(tc, annualRevenue);
 
+  // P168 B3-8：派生量只算一次 ⇒ fallback 与 params 必然同源（不可能漂）
+  const recoveryCaptures = lir * (lostCustomerRate / 100) * customerLTV * (recoveryRate / 100);
+  const lostCustomerValue = lir * (lostCustomerRate / 100);
+
   const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 
   // Health band
   const band = calcHealthBand(cpct);
   const healthEmoji = BAND_META[band];
+  // ⚠️ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
   const healthLabel =
     band === 'excellent'
-      ? 'Excellent — stockout cost < 5% of revenue'
+      ? makeToken('calc_out.stockout_cost.row.health_excellent', 'Excellent — stockout cost < 5% of revenue')
       : band === 'good'
-      ? 'Good — 5–10% of revenue lost to stockouts; tighten safety stock'
+      ? makeToken('calc_out.stockout_cost.row.health_good', 'Good — 5–10% of revenue lost to stockouts; tighten safety stock')
       : band === 'warning'
-      ? 'Warning — 10–15% of revenue lost; reorder point review needed'
-      : 'Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier';
+      ? makeToken('calc_out.stockout_cost.row.health_warning', 'Warning — 10–15% of revenue lost; reorder point review needed')
+      : makeToken('calc_out.stockout_cost.row.health_critical', 'Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier');
 
   // What-If: reduce stockout days by 50%, then increase recovery rate to 25%
   const daysDown50 = avgStockoutDays * 0.5;
@@ -146,39 +156,43 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   let r =
-    '⏰ Stockout Cost Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.stockout_cost_calculator|⏰ Stockout Cost Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Total stockout cost: ' + money(tc) + '/year  ·  ' + cpct.toFixed(2) + '% of annual revenue\n' +
-    '• Lost immediate: ' + money(lir) + '  ·  Lost LTV: ' + money(ll) + '  ·  Recovery captures: ' + money(lir * (lostCustomerRate / 100) * customerLTV * (recoveryRate / 100)) + '\n\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.total_stockout_cost', 'Total stockout cost: ' + money(tc) + '/year  ·  ' + cpct.toFixed(2) + '% of annual revenue', { cost: money(tc), pct: cpct.toFixed(2) }) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.lost_breakdown', 'Lost immediate: ' + money(lir) + '  ·  Lost LTV: ' + money(ll) + '  ·  Recovery captures: ' + money(recoveryCaptures), { immediate: money(lir), ltv: money(ll), recovery: money(recoveryCaptures) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Lost sales per day:       ' + money(lostSalesPerDay) + '\n' +
-    '• Stockout duration:        ' + avgStockoutDays + ' days  ·  cumulative: ' + money(lir) + '\n' +
-    '• Customer loss rate:       ' + lostCustomerRate.toFixed(1) + '%  ·  applies to ' + money(lir) + ' = ' + money(lir * (lostCustomerRate / 100)) + ' lost-customers\n' +
-    '• Customer LTV:             ' + money(customerLTV) + '\n' +
-    '• Recovery rate:            ' + recoveryRate.toFixed(1) + '%  ·  recaptures ' + money(lir * (lostCustomerRate / 100) * customerLTV * (recoveryRate / 100)) + '\n' +
-    '• Annual revenue:           ' + money(annualRevenue) + '\n' +
-    '• Stockout cost / revenue:  ' + cpct.toFixed(2) + '%\n\n' +
+    '• $calc_out.label.lost_sales_per_day|Lost sales per day|:       ' + money(lostSalesPerDay) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.stockout_duration', 'Stockout duration:        ' + avgStockoutDays + ' days  ·  cumulative: ' + money(lir), { days: String(avgStockoutDays), cumulative: money(lir) }) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.customer_loss_rate', 'Customer loss rate:       ' + lostCustomerRate.toFixed(1) + '%  ·  applies to ' + money(lir) + ' = ' + money(lostCustomerValue) + ' lost-customers', { rate: lostCustomerRate.toFixed(1), applies: money(lir), lost: money(lostCustomerValue) }) + '\n' +
+    '• $calc_out.label.customer_ltv|Customer LTV|:             ' + money(customerLTV) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.recovery_rate', 'Recovery rate:            ' + recoveryRate.toFixed(1) + '%  ·  recaptures ' + money(recoveryCaptures), { rate: recoveryRate.toFixed(1), recaptured: money(recoveryCaptures) }) + '\n' +
+    '• $calc_out.label.annual_revenue_stockout|Annual revenue|:           ' + money(annualRevenue) + '\n' +
+    '• $calc_out.label.stockout_cost_to_revenue|Stockout cost / revenue|:  ' + cpct.toFixed(2) + '%\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Cut stockout days by 50%: total cost = ' + money(tcDown50) + ' (' + cpctDown50.toFixed(2) + '%)  ·  annual savings = ' + money(savingsFrom50) + '\n' +
-    '• Raise recovery rate to 25%: total cost = ' + money(tcUp25) + '  ·  additional savings = ' + money(savingsFromRecovery) + '\n' +
-    '• Combined (50% less days + 25% recovery): see Milestone below\n\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.whatif_cut_days_50', 'Cut stockout days by 50%: total cost = ' + money(tcDown50) + ' (' + cpctDown50.toFixed(2) + '%)  ·  annual savings = ' + money(savingsFrom50), { cost: money(tcDown50), pct: cpctDown50.toFixed(2), savings: money(savingsFrom50) }) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.whatif_recovery_25', 'Raise recovery rate to 25%: total cost = ' + money(tcUp25) + '  ·  additional savings = ' + money(savingsFromRecovery), { cost: money(tcUp25), savings: money(savingsFromRecovery) }) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.whatif_combined', 'Combined (50% less days + 25% recovery): see Milestone below') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Max stockout days for 🟢 (< 5% of revenue): ' + (isFinite(maxDaysForExcellent) ? maxDaysForExcellent.toFixed(1) + ' days' : 'N/A (cost per day = 0)') + '\n' +
-    '• Current vs target: ' + (avgStockoutDays > maxDaysForExcellent ? 'reduce stockout days by ' + (avgStockoutDays - maxDaysForExcellent).toFixed(1) + ' to hit 🟢' : 'already below target') + '\n\n' +
+    '• ' + (isFinite(maxDaysForExcellent)
+      ? makeToken('calc_out.stockout_cost.row.break_even_max_days', 'Max stockout days for 🟢 (< 5% of revenue): ' + maxDaysForExcellent.toFixed(1) + ' days', { days: maxDaysForExcellent.toFixed(1) })
+      : makeToken('calc_out.stockout_cost.row.break_even_max_days_na', 'Max stockout days for 🟢 (< 5% of revenue): N/A (cost per day = 0)')) + '\n' +
+    '• ' + (avgStockoutDays > maxDaysForExcellent
+      ? makeToken('calc_out.stockout_cost.row.break_even_current_vs_target_reduce', 'Current vs target: reduce stockout days by ' + (avgStockoutDays - maxDaysForExcellent).toFixed(1) + ' to hit 🟢', { days: (avgStockoutDays - maxDaysForExcellent).toFixed(1) })
+      : makeToken('calc_out.stockout_cost.row.break_even_current_vs_target_below', 'Current vs target: already below target')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 12-mo savings if stockout cut 50%: ' + money(annualSavings50) + '\n' +
-    '• Reinvested at 8% return: ' + money(annualSavings50 * 0.08) + '/yr additional\n' +
-    '• Compounded over 3 years: ' + money(annualSavings50 * 1.08 * 3 - annualSavings50 * 3) + ' (vs $0 reinvested)\n\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.milestone_12mo_savings', '12-mo savings if stockout cut 50%: ' + money(annualSavings50), { savings: money(annualSavings50) }) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.milestone_reinvested_8pct', 'Reinvested at 8% return: ' + money(annualSavings50 * 0.08) + '/yr additional', { amount: money(annualSavings50 * 0.08) }) + '\n' +
+    '• ' + makeToken('calc_out.stockout_cost.row.milestone_compounded_3y', 'Compounded over 3 years: ' + money(annualSavings50 * 1.08 * 3 - annualSavings50 * 3) + ' (vs $0 reinvested)', { amount: money(annualSavings50 * 1.08 * 3 - annualSavings50 * 3) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💡 Tip: ' + tip + '\n';
 
@@ -190,6 +204,9 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
+  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function lir(lpd,days){return lpd*days;}" +
   "function ll(lir,lcr,ltv,rr){return lir*(lcr/100)*ltv*(1-rr/100);}" +
   "function tc(lir,ll){return lir+ll;}" +
@@ -202,15 +219,17 @@ const customFn =
   "var ltv=cnn(parseFloat(inputs.customerLTV)||0);" +
   "var rev=cnn(parseFloat(inputs.annualRevenue)||0);" +
   "var rr=cnn(Math.min(100,parseFloat(inputs.recoveryRate)||0));" +
-  "if(lpd===0||rev===0){return['\\u23F0 Stockout Cost Calculator\\n\\n\\uD83D\\uDCCA Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.'];}" +
+  "if(lpd===0||rev===0){return['$calc_out.section.stockout_cost_calculator|\\u23F0 Stockout Cost Calculator|\\n\\n'+tk('calc_out.stockout_cost.row.enter_inputs_required','\\uD83D\\uDCCA Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.')];}" +
   "var lirV=lir(lpd,days);" +
   "var llV=ll(lirV,lcr,ltv,rr);" +
   "var tcV=tc(lirV,llV);" +
   "var pct=cpct(tcV,rev);" +
   "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
+  "var recCap=lirV*(lcr/100)*ltv*(rr/100);" +
+  "var lostCust=lirV*(lcr/100);" +
   "var bd=band(pct);" +
   "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 stockout cost < 5% of revenue':bd==='good'?'Good \\u2014 5\\u201310% of revenue lost to stockouts; tighten safety stock':bd==='warning'?'Warning \\u2014 10\\u201315% of revenue lost; reorder point review needed':'Critical \\u2014 \\u2265 15% of revenue lost; urgent: switch to multi-supplier';" +
+  "var hl=bd==='excellent'?tk('calc_out.stockout_cost.row.health_excellent','Excellent \\u2014 stockout cost < 5% of revenue'):bd==='good'?tk('calc_out.stockout_cost.row.health_good','Good \\u2014 5\\u201310% of revenue lost to stockouts; tighten safety stock'):bd==='warning'?tk('calc_out.stockout_cost.row.health_warning','Warning \\u2014 10\\u201315% of revenue lost; reorder point review needed'):tk('calc_out.stockout_cost.row.health_critical','Critical \\u2014 \\u2265 15% of revenue lost; urgent: switch to multi-supplier');" +
   "var days50=days*0.5;var lir50=lir(lpd,days50);var ll50=ll(lir50,lcr,ltv,rr);var tc50=tc(lir50,ll50);var pct50=cpct(tc50,rev);var sav50=tcV-tc50;" +
   "var rr25=25;var ll25=ll(lirV,lcr,ltv,rr25);var tc25=tc(lirV,ll25);var savRec=tcV-tc25;" +
   "var costDay=lpd+lpd*(lcr/100)*ltv*(1-rr/100);var targetTc=rev*0.05;var maxDays=costDay>0?targetTc/costDay:Infinity;" +
@@ -222,39 +241,39 @@ const customFn =
   "else if(bd==='good'){tip=JSON.stringify({code:'stockout_measurable',params:tipP});}" +
   "else{tip=JSON.stringify({code:'stockout_excellent',params:tipP});}" +
   "var r2='';" +
-  "r2+='\\u23F0 Stockout Cost Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
+  "r2+='$calc_out.section.stockout_cost_calculator|\\u23F0 Stockout Cost Calculator|\\n\\n';" +
+  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
   "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Total stockout cost: '+money(tcV)+'/year  \\u00B7  '+pct.toFixed(2)+'% of annual revenue\\n';" +
-  "r2+='\\u2022 Lost immediate: '+money(lirV)+'  \\u00B7  Lost LTV: '+money(llV)+'  \\u00B7  Recovery captures: '+money(lirV*(lcr/100)*ltv*(rr/100))+'\\n\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.total_stockout_cost','Total stockout cost: '+money(tcV)+'/year  \\u00B7  '+pct.toFixed(2)+'% of annual revenue',{cost:money(tcV),pct:pct.toFixed(2)})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.lost_breakdown','Lost immediate: '+money(lirV)+'  \\u00B7  Lost LTV: '+money(llV)+'  \\u00B7  Recovery captures: '+money(recCap),{immediate:money(lirV),ltv:money(llV),recovery:money(recCap)})+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
+  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Lost sales per day:       '+money(lpd)+'\\n';" +
-  "r2+='\\u2022 Stockout duration:        '+days+' days  \\u00B7  cumulative: '+money(lirV)+'\\n';" +
-  "r2+='\\u2022 Customer loss rate:       '+lcr.toFixed(1)+'%  \\u00B7  applies to '+money(lirV)+' = '+money(lirV*(lcr/100))+' lost-customers\\n';" +
-  "r2+='\\u2022 Customer LTV:             '+money(ltv)+'\\n';" +
-  "r2+='\\u2022 Recovery rate:            '+rr.toFixed(1)+'%  \\u00B7  recaptures '+money(lirV*(lcr/100)*ltv*(rr/100))+'\\n';" +
-  "r2+='\\u2022 Annual revenue:           '+money(rev)+'\\n';" +
-  "r2+='\\u2022 Stockout cost / revenue:  '+pct.toFixed(2)+'%\\n\\n';" +
+  "r2+='\\u2022 $calc_out.label.lost_sales_per_day|Lost sales per day|:       '+money(lpd)+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.stockout_duration','Stockout duration:        '+days+' days  \\u00B7  cumulative: '+money(lirV),{days:String(days),cumulative:money(lirV)})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.customer_loss_rate','Customer loss rate:       '+lcr.toFixed(1)+'%  \\u00B7  applies to '+money(lirV)+' = '+money(lostCust)+' lost-customers',{rate:lcr.toFixed(1),applies:money(lirV),lost:money(lostCust)})+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.customer_ltv|Customer LTV|:             '+money(ltv)+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.recovery_rate','Recovery rate:            '+rr.toFixed(1)+'%  \\u00B7  recaptures '+money(recCap),{rate:rr.toFixed(1),recaptured:money(recCap)})+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.annual_revenue_stockout|Annual revenue|:           '+money(rev)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.stockout_cost_to_revenue|Stockout cost / revenue|:  '+pct.toFixed(2)+'%\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
+  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Cut stockout days by 50%: total cost = '+money(tc50)+' ('+pct50.toFixed(2)+'%)  \\u00B7  annual savings = '+money(sav50)+'\\n';" +
-  "r2+='\\u2022 Raise recovery rate to 25%: total cost = '+money(tc25)+'  \\u00B7  additional savings = '+money(savRec)+'\\n';" +
-  "r2+='\\u2022 Combined (50% less days + 25% recovery): see Milestone below\\n\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.whatif_cut_days_50','Cut stockout days by 50%: total cost = '+money(tc50)+' ('+pct50.toFixed(2)+'%)  \\u00B7  annual savings = '+money(sav50),{cost:money(tc50),pct:pct50.toFixed(2),savings:money(sav50)})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.whatif_recovery_25','Raise recovery rate to 25%: total cost = '+money(tc25)+'  \\u00B7  additional savings = '+money(savRec),{cost:money(tc25),savings:money(savRec)})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.whatif_combined','Combined (50% less days + 25% recovery): see Milestone below')+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
+  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Max stockout days for \\uD83D\\uDFE2 (< 5% of revenue): '+(isFinite(maxDays)?maxDays.toFixed(1)+' days':'N/A (cost per day = 0)')+'\\n';" +
-  "r2+='\\u2022 Current vs target: '+(days>maxDays?'reduce stockout days by '+(days-maxDays).toFixed(1)+' to hit \\uD83D\\uDFE2':'already below target')+'\\n\\n';" +
+  "r2+='\\u2022 '+(isFinite(maxDays)?tk('calc_out.stockout_cost.row.break_even_max_days','Max stockout days for \\uD83D\\uDFE2 (< 5% of revenue): '+maxDays.toFixed(1)+' days',{days:maxDays.toFixed(1)}):tk('calc_out.stockout_cost.row.break_even_max_days_na','Max stockout days for \\uD83D\\uDFE2 (< 5% of revenue): N/A (cost per day = 0)'))+'\\n';" +
+  "r2+='\\u2022 '+(days>maxDays?tk('calc_out.stockout_cost.row.break_even_current_vs_target_reduce','Current vs target: reduce stockout days by '+(days-maxDays).toFixed(1)+' to hit \\uD83D\\uDFE2',{days:(days-maxDays).toFixed(1)}):tk('calc_out.stockout_cost.row.break_even_current_vs_target_below','Current vs target: already below target'))+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
+  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 12-mo savings if stockout cut 50%: '+money(annSav50)+'\\n';" +
-  "r2+='\\u2022 Reinvested at 8% return: '+money(annSav50*0.08)+'/yr additional\\n';" +
-  "r2+='\\u2022 Compounded over 3 years: '+money(annSav50*1.08*3-annSav50*3)+' (vs $0 reinvested)\\n\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.milestone_12mo_savings','12-mo savings if stockout cut 50%: '+money(annSav50),{savings:money(annSav50)})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.milestone_reinvested_8pct','Reinvested at 8% return: '+money(annSav50*0.08)+'/yr additional',{amount:money(annSav50*0.08)})+'\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.milestone_compounded_3y','Compounded over 3 years: '+money(annSav50*1.08*3-annSav50*3)+' (vs $0 reinvested)',{amount:money(annSav50*1.08*3-annSav50*3)})+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
   "return [r2];";
@@ -310,7 +329,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Stockout Cost Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier\n• Total stockout cost: $275,000/year  ·  45.83% of annual revenue\n• Lost immediate: $5,000  ·  Lost LTV: $270,000  ·  Recovery captures: $30,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lost sales per day:       $1,000\n• Stockout duration:        5 days  ·  cumulative: $5,000\n• Customer loss rate:       30.0%  ·  applies to $5,000 = $1,500 lost-customers\n• Customer LTV:             $200\n• Recovery rate:            10.0%  ·  recaptures $30,000\n• Annual revenue:           $600,000\n• Stockout cost / revenue:  45.83%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut stockout days by 50%: total cost = $137,500 (22.92%)  ·  annual savings = $137,500\n• Raise recovery rate to 25%: total cost = $230,000  ·  additional savings = $45,000\n• Combined (50% less days + 25% recovery): see Milestone below\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Max stockout days for 🟢 (< 5% of revenue): 0.5 days\n• Current vs target: reduce stockout days by 4.5 to hit 🟢\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 12-mo savings if stockout cut 50%: $137,500\n• Reinvested at 8% return: $11,000/yr additional\n• Compounded over 3 years: $33,000 (vs $0 reinvested)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"stockout_critical","params":{"cost":"$275,000","pct":"45.83%","immediate":"$5,000","ltv":"$270,000"}}\n'],
+  staticExamples: ['$calc_out.section.stockout_cost_calculator|⏰ Stockout Cost Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 $calc_out.stockout_cost.row.health_critical|Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier|\n• $calc_out.stockout_cost.row.total_stockout_cost{"cost":"$275,000","pct":"45.83"}|Total stockout cost: $275,000/year  ·  45.83% of annual revenue|\n• $calc_out.stockout_cost.row.lost_breakdown{"immediate":"$5,000","ltv":"$270,000","recovery":"$30,000"}|Lost immediate: $5,000  ·  Lost LTV: $270,000  ·  Recovery captures: $30,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.lost_sales_per_day|Lost sales per day|:       $1,000\n• $calc_out.stockout_cost.row.stockout_duration{"days":"5","cumulative":"$5,000"}|Stockout duration:        5 days  ·  cumulative: $5,000|\n• $calc_out.stockout_cost.row.customer_loss_rate{"rate":"30.0","applies":"$5,000","lost":"$1,500"}|Customer loss rate:       30.0%  ·  applies to $5,000 = $1,500 lost-customers|\n• $calc_out.label.customer_ltv|Customer LTV|:             $200\n• $calc_out.stockout_cost.row.recovery_rate{"rate":"10.0","recaptured":"$30,000"}|Recovery rate:            10.0%  ·  recaptures $30,000|\n• $calc_out.label.annual_revenue_stockout|Annual revenue|:           $600,000\n• $calc_out.label.stockout_cost_to_revenue|Stockout cost / revenue|:  45.83%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.stockout_cost.row.whatif_cut_days_50{"cost":"$137,500","pct":"22.92","savings":"$137,500"}|Cut stockout days by 50%: total cost = $137,500 (22.92%)  ·  annual savings = $137,500|\n• $calc_out.stockout_cost.row.whatif_recovery_25{"cost":"$230,000","savings":"$45,000"}|Raise recovery rate to 25%: total cost = $230,000  ·  additional savings = $45,000|\n• $calc_out.stockout_cost.row.whatif_combined|Combined (50% less days + 25% recovery): see Milestone below|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.stockout_cost.row.break_even_max_days{"days":"0.5"}|Max stockout days for 🟢 (< 5% of revenue): 0.5 days|\n• $calc_out.stockout_cost.row.break_even_current_vs_target_reduce{"days":"4.5"}|Current vs target: reduce stockout days by 4.5 to hit 🟢|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.stockout_cost.row.milestone_12mo_savings{"savings":"$137,500"}|12-mo savings if stockout cut 50%: $137,500|\n• $calc_out.stockout_cost.row.milestone_reinvested_8pct{"amount":"$11,000"}|Reinvested at 8% return: $11,000/yr additional|\n• $calc_out.stockout_cost.row.milestone_compounded_3y{"amount":"$33,000"}|Compounded over 3 years: $33,000 (vs $0 reinvested)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"stockout_critical","params":{"cost":"$275,000","pct":"45.83%","immediate":"$5,000","ltv":"$270,000"}}\n'],
   faq: [
     { q: 'How much revenue do stockouts typically cost?', a: 'Studies show 5–15% of annual revenue for typical ecommerce businesses. Above 15% is critical — indicates either poor demand forecasting, weak supplier relationships, or systemic SKU count too high. Below 5% is excellent — indicates strong safety stock + supplier reliability.' },
     { q: 'What percentage of stockout customers defect forever?', a: 'Industry data: 30–60% of customers who experience a stockout will not return. This is the invisible cost — lost immediate revenue plus lost lifetime value. Win-back campaigns can recover 10–25% but the rest defect to competitors.' },
