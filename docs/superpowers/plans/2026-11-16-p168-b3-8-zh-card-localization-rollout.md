@@ -86,11 +86,16 @@ alias 见 §0.9 清单表。**en 值必须逐字等于源码原文**（G8）；*
 | 引擎 | 实测差异 | 裁定 | 由谁做 |
 |---|---|---|---|
 | stripe-fee | 服务端 `fee:       $2`（对齐空格）vs 客户端 `fee: $2` | **客户端**补齐对齐空格 | W2 |
-| burn-rate | 客户端少 3 段（Burn Health / What-If / Break-Even），且 tip 是裸 JSON `💡 Tip: {"code":...}` 不合 token 协议 | **客户端**补齐 3 段 + tip 改合规 token 形态 | W3 |
-| ai-api-cost-comparison | 客户端缺「📅 Pricing last updated」与「🩺 Cost Health」两段 | **客户端**补齐两段 | W2 |
+| burn-rate | 客户端少 3 段（Burn Health / What-If / Break-Even） | **客户端**补齐 3 段（与服务端逐字相同、同样令牌化） | W3 |
+| burn-rate | ⚠️ **原写「tip 是裸 JSON ⇒ tip 改合规 token 形态」—— 本条已作废，见 §10.8**（那个 JSON 是 P168 决策建议 i18n 的既定形态，不是缺陷） | ⛔ **tip 行一个字都别改** | W3 |
+| ai-api-cost-comparison | 客户端缺「📅 Pricing last updated」与「🩺 Cost Health」两段 | **只补「🩺 Cost Health」**；「📅 Pricing last updated」**不要补**（codegen 写 `staticExamples[0]` 时会过滤掉它，页面用**徽章**「📅 Data updated:」显示 ⇒ 补了会与徽章重复显示） | W2 |
 | safe-convertible-note | 服务端 `🟡 standard cap` vs 客户端 `💡 standard cap` | **客户端**改回 🟡 | W1 |
 | feature-adoption | 客户端用文字 `YELLOW` 代替 emoji，且措辞不同 | **客户端**改回服务端的 emoji 与措辞 | W1 |
 | **rental-yield** | **服务端 1.08% vs 客户端 6.89%** | **改服务端**（见下） | W2 |
+
+⚠️ **「📅 Pricing last updated」这一行不在卡片正文里** —— 它被 codegen 在写 `staticExamples[0]` 时过滤掉，页面改用徽章显示 ⇒ **令牌化清单里没有它，worker 也不要去改它**（改了会让动态卡片与徽章重复）。
+
+⚠️ **「📅 Pricing last updated」这一行不在卡片正文里** —— 它被 codegen 在写 `staticExamples[0]` 时过滤掉（注释原文 "UI badge covers it"），页面改用**徽章**「📅 Data updated:」显示同一个日期 ⇒ **令牌化清单里没有它，worker 也不要去改它**（改了会让动态卡片与徽章重复显示）。
 
 **rental-yield 服务端数值 bug（用户 2026-11-16 拍板：改服务端）**
 
@@ -152,30 +157,44 @@ const coc100Down = cashOnCashReturn({
    ↓
 ⑥ Task 9  全量验收（tsc / 构建 / 守卫 / 全量套件）
    ↓
-⑦ Task 10 线上复验（15 个 zh 页逐项一致）
+⑦ Task 10 浏览器目视验收（本地 dist，15 个 zh 页）
    ↓
 ⑧ Task 11 文档同步（CHANGELOG / AGENTS / spec §10 / plan 实施期修正 / INDEX）
    ↓
-⑨ Task 12 提交与推送（**必须先问用户**）
+⑨ Task 12 提交与推送（**必须先问用户**）→ push 后等 CF 部署 → 线上复验 15 个 zh 页
 ```
 
 ⚠️ **③⑤ 的顺序不能反**：引擎改完必须先落 locale 再重生成 `staticExamples`，否则产物是陈旧的 ⇒ G4/G4d 会误红。
+⚠️⚠️ **CI 必须始终是绿的** —— 「目标状态型」守卫（G13/G14）**在修复落地前必然红** ⇒
+守卫扩展与引擎修复**必须同一个 commit 落库**，否则 CI 会在中间态变红。
+**这正是 B3-7 三连红的成因**：它每个引擎一个 commit ⇒ 中间态 G2 红 ⇒ CI 连红 3 次。
+
+⇒ **本批的提交结构**：
+- **commit A** = 本批全部（真相源 + G13/G14 + 15 引擎令牌化 + locale 落库 + ALLOWED_DIFFS + codegen 重生成 + 体检工具）
+- **commit B** = 文档同步（CHANGELOG / AGENTS / spec §10 / plan §10 / INDEX）
+- ⚠️ **Task 1 的 commit `0dfcf08` 已经单独落地，它自己看是红的**（G3/G12/G6 预期红）
+  ⇒ **它必须与 commit A 一起 push**（CI 只评估被 push 的 HEAD ⇒ 一起 push 就是绿的）
+  ⇒ ⛔ **禁止单独 push `0dfcf08`**
 
 ---
 
 ### 0.9 本批 15 个引擎的英文行清单（逐行照着改）
 
 > 取数：`tests/scripts/p168-b3-8-audit.ts`（Task 2 建）· 源：`dist/zh/<slug>/index.html` 的卡片正文
-> 每一行 = 卡片里**必须令牌化**的一行（整行无中文）⇒ 判据 `isEnglishLine`
+> 每一行 = 卡片里**必须令牌化**的一行 ⇒ 判据用仓库自己的 `isEnglishLine`（**≥3 个英文词且无中文**）
+> ⚠️ **阈值必须是 `isEnglishLine`（≥3 词）而不是「≥4 词」** —— 用 ≥4 词会漏掉 66 行（248 vs 314）；守卫用的就是 `isEnglishLine` ⇒ 清单必须与守卫同口径，否则会漏检。
 > ⚠️ 清单来自**产物**，源码还有分支里没走到的行 ⇒ 令牌化时以**源码的全部输出行**为准，本清单是**下限不是上限**。
 > ⚠️ 行内的对齐空格是原样的 —— 令牌化时**不要动对齐空格**（它们留在 token 之外）。
 
-#### W1（4 引擎 · 63 行）
+#### W1（4 引擎 · 76 行）
 
-**solopreneur-time-value-calculator**（alias `time_value` · `src/engines/investment/time-value-calculator.ts` · 24 行）
+**solopreneur-time-value-calculator**（alias `time_value` · `src/engines/investment/time-value-calculator.ts` · 27 行）
 
 ```
+• Effective $/Minute:    $0.87/min
+• Effective $/Second:    $0.01/sec
 • Daily Rate (8 hrs):    $416.67/day
+• 1 day of work (8 hrs):  $416.67
 • Cost per 15-min interruption:  $13.02
 • Cost per context switch:  $26.04 (30 min refocus)
 • 🟡 $52/hr is average. Solid baseline; raise rate or reduce wasted hours.
@@ -201,18 +220,24 @@ Comparison: $250,000/yr → $130.21/hr | $2.17/min | $0.04/sec | Yearly waste @2
 Comparison: $500,000/yr → $260.42/hr | $4.34/min | $0.07/sec | Yearly waste @2hrs/day: $125,000.00
 ```
 
-**solopreneur-safe-convertible-note-calculator**（alias `safe_convertible_note` · `src/engines/valuation/safe-convertible-note-calculator.ts` · 23 行）
+**solopreneur-safe-convertible-note-calculator**（alias `safe_convertible_note` · `src/engines/valuation/safe-convertible-note-calculator.ts` · 29 行）
 
 ```
+• Post-Money Cap:      $5,000,000
 • Effective Pre-Money: $4,500,000  (cap − investment)
 • SAFE Type:           Post-Money SAFE (YC Standard)
 • Cap Price:           $4.50 per share  (post-money cap / (existing + SAFE shares))
+• Discount Price:      n/a (no discount)
 • Conversion Price:    $4.50 per share  ← CAP GOVERNS
+• SAFE Ownership:      10.0% at conversion
 • 🟡 standard cap (cap is 10.0× investment)
 • 🟢 no discount (post-money standard)
 • Conversion trigger:  whichever is lower (cap or discount) at next priced round
 • Existing Pool (founder + prior investors + options):
+pre-SAFE:  100.0%  (1,000,000 shares)
+post-SAFE: 90.0%  (1,000,000 of 1,111,111 shares)
 • SAFE Holder: 10.0%  (111,111 shares at conversion)
+• Pie: ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░  Existing 90.0%  |  SAFE 10.0%
 • Existing pool dilution: −10.0%  (from 100% to 90.0%)
 • Effective post-money at conversion: $5,000,000  (cap governs)
 • Cap sensitivity: at 2× cap ($10,000,000), SAFE holder would get 5.0% instead of 10.0%
@@ -239,14 +264,18 @@ Milestone: lifting adoption by +10 percentage points requires 300 more feature u
 Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look &quot;stuck&quot; but require different interventions.
 ```
 
-**solopreneur-inventory-turnover-calculator**（alias `inventory_turnover` · `src/engines/operations/inventory-turnover-calculator.ts` · 11 行）
+**solopreneur-inventory-turnover-calculator**（alias `inventory_turnover` · `src/engines/operations/inventory-turnover-calculator.ts` · 15 行）
 
 ```
 • 🟢 Excellent — inventory cycles ≥ 6x/year; capital is working efficiently
 • Turnover ratio: 6.00x/year  ·  Days to sell: 60.8 days
 • Industry benchmark: general = 6x/year  ·  Your status: above benchmark
+• Industry:           general (benchmark 6x)
+• Turnover ratio:     6.00x/year
+• Days to sell:       60.8 days
 • COGS −10% (slower sales): turnover = 5.40x · days to sell = 67.6
 • COGS +10% (faster sales): turnover = 6.60x · days to sell = 55.3
+• Capital freed (vs benchmark): +$4,000 at −10%, $-4,000 at +10%
 • Target inventory for 🟢: $40,000  (at 6x benchmark)
 • Action: inventory is already below 🟢 target
 • Improve ratio by +1: target inventory = $34,286
@@ -255,14 +284,18 @@ Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactiv
 💡 提示: Excellent turnover — capital is working efficiently. Watch for stockout risk as turnover rises; pair this metric with a stockout cost tracker (P7-3) to ensure fast turn is not buying you lost sales.
 ```
 
-#### W2（4 引擎 · 78 行）
+#### W2（4 引擎 · 93 行）
 
-**solopreneur-stripe-fee-calculator**（alias `stripe_fee` · `src/engines/valuation/stripe-fee-calculator.ts` · 24 行）
+**solopreneur-stripe-fee-calculator**（alias `stripe_fee` · `src/engines/valuation/stripe-fee-calculator.ts` · 29 行）
 
 ```
 • Net Received:         $97   ← what hits your bank
+• Effective Fee Rate:   3.2%
 📊 Provider Comparison (for $100 charge, sorted by total fee):
+• Wise                    fee:       $2  (1.50 + 0.00)  net: $99
+• Square                  fee:       $3  (2.60 + 0.10)  net: $97
 • Stripe (US) (selected)  fee:       $3  (2.90 + 0.30)  net: $97 ← selected
+• PayPal                  fee:       $4  (3.50 + 0.00)  net: $97
 • Stripe (International)  fee:       $5  (4.40 + 0.30)  net: $95
 • Industry average: ~2.9% + 30¢ (Stripe US standard)
 • On $100 charge: fixed fee is 0.3% of total fee.
@@ -272,6 +305,7 @@ Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactiv
 • Annualized impact: fees cost $3,840/yr — could fund ~77 extra transactions at your average ticket.
 • Cheapest provider: Wise ($2 per $100 charge)
 • Most expensive:    Stripe (International) ($5 per $100 charge)
+• Annual savings if switching: $3,840
 • Switching friction: Stripe ↔ PayPal takes 1-2 weeks; Wise requires account setup + payout delays.
 • Raise price by $1:                 $101 charge → net $98 (+$1 vs current)
 • Pass fees to customer:            charge $103 instead of $100 (add $3) to net the same amount
@@ -286,11 +320,15 @@ Comparison: $1,000 charge via Stripe (US) → fee $29 (2.9%), net $971
 Comparison: $10,000 charge via Stripe (US) → fee $290 (2.9%), net $9,710
 ```
 
-**solopreneur-rental-yield-calculator**（alias `rental_yield` · `src/engines/real-estate/rental-yield-calculator.ts` · 22 行）
+**solopreneur-rental-yield-calculator**（alias `rental_yield` · `src/engines/real-estate/rental-yield-calculator.ts` · 27 行）
 
 ```
+• Loan amount:           $225,000  (75% LTV)
 • Total cash invested:   $84,000  (down + 3% closing)
+📐 Annual Cash Flow:
+• Gross rent (annual):   $30,000
 • Effective rent (post-vacancy): $28,500
+• Annual mortgage P&amp;I:   $17,963
 • Net annual cash flow:  $3,337
 • 🟠 outlier — cash-on-cash outside 4-15% range; verify assumptions
 • Gross yield:           10.00%  (annual rent / price)
@@ -302,6 +340,7 @@ Comparison: $10,000 charge via Stripe (US) → fee $290 (2.9%), net $9,710
 • Goal threshold:  Aim for CoC ≥ 8% AND gross ≥ 8%
 • Yield component:       3.97% CoC annually
 • Principal paydown:     ~1-3% annual equity build (mortgage dependent)
+• Appreciation (Y1):     3.0% user-specified
 • Total estimated return: 7.0% (sum of components)
 • 100% down (vs current LTV):   CoC → 1.08% (no leverage)
 💡 提示: Cash-on-cash below 8% lags S&amp;P 500 historical return (~7-10%). Either negotiate a lower price, increase rent, or reduce expenses to reach 8%+ threshold.
@@ -313,9 +352,10 @@ Comparison: target 12% CoC on $84,000 cash invested → annual cash flow $10,080
 Comparison: target 15% CoC on $84,000 cash invested → annual cash flow $12,600
 ```
 
-**solopreneur-ai-api-cost-comparison**（alias `ai_api_cost_comparison` · `src/engines/ai-cost/ai-api-cost-comparison.ts` · 20 行）
+**solopreneur-ai-api-cost-comparison**（alias `ai_api_cost_comparison` · `src/engines/ai-cost/ai-api-cost-comparison.ts` · 21 行）
 
 ```
+🔴 Real-time Pricing
 Input: 1,000 tokens/req | Output: 500 tokens/req | Volume: 100 reqs/day (3,000 reqs/month)
 Comparing 4 models across 4 providers
 [G] Gemini 1.5 Flash (Google) — $0.67/month
@@ -338,7 +378,7 @@ Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek
 • If you only need cheap inference: pick Gemini 1.5 Flash (cheapest) and route 80% of traffic there
 ```
 
-**solopreneur-stockout-cost-calculator**（alias `stockout_cost` · `src/engines/operations/stockout-cost-calculator.ts` · 12 行）
+**solopreneur-stockout-cost-calculator**（alias `stockout_cost` · `src/engines/operations/stockout-cost-calculator.ts` · 16 行）
 
 ```
 • 🔴 Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier
@@ -347,45 +387,70 @@ Legend: [O]=OpenAI  [A]=Anthropic  [G]=Google  [D]=DeepSeek
 • Lost sales per day:       $1,000
 • Stockout duration:        5 days  ·  cumulative: $5,000
 • Customer loss rate:       30.0%  ·  applies to $5,000 = $1,500 lost-customers
+• Recovery rate:            10.0%  ·  recaptures $30,000
+• Stockout cost / revenue:  45.83%
 • Cut stockout days by 50%: total cost = $137,500 (22.92%)  ·  annual savings = $137,500
 • Raise recovery rate to 25%: total cost = $230,000  ·  additional savings = $45,000
 • Combined (50% less days + 25% recovery): see Milestone below
 • Max stockout days for 🟢 (&lt; 5% of revenue): 0.5 days
 • Current vs target: reduce stockout days by 4.5 to hit 🟢
+• 12-mo savings if stockout cut 50%: $137,500
+• Reinvested at 8% return: $11,000/yr additional
 • Compounded over 3 years: $33,000 (vs $0 reinvested)
 ```
 
-#### W3（4 引擎 · 67 行）
+#### W3（4 引擎 · 93 行）
 
-**solopreneur-freelance-rate-calculator**（alias `freelance_rate` · `src/engines/freelance/freelance-rate-calculator.ts` · 17 行）
+**solopreneur-freelance-rate-calculator**（alias `freelance_rate` · `src/engines/freelance/freelance-rate-calculator.ts` · 33 行）
 
 ```
+• Target Annual Net:    $80,000/yr
+• Business Expenses:   $10,000/yr  (12.5% of target)
+• Desired Profit:      $20,000/yr  (25.0% margin)
+• Billable Hours:      1,200 hrs/yr
+• Required Hourly Rate: $75.00/hr
 • 1.25x skilled:       $94/hr  (proven track record)
+• 1.5x premium:        $113/hr  (specialized niche)
 • 2x expert:           $150/hr  (top-tier authority)
 • Daily Rate (8 hrs):   $600/day
+• Weekly Rate (5 days): $3,000/wk
 • 🟢 Market-rate — competitive for your skill level.
 • 🟡 Billable utilization: 1,200 hrs/yr  (industry: 900-1,400)
 • 🟢 Expenses at 12.5% of income — lean operation.
 • 🟡 Profit margin 25.0% — workable, room to grow.
 • Junior:       $45/hr  (entry, building portfolio)
 • Mid-Level:    $75/hr  (3-5 yrs, market median)
+• Senior:       $120/hr  (6-10 yrs, specialist)
 • Expert:       $188/hr  (10+ yrs, top authority)
 • Your rate:    $75/hr  (100.0% of market median)
 • Break-even (expenses only): $8.33/hr
 • Break-even + profit:        $75.00/hr  (your required rate)
 • At current billable hrs (1,200), every $10/hr raise adds $12,000/yr
+• To hit $120,000/yr net: raise to $100.00/hr
+• Raise rate 20%:  $$90/hr → $108,000/yr gross
+• Raise rate 50%:  $$113/hr → $135,600/yr gross
 • Cut expenses 25%:  Save $2,500/yr → break-even drops to $6.25/hr
 • +200 billable hrs/yr:  Same rate → $105,000/yr gross (was $90,000)
 • Move to expert tier (2x):  $$150/hr → $180,000/yr gross
+Junior (60%): $45/hr → $360/day | $7,794/mo | $54,000/yr at 1,200 hrs
+Mid (100%): $75/hr → $600/day | $12,990/mo | $90,000/yr at 1,200 hrs
+Skilled (125%): $94/hr → $752/day | $16,281/mo | $112,800/yr at 1,200 hrs
+Premium (150%): $113/hr → $904/day | $19,572/mo | $135,600/yr at 1,200 hrs
+Expert (200%): $150/hr → $1,200/day | $25,980/mo | $180,000/yr at 1,200 hrs
 ```
 
-**solopreneur-freelance-tax-calculator**（alias `freelance_tax` · `src/engines/investment/freelance-tax-calculator.ts` · 25 行）
+**solopreneur-freelance-tax-calculator**（alias `freelance_tax` · `src/engines/investment/freelance-tax-calculator.ts` · 30 行）
 
 ```
 🌍 Country: US (Self-Employed, approx)  |  Filing: SINGLE
 • Retirement Deduction:  -$10,000  (SEP-IRA / Solo 401k)
+• Standard Deduction:     -$14,600  (single)
+• Total Tax Owed:         -$36,847
+• Net Take-Home:           $63,153/yr
+• Monthly Take-Home:     $5,262.74/mo
 • Effective Tax Rate:    36.8%  (after all deductions)
 • Marginal Tax Rate:    35.0%  (rate on next dollar earned)
+• Quarterly Payment:    $9,211.79/quarter
 • Monthly Tax Savings:  $3,070.60/mo  (set this aside!)
 • Self-Employment Tax:  $10,597  (15.3% on 92.35% of net)
 • 🟠 Effective rate 36.8% is high. Look for more deductions.
@@ -409,14 +474,18 @@ Comparison: $150,000/yr → Tax: $61,412 | Effective rate: 40.9% | Take-home: $7
 Comparison: $250,000/yr → Tax: $110,541 | Effective rate: 44.2% | Take-home: $11,621.54/mo
 ```
 
-**solopreneur-cart-abandonment-cost-calculator**（alias `cart_abandonment_cost` · `src/engines/marketing/cart-abandonment-cost-calculator.ts` · 18 行）
+**solopreneur-cart-abandonment-cost-calculator**（alias `cart_abandonment_cost` · `src/engines/marketing/cart-abandonment-cost-calculator.ts` · 23 行）
 
 ```
 * 🟢 Good — recovery ROI ≥ 300%; recovery spend is highly profitable
 * Recovery ROI: 1280%  *  Net gain: $41,300
 * Abandonment rate: 70%  *  Recovery rate: 8%
+* Cart add rate:             20%
+* Cart abandonment rate:     70%
+* Average order value:       $80
 * Recovery cost per send:    $0.5
 * Cart creations:       10,000  (traffic x 20% add rate)
+* Completed orders:     3,000  (30% conversion)
 * Abandoned carts:      7,000  (cart creations x 70%)
 * Lost revenue:         $560,000  (abandoned x AOV)
 * Recoverable revenue:  $44,800  (lost x 8% recovery)
@@ -428,6 +497,7 @@ Comparison: $250,000/yr → Tax: $110,541 | Effective rate: 44.2% | Take-home: $
 * Headroom: 7.38pp before recovery ROI hits 100%
 * At break-even, every recovery dollar returns exactly one recovery dollar in recovered revenue
 * Annualized net gain:    $495,600  (at current monthly run-rate)
+* Annual lost revenue:    $6,720,000
 * (Assumes constant traffic + rates — refresh quarterly with new funnel data)
 💡 提示: Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.
 ```
@@ -444,9 +514,9 @@ Comparison: $250,000/yr → Tax: $110,541 | Effective rate: 44.2% | Take-home: $
 • 🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment.
 ```
 
-#### W4（3 引擎 · 40 行）
+#### W4（3 引擎 · 52 行）
 
-**solopreneur-reorder-point-calculator**（alias `reorder_point` · `src/engines/operations/reorder-point-calculator.ts` · 14 行）
+**solopreneur-reorder-point-calculator**（alias `reorder_point` · `src/engines/operations/reorder-point-calculator.ts` · 18 行）
 
 ```
 • 🟢 Excellent — service level ≥ 95%; reorder point accounts for demand variability
@@ -455,22 +525,28 @@ Comparison: $250,000/yr → Tax: $110,541 | Effective rate: 44.2% | Take-home: $
 • Avg daily demand:        50 units/day
 • Supplier lead time:      14 days
 • Demand std deviation:    10 units/day
+• Review period:           7 days
 • Lead-time demand:        700 units
+• Safety stock:            23 units
+• Reorder point:           723 units
 • Lead time doubles: ROP = 1433 units  ·  safety stock grows by 10 units (√2 factor)
 • Service level raised to 99% (Z=2.33): ROP = 733 units  ·  safety stock grows by 10 units
 • Min service level for 🟢: 95%
+• Current vs target: at target
 • Inventory headroom (safety stock): 23 units above lead-time demand
 • Order frequency: ~4.3 orders/month  ·  ~51 orders/year
 • Annual stockout risk avoided: 1200 units not stocked out
 💡 提示: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.
 ```
 
-**solopreneur-sales-velocity-calculator**（alias `sales_velocity` · `src/engines/sales/sales-velocity-calculator.ts` · 13 行）
+**solopreneur-sales-velocity-calculator**（alias `sales_velocity` · `src/engines/sales/sales-velocity-calculator.ts` · 17 行）
 
 ```
 • 🟡 Good — productive sales engine; room to compress cycle or lift win rate
 • Daily velocity: $2,777.78/day  ·  Monthly: $83,333.33  ·  Annual: $1,013,888.89
 • Formula: (opps × deal size × win rate) ÷ cycle = (20 × $25,000 × 25%) ÷ 45 days
+• Average deal size: $25,000
+• Sales cycle: 45 days
 • Daily / Monthly / Annual velocity: $2,777.78 / $83,333.33 / $1,013,888.89
 • Win rate 25%→30%: $3,333/day (+20.0% lift)
 • Cycle 45→30 days: $4,167/day (+50.0% lift)
@@ -479,14 +555,17 @@ Comparison: $250,000/yr → Tax: $110,541 | Effective rate: 44.2% | Take-home: $
 • Path A — lift win rate to 45.0% (cycle unchanged)
 • Path B — compress cycle to 25 days (win rate unchanged)
 • Path C — add 16 more open opps (everything else unchanged)
+• Next tier: 🟢 Excellent ($5,000)
+• Gap to next tier: $2,222
 • At current pace: ~$1,013,888.89/year revenue contribution
 💡 提示: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.
 ```
 
-**solopreneur-quota-attainment-calculator**（alias `quota_attainment` · `src/engines/sales/quota-attainment-calculator.ts` · 13 行）
+**solopreneur-quota-attainment-calculator**（alias `quota_attainment` · `src/engines/sales/quota-attainment-calculator.ts` · 17 行）
 
 ```
 • 🔴 Critical — &lt; 50% of quota; urgent catch-up needed
+• Attainment: 40%  ·  On track: ✅ yes
 • Projected year-end: $1,000,000  ·  Gap to quota: $600,000
 • Annual quota: $1,000,000  ·  Months elapsed: 6 of 12
 • Revenue closed: $400,000  ·  Remaining: 6 months
@@ -496,12 +575,15 @@ Comparison: $250,000/yr → Tax: $110,541 | Effective rate: 44.2% | Take-home: $
 • If hit required pace ($100K/mo) for 6 mo: +$600,000 → $1M total = 100% (excellent, onTrack)
 • If accelerate 20% to $120K/mo for 6 mo: +$720,000 → $1.12M total = 112% (excellent)
 • Target for on-track at month 6: $500,000 closed (expected at-pace)
+• Gap to at-pace: $100,000 behind
 • Target for full quota: $1,000,000  ·  Required: $100K/mo for 6 remaining months
+• Next tier: 🟠 Warning (50%)
+• Gap to next tier: 10pp
 • At current pace, year-end: $1.20M (120%)
 💡 提示: Attainment &lt; 50% means you are at serious risk of missing quota. This is the urgent-action band — pull every lever: emergency top-of-funnel push (cold outreach, paid lead-gen, partnerships), pricing/discount review to close existing pipeline faster, and a 30-day deal-desk review of every late-stage opportunity. If the gap to 🟠 is &gt; 30pp, consider a quota reset conversation with leadership now — not at year-end. A pipeline review is overdue.
 ```
 
-合计 **248 行**（zh 侧）⇒ 令牌化后 zh 侧英文行必须是 **0**。
+合计 **314 行**（zh 侧）⇒ 令牌化后 zh 侧英文行必须是 **0**。
 ## Task 1: 「已令牌化引擎清单」抽成单一真相源 + 15 个引擎纳入
 
 **Files:**
@@ -689,7 +771,9 @@ cmd.exe /c "node node_modules\tsx\dist\cli.mjs --test --test-concurrency=1 tests
 ```
 Expected:
 - **G9（en-parity）全绿** —— 15 个引擎尚未令牌化 ⇒ 兜底渲染 == 基线 `staticExamples[0]` ⇒ 逐字不变 ✔（这是 Task 1 的**关键验收点**：机制改对了）
-- **G12/G12b 红**（15 个引擎还没令牌化 ⇒ locale 缺键）—— **预期红**
+- **G12 红**（15 个引擎还没令牌化 ⇒ locale 缺键）—— **预期红**（实测断言文本「试点没测全：10/25」）
+- **G12b 绿**（页面接线断言与清单长度无关）—— 实测是绿的；brief 原写「G12/G12b 红」有误
+- **G3 红**（15 个引擎还没令牌化 ⇒ token 集合一边是空的）—— **预期红**（brief 的预期红名单**漏了它**）
 - **G6 红**（6 个引擎漂移）—— **预期红**
 
 ⚠️ **若 G9 不绿 ⇒ 基线分组机制写错了 ⇒ 停下来查，不要往下走。**
@@ -742,6 +826,59 @@ refactor(guard): P168 B3-8 —— 「已令牌化引擎清单」抽成单一真�
 **Interfaces:**
 - Consumes: `TOKENIZED`（Task 1）、`staticCard` / `isEnglishLine` / `hasBareToken`（`tests/scripts/p168-card-text.mjs`）
 - Produces: G13 / G14 两条断言 + 体检工具 `p168-b3-8-audit.ts`
+
+### Step 0: ⭐ 先修 Task 1 审阅提出的 3 处（Important 2 + Minor 4 + Minor 6）
+
+**Step 0a：`tests/scripts/p168-engine-check.ts` 必须改用**分组基线**（Important 2）**
+
+它现在自己实现了一遍 `git show ' + BASELINE_SHA + ':' + rel`（约第 72 行）⇒ 与 G9 工具形成**两个基线真相源**。
+⚠️ 今天两基线对 15 个新引擎内容等价 ⇒ 暂时看不出问题；一旦按 Task 8 重钉 B3-8 基线，G9 用新 SHA 而 engine-check 仍用 `d3b3c1d` ⇒ 同一引擎两个基准、engine-check 对「有意的修复」报假红。
+
+改法：删掉它自己的 `headStaticExample` 实现，改用 G9 工具导出的同一个函数：
+
+~~~ts
+import { PILOT_FILES, ALLOWED_DIFFS, normalizeDates, baselineStaticExample, baselineShaFor } from './p168-en-page-parity.ts';
+~~~
+
+并把取基线那处改成：
+
+~~~ts
+const head = baselineStaticExample(rel, baselineShaFor(slug));
+~~~
+
+⚠️ `baselineStaticExample(file, sha?)` 的第二个参数是**按 slug 决定的基线**；第一个参数仍必须是**仓库相对路径**（绝对路径会被 git 当成 pathspec 而报 "exists on disk, but not in HEAD"）。
+
+**Step 0b：`baselineFor` 未知 slug 必须抛错，不能静默回落（Minor 6）**
+
+~~~js
+export function baselineFor(slug) {
+  const hit = TOKENIZED.find((e) => e.slug === slug);
+  if (!hit) throw new Error('未知 slug，没有基线：' + slug);
+  return hit.baseline;
+}
+~~~
+
+⚠️ 静默回落会让**拼错的 slug** 拿到错误基线而不报错。
+
+**Step 0c：给 `stripPricingBanner` 加检测器自检（Minor 4）**
+
+它在 `tests/` 下**没有任何断言** ⇒ 前缀一旦被放宽（例如改成 `startsWith('📅')`），G9 会静默少比一行 ⇒ **假绿方向**。
+在 `tests/calc-output-en-parity-guard.test.ts` 追加：
+
+~~~ts
+test('P168 B3-8 stripPricingBanner 检测器自检：只删 pricing 那一行，且渲染后仍能删', () => {
+  const NL2 = String.fromCharCode(10);
+  const withBanner = ['📅 Pricing last updated: 2026-11-09 (data synced weekly)', '🔴 Real-time Pricing', 'Input: 1,000 tokens'].join(NL2);
+  assert.equal(stripPricingBanner(withBanner), ['🔴 Real-time Pricing', 'Input: 1,000 tokens'].join(NL2));
+  // 渲染后（token 已替换成英文兜底）仍要能删掉
+  const afterRender = '$calc_out.section.x|Pricing last updated: 2026-11-09|'.replace(/\$calc_out\.section\.x\|Pricing last updated: 2026-11-09\|/, '📅 Pricing last updated: 2026-11-09');
+  assert.ok(stripPricingBanner(afterRender).indexOf('Pricing last updated') < 0, '渲染后没删掉 pricing 行');
+  // 其它行不许被误删
+  assert.ok(stripPricingBanner('📅 Usage Scenarios').indexOf('Usage Scenarios') >= 0, '误删了别的 📅 开头行');
+});
+~~~
+
+⚠️ 导入时记得把 `stripPricingBanner` 一起加进该守卫文件的 import。
 
 ### Step 1: 写 G13（扩 G4 的覆盖范围）
 
@@ -803,7 +940,7 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 
 // '$$' 后面不跟 '$' ⇒ 缺陷；'$$$'（后面跟 '$'）⇒ 合法字面量，放行
-const DD_DEFECT = /\$\$(?!\$)/g;
+const DD_DEFECT = /(?<!\$)\$\$(?!\$)/g;
 
 test('P168 B3-8 G14：产物页不得残留双美元号（$$）', () => {
   if (!process.env.RUN_BUILD_TESTS) {
@@ -896,7 +1033,15 @@ Expected: 25 个引擎 × 2 语言 = 50 行；**英文行合计 248**（zh 侧�
 
 ⚠️ 上面工具的 `totalEn` 同时累加了 en 侧 ⇒ 数字会大于 248。**这是有意的**（en 侧整行英文是正常的）⇒ 判据只看 `lang === 'zh'` 那些行的 `en` 数字。
 
-### Step 6: Commit
+### Step 6: ⚠️ **不 commit**（改动留给控制器并入 commit A）
+
+⚠️⚠️ **G13 / G14 是「目标型」守卫** —— 它们断言的是**本批要达成**的状态
+（zh 页 0 整行英文 / 产物页 0 处双美元号）⇒ 在引擎修复落地前**必然红**。
+⇒ **单独提交它们 = 提交一个 CI 必红的 commit**（这正是 B3-7 三连红的成因）。
+⇒ 本 Task **不要 commit**，改动留在工作区，由控制器在 Task 3~8 全部完成后
+与引擎改动、locale 落库、ALLOWED_DIFFS 登记**一起**提交为 commit A。
+
+（原 brief 里这一步写的是「Commit」，已按 §0.8 的「CI 必须始终是绿的」更正。）
 
 ```bash
 git add tests/calc-output-no-dd-guard.test.ts tests/scripts/p168-b3-8-audit.ts
@@ -1388,6 +1533,26 @@ Expected: **全绿**。
 
 ---
 
+### Step 7: ⭐ 更新 AGENTS.md 的套件计数（**必须与 commit A 同批**，否则 invariant 守卫会红）
+
+新增 `tests/calc-output-no-dd-guard.test.ts` 之后，套件计数变了（**实测**：build-dep 66 → **67**、总数 291 → **292**）
+⇒ `tests/claude-md-invariant-guard.test.ts` 会核对 AGENTS.md 里写死的这几个数字 ⇒ **不更新它就是红的**。
+
+⚠️ **不能推迟到 Task 11**（文档同步在 commit B）⇒ commit A 必须自带这次计数更新 ⇒ 提前到本 Step。
+
+改法：跑一次 meta-守卫拿到**准确**的三个数字，再改 AGENTS.md（不要凭算）：
+
+```
+$env:RUN_BUILD_TESTS='1'; cmd.exe /c "node node_modules\tsx\dist\cli.mjs --test --test-concurrency=1 --test-reporter=spec tests\claude-md-invariant-guard.test.ts"
+```
+
+把 AGENTS.md 里对应的 build-dep 套件数 / source-only 套件数 / 总套件数改成守卫报出来的值
+（Task 1 审阅已定位：约在 AGENTS.md 的 L173 与 L264 两处）。
+
+⚠️ 改完再跑一次该守卫 ⇒ 必须 **全绿**。
+
+---
+
 ## Task 9: 全量验收
 
 **Files:** 只读（不产生改动）
@@ -1665,5 +1830,232 @@ const res = await fetch('https://forgeflowkit.com/zh/' + slug + '/?cb=' + Date.n
 
 ## 实施期实测修正（实施时补写）
 
-> 本节留空。实施过程中任何「计划与实测不符」的地方，**必须**在此记录并写明为什么改（沿用 B3-7 §10 的体例）。
-> 同时在 `docs/superpowers/specs/2026-11-16-p168-b3-8-zh-card-localization-rollout-design.md` 的 §10 同步记录。
+---
+
+## 10. 实施期实测修正（2026-11-16 实施中补写）
+
+### 10.1 ⭐⭐ `$$` 的根因不是「陈旧 staticExamples」，而是**真运行时缺陷**
+
+| 项 | 计划原本的写法 | 实测 | 处置 |
+|---|---|---|---|
+| `$$` 出现在哪 | §0.6 说「修在输出字符串里」 | **只在 `staticExamples[0]` 里出现过一次**，差点误判成「重生成产物即可」 | 用 `node scripts/codegen-examples.mjs --check` 裁决 |
+| 裁决证据 | — | saas-valuation / affiliate-income / course-pricing / email-list-revenue / hourly-vs-fixed / unit-economics **全部「in sync」** ⇒ `staticExamples[0]` 与运行时**一致** | ⇒ `$$` 是运行时**真的吐出来**的 |
+| 真根因 | 未写 | `fmt()` / `fmt2()` / `fmt0()` **自带 `$`**，调用处又拼了一个字面量 `'$'` ⇒ `'$' + fmt(x)` = `$$x` | 去掉调用处多余的 `'$'`（**不改 `fmt()` 的行为**） |
+| 两侧 | 未强调 | **服务端与客户端 customFn 各有一份镜像** ⇒ 两边都要改 | 实测服务端 **20** 处 / 客户端 **20** 处 |
+
+⚠️ **处数更正**：Task 7（6 个非本批引擎）实际是 **17 处**（saas-valuation 8 · affiliate-income 5 · course-pricing 1 · email-list-revenue 1 · hourly-vs-fixed 1 · unit-economics 1），freelance-rate 的 **3 处**归 W3 ⇒ 合计 20 ✓ 与 §0.6 的总数一致。
+
+⭐⭐ **判据教训**：「这个缺陷是陈旧产物还是真缺陷」**不能靠读源码时看见它在 `staticExamples` 里就下结论** —— 必须拿一个**独立的可复算判据**去裁决（这里是 `codegen-examples --check` 的「in sync / DRIFT」）⇒ 否则会把「真缺陷」当「产物陈旧」而漏修。
+
+### 10.2 ⭐⭐ G14 的判据必须**两侧都看**：`(?<!\$)\$\$(?!\$)`
+
+- 只看右侧（`\$\$(?!\$)`）时，合法字面量 `"$$$"`（垃圾邮件敏感词示例，FAQ 里的原文）会在**位置 1 再匹配一次** ⇒ 误报 2 处。
+- ⇒ 判据 = `(?<!\$)\$\$(?!\$)`：**前后都不挨着 `$`** 才算缺陷。
+- 实测（修复前）：**产物 14 页 / 136 处**；源码 24 处 = **20 缺陷 + 2 注释 + 2 合法 FAQ**。
+
+### 10.3 ⭐⭐ locale 的英文模板必须从**源码**推导，不能只靠运行时求值
+
+- 运行时求值（跑 `generate()` + 客户端 `customFn`）**只覆盖默认输入走到的分支** ⇒ 实测 **48 个 code 拿不到英文模板**（健康度档位 / 错误提示 / 分支提示）。
+- ⇒ 若只靠运行时落库，这 48 个键会缺 ⇒ 用户换一组输入就会在 zh 页看到**裸 token**。
+- 解法：新增 **`tests/scripts/p168-locale-source.ts`** —— 解析源码里的两种 token 形态：
+  ① 字面量形态 `$code|英文原文|`（可选带 params 组）⇒ 英文 = 原文，params 取值换回 `{param}`；
+  ② 构造器形态 `makeToken('code', <表达式>, {参数})` ⇒ 把参数的**源表达式**替换成 `'{param}'` 后再求值 ⇒ 英文模板。
+- ⭐⭐ **自证机制**：源码推导的模板必须与运行时实测的模板**逐字相同**（两者都拿到的 code）⇒ 不一致就报 conflict。
+  实测 **3 处 conflict**，全部是源码推导侧的问题（源码里 `\'` 转义没还原 / fallback 是变量求不出）⇒ **以运行时为准**（源码只负责补齐运行时覆盖不到的分支）。
+- ⚠️ **提取器的 CLI 必须在「本文件是入口」时才跑** —— 否则被合并工具 `import` 时也跑 ⇒ 把 `tmp/p168-locale-extract.json` 覆盖成**空数据** ⇒ 翻译 worker 拿到空清单（已修：加入口判定 + 重新生成）。
+
+### 10.4 ⭐⭐ 「对齐空格留在 token 之外」是硬要求 —— G9 会当场抓住
+
+- W1 的 `inventory-turnover` 把 `Industry:` 的 **11 个对齐空格**并进了兜底 ⇒ G9 实测 **1 处未记录差异**：
+  `• Industry:           general (benchmark 6x)` → `• Industry: general (benchmark 6x)`。
+- 修法：拆成**标签键** `calc_out.label.industry`（原文 `Industry`）+ **值行** `calc_out.inventory_turnover.row.industry_benchmark_value`，**对齐空格留在 token 之外**。
+
+### 10.5 ⭐⭐ token 必须是 `$code|英文原文|` **三段齐全** —— G9 也是「token 形态合法性」的守卫
+
+- W2 的 `stripe_fee` 半成品写成 `$calc_out.label.fee|:       $2`（**缺 `|英文原文|` 段**）⇒ 渲染器拿不到兜底 ⇒ 页面会显示**裸 token** `$calc_out.label.fee` ⇒ G9 实测 **5 处未记录差异**。
+- ⇒ **G9 的价值不止「英文页零变化」**：token 形态写错 ⇒ 英文页必然变 ⇒ G9 立刻红 ⇒ 它顺带成了 token 形态的守卫。
+
+### 10.6 其余实测更正
+
+| # | 计划原文 | 实测 | 处置 |
+|---|---|---|---|
+| 1 | Task 2 预期表写 G12b（服务端/客户端 code 集合）会红 | **实测是绿的** | 预期表更正（不影响实现） |
+| 2 | 落库「文本插入，不是整文件重写」 | `JSON.stringify(obj, null, 2) + '\n'` 与现有 locale 文件**逐字节相同**（实测 en 1,091,401 B / zh 816,469 B 往返一致）⇒ 可以安全地整文件重写，但仍按「只插入、不重排既有键」实现（段内有 2 处 B3-7 留下的逆序 ⇒ 整段排序会产生无关 diff） | 落库工具 `tests/scripts/p168-locale-merge.ts` |
+| 3 | zh 译文由人工逐条写 | **zh 值 = 「en 值的前导 emoji」+「中文正文」** ⇒ 中文正文**不手打 emoji**（手打 emoji 有被代理转义弄坏码位的风险）⇒ 由落库工具补前导 emoji；合成时若中文正文也以 emoji 开头 ⇒ 先剥掉（否则两个 emoji） | 同上 |
+| 4 | AGENTS.md 套件计数 | 新增 1 个 **build-dep** 守卫（G14）⇒ **66 → 67** build-dep，总数 **291 → 292**（source-only **225** 不变） | 已与 commit A 同批更新 |
+| 5 | 并行纪律 | 首次派发的 **4 个 worker 全部因上游 429（Token Plan 用量上限）中断** ⇒ 重派后正常 | ⇒ **派发前先确认配额**；且 **locale 这类共享文件绝不能放进并行 worker**（由控制器统一落库） |
+
+### 10.7 本批的有意差异（`ALLOWED_DIFFS`）
+
+| 引擎 | 差异 | 白名单标记 |
+|---|---|---|
+| `solopreneur-saas-valuation-calculator` | 双美元号修复（4 行：`$$1,000,000` → `$1,000,000` 等） | `['$$']` |
+| `solopreneur-freelance-rate-calculator` | 双美元号修复（3 行） | `['$$']` |
+| `solopreneur-rental-yield-calculator` | 服务端 CoC bug 修复（**1.08% → 6.89%**，1 行） | `['CoC → 6.89%']`（**整段短语**，不是光一个 `6.89%` ⇒ 这行将来因别的原因再变 ⇒ 白名单不匹配 ⇒ CI 变红 ⇒ 强制复审） |
+
+⭐ **`$$` 作标记为什么安全**：修复后该页**已无任何 `$$`** ⇒ 未来任何含 `$$` 的差异**只能是「双美元号又回来了」** ⇒ 正是这条白名单要拦的 ⇒ 不会顺带放过别的改动。
+
+### 10.8 `burn_rate` 的 tip JSON 形态**不是缺陷** —— 原计划「tip 改合规 token 形态」这条**作废**
+
+**原计划原文**（spec §0.5 / plan §0.5 漂移裁定表 + W3 任务书）：
+「burn-rate …… 且 tip 是裸 JSON `Tip: {"code":...}` 不合 token 协议 ⇒ 客户端补齐 3 段 + **tip 改合规 token 形态**」。
+
+**实测复核（2026-11-16）**：这个 JSON 形态**是 P168 批次 3 第一阶段的既定成果**，**不是缺陷**：
+
+| 证据 | 位置 |
+|---|---|
+| 决策层有专门解析器 `parseDecisionTip`（读 `code` + `params`） | `src/lib/decision-support.ts:91,100` |
+| 英文句子在 `decision_tip.<code>` locale 模板里（zh 缺键自动回退 en） | `src/i18n/locales/{en,zh}.json` |
+| 有守卫钉住这个形态（`parseDecisionTip('{"code":"burn_high_burn","params":{}}')`） | `tests/decision-tip-i18n-guard.test.ts:23,58,120` |
+| 卡片正文里这一行**本来就不会显示** —— `isCalcOutputTipLine` 把含 `Tip:` 的行整条过滤，tip 由决策层单独渲染 | `src/lib/calc-output-i18n.ts:49-56` |
+
+⇒ **改成 `$calc_out.*` token 会让 `decision-tip-i18n-guard` 变红**（它断言的正是这个 JSON 形态），而且会丢掉「改措辞不动引擎」这个能力。
+
+⇒ **处置**：**burn_rate 的 tip 行一个字都不改**；只做「卡片 7 行令牌化 + 客户端补齐 3 段（与服务端逐字相同、同样令牌化）」。
+⇒ 已写进 R 波 `brief-w4r.md` 的硬约束，并在 recipe.md / spec / plan 的 §0.5 行就地标注「本条已作废」。
+
+⭐⭐ **可复用的判据**：看到「裸 JSON / 裸码 / 看起来不合协议」的输出，**先查它是不是另一个已落地机制的载体**，再决定要不要「统一」。
+本批已有一个**同方向**的案例（`Pricing last updated` 那一行**不要补** —— 页面用徽章显示同一日期）⇒ **同一条判据，两个方向都成立**。
+
+
+### 10.9 ⭐⭐ 提取器的两个**静默失败** —— 不报错、只是「推不出来」
+
+Task 8 落库后重跑提取器得到 **newKeys = 0**（幂等达成），但 G3 报出 **25 个「分支专属 token 缺 locale 键」** ⇒ 两者矛盾 ⇒ 说明提取器**漏推**了。
+
+**根因 ①：占位符被二次命中**
+`p168-locale-source.ts` 的 `templateFromExpr` 先把 `pct` 替换成 `{pct}` 占位符，**随后**又去扫「标识符候选」⇒ `pct` 在 `'{pct}'` 里又被命中一次 ⇒ 生成 `'{ {pct} }'` 形态的非法 JS ⇒ 推导**静默失败**（异常被吞）⇒ 整条分支的模板推不出来。
+**修法**：**哨兵两阶段替换**（U+0001 / U+0002 占位）—— 第一阶段把参数值换成哨兵，第二阶段才把哨兵换成 `{param}` ⇒ 参数值**不可能**再被当成标识符命中；字符串字面量**单独保护**，不参与标识符扫描。
+
+**根因 ②：`splitCodeStrings` 的 off-by-one**
+该函数用 `while` 循环逐字符扫字符串字面量，遇到**转义撇号**时 `continue` **跳过了 `i++`** ⇒ 下一次循环从撇号**之后**的字符重新开始 ⇒ 引号状态错乱 ⇒ 后面的字符串边界全乱。
+**修法**：改成「向前找候选 + 验证配对」；`readArgs`（`for` 循环）**保持 `src[++i]` 语义不变**。
+
+⭐⭐ **判据**：**「不报错」不等于「算对了」**。提取器的失败模式是「静默返回空」⇒ 必须有**独立信号**（G3 报缺键）与**它**对账 ⇒ 两者不一致就说明有一个在骗人。
+
+### 10.10 ⭐⭐ 静态推导对三类 fallback **无能为力** ⇒ 必须上运行时探针
+
+Task 8.5 实测：`p168-locale-extract.ts` 的**源码推导**对这三类**无解**：
+
+| 类别 | 例子 | 为什么静态推不出来 |
+|---|---|---|
+| 运行时变量 | `params.initial` 的值来自 `PROVIDER_INITIAL[provider]` | 值不在源码里 |
+| 含未定义函数的表达式 | `makeToken(code, fmt(x) + ' ' + y)` | 需要执行上下文 |
+| 跨字符串拼接的 params | `params: { hours: loc(billableHrs) }` | params 的值是另一个表达式 |
+
+**解法 = 运行时分支探针**（`tests/scripts/p168-locale-branch-probe.ts`，**已入库**）：
+
+1. **fuzz 输入**（number 多量级 + select 全遍历 + 每个 number 单独取 0 + 全 0 组合）；
+2. 跑服务端 `generate()` 与客户端 `customFn` ⇒ 捕获**默认路径走不到**的分支 token；
+3. 用 `substituteAll` **反推英文模板**；
+4. **round-trip 校验**（模板回填必须**逐字**等于 fallback）—— 反推错了就红；
+5. **众数模式消歧**（同一 code 在不同输入下 fallback 不同 ⇒ 取众数）—— 冲突从 **79 → 1**。
+
+⚠️ **死分支仍到不了**（`safe_convertible_note` 的 `postMoneyCap <= investment` 分支被上游守卫拦死，探针与静态推导都到不了）⇒ 手工补 2 条（`tests/scripts/p168-locale-manual.ts`）。
+⚠️ **取值替换必须按词边界**（新增 `replaceWordValue`，extract/probe 共用）：`params.initial` 的值只有单字符 `'O'` ⇒ 朴素替换会把 `OpenAI` 里的 `O` 也换掉 ⇒ 模板污染 ⇒ 规则：**只有取值的首/尾字符是单词字符时，才要求该侧边界非单词字符**。
+⚠️ **提取器的三来源合并顺序**：源码推导（结构化，最权威）> 默认运行时实测 > 分支探针 > 手工补（仅死分支）；merge 工具的 en 值取自提取器的 `newKeys` ⇒ **探针必须并入提取器**，否则并入的键会因「不在 newKeys 里」被丢弃。
+
+### 10.11 ⭐ 守卫检测器的字面量边界必须「**配对**」而非「最近引号」
+
+`tests/calc-output-i18n-guard.test.ts` 的 `enclosingLiteral` 原按「**最近的引号**」找边界 ⇒ 字面量**内含另一种引号**时找错边界 ⇒ **3 条假红**（`ai_api` 的 `health_tradeoffs` / `feature_adoption` 的 `tip_activation_pairing` / `burn_rate` 的 `insight_burning_faster`）。
+**修法**：「向前找候选 + 验证 `pos` 落在区间内」；构造器分支**跳过位于 TS 字符串内部的调用**（客户端 `customFn` 的 JS 层转义层级与 TS 文件不同 ⇒ 实参会被切错几十行）；**收尾 `|` 判定改用行级**（协议规定 fallback 不跨行 ⇒ 这是协议自带约束，不依赖字面量边界算得准不准）；新增检测器自检 4（字面量内含另一种引号时边界仍配对）。
+⚠️ 中间试过「全局扫描所有字面量区间」的方案 ⇒ **被正则字面量里的引号带偏** ⇒ 误报 `coupon_attribution` 3 条 ⇒ **否掉**。
+
+### 10.12 ⭐⭐⭐ `customFn` 返回**多元素数组** ⇒ 动态卡片**只剩第一行**（真 bug，本批修）
+
+**实测**：`solopreneur-ai-api-cost-comparison` 的 `customFn` 末行是 `return o;`（`o` 是 53 元素的**行数组**）⇒ 页面 `src/pages/[lang]/[slug].astro:2171-2172` 对 `type === 'custom'` 的引擎**只渲染 `results[0]`** ⇒ **用户在「计算」后看到的是一张空白卡片**（`results[0]` 是空串）。
+
+⭐ **这个 bug 早于本批**（B3-7 试点就已存在）⇒ 本批因令牌化把它暴露出来：`customfn-contract-guard` 的 M4/M5 断言「`results[0]` 不得是空串」⇒ **真 bug 被守卫抓住**（这正是守卫的价值：它守的是**契约**不是**当前形态**）。
+
+**修法**：`return [o.join('\n')];`（单元素数组 = 整份输出）⇒ 与全仓 **93 个业务引擎**的 `return [r]` 一致 ⇒ 动态卡片与静态卡片结构对齐。
+⚠️ **G6 不受影响**：`o.join('\n')` 与服务端 `out.join('\n')` **逐字相同** ⇒ 「服务端输出 ≡ 客户端输出」仍成立（守卫已复验绿）。
+⚠️ **另外 6 个 AI cost 引擎是同样的形态**（claude / gemini / deepseek / ai-image / ai-training / gpu-cloud，`return o;`）⇒ **同样的空白动态卡片** ⇒ **不在本批授权范围**（GSC top15 之外）⇒ 记入 §11 待办，**下一批带上**（改法同上，一行）。
+
+### 10.13 ⭐⭐ zh 章节文案必须与**既有 legacy 键逐字对齐**，否则产物层守卫红
+
+令牌化后，zh 页的章节标题改由 `calc_out.section.*` 提供 ⇒ 但**产物层**还有一条既有守卫（`tests/dead-i18n-keys-guard.test.ts` 的 `WORKING_KEY_REQUIRED`）要求**特定中文标题字符串出现在产物里** ⇒ 实测 **22 条缺失**。
+
+**根因**：新写的 `calc_out.section.*` 中文值与**旧 legacy 键**（`engine_health.*` / `engine_snapshot.*` / `engine_projection.*` / `engine_break_even.*` / `engine_breakdown.*`）**措辞或标点不一致** —— 典型三种：
+
+| 新键（落库时写） | 旧键（产物层期望） | 差异 |
+|---|---|---|
+| `🩺 烧钱健康度：` | `🩺 烧钱健康:` | 加了「度」+ **全角冒号** |
+| `🎯 季度预缴计划：` | `🎯 季度付款计划:` | 改词 + 全角冒号 |
+| `🎯 达成目标所需时间：` | `🎯 目标时间:` | 改词 + 全角冒号 |
+
+**修法（24 键）**：**从仓库自己的 legacy 键反查**（按 **EN 值**匹配 + **冒号存在性**必须一致）⇒ 取 legacy 的**措辞**、取源头的 **emoji**、按源头的**冒号存在性**补冒号 ⇒ 落库（实测：改动 24 键 · 新增 0 · 删除 0）。
+
+⭐⭐ **判据**：**新键的 zh 值不能「另起炉灶写文案」** ⇒ zh 页的章节标题是**跨引擎共享**的（`engine_health.*` 已被 **P111~P119** 铺到 60+ 引擎）⇒ 新旧两套键**必须逐字一致**，否则同一页的两处渲染会给出两个措辞。
+⚠️ **emoji 必须从源 en 值取**（把 `legacyZh` 里的 emoji 剥掉再拼源头的）—— 否则 `ai_cost.section.cost_breakdown`（`💰 成本明细`）会把 `📐 成本拆解：` 的 emoji 换掉。
+⚠️ **冒号存在性必须参与匹配**：不参与时会把 `⚖️ 盈亏平衡:` 误配到 `⚖️ 盈亏平衡`（无冒号）⇒ 产物层守卫照样红。
+⚠️ **匹配必须「唯一」才改**：同一 EN 值若对应多个 legacy 键且**中文值不一致** ⇒ 判为**冲突**并跳过（实测本批冲突 0）。
+
+### 10.14 ⭐ `tools.<slug>.decision_*` 键缺失**不是本批回归**
+
+本批实测有 6 个引擎缺 `tools.<slug>.decision_{goal,recommendation,constraint,next_tool}` 4 个键（en + zh 都缺）⇒ 页面的 `decisionTextReady` 为 false ⇒ 「🧭 算完之后」区块不渲染。
+**核对结论**：locale 里 `decision_*` 键共 **84** 个，**全部在基线 `5c1c789` 就存在**，本批**新增 0** ⇒ **不是本批回归**，而是「决策支持铺开到 227 页」这条**独立待办**的覆盖缺口。
+⇒ **本批不动**（宪法：AI 不得擅自扩范围）⇒ 已记入 §11 待办。
+
+### 10.15 ⭐⭐⭐ 「SSR 层绿」≠「用户所见绿」—— 客户端美化层会**自己造文案**
+
+**实测（Task 10 浏览器目视验收，2026-11-16）**：zh 页的静态卡片上仍有一行**整行英文** ——「📊 Usage Scenarios (monthly costs)」。
+
+⭐ **根因不在引擎，也不在 locale**：在 `src/pages/[lang]/[slug].astro` 的**客户端** `beautifySections()` 里 —— 它**自己写了面向用户的英文标题**：
+
+| 位置 | 硬编码标题 |
+|---|---|
+| `1695` | `💰 Savings Insights` |
+| `1721` | `📊 Usage Scenarios (monthly costs)` |
+
+这两个标题**覆盖**了 token 渲染出来的中文标题。
+
+⭐⭐⭐ **为什么产物层守卫抓不到（本轮最重要的判据教训）**：
+
+- 产物层守卫（G4c / G13 等）读的是 **SSR 出来的 HTML**；
+- beautify 是**浏览器里的后处理**（`staticMono.innerHTML = beautifySections(...)`，`[slug].astro:2073`）⇒ **SSR HTML 里根本没有这两行**；
+- ⇒ 「zh 页 0 整行英文」在 SSR 层**是真的** ⇒ 守卫绿 ⇒ **用户却看到英文**。
+
+⇒ ⭐⭐ **结论：SSR 层绿 ≠ 用户所见绿** ⇒ 必须有一条**能看见客户端插入内容**的判据。
+
+⭐⭐ **修法**：**beautify 不再自己造文案** —— 标题改为**取原文那一行**（原文是 token 原文 ⇒ 保留 token ⇒ `src/scripts/calc-output.client.ts` 扫 DOM 时把它换成 zh 模板）。
+这与同文件里**另外 5 处**标题（`esc(lines[0])` / `esc(cardLines[0].trim())` / `esc(blines[0])` / `esc(glines[0])` / `esc(titleLine)`）**本来的写法一致** ⇒ **那 5 处实测就是中文** ⇒ 这是「用既有的正确做法修」，不是新发明。
+
+⭐⭐⭐ **新守卫（结构性判据，不是字符串黑名单）**：`tests/beautify-no-hardcoded-copy-guard.test.ts`
+
+- 判据：**凡是把面向用户的文字直接写进 HTML 的地方，都必须来自原文**（可见文本含 ≥2 个英文词 ⇒ 违规）；
+- 为什么阈值是 **2** 而不是产物层的 3：这里判的是「一段硬编码文案」不是「整行英文」——「💰 Savings Insights」只有 2 个词，但它是**面向用户的英文**；
+- ⚠️ **变异台子当场抓到这个阈值错误**：第一版阈值 3 ⇒ M1（Savings Insights）**存活** ⇒ 收紧到 2 ⇒ **2/2 KILLED（精确红 1 条）**，还原 sha256 逐字节一致（台子入库：`tests/scripts/p168-beautify-copy-mutation.ts`）。
+
+⚠️ **同族教训**：⭐⭐ **「守卫绿」必须追问一句「它测的那一层，用户真的看得到吗？」** —— 本轮之前 G4c 绿了 25 个引擎、「0 整行英文」，而用户在 ai-api 页看到的就是一行英文。
+⭐⭐ **同族教训二**：⭐ **「同一个函数的 5 处写法对、第 6 处错」时，第 6 处几乎必然是「自己造文案」** ⇒ 审 beautify 这类**重排层**时，判据应该是「它有没有越过原文自己造字」。
+
+⭐ **浏览器实测（Task 10，2026-11-16）**：本地 `dist` + `python -m http.server` + **iframe 批量加载**（iframe 里的页面脚本会真的执行 beautify ⇒ 测的是**用户所见**，不是 SSR HTML）：
+
+| 批次 | 引擎 | 静态卡片整行英文 | 动态卡片整行英文 |
+|---|---|---|---|
+| 1 | time-value / freelance-rate / reorder-point / feature-adoption / safe-convertible-note | **0** | **0** |
+| 2 | stripe-fee / stockout-cost / ai-api-cost-comparison / rental-yield / sales-velocity | **0** | **0** |
+| 3 | freelance-tax / quota-attainment / burn-rate / cart-abandonment-cost / inventory-turnover | **0** | **0** |
+
+⭐ **ai-api-cost-comparison 的动态卡片实测**：修复前 = **1 行空白**（`results[0]` 是空串 ⇒ 用户点「计算」后看到空卡片）；修复后 = **37 行完整报告 · 0 整行英文**。
+
+### 10.16 ⭐⭐ 守卫的「子串匹配」会把 **token 名**误判成「建议码」—— 标识符必须按**词边界**匹配
+
+**实测（全量套件第 3 批红）**：`decision-support-build-guard` 的「结果卡片里没有决策建议」判据红，报 en/zh 的 freelance-rate「结果卡片里还有建议码 `freelance_rate_market`」。
+
+⭐ **根因不是「卡片里真的有建议码」** —— 实际查产物：`freelance_rate_market` 在 `static-results` 段里出现 **2 次**，两次都是 **token 名的一部分**：
+
+- `data-calc-output-templates` 属性里的键 `"calc_out.section.freelance_rate_market_position"`
+- `data-calc-output-raw` 属性里的 `$calc_out.section.freelance_rate_market_position|🩺 Market Position:|`
+
+⇒ 判据用的是 `cardHtml.includes(tipCode)`（**子串**）⇒ 「**含建议码前缀的 token 名**」被误判 ⇒ **假红**。
+⇒ 真正的建议码（`{"code":"freelance_rate_market"}`）在**段外**（customFn 源码里）⇒ 不构成「建议在卡片与决策区块各有一家」。
+
+⭐ **修法**：按**词边界**匹配（标识符语义）：`(?<![A-Za-z0-9_])` + `(?![A-Za-z0-9_])`。
+
+- `freelance_rate_market_position` ⇒ **不命中**（后面是 `_`）
+- `{"code":"freelance_rate_market"}` ⇒ **命中**（前后是引号）
+
+⚠️⚠️ **自检必须独立成 source-only 文件**（`tests/decision-tip-code-probe.test.ts`）：守卫文件是 **build-dep**（顶部 skip-guard ⇒ 无 build 时 `process.exit(0)`）⇒ 自检若放那里 ⇒ **source-only 模式下永远被跳过 ⇒ 真空绿** ⇒ 探针实现放共享夹具 `tests/_decision-support-fixture.ts`（无 skip-guard）+ 自检独立成套件。
+
+⭐⭐ **判据**：⭐ **「这个字符串在页面里出现过」不等于「这个字符串是那个东西」** —— 子串匹配判**标识符**时，**必须带词边界**。
+⭐ **同族教训**：⭐⭐ **B3-7 时这个守卫是绿的** —— 因为 10 个试点的 token 名里没有含建议码前缀的 ⇒ **同一段判据在不同的 token 命名下，结论相反** ⇒ 「守卫绿过」不等于「判据正确」。
