@@ -32,6 +32,8 @@ import {
   ROOT,
 } from './_decision-support-fixture.ts';
 import { stripComments } from './build-dep-suites.mjs';
+// P168 B3-8：「已令牌化引擎清单」的**单一真相源**（试点 10 + 本批 15 = 25）
+import { TOKENIZED } from './scripts/p168-tokenized-engines.mjs';
 import { tools } from '../src/data/tools/index.ts';
 import {
   calcOutputTemplates,
@@ -564,19 +566,8 @@ test('P168 B3-7 G2c：引擎里的 token 字面量符合协议（code 形态合�
 });
 
 // ── G3：两份实现（calculate / customFn）声明的 token 集合一致 ────────────
-/** B3-7 的 10 个试点引擎 —— 「非真空绿」判据只对它们生效 */
-const PILOT_SLUGS = new Set([
-  'solopreneur-mrr-calculator',
-  'solopreneur-rent-vs-buy-calculator',
-  'solopreneur-brrrr-calculator',
-  'solopreneur-project-profitability-calculator',
-  'solopreneur-coupon-attribution-calculator',
-  'solopreneur-saas-valuation-calculator',
-  'solopreneur-acv-calculator',
-  'solopreneur-funnel-step-calculator',
-  'solopreneur-activation-rate-calculator',
-  'solopreneur-stickiness-calculator',
-]);
+/** P168 B3-8：已令牌化的引擎（B3-7 试点 10 + 本批 15 = 25）—— 真相源在 p168-tokenized-engines.mjs */
+const PILOT_SLUGS = new Set(TOKENIZED.map((e) => e.slug));
 
 test('P168 B3-7 G3：customFn 声明的 token 集合 == calculate() 声明的 token 集合', () => {
   // ⭐ 检测器自检（2026-11-13）：造一个「服务端实现在 engine 对象里」的假引擎。

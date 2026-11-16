@@ -2,7 +2,7 @@
 // P168 B3-7 —— **英文页零变化**判据的可复算测量工具。
 //
 // 用法：
-//   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-en-page-parity.ts              # 全部 10 个试点
+//   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-en-page-parity.ts              # 全部 25 个已令牌化引擎
 //   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-en-page-parity.ts mrr         # 只看一个
 //   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-en-page-parity.ts --allow-list # 允许「有意改动」清单
 //
@@ -33,22 +33,13 @@ import '../../src/engines/index.ts';
 import { getAllEngines } from '../../src/core/engines/registry.ts';
 import { renderCalcOutput } from '../../src/lib/calc-output-i18n.ts';
 import { PILOT_SLUGS, codegenDefaults } from './p168-server-client-parity.ts';
+import { TOKENIZED, baselineFor } from './p168-tokenized-engines.mjs';
 
 const NL = String.fromCharCode(10);
 
-/** 试点引擎的源文件（slug → 仓库路径）—— 工具自带，不依赖 tmp/ ⇒ CI 也能跑 */
-export const PILOT_FILES: Record<string, string> = {
-  'solopreneur-mrr-calculator': 'src/engines/saas/mrr-calculator.ts',
-  'solopreneur-rent-vs-buy-calculator': 'src/engines/real-estate/rent-vs-buy-calculator.ts',
-  'solopreneur-brrrr-calculator': 'src/engines/real-estate/brrrr-calculator.ts',
-  'solopreneur-project-profitability-calculator': 'src/engines/freelance/project-profitability-calculator.ts',
-  'solopreneur-coupon-attribution-calculator': 'src/engines/marketing/coupon-attribution-calculator.ts',
-  'solopreneur-saas-valuation-calculator': 'src/engines/valuation/saas-valuation-calculator.ts',
-  'solopreneur-acv-calculator': 'src/engines/sales/acv-calculator.ts',
-  'solopreneur-funnel-step-calculator': 'src/engines/product-analytics/funnel-step-calculator.ts',
-  'solopreneur-activation-rate-calculator': 'src/engines/product-analytics/activation-rate-calculator.ts',
-  'solopreneur-stickiness-calculator': 'src/engines/product-analytics/stickiness-calculator.ts',
-};
+/** 已令牌化引擎的源文件（slug → 仓库路径）—— 工具自带，不依赖 tmp/ ⇒ CI 也能跑
+ *  ⭐ P168 B3-8：清单改为从**单一真相源**派生（p168-tokenized-engines.mjs） */
+export const PILOT_FILES: Record<string, string> = Object.fromEntries(TOKENIZED.map((e) => [e.slug, e.file]));
 
 /** ⭐ 已记录的「有意改动」白名单（每条都要写明理由） */
 export const ALLOWED_DIFFS: Record<string, string[]> = {
@@ -73,11 +64,19 @@ export interface EnParityRow {
  */
 export const BASELINE_SHA = 'd3b3c1d';
 
+/** ⭐ B3-8：基线按 slug 分组（试点 d3b3c1d / 本批 5c1c789）
+ *  ⇒ 单值 BASELINE_SHA 降级为「默认基线」，真正的基线由**每个引擎自己**决定
+ *  ⇒ 保留单值导出是为了不破坏既有 import（p168-engine-check.ts 等） */
+export function baselineShaFor(slug: string): string {
+  return baselineFor(slug);
+}
+
 /** 取基线提交里该引擎的 staticExamples[0]（token 化之前的英文输出） */
-export function baselineStaticExample(file: string): string | null {
+export function baselineStaticExample(file: string, sha?: string): string | null {
+  const use = sha ?? BASELINE_SHA;
   let src: string;
   try {
-    src = execSync('git show ' + BASELINE_SHA + ':' + file, { encoding: 'utf8', maxBuffer: 1 << 28 });
+    src = execSync('git show ' + use + ':' + file, { encoding: 'utf8', maxBuffer: 1 << 28 });
   } catch {
     return null;
   }
@@ -96,6 +95,25 @@ export function normalizeDates(text: string): string {
   return text.replace(/\(~[A-Z][a-z]{2} \d{4}\)/g, '(~DATE)');
 }
 
+/**
+ * ⭐⭐ 产物层的**生成规则**（2026-11-16 实测踩坑）：静态卡片里**没有**「📅 Pricing last updated:」那一行。
+ *
+ *   · scripts/codegen-examples.mjs:316-317 写 staticExamples[0] 之前会**过滤掉**这一行
+ *     （注释原文：'Strip the leading "📅 Pricing last updated:" + empty line (UI badge covers it)'）
+ *   · 页面用**徽章**显示同一个日期：src/pages/[lang]/[slug].astro:1394-1395 →「📅 Data updated: {dataLastUpdated}」
+ *   ⇒ 基线侧取的是 literal（本来就**没有**那一行）；
+ *     现在侧若直接拿 generate() 的原始输出比 ⇒ **必然多一行** ⇒ 后面每行整体错位
+ *     ⇒ 实测 ai-api-cost-comparison 53 行里 53 行全「不同」（假红），与基线分组机制无关。
+ *   ⇒ **两边必须按同一条产物规则处理**。
+ *
+ * ⚠️ 为什么在**渲染之后**过滤（而不是渲染之前）：
+ *   引擎令牌化之后，这一行会变成 token（$calc_out.…）⇒ 渲染前的前缀匹配认不出来；
+ *   渲染后是英文兜底「📅 Pricing last updated: …」⇒ 前缀稳定 ⇒ 令牌化前后都认得出。
+ */
+export function stripPricingBanner(text: string): string {
+  return text.split(NL).filter((l) => !l.startsWith('📅 Pricing last updated:')).join(NL);
+}
+
 export function measureEnParity(slugs: string[]): EnParityRow[] {
   const engines = getAllEngines() as any[];
   const defaults = codegenDefaults();
@@ -104,11 +122,14 @@ export function measureEnParity(slugs: string[]): EnParityRow[] {
     const file = PILOT_FILES[slug];
     const e = engines.find((x) => x.slug === slug);
     if (!e || !file) continue;
-    const head = baselineStaticExample(file);
-    if (head === null) { rows.push({ slug, same: false, allowed: false, headChars: 0, nowChars: 0, diffs: ['基线取不到（浅克隆，或 ' + BASELINE_SHA + ' 不在历史里）'] }); continue; }
+    const sha = baselineShaFor(slug);
+    const headRaw = baselineStaticExample(file, sha);
+    if (headRaw === null) { rows.push({ slug, same: false, allowed: false, headChars: 0, nowChars: 0, diffs: ['基线取不到（浅克隆，或 ' + sha + ' 不在历史里）'] }); continue; }
+    // ⭐ 两侧都按**产物规则**处理（去掉「📅 Pricing last updated:」那一行 —— 页面用徽章显示）
+    const head = stripPricingBanner(headRaw);
     const raw = (e.generate ?? e.calculate).call(e, defaults[slug]);
     const text = Array.isArray(raw) ? raw.map(String).join(NL) : String(raw);
-    const now = renderCalcOutput(text, {});
+    const now = stripPricingBanner(renderCalcOutput(text, {}));
     const A = normalizeDates(head).split(NL), B = normalizeDates(now).split(NL);
     const diffs: string[] = [];
     for (let i = 0; i < Math.max(A.length, B.length); i++) {

@@ -3,7 +3,7 @@
 //
 // 用法：
 //   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-server-client-parity.ts            # 全仓 100 个
-//   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-server-client-parity.ts --pilot    # 只看 10 个试点
+//   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-server-client-parity.ts --pilot    # 只看 25 个已令牌化引擎
 //   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-server-client-parity.ts --json     # 机器可读
 //
 // ⭐ 为什么需要它（2026-11-12 实测）：
@@ -18,20 +18,10 @@ import { resolve } from 'node:path';
 
 import '../../src/engines/index.ts';
 import { getAllEngines } from '../../src/core/engines/registry.ts';
+import { TOKENIZED } from './p168-tokenized-engines.mjs';
 
-/** B3-7 的 10 个试点引擎 */
-export const PILOT_SLUGS = [
-  'solopreneur-mrr-calculator',
-  'solopreneur-rent-vs-buy-calculator',
-  'solopreneur-brrrr-calculator',
-  'solopreneur-project-profitability-calculator',
-  'solopreneur-coupon-attribution-calculator',
-  'solopreneur-saas-valuation-calculator',
-  'solopreneur-acv-calculator',
-  'solopreneur-funnel-step-calculator',
-  'solopreneur-activation-rate-calculator',
-  'solopreneur-stickiness-calculator',
-];
+/** P168 B3-8：已令牌化的引擎清单 —— 真相源在 p168-tokenized-engines.mjs（B3-7 试点 10 + B3-8 本批 15 = 25） */
+export const PILOT_SLUGS = TOKENIZED.map((e) => e.slug);
 
 function pick(arr: unknown[]): unknown { return arr[Math.floor(Math.random() * arr.length)]; }
 function fill(t: string, v: Record<string, string>): string {

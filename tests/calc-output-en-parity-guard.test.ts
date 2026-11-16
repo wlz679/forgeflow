@@ -26,8 +26,10 @@
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { ALLOWED_DIFFS, measureEnParity, normalizeDates, BASELINE_SHA, baselineStaticExample, PILOT_FILES } from './scripts/p168-en-page-parity.ts';
+import { ALLOWED_DIFFS, measureEnParity, normalizeDates, BASELINE_SHA, baselineStaticExample, baselineShaFor, PILOT_FILES } from './scripts/p168-en-page-parity.ts';
 import { PILOT_SLUGS } from './scripts/p168-server-client-parity.ts';
+// P168 B3-8：「已令牌化引擎清单」的**单一真相源**（试点 10 + 本批 15 = 25）
+import { TOKENIZED } from './scripts/p168-tokenized-engines.mjs';
 
 test('P168 B3-7 G9：试点引擎的英文页逐字不变（token 化只改 zh，不改 en）', () => {
   const rows = measureEnParity(PILOT_SLUGS);
@@ -57,9 +59,24 @@ test('P168 B3-7 G9 基线自检：基线必须钉在 token 化之前（不得用
   //   ⇒ 基线里全是 token 原文 ⇒ 与「渲染后的英文」必然不等 ⇒ **G9 提交后必红**（CI 必红）。
   //   ⇒ 基线必须是**固定 SHA**，且必须能自证「它是 token 化之前的版本」。
   assert.notEqual(BASELINE_SHA, 'HEAD', '基线不得用 HEAD（一提交就失去意义）');
+  // ⭐ P168 B3-8：基线**按引擎分组** ⇒ 自检必须查「这个引擎**实际用的**那个基线」
+  //   （否则自检查的是单值 BASELINE_SHA，而 G9 比对用的是分组基线 ⇒ 判据与被测物脱节）
   for (const slug of PILOT_SLUGS) {
-    const head = baselineStaticExample(PILOT_FILES[slug]);
-    assert.ok(head !== null, slug + '：基线 ' + BASELINE_SHA + ' 取不到（浅克隆？）');
+    const sha = baselineShaFor(slug);
+    assert.notEqual(sha, 'HEAD', slug + '：基线不得用 HEAD（一提交就失去意义）');
+    const head = baselineStaticExample(PILOT_FILES[slug], sha);
+    assert.ok(head !== null, slug + '：基线 ' + sha + ' 取不到（浅克隆？）');
     assert.ok(!head.includes('$calc_out.'), slug + '：基线里出现了 token ⇒ 基线不是 token 化之前的版本');
   }
+});
+
+test('P168 B3-8 真相源自检：TOKENIZED 必须覆盖 25 个引擎且分组基线不同', () => {
+  assert.equal(TOKENIZED.length, 25, 'TOKENIZED 应有 25 个引擎，实际 ' + TOKENIZED.length);
+  const b37 = TOKENIZED.filter((e) => e.baseline === 'd3b3c1d');
+  const b38 = TOKENIZED.filter((e) => e.baseline === '5c1c789');
+  assert.equal(b37.length, 10, 'B3-7 试点应为 10 个，实际 ' + b37.length);
+  assert.equal(b38.length, 15, 'B3-8 本批应为 15 个，实际 ' + b38.length);
+  assert.equal(new Set(TOKENIZED.map((e) => e.slug)).size, 25, 'TOKENIZED 里有重复 slug');
+  // 基线不得用 HEAD（一提交就失去意义）
+  for (const e of TOKENIZED) assert.notEqual(e.baseline, 'HEAD', e.slug + ' 的基线不得用 HEAD');
 });

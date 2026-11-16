@@ -27,23 +27,16 @@ import '../../src/engines/index.ts';
 import { getAllEngines } from '../../src/core/engines/registry.ts';
 import { extractEngineTokenCodes } from '../../src/lib/calc-output-i18n.ts';
 import { calcOutputTemplates, toolAlias } from '../../src/lib/calc-output-templates.ts';
+// P168 B3-8：「已令牌化引擎清单」的**单一真相源**（试点 10 + 本批 15 = 25）
+import { TOKENIZED } from './p168-tokenized-engines.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const EN = enRaw as Record<string, string>;
 const ZH = zhRaw as Record<string, string>;
 
-const PILOT = [
-  'solopreneur-mrr-calculator',
-  'solopreneur-rent-vs-buy-calculator',
-  'solopreneur-brrrr-calculator',
-  'solopreneur-project-profitability-calculator',
-  'solopreneur-coupon-attribution-calculator',
-  'solopreneur-saas-valuation-calculator',
-  'solopreneur-acv-calculator',
-  'solopreneur-funnel-step-calculator',
-  'solopreneur-activation-rate-calculator',
-  'solopreneur-stickiness-calculator',
-];
+/** P168 B3-8：已令牌化的引擎 —— 真相源在 p168-tokenized-engines.mjs（B3-7 试点 10 + B3-8 本批 15 = 25）
+ *  ⭐ 这是本批发现的**第 5 份**散落清单（brief 只列了 4 份）⇒ 一并收口，否则「散着加必然漏」照旧 */
+const PILOT = TOKENIZED.map((e) => e.slug);
 
 /** slug → 引擎源文件（扫 src/engines/**，不硬编码路径表） */
 function engineFileBySlug(): Map<string, string> {

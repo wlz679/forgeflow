@@ -1,5 +1,8 @@
+import { TOKENIZED } from './p168-tokenized-engines.mjs';
+
 const Q=String.fromCharCode(34); const SQ=String.fromCharCode(39); const NL=String.fromCharCode(10);
-export const PILOT=[ ['solopreneur-mrr-calculator','src/engines/saas/mrr-calculator.ts','mrr'], ['solopreneur-rent-vs-buy-calculator','src/engines/real-estate/rent-vs-buy-calculator.ts','rent_vs_buy'], ['solopreneur-brrrr-calculator','src/engines/real-estate/brrrr-calculator.ts','brrrr'], ['solopreneur-project-profitability-calculator','src/engines/freelance/project-profitability-calculator.ts','project_profitability'], ['solopreneur-coupon-attribution-calculator','src/engines/marketing/coupon-attribution-calculator.ts','coupon_attribution'], ['solopreneur-saas-valuation-calculator','src/engines/valuation/saas-valuation-calculator.ts','saas_valuation'], ['solopreneur-acv-calculator','src/engines/sales/acv-calculator.ts','acv'], ['solopreneur-funnel-step-calculator','src/engines/product-analytics/funnel-step-calculator.ts','funnel_step'], ['solopreneur-activation-rate-calculator','src/engines/product-analytics/activation-rate-calculator.ts','activation_rate'], ['solopreneur-stickiness-calculator','src/engines/product-analytics/stickiness-calculator.ts','stickiness'] ];
+/** 已令牌化的引擎（slug, file, alias）—— 真相源在 p168-tokenized-engines.mjs */
+export const PILOT = TOKENIZED.map((e) => [e.slug, e.file, e.alias]);
 /**
  * 找一个带指定属性标记的元素，返回它的**正文文本**。
  *
