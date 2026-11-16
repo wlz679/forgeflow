@@ -136,6 +136,37 @@ export function extractTokenCodes(text: string): string[] {
 }
 
 /**
+ * 一个引擎**能吐出的全部 token code**（服务端 + 客户端）。
+ *
+ * ⭐ 为什么在运行时算、而不是手写一张 code 清单
+ *   · 手写清单必然与引擎漂移 ⇒ 漏一个 code ⇒ 客户端渲出裸 token（zh 页出现 `$calc_out.…`）。
+ *   · 协议规定「**code 必须来自字符串字面量**」⇒ 静态扫描就是**完备**的。
+ *
+ * ⭐ 两个来源，缺一不可
+ *   ① staticExamples —— 服务端渲静态卡片用的文本（codegen 用服务端 generate() 生成）。
+ *   ② clientConfig.customFn —— 客户端动态卡片用的 JS 源码。
+ *      ⚠️ 里面的 code 是**裸字面量**（`'calc_out.label.x'`，**没有 '$' 前缀**）
+ *         ⇒ extractTokenCodes（认 '$' 前缀）扫不到 ⇒ 必须单独认。
+ */
+export function extractEngineTokenCodes(engine: {
+  staticExamples?: readonly string[];
+  clientConfig?: { customFn?: string };
+}): string[] {
+  const out = new Set<string>();
+  for (const ex of engine.staticExamples ?? []) {
+    for (const c of extractTokenCodes(ex)) out.add(c);
+  }
+  const fn = engine.clientConfig?.customFn ?? '';
+  // ① '$code' 形态（customFn 里也可能直接写 token 字面量）
+  for (const c of extractTokenCodes(fn)) out.add(c);
+  // ② 裸 code 字面量：'calc_out.label.x' / "calc_out.label.x"
+  for (const m of fn.matchAll(/['"](calc_out\.[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)['"]/g)) {
+    out.add(m[1]);
+  }
+  return [...out].sort();
+}
+
+/**
  * 把文本里的 token 替换成模板文本。
  *
  * ⭐ 模板缺失 ⇒ 用 token 自带的英文兜底（可读）；兜底也为空 ⇒ 保留 token 原文

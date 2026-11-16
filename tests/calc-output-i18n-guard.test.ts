@@ -18,9 +18,13 @@ import {
   makeToken,
   renderCalcOutput,
   extractTokenCodes,
+  extractEngineTokenCodes,
   CALC_OUTPUT_TIP_MARKERS,
   isCalcOutputTipLine,
 } from '../src/lib/calc-output-i18n.ts';
+// P168 B3-7 G12：注入子集必须等于**引擎实际吐的 code 集合**⇒ 需要引擎对象本身。
+import '../src/engines/index.ts';
+import { getEngine } from '../src/core/engines/registry.ts';
 import {
   infoUnits,
   readLocale,
@@ -176,7 +180,8 @@ test('B3-7 alias：slug → alias（去前缀/后缀、连字符换下划线）�
 });
 
 test('B3-7 模板子集：共享 label/section + 本工具 row；不含别的工具的 row', () => {
-  const tpls = calcOutputTemplates('zh', 'mrr');
+  const mrrCodes = extractEngineTokenCodes(getEngine('solopreneur-mrr-calculator')!);
+  const tpls = calcOutputTemplates('zh', 'mrr', mrrCodes);
   const keys = Object.keys(tpls);
   // ⚠️ locale 键在 Task 16 落库前是空的 ⇒ 这条会红（预期红，见计划 Task 2 Step 4）
   assert.ok(keys.length > 0, '模板子集为空（locale 还没有 calc_out.* 键）');
@@ -189,7 +194,7 @@ test('B3-7 模板子集：共享 label/section + 本工具 row；不含别的工
     );
   }
   // 注入用的 JSON 串不含裸 <（防 </script> 截断）
-  const json = calcOutputTemplatesJson('zh', 'mrr');
+  const json = calcOutputTemplatesJson('zh', 'mrr', mrrCodes);
   assert.ok(!json.includes('<'), 'JSON 里出现裸 <');
   assert.doesNotThrow(() => JSON.parse(json));
 });
@@ -661,4 +666,54 @@ test('P168 B3-7 G11：tip 行标记必须语言无关（zh 的 translateCalcOutp
   // 非 tip 行不得被误杀
   assert.equal(isCalcOutputTipLine('• ARR（×12）: $174,000.00'), false);
   assert.equal(isCalcOutputTipLine(''), false);
+});
+
+// ── G12：注入子集 == 本引擎**实际会吐**的 code 集合 ───────────────────────
+// ⭐ 为什么要有这条（2026-11-13 实测）
+//   原实现把**全仓 184 条共享键 + 本工具行码**全部注入每个页面
+//   ⇒ rent_vs_buy 页面 **209 KB > 200 KB 阈值**（page-size 守卫红）。
+//   ⇒ 裁剪到「本引擎实际吐的 code」后：mrr 238→89 条 / rent_vs_buy 210→46 条。
+//
+// ⭐ 双向严格：少一个 ⇒ 客户端渲出裸 token；多一个 ⇒ 页面带不用的模板。
+test('P168 B3-7 G12：注入的模板子集必须恰好等于本引擎声明的 code 集合（且 en/zh 都有值）', () => {
+  const locales = { en: readLocale('en'), zh: readLocale('zh') } as const;
+  const totalCalcOut = Object.keys(locales.en).filter((k) => k.startsWith('calc_out.')).length;
+  const problems: string[] = [];
+  let checked = 0;
+  for (const slug of PILOT_SLUGS) {
+    const engine = getEngine(slug);
+    if (!engine) { problems.push(slug + '：引擎没注册'); continue; }
+    const codes = extractEngineTokenCodes(engine);
+    // ⭐ 防真空绿：提取器坏了就是空集 ⇒ 下面的「完全相等」会虚绿
+    if (codes.length === 0) { problems.push(slug + '：提取到的 code 数为 0（提取器坏了？）'); continue; }
+    checked++;
+    const alias = toolAlias(slug);
+    for (const lang of ['en', 'zh'] as const) {
+      const tpls = calcOutputTemplates(lang, alias, codes);
+      const got = Object.keys(tpls).sort();
+      const want = [...codes].sort();
+      const missing = want.filter((c) => !got.includes(c));
+      const extra = got.filter((c) => !want.includes(c));
+      if (missing.length) problems.push(lang + '/' + alias + '：注入表少了 ' + missing.join(', '));
+      if (extra.length) problems.push(lang + '/' + alias + '：注入表多了 ' + extra.join(', '));
+      for (const c of codes) {
+        if (typeof locales.en[c] !== 'string') problems.push(lang + '/' + alias + '：' + c + ' 在 en.json 缺值');
+        if (typeof locales.zh[c] !== 'string') problems.push(lang + '/' + alias + '：' + c + ' 在 zh.json 缺值');
+      }
+      // ⭐ 非真空绿：裁剪必须**真的在生效**（否则裁剪失效一样绿）
+      if (got.length >= totalCalcOut) {
+        problems.push(lang + '/' + alias + '：注入 ' + got.length + ' 条 ≥ 全仓 calc_out.* 的 ' + totalCalcOut + ' 条 ⇒ 裁剪没生效');
+      }
+    }
+  }
+  assert.ok(checked === PILOT_SLUGS.size, '试点没测全：' + checked + '/' + PILOT_SLUGS.size);
+  assert.deepEqual(problems, [], problems.join(' | '));
+});
+
+// ── G12b：页面接线必须把 code 集合传给模板函数 ─────────────────────
+// ⭐ 为什么还要一条源码级断言：G12 只能证明「函数能裁剪」，
+//   证不了「页面确实调用它」⇒ 页面会默默使用旧的全量路径。
+test('P168 B3-7 G12b：页面必须把「引擎声明的 code 集合」传给模板函数', () => {
+  assert.match(astroSrc, /extractEngineTokenCodes\(engine\)/, '页面没有算引擎声明的 code 集合');
+  assert.match(astroSrc, /calcOutputTemplates\(pageLang, calcOutAlias, calcOutCodes\)/, '页面没有把 code 集合传给模板函数');
 });

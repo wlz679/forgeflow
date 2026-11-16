@@ -169,6 +169,61 @@ function isOffender(token) {
   return true;
 }
 
+/**
+ * ⭐⭐ 剥掉标签，**必须按引号状态**扫描标签结束位置（2026-11-13 实测踩坑）。
+ *
+ *   属性值里可能有 '>'（例：data-calc-output-templates 里装的是整张模板表 JSON，
+ *   locale 值形如 'growth > 20%'）⇒ 用 /<[^>]*>/g 剥标签会**落在属性值里**
+ *   ⇒ 标签只被剥掉一半 ⇒ 属性里的 JSON 键名（calc_out.xxx）被当成正文
+ *   ⇒ 实测 2,480 处误报（每个试点页 ~248 处）。
+ *
+ *   ⇒ 逐字符走，遇引号切换 quote 状态，'>' 只在无引号时才算标签结束。
+ *   （仓库已有同款正确实现：tests/scripts/p168-card-text.mjs 的 tagEnd）
+ */
+function tagEnd(html, lt) {
+  let k = lt + 1;
+  let quote = '';
+  while (k < html.length) {
+    const c = html[k];
+    if (quote) {
+      if (c === quote) quote = '';
+    } else if (c === '"' || c === "'") {
+      quote = c;
+    } else if (c === '>') {
+      return k;
+    }
+    k++;
+  }
+  return -1;
+}
+
+/**
+ * 剥标签（引号状态感知）—— 返回不含标签的正文。
+ *
+ * ⭐ 标签要替成**空格**（不是抹掉）—— 直接抹会把相邻两个文本节点**粘成一份**
+ *   （如 'decision.' + '<span>' + 'Productivity' ⇒ 'decision.Productivity'）⇒ 又造出一批假报。
+ */
+function stripTags(html) {
+  let out = '';
+  let i = 0;
+  while (i < html.length) {
+    const lt = html.indexOf('<', i);
+    if (lt < 0) {
+      out += html.slice(i);
+      break;
+    }
+    out += html.slice(i, lt);
+    const te = tagEnd(html, lt);
+    if (te < 0) {
+      out += html.slice(lt);
+      break;
+    }
+    out += ' ';
+    i = te + 1;
+  }
+  return out;
+}
+
 /** Scan one HTML document. Returns [{ token, where }]. */
 function scanHtml(html) {
   const hits = [];
@@ -178,7 +233,9 @@ function scanHtml(html) {
     .replace(/<!--[\s\S]*?-->/g, ' ');
 
   // 1. text nodes
-  const text = markup.replace(/<[^>]*>/g, ' ');
+  //    ⭐⭐ 不能用 /<[^>]*>/g：属性值里的 '>' 会把标签剥到一半
+  //      （属性里的 JSON 键名被当成正文 ⇒ 误报）。
+  const text = stripTags(markup);
   for (const m of text.matchAll(DOTTED_TOKEN)) {
     if (isOffender(m[0])) hits.push({ token: m[0], where: 'text' });
   }
@@ -224,6 +281,16 @@ test('legitimate markup is not flagged', () => {
     + '</body></html>';
   const hits = scanHtml(html);
   assert.deepEqual(hits, [], `false positives: ${JSON.stringify(hits)}`);
+});
+
+test('a ">" inside an attribute value must not leak the attribute body into the text scan', () => {
+  // ⭐ 回归锁（2026-11-13）：属性值里的 '>' 会让 /<[^>]*>/g 只剥掉**半个**标签
+  //   ⇒ 属性**后半段**（含 calc_out.* 键名）被当成正文 ⇒ 实测 2,480 处误报。
+  //   真实来源：ResultCard 的 data-export / data-calc-output-raw 属性里装着**整段卡片文本**
+  //   （locale 值形如 'true ROI >= 100%'）⇒ 属性值里必然有 '>'。
+  const html = '<div id="s" data-calc-output-raw=">= 100% $calc_out.label.starting_mrr|Starting MRR|"></div>';
+  const hits = scanHtml(html);
+  assert.deepEqual(hits, [], '属性值里的 > 把属性内容泄漏成正文：' + JSON.stringify(hits));
 });
 
 test('no raw i18n key in any built page', () => {

@@ -17,7 +17,7 @@ import { resolveLiveTokens } from '../../lib/live-price';
 import DecisionSupport from '../../components/DecisionSupport.astro';
 import { hasDecisionLines, stripDecisionTip } from '../../lib/decision-support';
 // P168 B3-7：结果卡片的「语义码 + 值」渲染（服务端侧）。
-import { renderCalcOutput } from '../../lib/calc-output-i18n';
+import { renderCalcOutput, extractEngineTokenCodes } from '../../lib/calc-output-i18n';
 import { calcOutputTemplates, calcOutputTemplatesJson, toolAlias } from '../../lib/calc-output-templates';
 import { relatedTools } from '../../data/internal-links';
 import { tools } from '../../data/tools';
@@ -62,8 +62,13 @@ const pageLang = getLang(Astro);
 const calcOutAlias = toolAlias(slug!);
 const engineSampleText = (engine.staticExamples ?? []).join('\n');
 const hasCalcOutTokens = engineSampleText.includes('$calc_out.');
-const calcOutTemplates = hasCalcOutTokens ? calcOutputTemplates(pageLang, calcOutAlias) : {};
-const calcOutTemplatesJson = hasCalcOutTokens ? calcOutputTemplatesJson(pageLang, calcOutAlias) : '';
+// ⭐ 注入表只包含**本工具实际会吐的 code**（staticExamples ∩ customFn）
+//   —— 否则每个页面都要带上全仓 184 条共享键
+//   ⇒ rent_vs_buy 页面 209 KB > 200 KB 阈值（page-size 守卫红）。
+//   ⇒ 裁剪后每页降 8~12 KB（rent_vs_buy 210→46 条）。
+const calcOutCodes = hasCalcOutTokens ? extractEngineTokenCodes(engine) : [];
+const calcOutTemplates = hasCalcOutTokens ? calcOutputTemplates(pageLang, calcOutAlias, calcOutCodes) : {};
+const calcOutTemplatesJson = hasCalcOutTokens ? calcOutputTemplatesJson(pageLang, calcOutAlias, calcOutCodes) : '';
 
 const related = relatedTools[slug!]?.map(s => tools.find(t => t.slug === s)!).filter(Boolean) ?? [];
 const relatedTopics = TOPICS.filter((t) => t.calculatorSlugs.includes(slug!));

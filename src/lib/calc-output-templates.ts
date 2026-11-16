@@ -31,24 +31,43 @@ export function toolAlias(slug: string): string {
  * 该 lang 下、本工具要注入的模板子集。
  *
  * 组成：
- *   · calc_out.label.*    —— 跨工具共享的标签（全部）
- *   · calc_out.section.*  —— 跨工具共享的章节标题（全部）
- *   · calc_out.<alias>.*  —— 本工具独有的行码（全部）
+ *   · calc_out.label.*    —— 跨工具共享的标签
+ *   · calc_out.section.*  —— 跨工具共享的章节标题
+ *   · calc_out.<alias>.*  —— 本工具独有的行码
+ *   且**只保留 `codes` 里那些** —— 本工具**实际会吐**的 code。
+ *
+ * ⭐ 为什么必须按 codes 裁剪（2026-11-13 实测）
+ *   原实现把**全仓 184 条共享键 + 本工具行码**全部注入
+ *   ⇒ rent_vs_buy 的页面多带 16 KB（属性转义后 12.9 KB）
+ *   ⇒ 页面体积 **209 KB > 200 KB 阈值**⇒ page-size 守卫红。
+ *   ⇒ 裁剪到本工具实际吐的 code（mrr 238→89 条 / rent_vs_buy 210→46 条）
+ *   ⇒ 页面回到 **200 KB 以下**。
  *
  * ⭐ 别的工具的 row **不注入** —— 客户端根本不会吐那些 code。
  */
-export function calcOutputTemplates(lang: CalcOutLang, alias: string): Record<string, string> {
+export function calcOutputTemplates(
+  lang: CalcOutLang,
+  alias: string,
+  codes: readonly string[],
+): Record<string, string> {
+  const allow = new Set(codes);
   const out: Record<string, string> = {};
   for (const [k, v] of Object.entries(LOCALES[lang] ?? {})) {
     if (!k.startsWith(CALC_OUTPUT_KEY_PREFIX)) continue;
     if (typeof v !== 'string') continue;
     const second = k.slice(CALC_OUTPUT_KEY_PREFIX.length).split('.')[0];
-    if (second === 'label' || second === 'section' || second === alias) out[k] = v;
+    if (!(second === 'label' || second === 'section' || second === alias)) continue;
+    if (!allow.has(k)) continue;
+    out[k] = v;
   }
   return out;
 }
 
 /** 给 DOM 属性用的 JSON 串：'<' 转义 ⇒ 不会截断 </script> */
-export function calcOutputTemplatesJson(lang: CalcOutLang, alias: string): string {
-  return JSON.stringify(calcOutputTemplates(lang, alias)).replace(/</g, '\\u003c');
+export function calcOutputTemplatesJson(
+  lang: CalcOutLang,
+  alias: string,
+  codes: readonly string[],
+): string {
+  return JSON.stringify(calcOutputTemplates(lang, alias, codes)).replace(/</g, '\\u003c');
 }

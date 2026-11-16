@@ -2,14 +2,15 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import '../src/engines/saas/mrr-calculator.ts';
 import { getEngine } from '../src/core/engines/registry.ts';
-import { renderCalcOutput } from '../src/lib/calc-output-i18n.ts';
+import { renderCalcOutput, extractEngineTokenCodes } from '../src/lib/calc-output-i18n.ts';
 import { calcOutputTemplates } from '../src/lib/calc-output-templates.ts';
 
 const engine = getEngine('solopreneur-mrr-calculator');
 
 // P168 B3-7：引擎输出现在是**语义码 + 值**（token），英文原文在 token 的兜底段里
 //   ⇒ 断言「用户看到的英文」必须**先渲染**（locale.en 模板 ⇒ 与英文页逐字一致）。
-const TEMPLATES_EN = calcOutputTemplates('en', 'mrr');
+// ⇒ 注入表按**本引擎实际吐的 code** 裁剪（否则页面会带上全仓共享键）
+const TEMPLATES_EN = calcOutputTemplates('en', 'mrr', extractEngineTokenCodes(engine!));
 function en(r: string[]): string[] {
   return r.map((s) => renderCalcOutput(s, TEMPLATES_EN));
 }
