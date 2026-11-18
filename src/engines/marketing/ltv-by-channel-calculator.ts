@@ -1,6 +1,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-9：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // LTV by Channel Calculator (P6-2) — Business v3 standard
@@ -101,8 +106,8 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: no data entered
   if (!anyData) {
     return [
-      '⏰ LTV by Channel Calculator\n\n' +
-        '📊 Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.',
+      '$calc_out.section.ltv_by_channel_calculator|⏰ LTV by Channel Calculator|\n\n' +
+        makeToken('calc_out.ltv_by_channel.row.enter_inputs_required', '📊 Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.'),
     ];
   }
 
@@ -117,23 +122,24 @@ function calculate(inputs: Record<string, string>): string[] {
   let tableEmoji: string;
   let tableLabel: string;
   const finiteRatios = channels.filter((c) => isFinite(c.cac) && c.ratio > 0).map((c) => c.ratio);
+  // ── P168 B3-9：健康度五档 —— 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出）──
   if (finiteRatios.length === 0) {
     tableEmoji = '⚪';
-    tableLabel = 'No channels with conversions — enter conversion counts to compare';
+    tableLabel = makeToken('calc_out.ltv_by_channel.row.health_no_channels', 'No channels with conversions — enter conversion counts to compare');
   } else {
     const minRatio = Math.min(...finiteRatios);
     if (minRatio >= HEALTH_BANDS.excellent) {
       tableEmoji = '🟢';
-      tableLabel = 'All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively';
+      tableLabel = makeToken('calc_out.ltv_by_channel.row.health_all_green', 'All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively');
     } else if (minRatio >= HEALTH_BANDS.good[0]) {
       tableEmoji = '🟡';
-      tableLabel = 'All channels 🟡 — every channel > 1x but some < 3x; reallocate to top performers';
+      tableLabel = makeToken('calc_out.ltv_by_channel.row.health_all_yellow', 'All channels 🟡 — every channel > 1x but some < 3x; reallocate to top performers');
     } else if (minRatio >= HEALTH_BANDS.warning[0]) {
       tableEmoji = '🟠';
-      tableLabel = 'At least one channel 🟠 — 0.5-1x LTV:CAC; investigate creative/targeting';
+      tableLabel = makeToken('calc_out.ltv_by_channel.row.health_some_orange', 'At least one channel 🟠 — 0.5-1x LTV:CAC; investigate creative/targeting');
     } else {
       tableEmoji = '🔴';
-      tableLabel = 'At least one channel 🔴 — losing money on that channel; pause or rework';
+      tableLabel = makeToken('calc_out.ltv_by_channel.row.health_some_red', 'At least one channel 🔴 — losing money on that channel; pause or rework');
     }
   }
 
@@ -150,11 +156,11 @@ function calculate(inputs: Record<string, string>): string[] {
     const newLoserSpend = loser.spend - reallocAmount;
     const newLoserCAC = newLoserSpend / Math.max(loser.conversions, 1);
     const newLoserRatio = loser.ltv / newLoserCAC;
-    reallocWhatIf = 'Shift 25% from ' + loser.id + ' → ' + winner.id + ':\n' +
-      '  • ' + winner.id + ': ratio ' + winner.ratio.toFixed(2) + 'x → ' + newWinnerRatio.toFixed(2) + 'x (CAC rises)\n' +
-      '  • ' + loser.id + ': ratio ' + loser.ratio.toFixed(2) + 'x → ' + newLoserRatio.toFixed(2) + 'x (improves if convs stay)';
+    reallocWhatIf = makeToken('calc_out.ltv_by_channel.row.whatif_shift_25pct', 'Shift 25% from ' + loser.id + ' → ' + winner.id + ':', { from: loser.id, to: winner.id }) + '\n' +
+      '  • ' + makeToken('calc_out.ltv_by_channel.row.whatif_winner_ratio', winner.id + ': ratio ' + winner.ratio.toFixed(2) + 'x → ' + newWinnerRatio.toFixed(2) + 'x (CAC rises)', { id: winner.id, from: winner.ratio.toFixed(2), to: newWinnerRatio.toFixed(2) }) + '\n' +
+      '  • ' + makeToken('calc_out.ltv_by_channel.row.whatif_loser_ratio', loser.id + ': ratio ' + loser.ratio.toFixed(2) + 'x → ' + newLoserRatio.toFixed(2) + 'x (improves if convs stay)', { id: loser.id, from: loser.ratio.toFixed(2), to: newLoserRatio.toFixed(2) });
   } else {
-    reallocWhatIf = 'Add a 2nd channel to compare (currently only one valid channel).';
+    reallocWhatIf = makeToken('calc_out.ltv_by_channel.row.whatif_need_second_channel', 'Add a 2nd channel to compare (currently only one valid channel).');
   }
 
   // Break-Even: target CAC for lowest-band channel
@@ -167,13 +173,13 @@ function calculate(inputs: Record<string, string>): string[] {
     const currentCAC = lowestChannel.cac;
     const cacCutNeeded = currentCAC - targetCAC;
     breakEvenTarget =
-      'To push ' + lowestChannel.id + ' from ' + lowestChannel.ratio.toFixed(2) + 'x to 🟢 (≥3.0x):\n' +
-      '  • Target CAC: ' + money0(targetCAC) + ' (currently ' + money0(currentCAC) + ')\n' +
-      '  • Need to cut CAC by ' + money0(cacCutNeeded) + ' — improve CR by ' +
+      makeToken('calc_out.ltv_by_channel.row.breakeven_push_to_green', 'To push ' + lowestChannel.id + ' from ' + lowestChannel.ratio.toFixed(2) + 'x to 🟢 (≥3.0x):', { id: lowestChannel.id, ratio: lowestChannel.ratio.toFixed(2) }) + '\n' +
+      '  • ' + makeToken('calc_out.ltv_by_channel.row.breakeven_target_cac', 'Target CAC: ' + money0(targetCAC) + ' (currently ' + money0(currentCAC) + ')', { target: money0(targetCAC), current: money0(currentCAC) }) + '\n' +
+      '  • ' + makeToken('calc_out.ltv_by_channel.row.breakeven_cut_cac', 'Need to cut CAC by ' + money0(cacCutNeeded) + ' — improve CR by ' +
       ((cacCutNeeded / currentCAC) * 100).toFixed(0) + '% OR reduce spend ' +
-      ((cacCutNeeded / currentCAC) * 100).toFixed(0) + '%';
+      ((cacCutNeeded / currentCAC) * 100).toFixed(0) + '%', { cut: money0(cacCutNeeded), pct: ((cacCutNeeded / currentCAC) * 100).toFixed(0) });
   } else {
-    breakEvenTarget = 'Enter conversion counts to see break-even targets.';
+    breakEvenTarget = makeToken('calc_out.ltv_by_channel.row.breakeven_need_conversions', 'Enter conversion counts to see break-even targets.');
   }
 
   // Milestone: scaling winner 2x
@@ -181,11 +187,11 @@ function calculate(inputs: Record<string, string>): string[] {
   if (winner && isFinite(winner.cac)) {
     const scaleRevenue = winner.conversions * 2 * winner.ltv;
     const scaleProfit = scaleRevenue - winner.spend * 2;
-    milestone = 'Scaling ' + winner.id + ' 2x (same ratio):\n' +
-      '  • Revenue: ' + money(scaleRevenue) + '\n' +
-      '  • Profit (after ad cost): ' + money(scaleProfit);
+    milestone = makeToken('calc_out.ltv_by_channel.row.milestone_scaling', 'Scaling ' + winner.id + ' 2x (same ratio):', { id: winner.id }) + '\n' +
+      '  • $calc_out.label.revenue|Revenue|: ' + money(scaleRevenue) + '\n' +
+      '  • $calc_out.label.profit_after_ad_cost|Profit (after ad cost)|: ' + money(scaleProfit);
   } else {
-    milestone = 'Enter data to project scaling outcomes.';
+    milestone = makeToken('calc_out.ltv_by_channel.row.milestone_need_data', 'Enter data to project scaling outcomes.');
   }
 
   // Tip
@@ -234,38 +240,47 @@ function calculate(inputs: Record<string, string>): string[] {
       const cacStr = isFinite(c.cac) ? money0(c.cac) : '∞ (no conv)';
       const ratioStr = isFinite(c.cac) ? c.ratio.toFixed(2) + 'x' : '—';
       const rank = i === 0 ? '🏆 ' : '   ';
-      return rank + emoji + ' ' + c.id + '  ·  spend ' + money(c.spend) +
-        ' · conv ' + c.conversions + ' · LTV ' + money(c.ltv) +
-        ' · CAC ' + cacStr + ' · ' + ratioStr;
+      // ⚠️ 排名标记与健康度 emoji 留在 token 之外（语言无关）；整行其余部分令牌化
+      return rank + emoji + ' ' + makeToken(
+        'calc_out.ltv_by_channel.row.channel_row',
+        c.id + '  ·  spend ' + money(c.spend) +
+          ' · conv ' + c.conversions + ' · LTV ' + money(c.ltv) +
+          ' · CAC ' + cacStr + ' · ' + ratioStr,
+        { id: c.id, spend: money(c.spend), conv: String(c.conversions), ltv: money(c.ltv), cac: cacStr, ratio: ratioStr },
+      );
     })
     .join('\n');
 
+  // ── P168 B3-9：输出行逐行令牌化 ─────────────────────────────────────────
+  //   · 章节标题 / 标签 ⇒ **字面量 token**（对齐空格留在 token 之外）
+  //   · 带运行时数值的整行 ⇒ makeToken(code, fallback, params)（fallback 与 params 同源）
+  //   ⚠️ 「💡 Tip: {"code":…}」是 P168 决策建议 i18n 的**既定形态** ⇒ **一个字都不动**
   let r =
-    '⏰ LTV by Channel Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.ltv_by_channel_calculator|⏰ LTV by Channel Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ' + tableEmoji + ' ' + tableLabel + '\n' +
-    '• Winner: ' + (winner ? winner.id + ' (' + winner.ratio.toFixed(2) + 'x)' : 'n/a') +
-    '  ·  Loser: ' + (loser ? loser.id + ' (' + loser.ratio.toFixed(2) + 'x)' : 'n/a') + '\n' +
-    '• Blended CAC: ' + (isFinite(blended) ? money0(blended) : '∞') +
-    '  ·  Blended LTV:CAC: ' + (isFinite(blendedRatio) ? blendedRatio.toFixed(2) + 'x' : '—') + '\n\n' +
+    '• $calc_out.label.winner|Winner|: ' + (winner ? winner.id + ' (' + winner.ratio.toFixed(2) + 'x)' : 'n/a') +
+    '  ·  $calc_out.label.loser|Loser|: ' + (loser ? loser.id + ' (' + loser.ratio.toFixed(2) + 'x)' : 'n/a') + '\n' +
+    '• $calc_out.label.blended_cac|Blended CAC|: ' + (isFinite(blended) ? money0(blended) : '∞') +
+    '  ·  $calc_out.label.blended_ltv_cac|Blended LTV:CAC|: ' + (isFinite(blendedRatio) ? blendedRatio.toFixed(2) + 'x' : '—') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     tableRows + '\n\n' +
-    '• Total spend:  ' + money(totalSpend) + '\n' +
-    '• Total conv:   ' + totalConv + '\n' +
-    '• Blended CAC:  ' + (isFinite(blended) ? money0(blended) : '∞') + '\n\n' +
+    '• $calc_out.label.total_spend|Total spend|:  ' + money(totalSpend) + '\n' +
+    '• $calc_out.label.total_conv|Total conv|:   ' + totalConv + '\n' +
+    '• $calc_out.label.blended_cac|Blended CAC|:  ' + (isFinite(blended) ? money0(blended) : '∞') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     reallocWhatIf + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     breakEvenTarget + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     milestone + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
@@ -283,16 +298,19 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (minified, mirrors calculate()) ==============
 
 const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function cCAC(s,c){if(c<=0)return Infinity;return s/c;}" +
   "function cRatio(l,c){if(c<=0||!isFinite(c))return 0;return l/c;}" +
-  "function totalsF(cs){return cs.reduce((a,c)=>({ts:a.ts+c.s,tc:a.tc+c.c}),{ts:0,tc:0});}" +
+  "function totalsF(cs){return cs.reduce((a,c)=>({ts:a.ts+c.spend,tc:a.tc+c.conversions}),{ts:0,tc:0});}" +
   "function bCAC(cs){var t=totalsF(cs);if(t.tc<=0)return Infinity;return t.ts/t.tc;}" +
   "function rankF(cs){return[...cs].sort(function(a,b){if(!isFinite(a.cac)&&!isFinite(b.cac))return 0;if(!isFinite(a.cac))return 1;if(!isFinite(b.cac))return -1;return b.ratio-a.ratio;});}" +
   "function hBand(r){if(!isFinite(r)||r<=0)return'\\u26AA';if(r>=3)return'\\uD83D\\uDFE2';if(r>=1)return'\\uD83D\\uDFE1';if(r>=0.5)return'\\uD83D\\uDFE0';return'\\uD83D\\uDD34';}" +
   "var ch=[];var anyData=false;" +
   "var cnn=function(x){return Math.max(0,x)};" +
   "for(var i=1;i<=5;i++){var sp=cnn(parseFloat(inputs['ch'+i+'_spend'])||0);var cv=cnn(parseFloat(inputs['ch'+i+'_conv'])||0);var lv=cnn(parseFloat(inputs['ch'+i+'_ltv'])||0);if(sp>0||cv>0||lv>0)anyData=true;var cac=cCAC(sp,cv);ch.push({id:'Ch'+i,spend:sp,conversions:cv,ltv:lv,cac:cac,ratio:cRatio(lv,cac)});}" +
-  "if(!anyData){return['\\u23F0 LTV by Channel Calculator\\n\\n\\uD83D\\uDCCA Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.'];}" +
+  "if(!anyData){return['$calc_out.section.ltv_by_channel_calculator|\\u23F0 LTV by Channel Calculator|\\n\\n'+tk('calc_out.ltv_by_channel.row.enter_inputs_required','\\uD83D\\uDCCA Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.')];}" +
   "var ranked=rankF(ch);" +
   "var winner=ranked.find(function(c){return isFinite(c.cac);});" +
   "var loser=[...ranked].reverse().find(function(c){return isFinite(c.cac);});" +
@@ -300,51 +318,51 @@ const customFn =
   "var blRatio=t.tc>0?ch.reduce(function(a,c){return a+c.ltv*c.conversions;},0)/t.tc/blen:0;" +
   "var finiteRatios=ch.filter(function(c){return isFinite(c.cac)&&c.ratio>0;}).map(function(c){return c.ratio;});" +
   "var tEmo='',tLab='';" +
-  "if(finiteRatios.length===0){tEmo='\\u26AA';tLab='No channels with conversions \\u2014 enter conversion counts to compare';}" +
+  "if(finiteRatios.length===0){tEmo='\\u26AA';tLab=tk('calc_out.ltv_by_channel.row.health_no_channels','No channels with conversions \\u2014 enter conversion counts to compare');}" +
   "else{var minR=Math.min.apply(null,finiteRatios);" +
-  "if(minR>=3){tEmo='\\uD83D\\uDFE2';tLab='All channels \\uD83D\\uDFE2 \\u2014 every channel > 3x LTV:CAC; scale aggressively';}" +
-  "else if(minR>=1){tEmo='\\uD83D\\uDFE1';tLab='All channels \\uD83D\\uDFE1 \\u2014 every channel > 1x but some < 3x; reallocate to top performers';}" +
-  "else if(minR>=0.5){tEmo='\\uD83D\\uDFE0';tLab='At least one channel \\uD83D\\uDFE0 \\u2014 0.5-1x LTV:CAC; investigate creative/targeting';}" +
-  "else{tEmo='\\uD83D\\uDD34';tLab='At least one channel \\uD83D\\uDD34 \\u2014 losing money on that channel; pause or rework';}}" +
+  "if(minR>=3){tEmo='\\uD83D\\uDFE2';tLab=tk('calc_out.ltv_by_channel.row.health_all_green','All channels \\uD83D\\uDFE2 \\u2014 every channel > 3x LTV:CAC; scale aggressively');}" +
+  "else if(minR>=1){tEmo='\\uD83D\\uDFE1';tLab=tk('calc_out.ltv_by_channel.row.health_all_yellow','All channels \\uD83D\\uDFE1 \\u2014 every channel > 1x but some < 3x; reallocate to top performers');}" +
+  "else if(minR>=0.5){tEmo='\\uD83D\\uDFE0';tLab=tk('calc_out.ltv_by_channel.row.health_some_orange','At least one channel \\uD83D\\uDFE0 \\u2014 0.5-1x LTV:CAC; investigate creative/targeting');}" +
+  "else{tEmo='\\uD83D\\uDD34';tLab=tk('calc_out.ltv_by_channel.row.health_some_red','At least one channel \\uD83D\\uDD34 \\u2014 losing money on that channel; pause or rework');}}" +
   "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
   "function money0(n){return isFinite(n)?'$'+n.toFixed(2):'\\u221E';}" +
   "var realloc='';" +
-  "if(winner&&loser&&winner.id!==loser.id){var ra=loser.spend*0.25;var nws=winner.spend+ra;var nwc=nws/winner.conversions;var nwr=winner.ltv/nwc;var nls=loser.spend-ra;var nlc=nls/Math.max(loser.conversions,1);var nlr=loser.ltv/nlc;realloc='Shift 25% from '+loser.id+' \\u2192 '+winner.id+':\\n  \\u2022 '+winner.id+': ratio '+winner.ratio.toFixed(2)+'x \\u2192 '+nwr.toFixed(2)+'x (CAC rises)\\n  \\u2022 '+loser.id+': ratio '+loser.ratio.toFixed(2)+'x \\u2192 '+nlr.toFixed(2)+'x (improves if convs stay)';}else{realloc='Add a 2nd channel to compare (currently only one valid channel).';}" +
+  "if(winner&&loser&&winner.id!==loser.id){var ra=loser.spend*0.25;var nws=winner.spend+ra;var nwc=nws/winner.conversions;var nwr=winner.ltv/nwc;var nls=loser.spend-ra;var nlc=nls/Math.max(loser.conversions,1);var nlr=loser.ltv/nlc;realloc=tk('calc_out.ltv_by_channel.row.whatif_shift_25pct','Shift 25% from '+loser.id+' \\u2192 '+winner.id+':',{from:loser.id,to:winner.id})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.whatif_winner_ratio',winner.id+': ratio '+winner.ratio.toFixed(2)+'x \\u2192 '+nwr.toFixed(2)+'x (CAC rises)',{id:winner.id,from:winner.ratio.toFixed(2),to:nwr.toFixed(2)})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.whatif_loser_ratio',loser.id+': ratio '+loser.ratio.toFixed(2)+'x \\u2192 '+nlr.toFixed(2)+'x (improves if convs stay)',{id:loser.id,from:loser.ratio.toFixed(2),to:nlr.toFixed(2)});}else{realloc=tk('calc_out.ltv_by_channel.row.whatif_need_second_channel','Add a 2nd channel to compare (currently only one valid channel).');}" +
   "var lc=finiteRatios.length>0?ch.filter(function(c){return isFinite(c.cac)&&c.ratio>0;}).reduce(function(min,c){return c.ratio<min.ratio?c:min;}):null;" +
   "var beT='';" +
-  "if(lc){var tgtCAC=lc.ltv/1;var curCAC=lc.cac;var cut=curCAC-tgtCAC;beT='To push '+lc.id+' from '+lc.ratio.toFixed(2)+'x to \\uD83D\\uDFE2 (\\u22653.0x):\\n  \\u2022 Target CAC: '+money0(tgtCAC)+' (currently '+money0(curCAC)+')\\n  \\u2022 Need to cut CAC by '+money0(cut)+' \\u2014 improve CR by '+((cut/curCAC)*100).toFixed(0)+'% OR reduce spend '+((cut/curCAC)*100).toFixed(0)+'%';}else{beT='Enter conversion counts to see break-even targets.';}" +
+  "if(lc){var tgtCAC=lc.ltv/1;var curCAC=lc.cac;var cut=curCAC-tgtCAC;beT=tk('calc_out.ltv_by_channel.row.breakeven_push_to_green','To push '+lc.id+' from '+lc.ratio.toFixed(2)+'x to \\uD83D\\uDFE2 (\\u22653.0x):',{id:lc.id,ratio:lc.ratio.toFixed(2)})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.breakeven_target_cac','Target CAC: '+money0(tgtCAC)+' (currently '+money0(curCAC)+')',{target:money0(tgtCAC),current:money0(curCAC)})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.breakeven_cut_cac','Need to cut CAC by '+money0(cut)+' \\u2014 improve CR by '+((cut/curCAC)*100).toFixed(0)+'% OR reduce spend '+((cut/curCAC)*100).toFixed(0)+'%',{cut:money0(cut),pct:((cut/curCAC)*100).toFixed(0)});}else{beT=tk('calc_out.ltv_by_channel.row.breakeven_need_conversions','Enter conversion counts to see break-even targets.');}" +
   "var ms='';" +
-  "if(winner&&isFinite(winner.cac)){var sRev=winner.conversions*2*winner.ltv;var sProf=sRev-winner.spend*2;ms='Scaling '+winner.id+' 2x (same ratio):\\n  \\u2022 Revenue: '+money(sRev)+'\\n  \\u2022 Profit (after ad cost): '+money(sProf);}else{ms='Enter data to project scaling outcomes.';}" +
+  "if(winner&&isFinite(winner.cac)){var sRev=winner.conversions*2*winner.ltv;var sProf=sRev-winner.spend*2;ms=tk('calc_out.ltv_by_channel.row.milestone_scaling','Scaling '+winner.id+' 2x (same ratio):',{id:winner.id})+'\\n  \\u2022 $calc_out.label.revenue|Revenue|: '+money(sRev)+'\\n  \\u2022 $calc_out.label.profit_after_ad_cost|Profit (after ad cost)|: '+money(sProf);}else{ms=tk('calc_out.ltv_by_channel.row.milestone_need_data','Enter data to project scaling outcomes.');}" +
   "var tip='';" +
   "if(finiteRatios.length===0){tip=JSON.stringify({code:'ltv_no_data',params:{}});}else if(winner&&loser&&winner.id===loser.id){tip=JSON.stringify({code:'ltv_single_channel',params:{}});}else if(winner&&loser){var wr=winner.ratio;var lr=loser.ratio;if(wr>=3&&lr<1){tip=JSON.stringify({code:'ltv_strong_winner',params:{winner:winner.id,winnerRatio:wr.toFixed(1),loser:loser.id,loserRatio:lr.toFixed(1)}});}else if(wr>=3&&lr>=1){tip=JSON.stringify({code:'ltv_both_healthy',params:{winner:winner.id,ratio:(wr/lr).toFixed(1),loser:loser.id}});}else if(wr<3&&lr<1){tip=JSON.stringify({code:'ltv_no_green',params:{}});}else{tip=JSON.stringify({code:'ltv_similar_ratios',params:{}});}}else{tip=JSON.stringify({code:'ltv_no_data',params:{}});}" +
-  "var tr=ranked.map(function(c,i){var e=hBand(c.ratio);var cs=isFinite(c.cac)?money0(c.cac):'\\u221E (no conv)';var rs=isFinite(c.cac)?c.ratio.toFixed(2)+'x':'\\u2014';var rk=i===0?'\\uD83C\\uDFC6 ':'   ';return rk+e+' '+c.id+'  \\u00B7  spend '+money(c.spend)+' \\u00B7 conv '+c.conversions+' \\u00B7 LTV '+money(c.ltv)+' \\u00B7 CAC '+cs+' \\u00B7 '+rs;}).join('\\n');" +
+  "var tr=ranked.map(function(c,i){var e=hBand(c.ratio);var cs=isFinite(c.cac)?money0(c.cac):'\\u221E (no conv)';var rs=isFinite(c.cac)?c.ratio.toFixed(2)+'x':'\\u2014';var rk=i===0?'\\uD83C\\uDFC6 ':'   ';return rk+e+' '+tk('calc_out.ltv_by_channel.row.channel_row',c.id+'  \\u00B7  spend '+money(c.spend)+' \\u00B7 conv '+c.conversions+' \\u00B7 LTV '+money(c.ltv)+' \\u00B7 CAC '+cs+' \\u00B7 '+rs,{id:c.id,spend:money(c.spend),conv:String(c.conversions),ltv:money(c.ltv),cac:cs,ratio:rs});}).join('\\n');" +
   "var r2='';" +
-  "r2+='\\u23F0 LTV by Channel Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r2+='$calc_out.section.ltv_by_channel_calculator|\\u23F0 LTV by Channel Calculator|\\n\\n';" +
+  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n';" +
   "r2+='\\u2022 '+tEmo+' '+tLab+'\\n';" +
-  "r2+='\\u2022 Winner: '+(winner?winner.id+' ('+winner.ratio.toFixed(2)+'x)':'n/a')+'  \\u00B7  Loser: '+(loser?loser.id+' ('+loser.ratio.toFixed(2)+'x)':'n/a')+'\\n';" +
-  "r2+='\\u2022 Blended CAC: '+(isFinite(blen)?money0(blen):'\\u221E')+'  \\u00B7  Blended LTV:CAC: '+(isFinite(blRatio)?blRatio.toFixed(2)+'x':'\\u2014')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r2+='\\u2022 $calc_out.label.winner|Winner|: '+(winner?winner.id+' ('+winner.ratio.toFixed(2)+'x)':'n/a')+'  \\u00B7  $calc_out.label.loser|Loser|: '+(loser?loser.id+' ('+loser.ratio.toFixed(2)+'x)':'n/a')+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.blended_cac|Blended CAC|: '+(isFinite(blen)?money0(blen):'\\u221E')+'  \\u00B7  $calc_out.label.blended_ltv_cac|Blended LTV:CAC|: '+(isFinite(blRatio)?blRatio.toFixed(2)+'x':'\\u2014')+'\\n\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n';" +
   "r2+=tr+'\\n\\n';" +
-  "r2+='\\u2022 Total spend:  '+money(t.ts)+'\\n';" +
-  "r2+='\\u2022 Total conv:   '+t.tc+'\\n';" +
-  "r2+='\\u2022 Blended CAC:  '+(isFinite(blen)?money0(blen):'\\u221E')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+  "r2+='\\u2022 $calc_out.label.total_spend|Total spend|:  '+money(t.ts)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.total_conv|Total conv|:   '+t.tc+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.blended_cac|Blended CAC|:  '+(isFinite(blen)?money0(blen):'\\u221E')+'\\n\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n';" +
   "r2+=realloc+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n';" +
   "r2+=beT+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
+  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n';" +
   "r2+=ms+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
+    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
   "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
   "return [r2];";
 
@@ -414,7 +432,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ LTV by Channel Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively\n• Winner: Ch1 (25.00x)  ·  Loser: Ch4 (13.33x)\n• Blended CAC: $32.90  ·  Blended LTV:CAC: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x\n   🟢 Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x\n   🟢 Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x\n   🟢 Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x\n   🟢 Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x\n\n• Total spend:  $5,100\n• Total conv:   155\n• Blended CAC:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nShift 25% from Ch4 → Ch1:\n  • Ch1: ratio 25.00x → 19.23x (CAC rises)\n  • Ch4: ratio 13.33x → 17.78x (improves if convs stay)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTo push Ch4 from 13.33x to 🟢 (≥3.0x):\n  • Target CAC: $400.00 (currently $30.00)\n  • Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nScaling Ch1 2x (same ratio):\n  • Revenue: $50,000\n  • Profit (after ad cost): $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"ltv_both_healthy","params":{"winner":"Ch1","ratio":"1.9","loser":"Ch4"}}\n'],
+  staticExamples: ['$calc_out.section.ltv_by_channel_calculator|⏰ LTV by Channel Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 $calc_out.ltv_by_channel.row.health_all_green|All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively|\n• $calc_out.label.winner|Winner|: Ch1 (25.00x)  ·  $calc_out.label.loser|Loser|: Ch4 (13.33x)\n• $calc_out.label.blended_cac|Blended CAC|: $32.90  ·  $calc_out.label.blended_ltv_cac|Blended LTV:CAC|: 17.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 🟢 $calc_out.ltv_by_channel.row.channel_row{"id":"Ch1","spend":"$1,000","conv":"50","ltv":"$500","cac":"$20.00","ratio":"25.00x"}|Ch1  ·  spend $1,000 · conv 50 · LTV $500 · CAC $20.00 · 25.00x|\n   🟢 $calc_out.ltv_by_channel.row.channel_row{"id":"Ch5","spend":"$600","conv":"15","ltv":"$700","cac":"$40.00","ratio":"17.50x"}|Ch5  ·  spend $600 · conv 15 · LTV $700 · CAC $40.00 · 17.50x|\n   🟢 $calc_out.ltv_by_channel.row.channel_row{"id":"Ch2","spend":"$1,500","conv":"30","ltv":"$800","cac":"$50.00","ratio":"16.00x"}|Ch2  ·  spend $1,500 · conv 30 · LTV $800 · CAC $50.00 · 16.00x|\n   🟢 $calc_out.ltv_by_channel.row.channel_row{"id":"Ch3","spend":"$800","conv":"20","ltv":"$600","cac":"$40.00","ratio":"15.00x"}|Ch3  ·  spend $800 · conv 20 · LTV $600 · CAC $40.00 · 15.00x|\n   🟢 $calc_out.ltv_by_channel.row.channel_row{"id":"Ch4","spend":"$1,200","conv":"40","ltv":"$400","cac":"$30.00","ratio":"13.33x"}|Ch4  ·  spend $1,200 · conv 40 · LTV $400 · CAC $30.00 · 13.33x|\n\n• $calc_out.label.total_spend|Total spend|:  $5,100\n• $calc_out.label.total_conv|Total conv|:   155\n• $calc_out.label.blended_cac|Blended CAC|:  $32.90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.ltv_by_channel.row.whatif_shift_25pct{"from":"Ch4","to":"Ch1"}|Shift 25% from Ch4 → Ch1:|\n  • $calc_out.ltv_by_channel.row.whatif_winner_ratio{"id":"Ch1","from":"25.00","to":"19.23"}|Ch1: ratio 25.00x → 19.23x (CAC rises)|\n  • $calc_out.ltv_by_channel.row.whatif_loser_ratio{"id":"Ch4","from":"13.33","to":"17.78"}|Ch4: ratio 13.33x → 17.78x (improves if convs stay)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.ltv_by_channel.row.breakeven_push_to_green{"id":"Ch4","ratio":"13.33"}|To push Ch4 from 13.33x to 🟢 (≥3.0x):|\n  • $calc_out.ltv_by_channel.row.breakeven_target_cac{"target":"$400.00","current":"$30.00"}|Target CAC: $400.00 (currently $30.00)|\n  • $calc_out.ltv_by_channel.row.breakeven_cut_cac{"cut":"$-370.00","pct":"-1233"}|Need to cut CAC by $-370.00 — improve CR by -1233% OR reduce spend -1233%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.ltv_by_channel.row.milestone_scaling{"id":"Ch1"}|Scaling Ch1 2x (same ratio):|\n  • $calc_out.label.revenue|Revenue|: $50,000\n  • $calc_out.label.profit_after_ad_cost|Profit (after ad cost)|: $48,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"ltv_both_healthy","params":{"winner":"Ch1","ratio":"1.9","loser":"Ch4"}}\n'],
   faq: [
     { q: 'How many channels should I compare?', a: 'Up to 5 — typical solopreneurs use 3-4 (Google Ads, Meta, TikTok, Email). Empty fields are skipped; only fill channels with data.' },
     { q: 'What is a good LTV:CAC ratio?', a: '3:1 is the textbook benchmark (🟢). 1:1 means you break even (🟡). Below 1:1 means losing money (🔴). World-class SaaS targets 5:1+' },

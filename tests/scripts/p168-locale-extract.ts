@@ -122,7 +122,10 @@ export function extractAll(only: string[]) {
       const tpl = s !== undefined ? s : (r !== undefined ? r : (p !== undefined ? p : m));
       if (tpl === undefined) { (en[c] === undefined && zh[c] === undefined ? noTemplateMissing : noTemplateCovered).push(e.slug + ' :: ' + c); continue; }
       if (en[c] === undefined) { newKeys[c] = tpl; newCount++; }
-      else if (r !== undefined && en[c] !== r) {
+      // ⭐ 2026-11-17 B3-9（实测修）：漂移基线必须是**推导模板 tpl**，不是运行时值 r
+      //   ⇒ r 是「运行时烘焙值」（数值已填死）⇒ locale（正确的模板）≠ r ⇒ **假阳性**
+      //   ⇒ 真正的漂移 = locale.en ≠ 推导模板（用户会看到错文案 / 错数值）
+      else if (en[c] !== tpl) {
         coveredDrift.push(e.slug + ' :: ' + c + '\n    locale=' + JSON.stringify(en[c]) + '\n    derived=' + JSON.stringify(tpl));
       }
     }

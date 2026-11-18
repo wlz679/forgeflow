@@ -81,14 +81,29 @@ export function replaceWordValue(text: string, value: string, placeholder: strin
   const isWord = (ch: string) => /[A-Za-z0-9_$]/.test(ch);
   const firstIsWord = isWord(value[0]);
   const lastIsWord = isWord(value[value.length - 1]);
+  // ⭐ 数值型取值：边界判定改用「不得拆数字」而不是「不得拆单词」
+  //   原因（2026-11-17 B3-9 实测）：取值后面的**单位后缀**（`pp` / `x` / `h` / `mo`）也是单词字符
+  //   ⇒ 旧规则要求「值后不是单词字符」⇒ `60.0pp` 里的 `60.0` 永远换不了
+  //   ⇒ 模板里的数值被**冻结**（页面显示的是默认输入的数，不是用户实际输入的数）
+  //   ⇒ 例：注释留存器的 `Gap: +0.0pp needed`（实际应为 `Gap: +{gap}pp needed`）
+  //   ⇒ 数值型的边界：前后**不得是数字/小数点**（不拆更长的数字）
+  //   ⇒ 但**允许后缀字母**（`pp`/`x`/`h`）⇒ `60.0pp` ⇒ `{gap}pp` ✓
+  const numericLike = /^[\$+\-]?[0-9][0-9,.]*%?$/.test(value) && /[0-9]/.test(value);
+  const isDigitish = (ch: string) => /[0-9.,]/.test(ch);
   let out = '';
   let i = 0;
   while (i < text.length) {
     if (text.startsWith(value, i)) {
       const before = i > 0 ? text[i - 1] : '';
       const after = i + value.length < text.length ? text[i + value.length] : '';
-      const okBefore = !firstIsWord || before === '' || !isWord(before);
-      const okAfter = !lastIsWord || after === '' || !isWord(after);
+      // ⭐ 数值型取值的边界判定改用「**不得拆数字**」（isDigitish）而不是「不得拆单词」
+      //   ⇒ 允许**单位后缀**（`pp` / `x` / `h` / `mo` / `%`）⇒ `60.0pp` ⇒ `{gap}pp` ✓
+      //     （2026-11-17 B3-9 实测踩坑：numericLike / isDigitish 算出来了却**没接上**
+      //      ⇒ `1.25x` 里的 `1.25` 永远换不掉 ⇒ 模板数值被**冻结**）
+      //   ⇒ 同时保证不拆更长的数字（`1,500` 里的 `500` 不单独替换）
+      const boundary = numericLike ? isDigitish : isWord;
+      const okBefore = !firstIsWord || before === '' || !boundary(before);
+      const okAfter = !lastIsWord || after === '' || !boundary(after);
       if (okBefore && okAfter) { out += placeholder; i += value.length; continue; }
     }
     out += text[i];
@@ -106,38 +121,46 @@ export function substituteValues(text: string, params: Record<string, string>): 
   return out;
 }
 
-/** 把源码表达式切成「代码片段 / 字符串片段」交替的数组（引号内的内容单独成段）
- *
- *  为何需要（2026-11-16 实测踩坑）：参数表达式的**标识符**常常与英文文案里的单词同名
+/** 源码表达式的「代码区标志」：与 src **同长度**，字符串字面量区域标 false */
+/**
+ *  为何需要（2026-11-17 B3-9 实测修）：
+ *  参数表达式的**标识符**常常与英文文案里的单词同名
  *  （例：params = { fees: money(volume.yearly.fees) }，而文案写着 'At your volume, ... in fees.'）
  *  ⇒ 若不区分代码区与字符串区，'volume' / 'fees' 会被当成参数替换 ⇒ 英文文案被污染。
- *  ⇒ 参数表达式**只可能出现在代码区** ⇒ 只在代码片段里替换，字符串片段一律不动。 */
-function splitCodeStrings(src: string): { code: string; str: boolean }[] {
-  const out: { code: string; str: boolean }[] = [];
-  let cur = '';
+ *  ⇒ 参数表达式**只可能出现在代码区** ⇒ 只在代码区替换，字符串区一律不动。
+ *
+ *  ⭐ 为什么用「标志数组」而不是「切成分段数组」（2026-11-17 B3-9 实测踩坑）：
+ *  候选表达式**自身含字符串字面量**时（例 `String(m).padStart(2, " ")`）
+ *  它**横跨「代码段 + 字符串段 + 代码段」** ⇒ 分段匹配**必然失配**
+ *  ⇒ 参数没被替换 ⇒ 模板里残留运行时表达式 ⇒ 推导结果不可用。
+ *  ⇒ 标志数组与原串**同长度对齐** ⇒ 可以跨段匹配，同时仍能排除字符串区。 */
+function codeRegions(src: string): boolean[] {
+  const flags: boolean[] = new Array(src.length).fill(false);
   let quote = '';
   let i = 0;
   while (i < src.length) {
     const c = src[i];
     if (quote) {
-      cur += c;
-      if (c === '\\') { cur += src[i + 1] ?? ''; i += 2; continue; }
-      if (c === quote) { out.push({ code: cur, str: true }); cur = ''; quote = ''; }
+      flags[i] = false;
+      if (c === '\\') {
+        if (i + 1 < src.length) flags[i + 1] = false;
+        i += 2;
+        continue;
+      }
+      if (c === quote) quote = '';
       i++;
       continue;
     }
     if (c === String.fromCharCode(39) || c === String.fromCharCode(34) || c === String.fromCharCode(96)) {
-      if (cur) { out.push({ code: cur, str: false }); cur = ''; }
       quote = c;
-      cur = c;
+      flags[i] = false;
       i++;
       continue;
     }
-    cur += c;
+    flags[i] = true;
     i++;
   }
-  if (cur) out.push({ code: cur, str: quote ? true : false });
-  return out;
+  return flags;
 }
 
 /** 词边界敏感的标识符替换：每命中一次调一次 nextMark() 拿一个新的哨兵 */
@@ -161,7 +184,7 @@ function replaceIdentAll(src: string, ident: string, nextMark: () => string): st
 
 /** 把参数**源表达式**换回 {param} 占位，再对 fallback 表达式求值 */
 function templateFromExpr(expr: string, paramSrc: { k: string; expr: string }[]): string | null {
-  const parts = splitCodeStrings(expr);
+  const codeFlags = codeRegions(expr);
   const cands: { k: string; text: string }[] = [];
   for (const p of paramSrc) {
     cands.push({ k: p.k, text: p.expr });
@@ -189,19 +212,45 @@ function templateFromExpr(expr: string, paramSrc: { k: string; expr: string }[])
     marks.push(k);
     return m;
   };
-  for (const c of uniq) {
-    for (const p of parts) {
-      if (p.str) continue;
-      if (p.code.indexOf(c.text) < 0) continue;
-      if (isIdent(c.text)) {
-        p.code = replaceIdentAll(p.code, c.text, () => nextMark(c.k));
-      } else {
-        const pieces = p.code.split(c.text);
-        p.code = pieces.map((s, idx) => (idx < pieces.length - 1 ? s + nextMark(c.k) : s)).join('');
+  // ⭐⭐ 2026-11-17 B3-9（实测修）：**单遍扫插入**（而不是「按候选逐个扫」）
+  //   ⇒ 为什么：「按候选逐个扫」会让插入的占位符**改变后续候选的偏移**
+  //     ⇒ 后续候选可能匹配到占位符内部⇒ 模板被污染。
+  //   ⇒ 单遍扫只插入一次 ⇒ 不会影响后续匹配。
+  //   · 候选按长度降序（长的先匹配）⇒ 更具体的表达式先命中。
+  //   · 代码区判定：标识符候选要求**覆盖区全在代码区**；整表达式候选要求**起点在代码区**。
+  const out: string[] = [];
+  let i = 0;
+  while (i < expr.length) {
+    if (codeFlags[i]) {
+      let hit: { k: string; text: string } | null = null;
+      for (const c of uniq) {
+        if (!expr.startsWith(c.text, i)) continue;
+        if (isIdent(c.text)) {
+          let allCode = true;
+          for (let j = i; j < i + c.text.length; j++) {
+            if (!codeFlags[j]) { allCode = false; break; }
+          }
+          if (!allCode) continue;
+          // ⭐ 词边界（保留原语义）：不能在更长标识符**内部**拿到匹配
+          //   （例 `dropM` 不能命中 `dropMIdx`）⇒ 否则会把参数同名的两处都替掉
+          const before = i > 0 ? expr[i - 1] : '';
+          const after = i + c.text.length < expr.length ? expr[i + c.text.length] : '';
+          const isWord = (ch: string) => /[A-Za-z0-9_$]/.test(ch);
+          if ((before !== '' && isWord(before)) || (after !== '' && isWord(after))) continue;
+        }
+        hit = c;
+        break;
+      }
+      if (hit) {
+        out.push(nextMark(hit.k));
+        i += hit.text.length;
+        continue;
       }
     }
+    out.push(expr[i]);
+    i++;
   }
-  let e = parts.map((p) => p.code).join('');
+  let e = out.join('');
   for (let i = 0; i < marks.length; i++) {
     e = e.split(QUOTE + S1 + i + S2 + QUOTE).join(QUOTE + LBRACE + marks[i] + RBRACE + QUOTE);
   }
@@ -220,27 +269,21 @@ function parseParamSrc(src: string): { k: string; expr: string }[] {
   return out;
 }
 
-/** 一个引擎源码里全部 token 的英文模板 */
-export function sourceTemplates(file: string): Record<string, string> {
+/** 一个引擎源码里全部 token 的英文模板
+ *
+ *  ⭐ 附带**来源标记**（哪个分支推出来的）：
+ *    · 'constructor' —— 从 `makeToken(code, expr, params)` 的**表达式**结构化推导（可靠）
+ *    · 'literal'     —— 从源码里的字面量 `$code|...|` 扫出来的（值是**烘焙**的，有冻结风险）
+ *  ⇒ 工具与守卫可据此判断「这条模板的数值会不会被冻住」。 */
+export function sourceTemplatesWithOrigin(file: string): { tpl: Record<string, string>; origin: Record<string, string>; ctor: Record<string, string>; lit: Record<string, string> } {
   const src = readFileSync(file, 'utf8');
-  const out: Record<string, string> = {};
-  // ① 字面量形态（带或不带 params 组）
-  const lit = /\$((?:calc_out\.)[a-z0-9_.]+)(?:\{([^{}]*)\})?\|([^|\n]*)\|/g;
-  let m: RegExpExecArray | null;
-  while ((m = lit.exec(src)) !== null) {
-    let original = m[3];
-    if (m[2]) {
-      let params: Record<string, string> = {};
-      try { params = JSON.parse('{' + m[2] + '}'); } catch { params = {}; }
-      original = substituteValues(original, params);
-    }
-    if (out[m[1]] === undefined) out[m[1]] = original;
-  }
-  // ② 构造器形态
+  const ctor: Record<string, string> = {};
+  const ctorParams: Record<string, string[]> = {};
+  const origin: Record<string, string> = {};
   const call = /(?:makeToken|tk)\(\s*(['"])((?:calc_out\.)[a-z0-9_.]+)\1/g;
+  let m: RegExpExecArray | null;
   while ((m = call.exec(src)) !== null) {
     const code = m[2];
-    // ⚠️ 跳过 code 字符串与第一个实参之间的逗号（漏掉它 ⇒ 第一个实参变成「, 表达式」⇒ 求值失败）
     let ap = m.index + m[0].length;
     while (ap < src.length && (src[ap] === ' ' || src[ap] === '\t' || src[ap] === '\n' || src[ap] === '\r')) ap++;
     if (src[ap] === ',') ap++;
@@ -248,7 +291,50 @@ export function sourceTemplates(file: string): Record<string, string> {
     const expr = args[0] ?? '';
     const paramSrc = args[1] ? parseParamSrc(args[1]) : [];
     const tpl = templateFromExpr(expr, paramSrc);
-    if (tpl !== null && out[code] === undefined) out[code] = unescapeUnicode(tpl);
+    if (tpl !== null && ctor[code] === undefined) {
+      ctor[code] = unescapeUnicode(tpl);
+      ctorParams[code] = paramSrc.map((p) => p.k);
+    }
   }
-  return out;
+  const lit: Record<string, string> = {};
+  const litRe = /\$((?:calc_out\.)[a-z0-9_.]+)(?:\{([^{}]*)\})?\|([^|\n]*)\|/g;
+  while ((m = litRe.exec(src)) !== null) {
+    let original = m[3];
+    if (m[2]) {
+      let params: Record<string, string> = {};
+      try { params = JSON.parse('{' + m[2] + '}'); } catch { params = {}; }
+      original = substituteValues(original, params);
+    }
+    if (lit[m[1]] === undefined) lit[m[1]] = original;
+  }
+  // ⭐⭐ 选择规则（2026-11-17 B3-9 实测定案）：**构造器分支优先，但仅当它把全部参数都回填成了占位符**
+  //   ⇒ 否则回落字面量分支
+  //   ⇒ 理由（两个分支各自的弱点）：
+  //     · 构造器分支（结构化推导）能把「运行时值」推回参数，
+  //       但当两个参数**共用同一个标识符**（例如两个参数都跟 `dropIdx` 有关）⇒
+  //       推导会把两处都替成同一个占位符 ⇒ 参数丢失
+  //     · 字面量分支（从 staticExamples 的烘焙值反推）能补上那些参数，
+  //       但值后面跟着**单位后缀**（`pp`/`x`/`h`）时反推失败 ⇒ 数值被**冻结**
+  //   ⇒ 两分支必须双向校验（下面的工具对每个 code 做「回填后渲染 == 点值」验证）
+  const out: Record<string, string> = {};
+  for (const code of Object.keys(ctor)) {
+    const keys = ctorParams[code] ?? [];
+    const complete = keys.length > 0 && keys.every((k) => ctor[code].includes('{' + k + '}'));
+    if (complete) { out[code] = ctor[code]; origin[code] = 'constructor'; }
+  }
+  for (const code of Object.keys(lit)) {
+    if (out[code] !== undefined) continue;
+    out[code] = lit[code];
+    origin[code] = 'literal';
+  }
+  return { tpl: out, origin, ctor, lit };
+}
+
+/** 一个引擎源码里全部 token 的英文模板 */
+export function sourceTemplates(file: string): Record<string, string> {
+  // ⭐ 2026-11-17 B3-9（实测修）：**与 sourceTemplatesWithOrigin 用同一条选择规则**
+  //   ⇒ 之前这里「构造器优先、字面量补缺」，那边「构造器**且全部参数都回填成占位符**才用」
+  //   ⇒ 同一个 code 在两个工具里给出**不同模板** ⇒ 落库与体检互相打架（本批实测）
+  //   ⇒ 现在统一走 sourceTemplatesWithOrigin（构造器完整才用，否则回落字面量）。
+  return sourceTemplatesWithOrigin(file).tpl;
 }

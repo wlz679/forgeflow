@@ -114,6 +114,42 @@ export function tipCodeRegex(code: string): RegExp {
  */
 export const MAX_TOOL_PAGE_SIMILARITY = 19;
 
+
+/**
+ * 一个 locale 值是否**含可翻译的自然语言**。
+ *
+ * ⭐ 为什么需要它（2026-11-17 B3-9 实测）
+ *   G1 断言「zh 与 en 逐字相同 ⇒ 没翻」+「中文厚度 ≥ 英文 × 0.7」。
+ *   但有一类值**根本不含自然语言**：纯数值片段（`{rev}/mo`、`{from}% → {to}%`）、
+ *   公式（`  = LTV ÷ CAC`）、行业缩写（`AOV` / `GPU` / `ROI` / `📈 GRR / NRR`）。
+ *   ⇒ 它们的 zh ��于英文是**正确的**（不是漏翻）⇒ 对它们套「≠ en」「厚度比」两条判据 = 假红。
+ *   实测：新增 675 键里有 **13** 个属此类；既有 1012 键里 **0** 个（B3-7/B3-8 恰好没碰到）。
+ *
+ * ⭐ 判据口径（**只用词形，不看语义**）：
+ *   ① 去掉 `{param}` 占位符；
+ *   ② 剩下的英文词里，**长度 < 3**（`/mo`、`yr`…）与**已知行业缩写**不计入；
+ *   ③ 若还剩 ≥1 个普通英文词 ⇒ 含自然语言（该受 G1 两条判据约束）。
+ *
+ * ⚠️ 缩写表是**显式枚举**（不是「全大写就算缩写」）——
+ *   「AOV / GPU / ROI」全大写，但「Epoch」不是缩写（是普通词）⇒ 必须分开。
+ *   ⇒ 若全大写一律豁免，`Epoch` 这类「全大写但仍是普通词」的键会被放过 ⇒ 漏译。
+ */
+export const CALC_OUT_ABBREVIATIONS = new Set([
+  'AOV', 'ARPU', 'ARR', 'CAC', 'CTR', 'EPS', 'ESP', 'GMV', 'GPU', 'GRR', 'LTV',
+  'MRR', 'NRR', 'ROI', 'SaaS', 'AI', 'API', 'USD', 'COO', 'CRM', 'SEO', 'SaaS',
+]);
+
+/** 这个值是否含可翻译的自然语言（见上方说明） */
+export function hasNaturalLanguage(value: string): boolean {
+  const cleaned = String(value).replace(/\{\w+\}/g, ' ');
+  for (const m of cleaned.matchAll(/[A-Za-z][A-Za-z'\u2019\-]*/g)) {
+    const w = m[0];
+    if (w.length < 3) continue;
+    if (CALC_OUT_ABBREVIATIONS.has(w.toUpperCase())) continue;
+    return true;
+  }
+  return false;
+}
 /** 信息量：Latin word 记 1，CJK 字符记 0.5（与既有决策层守卫同口径） */
 export function infoUnits(text: string): number {
   let latin = 0;

@@ -96,7 +96,11 @@ export function baselineStaticExample(file: string, sha?: string): string | null
   } catch {
     return null;
   }
-  const m = src.match(/staticExamples:\s*\[\s*'((?:[^'\\]|\\.)*)'/);
+  // ⭐ 2026-11-17 B3-9 实测修：`[` 与字符串字面量之间**可能夹着注释行**
+  //   （实测 claude / gemini / deepseek 三个引擎的 staticExamples 里都有注释）
+  //   ⇒ 旧正则 `\[\s*'` 匹配不到 ⇒ G9 报「基线取不到」⇒ **整条判据失效（真空绿）**。
+  //   ⇒ 改成：`[` 之后**跳过注释与空白**，再取字符串字面量。
+  const m = src.match(/staticExamples:\s*\[(?:[^'\]]*?)?'((?:[^'\\]|\\.)*)'/);
   if (!m) return null;
   return m[1].replace(/\\n/g, NL).replace(/\\'/g, "'");
 }

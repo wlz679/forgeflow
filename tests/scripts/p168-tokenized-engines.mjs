@@ -44,7 +44,37 @@ export const B3_8_BATCH = [
   { slug: 'solopreneur-inventory-turnover-calculator', file: 'src/engines/operations/inventory-turnover-calculator.ts', alias: 'inventory_turnover', baseline: '5c1c789' },
 ];
 
-export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH];
+/** @type {{slug:string,file:string,alias:string,baseline:string}[]} */
+export const B3_9_BATCH = [
+  { slug: 'solopreneur-email-list-revenue-calculator', file: 'src/engines/freelance/email-list-revenue-calculator.ts', alias: 'email_list_revenue', baseline: '5c1bd52' },
+  { slug: 'solopreneur-cap-rate-calculator', file: 'src/engines/real-estate/cap-rate-calculator.ts', alias: 'cap_rate', baseline: '5c1bd52' },
+  { slug: 'solopreneur-roas-calculator', file: 'src/engines/marketing/roas-calculator.ts', alias: 'roas', baseline: '5c1bd52' },
+  { slug: 'solopreneur-cohort-retention-calculator', file: 'src/engines/marketing/cohort-retention-calculator.ts', alias: 'cohort_retention', baseline: '5c1bd52' },
+  { slug: 'solopreneur-market-size-estimator', file: 'src/engines/saas/market-size-estimator.ts', alias: 'market_size_estimator', baseline: '5c1bd52' },
+  { slug: 'solopreneur-ltv-by-channel-calculator', file: 'src/engines/marketing/ltv-by-channel-calculator.ts', alias: 'ltv_by_channel', baseline: '5c1bd52' },
+  { slug: 'solopreneur-churn-rate-calculator', file: 'src/engines/saas/churn-rate-calculator.ts', alias: 'churn_rate', baseline: '5c1bd52' },
+  { slug: 'solopreneur-pipeline-coverage-calculator', file: 'src/engines/sales/pipeline-coverage-calculator.ts', alias: 'pipeline_coverage', baseline: '5c1bd52' },
+  { slug: 'solopreneur-cac-calculator', file: 'src/engines/valuation/cac-calculator.ts', alias: 'cac', baseline: '5c1bd52' },
+  { slug: 'solopreneur-ai-training-cost-estimator', file: 'src/engines/ai-cost/ai-training-cost-estimator.ts', alias: 'ai_training_cost_estimator', baseline: '5c1bd52' },
+  { slug: 'solopreneur-content-marketing-roi-calculator', file: 'src/engines/marketing/content-marketing-roi-calculator.ts', alias: 'content_marketing_roi', baseline: '5c1bd52' },
+  { slug: 'solopreneur-revenue-projector', file: 'src/engines/saas/revenue-projector.ts', alias: 'revenue_projector', baseline: '5c1bd52' },
+  { slug: 'solopreneur-logo-churn-rate-calculator', file: 'src/engines/retention/logo-churn-rate-calculator.ts', alias: 'logo_churn_rate', baseline: '5c1bd52' },
+  { slug: 'solopreneur-email-campaign-roi-calculator', file: 'src/engines/marketing/email-campaign-roi-calculator.ts', alias: 'email_campaign_roi', baseline: '5c1bd52' },
+  { slug: 'solopreneur-renewal-rate-calculator', file: 'src/engines/retention/renewal-rate-calculator.ts', alias: 'renewal_rate', baseline: '5c1bd52' },
+];
+
+
+/** @type {{slug:string,file:string,alias:string,baseline:string}[]} */
+export const B3_9_AI_COST = [
+  { slug: 'solopreneur-claude-api-cost-calculator', file: 'src/engines/ai-cost/claude-api-cost-calculator.ts', alias: 'claude_api_cost', baseline: '5c1bd52' },
+  { slug: 'solopreneur-gemini-api-cost-calculator', file: 'src/engines/ai-cost/gemini-api-cost-calculator.ts', alias: 'gemini_api_cost', baseline: '5c1bd52' },
+  { slug: 'solopreneur-deepseek-api-cost-calculator', file: 'src/engines/ai-cost/deepseek-api-cost-calculator.ts', alias: 'deepseek_api_cost', baseline: '5c1bd52' },
+  { slug: 'solopreneur-ai-image-cost-calculator', file: 'src/engines/ai-cost/ai-image-generation-cost-calculator.ts', alias: 'ai_image_cost', baseline: '5c1bd52' },
+  { slug: 'solopreneur-gpu-cloud-cost-calculator', file: 'src/engines/ai-cost/gpu-cloud-cost-calculator.ts', alias: 'gpu_cloud_cost', baseline: '5c1bd52' },
+];
+
+export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST];
+
 
 /** 按 slug 取基线 SHA（未知 slug **抛错**，不能静默回落）
  *

@@ -2,6 +2,7 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import PRICING from '../../data/ai-pricing.json';
 import { pickInteractiveModels, pickCrossProviderModels } from '../../data/ai-pricing-popular';
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // --- Model definitions ---
 interface ModelInfo {
@@ -224,30 +225,35 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-9: DELETE the "Pricing last updated" line (same recipe as ai-training-cost-estimator).
+  //   codegen already strips it from staticExamples[0] (scripts/codegen-examples.mjs:317) and the
+  //   page renders the same date as a badge => keeping it only makes the server output one line
+  //   longer than the static card (pre-existing G6 drift). After tokenization both sides must match
+  //   character for character. The visible English page does not change.
   out.push('');
 
   // ================================================================
   // Section 1: Header
   // ================================================================
-  const modeEmoji = pricingMode === 'batch' ? '⚡' : '🔴';
-  const modeLabel = pricingMode === 'batch' ? 'Batch Pricing (50% off)' : 'Real-time Pricing';
-  let headerLine = modeEmoji + ' ' + modeLabel;
+  // P168 B3-9: the pricing-mode label is a token (same code on server and client).
+  const modeLabel = pricingMode === 'batch'
+    ? makeToken('calc_out.claude_api_cost.row.pricing_mode_batch', '⚡ Batch Pricing (50% off)')
+    : makeToken('calc_out.claude_api_cost.row.pricing_mode_realtime', '🔴 Real-time Pricing');
+  let headerLine = modeLabel;
   if (cachingActive) {
     const ttlLabel = cacheTtl === '1hour' ? '1-hour TTL' : '5-min TTL';
-    headerLine += ' | 💾 Cache: ' + cacheReadHitRate + '% hit (' + ttlLabel + ')';
+    headerLine += ' | ' + makeToken('calc_out.claude_api_cost.row.cache_header', '💾 Cache: ' + cacheReadHitRate + '% hit (' + ttlLabel + ')', { hit: String(cacheReadHitRate), ttl: ttlLabel });
   }
   out.push(headerLine);
   out.push('');
   out.push(
-    '📥 Input: ' + lc(inTokens) + ' tokens/req | ' +
-    '📤 Output: ' + lc(outTokens) + ' tokens/req | ' +
+    makeToken('calc_out.claude_api_cost.row.input_req', '📥 Input') + ': ' + lc(inTokens) + ' tokens/req | ' +
+    makeToken('calc_out.claude_api_cost.row.output_req', '📤 Output') + ': ' + lc(outTokens) + ' tokens/req | ' +
     '🔄 ' + lc(reqPerDay) + ' reqs/day',
   );
   if (cachingActive) {
     out.push(
-      '💾 Cache Write: ' + lc(cacheWriteTokens) + ' tokens/req (' +
-      (writeMult === 1.25 ? '1.25×' : '2×') + ' write, 0.1× read)',
+      makeToken('calc_out.claude_api_cost.row.cache_write_line', '💾 Cache Write: ' + lc(cacheWriteTokens) + ' tokens/req (' + (writeMult === 1.25 ? '1.25×' : '2×') + ' write, 0.1× read)', { tokens: lc(cacheWriteTokens), mult: writeMult === 1.25 ? '1.25×' : '2×' }),
     );
   }
   out.push('');
@@ -255,7 +261,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 2: Bar Chart
   // ================================================================
-  out.push('📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.claude_api_cost.row.cost_comparison', '📊 Cost Comparison') + ' (' + lc(reqPerDay) + ' reqs/day)');
   out.push(SEP.repeat(54));
   const BAR_WIDTH = 40;
   for (const c of allCosts) {
@@ -273,7 +279,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 3: Detail Cards — selected models
   // ================================================================
-  out.push('📋 Selected Model Details');
+  out.push(makeToken('calc_out.claude_api_cost.row.selected_model_details', '📋 Selected Model Details'));
   out.push(SEP.repeat(60));
   for (const c of selectedCosts) {
     const icon = FAMILY_ICONS[c.info.family];
@@ -282,15 +288,16 @@ function calculate(inputs: Record<string, string>): string[] {
     const annualCost = c.monthlyCost * 12;
 
     out.push(
-      icon + ' ' + c.info.name + ' (' + famLabel + ') | Context: ' +
-        c.info.contextWindow + ' | Max Output: ' + c.info.maxOutput,
+      icon + ' ' + c.info.name + ' (' + famLabel + ') | ' +
+      makeToken('calc_out.claude_api_cost.row.context_label', 'Context') + ': ' + c.info.contextWindow + ' | ' +
+      makeToken('calc_out.claude_api_cost.row.max_output_label', 'Max Output') + ': ' + c.info.maxOutput,
     );
     out.push(DASH.repeat(44));
 
     // Input cost per-request breakdown
     const inputCostLine = (inTokens / 1_000_000) * c.inputPrice;
     out.push(
-      'Input:  ' +
+      makeToken('calc_out.claude_api_cost.row.input_label', 'Input') + ':  ' +
         pad(lc(inTokens), 7) +
         ' tokens × ' +
         fmt(c.inputPrice) +
@@ -301,7 +308,7 @@ function calculate(inputs: Record<string, string>): string[] {
     // Output cost per-request breakdown
     const outputCostLine = (outTokens / 1_000_000) * c.outputPrice;
     out.push(
-      'Output: ' +
+      makeToken('calc_out.claude_api_cost.row.output_label', 'Output') + ': ' +
         pad(lc(outTokens), 7) +
         ' tokens × ' +
         fmt(c.outputPrice) +
@@ -311,10 +318,10 @@ function calculate(inputs: Record<string, string>): string[] {
     );
 
     out.push(DASH.repeat(44));
-    out.push('Per request:    ' + fmt(c.costPerReq));
-    out.push('Daily (' + reqPerDay + '):    ' + fmt(dailyCost));
-    out.push('Monthly (30d):  ' + fmt(c.monthlyCost));
-    out.push('Annual:         ' + fmt(annualCost));
+    out.push(makeToken('calc_out.claude_api_cost.row.per_request_label', 'Per request') + ':    ' + fmt(c.costPerReq));
+    out.push(makeToken('calc_out.claude_api_cost.row.daily_label', 'Daily') + ' (' + reqPerDay + '):    ' + fmt(dailyCost));
+    out.push(makeToken('calc_out.claude_api_cost.row.monthly_label', 'Monthly') + ' (30d):  ' + fmt(c.monthlyCost));
+    out.push(makeToken('calc_out.claude_api_cost.row.annual_label', 'Annual') + ':         ' + fmt(annualCost));
     out.push(DASH.repeat(44));
 
     // Alternative pricing line
@@ -324,11 +331,7 @@ function calculate(inputs: Record<string, string>): string[] {
         (outTokens / 1_000_000) * c.info.batchOutput;
       const batchMonthly = batchCPR * reqPerDay * 30;
       out.push(
-        '💡 Batch pricing: ' +
-          fmt(batchCPR) +
-          '/req (' +
-          fmt(batchMonthly) +
-          '/mo) — save 50%',
+        makeToken('calc_out.claude_api_cost.row.batch_pricing_line', '💡 Batch pricing: ' + fmt(batchCPR) + '/req (' + fmt(batchMonthly) + '/mo) — save 50%', { cpr: fmt(batchCPR), monthly: fmt(batchMonthly) }),
       );
     } else {
       const realtimeCPR =
@@ -336,7 +339,7 @@ function calculate(inputs: Record<string, string>): string[] {
         (outTokens / 1_000_000) * c.info.output;
       const realtimeMonthly = realtimeCPR * reqPerDay * 30;
       out.push(
-        '🔴 Real-time: ' +
+        makeToken('calc_out.claude_api_cost.row.real_time_label', '🔴 Real-time') + ': ' +
           fmt(realtimeCPR) +
           '/req (' +
           fmt(realtimeMonthly) +
@@ -349,15 +352,7 @@ function calculate(inputs: Record<string, string>): string[] {
       const savings = c.noCacheMonthly - c.monthlyCost;
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
       out.push(
-        '💾 With ' +
-          cacheReadHitRate +
-          '% cache hit: ' +
-          fmt(c.monthlyCost) +
-          '/mo — saves ' +
-          fmt(savings) +
-          '/mo (' +
-          pctSaved +
-          '%)',
+        makeToken('calc_out.claude_api_cost.row.cache_hit_line', '💾 With ' + cacheReadHitRate + '% cache hit: ' + fmt(c.monthlyCost) + '/mo — saves ' + fmt(savings) + '/mo (' + pctSaved + '%)', { hit: String(cacheReadHitRate), monthly: fmt(c.monthlyCost), savings: fmt(savings), pct: String(pctSaved) }),
       );
     }
 
@@ -372,7 +367,7 @@ function calculate(inputs: Record<string, string>): string[] {
     const ip = ref.inputPrice;
     const ttlLabel = cacheTtl === '1hour' ? '1-hour TTL' : '5-min TTL';
     const wmLabel = writeMult === 1.25 ? '1.25×' : '2×';
-    out.push('💾 Prompt Caching Breakdown (' + ttlLabel + ' × ' + wmLabel + ' write)');
+    out.push(makeToken('calc_out.claude_api_cost.row.cache_breakdown_title', '💾 Prompt Caching Breakdown (' + ttlLabel + ' × ' + wmLabel + ' write)', { ttl: ttlLabel, mult: wmLabel }));
     out.push(SEP.repeat(54));
 
     const cacheWriteCost = (cacheWriteTokens / 1_000_000) * ip * writeMult;
@@ -382,18 +377,18 @@ function calculate(inputs: Record<string, string>): string[] {
     const blendedInput = nonCacheInput + cacheMissCost + cacheHitCost;
     const noCacheInput = (inTokens / 1_000_000) * ip;
 
-    out.push('  Model: ' + ref.info.name + ' (cheapest)');
-    out.push('  Cache Write (per miss): ' + fmt(cacheWriteCost) + '/req');
-    out.push('  Cache Miss Cost: ' + fmt(cacheMissCost) + '/req (' + Math.round((1 - hitRate) * 100) + '% of requests)');
-    out.push('  Cache Hit Cost: ' + fmt(cacheHitCost) + '/req (' + Math.round(hitRate * 100) + '% of requests)');
-    out.push('  Non-Cached Input: ' + fmt(nonCacheInput) + '/req');
-    out.push('  Blended Input Cost: ' + fmt(blendedInput) + '/req');
-    out.push('  vs without caching: ' + fmt(noCacheInput) + '/req → saves ' + fmt(noCacheInput - blendedInput) + '/req');
-    out.push('  Monthly Savings: ' + fmt((noCacheInput - blendedInput) * reqsPerMonth));
+    out.push(makeToken('calc_out.claude_api_cost.row.model_line', '  Model: ' + ref.info.name + ' (cheapest)', { name: ref.info.name }));
+    out.push(makeToken('calc_out.claude_api_cost.row.cache_write_miss_label', 'Cache Write (per miss)') + ': ' + fmt(cacheWriteCost) + '/req');
+    out.push(makeToken('calc_out.claude_api_cost.row.cache_miss_cost_line', '  Cache Miss Cost: ' + fmt(cacheMissCost) + '/req (' + Math.round((1 - hitRate) * 100) + '% of requests)', { cost: fmt(cacheMissCost), pct: String(Math.round((1 - hitRate) * 100)) }));
+    out.push(makeToken('calc_out.claude_api_cost.row.cache_hit_cost_line', '  Cache Hit Cost: ' + fmt(cacheHitCost) + '/req (' + Math.round(hitRate * 100) + '% of requests)', { cost: fmt(cacheHitCost), pct: String(Math.round(hitRate * 100)) }));
+    out.push(makeToken('calc_out.claude_api_cost.row.non_cached_input_label', 'Non-Cached Input') + ': ' + fmt(nonCacheInput) + '/req');
+    out.push(makeToken('calc_out.claude_api_cost.row.blended_input_label', 'Blended Input Cost') + ': ' + fmt(blendedInput) + '/req');
+    out.push(makeToken('calc_out.claude_api_cost.row.vs_without_caching_line', '  vs without caching: ' + fmt(noCacheInput) + '/req → saves ' + fmt(noCacheInput - blendedInput) + '/req', { nocache: fmt(noCacheInput), savings: fmt(noCacheInput - blendedInput) }));
+    out.push(makeToken('calc_out.claude_api_cost.row.monthly_savings_label', 'Monthly Savings') + ': ' + fmt((noCacheInput - blendedInput) * reqsPerMonth));
     // Break-even
     const beHits5min = Math.ceil(1 / (1 - CACHE_READ_MULT - (CACHE_WRITE_MULT['5min'] - 1)));
     const beHits1hour = Math.ceil(1 / (1 - CACHE_READ_MULT - (CACHE_WRITE_MULT['1hour'] - 1)));
-    out.push('  Break-even: ~' + beHits5min + ' cache reads (5-min) / ~' + beHits1hour + ' reads (1-hour)');
+    out.push(makeToken('calc_out.claude_api_cost.row.break_even_line', '  Break-even: ~' + beHits5min + ' cache reads (5-min) / ~' + beHits1hour + ' reads (1-hour)', { be5: String(beHits5min), be1: String(beHits1hour) }));
     out.push('');
   }
 
@@ -401,11 +396,12 @@ function calculate(inputs: Record<string, string>): string[] {
   // Section 5: Growth Projection
   // ================================================================
   if (growthRate > 0) {
-    out.push('📈 Growth Projection (' + growthRate + '%/month, ' + projMonths + ' months)');
+    out.push(makeToken('calc_out.claude_api_cost.row.growth_projection', '📈 Growth Projection') + ' (' + growthRate + '%/month, ' + projMonths + ' months)');
     out.push('');
 
     // Table header
-    let header = 'Month'.padEnd(8);
+    // Alignment spaces stay OUTSIDE the token (same recipe as ai-training-cost-estimator).
+    let header = makeToken('calc_out.claude_api_cost.row.month_label', 'Month') + 'Month'.padEnd(8).slice('Month'.length);
     for (const c of selectedCosts) header += ' | ' + c.info.name.padEnd(14);
     out.push(header);
 
@@ -432,7 +428,7 @@ function calculate(inputs: Record<string, string>): string[] {
     let totalLine = ''.padEnd(8, SEP);
     for (const _ of selectedCosts) totalLine += '-+-'.padEnd(15, SEP);
     out.push(totalLine);
-    let totalRow = 'Total'.padEnd(8);
+    let totalRow = makeToken('calc_out.claude_api_cost.row.total_label', 'Total') + 'Total'.padEnd(8).slice('Total'.length);
     for (const c of selectedCosts) {
       let cum = 0;
       for (let m = 1; m <= projMonths; m++) {
@@ -447,7 +443,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 6: Savings Insights
   // ================================================================
-  out.push('💰 Savings Insights');
+  out.push(makeToken('calc_out.claude_api_cost.row.savings_insights', '💰 Savings Insights'));
   out.push(SEP.repeat(60));
 
   // Cheapest overall
@@ -455,11 +451,7 @@ function calculate(inputs: Record<string, string>): string[] {
     c.monthlyCost < min.monthlyCost ? c : min,
   );
   out.push(
-    '🏆 Cheapest: ' +
-      cheapestClaude.info.name +
-      ' at ' +
-      fmt(cheapestClaude.monthlyCost) +
-      '/mo',
+    makeToken('calc_out.claude_api_cost.row.cheapest_line', '🏆 Cheapest: ' + cheapestClaude.info.name + ' at ' + fmt(cheapestClaude.monthlyCost) + '/mo', { name: cheapestClaude.info.name, cost: fmt(cheapestClaude.monthlyCost) }),
   );
 
   // Best value (Claude 4.x family, excluding legacy)
@@ -468,11 +460,7 @@ function calculate(inputs: Record<string, string>): string[] {
     .reduce((min, c) => (c.monthlyCost < min.monthlyCost ? c : min), allCosts[0]);
   if (bestValue && bestValue.key !== cheapestClaude.key) {
     out.push(
-      '⭐ Best value (current-gen): ' +
-        bestValue.info.name +
-        ' at ' +
-        fmt(bestValue.monthlyCost) +
-        '/mo',
+      makeToken('calc_out.claude_api_cost.row.best_value_line', '⭐ Best value (current-gen): ' + bestValue.info.name + ' at ' + fmt(bestValue.monthlyCost) + '/mo', { name: bestValue.info.name, cost: fmt(bestValue.monthlyCost) }),
     );
   }
 
@@ -486,15 +474,7 @@ function calculate(inputs: Record<string, string>): string[] {
     );
     const diff = mostExpSelected.monthlyCost - cheapSelected.monthlyCost;
     out.push(
-      '💸 Switching from ' +
-        mostExpSelected.info.name +
-        ' to ' +
-        cheapSelected.info.name +
-        ' saves ' +
-        fmt(diff) +
-        '/mo (' +
-        fmt(diff * 12) +
-        '/yr)',
+      makeToken('calc_out.claude_api_cost.row.switching_line', '💸 Switching from ' + mostExpSelected.info.name + ' to ' + cheapSelected.info.name + ' saves ' + fmt(diff) + '/mo (' + fmt(diff * 12) + '/yr)', { from: mostExpSelected.info.name, to: cheapSelected.info.name, monthly: fmt(diff), yearly: fmt(diff * 12) }),
     );
   }
 
@@ -503,12 +483,7 @@ function calculate(inputs: Record<string, string>): string[] {
     const ref = selectedCosts[0];
     const savings = ref.noCacheMonthly - ref.monthlyCost;
     out.push(
-      '💾 Prompt caching at ' +
-        cacheReadHitRate +
-        '% hit rate saves ~' +
-        fmt(savings) +
-        '/mo on ' +
-        ref.info.name,
+      makeToken('calc_out.claude_api_cost.row.prompt_caching_line', '💾 Prompt caching at ' + cacheReadHitRate + '% hit rate saves ~' + fmt(savings) + '/mo on ' + ref.info.name, { hit: String(cacheReadHitRate), savings: fmt(savings), name: ref.info.name }),
     );
   }
 
@@ -520,67 +495,86 @@ function calculate(inputs: Record<string, string>): string[] {
     const pct = provMonthly > 0 ? Math.abs(diff) / provMonthly * 100 : 0;
     if (diff > 0) {
       out.push(
-        '🌍 ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude costs ' +
-          fmt(diff) + ' more/month (' + Math.round(pct) + '% premium)',
+        makeToken('calc_out.claude_api_cost.row.cross_premium_line', '🌍 ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude costs ' + fmt(diff) + ' more/month (' + Math.round(pct) + '% premium)', { a: cheapestClaude.info.name, b: prov.name, diff: fmt(diff), pct: String(Math.round(pct)) }),
       );
     } else {
       out.push(
-        '🌍 ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude saves ' +
-          fmt(Math.abs(diff)) + '/month (' + Math.round(pct) + '% cheaper)',
+        makeToken('calc_out.claude_api_cost.row.cross_cheaper_line', '🌍 ' + cheapestClaude.info.name + ' vs ' + prov.name + ': Claude saves ' + fmt(Math.abs(diff)) + '/month (' + Math.round(pct) + '% cheaper)', { a: cheapestClaude.info.name, b: prov.name, diff: fmt(Math.abs(diff)), pct: String(Math.round(pct)) }),
       );
     }
   }
-  out.push('💡 Premium buys: 1M context, best-in-class safety, superior code generation');
+  out.push(makeToken('calc_out.claude_api_cost.row.premium_buys', '💡 Premium buys: 1M context, best-in-class safety, superior code generation'));
   out.push('');
 
   // ================================================================
   // Section 7: Usage Scenarios
   // ================================================================
-  out.push('📊 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.claude_api_cost.row.usage_scenarios', '📊 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)', { rpd: lc(reqPerDay) }));
   out.push('');
   const volumes = [50, 100, 500, 1000, 5000, 10000];
   for (const c of selectedCosts) {
     const icon = FAMILY_ICONS[c.info.family];
-    let line = icon + ' ' + c.info.name + ' (' + FAMILY_LABELS[c.info.family] + '): ';
     const parts: string[] = [];
     for (const v of volumes) {
       parts.push(lc(v) + '→' + fmt(c.costPerReq * v * 30));
     }
-    line += parts.join(' · ');
-    out.push(line);
+    // P168 B3-9：整行**令牌化**（原先是裸文本 ⇒ zh 卡片这一行整行是英文 ⇒ G4c 红）
+    //   ⇒ 图标 / 型号 / 系列标签 / 6 档用量全部走 {param} ⇒ zh 侧可整行中文化。
+    out.push(
+      makeToken(
+        'calc_out.claude_api_cost.row.usage_scenario_line',
+        icon + ' ' + c.info.name + ' (' + FAMILY_LABELS[c.info.family] + '): ' + parts.join(' · '),
+        {
+          icon,
+          model: c.info.name,
+          family: FAMILY_LABELS[c.info.family],
+          v50: parts[0],
+          v100: parts[1],
+          v500: parts[2],
+          v1k: parts[3],
+          v5k: parts[4],
+          v10k: parts[5],
+        },
+      ),
+    );
   }
 
   // 🩺 Cost Health (v3)
   out.push('');
-  out.push('🩺 Cost Health:');
+  out.push(makeToken('calc_out.claude_api_cost.row.cost_health', '🩺 Cost Health:'));
   out.push(SEP.repeat(60));
   const totalSelectedMonthly = selectedCosts.reduce((s, c) => s + c.monthlyCost, 0);
   const cheapestSelected = selectedCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
   const expensiveSelected = selectedCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max);
   if (selectedCosts.length >= 2) {
     const ratio = expensiveSelected.monthlyCost / Math.max(cheapestSelected.monthlyCost, 0.01);
-    if (ratio >= 50) out.push('• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.');
-    else if (ratio >= 10) out.push('• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.');
-    else out.push('• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.');
+    if (ratio >= 50) out.push(makeToken('calc_out.claude_api_cost.row.health_expensive', '• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.', { ratio: ratio.toFixed(0) }));
+    else if (ratio >= 10) out.push(makeToken('calc_out.claude_api_cost.row.health_spread_warning', '• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.', { ratio: ratio.toFixed(0) }));
+    else out.push(makeToken('calc_out.claude_api_cost.row.health_spread_ok', '• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.', { ratio: ratio.toFixed(1) }));
   }
   if (cheapestSelected) {
-    const tier = cheapestSelected.monthlyCost < 5 ? '🟢 Micro-tier (under $5/mo)' : cheapestSelected.monthlyCost < 50 ? '🟢 Low-volume tier' : cheapestSelected.monthlyCost < 500 ? '🟡 Mid-volume tier' : '🟠 High-volume tier';
-    out.push('• ' + tier + ' — ' + cheapestSelected.info.name + ' at ' + fmt(cheapestSelected.monthlyCost) + '/mo.');
+    const tierName = cheapestSelected.info.name;
+    const tierCost = fmt(cheapestSelected.monthlyCost);
+    const tierTail = tierName + ' at ' + tierCost + '/mo.';
+    if (cheapestSelected.monthlyCost < 5) out.push(makeToken('calc_out.claude_api_cost.row.health_tier_micro', '• 🟢 Micro-tier (under $5/mo) — ' + tierTail, { name: tierName, cost: tierCost }));
+    else if (cheapestSelected.monthlyCost < 50) out.push(makeToken('calc_out.claude_api_cost.row.health_tier_low', '• 🟢 Low-volume tier — ' + tierTail, { name: tierName, cost: tierCost }));
+    else if (cheapestSelected.monthlyCost < 500) out.push(makeToken('calc_out.claude_api_cost.row.health_tier_mid', '• 🟡 Mid-volume tier — ' + tierTail, { name: tierName, cost: tierCost }));
+    else out.push(makeToken('calc_out.claude_api_cost.row.health_tier_high', '• 🟠 High-volume tier — ' + tierTail, { name: tierName, cost: tierCost }));
   }
   if (cacheReadHitRate === 0) {
-    out.push('• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.');
+    out.push(makeToken('calc_out.claude_api_cost.row.health_cache_zero', '• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.'));
   } else if (cacheReadHitRate < 30) {
-    out.push('• 🟡 Low cache hit rate (' + cacheReadHitRate + '%) — review if your prompt has stable system instructions.');
+    out.push(makeToken('calc_out.claude_api_cost.row.health_cache_low', '• 🟡 Low cache hit rate (' + cacheReadHitRate + '%) — review if your prompt has stable system instructions.', { hit: String(cacheReadHitRate) }));
   } else {
-    out.push('• 🟢 Healthy cache rate (' + cacheReadHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.');
+    out.push(makeToken('calc_out.claude_api_cost.row.health_cache_ok', '• 🟢 Healthy cache rate (' + cacheReadHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.', { hit: String(cacheReadHitRate) }));
   }
   if (writeMult > 1) {
-    out.push('• 💡 Cache write multiplier is ' + writeMult + 'x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).');
+    out.push(makeToken('calc_out.claude_api_cost.row.health_cache_write_mult', '• 💡 Cache write multiplier is ' + writeMult + 'x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).', { mult: String(writeMult) }));
   }
   out.push('');
 
   // 🔄 What-If Scenarios (v3)
-  out.push('🔄 What-If Scenarios:');
+  out.push(makeToken('calc_out.claude_api_cost.row.what_if_scenarios', '🔄 What-If Scenarios:'));
   out.push(SEP.repeat(60));
   // Switch to cheapest popular model
   const popularCheapest = allCosts
@@ -589,18 +583,18 @@ function calculate(inputs: Record<string, string>): string[] {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
-    if (savings > 0) out.push('• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)');
+    if (savings > 0) out.push(makeToken('calc_out.claude_api_cost.row.whatif_switch_cheapest', '• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)', { name: popularCheapest.info.name, savings: fmt(savings) }));
   }
   // Double volume
-  out.push('• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo');
+  out.push(makeToken('calc_out.claude_api_cost.row.whatif_double_volume', '• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo', { rpd: lc(reqPerDay * 2), cost: fmt(totalSelectedMonthly * 2) }));
   // Halve volume
-  out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo');
+  out.push(makeToken('calc_out.claude_api_cost.row.whatif_halve_volume', '• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo', { rpd: lc(Math.max(1, Math.floor(reqPerDay / 2))), cost: fmt(totalSelectedMonthly / 2) }));
   // 50% cache
   if (cacheReadHitRate < 50) {
     const cacheFactor = 0.5 + 0.5 * (1 - 0.5 * 0.9); // ~50% of input is cacheable, 90% discount
     const cachedMonthly = totalSelectedMonthly * cacheFactor;
     const cacheSavings = totalSelectedMonthly - cachedMonthly;
-    out.push('• Boost cache hit rate to 50%:  save ~' + fmt(cacheSavings) + '/mo  (' + fmt(totalSelectedMonthly) + ' → ' + fmt(cachedMonthly) + ')');
+    out.push(makeToken('calc_out.claude_api_cost.row.whatif_boost_cache', '• Boost cache hit rate to 50%:  save ~' + fmt(cacheSavings) + '/mo  (' + fmt(totalSelectedMonthly) + ' → ' + fmt(cachedMonthly) + ')', { savings: fmt(cacheSavings), total: fmt(totalSelectedMonthly), cached: fmt(cachedMonthly) }));
   }
   out.push('');
 
@@ -608,12 +602,14 @@ function calculate(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
+  // P168 B3-9: the shared token builder (same implementation as the server side).
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   // --- MODELS map (full keys, MUST match TS MODELS) ---
   "var M={'claude-fable-5':{i:10,o:50,n:'Claude Fable 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:1},'claude-opus-5-5':{i:4,o:20,n:'Claude Opus 55',f:'claude5x',cw:'1M',mo:'128K',bi:2,bo:10,od:2},'claude-sonnet-5-5':{i:2,o:10,n:'Claude Sonnet 55',f:'claude5x',cw:'1M',mo:'128K',bi:1,bo:5,od:3},'claude-haiku-5-5':{i:0.1,o:0.5,n:'Claude Haiku 55',f:'claude5x',cw:'1M',mo:'128K',bi:0.05,bo:0.25,od:4},'claude-opus-5':{i:5,o:25,n:'Claude Opus 5',f:'claude5x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:5},'claude-sonnet-5':{i:2,o:10,n:'Claude Sonnet 5',f:'claude5x',cw:'1M',mo:'128K',bi:1,bo:5,od:6},'claude-mythos-5':{i:10,o:50,n:'Claude Mythos 5',f:'mythos',cw:'1M',mo:'128K',bi:5,bo:25,od:7},'claude-opus-4-8':{i:5,o:25,n:'Claude Opus 48',f:'claude4x',cw:'1M',mo:'128K',bi:2.5,bo:12.5,od:8},'claude-sonnet-4-6':{i:3,o:15,n:'Claude Sonnet 46',f:'claude4x',cw:'1M',mo:'64K',bi:1.5,bo:7.5,od:9},'claude-haiku-4-5':{i:1,o:5,n:'Claude Haiku 45',f:'claude4x',cw:'200K',mo:'64K',bi:0.5,bo:2.5,od:10},'claude-opus-4-1':{i:15,o:75,n:'Claude Opus 41',f:'claude4x',cw:'200K',mo:'32K',bi:7.5,bo:37.5,od:11},'claude-haiku-3-5':{i:0.8,o:4,n:'Claude Haiku 3.5',f:'lg',cw:'200K',mo:'8K',bi:0.4,bo:2,od:12},'claude-haiku-3':{i:0.25,o:1.25,n:'Claude Haiku 3',f:'lg',cw:'200K',mo:'4K',bi:0.125,bo:0.625,od:13}};\nvar XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},deepseek:{i:0.3,o:1.2,n:'DeepSeek V4 Flash'},gemini:{i:0.075,o:0.3,n:'Gemini 1.5 Flash'}};" +
 
   // Family icons
-  "var FI={mythos:'\\u2726',claude5x:'\\u2605',claude4x:'\\u25B2',legacy:'\\u25C6'};" +
-  "var FL={mythos:'Mythos',claude5x:'Claude 5.x',claude4x:'Claude 4.x',legacy:'Legacy'};" +
+  "var FI={mythos:'\\u2726',claude5x:'\\u2605',claude4x:'\\u25B2',legacy:'\\u25C6',lg:'\\u25C6'};" +
+  "var FL={mythos:'Mythos',claude5x:'Claude 5.x',claude4x:'Claude 4.x',legacy:'Legacy',lg:'Legacy'};" +
   // Defaults
   "var DEF=['claude-fable-5','claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5'];" +
   // Caching constants
@@ -662,16 +658,15 @@ const customFn =
   // --- Output ---
   "var o=[];" +
   // Section 1: Header
-  "var me=pm==='batch'?'\\u26A1':'\\u{1F534}';" +
-  "var ml=pm==='batch'?'Batch Pricing (50% off)':'Real-time Pricing';" +
-  "var hl=me+' '+ml;" +
-  "if(cacheOn){var tl=cTTL==='1hour'?'1-hour TTL':'5-min TTL';hl+=' | \\u{1F4BE} Cache: '+cHR+'% hit ('+tl+')';}" +
-  "o.push(hl);o.push('');" +
-  "o.push('\\u{1F4E5} Input: '+lc(iT)+' tokens/req | \\u{1F4E4} Output: '+lc(oT)+' tokens/req | \\u{1F504} '+lc(rpd)+' reqs/day');" +
-  "if(cacheOn){o.push('\\u{1F4BE} Cache Write: '+lc(cwT)+' tokens/req ('+(wM===1.25?'1.25\\u00D7':'2\\u00D7')+' write, 0.1\\u00D7 read)');}" +
+  "var ml=pm==='batch'?tk('calc_out.claude_api_cost.row.pricing_mode_batch','\\u26A1 Batch Pricing (50% off)'):tk('calc_out.claude_api_cost.row.pricing_mode_realtime','\\u{1F534} Real-time Pricing');" +
+  "var hl=ml;" +
+  "if(cacheOn){var tl=cTTL==='1hour'?'1-hour TTL':'5-min TTL';hl+=' | '+tk('calc_out.claude_api_cost.row.cache_header','\\u{1F4BE} Cache: '+cHR+'% hit ('+tl+')',{hit:String(cHR),ttl:tl});}" +
+  "o.push('');o.push(hl);o.push('');" +
+  "o.push(tk('calc_out.claude_api_cost.row.input_req','\\u{1F4E5} Input')+': '+lc(iT)+' tokens/req | '+tk('calc_out.claude_api_cost.row.output_req','\\u{1F4E4} Output')+': '+lc(oT)+' tokens/req | \\u{1F504} '+lc(rpd)+' reqs/day');" +
+  "if(cacheOn){o.push(tk('calc_out.claude_api_cost.row.cache_write_line','\\u{1F4BE} Cache Write: '+lc(cwT)+' tokens/req ('+(wM===1.25?'1.25\\u00D7':'2\\u00D7')+' write, 0.1\\u00D7 read)',{tokens:lc(cwT),mult:wM===1.25?'1.25\\u00D7':'2\\u00D7'}));}" +
   "o.push('');" +
   // Section 2: Bar Chart
-  "o.push('\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)');" +
+  "o.push(tk('calc_out.claude_api_cost.row.cost_comparison','\\u{1F4CA} Cost Comparison')+' ('+lc(rpd)+' reqs/day)');" +
   "o.push(SEP.repeat(54));" +
   "var BW=40;" +
   "for(var i=0;i<all.length;i++){" +
@@ -683,94 +678,137 @@ const customFn =
   "}" +
   "o.push('');" +
   // Section 3: Detail Cards
-  "o.push('\\u{1F4CB} Selected Model Details');" +
+  "o.push(tk('calc_out.claude_api_cost.row.selected_model_details','\\u{1F4CB} Selected Model Details'));" +
   "o.push(SEP.repeat(60));" +
   "for(var i=0;i<sc.length;i++){" +
   "var c=sc[i];var icon=FI[c.i.f];var fl=FL[c.i.f];" +
   "var dc2=c.cpr*rpd;var ann=c.mc*12;" +
-  "o.push(icon+' '+c.i.n+' ('+fl+') | Context: '+c.i.cw+' | Max Output: '+c.i.mo);" +
-  "o.push(Array(45).join('\\u2500'));" +
+  "o.push(icon+' '+c.i.n+' ('+fl+') | '+tk('calc_out.claude_api_cost.row.context_label','Context')+': '+c.i.cw+' | '+tk('calc_out.claude_api_cost.row.max_output_label','Max Output')+': '+c.i.mo);" +
+  "o.push(Array(45).join('\\u2014'));" +
   "var icl=(iT/1e6)*c.ip;var ocl=(oT/1e6)*c.op;" +
-  "o.push('Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(c.ip)+'/1M \\u2192 '+fm(icl)+'/req');" +
-  "o.push('Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(c.op)+'/1M \\u2192 '+fm(ocl)+'/req');" +
-  "o.push(Array(45).join('\\u2500'));" +
-  "o.push('Per request:    '+fm(c.cpr));" +
-  "o.push('Daily ('+rpd+'):    '+fm(dc2));" +
-  "o.push('Monthly (30d):  '+fm(c.mc));" +
-  "o.push('Annual:         '+fm(ann));" +
-  "o.push(Array(45).join('\\u2500'));" +
+  "o.push(tk('calc_out.claude_api_cost.row.input_label','Input')+':  '+pd(lc(iT),7)+' tokens \\u00D7 '+fm(c.ip)+'/1M \\u2192 '+fm(icl)+'/req');" +
+  "o.push(tk('calc_out.claude_api_cost.row.output_label','Output')+': '+pd(lc(oT),7)+' tokens \\u00D7 '+fm(c.op)+'/1M \\u2192 '+fm(ocl)+'/req');" +
+  "o.push(Array(45).join('\\u2014'));" +
+  "o.push(tk('calc_out.claude_api_cost.row.per_request_label','Per request')+':    '+fm(c.cpr));" +
+  "o.push(tk('calc_out.claude_api_cost.row.daily_label','Daily')+' ('+rpd+'):    '+fm(dc2));" +
+  "o.push(tk('calc_out.claude_api_cost.row.monthly_label','Monthly')+' (30d):  '+fm(c.mc));" +
+  "o.push(tk('calc_out.claude_api_cost.row.annual_label','Annual')+':         '+fm(ann));" +
+  "o.push(Array(45).join('\\u2014'));" +
   "if(pm==='realtime'){" +
   "var bcpr=(iT/1e6)*c.i.bi+(oT/1e6)*c.i.bo;var bm=bcpr*rpd*30;" +
-  "o.push('\\u{1F4A1} Batch pricing: '+fm(bcpr)+'/req ('+fm(bm)+'/mo) \\u2014 save 50%');}" +
+  "o.push(tk('calc_out.claude_api_cost.row.batch_pricing_line','\\u{1F4A1} Batch pricing: '+fm(bcpr)+'/req ('+fm(bm)+'/mo) \\u2014 save 50%',{cpr:fm(bcpr),monthly:fm(bm)}));}" +
   "else{" +
   "var rcpr=(iT/1e6)*c.i.i+(oT/1e6)*c.i.o;var rm2=rcpr*rpd*30;" +
-  "o.push('\\u{1F534} Real-time: '+fm(rcpr)+'/req ('+fm(rm2)+'/mo)');}" +
+  "o.push(tk('calc_out.claude_api_cost.row.real_time_label','\\u{1F534} Real-time')+': '+fm(rcpr)+'/req ('+fm(rm2)+'/mo)');}" +
   "if(cacheOn){" +
   "var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;" +
-  "o.push('\\u{1F4BE} With '+cHR+'% cache hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)');}" +
+  "o.push(tk('calc_out.claude_api_cost.row.cache_hit_line','\\u{1F4BE} With '+cHR+'% cache hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)',{hit:String(cHR),monthly:fm(c.mc),savings:fm(sv),pct:String(ps)}));}" +
   "o.push('');" +
   "}" +
   // Section 4: Caching Breakdown
   "if(cacheOn){" +
   "var ref=ch;var ip=ref.ip;var tl2=cTTL==='1hour'?'1-hour TTL':'5-min TTL';var wl=wM===1.25?'1.25\\u00D7':'2\\u00D7';" +
-  "o.push('\\u{1F4BE} Prompt Caching Breakdown ('+tl2+' \\u00d7 '+wl+' write)');" +
+  "o.push(tk('calc_out.claude_api_cost.row.cache_breakdown_title','\\u{1F4BE} Prompt Caching Breakdown ('+tl2+' \\u00D7 '+wl+' write)',{ttl:tl2,mult:wl}));" +
   "o.push(SEP.repeat(54));" +
   "var ccw=(cwT/1e6)*ip*wM;var cmc2=(1-hR)*ccw;var chc2=hR*(cwT/1e6)*ip*CRM;" +
   "var nci2=((iT-cwT)/1e6)*ip;var bi2=nci2+cmc2+chc2;var nci3=(iT/1e6)*ip;" +
-  "o.push('  Model: '+ref.i.n+' (cheapest)');" +
-  "o.push('  Cache Write (per miss): '+fm(ccw)+'/req');" +
-  "o.push('  Cache Miss Cost: '+fm(cmc2)+'/req ('+Math.round((1-hR)*100)+'% of requests)');" +
-  "o.push('  Cache Hit Cost: '+fm(chc2)+'/req ('+Math.round(hR*100)+'% of requests)');" +
-  "o.push('  Non-Cached Input: '+fm(nci2)+'/req');" +
-  "o.push('  Blended Input Cost: '+fm(bi2)+'/req');" +
-  "o.push('  vs without caching: '+fm(nci3)+'/req \\u2192 saves '+fm(nci3-bi2)+'/req');" +
-  "o.push('  Monthly Savings: '+fm((nci3-bi2)*rpm));" +
-  "o.push('  Break-even: ~2 cache reads (5-min) / ~2 reads (1-hour)');" +
+  "o.push(tk('calc_out.claude_api_cost.row.model_line','  Model: '+ref.i.n+' (cheapest)',{name:ref.i.n}));" +
+  "o.push(tk('calc_out.claude_api_cost.row.cache_write_miss_label','Cache Write (per miss)')+': '+fm(ccw)+'/req');" +
+  "o.push(tk('calc_out.claude_api_cost.row.cache_miss_cost_line','  Cache Miss Cost: '+fm(cmc2)+'/req ('+Math.round((1-hR)*100)+'% of requests)',{cost:fm(cmc2),pct:String(Math.round((1-hR)*100))}));" +
+  "o.push(tk('calc_out.claude_api_cost.row.cache_hit_cost_line','  Cache Hit Cost: '+fm(chc2)+'/req ('+Math.round(hR*100)+'% of requests)',{cost:fm(chc2),pct:String(Math.round(hR*100))}));" +
+  "o.push(tk('calc_out.claude_api_cost.row.non_cached_input_label','Non-Cached Input')+': '+fm(nci2)+'/req');" +
+  "o.push(tk('calc_out.claude_api_cost.row.blended_input_label','Blended Input Cost')+': '+fm(bi2)+'/req');" +
+  "o.push(tk('calc_out.claude_api_cost.row.vs_without_caching_line','  vs without caching: '+fm(nci3)+'/req \\u2192 saves '+fm(nci3-bi2)+'/req',{nocache:fm(nci3),savings:fm(nci3-bi2)}));" +
+  "o.push(tk('calc_out.claude_api_cost.row.monthly_savings_label','Monthly Savings')+': '+fm((nci3-bi2)*rpm));" +
+  "var be5=Math.ceil(1/(1-CRM-(CWM['5min']-1)));var be1=Math.ceil(1/(1-CRM-(CWM['1hour']-1)));" +
+  "o.push(tk('calc_out.claude_api_cost.row.break_even_line','  Break-even: ~'+be5+' cache reads (5-min) / ~'+be1+' reads (1-hour)',{be5:String(be5),be1:String(be1)}));" +
   "o.push('');" +
   "}" +
   // Section 5: Growth Projection
   "if(gR>0){" +
-  "o.push('\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)');o.push('');" +
-  "var hdr='Month'.padEnd(8);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(14);o.push(hdr);" +
+  "o.push(tk('calc_out.claude_api_cost.row.growth_projection','\\u{1F4C8} Growth Projection')+' ('+gR+'%/month, '+pM+' months)');o.push('');" +
+  "var hdr=tk('calc_out.claude_api_cost.row.month_label','Month')+'Month'.padEnd(8).slice(5);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(14);o.push(hdr);" +
   "var sl=''.padEnd(8,SEP);for(var i=0;i<sc.length;i++)sl+='-+-'.padEnd(15,SEP);o.push(sl);" +
   "var gm=1+gR/100;" +
   "for(var m=1;m<=pM;m++){var mult=Math.pow(gm,m-1);var row=String(m).padEnd(8);for(var i=0;i<sc.length;i++)row+=' | '+fm(sc[i].mc*mult).padEnd(14);o.push(row);}" +
   "o.push(sl);" +
-  "var tr='Total'.padEnd(8);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(14);}o.push(tr);" +
+  "var tr=tk('calc_out.claude_api_cost.row.total_label','Total')+'Total'.padEnd(8).slice(5);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(14);}o.push(tr);" +
   "o.push('');" +
   "}" +
   // Section 6: Savings Insights
-  "o.push('\\u{1F4B0} Savings Insights');" +
+  "o.push(tk('calc_out.claude_api_cost.row.savings_insights','\\u{1F4B0} Savings Insights'));" +
   "o.push(SEP.repeat(60));" +
   "var cheapestC=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
-  "o.push('\\u{1F3C6} Cheapest: '+cheapestC.i.n+' at '+fm(cheapestC.mc)+'/mo');" +
-  "var flt2=all.filter(function(c){return c.i.f!=='legacy';});" +
+  "o.push(tk('calc_out.claude_api_cost.row.cheapest_line','\\u{1F3C6} Cheapest: '+cheapestC.i.n+' at '+fm(cheapestC.mc)+'/mo',{name:cheapestC.i.n,cost:fm(cheapestC.mc)}));" +
+  "var flt2=all.filter(function(c){return c.i.f!=='legacy'&&c.i.f!=='lg';});" +
   "var bv=flt2.length>0?flt2.reduce(function(mn,c){return c.mc<mn.mc?c:mn;}):null;" +
-  "if(bv&&bv.k!==cheapestC.k){o.push('\\u2B50 Best value (current-gen): '+bv.i.n+' at '+fm(bv.mc)+'/mo');}" +
+  "if(bv&&bv.k!==cheapestC.k){o.push(tk('calc_out.claude_api_cost.row.best_value_line','\\u2B50 Best value (current-gen): '+bv.i.n+' at '+fm(bv.mc)+'/mo',{name:bv.i.n,cost:fm(bv.mc)}));}" +
   "if(sc.length>=2){" +
   "var meS=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
   "var chS=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
   "var df2=meS.mc-chS.mc;" +
-  "o.push('\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)');}" +
+  "o.push(tk('calc_out.claude_api_cost.row.switching_line','\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)',{from:meS.i.n,to:chS.i.n,monthly:fm(df2),yearly:fm(df2*12)}));}" +
   "if(cacheOn&&sc.length>0){" +
   "var ref2=sc[0];var sv2=ref2.ncm-ref2.mc;" +
-  "o.push('\\u{1F4BE} Prompt caching at '+cHR+'% hit rate saves ~'+fm(sv2)+'/mo on '+ref2.i.n);}" +
+  "o.push(tk('calc_out.claude_api_cost.row.prompt_caching_line','\\u{1F4BE} Prompt caching at '+cHR+'% hit rate saves ~'+fm(sv2)+'/mo on '+ref2.i.n,{hit:String(cHR),savings:fm(sv2),name:ref2.i.n}));}" +
   "for(var pk in XP){var pv=XP[pk];var pcpr=(iT/1e6)*pv.i+(oT/1e6)*pv.o;var pm2=pcpr*rpm;var d=cheapestC.mc-pm2;var pct=pm2>0?Math.abs(d)/pm2*100:0;" +
-  "if(d>0){o.push('\\u{1F30D} '+cheapestC.i.n+' vs '+pv.n+': Claude costs '+fm(d)+' more/month ('+Math.round(pct)+'% premium)');}" +
-  "else{o.push('\\u{1F30D} '+cheapestC.i.n+' vs '+pv.n+': Claude saves '+fm(Math.abs(d))+'/month ('+Math.round(pct)+'% cheaper)');}" +
+  "if(d>0){o.push(tk('calc_out.claude_api_cost.row.cross_premium_line','\\u{1F30D} '+cheapestC.i.n+' vs '+pv.n+': Claude costs '+fm(d)+' more/month ('+Math.round(pct)+'% premium)',{a:cheapestC.i.n,b:pv.n,diff:fm(d),pct:String(Math.round(pct))}));}" +
+  "else{o.push(tk('calc_out.claude_api_cost.row.cross_cheaper_line','\\u{1F30D} '+cheapestC.i.n+' vs '+pv.n+': Claude saves '+fm(Math.abs(d))+'/month ('+Math.round(pct)+'% cheaper)',{a:cheapestC.i.n,b:pv.n,diff:fm(Math.abs(d)),pct:String(Math.round(pct))}));}" +
   "}" +
-  "o.push('\\u{1F4A1} Premium buys: 1M context, best-in-class safety, superior code generation');" +
+  "o.push(tk('calc_out.claude_api_cost.row.premium_buys','\\u{1F4A1} Premium buys: 1M context, best-in-class safety, superior code generation'));" +
   "o.push('');" +
   // Section 7: Usage Scenarios
-  "o.push('\\u{1F4CA} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');" +
+  "o.push(tk('calc_out.claude_api_cost.row.usage_scenarios','\\u{1F4CA} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)',{rpd:lc(rpd)}));" +
   "o.push('');" +
   "var vols=[50,100,500,1000,5000,10000];" +
   "for(var i=0;i<sc.length;i++){" +
-  "var c=sc[i];var icon=FI[c.i.f];var line=icon+' '+c.i.n+' ('+FL[c.i.f]+'): ';var pts=[];" +
+  "var c=sc[i];var icon=FI[c.i.f];var pts=[];" +
   "for(var j=0;j<vols.length;j++){pts.push(lc(vols[j])+'\\u2192'+fm(c.cpr*vols[j]*30));}" +
-  "line+=pts.join(' \\u00b7 ');o.push(line);" +
+  "o.push(tk('calc_out.claude_api_cost.row.usage_scenario_line',icon+' '+c.i.n+' ('+FL[c.i.f]+'): '+pts.join(' \\u00b7 '),{icon:icon,model:c.i.n,family:FL[c.i.f],v50:pts[0],v100:pts[1],v500:pts[2],v1k:pts[3],v5k:pts[4],v10k:pts[5]}));" +
   "}" +
-  "return o;";
+  // Cost Health (v3) -- mirrors the server section 1:1
+  "o.push('');" +
+  "o.push(tk('calc_out.claude_api_cost.row.cost_health','\\u{1FA7A} Cost Health:'));" +
+  "o.push(SEP.repeat(60));" +
+  "var tsm=sc.reduce(function(s,c){return s+c.mc;},0);" +
+  "var chSel=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var exSel=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
+  "if(sc.length>=2){" +
+  "var ratio2=exSel.mc/Math.max(chSel.mc,0.01);" +
+  "if(ratio2>=50)o.push(tk('calc_out.claude_api_cost.row.health_expensive','\\u2022 \\u{1F534} Your most expensive selection costs '+ratio2.toFixed(0)+'x your cheapest \\u2014 consider mixing tiers.',{ratio:ratio2.toFixed(0)}));" +
+  "else if(ratio2>=10)o.push(tk('calc_out.claude_api_cost.row.health_spread_warning','\\u2022 \\u{1F7E0} '+ratio2.toFixed(0)+'x cost spread across selected models \\u2014 review if every model needs to be premium.',{ratio:ratio2.toFixed(0)}));" +
+  "else o.push(tk('calc_out.claude_api_cost.row.health_spread_ok','\\u2022 \\u{1F7E2} Healthy cost spread ('+ratio2.toFixed(1)+'x) across selected models.',{ratio:ratio2.toFixed(1)}));" +
+  "}" +
+  "if(chSel){" +
+  "var tierName=chSel.i.n;var tierCost=fm(chSel.mc);var tierTail=tierName+' at '+tierCost+'/mo.';" +
+  "if(chSel.mc<5)o.push(tk('calc_out.claude_api_cost.row.health_tier_micro','\\u2022 \\u{1F7E2} Micro-tier (under $5/mo) \\u2014 '+tierTail,{name:tierName,cost:tierCost}));" +
+  "else if(chSel.mc<50)o.push(tk('calc_out.claude_api_cost.row.health_tier_low','\\u2022 \\u{1F7E2} Low-volume tier \\u2014 '+tierTail,{name:tierName,cost:tierCost}));" +
+  "else if(chSel.mc<500)o.push(tk('calc_out.claude_api_cost.row.health_tier_mid','\\u2022 \\u{1F7E1} Mid-volume tier \\u2014 '+tierTail,{name:tierName,cost:tierCost}));" +
+  "else o.push(tk('calc_out.claude_api_cost.row.health_tier_high','\\u2022 \\u{1F7E0} High-volume tier \\u2014 '+tierTail,{name:tierName,cost:tierCost}));" +
+  "}" +
+  "if(cHR===0){o.push(tk('calc_out.claude_api_cost.row.health_cache_zero','\\u2022 \\u26A0\\uFE0F Cache hit rate is 0% \\u2014 enabling prompt caching on repeated prefixes can cut cost 40-90%.'));}" +
+  "else if(cHR<30){o.push(tk('calc_out.claude_api_cost.row.health_cache_low','\\u2022 \\u{1F7E1} Low cache hit rate ('+cHR+'%) \\u2014 review if your prompt has stable system instructions.',{hit:String(cHR)}));}" +
+  "else{o.push(tk('calc_out.claude_api_cost.row.health_cache_ok','\\u2022 \\u{1F7E2} Healthy cache rate ('+cHR+'%) \\u2014 keep an eye on cache TTL vs your traffic pattern.',{hit:String(cHR)}));}" +
+  "if(wM>1){o.push(tk('calc_out.claude_api_cost.row.health_cache_write_mult','\\u2022 \\u{1F4A1} Cache write multiplier is '+wM+'x \\u2014 writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).',{mult:String(wM)}));}" +
+  "o.push('');" +
+  // What-If Scenarios (v3) -- mirrors the server section 1:1
+  "o.push(tk('calc_out.claude_api_cost.row.what_if_scenarios','\\u{1F504} What-If Scenarios:'));" +
+  "o.push(SEP.repeat(60));" +
+  "var pc2=all.reduce(function(min,c){return (c.i.i+c.i.o)<(min.i.i+min.i.o)?c:min;},all[0]);" +
+  "if(pc2&&pc2.k!==chSel.k){" +
+  "var cpr2=(iT/1e6)*pc2.i.i+(oT/1e6)*pc2.i.o;var nm2=cpr2*rpd*30;var sav2=(chSel?chSel.mc:0)-nm2;" +
+  "if(sav2>0)o.push(tk('calc_out.claude_api_cost.row.whatif_switch_cheapest','\\u2022 Switch cheapest to '+pc2.i.n+':  save '+fm(sav2)+'/mo  (similar quality, much cheaper)',{name:pc2.i.n,savings:fm(sav2)}));" +
+  "}" +
+  "o.push(tk('calc_out.claude_api_cost.row.whatif_double_volume','\\u2022 Double volume to '+lc(rpd*2)+' reqs/day:  '+fm(tsm*2)+'/mo',{rpd:lc(rpd*2),cost:fm(tsm*2)}));" +
+  "o.push(tk('calc_out.claude_api_cost.row.whatif_halve_volume','\\u2022 Halve volume to '+lc(Math.max(1,Math.floor(rpd/2)))+' reqs/day:  '+fm(tsm/2)+'/mo',{rpd:lc(Math.max(1,Math.floor(rpd/2))),cost:fm(tsm/2)}));" +
+  "if(cHR<50){" +
+  "var cf2=0.5+0.5*(1-0.5*0.9);var cm2=tsm*cf2;var csav2=tsm-cm2;" +
+  "o.push(tk('calc_out.claude_api_cost.row.whatif_boost_cache','\\u2022 Boost cache hit rate to 50%:  save ~'+fm(csav2)+'/mo  ('+fm(tsm)+' \\u2192 '+fm(cm2)+')',{savings:fm(csav2),total:fm(tsm),cached:fm(cm2)}));" +
+  "}" +
+  "o.push('');" +
+  // P168 B3-9：⭐ 返回**整份输出**的单元素数组 —— 页面（src/pages/[lang]/[slug].astro:2186）对 custom 型**只渲染 results[0]**
+  //   ⇒ 多元素数组会让动态卡片只剩第一行（同一形态 B3-8 已在 ai-api-cost-comparison 修复并验证）。
+  "return [o.join('\\n')];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-claude-api-cost-calculator',
@@ -802,7 +840,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // Single comprehensive example covering all 7 sections (same structure as calculate() output)
-    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n✦ Claude Fable 5           ███████████████████████████              $105.00\n★ Claude Opus 55           ███████████                              $42.00\n★ Claude Sonnet 55         █████                                    $21.00\n★ Claude Haiku 55          ░                                        $1.05 🏆\n★ Claude Opus 5            █████████████                            $52.50\n★ Claude Sonnet 5          █████                                    $21.00\n✦ Claude Mythos 5          ███████████████████████████              $105.00\n▲ Claude Opus 48           █████████████                            $52.50\n▲ Claude Sonnet 46         ████████                                 $31.50\n▲ Claude Haiku 45          ███                                      $10.50\n▲ Claude Opus 41           ████████████████████████████████████████ $157.50\n◆ Claude Haiku 3.5         ██                                       $8.40\n◆ Claude Haiku 3           █                                        $2.63\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n▲ Claude Sonnet 46 (Claude 4.x) | Context: 1M | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $3.00/1M → $0.0030/req\nOutput: 500     tokens × $15.00/1M → $0.0075/req\n————————————————————————————————————————————\nPer request:    $0.01\nDaily (100):    $1.05\nMonthly (30d):  $31.50\nAnnual:         $378.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0052/req ($15.75/mo) — save 50%\n\n▲ Claude Haiku 45 (Claude 4.x) | Context: 200K | Max Output: 64K\n————————————————————————————————————————————\nInput:  1,000   tokens × $1.00/1M → $0.0010/req\nOutput: 500     tokens × $5.00/1M → $0.0025/req\n————————————————————————————————————————————\nPer request:    $0.0035\nDaily (100):    $0.35\nMonthly (30d):  $10.50\nAnnual:         $126.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%\n\n✦ Claude Fable 5 (Mythos) | Context: 1M | Max Output: 128K\n————————————————————————————————————————————\nInput:  1,000   tokens × $10.00/1M → $0.01/req\nOutput: 500     tokens × $50.00/1M → $0.03/req\n————————————————————————————————————————————\nPer request:    $0.04\nDaily (100):    $3.50\nMonthly (30d):  $105.00\nAnnual:         $1260.00\n————————————————————————————————————————————\n💡 Batch pricing: $0.02/req ($52.50/mo) — save 50%\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Claude Haiku 55 at $1.05/mo\n💸 Switching from Claude Fable 5 to Claude Haiku 45 saves $94.50/mo ($1134.00/yr)\n🌍 Claude Haiku 55 vs GPT-5 Nano: Claude costs $0.30 more/month (40% premium)\n🌍 Claude Haiku 55 vs DeepSeek V4 Flash: Claude saves $1.65/month (61% cheaper)\n🌍 Claude Haiku 55 vs Gemini 1.5 Flash: Claude costs $0.38 more/month (56% premium)\n💡 Premium buys: 1M context, best-in-class safety, superior code generation\n\n📊 Usage Scenarios (monthly cost at 100 reqs/day)\n\n▲ Claude Sonnet 46 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00\n▲ Claude Haiku 45 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00\n✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟠 10x cost spread across selected models — review if every model needs to be premium.\n• 🟢 Low-volume tier — Claude Haiku 45 at $10.50/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Cache write multiplier is 1.25x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Claude Haiku 55:  save $9.45/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $294.00/mo\n• Halve volume to 50 reqs/day:  $73.50/mo\n• Boost cache hit rate to 50%:  save ~$33.08/mo  ($147.00 → $113.92)\n',
+    '\n$calc_out.claude_api_cost.row.pricing_mode_realtime|🔴 Real-time Pricing|\n\n$calc_out.claude_api_cost.row.input_req|📥 Input|: 1,000 tokens/req | $calc_out.claude_api_cost.row.output_req|📤 Output|: 500 tokens/req | 🔄 100 reqs/day\n\n$calc_out.claude_api_cost.row.cost_comparison|📊 Cost Comparison| (100 reqs/day)\n──────────────────────────────────────────────────────\n✦ Claude Fable 5           ███████████████████████████              $105.00\n★ Claude Opus 55           ███████████                              $42.00\n★ Claude Sonnet 55         █████                                    $21.00\n★ Claude Haiku 55          ░                                        $1.05 🏆\n★ Claude Opus 5            █████████████                            $52.50\n★ Claude Sonnet 5          █████                                    $21.00\n✦ Claude Mythos 5          ███████████████████████████              $105.00\n▲ Claude Opus 48           █████████████                            $52.50\n▲ Claude Sonnet 46         ████████                                 $31.50\n▲ Claude Haiku 45          ███                                      $10.50\n▲ Claude Opus 41           ████████████████████████████████████████ $157.50\n◆ Claude Haiku 3.5         ██                                       $8.40\n◆ Claude Haiku 3           █                                        $2.63\n\n$calc_out.claude_api_cost.row.selected_model_details|📋 Selected Model Details|\n────────────────────────────────────────────────────────────\n▲ Claude Sonnet 46 (Claude 4.x) | $calc_out.claude_api_cost.row.context_label|Context|: 1M | $calc_out.claude_api_cost.row.max_output_label|Max Output|: 64K\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.input_label|Input|:  1,000   tokens × $3.00/1M → $0.0030/req\n$calc_out.claude_api_cost.row.output_label|Output|: 500     tokens × $15.00/1M → $0.0075/req\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.per_request_label|Per request|:    $0.01\n$calc_out.claude_api_cost.row.daily_label|Daily| (100):    $1.05\n$calc_out.claude_api_cost.row.monthly_label|Monthly| (30d):  $31.50\n$calc_out.claude_api_cost.row.annual_label|Annual|:         $378.00\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.batch_pricing_line{"cpr":"$0.0052","monthly":"$15.75"}|💡 Batch pricing: $0.0052/req ($15.75/mo) — save 50%|\n\n▲ Claude Haiku 45 (Claude 4.x) | $calc_out.claude_api_cost.row.context_label|Context|: 200K | $calc_out.claude_api_cost.row.max_output_label|Max Output|: 64K\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.input_label|Input|:  1,000   tokens × $1.00/1M → $0.0010/req\n$calc_out.claude_api_cost.row.output_label|Output|: 500     tokens × $5.00/1M → $0.0025/req\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.per_request_label|Per request|:    $0.0035\n$calc_out.claude_api_cost.row.daily_label|Daily| (100):    $0.35\n$calc_out.claude_api_cost.row.monthly_label|Monthly| (30d):  $10.50\n$calc_out.claude_api_cost.row.annual_label|Annual|:         $126.00\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.batch_pricing_line{"cpr":"$0.0018","monthly":"$5.25"}|💡 Batch pricing: $0.0018/req ($5.25/mo) — save 50%|\n\n✦ Claude Fable 5 (Mythos) | $calc_out.claude_api_cost.row.context_label|Context|: 1M | $calc_out.claude_api_cost.row.max_output_label|Max Output|: 128K\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.input_label|Input|:  1,000   tokens × $10.00/1M → $0.01/req\n$calc_out.claude_api_cost.row.output_label|Output|: 500     tokens × $50.00/1M → $0.03/req\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.per_request_label|Per request|:    $0.04\n$calc_out.claude_api_cost.row.daily_label|Daily| (100):    $3.50\n$calc_out.claude_api_cost.row.monthly_label|Monthly| (30d):  $105.00\n$calc_out.claude_api_cost.row.annual_label|Annual|:         $1260.00\n————————————————————————————————————————————\n$calc_out.claude_api_cost.row.batch_pricing_line{"cpr":"$0.02","monthly":"$52.50"}|💡 Batch pricing: $0.02/req ($52.50/mo) — save 50%|\n\n$calc_out.claude_api_cost.row.savings_insights|💰 Savings Insights|\n────────────────────────────────────────────────────────────\n$calc_out.claude_api_cost.row.cheapest_line{"name":"Claude Haiku 55","cost":"$1.05"}|🏆 Cheapest: Claude Haiku 55 at $1.05/mo|\n$calc_out.claude_api_cost.row.switching_line{"from":"Claude Fable 5","to":"Claude Haiku 45","monthly":"$94.50","yearly":"$1134.00"}|💸 Switching from Claude Fable 5 to Claude Haiku 45 saves $94.50/mo ($1134.00/yr)|\n$calc_out.claude_api_cost.row.cross_premium_line{"a":"Claude Haiku 55","b":"GPT-5 Nano","diff":"$0.30","pct":"40"}|🌍 Claude Haiku 55 vs GPT-5 Nano: Claude costs $0.30 more/month (40% premium)|\n$calc_out.claude_api_cost.row.cross_cheaper_line{"a":"Claude Haiku 55","b":"DeepSeek V4 Flash","diff":"$1.65","pct":"61"}|🌍 Claude Haiku 55 vs DeepSeek V4 Flash: Claude saves $1.65/month (61% cheaper)|\n$calc_out.claude_api_cost.row.cross_premium_line{"a":"Claude Haiku 55","b":"Gemini 1.5 Flash","diff":"$0.38","pct":"56"}|🌍 Claude Haiku 55 vs Gemini 1.5 Flash: Claude costs $0.38 more/month (56% premium)|\n$calc_out.claude_api_cost.row.premium_buys|💡 Premium buys: 1M context, best-in-class safety, superior code generation|\n\n$calc_out.claude_api_cost.row.usage_scenarios{"rpd":"100"}|📊 Usage Scenarios (monthly cost at 100 reqs/day)|\n\n$calc_out.claude_api_cost.row.usage_scenario_line{"icon":"▲","model":"Claude Sonnet 46","family":"Claude 4.x","v50":"50→$15.75","v100":"100→$31.50","v500":"500→$157.50","v1k":"1,000→$315.00","v5k":"5,000→$1575.00","v10k":"10,000→$3150.00"}|▲ Claude Sonnet 46 (Claude 4.x): 50→$15.75 · 100→$31.50 · 500→$157.50 · 1,000→$315.00 · 5,000→$1575.00 · 10,000→$3150.00|\n$calc_out.claude_api_cost.row.usage_scenario_line{"icon":"▲","model":"Claude Haiku 45","family":"Claude 4.x","v50":"50→$5.25","v100":"100→$10.50","v500":"500→$52.50","v1k":"1,000→$105.00","v5k":"5,000→$525.00","v10k":"10,000→$1050.00"}|▲ Claude Haiku 45 (Claude 4.x): 50→$5.25 · 100→$10.50 · 500→$52.50 · 1,000→$105.00 · 5,000→$525.00 · 10,000→$1050.00|\n$calc_out.claude_api_cost.row.usage_scenario_line{"icon":"✦","model":"Claude Fable 5","family":"Mythos","v50":"50→$52.50","v100":"100→$105.00","v500":"500→$525.00","v1k":"1,000→$1050.00","v5k":"5,000→$5250.00","v10k":"10,000→$10500.00"}|✦ Claude Fable 5 (Mythos): 50→$52.50 · 100→$105.00 · 500→$525.00 · 1,000→$1050.00 · 5,000→$5250.00 · 10,000→$10500.00|\n\n$calc_out.claude_api_cost.row.cost_health|🩺 Cost Health:|\n────────────────────────────────────────────────────────────\n$calc_out.claude_api_cost.row.health_spread_warning{"ratio":"10"}|• 🟠 10x cost spread across selected models — review if every model needs to be premium.|\n$calc_out.claude_api_cost.row.health_tier_low{"name":"Claude Haiku 45","cost":"$10.50"}|• 🟢 Low-volume tier — Claude Haiku 45 at $10.50/mo.|\n$calc_out.claude_api_cost.row.health_cache_zero|• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.|\n$calc_out.claude_api_cost.row.health_cache_write_mult{"mult":"1.25"}|• 💡 Cache write multiplier is 1.25x — writes are expensive. Only cache stable prefixes (system prompts, few-shot examples).|\n\n$calc_out.claude_api_cost.row.what_if_scenarios|🔄 What-If Scenarios:|\n────────────────────────────────────────────────────────────\n$calc_out.claude_api_cost.row.whatif_switch_cheapest{"name":"Claude Haiku 55","savings":"$9.45"}|• Switch cheapest to Claude Haiku 55:  save $9.45/mo  (similar quality, much cheaper)|\n$calc_out.claude_api_cost.row.whatif_double_volume{"rpd":"200","cost":"$294.00"}|• Double volume to 200 reqs/day:  $294.00/mo|\n$calc_out.claude_api_cost.row.whatif_halve_volume{"rpd":"50","cost":"$73.50"}|• Halve volume to 50 reqs/day:  $73.50/mo|\n$calc_out.claude_api_cost.row.whatif_boost_cache{"savings":"$33.08","total":"$147.00","cached":"$113.92"}|• Boost cache hit rate to 50%:  save ~$33.08/mo  ($147.00 → $113.92)|\n',
   ],
   faq: [
     {

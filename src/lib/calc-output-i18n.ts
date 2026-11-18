@@ -172,6 +172,93 @@ export function extractEngineTokenCodes(engine: {
  * ⭐ 模板缺失 ⇒ 用 token 自带的英文兜底（可读）；兜底也为空 ⇒ 保留 token 原文
  *   （守卫负责让这种情况在 CI 里变红，页面不会显示空串）。
  */
+/**
+ * 「标签: 内容」切分的**唯一实现**（JS 源码字符串）。
+ *
+ * ⭐ 为什么需要它（2026-11-17 B3-9 实测，浏览器层才抓到）：
+ *   `beautifySections` 的 BIZ_V3 分支把一行拆成「标签 + 内容」，用 `/^([^:]+):\s*(.*)$/`
+ *   ⇒ 而 token 的 **params 组是 JSON**（`{"gain":"$50,000"}`）⇒ **JSON 里有冒号**
+ *   ⇒ 切分会劈进 token 内部 ⇒ 客户端拿到半截 token ⇒ params 解析失败
+ *   ⇒ 模板里的 `{gain}` 留成字面量 + JSON 碎片裸露到页面上（zh 页整行英文）。
+ *
+ * ⭐ 为什么用「整体替换」而不是「避开冒号」：
+ *   token 里可能同时出现**多个**冒号（JSON 的键值对 + fallback 里的 `Context: `）
+ *   ⇒ 任何「找下一个冒号」的启发式都会漏。
+ *
+ * ⭐ 占位符形态：不含 `:` / `|` / 换行 / 空白 ⇒ 切分逻辑看不见它 ⇒ 切完还原即可。
+ *
+ * ⭐⭐ 为什么 label **和** content 都要还原（2026-11-17 实测抓到的第二个缺陷）：
+ *   emoji-led 分支的 content 取自**遮蔽后**的文本 ⇒ 若不还原，用户看到的是
+ *   `\u0001N\u0001` 这样的**占位符控制字符**，正文内容**整段丢失**。
+ *   ⇒ 还原放在**唯一一处**（本函数内）⇒ 页面不可能漏还原。
+ *
+ * ⭐ 为什么是「JS 源码字符串」而不是 TS 函数（服务端与页面同一份实现，不漂）：
+ *   页面内联的 define:vars 脚本**不能 import** ⇒ 与 `CALC_OUTPUT_MAKE_TOKEN_JS`
+ *   同一个套路：服务端 `new Function` 求值，页面经 define:vars 注入后求值。
+ *
+ * ⚠️ `String.raw` 里的反斜杠**必须只写一层**（`\$` 而不是 `\\$`）
+ *   —— 写两层的话，求值后的 JS 源码里会是 `\\$` ⇒ 正则变成「匹配一个字面反斜杠」
+ *   ⇒ token 一个都匹配不到 ⇒ 遮蔽失效 ⇒ 缺陷原样复现。
+ */
+export const CALC_OUTPUT_SPLIT_V3_LINE_JS = String.raw`function splitV3Line(line){
+var found=[];
+var re=/\$([a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+)(\{[^{}]*\})?(?:\|((?:(?!\$[a-z])[^|\n\r])*)\|)?/g;
+var masked=String(line).replace(re,function(m){found.push(m);return '\u0001'+String(found.length-1)+'\u0001';});
+function restore(s){return String(s).replace(/\u0001(\d+)\u0001/g,function(_,i){return found[Number(i)]||'';});}
+var em=masked.match(/^([\p{Extended_Pictographic}\uFE0F\uFE0E\u200D]+)\s+([^:]+):\s*(.*)$/u);
+if(em)return {kind:'emoji',icon:em[1],label:restore(em[2]).trim(),content:restore(em[3])};
+var lb=masked.match(/^([^:]+):\s*(.*)$/);
+if(lb)return {kind:'label',label:restore(lb[1]).trim(),content:restore(lb[2])};
+return null;
+}`;
+
+/** 「标签: 内容」切分的返回形态 */
+export interface CalcOutputV3Split {
+  kind: 'emoji' | 'label';
+  /** emoji-led 形态的那个 emoji（label-only 形态为空串） */
+  icon: string;
+  /** 标签（**已还原**：可能是 token 原文） */
+  label: string;
+  /** 内容（**已还原**：可能是 token 原文） */
+  content: string;
+}
+
+/**
+ * 把一行拆成「标签 + 内容」，且**不劈开 token**。
+ *
+ * ⭐ 服务端与页面用**同一份**实现（`CALC_OUTPUT_SPLIT_V3_LINE_JS`）⇒ 不可能漂。
+ *   · 服务端：本函数（`new Function` 求值同一份源码）。
+ *   · 页面：经 define:vars 注入源码后求值。
+ *
+ * @param line 一行原文（可含 token）
+ * @returns 拆不出「标签: 内容」形态时返回 null
+ */
+export const splitCalcOutputV3Line: (line: string) => CalcOutputV3Split | null =
+  new Function('return ' + CALC_OUTPUT_SPLIT_V3_LINE_JS)() as (
+    line: string,
+  ) => CalcOutputV3Split | null;
+
+/**
+ * 还原 HTML 实体（params 组在正文里被 Astro 转义过）。
+ *
+ * ⭐ 为什么需要它（2026-11-17 B3-9 实测）：
+ *   Astro 的 `text={...}` 会把内容做 HTML 转义（`"` → `&#34;`）；
+ *   而 token 的 params 组是 JSON（含双引号）⇒ 落到 DOM 里就是 `{"k":&#34;v&#34;}`
+ *   ⇒ JSON.parse 失败 ⇒ params 丢失 ⇒ 模板占位符留成字面量 + JSON 碎片裸露。
+ *
+ * ⚠️ 顺序：`&amp;` 必须**最后**还原（否则 `&amp;quot;` 会被二次还原成 `"`）。
+ */
+
+export function decodeHtmlEntities(s: string): string {
+  return String(s)
+    .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
 export const renderCalcOutput: RenderCalcOutput = (text, templates) => {
   if (!text) return text;
   const re = new RegExp(CALC_OUTPUT_TOKEN_RE.source, 'g');
@@ -179,7 +266,11 @@ export const renderCalcOutput: RenderCalcOutput = (text, templates) => {
     let params: Record<string, string> = {};
     if (rawParams) {
       try {
-        const parsed = JSON.parse(rawParams);
+        // ⭐ P168 B3-9（实测修）：params 组在**正文文本节点**里会被 HTML 转义
+        //   （Astro 的 text={...} 把 `"` 转成 `&#34;`）⇒ 直接 JSON.parse 会失败
+        //   ⇒ params 全丢 ⇒ 模板里的 `{gain}` 留成字面量 + JSON 碎片裸露到页面上。
+        //   ⇒ 解析前先还原 HTML 实体（顺序：&amp; 最后，避免二次还原）。
+        const parsed = JSON.parse(decodeHtmlEntities(rawParams));
         if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
           for (const [k, v] of Object.entries(parsed)) params[k] = String(v);
         }

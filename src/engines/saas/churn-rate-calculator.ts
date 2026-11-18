@@ -1,6 +1,13 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-9：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+//   ⛔ 「💡 Tip: {"code":...}」是 P168 决策建议 i18n 的既定形态 ⇒ **一个字都不动**
+//      （src/lib/decision-support.ts 的 parseDecisionTip 解析它；英文句子在 decision_tip.* 模板里）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateChurn(inputs: Record<string, string>): string[] {
   const customersStart = clampNonNegative(parseInt(inputs.customersStart) || 0);
@@ -35,28 +42,28 @@ function calculateChurn(inputs: Record<string, string>): string[] {
 
   // ---- Build main result ----
   let mainResult =
-    '📉 Logo & Revenue Churn Analysis\n\n' +
-    '• Customers at Start: ' + loc(customersStart) + '\n' +
-    '• New Customers Added: ' + loc(newCustomers) + '\n' +
-    '• Customers Lost: ' + loc(customersLost) + '\n' +
-    '• Customers at End: ' + loc(customersEnd) + '\n' +
-    '• Net Growth: ' + (netGrowth >= 0 ? '+' : '') + loc(netGrowth) + ' (' + growthRate.toFixed(1) + '%)\n\n' +
+    '$calc_out.section.churn_rate_logo_revenue_churn_analysis|📉 Logo & Revenue Churn Analysis|\n\n' +
+    '• $calc_out.label.customers_at_start|Customers at Start|: ' + loc(customersStart) + '\n' +
+    '• $calc_out.label.new_customers_added|New Customers Added|: ' + loc(newCustomers) + '\n' +
+    '• $calc_out.label.customers_lost|Customers Lost|: ' + loc(customersLost) + '\n' +
+    '• $calc_out.label.customers_at_end|Customers at End|: ' + loc(customersEnd) + '\n' +
+    '• $calc_out.label.net_growth|Net Growth|: ' + (netGrowth >= 0 ? '+' : '') + loc(netGrowth) + ' (' + growthRate.toFixed(1) + '%)\n\n' +
     '━━━━━━━━━━━━━━━━━━━━\n\n';
 
   // ---- Logo Churn section ----
   mainResult +=
-    '👥 Logo Churn (Customer Headcount)\n' +
-    '• Monthly Logo Churn: ' + pct(monthlyLogoChurn) + '\n' +
-    '• Annual Logo Churn: ' + pct(annualLogoChurn) + '\n\n';
+    '$calc_out.section.churn_rate_logo_churn|👥 Logo Churn (Customer Headcount)|\n' +
+    '• $calc_out.label.monthly_logo_churn|Monthly Logo Churn|: ' + pct(monthlyLogoChurn) + '\n' +
+    '• $calc_out.label.annual_logo_churn|Annual Logo Churn|: ' + pct(annualLogoChurn) + '\n\n';
 
   // ---- Revenue Churn section (only when avgRevenue > 0) ----
   if (avgRevenue > 0) {
     mainResult +=
-      '💰 Revenue Churn\n' +
-      '• Gross Revenue Churn (before expansion): ' + pct(monthlyGrossRevChurn) + '\n' +
-      '• Net Revenue Churn (after expansion): ' + pct(monthlyNetRevChurn) + '\n' +
-      '• Monthly Revenue Lost to Churn: ' + fmt(churnedRevenue) + '\n' +
-      '• Annual Revenue Lost to Churn: ' + fmt(churnedRevenue * 12) + '\n\n';
+      '$calc_out.section.churn_rate_revenue_churn|💰 Revenue Churn|\n' +
+      '• $calc_out.label.gross_revenue_churn|Gross Revenue Churn (before expansion)|: ' + pct(monthlyGrossRevChurn) + '\n' +
+      '• $calc_out.label.net_revenue_churn|Net Revenue Churn (after expansion)|: ' + pct(monthlyNetRevChurn) + '\n' +
+      '• $calc_out.label.monthly_revenue_lost_to_churn|Monthly Revenue Lost to Churn|: ' + fmt(churnedRevenue) + '\n' +
+      '• $calc_out.label.annual_revenue_lost_to_churn|Annual Revenue Lost to Churn|: ' + fmt(churnedRevenue * 12) + '\n\n';
 
     // ---- GRR / NRR section ----
     // NRR status
@@ -71,10 +78,28 @@ function calculateChurn(inputs: Record<string, string>): string[] {
     else if (grr >= 80) grrLabel = '🟡 Watch';
     else grrLabel = '🔴 At risk';
 
+    // ⭐ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
+    let grrRow: string;
+    if (grr >= 90) {
+      grrRow = makeToken('calc_out.churn_rate.row.grr_healthy', 'GRR = ' + grr.toFixed(1) + '% — ' + grrLabel, { grr: grr.toFixed(1) });
+    } else if (grr >= 80) {
+      grrRow = makeToken('calc_out.churn_rate.row.grr_watch', 'GRR = ' + grr.toFixed(1) + '% — ' + grrLabel, { grr: grr.toFixed(1) });
+    } else {
+      grrRow = makeToken('calc_out.churn_rate.row.grr_at_risk', 'GRR = ' + grr.toFixed(1) + '% — ' + grrLabel, { grr: grr.toFixed(1) });
+    }
+    let nrrRow: string;
+    if (nrr >= 120) {
+      nrrRow = makeToken('calc_out.churn_rate.row.nrr_best_in_class', 'NRR = ' + nrr.toFixed(1) + '% — ' + nrrLabel, { nrr: nrr.toFixed(1) });
+    } else if (nrr >= 100) {
+      nrrRow = makeToken('calc_out.churn_rate.row.nrr_positive', 'NRR = ' + nrr.toFixed(1) + '% — ' + nrrLabel, { nrr: nrr.toFixed(1) });
+    } else {
+      nrrRow = makeToken('calc_out.churn_rate.row.nrr_shrinking', 'NRR = ' + nrr.toFixed(1) + '% — ' + nrrLabel, { nrr: nrr.toFixed(1) });
+    }
+
     mainResult +=
-      '📈 GRR / NRR\n' +
-      '• GRR = ' + grr.toFixed(1) + '% — ' + grrLabel + '\n' +
-      '• NRR = ' + nrr.toFixed(1) + '% — ' + nrrLabel + '\n\n';
+      '$calc_out.section.churn_rate_grr_nrr|📈 GRR / NRR|\n' +
+      '• ' + grrRow + '\n' +
+      '• ' + nrrRow + '\n\n';
   }
 
   mainResult +=
@@ -82,11 +107,11 @@ function calculateChurn(inputs: Record<string, string>): string[] {
 
   // ---- Health assessment (based on monthly logo churn) ----
   if (monthlyLogoChurn <= 0.02) {
-    mainResult += '🟢 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.\n';
+    mainResult += makeToken('calc_out.churn_rate.row.health_healthy', '🟢 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.') + '\n';
   } else if (monthlyLogoChurn <= 0.05) {
-    mainResult += '🟡 AVERAGE: 2-5% monthly logo churn is typical for SaaS. There is room for improvement.\n';
+    mainResult += makeToken('calc_out.churn_rate.row.health_average', '🟡 AVERAGE: 2-5% monthly logo churn is typical for SaaS. There is room for improvement.') + '\n';
   } else {
-    mainResult += '🔴 HIGH: Over 5% monthly logo churn means you are losing ~46%+ of customers annually. Address this urgently.\n';
+    mainResult += makeToken('calc_out.churn_rate.row.health_high', '🔴 HIGH: Over 5% monthly logo churn means you are losing ~46%+ of customers annually. Address this urgently.') + '\n';
   }
 
   mainResult += '\n' +
@@ -97,9 +122,9 @@ function calculateChurn(inputs: Record<string, string>): string[] {
     const voluntaryEst = Math.round(customersLost * 0.6);
     const involuntaryEst = Math.round(customersLost * 0.4);
     mainResult +=
-      '🔍 Churn Attribution (' + loc(customersLost) + ' customers lost)\n' +
-      '• Voluntary (~60%): ~' + loc(voluntaryEst) + ' customers — fix with better onboarding\n' +
-      '• Involuntary (~40%): ~' + loc(involuntaryEst) + ' customers — fix with dunning emails\n\n';
+      makeToken('calc_out.churn_rate.row.churn_attribution', '🔍 Churn Attribution (' + loc(customersLost) + ' customers lost)', { lost: loc(customersLost) }) + '\n' +
+      '• ' + makeToken('calc_out.churn_rate.row.voluntary_churn', 'Voluntary (~60%): ~' + loc(voluntaryEst) + ' customers — fix with better onboarding', { est: loc(voluntaryEst) }) + '\n' +
+      '• ' + makeToken('calc_out.churn_rate.row.involuntary_churn', 'Involuntary (~40%): ~' + loc(involuntaryEst) + ' customers — fix with dunning emails', { est: loc(involuntaryEst) }) + '\n\n';
   }
 
   // ---- Tip (P168 decision code) ----
@@ -124,57 +149,78 @@ function calculateChurn(inputs: Record<string, string>): string[] {
   // 🩺 Churn Health (v3)
   const annualChurnPct = Math.round((1 - Math.pow(1 - monthlyLogoChurn, 12)) * 100);
   if (monthlyLogoChurn <= 0.02) {
-    mainResult += '\n\n🩺 Churn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 HEALTHY: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.';
+    mainResult += '\n\n$calc_out.section.churn_rate_churn_health|🩺 Churn Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' +
+      makeToken('calc_out.churn_rate.row.health_band_healthy', '🟢 HEALTHY: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.', { rate: (monthlyLogoChurn * 100).toFixed(1) });
   } else if (monthlyLogoChurn <= 0.05) {
-    mainResult += '\n\n🩺 Churn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 AVERAGE: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% is typical for SaaS but has room. Annualized: ~' + annualChurnPct + '% loss/year.\n• Common wins: better onboarding, customer success calls at day 30/60/90.';
+    mainResult += '\n\n$calc_out.section.churn_rate_churn_health|🩺 Churn Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' +
+      makeToken('calc_out.churn_rate.row.health_band_average', '🟡 AVERAGE: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% is typical for SaaS but has room. Annualized: ~' + annualChurnPct + '% loss/year.', { rate: (monthlyLogoChurn * 100).toFixed(1), annual: String(annualChurnPct) }) + '\n• ' +
+      makeToken('calc_out.churn_rate.row.health_common_wins', 'Common wins: better onboarding, customer success calls at day 30/60/90.');
   } else {
-    mainResult += '\n\n🩺 Churn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 HIGH: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% means ~' + annualChurnPct + '% customer loss/year. Address urgently.\n• Common causes: poor onboarding, weak value prop, pricing issues, support gaps.';
+    mainResult += '\n\n$calc_out.section.churn_rate_churn_health|🩺 Churn Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' +
+      makeToken('calc_out.churn_rate.row.health_band_high', '🔴 HIGH: Monthly logo churn ' + (monthlyLogoChurn * 100).toFixed(1) + '% means ~' + annualChurnPct + '% customer loss/year. Address urgently.', { rate: (monthlyLogoChurn * 100).toFixed(1), annual: String(annualChurnPct) }) + '\n• ' +
+      makeToken('calc_out.churn_rate.row.health_common_causes', 'Common causes: poor onboarding, weak value prop, pricing issues, support gaps.');
   }
 
   // 🔄 What-If Scenarios (v3)
-  mainResult += '\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  // ⚠️ ' | ' 是维度行分隔符 ⇒ **不得进 fallback**（token 的兜底段以第一个 | 收尾）
+  //   ⇒ 整行拆成多个 token，中间用**原样**的分隔字面量连接 ⇒ 英文页逐字不变。
+  mainResult += '\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
   if (customersStart > 0 && avgRevenue > 0) {
     const halfChurnCust = Math.round(customersStart * (monthlyLogoChurn / 2));
     const halfChurnRev = halfChurnCust * avgRevenue;
-    mainResult += '\n• Cut churn in half:  Save ' + halfChurnCust + ' cust/mo | $' + Math.round(halfChurnRev).toLocaleString() + '/mo in retained revenue';
+    mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.whatif_cut_churn_half', 'Cut churn in half:  Save ' + halfChurnCust + ' cust/mo', { cust: String(halfChurnCust) }) +
+      ' | ' + makeToken('calc_out.churn_rate.row.whatif_cut_churn_half_revenue', '$' + Math.round(halfChurnRev).toLocaleString() + '/mo in retained revenue', { rev: '$' + Math.round(halfChurnRev).toLocaleString() });
     const doubledAcq = newCustomers * 2;
-    mainResult += '\n• Double acquisition:  From ' + newCustomers + ' to ' + doubledAcq + ' new/mo (assumes linear growth)';
+    mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.whatif_double_acquisition', 'Double acquisition:  From ' + newCustomers + ' to ' + doubledAcq + ' new/mo (assumes linear growth)', { from: String(newCustomers), to: String(doubledAcq) });
     const savedCust = Math.round(customersStart * (monthlyLogoChurn / 2));
-    mainResult += '\n• Combined:  Cut churn 50% + add 50% more:  net +' + savedCust + ' cust/mo';
+    mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.whatif_combined', 'Combined:  Cut churn 50% + add 50% more:  net +' + savedCust + ' cust/mo', { cust: String(savedCust) });
     const onePctLoss = Math.round(customersStart * 0.01);
     const onePctRev = onePctLoss * avgRevenue;
-    mainResult += '\n• Industry best (1% monthly):  Lose only ' + onePctLoss + ' cust/mo (vs current ' + Math.round(customersStart * monthlyLogoChurn) + ')  | $' + Math.round(onePctRev).toLocaleString() + '/mo';
+    mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.whatif_industry_best', 'Industry best (1% monthly):  Lose only ' + onePctLoss + ' cust/mo (vs current ' + Math.round(customersStart * monthlyLogoChurn) + ')', { lost: String(onePctLoss), current: String(Math.round(customersStart * monthlyLogoChurn)) }) +
+      '  | ' + makeToken('calc_out.churn_rate.row.whatif_industry_best_revenue', '$' + Math.round(onePctRev).toLocaleString() + '/mo', { rev: '$' + Math.round(onePctRev).toLocaleString() });
   } else {
-    mainResult += '\n• ⚠️ Cannot model — enter start customer count and monthly revenue to see scenarios.';
+    mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.whatif_cannot_model', '⚠️ Cannot model — enter start customer count and monthly revenue to see scenarios.');
   }
 
   // ⚖️ Break-Even (v3)
   if (customersStart > 0) {
-    mainResult += '\n\n⚖️ Break-Even\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    mainResult += '\n\n$calc_out.section.churn_rate_break_even|⚖️ Break-Even|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     const breakEvenNew = Math.round(customersStart * monthlyLogoChurn);
     if (newCustomers >= breakEvenNew) {
-      mainResult += '\n• 🟢 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding enough to grow (current: ' + newCustomers + ').';
+      mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.break_even_healthy', '🟢 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding enough to grow (current: ' + newCustomers + ').', { be: String(breakEvenNew), actual: String(newCustomers) });
     } else if (newCustomers > 0) {
-      mainResult += '\n• 🟡 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding ' + newCustomers + ', short by ' + (breakEvenNew - newCustomers) + '. Customer base is shrinking.';
+      mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.break_even_short', '🟡 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding ' + newCustomers + ', short by ' + (breakEvenNew - newCustomers) + '. Customer base is shrinking.', { be: String(breakEvenNew), actual: String(newCustomers), gap: String(breakEvenNew - newCustomers) });
     } else {
-      mainResult += '\n• 🔴 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding 0. Base erodes by ' + breakEvenNew + ' customers/mo.';
+      mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.break_even_eroding', '🔴 Break-even new customers/mo:  ' + breakEvenNew + '  — you\'re adding 0. Base erodes by ' + breakEvenNew + ' customers/mo.', { be: String(breakEvenNew) });
     }
     if (monthlyLogoChurn > 0 && newCustomers > 0) {
       const newCustomerChurnPct = customersStart > 0 ? (newCustomers / customersStart) * 100 : 0;
-      mainResult += '\n• Your acquisition rate:  ' + newCustomerChurnPct.toFixed(1) + '%/mo  vs churn:  ' + (monthlyLogoChurn * 100).toFixed(1) + '%/mo';
+      mainResult += '\n• ' + makeToken('calc_out.churn_rate.row.acquisition_rate_vs_churn', 'Your acquisition rate:  ' + newCustomerChurnPct.toFixed(1) + '%/mo  vs churn:  ' + (monthlyLogoChurn * 100).toFixed(1) + '%/mo', { acq: newCustomerChurnPct.toFixed(1), churn: (monthlyLogoChurn * 100).toFixed(1) });
     }
   }
 
   // 🎯 Churn Milestones (v3)
   if (customersStart > 0) {
-    mainResult += '\n\n🎯 Churn Milestones\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    mainResult += '\n\n$calc_out.section.churn_rate_churn_milestones|🎯 Churn Milestones|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     const targetChurns = [0.01, 0.02, 0.03, 0.05];
-    const labels = ['Best-in-class (1%)', 'Strong (2%)', 'Healthy (3%)', 'Warning (5%)'];
     for (let i = 0; i < targetChurns.length; i++) {
       const annual = 1 - Math.pow(1 - targetChurns[i], 12);
       const monthlyLost = Math.round(customersStart * targetChurns[i]);
       const threeYearRetained = Math.pow(1 - targetChurns[i], 36) * 100;
-      mainResult += '\n• ' + labels[i] + ' monthly:  lose ' + monthlyLost + ' cust/mo  |  annual ' + (annual * 100).toFixed(1) + '%  |  3-yr retention ' + threeYearRetained.toFixed(0) + '%';
+      // ⭐ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
+      let milestoneRow: string;
+      if (i === 0) {
+        milestoneRow = makeToken('calc_out.churn_rate.row.milestone_best_in_class', 'Best-in-class (1%) monthly:  lose ' + monthlyLost + ' cust/mo', { lost: String(monthlyLost) });
+      } else if (i === 1) {
+        milestoneRow = makeToken('calc_out.churn_rate.row.milestone_strong_2pct', 'Strong (2%) monthly:  lose ' + monthlyLost + ' cust/mo', { lost: String(monthlyLost) });
+      } else if (i === 2) {
+        milestoneRow = makeToken('calc_out.churn_rate.row.milestone_healthy_3pct', 'Healthy (3%) monthly:  lose ' + monthlyLost + ' cust/mo', { lost: String(monthlyLost) });
+      } else {
+        milestoneRow = makeToken('calc_out.churn_rate.row.milestone_warning_5pct', 'Warning (5%) monthly:  lose ' + monthlyLost + ' cust/mo', { lost: String(monthlyLost) });
+      }
+      mainResult += '\n• ' + milestoneRow +
+        '  |  ' + makeToken('calc_out.churn_rate.row.milestone_annual_churn', 'annual ' + (annual * 100).toFixed(1) + '%', { annual: (annual * 100).toFixed(1) }) +
+        '  |  ' + makeToken('calc_out.churn_rate.row.milestone_3yr_retention', '3-yr retention ' + threeYearRetained.toFixed(0) + '%', { ret: threeYearRetained.toFixed(0) });
     }
   }
 
@@ -195,11 +241,20 @@ function calculateChurn(inputs: Record<string, string>): string[] {
     const annual = 1 - Math.pow(1 - churnScenarios[i].churnRate, 12);
     const revLost = lost * avgRevenue;
     const scenarioGRR = ((1 - churnScenarios[i].churnRate) * 100).toFixed(1);
+    // ⭐ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
+    let scenarioLabel: string;
+    if (i === 0) scenarioLabel = '$calc_out.label.scenario_best_case_1pct_churn|Best Case (1% churn)|';
+    else if (i === 1) scenarioLabel = '$calc_out.label.scenario_good_2pct_churn|Good (2% churn)|';
+    else if (i === 2) scenarioLabel = '$calc_out.label.scenario_average_3pct_churn|Average (3% churn)|';
+    else if (i === 3) scenarioLabel = '$calc_out.label.scenario_warning_5pct_churn|Warning (5% churn)|';
+    else scenarioLabel = '$calc_out.label.scenario_critical_8pct_churn|Critical (8% churn)|';
     let line =
-      churnScenarios[i].label + ': Lose ' + lost + ' cust/mo | Annual churn ' + pct(annual) +
-      ' | GRR ' + scenarioGRR + '% | End with ' + end + ' customers';
+      scenarioLabel + ': ' + makeToken('calc_out.churn_rate.row.scenario_lose_cust', 'Lose ' + lost + ' cust/mo', { lost: String(lost) }) +
+      ' | ' + makeToken('calc_out.churn_rate.row.scenario_annual_churn', 'Annual churn ' + pct(annual), { annual: pct(annual) }) +
+      ' | ' + makeToken('calc_out.churn_rate.row.scenario_grr', 'GRR ' + scenarioGRR + '%', { grr: scenarioGRR }) +
+      ' | ' + makeToken('calc_out.churn_rate.row.scenario_end_customers', 'End with ' + end + ' customers', { end: String(end) });
     if (avgRevenue > 0) {
-      line += ' | Lose ' + fmt(revLost) + '/mo';
+      line += ' | ' + makeToken('calc_out.churn_rate.row.scenario_revenue_lost', 'Lose ' + fmt(revLost) + '/mo', { rev: fmt(revLost) });
     }
     results.push(line);
   }
@@ -208,6 +263,12 @@ function calculateChurn(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  //   ⚠️ 客户端原先少 4 段（Churn Health / What-If / Break-Even / Churn Milestones）
+  //      ⇒ 本次补齐（与服务端逐字相同、同样令牌化）—— 否则同一页静态卡片与动态卡片不同。
+  //   ⚠️ 页面只渲染 results[0] ⇒ 返回**单元素数组**（整份输出拼成一段）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var cnn=function(x){return Math.max(0,x)};" +
   "var cs=cnn(parseInt(inputs.customersStart)||0);" +
   "var cl=cnn(parseInt(inputs.customersLost)||0);" +
@@ -229,43 +290,67 @@ const customFn =
   "function fmtn(n){return '$'+Math.round(n).toLocaleString()}" +
   "function locn(n){return n.toLocaleString()}" +
   "var mr3='';" +
-  "mr3+='\\uD83D\\uDCC9 Logo & Revenue Churn Analysis\\n\\n';" +
-  "mr3+='\\u2022 Customers at Start: '+locn(cs)+'\\n';" +
-  "mr3+='\\u2022 New Customers Added: '+locn(nc)+'\\n';" +
-  "mr3+='\\u2022 Customers Lost: '+locn(cl)+'\\n';" +
-  "mr3+='\\u2022 Customers at End: '+locn(ce)+'\\n';" +
-  "mr3+='\\u2022 Net Growth: '+(ng>=0?'+':'')+locn(ng)+' ('+gr.toFixed(1)+'%)\\n\\n';" +
+  "mr3+='$calc_out.section.churn_rate_logo_revenue_churn_analysis|\\uD83D\\uDCC9 Logo & Revenue Churn Analysis|\\n\\n';" +
+  "mr3+='\\u2022 $calc_out.label.customers_at_start|Customers at Start|: '+locn(cs)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.new_customers_added|New Customers Added|: '+locn(nc)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.customers_lost|Customers Lost|: '+locn(cl)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.customers_at_end|Customers at End|: '+locn(ce)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.net_growth|Net Growth|: '+(ng>=0?'+':'')+locn(ng)+' ('+gr.toFixed(1)+'%)\\n\\n';" +
   "mr3+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "mr3+='\\uD83D\\uDC65 Logo Churn (Customer Headcount)\\n';" +
-  "mr3+='\\u2022 Monthly Logo Churn: '+pctn(mlc)+'\\n';" +
-  "mr3+='\\u2022 Annual Logo Churn: '+pctn(alc)+'\\n\\n';" +
+  "mr3+='$calc_out.section.churn_rate_logo_churn|\\uD83D\\uDC65 Logo Churn (Customer Headcount)|\\n';" +
+  "mr3+='\\u2022 $calc_out.label.monthly_logo_churn|Monthly Logo Churn|: '+pctn(mlc)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.annual_logo_churn|Annual Logo Churn|: '+pctn(alc)+'\\n\\n';" +
   "if(ar>0){" +
-  "mr3+='\\uD83D\\uDCB0 Revenue Churn\\n';" +
-  "mr3+='\\u2022 Gross Revenue Churn (before expansion): '+pctn(mgrc)+'\\n';" +
-  "mr3+='\\u2022 Net Revenue Churn (after expansion): '+pctn(mnrc)+'\\n';" +
-  "mr3+='\\u2022 Monthly Revenue Lost to Churn: '+fmtn(cr2)+'\\n';" +
-  "mr3+='\\u2022 Annual Revenue Lost to Churn: '+fmtn(cr2*12)+'\\n\\n';" +
+  "mr3+='$calc_out.section.churn_rate_revenue_churn|\\uD83D\\uDCB0 Revenue Churn|\\n';" +
+  "mr3+='\\u2022 $calc_out.label.gross_revenue_churn|Gross Revenue Churn (before expansion)|: '+pctn(mgrc)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.net_revenue_churn|Net Revenue Churn (after expansion)|: '+pctn(mnrc)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.monthly_revenue_lost_to_churn|Monthly Revenue Lost to Churn|: '+fmtn(cr2)+'\\n';" +
+  "mr3+='\\u2022 $calc_out.label.annual_revenue_lost_to_churn|Annual Revenue Lost to Churn|: '+fmtn(cr2*12)+'\\n\\n';" +
   "var nrL='';if(nrr>=120)nrL='\\uD83D\\uDFE2 Best-in-class';else if(nrr>=100)nrL='\\uD83D\\uDFE1 Positive';else nrL='\\uD83D\\uDD34 Shrinking';" +
   "var grL='';if(grr>=90)grL='\\uD83D\\uDFE2 Healthy';else if(grr>=80)grL='\\uD83D\\uDFE1 Watch';else grL='\\uD83D\\uDD34 At risk';" +
-  "mr3+='\\uD83D\\uDCC8 GRR / NRR\\n';" +
-  "mr3+='\\u2022 GRR = '+grr.toFixed(1)+'% \\u2014 '+grL+'\\n';" +
-  "mr3+='\\u2022 NRR = '+nrr.toFixed(1)+'% \\u2014 '+nrL+'\\n\\n';" +
+  "var grrRow=grr>=90?tk('calc_out.churn_rate.row.grr_healthy','GRR = '+grr.toFixed(1)+'% \\u2014 '+grL,{grr:grr.toFixed(1)}):grr>=80?tk('calc_out.churn_rate.row.grr_watch','GRR = '+grr.toFixed(1)+'% \\u2014 '+grL,{grr:grr.toFixed(1)}):tk('calc_out.churn_rate.row.grr_at_risk','GRR = '+grr.toFixed(1)+'% \\u2014 '+grL,{grr:grr.toFixed(1)});" +
+  "var nrrRow=nrr>=120?tk('calc_out.churn_rate.row.nrr_best_in_class','NRR = '+nrr.toFixed(1)+'% \\u2014 '+nrL,{nrr:nrr.toFixed(1)}):nrr>=100?tk('calc_out.churn_rate.row.nrr_positive','NRR = '+nrr.toFixed(1)+'% \\u2014 '+nrL,{nrr:nrr.toFixed(1)}):tk('calc_out.churn_rate.row.nrr_shrinking','NRR = '+nrr.toFixed(1)+'% \\u2014 '+nrL,{nrr:nrr.toFixed(1)});" +
+  "mr3+='$calc_out.section.churn_rate_grr_nrr|\\uD83D\\uDCC8 GRR / NRR|\\n';" +
+  "mr3+='\\u2022 '+grrRow+'\\n';" +
+  "mr3+='\\u2022 '+nrrRow+'\\n\\n';" +
   "}" +
   "mr3+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "if(mlc<=0.02)mr3+='\\uD83D\\uDFE2 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.\\n';" +
-  "else if(mlc<=0.05)mr3+='\\uD83D\\uDFE1 AVERAGE: 2-5% monthly logo churn is typical for SaaS. There is room for improvement.\\n';" +
-  "else mr3+='\\uD83D\\uDD34 HIGH: Over 5% monthly logo churn means you are losing ~46%+ of customers annually. Address this urgently.\\n';" +
+  "if(mlc<=0.02)mr3+=tk('calc_out.churn_rate.row.health_healthy','\\uD83D\\uDFE2 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.')+'\\n';" +
+  "else if(mlc<=0.05)mr3+=tk('calc_out.churn_rate.row.health_average','\\uD83D\\uDFE1 AVERAGE: 2-5% monthly logo churn is typical for SaaS. There is room for improvement.')+'\\n';" +
+  "else mr3+=tk('calc_out.churn_rate.row.health_high','\\uD83D\\uDD34 HIGH: Over 5% monthly logo churn means you are losing ~46%+ of customers annually. Address this urgently.')+'\\n';" +
   "mr3+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "if(cl>0){var ve=Math.round(cl*0.6);var ie=Math.round(cl*0.4);mr3+='\\uD83D\\uDD0D Churn Attribution ('+locn(cl)+' customers lost)\\n';mr3+='\\u2022 Voluntary (~60%): ~'+locn(ve)+' customers \\u2014 fix with better onboarding\\n';mr3+='\\u2022 Involuntary (~40%): ~'+locn(ie)+' customers \\u2014 fix with dunning emails\\n\\n';}" +
+  "if(cl>0){var ve=Math.round(cl*0.6);var ie=Math.round(cl*0.4);" +
+  "mr3+=tk('calc_out.churn_rate.row.churn_attribution','\\uD83D\\uDD0D Churn Attribution ('+locn(cl)+' customers lost)',{lost:locn(cl)})+'\\n';" +
+  "mr3+='\\u2022 '+tk('calc_out.churn_rate.row.voluntary_churn','Voluntary (~60%): ~'+locn(ve)+' customers \\u2014 fix with better onboarding',{est:locn(ve)})+'\\n';" +
+  "mr3+='\\u2022 '+tk('calc_out.churn_rate.row.involuntary_churn','Involuntary (~40%): ~'+locn(ie)+' customers \\u2014 fix with dunning emails',{est:locn(ie)})+'\\n\\n';}" +
   "var tipP={monthly:pctn(mlc),annual:pctn(alc),lost:locn(cl),base:locn(cs)};" +
   "var tipO=mlc<=0.02?{code:'churn_rate_healthy',params:tipP}:(mlc<=0.05?{code:'churn_rate_average',params:tipP}:{code:'churn_rate_high',params:tipP});" +
   "mr3+='\\uD83D\\uDCA1 Tip: '+JSON.stringify(tipO);" +
+  "var acp=Math.round((1-Math.pow(1-mlc,12))*100);" +
+  "if(mlc<=0.02){mr3+='\\n\\n$calc_out.section.churn_rate_churn_health|\\uD83E\\uDE7A Churn Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.churn_rate.row.health_band_healthy','\\uD83D\\uDFE2 HEALTHY: Monthly logo churn '+(mlc*100).toFixed(1)+'% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.',{rate:(mlc*100).toFixed(1)});}" +
+  "else if(mlc<=0.05){mr3+='\\n\\n$calc_out.section.churn_rate_churn_health|\\uD83E\\uDE7A Churn Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.churn_rate.row.health_band_average','\\uD83D\\uDFE1 AVERAGE: Monthly logo churn '+(mlc*100).toFixed(1)+'% is typical for SaaS but has room. Annualized: ~'+acp+'% loss/year.',{rate:(mlc*100).toFixed(1),annual:String(acp)})+'\\n\\u2022 '+tk('calc_out.churn_rate.row.health_common_wins','Common wins: better onboarding, customer success calls at day 30/60/90.');}" +
+  "else{mr3+='\\n\\n$calc_out.section.churn_rate_churn_health|\\uD83E\\uDE7A Churn Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.churn_rate.row.health_band_high','\\uD83D\\uDD34 HIGH: Monthly logo churn '+(mlc*100).toFixed(1)+'% means ~'+acp+'% customer loss/year. Address urgently.',{rate:(mlc*100).toFixed(1),annual:String(acp)})+'\\n\\u2022 '+tk('calc_out.churn_rate.row.health_common_causes','Common causes: poor onboarding, weak value prop, pricing issues, support gaps.');}" +
+  "mr3+='\\n\\n$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n'+'\\u2501'.repeat(54);" +
+  "if(cs>0&&ar>0){var hcc=Math.round(cs*(mlc/2));var hcr=hcc*ar;" +
+  "mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.whatif_cut_churn_half','Cut churn in half:  Save '+hcc+' cust/mo',{cust:String(hcc)})+' | '+tk('calc_out.churn_rate.row.whatif_cut_churn_half_revenue','$'+Math.round(hcr).toLocaleString()+'/mo in retained revenue',{rev:'$'+Math.round(hcr).toLocaleString()});" +
+  "var dacq=nc*2;" +
+  "mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.whatif_double_acquisition','Double acquisition:  From '+nc+' to '+dacq+' new/mo (assumes linear growth)',{from:String(nc),to:String(dacq)});" +
+  "var svc=Math.round(cs*(mlc/2));" +
+  "mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.whatif_combined','Combined:  Cut churn 50% + add 50% more:  net +'+svc+' cust/mo',{cust:String(svc)});" +
+  "var opl=Math.round(cs*0.01);var opr=opl*ar;" +
+  "mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.whatif_industry_best','Industry best (1% monthly):  Lose only '+opl+' cust/mo (vs current '+Math.round(cs*mlc)+')',{lost:String(opl),current:String(Math.round(cs*mlc))})+'  | '+tk('calc_out.churn_rate.row.whatif_industry_best_revenue','$'+Math.round(opr).toLocaleString()+'/mo',{rev:'$'+Math.round(opr).toLocaleString()});" +
+  "}else{mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.whatif_cannot_model','\\u26A0\\uFE0F Cannot model \\u2014 enter start customer count and monthly revenue to see scenarios.');}" +
+  "if(cs>0){mr3+='\\n\\n$calc_out.section.churn_rate_break_even|\\u2696\\uFE0F Break-Even|\\n'+'\\u2501'.repeat(54);var ben=Math.round(cs*mlc);if(nc>=ben)mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.break_even_healthy','\\uD83D\\uDFE2 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding enough to grow (current: '+nc+').',{be:String(ben),actual:String(nc)});else if(nc>0)mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.break_even_short','\\uD83D\\uDFE1 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding '+nc+', short by '+(ben-nc)+'. Customer base is shrinking.',{be:String(ben),actual:String(nc),gap:String(ben-nc)});else mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.break_even_eroding','\\uD83D\\uDD34 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding 0. Base erodes by '+ben+' customers/mo.',{be:String(ben)});if(mlc>0&&nc>0){var ncr=cs>0?(nc/cs)*100:0;mr3+='\\n\\u2022 '+tk('calc_out.churn_rate.row.acquisition_rate_vs_churn','Your acquisition rate:  '+ncr.toFixed(1)+'%/mo  vs churn:  '+(mlc*100).toFixed(1)+'%/mo',{acq:ncr.toFixed(1),churn:(mlc*100).toFixed(1)});}}" +
+  "if(cs>0){mr3+='\\n\\n$calc_out.section.churn_rate_churn_milestones|\\uD83C\\uDFAF Churn Milestones|\\n'+'\\u2501'.repeat(54);var tcs=[0.01,0.02,0.03,0.05];for(var ti=0;ti<tcs.length;ti++){var an=1-Math.pow(1-tcs[ti],12);var ml=Math.round(cs*tcs[ti]);var tr=Math.pow(1-tcs[ti],36)*100;" +
+  "var mrow=ti===0?tk('calc_out.churn_rate.row.milestone_best_in_class','Best-in-class (1%) monthly:  lose '+ml+' cust/mo',{lost:String(ml)}):ti===1?tk('calc_out.churn_rate.row.milestone_strong_2pct','Strong (2%) monthly:  lose '+ml+' cust/mo',{lost:String(ml)}):ti===2?tk('calc_out.churn_rate.row.milestone_healthy_3pct','Healthy (3%) monthly:  lose '+ml+' cust/mo',{lost:String(ml)}):tk('calc_out.churn_rate.row.milestone_warning_5pct','Warning (5%) monthly:  lose '+ml+' cust/mo',{lost:String(ml)});" +
+  "mr3+='\\n\\u2022 '+mrow+'  |  '+tk('calc_out.churn_rate.row.milestone_annual_churn','annual '+(an*100).toFixed(1)+'%',{annual:(an*100).toFixed(1)})+'  |  '+tk('calc_out.churn_rate.row.milestone_3yr_retention','3-yr retention '+tr.toFixed(0)+'%',{ret:tr.toFixed(0)});}}" +
   "var results=[mr3];" +
   "var chs=[{l:'Best Case (1% churn)',cr:0.01},{l:'Good (2% churn)',cr:0.02},{l:'Average (3% churn)',cr:0.03},{l:'Warning (5% churn)',cr:0.05},{l:'Critical (8% churn)',cr:0.08}];" +
-  "for(var i=0;i<chs.length;i++){var lost=Math.round(cs*chs[i].cr);var end=cs-lost+nc;var ann=1-Math.pow(1-chs[i].cr,12);var revLost=lost*ar;var sgrr=((1-chs[i].cr)*100).toFixed(1);var line=chs[i].l+': Lose '+lost+' cust/mo | Annual churn '+pctn(ann)+' | GRR '+sgrr+'% | End with '+end+' customers';if(ar>0)line+=' | Lose '+fmtn(revLost)+'/mo';results.push(line);}" +
-  "if(cs>0){mr3+='\\n\\n\\u2696\\uFE0F Break-Even\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var ben=Math.round(cs*mlc);if(nc>=ben)mr3+='\\n\\u2022 \\uD83D\\uDFE2 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding enough to grow (current: '+nc+').';else if(nc>0)mr3+='\\n\\u2022 \\uD83D\\uDFE1 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding '+nc+', short by '+(ben-nc)+'. Customer base is shrinking.';else mr3+='\\n\\u2022 \\uD83D\\uDD34 Break-even new customers/mo:  '+ben+'  \\u2014 you\\'re adding 0. Base erodes by '+ben+' customers/mo.';if(mlc>0&&nc>0){var ncr=cs>0?(nc/cs)*100:0;mr3+='\\n\\u2022 Your acquisition rate:  '+ncr.toFixed(1)+'%/mo  vs churn:  '+(mlc*100).toFixed(1)+'%/mo';}}" +
-  "if(cs>0){mr3+='\\n\\n\\uD83C\\uDFAF Churn Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';var tcs=[0.01,0.02,0.03,0.05];var tls=['Best-in-class (1%)','Strong (2%)','Healthy (3%)','Warning (5%)'];for(var ti=0;ti<tcs.length;ti++){var an=1-Math.pow(1-tcs[ti],12);var ml=Math.round(cs*tcs[ti]);var tr=Math.pow(1-tcs[ti],36)*100;mr3+='\\n\\u2022 '+tls[ti]+' monthly:  lose '+ml+' cust/mo  |  annual '+(an*100).toFixed(1)+'%  |  3-yr retention '+tr.toFixed(0)+'%';}}" +
-  "return results;";
+  "for(var i=0;i<chs.length;i++){var lost=Math.round(cs*chs[i].cr);var end=cs-lost+nc;var ann=1-Math.pow(1-chs[i].cr,12);var revLost=lost*ar;var sgrr=((1-chs[i].cr)*100).toFixed(1);" +
+  "var slab=i===0?'$calc_out.label.scenario_best_case_1pct_churn|Best Case (1% churn)|':i===1?'$calc_out.label.scenario_good_2pct_churn|Good (2% churn)|':i===2?'$calc_out.label.scenario_average_3pct_churn|Average (3% churn)|':i===3?'$calc_out.label.scenario_warning_5pct_churn|Warning (5% churn)|':'$calc_out.label.scenario_critical_8pct_churn|Critical (8% churn)|';" +
+  "var line=slab+': '+tk('calc_out.churn_rate.row.scenario_lose_cust','Lose '+lost+' cust/mo',{lost:String(lost)})+' | '+tk('calc_out.churn_rate.row.scenario_annual_churn','Annual churn '+pctn(ann),{annual:pctn(ann)})+' | '+tk('calc_out.churn_rate.row.scenario_grr','GRR '+sgrr+'%',{grr:sgrr})+' | '+tk('calc_out.churn_rate.row.scenario_end_customers','End with '+end+' customers',{end:String(end)});if(ar>0)line+=' | '+tk('calc_out.churn_rate.row.scenario_revenue_lost','Lose '+fmtn(revLost)+'/mo',{rev:fmtn(revLost)});results.push(line);}" +
+  // ⭐ 页面只渲染 results[0] ⇒ 返回**单元素数组**（整份输出拼成一段）
+  "return [results.join('\\n')];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-churn-rate-calculator',
@@ -287,7 +372,7 @@ const engine: ToolEngine = {
     return calculateChurn(inputs);
   },
   staticExamples: [
-    '📉 Logo & Revenue Churn Analysis\n\n• Customers at Start: 1,000\n• New Customers Added: 25\n• Customers Lost: 15\n• Customers at End: 1,010\n• Net Growth: +10 (1.0%)\n\n━━━━━━━━━━━━━━━━━━━━\n\n👥 Logo Churn (Customer Headcount)\n• Monthly Logo Churn: 1.5%\n• Annual Logo Churn: 16.6%\n\n💰 Revenue Churn\n• Gross Revenue Churn (before expansion): 1.5%\n• Net Revenue Churn (after expansion): -0.1%\n• Monthly Revenue Lost to Churn: $750\n• Annual Revenue Lost to Churn: $9,000\n\n📈 GRR / NRR\n• GRR = 98.5% — 🟢 Healthy\n• NRR = 100.1% — 🟡 Positive\n\n━━━━━━━━━━━━━━━━━━━━\n\n🟢 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.\n\n━━━━━━━━━━━━━━━━━━━━\n\n🔍 Churn Attribution (15 customers lost)\n• Voluntary (~60%): ~9 customers — fix with better onboarding\n• Involuntary (~40%): ~6 customers — fix with dunning emails\n\n💡 Tip: {"code":"churn_rate_healthy","params":{"monthly":"1.5%","annual":"16.6%","lost":"15","base":"1,000"}}\n\n🩺 Churn Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 HEALTHY: Monthly logo churn 1.5% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut churn in half:  Save 8 cust/mo | $400/mo in retained revenue\n• Double acquisition:  From 25 to 50 new/mo (assumes linear growth)\n• Combined:  Cut churn 50% + add 50% more:  net +8 cust/mo\n• Industry best (1% monthly):  Lose only 10 cust/mo (vs current 15)  | $500/mo\n\n⚖️ Break-Even\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Break-even new customers/mo:  15  — you\'re adding enough to grow (current: 25).\n• Your acquisition rate:  2.5%/mo  vs churn:  1.5%/mo\n\n🎯 Churn Milestones\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Best-in-class (1%) monthly:  lose 10 cust/mo  |  annual 11.4%  |  3-yr retention 70%\n• Strong (2%) monthly:  lose 20 cust/mo  |  annual 21.5%  |  3-yr retention 48%\n• Healthy (3%) monthly:  lose 30 cust/mo  |  annual 30.6%  |  3-yr retention 33%\n• Warning (5%) monthly:  lose 50 cust/mo  |  annual 46.0%  |  3-yr retention 16%\nBest Case (1% churn): Lose 10 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 1015 customers | Lose $500/mo\nGood (2% churn): Lose 20 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 1005 customers | Lose $1,000/mo\nAverage (3% churn): Lose 30 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 995 customers | Lose $1,500/mo\nWarning (5% churn): Lose 50 cust/mo | Annual churn 46.0% | GRR 95.0% | End with 975 customers | Lose $2,500/mo\nCritical (8% churn): Lose 80 cust/mo | Annual churn 63.2% | GRR 92.0% | End with 945 customers | Lose $4,000/mo',
+    '$calc_out.section.churn_rate_logo_revenue_churn_analysis|📉 Logo & Revenue Churn Analysis|\n\n• $calc_out.label.customers_at_start|Customers at Start|: 1,000\n• $calc_out.label.new_customers_added|New Customers Added|: 25\n• $calc_out.label.customers_lost|Customers Lost|: 15\n• $calc_out.label.customers_at_end|Customers at End|: 1,010\n• $calc_out.label.net_growth|Net Growth|: +10 (1.0%)\n\n━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.churn_rate_logo_churn|👥 Logo Churn (Customer Headcount)|\n• $calc_out.label.monthly_logo_churn|Monthly Logo Churn|: 1.5%\n• $calc_out.label.annual_logo_churn|Annual Logo Churn|: 16.6%\n\n$calc_out.section.churn_rate_revenue_churn|💰 Revenue Churn|\n• $calc_out.label.gross_revenue_churn|Gross Revenue Churn (before expansion)|: 1.5%\n• $calc_out.label.net_revenue_churn|Net Revenue Churn (after expansion)|: -0.1%\n• $calc_out.label.monthly_revenue_lost_to_churn|Monthly Revenue Lost to Churn|: $750\n• $calc_out.label.annual_revenue_lost_to_churn|Annual Revenue Lost to Churn|: $9,000\n\n$calc_out.section.churn_rate_grr_nrr|📈 GRR / NRR|\n• $calc_out.churn_rate.row.grr_healthy{"grr":"98.5"}|GRR = 98.5% — 🟢 Healthy|\n• $calc_out.churn_rate.row.nrr_positive{"nrr":"100.1"}|NRR = 100.1% — 🟡 Positive|\n\n━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.churn_rate.row.health_healthy|🟢 HEALTHY: Monthly logo churn under 2% is excellent. Keep doing what you are doing.|\n\n━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.churn_rate.row.churn_attribution{"lost":"15"}|🔍 Churn Attribution (15 customers lost)|\n• $calc_out.churn_rate.row.voluntary_churn{"est":"9"}|Voluntary (~60%): ~9 customers — fix with better onboarding|\n• $calc_out.churn_rate.row.involuntary_churn{"est":"6"}|Involuntary (~40%): ~6 customers — fix with dunning emails|\n\n💡 Tip: {"code":"churn_rate_healthy","params":{"monthly":"1.5%","annual":"16.6%","lost":"15","base":"1,000"}}\n\n$calc_out.section.churn_rate_churn_health|🩺 Churn Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.churn_rate.row.health_band_healthy{"rate":"1.5"}|🟢 HEALTHY: Monthly logo churn 1.5% is excellent. Target: <2% monthly for SMB SaaS, <1% for enterprise.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.churn_rate.row.whatif_cut_churn_half{"cust":"8"}|Cut churn in half:  Save 8 cust/mo| | $calc_out.churn_rate.row.whatif_cut_churn_half_revenue{"rev":"$400"}|$400/mo in retained revenue|\n• $calc_out.churn_rate.row.whatif_double_acquisition{"from":"25","to":"50"}|Double acquisition:  From 25 to 50 new/mo (assumes linear growth)|\n• $calc_out.churn_rate.row.whatif_combined{"cust":"8"}|Combined:  Cut churn 50% + add 50% more:  net +8 cust/mo|\n• $calc_out.churn_rate.row.whatif_industry_best{"lost":"10","current":"15"}|Industry best (1% monthly):  Lose only 10 cust/mo (vs current 15)|  | $calc_out.churn_rate.row.whatif_industry_best_revenue{"rev":"$500"}|$500/mo|\n\n$calc_out.section.churn_rate_break_even|⚖️ Break-Even|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.churn_rate.row.break_even_healthy{"be":"15","actual":"25"}|🟢 Break-even new customers/mo:  15  — you\'re adding enough to grow (current: 25).|\n• $calc_out.churn_rate.row.acquisition_rate_vs_churn{"acq":"2.5","churn":"1.5"}|Your acquisition rate:  2.5%/mo  vs churn:  1.5%/mo|\n\n$calc_out.section.churn_rate_churn_milestones|🎯 Churn Milestones|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.churn_rate.row.milestone_best_in_class{"lost":"10"}|Best-in-class (1%) monthly:  lose 10 cust/mo|  |  $calc_out.churn_rate.row.milestone_annual_churn{"annual":"11.4"}|annual 11.4%|  |  $calc_out.churn_rate.row.milestone_3yr_retention{"ret":"70"}|3-yr retention 70%|\n• $calc_out.churn_rate.row.milestone_strong_2pct{"lost":"20"}|Strong (2%) monthly:  lose 20 cust/mo|  |  $calc_out.churn_rate.row.milestone_annual_churn{"annual":"21.5"}|annual 21.5%|  |  $calc_out.churn_rate.row.milestone_3yr_retention{"ret":"48"}|3-yr retention 48%|\n• $calc_out.churn_rate.row.milestone_healthy_3pct{"lost":"30"}|Healthy (3%) monthly:  lose 30 cust/mo|  |  $calc_out.churn_rate.row.milestone_annual_churn{"annual":"30.6"}|annual 30.6%|  |  $calc_out.churn_rate.row.milestone_3yr_retention{"ret":"33"}|3-yr retention 33%|\n• $calc_out.churn_rate.row.milestone_warning_5pct{"lost":"50"}|Warning (5%) monthly:  lose 50 cust/mo|  |  $calc_out.churn_rate.row.milestone_annual_churn{"annual":"46.0"}|annual 46.0%|  |  $calc_out.churn_rate.row.milestone_3yr_retention{"ret":"16"}|3-yr retention 16%|\n$calc_out.label.scenario_best_case_1pct_churn|Best Case (1% churn)|: $calc_out.churn_rate.row.scenario_lose_cust{"lost":"10"}|Lose 10 cust/mo| | $calc_out.churn_rate.row.scenario_annual_churn{"annual":"11.4%"}|Annual churn 11.4%| | $calc_out.churn_rate.row.scenario_grr{"grr":"99.0"}|GRR 99.0%| | $calc_out.churn_rate.row.scenario_end_customers{"end":"1015"}|End with 1015 customers| | $calc_out.churn_rate.row.scenario_revenue_lost{"rev":"$500"}|Lose $500/mo|\n$calc_out.label.scenario_good_2pct_churn|Good (2% churn)|: $calc_out.churn_rate.row.scenario_lose_cust{"lost":"20"}|Lose 20 cust/mo| | $calc_out.churn_rate.row.scenario_annual_churn{"annual":"21.5%"}|Annual churn 21.5%| | $calc_out.churn_rate.row.scenario_grr{"grr":"98.0"}|GRR 98.0%| | $calc_out.churn_rate.row.scenario_end_customers{"end":"1005"}|End with 1005 customers| | $calc_out.churn_rate.row.scenario_revenue_lost{"rev":"$1,000"}|Lose $1,000/mo|\n$calc_out.label.scenario_average_3pct_churn|Average (3% churn)|: $calc_out.churn_rate.row.scenario_lose_cust{"lost":"30"}|Lose 30 cust/mo| | $calc_out.churn_rate.row.scenario_annual_churn{"annual":"30.6%"}|Annual churn 30.6%| | $calc_out.churn_rate.row.scenario_grr{"grr":"97.0"}|GRR 97.0%| | $calc_out.churn_rate.row.scenario_end_customers{"end":"995"}|End with 995 customers| | $calc_out.churn_rate.row.scenario_revenue_lost{"rev":"$1,500"}|Lose $1,500/mo|\n$calc_out.label.scenario_warning_5pct_churn|Warning (5% churn)|: $calc_out.churn_rate.row.scenario_lose_cust{"lost":"50"}|Lose 50 cust/mo| | $calc_out.churn_rate.row.scenario_annual_churn{"annual":"46.0%"}|Annual churn 46.0%| | $calc_out.churn_rate.row.scenario_grr{"grr":"95.0"}|GRR 95.0%| | $calc_out.churn_rate.row.scenario_end_customers{"end":"975"}|End with 975 customers| | $calc_out.churn_rate.row.scenario_revenue_lost{"rev":"$2,500"}|Lose $2,500/mo|\n$calc_out.label.scenario_critical_8pct_churn|Critical (8% churn)|: $calc_out.churn_rate.row.scenario_lose_cust{"lost":"80"}|Lose 80 cust/mo| | $calc_out.churn_rate.row.scenario_annual_churn{"annual":"63.2%"}|Annual churn 63.2%| | $calc_out.churn_rate.row.scenario_grr{"grr":"92.0"}|GRR 92.0%| | $calc_out.churn_rate.row.scenario_end_customers{"end":"945"}|End with 945 customers| | $calc_out.churn_rate.row.scenario_revenue_lost{"rev":"$4,000"}|Lose $4,000/mo|',
     'Best Case (1% churn): Lose 5 cust/mo | Annual churn 11.4% | GRR 99.0% | End with 520 customers | Lose $250/mo',
     'Good (2% churn): Lose 10 cust/mo | Annual churn 21.5% | GRR 98.0% | End with 515 customers | Lose $500/mo',
     'Average (3% churn): Lose 15 cust/mo | Annual churn 30.6% | GRR 97.0% | End with 510 customers | Lose $750/mo',

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang='zh'>
+<head><meta charset='utf-8'><title>P168 B3-9 browser harness</title></head>
+<body>
+<pre id='out'>running…</pre>
+<script>
+(async () => {
+  const SLUGS = __SLUGS__;
+  const DYN = __DYN__;
+  const cjk = (s) => { let n = 0; for (const ch of s) { const c = ch.codePointAt(0); if (c >= 0x3400 && c <= 0x9fff) n++; } return n; };
+  const ew = (s) => { let n = 0, run = 0; for (const ch of s) { const c = ch.codePointAt(0); const isL = (c >= 65 && c <= 90) || (c >= 97 && c <= 122); if (isL) run++; else { if (run >= 3) n++; run = 0; } } if (run >= 3) n++; return n; };
+  const isEn = (l) => { const t = l.trim(); if (!t) return false; if (cjk(t) > 2) return false; return ew(t) >= 3; };
+  const out = [];
+  const load = (url) => new Promise((res) => {
+    const f = document.createElement('iframe');
+    f.style.cssText = 'width:1200px;height:900px;position:absolute;left:-9999px;top:0';
+    document.body.appendChild(f);
+    f.onload = () => res(f);
+    f.onerror = () => res(f);
+    f.src = url;
+  });
+  for (const slug of SLUGS) {
+    const f = await load('/zh/' + slug + '/index.html');
+    await new Promise((r) => setTimeout(r, 500));
+    const doc = f.contentDocument;
+    const card = doc && doc.getElementById('static-results');
+    const ls = card ? card.innerText.split('\n').map((x) => x.trim()).filter((x) => x) : [];
+    const en = ls.filter(isEn);
+    const dd = ls.filter((l) => l.indexOf('$$') >= 0);
+    const bare = ls.filter((l) => l.indexOf('$calc_out') >= 0);
+    out.push(['S', slug, ls.length, en.length, dd.length, bare.length, en.slice(0, 3).join(' ~~ ')]);
+    f.remove();
+  }
+  for (const slug of DYN) {
+    const f = await load('/zh/' + slug + '/index.html');
+    await new Promise((r) => setTimeout(r, 500));
+    const doc = f.contentDocument;
+    const form = doc && doc.getElementById('tool-form');
+    const btn = form ? form.querySelector('button[type=submit]') : null;
+    if (btn) { btn.click(); await new Promise((r) => setTimeout(r, 1200)); }
+    const dr = doc && doc.getElementById('dynamic-results');
+    const dl = dr ? dr.innerText.split('\n').map((x) => x.trim()).filter((x) => x) : [];
+    const det = dr ? dr.querySelectorAll('.detail') : [];
+    const detail = det.length ? det[0].innerText.length : 0;
+    const visible = dl.join(' ').length + detail;
+    const en = dl.filter(isEn);
+    out.push(['D', slug, dl.length, visible, detail, en.length, en.slice(0, 3).join(' ~~ ')]);
+    f.remove();
+  }
+  out.push(['DONE']);
+  const text = out.map((r) => r.join('|')).join('\n');
+  document.getElementById('out').textContent = text;
+  await fetch('/result', { method: 'POST', body: text });
+})().catch((e) => {
+  fetch('/result', { method: 'POST', body: 'ERROR|' + String(e && e.message) });
+});
+</script>
+</body>
+</html>

@@ -1,6 +1,13 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-9：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+//   ⛔ 「💡 Tip: {"code":...}」是 P168 决策建议 i18n 的既定形态 ⇒ **一个字都不动**
+//      （src/lib/decision-support.ts 的 parseDecisionTip 解析它；英文句子在 decision_tip.* 模板里）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateCAC(inputs: Record<string, string>): string[] {
   const marketingSpend = clampNonNegative(parseFloat(inputs.marketingSpend) || 0);
@@ -22,19 +29,19 @@ function calculateCAC(inputs: Record<string, string>): string[] {
   const loc = (n: number) => n.toLocaleString();
 
   let mainResult =
-    '🎯 Customer Acquisition Cost (CAC)\n\n' +
-    '• Marketing Spend: ' + fmt(marketingSpend) + ' (' + pct(marketingPct) + ' of total)\n' +
-    '• Sales Spend: ' + fmt(salesSpend) + ' (' + pct(salesPct) + ' of total)\n' +
-    '• Total Acquisition Spend: ' + fmt(totalSpend) + '\n' +
-    '• New Customers Acquired: ' + loc(newCustomers) + '\n\n' +
+    '$calc_out.section.cac_calculator|🎯 Customer Acquisition Cost (CAC)|\n\n' +
+    '• ' + makeToken('calc_out.cac.row.marketing_spend', 'Marketing Spend: ' + fmt(marketingSpend) + ' (' + pct(marketingPct) + ' of total)', { amount: fmt(marketingSpend), pct: pct(marketingPct) }) + '\n' +
+    '• ' + makeToken('calc_out.cac.row.sales_spend', 'Sales Spend: ' + fmt(salesSpend) + ' (' + pct(salesPct) + ' of total)', { amount: fmt(salesSpend), pct: pct(salesPct) }) + '\n' +
+    '• $calc_out.label.total_acquisition_spend|Total Acquisition Spend|: ' + fmt(totalSpend) + '\n' +
+    '• $calc_out.label.new_customers_acquired|New Customers Acquired|: ' + loc(newCustomers) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Key Results:\n\n' +
-    '• Customer Acquisition Cost (CAC): ' + fmt(cac) + ' per customer\n';
+    '$calc_out.section.cac_key_results|📊 Key Results:|\n\n' +
+    '• ' + makeToken('calc_out.cac.row.customer_acquisition_cost', 'Customer Acquisition Cost (CAC): ' + fmt(cac) + ' per customer', { cac: fmt(cac) }) + '\n';
 
   if (avgRevenuePerCustomer > 0) {
-    mainResult += '• Avg Revenue per Customer: ' + fmt(avgRevenuePerCustomer) + '/mo\n';
-    mainResult += '• Gross Profit per Customer: ' + fmt(grossProfitPerCustomer) + '/mo\n';
-    mainResult += '• CAC Payback Period: ' + paybackMonths.toFixed(1) + ' months\n';
+    mainResult += '• $calc_out.label.avg_revenue_per_customer_mo|Avg Revenue per Customer|: ' + fmt(avgRevenuePerCustomer) + '/mo\n';
+    mainResult += '• $calc_out.label.gross_profit_per_customer|Gross Profit per Customer|: ' + fmt(grossProfitPerCustomer) + '/mo\n';
+    mainResult += '• ' + makeToken('calc_out.cac.row.cac_payback_period', 'CAC Payback Period: ' + paybackMonths.toFixed(1) + ' months', { months: paybackMonths.toFixed(1) }) + '\n';
   }
 
   mainResult += '\n';
@@ -42,20 +49,20 @@ function calculateCAC(inputs: Record<string, string>): string[] {
   if (avgRevenuePerCustomer > 0) {
     const firstYearValue = avgRevenuePerCustomer * 12 * (grossMargin / 100);
     const ltvEstimate = paybackMonths > 0 ? cac * 3 : 0; // assume 3:1 LTV:CAC target
-    mainResult += '• Est. First-Year Customer Value: ' + fmt(firstYearValue) + '\n';
+    mainResult += '• $calc_out.label.est_first_year_customer_value|Est. First-Year Customer Value|: ' + fmt(firstYearValue) + '\n';
     if (ltvEstimate > 0) {
-      mainResult += '• Target LTV (at 3:1 ratio): ' + fmt(ltvEstimate) + '\n';
+      mainResult += '• $calc_out.label.target_ltv_3to1|Target LTV (at 3:1 ratio)|: ' + fmt(ltvEstimate) + '\n';
     }
     mainResult += '\n';
 
     if (paybackMonths <= 6) {
-      mainResult += '🟢 STRONG: CAC payback in ' + paybackMonths.toFixed(1) + ' months is excellent. You recover acquisition costs quickly and can reinvest faster.\n';
+      mainResult += makeToken('calc_out.cac.row.payback_strong', '🟢 STRONG: CAC payback in ' + paybackMonths.toFixed(1) + ' months is excellent. You recover acquisition costs quickly and can reinvest faster.', { months: paybackMonths.toFixed(1) }) + '\n';
     } else if (paybackMonths <= 12) {
-      mainResult += '🟡 GOOD: CAC payback in ' + paybackMonths.toFixed(1) + ' months is within the 12-month benchmark. Keep optimizing channel mix.\n';
+      mainResult += makeToken('calc_out.cac.row.payback_good', '🟡 GOOD: CAC payback in ' + paybackMonths.toFixed(1) + ' months is within the 12-month benchmark. Keep optimizing channel mix.', { months: paybackMonths.toFixed(1) }) + '\n';
     } else if (paybackMonths <= 18) {
-      mainResult += '🟡 WARNING: ' + paybackMonths.toFixed(1) + ' months payback is above the 12-month ideal. Review your acquisition channels for efficiency.\n';
+      mainResult += makeToken('calc_out.cac.row.payback_warning', '🟡 WARNING: ' + paybackMonths.toFixed(1) + ' months payback is above the 12-month ideal. Review your acquisition channels for efficiency.', { months: paybackMonths.toFixed(1) }) + '\n';
     } else {
-      mainResult += '🔴 CRITICAL: ' + paybackMonths.toFixed(1) + ' months payback is too long. Your cash flow is strained. Cut underperforming channels immediately.\n';
+      mainResult += makeToken('calc_out.cac.row.payback_critical', '🔴 CRITICAL: ' + paybackMonths.toFixed(1) + ' months payback is too long. Your cash flow is strained. Cut underperforming channels immediately.', { months: paybackMonths.toFixed(1) }) + '\n';
     }
   }
 
@@ -78,27 +85,27 @@ function calculateCAC(inputs: Record<string, string>): string[] {
 
   // 🩺 CAC Health (v3)
   if (cac <= 0) {
-    mainResult += '\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 $0 CAC — organic/word-of-mouth growth. Don\'t get complacent; track how you scale.';
+    mainResult += '\n\n$calc_out.section.cac_health|🩺 CAC Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' + makeToken('calc_out.cac.row.health_zero', '🟢 $0 CAC — organic/word-of-mouth growth. Don\'t get complacent; track how you scale.');
   } else if (cac < 200) {
-    mainResult += '\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 CAC $' + Math.round(cac) + ' is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.';
+    mainResult += '\n\n$calc_out.section.cac_health|🩺 CAC Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' + makeToken('calc_out.cac.row.health_low', '🟢 CAC $' + Math.round(cac) + ' is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.', { cac: '$' + Math.round(cac) });
   } else if (cac < 500) {
-    mainResult += '\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 CAC $' + Math.round(cac) + ' is mid-range. Verify LTV:CAC ratio is at least 3:1 before scaling spend.';
+    mainResult += '\n\n$calc_out.section.cac_health|🩺 CAC Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' + makeToken('calc_out.cac.row.health_mid', '🟡 CAC $' + Math.round(cac) + ' is mid-range. Verify LTV:CAC ratio is at least 3:1 before scaling spend.', { cac: '$' + Math.round(cac) });
   } else {
-    mainResult += '\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 CAC $' + Math.round(cac) + ' is high. Each new customer takes months/years to pay back. Cut CAC or raise LTV.';
+    mainResult += '\n\n$calc_out.section.cac_health|🩺 CAC Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ' + makeToken('calc_out.cac.row.health_high', '🔴 CAC $' + Math.round(cac) + ' is high. Each new customer takes months/years to pay back. Cut CAC or raise LTV.', { cac: '$' + Math.round(cac) });
   }
 
   // 🔄 What-If Scenarios (v3)
-  mainResult += '\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+  mainResult += '\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
   if (newCustomers > 0) {
     const halfCac = cac / 2;
     const doubledCust = newCustomers * 2;
     const newCacAtDoubled = (marketingSpend + salesSpend) / doubledCust;
-    mainResult += '\n• Cut CAC in half:  $' + Math.round(halfCac) + '  (assumes same spend, better conversion)';
-    mainResult += '\n• Double acquisition:  ' + newCustomers + ' → ' + doubledCust + ' customers at $' + Math.round(newCacAtDoubled) + '/customer';
-    mainResult += '\n• Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+';
-    mainResult += '\n• Reduce spend 20%:  Same customers → $' + Math.round(cac * 0.8) + ' CAC (if conversion maintained)';
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.whatif_cut_cac_half', 'Cut CAC in half:  $' + Math.round(halfCac) + '  (assumes same spend, better conversion)', { cac: '$' + Math.round(halfCac) });
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.whatif_double_acquisition', 'Double acquisition:  ' + newCustomers + ' → ' + doubledCust + ' customers at $' + Math.round(newCacAtDoubled) + '/customer', { from: String(newCustomers), to: String(doubledCust), cac: '$' + Math.round(newCacAtDoubled) });
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.whatif_industry_benchmark', 'Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+');
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.whatif_reduce_spend_20', 'Reduce spend 20%:  Same customers → $' + Math.round(cac * 0.8) + ' CAC (if conversion maintained)', { cac: '$' + Math.round(cac * 0.8) });
   } else {
-    mainResult += '\n• ⚠️ Cannot model — enter marketing spend, sales spend, and new customers to see scenarios.';
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.whatif_cannot_model', '⚠️ Cannot model — enter marketing spend, sales spend, and new customers to see scenarios.');
   }
 
   // ⚖️ Break-Even (v3)
@@ -106,31 +113,31 @@ function calculateCAC(inputs: Record<string, string>): string[] {
     const targetLtv = cac * 3; // 3:1 LTV:CAC benchmark
     const ltvNow = grossProfitPerCustomer * 12; // conservative 12-month LTV at current GR
     const ltvCacNow = ltvNow / cac;
-    let beLine = '\n\n⚖️ Break-Even\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    let beLine = '\n\n$calc_out.section.cac_break_even|⚖️ Break-Even|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
     if (ltvCacNow >= 3) {
-      beLine += '\n• 🟢 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — already above the 3:1 break-even. Healthy to scale spend.';
+      beLine += '\n• ' + makeToken('calc_out.cac.row.break_even_healthy', '🟢 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — already above the 3:1 break-even. Healthy to scale spend.', { ratio: ltvCacNow.toFixed(1) });
     } else if (ltvCacNow >= 1) {
-      beLine += '\n• 🟡 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — above 1:1 (not losing money) but below 3:1 ideal.';
-      beLine += '\n• To reach 3:1 at current 12-mo LTV ($' + Math.round(ltvNow).toLocaleString() + '):  target CAC = $' + Math.round(targetLtv).toLocaleString();
+      beLine += '\n• ' + makeToken('calc_out.cac.row.break_even_ok', '🟡 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — above 1:1 (not losing money) but below 3:1 ideal.', { ratio: ltvCacNow.toFixed(1) });
+      beLine += '\n• ' + makeToken('calc_out.cac.row.break_even_target_3to1', 'To reach 3:1 at current 12-mo LTV ($' + Math.round(ltvNow).toLocaleString() + '):  target CAC = $' + Math.round(targetLtv).toLocaleString(), { ltv: '$' + Math.round(ltvNow).toLocaleString(), cac: '$' + Math.round(targetLtv).toLocaleString() });
     } else {
-      beLine += '\n• 🔴 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — losing money per customer. Stop scaling spend until ratio ≥ 1:1.';
+      beLine += '\n• ' + makeToken('calc_out.cac.row.break_even_losing', '🔴 LTV:CAC = ' + ltvCacNow.toFixed(1) + ':1 — losing money per customer. Stop scaling spend until ratio ≥ 1:1.', { ratio: ltvCacNow.toFixed(1) });
     }
     if (paybackMonths > 0) {
-      beLine += '\n• Payback break-even:  ≤ 12 months. Your payback = ' + paybackMonths.toFixed(1) + ' mo.';
+      beLine += '\n• ' + makeToken('calc_out.cac.row.break_even_payback', 'Payback break-even:  ≤ 12 months. Your payback = ' + paybackMonths.toFixed(1) + ' mo.', { months: paybackMonths.toFixed(1) });
     }
     mainResult += beLine;
   }
 
   // 🎯 CAC Milestones (v3)
   if (cac > 0 && grossProfitPerCustomer > 0) {
-    mainResult += '\n\n🎯 CAC Milestones\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
-    mainResult += '\n• ≤ 6 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 6).toLocaleString();
-    mainResult += '\n• ≤ 12 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 12).toLocaleString();
-    mainResult += '\n• ≤ 18 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 18).toLocaleString();
+    mainResult += '\n\n$calc_out.section.cac_milestones|🎯 CAC Milestones|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.milestone_6mo', '≤ 6 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 6).toLocaleString(), { cac: '$' + Math.round(grossProfitPerCustomer * 6).toLocaleString() });
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.milestone_12mo', '≤ 12 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 12).toLocaleString(), { cac: '$' + Math.round(grossProfitPerCustomer * 12).toLocaleString() });
+    mainResult += '\n• ' + makeToken('calc_out.cac.row.milestone_18mo', '≤ 18 months payback:  CAC ≤ $' + Math.round(grossProfitPerCustomer * 18).toLocaleString(), { cac: '$' + Math.round(grossProfitPerCustomer * 18).toLocaleString() });
     if (newCustomers > 0 && totalSpend > 0) {
       const targetCac = grossProfitPerCustomer * 12;
       const budgetFor100 = Math.round(targetCac * 100); // 100 customers at 12-mo payback
-      mainResult += '\n• To acquire 100 customers at 12-mo payback:  budget $' + budgetFor100.toLocaleString();
+      mainResult += '\n• ' + makeToken('calc_out.cac.row.milestone_100_customers', 'To acquire 100 customers at 12-mo payback:  budget $' + budgetFor100.toLocaleString(), { budget: '$' + budgetFor100.toLocaleString() });
     }
   }
 
@@ -160,17 +167,31 @@ function calculateCAC(inputs: Record<string, string>): string[] {
       : newCustomers;
     const cacScen = scaledCustomers > 0 ? total / scaledCustomers : 0;
     const paybackScen = grossProfitPerCustomer > 0 ? cacScen / grossProfitPerCustomer : 0;
-    results.push(
-      s.label + ': $' + Math.round(total).toLocaleString() + ' total spend, ' +
-      scaledCustomers + ' customers, CAC ' + fmt(cacScen) +
-      (avgRevenuePerCustomer > 0 ? ', Payback ' + paybackScen.toFixed(1) + ' mo' : ''),
-    );
+    // ⭐ 每档**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
+    let scenarioLabel: string;
+    if (i === 0) scenarioLabel = '$calc_out.label.scenario_cut_spend_50|Cut spend 50%|';
+    else if (i === 1) scenarioLabel = '$calc_out.label.scenario_cut_spend_25|Cut spend 25%|';
+    else if (i === 2) scenarioLabel = '$calc_out.label.scenario_current|Current|';
+    else if (i === 3) scenarioLabel = '$calc_out.label.scenario_increase_spend_25|Increase spend 25%|';
+    else scenarioLabel = '$calc_out.label.scenario_double_spend|Double spend|';
+    let line =
+      scenarioLabel + ': ' + makeToken('calc_out.cac.row.scenario_spend', '$' + Math.round(total).toLocaleString() + ' total spend, ' + scaledCustomers + ' customers, CAC ' + fmt(cacScen), { total: '$' + Math.round(total).toLocaleString(), customers: String(scaledCustomers), cac: fmt(cacScen) });
+    if (avgRevenuePerCustomer > 0) {
+      line += makeToken('calc_out.cac.row.scenario_payback', ', Payback ' + paybackScen.toFixed(1) + ' mo', { months: paybackScen.toFixed(1) });
+    }
+    results.push(line);
   }
 
   return results;
 }
 
 const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  //   ⚠️ 客户端原先少 4 段（CAC Health / What-If / Break-Even / CAC Milestones）
+  //      ⇒ 本次补齐（与服务端逐字相同、同样令牌化）—— 否则同一页静态卡片与动态卡片不同。
+  //   ⚠️ 页面只渲染 results[0] ⇒ 返回**单元素数组**（整份输出拼成一段）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var cnn=function(x){return Math.max(0,x)};" +
   "var ms=cnn(parseFloat(inputs.marketingSpend)||0);" +
   "var ss=cnn(parseFloat(inputs.salesSpend)||0);" +
@@ -187,28 +208,52 @@ const customFn =
   "var mp=ts>0?(ms/ts)*100:0;" +
   "var sp=ts>0?(ss/ts)*100:0;" +
   "var mr6='';" +
-  "mr6+='\\uD83C\\uDFAF Customer Acquisition Cost (CAC)\\n\\n';" +
-  "mr6+='\\u2022 Marketing Spend: '+fmt4(ms)+' ('+pct4(mp)+' of total)\\n';" +
-  "mr6+='\\u2022 Sales Spend: '+fmt4(ss)+' ('+pct4(sp)+' of total)\\n';" +
-  "mr6+='\\u2022 Total Acquisition Spend: '+fmt4(ts)+'\\n';" +
-  "mr6+='\\u2022 New Customers Acquired: '+loc4(nc2)+'\\n\\n';" +
-  "mr6+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "mr6+='\\uD83D\\uDCCA Key Results:\\n\\n';" +
-  "mr6+='\\u2022 Customer Acquisition Cost (CAC): '+fmt4(cac2)+' per customer\\n';" +
-  "if(arc>0){mr6+='\\u2022 Avg Revenue per Customer: '+fmt4(arc)+'/mo\\n';mr6+='\\u2022 Gross Profit per Customer: '+fmt4(gpc)+'/mo\\n';mr6+='\\u2022 CAC Payback Period: '+pbm.toFixed(1)+' months\\n';}" +
+  "mr6+='$calc_out.section.cac_calculator|\\uD83C\\uDFAF Customer Acquisition Cost (CAC)|\\n\\n';" +
+  "mr6+='\\u2022 '+tk('calc_out.cac.row.marketing_spend','Marketing Spend: '+fmt4(ms)+' ('+pct4(mp)+' of total)',{amount:fmt4(ms),pct:pct4(mp)})+'\\n';" +
+  "mr6+='\\u2022 '+tk('calc_out.cac.row.sales_spend','Sales Spend: '+fmt4(ss)+' ('+pct4(sp)+' of total)',{amount:fmt4(ss),pct:pct4(sp)})+'\\n';" +
+  "mr6+='\\u2022 $calc_out.label.total_acquisition_spend|Total Acquisition Spend|: '+fmt4(ts)+'\\n';" +
+  "mr6+='\\u2022 $calc_out.label.new_customers_acquired|New Customers Acquired|: '+loc4(nc2)+'\\n\\n';" +
+  "mr6+='\\u2501'.repeat(20)+'\\n\\n';" +
+  "mr6+='$calc_out.section.cac_key_results|\\uD83D\\uDCCA Key Results:|\\n\\n';" +
+  "mr6+='\\u2022 '+tk('calc_out.cac.row.customer_acquisition_cost','Customer Acquisition Cost (CAC): '+fmt4(cac2)+' per customer',{cac:fmt4(cac2)})+'\\n';" +
+  "if(arc>0){mr6+='\\u2022 $calc_out.label.avg_revenue_per_customer_mo|Avg Revenue per Customer|: '+fmt4(arc)+'/mo\\n';mr6+='\\u2022 $calc_out.label.gross_profit_per_customer|Gross Profit per Customer|: '+fmt4(gpc)+'/mo\\n';mr6+='\\u2022 '+tk('calc_out.cac.row.cac_payback_period','CAC Payback Period: '+pbm.toFixed(1)+' months',{months:pbm.toFixed(1)})+'\\n';}" +
   "mr6+='\\n';" +
-  "if(arc>0){var fyv=arc*12*(gm2/100);var ltvE=pbm>0?cac2*3:0;mr6+='\\u2022 Est. First-Year Customer Value: '+fmt4(fyv)+'\\n';if(ltvE>0)mr6+='\\u2022 Target LTV (at 3:1 ratio): '+fmt4(ltvE)+'\\n';mr6+='\\n';" +
-  "if(pbm<=6)mr6+='\\uD83D\\uDFE2 STRONG: CAC payback in '+pbm.toFixed(1)+' months is excellent. You recover acquisition costs quickly and can reinvest faster.\\n';" +
-  "else if(pbm<=12)mr6+='\\uD83D\\uDFE1 GOOD: CAC payback in '+pbm.toFixed(1)+' months is within the 12-month benchmark. Keep optimizing channel mix.\\n';" +
-  "else if(pbm<=18)mr6+='\\uD83D\\uDFE1 WARNING: '+pbm.toFixed(1)+' months payback is above the 12-month ideal. Review your acquisition channels for efficiency.\\n';" +
-  "else mr6+='\\uD83D\\uDD34 CRITICAL: '+pbm.toFixed(1)+' months payback is too long. Your cash flow is strained. Cut underperforming channels immediately.\\n';}" +
+  "if(arc>0){var fyv=arc*12*(gm2/100);var ltvE=pbm>0?cac2*3:0;mr6+='\\u2022 $calc_out.label.est_first_year_customer_value|Est. First-Year Customer Value|: '+fmt4(fyv)+'\\n';if(ltvE>0)mr6+='\\u2022 $calc_out.label.target_ltv_3to1|Target LTV (at 3:1 ratio)|: '+fmt4(ltvE)+'\\n';mr6+='\\n';" +
+  "if(pbm<=6)mr6+=tk('calc_out.cac.row.payback_strong','\\uD83D\\uDFE2 STRONG: CAC payback in '+pbm.toFixed(1)+' months is excellent. You recover acquisition costs quickly and can reinvest faster.',{months:pbm.toFixed(1)})+'\\n';" +
+  "else if(pbm<=12)mr6+=tk('calc_out.cac.row.payback_good','\\uD83D\\uDFE1 GOOD: CAC payback in '+pbm.toFixed(1)+' months is within the 12-month benchmark. Keep optimizing channel mix.',{months:pbm.toFixed(1)})+'\\n';" +
+  "else if(pbm<=18)mr6+=tk('calc_out.cac.row.payback_warning','\\uD83D\\uDFE1 WARNING: '+pbm.toFixed(1)+' months payback is above the 12-month ideal. Review your acquisition channels for efficiency.',{months:pbm.toFixed(1)})+'\\n';" +
+  "else mr6+=tk('calc_out.cac.row.payback_critical','\\uD83D\\uDD34 CRITICAL: '+pbm.toFixed(1)+' months payback is too long. Your cash flow is strained. Cut underperforming channels immediately.',{months:pbm.toFixed(1)})+'\\n';}" +
   "var tipTxt = arc <= 0 ? JSON.stringify({code:'cac_no_revenue',params:{cac:'$'+Math.round(cac2).toLocaleString()}}) : pbm <= 6 ? JSON.stringify({code:'cac_payback_fast',params:{paybackMonths:pbm.toFixed(1)}}) : pbm <= 12 ? JSON.stringify({code:'cac_payback_within_12',params:{paybackMonths:pbm.toFixed(1)}}) : pbm <= 18 ? JSON.stringify({code:'cac_payback_past_12',params:{paybackMonths:pbm.toFixed(1)}}) : JSON.stringify({code:'cac_payback_slow',params:{paybackMonths:pbm.toFixed(1)}});" +
-  "mr6+='\\n\\uD83D\\uDCA1 Tip: ' + tipTxt;var results=[mr6];" +
+  "mr6+='\\n\\uD83D\\uDCA1 Tip: ' + tipTxt;" +
+  "if(cac2<=0){mr6+='\\n\\n$calc_out.section.cac_health|\\uD83E\\uDE7A CAC Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.cac.row.health_zero','\\uD83D\\uDFE2 $0 CAC \\u2014 organic/word-of-mouth growth. Don\\'t get complacent; track how you scale.');}" +
+  "else if(cac2<200){mr6+='\\n\\n$calc_out.section.cac_health|\\uD83E\\uDE7A CAC Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.cac.row.health_low','\\uD83D\\uDFE2 CAC $'+Math.round(cac2)+' is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.',{cac:'$'+Math.round(cac2)});}" +
+  "else if(cac2<500){mr6+='\\n\\n$calc_out.section.cac_health|\\uD83E\\uDE7A CAC Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.cac.row.health_mid','\\uD83D\\uDFE1 CAC $'+Math.round(cac2)+' is mid-range. Verify LTV:CAC ratio is at least 3:1 before scaling spend.',{cac:'$'+Math.round(cac2)});}" +
+  "else{mr6+='\\n\\n$calc_out.section.cac_health|\\uD83E\\uDE7A CAC Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 '+tk('calc_out.cac.row.health_high','\\uD83D\\uDD34 CAC $'+Math.round(cac2)+' is high. Each new customer takes months/years to pay back. Cut CAC or raise LTV.',{cac:'$'+Math.round(cac2)});}" +
+  "mr6+='\\n\\n$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n'+'\\u2501'.repeat(54);" +
+  "if(nc2>0){var hc2=cac2/2;var dc2=nc2*2;var ncD=(ms+ss)/dc2;" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.whatif_cut_cac_half','Cut CAC in half:  $'+Math.round(hc2)+'  (assumes same spend, better conversion)',{cac:'$'+Math.round(hc2)});" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.whatif_double_acquisition','Double acquisition:  '+nc2+' \\u2192 '+dc2+' customers at $'+Math.round(ncD)+'/customer',{from:String(nc2),to:String(dc2),cac:'$'+Math.round(ncD)});" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.whatif_industry_benchmark','Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+');" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.whatif_reduce_spend_20','Reduce spend 20%:  Same customers \\u2192 $'+Math.round(cac2*0.8)+' CAC (if conversion maintained)',{cac:'$'+Math.round(cac2*0.8)});" +
+  "}else{mr6+='\\n\\u2022 '+tk('calc_out.cac.row.whatif_cannot_model','\\u26A0\\uFE0F Cannot model \\u2014 enter marketing spend, sales spend, and new customers to see scenarios.');}" +
+  "if(arc>0&&cac2>0){var tl2=cac2*3;var ln2=gpc*12;var lcn2=ln2/cac2;var bl2='\\n\\n$calc_out.section.cac_break_even|\\u2696\\uFE0F Break-Even|\\n'+'\\u2501'.repeat(54);" +
+  "if(lcn2>=3)bl2+='\\n\\u2022 '+tk('calc_out.cac.row.break_even_healthy','\\uD83D\\uDFE2 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 already above the 3:1 break-even. Healthy to scale spend.',{ratio:lcn2.toFixed(1)});" +
+  "else if(lcn2>=1){bl2+='\\n\\u2022 '+tk('calc_out.cac.row.break_even_ok','\\uD83D\\uDFE1 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 above 1:1 (not losing money) but below 3:1 ideal.',{ratio:lcn2.toFixed(1)});" +
+  "bl2+='\\n\\u2022 '+tk('calc_out.cac.row.break_even_target_3to1','To reach 3:1 at current 12-mo LTV ($'+Math.round(ln2).toLocaleString()+'):  target CAC = $'+Math.round(tl2).toLocaleString(),{ltv:'$'+Math.round(ln2).toLocaleString(),cac:'$'+Math.round(tl2).toLocaleString()});}" +
+  "else bl2+='\\n\\u2022 '+tk('calc_out.cac.row.break_even_losing','\\uD83D\\uDD34 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 losing money per customer. Stop scaling spend until ratio \\u2265 1:1.',{ratio:lcn2.toFixed(1)});" +
+  "if(pbm>0)bl2+='\\n\\u2022 '+tk('calc_out.cac.row.break_even_payback','Payback break-even:  \\u2264 12 months. Your payback = '+pbm.toFixed(1)+' mo.',{months:pbm.toFixed(1)});mr6+=bl2;}" +
+  "if(cac2>0&&gpc>0){mr6+='\\n\\n$calc_out.section.cac_milestones|\\uD83C\\uDFAF CAC Milestones|\\n'+'\\u2501'.repeat(54);" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.milestone_6mo','\\u2264 6 months payback:  CAC \\u2264 $'+Math.round(gpc*6).toLocaleString(),{cac:'$'+Math.round(gpc*6).toLocaleString()});" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.milestone_12mo','\\u2264 12 months payback:  CAC \\u2264 $'+Math.round(gpc*12).toLocaleString(),{cac:'$'+Math.round(gpc*12).toLocaleString()});" +
+  "mr6+='\\n\\u2022 '+tk('calc_out.cac.row.milestone_18mo','\\u2264 18 months payback:  CAC \\u2264 $'+Math.round(gpc*18).toLocaleString(),{cac:'$'+Math.round(gpc*18).toLocaleString()});" +
+  "if(nc2>0&&ts>0){var tc3=gpc*12;var b4=Math.round(tc3*100);mr6+='\\n\\u2022 '+tk('calc_out.cac.row.milestone_100_customers','To acquire 100 customers at 12-mo payback:  budget $'+b4.toLocaleString(),{budget:'$'+b4.toLocaleString()});}}" +
+  "var results=[mr6];" +
   "var ss5=[{l:'Cut spend 50%',mk:ms*0.5,sk:ss*0.5},{l:'Cut spend 25%',mk:ms*0.75,sk:ss*0.75},{l:'Current',mk:ms,sk:ss},{l:'Increase spend 25%',mk:ms*1.25,sk:ss*1.25},{l:'Double spend',mk:ms*2,sk:ss*2}];" +
-  "for(var i=0;i<ss5.length;i++){var st=ss5[i].mk+ss5[i].sk;var sc2=nc2>0&&ts>0?Math.round(nc2*(st/ts)):nc2;var cacS=sc2>0?st/sc2:0;var pbS=gpc>0?cacS/gpc:0;results.push(ss5[i].l+': $'+Math.round(st).toLocaleString()+' total spend, '+sc2+' customers, CAC '+fmt4(cacS)+(arc>0?', Payback '+pbS.toFixed(1)+' mo':''));}" +
-  "if(arc>0&&cac2>0){var tl2=cac2*3;var ln2=gpc*12;var lcn2=ln2/cac2;var bl2='\\n\\n\\u2696\\uFE0F Break-Even\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';if(lcn2>=3)bl2+='\\n\\u2022 \\uD83D\\uDFE2 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 already above the 3:1 break-even. Healthy to scale spend.';else if(lcn2>=1){bl2+='\\n\\u2022 \\uD83D\\uDFE1 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 above 1:1 (not losing money) but below 3:1 ideal.\\n\\u2022 To reach 3:1 at current 12-mo LTV ($'+Math.round(ln2).toLocaleString()+'):  target CAC = $'+Math.round(tl2).toLocaleString();}else bl2+='\\n\\u2022 \\uD83D\\uDD34 LTV:CAC = '+lcn2.toFixed(1)+':1 \\u2014 losing money per customer. Stop scaling spend until ratio \\u2265 1:1.';if(pbm>0)bl2+='\\n\\u2022 Payback break-even:  \\u2264 12 months. Your payback = '+pbm.toFixed(1)+' mo.';mr6+=bl2;}" +
-  "if(cac2>0&&gpc>0){mr6+='\\n\\n\\uD83C\\uDFAF CAC Milestones\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';mr6+='\\n\\u2022 \\u2264 6 months payback:  CAC \\u2264 $'+Math.round(gpc*6).toLocaleString();mr6+='\\n\\u2022 \\u2264 12 months payback:  CAC \\u2264 $'+Math.round(gpc*12).toLocaleString();mr6+='\\n\\u2022 \\u2264 18 months payback:  CAC \\u2264 $'+Math.round(gpc*18).toLocaleString();if(nc2>0&&ts>0){var tc3=gpc*12;var b4=Math.round(tc3*100);mr6+='\\n\\u2022 To acquire 100 customers at 12-mo payback:  budget $'+b4.toLocaleString();}}" +
-  "return results;";
+  "for(var i=0;i<ss5.length;i++){var st=ss5[i].mk+ss5[i].sk;var sc2=nc2>0&&ts>0?Math.round(nc2*(st/ts)):nc2;var cacS=sc2>0?st/sc2:0;var pbS=gpc>0?cacS/gpc:0;" +
+  "var slab=i===0?'$calc_out.label.scenario_cut_spend_50|Cut spend 50%|':i===1?'$calc_out.label.scenario_cut_spend_25|Cut spend 25%|':i===2?'$calc_out.label.scenario_current|Current|':i===3?'$calc_out.label.scenario_increase_spend_25|Increase spend 25%|':'$calc_out.label.scenario_double_spend|Double spend|';" +
+  "var line=slab+': '+tk('calc_out.cac.row.scenario_spend','$'+Math.round(st).toLocaleString()+' total spend, '+sc2+' customers, CAC '+fmt4(cacS),{total:'$'+Math.round(st).toLocaleString(),customers:String(sc2),cac:fmt4(cacS)});if(arc>0)line+=tk('calc_out.cac.row.scenario_payback',', Payback '+pbS.toFixed(1)+' mo',{months:pbS.toFixed(1)});results.push(line);}" +
+  // ⭐ 页面只渲染 results[0] ⇒ 返回**单元素数组**（整份输出拼成一段）
+  "return [results.join('\\n')];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-cac-calculator',
@@ -230,7 +275,7 @@ const engine: ToolEngine = {
     return calculateCAC(inputs);
   },
   staticExamples: [
-    '🎯 Customer Acquisition Cost (CAC)\n\n• Marketing Spend: $5,000 (62.5% of total)\n• Sales Spend: $3,000 (37.5% of total)\n• Total Acquisition Spend: $8,000\n• New Customers Acquired: 100\n\n━━━━━━━━━━━━━━━━━━━━\n\n📊 Key Results:\n\n• Customer Acquisition Cost (CAC): $80 per customer\n\n\n💡 Tip: {"code":"cac_no_revenue","params":{"cac":"$80"}}\n\n🩺 CAC Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 CAC $80 is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut CAC in half:  $40  (assumes same spend, better conversion)\n• Double acquisition:  100 → 200 customers at $40/customer\n• Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+\n• Reduce spend 20%:  Same customers → $64 CAC (if conversion maintained)\nCut spend 50%: $4,000 total spend, 50 customers, CAC $80\nCut spend 25%: $6,000 total spend, 75 customers, CAC $80\nCurrent: $8,000 total spend, 100 customers, CAC $80\nIncrease spend 25%: $10,000 total spend, 125 customers, CAC $80\nDouble spend: $16,000 total spend, 200 customers, CAC $80',
+    '$calc_out.section.cac_calculator|🎯 Customer Acquisition Cost (CAC)|\n\n• $calc_out.cac.row.marketing_spend{"amount":"$5,000","pct":"62.5%"}|Marketing Spend: $5,000 (62.5% of total)|\n• $calc_out.cac.row.sales_spend{"amount":"$3,000","pct":"37.5%"}|Sales Spend: $3,000 (37.5% of total)|\n• $calc_out.label.total_acquisition_spend|Total Acquisition Spend|: $8,000\n• $calc_out.label.new_customers_acquired|New Customers Acquired|: 100\n\n━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.cac_key_results|📊 Key Results:|\n\n• $calc_out.cac.row.customer_acquisition_cost{"cac":"$80"}|Customer Acquisition Cost (CAC): $80 per customer|\n\n\n💡 Tip: {"code":"cac_no_revenue","params":{"cac":"$80"}}\n\n$calc_out.section.cac_health|🩺 CAC Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.cac.row.health_low{"cac":"$80"}|🟢 CAC $80 is low. Healthy for SMB SaaS. Pair with LTV to confirm LTV:CAC > 3.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.cac.row.whatif_cut_cac_half{"cac":"$40"}|Cut CAC in half:  $40  (assumes same spend, better conversion)|\n• $calc_out.cac.row.whatif_double_acquisition{"from":"100","to":"200","cac":"$40"}|Double acquisition:  100 → 200 customers at $40/customer|\n• $calc_out.cac.row.whatif_industry_benchmark|Industry benchmark CAC:  SMB SaaS $100-300, mid-market $300-700, enterprise $700+|\n• $calc_out.cac.row.whatif_reduce_spend_20{"cac":"$64"}|Reduce spend 20%:  Same customers → $64 CAC (if conversion maintained)|\n$calc_out.label.scenario_cut_spend_50|Cut spend 50%|: $calc_out.cac.row.scenario_spend{"total":"$4,000","customers":"50","cac":"$80"}|$4,000 total spend, 50 customers, CAC $80|\n$calc_out.label.scenario_cut_spend_25|Cut spend 25%|: $calc_out.cac.row.scenario_spend{"total":"$6,000","customers":"75","cac":"$80"}|$6,000 total spend, 75 customers, CAC $80|\n$calc_out.label.scenario_current|Current|: $calc_out.cac.row.scenario_spend{"total":"$8,000","customers":"100","cac":"$80"}|$8,000 total spend, 100 customers, CAC $80|\n$calc_out.label.scenario_increase_spend_25|Increase spend 25%|: $calc_out.cac.row.scenario_spend{"total":"$10,000","customers":"125","cac":"$80"}|$10,000 total spend, 125 customers, CAC $80|\n$calc_out.label.scenario_double_spend|Double spend|: $calc_out.cac.row.scenario_spend{"total":"$16,000","customers":"200","cac":"$80"}|$16,000 total spend, 200 customers, CAC $80|',
     'Cut spend 50%: $4,000 total spend, 20 customers, CAC $200, Payback 5.0 mo',
     'Cut spend 25%: $6,000 total spend, 30 customers, CAC $200, Payback 5.0 mo',
     'Current: $8,000 total spend, 40 customers, CAC $200, Payback 5.0 mo',

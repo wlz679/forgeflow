@@ -16,9 +16,9 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { extractAll } from './p168-locale-extract.ts';
+import { insertCalcOut } from './p168-locale-order.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
-const PREFIX = 'calc_out.';
 
 /** 取 en 值的前导 emoji（含变体选择符/ZWJ 序列）+ 其后的空白 */
 function leadingEmoji(s: string): { emoji: string; rest: string } {
@@ -41,30 +41,7 @@ function serialize(obj: Record<string, string>): string {
   return JSON.stringify(obj, null, 2) + '\n';
 }
 
-/** 把新键插进 calc_out.* 连续段（保持段内字典序，其余键的相对顺序不变） */
-function insertCalcOut(obj: Record<string, string>, additions: Record<string, string>): Record<string, string> {
-  const keys = Object.keys(obj);
-  const idx = keys.map((k, i) => (k.startsWith(PREFIX) ? i : -1)).filter((i) => i >= 0);
-  if (idx.length === 0) throw new Error('locale 里没有 calc_out.* 段');
-  const first = idx[0];
-  const last = idx[idx.length - 1];
-  if (last - first + 1 !== idx.length) throw new Error('calc_out.* 段不连续 ⇒ 插入策略要重做');
-  const blockKeys = keys.slice(first, last + 1);
-  const blockVals = new Map<string, string>();
-  for (const k of blockKeys) blockVals.set(k, obj[k]);
-  // ⚠️ **只插入、不重排既有键**（段内有 2 处 B3-7 留下的逆序 ⇒ 整段排序会产生无关 diff）
-  for (const nk of Object.keys(additions).sort()) {
-    let pos = blockKeys.length;
-    for (let i = 0; i < blockKeys.length; i++) { if (blockKeys[i] > nk) { pos = i; break; } }
-    blockKeys.splice(pos, 0, nk);
-    blockVals.set(nk, additions[nk]);
-  }
-  const out: Record<string, string> = {};
-  for (let i = 0; i < first; i++) out[keys[i]] = obj[keys[i]];
-  for (const k of blockKeys) out[k] = blockVals.get(k)!;
-  for (let i = last + 1; i < keys.length; i++) out[keys[i]] = obj[keys[i]];
-  return out;
-}
+// ⚠️ 插入规则已抽到 p168-locale-order.ts（共享）⇒ 落库工具只有一处规则。
 
 const args = process.argv.slice(2);
 const dry = args.includes('--dry');

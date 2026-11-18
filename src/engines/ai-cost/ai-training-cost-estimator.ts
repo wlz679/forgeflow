@@ -2,6 +2,7 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 interface GpuInfo {
   hourlyRate: number;
@@ -22,6 +23,35 @@ interface ModelInfo {
 const GPU_TYPES: Record<string, GpuInfo> = PRICING.training.gpuTypes as any;
 
 const MODEL_SIZES: Record<string, ModelInfo> = PRICING.training.modelSizes as any;
+/**
+ * 模型显示名：把「型号 + 变体说明」拆开 —— 型号（7B / 70B）留在 token 外，
+ * 变体说明（LoRA fine-tune / full fine-tune / full train）包成 token。
+ *
+ * ⭐ 为什么不能整段包 token：型号本身不该译（翻成「7B（LoRA 微调）」会把型号也动到）；
+ *   而不拆则 zh 页那一行**整行**是英文（B3-9 产物层守卫实测抓到 2 行）。
+ *
+ * ⚠️ code 是**字面量**（协议要求 code 必须来自字符串字面量 ⇒ 静态扫描才完备）。
+ */
+const MODEL_VARIANT_FALLBACK: Record<string, string> = {
+  'LoRA fine-tune': 'LoRA fine-tune',
+  'full fine-tune': 'full fine-tune',
+  'full train': 'full train',
+};
+
+function modelLabel(name: string): string {
+  const i = name.indexOf(' (');
+  if (i < 0) return name;
+  const base = name.slice(0, i);
+  const variant = name.slice(i + 2, name.lastIndexOf(')'));
+  const code =
+    variant === 'LoRA fine-tune'
+      ? 'calc_out.ai_training_cost_estimator.row.model_variant_lora_fine_tune'
+      : variant === 'full fine-tune'
+      ? 'calc_out.ai_training_cost_estimator.row.model_variant_full_fine_tune'
+      : 'calc_out.ai_training_cost_estimator.row.model_variant_full_train';
+  return base + ' (' + makeToken(code, MODEL_VARIANT_FALLBACK[variant] ?? variant) + ')';
+}
+
 
 // Storage cost per GB per month
 const STORAGE_COST_PER_GB = PRICING.gpu.storagePerGB;
@@ -80,41 +110,56 @@ function calculate(inputs: Record<string, string>): string[] {
   const totalCost = gpuCost + storageCost + dataProcessCost;
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-9：⭐ **删除**「📅 Pricing last updated: ...」这一行。
+  //   理由（与 B3-8 ai-api-cost-comparison 同源）：codegen 写 staticExamples[0] 时**本来就过滤掉它**
+  //   （scripts/codegen-examples.mjs:317），页面用**徽章**显示同一日期 ⇒ 保留它只会让
+  //   「服务端输出」比「静态卡片」多一行（既有 G6 漂移），令牌化后两端必须逐字一致 ⇒ 删掉。
+  //   ⚠️ 英文页可见输出不变：静态卡片本来就没有这一行，客户端也从来没有这一行。
   out.push('');
 
   // Section 1: Header
-  let header = '\u{1F916} AI Training Cost Estimate';
-  if (isLoRA) header += ' (LoRA)';
-  out.push(header);
+  if (isLoRA) {
+    out.push(makeToken('calc_out.section.ai_training_cost_estimator_lora', '\u{1F916} AI Training Cost Estimate (LoRA)'));
+  } else {
+    out.push(makeToken('calc_out.section.ai_training_cost_estimator', '\u{1F916} AI Training Cost Estimate'));
+  }
   out.push('');
-  out.push('Model: ' + model.name + ' | GPU: ' + gpuCount + '× ' + gpu.name);
-  out.push('Training: ' + lc(trainingHours) + ' hrs/epoch × ' + epochs + ' epochs = ' + lc(totalGpuHours) + ' total GPU-hours');
+  out.push(makeToken('calc_out.label.model', 'Model') + ': ' + modelLabel(model.name) + ' | ' + makeToken('calc_out.label.gpu', 'GPU') + ': ' + gpuCount + '× ' + gpu.name);
+  out.push(makeToken('calc_out.label.training', 'Training') + ': ' + lc(trainingHours) + makeToken('calc_out.ai_training_cost_estimator.row.unit_hrs_per_epoch', ' hrs/epoch', { hrs: lc(trainingHours) }) + ' × ' + epochs + makeToken('calc_out.ai_training_cost_estimator.row.unit_epochs', ' epochs', { epochs: String(epochs) }) + ' = ' + lc(totalGpuHours) + makeToken('calc_out.ai_training_cost_estimator.row.unit_total_gpu_hours', ' total GPU-hours', { hours: lc(totalGpuHours) }));
   out.push('');
 
   // Section 2: Cost Breakdown
-  out.push('\u{1F4B0} Cost Breakdown');
+  out.push(makeToken('calc_out.section.ai_training_cost_breakdown', '\u{1F4B0} Cost Breakdown'));
   out.push(SEP.repeat(50));
-  out.push('GPU Compute:  ' + pad(gpuCount + '× ' + gpu.name + ' @ ' + fmt(gpu.hourlyRate) + '/hr × ' + lc(totalGpuHours) + ' hrs', 45) + fmt(gpuCost));
-  out.push('Cloud Storage: ' + pad(lc(cloudStorageGB) + ' GB @ $' + STORAGE_COST_PER_GB.toFixed(2) + '/GB/mo × ' + trainingMonths.toFixed(1) + ' mo', 45) + fmt(storageCost));
-  out.push('Data Processing:' + pad(' ' + fmt(dataProcessCost), 45) + fmt(dataProcessCost));
+  out.push(makeToken('calc_out.label.gpu_compute', 'GPU Compute') + ':  ' + pad(gpuCount + '× ' + gpu.name + ' @ ' + fmt(gpu.hourlyRate) + '/hr × ' + lc(totalGpuHours) + ' hrs', 45) + fmt(gpuCost));
+  out.push(makeToken('calc_out.label.cloud_storage', 'Cloud Storage') + ': ' + pad(lc(cloudStorageGB) + ' GB @ $' + STORAGE_COST_PER_GB.toFixed(2) + '/GB/mo × ' + trainingMonths.toFixed(1) + ' mo', 45) + fmt(storageCost));
+  out.push(makeToken('calc_out.label.data_processing', 'Data Processing') + ':' + pad(' ' + fmt(dataProcessCost), 45) + fmt(dataProcessCost));
   out.push(SEP.repeat(50));
-  out.push('Total Estimated Cost: ' + pad('', 23) + fmt(totalCost));
+  out.push(makeToken('calc_out.label.total_estimated_cost', 'Total Estimated Cost') + ': ' + pad('', 23) + fmt(totalCost));
   out.push('');
 
   // Per-epoch cost breakdown
-  out.push('\u{1F4CA} Per-Epoch Tracking');
+  out.push(makeToken('calc_out.section.ai_training_per_epoch_tracking', '\u{1F4CA} Per-Epoch Tracking'));
   out.push(SEP.repeat(50));
   const perEpochGpu = effectiveHoursPerEpoch * gpuCount * gpu.hourlyRate;
   const perEpochStorage = cloudStorageGB * STORAGE_COST_PER_GB * (effectiveHoursPerEpoch / 24 / 30);
-  out.push('Per Epoch GPU Cost: ' + fmt(perEpochGpu));
-  out.push('Per Epoch Total:    ' + fmt(perEpochGpu + perEpochStorage));
+  out.push(makeToken('calc_out.label.per_epoch_gpu_cost', 'Per Epoch GPU Cost') + ': ' + fmt(perEpochGpu));
+  out.push(makeToken('calc_out.label.per_epoch_total', 'Per Epoch Total') + ':    ' + fmt(perEpochGpu + perEpochStorage));
   out.push('');
 
   // Epoch-by-epoch table
-  let tblHdr = 'Epoch'.padEnd(8) + ' | ' + 'GPU Cost'.padEnd(14) + ' | ' + 'Cumulative'.padEnd(16);
+  //   ⭐ 对齐空格**留在 token 之外**（\0.3 配方第 2 条）⇒ 表头单元格的 padEnd 结果单独算好再拼。
+  const hdrEpoch = 'Epoch'.padEnd(8);
+  const hdrGpu = 'GPU Cost'.padEnd(14);
+  const hdrCum = 'Cumulative'.padEnd(16);
+  const tblHdr =
+    makeToken('calc_out.label.epoch', 'Epoch') + hdrEpoch.slice('Epoch'.length) +
+    ' | ' +
+    makeToken('calc_out.label.gpu_cost', 'GPU Cost') + hdrGpu.slice('GPU Cost'.length) +
+    ' | ' +
+    makeToken('calc_out.label.cumulative', 'Cumulative') + hdrCum.slice('Cumulative'.length);
   out.push(tblHdr);
-  out.push('─'.repeat(tblHdr.length));
+  out.push('─'.repeat(hdrEpoch.length + 3 + hdrGpu.length + 3 + hdrCum.length));
   for (let e = 1; e <= epochs; e++) {
     const cumGpu = perEpochGpu * e;
     const cumStorage = cloudStorageGB * STORAGE_COST_PER_GB * ((effectiveHoursPerEpoch * e) / 24 / 30);
@@ -128,20 +173,20 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // Section 3: Total cost summary
-  out.push('\u{1F4CB} Cost Summary');
+  out.push(makeToken('calc_out.section.ai_training_cost_summary', '\u{1F4CB} Cost Summary'));
   out.push(SEP.repeat(50));
   const pctGpu = totalCost > 0 ? Math.round((gpuCost / totalCost) * 100) : 0;
   const pctStorage = totalCost > 0 ? Math.round((storageCost / totalCost) * 100) : 0;
   const pctData = totalCost > 0 ? Math.round((dataProcessCost / totalCost) * 100) : 0;
-  out.push('GPU:     ' + fmt(gpuCost).padEnd(14) + ' (' + pctGpu + '%)  ' + '█'.repeat(Math.round(pctGpu / 5)));
-  out.push('Storage: ' + fmt(storageCost).padEnd(14) + ' (' + pctStorage + '%)  ' + '▓'.repeat(Math.round(pctStorage / 5)));
+  out.push(makeToken('calc_out.label.gpu', 'GPU') + ':     ' + fmt(gpuCost).padEnd(14) + ' (' + pctGpu + '%)  ' + '█'.repeat(Math.round(pctGpu / 5)));
+  out.push(makeToken('calc_out.label.storage', 'Storage') + ': ' + fmt(storageCost).padEnd(14) + ' (' + pctStorage + '%)  ' + '▓'.repeat(Math.round(pctStorage / 5)));
   if (dataProcessCost > 0) {
-    out.push('Data:    ' + fmt(dataProcessCost).padEnd(14) + ' (' + pctData + '%)  ' + '▒'.repeat(Math.round(pctData / 5)));
+    out.push(makeToken('calc_out.label.data', 'Data') + ':    ' + fmt(dataProcessCost).padEnd(14) + ' (' + pctData + '%)  ' + '▒'.repeat(Math.round(pctData / 5)));
   }
   out.push('');
 
   // Section 4: Optimistic/Pessimistic Range
-  out.push('\u{1F4C8} Cost Range (Optimistic — Pessimistic)');
+  out.push(makeToken('calc_out.section.ai_training_cost_range', '\u{1F4C8} Cost Range (Optimistic — Pessimistic)'));
   out.push(SEP.repeat(50));
   const optimistic = totalCost * 0.7;
   const pessimistic = totalCost * 1.5;
@@ -155,66 +200,68 @@ function calculate(inputs: Record<string, string>): string[] {
   const spotOffHigh = Math.round((1 - SPOT_MULT_MIN) * 100);
   const reservedOffLow = Math.round((1 - RESERVED_MULT_MAX) * 100);
   const reservedOffHigh = Math.round((1 - RESERVED_MULT_MIN) * 100);
-  out.push('Optimistic (spot instances + optimizations):  ' + fmt(optimistic));
-  out.push('Expected:                                      ' + fmt(totalCost));
-  out.push('Pessimistic (on-demand + overhead):            ' + fmt(pessimistic));
+  out.push(makeToken('calc_out.label.optimistic_spot_optimizations', 'Optimistic (spot instances + optimizations)') + ':  ' + fmt(optimistic));
+  out.push(makeToken('calc_out.label.expected', 'Expected') + ':' + ' '.repeat(47 - 'Expected:'.length) + fmt(totalCost));
+  out.push(makeToken('calc_out.label.pessimistic_ondemand_overhead', 'Pessimistic (on-demand + overhead)') + ':' + ' '.repeat(47 - 'Pessimistic (on-demand + overhead):'.length) + fmt(pessimistic));
   out.push('');
-  out.push('With Spot Discount (' + spotOffLow + '-' + spotOffHigh + '% off):        ' + fmt(withSpotLow) + ' - ' + fmt(withSpotHigh));
-  out.push('With Reserved Discount (' + reservedOffLow + '-' + reservedOffHigh + '% off):     ' + fmt(withReservedLow) + ' - ' + fmt(withReservedHigh));
+  out.push(makeToken('calc_out.ai_training_cost_estimator.row.with_spot_discount', 'With Spot Discount (' + spotOffLow + '-' + spotOffHigh + '% off)', { low: String(spotOffLow), high: String(spotOffHigh) }) + ':        ' + fmt(withSpotLow) + ' - ' + fmt(withSpotHigh));
+  out.push(makeToken('calc_out.ai_training_cost_estimator.row.with_reserved_discount', 'With Reserved Discount (' + reservedOffLow + '-' + reservedOffHigh + '% off)', { low: String(reservedOffLow), high: String(reservedOffHigh) }) + ':     ' + fmt(withReservedLow) + ' - ' + fmt(withReservedHigh));
   out.push('');
 
   // Section 5: Multi-Run Scaling
-  out.push('\u{1F504} Multi-Run Scaling');
+  out.push(makeToken('calc_out.section.ai_training_multi_run_scaling', '\u{1F504} Multi-Run Scaling'));
   out.push(SEP.repeat(50));
   const runs = [1, 3, 5, 10, 25, 50];
-  let runHdr = 'Runs'.padEnd(8);
+  const runsCell = 'Runs'.padEnd(8);
+  let runHdr = makeToken('calc_out.label.runs', 'Runs') + runsCell.slice('Runs'.length);
   for (const r of runs) runHdr += ' | ' + pad(lc(r), 12);
   out.push(runHdr);
   let runSep = ''.padEnd(8, SEP);
   for (const _ of runs) runSep += '─┼─'.padEnd(13, SEP);
   out.push(runSep);
-  let totalRow = 'Total'.padEnd(8);
+  const totalCell = 'Total'.padEnd(8);
+  let totalRow = makeToken('calc_out.label.total', 'Total') + totalCell.slice('Total'.length);
   for (const r of runs) totalRow += ' | ' + pad(fmt(totalCost * r), 12);
   out.push(totalRow);
   out.push('');
 
   // CPU-hours equivalent comparison
   const cpuEquiv = totalGpuHours * gpuCount * 100; // rough: 1 GPU-hour ≈ 100 CPU-core-hours
-  out.push('\u{1F4A1} ' + lc(totalGpuHours) + ' GPU-hours ≈ ' + lc(cpuEquiv) + ' CPU-core-hours equivalent.');
-  out.push('\u{1F4A1} LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.');
+  out.push(makeToken('calc_out.ai_training_cost_estimator.row.gpu_hours_equivalent', '\u{1F4A1} ' + lc(totalGpuHours) + ' GPU-hours ≈ ' + lc(cpuEquiv) + ' CPU-core-hours equivalent.', { hours: lc(totalGpuHours), cpu: lc(cpuEquiv) }));
+  out.push(makeToken('calc_out.ai_training_cost_estimator.row.lora_cost_note', '\u{1F4A1} LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.'));
 
   // 🩺 Cost Health (v3)
   out.push('');
-  out.push('🩺 Cost Health:');
+  out.push(makeToken('calc_out.section.ai_training_cost_health', '🩺 Cost Health:'));
   out.push(SEP.repeat(60));
   if (model.isLoRA) {
-    out.push('• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.health_lora', '• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.'));
   } else {
-    out.push('• 🟠 Full fine-tune — training all model weights. Most expensive option. Consider LoRA unless you have a specific need.');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.health_full', '• 🟠 Full fine-tune — training all model weights. Most expensive option. Consider LoRA unless you have a specific need.'));
   }
   if (epochs > 5) {
-    out.push('• 🟡 ' + epochs + ' epochs is aggressive — most models converge in 2-4. Diminishing returns past epoch 5 unless you have a specific reason.');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.health_epochs_aggressive', '• 🟡 ' + epochs + ' epochs is aggressive — most models converge in 2-4. Diminishing returns past epoch 5 unless you have a specific reason.', { epochs: String(epochs) }));
   }
   if (cloudStorageGB > 1000) {
-    out.push('• 💡 ' + lc(cloudStorageGB) + 'GB storage is significant — consider S3 cold storage or dataset compression.');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.health_storage_significant', '• 💡 ' + lc(cloudStorageGB) + 'GB storage is significant — consider S3 cold storage or dataset compression.', { gb: lc(cloudStorageGB) }));
   }
   out.push('');
 
   // 🔄 What-If Scenarios (v3)
-  out.push('🔄 What-If Scenarios:');
+  out.push(makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:'));
   out.push(SEP.repeat(60));
   // P163：full-FT 倍数由数据集派生（loraSpeedup = 0.35 ⇒ 1/0.35 ≈ 2.86 ⇒ 取整 3x），
   // 与 FAQ 的 {{liveTrainingFullFtMult}} 同源 —— 写死的 3 会在数据集变动后与 FAQ 打架。
   const FULL_FT_MULT = Math.round(1 / LORA_EPOCH_SPEEDUP);
   if (model.isLoRA) {
     const fullCost = totalCost * FULL_FT_MULT;
-    out.push('• Switch to full fine-tune:  ' + fmt(fullCost) + '  (' + FULL_FT_MULT + 'x cost, but better quality)');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.whatif_switch_full_finetune', '• Switch to full fine-tune:  ' + fmt(fullCost) + '  (' + FULL_FT_MULT + 'x cost, but better quality)', { cost: fmt(fullCost), mult: String(FULL_FT_MULT) }));
   } else {
     const loraCost = totalCost / FULL_FT_MULT;
-    out.push('• Switch to LoRA fine-tuning:  ' + fmt(loraCost) + '  (1/' + FULL_FT_MULT + ' cost, similar quality for most tasks)');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.whatif_switch_lora', '• Switch to LoRA fine-tuning:  ' + fmt(loraCost) + '  (1/' + FULL_FT_MULT + ' cost, similar quality for most tasks)', { cost: fmt(loraCost), mult: String(FULL_FT_MULT) }));
   }
-  out.push('• Halve epochs to ' + Math.max(1, Math.floor(epochs / 2)) + ':  ' + fmt(totalCost / 2) + '  (may need more data to compensate)');
-  out.push('• Double epochs to ' + (epochs * 2) + ':  ' + fmt(totalCost * 2) + '  (diminishing returns past 5)');
+  out.push(makeToken('calc_out.ai_training_cost_estimator.row.whatif_halve_epochs', '• Halve epochs to ' + Math.max(1, Math.floor(epochs / 2)) + ':  ' + fmt(totalCost / 2) + '  (may need more data to compensate)', { epochs: String(Math.max(1, Math.floor(epochs / 2))), cost: fmt(totalCost / 2) }));
+  out.push(makeToken('calc_out.ai_training_cost_estimator.row.whatif_double_epochs', '• Double epochs to ' + (epochs * 2) + ':  ' + fmt(totalCost * 2) + '  (diminishing returns past 5)', { epochs: String(epochs * 2), cost: fmt(totalCost * 2) }));
   // P163 D3 同族：旧文案写死「RunPod/Vast.ai for 40-50% savings」。
   // 实测（2026-10-30）：把 gpu.providers 的 A100 现货价与 training.gpuTypes
   // 的 A100-80GB 基准（$1.50/hr）比，runpod = 47.3%、vastai = 54.0%
@@ -231,12 +278,21 @@ function calculate(inputs: Record<string, string>): string[] {
     const cheapestMarket = Math.min(...marketRates);
     const marketSavingPct = Math.round((1 - cheapestMarket / gpu.hourlyRate) * 100);
     out.push(
-      '• Switch to cheaper GPU in same tier:  cheapest market rate for ' + gpu.name +
-      ' is $' + fmtNum(cheapestMarket) + '/hr vs $' + fmtNum(gpu.hourlyRate) +
-      '/hr baseline — save ~' + marketSavingPct + '%',
+      makeToken(
+        'calc_out.ai_training_cost_estimator.row.whatif_cheaper_gpu_market',
+        '• Switch to cheaper GPU in same tier:  cheapest market rate for ' + gpu.name +
+        ' is $' + fmtNum(cheapestMarket) + '/hr vs $' + fmtNum(gpu.hourlyRate) +
+        '/hr baseline — save ~' + marketSavingPct + '%',
+        {
+          gpu: gpu.name,
+          market: '$' + fmtNum(cheapestMarket) + '/hr',
+          baseline: '$' + fmtNum(gpu.hourlyRate) + '/hr',
+          save: String(marketSavingPct),
+        }
+      ),
     );
   } else {
-    out.push('• Switch to cheaper GPU in same tier:  compare per-GPU-hour rates across cloud providers');
+    out.push(makeToken('calc_out.ai_training_cost_estimator.row.whatif_cheaper_gpu_compare', '• Switch to cheaper GPU in same tier:  compare per-GPU-hour rates across cloud providers'));
   }
   out.push('');
 
@@ -246,6 +302,8 @@ function calculate(inputs: Record<string, string>): string[] {
 // customFn — exact sync with calculate()
 const customFn =
   // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+  "function ml2(n){var i=n.indexOf(' (');if(i<0)return n;var b=n.slice(0,i);var v=n.slice(i+2,n.lastIndexOf(')'));var c=v==='LoRA fine-tune'?'calc_out.ai_training_cost_estimator.row.model_variant_lora_fine_tune':v==='full fine-tune'?'calc_out.ai_training_cost_estimator.row.model_variant_full_fine_tune':'calc_out.ai_training_cost_estimator.row.model_variant_full_train';return b+' ('+tk(c,v)+')';}" +
   "var cnn=function(x){return Math.max(0,x)};" +
   "var GT={" +
   "'H200-141GB':{hr:3.5,n:'H200 141GB',od:1}," +
@@ -276,50 +334,88 @@ const customFn =
   "var tgh=ehp*ep;var gpc=tgh*gc2*g.hr;" +
   "var tm=Math.max(0.1,(tgh/24)/30);var sc=csg*SCG*tm;" +
   "var tc=gpc+sc+dpc;" +
-  "var o=[];" +
-  "var hdr2='\\u{1F916} AI Training Cost Estimate';if(isL)hdr2+=' (LoRA)';" +
-  "o.push(hdr2);o.push('');" +
-  "o.push('Model: '+m.n+' | GPU: '+gc2+'\\u00D7 '+g.n);" +
-  "o.push('Training: '+lc2(th)+' hrs/epoch \\u00D7 '+ep+' epochs = '+lc2(tgh)+' total GPU-hours');o.push('');" +
-  "o.push('\\u{1F4B0} Cost Breakdown');o.push(SEP4.repeat(50));" +
-  "o.push('GPU Compute:  '+pd2(gc2+'\\u00D7 '+g.n+' @ '+fm2(g.hr)+'/hr \\u00D7 '+lc2(tgh)+' hrs',45)+fm2(gpc));" +
-  "o.push('Cloud Storage: '+pd2(lc2(csg)+' GB @ $'+SCG.toFixed(2)+'/GB/mo \\u00D7 '+tm.toFixed(1)+' mo',45)+fm2(sc));" +
-  "o.push('Data Processing:'+pd2(' '+fm2(dpc),45)+fm2(dpc));" +
-  "o.push(SEP4.repeat(50));" +
-  "o.push('Total Estimated Cost: '+pd2('',23)+fm2(tc));o.push('');" +
-  "o.push('\\u{1F4CA} Per-Epoch Tracking');o.push(SEP4.repeat(50));" +
-  "var peg=ehp*gc2*g.hr;var pes=csg*SCG*(ehp/24/30);" +
-  "o.push('Per Epoch GPU Cost: '+fm2(peg));" +
-  "o.push('Per Epoch Total:    '+fm2(peg+pes));o.push('');" +
-  "var th2='Epoch'.padEnd(8)+' | '+'GPU Cost'.padEnd(14)+' | '+'Cumulative'.padEnd(16);o.push(th2);" +
-  "o.push('\\u2500'.repeat(th2.length));" +
-  "for(var e=1;e<=ep;e++){" +
-  "var cg2=peg*e;var cs2=csg*SCG*((ehp*e)/24/30);var ct2=cg2+cs2+dpc;" +
-  "o.push(String(e).padEnd(8)+' | '+fm2(peg*e).padEnd(14)+' | '+fm2(ct2).padEnd(16));}" +
-  "o.push('');" +
-  "o.push('\\u{1F4CB} Cost Summary');o.push(SEP4.repeat(50));" +
-  "var pg=tc>0?Math.round((gpc/tc)*100):0;var ps2=tc>0?Math.round((sc/tc)*100):0;var pd3=tc>0?Math.round((dpc/tc)*100):0;" +
-  "o.push('GPU:     '+fm2(gpc).padEnd(14)+' ('+pg+'%)  '+Array(Math.round(pg/5)+1).join('\\u2588'));" +
-  "o.push('Storage: '+fm2(sc).padEnd(14)+' ('+ps2+'%)  '+Array(Math.round(ps2/5)+1).join('\\u2593'));" +
-  "if(dpc>0){o.push('Data:    '+fm2(dpc).padEnd(14)+' ('+pd3+'%)  '+Array(Math.round(pd3/5)+1).join('\\u2592'));}" +
-  "o.push('');" +
-  "o.push('\\u{1F4C8} Cost Range (Optimistic \\u2014 Pessimistic)');o.push(SEP4.repeat(50));" +
-  "o.push('Optimistic (spot instances + optimizations):  '+fm2(tc*0.7));" +
-  "o.push('Expected:                                      '+fm2(tc));" +
-  "o.push('Pessimistic (on-demand + overhead):            '+fm2(tc*1.5));" +
-  "o.push('');" +
-  "o.push('With Spot Discount ('+Math.round((1-SPMAX)*100)+'-'+Math.round((1-SPMIN)*100)+'% off):        '+fm2(tc*SPMIN)+' - '+fm2(tc*SPMAX));" +
-  "o.push('With Reserved Discount ('+Math.round((1-RPMAX)*100)+'-'+Math.round((1-RPMIN)*100)+'% off):     '+fm2(tc*RPMIN)+' - '+fm2(tc*RPMAX));" +
-  "o.push('');" +
-  "o.push('\\u{1F504} Multi-Run Scaling');o.push(SEP4.repeat(50));" +
-  "var rns=[1,3,5,10,25,50];" +
-  "var rh='Runs'.padEnd(8);for(var ri=0;ri<rns.length;ri++)rh+=' | '+pd2(lc2(rns[ri]),12);o.push(rh);" +
-  "var rs=''.padEnd(8,SEP4);for(var ri2=0;ri2<rns.length;ri2++)rs+='\\u2500\\u253C\\u2500'.padEnd(13,SEP4);o.push(rs);" +
-  "var tr2='Total'.padEnd(8);for(var ri3=0;ri3<rns.length;ri3++)tr2+=' | '+pd2(fm2(tc*rns[ri3]),12);o.push(tr2);" +
-  "o.push('');" +
-  "var ce=tgh*gc2*100;o.push('\\u{1F4A1} '+lc2(tgh)+' GPU-hours \\u2248 '+lc2(ce)+' CPU-core-hours equivalent.');" +
-  "o.push('\\u{1F4A1} LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.');" +
-  "return o;";
+    "var MKT={'H200':2.2,'H100':1.69,'A100':0.69,'L40S':0.59};\n" +
+  "var o=[];\n" +
+  "o.push('');\n" +
+  "if(isL)o.push(tk('calc_out.section.ai_training_cost_estimator_lora','\\u{1F916} AI Training Cost Estimate (LoRA)'));\n" +
+  "else o.push(tk('calc_out.section.ai_training_cost_estimator','\\u{1F916} AI Training Cost Estimate'));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.label.model','Model')+': '+ml2(m.n)+' | '+tk('calc_out.label.gpu','GPU')+': '+gc2+'\\u00D7 '+g.n);\n" +
+  "o.push(tk('calc_out.label.training','Training')+': '+lc2(th)+tk('calc_out.ai_training_cost_estimator.row.unit_hrs_per_epoch',' hrs/epoch',{hrs:lc2(th)})+' \\u00D7 '+ep+tk('calc_out.ai_training_cost_estimator.row.unit_epochs',' epochs',{epochs:String(ep)})+' = '+lc2(tgh)+tk('calc_out.ai_training_cost_estimator.row.unit_total_gpu_hours',' total GPU-hours',{hours:lc2(tgh)}));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.ai_training_cost_breakdown','\\u{1F4B0} Cost Breakdown'));\n" +
+  "o.push(SEP4.repeat(50));\n" +
+  "o.push(tk('calc_out.label.gpu_compute','GPU Compute')+':  '+pd2(gc2+'\\u00D7 '+g.n+' @ '+fm2(g.hr)+'/hr \\u00D7 '+lc2(tgh)+' hrs',45)+fm2(gpc));\n" +
+  "o.push(tk('calc_out.label.cloud_storage','Cloud Storage')+': '+pd2(lc2(csg)+' GB @ $'+SCG.toFixed(2)+'/GB/mo \\u00D7 '+tm.toFixed(1)+' mo',45)+fm2(sc));\n" +
+  "o.push(tk('calc_out.label.data_processing','Data Processing')+':'+pd2(' '+fm2(dpc),45)+fm2(dpc));\n" +
+  "o.push(SEP4.repeat(50));\n" +
+  "o.push(tk('calc_out.label.total_estimated_cost','Total Estimated Cost')+': '+pd2('',23)+fm2(tc));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.ai_training_per_epoch_tracking','\\u{1F4CA} Per-Epoch Tracking'));\n" +
+  "o.push(SEP4.repeat(50));\n" +
+  "var peg=ehp*gc2*g.hr;var pes=csg*SCG*(ehp/24/30);\n" +
+  "o.push(tk('calc_out.label.per_epoch_gpu_cost','Per Epoch GPU Cost')+': '+fm2(peg));\n" +
+  "o.push(tk('calc_out.label.per_epoch_total','Per Epoch Total')+':    '+fm2(peg+pes));\n" +
+  "o.push('');\n" +
+  "var hE='Epoch'.padEnd(8);var hG='GPU Cost'.padEnd(14);var hC='Cumulative'.padEnd(16);\n" +
+  "var th2=tk('calc_out.label.epoch','Epoch')+hE.slice(5)+' | '+tk('calc_out.label.gpu_cost','GPU Cost')+hG.slice(8)+' | '+tk('calc_out.label.cumulative','Cumulative')+hC.slice(10);\n" +
+  "o.push(th2);\n" +
+  "o.push('\\u2500'.repeat(hE.length+3+hG.length+3+hC.length));\n" +
+  "for(var e=1;e<=ep;e++){var cg2=peg*e;var cs2=csg*SCG*((ehp*e)/24/30);var ct2=cg2+cs2+dpc;o.push(String(e).padEnd(8)+' | '+fm2(peg*e).padEnd(14)+' | '+fm2(ct2).padEnd(16));}\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.ai_training_cost_summary','\\u{1F4CB} Cost Summary'));\n" +
+  "o.push(SEP4.repeat(50));\n" +
+  "var pg=tc>0?Math.round((gpc/tc)*100):0;var ps2=tc>0?Math.round((sc/tc)*100):0;var pd3=tc>0?Math.round((dpc/tc)*100):0;\n" +
+  "o.push(tk('calc_out.label.gpu','GPU')+':     '+fm2(gpc).padEnd(14)+' ('+pg+'%)  '+Array(Math.round(pg/5)+1).join('\\u2588'));\n" +
+  "o.push(tk('calc_out.label.storage','Storage')+': '+fm2(sc).padEnd(14)+' ('+ps2+'%)  '+Array(Math.round(ps2/5)+1).join('\\u2593'));\n" +
+  "if(dpc>0){o.push(tk('calc_out.label.data','Data')+':    '+fm2(dpc).padEnd(14)+' ('+pd3+'%)  '+Array(Math.round(pd3/5)+1).join('\\u2592'));}\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.ai_training_cost_range','\\u{1F4C8} Cost Range (Optimistic \\u2014 Pessimistic)'));\n" +
+  "o.push(SEP4.repeat(50));\n" +
+  "o.push(tk('calc_out.label.optimistic_spot_optimizations','Optimistic (spot instances + optimizations)')+':  '+fm2(tc*0.7));\n" +
+  "o.push(tk('calc_out.label.expected','Expected')+':'+' '.repeat(47-'Expected:'.length)+fm2(tc));\n" +
+  "o.push(tk('calc_out.label.pessimistic_ondemand_overhead','Pessimistic (on-demand + overhead)')+':'+' '.repeat(47-'Pessimistic (on-demand + overhead):'.length)+fm2(tc*1.5));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.ai_training_cost_estimator.row.with_spot_discount','With Spot Discount ('+Math.round((1-SPMAX)*100)+'-'+Math.round((1-SPMIN)*100)+'% off)',{low:String(Math.round((1-SPMAX)*100)),high:String(Math.round((1-SPMIN)*100))})+':        '+fm2(tc*SPMIN)+' - '+fm2(tc*SPMAX));\n" +
+  "o.push(tk('calc_out.ai_training_cost_estimator.row.with_reserved_discount','With Reserved Discount ('+Math.round((1-RPMAX)*100)+'-'+Math.round((1-RPMIN)*100)+'% off)',{low:String(Math.round((1-RPMAX)*100)),high:String(Math.round((1-RPMIN)*100))})+':     '+fm2(tc*RPMIN)+' - '+fm2(tc*RPMAX));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.ai_training_multi_run_scaling','\\u{1F504} Multi-Run Scaling'));\n" +
+  "o.push(SEP4.repeat(50));\n" +
+  "var rns=[1,3,5,10,25,50];\n" +
+  "var runsCell='Runs'.padEnd(8);\n" +
+  "var rh=tk('calc_out.label.runs','Runs')+runsCell.slice(4);\n" +
+  "for(var ri=0;ri<rns.length;ri++)rh+=' | '+pd2(lc2(rns[ri]),12);\n" +
+  "o.push(rh);\n" +
+  "var rs=''.padEnd(8,SEP4);for(var ri2=0;ri2<rns.length;ri2++)rs+='\\u2500\\u253C\\u2500'.padEnd(13,SEP4);o.push(rs);\n" +
+  "var totalCell='Total'.padEnd(8);\n" +
+  "var tr2=tk('calc_out.label.total','Total')+totalCell.slice(5);\n" +
+  "for(var ri3=0;ri3<rns.length;ri3++)tr2+=' | '+pd2(fm2(tc*rns[ri3]),12);\n" +
+  "o.push(tr2);\n" +
+  "o.push('');\n" +
+  "var ce=tgh*gc2*100;\n" +
+  "o.push(tk('calc_out.ai_training_cost_estimator.row.gpu_hours_equivalent','\\u{1F4A1} '+lc2(tgh)+' GPU-hours \\u2248 '+lc2(ce)+' CPU-core-hours equivalent.',{hours:lc2(tgh),cpu:lc2(ce)}));\n" +
+  "o.push(tk('calc_out.ai_training_cost_estimator.row.lora_cost_note','\\u{1F4A1} LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.'));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.ai_training_cost_health','\\uD83E\\uDE7A Cost Health:'));\n" +
+  "o.push(SEP4.repeat(60));\n" +
+  "if(isL)o.push(tk('calc_out.ai_training_cost_estimator.row.health_lora','\\u2022 \\uD83D\\uDFE2 LoRA mode \\u2014 training only adapter weights, not the full model. ~65% cheaper than full fine-tune.'));\n" +
+  "else o.push(tk('calc_out.ai_training_cost_estimator.row.health_full','\\u2022 \\uD83D\\uDFE0 Full fine-tune \\u2014 training all model weights. Most expensive option. Consider LoRA unless you have a specific need.'));\n" +
+  "if(ep>5)o.push(tk('calc_out.ai_training_cost_estimator.row.health_epochs_aggressive','\\u2022 \\uD83D\\uDFE1 '+ep+' epochs is aggressive \\u2014 most models converge in 2-4. Diminishing returns past epoch 5 unless you have a specific reason.',{epochs:String(ep)}));\n" +
+  "if(csg>1000)o.push(tk('calc_out.ai_training_cost_estimator.row.health_storage_significant','\\u2022 \\uD83D\\uDCA1 '+lc2(csg)+'GB storage is significant \\u2014 consider S3 cold storage or dataset compression.',{gb:lc2(csg)}));\n" +
+  "o.push('');\n" +
+  "o.push(tk('calc_out.section.what_if_scenarios','\\uD83D\\uDD04 What-If Scenarios:'));\n" +
+  "o.push(SEP4.repeat(60));\n" +
+  "var FFM=Math.round(1/LES);\n" +
+  "if(isL){var fullC=tc*FFM;o.push(tk('calc_out.ai_training_cost_estimator.row.whatif_switch_full_finetune','\\u2022 Switch to full fine-tune:  '+fm2(fullC)+'  ('+FFM+'x cost, but better quality)',{cost:fm2(fullC),mult:String(FFM)}));}\n" +
+  "else{var loraC=tc/FFM;o.push(tk('calc_out.ai_training_cost_estimator.row.whatif_switch_lora','\\u2022 Switch to LoRA fine-tuning:  '+fm2(loraC)+'  (1/'+FFM+' cost, similar quality for most tasks)',{cost:fm2(loraC),mult:String(FFM)}));}\n" +
+  "o.push(tk('calc_out.ai_training_cost_estimator.row.whatif_halve_epochs','\\u2022 Halve epochs to '+Math.max(1,Math.floor(ep/2))+':  '+fm2(tc/2)+'  (may need more data to compensate)',{epochs:String(Math.max(1,Math.floor(ep/2))),cost:fm2(tc/2)}));\n" +
+  "o.push(tk('calc_out.ai_training_cost_estimator.row.whatif_double_epochs','\\u2022 Double epochs to '+(ep*2)+':  '+fm2(tc*2)+'  (diminishing returns past 5)',{epochs:String(ep*2),cost:fm2(tc*2)}));\n" +
+  "var gk2=gk.replace(/-\\d+GB$/,'');\n" +
+  "var mkt=Object.prototype.hasOwnProperty.call(MKT,gk2)?MKT[gk2]:null;\n" +
+  "if(mkt!==null){var savePct=Math.round((1-mkt/g.hr)*100);o.push(tk('calc_out.ai_training_cost_estimator.row.whatif_cheaper_gpu_market','\\u2022 Switch to cheaper GPU in same tier:  cheapest market rate for '+g.n+' is $'+mkt.toFixed(2)+'/hr vs $'+g.hr.toFixed(2)+'/hr baseline \\u2014 save ~'+savePct+'%',{gpu:g.n,market:'$'+mkt.toFixed(2)+'/hr',baseline:'$'+g.hr.toFixed(2)+'/hr',save:String(savePct)}));}\n" +
+  "else{o.push(tk('calc_out.ai_training_cost_estimator.row.whatif_cheaper_gpu_compare','\\u2022 Switch to cheaper GPU in same tier:  compare per-GPU-hour rates across cloud providers'));}\n" +
+  "o.push('');\n" +
+  "return [o.join('\\n')];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-ai-training-cost-estimator',
@@ -357,7 +453,7 @@ const engine: ToolEngine = {
     { key: 'pro-405b', emoji: '👑', fields: { modelSize: '405B', gpuType: 'H200-141GB', gpuCount: '128', trainingHours: '720', epochs: '1', cloudStorage: '5000', dataProcessCost: '2000' } },
   ],
   staticExamples: [
-    '\n🤖 AI Training Cost Estimate (LoRA)\n\nModel: 7B (LoRA fine-tune) | GPU: 8× A100 80GB\nTraining: 24 hrs/epoch × 3 epochs = 25.2 total GPU-hours\n\n💰 Cost Breakdown\n──────────────────────────────────────────────────\nGPU Compute:  8× A100 80GB @ $1.50/hr × 25.2 hrs           $302.40\nCloud Storage: 500 GB @ $0.10/GB/mo × 0.1 mo                $5.00\nData Processing: $1000.00                                    $1000.00\n──────────────────────────────────────────────────\nTotal Estimated Cost:                        $1307.40\n\n📊 Per-Epoch Tracking\n──────────────────────────────────────────────────\nPer Epoch GPU Cost: $100.80\nPer Epoch Total:    $101.38\n\nEpoch    | GPU Cost       | Cumulative      \n────────────────────────────────────────────\n1        | $100.80        | $1101.38        \n2        | $201.60        | $1202.77        \n3        | $302.40        | $1304.15        \n\n📋 Cost Summary\n──────────────────────────────────────────────────\nGPU:     $302.40        (23%)  █████\nStorage: $5.00          (0%)  \nData:    $1000.00       (76%)  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n\n📈 Cost Range (Optimistic — Pessimistic)\n──────────────────────────────────────────────────\nOptimistic (spot instances + optimizations):  $915.18\nExpected:                                      $1307.40\nPessimistic (on-demand + overhead):            $1961.10\n\nWith Spot Discount (30-60% off):        $522.96 - $915.18\nWith Reserved Discount (10-30% off):     $915.18 - $1176.66\n\n🔄 Multi-Run Scaling\n──────────────────────────────────────────────────\nRuns     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\nTotal    | $1307.40     | $3922.20     | $6537.00     | $13074.00    | $32685.00    | $65370.00   \n\n💡 25.2 GPU-hours ≈ 20,160 CPU-core-hours equivalent.\n💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch to full fine-tune:  $3922.20  (3x cost, but better quality)\n• Halve epochs to 1:  $653.70  (may need more data to compensate)\n• Double epochs to 6:  $2614.80  (diminishing returns past 5)\n• Switch to cheaper GPU in same tier:  cheapest market rate for A100 80GB is $0.69/hr vs $1.50/hr baseline — save ~54%\n',
+    '\n$calc_out.section.ai_training_cost_estimator_lora|🤖 AI Training Cost Estimate (LoRA)|\n\n$calc_out.label.model|Model|: 7B ($calc_out.ai_training_cost_estimator.row.model_variant_lora_fine_tune|LoRA fine-tune|) | $calc_out.label.gpu|GPU|: 8× A100 80GB\n$calc_out.label.training|Training|: 24$calc_out.ai_training_cost_estimator.row.unit_hrs_per_epoch{"hrs":"24"}| hrs/epoch| × 3$calc_out.ai_training_cost_estimator.row.unit_epochs{"epochs":"3"}| epochs| = 25.2$calc_out.ai_training_cost_estimator.row.unit_total_gpu_hours{"hours":"25.2"}| total GPU-hours|\n\n$calc_out.section.ai_training_cost_breakdown|💰 Cost Breakdown|\n──────────────────────────────────────────────────\n$calc_out.label.gpu_compute|GPU Compute|:  8× A100 80GB @ $1.50/hr × 25.2 hrs           $302.40\n$calc_out.label.cloud_storage|Cloud Storage|: 500 GB @ $0.10/GB/mo × 0.1 mo                $5.00\n$calc_out.label.data_processing|Data Processing|: $1000.00                                    $1000.00\n──────────────────────────────────────────────────\n$calc_out.label.total_estimated_cost|Total Estimated Cost|:                        $1307.40\n\n$calc_out.section.ai_training_per_epoch_tracking|📊 Per-Epoch Tracking|\n──────────────────────────────────────────────────\n$calc_out.label.per_epoch_gpu_cost|Per Epoch GPU Cost|: $100.80\n$calc_out.label.per_epoch_total|Per Epoch Total|:    $101.38\n\n$calc_out.label.epoch|Epoch|    | $calc_out.label.gpu_cost|GPU Cost|       | $calc_out.label.cumulative|Cumulative|      \n────────────────────────────────────────────\n1        | $100.80        | $1101.38        \n2        | $201.60        | $1202.77        \n3        | $302.40        | $1304.15        \n\n$calc_out.section.ai_training_cost_summary|📋 Cost Summary|\n──────────────────────────────────────────────────\n$calc_out.label.gpu|GPU|:     $302.40        (23%)  █████\n$calc_out.label.storage|Storage|: $5.00          (0%)  \n$calc_out.label.data|Data|:    $1000.00       (76%)  ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒\n\n$calc_out.section.ai_training_cost_range|📈 Cost Range (Optimistic — Pessimistic)|\n──────────────────────────────────────────────────\n$calc_out.label.optimistic_spot_optimizations|Optimistic (spot instances + optimizations)|:  $915.18\n$calc_out.label.expected|Expected|:                                      $1307.40\n$calc_out.label.pessimistic_ondemand_overhead|Pessimistic (on-demand + overhead)|:            $1961.10\n\n$calc_out.ai_training_cost_estimator.row.with_spot_discount{"low":"30","high":"60"}|With Spot Discount (30-60% off)|:        $522.96 - $915.18\n$calc_out.ai_training_cost_estimator.row.with_reserved_discount{"low":"10","high":"30"}|With Reserved Discount (10-30% off)|:     $915.18 - $1176.66\n\n$calc_out.section.ai_training_multi_run_scaling|🔄 Multi-Run Scaling|\n──────────────────────────────────────────────────\n$calc_out.label.runs|Runs|     | 1            | 3            | 5            | 10           | 25           | 50          \n─────────┼────────────┼────────────┼────────────┼────────────┼────────────┼───────────\n$calc_out.label.total|Total|    | $1307.40     | $3922.20     | $6537.00     | $13074.00    | $32685.00    | $65370.00   \n\n$calc_out.ai_training_cost_estimator.row.gpu_hours_equivalent{"hours":"25.2","cpu":"20,160"}|💡 25.2 GPU-hours ≈ 20,160 CPU-core-hours equivalent.|\n$calc_out.ai_training_cost_estimator.row.lora_cost_note|💡 LoRA fine-tuning reduces cost by ~65% vs full fine-tuning. Use checkpointing to protect against spot interruptions.|\n\n$calc_out.section.ai_training_cost_health|🩺 Cost Health:|\n────────────────────────────────────────────────────────────\n$calc_out.ai_training_cost_estimator.row.health_lora|• 🟢 LoRA mode — training only adapter weights, not the full model. ~65% cheaper than full fine-tune.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n────────────────────────────────────────────────────────────\n$calc_out.ai_training_cost_estimator.row.whatif_switch_full_finetune{"cost":"$3922.20","mult":"3"}|• Switch to full fine-tune:  $3922.20  (3x cost, but better quality)|\n$calc_out.ai_training_cost_estimator.row.whatif_halve_epochs{"epochs":"1","cost":"$653.70"}|• Halve epochs to 1:  $653.70  (may need more data to compensate)|\n$calc_out.ai_training_cost_estimator.row.whatif_double_epochs{"epochs":"6","cost":"$2614.80"}|• Double epochs to 6:  $2614.80  (diminishing returns past 5)|\n$calc_out.ai_training_cost_estimator.row.whatif_cheaper_gpu_market{"gpu":"A100 80GB","market":"$0.69/hr","baseline":"$1.50/hr","save":"54"}|• Switch to cheaper GPU in same tier:  cheapest market rate for A100 80GB is $0.69/hr vs $1.50/hr baseline — save ~54%|\n',
   ],
   faq: [
     { q: 'How much does it cost to train a 7B model in 2026?', a: 'LoRA fine-tuning a 7B model: {{liveTrainingGpuCost:H100-80GB|4|4}}-{{liveTrainingGpuCost:H100-80GB|24|4}} on 4 H100 GPUs (4-24 hrs). Full fine-tuning: roughly {{liveTrainingFullFtMult}}x that. Pre-training from scratch: orders of magnitude more. With H200 GPUs, a 7B LoRA can complete in 2-4 hours at {{liveTrainingGpuRate:H200-141GB}}/hr/GPU — under {{liveTrainingGpuCost:H200-141GB|4|2}} for a quick fine-tune on 2 GPUs. Budget GPU (RTX 6000 at {{liveTrainingGpuRate:RTX-6000}}/hr) can do a 7B LoRA for under {{liveTrainingGpuCost:RTX-6000|24|4}}.' },

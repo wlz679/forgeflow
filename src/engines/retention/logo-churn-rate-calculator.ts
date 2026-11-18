@@ -19,6 +19,11 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-9：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+//   ⚠️ 章节标题 / 标签用**字面量 token**（code|原文|）；带运行时数值的整行用
+//      makeToken(code, fallback, params) ⇒ fallback 与 params 取**同一个变量**。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: [0, 0.05],
@@ -49,7 +54,11 @@ function calculate(inputs: Record<string, string>): string[] {
 
   if (startCustomers === 0 && lostCustomers === 0) {
     return [
-      '📊 Logo Churn Rate Calculator\n\n📊 Enter customers at period start and customers lost during period to see your logo churn rate — the count-based complement to GRR (revenue-based).',
+      '$calc_out.section.logo_churn_rate_calculator|📊 Logo Churn Rate Calculator|\n\n' +
+      makeToken(
+        'calc_out.logo_churn_rate.row.enter_prompt',
+        '📊 Enter customers at period start and customers lost during period to see your logo churn rate — the count-based complement to GRR (revenue-based).',
+      ),
     ];
   }
 
@@ -70,6 +79,17 @@ function calculate(inputs: Record<string, string>): string[] {
       ? 'Warning — Logo churn 10–20%; high churn, intervention needed'
       : 'Critical — Logo churn ≥ 20%; severe churn, business model at risk';
 
+  // ── P168 B3-9：健康度整行 → token（4 档各写一个 **code 字面量**；动态拼码 ⇒ 静态扫描器认不出）
+  //   ⚠️ 兜底直接取 healthEmoji + healthLabel（运行时变量）⇒ emoji 不会走样。
+  const healthRow =
+    band === 'excellent'
+      ? makeToken('calc_out.logo_churn_rate.row.health_excellent', healthEmoji + ' ' + healthLabel)
+      : band === 'good'
+      ? makeToken('calc_out.logo_churn_rate.row.health_good', healthEmoji + ' ' + healthLabel)
+      : band === 'warning'
+      ? makeToken('calc_out.logo_churn_rate.row.health_warning', healthEmoji + ' ' + healthLabel)
+      : makeToken('calc_out.logo_churn_rate.row.health_critical', healthEmoji + ' ' + healthLabel);
+
   // What-If: reduce lost customers
   const churnHalveLoss = logoChurnPct(startCustomers, lostCustomers / 2);
   const churnZeroLoss = logoChurnPct(startCustomers, 0);
@@ -77,6 +97,7 @@ function calculate(inputs: Record<string, string>): string[] {
   const liftHL = ratio - churnHalveLoss;
   const liftZL = ratio;
   const liftL3 = ratio - churnLose3;
+  const halfLoss = String(lostCustomers / 2);
 
   // Break-Even: gap to Excellent (<0.05)
   // Target lost = 0.05 × startCustomers; current = lost; gap = max(0, current - target)
@@ -89,6 +110,15 @@ function calculate(inputs: Record<string, string>): string[] {
   else if (band === 'warning') { gapToNext = lostCustomers - 0.10 * startCustomers; nextTier = '🟡 Good (10%)'; }
   else if (band === 'good') { gapToNext = lostCustomers - 0.05 * startCustomers; nextTier = '🟢 Excellent (5%)'; }
   else { gapToNext = 0; nextTier = 'top tier maintained'; }
+  // ── P168 B3-9：Next tier 的 4 种形态各写一个 code 字面量（兜底直接取 nextTier ⇒ emoji 不会走样）
+  const nextTierToken =
+    band === 'critical'
+      ? makeToken('calc_out.logo_churn_rate.row.next_tier_warning', nextTier)
+      : band === 'warning'
+      ? makeToken('calc_out.logo_churn_rate.row.next_tier_good', nextTier)
+      : band === 'good'
+      ? makeToken('calc_out.logo_churn_rate.row.next_tier_excellent', nextTier)
+      : makeToken('calc_out.logo_churn_rate.row.next_tier_top', nextTier);
   const annualCompounded = startCustomers * Math.pow(1 - ratio, 1);
 
   // Tip: band-driven
@@ -98,39 +128,49 @@ function calculate(inputs: Record<string, string>): string[] {
   else if (band === 'good') tip = 'Logo churn 5-10% is healthy mid-market retention. To push to Excellent (<5%), focus on tail of at-risk accounts and tighten ICP — sometimes fewer customers with better fit is the move.';
   else tip = 'Logo churn < 5% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby. Pair with GRR (P9-2) to make sure revenue retention matches logo retention.';
 
+  // ── P168 B3-9：Tip 整行 → token（tip 标记语言无关；正文进兜底）
+  const tipToken =
+    band === 'critical'
+      ? makeToken('calc_out.logo_churn_rate.row.tip_critical', '💡 Tip: ' + tip)
+      : band === 'warning'
+      ? makeToken('calc_out.logo_churn_rate.row.tip_warning', '💡 Tip: ' + tip)
+      : band === 'good'
+      ? makeToken('calc_out.logo_churn_rate.row.tip_good', '💡 Tip: ' + tip)
+      : makeToken('calc_out.logo_churn_rate.row.tip_excellent', '💡 Tip: ' + tip);
+
   const r =
-    '📊 Logo Churn Rate Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.logo_churn_rate_calculator|📊 Logo Churn Rate Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Logo churn: ' + pctInt(ratio) + '%  ·  Retained customers: ' + retained + '\n' +
-    '• Lost customers: ' + lostCustomers + '  ·  Started with: ' + startCustomers + '\n\n' +
+    '• ' + healthRow + '\n' +
+    '• $calc_out.label.logo_churn|Logo churn|: ' + pctInt(ratio) + '%  ·  $calc_out.label.retained_customers|Retained customers|: ' + retained + '\n' +
+    '• $calc_out.label.lost_customers|Lost customers|: ' + lostCustomers + '  ·  $calc_out.label.started_with|Started with|: ' + startCustomers + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Customers at period start: ' + startCustomers + '\n' +
-    '• Customers lost:          -' + lostCustomers + '\n' +
-    '• Retained customers:        ' + retained + '\n' +
-    '• Logo churn %: ' + ratio.toFixed(4) + ' (' + pctInt(ratio) + '%)\n\n' +
+    '• $calc_out.label.customers_at_period_start|Customers at period start|: ' + startCustomers + '\n' +
+    '• $calc_out.label.customers_lost_period|Customers lost|:          -' + lostCustomers + '\n' +
+    '• $calc_out.label.retained_customers|Retained customers|:        ' + retained + '\n' +
+    '• $calc_out.label.logo_churn_pct|Logo churn %|: ' + ratio.toFixed(4) + ' (' + pctInt(ratio) + '%)\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Halve loss (' + (lostCustomers / 2) + ' instead of ' + lostCustomers + '): Churn ' + pctInt(churnHalveLoss) + '% (-' + pct1(liftHL * 100) + 'pp)\n' +
-    '• Zero loss: Churn 0% (all ' + startCustomers + ' retained)\n' +
-    '• Lose only 3: Churn ' + pctInt(churnLose3) + '% (-' + pct1(liftL3 * 100) + 'pp)\n\n' +
+    '• ' + makeToken('calc_out.logo_churn_rate.row.whatif_halve_loss', 'Halve loss (' + halfLoss + ' instead of ' + lostCustomers + '): Churn ' + pctInt(churnHalveLoss) + '% (-' + pct1(liftHL * 100) + 'pp)', { half: halfLoss, lost: String(lostCustomers), churn: pctInt(churnHalveLoss), lift: pct1(liftHL * 100) }) + '\n' +
+    '• ' + makeToken('calc_out.logo_churn_rate.row.whatif_zero_loss', 'Zero loss: Churn 0% (all ' + startCustomers + ' retained)', { start: String(startCustomers) }) + '\n' +
+    '• ' + makeToken('calc_out.logo_churn_rate.row.whatif_lose_only_3', 'Lose only 3: Churn ' + pctInt(churnLose3) + '% (-' + pct1(liftL3 * 100) + 'pp)', { churn: pctInt(churnLose3), lift: pct1(liftL3 * 100) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target for 🟢 Excellent: Logo churn < 5% (max ' + Math.round(targetLost) + ' lost customers from ' + startCustomers + ')\n' +
-    '• Current lost: ' + lostCustomers + '  ·  Gap to 🟢: ' + Math.round(gapToExcellent) + ' fewer customers lost\n' +
-    '• Action: reduce lost customers by ' + Math.round(gapToExcellent) + ' (save play, ICP tightening, product-market fit)\n\n' +
+    '• $calc_out.label.target_for_excellent|Target for 🟢 Excellent|: ' + makeToken('calc_out.logo_churn_rate.row.break_even_target_detail', 'Logo churn < 5% (max ' + Math.round(targetLost) + ' lost customers from ' + startCustomers + ')', { max: String(Math.round(targetLost)), start: String(startCustomers) }) + '\n' +
+    '• $calc_out.label.current_lost|Current lost|: ' + lostCustomers + '  ·  $calc_out.label.gap_to_excellent|Gap to 🟢|: ' + makeToken('calc_out.logo_churn_rate.row.fewer_customers_lost', Math.round(gapToExcellent) + ' fewer customers lost', { gap: String(Math.round(gapToExcellent)) }) + '\n' +
+    '• ' + makeToken('calc_out.logo_churn_rate.row.break_even_action', 'Action: reduce lost customers by ' + Math.round(gapToExcellent) + ' (save play, ICP tightening, product-market fit)', { gap: String(Math.round(gapToExcellent)) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + Math.round(Math.max(0, gapToNext)) + ' fewer customers lost' + (band === 'excellent' ? ' (already at top)' : '') + '\n\n' +
+    '• $calc_out.label.next_tier|Next tier|: ' + nextTierToken + '\n' +
+    '• $calc_out.label.gap_to_next_tier|Gap to next tier|: ' + makeToken('calc_out.logo_churn_rate.row.fewer_customers_lost', Math.round(Math.max(0, gapToNext)) + ' fewer customers lost', { gap: String(Math.round(Math.max(0, gapToNext))) }) + (band === 'excellent' ? makeToken('calc_out.logo_churn_rate.row.already_at_top', ' (already at top)') : '') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tipToken + '\n';
 
   return [r];
 }
@@ -138,119 +178,98 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function cnn(x){return Number.isNaN(x)?0:Math.max(0,x);}" +
   "function bandfn(v){if(v>=0.2)return'critical';if(v>=0.1)return'warning';if(v>=0.05)return'good';return'excellent';}" +
   "var startCustomers=cnn(parseFloat(inputs.startCustomers)||0);" +
   "var lostCustomers=cnn(parseFloat(inputs.lostCustomers)||0);" +
-  "if(startCustomers===0&&lostCustomers===0){return['\uD83D\uDCCA Logo Churn Rate Calculator\\n\\n\uD83D\uDCCA Enter customers at period start and customers lost during period to see your logo churn rate \u2014 the count-based complement to GRR (revenue-based).',];}var retained=(startCustomers-lostCustomers);" +
+  "if(startCustomers===0&&lostCustomers===0){return['$calc_out.section.logo_churn_rate_calculator|\uD83D\uDCCA Logo Churn Rate Calculator|\\n\\n'+tk('calc_out.logo_churn_rate.row.enter_prompt','\uD83D\uDCCA Enter customers at period start and customers lost during period to see your logo churn rate \u2014 the count-based complement to GRR (revenue-based).'),];}var retained=(startCustomers-lostCustomers);" +
   "var ratio=(startCustomers===0?0:(lostCustomers)/startCustomers);" +
   "var pctInt=function(n){return Math.round(n*100).toString();};" +
   "var pct1=function(n){return n.toFixed(1);};" +
   "var band=bandfn(ratio);" +
   "var healthEmoji=(band==='excellent'?'\uD83D\uDFE2':band==='good'?'\uD83D\uDFE1':band==='warning'?'\uD83D\uDFE0':'\uD83D\uDD34');" +
   "var healthLabel=band==='excellent'?'Excellent \u2014 Logo churn < 5%; best-in-class customer retention':band==='good'?'Good \u2014 Logo churn 5\u201310%; top-quartile mid-market retention':band==='warning'?'Warning \u2014 Logo churn 10\u201320%; high churn, intervention needed':'Critical \u2014 Logo churn \u2265 20%; severe churn, business model at risk';" +
+  "var healthRow=band==='excellent'?tk('calc_out.logo_churn_rate.row.health_excellent',healthEmoji+' '+healthLabel):band==='good'?tk('calc_out.logo_churn_rate.row.health_good',healthEmoji+' '+healthLabel):band==='warning'?tk('calc_out.logo_churn_rate.row.health_warning',healthEmoji+' '+healthLabel):tk('calc_out.logo_churn_rate.row.health_critical',healthEmoji+' '+healthLabel);" +
   "var churnHalveLoss=(startCustomers===0?0:(lostCustomers/2)/startCustomers);" +
   "var churnZeroLoss=(startCustomers===0?0:(0)/startCustomers);" +
   "var churnLose3=(startCustomers===0?0:(3)/startCustomers);" +
   "var liftHL=ratio-churnHalveLoss;" +
   "var liftZL=ratio;" +
   "var liftL3=ratio-churnLose3;" +
+  "var halfLoss=String(lostCustomers/2);" +
   "var targetLost=0.05*startCustomers;" +
   "var gapToExcellent=Math.max(0,lostCustomers-targetLost);" +
   "var gapToNext,nextTier;" +
   "if(band==='critical'){gapToNext=lostCustomers-0.20*startCustomers;nextTier='\uD83D\uDFE0 Warning (20%)';}else if(band==='warning'){gapToNext=lostCustomers-0.10*startCustomers;nextTier='\uD83D\uDFE1 Good (10%)';}else if(band==='good'){gapToNext=lostCustomers-0.05*startCustomers;nextTier='\uD83D\uDFE2 Excellent (5%)';}else{gapToNext=0;nextTier='top tier maintained';}var annualCompounded=startCustomers*Math.pow(1-ratio,1);" +
+  "var nextTierToken=band==='critical'?tk('calc_out.logo_churn_rate.row.next_tier_warning',nextTier):band==='warning'?tk('calc_out.logo_churn_rate.row.next_tier_good',nextTier):band==='good'?tk('calc_out.logo_churn_rate.row.next_tier_excellent',nextTier):tk('calc_out.logo_churn_rate.row.next_tier_top',nextTier);" +
   "var tip;" +
   "if(band==='critical')tip='Logo churn \u2265 20% means you are losing 1 in 5 customers per period. This is not a CS problem \u2014 it is a business model problem. Audit product-market fit, pricing, ICP definition. The cohort analysis question: which quarter\u2019s logo class is churning fastest and why?';" +
   "else if(band==='warning')tip='Logo churn 10-20% is high for mid-market B2B SaaS. Diagnose by cohort, build save motion for top 20 at-risk accounts, and reassign CSM coverage. Often the highest-ROI lever is reducing churn on the bottom decile.';" +
   "else if(band==='good')tip='Logo churn 5-10% is healthy mid-market retention. To push to Excellent (<5%), focus on tail of at-risk accounts and tighten ICP \u2014 sometimes fewer customers with better fit is the move.';" +
   "else tip='Logo churn < 5% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby. Pair with GRR (P9-2) to make sure revenue retention matches logo retention.';" +
+  "var tipToken=band==='critical'?tk('calc_out.logo_churn_rate.row.tip_critical','\uD83D\uDCA1 Tip: '+tip):band==='warning'?tk('calc_out.logo_churn_rate.row.tip_warning','\uD83D\uDCA1 Tip: '+tip):band==='good'?tk('calc_out.logo_churn_rate.row.tip_good','\uD83D\uDCA1 Tip: '+tip):tk('calc_out.logo_churn_rate.row.tip_excellent','\uD83D\uDCA1 Tip: '+tip);" +
   "var r='';" +
-  "r+='\uD83D\uDCCA Logo Churn Rate Calculator\\n\\n';" +
-  "r+='\uD83E\uDE7A Health:\\n';" +
+  "r+='$calc_out.section.logo_churn_rate_calculator|\uD83D\uDCCA Logo Churn Rate Calculator|\\n\\n';" +
+  "r+='$calc_out.section.health|\uD83E\uDE7A Health:|\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
-  "r+='\u2022 ';" +
-  "r+=healthEmoji;" +
-  "r+=' ';" +
-  "r+=healthLabel;" +
-  "r+='\\n';" +
-  "r+='\u2022 Logo churn: ';" +
+  "r+='\u2022 '+healthRow+'\\n';" +
+  "r+='\u2022 $calc_out.label.logo_churn|Logo churn|: ';" +
   "r+=pctInt(ratio);" +
-  "r+='%  \u00B7  Retained customers: ';" +
+  "r+='%  \u00B7  $calc_out.label.retained_customers|Retained customers|: ';" +
   "r+=retained;" +
   "r+='\\n';" +
-  "r+='\u2022 Lost customers: ';" +
+  "r+='\u2022 $calc_out.label.lost_customers|Lost customers|: ';" +
   "r+=lostCustomers;" +
-  "r+='  \u00B7  Started with: ';" +
+  "r+='  \u00B7  $calc_out.label.started_with|Started with|: ';" +
   "r+=startCustomers;" +
   "r+='\\n\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
-  "r+='\uD83D\uDCCA Inputs Snapshot:\\n';" +
+  "r+='$calc_out.section.inputs_snapshot|\uD83D\uDCCA Inputs Snapshot:|\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
-  "r+='\u2022 Customers at period start: ';" +
+  "r+='\u2022 $calc_out.label.customers_at_period_start|Customers at period start|: ';" +
   "r+=startCustomers;" +
   "r+='\\n';" +
-  "r+='\u2022 Customers lost:          -';" +
+  "r+='\u2022 $calc_out.label.customers_lost_period|Customers lost|:          -';" +
   "r+=lostCustomers;" +
   "r+='\\n';" +
-  "r+='\u2022 Retained customers:        ';" +
+  "r+='\u2022 $calc_out.label.retained_customers|Retained customers|:        ';" +
   "r+=retained;" +
   "r+='\\n';" +
-  "r+='\u2022 Logo churn %: ';" +
+  "r+='\u2022 $calc_out.label.logo_churn_pct|Logo churn %|: ';" +
   "r+=ratio.toFixed(4);" +
   "r+=' (';" +
   "r+=pctInt(ratio);" +
   "r+='%)\\n\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
-  "r+='\uD83D\uDD04 What-If:\\n';" +
+  "r+='$calc_out.section.what_if|\uD83D\uDD04 What-If:|\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
-  "r+='\u2022 Halve loss (';" +
-  "r+=(lostCustomers/2);" +
-  "r+=' instead of ';" +
-  "r+=lostCustomers;" +
-  "r+='): Churn ';" +
-  "r+=pctInt(churnHalveLoss);" +
-  "r+='% (-';" +
-  "r+=pct1(liftHL*100);" +
-  "r+='pp)\\n';" +
-  "r+='\u2022 Zero loss: Churn 0% (all ';" +
-  "r+=startCustomers;" +
-  "r+=' retained)\\n';" +
-  "r+='\u2022 Lose only 3: Churn ';" +
-  "r+=pctInt(churnLose3);" +
-  "r+='% (-';" +
-  "r+=pct1(liftL3*100);" +
-  "r+='pp)\\n\\n';" +
+  "r+='\u2022 '+tk('calc_out.logo_churn_rate.row.whatif_halve_loss','Halve loss ('+halfLoss+' instead of '+lostCustomers+'): Churn '+pctInt(churnHalveLoss)+'% (-'+pct1(liftHL*100)+'pp)',{half:halfLoss,lost:String(lostCustomers),churn:pctInt(churnHalveLoss),lift:pct1(liftHL*100)})+'\\n';" +
+  "r+='\u2022 '+tk('calc_out.logo_churn_rate.row.whatif_zero_loss','Zero loss: Churn 0% (all '+startCustomers+' retained)',{start:String(startCustomers)})+'\\n';" +
+  "r+='\u2022 '+tk('calc_out.logo_churn_rate.row.whatif_lose_only_3','Lose only 3: Churn '+pctInt(churnLose3)+'% (-'+pct1(liftL3*100)+'pp)',{churn:pctInt(churnLose3),lift:pct1(liftL3*100)})+'\\n\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
-  "r+='\u2696\uFE0F Break-Even:\\n';" +
+  "r+='$calc_out.section.break_even|\u2696\uFE0F Break-Even:|\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
-  "r+='\u2022 Target for \uD83D\uDFE2 Excellent: Logo churn < 5% (max ';" +
-  "r+=Math.round(targetLost);" +
-  "r+=' lost customers from ';" +
-  "r+=startCustomers;" +
-  "r+=')\\n';" +
-  "r+='\u2022 Current lost: ';" +
+  "r+='\u2022 $calc_out.label.target_for_excellent|Target for \uD83D\uDFE2 Excellent|: '+tk('calc_out.logo_churn_rate.row.break_even_target_detail','Logo churn < 5% (max '+Math.round(targetLost)+' lost customers from '+startCustomers+')',{max:String(Math.round(targetLost)),start:String(startCustomers)})+'\\n';" +
+  "r+='\u2022 $calc_out.label.current_lost|Current lost|: ';" +
   "r+=lostCustomers;" +
-  "r+='  \u00B7  Gap to \uD83D\uDFE2: ';" +
-  "r+=Math.round(gapToExcellent);" +
-  "r+=' fewer customers lost\\n';" +
-  "r+='\u2022 Action: reduce lost customers by ';" +
-  "r+=Math.round(gapToExcellent);" +
-  "r+=' (save play, ICP tightening, product-market fit)\\n\\n';" +
+  "r+='  \u00B7  $calc_out.label.gap_to_excellent|Gap to \uD83D\uDFE2|: ';" +
+  "r+=tk('calc_out.logo_churn_rate.row.fewer_customers_lost',Math.round(gapToExcellent)+' fewer customers lost',{gap:String(Math.round(gapToExcellent))})+'\\n';" +
+  "r+='\u2022 '+tk('calc_out.logo_churn_rate.row.break_even_action','Action: reduce lost customers by '+Math.round(gapToExcellent)+' (save play, ICP tightening, product-market fit)',{gap:String(Math.round(gapToExcellent))})+'\\n\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
-  "r+='\uD83C\uDFAF Milestone:\\n';" +
+  "r+='$calc_out.section.milestone|\uD83C\uDFAF Milestone:|\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n';" +
-  "r+='\u2022 Next tier: ';" +
-  "r+=nextTier;" +
+  "r+='\u2022 $calc_out.label.next_tier|Next tier|: ';" +
+  "r+=nextTierToken;" +
   "r+='\\n';" +
-  "r+='\u2022 Gap to next tier: ';" +
-  "r+=Math.round(Math.max(0,gapToNext));" +
-  "r+=' fewer customers lost';" +
-  "r+=(band==='excellent'?' (already at top)':'');" +
+  "r+='\u2022 $calc_out.label.gap_to_next_tier|Gap to next tier|: ';" +
+  "r+=tk('calc_out.logo_churn_rate.row.fewer_customers_lost',Math.round(Math.max(0,gapToNext))+' fewer customers lost',{gap:String(Math.round(Math.max(0,gapToNext)))});" +
+  "r+=(band==='excellent'?tk('calc_out.logo_churn_rate.row.already_at_top',' (already at top)'):'');" +
   "r+='\\n\\n';" +
   "r+='\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n';" +
-  "r+='\uD83D\uDCA1 Tip: ';" +
-  "r+=tip;" +
-  "r+='\\n';" +
+  "r+=tipToken+'\\n';" +
   "return[r];"
 ;
 
@@ -285,7 +304,7 @@ const engine: ToolEngine = {
     'https://www.saas-capital.com/blog-posts/saas-retention-metrics/',
     'https://openviewpartners.com/blog/the-real-story-behind-net-dollar-retention/',
   ],
-  staticExamples: ['📊 Logo Churn Rate Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — Logo churn 5–10%; top-quartile mid-market retention\n• Logo churn: 8%  ·  Retained customers: 92\n• Lost customers: 8  ·  Started with: 100\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Customers at period start: 100\n• Customers lost:          -8\n• Retained customers:        92\n• Logo churn %: 0.0800 (8%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Halve loss (4 instead of 8): Churn 4% (-4.0pp)\n• Zero loss: Churn 0% (all 100 retained)\n• Lose only 3: Churn 3% (-5.0pp)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: Logo churn < 5% (max 5 lost customers from 100)\n• Current lost: 8  ·  Gap to 🟢: 3 fewer customers lost\n• Action: reduce lost customers by 3 (save play, ICP tightening, product-market fit)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent (5%)\n• Gap to next tier: 3 fewer customers lost\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Logo churn 5-10% is healthy mid-market retention. To push to Excellent (<5%), focus on tail of at-risk accounts and tighten ICP — sometimes fewer customers with better fit is the move.\n'],
+  staticExamples: ['$calc_out.section.logo_churn_rate_calculator|📊 Logo Churn Rate Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.logo_churn_rate.row.health_good|🟡 Good — Logo churn 5–10%; top-quartile mid-market retention|\n• $calc_out.label.logo_churn|Logo churn|: 8%  ·  $calc_out.label.retained_customers|Retained customers|: 92\n• $calc_out.label.lost_customers|Lost customers|: 8  ·  $calc_out.label.started_with|Started with|: 100\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.customers_at_period_start|Customers at period start|: 100\n• $calc_out.label.customers_lost_period|Customers lost|:          -8\n• $calc_out.label.retained_customers|Retained customers|:        92\n• $calc_out.label.logo_churn_pct|Logo churn %|: 0.0800 (8%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.logo_churn_rate.row.whatif_halve_loss{"half":"4","lost":"8","churn":"4","lift":"4.0"}|Halve loss (4 instead of 8): Churn 4% (-4.0pp)|\n• $calc_out.logo_churn_rate.row.whatif_zero_loss{"start":"100"}|Zero loss: Churn 0% (all 100 retained)|\n• $calc_out.logo_churn_rate.row.whatif_lose_only_3{"churn":"3","lift":"5.0"}|Lose only 3: Churn 3% (-5.0pp)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.target_for_excellent|Target for 🟢 Excellent|: $calc_out.logo_churn_rate.row.break_even_target_detail{"max":"5","start":"100"}|Logo churn < 5% (max 5 lost customers from 100)|\n• $calc_out.label.current_lost|Current lost|: 8  ·  $calc_out.label.gap_to_excellent|Gap to 🟢|: $calc_out.logo_churn_rate.row.fewer_customers_lost{"gap":"3"}|3 fewer customers lost|\n• $calc_out.logo_churn_rate.row.break_even_action{"gap":"3"}|Action: reduce lost customers by 3 (save play, ICP tightening, product-market fit)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.next_tier|Next tier|: $calc_out.logo_churn_rate.row.next_tier_excellent|🟢 Excellent (5%)|\n• $calc_out.label.gap_to_next_tier|Gap to next tier|: $calc_out.logo_churn_rate.row.fewer_customers_lost{"gap":"3"}|3 fewer customers lost|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.logo_churn_rate.row.tip_good|💡 Tip: Logo churn 5-10% is healthy mid-market retention. To push to Excellent (<5%), focus on tail of at-risk accounts and tighten ICP — sometimes fewer customers with better fit is the move.|\n'],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)

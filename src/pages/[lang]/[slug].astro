@@ -17,7 +17,7 @@ import { resolveLiveTokens } from '../../lib/live-price';
 import DecisionSupport from '../../components/DecisionSupport.astro';
 import { hasDecisionLines, stripDecisionTip } from '../../lib/decision-support';
 // P168 B3-7：结果卡片的「语义码 + 值」渲染（服务端侧）。
-import { renderCalcOutput, extractEngineTokenCodes } from '../../lib/calc-output-i18n';
+import { renderCalcOutput, extractEngineTokenCodes, CALC_OUTPUT_SPLIT_V3_LINE_JS } from '../../lib/calc-output-i18n';
 import { calcOutputTemplates, calcOutputTemplatesJson, toolAlias } from '../../lib/calc-output-templates';
 import { relatedTools } from '../../data/internal-links';
 import { tools } from '../../data/tools';
@@ -1495,7 +1495,7 @@ const schema = JSON.stringify({
 
 {isInteractive && (
   <>
-    <script define:vars={{ clientConfig, exportLabel: t('btn.export', lang), toolSlug: slug }}>
+    <script define:vars={{ clientConfig, exportLabel: t('btn.export', lang), toolSlug: slug, CALC_OUTPUT_SPLIT_V3_LINE_JS }}>
       var isOpenAI = toolSlug === 'solopreneur-openai-token-calculator';
       var isClaude = toolSlug === 'solopreneur-claude-api-cost-calculator';
       var isDeepSeek = toolSlug === 'solopreneur-deepseek-api-cost-calculator';
@@ -1534,6 +1534,11 @@ const schema = JSON.stringify({
       // Config-driven: beautifySections(text, CONFIG) replaces 8 individual functions
       // renderCard() is a shared helper for detail-card rendering
 
+      // P168 B3-9（浏览器层实测）：「标签: 内容」切分的**唯一实现**。
+      //   ⭐ 与服务端 src/lib/calc-output-i18n.ts 的 CALC_OUTPUT_SPLIT_V3_LINE_JS **同一份源码**
+      //     （服务端用 new Function 求值；这里经 define:vars 注入同一份源码后求值）
+      //     ⇒ 两端不可能漂 ⇒ 也不可能再出现「页面漏还原占位符」这种缺陷。
+      var splitCalcOutputV3Line = new Function('return ' + CALC_OUTPUT_SPLIT_V3_LINE_JS)();
       function beautifySections(text, config) {
         var rawSections = text.split(/\n\n(?=\S)/);
         var sections = [];
@@ -1797,24 +1802,26 @@ const schema = JSON.stringify({
             for (var v3i = 0; v3i < v3lines.length; v3i++) {
               var v3l = v3lines[v3i].trim();
               if (!v3l) continue;
-              // Try emoji-led first: <emoji> <Label>: <content>
-              // Include VS-16/VS-15/ZWJ in the emoji cluster (\p{Extended_Pictographic}
-              // covers base emoji codepoints only — `⚖️` = U+2696+U+FE0F needs FE0F too).
-              var v3m = v3l.match(/^([\p{Extended_Pictographic}️︎‍]+)\s+([^:]+):\s*(.*)$/u);
+              // ⚠️ P168 B3-9（浏览器层实测）：token 的 **params 组是 JSON** ⇒ JSON 里有冒号
+              //   ⇒ 下面的「按第一个冒号切标签」会劈进 token 内部 ⇒ 客户端拿到半截 token
+              //   ⇒ params 解析失败 ⇒ 模板占位符留成字面量 + JSON 碎片裸露到 zh 页上。
+              //   ⇒ 切分前把整行里的 token **整体**换成不含冒号的占位符，切完再还原。
+              // ⚠️ P168 B3-9（浏览器层实测）：token 的 **params 组是 JSON** ⇒ JSON 里有冒号
+              //   ⇒ 任何「按第一个冒号切标签」的启发式都会劈进 token 内部
+              //   ⇒ 客户端拿到半截 token ⇒ params 解析失败 ⇒ 占位符留字面量 + JSON 碎片裸露。
+              //   ⇒ 切分走**共享实现**（遮蔽 → 切分 → 还原，收在同一个函数里）
+              //   ⇒ 页面不可能漏还原 ⇒ 不会再出现「正文整段丢失」。
+              var v3split = splitCalcOutputV3Line(v3l);
               var v3icon, v3label, v3content;
-              if (v3m) {
-                v3icon = v3m[1];
-                v3label = v3m[2].trim();
-                v3content = v3m[3];
-              } else {
-                // Try label-only: <Label>: <content>
-                v3m = v3l.match(/^([^:]+):\s*(.*)$/);
-                if (!v3m) {
+              if (!v3split) {
                   html += '<div class="text-xs text-gray-600 ml-5 mb-1">' + esc(v3l) + '</div>';
                   continue;
-                }
-                v3label = v3m[1].trim();
-                v3content = v3m[2];
+              }
+              v3label = v3split.label;
+              v3content = v3split.content;
+              if (v3split.kind === 'emoji') {
+                v3icon = v3split.icon;
+              } else {
                 // Map label → emoji; fall back to defaultFamily if label not in map.
                 v3icon = v3labelMap[v3label] || null;
                 if (!v3icon) {

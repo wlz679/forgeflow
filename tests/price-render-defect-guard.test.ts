@@ -29,13 +29,69 @@ const root = resolve(import.meta.dirname, '..');
 const IMAGE_ENGINE = 'src/engines/ai-cost/ai-image-generation-cost-calculator.ts';
 const TRAINING_ENGINE = 'src/engines/ai-cost/ai-training-cost-estimator.ts';
 
-/** 只查「拼字符串」的行（out.push / o.push），排除注释行 */
+/** 注释行不是语句起点 */
+function isCommentLine(l: string): boolean {
+  const t = l.trim();
+  return t.startsWith('//') || t.startsWith('*') || t.startsWith('/*');
+}
+
+/**
+ * 从第 i 行开始的那条 push 语句在哪一行结束（括号配平 + 字符串/转义感知）。
+ * 字符串字面量里的括号不参与配平（客户端 customFn 是一大段字符串）。
+ */
+function pushStatementEnd(lines: string[], i: number): number {
+  let depth = 0;
+  let inStr: string | null = null;
+  let esc = false;
+  for (let j = i; j < lines.length && j - i < 80; j++) {
+    for (const ch of lines[j]) {
+      if (esc) {
+        esc = false;
+        continue;
+      }
+      if (ch === '\\') {
+        esc = true;
+        continue;
+      }
+      if (inStr) {
+        if (ch === inStr) inStr = null;
+        continue;
+      }
+      if (ch === "'" || ch === '"' || ch === '`') {
+        inStr = ch;
+        continue;
+      }
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+    }
+    if (depth <= 0) return j;
+  }
+  return lines.length - 1;
+}
+
+/**
+ * 只查「拼字符串」的 push 语句里的**每一行**（out.push / o.push），排除注释行。
+ *
+ * P168 B3-9：令牌化把输出改写成多行 `out.push(makeToken(code, '…', {…}))`
+ *   ⇒ **只扫首行会让续行里的价格字面量逃过判据**（守卫静默变真空绿）。
+ *   ⇒ 这里取**整条 push 语句覆盖到的所有行**；逐行判据本身不变。
+ */
 function pushLines(rel: string): Array<[number, string]> {
   const src = readFileSync(resolve(root, rel), 'utf-8');
-  return src
-    .split('\n')
-    .map((l, i) => [i + 1, l] as [number, string])
-    .filter(([, l]) => /out\.push|"o\.push/.test(l));
+  const lines = src.split('\n');
+  const out: Array<[number, string]> = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!/out\.push|"o\.push/.test(line) || isCommentLine(line)) {
+      i++;
+      continue;
+    }
+    const end = pushStatementEnd(lines, i);
+    for (let j = i; j <= end; j++) out.push([j + 1, lines[j]]);
+    i = end + 1;
+  }
+  return out;
 }
 
 test('D1：引擎输出里不得出现 $$ 双美元号', () => {

@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-9：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ─── Math helpers ─────────────────────────────────────────────────────────
 
@@ -57,18 +60,27 @@ const engine: ToolEngine = {
     const bandInfo = HEALTH_BANDS[band];
 
     const fmt = formatCurrency;
+    const ratePct = (rate * 100).toFixed(1) + '%';
+    // ── P168 B3-9：健康度行 —— 4 档各写一个 **code 字面量**（动态拼码 ⇒ 静态扫描器认不出）
+    const bandFallback = bandInfo.label + ' (' + ratePct + ')';
+    const bandParams = { pct: ratePct };
+    const bandRow =
+      band === 'excellent' ? makeToken('calc_out.renewal_rate.row.band_excellent', bandFallback, bandParams)
+      : band === 'good' ? makeToken('calc_out.renewal_rate.row.band_good', bandFallback, bandParams)
+      : band === 'warning' ? makeToken('calc_out.renewal_rate.row.band_warning', bandFallback, bandParams)
+      : makeToken('calc_out.renewal_rate.row.band_critical', bandFallback, bandParams);
 
     return [
-      '🩺 Renewal Rate Health: ' + bandInfo.label + ' (' + (rate * 100).toFixed(1) + '%)',
-      '📊 Snapshot: ' + fmt(arrRenewed) + ' of ' + fmt(arrUpForRenewal) + ' up-for-renewal ARR renewed.',
-      '🔄 What-If: Each +5pp in renewal rate recovers ' + fmt(arrUpForRenewal * 0.05) + ' of ARR; a 90% target would lift renewed ARR to ' + fmt(arrUpForRenewal * 0.90) + '.',
-      '⚖️ Break-Even: To hit 90% (world-class), you need ' + fmt(arrUpForRenewal * 0.90 - arrRenewed) + ' more renewed ARR.',
-      '🎯 Milestone: Move from ' + (rate * 100).toFixed(1) + '% → 80% (good band) requires retaining ' + fmt(arrUpForRenewal * 0.80 - arrRenewed) + ' more; → 90% requires ' + fmt(arrUpForRenewal * 0.90 - arrRenewed) + ' more.',
-      '💡 Tip: Renewal rate is the cleanest gross retention signal — GRR folds in downgrades and churn; renewal rate isolates the renewal decision itself. Pair with [[solopreneur-grr-calculator]] to see the full gross retention picture, and [[solopreneur-nrr-calculator]] to capture expansion impact.',
+      '🩺 ' + makeToken('calc_out.label.renewal_rate_health', 'Renewal Rate Health') + ': ' + bandRow,
+      '📊 ' + makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken('calc_out.renewal_rate.row.snapshot_detail', fmt(arrRenewed) + ' of ' + fmt(arrUpForRenewal) + ' up-for-renewal ARR renewed.', { renewed: fmt(arrRenewed), up: fmt(arrUpForRenewal) }),
+      '🔄 ' + makeToken('calc_out.renewal_rate.row.whatif_plus_5pp', 'What-If: Each +5pp in renewal rate recovers ' + fmt(arrUpForRenewal * 0.05) + ' of ARR; a 90% target would lift renewed ARR to ' + fmt(arrUpForRenewal * 0.90) + '.', { gain: fmt(arrUpForRenewal * 0.05), target: fmt(arrUpForRenewal * 0.90) }),
+      '⚖️ ' + makeToken('calc_out.renewal_rate.row.break_even_90', 'Break-Even: To hit 90% (world-class), you need ' + fmt(arrUpForRenewal * 0.90 - arrRenewed) + ' more renewed ARR.', { need: fmt(arrUpForRenewal * 0.90 - arrRenewed) }),
+      '🎯 ' + makeToken('calc_out.renewal_rate.row.milestone_to_80_90', 'Milestone: Move from ' + ratePct + ' → 80% (good band) requires retaining ' + fmt(arrUpForRenewal * 0.80 - arrRenewed) + ' more; → 90% requires ' + fmt(arrUpForRenewal * 0.90 - arrRenewed) + ' more.', { from: ratePct, need80: fmt(arrUpForRenewal * 0.80 - arrRenewed), need90: fmt(arrUpForRenewal * 0.90 - arrRenewed) }),
+      makeToken('calc_out.renewal_rate.row.tip_renewal_rate', '💡 Tip: Renewal rate is the cleanest gross retention signal — GRR folds in downgrades and churn; renewal rate isolates the renewal decision itself. Pair with [[solopreneur-grr-calculator]] to see the full gross retention picture, and [[solopreneur-nrr-calculator]] to capture expansion impact.'),
     ];
   },
   staticExamples: [
-    '🩺 Renewal Rate Health: 🟡 Good (85.0%)\n📊 Snapshot: $850,000 of $1,000,000 up-for-renewal ARR renewed.\n🔄 What-If: Each +5pp in renewal rate recovers $50,000 of ARR; a 90% target would lift renewed ARR to $900,000.\n⚖️ Break-Even: To hit 90% (world-class), you need $50,000 more renewed ARR.\n🎯 Milestone: Move from 85.0% → 80% (good band) requires retaining $-50,000 more; → 90% requires $50,000 more.\n💡 Tip: Renewal rate is the cleanest gross retention signal — GRR folds in downgrades and churn; renewal rate isolates the renewal decision itself. Pair with [[solopreneur-grr-calculator]] to see the full gross retention picture, and [[solopreneur-nrr-calculator]] to capture expansion impact.',
+    '🩺 $calc_out.label.renewal_rate_health|Renewal Rate Health|: $calc_out.renewal_rate.row.band_good{"pct":"85.0%"}|🟡 Good (85.0%)|\n📊 $calc_out.label.snapshot|Snapshot|: $calc_out.renewal_rate.row.snapshot_detail{"renewed":"$850,000","up":"$1,000,000"}|$850,000 of $1,000,000 up-for-renewal ARR renewed.|\n🔄 $calc_out.renewal_rate.row.whatif_plus_5pp{"gain":"$50,000","target":"$900,000"}|What-If: Each +5pp in renewal rate recovers $50,000 of ARR; a 90% target would lift renewed ARR to $900,000.|\n⚖️ $calc_out.renewal_rate.row.break_even_90{"need":"$50,000"}|Break-Even: To hit 90% (world-class), you need $50,000 more renewed ARR.|\n🎯 $calc_out.renewal_rate.row.milestone_to_80_90{"from":"85.0%","need80":"$-50,000","need90":"$50,000"}|Milestone: Move from 85.0% → 80% (good band) requires retaining $-50,000 more; → 90% requires $50,000 more.|\n$calc_out.renewal_rate.row.tip_renewal_rate|💡 Tip: Renewal rate is the cleanest gross retention signal — GRR folds in downgrades and churn; renewal rate isolates the renewal decision itself. Pair with [[solopreneur-grr-calculator]] to see the full gross retention picture, and [[solopreneur-nrr-calculator]] to capture expansion impact.|',
     '📊 Snapshot: $850,000 of $1,000,000 up-for-renewal ARR renewed.',
     '🔄 What-If: Each +5pp in renewal rate recovers $50,000 of ARR; a 90% target would lift renewed ARR to $900,000.',
     '⚖️ Break-Even: To hit 90% (world-class), you need $50,000 more renewed ARR.',
@@ -117,7 +129,20 @@ function formatCurrency(n: number): string {
 
 // ─── Minimal live customFn (computed in browser; mirrors calculate math) ───
 
-const customFn = "var cnn=function(x){return Math.max(0,x)};const up=cnn(Number(inputs.arrUpForRenewal)||0);const renewed=cnn(Number(inputs.arrRenewed)||0);const rate=up>0?renewed/up:0;let band='critical';if(rate>=0.90)band='excellent';else if(rate>=0.80)band='good';else if(rate>=0.70)band='warning';const pct=(rate*100).toFixed(1)+'%';const BAND_LABEL={excellent:'🟢 Excellent',good:'🟡 Good',warning:'🟠 Warning',critical:'🔴 Critical'};const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');return['🩺 Renewal Rate Health: '+BAND_LABEL[band]+' ('+pct+')','📊 Snapshot: '+fmt(renewed)+' of '+fmt(up)+' up-for-renewal ARR renewed.','🔄 What-If: Each +5pp recovers '+fmt(up*0.05)+'; 90% target lifts renewed to '+fmt(up*0.90)+'.','⚖️ Break-Even: To hit 90%, need '+fmt(up*0.90-renewed)+' more renewed ARR.','🎯 Milestone: → 80% needs '+fmt(up*0.80-renewed)+' more; → 90% needs '+fmt(up*0.90-renewed)+' more.','💡 Tip: Pair with [[solopreneur-grr-calculator]] for full gross retention and [[solopreneur-nrr-calculator]] for expansion impact.',];";
+const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  // ⚠️ 本引擎的客户端文案**原本与服务端漂移**（What-If / Break-Even / Milestone / Tip 四行措辞不同）
+  //   ⇒ 以**服务端为准**改齐（B3-8 §0.5 默认原则：服务端是 SSR / staticExamples[0] / 引擎单测的指向）。
+  //   ⚠️ 返回仍是 6 元素数组（G15 台账已登记本引擎；页面只渲染 results[0] ⇒ 修它要同步销账，超出本引擎范围）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
+  "var cnn=function(x){return Math.max(0,x)};const up=cnn(Number(inputs.arrUpForRenewal)||0);const renewed=cnn(Number(inputs.arrRenewed)||0);const rate=up>0?renewed/up:0;let band='critical';if(rate>=0.90)band='excellent';else if(rate>=0.80)band='good';else if(rate>=0.70)band='warning';const pct=(rate*100).toFixed(1)+'%';const BAND_LABEL={excellent:'🟢 Excellent',good:'🟡 Good',warning:'🟠 Warning',critical:'🔴 Critical'};const fmt=n=>'$'+Math.round(n).toLocaleString('en-US');const bandFallback=BAND_LABEL[band]+' ('+pct+')';const bandParams={pct:pct};const bandRow=band==='excellent'?tk('calc_out.renewal_rate.row.band_excellent',bandFallback,bandParams):band==='good'?tk('calc_out.renewal_rate.row.band_good',bandFallback,bandParams):band==='warning'?tk('calc_out.renewal_rate.row.band_warning',bandFallback,bandParams):tk('calc_out.renewal_rate.row.band_critical',bandFallback,bandParams);" +
+  "return['🩺 '+tk('calc_out.label.renewal_rate_health','Renewal Rate Health')+': '+bandRow," +
+  "'📊 '+tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.renewal_rate.row.snapshot_detail',fmt(renewed)+' of '+fmt(up)+' up-for-renewal ARR renewed.',{renewed:fmt(renewed),up:fmt(up)})," +
+  "'🔄 '+tk('calc_out.renewal_rate.row.whatif_plus_5pp','What-If: Each +5pp in renewal rate recovers '+fmt(up*0.05)+' of ARR; a 90% target would lift renewed ARR to '+fmt(up*0.90)+'.',{gain:fmt(up*0.05),target:fmt(up*0.90)})," +
+  "'⚖️ '+tk('calc_out.renewal_rate.row.break_even_90','Break-Even: To hit 90% (world-class), you need '+fmt(up*0.90-renewed)+' more renewed ARR.',{need:fmt(up*0.90-renewed)})," +
+  "'🎯 '+tk('calc_out.renewal_rate.row.milestone_to_80_90','Milestone: Move from '+pct+' → 80% (good band) requires retaining '+fmt(up*0.80-renewed)+' more; → 90% requires '+fmt(up*0.90-renewed)+' more.',{from:pct,need80:fmt(up*0.80-renewed),need90:fmt(up*0.90-renewed)})," +
+  "tk('calc_out.renewal_rate.row.tip_renewal_rate','💡 Tip: Renewal rate is the cleanest gross retention signal — GRR folds in downgrades and churn; renewal rate isolates the renewal decision itself. Pair with [[solopreneur-grr-calculator]] to see the full gross retention picture, and [[solopreneur-nrr-calculator]] to capture expansion impact.'),];";
 engine.clientConfig = { type: 'custom', wordPools: {}, customFn };
 
 registerEngine(engine);

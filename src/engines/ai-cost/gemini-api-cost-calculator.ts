@@ -2,6 +2,7 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import PRICING from '../../data/ai-pricing.json';
 import { pickInteractiveModels, pickCrossProviderModels } from '../../data/ai-pricing-popular';
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 interface ModelInfo {
   input: number;
@@ -185,29 +186,35 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-9：⭐「📅 Pricing last updated」这一行**从卡片正文里去掉**（同一配方见 claude / deepseek）——
+  //   · 页面用**徽章**显示同一个日期（dataLastUpdated →「📅 Data updated」）
+  //   · codegen 写 staticExamples[0] 时也会过滤掉它（"UI badge covers it"）
+  //   ⇒ 留在正文里只会与徽章重复，且让服务端输出比静态卡片多一行（G6 漂移）。
+  //   ⚠️ 下面这一行**空元素保留**（原本紧跟 banner 的那一行）⇒ out 数组与 staticExamples[0] 逐行一致。
   out.push('');
 
   // Section 1: Header
-  let headerLine = '\u{1F916} Gemini API Cost';
+  let headerLine = makeToken('calc_out.section.gemini_api_cost', '\u{1F916} Gemini API Cost');
   if (isBatch) {
-    headerLine += ' | \u{1F4E6} Batch Mode (50% discount)';
+    headerLine += ' | ' + makeToken('calc_out.section.gemini_api_cost_batch_mode', '\u{1F4E6} Batch Mode (50% discount)');
   }
   if (cachingActive) {
-    headerLine += ' | \u{1F4BE} Context Caching: ' + cacheReadHitRate + '% hit (90% discount)';
+    headerLine += ' | ' + makeToken('calc_out.section.gemini_api_cost_context_caching', '\u{1F4BE} Context Caching: ' + cacheReadHitRate + '% hit (90% discount)', { hit: String(cacheReadHitRate) });
   }
   out.push(headerLine);
   out.push('');
   out.push(
-    '\u{1F4E5} Input: ' + lc(inTokens) + ' tokens/req | ' +
-    '\u{1F4E4} Output: ' + lc(outTokens) + ' tokens/req | ' +
-    '\u{1F504} ' + lc(reqPerDay) + ' reqs/day | ' +
-    (isBatch ? '\u{1F4E6} Batch' : '⚡ Real-time'),
+    makeToken('calc_out.gemini_api_cost.row.input_tokens', '\u{1F4E5} Input: ' + lc(inTokens) + ' tokens/req', { tokens: lc(inTokens) }) + ' | ' +
+    makeToken('calc_out.gemini_api_cost.row.output_tokens', '\u{1F4E4} Output: ' + lc(outTokens) + ' tokens/req', { tokens: lc(outTokens) }) + ' | ' +
+    makeToken('calc_out.gemini_api_cost.row.requests_per_day', '\u{1F504} ' + lc(reqPerDay) + ' reqs/day', { reqs: lc(reqPerDay) }) + ' | ' +
+    (isBatch
+      ? makeToken('calc_out.gemini_api_cost.row.mode_batch', '\u{1F4E6} Batch')
+      : makeToken('calc_out.gemini_api_cost.row.mode_realtime', '⚡ Real-time')),
   );
   out.push('');
 
   // Section 2: Bar Chart
-  out.push('📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.gemini_api_cost.row.cost_comparison_header', '📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)', { reqs: lc(reqPerDay) }));
   out.push(SEP.repeat(54));
   const BAR_WIDTH = 40;
   for (const c of allCosts) {
@@ -225,7 +232,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // Section 3: Detail Cards — selected models
-  out.push('📋 Selected Model Details');
+  out.push('$calc_out.section.gemini_api_cost_selected_models|📋 Selected Model Details|');
   out.push(SEP.repeat(60));
   for (const c of selectedCosts) {
     const icon = c.info.icon;
@@ -233,36 +240,73 @@ function calculate(inputs: Record<string, string>): string[] {
     const dailyCost = c.costPerReq * reqPerDay;
     const annualCost = c.monthlyCost * 12;
 
+    // P168 B3-9：⭐ 型号名留在 token 外（专有名词不该被译）；只把**系列标签**与
+    //   「Context: …」包进 token ⇒ zh 页那一行不再是整行英文。
+    const familyToken =
+      c.info.family === 'gem4'
+        ? makeToken('calc_out.gemini_api_cost.row.family_gem4', '(' + famLabel + ')')
+        : c.info.family === 'flash35'
+          ? makeToken('calc_out.gemini_api_cost.row.family_flash35', '(' + famLabel + ')')
+          : c.info.family === 'pro'
+            ? makeToken('calc_out.gemini_api_cost.row.family_pro', '(' + famLabel + ')')
+            : c.info.family === 'flash3'
+              ? makeToken('calc_out.gemini_api_cost.row.family_flash3', '(' + famLabel + ')')
+              : makeToken('calc_out.gemini_api_cost.row.family_legacy', '(' + famLabel + ')');
     out.push(
-      icon + ' ' + c.info.name + ' (' + famLabel + ') | Context: ' + c.info.contextWindow,
+      icon + ' ' + c.info.name + ' ' + familyToken +
+      ' | ' + makeToken('calc_out.gemini_api_cost.row.context_window', 'Context: ' + c.info.contextWindow, { context: c.info.contextWindow }),
     );
     out.push(SEP.repeat(44));
 
-    const inputCostLine = (inTokens / 1_000_000) * (isBatch && c.info.supportsBatch ? c.info.batchInput : c.info.input);
-    const outputCostLine = (outTokens / 1_000_000) * (isBatch && c.info.supportsBatch ? c.info.batchOutput : c.info.output);
+    const effInRate = isBatch && c.info.supportsBatch ? c.info.batchInput : c.info.input;
+    const effOutRate = isBatch && c.info.supportsBatch ? c.info.batchOutput : c.info.output;
+    const inputCostLine = (inTokens / 1_000_000) * effInRate;
+    const outputCostLine = (outTokens / 1_000_000) * effOutRate;
     out.push(
-      'Input:  ' + pad(lc(inTokens), 7) + ' tokens × ' +
-        fmt(isBatch && c.info.supportsBatch ? c.info.batchInput : c.info.input) +
-        '/1M → ' + fmt(inputCostLine) + '/req',
+      makeToken(
+        'calc_out.gemini_api_cost.row.input_cost',
+        'Input:  ' +
+          pad(lc(inTokens), 7) +
+          ' tokens × ' +
+          fmt(effInRate) +
+          '/1M → ' +
+          fmt(inputCostLine) +
+          '/req',
+        { tokens: lc(inTokens), rate: fmt(effInRate), cost: fmt(inputCostLine) },
+      ),
     );
     out.push(
-      'Output: ' + pad(lc(outTokens), 7) + ' tokens × ' +
-        fmt(isBatch && c.info.supportsBatch ? c.info.batchOutput : c.info.output) +
-        '/1M → ' + fmt(outputCostLine) + '/req',
+      makeToken(
+        'calc_out.gemini_api_cost.row.output_cost',
+        'Output: ' +
+          pad(lc(outTokens), 7) +
+          ' tokens × ' +
+          fmt(effOutRate) +
+          '/1M → ' +
+          fmt(outputCostLine) +
+          '/req',
+        { tokens: pad(lc(outTokens), 7), rate: fmt(effOutRate), cost: fmt(outputCostLine) },
+      ),
     );
 
     // Batch rate line for models that support it
     if (!isBatch && c.info.supportsBatch) {
-      out.push('  Batch Rate: ' + fmt(c.info.batchInput) + '/' + fmt(c.info.batchOutput) + ' per 1M tokens');
+      out.push(
+        makeToken(
+          'calc_out.gemini_api_cost.row.batch_rate',
+          '  Batch Rate: ' + fmt(c.info.batchInput) + '/' + fmt(c.info.batchOutput) + ' per 1M tokens',
+          { input: fmt(c.info.batchInput), output: fmt(c.info.batchOutput) },
+        ),
+      );
     } else if (!c.info.supportsBatch) {
-      out.push('  ⚠ Batch: N/A for this model');
+      out.push('$calc_out.gemini_api_cost.row.batch_na|  ⚠ Batch: N/A for this model|');
     }
 
     out.push(SEP.repeat(44));
-    out.push('Per request:    ' + fmt(c.costPerReq));
-    out.push('Daily (' + reqPerDay + '):    ' + fmt(dailyCost));
-    out.push('Monthly (30d):  ' + fmt(c.monthlyCost));
-    out.push('Annual:         ' + fmt(annualCost));
+    out.push(makeToken('calc_out.label.per_request', 'Per request') + ':    ' + fmt(c.costPerReq));
+    out.push(makeToken('calc_out.label.daily', 'Daily') + ' (' + reqPerDay + '):    ' + fmt(dailyCost));
+    out.push(makeToken('calc_out.label.monthly', 'Monthly') + ' (30d):  ' + fmt(c.monthlyCost));
+    out.push(makeToken('calc_out.label.annual', 'Annual') + ':         ' + fmt(annualCost));
     out.push(SEP.repeat(44));
 
     // Context caching savings per model
@@ -270,11 +314,22 @@ function calculate(inputs: Record<string, string>): string[] {
       const savings = c.noCacheMonthly - c.monthlyCost;
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
       out.push(
-        '💾 Context cache at ' + cacheReadHitRate + '% hit: ' + fmt(c.monthlyCost) +
-          '/mo — saves ' + fmt(savings) + '/mo (' + pctSaved + '%)',
+        makeToken(
+          'calc_out.gemini_api_cost.row.context_cache_savings',
+          '💾 Context cache at ' +
+            cacheReadHitRate +
+            '% hit: ' +
+            fmt(c.monthlyCost) +
+            '/mo — saves ' +
+            fmt(savings) +
+            '/mo (' +
+            pctSaved +
+            '%)',
+          { rate: String(cacheReadHitRate), cost: fmt(c.monthlyCost), saved: fmt(savings), pct: String(pctSaved) },
+        ),
       );
     } else if (cachingActive && !c.info.supportsCache) {
-      out.push('🚫 Context caching not available for this model');
+      out.push('$calc_out.gemini_api_cost.row.cache_unavailable|🚫 Context caching not available for this model|');
     }
 
     out.push('');
@@ -282,9 +337,11 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Section 4: Growth Projection
   if (growthRate > 0) {
-    out.push('\u{1F4C8} Growth Projection (' + growthRate + '%/month, ' + projMonths + ' months)');
+    out.push(makeToken('calc_out.gemini_api_cost.row.growth_projection', '\u{1F4C8} Growth Projection (' + growthRate + '%/month, ' + projMonths + ' months)', { growth: String(growthRate), months: String(projMonths) }));
     out.push('');
-    let header = 'Month'.padEnd(8);
+    // ⭐ 对齐空格留在 token 之外（先按原英文 pad，再把标签那一截换掉）
+    const monthCell = 'Month'.padEnd(8);
+    let header = makeToken('calc_out.label.month', 'Month') + monthCell.slice('Month'.length);
     for (const c of selectedCosts) header += ' | ' + c.info.name.padEnd(16);
     out.push(header);
     let sepLine = ''.padEnd(8, SEP);
@@ -300,7 +357,8 @@ function calculate(inputs: Record<string, string>): string[] {
       out.push(row);
     }
     out.push(sepLine);
-    let totalRow = 'Total'.padEnd(8);
+    const totalCell = 'Total'.padEnd(8);
+    let totalRow = makeToken('calc_out.label.total', 'Total') + totalCell.slice('Total'.length);
     for (const c of selectedCosts) {
       let cum = 0;
       for (let m = 1; m <= projMonths; m++) cum += c.monthlyCost * Math.pow(growthMult, m - 1);
@@ -311,18 +369,22 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   // Section 5: Savings Insights
-  out.push('💰 Savings Insights');
+  out.push('$calc_out.section.gemini_api_cost_savings_insights|💰 Savings Insights|');
   out.push(SEP.repeat(60));
 
   const cheapestGem = allCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
-  out.push('🏆 Cheapest: ' + cheapestGem.info.name + ' at ' + fmt(cheapestGem.monthlyCost) + '/mo');
+  out.push(
+    makeToken('calc_out.gemini_api_cost.row.cheapest', '🏆 Cheapest: ' + cheapestGem.info.name + ' at ' + fmt(cheapestGem.monthlyCost) + '/mo', { model: cheapestGem.info.name, cost: fmt(cheapestGem.monthlyCost) }),
+  );
 
   // Best value (non-legacy Gemini 3 family)
   const bestValue = allCosts
     .filter((c) => c.info.family !== 'legacy')
     .reduce((min, c) => (c.monthlyCost < min.monthlyCost ? c : min), allCosts[0]);
   if (bestValue && bestValue.key !== cheapestGem.key) {
-    out.push('⭐ Best value (Gemini 3 series): ' + bestValue.info.name + ' at ' + fmt(bestValue.monthlyCost) + '/mo');
+    out.push(
+      makeToken('calc_out.gemini_api_cost.row.best_value', '⭐ Best value (Gemini 3 series): ' + bestValue.info.name + ' at ' + fmt(bestValue.monthlyCost) + '/mo', { model: bestValue.info.name, cost: fmt(bestValue.monthlyCost) }),
+    );
   }
 
   // Switching savings
@@ -330,15 +392,18 @@ function calculate(inputs: Record<string, string>): string[] {
     const mostExpSelected = selectedCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max);
     const cheapSelected = selectedCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
     const diff = mostExpSelected.monthlyCost - cheapSelected.monthlyCost;
-    out.push('💸 Switching from ' + mostExpSelected.info.name + ' to ' + cheapSelected.info.name +
-      ' saves ' + fmt(diff) + '/mo (' + fmt(diff * 12) + '/yr)');
+    out.push(
+      makeToken('calc_out.gemini_api_cost.row.switching_savings', '💸 Switching from ' + mostExpSelected.info.name + ' to ' + cheapSelected.info.name + ' saves ' + fmt(diff) + '/mo (' + fmt(diff * 12) + '/yr)', { from: mostExpSelected.info.name, to: cheapSelected.info.name, saved: fmt(diff), yearly: fmt(diff * 12) }),
+    );
   }
 
   // Caching tip
   if (cachingActive && selectedCosts.length > 0) {
     const ref = selectedCosts[0];
     const savings = ref.noCacheMonthly - ref.monthlyCost;
-    out.push('💾 Context cache at ' + cacheReadHitRate + '% hit rate saves ~' + fmt(savings) + '/mo on ' + ref.info.name);
+    out.push(
+      makeToken('calc_out.gemini_api_cost.row.cache_summary', '💾 Context cache at ' + cacheReadHitRate + '% hit rate saves ~' + fmt(savings) + '/mo on ' + ref.info.name, { rate: String(cacheReadHitRate), saved: fmt(savings), model: ref.info.name }),
+    );
   }
 
   // Cross-provider comparison
@@ -347,8 +412,15 @@ function calculate(inputs: Record<string, string>): string[] {
     const savings = provMonthly - cheapestGem.monthlyCost;
     const pct = provMonthly > 0 ? Math.round((savings / provMonthly) * 100) : 0;
     const cheaper = savings > 0;
-    out.push('🌍 ' + cheapestGem.info.name + ' vs ' + prov.name + ': ' +
-      (cheaper ? 'saves ' + fmt(savings) + '/month (' + pct + '% cheaper)' : 'costs ' + fmt(-savings) + '/month more'));
+    if (cheaper) {
+      out.push(
+        makeToken('calc_out.gemini_api_cost.row.cross_provider_cheaper', '🌍 ' + cheapestGem.info.name + ' vs ' + prov.name + ': saves ' + fmt(savings) + '/month (' + pct + '% cheaper)', { model: cheapestGem.info.name, provider: prov.name, saved: fmt(savings), pct: String(pct) }),
+      );
+    } else {
+      out.push(
+        makeToken('calc_out.gemini_api_cost.row.cross_provider_pricier', '🌍 ' + cheapestGem.info.name + ' vs ' + prov.name + ': costs ' + fmt(-savings) + '/month more', { model: cheapestGem.info.name, provider: prov.name, extra: fmt(-savings) }),
+      );
+    }
   }
   // P164: 这句里的模型名、价格、缓存模型数全部改为派生。
   // 原句写死了 "Gemini 3 Flash" / "$0.50/$3.00" / "the newest 3 models" ——
@@ -357,59 +429,90 @@ function calculate(inputs: Record<string, string>): string[] {
   // （3.1-pro / 3-flash / 3.5-flash / 3.8-flash / 4-argon），两个 legacy 不支持。
   const gf = MODELS['gemini-3-flash'];
   const cacheModelCount = Object.values(MODELS).filter((m) => m.supportsCache).length;
-  out.push('💡 ' + gf.name + ' is the cheapest frontier-quality model at $' +
-    gf.input.toFixed(2) + '/$' + gf.output.toFixed(2) +
-    ' per 1M tokens. Context Caching saves 90% on repeated prompts for the ' +
-    cacheModelCount + ' models that support it.');
+  out.push(
+    makeToken(
+      'calc_out.gemini_api_cost.row.tip_cheapest_frontier',
+      '💡 ' + gf.name + ' is the cheapest frontier-quality model at $' +
+        gf.input.toFixed(2) + '/$' + gf.output.toFixed(2) +
+        ' per 1M tokens. Context Caching saves 90% on repeated prompts for the ' +
+        cacheModelCount + ' models that support it.',
+      { model: gf.name, input: '$' + gf.input.toFixed(2), output: '$' + gf.output.toFixed(2), count: String(cacheModelCount) },
+    ),
+  );
   out.push('');
 
   // Section 6: Usage Scenarios
-  out.push('📅 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.gemini_api_cost.row.usage_scenarios', '📅 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)', { reqs: lc(reqPerDay) }));
   out.push('');
   const volumes = [50, 100, 500, 1000, 5000, 10000];
   for (const c of selectedCosts) {
     const icon = c.info.icon;
-    let line = icon + ' ' + c.info.name + ': ';
     const parts: string[] = [];
     for (const v of volumes) {
       parts.push(lc(v) + '→' + fmt(c.costPerReq * v * 30));
     }
-    line += parts.join(' · ');
-    out.push(line);
+    // P168 B3-9：整行**令牌化**（原先是裸文本 ⇒ zh 卡片这一行仍是英文）
+    //   ⇒ 图标 / 型号 / 6 档用量全部走 {param} ⇒ zh 侧可整行中文化。
+    out.push(
+      makeToken(
+        'calc_out.gemini_api_cost.row.usage_scenario_line',
+        icon + ' ' + c.info.name + ': ' + parts.join(' · '),
+        {
+          icon,
+          model: c.info.name,
+          v50: parts[0],
+          v100: parts[1],
+          v500: parts[2],
+          v1k: parts[3],
+          v5k: parts[4],
+          v10k: parts[5],
+        },
+      ),
+    );
   }
 
   // 🩺 Cost Health (v3)
   out.push('');
-  out.push('🩺 Cost Health:');
+  out.push('$calc_out.section.gemini_api_cost_health|🩺 Cost Health:|');
   out.push(SEP.repeat(60));
   const totalSelectedMonthly = selectedCosts.reduce((s, c) => s + c.monthlyCost, 0);
   const cheapestSelected = selectedCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
   const expensiveSelected = selectedCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max);
   if (selectedCosts.length >= 2) {
     const ratio = expensiveSelected.monthlyCost / Math.max(cheapestSelected.monthlyCost, 0.01);
-    if (ratio >= 50) out.push('• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.');
-    else if (ratio >= 10) out.push('• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.');
-    else out.push('• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.');
+    if (ratio >= 50) out.push(makeToken('calc_out.gemini_api_cost.row.health_spread_50x', '• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.', { ratio: ratio.toFixed(0) }));
+    else if (ratio >= 10) out.push(makeToken('calc_out.gemini_api_cost.row.health_spread_10x', '• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.', { ratio: ratio.toFixed(0) }));
+    else out.push(makeToken('calc_out.gemini_api_cost.row.health_spread_healthy', '• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.', { ratio: ratio.toFixed(1) }));
   }
   if (cheapestSelected) {
-    const tier = cheapestSelected.monthlyCost < 5 ? '🟢 Micro-tier (under $5/mo)' : cheapestSelected.monthlyCost < 50 ? '🟢 Low-volume tier' : cheapestSelected.monthlyCost < 500 ? '🟡 Mid-volume tier' : '🟠 High-volume tier';
-    out.push('• ' + tier + ' — ' + cheapestSelected.info.name + ' at ' + fmt(cheapestSelected.monthlyCost) + '/mo.');
+    const tierModel = cheapestSelected.info.name;
+    const tierCost = fmt(cheapestSelected.monthlyCost);
+    // ⚠️ 四档**各有自己的 code**（而不是「一个 code + 四种兜底」）⇒ locale 的 en 值与运行时兜底永远一致。
+    if (cheapestSelected.monthlyCost < 5) {
+      out.push(makeToken('calc_out.gemini_api_cost.row.health_tier_micro', '• 🟢 Micro-tier (under $5/mo) — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    } else if (cheapestSelected.monthlyCost < 50) {
+      out.push(makeToken('calc_out.gemini_api_cost.row.health_tier_low', '• 🟢 Low-volume tier — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    } else if (cheapestSelected.monthlyCost < 500) {
+      out.push(makeToken('calc_out.gemini_api_cost.row.health_tier_mid', '• 🟡 Mid-volume tier — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    } else {
+      out.push(makeToken('calc_out.gemini_api_cost.row.health_tier_high', '• 🟠 High-volume tier — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    }
   }
   if (cacheReadHitRate === 0) {
-    out.push('• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.');
+    out.push('$calc_out.gemini_api_cost.row.health_cache_zero|• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.|');
   } else if (cacheReadHitRate < 30) {
-    out.push('• 🟡 Low cache hit rate (' + cacheReadHitRate + '%) — review if your prompt has stable system instructions.');
+    out.push(makeToken('calc_out.gemini_api_cost.row.health_cache_low', '• 🟡 Low cache hit rate (' + cacheReadHitRate + '%) — review if your prompt has stable system instructions.', { rate: String(cacheReadHitRate) }));
   } else {
-    out.push('• 🟢 Healthy cache rate (' + cacheReadHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.');
+    out.push(makeToken('calc_out.gemini_api_cost.row.health_cache_healthy', '• 🟢 Healthy cache rate (' + cacheReadHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.', { rate: String(cacheReadHitRate) }));
   }
   if (pricingMode === 'realtime') {
     const batchSavings = totalSelectedMonthly * 0.5;
-    out.push('• 💡 Switch to batch pricing: save ~' + fmt(batchSavings) + '/mo (50% discount) if latency is not critical.');
+    out.push(makeToken('calc_out.gemini_api_cost.row.batch_pricing_tip', '• 💡 Switch to batch pricing: save ~' + fmt(batchSavings) + '/mo (50% discount) if latency is not critical.', { saved: fmt(batchSavings) }));
   }
   out.push('');
 
   // 🔄 What-If Scenarios (v3)
-  out.push('🔄 What-If Scenarios:');
+  out.push('$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|');
   out.push(SEP.repeat(60));
   const popularCheapest = allCosts
     .reduce((min, c) => (c.info.input + c.info.output) < (min.info.input + min.info.output) ? c : min, allCosts[0]);
@@ -417,15 +520,15 @@ function calculate(inputs: Record<string, string>): string[] {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
-    if (savings > 0) out.push('• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)');
+    if (savings > 0) out.push(makeToken('calc_out.gemini_api_cost.row.whatif_switch_cheapest', '• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)', { model: popularCheapest.info.name, saved: fmt(savings) }));
   }
-  out.push('• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo');
-  out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo');
+  out.push(makeToken('calc_out.gemini_api_cost.row.whatif_double_volume', '• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo', { reqs: lc(reqPerDay * 2), cost: fmt(totalSelectedMonthly * 2) }));
+  out.push(makeToken('calc_out.gemini_api_cost.row.whatif_halve_volume', '• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo', { reqs: lc(Math.max(1, Math.floor(reqPerDay / 2))), cost: fmt(totalSelectedMonthly / 2) }));
   if (cacheReadHitRate < 50) {
     const cacheFactor = 0.5 + 0.5 * (1 - 0.5 * 0.9);
     const cachedMonthly = totalSelectedMonthly * cacheFactor;
     const cacheSavings = totalSelectedMonthly - cachedMonthly;
-    out.push('• Boost cache hit rate to 50%:  save ~' + fmt(cacheSavings) + '/mo  (' + fmt(totalSelectedMonthly) + ' → ' + fmt(cachedMonthly) + ')');
+    out.push(makeToken('calc_out.gemini_api_cost.row.whatif_boost_cache', '• Boost cache hit rate to 50%:  save ~' + fmt(cacheSavings) + '/mo  (' + fmt(totalSelectedMonthly) + ' → ' + fmt(cachedMonthly) + ')', { saved: fmt(cacheSavings), current: fmt(totalSelectedMonthly), boosted: fmt(cachedMonthly) }));
   }
   out.push('');
   return out;
@@ -433,9 +536,12 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var M={'gemini-4-argon':{i:2,o:10,bi:1,bo:5,n:'Gemini 4 Argon',f:'gem4',ic:'★',cw:'1M',od:1,sc:true,sb:true},'gemini-3.8-flash':{i:0.75,o:3.75,bi:0.375,bo:1.875,n:'Gemini 3.8 Flash',f:'flash3',ic:'◆',cw:'1M',od:2,sc:true,sb:true},'gemini-3.5-flash':{i:1.5,o:9,bi:0.375,bo:2.25,n:'Gemini 3.5 Flash',f:'flash35',ic:'●',cw:'1M',od:3,sc:true,sb:true},'gemini-3.1-pro':{i:2,o:12,bi:1,bo:6,n:'Gemini 3.1 Pro',f:'pro',ic:'▲',cw:'1M',od:4,sc:true,sb:true},'gemini-3-flash':{i:0.5,o:3,bi:0.25,bo:1.5,n:'Gemini 3 Flash',f:'flash3',ic:'◆',cw:'1M',od:5,sc:true,sb:true},'gemini-2.5-flash':{i:0.3,o:2.5,bi:0,bo:0,n:'Gemini 2.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:6,sc:false,sb:false},'gemini-1.5-pro':{i:3.5,o:10.5,bi:0,bo:0,n:'Gemini 1.5 Pro',f:'legacy',ic:'◇',cw:'2M',od:7,sc:false,sb:false},'gemini-1.5-flash':{i:0.075,o:0.3,bi:0,bo:0,n:'Gemini 1.5 Flash',f:'legacy',ic:'◇',cw:'1M',od:8,sc:false,sb:false}};\nvar XP={openai:{i:0.05,o:0.4,n:'GPT-5 Nano'},claude:{i:0.25,o:1.25,n:'Claude Haiku 3'},deepseek:{i:0.3,o:1.2,n:'DeepSeek V4 Flash'}};" +
 
-  "var FL={flash35:'Gemini 3.5 Flash',pro:'Gemini 3.1 Pro',flash3:'Gemini 3 Flash',legacy:'Legacy'};" +
+  "var FL={gem4:'Gemini 4 Argon',flash35:'Gemini 3.5 Flash',pro:'Gemini 3.1 Pro',flash3:'Gemini 3 Flash',legacy:'Legacy'};" +
   "var DEF=['gemini-3.5-flash','gemini-3.1-pro','gemini-3-flash','gemini-1.5-flash'];" +
   "var CRM=0.1;" +
   "function fm(n){if(Math.abs(n)<0.01&&n!==0)return '$'+n.toFixed(4);return '$'+n.toFixed(2)}" +
@@ -462,68 +568,104 @@ const customFn =
   "var sc=[];for(var i=0;i<sks.length;i++){var e=all.find(function(c){return c.k===sks[i];});if(e)sc.push(e);}" +
   "if(sc.length===0){for(var j=0;j<DEF.length;j++){var e2=all.find(function(c){return c.k===DEF[j];});if(e2)sc.push(e2);}}" +
   "var o=[];" +
-  "var hl='\\u{1F916} Gemini API Cost';if(isBatch){hl+=' | \\u{1F4E6} Batch Mode (50% discount)';}" +
-  "if(cacheOn){hl+=' | \\u{1F4BE} Context Caching: '+cHR+'% hit (90% discount)';}" +
+  "o.push('');" +
+  "var hl=tk('calc_out.section.gemini_api_cost','\\u{1F916} Gemini API Cost');if(isBatch){hl+=' | '+tk('calc_out.section.gemini_api_cost_batch_mode','\\u{1F4E6} Batch Mode (50% discount)');}" +
+  "if(cacheOn){hl+=' | '+tk('calc_out.section.gemini_api_cost_context_caching','\\u{1F4BE} Context Caching: '+cHR+'% hit (90% discount)',{hit:String(cHR)});}" +
   "o.push(hl);o.push('');" +
-  "o.push('\\u{1F4E5} Input: '+lc(iT)+' tokens/req | \\u{1F4E4} Output: '+lc(oT)+' tokens/req | \\u{1F504} '+lc(rpd)+' reqs/day | '+(isBatch?'\\u{1F4E6} Batch':'\\u26A1 Real-time'));o.push('');" +
-  "o.push('\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP2.repeat(54));" +
+  "o.push(tk('calc_out.gemini_api_cost.row.input_tokens','\\u{1F4E5} Input: '+lc(iT)+' tokens/req',{tokens:lc(iT)})+' | '+tk('calc_out.gemini_api_cost.row.output_tokens','\\u{1F4E4} Output: '+lc(oT)+' tokens/req',{tokens:lc(oT)})+' | '+tk('calc_out.gemini_api_cost.row.requests_per_day','\\u{1F504} '+lc(rpd)+' reqs/day',{reqs:lc(rpd)})+' | '+(isBatch?tk('calc_out.gemini_api_cost.row.mode_batch','\\u{1F4E6} Batch'):tk('calc_out.gemini_api_cost.row.mode_realtime','\\u26A1 Real-time')));o.push('');" +
+  "o.push(tk('calc_out.gemini_api_cost.row.cost_comparison_header','\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)',{reqs:lc(rpd)}));o.push(SEP2.repeat(54));" +
   "var BW=40;for(var i=0;i<all.length;i++){var c=all[i];var icon=c.i.ic;var label=icon+' '+c.i.n;" +
   "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.k===ch.k?'\\u2591':'\\u2588';" +
   "var sf=isBatch&&!c.i.sb?' (no batch)':'';var bd=c.k===ch.k?' \\u{1F3C6}':'';" +
   "o.push(pd(label,28)+' '+pd(bc.repeat(bl),BW)+' '+fm(c.mc)+sf+bd);}o.push('');o.push('');" +
-  "o.push('\\u{1F4CB} Selected Model Details');o.push(SEP2.repeat(60));" +
+  "o.push('$calc_out.section.gemini_api_cost_selected_models|\\u{1F4CB} Selected Model Details|');o.push(SEP2.repeat(60));" +
   "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=c.i.ic;var dc2=c.cpr*rpd;var ann=c.mc*12;" +
-  "o.push(icon+' '+c.i.n+' ('+FL[c.i.f]+') | Context: '+c.i.cw);" +
+  "var ftok=c.i.f==='gem4'?tk('calc_out.gemini_api_cost.row.family_gem4','('+FL[c.i.f]+')'):c.i.f==='flash35'?tk('calc_out.gemini_api_cost.row.family_flash35','('+FL[c.i.f]+')'):c.i.f==='pro'?tk('calc_out.gemini_api_cost.row.family_pro','('+FL[c.i.f]+')'):c.i.f==='flash3'?tk('calc_out.gemini_api_cost.row.family_flash3','('+FL[c.i.f]+')'):tk('calc_out.gemini_api_cost.row.family_legacy','('+FL[c.i.f]+')');" +
+  "o.push(icon+' '+c.i.n+' '+ftok+' | '+tk('calc_out.gemini_api_cost.row.context_window','Context: '+c.i.cw,{context:c.i.cw}));" +
   "o.push(SEP2.repeat(44));" +
   "var ei2=isBatch&&c.i.sb?c.i.bi:c.i.i;var eo2=isBatch&&c.i.sb?c.i.bo:c.i.o;" +
   "var icl=(iT/1e6)*ei2;var ocl=(oT/1e6)*eo2;" +
-  "o.push('Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(ei2)+'/1M \\u2192 '+fm(icl)+'/req');" +
-  "o.push('Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(eo2)+'/1M \\u2192 '+fm(ocl)+'/req');" +
-  "if(!isBatch&&c.i.sb){o.push('  Batch Rate: '+fm(c.i.bi)+'/'+fm(c.i.bo)+' per 1M tokens');}" +
-  "else if(!c.i.sb){o.push('  \\u26A0 Batch: N/A for this model');}" +
+  "o.push(tk('calc_out.gemini_api_cost.row.input_cost','Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(ei2)+'/1M \\u2192 '+fm(icl)+'/req',{tokens:lc(iT),rate:fm(ei2),cost:fm(icl)}));" +
+  "o.push(tk('calc_out.gemini_api_cost.row.output_cost','Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(eo2)+'/1M \\u2192 '+fm(ocl)+'/req',{tokens:pd(lc(oT),7),rate:fm(eo2),cost:fm(ocl)}));" +
+  "if(!isBatch&&c.i.sb){o.push(tk('calc_out.gemini_api_cost.row.batch_rate','  Batch Rate: '+fm(c.i.bi)+'/'+fm(c.i.bo)+' per 1M tokens',{input:fm(c.i.bi),output:fm(c.i.bo)}));}" +
+  "else if(!c.i.sb){o.push('$calc_out.gemini_api_cost.row.batch_na|  \\u26A0 Batch: N/A for this model|');}" +
   "o.push(SEP2.repeat(44));" +
-  "o.push('Per request:    '+fm(c.cpr));" +
-  "o.push('Daily ('+rpd+'):    '+fm(dc2));" +
-  "o.push('Monthly (30d):  '+fm(c.mc));" +
-  "o.push('Annual:         '+fm(ann));" +
+  "o.push(tk('calc_out.label.per_request','Per request')+':    '+fm(c.cpr));" +
+  "o.push(tk('calc_out.label.daily','Daily')+' ('+rpd+'):    '+fm(dc2));" +
+  "o.push(tk('calc_out.label.monthly','Monthly')+' (30d):  '+fm(c.mc));" +
+  "o.push(tk('calc_out.label.annual','Annual')+':         '+fm(ann));" +
   "o.push(SEP2.repeat(44));" +
-  "if(cacheOn&&c.i.sc){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;o.push('\\u{1F4BE} Context cache at '+cHR+'% hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)');}" +
-  "else if(cacheOn&&!c.i.sc){o.push('\\u{1F6AB} Context caching not available for this model');}" +
+  "if(cacheOn&&c.i.sc){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;o.push(tk('calc_out.gemini_api_cost.row.context_cache_savings','\\u{1F4BE} Context cache at '+cHR+'% hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)',{rate:String(cHR),cost:fm(c.mc),saved:fm(sv),pct:String(ps)}));}" +
+  "else if(cacheOn&&!c.i.sc){o.push('$calc_out.gemini_api_cost.row.cache_unavailable|\\u{1F6AB} Context caching not available for this model|');}" +
   "o.push('');}" +
   "if(gR>0){" +
-  "o.push('\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)');o.push('');" +
-  "var hdr='Month'.padEnd(8);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(16);o.push(hdr);" +
+  "o.push(tk('calc_out.gemini_api_cost.row.growth_projection','\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)',{growth:String(gR),months:String(pM)}));o.push('');" +
+  "var mCell='Month'.padEnd(8);var hdr=tk('calc_out.label.month','Month')+mCell.slice(5);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(16);o.push(hdr);" +
   "var sl=''.padEnd(8,SEP2);for(var i=0;i<sc.length;i++)sl+='-+-'.padEnd(17,SEP2);o.push(sl);" +
   "var gm=1+gR/100;" +
   "for(var m=1;m<=pM;m++){var mult=Math.pow(gm,m-1);var row=String(m).padEnd(8);for(var i=0;i<sc.length;i++)row+=' | '+fm(sc[i].mc*mult).padEnd(16);o.push(row);}" +
   "o.push(sl);" +
-  "var tr='Total'.padEnd(8);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(16);}o.push(tr);" +
+  "var tCell='Total'.padEnd(8);var tr=tk('calc_out.label.total','Total')+tCell.slice(5);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(16);}o.push(tr);" +
   "o.push('');}" +
-  "o.push('\\u{1F4B0} Savings Insights');o.push(SEP2.repeat(60));" +
+  "o.push('$calc_out.section.gemini_api_cost_savings_insights|\\u{1F4B0} Savings Insights|');o.push(SEP2.repeat(60));" +
   "var cheapestG=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
-  "o.push('\\u{1F3C6} Cheapest: '+cheapestG.i.n+' at '+fm(cheapestG.mc)+'/mo');" +
+  "o.push(tk('calc_out.gemini_api_cost.row.cheapest','\\u{1F3C6} Cheapest: '+cheapestG.i.n+' at '+fm(cheapestG.mc)+'/mo',{model:cheapestG.i.n,cost:fm(cheapestG.mc)}));" +
   "var flt2=all.filter(function(c){return c.i.f!=='legacy';});" +
   "var bv=flt2.length>0?flt2.reduce(function(mn,c){return c.mc<mn.mc?c:mn;}):null;" +
-  "if(bv&&bv.k!==cheapestG.k){o.push('\\u2B50 Best value (Gemini 3 series): '+bv.i.n+' at '+fm(bv.mc)+'/mo');}" +
+  "if(bv&&bv.k!==cheapestG.k){o.push(tk('calc_out.gemini_api_cost.row.best_value','\\u2B50 Best value (Gemini 3 series): '+bv.i.n+' at '+fm(bv.mc)+'/mo',{model:bv.i.n,cost:fm(bv.mc)}));}" +
   "if(sc.length>=2){" +
   "var meS=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
   "var chS=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
   "var df2=meS.mc-chS.mc;" +
-  "o.push('\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)');}" +
+  "o.push(tk('calc_out.gemini_api_cost.row.switching_savings','\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)',{from:meS.i.n,to:chS.i.n,saved:fm(df2),yearly:fm(df2*12)}));}" +
   "if(cacheOn&&sc.length>0){" +
   "var ref2=sc[0];var sv3=ref2.ncm-ref2.mc;" +
-  "o.push('\\u{1F4BE} Context cache at '+cHR+'% hit rate saves ~'+fm(sv3)+'/mo on '+ref2.i.n);}" +
+  "o.push(tk('calc_out.gemini_api_cost.row.cache_summary','\\u{1F4BE} Context cache at '+cHR+'% hit rate saves ~'+fm(sv3)+'/mo on '+ref2.i.n,{rate:String(cHR),saved:fm(sv3),model:ref2.i.n}));}" +
   "for(var pk in XP){var pv=XP[pk];var pm2=((iT/1e6)*pv.i+(oT/1e6)*pv.o)*rpm;var sv2=pm2-cheapestG.mc;var pct=pm2>0?Math.round((sv2/pm2)*100):0;" +
-  "var cheaper=sv2>0;o.push('\\u{1F30D} '+cheapestG.i.n+' vs '+pv.n+': '+(cheaper?'saves '+fm(sv2)+'/month ('+pct+'% cheaper)':'costs '+fm(-sv2)+'/month more'));}" +
+  "var cheaper=sv2>0;if(cheaper){o.push(tk('calc_out.gemini_api_cost.row.cross_provider_cheaper','\\u{1F30D} '+cheapestG.i.n+' vs '+pv.n+': saves '+fm(sv2)+'/month ('+pct+'% cheaper)',{model:cheapestG.i.n,provider:pv.n,saved:fm(sv2),pct:String(pct)}));}" +
+  "else{o.push(tk('calc_out.gemini_api_cost.row.cross_provider_pricier','\\u{1F30D} '+cheapestG.i.n+' vs '+pv.n+': costs '+fm(-sv2)+'/month more',{model:cheapestG.i.n,provider:pv.n,extra:fm(-sv2)}));}}" +
   "var gf3=M['gemini-3-flash'];var ccm=0;for(var kk in M){if(M[kk].sc)ccm++;}" +
-  "o.push('\\u{1F4A1} '+gf3.n+' is the cheapest frontier-quality model at $'+gf3.i.toFixed(2)+'/$'+gf3.o.toFixed(2)+' per 1M tokens. Context Caching saves 90% on repeated prompts for the '+ccm+' models that support it.');" +
+  "o.push(tk('calc_out.gemini_api_cost.row.tip_cheapest_frontier','\\u{1F4A1} '+gf3.n+' is the cheapest frontier-quality model at $'+gf3.i.toFixed(2)+'/$'+gf3.o.toFixed(2)+' per 1M tokens. Context Caching saves 90% on repeated prompts for the '+ccm+' models that support it.',{model:gf3.n,input:'$'+gf3.i.toFixed(2),output:'$'+gf3.o.toFixed(2),count:String(ccm)}));" +
   "o.push('');" +
-  "o.push('\\u{1F4C5} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');o.push('');" +
+  "o.push(tk('calc_out.gemini_api_cost.row.usage_scenarios','\\u{1F4C5} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)',{reqs:lc(rpd)}));o.push('');" +
   "var vols=[50,100,500,1000,5000,10000];" +
-  "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=c.i.ic;var line=icon+' '+c.i.n+': ';var pts=[];" +
+  "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=c.i.ic;var pts=[];" +
   "for(var j=0;j<vols.length;j++){pts.push(lc(vols[j])+'\\u2192'+fm(c.cpr*vols[j]*30));}" +
-  "line+=pts.join(' \\u00b7 ');o.push(line);}" +
-  "return o;";
+  "o.push(tk('calc_out.gemini_api_cost.row.usage_scenario_line',icon+' '+c.i.n+': '+pts.join(' \\u00b7 '),{icon:icon,model:c.i.n,v50:pts[0],v100:pts[1],v500:pts[2],v1k:pts[3],v5k:pts[4],v10k:pts[5]}));}" +
+  // P168 B3-9：🩺 Cost Health + 🔄 What-If 两段**客户端原本缺失**（服务端有）
+  //   ⇒ 与服务端逐字补齐（同一配方见 deepseek B3-10）⇒ 两端输出逐字节一致。
+  "o.push('');" +
+  "o.push('$calc_out.section.gemini_api_cost_health|\\uD83E\\uDE7A Cost Health:|');o.push(SEP2.repeat(60));" +
+  "var totSel=0;for(var i=0;i<sc.length;i++)totSel+=sc[i].mc;" +
+  "var chSel=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var exSel=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
+  "if(sc.length>=2){var ratio=exSel.mc/Math.max(chSel.mc,0.01);" +
+  "if(ratio>=50)o.push(tk('calc_out.gemini_api_cost.row.health_spread_50x','\\u2022 \\uD83D\\uDD34 Your most expensive selection costs '+ratio.toFixed(0)+'x your cheapest \\u2014 consider mixing tiers.',{ratio:ratio.toFixed(0)}));" +
+  "else if(ratio>=10)o.push(tk('calc_out.gemini_api_cost.row.health_spread_10x','\\u2022 \\uD83D\\uDFE0 '+ratio.toFixed(0)+'x cost spread across selected models \\u2014 review if every model needs to be premium.',{ratio:ratio.toFixed(0)}));" +
+  "else o.push(tk('calc_out.gemini_api_cost.row.health_spread_healthy','\\u2022 \\uD83D\\uDFE2 Healthy cost spread ('+ratio.toFixed(1)+'x) across selected models.',{ratio:ratio.toFixed(1)}));}" +
+  "var tM=chSel.i.n;var tC=fm(chSel.mc);" +
+  "if(chSel.mc<5)o.push(tk('calc_out.gemini_api_cost.row.health_tier_micro','\\u2022 '+'🟢 Micro-tier (under $5/mo)'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "else if(chSel.mc<50)o.push(tk('calc_out.gemini_api_cost.row.health_tier_low','\\u2022 '+'🟢 Low-volume tier'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "else if(chSel.mc<500)o.push(tk('calc_out.gemini_api_cost.row.health_tier_mid','\\u2022 '+'🟡 Mid-volume tier'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "else o.push(tk('calc_out.gemini_api_cost.row.health_tier_high','\\u2022 '+'🟠 High-volume tier'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "if(cHR===0)o.push('$calc_out.gemini_api_cost.row.health_cache_zero|• \\u26A0\\uFE0F Cache hit rate is 0% \\u2014 enabling prompt caching on repeated prefixes can cut cost 40-90%.|');" +
+  "else if(cHR<30)o.push(tk('calc_out.gemini_api_cost.row.health_cache_low','\\u2022 \\uD83D\\uDFE1 Low cache hit rate ('+cHR+'%) \\u2014 review if your prompt has stable system instructions.',{rate:String(cHR)}));" +
+  "else o.push(tk('calc_out.gemini_api_cost.row.health_cache_healthy','\\u2022 \\uD83D\\uDFE2 Healthy cache rate ('+cHR+'%) \\u2014 keep an eye on cache TTL vs your traffic pattern.',{rate:String(cHR)}));" +
+  "if(pMode==='realtime'){o.push(tk('calc_out.gemini_api_cost.row.batch_pricing_tip','\\u2022 \\uD83D\\uDCA1 Switch to batch pricing: save ~'+fm(totSel*0.5)+'/mo (50% discount) if latency is not critical.',{saved:fm(totSel*0.5)}));}" +
+  "o.push('');" +
+  "o.push('$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|');o.push(SEP2.repeat(60));" +
+  "var pc=all.reduce(function(min,c){return (c.i.i+c.i.o)<(min.i.i+min.i.o)?c:min;},all[0]);" +
+  "var chSelK=chSel?chSel.k:undefined;" +
+  "if(pc&&pc.k!==chSelK){var cpr2=(iT/1e6)*pc.i.i+(oT/1e6)*pc.i.o;var newM2=cpr2*rpd*30;var svS=(chSel?chSel.mc:0)-newM2;" +
+  "if(svS>0)o.push(tk('calc_out.gemini_api_cost.row.whatif_switch_cheapest','\\u2022 Switch cheapest to '+pc.i.n+':  save '+fm(svS)+'/mo  (similar quality, much cheaper)',{model:pc.i.n,saved:fm(svS)}));}" +
+  "o.push(tk('calc_out.gemini_api_cost.row.whatif_double_volume','\\u2022 Double volume to '+lc(rpd*2)+' reqs/day:  '+fm(totSel*2)+'/mo',{reqs:lc(rpd*2),cost:fm(totSel*2)}));" +
+  "o.push(tk('calc_out.gemini_api_cost.row.whatif_halve_volume','\\u2022 Halve volume to '+lc(Math.max(1,Math.floor(rpd/2)))+' reqs/day:  '+fm(totSel/2)+'/mo',{reqs:lc(Math.max(1,Math.floor(rpd/2))),cost:fm(totSel/2)}));" +
+  "if(cHR<50){var cf2=0.5+0.5*(1-0.5*0.9);var cm2=totSel*cf2;var cs2=totSel-cm2;" +
+  "o.push(tk('calc_out.gemini_api_cost.row.whatif_boost_cache','\\u2022 Boost cache hit rate to 50%:  save ~'+fm(cs2)+'/mo  ('+fm(totSel)+' \\u2192 '+fm(cm2)+')',{saved:fm(cs2),current:fm(totSel),boosted:fm(cm2)}));}" +
+  "o.push('');" +
+  // P168 B3-9：⭐ 返回**整份输出**的单元素数组 —— 页面（src/pages/[lang]/[slug].astro:2186）对 custom 型**只渲染 results[0]】
+  //   ⇒ 多元素数组会让动态卡片只剩第一行（同一形态 B3-8 已在 ai-api-cost-comparison 修复并验证）。
+  "return [o.join('\\n')]";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-gemini-api-cost-calculator',
@@ -553,7 +695,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // All values verified against actual calculate() output with default inputs
-    '\n🤖 Gemini API Cost\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day | ⚡ Real-time\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n★ Gemini 4 Argon             ████████████████████████████████         $21.00\n◆ Gemini 3.8 Flash           ████████████                             $7.87\n● Gemini 3.5 Flash           ███████████████████████████              $18.00\n▲ Gemini 3.1 Pro             █████████████████████████████████████    $24.00\n◆ Gemini 3 Flash             █████████                                $6.00\n◇ Gemini 2.5 Flash           ███████                                  $4.65\n◇ Gemini 1.5 Pro             ████████████████████████████████████████ $26.25\n◇ Gemini 1.5 Flash           ░                                        $0.67 🏆\n\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n● Gemini 3.5 Flash (Gemini 3.5 Flash) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $1.50/1M → $0.0015/req\nOutput: 500     tokens × $9.00/1M → $0.0045/req\n  Batch Rate: $0.38/$2.25 per 1M tokens\n────────────────────────────────────────────\nPer request:    $0.0060\nDaily (100):    $0.60\nMonthly (30d):  $18.00\nAnnual:         $216.00\n────────────────────────────────────────────\n\n▲ Gemini 3.1 Pro (Gemini 3.1 Pro) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $2.00/1M → $0.0020/req\nOutput: 500     tokens × $12.00/1M → $0.0060/req\n  Batch Rate: $1.00/$6.00 per 1M tokens\n────────────────────────────────────────────\nPer request:    $0.0080\nDaily (100):    $0.80\nMonthly (30d):  $24.00\nAnnual:         $288.00\n────────────────────────────────────────────\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Gemini 1.5 Flash at $0.67/mo\n⭐ Best value (Gemini 3 series): Gemini 3 Flash at $6.00/mo\n💸 Switching from Gemini 3.1 Pro to Gemini 3.5 Flash saves $6.00/mo ($72.00/yr)\n🌍 Gemini 1.5 Flash vs GPT-5 Nano: saves $0.08/month (10% cheaper)\n🌍 Gemini 1.5 Flash vs Claude Haiku 3: saves $1.95/month (74% cheaper)\n🌍 Gemini 1.5 Flash vs DeepSeek V4 Flash: saves $2.02/month (75% cheaper)\n💡 Gemini 3 Flash is the cheapest frontier-quality model at $0.50/$3.00 per 1M tokens. Context Caching saves 90% on repeated prompts for the 5 models that support it.\n\n📅 Usage Scenarios (monthly cost at 100 reqs/day)\n\n● Gemini 3.5 Flash: 50→$9.00 · 100→$18.00 · 500→$90.00 · 1,000→$180.00 · 5,000→$900.00 · 10,000→$1800.00\n▲ Gemini 3.1 Pro: 50→$12.00 · 100→$24.00 · 500→$120.00 · 1,000→$240.00 · 5,000→$1200.00 · 10,000→$2400.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Healthy cost spread (1.3x) across selected models.\n• 🟢 Low-volume tier — Gemini 3.5 Flash at $18.00/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.\n• 💡 Switch to batch pricing: save ~$21.00/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Gemini 1.5 Flash:  save $17.32/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $84.00/mo\n• Halve volume to 50 reqs/day:  $21.00/mo\n• Boost cache hit rate to 50%:  save ~$9.45/mo  ($42.00 → $32.55)\n',
+    '\n$calc_out.section.gemini_api_cost|🤖 Gemini API Cost|\n\n$calc_out.gemini_api_cost.row.input_tokens{"tokens":"1,000"}|📥 Input: 1,000 tokens/req| | $calc_out.gemini_api_cost.row.output_tokens{"tokens":"500"}|📤 Output: 500 tokens/req| | $calc_out.gemini_api_cost.row.requests_per_day{"reqs":"100"}|🔄 100 reqs/day| | $calc_out.gemini_api_cost.row.mode_realtime|⚡ Real-time|\n\n$calc_out.gemini_api_cost.row.cost_comparison_header{"reqs":"100"}|📊 Cost Comparison (100 reqs/day)|\n──────────────────────────────────────────────────────\n★ Gemini 4 Argon             ████████████████████████████████         $21.00\n◆ Gemini 3.8 Flash           ████████████                             $7.87\n● Gemini 3.5 Flash           ███████████████████████████              $18.00\n▲ Gemini 3.1 Pro             █████████████████████████████████████    $24.00\n◆ Gemini 3 Flash             █████████                                $6.00\n◇ Gemini 2.5 Flash           ███████                                  $4.65\n◇ Gemini 1.5 Pro             ████████████████████████████████████████ $26.25\n◇ Gemini 1.5 Flash           ░                                        $0.67 🏆\n\n\n$calc_out.section.gemini_api_cost_selected_models|📋 Selected Model Details|\n────────────────────────────────────────────────────────────\n● Gemini 3.5 Flash $calc_out.gemini_api_cost.row.family_flash35|(Gemini 3.5 Flash)| | $calc_out.gemini_api_cost.row.context_window{"context":"1M"}|Context: 1M|\n────────────────────────────────────────────\n$calc_out.gemini_api_cost.row.input_cost{"tokens":"1,000","rate":"$1.50","cost":"$0.0015"}|Input:  1,000   tokens × $1.50/1M → $0.0015/req|\n$calc_out.gemini_api_cost.row.output_cost{"tokens":"500    ","rate":"$9.00","cost":"$0.0045"}|Output: 500     tokens × $9.00/1M → $0.0045/req|\n$calc_out.gemini_api_cost.row.batch_rate{"input":"$0.38","output":"$2.25"}|  Batch Rate: $0.38/$2.25 per 1M tokens|\n────────────────────────────────────────────\n$calc_out.label.per_request|Per request|:    $0.0060\n$calc_out.label.daily|Daily| (100):    $0.60\n$calc_out.label.monthly|Monthly| (30d):  $18.00\n$calc_out.label.annual|Annual|:         $216.00\n────────────────────────────────────────────\n\n▲ Gemini 3.1 Pro $calc_out.gemini_api_cost.row.family_pro|(Gemini 3.1 Pro)| | $calc_out.gemini_api_cost.row.context_window{"context":"1M"}|Context: 1M|\n────────────────────────────────────────────\n$calc_out.gemini_api_cost.row.input_cost{"tokens":"1,000","rate":"$2.00","cost":"$0.0020"}|Input:  1,000   tokens × $2.00/1M → $0.0020/req|\n$calc_out.gemini_api_cost.row.output_cost{"tokens":"500    ","rate":"$12.00","cost":"$0.0060"}|Output: 500     tokens × $12.00/1M → $0.0060/req|\n$calc_out.gemini_api_cost.row.batch_rate{"input":"$1.00","output":"$6.00"}|  Batch Rate: $1.00/$6.00 per 1M tokens|\n────────────────────────────────────────────\n$calc_out.label.per_request|Per request|:    $0.0080\n$calc_out.label.daily|Daily| (100):    $0.80\n$calc_out.label.monthly|Monthly| (30d):  $24.00\n$calc_out.label.annual|Annual|:         $288.00\n────────────────────────────────────────────\n\n$calc_out.section.gemini_api_cost_savings_insights|💰 Savings Insights|\n────────────────────────────────────────────────────────────\n$calc_out.gemini_api_cost.row.cheapest{"model":"Gemini 1.5 Flash","cost":"$0.67"}|🏆 Cheapest: Gemini 1.5 Flash at $0.67/mo|\n$calc_out.gemini_api_cost.row.best_value{"model":"Gemini 3 Flash","cost":"$6.00"}|⭐ Best value (Gemini 3 series): Gemini 3 Flash at $6.00/mo|\n$calc_out.gemini_api_cost.row.switching_savings{"from":"Gemini 3.1 Pro","to":"Gemini 3.5 Flash","saved":"$6.00","yearly":"$72.00"}|💸 Switching from Gemini 3.1 Pro to Gemini 3.5 Flash saves $6.00/mo ($72.00/yr)|\n$calc_out.gemini_api_cost.row.cross_provider_cheaper{"model":"Gemini 1.5 Flash","provider":"GPT-5 Nano","saved":"$0.08","pct":"10"}|🌍 Gemini 1.5 Flash vs GPT-5 Nano: saves $0.08/month (10% cheaper)|\n$calc_out.gemini_api_cost.row.cross_provider_cheaper{"model":"Gemini 1.5 Flash","provider":"Claude Haiku 3","saved":"$1.95","pct":"74"}|🌍 Gemini 1.5 Flash vs Claude Haiku 3: saves $1.95/month (74% cheaper)|\n$calc_out.gemini_api_cost.row.cross_provider_cheaper{"model":"Gemini 1.5 Flash","provider":"DeepSeek V4 Flash","saved":"$2.02","pct":"75"}|🌍 Gemini 1.5 Flash vs DeepSeek V4 Flash: saves $2.02/month (75% cheaper)|\n$calc_out.gemini_api_cost.row.tip_cheapest_frontier{"model":"Gemini 3 Flash","input":"$0.50","output":"$3.00","count":"5"}|💡 Gemini 3 Flash is the cheapest frontier-quality model at $0.50/$3.00 per 1M tokens. Context Caching saves 90% on repeated prompts for the 5 models that support it.|\n\n$calc_out.gemini_api_cost.row.usage_scenarios{"reqs":"100"}|📅 Usage Scenarios (monthly cost at 100 reqs/day)|\n\n$calc_out.gemini_api_cost.row.usage_scenario_line{"icon":"●","model":"Gemini 3.5 Flash","v50":"50→$9.00","v100":"100→$18.00","v500":"500→$90.00","v1k":"1,000→$180.00","v5k":"5,000→$900.00","v10k":"10,000→$1800.00"}|● Gemini 3.5 Flash: 50→$9.00 · 100→$18.00 · 500→$90.00 · 1,000→$180.00 · 5,000→$900.00 · 10,000→$1800.00|\n$calc_out.gemini_api_cost.row.usage_scenario_line{"icon":"▲","model":"Gemini 3.1 Pro","v50":"50→$12.00","v100":"100→$24.00","v500":"500→$120.00","v1k":"1,000→$240.00","v5k":"5,000→$1200.00","v10k":"10,000→$2400.00"}|▲ Gemini 3.1 Pro: 50→$12.00 · 100→$24.00 · 500→$120.00 · 1,000→$240.00 · 5,000→$1200.00 · 10,000→$2400.00|\n\n$calc_out.section.gemini_api_cost_health|🩺 Cost Health:|\n────────────────────────────────────────────────────────────\n$calc_out.gemini_api_cost.row.health_spread_healthy{"ratio":"1.3"}|• 🟢 Healthy cost spread (1.3x) across selected models.|\n$calc_out.gemini_api_cost.row.health_tier_low{"model":"Gemini 3.5 Flash","cost":"$18.00"}|• 🟢 Low-volume tier — Gemini 3.5 Flash at $18.00/mo.|\n$calc_out.gemini_api_cost.row.health_cache_zero|• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%.|\n$calc_out.gemini_api_cost.row.batch_pricing_tip{"saved":"$21.00"}|• 💡 Switch to batch pricing: save ~$21.00/mo (50% discount) if latency is not critical.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n────────────────────────────────────────────────────────────\n$calc_out.gemini_api_cost.row.whatif_switch_cheapest{"model":"Gemini 1.5 Flash","saved":"$17.32"}|• Switch cheapest to Gemini 1.5 Flash:  save $17.32/mo  (similar quality, much cheaper)|\n$calc_out.gemini_api_cost.row.whatif_double_volume{"reqs":"200","cost":"$84.00"}|• Double volume to 200 reqs/day:  $84.00/mo|\n$calc_out.gemini_api_cost.row.whatif_halve_volume{"reqs":"50","cost":"$21.00"}|• Halve volume to 50 reqs/day:  $21.00/mo|\n$calc_out.gemini_api_cost.row.whatif_boost_cache{"saved":"$9.45","current":"$42.00","boosted":"$32.55"}|• Boost cache hit rate to 50%:  save ~$9.45/mo  ($42.00 → $32.55)|\n',
   ],
   faq: [
     { q: 'How does Gemini pricing compare to OpenAI/Claude?', a: 'Gemini 3 Flash at {{live:google/gemini-3-flash}} per 1M tokens costs {{liveShareIn:google/gemini-3-flash|openai/gpt-4o}} of GPT-4o ({{live:openai/gpt-4o}}) on input, while its output price is {{liveShareOut:google/gemini-3-flash|anthropic/claude-haiku-3}} of Claude Haiku 3\'s ({{live:anthropic/claude-haiku-3}}). Gemini 3.5 Flash at {{live:google/gemini-3.5-flash}} is {{liveShareIn:google/gemini-3.5-flash|openai/gpt-4o}} of GPT-4o on input. The biggest advantage is Gemini\'s 2M token context window on Pro models.' },

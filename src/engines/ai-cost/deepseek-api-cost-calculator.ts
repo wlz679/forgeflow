@@ -2,6 +2,9 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import PRICING from '../../data/ai-pricing.json';
 import { pickInteractiveModels } from '../../data/ai-pricing-popular';
+// P168 B3-10：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 interface ModelInfo {
   input: number;
@@ -154,25 +157,34 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-10：⭐「📅 Pricing last updated」这一行**从卡片正文里去掉** ——
+  //   · 页面用**徽章**显示同一个日期（dataLastUpdated → 「📅 Data updated」）
+  //   · codegen 写 staticExamples[0] 时也会过滤掉它（"UI badge covers it"）
+  //   ⇒ 留在正文里只会与徽章重复（同一形态 ai-api-cost-comparison / ai-training 已处理）。
+  //   ⚠️ 这里**保留空元素**（而不是把这一行删掉）⇒ out 数组与 staticExamples[0] 开头的 '\n' 逐字一致
+  //   ⇒ 英文页零变化（selfcheck ① 不需要白名单）。
   out.push('');
 
   // Section 1: Header
-  let headerLine = '\u{1F534} DeepSeek API Cost';
+  let headerLine = '$calc_out.section.deepseek_api_cost|\u{1F534} DeepSeek API Cost|';
   if (cachingActive) {
-    headerLine += ' | \u{1F4BE} Auto-Cache: ' + cacheReadHitRate + '% hit (98% discount)';
+    headerLine += ' | ' + makeToken(
+      'calc_out.deepseek_api_cost.row.auto_cache_badge',
+      '\u{1F4BE} Auto-Cache: ' + cacheReadHitRate + '% hit (98% discount)',
+      { rate: String(cacheReadHitRate) },
+    );
   }
   out.push(headerLine);
   out.push('');
   out.push(
-    '\u{1F4E5} Input: ' + lc(inTokens) + ' tokens/req | ' +
-    '\u{1F4E4} Output: ' + lc(outTokens) + ' tokens/req | ' +
-    '\u{1F504} ' + lc(reqPerDay) + ' reqs/day',
+    makeToken('calc_out.deepseek_api_cost.row.input_tokens', '\u{1F4E5} Input: ' + lc(inTokens) + ' tokens/req', { tokens: lc(inTokens) }) + ' | ' +
+    makeToken('calc_out.deepseek_api_cost.row.output_tokens', '\u{1F4E4} Output: ' + lc(outTokens) + ' tokens/req', { tokens: lc(outTokens) }) + ' | ' +
+    makeToken('calc_out.deepseek_api_cost.row.requests_per_day', '\u{1F504} ' + lc(reqPerDay) + ' reqs/day', { reqs: lc(reqPerDay) }),
   );
   out.push('');
 
   // Section 2: Bar Chart
-  out.push('📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.deepseek_api_cost.row.cost_comparison', '📊 Cost Comparison (' + lc(reqPerDay) + ' reqs/day)', { reqs: lc(reqPerDay) }));
   out.push(SEP.repeat(54));
   const BAR_WIDTH = 40;
   for (const c of allCosts) {
@@ -203,7 +215,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // Section 3: Detail Cards — selected models
-  out.push('📋 Selected Model Details');
+  out.push('$calc_out.section.deepseek_api_cost_selected_models|📋 Selected Model Details|');
   out.push(SEP.repeat(60));
   for (const c of selectedCosts) {
     const icon = FAMILY_ICONS[c.info.family];
@@ -211,39 +223,53 @@ function calculate(inputs: Record<string, string>): string[] {
     const dailyCost = c.costPerReq * reqPerDay;
     const annualCost = c.monthlyCost * 12;
 
+    // P168 B3-10：型号名留在 token 外（专有名词不该被译）；只把**系列标签**与
+    //   「Context: …」包进 token ⇒ zh 页那一行不再是整行英文。
+    const familyToken = c.info.family === 'v4'
+      ? makeToken('calc_out.deepseek_api_cost.row.family_v4', '(' + famLabel + ')')
+      : makeToken('calc_out.deepseek_api_cost.row.family_legacy', '(' + famLabel + ')');
     out.push(
-      icon + ' ' + c.info.name + ' (' + famLabel + ') | Context: ' + c.info.contextWindow,
+      icon + ' ' + c.info.name + ' ' + familyToken +
+      ' | ' + makeToken('calc_out.deepseek_api_cost.row.context_window', 'Context: ' + c.info.contextWindow, { context: c.info.contextWindow }),
     );
     out.push(SEP.repeat(44));
 
     // Input cost per-request breakdown
     const inputCostLine = (inTokens / 1_000_000) * c.info.input;
     out.push(
-      'Input:  ' +
-        pad(lc(inTokens), 7) +
-        ' tokens × ' +
-        fmt(c.info.input) +
-        '/1M → ' +
-        fmt(inputCostLine) +
-        '/req',
+      makeToken(
+        'calc_out.deepseek_api_cost.row.input_cost',
+        'Input:  ' +
+          pad(lc(inTokens), 7) +
+          ' tokens × ' +
+          fmt(c.info.input) +
+          '/1M → ' +
+          fmt(inputCostLine) +
+          '/req',
+        { tokens: lc(inTokens), rate: fmt(c.info.input), cost: fmt(inputCostLine) },
+      ),
     );
     // Output cost per-request breakdown
     const outputCostLine = (outTokens / 1_000_000) * c.info.output;
     out.push(
-      'Output: ' +
-        pad(lc(outTokens), 7) +
-        ' tokens × ' +
-        fmt(c.info.output) +
-        '/1M → ' +
-        fmt(outputCostLine) +
-        '/req',
+      makeToken(
+        'calc_out.deepseek_api_cost.row.output_cost',
+        'Output: ' +
+          pad(lc(outTokens), 7) +
+          ' tokens × ' +
+          fmt(c.info.output) +
+          '/1M → ' +
+          fmt(outputCostLine) +
+          '/req',
+        { tokens: pad(lc(outTokens), 7), rate: fmt(c.info.output), cost: fmt(outputCostLine) },
+      ),
     );
 
     out.push(SEP.repeat(44));
-    out.push('Per request:    ' + fmt(c.costPerReq));
-    out.push('Daily (' + reqPerDay + '):    ' + fmt(dailyCost));
-    out.push('Monthly (30d):  ' + fmt(c.monthlyCost));
-    out.push('Annual:         ' + fmt(annualCost));
+    out.push(makeToken('calc_out.label.per_request', 'Per request') + ':    ' + fmt(c.costPerReq));
+    out.push(makeToken('calc_out.label.daily', 'Daily') + ' (' + reqPerDay + '):    ' + fmt(dailyCost));
+    out.push(makeToken('calc_out.label.monthly', 'Monthly') + ' (30d):  ' + fmt(c.monthlyCost));
+    out.push(makeToken('calc_out.label.annual', 'Annual') + ':         ' + fmt(annualCost));
     out.push(SEP.repeat(44));
 
     // Cache savings per model
@@ -251,15 +277,19 @@ function calculate(inputs: Record<string, string>): string[] {
       const savings = c.noCacheMonthly - c.monthlyCost;
       const pctSaved = c.noCacheMonthly > 0 ? Math.round((savings / c.noCacheMonthly) * 100) : 0;
       out.push(
-        '💾 Auto-cache at ' +
-          cacheReadHitRate +
-          '% hit: ' +
-          fmt(c.monthlyCost) +
-          '/mo — saves ' +
-          fmt(savings) +
-          '/mo (' +
-          pctSaved +
-          '%)',
+        makeToken(
+          'calc_out.deepseek_api_cost.row.auto_cache_savings',
+          '💾 Auto-cache at ' +
+            cacheReadHitRate +
+            '% hit: ' +
+            fmt(c.monthlyCost) +
+            '/mo — saves ' +
+            fmt(savings) +
+            '/mo (' +
+            pctSaved +
+            '%)',
+          { rate: String(cacheReadHitRate), cost: fmt(c.monthlyCost), saved: fmt(savings), pct: String(pctSaved) },
+        ),
       );
     }
 
@@ -268,9 +298,11 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Section 4: Growth Projection
   if (growthRate > 0) {
-    out.push('\u{1F4C8} Growth Projection (' + growthRate + '%/month, ' + projMonths + ' months)');
+    out.push(makeToken('calc_out.deepseek_api_cost.row.growth_projection', '\u{1F4C8} Growth Projection (' + growthRate + '%/month, ' + projMonths + ' months)', { growth: String(growthRate), months: String(projMonths) }));
     out.push('');
-    let header = 'Month'.padEnd(8);
+    // ⭐ 对齐空格留在 token 之外（先按原英文 pad，再把标签那一截换掉）
+    const monthCell = 'Month'.padEnd(8);
+    let header = makeToken('calc_out.label.month', 'Month') + monthCell.slice('Month'.length);
     for (const c of selectedCosts) header += ' | ' + c.info.name.padEnd(16);
     out.push(header);
     let sepLine = ''.padEnd(8, SEP);
@@ -286,7 +318,8 @@ function calculate(inputs: Record<string, string>): string[] {
       out.push(row);
     }
     out.push(sepLine);
-    let totalRow = 'Total'.padEnd(8);
+    const totalCell = 'Total'.padEnd(8);
+    let totalRow = makeToken('calc_out.label.total', 'Total') + totalCell.slice('Total'.length);
     for (const c of selectedCosts) {
       let cum = 0;
       for (let m = 1; m <= projMonths; m++) cum += c.monthlyCost * Math.pow(growthMult, m - 1);
@@ -297,13 +330,13 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   // Section 5: Savings Insights
-  out.push('💰 Savings Insights');
+  out.push('$calc_out.section.deepseek_api_cost_savings_insights|💰 Savings Insights|');
   out.push(SEP.repeat(60));
 
   // Cheapest overall
   const cheapestDS = allCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
   out.push(
-    '🏆 Cheapest: ' + cheapestDS.info.name + ' at ' + fmt(cheapestDS.monthlyCost) + '/mo',
+    makeToken('calc_out.deepseek_api_cost.row.cheapest', '🏆 Cheapest: ' + cheapestDS.info.name + ' at ' + fmt(cheapestDS.monthlyCost) + '/mo', { model: cheapestDS.info.name, cost: fmt(cheapestDS.monthlyCost) }),
   );
 
   // Best value (V4 series, non-promo)
@@ -312,11 +345,7 @@ function calculate(inputs: Record<string, string>): string[] {
     .reduce((min, c) => (c.monthlyCost < min.monthlyCost ? c : min), allCosts[0]);
   if (bestValue && bestValue.key !== cheapestDS.key) {
     out.push(
-      '⭐ Best value (V4 standard): ' +
-        bestValue.info.name +
-        ' at ' +
-        fmt(bestValue.monthlyCost) +
-        '/mo',
+      makeToken('calc_out.deepseek_api_cost.row.best_value', '⭐ Best value (V4 standard): ' + bestValue.info.name + ' at ' + fmt(bestValue.monthlyCost) + '/mo', { model: bestValue.info.name, cost: fmt(bestValue.monthlyCost) }),
     );
   }
 
@@ -330,15 +359,7 @@ function calculate(inputs: Record<string, string>): string[] {
     );
     const diff = mostExpSelected.monthlyCost - cheapSelected.monthlyCost;
     out.push(
-      '💸 Switching from ' +
-        mostExpSelected.info.name +
-        ' to ' +
-        cheapSelected.info.name +
-        ' saves ' +
-        fmt(diff) +
-        '/mo (' +
-        fmt(diff * 12) +
-        '/yr)',
+      makeToken('calc_out.deepseek_api_cost.row.switching_savings', '💸 Switching from ' + mostExpSelected.info.name + ' to ' + cheapSelected.info.name + ' saves ' + fmt(diff) + '/mo (' + fmt(diff * 12) + '/yr)', { from: mostExpSelected.info.name, to: cheapSelected.info.name, saved: fmt(diff), yearly: fmt(diff * 12) }),
     );
   }
 
@@ -347,12 +368,7 @@ function calculate(inputs: Record<string, string>): string[] {
     const ref = selectedCosts[0];
     const savings = ref.noCacheMonthly - ref.monthlyCost;
     out.push(
-      '💾 Auto-cache at ' +
-        cacheReadHitRate +
-        '% hit rate saves ~' +
-        fmt(savings) +
-        '/mo on ' +
-        ref.info.name,
+      makeToken('calc_out.deepseek_api_cost.row.auto_cache_summary', '💾 Auto-cache at ' + cacheReadHitRate + '% hit rate saves ~' + fmt(savings) + '/mo on ' + ref.info.name, { rate: String(cacheReadHitRate), saved: fmt(savings), model: ref.info.name }),
     );
   }
 
@@ -363,59 +379,82 @@ function calculate(inputs: Record<string, string>): string[] {
     const pct = provMonthly > 0 ? Math.round((Math.abs(diff) / provMonthly) * 100) : 0;
     if (diff > 0) {
       out.push(
-        '🌍 ' + cheapestDS.info.name + ' vs ' + prov.name + ': saves ' +
-          fmt(diff) + '/month (' + pct + '% cheaper)',
+        makeToken('calc_out.deepseek_api_cost.row.cross_provider_cheaper', '🌍 ' + cheapestDS.info.name + ' vs ' + prov.name + ': saves ' + fmt(diff) + '/month (' + pct + '% cheaper)', { model: cheapestDS.info.name, provider: prov.name, saved: fmt(diff), pct: String(pct) }),
       );
     } else {
       out.push(
-        '🌍 ' + cheapestDS.info.name + ' vs ' + prov.name + ': costs ' +
-          fmt(-diff) + '/month more (' + pct + '% premium)',
+        makeToken('calc_out.deepseek_api_cost.row.cross_provider_pricier', '🌍 ' + cheapestDS.info.name + ' vs ' + prov.name + ': costs ' + fmt(-diff) + '/month more (' + pct + '% premium)', { model: cheapestDS.info.name, provider: prov.name, extra: fmt(-diff), pct: String(pct) }),
       );
     }
   }
-  out.push('💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.');
+  out.push(makeToken('calc_out.deepseek_api_cost.row.tip_cheaper_than_frontier', '💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.'));
   out.push('');
 
   // Section 6: Usage Scenarios
-  out.push('📅 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)');
+  out.push(makeToken('calc_out.deepseek_api_cost.row.usage_scenarios', '📅 Usage Scenarios (monthly cost at ' + lc(reqPerDay) + ' reqs/day)', { reqs: lc(reqPerDay) }));
   out.push('');
   const volumes = [50, 100, 500, 1000, 5000, 10000];
   for (const c of selectedCosts) {
     const icon = FAMILY_ICONS[c.info.family];
-    let line = icon + ' ' + c.info.name + ': ';
     const parts: string[] = [];
     for (const v of volumes) {
       parts.push(lc(v) + '→' + fmt(c.costPerReq * v * 30));
     }
-    line += parts.join(' · ');
-    out.push(line);
+    // P168 B3-9：整行**令牌化**（原先是裸文本 ⇒ zh 卡片这一行仍是英文）
+    //   ⇒ 图标 / 型号 / 6 档用量全部走 {param} ⇒ zh 侧可整行中文化。
+    out.push(
+      makeToken(
+        'calc_out.deepseek_api_cost.row.usage_scenario_line',
+        icon + ' ' + c.info.name + ': ' + parts.join(' · '),
+        {
+          icon,
+          model: c.info.name,
+          v50: parts[0],
+          v100: parts[1],
+          v500: parts[2],
+          v1k: parts[3],
+          v5k: parts[4],
+          v10k: parts[5],
+        },
+      ),
+    );
   }
 
   // 🩺 Cost Health (v3)
   out.push('');
-  out.push('🩺 Cost Health:');
+  out.push('$calc_out.section.deepseek_api_cost_health|🩺 Cost Health:|');
   out.push(SEP.repeat(60));
   const totalSelectedMonthly = selectedCosts.reduce((s, c) => s + c.monthlyCost, 0);
   const cheapestSelected = selectedCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
   const expensiveSelected = selectedCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max);
   if (selectedCosts.length >= 2) {
     const ratio = expensiveSelected.monthlyCost / Math.max(cheapestSelected.monthlyCost, 0.01);
-    if (ratio >= 50) out.push('• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.');
-    else if (ratio >= 10) out.push('• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.');
-    else out.push('• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.');
+    if (ratio >= 50) out.push(makeToken('calc_out.deepseek_api_cost.row.health_spread_50x', '• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers.', { ratio: ratio.toFixed(0) }));
+    else if (ratio >= 10) out.push(makeToken('calc_out.deepseek_api_cost.row.health_spread_10x', '• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.', { ratio: ratio.toFixed(0) }));
+    else out.push(makeToken('calc_out.deepseek_api_cost.row.health_spread_healthy', '• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.', { ratio: ratio.toFixed(1) }));
   }
   if (cheapestSelected) {
-    const tier = cheapestSelected.monthlyCost < 5 ? '🟢 Micro-tier (under $5/mo)' : cheapestSelected.monthlyCost < 50 ? '🟢 Low-volume tier' : cheapestSelected.monthlyCost < 500 ? '🟡 Mid-volume tier' : '🟠 High-volume tier';
-    out.push('• ' + tier + ' — ' + cheapestSelected.info.name + ' at ' + fmt(cheapestSelected.monthlyCost) + '/mo.');
+    const tierModel = cheapestSelected.info.name;
+    const tierCost = fmt(cheapestSelected.monthlyCost);
+    // ⚠️ 四档**各有自己的 code**（而不是「一个 code + 四种兜底」）⇒ locale 的 en 值与运行时兜底永远一致。
+    if (cheapestSelected.monthlyCost < 5) {
+      out.push(makeToken('calc_out.deepseek_api_cost.row.health_tier_micro', '• 🟢 Micro-tier (under $5/mo) — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    } else if (cheapestSelected.monthlyCost < 50) {
+      out.push(makeToken('calc_out.deepseek_api_cost.row.health_tier_low', '• 🟢 Low-volume tier — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    } else if (cheapestSelected.monthlyCost < 500) {
+      out.push(makeToken('calc_out.deepseek_api_cost.row.health_tier_mid', '• 🟡 Mid-volume tier — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    } else {
+      out.push(makeToken('calc_out.deepseek_api_cost.row.health_tier_high', '• 🟠 High-volume tier — ' + tierModel + ' at ' + tierCost + '/mo.', { model: tierModel, cost: tierCost }));
+    }
   }
   if (true) { // deepseek doesn't have batch pricing
     const batchSavings = totalSelectedMonthly * 0.5;
-    out.push('• 💡 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~' + fmt(batchSavings) + '/mo (50% discount) if latency is not critical.');
+    out.push(makeToken('calc_out.deepseek_api_cost.row.batch_pricing_tip', '• 💡 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~' + fmt(batchSavings) + '/mo (50% discount) if latency is not critical.', { saved: fmt(batchSavings) }));
   }
   out.push('');
 
   // 🔄 What-If Scenarios (v3)
-  out.push('🔄 What-If Scenarios:');
+  out.push('$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|');
   out.push(SEP.repeat(60));
   const popularCheapest = allCosts
     .reduce((min, c) => (c.info.input + c.info.output) < (min.info.input + min.info.output) ? c : min, allCosts[0]);
@@ -423,10 +462,10 @@ function calculate(inputs: Record<string, string>): string[] {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
-    if (savings > 0) out.push('• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)');
+    if (savings > 0) out.push(makeToken('calc_out.deepseek_api_cost.row.whatif_switch_cheapest', '• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)', { model: popularCheapest.info.name, saved: fmt(savings) }));
   }
-  out.push('• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo');
-  out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo');
+  out.push(makeToken('calc_out.deepseek_api_cost.row.whatif_double_volume', '• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(totalSelectedMonthly * 2) + '/mo', { reqs: lc(reqPerDay * 2), cost: fmt(totalSelectedMonthly * 2) }));
+  out.push(makeToken('calc_out.deepseek_api_cost.row.whatif_halve_volume', '• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(totalSelectedMonthly / 2) + '/mo', { reqs: lc(Math.max(1, Math.floor(reqPerDay / 2))), cost: fmt(totalSelectedMonthly / 2) }));
 
   out.push('');
   return out;
@@ -434,6 +473,9 @@ function calculate(inputs: Record<string, string>): string[] {
 
 // customFn — exact sync with calculate()
 const customFn =
+  // P168 B3-10：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var M={'deepseek-v4.1-flash-1017':{i:0.15,o:0.6,n:'Deepseek V4.1 Flash 1017',f:'v4',cw:'1M',od:1},'deepseek-v4-flash':{i:0.3,o:1.2,n:'Deepseek V4 Flash',f:'v4',cw:'1M',od:2},'deepseek-v4-pro':{i:1.32,o:3.96,n:'Deepseek V4 Pro',f:'v4',cw:'1M',od:3},'deepseek-v4-pro-promo':{i:0.435,o:0.87,n:'V4 Pro (75% Promo)',f:'v4',cw:'1M',od:4},'deepseek-r1':{i:0.55,o:2.19,n:'Deepseek R1',f:'legacy',cw:'66K',od:5}};" +
 
   "var FI={v4:'\\u25C6',legacy:'\\u25C7'};" +
@@ -463,63 +505,93 @@ const customFn =
   "var sc=[];for(var i=0;i<sks.length;i++){var e=all.find(function(c){return c.k===sks[i];});if(e)sc.push(e);}" +
   "if(sc.length===0){for(var j=0;j<DEF.length;j++){var e2=all.find(function(c){return c.k===DEF[j];});if(e2)sc.push(e2);}}" +
   "var o=[];" +
-  "var hl='\\u{1F534} DeepSeek API Cost';if(cacheOn){hl+=' | \\u{1F4BE} Auto-Cache: '+cHR+'% hit (98% discount)';}o.push(hl);o.push('');" +
-  "o.push('\\u{1F4E5} Input: '+lc(iT)+' tokens/req | \\u{1F4E4} Output: '+lc(oT)+' tokens/req | \\u{1F504} '+lc(rpd)+' reqs/day');o.push('');" +
-  "o.push('\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)');o.push(SEP2.repeat(54));" +
+  "o.push('');" +
+  "var hl='$calc_out.section.deepseek_api_cost|\\u{1F534} DeepSeek API Cost|';if(cacheOn){hl+=' | '+tk('calc_out.deepseek_api_cost.row.auto_cache_badge','\\u{1F4BE} Auto-Cache: '+cHR+'% hit (98% discount)',{rate:String(cHR)});}o.push(hl);o.push('');" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.input_tokens','\\u{1F4E5} Input: '+lc(iT)+' tokens/req',{tokens:lc(iT)})+' | '+tk('calc_out.deepseek_api_cost.row.output_tokens','\\u{1F4E4} Output: '+lc(oT)+' tokens/req',{tokens:lc(oT)})+' | '+tk('calc_out.deepseek_api_cost.row.requests_per_day','\\u{1F504} '+lc(rpd)+' reqs/day',{reqs:lc(rpd)}));o.push('');" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.cost_comparison','\\u{1F4CA} Cost Comparison ('+lc(rpd)+' reqs/day)',{reqs:lc(rpd)}));o.push(SEP2.repeat(54));" +
   "var BW=40;for(var i=0;i<all.length;i++){var c=all[i];var icon=FI[c.i.f];var label=icon+' '+c.i.n;" +
   "var bl=mx>0?Math.max(1,Math.round((c.mc/mx)*BW)):1;var bc=c.k===ch.k?'\\u2591':'\\u2588';var bd=c.k===ch.k?' \\u{1F3C6}':'';" +
   "o.push((label.length>=26?label+'  ':pd(label,26)+' ')+pd(bc.repeat(bl),BW)+' '+fm(c.mc)+bd);}o.push('');o.push('');" +
-  "o.push('\\u{1F4CB} Selected Model Details');o.push(SEP2.repeat(60));" +
+  "o.push('$calc_out.section.deepseek_api_cost_selected_models|\\u{1F4CB} Selected Model Details|');o.push(SEP2.repeat(60));" +
   "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];var dc2=c.cpr*rpd;var ann=c.mc*12;" +
-  "o.push(icon+' '+c.i.n+' ('+FL[c.i.f]+') | Context: '+c.i.cw);" +
+  "var famTok=c.i.f==='v4'?tk('calc_out.deepseek_api_cost.row.family_v4','('+FL[c.i.f]+')'):tk('calc_out.deepseek_api_cost.row.family_legacy','('+FL[c.i.f]+')');" +
+  "o.push(icon+' '+c.i.n+' '+famTok+' | '+tk('calc_out.deepseek_api_cost.row.context_window','Context: '+c.i.cw,{context:c.i.cw}));" +
   "o.push(SEP2.repeat(44));" +
   "var icl=(iT/1e6)*c.i.i;var ocl=(oT/1e6)*c.i.o;" +
-  "o.push('Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(c.i.i)+'/1M \\u2192 '+fm(icl)+'/req');" +
-  "o.push('Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(c.i.o)+'/1M \\u2192 '+fm(ocl)+'/req');" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.input_cost','Input:  '+pd(lc(iT),7)+' tokens \\u00d7 '+fm(c.i.i)+'/1M \\u2192 '+fm(icl)+'/req',{tokens:lc(iT),rate:fm(c.i.i),cost:fm(icl)}));" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.output_cost','Output: '+pd(lc(oT),7)+' tokens \\u00d7 '+fm(c.i.o)+'/1M \\u2192 '+fm(ocl)+'/req',{tokens:pd(lc(oT),7),rate:fm(c.i.o),cost:fm(ocl)}));" +
   "o.push(SEP2.repeat(44));" +
-  "o.push('Per request:    '+fm(c.cpr));" +
-  "o.push('Daily ('+rpd+'):    '+fm(dc2));" +
-  "o.push('Monthly (30d):  '+fm(c.mc));" +
-  "o.push('Annual:         '+fm(ann));" +
+  "o.push(tk('calc_out.label.per_request','Per request')+':    '+fm(c.cpr));" +
+  "o.push(tk('calc_out.label.daily','Daily')+' ('+rpd+'):    '+fm(dc2));" +
+  "o.push(tk('calc_out.label.monthly','Monthly')+' (30d):  '+fm(c.mc));" +
+  "o.push(tk('calc_out.label.annual','Annual')+':         '+fm(ann));" +
   "o.push(SEP2.repeat(44));" +
   "if(cacheOn){var sv=c.ncm-c.mc;var ps=c.ncm>0?Math.round((sv/c.ncm)*100):0;" +
-  "o.push('\\u{1F4BE} Auto-cache at '+cHR+'% hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)');}" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.auto_cache_savings','\\u{1F4BE} Auto-cache at '+cHR+'% hit: '+fm(c.mc)+'/mo \\u2014 saves '+fm(sv)+'/mo ('+ps+'%)',{rate:String(cHR),cost:fm(c.mc),saved:fm(sv),pct:String(ps)}));}" +
   "o.push('');}" +
   "if(gR>0){" +
-  "o.push('\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)');o.push('');" +
-  "var hdr='Month'.padEnd(8);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(16);o.push(hdr);" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.growth_projection','\\u{1F4C8} Growth Projection ('+gR+'%/month, '+pM+' months)',{growth:String(gR),months:String(pM)}));o.push('');" +
+  "var mCell='Month'.padEnd(8);var hdr=tk('calc_out.label.month','Month')+mCell.slice(5);for(var i=0;i<sc.length;i++)hdr+=' | '+sc[i].i.n.padEnd(16);o.push(hdr);" +
   "var sl=''.padEnd(8,SEP2);for(var i=0;i<sc.length;i++)sl+='-+-'.padEnd(17,SEP2);o.push(sl);" +
   "var gm=1+gR/100;" +
   "for(var m=1;m<=pM;m++){var mult=Math.pow(gm,m-1);var row=String(m).padEnd(8);for(var i=0;i<sc.length;i++)row+=' | '+fm(sc[i].mc*mult).padEnd(16);o.push(row);}" +
   "o.push(sl);" +
-  "var tr='Total'.padEnd(8);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(16);}o.push(tr);" +
+  "var tCell='Total'.padEnd(8);var tr=tk('calc_out.label.total','Total')+tCell.slice(5);for(var i=0;i<sc.length;i++){var cum=0;for(var m=1;m<=pM;m++)cum+=sc[i].mc*Math.pow(gm,m-1);tr+=' | '+fm(cum).padEnd(16);}o.push(tr);" +
   "o.push('');}" +
-  "o.push('\\u{1F4B0} Savings Insights');o.push(SEP2.repeat(60));" +
+  "o.push('$calc_out.section.deepseek_api_cost_savings_insights|\\u{1F4B0} Savings Insights|');o.push(SEP2.repeat(60));" +
   "var cheapestD=all.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
-  "o.push('\\u{1F3C6} Cheapest: '+cheapestD.i.n+' at '+fm(cheapestD.mc)+'/mo');" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.cheapest','\\u{1F3C6} Cheapest: '+cheapestD.i.n+' at '+fm(cheapestD.mc)+'/mo',{model:cheapestD.i.n,cost:fm(cheapestD.mc)}));" +
   "var flt2=all.filter(function(c){return c.i.f==='v4'&&c.k!=='deepseek-v4-pro-promo';});" +
   "var bv=flt2.length>0?flt2.reduce(function(mn,c){return c.mc<mn.mc?c:mn;}):null;" +
-  "if(bv&&bv.k!==cheapestD.k){o.push('\\u2B50 Best value (V4 standard): '+bv.i.n+' at '+fm(bv.mc)+'/mo');}" +
+  "if(bv&&bv.k!==cheapestD.k){o.push(tk('calc_out.deepseek_api_cost.row.best_value','\\u2B50 Best value (V4 standard): '+bv.i.n+' at '+fm(bv.mc)+'/mo',{model:bv.i.n,cost:fm(bv.mc)}));}" +
   "if(sc.length>=2){" +
   "var meS=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
   "var chS=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
   "var df2=meS.mc-chS.mc;" +
-  "o.push('\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)');}" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.switching_savings','\\u{1F4B8} Switching from '+meS.i.n+' to '+chS.i.n+' saves '+fm(df2)+'/mo ('+fm(df2*12)+'/yr)',{from:meS.i.n,to:chS.i.n,saved:fm(df2),yearly:fm(df2*12)}));}" +
   "if(cacheOn&&sc.length>0){" +
   "var ref2=sc[0];var sv2=ref2.ncm-ref2.mc;" +
-  "o.push('\\u{1F4BE} Auto-cache at '+cHR+'% hit rate saves ~'+fm(sv2)+'/mo on '+ref2.i.n);}" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.auto_cache_summary','\\u{1F4BE} Auto-cache at '+cHR+'% hit rate saves ~'+fm(sv2)+'/mo on '+ref2.i.n,{rate:String(cHR),saved:fm(sv2),model:ref2.i.n}));}" +
   "for(var pk in XP){var pv=XP[pk];var pm2=((iT/1e6)*pv.i+(oT/1e6)*pv.o)*rpm;var df=pm2-cheapestD.mc;var pct=pm2>0?Math.round((Math.abs(df)/pm2)*100):0;" +
-  "if(df>0){o.push('\\u{1F30D} '+cheapestD.i.n+' vs '+pv.n+': saves '+fm(df)+'/month ('+pct+'% cheaper)');}" +
-  "else{o.push('\\u{1F30D} '+cheapestD.i.n+' vs '+pv.n+': costs '+fm(-df)+'/month more ('+pct+'% premium)');}" +
+  "if(df>0){o.push(tk('calc_out.deepseek_api_cost.row.cross_provider_cheaper','\\u{1F30D} '+cheapestD.i.n+' vs '+pv.n+': saves '+fm(df)+'/month ('+pct+'% cheaper)',{model:cheapestD.i.n,provider:pv.n,saved:fm(df),pct:String(pct)}));}" +
+  "else{o.push(tk('calc_out.deepseek_api_cost.row.cross_provider_pricier','\\u{1F30D} '+cheapestD.i.n+' vs '+pv.n+': costs '+fm(-df)+'/month more ('+pct+'% premium)',{model:cheapestD.i.n,provider:pv.n,extra:fm(-df),pct:String(pct)}));}" +
   "}" +
-  "o.push('\\u{1F4A1} DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.');" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.tip_cheaper_than_frontier','\\u{1F4A1} DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.'));" +
   "o.push('');" +
-  "o.push('\\u{1F4C5} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)');o.push('');" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.usage_scenarios','\\u{1F4C5} Usage Scenarios (monthly cost at '+lc(rpd)+' reqs/day)',{reqs:lc(rpd)}));o.push('');" +
   "var vols=[50,100,500,1000,5000,10000];" +
-  "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];var line=icon+' '+c.i.n+': ';var pts=[];" +
+  "for(var i=0;i<sc.length;i++){var c=sc[i];var icon=FI[c.i.f];var pts=[];" +
   "for(var j=0;j<vols.length;j++){pts.push(lc(vols[j])+'\\u2192'+fm(c.cpr*vols[j]*30));}" +
-  "line+=pts.join(' \\u00b7 ');o.push(line);}" +
-  "return o;";
+  "o.push(tk('calc_out.deepseek_api_cost.row.usage_scenario_line',icon+' '+c.i.n+': '+pts.join(' \\u00b7 '),{icon:icon,model:c.i.n,v50:pts[0],v100:pts[1],v500:pts[2],v1k:pts[3],v5k:pts[4],v10k:pts[5]}));}" +
+  // P168 B3-10：🩺 Cost Health + 🔄 What-If 两段**客户端原本缺失**（服务端有）
+  //   ⇒ 与服务端逐字补齐（同一批 B3-8 §0.5 对 burn-rate 的裁定：客户端补齐缺失段）。
+  "o.push('');" +
+  "o.push('$calc_out.section.deepseek_api_cost_health|\\uD83E\\uDE7A Cost Health:|');o.push(SEP2.repeat(60));" +
+  "var totSel=0;for(var i=0;i<sc.length;i++)totSel+=sc[i].mc;" +
+  "var chSel=sc.reduce(function(min,c){return c.mc<min.mc?c:min;});" +
+  "var exSel=sc.reduce(function(max,c){return c.mc>max.mc?c:max;});" +
+  "if(sc.length>=2){var ratio=exSel.mc/Math.max(chSel.mc,0.01);" +
+  "if(ratio>=50)o.push(tk('calc_out.deepseek_api_cost.row.health_spread_50x','\\u2022 \\uD83D\\uDD34 Your most expensive selection costs '+ratio.toFixed(0)+'x your cheapest \\u2014 consider mixing tiers.',{ratio:ratio.toFixed(0)}));" +
+  "else if(ratio>=10)o.push(tk('calc_out.deepseek_api_cost.row.health_spread_10x','\\u2022 \\uD83D\\uDFE0 '+ratio.toFixed(0)+'x cost spread across selected models \\u2014 review if every model needs to be premium.',{ratio:ratio.toFixed(0)}));" +
+  "else o.push(tk('calc_out.deepseek_api_cost.row.health_spread_healthy','\\u2022 \\uD83D\\uDFE2 Healthy cost spread ('+ratio.toFixed(1)+'x) across selected models.',{ratio:ratio.toFixed(1)}));}" +
+  "var tM=chSel.i.n;var tC=fm(chSel.mc);" +
+  "if(chSel.mc<5)o.push(tk('calc_out.deepseek_api_cost.row.health_tier_micro','\\u2022 '+'🟢 Micro-tier (under $5/mo)'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "else if(chSel.mc<50)o.push(tk('calc_out.deepseek_api_cost.row.health_tier_low','\\u2022 '+'🟢 Low-volume tier'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "else if(chSel.mc<500)o.push(tk('calc_out.deepseek_api_cost.row.health_tier_mid','\\u2022 '+'🟡 Mid-volume tier'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "else o.push(tk('calc_out.deepseek_api_cost.row.health_tier_high','\\u2022 '+'🟠 High-volume tier'+' \\u2014 '+tM+' at '+tC+'/mo.',{model:tM,cost:tC}));" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.batch_pricing_tip','\\u2022 \\uD83D\\uDCA1 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~'+fm(totSel*0.5)+'/mo (50% discount) if latency is not critical.',{saved:fm(totSel*0.5)}));" +
+  "o.push('');" +
+  "o.push('$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|');o.push(SEP2.repeat(60));" +
+  "var pc=all.reduce(function(min,c){return (c.i.i+c.i.o)<(min.i.i+min.i.o)?c:min;},all[0]);" +
+  "var chSelK=chSel?chSel.k:undefined;" +
+  "if(pc&&pc.k!==chSelK){var cpr2=(iT/1e6)*pc.i.i+(oT/1e6)*pc.i.o;var newM2=cpr2*rpd*30;var svS=(chSel?chSel.mc:0)-newM2;" +
+  "if(svS>0)o.push(tk('calc_out.deepseek_api_cost.row.whatif_switch_cheapest','\\u2022 Switch cheapest to '+pc.i.n+':  save '+fm(svS)+'/mo  (similar quality, much cheaper)',{model:pc.i.n,saved:fm(svS)}));}" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.whatif_double_volume','\\u2022 Double volume to '+lc(rpd*2)+' reqs/day:  '+fm(totSel*2)+'/mo',{reqs:lc(rpd*2),cost:fm(totSel*2)}));" +
+  "o.push(tk('calc_out.deepseek_api_cost.row.whatif_halve_volume','\\u2022 Halve volume to '+lc(Math.max(1,Math.floor(rpd/2)))+' reqs/day:  '+fm(totSel/2)+'/mo',{reqs:lc(Math.max(1,Math.floor(rpd/2))),cost:fm(totSel/2)}));" +
+  "o.push('');" +
+  // P168 B3-9：⭐ 返回**整份输出**的单元素数组 —— 页面（src/pages/[lang]/[slug].astro:2186）对 custom 型**只渲染 results[0]**
+  //   ⇒ 多元素数组会让动态卡片只剩第一行（同一形态 B3-8 已在 ai-api-cost-comparison 修复并验证）。
+  "return [o.join('\\n')];";
 
 const engine: ToolEngine = {
   slug: 'solopreneur-deepseek-api-cost-calculator',
@@ -548,7 +620,7 @@ const engine: ToolEngine = {
   generate(inputs) { return calculate(inputs); },
   staticExamples: [
     // Single comprehensive example covering all 6 sections
-    '\n🔴 DeepSeek API Cost\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (100 reqs/day)\n──────────────────────────────────────────────────────\n◆ Deepseek V4.1 Flash 1017  ░░░░░                                    $1.35 🏆\n◆ Deepseek V4 Flash        ███████████                              $2.70\n◆ Deepseek V4 Pro          ████████████████████████████████████████ $9.90\n◆ V4 Pro (75% Promo)       ███████████                              $2.61\n◇ Deepseek R1              ████████████████████                     $4.94\n\n\n📋 Selected Model Details\n────────────────────────────────────────────────────────────\n◆ Deepseek V4 Flash (V4 Series) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.30/1M → $0.0003/req\nOutput: 500     tokens × $1.20/1M → $0.0006/req\n────────────────────────────────────────────\nPer request:    $0.0009\nDaily (100):    $0.09\nMonthly (30d):  $2.70\nAnnual:         $32.40\n────────────────────────────────────────────\n\n◆ V4 Pro (75% Promo) (V4 Series) | Context: 1M\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.43/1M → $0.0004/req\nOutput: 500     tokens × $0.87/1M → $0.0004/req\n────────────────────────────────────────────\nPer request:    $0.0009\nDaily (100):    $0.09\nMonthly (30d):  $2.61\nAnnual:         $31.32\n────────────────────────────────────────────\n\n💰 Savings Insights\n────────────────────────────────────────────────────────────\n🏆 Cheapest: Deepseek V4.1 Flash 1017 at $1.35/mo\n💸 Switching from Deepseek V4 Flash to V4 Pro (75% Promo) saves $0.09/mo ($1.08/yr)\n🌍 Deepseek V4.1 Flash 1017 vs GPT-5 Nano: costs $0.60/month more (80% premium)\n🌍 Deepseek V4.1 Flash 1017 vs Claude Haiku 3: saves $1.28/month (49% cheaper)\n🌍 Deepseek V4.1 Flash 1017 vs Gemini 1.5 Flash: costs $0.67/month more (100% premium)\n💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.\n\n📅 Usage Scenarios (monthly cost at 100 reqs/day)\n\n◆ Deepseek V4 Flash: 50→$1.35 · 100→$2.70 · 500→$13.50 · 1,000→$27.00 · 5,000→$135.00 · 10,000→$270.00\n◆ V4 Pro (75% Promo): 50→$1.30 · 100→$2.61 · 500→$13.05 · 1,000→$26.10 · 5,000→$130.50 · 10,000→$261.00\n\n🩺 Cost Health:\n────────────────────────────────────────────────────────────\n• 🟢 Healthy cost spread (1.0x) across selected models.\n• 🟢 Micro-tier (under $5/mo) — V4 Pro (75% Promo) at $2.61/mo.\n• 💡 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~$2.65/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n────────────────────────────────────────────────────────────\n• Switch cheapest to Deepseek V4.1 Flash 1017:  save $1.26/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $10.62/mo\n• Halve volume to 50 reqs/day:  $2.65/mo\n',
+    '\n$calc_out.section.deepseek_api_cost|🔴 DeepSeek API Cost|\n\n$calc_out.deepseek_api_cost.row.input_tokens{"tokens":"1,000"}|📥 Input: 1,000 tokens/req| | $calc_out.deepseek_api_cost.row.output_tokens{"tokens":"500"}|📤 Output: 500 tokens/req| | $calc_out.deepseek_api_cost.row.requests_per_day{"reqs":"100"}|🔄 100 reqs/day|\n\n$calc_out.deepseek_api_cost.row.cost_comparison{"reqs":"100"}|📊 Cost Comparison (100 reqs/day)|\n──────────────────────────────────────────────────────\n◆ Deepseek V4.1 Flash 1017  ░░░░░                                    $1.35 🏆\n◆ Deepseek V4 Flash        ███████████                              $2.70\n◆ Deepseek V4 Pro          ████████████████████████████████████████ $9.90\n◆ V4 Pro (75% Promo)       ███████████                              $2.61\n◇ Deepseek R1              ████████████████████                     $4.94\n\n\n$calc_out.section.deepseek_api_cost_selected_models|📋 Selected Model Details|\n────────────────────────────────────────────────────────────\n◆ Deepseek V4 Flash $calc_out.deepseek_api_cost.row.family_v4|(V4 Series)| | $calc_out.deepseek_api_cost.row.context_window{"context":"1M"}|Context: 1M|\n────────────────────────────────────────────\n$calc_out.deepseek_api_cost.row.input_cost{"tokens":"1,000","rate":"$0.30","cost":"$0.0003"}|Input:  1,000   tokens × $0.30/1M → $0.0003/req|\n$calc_out.deepseek_api_cost.row.output_cost{"tokens":"500    ","rate":"$1.20","cost":"$0.0006"}|Output: 500     tokens × $1.20/1M → $0.0006/req|\n────────────────────────────────────────────\n$calc_out.label.per_request|Per request|:    $0.0009\n$calc_out.label.daily|Daily| (100):    $0.09\n$calc_out.label.monthly|Monthly| (30d):  $2.70\n$calc_out.label.annual|Annual|:         $32.40\n────────────────────────────────────────────\n\n◆ V4 Pro (75% Promo) $calc_out.deepseek_api_cost.row.family_v4|(V4 Series)| | $calc_out.deepseek_api_cost.row.context_window{"context":"1M"}|Context: 1M|\n────────────────────────────────────────────\n$calc_out.deepseek_api_cost.row.input_cost{"tokens":"1,000","rate":"$0.43","cost":"$0.0004"}|Input:  1,000   tokens × $0.43/1M → $0.0004/req|\n$calc_out.deepseek_api_cost.row.output_cost{"tokens":"500    ","rate":"$0.87","cost":"$0.0004"}|Output: 500     tokens × $0.87/1M → $0.0004/req|\n────────────────────────────────────────────\n$calc_out.label.per_request|Per request|:    $0.0009\n$calc_out.label.daily|Daily| (100):    $0.09\n$calc_out.label.monthly|Monthly| (30d):  $2.61\n$calc_out.label.annual|Annual|:         $31.32\n────────────────────────────────────────────\n\n$calc_out.section.deepseek_api_cost_savings_insights|💰 Savings Insights|\n────────────────────────────────────────────────────────────\n$calc_out.deepseek_api_cost.row.cheapest{"model":"Deepseek V4.1 Flash 1017","cost":"$1.35"}|🏆 Cheapest: Deepseek V4.1 Flash 1017 at $1.35/mo|\n$calc_out.deepseek_api_cost.row.switching_savings{"from":"Deepseek V4 Flash","to":"V4 Pro (75% Promo)","saved":"$0.09","yearly":"$1.08"}|💸 Switching from Deepseek V4 Flash to V4 Pro (75% Promo) saves $0.09/mo ($1.08/yr)|\n$calc_out.deepseek_api_cost.row.cross_provider_pricier{"model":"Deepseek V4.1 Flash 1017","provider":"GPT-5 Nano","extra":"$0.60","pct":"80"}|🌍 Deepseek V4.1 Flash 1017 vs GPT-5 Nano: costs $0.60/month more (80% premium)|\n$calc_out.deepseek_api_cost.row.cross_provider_cheaper{"model":"Deepseek V4.1 Flash 1017","provider":"Claude Haiku 3","saved":"$1.28","pct":"49"}|🌍 Deepseek V4.1 Flash 1017 vs Claude Haiku 3: saves $1.28/month (49% cheaper)|\n$calc_out.deepseek_api_cost.row.cross_provider_pricier{"model":"Deepseek V4.1 Flash 1017","provider":"Gemini 1.5 Flash","extra":"$0.67","pct":"100"}|🌍 Deepseek V4.1 Flash 1017 vs Gemini 1.5 Flash: costs $0.67/month more (100% premium)|\n$calc_out.deepseek_api_cost.row.tip_cheaper_than_frontier|💡 DeepSeek V4 Flash is 20-100x cheaper than frontier models. Auto-caching saves 98% on repeated prompts.|\n\n$calc_out.deepseek_api_cost.row.usage_scenarios{"reqs":"100"}|📅 Usage Scenarios (monthly cost at 100 reqs/day)|\n\n$calc_out.deepseek_api_cost.row.usage_scenario_line{"icon":"◆","model":"Deepseek V4 Flash","v50":"50→$1.35","v100":"100→$2.70","v500":"500→$13.50","v1k":"1,000→$27.00","v5k":"5,000→$135.00","v10k":"10,000→$270.00"}|◆ Deepseek V4 Flash: 50→$1.35 · 100→$2.70 · 500→$13.50 · 1,000→$27.00 · 5,000→$135.00 · 10,000→$270.00|\n$calc_out.deepseek_api_cost.row.usage_scenario_line{"icon":"◆","model":"V4 Pro (75% Promo)","v50":"50→$1.30","v100":"100→$2.61","v500":"500→$13.05","v1k":"1,000→$26.10","v5k":"5,000→$130.50","v10k":"10,000→$261.00"}|◆ V4 Pro (75% Promo): 50→$1.30 · 100→$2.61 · 500→$13.05 · 1,000→$26.10 · 5,000→$130.50 · 10,000→$261.00|\n\n$calc_out.section.deepseek_api_cost_health|🩺 Cost Health:|\n────────────────────────────────────────────────────────────\n$calc_out.deepseek_api_cost.row.health_spread_healthy{"ratio":"1.0"}|• 🟢 Healthy cost spread (1.0x) across selected models.|\n$calc_out.deepseek_api_cost.row.health_tier_micro{"model":"V4 Pro (75% Promo)","cost":"$2.61"}|• 🟢 Micro-tier (under $5/mo) — V4 Pro (75% Promo) at $2.61/mo.|\n$calc_out.deepseek_api_cost.row.batch_pricing_tip{"saved":"$2.65"}|• 💡 Switch to a provider with batch pricing (Anthropic/OpenAI): save ~$2.65/mo (50% discount) if latency is not critical.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n────────────────────────────────────────────────────────────\n$calc_out.deepseek_api_cost.row.whatif_switch_cheapest{"model":"Deepseek V4.1 Flash 1017","saved":"$1.26"}|• Switch cheapest to Deepseek V4.1 Flash 1017:  save $1.26/mo  (similar quality, much cheaper)|\n$calc_out.deepseek_api_cost.row.whatif_double_volume{"reqs":"200","cost":"$10.62"}|• Double volume to 200 reqs/day:  $10.62/mo|\n$calc_out.deepseek_api_cost.row.whatif_halve_volume{"reqs":"50","cost":"$2.65"}|• Halve volume to 50 reqs/day:  $2.65/mo|\n',
   ],
   faq: [
     { q: 'How much cheaper is DeepSeek than OpenAI?', a: 'DeepSeek V4.1 Flash 1017 at {{live:deepseek/deepseek-v4.1-flash-1017}} per 1M tokens costs {{liveShareMix:deepseek/deepseek-v4.1-flash-1017|openai/gpt-4o}} of GPT-4o ({{live:openai/gpt-4o}}) on a typical mixed workload. For 1,000 input + 500 output tokens at 3,000 requests/month: DeepSeek V4.1 Flash 1017 costs {{liveMonthlyAt:deepseek/deepseek-v4.1-flash-1017|3000}}/month vs {{liveMonthlyAt:openai/gpt-4o|3000}}/month for GPT-4o. The cheapest DeepSeek model, Coder ({{live:deepseek/deepseek-coder}}), costs {{liveMonthlyAt:deepseek/deepseek-coder|3000}}/month. V4 Pro at promo pricing ({{live:deepseek/deepseek-v4-pro-promo}}) still costs {{liveShareMix:deepseek/deepseek-v4-pro-promo|openai/gpt-4o}} of GPT-4o.' },

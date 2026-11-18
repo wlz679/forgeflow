@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-9：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Email Campaign ROI Calculator (P6-5) — Business v3 standard
@@ -70,8 +73,11 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: no list
   if (listSize === 0) {
     return [
-      '⏰ Email Campaign ROI Calculator\n\n' +
-        '📊 Enter list size, open rate, CTR, AOV per click, campaign cost, and number of emails to see ROI %, cost-per-click/open, and projected scaling outcomes.',
+      '$calc_out.section.email_campaign_roi_calculator|⏰ Email Campaign ROI Calculator|\n\n' +
+        makeToken(
+          'calc_out.email_campaign_roi.row.enter_prompt',
+          '📊 Enter list size, open rate, CTR, AOV per click, campaign cost, and number of emails to see ROI %, cost-per-click/open, and projected scaling outcomes.',
+        ),
     ];
   }
 
@@ -104,9 +110,23 @@ function calculate(inputs: Record<string, string>): string[] {
     healthLabel = 'Critical — ROI < 0%; losing money on this campaign';
   }
 
+  // ── P168 B3-9：健康度整行 → token（5 档各写一个 **code 字面量**；兜底取 healthEmoji + healthLabel ⇒ emoji 不会走样）
+  const healthRow =
+    campaignCost > 0 && roi >= HEALTH_BANDS.excellent
+      ? makeToken('calc_out.email_campaign_roi.row.health_excellent', healthEmoji + ' ' + healthLabel)
+      : campaignCost > 0 && roi >= HEALTH_BANDS.good[0]
+      ? makeToken('calc_out.email_campaign_roi.row.health_good', healthEmoji + ' ' + healthLabel)
+      : campaignCost > 0 && roi >= HEALTH_BANDS.warning[0]
+      ? makeToken('calc_out.email_campaign_roi.row.health_warning', healthEmoji + ' ' + healthLabel)
+      : campaignCost === 0
+      ? makeToken('calc_out.email_campaign_roi.row.health_no_cost', healthEmoji + ' ' + healthLabel)
+      : makeToken('calc_out.email_campaign_roi.row.health_critical', healthEmoji + ' ' + healthLabel);
+
   const money = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
   const money2 = (n: number) => (isFinite(n) ? '$' + n.toFixed(2) : '∞');
   const fmt = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  // P168 B3-9：∞ 单独取一个变量（兜底里要用 ⇒ 只手打一次）
+  const infMark = '∞';
 
   // What-If: openRate +5pp (typical improvement from subject-line testing)
   const openRateBoost = 5;
@@ -148,44 +168,58 @@ function calculate(inputs: Record<string, string>): string[] {
     tip = 'Good ROI but with room to optimize. Test A/B variants of subject lines, body copy, and CTAs. A 30% open rate improvement at this band could push ROI into 🟢.';
   }
 
+  // ── P168 B3-9：Tip 整行 → token（6 种形态各写一个 code 字面量）
+  const tipToken =
+    campaignCost === 0
+      ? makeToken('calc_out.email_campaign_roi.row.tip_no_cost', '💡 Tip: ' + tip)
+      : roi < 0
+      ? makeToken('calc_out.email_campaign_roi.row.tip_negative_roi', '💡 Tip: ' + tip)
+      : openRate < 21
+      ? makeToken('calc_out.email_campaign_roi.row.tip_low_open_rate', '💡 Tip: ' + tip)
+      : ctr < 2
+      ? makeToken('calc_out.email_campaign_roi.row.tip_low_ctr', '💡 Tip: ' + tip)
+      : roi >= HEALTH_BANDS.excellent
+      ? makeToken('calc_out.email_campaign_roi.row.tip_excellent', '💡 Tip: ' + tip)
+      : makeToken('calc_out.email_campaign_roi.row.tip_good', '💡 Tip: ' + tip);
+
   const r =
-    '⏰ Email Campaign ROI Calculator\n\n' +
-    '🩺 Health:\n' +
+    '$calc_out.section.email_campaign_roi_calculator|⏰ Email Campaign ROI Calculator|\n\n' +
+    '$calc_out.section.health|🩺 Health:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Gross revenue: ' + money(grossRevenue) + '  ·  Net revenue: ' + money(netRevenue) + '\n' +
-    '• Industry benchmark open rate: 21% (yours: ' + openRate.toFixed(1) + '%)\n\n' +
+    '• ' + healthRow + '\n' +
+    '• $calc_out.label.gross_revenue|Gross revenue|: ' + money(grossRevenue) + '  ·  $calc_out.label.net_revenue|Net revenue|: ' + money(netRevenue) + '\n' +
+    '• $calc_out.label.industry_benchmark_open_rate|Industry benchmark open rate|: ' + makeToken('calc_out.email_campaign_roi.row.benchmark_open_rate', '21% (yours: ' + openRate.toFixed(1) + '%)', { open: openRate.toFixed(1) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    '$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• List size:       ' + fmt(listSize) + '\n' +
-    '• Emails sent:     ' + fmt(emailsDelivered) + '  (' + numEmails + ' per subscriber)\n' +
-    '• Opens:           ' + fmt(opens) + '  (' + openRate.toFixed(1) + '% open rate)\n' +
-    '• Clicks:          ' + fmt(clicks) + '  (' + ctr.toFixed(1) + '% CTR)\n' +
-    '• AOV per click:   ' + money(aovPerClick) + '\n' +
-    '• Campaign cost:   ' + money(campaignCost) + '\n' +
-    '• ROI:             ' + (isFinite(roi) ? roi.toFixed(0) + '%' : '∞') + '\n' +
-    '• Cost per click:  ' + money2(cpc) + '  ·  Cost per open: ' + money2(cpo) + '\n\n' +
+    '• $calc_out.label.list_size|List size|:       ' + fmt(listSize) + '\n' +
+    '• $calc_out.label.emails_sent|Emails sent|:     ' + makeToken('calc_out.email_campaign_roi.row.emails_sent_detail', fmt(emailsDelivered) + '  (' + numEmails + ' per subscriber)', { count: fmt(emailsDelivered), emails: String(numEmails) }) + '\n' +
+    '• $calc_out.label.opens|Opens|:           ' + makeToken('calc_out.email_campaign_roi.row.opens_detail', fmt(opens) + '  (' + openRate.toFixed(1) + '% open rate)', { count: fmt(opens), open: openRate.toFixed(1) }) + '\n' +
+    '• $calc_out.label.clicks|Clicks|:          ' + makeToken('calc_out.email_campaign_roi.row.clicks_detail', fmt(clicks) + '  (' + ctr.toFixed(1) + '% CTR)', { count: fmt(clicks), ctr: ctr.toFixed(1) }) + '\n' +
+    '• $calc_out.label.aov_per_click|AOV per click|:   ' + money(aovPerClick) + '\n' +
+    '• $calc_out.label.campaign_cost|Campaign cost|:   ' + money(campaignCost) + '\n' +
+    '• $calc_out.label.roi|ROI|:             ' + (isFinite(roi) ? roi.toFixed(0) + '%' : infMark) + '\n' +
+    '• $calc_out.label.cost_per_click|Cost per click|:  ' + money2(cpc) + '  ·  $calc_out.label.cost_per_open|Cost per open|: ' + money2(cpo) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    '$calc_out.section.what_if|🔄 What-If:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Open rate +5pp (' + openRate.toFixed(1) + '% → ' + newOpenRate.toFixed(1) + '%):\n' +
-    '  • Revenue: ' + money(grossRevenue) + ' → ' + money(newRevenue) + ' (+' + money(newRevenue - grossRevenue) + ')\n' +
-    '  • ROI: ' + (isFinite(roi) ? roi.toFixed(0) : '∞') + '% → ' + (isFinite(newROI) ? newROI.toFixed(0) : '∞') + '%\n\n' +
+    '• ' + makeToken('calc_out.email_campaign_roi.row.whatif_open_rate_boost', 'Open rate +5pp (' + openRate.toFixed(1) + '% → ' + newOpenRate.toFixed(1) + '%):', { from: openRate.toFixed(1), to: newOpenRate.toFixed(1) }) + '\n' +
+    '  • $calc_out.label.revenue|Revenue|: ' + makeToken('calc_out.email_campaign_roi.row.whatif_revenue', money(grossRevenue) + ' → ' + money(newRevenue) + ' (+' + money(newRevenue - grossRevenue) + ')', { from: money(grossRevenue), to: money(newRevenue), delta: money(newRevenue - grossRevenue) }) + '\n' +
+    '  • $calc_out.label.roi|ROI|: ' + makeToken('calc_out.email_campaign_roi.row.whatif_roi', (isFinite(roi) ? roi.toFixed(0) : infMark) + '% → ' + (isFinite(newROI) ? newROI.toFixed(0) : infMark) + '%', { from: isFinite(roi) ? roi.toFixed(0) : infMark, to: isFinite(newROI) ? newROI.toFixed(0) : infMark }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    '$calc_out.section.break_even|⚖️ Break-Even:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• To hit 🟢 ROI (' + targetROI + '%):\n' +
-    '  • Required revenue: ' + money(breakEvenRevenue) + '  (currently ' + money(grossRevenue) + ')\n' +
-    '  • Required clicks: ' + fmt(breakEvenClicks) + '  ·  Required open rate: ' + breakEvenOpenRate.toFixed(1) + '% (currently ' + openRate.toFixed(1) + '%)\n\n' +
+    '• ' + makeToken('calc_out.email_campaign_roi.row.break_even_target', 'To hit 🟢 ROI (' + targetROI + '%):', { target: String(targetROI) }) + '\n' +
+    '  • $calc_out.label.required_revenue|Required revenue|: ' + makeToken('calc_out.email_campaign_roi.row.break_even_required_revenue', money(breakEvenRevenue) + '  (currently ' + money(grossRevenue) + ')', { need: money(breakEvenRevenue), now: money(grossRevenue) }) + '\n' +
+    '  • $calc_out.label.required_clicks|Required clicks|: ' + fmt(breakEvenClicks) + '  ·  $calc_out.label.required_open_rate|Required open rate|: ' + makeToken('calc_out.email_campaign_roi.row.break_even_required_open_rate', breakEvenOpenRate.toFixed(1) + '% (currently ' + openRate.toFixed(1) + '%)', { need: breakEvenOpenRate.toFixed(1), now: openRate.toFixed(1) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    '$calc_out.section.milestone|🎯 Milestone:|\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Annual projection (list +5%/quarter):\n' +
-    '  • Revenue: ' + money(annualRevenue) + '  ·  Cost: ' + money(annualCost) + '\n' +
-    '  • Net: ' + money(annualNet) + '  ·  Annual ROI: ' + (isFinite(annualROI) ? annualROI.toFixed(0) + '%' : '∞') + '\n\n' +
+    '• ' + makeToken('calc_out.email_campaign_roi.row.annual_projection', 'Annual projection (list +5%/quarter):') + '\n' +
+    '  • $calc_out.label.revenue|Revenue|: ' + money(annualRevenue) + '  ·  $calc_out.label.cost|Cost|: ' + money(annualCost) + '\n' +
+    '  • $calc_out.label.net_amount|Net|: ' + money(annualNet) + '  ·  $calc_out.label.annual_roi|Annual ROI|: ' + (isFinite(annualROI) ? annualROI.toFixed(0) + '%' : infMark) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tipToken + '\n';
 
   return [r];
 }
@@ -193,6 +227,9 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (minified, mirrors calculate()) ==============
 
 const customFn =
+  // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
+  //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "function cGR(ls,o,ct,av,ne){var ed=ls*ne;var op=ed*(o/100);var cl=op*(ct/100);return cl*av;}" +
   "function cNR(gr,cc){return gr-cc;}" +
   "function cROI(nr,cc){if(cc<=0)return Infinity;return(nr/cc)*100;}" +
@@ -205,7 +242,7 @@ const customFn =
   "var av=cnn(parseFloat(inputs.aovPerClick)||0);" +
   "var cc=cnn(parseFloat(inputs.campaignCost)||0);" +
   "var ne=Math.max(1,parseFloat(inputs.numEmails)||1);" +
-  "if(ls===0){return['\\u23F0 Email Campaign ROI Calculator\\n\\n\\uD83D\\uDCCA Enter list size, open rate, CTR, AOV per click, campaign cost, and number of emails to see ROI %, cost-per-click/open, and projected scaling outcomes.'];}" +
+  "if(ls===0){return['$calc_out.section.email_campaign_roi_calculator|\\u23F0 Email Campaign ROI Calculator|\\n\\n'+tk('calc_out.email_campaign_roi.row.enter_prompt','\\uD83D\\uDCCA Enter list size, open rate, CTR, AOV per click, campaign cost, and number of emails to see ROI %, cost-per-click/open, and projected scaling outcomes.')];}" +
   "var ed=ls*ne;var op=ed*(or2/100);var cl=op*(ctr2/100);" +
   "var gr=cGR(ls,or2,ctr2,av,ne);var nr=cNR(gr,cc);var roi=cROI(nr,cc);" +
   "var pc=cPC(cc,cl);var po=cPO(cc,op);" +
@@ -215,9 +252,11 @@ const customFn =
   "else if(cc>0&&roi>=0){hE='\\uD83D\\uDFE0';hL='Warning \\u2014 ROI 0\\u2013100%; breaking even, optimize creative';}" +
   "else if(cc===0){hE='\\u26AA';hL='No cost entered \\u2014 ROI infinite; verify cost estimate';}" +
   "else{hE='\\uD83D\\uDD34';hL='Critical \\u2014 ROI < 0%; losing money on this campaign';}" +
+  "var hT=cc>0&&roi>=300?tk('calc_out.email_campaign_roi.row.health_excellent',hE+' '+hL):cc>0&&roi>=100?tk('calc_out.email_campaign_roi.row.health_good',hE+' '+hL):cc>0&&roi>=0?tk('calc_out.email_campaign_roi.row.health_warning',hE+' '+hL):cc===0?tk('calc_out.email_campaign_roi.row.health_no_cost',hE+' '+hL):tk('calc_out.email_campaign_roi.row.health_critical',hE+' '+hL);" +
   "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
   "function money2(n){return isFinite(n)?'$'+n.toFixed(2):'\\u221E';}" +
   "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
+  "var infMark='\\u221E';" +
   "var boost=5;var nO=or2+boost;var nOp2=ed*(nO/100);var nCl2=nOp2*(ctr2/100);" +
   "var nRev=nCl2*av;var nROI2=cc>0?((nRev-cc)/cc)*100:Infinity;" +
   "var tROI=300;var beR=cc*(tROI/100)+cc;var beCl=av>0?beR/av:0;" +
@@ -232,44 +271,45 @@ const customFn =
   "else if(ctr2<2){tip='Open rate OK but CTR low. Test CTA placement (above fold), link count (1-3 max), and button color. Clear value prop above the fold typically doubles CTR.';}" +
   "else if(roi>=300){tip='Excellent ROI. Scale send cadence (weekly \\u2192 2-3x/week), test list segmentation, and refresh creative monthly. Don\\'t let audience fatigue set in.';}" +
   "else{tip='Good ROI but with room to optimize. Test A/B variants of subject lines, body copy, and CTAs. A 30% open rate improvement at this band could push ROI into \\uD83D\\uDFE2.';}" +
+  "var tipToken=cc===0?tk('calc_out.email_campaign_roi.row.tip_no_cost','\\uD83D\\uDCA1 Tip: '+tip):roi<0?tk('calc_out.email_campaign_roi.row.tip_negative_roi','\\uD83D\\uDCA1 Tip: '+tip):or2<21?tk('calc_out.email_campaign_roi.row.tip_low_open_rate','\\uD83D\\uDCA1 Tip: '+tip):ctr2<2?tk('calc_out.email_campaign_roi.row.tip_low_ctr','\\uD83D\\uDCA1 Tip: '+tip):roi>=300?tk('calc_out.email_campaign_roi.row.tip_excellent','\\uD83D\\uDCA1 Tip: '+tip):tk('calc_out.email_campaign_roi.row.tip_good','\\uD83D\\uDCA1 Tip: '+tip);" +
   "var r2='';" +
-  "r2+='\\u23F0 Email Campaign ROI Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
+  "r2+='$calc_out.section.email_campaign_roi_calculator|\\u23F0 Email Campaign ROI Calculator|\\n\\n';" +
+  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+hE+' '+hL+'\\n';" +
-  "r2+='\\u2022 Gross revenue: '+money(gr)+'  \\u00B7  Net revenue: '+money(nr)+'\\n';" +
-  "r2+='\\u2022 Industry benchmark open rate: 21% (yours: '+or2.toFixed(1)+'%)\\n\\n';" +
+  "r2+='\\u2022 '+hT+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.gross_revenue|Gross revenue|: '+money(gr)+'  \\u00B7  $calc_out.label.net_revenue|Net revenue|: '+money(nr)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.industry_benchmark_open_rate|Industry benchmark open rate|: '+tk('calc_out.email_campaign_roi.row.benchmark_open_rate','21% (yours: '+or2.toFixed(1)+'%)',{open:or2.toFixed(1)})+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
+  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 List size:       '+fmt(ls)+'\\n';" +
-  "r2+='\\u2022 Emails sent:     '+fmt(ed)+'  ('+ne+' per subscriber)\\n';" +
-  "r2+='\\u2022 Opens:           '+fmt(op)+'  ('+or2.toFixed(1)+'% open rate)\\n';" +
-  "r2+='\\u2022 Clicks:          '+fmt(cl)+'  ('+ctr2.toFixed(1)+'% CTR)\\n';" +
-  "r2+='\\u2022 AOV per click:   '+money(av)+'\\n';" +
-  "r2+='\\u2022 Campaign cost:   '+money(cc)+'\\n';" +
-  "r2+='\\u2022 ROI:             '+(isFinite(roi)?roi.toFixed(0)+'%':'\\u221E')+'\\n';" +
-  "r2+='\\u2022 Cost per click:  '+money2(pc)+'  \\u00B7  Cost per open: '+money2(po)+'\\n\\n';" +
+  "r2+='\\u2022 $calc_out.label.list_size|List size|:       '+fmt(ls)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.emails_sent|Emails sent|:     '+tk('calc_out.email_campaign_roi.row.emails_sent_detail',fmt(ed)+'  ('+ne+' per subscriber)',{count:fmt(ed),emails:String(ne)})+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.opens|Opens|:           '+tk('calc_out.email_campaign_roi.row.opens_detail',fmt(op)+'  ('+or2.toFixed(1)+'% open rate)',{count:fmt(op),open:or2.toFixed(1)})+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.clicks|Clicks|:          '+tk('calc_out.email_campaign_roi.row.clicks_detail',fmt(cl)+'  ('+ctr2.toFixed(1)+'% CTR)',{count:fmt(cl),ctr:ctr2.toFixed(1)})+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.aov_per_click|AOV per click|:   '+money(av)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.campaign_cost|Campaign cost|:   '+money(cc)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.roi|ROI|:             '+(isFinite(roi)?roi.toFixed(0)+'%':infMark)+'\\n';" +
+  "r2+='\\u2022 $calc_out.label.cost_per_click|Cost per click|:  '+money2(pc)+'  \\u00B7  $calc_out.label.cost_per_open|Cost per open|: '+money2(po)+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
+  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Open rate +5pp ('+or2.toFixed(1)+'% \\u2192 '+nO.toFixed(1)+'%):\\n';" +
-  "r2+='  \\u2022 Revenue: '+money(gr)+' \\u2192 '+money(nRev)+' (+'+money(nRev-gr)+')\\n';" +
-  "r2+='  \\u2022 ROI: '+(isFinite(roi)?roi.toFixed(0):'\\u221E')+'% \\u2192 '+(isFinite(nROI2)?nROI2.toFixed(0):'\\u221E')+'%\\n\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.email_campaign_roi.row.whatif_open_rate_boost','Open rate +5pp ('+or2.toFixed(1)+'% \\u2192 '+nO.toFixed(1)+'%):',{from:or2.toFixed(1),to:nO.toFixed(1)})+'\\n';" +
+  "r2+='  \\u2022 $calc_out.label.revenue|Revenue|: '+tk('calc_out.email_campaign_roi.row.whatif_revenue',money(gr)+' \\u2192 '+money(nRev)+' (+'+money(nRev-gr)+')',{from:money(gr),to:money(nRev),delta:money(nRev-gr)})+'\\n';" +
+  "r2+='  \\u2022 $calc_out.label.roi|ROI|: '+tk('calc_out.email_campaign_roi.row.whatif_roi',(isFinite(roi)?roi.toFixed(0):infMark)+'% \\u2192 '+(isFinite(nROI2)?nROI2.toFixed(0):infMark)+'%',{from:isFinite(roi)?roi.toFixed(0):infMark,to:isFinite(nROI2)?nROI2.toFixed(0):infMark})+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
+  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 To hit \\uD83D\\uDFE2 ROI ('+tROI+'%):\\n';" +
-  "r2+='  \\u2022 Required revenue: '+money(beR)+'  (currently '+money(gr)+')\\n';" +
-  "r2+='  \\u2022 Required clicks: '+fmt(beCl)+'  \\u00B7  Required open rate: '+beOR.toFixed(1)+'% (currently '+or2.toFixed(1)+'%)\\n\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.email_campaign_roi.row.break_even_target','To hit \\uD83D\\uDFE2 ROI ('+tROI+'%):',{target:String(tROI)})+'\\n';" +
+  "r2+='  \\u2022 $calc_out.label.required_revenue|Required revenue|: '+tk('calc_out.email_campaign_roi.row.break_even_required_revenue',money(beR)+'  (currently '+money(gr)+')',{need:money(beR),now:money(gr)})+'\\n';" +
+  "r2+='  \\u2022 $calc_out.label.required_clicks|Required clicks|: '+fmt(beCl)+'  \\u00B7  $calc_out.label.required_open_rate|Required open rate|: '+tk('calc_out.email_campaign_roi.row.break_even_required_open_rate',beOR.toFixed(1)+'% (currently '+or2.toFixed(1)+'%)',{need:beOR.toFixed(1),now:or2.toFixed(1)})+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
+  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Annual projection (list +5%/quarter):\\n';" +
-  "r2+='  \\u2022 Revenue: '+money(annR)+'  \\u00B7  Cost: '+money(annC)+'\\n';" +
-  "r2+='  \\u2022 Net: '+money(annN)+'  \\u00B7  Annual ROI: '+(isFinite(annROI)?annROI.toFixed(0)+'%':'\\u221E')+'\\n\\n';" +
+  "r2+='\\u2022 '+tk('calc_out.email_campaign_roi.row.annual_projection','Annual projection (list +5%/quarter):')+'\\n';" +
+  "r2+='  \\u2022 $calc_out.label.revenue|Revenue|: '+money(annR)+'  \\u00B7  $calc_out.label.cost|Cost|: '+money(annC)+'\\n';" +
+  "r2+='  \\u2022 $calc_out.label.net_amount|Net|: '+money(annN)+'  \\u00B7  $calc_out.label.annual_roi|Annual ROI|: '+(isFinite(annROI)?annROI.toFixed(0)+'%':infMark)+'\\n\\n';" +
   "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
+  "r2+=tipToken+'\\n';" +
   "return [r2];";
 
 // ============== Engine ==============
@@ -324,7 +364,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Email Campaign ROI Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Excellent — ROI ≥ 300%; profitable and scalable\n• Gross revenue: $12,500  ·  Net revenue: $12,000\n• Industry benchmark open rate: 21% (yours: 25.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• List size:       10,000\n• Emails sent:     40,000  (4 per subscriber)\n• Opens:           10,000  (25.0% open rate)\n• Clicks:          500  (5.0% CTR)\n• AOV per click:   $25\n• Campaign cost:   $500\n• ROI:             2400%\n• Cost per click:  $1.00  ·  Cost per open: $0.05\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Open rate +5pp (25.0% → 30.0%):\n  • Revenue: $12,500 → $15,000 (+$2,500)\n  • ROI: 2400% → 2900%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• To hit 🟢 ROI (300%):\n  • Required revenue: $2,000  (currently $12,500)\n  • Required clicks: 80  ·  Required open rate: 0.0% (currently 25.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Annual projection (list +5%/quarter):\n  • Revenue: $53,876  ·  Cost: $2,000\n  • Net: $51,876  ·  Annual ROI: 2594%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Excellent ROI. Scale send cadence (weekly → 2-3x/week), test list segmentation, and refresh creative monthly. Don\'t let audience fatigue set in.\n'],
+  staticExamples: ['$calc_out.section.email_campaign_roi_calculator|⏰ Email Campaign ROI Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.email_campaign_roi.row.health_excellent|🟢 Excellent — ROI ≥ 300%; profitable and scalable|\n• $calc_out.label.gross_revenue|Gross revenue|: $12,500  ·  $calc_out.label.net_revenue|Net revenue|: $12,000\n• $calc_out.label.industry_benchmark_open_rate|Industry benchmark open rate|: $calc_out.email_campaign_roi.row.benchmark_open_rate{"open":"25.0"}|21% (yours: 25.0%)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.label.list_size|List size|:       10,000\n• $calc_out.label.emails_sent|Emails sent|:     $calc_out.email_campaign_roi.row.emails_sent_detail{"count":"40,000","emails":"4"}|40,000  (4 per subscriber)|\n• $calc_out.label.opens|Opens|:           $calc_out.email_campaign_roi.row.opens_detail{"count":"10,000","open":"25.0"}|10,000  (25.0% open rate)|\n• $calc_out.label.clicks|Clicks|:          $calc_out.email_campaign_roi.row.clicks_detail{"count":"500","ctr":"5.0"}|500  (5.0% CTR)|\n• $calc_out.label.aov_per_click|AOV per click|:   $25\n• $calc_out.label.campaign_cost|Campaign cost|:   $500\n• $calc_out.label.roi|ROI|:             2400%\n• $calc_out.label.cost_per_click|Cost per click|:  $1.00  ·  $calc_out.label.cost_per_open|Cost per open|: $0.05\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.email_campaign_roi.row.whatif_open_rate_boost{"from":"25.0","to":"30.0"}|Open rate +5pp (25.0% → 30.0%):|\n  • $calc_out.label.revenue|Revenue|: $calc_out.email_campaign_roi.row.whatif_revenue{"from":"$12,500","to":"$15,000","delta":"$2,500"}|$12,500 → $15,000 (+$2,500)|\n  • $calc_out.label.roi|ROI|: $calc_out.email_campaign_roi.row.whatif_roi{"from":"2400","to":"2900"}|2400% → 2900%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.email_campaign_roi.row.break_even_target{"target":"300"}|To hit 🟢 ROI (300%):|\n  • $calc_out.label.required_revenue|Required revenue|: $calc_out.email_campaign_roi.row.break_even_required_revenue{"need":"$2,000","now":"$12,500"}|$2,000  (currently $12,500)|\n  • $calc_out.label.required_clicks|Required clicks|: 80  ·  $calc_out.label.required_open_rate|Required open rate|: $calc_out.email_campaign_roi.row.break_even_required_open_rate{"need":"0.0","now":"25.0"}|0.0% (currently 25.0%)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $calc_out.email_campaign_roi.row.annual_projection|Annual projection (list +5%/quarter):|\n  • $calc_out.label.revenue|Revenue|: $53,876  ·  $calc_out.label.cost|Cost|: $2,000\n  • $calc_out.label.net_amount|Net|: $51,876  ·  $calc_out.label.annual_roi|Annual ROI|: 2594%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.email_campaign_roi.row.tip_excellent|💡 Tip: Excellent ROI. Scale send cadence (weekly → 2-3x/week), test list segmentation, and refresh creative monthly. Don\'t let audience fatigue set in.|\n'],
   faq: [
     { q: 'What is a good email open rate?', a: 'Average: 21% (HubSpot 2024). Good: 25-30%. Excellent: >30%. Varies by industry — B2B typically higher than B2C. Subject line, sender name, and send time all impact open rate.' },
     { q: 'What is a typical email campaign ROI?', a: 'DMA reports email ROI at $36-$42 per $1 spent — the highest of any marketing channel. Most solopreneur campaigns achieve 200-500% ROI on warm lists.' },

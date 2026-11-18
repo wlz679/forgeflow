@@ -2,6 +2,7 @@ import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
 import PRICING from '../../data/ai-pricing.json';
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 interface ProviderInfo {
   name: string;
@@ -43,30 +44,34 @@ function calculate(inputs: Record<string, string>): string[] {
   const advMult = ADVANCED_MULT[advancedMode] || 1;
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-9：⭐ **删除**「📅 Pricing last updated: ...」这一行（与 ai-training-cost-estimator 同源）。
+  //   codegen 写 staticExamples[0] 时**本来就过滤掉它**（scripts/codegen-examples.mjs:317），
+  //   页面用**徽章**显示同一日期 ⇒ 保留它只会让「服务端输出」比「静态卡片」多一行
+  //   ⇒ 令牌化后两端必须逐字一致（英文页零变化 + G6 守恒）⇒ 删掉。
+  //   ⚠️ 英文页可见输出不变：静态卡片本来就没有这一行，客户端也从来没有这一行。
   out.push('');
 
   // Section 1: Header
-  let header = '🎨 ' + p.name + ' Cost Estimate';
+  let header = makeToken('calc_out.ai_image_cost.row.header_estimate', '🎨 ' + p.name + ' Cost Estimate', { name: p.name });
   if (advancedMode !== 'standard') {
-    header += ' (' + advancedMode.toUpperCase() + ' mode, ' + advMult + 'x cost)';
+    header = makeToken('calc_out.ai_image_cost.row.header_estimate_advanced', '🎨 ' + p.name + ' Cost Estimate (' + advancedMode.toUpperCase() + ' mode, ' + advMult + 'x cost)', { name: p.name, mode: advancedMode.toUpperCase(), mult: String(advMult) });
   }
   out.push(header);
   out.push('');
-  out.push('Quality: ' + p.quality + ' | Resolution: ' + resolution + ' | Batch: ' + batchSize + '/gen');
-  out.push('Pricing: ' + (p.isSubscription ? 'Subscription ' + p.subRange : 'Per-Image $' + p.perImage.toFixed(3)));
+  out.push(makeToken('calc_out.label.quality', 'Quality') + ': ' + p.quality + ' | ' + makeToken('calc_out.label.resolution', 'Resolution') + ': ' + resolution + ' | ' + makeToken('calc_out.label.batch', 'Batch') + ': ' + batchSize + makeToken('calc_out.ai_image_cost.row.unit_per_generation', '/gen'));
+  out.push(makeToken('calc_out.label.pricing', 'Pricing') + ': ' + (p.isSubscription ? makeToken('calc_out.label.subscription', 'Subscription') + ' ' + p.subRange : makeToken('calc_out.ai_image_cost.row.pricing_model_per_image', 'Per-Image') + ' $' + p.perImage.toFixed(3)));
   out.push('');
 
   // Section 2: Cost Summary
-  out.push('💰 Cost Summary');
+  out.push(makeToken('calc_out.section.ai_image_cost_summary', '💰 Cost Summary'));
   out.push(SEP.repeat(50));
   let bestTier = 0;
   let perImageCost = 0;
   let monthlyCost = 0;
   if (p.isSubscription) {
     const tiers = SUB_TIERS[providerKey] || [10, 30, 60];
-    out.push('Pricing Model: Subscription');
-    out.push('Monthly Sub Cost: ' + p.subRange);
+    out.push(makeToken('calc_out.label.pricing_model', 'Pricing Model') + ': ' + makeToken('calc_out.label.subscription', 'Subscription'));
+    out.push(makeToken('calc_out.label.monthly_sub_cost', 'Monthly Sub Cost') + ': ' + p.subRange);
     out.push('');
 
     bestTier = tiers[0];
@@ -81,23 +86,23 @@ function calculate(inputs: Record<string, string>): string[] {
         break;
       }
     }
-    out.push('Best Tier for ' + lc(imgs) + ' images/mo: $' + bestTier + '/mo');
-    out.push('Annual: ' + fmt(bestTier * 12));
+    out.push(makeToken('calc_out.ai_image_cost.row.best_tier', 'Best Tier for ' + lc(imgs) + ' images/mo: $' + bestTier + '/mo', { imgs: lc(imgs), tier: String(bestTier) }));
+    out.push(makeToken('calc_out.label.annual', 'Annual') + ': ' + fmt(bestTier * 12));
   } else {
     perImageCost = p.perImage * advMult;
     monthlyCost = imgs * perImageCost;
-    out.push('Per Image: ' + fmt(perImageCost));
-    out.push('Monthly Cost (' + lc(imgs) + ' images): ' + fmt(monthlyCost));
-    out.push('Annual Cost: ' + fmt(monthlyCost * 12));
+    out.push(makeToken('calc_out.label.per_image', 'Per Image') + ': ' + fmt(perImageCost));
+    out.push(makeToken('calc_out.label.monthly_cost', 'Monthly Cost') + ' (' + lc(imgs) + makeToken('calc_out.ai_image_cost.row.unit_images', ' images') + '): ' + fmt(monthlyCost));
+    out.push(makeToken('calc_out.label.annual_cost', 'Annual Cost') + ': ' + fmt(monthlyCost * 12));
     out.push('');
 
     const daily = monthlyCost / 30;
-    out.push('Daily Avg: ' + fmt(daily) + ' (' + lc(Math.round(imgs / 30)) + ' images/day)');
+    out.push(makeToken('calc_out.label.daily_avg', 'Daily Avg') + ': ' + fmt(daily) + ' (' + lc(Math.round(imgs / 30)) + makeToken('calc_out.ai_image_cost.row.unit_images_per_day', ' images/day') + ')');
   }
   out.push('');
 
   // Section 3: Bar Chart
-  out.push('📊 All Providers — Monthly Cost at ' + lc(imgs) + ' images/mo');
+  out.push(makeToken('calc_out.ai_image_cost.row.section_all_providers', '📊 All Providers — Monthly Cost at ' + lc(imgs) + ' images/mo', { imgs: lc(imgs) }));
   out.push(SEP.repeat(50));
   const sortedProviders = Object.values(PROVIDERS).sort((a, b) => a.order - b.order);
   const allCosts: { name: string; cost: number; isSub: boolean }[] = [];
@@ -127,34 +132,36 @@ function calculate(inputs: Record<string, string>): string[] {
     const ratio = c.cost / maxCost;
     const isCheapest = c === cheapest;
     const prefix = isCheapest ? '✅ ' : '   ';
-    let label = c.name;
-    if (c.isSub) label += ' (sub)';
+    // ⭐ 对齐宽度按**英文**标签算（padding 留在 token 之外）⇒ 英文页逐字不变
+    const labelEn = c.isSub ? c.name + ' (sub)' : c.name;
+    const labelCell = pad(labelEn, 21);
+    const label = c.isSub ? c.name + makeToken('calc_out.ai_image_cost.row.unit_subscription_tag', ' (sub)') + labelCell.slice(labelEn.length) : labelCell;
     const barLen = Math.max(1, Math.round(ratio * BAR_WIDTH));
     const barStr = '█'.repeat(barLen) + ' '.repeat(Math.max(0, BAR_WIDTH - barLen + 2));
-    out.push(prefix + pad(label, 21) + ' ' + barStr + ' ' + fmt(c.cost) + (c.isSub ? '/mo' : ''));
+    out.push(prefix + label + ' ' + barStr + ' ' + fmt(c.cost) + (c.isSub ? '/mo' : ''));
   }
   out.push('');
 
   // Section 3b: Health (NEW)
-  out.push('🩺 Cost Health:');
+  out.push(makeToken('calc_out.section.ai_image_cost_health', '🩺 Cost Health:'));
   out.push(SEP.repeat(50));
   const effectivePerImg = p.isSubscription ? (bestTier / Math.max(1, imgs)) : perImageCost;
   if (effectivePerImg < 0.01) {
-    out.push('• 🟢 Exceptional — ' + fmt(effectivePerImg) + '/image is 5x+ below market.');
+    out.push(makeToken('calc_out.ai_image_cost.row.health_exceptional', '• 🟢 Exceptional — ' + fmt(effectivePerImg) + '/image is 5x+ below market.', { price: fmt(effectivePerImg) }));
   } else if (effectivePerImg < 0.05) {
-    out.push('• 🟢 Competitive — ' + fmt(effectivePerImg) + '/image is at/below market avg ($0.05).');
+    out.push(makeToken('calc_out.ai_image_cost.row.health_competitive', '• 🟢 Competitive — ' + fmt(effectivePerImg) + '/image is at/below market avg ($0.05).', { price: fmt(effectivePerImg) }));
   } else if (effectivePerImg < 0.10) {
-    out.push('• 🟡 Mid-market — ' + fmt(effectivePerImg) + '/image is around the average.');
+    out.push(makeToken('calc_out.ai_image_cost.row.health_mid_market', '• 🟡 Mid-market — ' + fmt(effectivePerImg) + '/image is around the average.', { price: fmt(effectivePerImg) }));
   } else {
-    out.push('• 🟠 Premium pricing — ' + fmt(effectivePerImg) + '/image is 2x+ market rate.');
+    out.push(makeToken('calc_out.ai_image_cost.row.health_premium', '• 🟠 Premium pricing — ' + fmt(effectivePerImg) + '/image is 2x+ market rate.', { price: fmt(effectivePerImg) }));
   }
   if (p.isSubscription) {
     if (imgs >= 500) {
-      out.push('• ✅ Subscription well-utilized at ' + lc(imgs) + ' images/mo.');
+      out.push(makeToken('calc_out.ai_image_cost.row.health_sub_well_utilized', '• ✅ Subscription well-utilized at ' + lc(imgs) + ' images/mo.', { imgs: lc(imgs) }));
     } else if (imgs >= 200) {
-      out.push('• ⚠️ Subscription moderately used. Break-even met but not maximized.');
+      out.push(makeToken('calc_out.ai_image_cost.row.health_sub_moderately_used', '• ⚠️ Subscription moderately used. Break-even met but not maximized.'));
     } else {
-      out.push('• 🔴 Subscription underutilized at ' + lc(imgs) + ' images/mo. Per-image may be cheaper.');
+      out.push(makeToken('calc_out.ai_image_cost.row.health_sub_underutilized', '• 🔴 Subscription underutilized at ' + lc(imgs) + ' images/mo. Per-image may be cheaper.', { imgs: lc(imgs) }));
     }
   } else {
     const subAlt = sortedProviders.find(prov => prov.isSubscription);
@@ -163,23 +170,25 @@ function calculate(inputs: Record<string, string>): string[] {
       const subLowest = subKey && SUB_TIERS[subKey] ? SUB_TIERS[subKey][0] : 10;
       const breakEven = Math.ceil(subLowest / p.perImage);
       if (imgs >= breakEven) {
-        out.push('• ⚠️ At ' + lc(imgs) + ' imgs/mo, ' + subAlt.name + ' ($' + subLowest + '/mo) would save money.');
+        out.push(makeToken('calc_out.ai_image_cost.row.health_alt_would_save', '• ⚠️ At ' + lc(imgs) + ' imgs/mo, ' + subAlt.name + ' ($' + subLowest + '/mo) would save money.', { imgs: lc(imgs), sub: subAlt.name, price: '$' + subLowest + '/mo' }));
       } else {
-        out.push('• ✅ Per-image is correct for ' + lc(imgs) + ' imgs/mo. Break-even: ' + lc(breakEven) + ' imgs.');
+        out.push(makeToken('calc_out.ai_image_cost.row.health_alt_per_image_correct', '• ✅ Per-image is correct for ' + lc(imgs) + ' imgs/mo. Break-even: ' + lc(breakEven) + ' imgs.', { imgs: lc(imgs), be: lc(breakEven) }));
       }
     }
   }
   out.push('');
 
   // Section 4: Subscription vs API comparison table
-  out.push('📋 Subscription vs API — Price Comparison');
+  out.push(makeToken('calc_out.section.ai_image_cost_provider_comparison', '📋 Subscription vs API — Price Comparison'));
   out.push(SEP.repeat(50));
   const volumes = [50, 200, 500, 1000, 5000];
 
-  let tblHeader = 'Volume'.padEnd(10);
-  for (const prov of sortedProviders) tblHeader += ' | ' + pad(prov.name, 14);
+  // ⚠️ 表头**长度**按英文算（分隔线长度不能跟着 token 变长）
+  let tblHeaderEn = 'Volume'.padEnd(10);
+  for (const prov of sortedProviders) tblHeaderEn += ' | ' + pad(prov.name, 14);
+  let tblHeader = makeToken('calc_out.label.volume', 'Volume') + tblHeaderEn.slice('Volume'.length);
   out.push(tblHeader);
-  out.push('─'.repeat(tblHeader.length));
+  out.push('─'.repeat(tblHeaderEn.length));
 
   for (const vol of volumes) {
     let row = lc(vol).padEnd(10);
@@ -204,7 +213,7 @@ function calculate(inputs: Record<string, string>): string[] {
   out.push('');
 
   // Section 4b: Break-even analysis (NEW)
-  out.push('⚖️ Break-Even: When Subscription Beats Per-Image');
+  out.push(makeToken('calc_out.section.ai_image_cost_break_even', '⚖️ Break-Even: When Subscription Beats Per-Image'));
   out.push(SEP.repeat(50));
   const perImgProvs = sortedProviders.filter(prov => !prov.isSubscription);
   const subProvs = sortedProviders.filter(prov => prov.isSubscription);
@@ -215,17 +224,17 @@ function calculate(inputs: Record<string, string>): string[] {
     for (const api of perImgProvs) {
       const be = Math.ceil(subBasic / api.perImage);
       if (be > 0 && be < 100000) {
-        out.push('  ' + api.name + ' → ' + sub.name + ' ($' + subBasic + '/mo): ' + lc(be) + ' imgs/mo break-even');
+        out.push(makeToken('calc_out.ai_image_cost.row.break_even_line', '  ' + api.name + ' → ' + sub.name + ' ($' + subBasic + '/mo): ' + lc(be) + ' imgs/mo break-even', { api: api.name, sub: sub.name, price: '$' + subBasic + '/mo', be: lc(be) }));
       }
     }
   }
   out.push('');
 
   // Section 5: Volume scenarios at different batch sizes
-  out.push('📈 Volume Scenarios at Different Batch Sizes');
+  out.push(makeToken('calc_out.section.ai_image_cost_volume_scenarios', '📈 Volume Scenarios at Different Batch Sizes'));
   out.push(SEP.repeat(50));
   const batchScenarios = [1, 4, 8, 16, 32];
-  out.push('Batch Size | Images/Mo | Cost/Mo    | Generations Needed');
+  out.push(makeToken('calc_out.label.batch_size', 'Batch Size') + ' | ' + makeToken('calc_out.label.images_per_month', 'Images/Mo') + ' | ' + makeToken('calc_out.label.cost_per_month', 'Cost/Mo') + '    | ' + makeToken('calc_out.label.generations_needed', 'Generations Needed'));
   out.push('──────────┼───────────┼────────────┼───────────────────');
   for (const bs of batchScenarios) {
     const perImgForBs = p.isSubscription ? 0 : p.perImage * advMult;
@@ -243,22 +252,22 @@ function calculate(inputs: Record<string, string>): string[] {
       pad(String(bs), 10) + '│ ' +
       pad(lc(imgs), 10) + '│ ' +
       pad(fmt(cost), 11) + '│ ' +
-      lc(gems) + ' runs of ' + bs + ' imgs each',
+      lc(gems) + makeToken('calc_out.ai_image_cost.row.batch_runs', ' runs of ' + bs + ' imgs each', { runs: String(bs) }),
     );
   }
   out.push('');
-  out.push('💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.');
+  out.push(makeToken('calc_out.ai_image_cost.row.tip_batch_sizes', '💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.'));
 
   // Section 5b: What-If Scenarios (NEW)
   out.push('');
-  out.push('🔄 What-If Scenarios:');
+  out.push(makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:'));
   out.push(SEP.repeat(50));
   if (p.isSubscription) {
-    out.push('• Cut volume to 50% (' + lc(Math.round(imgs/2)) + ' imgs/mo): Save $0/mo (subscription is fixed)');
+    out.push(makeToken('calc_out.ai_image_cost.row.whatif_cut_to_half', '• Cut volume to 50% (' + lc(Math.round(imgs/2)) + ' imgs/mo): Save $0/mo (subscription is fixed)', { imgs: lc(Math.round(imgs/2)) }));
   } else {
     const halfImgs = Math.max(1, Math.round(imgs / 2));
     const halfCost = halfImgs * perImageCost;
-    out.push('• Cut volume in half: Save $' + fmtNum(monthlyCost - halfCost) + '/mo ($' + fmtNum(monthlyCost) + ' → $' + fmtNum(halfCost) + ')');
+    out.push(makeToken('calc_out.ai_image_cost.row.whatif_cut_in_half', '• Cut volume in half: Save $' + fmtNum(monthlyCost - halfCost) + '/mo ($' + fmtNum(monthlyCost) + ' → $' + fmtNum(halfCost) + ')', { save: fmtNum(monthlyCost - halfCost), cur: fmtNum(monthlyCost), half: fmtNum(halfCost) }));
   }
   const sd4 = PROVIDERS['stable-diffusion-4'];
   // P163：SD 4 / Ideogram 3 / DALL-E 3 的单价全部由数据集派生 ——
@@ -270,9 +279,9 @@ function calculate(inputs: Record<string, string>): string[] {
   const currentCost = p.isSubscription ? bestTier : monthlyCost;
   const sd4Savings = currentCost - sd4Cost;
   if (sd4Savings > 0) {
-    out.push('• Switch to SD 4 API ($' + fmtPrice3(sd4.perImage) + '/img): $' + fmtNum(sd4Cost) + '/mo  (saves $' + fmtNum(sd4Savings) + '/mo)');
+    out.push(makeToken('calc_out.ai_image_cost.row.whatif_sd4_saves', '• Switch to SD 4 API ($' + fmtPrice3(sd4.perImage) + '/img): $' + fmtNum(sd4Cost) + '/mo  (saves $' + fmtNum(sd4Savings) + '/mo)', { price: '$' + fmtPrice3(sd4.perImage) + '/img', cost: '$' + fmtNum(sd4Cost) + '/mo', save: '$' + fmtNum(sd4Savings) + '/mo' }));
   } else {
-    out.push('• Switch to SD 4 API: $' + fmtNum(sd4Cost) + '/mo  (already cheaper)');
+    out.push(makeToken('calc_out.ai_image_cost.row.whatif_sd4_already_cheaper', '• Switch to SD 4 API: $' + fmtNum(sd4Cost) + '/mo  (already cheaper)', { cost: '$' + fmtNum(sd4Cost) + '/mo' }));
   }
   if (!p.isSubscription) {
     const subAlt = sortedProviders.find(prov => prov.isSubscription);
@@ -280,50 +289,50 @@ function calculate(inputs: Record<string, string>): string[] {
       const subKey = Object.keys(PROVIDERS).find(k => PROVIDERS[k] === subAlt);
       const subBasic = subKey && SUB_TIERS[subKey] ? SUB_TIERS[subKey][0] : 10;
       if (subBasic < monthlyCost) {
-        out.push('• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): saves $' + fmtNum(monthlyCost - subBasic) + '/mo');
+        out.push(makeToken('calc_out.ai_image_cost.row.whatif_switch_sub_saves', '• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): saves $' + fmtNum(monthlyCost - subBasic) + '/mo', { sub: subAlt.name, price: '$' + subBasic + '/mo', save: '$' + fmtNum(monthlyCost - subBasic) + '/mo' }));
       } else {
-        out.push('• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): +$' + fmtNum(subBasic - monthlyCost) + '/mo vs pay-per-image');
+        out.push(makeToken('calc_out.ai_image_cost.row.whatif_switch_sub_costs_more', '• Switch to ' + subAlt.name + ' ($' + subBasic + '/mo): +$' + fmtNum(subBasic - monthlyCost) + '/mo vs pay-per-image', { sub: subAlt.name, price: '$' + subBasic + '/mo', diff: '$' + fmtNum(subBasic - monthlyCost) + '/mo' }));
       }
     }
   } else {
     const cheapestApi = sortedProviders.filter(prov => !prov.isSubscription).sort((a, b) => a.perImage - b.perImage)[0];
     if (cheapestApi) {
       const altCost = imgs * cheapestApi.perImage;
-      out.push('• Drop subscription, go per-image (' + cheapestApi.name + '): $' + fmtNum(altCost) + '/mo  (vs $' + bestTier + '/mo)');
+      out.push(makeToken('calc_out.ai_image_cost.row.whatif_drop_subscription', '• Drop subscription, go per-image (' + cheapestApi.name + '): $' + fmtNum(altCost) + '/mo  (vs $' + bestTier + '/mo)', { api: cheapestApi.name, cost: '$' + fmtNum(altCost) + '/mo', cur: '$' + bestTier + '/mo' }));
     }
   }
   if (p.isSubscription) {
-    out.push('• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $0 extra (sub is fixed)');
+    out.push(makeToken('calc_out.ai_image_cost.row.whatif_double_volume_sub', '• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $0 extra (sub is fixed)', { imgs: lc(imgs * 2) }));
   } else {
-    out.push('• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $' + fmtNum(imgs * 2 * perImageCost) + '/mo');
+    out.push(makeToken('calc_out.ai_image_cost.row.whatif_double_volume', '• Double volume to ' + lc(imgs * 2) + ' imgs/mo: $' + fmtNum(imgs * 2 * perImageCost) + '/mo', { imgs: lc(imgs * 2), cost: '$' + fmtNum(imgs * 2 * perImageCost) + '/mo' }));
   }
 
   // Section 6: Use-case recommendation (NEW)
   out.push('');
-  out.push('🎯 Best Provider by Use Case:');
+  out.push(makeToken('calc_out.section.ai_image_cost_best_provider', '🎯 Best Provider by Use Case:'));
   out.push(SEP.repeat(50));
-  out.push('• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)');
-  out.push('• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)');
-  out.push('• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($' + fmtPrice3(sd4.perImage) + '/image)');
-  out.push('• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)');
-  out.push('• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)');
+  out.push(makeToken('calc_out.ai_image_cost.row.use_case_text', '• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)'));
+  out.push(makeToken('calc_out.ai_image_cost.row.use_case_artistic', '• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)'));
+  out.push(makeToken('calc_out.ai_image_cost.row.use_case_budget', '• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($' + fmtPrice3(sd4.perImage) + '/image)', { price: '$' + fmtPrice3(sd4.perImage) + '/image' }));
+  out.push(makeToken('calc_out.ai_image_cost.row.use_case_complex', '• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)'));
+  out.push(makeToken('calc_out.ai_image_cost.row.use_case_volume', '• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)'));
   out.push('');
-  out.push('💡 For your case (' + lc(imgs) + ' imgs/mo via ' + p.name + '):');
+  out.push(makeToken('calc_out.ai_image_cost.row.for_your_case', '💡 For your case (' + lc(imgs) + ' imgs/mo via ' + p.name + '):', { imgs: lc(imgs), name: p.name }));
   if (p.perImage >= dalle3.perImage && imgs < 500) {
     const altCost = imgs * ideogram.perImage;
-    out.push('   Switch to Ideogram 3 ($' + fmtPrice3(ideogram.perImage) + '/img) to save $' + fmtNum(monthlyCost - altCost) + '/mo with similar quality.');
+    out.push(makeToken('calc_out.ai_image_cost.row.final_switch_ideogram', '   Switch to Ideogram 3 ($' + fmtPrice3(ideogram.perImage) + '/img) to save $' + fmtNum(monthlyCost - altCost) + '/mo with similar quality.', { price: '$' + fmtPrice3(ideogram.perImage) + '/img', save: '$' + fmtNum(monthlyCost - altCost) + '/mo' }));
   } else if (p.perImage >= ideogram.perImage && imgs < 100) {
     const altCost = imgs * sd4.perImage;
     // P163 D2：倍数必须由当前单价算出 —— 写死的 "13x" 只在 Ideogram 3
     // ($0.04) 上恰好正确，Flux Pro ($0.05) 实为 16.7x。
     // 除数也必须是数据集单价（sd4.perImage），不是字面量 0.003。
     const sd4Ratio = Math.round(perImageCost / sd4.perImage);
-    out.push('   At <100 imgs/mo, SD 4 API is ' + sd4Ratio + 'x cheaper ($' + fmtNum(altCost) + ' vs $' + fmtNum(monthlyCost) + '/mo).');
+    out.push(makeToken('calc_out.ai_image_cost.row.final_sd4_cheaper', '   At <100 imgs/mo, SD 4 API is ' + sd4Ratio + 'x cheaper ($' + fmtNum(altCost) + ' vs $' + fmtNum(monthlyCost) + '/mo).', { mult: String(sd4Ratio), alt: '$' + fmtNum(altCost), cur: '$' + fmtNum(monthlyCost) + '/mo' }));
   } else if (p.isSubscription && imgs < 100) {
     const altCost = imgs * ideogram.perImage;
-    out.push('   Subscription is underutilized. Per-image (Ideogram 3) would be ~$' + fmtNum(altCost) + '/mo.');
+    out.push(makeToken('calc_out.ai_image_cost.row.final_sub_underutilized', '   Subscription is underutilized. Per-image (Ideogram 3) would be ~$' + fmtNum(altCost) + '/mo.', { cost: '$' + fmtNum(altCost) + '/mo' }));
   } else {
-    out.push('   Your current choice is well-matched to your volume and quality needs.');
+    out.push(makeToken('calc_out.ai_image_cost.row.final_well_matched', '   Your current choice is well-matched to your volume and quality needs.'));
   }
 
   return out;
@@ -332,6 +341,8 @@ function calculate(inputs: Record<string, string>): string[] {
 // customFn — minified JS port of calculate(). Variables: bt=bestTier, pic=perImageCost, mc=monthlyCost.
 const customFn =
   // P15 defensive clamp (preserved across codegen-customfn.mjs regen — sits before data-table markers)
+  // P168 B3-9：⭐ 前置**共享的** token 构造器（与服务端 makeToken 同一份实现 ⇒ 两端不会漂）
+  CALC_OUTPUT_MAKE_TOKEN_JS +
   "var cnn=function(x){return Math.max(0,x)};" +
   "var PS={" +
   "'dalle-4':{n:'DALL-E 4',pi:0.12,is:false,sr:'',q:'Highest',rs:['1024×1024','1792×1024','1024×1792'],od:1}," +
@@ -344,34 +355,35 @@ const customFn =
 
   "var ST={mj:[10,30,60,120],leo:[12,29,49]};" +
   "var AM={standard:1,hd:1.3,ultra:1.8};" +
-  "function fm(n){return '$'+n.toFixed(2)}function fn(n){return n.toFixed(2)}function fp3(n){var s=n.toFixed(3);return s.indexOf('.')>0?s.replace(/0+$/,'').replace(/\.$/,''):s}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
-  "var SEP3='─';" +
+  "function fm(n){return '$'+n.toFixed(2)}function fn(n){return n.toFixed(2)}function fp3(n){var s=n.toFixed(3);return s.indexOf('.')>0?s.replace(/0+$/,'').replace(/[.]$/,''):s}function lc(n){return n.toLocaleString()}function pd(s,l){return s+' '.repeat(Math.max(0,l-s.length))}" +
+  "var SEP3='\u2500';" +
   "var pk=inputs.provider||'dalle-3';var p=PS[pk]||PS['dalle-3'];" +
   "var im=Math.max(1,Math.min(1e6,cnn(parseInt(inputs.imagesPerMonth))||100));" +
   "var res=inputs.resolution||p.rs[0];var bs=Math.max(1,Math.min(64,cnn(parseInt(inputs.batchSize))||1));" +
   "var advm=inputs.advancedMode||'standard';var amv=AM[advm]||1;" +
   "var o=[];" +
   "var bt=0,pic=0,mc=0;" +
-  "var hdr='🎨 '+p.n+' Cost Estimate';if(advm!=='standard')hdr+=' ('+advm.toUpperCase()+' mode, '+amv+'x cost)';" +
+  "o.push('');" +
+  "var hdr=tk('calc_out.ai_image_cost.row.header_estimate','\uD83C\uDFA8 '+p.n+' Cost Estimate',{name:p.n});if(advm!=='standard')hdr=tk('calc_out.ai_image_cost.row.header_estimate_advanced','\uD83C\uDFA8 '+p.n+' Cost Estimate ('+advm.toUpperCase()+' mode, '+amv+'x cost)',{name:p.n,mode:advm.toUpperCase(),mult:String(amv)});" +
   "o.push(hdr);o.push('');" +
-  "o.push('Quality: '+p.q+' | Resolution: '+res+' | Batch: '+bs+'/gen');" +
-  "o.push('Pricing: '+(p.is?'Subscription '+p.sr:'Per-Image $'+p.pi.toFixed(3)));o.push('');" +
-  "o.push('💰 Cost Summary');o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.label.quality','Quality')+': '+p.q+' | '+tk('calc_out.label.resolution','Resolution')+': '+res+' | '+tk('calc_out.label.batch','Batch')+': '+bs+tk('calc_out.ai_image_cost.row.unit_per_generation','/gen'));" +
+  "o.push(tk('calc_out.label.pricing','Pricing')+': '+(p.is?tk('calc_out.label.subscription','Subscription')+' '+p.sr:tk('calc_out.ai_image_cost.row.pricing_model_per_image','Per-Image')+' $'+p.pi.toFixed(3)));o.push('');" +
+  "o.push(tk('calc_out.section.ai_image_cost_summary','\uD83D\uDCB0 Cost Summary'));o.push(SEP3.repeat(50));" +
   "if(p.is){" +
   "var ts=pk.indexOf('midjourney')>=0?ST.mj:ST.leo;" +
-  "o.push('Pricing Model: Subscription');o.push('Monthly Sub Cost: '+p.sr);o.push('');" +
+  "o.push(tk('calc_out.label.pricing_model','Pricing Model')+': '+tk('calc_out.label.subscription','Subscription'));o.push(tk('calc_out.label.monthly_sub_cost','Monthly Sub Cost')+': '+p.sr);o.push('');" +
   "bt=ts[0];for(var ti=0;ti<ts.length;ti++){var t=ts[ti];" +
   "var lim=pk.indexOf('midjourney')>=0?(t<=30?200:t<=60?1000:5000):pk.indexOf('leo')>=0?(t<=12?200:t<=29?1000:999999):200;" +
   "if(im<=lim||ti===ts.length-1){bt=t;break;}}" +
-  "o.push('Best Tier for '+lc(im)+' images/mo: $'+bt+'/mo');o.push('Annual: '+fm(bt*12));" +
+  "o.push(tk('calc_out.ai_image_cost.row.best_tier','Best Tier for '+lc(im)+' images/mo: $'+bt+'/mo',{imgs:lc(im),tier:String(bt)}));o.push(tk('calc_out.label.annual','Annual')+': '+fm(bt*12));" +
   "}else{" +
   "pic=p.pi*amv;mc=im*pic;" +
-  "o.push('Per Image: '+fm(pic));o.push('Monthly Cost ('+lc(im)+' images): '+fm(mc));" +
-  "o.push('Annual Cost: '+fm(mc*12));o.push('');" +
-  "o.push('Daily Avg: '+fm(mc/30)+' ('+lc(Math.round(im/30))+' images/day)');" +
+  "o.push(tk('calc_out.label.per_image','Per Image')+': '+fm(pic));o.push(tk('calc_out.label.monthly_cost','Monthly Cost')+' ('+lc(im)+tk('calc_out.ai_image_cost.row.unit_images',' images')+'): '+fm(mc));" +
+  "o.push(tk('calc_out.label.annual_cost','Annual Cost')+': '+fm(mc*12));o.push('');" +
+  "o.push(tk('calc_out.label.daily_avg','Daily Avg')+': '+fm(mc/30)+' ('+lc(Math.round(im/30))+tk('calc_out.ai_image_cost.row.unit_images_per_day',' images/day')+')');" +
   "}" +
   "o.push('');" +
-  "o.push('📊 All Providers — Monthly Cost at '+lc(im)+' images/mo');o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.ai_image_cost.row.section_all_providers','\uD83D\uDCCA All Providers \u2014 Monthly Cost at '+lc(im)+' images/mo',{imgs:lc(im)}));o.push(SEP3.repeat(50));" +
   "var sp=[];for(var k2 in PS)sp.push(PS[k2]);sp.sort(function(a,b){return a.od-b.od;});" +
   "var ac=[];for(var i=0;i<sp.length;i++){" +
   "var pr=sp[i];var cst=0;var pk2=Object.keys(PS).find(function(kk){return PS[kk]===pr;})||'';" +
@@ -381,34 +393,36 @@ const customFn =
   "ac.push({n:pr.n,c:cst,is:pr.is});}" +
   "var mx=ac.reduce(function(max,c){return c.c>max.c?c:max;}).c;mx=Math.max(mx,1);" +
   "var BW=35;var ch=ac.reduce(function(min,c){return c.c<min.c?c:min;});" +
-  "for(var i=0;i<ac.length;i++){var c=ac[i];var rt=c.c/mx;var isCh=c===ch;var pf=isCh?'✅ ':'   ';" +
-  "var lb=c.n;if(c.is)lb+=' (sub)';var bl=Math.max(1,Math.round(rt*BW));" +
-  "o.push(pf+pd(lb,21)+' '+'█'.repeat(bl)+' '.repeat(Math.max(0,BW-bl+2))+' '+fm(c.c)+(c.is?'/mo':''));" +
+  "for(var i=0;i<ac.length;i++){var c=ac[i];var rt=c.c/mx;var isCh=c===ch;var pf=isCh?'\u2705 ':'   ';" +
+  "var lbEn=c.is?c.n+' (sub)':c.n;var lbCell=pd(lbEn,21);var lb=c.is?c.n+tk('calc_out.ai_image_cost.row.unit_subscription_tag',' (sub)')+lbCell.slice(lbEn.length):lbCell;" +
+  "var bl=Math.max(1,Math.round(rt*BW));" +
+  "o.push(pf+lb+' '+'\u2588'.repeat(bl)+' '.repeat(Math.max(0,BW-bl+2))+' '+fm(c.c)+(c.is?'/mo':''));" +
   "}" +
   "o.push('');" +
-  "o.push('🩺 Cost Health:');o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.section.ai_image_cost_health','\uD83E\uDE7A Cost Health:'));o.push(SEP3.repeat(50));" +
   "var epi=p.is?(bt/Math.max(1,im)):pic;" +
-  "if(epi<0.01){o.push('• 🟢 Exceptional — '+fm(epi)+'/image is 5x+ below market.');}" +
-  "else if(epi<0.05){o.push('• 🟢 Competitive — '+fm(epi)+'/image is at/below market avg ($0.05).');}" +
-  "else if(epi<0.10){o.push('• 🟡 Mid-market — '+fm(epi)+'/image is around the average.');}" +
-  "else{o.push('• 🟠 Premium pricing — '+fm(epi)+'/image is 2x+ market rate.');}" +
+  "if(epi<0.01){o.push(tk('calc_out.ai_image_cost.row.health_exceptional','\u2022 \uD83D\uDFE2 Exceptional \u2014 '+fm(epi)+'/image is 5x+ below market.',{price:fm(epi)}));}" +
+  "else if(epi<0.05){o.push(tk('calc_out.ai_image_cost.row.health_competitive','\u2022 \uD83D\uDFE2 Competitive \u2014 '+fm(epi)+'/image is at/below market avg ($0.05).',{price:fm(epi)}));}" +
+  "else if(epi<0.10){o.push(tk('calc_out.ai_image_cost.row.health_mid_market','\u2022 \uD83D\uDFE1 Mid-market \u2014 '+fm(epi)+'/image is around the average.',{price:fm(epi)}));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.health_premium','\u2022 \uD83D\uDFE0 Premium pricing \u2014 '+fm(epi)+'/image is 2x+ market rate.',{price:fm(epi)}));}" +
   "if(p.is){" +
-  "if(im>=500){o.push('• ✅ Subscription well-utilized at '+lc(im)+' images/mo.');}" +
-  "else if(im>=200){o.push('• ⚠️ Subscription moderately used. Break-even met but not maximized.');}" +
-  "else{o.push('• 🔴 Subscription underutilized at '+lc(im)+' images/mo. Per-image may be cheaper.');}" +
+  "if(im>=500){o.push(tk('calc_out.ai_image_cost.row.health_sub_well_utilized','\u2022 \u2705 Subscription well-utilized at '+lc(im)+' images/mo.',{imgs:lc(im)}));}" +
+  "else if(im>=200){o.push(tk('calc_out.ai_image_cost.row.health_sub_moderately_used','\u2022 \u26A0\uFE0F Subscription moderately used. Break-even met but not maximized.'));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.health_sub_underutilized','\u2022 \uD83D\uDD34 Subscription underutilized at '+lc(im)+' images/mo. Per-image may be cheaper.',{imgs:lc(im)}));}" +
   "}else{" +
   "var sa=sp.filter(function(x){return x.is;})[0];" +
   "if(sa){var sak=Object.keys(PS).find(function(kk){return PS[kk]===sa;})||'';" +
   "var ismj=sak.indexOf('midjourney')>=0;var sl=ismj?ST.mj[0]:ST.leo[0];" +
   "var be2=Math.ceil(sl/p.pi);" +
-  "if(im>=be2){o.push('• ⚠️ At '+lc(im)+' imgs/mo, '+sa.n+' ($'+sl+'/mo) would save money.');}" +
-  "else{o.push('• ✅ Per-image is correct for '+lc(im)+' imgs/mo. Break-even: '+lc(be2)+' imgs.');}}" +
+  "if(im>=be2){o.push(tk('calc_out.ai_image_cost.row.health_alt_would_save','\u2022 \u26A0\uFE0F At '+lc(im)+' imgs/mo, '+sa.n+' ($'+sl+'/mo) would save money.',{imgs:lc(im),sub:sa.n,price:'$'+sl+'/mo'}));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.health_alt_per_image_correct','\u2022 \u2705 Per-image is correct for '+lc(im)+' imgs/mo. Break-even: '+lc(be2)+' imgs.',{imgs:lc(im),be:lc(be2)}));}}" +
   "}" +
   "o.push('');" +
-  "o.push('📋 Subscription vs API — Price Comparison');o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.section.ai_image_cost_provider_comparison','\uD83D\uDCCB Subscription vs API \u2014 Price Comparison'));o.push(SEP3.repeat(50));" +
   "var vols2=[50,200,500,1000,5000];" +
-  "var th='Volume'.padEnd(10);for(var i=0;i<sp.length;i++)th+=' | '+pd(sp[i].n,14);o.push(th);" +
-  "o.push('─'.repeat(th.length));" +
+  "var thEn='Volume'.padEnd(10);for(var i=0;i<sp.length;i++)thEn+=' | '+pd(sp[i].n,14);" +
+  "var th=tk('calc_out.label.volume','Volume')+thEn.slice(6);o.push(th);" +
+  "o.push('\u2500'.repeat(thEn.length));" +
   "for(var vi=0;vi<vols2.length;vi++){var vl=vols2[vi];var row=lc(vl).padEnd(10);" +
   "for(var pi2=0;pi2<sp.length;pi2++){var pr2=sp[pi2];var cst2=0;" +
   "if(pr2.is){var st3=(Object.keys(PS).find(function(kk){return PS[kk]===pr2;})||'').indexOf('midjourney')>=0?ST.mj:ST.leo;" +
@@ -417,7 +431,7 @@ const customFn =
   "row+=' | '+pd(fm(cst2),14);}" +
   "o.push(row);}" +
   "o.push('');" +
-  "o.push('⚖️ Break-Even: When Subscription Beats Per-Image');o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.section.ai_image_cost_break_even','\u2696\uFE0F Break-Even: When Subscription Beats Per-Image'));o.push(SEP3.repeat(50));" +
   "var pap=sp.filter(function(x){return !x.is;});" +
   "var sbp=sp.filter(function(x){return x.is;});" +
   "for(var si=0;si<sbp.length;si++){var sub=sbp[si];" +
@@ -425,51 +439,53 @@ const customFn =
   "if(!sk)continue;var ismj2=sk.indexOf('midjourney')>=0;var sb=ismj2?ST.mj[0]:ST.leo[0];" +
   "for(var ai=0;ai<pap.length;ai++){var api=pap[ai];" +
   "var be3=Math.ceil(sb/api.pi);if(be3>0&&be3<100000){" +
-  "o.push('  '+api.n+' → '+sub.n+' ($'+sb+'/mo): '+lc(be3)+' imgs/mo break-even');" +
+  "o.push(tk('calc_out.ai_image_cost.row.break_even_line','  '+api.n+' \u2192 '+sub.n+' ($'+sb+'/mo): '+lc(be3)+' imgs/mo break-even',{api:api.n,sub:sub.n,price:'$'+sb+'/mo',be:lc(be3)}));" +
   "}}" +
   "}" +
   "o.push('');" +
-  "o.push('📈 Volume Scenarios at Different Batch Sizes');o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.section.ai_image_cost_volume_scenarios','\uD83D\uDCC8 Volume Scenarios at Different Batch Sizes'));o.push(SEP3.repeat(50));" +
   "var bss=[1,4,8,16,32];" +
-  "o.push('Batch Size | Images/Mo | Cost/Mo    | Generations Needed');" +
-  "o.push('──────────┼───────────┼────────────┼───────────────────');" +
+  "o.push(tk('calc_out.label.batch_size','Batch Size')+' | '+tk('calc_out.label.images_per_month','Images/Mo')+' | '+tk('calc_out.label.cost_per_month','Cost/Mo')+'    | '+tk('calc_out.label.generations_needed','Generations Needed'));" +
+  "o.push('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500');" +
   "for(var bi=0;bi<bss.length;bi++){var bs2=bss[bi];var pic2=p.is?0:p.pi*amv;" +
   "var cst3=p.is?bt:im*pic2;var rns=Math.ceil(im/bs2);" +
-  "o.push(pd(String(bs2),10)+'│ '+pd(lc(im),10)+'│ '+pd(fm(cst3),11)+'│ '+lc(rns)+' runs of '+bs2+' imgs each');}" +
-  "o.push('');o.push('💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.');" +
+  "o.push(pd(String(bs2),10)+'\u2502 '+pd(lc(im),10)+'\u2502 '+pd(fm(cst3),11)+'\u2502 '+lc(rns)+tk('calc_out.ai_image_cost.row.batch_runs',' runs of '+bs2+' imgs each',{runs:String(bs2)}));}" +
+  "o.push('');o.push(tk('calc_out.ai_image_cost.row.tip_batch_sizes','\uD83D\uDCA1 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.'));" +
   "o.push('');" +
-  "o.push('🔄 What-If Scenarios:');o.push(SEP3.repeat(50));" +
-  "if(p.is){o.push('• Cut volume to 50% ('+lc(Math.round(im/2))+' imgs/mo): Save $0/mo (subscription is fixed)');}" +
-  "else{var hi=Math.max(1,Math.round(im/2));var hc=hi*pic;o.push('• Cut volume in half: Save $'+fn(mc-hc)+'/mo ($'+fn(mc)+' → $'+fn(hc)+')');}" +
+  "o.push(tk('calc_out.section.what_if_scenarios','\uD83D\uDD04 What-If Scenarios:'));o.push(SEP3.repeat(50));" +
+  "if(p.is){o.push(tk('calc_out.ai_image_cost.row.whatif_cut_to_half','\u2022 Cut volume to 50% ('+lc(Math.round(im/2))+' imgs/mo): Save $0/mo (subscription is fixed)',{imgs:lc(Math.round(im/2))}));}" +
+  "else{var hi=Math.max(1,Math.round(im/2));var hc=hi*pic;o.push(tk('calc_out.ai_image_cost.row.whatif_cut_in_half','\u2022 Cut volume in half: Save $'+fn(mc-hc)+'/mo ($'+fn(mc)+' \u2192 $'+fn(hc)+')',{save:fn(mc-hc),cur:fn(mc),half:fn(hc)}));}" +
   "var sdc=im*PS['stable-diffusion-4'].pi;var cur=p.is?bt:mc;var sav=cur-sdc;" +
-  "if(sav>0){o.push('• Switch to SD 4 API ($'+fp3(PS['stable-diffusion-4'].pi)+'/img): $'+fn(sdc)+'/mo  (saves $'+fn(sav)+'/mo)');}" +
-  "else{o.push('• Switch to SD 4 API: $'+fn(sdc)+'/mo  (already cheaper)');}" +
+  "if(sav>0){o.push(tk('calc_out.ai_image_cost.row.whatif_sd4_saves','\u2022 Switch to SD 4 API ($'+fp3(PS['stable-diffusion-4'].pi)+'/img): $'+fn(sdc)+'/mo  (saves $'+fn(sav)+'/mo)',{price:'$'+fp3(PS['stable-diffusion-4'].pi)+'/img',cost:'$'+fn(sdc)+'/mo',save:'$'+fn(sav)+'/mo'}));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.whatif_sd4_already_cheaper','\u2022 Switch to SD 4 API: $'+fn(sdc)+'/mo  (already cheaper)',{cost:'$'+fn(sdc)+'/mo'}));}" +
   "if(!p.is){" +
   "var sa2=sp.filter(function(x){return x.is;})[0];" +
   "if(sa2){var sak2=Object.keys(PS).find(function(kk){return PS[kk]===sa2;})||'';" +
   "var ismj3=sak2.indexOf('midjourney')>=0;var sb2=ismj3?ST.mj[0]:ST.leo[0];" +
-  "if(sb2<mc){o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): saves $'+fn(mc-sb2)+'/mo');}" +
-  "else{o.push('• Switch to '+sa2.n+' ($'+sb2+'/mo): +$'+fn(sb2-mc)+'/mo vs pay-per-image');}" +
+  "if(sb2<mc){o.push(tk('calc_out.ai_image_cost.row.whatif_switch_sub_saves','\u2022 Switch to '+sa2.n+' ($'+sb2+'/mo): saves $'+fn(mc-sb2)+'/mo',{sub:sa2.n,price:'$'+sb2+'/mo',save:'$'+fn(mc-sb2)+'/mo'}));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.whatif_switch_sub_costs_more','\u2022 Switch to '+sa2.n+' ($'+sb2+'/mo): +$'+fn(sb2-mc)+'/mo vs pay-per-image',{sub:sa2.n,price:'$'+sb2+'/mo',diff:'$'+fn(sb2-mc)+'/mo'}));}" +
   "}else{" +
   "var cap=sp.filter(function(x){return !x.is;}).sort(function(a,b){return a.pi-b.pi;})[0];" +
-  "if(cap){var ac2=im*cap.pi;o.push('• Drop subscription, go per-image ('+cap.n+'): $'+fn(ac2)+'/mo  (vs $'+bt+'/mo)');}}" +
+  "if(cap){var ac2=im*cap.pi;o.push(tk('calc_out.ai_image_cost.row.whatif_drop_subscription','\u2022 Drop subscription, go per-image ('+cap.n+'): $'+fn(ac2)+'/mo  (vs $'+bt+'/mo)',{api:cap.n,cost:'$'+fn(ac2)+'/mo',cur:'$'+bt+'/mo'}));}}" +
   "}" +
-  "if(p.is){o.push('• Double volume to '+lc(im*2)+' imgs/mo: $0 extra (sub is fixed)');}" +
-  "else{o.push('• Double volume to '+lc(im*2)+' imgs/mo: $'+fn(im*2*pic)+'/mo');}" +
+  "if(p.is){o.push(tk('calc_out.ai_image_cost.row.whatif_double_volume_sub','\u2022 Double volume to '+lc(im*2)+' imgs/mo: $0 extra (sub is fixed)',{imgs:lc(im*2)}));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.whatif_double_volume','\u2022 Double volume to '+lc(im*2)+' imgs/mo: $'+fn(im*2*pic)+'/mo',{imgs:lc(im*2),cost:'$'+fn(im*2*pic)+'/mo'}));}" +
   "o.push('');" +
-  "o.push('🎯 Best Provider by Use Case:');o.push(SEP3.repeat(50));" +
-  "o.push('• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)');" +
-  "o.push('• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)');" +
-  "o.push('• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($'+fp3(PS['stable-diffusion-4'].pi)+'/image)');" +
-  "o.push('• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)');" +
-  "o.push('• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)');" +
+  "o.push(tk('calc_out.section.ai_image_cost_best_provider','\uD83C\uDFAF Best Provider by Use Case:'));o.push(SEP3.repeat(50));" +
+  "o.push(tk('calc_out.ai_image_cost.row.use_case_text','\u2022 \uD83D\uDCDD Text in images (logos, signs, UI):  \u2192 Ideogram 3 (best text rendering)'));" +
+  "o.push(tk('calc_out.ai_image_cost.row.use_case_artistic','\u2022 \uD83C\uDFA8 Artistic / creative work:           \u2192 Midjourney V7 (aesthetic quality)'));" +
+  "o.push(tk('calc_out.ai_image_cost.row.use_case_budget','\u2022 \uD83D\uDCB0 Budget is #1 concern:              \u2192 Stable Diffusion 4 ($'+fp3(PS['stable-diffusion-4'].pi)+'/image)',{price:'$'+fp3(PS['stable-diffusion-4'].pi)+'/image'}));" +
+  "o.push(tk('calc_out.ai_image_cost.row.use_case_complex','\u2022 \uD83E\uDDE9 Complex multi-object prompts:      \u2192 DALL-E 4 (instruction following)'));" +
+  "o.push(tk('calc_out.ai_image_cost.row.use_case_volume','\u2022 \uD83D\uDCE6 Maximum volume (5000+ imgs/mo):    \u2192 Midjourney V7 Mega ($60-120/mo)'));" +
   "o.push('');" +
-  "o.push('💡 For your case ('+lc(im)+' imgs/mo via '+p.n+'):');" +
-  "if(p.pi>=PS['dalle-3'].pi&&im<500){var ac3=im*PS['ideogram-3'].pi;o.push('   Switch to Ideogram 3 ($'+fp3(PS['ideogram-3'].pi)+'/img) to save $'+fn(mc-ac3)+'/mo with similar quality.');}" +
-  "else if(p.pi>=PS['ideogram-3'].pi&&im<100){var ac3=im*PS['stable-diffusion-4'].pi;o.push('   At <100 imgs/mo, SD 4 API is '+Math.round(pic/PS['stable-diffusion-4'].pi)+'x cheaper ($'+fn(ac3)+' vs $'+fn(mc)+'/mo).');}" +
-  "else if(p.is&&im<100){var ac3=im*PS['ideogram-3'].pi;o.push('   Subscription is underutilized. Per-image (Ideogram 3) would be ~$'+fn(ac3)+'/mo.');}" +
-  "else{o.push('   Your current choice is well-matched to your volume and quality needs.');}" +
-  "return o;";
+  "o.push(tk('calc_out.ai_image_cost.row.for_your_case','\uD83D\uDCA1 For your case ('+lc(im)+' imgs/mo via '+p.n+'):',{imgs:lc(im),name:p.n}));" +
+  "if(p.pi>=PS['dalle-3'].pi&&im<500){var ac3=im*PS['ideogram-3'].pi;o.push(tk('calc_out.ai_image_cost.row.final_switch_ideogram','   Switch to Ideogram 3 ($'+fp3(PS['ideogram-3'].pi)+'/img) to save $'+fn(mc-ac3)+'/mo with similar quality.',{price:'$'+fp3(PS['ideogram-3'].pi)+'/img',save:'$'+fn(mc-ac3)+'/mo'}));}" +
+  "else if(p.pi>=PS['ideogram-3'].pi&&im<100){var ac3=im*PS['stable-diffusion-4'].pi;o.push(tk('calc_out.ai_image_cost.row.final_sd4_cheaper','   At <100 imgs/mo, SD 4 API is '+Math.round(pic/PS['stable-diffusion-4'].pi)+'x cheaper ($'+fn(ac3)+' vs $'+fn(mc)+'/mo).',{mult:String(Math.round(pic/PS['stable-diffusion-4'].pi)),alt:'$'+fn(ac3),cur:'$'+fn(mc)+'/mo'}));}" +
+  "else if(p.is&&im<100){var ac3=im*PS['ideogram-3'].pi;o.push(tk('calc_out.ai_image_cost.row.final_sub_underutilized','   Subscription is underutilized. Per-image (Ideogram 3) would be ~$'+fn(ac3)+'/mo.',{cost:'$'+fn(ac3)+'/mo'}));}" +
+  "else{o.push(tk('calc_out.ai_image_cost.row.final_well_matched','   Your current choice is well-matched to your volume and quality needs.'));}" +
+  // P168 B3-9：⭐ 返回**整份输出**的单元素数组 —— 页面（src/pages/[lang]/[slug].astro:2186）对 custom 型**只渲染 results[0]**
+  //   ⇒ 多元素数组会让动态卡片只剩第一行（同一形态 B3-8 已在 ai-api-cost-comparison 修复并验证）。
+  "return [o.join('\\n')];"
 
 const engine: ToolEngine = {
   slug: 'solopreneur-ai-image-cost-calculator',
@@ -505,7 +521,7 @@ const engine: ToolEngine = {
     { key: 'artistic',    emoji: '🖼️', fields: { provider: 'flux-pro',               imagesPerMonth: '800',  resolution: '2048×2048', batchSize: '2', advancedMode: 'hd'       } },
   ],
   staticExamples: [
-    '\n🎨 DALL-E 3 Cost Estimate\n\nQuality: Very High | Resolution: 1024×1024 | Batch: 1/gen\nPricing: Per-Image $0.080\n\n💰 Cost Summary\n──────────────────────────────────────────────────\nPer Image: $0.08\nMonthly Cost (100 images): $8.00\nAnnual Cost: $96.00\n\nDaily Avg: $0.27 (3 images/day)\n\n📊 All Providers — Monthly Cost at 100 images/mo\n──────────────────────────────────────────────────\n   DALL-E 4              ███████████████████████████████████   $12.00\n   DALL-E 3              ███████████████████████               $8.00\n   Midjourney V7 (sub)   █████████████████████████████         $10.00/mo\n✅ SD 4 (API)            █                                     $0.30\n   Ideogram 3            ████████████                          $4.00\n   Flux Pro              ███████████████                       $5.00\n   Leonardo AI (sub)     ███████████████████████████████████   $12.00/mo\n\n🩺 Cost Health:\n──────────────────────────────────────────────────\n• 🟡 Mid-market — $0.08/image is around the average.\n• ✅ Per-image is correct for 100 imgs/mo. Break-even: 125 imgs.\n\n📋 Subscription vs API — Price Comparison\n──────────────────────────────────────────────────\nVolume     | DALL-E 4       | DALL-E 3       | Midjourney V7  | SD 4 (API)     | Ideogram 3     | Flux Pro       | Leonardo AI   \n─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n50         | $6.00          | $4.00          | $10.00         | $0.15          | $2.00          | $2.50          | $12.00        \n200        | $24.00         | $16.00         | $10.00         | $0.60          | $8.00          | $10.00         | $12.00        \n500        | $60.00         | $40.00         | $30.00         | $1.50          | $20.00         | $25.00         | $29.00        \n1,000      | $120.00        | $80.00         | $30.00         | $3.00          | $40.00         | $50.00         | $29.00        \n5,000      | $600.00        | $400.00        | $120.00        | $15.00         | $200.00        | $250.00        | $49.00        \n\n⚖️ Break-Even: When Subscription Beats Per-Image\n──────────────────────────────────────────────────\n  DALL-E 4 → Midjourney V7 ($10/mo): 84 imgs/mo break-even\n  DALL-E 3 → Midjourney V7 ($10/mo): 125 imgs/mo break-even\n  SD 4 (API) → Midjourney V7 ($10/mo): 3,334 imgs/mo break-even\n  Ideogram 3 → Midjourney V7 ($10/mo): 250 imgs/mo break-even\n  Flux Pro → Midjourney V7 ($10/mo): 200 imgs/mo break-even\n  DALL-E 4 → Leonardo AI ($12/mo): 100 imgs/mo break-even\n  DALL-E 3 → Leonardo AI ($12/mo): 150 imgs/mo break-even\n  SD 4 (API) → Leonardo AI ($12/mo): 4,000 imgs/mo break-even\n  Ideogram 3 → Leonardo AI ($12/mo): 300 imgs/mo break-even\n  Flux Pro → Leonardo AI ($12/mo): 240 imgs/mo break-even\n\n📈 Volume Scenarios at Different Batch Sizes\n──────────────────────────────────────────────────\nBatch Size | Images/Mo | Cost/Mo    | Generations Needed\n──────────┼───────────┼────────────┼───────────────────\n1         │ 100       │ $8.00      │ 100 runs of 1 imgs each\n4         │ 100       │ $8.00      │ 25 runs of 4 imgs each\n8         │ 100       │ $8.00      │ 13 runs of 8 imgs each\n16        │ 100       │ $8.00      │ 7 runs of 16 imgs each\n32        │ 100       │ $8.00      │ 4 runs of 32 imgs each\n\n💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.\n\n🔄 What-If Scenarios:\n──────────────────────────────────────────────────\n• Cut volume in half: Save $4.00/mo ($8.00 → $4.00)\n• Switch to SD 4 API ($0.003/img): $0.30/mo  (saves $7.70/mo)\n• Switch to Midjourney V7 ($10/mo): +$2.00/mo vs pay-per-image\n• Double volume to 200 imgs/mo: $16.00/mo\n\n🎯 Best Provider by Use Case:\n──────────────────────────────────────────────────\n• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)\n• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)\n• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)\n• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)\n• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)\n\n💡 For your case (100 imgs/mo via DALL-E 3):\n   Switch to Ideogram 3 ($0.04/img) to save $4.00/mo with similar quality.',
+    '\n$calc_out.ai_image_cost.row.header_estimate{"name":"DALL-E 3"}|🎨 DALL-E 3 Cost Estimate|\n\n$calc_out.label.quality|Quality|: Very High | $calc_out.label.resolution|Resolution|: 1024×1024 | $calc_out.label.batch|Batch|: 1$calc_out.ai_image_cost.row.unit_per_generation|/gen|\n$calc_out.label.pricing|Pricing|: $calc_out.ai_image_cost.row.pricing_model_per_image|Per-Image| $0.080\n\n$calc_out.section.ai_image_cost_summary|💰 Cost Summary|\n──────────────────────────────────────────────────\n$calc_out.label.per_image|Per Image|: $0.08\n$calc_out.label.monthly_cost|Monthly Cost| (100$calc_out.ai_image_cost.row.unit_images| images|): $8.00\n$calc_out.label.annual_cost|Annual Cost|: $96.00\n\n$calc_out.label.daily_avg|Daily Avg|: $0.27 (3$calc_out.ai_image_cost.row.unit_images_per_day| images/day|)\n\n$calc_out.ai_image_cost.row.section_all_providers{"imgs":"100"}|📊 All Providers — Monthly Cost at 100 images/mo|\n──────────────────────────────────────────────────\n   DALL-E 4              ███████████████████████████████████   $12.00\n   DALL-E 3              ███████████████████████               $8.00\n   Midjourney V7$calc_out.ai_image_cost.row.unit_subscription_tag| (sub)|   █████████████████████████████         $10.00/mo\n✅ SD 4 (API)            █                                     $0.30\n   Ideogram 3            ████████████                          $4.00\n   Flux Pro              ███████████████                       $5.00\n   Leonardo AI$calc_out.ai_image_cost.row.unit_subscription_tag| (sub)|     ███████████████████████████████████   $12.00/mo\n\n$calc_out.section.ai_image_cost_health|🩺 Cost Health:|\n──────────────────────────────────────────────────\n$calc_out.ai_image_cost.row.health_mid_market{"price":"$0.08"}|• 🟡 Mid-market — $0.08/image is around the average.|\n$calc_out.ai_image_cost.row.health_alt_per_image_correct{"imgs":"100","be":"125"}|• ✅ Per-image is correct for 100 imgs/mo. Break-even: 125 imgs.|\n\n$calc_out.section.ai_image_cost_provider_comparison|📋 Subscription vs API — Price Comparison|\n──────────────────────────────────────────────────\n$calc_out.label.volume|Volume|     | DALL-E 4       | DALL-E 3       | Midjourney V7  | SD 4 (API)     | Ideogram 3     | Flux Pro       | Leonardo AI   \n─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n50         | $6.00          | $4.00          | $10.00         | $0.15          | $2.00          | $2.50          | $12.00        \n200        | $24.00         | $16.00         | $10.00         | $0.60          | $8.00          | $10.00         | $12.00        \n500        | $60.00         | $40.00         | $30.00         | $1.50          | $20.00         | $25.00         | $29.00        \n1,000      | $120.00        | $80.00         | $30.00         | $3.00          | $40.00         | $50.00         | $29.00        \n5,000      | $600.00        | $400.00        | $120.00        | $15.00         | $200.00        | $250.00        | $49.00        \n\n$calc_out.section.ai_image_cost_break_even|⚖️ Break-Even: When Subscription Beats Per-Image|\n──────────────────────────────────────────────────\n$calc_out.ai_image_cost.row.break_even_line{"api":"DALL-E 4","sub":"Midjourney V7","price":"$10/mo","be":"84"}|  DALL-E 4 → Midjourney V7 ($10/mo): 84 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"DALL-E 3","sub":"Midjourney V7","price":"$10/mo","be":"125"}|  DALL-E 3 → Midjourney V7 ($10/mo): 125 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"SD 4 (API)","sub":"Midjourney V7","price":"$10/mo","be":"3,334"}|  SD 4 (API) → Midjourney V7 ($10/mo): 3,334 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"Ideogram 3","sub":"Midjourney V7","price":"$10/mo","be":"250"}|  Ideogram 3 → Midjourney V7 ($10/mo): 250 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"Flux Pro","sub":"Midjourney V7","price":"$10/mo","be":"200"}|  Flux Pro → Midjourney V7 ($10/mo): 200 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"DALL-E 4","sub":"Leonardo AI","price":"$12/mo","be":"100"}|  DALL-E 4 → Leonardo AI ($12/mo): 100 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"DALL-E 3","sub":"Leonardo AI","price":"$12/mo","be":"150"}|  DALL-E 3 → Leonardo AI ($12/mo): 150 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"SD 4 (API)","sub":"Leonardo AI","price":"$12/mo","be":"4,000"}|  SD 4 (API) → Leonardo AI ($12/mo): 4,000 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"Ideogram 3","sub":"Leonardo AI","price":"$12/mo","be":"300"}|  Ideogram 3 → Leonardo AI ($12/mo): 300 imgs/mo break-even|\n$calc_out.ai_image_cost.row.break_even_line{"api":"Flux Pro","sub":"Leonardo AI","price":"$12/mo","be":"240"}|  Flux Pro → Leonardo AI ($12/mo): 240 imgs/mo break-even|\n\n$calc_out.section.ai_image_cost_volume_scenarios|📈 Volume Scenarios at Different Batch Sizes|\n──────────────────────────────────────────────────\n$calc_out.label.batch_size|Batch Size| | $calc_out.label.images_per_month|Images/Mo| | $calc_out.label.cost_per_month|Cost/Mo|    | $calc_out.label.generations_needed|Generations Needed|\n──────────┼───────────┼────────────┼───────────────────\n1         │ 100       │ $8.00      │ 100$calc_out.ai_image_cost.row.batch_runs{"runs":"1"}| runs of 1 imgs each|\n4         │ 100       │ $8.00      │ 25$calc_out.ai_image_cost.row.batch_runs{"runs":"4"}| runs of 4 imgs each|\n8         │ 100       │ $8.00      │ 13$calc_out.ai_image_cost.row.batch_runs{"runs":"8"}| runs of 8 imgs each|\n16        │ 100       │ $8.00      │ 7$calc_out.ai_image_cost.row.batch_runs{"runs":"16"}| runs of 16 imgs each|\n32        │ 100       │ $8.00      │ 4$calc_out.ai_image_cost.row.batch_runs{"runs":"32"}| runs of 32 imgs each|\n\n$calc_out.ai_image_cost.row.tip_batch_sizes|💡 Larger batch sizes = fewer API calls. Some providers limit batch to 4-10 images per generation.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n──────────────────────────────────────────────────\n$calc_out.ai_image_cost.row.whatif_cut_in_half{"save":"4.00","cur":"8.00","half":"4.00"}|• Cut volume in half: Save $4.00/mo ($8.00 → $4.00)|\n$calc_out.ai_image_cost.row.whatif_sd4_saves{"price":"$0.003/img","cost":"$0.30/mo","save":"$7.70/mo"}|• Switch to SD 4 API ($0.003/img): $0.30/mo  (saves $7.70/mo)|\n$calc_out.ai_image_cost.row.whatif_switch_sub_costs_more{"sub":"Midjourney V7","price":"$10/mo","diff":"$2.00/mo"}|• Switch to Midjourney V7 ($10/mo): +$2.00/mo vs pay-per-image|\n$calc_out.ai_image_cost.row.whatif_double_volume{"imgs":"200","cost":"$16.00/mo"}|• Double volume to 200 imgs/mo: $16.00/mo|\n\n$calc_out.section.ai_image_cost_best_provider|🎯 Best Provider by Use Case:|\n──────────────────────────────────────────────────\n$calc_out.ai_image_cost.row.use_case_text|• 📝 Text in images (logos, signs, UI):  → Ideogram 3 (best text rendering)|\n$calc_out.ai_image_cost.row.use_case_artistic|• 🎨 Artistic / creative work:           → Midjourney V7 (aesthetic quality)|\n$calc_out.ai_image_cost.row.use_case_budget{"price":"$0.003/image"}|• 💰 Budget is #1 concern:              → Stable Diffusion 4 ($0.003/image)|\n$calc_out.ai_image_cost.row.use_case_complex|• 🧩 Complex multi-object prompts:      → DALL-E 4 (instruction following)|\n$calc_out.ai_image_cost.row.use_case_volume|• 📦 Maximum volume (5000+ imgs/mo):    → Midjourney V7 Mega ($60-120/mo)|\n\n$calc_out.ai_image_cost.row.for_your_case{"imgs":"100","name":"DALL-E 3"}|💡 For your case (100 imgs/mo via DALL-E 3):|\n$calc_out.ai_image_cost.row.final_switch_ideogram{"price":"$0.04/img","save":"$4.00/mo"}|   Switch to Ideogram 3 ($0.04/img) to save $4.00/mo with similar quality.|',
   ],
   faq: [
     { q: 'Which AI image generator is cheapest in 2026?', a: '{{liveImageCheapest:stable-diffusion-4}} at {{liveImagePerImage:stable-diffusion-4}}/image is by far the cheapest — {{liveImageMonthly:stable-diffusion-4|1000}}/mo for 1000 images. For subscription-based, Midjourney V7 at {{liveImageSubRange:midjourney-v7}} and Leonardo AI at {{liveImageSubRange:leonardo}} become the cheapest at higher volumes (200+ images/month). DALL-E 3 ({{liveImagePerImageTrim:dalle-3}}) and Ideogram 3 ({{liveImagePerImageTrim:ideogram-3}}) are the mid-range per-image options.' },

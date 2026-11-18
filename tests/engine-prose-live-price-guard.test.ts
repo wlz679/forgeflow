@@ -72,13 +72,22 @@ test('E1: prose 层的价格与模型数必须是派生量（源码里不许写�
   assert.ok(idx >= 0, `${GEMINI_ENGINE} has no "${ANCHOR}" prose`);
   // 取该 out.push(...) 语句：从锚点所在行往上找 `out.push(`，往下找 `);`
   const lines = src.split('\n');
-  const anchorLine = lines.findIndex((l) => l.includes(ANCHOR) && l.includes('out.push'));
-  assert.ok(anchorLine >= 0, 'the server-side prose line is not an out.push(...) call');
+  // P168 B3-9：服务端 prose 已被令牌化成多行 `out.push(makeToken(code, '...', {...}))`
+  //   => 锚点那句**不再与 `out.push(` 同行**（P164 写死的是令牌化之前的单行形态）。
+  //   判据不变：仍是**包住锚点的那条 out.push 语句**，且必须落在服务端 calculate() 区间内
+  //   （clientConfig 之后是客户端 customFn 的平行实现，不是服务端 prose）。
+  const calcStart = lines.findIndex((l) => /function calculate\(/.test(l));
+  assert.ok(calcStart >= 0, GEMINI_ENGINE + ' has no calculate() function');
+  const clientStart = lines.findIndex((l, i) => i > calcStart && l.includes('clientConfig'));
+  const region = lines.slice(calcStart, clientStart >= 0 ? clientStart : lines.length);
+  const anchorLine = region.findIndex((l) => l.includes(ANCHOR));
+  assert.ok(anchorLine >= 0, 'no server-side prose line contains ' + ANCHOR);
   let start = anchorLine;
-  while (start >= 0 && !/out\.push\(/.test(lines[start])) start--;
+  while (start >= 0 && !/out\.push\(/.test(region[start])) start--;
+  assert.ok(start >= 0, 'the server-side prose line is not an out.push(...) call');
   let end = anchorLine;
-  while (end < lines.length && !/\);\s*$/.test(lines[end])) end++;
-  const block = lines.slice(start, end + 1).join('\n');
+  while (end < region.length && !/\);\s*$/.test(region[end])) end++;
+  const block = region.slice(start, end + 1).join('\n');
 
   assert.match(
     block,

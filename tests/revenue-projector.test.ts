@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import '../src/engines/saas/revenue-projector.ts';
 import { getEngine } from '../src/core/engines/registry.ts';
+import { renderCalcOutput } from '../src/lib/calc-output-i18n.ts';
 
 const engine = getEngine('solopreneur-revenue-projector');
 
@@ -24,9 +25,10 @@ test('revenue-projector: canonical $5K MRR / 8% growth / 3% churn → ~$9K end M
   assert.ok(Array.isArray(r));
   assert.ok(r.length > 0);
   // Starting MRR $5,000
-  assert.match(r[0], /Starting MRR:\s+\$5,000/);
+  const text = renderCalcOutput(r.join('\n'), {});
+  assert.match(text, /Starting MRR:\s+\$5,000/);
   // Net growth = 5%
-  assert.match(r[0], /Net Monthly Growth:\s+\+5\.0%/);
+  assert.match(text, /Net Monthly Growth:\s+\+5\.0%/);
 });
 
 // Test 2: zero MRR
@@ -43,7 +45,8 @@ test('revenue-projector: zero MRR → $0 revenue', () => {
     months: '12',
   });
   assert.ok(Array.isArray(r));
-  assert.match(r[0], /Starting MRR:\s+\$0/);
+  const text = renderCalcOutput(r.join('\n'), {});
+  assert.match(text, /Starting MRR:\s+\$0/);
 });
 
 // Test 3: zero expenses
@@ -62,7 +65,8 @@ test('revenue-projector: zero expenses → no crash', () => {
   assert.ok(Array.isArray(r));
   assert.ok(r.length > 0);
   // Zero expenses → Break-even MRR = $0 (covers monthly expenses)
-  assert.match(r[0], /Break-even MRR:\s+\$0/);
+  const text = renderCalcOutput(r.join('\n'), {});
+  assert.match(text, /Break-even MRR:\s+\$0/);
 });
 
 // Defensive test (P16-4 Layer 2): negative inputs clamp to 0

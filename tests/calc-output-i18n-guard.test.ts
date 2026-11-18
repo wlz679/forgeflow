@@ -29,6 +29,7 @@ import {
   infoUnits,
   readLocale,
   MIN_ZH_TO_EN_RATIO,
+  hasNaturalLanguage,
   ROOT,
 } from './_decision-support-fixture.ts';
 import { stripComments } from './build-dep-suites.mjs';
@@ -286,6 +287,11 @@ test('P168 B3-7 G1：calc_out.* 的 zh 译文不是英文原文、不是占位�
       problems.push(key + ' 在 en/zh 有一边缺失');
       continue;
     }
+    // ⚠️ P168 B3-9：只有**含自然语言**的值才受下面两条判据约束。
+    //   纯数值片段（`{rev}/mo`）、公式（`  = LTV ÷ CAC`）、行业缩写（`AOV`/`GPU`/`ROI`）
+    //   的 zh 与 en 逐字相同是**正确的**（没有可翻的自然语言）⇒ 对它们套判据 = 假红。
+    //   实测：新增 675 键里 13 个属此类；既有 1012 键里 0 个。
+    if (!hasNaturalLanguage(en)) continue;
     if (zh === en) problems.push(key + ' 的 zh 与 en 逐字相同（没翻）');
     if (zh.includes('用此计算器')) problems.push(key + ' 是占位模板');
     const enU = infoUnits(en);
