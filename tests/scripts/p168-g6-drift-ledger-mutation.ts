@@ -75,14 +75,12 @@ const variants = [
     name: '改客户端副本（生成区）里的一个字面量 ⇒ 客户端与服务端漂移',
     file: ENGINE,
     apply: (t: string) => replaceInGenerated(t, LIT, MUT),
-    expectHits: 2,
   },
   {
     id: 'M2',
     name: '改服务端里的一个字面量但**不重新生成副本** ⇒ 副本陈旧',
     file: ENGINE,
     apply: (t: string) => replaceFirst(t, LIT, MUT),
-    expectHits: 2,
   },
   {
     id: 'M3',
@@ -93,7 +91,6 @@ const variants = [
       'export const DRIFT_DEBT: Record<string, { kind: DriftKind; note: string }> = {' + NLc
         + "  'solopreneur-ghost-engine-calculator': { kind: 'wording', note: '幽灵' },",
     ),
-    expectHits: 1,
   },
 ];
 
@@ -102,15 +99,12 @@ let notIsolated = 0;
 try {
   for (const v of variants) {
     const orig = v.file === LEDGER ? LEDGER_ORIG : ENGINE_ORIG;
-    const hits = orig.split(v.from === undefined ? (v.id === 'M3' ? 'export const DRIFT_DEBT' : LIT) : v.from).length - 1;
-    if (hits < (v.expectHits ?? 1)) {
-      console.log(v.id + ' SKIP：目标串命中 ' + hits + ' 次（需要 >= ' + (v.expectHits ?? 1) + '）');
-      survived++;
-      continue;
-    }
+    // ⚠️ 「变异有没有真的打中目标」的判据 = **改完的内容与原文不同**
+    //   （旧版用「目标串命中次数」⇒ 台账清零后目标串不存在 ⇒ 命中 0 次 ⇒ 报 SKIP
+    //    ⇒ 台子会把「变异没打中」误报成「守卫没牙」⇒ 会去「修」一个根本没坏的守卫）。
     const mutated = v.apply(orig);
     if (mutated === orig) {
-      console.log(v.id + ' SKIP：变异没有生效');
+      console.log(v.id + ' SKIP：变异没有生效（目标串可能不存在）');
       survived++;
       continue;
     }
