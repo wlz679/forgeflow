@@ -14,6 +14,7 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { PILOT_SLUGS, loadParityRows, measureParity } from './scripts/p168-server-client-parity.ts';
+import { DRIFT_DEBT, loadDriftRows, measureDrift } from './scripts/p168-server-client-drift-ledger.ts';
 
 test('P168 B3-7 G6：试点引擎的客户端 customFn 输出 ≡ 服务端 generate() 输出', () => {
   const rows = loadParityRows(PILOT_SLUGS);
@@ -46,5 +47,74 @@ test('P168 B3-7 G6 检测器自检：造一对漂移的假引擎，判据必须�
   assert.equal(rows[0].same, false, '检测器没看出漂移 ⇒ 自检失效');
   assert.equal(rows[0].serverLines, 1);
   assert.equal(rows[0].clientLines, 1);
+});
+
+// ── P168 B3-10：G6 漂移台账 ──────────────────────────────────────────────
+// G6 上面那条只守「已令牌化的 45 个引擎」⇒ 其余引擎的漂移此前**不可见、不可守**。
+// 实测全仓：100 个引擎 · 一致 68 · 漂移 32 ⇒ 这 32 条是「静态卡片 vs 动态卡片内容矛盾」的
+// **已知欠账**。台账只能变小不能变大（修好一条销一条），每条的分类必须与实测一致。
+
+test('P168 B3-10 G6-debt：全仓 G6 漂移集合 ≡ 台账（不得新增，也不得修好却忘了销账）', () => {
+  const rows = loadDriftRows();
+  const actual = new Set(rows.map((r) => r.slug));
+  const newly = [...actual].filter((s) => !(s in DRIFT_DEBT));
+  const fixed = Object.keys(DRIFT_DEBT).filter((s) => !actual.has(s));
+  assert.deepEqual(
+    newly,
+    [],
+    'these engines now drift between the server output and the client customFn - ' +
+      'the static card and the dynamic card contradict each other. Fix the engine and ' +
+      'add the entry to DRIFT_DEBT (the ledger may shrink, it may never grow). ' + newly.join(' | '),
+  );
+  assert.deepEqual(
+    fixed,
+    [],
+    'these DRIFT_DEBT entries no longer drift - remove them from DRIFT_DEBT ' +
+      '(the ledger may shrink, it may never drift). ' + fixed.join(' | '),
+  );
+});
+
+test('P168 B3-10 G6-debt-b：台账里每条的分类必须与实测一致（台账条目不许是空壳）', () => {
+  const rows = loadDriftRows();
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  const wrong: string[] = [];
+  for (const [slug, entry] of Object.entries(DRIFT_DEBT)) {
+    const row = bySlug.get(slug);
+    // ⭐ 台账里「不存在于实测」的条目由上一条断言（G6-debt 的 fixed 列表）负责
+  //   ⇒ 这里**跳过**它 ⇒ 「存在性」只有一个家（一个不变量只守一处）
+  //   ⇒ 一条变异（塞一条幽灵欠账）因此只红 1 条断言，隔离不破。
+    if (!row) continue;
+    if (row.kind !== entry.kind) {
+      wrong.push(slug + '：台账写 ' + entry.kind + '，实测 ' + row.kind);
+    }
+  }
+  assert.deepEqual(
+    wrong,
+    [],
+    '台账的分类与实测不一致 ⇒ 这条欠账的性质被写错了（分类决定修法与优先级）。' + wrong.join(' | '),
+  );
+});
+
+test('P168 B3-10 G6-debt-c：防真空绿 —— 台账非空且实测确有漂移', () => {
+  assert.ok(Object.keys(DRIFT_DEBT).length > 0, 'DRIFT_DEBT must not be empty: an empty ledger would make the drift assertions vacuous.');
+  const rows = loadDriftRows();
+  assert.ok(rows.length > 0, 'no drift measured at all - either the measurement broke or the ledger is stale.');
+});
+
+test('P168 B3-10 G6-debt 自检：造一个「客户端整段缺失」的假引擎，分类器必须看得见', () => {
+  const fake = [
+    {
+      slug: 'fake-missing-section',
+      inputs: [],
+      clientConfig: { customFn: "return ['ONLY ONE LINE'];" },
+      generate: () => ['SERVER LINE 1', 'SERVER LINE 2', 'SERVER LINE 3'],
+    },
+  ];
+  const rows = measureDrift(fake as any, {});
+  assert.equal(rows.length, 1, 'the detector saw no drift at all');
+  assert.equal(rows[0].kind, 'missing-section', 'the detector must classify a truncated client as missing-section');
+  assert.equal(rows[0].firstDiffLine, 1);
+  assert.equal(rows[0].clientLines, 1);
+  assert.equal(rows[0].serverLines, 3);
 });
 
