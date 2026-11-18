@@ -305,106 +305,72 @@ function calculateStripeFee(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var FEE={'stripe':{p:0.029,f:0.30,h:1},'stripe-international':{p:0.044,f:0.30,h:1},'paypal':{p:0.035,f:0.00,h:0},'square':{p:0.026,f:0.10,h:1},'wise':{p:0.015,f:0.00,h:0}};" +
-  "var LABELS={'stripe':'Stripe (US)','stripe-international':'Stripe (International)','paypal':'PayPal','square':'Square','wise':'Wise'};" +
-  "function cf(a,prov){var s=FEE[prov];var pf=a*s.p;var ff=s.h?s.f:0;var tf=pf+ff;var net=a-tf;var er=a>0?tf/a:0;return{pf:pf,ff:ff,tf:tf,net:net,er:er};}" +
-  "function pv(a,prov,mt){if(mt<=0||a<=0)return{mg:0,mf:0,mn:0,yg:0,yf:0,yn:0};var sf=cf(a,prov);var mg=a*mt;var mf=sf.tf*mt;var mn=sf.net*mt;return{mg:mg,mf:mf,mn:mn,yg:mg*12,yf:mf*12,yn:mn*12};}" +
-  "function cmp(a){var all=['stripe','stripe-international','paypal','square','wise'];var rows=[];for(var i=0;i<all.length;i++){var p=all[i];rows.push({p:p,fee:cf(a,p),n:LABELS[p]});}rows.sort(function(x,y){return x.fee.tf-y.fee.tf;});return rows;}" +
-  "function fh(er,a){if(a<5)return{e:'\\uD83D\\uDD34',l:tk('calc_out.stripe_fee.row.health_fixed_fee_dominates','fixed fee dominates \\u2014 set $5 minimum or use no-fixed-fee provider')};if(er<0.02)return{e:'\\uD83D\\uDFE2',l:tk('calc_out.stripe_fee.row.health_excellent_rate','excellent rate')};if(er<0.03)return{e:'\\uD83D\\uDCA1',l:tk('calc_out.stripe_fee.row.health_standard_rate','standard rate')};if(er<0.04)return{e:'\\uD83D\\uDFE0',l:tk('calc_out.stripe_fee.row.health_above_average','above average')};return{e:'\\uD83D\\uDD34',l:tk('calc_out.stripe_fee.row.health_high_consider_switching','high \\u2014 consider switching')};}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var a=cnn(parseFloat(inputs.chargeAmount)||0);" +
-  "var mt=cnn(parseFloat(inputs.monthlyTransactions)||0);" +
-  "var pr=inputs.provider;" +
-  "var prov=pr==='stripe-international'?'stripe-international':pr==='paypal'?'paypal':pr==='square'?'square':pr==='wise'?'wise':'stripe';" +
-  "var ic=prov==='stripe'&&inputs.internationalCards==='yes';" +
-  "var ep=ic?'stripe-international':prov;" +
-  "if(a<=0){return['$calc_out.section.stripe_fee_calculator|\\u23F0 Stripe Fee Calculator|\\n\\n$calc_out.stripe_fee.row.enter_charge_amount|\\uD83D\\uDCB0 Enter a charge amount above $0 to see your payment processing fees, provider comparison, and annual projections.|'];}" +
-  "var f=cf(a,ep);" +
-  "var h=fh(f.er,a);" +
-  "var v=pv(a,ep,mt);" +
-  "var c=cmp(a);" +
-  "var chp=c[0];" +
-  "var me=c[c.length-1];" +
-  "var asw=(me.fee.tf-chp.fee.tf)*mt*12;" +
-  "function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}" +
-  "function mny(n){return'$'+fmt(Math.round(n*100)/100);}" +
-  "function pct(n){return(n*100).toFixed(1)+'%';}" +
-  "function cen(n){return n.toFixed(2);}" +
-  "var cs='';" +
-  "for(var i=0;i<c.length;i++){var r=c[i];var sel=r.p===ep;var nm=r.n+(sel?' (selected)':'');var cp=' '.repeat(Math.max(0,22-nm.length));var cell=r.n+(sel?' '+tk('calc_out.stripe_fee.row.provider_selected','(selected)'):'')+cp;cs+='\\u2022 '+cell+'  $calc_out.label.fee|fee|: '+mny(r.fee.tf).padStart(8)+'  ('+cen(r.fee.pf)+' + '+cen(r.fee.ff)+')  $calc_out.label.net|net|: '+mny(r.fee.net)+(sel?' '+tk('calc_out.stripe_fee.row.selected_marker','\\u2190 selected'):'')+'\\n';}" +
-  "var f1=cf(a+1,ep);" +
-  "var d1=f1.net-f.net;" +
-  "var ps=FEE[ep];" +
-  "var ptc=ps.h?(a+ps.f)/(1-ps.p):a/(1-ps.p);" +
-  "var ptcd=ptc-a;" +
-  "var fpt=ps.h?ps.f:0;" +
-  "var abs=fpt*11*mt*12;" +
-  "var mg=a*mt;" +
-  "var neg=mg>=50000;" +
-  "var dr=0.005;" +
-  "var ns=neg?mg*dr*12:mg*dr*12*0.5;" +
-  "var ba=a*12;" +
-  "var bf=cf(ba,ep).tf;" +
-  "var uf=f.tf*12;" +
-  "var bs=uf-bf;" +
-  "var tip='';" +
-  "if(mt>1000){tip=tk('calc_out.stripe_fee.row.tip_high_volume','\\uD83D\\uDCA1 Tip: At your volume, you\\'re paying '+mny(v.yf)+'/yr in fees. Contact Stripe sales \\u2014 they negotiate 0.1-0.3% off at $50K MRR. The 30-min call pays for itself.',{fees:mny(v.yf)});}" +
-  "else if(a<5){tip=tk('calc_out.stripe_fee.row.tip_small_charge','\\uD83D\\uDCA1 Tip: On charges under $5, the 30\\u00a2 fixed fee dominates. Charge $5 minimum, or use PayPal (3.5% flat) for small transactions \\u2014 Wise is cheapest but takes 1-2 days for payouts.');}" +
-  "else{tip=tk('calc_out.stripe_fee.row.tip_default','\\uD83D\\uDCA1 Tip: Stripe fees are unavoidable but negotiable at $50K+ MRR. Each 0.1% reduction saves '+mny(v.yf*0.001/0.01)+'/yr at your volume. Consider annual plans (lower per-tx fees), pass fees to customers (+'+mny(ptcd)+' to cover '+mny(a)+'), or compare Wise for international.',{save:mny(v.yf*0.001/0.01),add:mny(ptcd),charge:mny(a)});}" +
-  "var pd=LABELS[ep];" +
-  "var r='';" +
-  "r+='$calc_out.section.stripe_fee_calculator|\\u23F0 Stripe Fee Calculator|\\n\\n';" +
-  "r+='$calc_out.section.stripe_fee_single_charge_breakdown|\\uD83D\\uDCB0 Single Charge Breakdown:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 $calc_out.label.charge_amount|Charge Amount|:        '+mny(a)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.provider|Provider|:             '+pd+(ic?' '+tk('calc_out.stripe_fee.row.international_cards_applied','(international cards applied)'):'')+'\\n';" +
-  "r+='\\u2022 $calc_out.label.percentage_fee|Percentage Fee|:       '+mny(f.pf)+'  ('+pct(FEE[ep].p)+')\\n';" +
-  "r+='\\u2022 $calc_out.label.fixed_fee|Fixed Fee|:            '+mny(f.ff)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.total_fee|Total Fee|:            '+mny(f.tf)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.net_received|Net Received|:         '+mny(f.net)+'   '+tk('calc_out.stripe_fee.row.net_received_note','\\u2190 what hits your bank')+'\\n';" +
-  "r+='\\u2022 $calc_out.label.effective_fee_rate|Effective Fee Rate|:   '+pct(f.er)+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tk('calc_out.stripe_fee.row.provider_comparison_header','\\uD83D\\uDCCA Provider Comparison (for '+mny(a)+' charge, sorted by total fee):',{amount:mny(a)})+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+=cs+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.stripe_fee_fee_efficiency_health|\\uD83E\\uDE7A Fee Efficiency Health:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+h.e+' '+h.l+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.industry_average','Industry average: ~2.9% + 30\\u00a2 (Stripe US standard)')+'\\n';" +
-  "if(a<5)r+='\\u2022 '+tk('calc_out.stripe_fee.row.fixed_fee_share_small','On '+mny(a)+' charge: fixed fee is '+pct(f.ff/a)+' of total. Set $5 minimum or use PayPal/Wise.',{amount:mny(a),pct:pct(f.ff/a)})+'\\n';" +
-  "else r+='\\u2022 '+tk('calc_out.stripe_fee.row.fixed_fee_share','On '+mny(a)+' charge: fixed fee is '+pct(f.ff/a)+' of total fee.',{amount:mny(a),pct:pct(f.ff/a)})+'\\n';" +
-  "r+='\\u2022 '+(f.er<0.029?tk('calc_out.stripe_fee.row.vs_average_better','Vs average: \\uD83D\\uDFE2 better than average'):f.er===0.029?tk('calc_out.stripe_fee.row.vs_average_equal','Vs average: \\uD83D\\uDCA1 equal to average'):tk('calc_out.stripe_fee.row.vs_average_worse','Vs average: \\uD83D\\uDFE0 worse than average'))+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.stripe_fee_volume_projection|\\uD83C\\uDFAF Volume Projection:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(mt<=0)r+='\\u2022 '+tk('calc_out.stripe_fee.row.enter_monthly_transactions','Enter monthly transaction count for batch projection.')+'\\n';" +
-  "else{r+='\\u2022 '+tk('calc_out.stripe_fee.row.monthly_projection','Monthly:  '+mny(v.mg)+' gross  \\u2192  '+mny(v.mf)+' fees  \\u2192  '+mny(v.mn)+' net',{gross:mny(v.mg),fees:mny(v.mf),net:mny(v.mn)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.yearly_projection','Yearly:   '+mny(v.yg)+' gross  \\u2192  '+mny(v.yf)+' fees  \\u2192  '+mny(v.yn)+' net',{gross:mny(v.yg),fees:mny(v.yf),net:mny(v.yn)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.annualized_impact','Annualized impact: fees cost '+mny(v.yf)+'/yr \\u2014 could fund ~'+Math.round(v.yf/(a*0.5))+' extra transactions at your average ticket.',{fees:mny(v.yf),count:String(Math.round(v.yf/(a*0.5)))})+'\\n\\n';}" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.stripe_fee_break_even_provider|\\u2696\\uFE0F Break-Even on Provider Choice:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.cheapest_provider','Cheapest provider: '+chp.n+' ('+mny(chp.fee.tf)+' per '+mny(a)+' charge)',{provider:chp.n,fee:mny(chp.fee.tf),charge:mny(a)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.most_expensive_provider','Most expensive:    '+me.n+' ('+mny(me.fee.tf)+' per '+mny(a)+' charge)',{provider:me.n,fee:mny(me.fee.tf),charge:mny(a)})+'\\n';" +
-  "if(mt>0)r+='\\u2022 '+tk('calc_out.stripe_fee.row.annual_savings_if_switching','Annual savings if switching: '+mny(asw),{savings:mny(asw)})+'\\n';" +
-  "else r+='\\u2022 '+tk('calc_out.stripe_fee.row.annual_savings_pending','Annual savings if switching: (enter monthly transactions to compute)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.switching_friction','Switching friction: Stripe \\u2194 PayPal takes 1-2 weeks; Wise requires account setup + payout delays.')+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.whatif_raise_price','Raise price by $1:                 '+mny(a+1)+' charge \\u2192 net '+mny(f1.net)+' ('+(d1>=0?'+':'')+mny(d1)+' vs current)',{charge:mny(a+1),net:mny(f1.net),delta:(d1>=0?'+':'')+mny(d1)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.whatif_pass_fees','Pass fees to customer:            charge '+mny(ptc)+' instead of '+mny(a)+' (add '+mny(ptcd)+') to net the same amount',{charge:mny(ptc),base:mny(a),add:mny(ptcd)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.whatif_annual_billing','Switch to annual billing:         save '+mny(abs)+'/yr in fixed fees (11 fewer transactions \\u00d7 '+cen(fpt)+')',{save:mny(abs),fixed:cen(fpt)})+'\\n';" +
-  "r+='\\u2022 '+(neg?tk('calc_out.stripe_fee.row.whatif_volume_discount','Negotiate 0.5% volume discount:   save '+mny(ns)+'/yr',{save:mny(ns)}):tk('calc_out.stripe_fee.row.whatif_volume_discount_partial','Negotiate 0.5% volume discount:   save '+mny(ns)+'/yr (volume below $50K MRR \\u2014 partial credit)',{save:mny(ns)}))+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.stripe_fee.row.whatif_bundle_12','Bundle 12 transactions:           fee on $'+fmt(ba)+' single charge ('+mny(bf)+') vs 12\\u00d7 current ('+mny(uf)+') \\u2014 save '+mny(bs),{amount:'$'+fmt(ba),fee:mny(bf),current:mny(uf),save:mny(bs)})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tip;" +
-  "var results=[r];" +
-  "var amts=[1,10,100,1000,10000];" +
-  "for(var i=0;i<amts.length;i++){var am=amts[i];var ff=cf(am,ep);results.push(tk('calc_out.stripe_fee.row.comparison','Comparison: $'+fmt(am)+' charge via '+pd+' \\u2192 fee '+mny(ff.tf)+' ('+pct(ff.er)+'), net '+mny(ff.net),{amount:'$'+fmt(am),provider:pd,fee:mny(ff.tf),rate:pct(ff.er),net:mny(ff.net)}));}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let j=function(r){return Number.isNaN(r)?0:Math.max(0,r)},d=function(r,t){const n=R[t],o=r*n.percentage,_=n.hasFixed?n.fixed:0,u=o+_,h=r-u,l=r>0?u/r:0;return{percentageFee:o,fixedFee:_,totalFee:u,netReceived:h,effectiveRate:l}},B=function(r,t,n){if(n<=0||r<=0)return{monthly:{gross:0,fees:0,net:0},yearly:{gross:0,fees:0,net:0}};const o=d(r,t),_=r*n,u=o.totalFee*n,h=o.netReceived*n;return{monthly:{gross:_,fees:u,net:h},yearly:{gross:_*12,fees:u*12,net:h*12}}},D=function(r){return["stripe","stripe-international","paypal","square","wise"].map(n=>({provider:n,fee:d(r,n),displayName:K[n]})).sort((n,o)=>n.fee.totalFee-o.fee.totalFee)},I=function(r,t){return t<5?{emoji:"🔴",label:a("calc_out.stripe_fee.row.health_fixed_fee_dominates","fixed fee dominates — set $5 minimum or use no-fixed-fee provider")}:r<.02?{emoji:"🟢",label:a("calc_out.stripe_fee.row.health_excellent_rate","excellent rate")}:r<.03?{emoji:"🟡",label:a("calc_out.stripe_fee.row.health_standard_rate","standard rate")}:r<.04?{emoji:"🟠",label:a("calc_out.stripe_fee.row.health_above_average","above average")}:{emoji:"🔴",label:a("calc_out.stripe_fee.row.health_high_consider_switching","high — consider switching")}},V=function(r){const t=j(parseFloat(r.chargeAmount)||0),n=j(parseFloat(r.monthlyTransactions)||0),o=r.provider,_=o==="stripe-international"?"stripe-international":o==="paypal"?"paypal":o==="square"?"square":o==="wise"?"wise":"stripe",u=r.internationalCards,h=_==="stripe"&&u==="yes",l=h?"stripe-international":_;if(t<=0)return[\`$calc_out.section.stripe_fee_calculator|⏰ Stripe Fee Calculator|
+
+$calc_out.stripe_fee.row.enter_charge_amount|💰 Enter a charge amount above $0 to see your payment processing fees, provider comparison, and annual projections.|\`];const c=d(t,l),G=I(c.effectiveRate,t),s=B(t,l,n),m=D(t),v=m[0],y=m[m.length-1],J=(y.fee.totalFee-v.fee.totalFee)*n*12,w=i=>i.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),e=i=>"$"+w(Math.round(i*100)/100),p=i=>(i*100).toFixed(1)+"%",F=i=>i.toFixed(2);let U="";for(const i of m){const f=i.provider===l,k=i.displayName+(f?" (selected)":""),ee=" ".repeat(Math.max(0,22-k.length)),te=i.displayName+(f?" "+a("calc_out.stripe_fee.row.provider_selected","(selected)"):"")+ee;U+="• "+te+"  $calc_out.label.fee|fee|: "+e(i.fee.totalFee).padStart(8)+"  ("+F(i.fee.percentageFee)+" + "+F(i.fee.fixedFee)+")  $calc_out.label.net|net|: "+e(i.fee.netReceived)+(f?" "+a("calc_out.stripe_fee.row.selected_marker","← selected"):"")+\`
+\`}const N=d(t+1,l),x=N.netReceived-c.netReceived,g=R[l],P=g.hasFixed?(t+g.fixed)/(1-g.percentage):t/(1-g.percentage),b=P-t,C=g.hasFixed?g.fixed:0,Y=C*11*n*12,q=t*n,Q=q>=5e4,X=.005,$=Q?q*X*12:q*X*12*.5,M=t*12,A=d(M,l).totalFee,W=c.totalFee*12,Z=W-A;let S;n>1e3?S=a("calc_out.stripe_fee.row.tip_high_volume","💡 Tip: At your volume, you're paying "+e(s.yearly.fees)+"/yr in fees. Contact Stripe sales — they negotiate 0.1-0.3% off at $50K MRR. The 30-min call pays for itself.",{fees:e(s.yearly.fees)}):t<5?S=a("calc_out.stripe_fee.row.tip_small_charge","💡 Tip: On charges under $5, the 30¢ fixed fee dominates. Charge $5 minimum, or use PayPal (3.5% flat) for small transactions — Wise is cheapest but takes 1-2 days for payouts."):S=a("calc_out.stripe_fee.row.tip_default","💡 Tip: Stripe fees are unavoidable but negotiable at $50K+ MRR. Each 0.1% reduction saves "+e(s.yearly.fees*.001/.01)+"/yr at your volume. Consider annual plans (lower per-tx fees), pass fees to customers (+"+e(b)+" to cover "+e(t)+"), or compare Wise for international.",{save:e(s.yearly.fees*.001/.01),add:e(b),charge:e(t)});const O=K[l],E=[\`$calc_out.section.stripe_fee_calculator|⏰ Stripe Fee Calculator|
+
+$calc_out.section.stripe_fee_single_charge_breakdown|💰 Single Charge Breakdown:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.charge_amount|Charge Amount|:        \`+e(t)+\`
+• $calc_out.label.provider|Provider|:             \`+O+(h?" "+a("calc_out.stripe_fee.row.international_cards_applied","(international cards applied)"):"")+\`
+• $calc_out.label.percentage_fee|Percentage Fee|:       \`+e(c.percentageFee)+"  ("+p(R[l].percentage)+\`)
+• $calc_out.label.fixed_fee|Fixed Fee|:            \`+e(c.fixedFee)+\`
+• $calc_out.label.total_fee|Total Fee|:            \`+e(c.totalFee)+\`
+• $calc_out.label.net_received|Net Received|:         \`+e(c.netReceived)+"   "+a("calc_out.stripe_fee.row.net_received_note","← what hits your bank")+\`
+• $calc_out.label.effective_fee_rate|Effective Fee Rate|:   \`+p(c.effectiveRate)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+a("calc_out.stripe_fee.row.provider_comparison_header","📊 Provider Comparison (for "+e(t)+" charge, sorted by total fee):",{amount:e(t)})+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+U+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.stripe_fee_fee_efficiency_health|🩺 Fee Efficiency Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+G.emoji+" "+G.label+\`
+• \`+a("calc_out.stripe_fee.row.industry_average","Industry average: ~2.9% + 30¢ (Stripe US standard)")+\`
+\`+(t<5?"• "+a("calc_out.stripe_fee.row.fixed_fee_share_small","On "+e(t)+" charge: fixed fee is "+p(c.fixedFee/t)+" of total. Set $5 minimum or use PayPal/Wise.",{amount:e(t),pct:p(c.fixedFee/t)})+\`
+\`:"• "+a("calc_out.stripe_fee.row.fixed_fee_share","On "+e(t)+" charge: fixed fee is "+p(c.fixedFee/t)+" of total fee.",{amount:e(t),pct:p(c.fixedFee/t)})+\`
+\`)+"• "+(c.effectiveRate<.029?a("calc_out.stripe_fee.row.vs_average_better","Vs average: 🟢 better than average"):c.effectiveRate===.029?a("calc_out.stripe_fee.row.vs_average_equal","Vs average: 🟡 equal to average"):a("calc_out.stripe_fee.row.vs_average_worse","Vs average: 🟠 worse than average"))+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.stripe_fee_volume_projection|🎯 Volume Projection:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(n<=0?"• "+a("calc_out.stripe_fee.row.enter_monthly_transactions","Enter monthly transaction count for batch projection.")+\`
+\`:"• "+a("calc_out.stripe_fee.row.monthly_projection","Monthly:  "+e(s.monthly.gross)+" gross  →  "+e(s.monthly.fees)+" fees  →  "+e(s.monthly.net)+" net",{gross:e(s.monthly.gross),fees:e(s.monthly.fees),net:e(s.monthly.net)})+\`
+• \`+a("calc_out.stripe_fee.row.yearly_projection","Yearly:   "+e(s.yearly.gross)+" gross  →  "+e(s.yearly.fees)+" fees  →  "+e(s.yearly.net)+" net",{gross:e(s.yearly.gross),fees:e(s.yearly.fees),net:e(s.yearly.net)})+\`
+• \`+a("calc_out.stripe_fee.row.annualized_impact","Annualized impact: fees cost "+e(s.yearly.fees)+"/yr — could fund ~"+Math.round(s.yearly.fees/(t*.5))+" extra transactions at your average ticket.",{fees:e(s.yearly.fees),count:String(Math.round(s.yearly.fees/(t*.5)))})+\`
+\`)+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.stripe_fee_break_even_provider|⚖️ Break-Even on Provider Choice:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+a("calc_out.stripe_fee.row.cheapest_provider","Cheapest provider: "+v.displayName+" ("+e(v.fee.totalFee)+" per "+e(t)+" charge)",{provider:v.displayName,fee:e(v.fee.totalFee),charge:e(t)})+\`
+• \`+a("calc_out.stripe_fee.row.most_expensive_provider","Most expensive:    "+y.displayName+" ("+e(y.fee.totalFee)+" per "+e(t)+" charge)",{provider:y.displayName,fee:e(y.fee.totalFee),charge:e(t)})+\`
+\`+(n>0?"• "+a("calc_out.stripe_fee.row.annual_savings_if_switching","Annual savings if switching: "+e(J),{savings:e(J)})+\`
+\`:"• "+a("calc_out.stripe_fee.row.annual_savings_pending","Annual savings if switching: (enter monthly transactions to compute)")+\`
+\`)+"• "+a("calc_out.stripe_fee.row.switching_friction","Switching friction: Stripe ↔ PayPal takes 1-2 weeks; Wise requires account setup + payout delays.")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+a("calc_out.stripe_fee.row.whatif_raise_price","Raise price by $1:                 "+e(t+1)+" charge → net "+e(N.netReceived)+" ("+(x>=0?"+":"")+e(x)+" vs current)",{charge:e(t+1),net:e(N.netReceived),delta:(x>=0?"+":"")+e(x)})+\`
+• \`+a("calc_out.stripe_fee.row.whatif_pass_fees","Pass fees to customer:            charge "+e(P)+" instead of "+e(t)+" (add "+e(b)+") to net the same amount",{charge:e(P),base:e(t),add:e(b)})+\`
+• \`+a("calc_out.stripe_fee.row.whatif_annual_billing","Switch to annual billing:         save "+e(Y)+"/yr in fixed fees (11 fewer transactions × "+F(C)+")",{save:e(Y),fixed:F(C)})+\`
+\`+(Q?"• "+a("calc_out.stripe_fee.row.whatif_volume_discount","Negotiate 0.5% volume discount:   save "+e($)+"/yr",{save:e($)})+\`
+\`:"• "+a("calc_out.stripe_fee.row.whatif_volume_discount_partial","Negotiate 0.5% volume discount:   save "+e($)+"/yr (volume below $50K MRR — partial credit)",{save:e($)})+\`
+\`)+"• "+a("calc_out.stripe_fee.row.whatif_bundle_12","Bundle 12 transactions:           fee on $"+w(M)+" single charge ("+e(A)+") vs 12× current ("+e(W)+") — save "+e(Z),{amount:"$"+w(M),fee:e(A),current:e(W),save:e(Z)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+S],T=[1,10,100,1e3,1e4];for(const i of T){const f=d(i,l);E.push(a("calc_out.stripe_fee.row.comparison","Comparison: $"+w(i)+" charge via "+O+" → fee "+e(f.totalFee)+" ("+p(f.effectiveRate)+"), net "+e(f.netReceived),{amount:"$"+w(i),provider:O,fee:e(f.totalFee),rate:p(f.effectiveRate),net:e(f.netReceived)}))}return E},z=function(r,t,n){var o=L(r);return Array.isArray(o)?o.join(\`
+\`):String(o)};var ae=j,re=d,ne=B,se=D,ie=I,oe=V,ce=z,a=tk,H='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',a=new Function("return "+H)(),R={stripe:{percentage:.029,fixed:.3,hasFixed:!0},"stripe-international":{percentage:.044,fixed:.3,hasFixed:!0},paypal:{percentage:.035,fixed:0,hasFixed:!1},square:{percentage:.026,fixed:.1,hasFixed:!0},wise:{percentage:.015,fixed:0,hasFixed:!1}},K={stripe:"Stripe (US)","stripe-international":"Stripe (International)",paypal:"PayPal",square:"Square",wise:"Wise"},L=function(r){return V(r)};return[z(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine — to be filled in Step 6 ==============
 

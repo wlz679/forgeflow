@@ -212,74 +212,57 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  "function sOT(p){return Math.min(100,p);}" +
-  "function sDef(d){return Math.max(0,Math.min(100,100-d*10));}" +
-  "function sLead(lv){return Math.max(0,Math.min(100,100-lv*5));}" +
-  "function sCost(cv){return Math.max(0,Math.min(100,100-Math.abs(cv)*2));}" +
-  "var W={balanced:{onTime:0.4,defect:0.3,lead:0.15,cost:0.15},quality:{onTime:0.25,defect:0.5,lead:0.15,cost:0.1},speed:{onTime:0.5,defect:0.2,lead:0.25,cost:0.05},cost:{onTime:0.2,defect:0.2,lead:0.1,cost:0.5}};" +
-  "function gw(p){return W[p]||W.balanced;}" +
-  "function cs(ot,df,ld,ct,w){return ot*w.onTime+df*w.defect+ld*w.lead+ct*w.cost;}" +
-  "function gr(s){if(s>=90)return 'A';if(s>=80)return 'B';if(s>=70)return 'C';return 'D';}" +
-  "function band(s){if(s>=90)return 'excellent';if(s>=80)return 'good';if(s>=70)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var otp=cnn(Math.min(100,parseFloat(inputs.onTimePct)||0));" +
-  "var drp=cnn(parseFloat(inputs.defectRatePct)||0);" +
-  "var lvd=cnn(parseFloat(inputs.leadVarianceDays)||0);" +
-  "var cvp=parseFloat(inputs.costVariancePct)||0;" +
-  "var wp=inputs.weightPreset||'balanced';" +
-  "if(otp===0&&drp===0&&lvd===0&&cvp===0){return['\\u23F0 Supplier Performance Scorecard Calculator\\n\\n\\uD83D\\uDCCA Enter your supplier performance metrics \\u2014 on-time delivery %, defect rate %, lead time variance, and cost variance \\u2014 to see the composite score and letter grade.'];}" +
-  "var w=gw(wp);" +
-  "var s1=sOT(otp);var s2=sDef(drp);var s3=sLead(lvd);var s4=sCost(cvp);" +
-  "var sc=cs(s1,s2,s3,s4,w);" +
-  "var g=gr(sc);" +
-  "var bd=band(sc);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 composite '+sc.toFixed(1)+' = grade '+g+'; strategic partner':bd==='good'?'Good \\u2014 composite '+sc.toFixed(1)+' = grade '+g+'; solid, monitor':bd==='warning'?'Warning \\u2014 composite '+sc.toFixed(1)+' = grade '+g+'; underperforming':'Critical \\u2014 composite '+sc.toFixed(1)+' = grade '+g+'; replace';" +
-  "var dD=0.5;var sD2=sDef(dD);var scD=cs(s1,sD2,s3,s4,w);var scDlt=scD-sc;" +
-  "var otU=95;var sOU=sOT(otU);var scOU=cs(sOU,s2,s3,s4,w);var scOlt=scOU-sc;" +
-  "var oc=s2*w.defect+s3*w.lead+s4*w.cost;var tOT=(80-oc)/w.onTime;var cOT=s1;var oth=tOT-cOT;" +
-  "var cg=g;var nGT=cg==='D'?70:cg==='C'?80:cg==='B'?90:95;var pt2up=nGT-sc;" +
-  "var tip='';" +
-  "if(bd==='critical'){tip='Grade D is a replace signal. Begin dual-sourcing immediately (qualify a backup supplier over 60\\u201390 days). For critical SKUs, air-ship to bridge the gap while transitioning. Do NOT extend POs without backup.';}" +
-  "else if(bd==='warning'){tip='Grade C means 1\\u20132 dimensions are failing. Identify the weakest metric (likely defect rate or lead variance) and require a corrective action plan (CAP) within 30 days. Hold new SKUs until improvement.';}" +
-  "else if(bd==='good'){tip='Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.';}" +
-  "else{tip='Grade A \\u2014 strategic partner. Lock in long-term contracts, request preferred-customer pricing, and ask for early access to new SKUs / capacity. Audit quarterly to ensure quality holds.';}" +
-  "var r2='';" +
-  "r2+='\\u23F0 Supplier Performance Scorecard Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Composite: '+sc.toFixed(1)+'/100  \\u00B7  Grade: '+g+'  \\u00B7  Weight preset: '+wp+'\\n';" +
-  "r2+='\\u2022 Sub-scores: on-time '+s1.toFixed(0)+' \\u00B7 defect '+s2.toFixed(0)+' \\u00B7 lead '+s3.toFixed(0)+' \\u00B7 cost '+s4.toFixed(0)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 On-time delivery:        '+otp.toFixed(1)+'%  \\u2192  score '+s1.toFixed(0)+'  (weight '+(w.onTime*100).toFixed(0)+'%)\\n';" +
-  "r2+='\\u2022 Defect rate:             '+drp.toFixed(1)+'%  \\u2192  score '+s2.toFixed(0)+'  (weight '+(w.defect*100).toFixed(0)+'%)\\n';" +
-  "r2+='\\u2022 Lead time variance:      '+lvd.toFixed(1)+' days  \\u2192  score '+s3.toFixed(0)+'  (weight '+(w.lead*100).toFixed(0)+'%)\\n';" +
-  "r2+='\\u2022 Cost variance:           '+cvp.toFixed(1)+'%  \\u2192  score '+s4.toFixed(0)+'  (weight '+(w.cost*100).toFixed(0)+'%)\\n';" +
-  "r2+='\\u2022 Composite:               '+sc.toFixed(1)+'/100  \\u00B7  Grade '+g+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Defect rate drops to 0.5%: composite = '+scD.toFixed(1)+' (\\u0394 +'+scDlt.toFixed(1)+' points)\\n';" +
-  "r2+='\\u2022 On-time improves to 95%: composite = '+scOU.toFixed(1)+' (\\u0394 +'+scOlt.toFixed(1)+' points)\\n';" +
-  "r2+='\\u2022 Combined (defect 0.5% + on-time 95%): see Milestone\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Min on-time score for grade B (\\u2265 80 composite): '+tOT.toFixed(1)+'\\n';" +
-  "r2+='\\u2022 Current on-time score: '+cOT.toFixed(1)+'\\n';" +
-  "r2+='\\u2022 On-time headroom: '+(oth>0?'raise on-time by '+oth.toFixed(1)+' pts to hit B':oth===0?'at threshold':'already above target')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Current grade: '+cg+' (composite '+sc.toFixed(1)+')\\n';" +
-  "r2+='\\u2022 Upgrade target: '+nGT+'+  \\u00B7  Points needed: +'+pt2up.toFixed(1)+'\\n';" +
-  "r2+='\\u2022 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(e){return Number.isNaN(e)?0:Math.max(0,e)},y=function(e){return Math.min(100,e)},w=function(e){return g(100-e*10,0,100)},b=function(e){return g(100-e*5,0,100)},D=function(e){return g(100-Math.abs(e)*2,0,100)},g=function(e,r,i){return Math.max(r,Math.min(i,e))},C=function(e){return T[e]??T.balanced},x=function(e,r,i,o,a){return e*a.onTime+r*a.defect+i*a.lead+o*a.cost},P=function(e){return e>=90?"A":e>=80?"B":e>=70?"C":"D"},k=function(e){return e>=h.excellent?"excellent":e>=h.good[0]?"good":e>=h.warning[0]?"warning":"critical"},O=function(e,r,i){var o=B(e);return Array.isArray(o)?o.join(\`
+\`):String(o)};var I=f,R=y,W=w,z=b,J=D,Q=g,X=C,Y=x,Z=P,H=k,ee=O,q={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},h={excellent:90,good:[80,90],warning:[70,80],critical:0},T={balanced:{onTime:.4,defect:.3,lead:.15,cost:.15},quality:{onTime:.25,defect:.5,lead:.15,cost:.1},speed:{onTime:.5,defect:.2,lead:.25,cost:.05},cost:{onTime:.2,defect:.2,lead:.1,cost:.5}},B=function(e){const r=f(Math.min(100,parseFloat(e.onTimePct)||0)),i=f(parseFloat(e.defectRatePct)||0),o=f(parseFloat(e.leadVarianceDays)||0),a=parseFloat(e.costVariancePct)||0,S=e.weightPreset||"balanced";if(r===0&&i===0&&o===0&&a===0)return[\`⏰ Supplier Performance Scorecard Calculator
+
+📊 Enter your supplier performance metrics — on-time delivery %, defect rate %, lead time variance, and cost variance — to see the composite score and letter grade.\`];const n=C(S),m=y(r),u=w(i),d=b(o),l=D(a),t=x(m,u,d,l,n),c=P(t),s=k(t),A=q[s],K=s==="excellent"?\`Excellent — composite \${t.toFixed(1)} = grade \${c}; strategic partner\`:s==="good"?\`Good — composite \${t.toFixed(1)} = grade \${c}; solid, monitor\`:s==="warning"?\`Warning — composite \${t.toFixed(1)} = grade \${c}; underperforming\`:\`Critical — composite \${t.toFixed(1)} = grade \${c}; replace\`,N=w(.5),M=x(m,N,d,l,n),V=M-t,L=y(95),U=x(L,u,d,l,n),j=U-t,_=(80-(u*n.defect+d*n.lead+l*n.cost))/n.onTime,G=m,v=_-G,F=c,$=F==="D"?70:F==="C"?80:F==="B"?90:95,E=$-t;let p;return s==="critical"?p="Grade D is a replace signal. Begin dual-sourcing immediately (qualify a backup supplier over 60–90 days). For critical SKUs, air-ship to bridge the gap while transitioning. Do NOT extend POs without backup.":s==="warning"?p="Grade C means 1–2 dimensions are failing. Identify the weakest metric (likely defect rate or lead variance) and require a corrective action plan (CAP) within 30 days. Hold new SKUs until improvement.":s==="good"?p="Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.":p="Grade A — strategic partner. Lock in long-term contracts, request preferred-customer pricing, and ask for early access to new SKUs / capacity. Audit quarterly to ensure quality holds.",[\`⏰ Supplier Performance Scorecard Calculator
+
+🩺 Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+A+" "+K+\`
+• Composite: \`+t.toFixed(1)+"/100  ·  Grade: "+c+"  ·  Weight preset: "+S+\`
+• Sub-scores: on-time \`+m.toFixed(0)+" · defect "+u.toFixed(0)+" · lead "+d.toFixed(0)+" · cost "+l.toFixed(0)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Inputs Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• On-time delivery:        \`+r.toFixed(1)+"%  →  score "+m.toFixed(0)+"  (weight "+(n.onTime*100).toFixed(0)+\`%)
+• Defect rate:             \`+i.toFixed(1)+"%  →  score "+u.toFixed(0)+"  (weight "+(n.defect*100).toFixed(0)+\`%)
+• Lead time variance:      \`+o.toFixed(1)+" days  →  score "+d.toFixed(0)+"  (weight "+(n.lead*100).toFixed(0)+\`%)
+• Cost variance:           \`+a.toFixed(1)+"%  →  score "+l.toFixed(0)+"  (weight "+(n.cost*100).toFixed(0)+\`%)
+• Composite:               \`+t.toFixed(1)+"/100  ·  Grade "+c+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Defect rate drops to 0.5%: composite = \`+M.toFixed(1)+" (Δ +"+V.toFixed(1)+\` points)
+• On-time improves to 95%: composite = \`+U.toFixed(1)+" (Δ +"+j.toFixed(1)+\` points)
+• Combined (defect 0.5% + on-time 95%): see Milestone
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Min on-time score for grade B (≥ 80 composite): \`+_.toFixed(1)+\`
+• Current on-time score: \`+G.toFixed(1)+\`
+• On-time headroom: \`+(v>0?"raise on-time by "+v.toFixed(1)+" pts to hit B":v===0?"at threshold":"already above target")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Milestone:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Current grade: \`+F+" (composite "+t.toFixed(1)+\`)
+• Upgrade target: \`+$+"+  ·  Points needed: +"+E.toFixed(1)+\`
+• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+p+\`
+\`]};return[O(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

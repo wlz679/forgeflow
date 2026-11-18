@@ -64,35 +64,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cnn=function(x){return Math.max(0,x)};
-  var mt = cnn(Number(inputs.months_to_full) || 6);
-  var sp = cnn(Number(inputs.starting_pct) || 0);
-  var sh = inputs.curve_shape || 'S-Curve';
-  var mc = cnn(Number(inputs.monthly_cost) || 0);
-  // Find P50 month
-  var p50 = mt;
-  for (var t = 0.1; t <= mt * 2; t += 0.1) {
-    var p = 0;
-    if (t >= mt) p = 100;
-    else if (sh === 'Linear') p = sp + (100 - sp) * (t / mt);
-    else if (sh === 'SlowStart') p = sp + (100 - sp) * Math.pow(t / mt, 2);
-    else { var k = 12 / mt, t0 = mt / 2; p = sp + (100 - sp) / (1 + Math.exp(-k * (t - t0))); }
-    if (p >= 50) { p50 = Math.round(t * 10) / 10; break; }
-  }
-  var p50Pct = p50 / mt;
-  var band = p50Pct <= 0.30 ? 'Excellent' : p50Pct <= 0.50 ? 'Good' : p50Pct <= 0.70 ? 'Warning' : 'Critical';
-  var emoji = p50Pct <= 0.30 ? '🟢' : p50Pct <= 0.50 ? '🟡' : p50Pct <= 0.70 ? '🟠' : '🔴';
-  return [
-    '🩺 Ramp Health: ' + emoji + ' ' + band + ' (P50 at month ' + p50 + ', ' + (p50Pct * 100).toFixed(0) + '% of months_to_full)',
-    '📊 Snapshot: ' + mt + 'mo ' + sh + ' curve, ' + sp + '% start, $' + mc.toLocaleString() + '/mo fully-loaded',
-    '🔄 What-If: Linear curve hits P50 at same month (' + p50 + '); SlowStart hits P50 at month ' + (Math.sqrt(0.5) * mt).toFixed(1) + ' (slower)',
-    '⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤30%), use S-Curve with shorter months_to_full or pre-onboarding bootcamp',
-    '🎯 Milestone: At month ' + Math.round(mt / 2) + ' the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2)',
-    '💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance).'
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e,o,r){const a=100-o;if(t<=0)return o;if(t>=e)return 100;if(r==="Linear")return o+a*(t/e);if(r==="SlowStart")return o+a*Math.pow(t/e,2);const c=12/e,s=e/2;return o+a/(1+Math.exp(-c*(t-s)))},i=function(t,e,o){for(let r=.1;r<=t*2;r+=.1)if(u(r,t,e,o)>=50)return Math.round(r*10)/10;return t},h=function(t){const e=t/100;return e<=n.excellent.threshold?"excellent":e<=n.good.threshold?"good":e<=n.warning.threshold?"warning":"critical"},f=function(t){return t.toFixed(1)+"%"},d=function(t){return"$"+Math.round(t).toLocaleString()},m=function(t,e,o){var r=p(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var g=l,v=u,P=i,S=h,k=f,x=d,M=m,n={excellent:{threshold:.3,label:"🟢 Excellent",message:"Steep ramp — employee reaches P50 productivity in <30% of months_to_full."},good:{threshold:.5,label:"🟡 Good",message:"Healthy ramp — P50 reached at 30-50% of months_to_full (typical for S-Curve)."},warning:{threshold:.7,label:"🟠 Warning",message:"Slow ramp — P50 takes 50-70% of months_to_full. Onboarding likely needs scope/buddy support."},critical:{threshold:null,label:"🔴 Critical",message:"Very slow ramp — employee takes >70% of months_to_full to reach P50 productivity."}},p=function(t){const e=l(Number(t.months_to_full)||6),o=l(Number(t.starting_pct)||0),r=t.curve_shape||"S-Curve",a=l(Number(t.monthly_cost)||0),c=i(e,o,r),s=c/e,_=h(s*100),y=n[_],w=i(e,o,"Linear"),b=i(e,o,"SlowStart");return["🩺 Ramp Health: "+y.label+" (P50 at month "+c+", "+f(s*100)+" of months_to_full)","📊 Snapshot: "+e+"mo "+r+" curve · "+o+"% start · "+d(a)+"/mo fully-loaded","🔄 What-If: Linear curve hits P50 at same month ("+w+"); SlowStart hits P50 at month "+b.toFixed(1)+" (slower)","⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤"+n.excellent.threshold*100+"% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp","🎯 Milestone: At month "+Math.round(e/2)+" the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks","💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications)."]};return[m(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

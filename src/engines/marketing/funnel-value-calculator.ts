@@ -204,73 +204,56 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (minified, mirrors calculate()) ==============
 
 const customFn =
-  "function sV(i){return i;}" +
-  "function sC(i,c){return i*(c/100);}" +
-  "function sL(c,lr){return c*(lr/100);}" +
-  "function sS(l,sr){return l*(sr/100);}" +
-  "function oCR(s,i){if(i<=0)return 0;return(s/i)*100;}" +
-  "function dO(p,c){return Math.max(0,p-c);}" +
-  "function bLS(f){var s2=sC(f.i,f.c);var s3=sL(s2,f.l);var s4=sS(s3,f.s);var d12=dO(f.i,s2);var d23=dO(s2,s3);var d34=dO(s3,s4);var m=Math.max(d12,d23,d34);if(m===d12)return'1\\u21922';if(m===d23)return'2\\u21923';return'3\\u21924';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var f={i:cnn(parseFloat(inputs.impressions)||0),c:cnn(parseFloat(inputs.ctr)||0),l:cnn(parseFloat(inputs.leadRate)||0),s:cnn(parseFloat(inputs.saleRate)||0),a:cnn(parseFloat(inputs.aov)||0),g:cnn(parseFloat(inputs.grossMargin)||0)};" +
-  "if(f.i===0){return['\\u23F0 Funnel Value Calculator\\n\\n\\uD83D\\uDCCA Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.'];}" +
-  "var s2=sC(f.i,f.c);var s3=sL(s2,f.l);var s4=sS(s3,f.s);" +
-  "var cr=oCR(s4,f.i);var tR=s4*f.a;var tP=tR*(f.g/100);" +
-  "var d12=dO(f.i,s2);var d23=dO(s2,s3);var d34=dO(s3,s4);" +
-  "var leak=bLS(f);" +
-  "var d12p=f.i>0?(d12/f.i)*100:0;var d23p=s2>0?(d23/s2)*100:0;var d34p=s3>0?(d34/s3)*100:0;" +
-  "var hE='',hL='';" +
-  "if(cr>=5){hE='\\uD83D\\uDFE2';hL='Excellent \\u2014 overall CR \\u2265 5%; funnel highly optimized';}" +
-  "else if(cr>=1){hE='\\uD83D\\uDFE1';hL='Good \\u2014 overall CR 1\\u20135%; profitable with optimization upside';}" +
-  "else if(cr>=0.1){hE='\\uD83D\\uDFE0';hL='Warning \\u2014 overall CR 0.1\\u20131%; significant drop-off';}" +
-  "else{hE='\\uD83D\\uDD34';hL='Critical \\u2014 overall CR < 0.1%; funnel broken or extreme thin audience';}" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:1});}" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "var boost=Math.max(f.l*0.3,5);var nLR=f.l+boost;" +
-  "var nS3=sL(s2,nLR);var nS4=sS(nS3,f.s);var nCR=oCR(nS4,f.i);var nRev=nS4*f.a;" +
-  "var tRev=Math.max(tR,10000);" +
-  "var beCR=(tRev/f.a)/f.i*100;var beLR=s2>0?(tRev/f.a/s2)*100:0;" +
-  "var s2x=sC(f.i*2,f.c);var s4x=sS(sL(s2x,f.l),f.s);var s2xR=s4x*f.a;var annR=tR*12;" +
-  "var tip='';" +
-  "if(leak==='1\\u21922'){tip='Biggest leak at the awareness stage (1\\u21922): impressions \\u2192 clickers lost '+d12p.toFixed(0)+'%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.';}" +
-  "else if(leak==='2\\u21923'){tip='Biggest leak at the consideration stage (2\\u21923): clickers \\u2192 leads lost '+d23p.toFixed(0)+'%. Audit landing page, headline copy, and CTA. Optimize page-load speed and trust signals.';}" +
-  "else if(leak==='3\\u21924'){tip='Biggest leak at the decision stage (3\\u21924): leads \\u2192 sales lost '+d34p.toFixed(0)+'%. Test pricing, sales page, checkout flow. Add social proof, testimonials, and risk-reversal (guarantees).';}" +
-  "else{tip='Add data to see stage-specific recommendations.';}" +
-  "var r2='';" +
-  "r2+='\\u23F0 Funnel Value Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+hE+' '+hL+'\\n';" +
-  "r2+='\\u2022 Overall conversion rate: '+cr.toFixed(3)+'%  \\u00B7  Biggest leak: stage '+leak+'\\n';" +
-  "r2+='\\u2022 Revenue: '+money(tR)+'  \\u00B7  Net profit: '+money(tP)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Impressions:  '+fmt(f.i)+'\\n';" +
-  "r2+='\\u2022 Clickers:     '+fmt(s2)+'  (CTR '+f.c.toFixed(1)+'%, drop '+d12p.toFixed(1)+'%)\\n';" +
-  "r2+='\\u2022 Leads:        '+fmt(s3)+'  (lead rate '+f.l.toFixed(1)+'%, drop '+d23p.toFixed(1)+'%)\\n';" +
-  "r2+='\\u2022 Sales:        '+fmt(s4)+'  (sale rate '+f.s.toFixed(1)+'%, drop '+d34p.toFixed(1)+'%)\\n';" +
-  "r2+='\\u2022 AOV:          '+money(f.a)+'  \\u00B7  Margin: '+f.g.toFixed(0)+'%\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Lead rate +'+boost.toFixed(1)+'pp ('+f.l.toFixed(1)+'% \\u2192 '+nLR.toFixed(1)+'%):\\n';" +
-  "r2+='  \\u2022 Sales: '+fmt(s4)+' \\u2192 '+fmt(nS4)+'  \\u00B7  Revenue: '+money(nRev)+'\\n';" +
-  "r2+='  \\u2022 CR: '+cr.toFixed(3)+'% \\u2192 '+nCR.toFixed(3)+'%\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 To reach '+money(tRev)+' revenue at current AOV: need '+fmt(tRev/f.a)+' sales\\n';" +
-  "r2+='  \\u2022 Required overall CR: '+beCR.toFixed(3)+'% (currently '+cr.toFixed(3)+'%)\\n';" +
-  "r2+='  \\u2022 Required lead rate: '+beLR.toFixed(1)+'% (currently '+f.l.toFixed(1)+'%)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Scale impressions 2x: '+fmt(s4x)+' sales \\u2192 '+money(s2xR)+' revenue\\n';" +
-  "r2+='\\u2022 12-month projection (constant funnel): '+money(annR)+' revenue\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let i=function(n){return Number.isNaN(n)?0:Math.max(0,n)},m=function(n,e){return n*(e/100)},u=function(n,e){return n*(e/100)},g=function(n,e){return n*(e/100)},k=function(n,e){return e<=0?0:n/e*100},l=function(n,e){return Math.max(0,n-e)},w=function(n){const e=m(n.impressions,n.ctr),t=u(e,n.leadRate),a=g(t,n.saleRate),o=l(n.impressions,e),s=l(e,t),d=l(t,a),R=Math.max(o,s,d);return R===o?"1→2":R===s?"2→3":"3→4"},S=function(n,e,t){var a=O(n);return Array.isArray(a)?a.join(\`
+\`):String(a)};var K=i,P=m,$=u,D=g,J=k,Q=l,X=w,Y=S,h={excellent:5,good:[1,5],warning:[.1,1],critical:0},O=function(n){const e={impressions:i(parseFloat(n.impressions)||0),ctr:i(parseFloat(n.ctr)||0),leadRate:i(parseFloat(n.leadRate)||0),saleRate:i(parseFloat(n.saleRate)||0),aov:i(parseFloat(n.aov)||0),grossMargin:i(parseFloat(n.grossMargin)||0)};if(e.impressions===0)return[\`⏰ Funnel Value Calculator
+
+📊 Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.\`];const t=m(e.impressions,e.ctr),a=u(t,e.leadRate),o=g(a,e.saleRate),s=k(o,e.impressions),d=o*e.aov,R=d*(e.grossMargin/100),V=l(e.impressions,t),j=l(t,a),B=l(a,o),x=w(e),y=e.impressions>0?V/e.impressions*100:0,_=t>0?j/t*100:0,b=a>0?B/a*100:0;let p,f;s>=h.excellent?(p="🟢",f="Excellent — overall CR ≥ 5%; funnel highly optimized"):s>=h.good[0]?(p="🟡",f="Good — overall CR 1–5%; profitable with optimization upside"):s>=h.warning[0]?(p="🟠",f="Warning — overall CR 0.1–1%; significant drop-off"):(p="🔴",f="Critical — overall CR < 0.1%; funnel broken or extreme thin audience");const r=M=>M.toLocaleString("en-US",{maximumFractionDigits:1}),c=M=>"$"+Math.round(M).toLocaleString("en-US"),A=Math.max(e.leadRate*.3,5),E=e.leadRate+A,T=u(t,E),C=g(T,e.saleRate),z=k(C,e.impressions),I=C*e.aov,F=Math.max(d,1e4),N=F/e.aov/e.impressions*100,q=t>0?F/e.aov/t*100:0,U=m(e.impressions*2,e.ctr),L=g(u(U,e.leadRate),e.saleRate),W=L*e.aov,G=d*12;let v;return x==="1→2"?v="Biggest leak at the awareness stage (1→2): impressions → clickers lost "+y.toFixed(0)+"%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.":x==="2→3"?v="Biggest leak at the consideration stage (2→3): clickers → leads lost "+_.toFixed(0)+"%. Audit landing page, headline copy, and CTA. Optimize page-load speed and trust signals.":x==="3→4"?v="Biggest leak at the decision stage (3→4): leads → sales lost "+b.toFixed(0)+"%. Test pricing, sales page, checkout flow. Add social proof, testimonials, and risk-reversal (guarantees).":v="Add data to see stage-specific recommendations.",[\`⏰ Funnel Value Calculator
+
+🩺 Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+p+" "+f+\`
+• Overall conversion rate: \`+s.toFixed(3)+"%  ·  Biggest leak: stage "+x+\`
+• Revenue: \`+c(d)+"  ·  Net profit: "+c(R)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Inputs Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Impressions:  \`+r(e.impressions)+\`
+• Clickers:     \`+r(t)+"  (CTR "+e.ctr.toFixed(1)+"%, drop "+y.toFixed(1)+\`%)
+• Leads:        \`+r(a)+"  (lead rate "+e.leadRate.toFixed(1)+"%, drop "+_.toFixed(1)+\`%)
+• Sales:        \`+r(o)+"  (sale rate "+e.saleRate.toFixed(1)+"%, drop "+b.toFixed(1)+\`%)
+• AOV:          \`+c(e.aov)+"  ·  Margin: "+e.grossMargin.toFixed(0)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Lead rate +\`+A.toFixed(1)+"pp ("+e.leadRate.toFixed(1)+"% → "+E.toFixed(1)+\`%):
+  • Sales: \`+r(o)+" → "+r(C)+"  ·  Revenue: "+c(I)+\`
+  • CR: \`+s.toFixed(3)+"% → "+z.toFixed(3)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• To reach \`+c(F)+" revenue at current AOV: need "+r(F/e.aov)+\` sales
+  • Required overall CR: \`+N.toFixed(3)+"% (currently "+s.toFixed(3)+\`%)
+  • Required lead rate: \`+q.toFixed(1)+"% (currently "+e.leadRate.toFixed(1)+\`%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Milestone:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Scale impressions 2x: \`+r(L)+" sales → "+c(W)+\` revenue
+• 12-month projection (constant funnel): \`+c(G)+\` revenue
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+v+\`
+\`]};return[S(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

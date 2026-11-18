@@ -57,36 +57,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cnn=function(x){return Math.max(0,x)};
-  var base = cnn(Number(inputs.base_salary) || 0);
-  var p25 = cnn(Number(inputs.market_p25) || 1);
-  var p50 = cnn(Number(inputs.market_p50) || 1);
-  var p75 = cnn(Number(inputs.market_p75) || 1);
-  var role = inputs.role_title || 'this role';
-  var pct = 0;
-  if (base <= p25) pct = (base / p25) * 25;
-  else if (base <= p50) pct = 25 + ((base - p25) / (p50 - p25)) * 25;
-  else if (base <= p75) pct = 50 + ((base - p50) / (p75 - p50)) * 25;
-  else pct = Math.min(100, 75 + ((base - p75) / p75) * 25);
-  var band = pct >= 75 ? 'Excellent' : pct >= 50 ? 'Good' : pct >= 25 ? 'Warning' : 'Critical';
-  var emoji = pct >= 75 ? '🟢' : pct >= 50 ? '🟡' : pct >= 25 ? '🟠' : '🔴';
-  var targetAt75 = p75;
-  var tipParams = { pct: pct.toFixed(0), base: '$' + Math.round(base).toLocaleString(), p50: '$' + Math.round(p50).toLocaleString(), p75: '$' + Math.round(p75).toLocaleString() };
-  var tip = band === 'Excellent' ? JSON.stringify({ code: 'comp_banding_top_quartile', params: tipParams })
-    : band === 'Good' ? JSON.stringify({ code: 'comp_banding_p50_to_p75', params: tipParams })
-    : band === 'Warning' ? JSON.stringify({ code: 'comp_banding_p25_to_p50', params: tipParams })
-    : JSON.stringify({ code: 'comp_banding_below_p25', params: tipParams });
-  return [
-    '🩺 Comp Banding: ' + emoji + ' ' + band + ' (P' + pct.toFixed(0) + ')',
-    '📊 Snapshot: ' + role + ' at $' + base.toLocaleString() + ' vs P25 $' + p25.toLocaleString() + ' / P50 $' + p50.toLocaleString() + ' / P75 $' + p75.toLocaleString(),
-    '🔄 What-If: at P75 ($' + p75.toLocaleString() + '), retention risk drops 40% (per Pave 2024)',
-    '⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget $' + targetAt75.toLocaleString() + ' — vs current $' + base.toLocaleString() + ' = $' + (targetAt75 - base).toLocaleString() + ' delta',
-    '🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)',
-    '💡 Tip: ' + tip
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let a=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,i,e,n){return t<=i?i===0?0:t/i*25:t<=e?e===i?25:25+(t-i)/(e-i)*25:t<=n?n===e?50:50+(t-e)/(n-e)*25:Math.min(100,75+(t-n)/n*25)},g=function(t){return t>=s.excellent.threshold?"excellent":t>=s.good.threshold?"good":t>=s.warning.threshold?"warning":"critical"},r=function(t){return"$"+Math.round(t).toLocaleString()},h=function(t,i,e){var n=_(t);return Array.isArray(n)?n.join(\`
+\`):String(n)};var y=a,k=d,v=g,P=r,w=h,s={excellent:{threshold:75,label:"🟢 Excellent",message:"Paying at or above P75 — top-quartile retention signal."},good:{threshold:50,label:"🟡 Good",message:"Paying at market median or above — competitive but not top-quartile."},warning:{threshold:25,label:"🟠 Warning",message:"Below market median — flight risk to competitors offering P50+."},critical:{threshold:null,label:"🔴 Critical",message:"Significantly below market — high attrition risk; expect counter-offer pressure within 6 months."}},_=function(t){const i=t.role_title||"this role",e=a(Number(t.base_salary)||0),n=a(Number(t.market_p25)||0),u=a(Number(t.market_p50)||0),o=a(Number(t.market_p75)||0),m=d(e,n,u,o),c=g(m),p=s[c],b=o-e,f={pct:m.toFixed(0),base:r(e),p50:r(u),p75:r(o)};let l;return c==="excellent"?l=JSON.stringify({code:"comp_banding_top_quartile",params:f}):c==="good"?l=JSON.stringify({code:"comp_banding_p50_to_p75",params:f}):c==="warning"?l=JSON.stringify({code:"comp_banding_p25_to_p50",params:f}):l=JSON.stringify({code:"comp_banding_below_p25",params:f}),["🩺 Comp Banding: "+p.label+" (P"+m.toFixed(0)+")","📊 Snapshot: "+i+" at "+r(e)+" · Below P75 by "+r(Math.max(0,o-e))+" · Above P50 by "+r(Math.max(0,e-u)),"🔄 What-If: at P75 ("+r(o)+"), retention risk drops 40% (per Pave 2024)","⚖️ Break-Even: to hit 🟢 Excellent (≥P75), budget "+r(o)+" — vs current "+r(e)+" = "+r(b)+" delta","🎯 Milestone: Annual comp review (Q1) to keep up with market drift (~5%/yr per Levels.fyi)","💡 Tip: "+l]};return[h(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

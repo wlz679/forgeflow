@@ -52,31 +52,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var deflected = cnn(Number(inputs.tickets_deflected_30d) || 0);
-  var reopened = cnn(Number(inputs.tickets_reopened_30d) || 0);
-  var target = cnn(Number(inputs.target_quality_pct) || 0);
-  var source = inputs.deflection_source || 'Both';
-  if (reopened > deflected) reopened = deflected;
-  var reopen = deflected > 0 ? reopened / deflected : 0;
-  var quality = Math.max(0, 100 - reopen * 100);
-  var gap = target - quality;
-  var band = reopen <= 0.08 ? 'Excellent' : reopen <= 0.15 ? 'Good' : reopen <= 0.25 ? 'Warning' : 'Critical';
-  var emoji = reopen <= 0.08 ? '🟢' : reopen <= 0.15 ? '🟡' : reopen <= 0.25 ? '🟠' : '🔴';
-  var altReopen = 0.08;
-  var altQuality = 100 - altReopen * 100;
-  var liftReopen = Math.max(0, reopened - altReopen * deflected);
-  var reopenFree = liftReopen;
-  return [
-    '🩺 Deflection Quality Health: ' + emoji + ' ' + band + ' (' + (reopen*100).toFixed(1) + '% reopen · ' + quality.toFixed(1) + '% quality · ' + Math.round(reopened).toLocaleString() + ' of ' + Math.round(deflected).toLocaleString() + ' reopened)',
-    '📊 Snapshot: ' + Math.round(reopened).toLocaleString() + ' of ' + Math.round(deflected).toLocaleString() + ' tickets reopened (' + (reopen*100).toFixed(1) + '%) via ' + source + ' · quality ' + quality.toFixed(1) + '% · target ' + target + '% (' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp gap)',
-    '🔄 What-If: if reopen rate drops to 8% (Excellent), ' + Math.round(reopenFree).toLocaleString() + ' fewer reopen tickets/mo - saved quality climbs to ' + altQuality.toFixed(1) + '%',
-    '⚖️ Break-Even: to hit ≤8% reopen (Excellent), need ' + Math.round(reopenFree).toLocaleString() + ' fewer reopens/mo OR refresh ~' + Math.ceil(reopenFree / 10) + ' top-reopen articles',
-    '🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release',
-    '💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let a=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,t){return t>0?e/t:0},f=function(e){return Math.max(0,100-e*100)},g=function(e,t){return t-e},m=function(e){return e<=r.excellent.threshold?"excellent":e<=r.good.threshold?"good":e<=r.warning.threshold?"warning":"critical"},l=function(e){return(e*100).toFixed(1)+"%"},s=function(e){return e.toFixed(1)+"%"},n=function(e){return Math.round(e).toLocaleString()},y=function(e,t,i){var o=x(e);return Array.isArray(o)?o.join(\`
+\`):String(o)};var w=a,M=p,q=f,F=g,N=m,R=l,K=s,W=n,G=y,r={excellent:{threshold:.08,label:"Excellent",message:"KB content solving customer problems."},good:{threshold:.15,label:"Good",message:"Most deflected tickets stay solved."},warning:{threshold:.25,label:"Warning",message:"Notable reopen rate - audit top articles."},critical:{threshold:null,label:"Critical",message:"Deflection masking product gaps."}},x=function(e){const t=a(Number(e.tickets_deflected_30d)||0),i=Math.min(a(Number(e.tickets_reopened_30d)||0),t),o=a(Number(e.target_quality_pct)||0),k=String(e.deflection_source||"Both"),c=p(i,t),u=f(c),b=g(u,o),_=m(c),v=r[_],d=r.excellent.threshold,h=Math.max(0,i-d*t);return["🩺 Deflection Quality Health: "+v.label+" ("+l(c)+" reopen · "+s(u)+" quality · "+n(i)+" of "+n(t)+" reopened)","📊 Snapshot: "+n(i)+" of "+n(t)+" tickets reopened ("+l(c)+") via "+k+" · quality "+s(u)+" · target "+o+"% ("+(b>=0?"+":"")+b.toFixed(1)+"pp gap)","🔄 What-If: if reopen rate drops to "+l(d)+" (Excellent), "+n(h)+" fewer reopen tickets/mo - saved quality climbs to "+s(100-d*100),"⚖️ Break-Even: to hit "+l(r.excellent.threshold)+" reopen (Excellent), need "+n(h)+" fewer reopens/mo OR refresh ~"+Math.ceil(h/10)+" top-reopen articles","🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release","💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes."]};return[y(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

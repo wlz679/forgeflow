@@ -349,120 +349,58 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function bACV(t,n){if(n<=0)return 0;return t/n;}" +
-  "function mACV(b,l){if(l<=0)return 0;return b/l;}" +
-  "function aACV(m){return Math.round(m*12);}" +
-  "function eACV(a,r){return a*(100+r)/100;}" +
-  "function band(v){if(v>=50000)return 'excellent';if(v>=10000)return 'good';if(v>=2000)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var tcv=cnn(parseFloat(inputs.totalContractValue)||0);" +
-  "var cl=Math.max(1,parseFloat(inputs.contractLength)||1);" +
-  "var nc=Math.max(1,parseFloat(inputs.numCustomers)||1);" +
-  "var er=cnn(parseFloat(inputs.expansionRate)||0);" +
-  "var base=bACV(tcv,nc);" +
-  "var moRaw=mACV(base,cl);" +
-  "var moDisp=Math.round(moRaw*100)/100;" +
-  "var annual=aACV(moRaw);" +
-  "var expd=eACV(annual,er);" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function moneyExact(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}" +
-  "var bd=band(annual);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?tk('calc_out.acv.row.health_excellent','" + HEALTH_BAND_TEXT.excellent + "'):bd==='good'?tk('calc_out.acv.row.health_good','" + HEALTH_BAND_TEXT.good + "'):bd==='warning'?tk('calc_out.acv.row.health_warning','" + HEALTH_BAND_TEXT.warning + "'):tk('calc_out.acv.row.health_critical','" + HEALTH_BAND_TEXT.critical + "');" +
-  "var exp20=eACV(annual,20);" +
-  "var exp20pct=expd>0?((exp20-expd)/expd)*100:0;" +
-  "var ann24=aACV(mACV(base,24));" +
-  "var csPct=annual>0?((ann24-annual)/annual)*100:0;" +
-  "var ann24c=aACV(mACV(bACV(tcv,24),cl));" +
-  "var custPct=annual>0?((ann24c-annual)/annual)*100:0;" +
-  "var tgt=50000;" +
-  "var gap=Math.max(0,tgt-annual);" +
-  "var tcvForExc=annual>0?(tgt/annual)*tcv:0;" +
-  "var tcvLift=Math.max(0,tcvForExc-tcv);" +
-  "var ncForExc=tcv>0?Math.floor(tcv/tgt):0;" +
-  "var fcNeed=Math.max(0,nc-ncForExc);" +
-  "var gn,nt;" +
-  "if(bd==='critical'){gn=2000-annual;nt=tk('calc_out.acv.row.next_tier_warning','" + NEXT_TIER_TEXT.warning + "');}" +
-  "else if(bd==='warning'){gn=10000-annual;nt=tk('calc_out.acv.row.next_tier_good','" + NEXT_TIER_TEXT.good + "');}" +
-  "else if(bd==='good'){gn=50000-annual;nt=tk('calc_out.acv.row.next_tier_excellent','" + NEXT_TIER_TEXT.excellent + "');}" +
-  "else{gn=0;nt=tk('calc_out.acv.row.top_tier_maintained','" + NEXT_TIER_TEXT.top + "');}" +
-  "var tip='';" +
-  "if(bd==='critical'){tip=JSON.stringify({code:'acv_micro_transaction',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
-  "else if(bd==='warning'){tip=JSON.stringify({code:'acv_smb_tier',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
-  "else if(bd==='good'){tip=JSON.stringify({code:'acv_mid_market',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
-  "else{tip=JSON.stringify({code:'acv_enterprise_grade',params:{acv:money(annual),monthly:moneyExact(moDisp),expanded:money(expd)}});}" +
-  // P168 B3-7：params 表达式用**服务端同名变量**（客户端变量是短名 ⇒ 这里做别名）
-  "var totalContractValue=tcv;var contractLength=cl;var numCustomers=nc;var expansionRate=er;" +
-  "var monthlyDisplay=moDisp;var expanded=expd;var expanded20=exp20;var expanded20LiftPct=exp20pct;" +
-  "var annualAt24=ann24;var contractShiftPct=csPct;var annualAt24Cust=ann24c;var custShiftPct=custPct;" +
-  "var targetAnnual=tgt;var gapToExcellent=gap;var totalCVLiftNeeded=tcvLift;var numCustForExcellent=ncForExc;" +
-  "var gapToNext=gn;var nextTier=nt;" +
-  "var tkHealthAcvSummary=tk('calc_out.acv.row.health_acv_summary','Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(monthlyDisplay)+'/month  \\u00B7  Annual: '+money(annual)+'/year',{base:money(base),monthly:moneyExact(monthlyDisplay),annual:money(annual)});" +
-  "var tkExpansionAdjusted=tk('calc_out.acv.row.expansion_adjusted','Expansion-adjusted ('+expansionRate+'%): '+money(expanded)+'/year',{rate:String(expansionRate),expanded:money(expanded)});" +
-  "var tkFormula=tk('calc_out.acv.row.formula','Formula: '+money(totalContractValue)+' \\u00F7 '+numCustomers+' customers \\u00F7 '+contractLength+' months \\u00D7 12 \\u00D7 (1 + '+expansionRate+'%) = '+money(expanded)+'/year',{tcv:money(totalContractValue),cust:String(numCustomers),months:String(contractLength),rate:String(expansionRate),expanded:money(expanded)});" +
-  "var tkContractLength=tk('calc_out.acv.row.contract_length','Contract length: '+contractLength+' months',{months:String(contractLength)});" +
-  "var tkInputsAcvSummary=tk('calc_out.acv.row.inputs_acv_summary','Base ACV: '+money(base)+'  \\u00B7  Monthly: '+moneyExact(monthlyDisplay)+'  \\u00B7  Annual: '+money(annual)+'  \\u00B7  Expansion-adjusted: '+money(expanded),{base:money(base),monthly:moneyExact(monthlyDisplay),annual:money(annual),expanded:money(expanded)});" +
-  "var tkWhatifExpansion=tk('calc_out.acv.row.whatif_expansion_rate_20','Expansion rate '+expansionRate+'%\\u219220%: '+money(expanded20)+'/year ('+(expanded20LiftPct>=0?'+':'')+expanded20LiftPct.toFixed(1)+'% vs current expanded)',{rate:String(expansionRate),expanded20:money(expanded20),lift:(expanded20LiftPct>=0?'+':'')+expanded20LiftPct.toFixed(1)+'%'});" +
-  "var tkWhatifContract=tk('calc_out.acv.row.whatif_contract_length_24','Contract length '+contractLength+'\\u219224 months: '+money(annualAt24)+'/year base ('+(contractShiftPct>=0?'+':'')+contractShiftPct.toFixed(1)+'%)',{months:String(contractLength),annual24:money(annualAt24),shift:(contractShiftPct>=0?'+':'')+contractShiftPct.toFixed(1)});" +
-  "var tkWhatifCustomers=tk('calc_out.acv.row.whatif_customers_24','Customers '+numCustomers+'\\u219224: '+money(annualAt24Cust)+'/year base ('+(custShiftPct>=0?'+':'')+custShiftPct.toFixed(1)+'%)',{cust:String(numCustomers),annual24c:money(annualAt24Cust),shift:(custShiftPct>=0?'+':'')+custShiftPct.toFixed(1)});" +
-  "var tkPathA=tk('calc_out.acv.row.path_a_raise_contract_value','Path A \\u2014 raise total contract value by '+money(totalCVLiftNeeded)+' (same customers, larger deals)',{amount:money(totalCVLiftNeeded)});" +
-  "var tkPathB=tk('calc_out.acv.row.path_b_reduce_customers','Path B \\u2014 reduce to ~'+numCustForExcellent+' or fewer customers (each \\u2265 $50K target; fewer, higher-value contracts)',{n:String(numCustForExcellent)});" +
-  "var tkNote=tk('calc_out.acv.row.note_more_customers_lower_acv','Note: adding more customers at the same per-customer value reduces per-customer ACV');" +
-  "var tkAtCurrentPace=tk('calc_out.acv.row.at_current_pace','At current pace: ~'+money(expanded)+'/year per-customer revenue (with '+expansionRate+'% expansion)',{expanded:money(expanded),rate:String(expansionRate)});" +
-  "var tkGapSuffix=bd==='excellent'?tk('calc_out.acv.row.gap_already_at_top','(already at top)'):tk('calc_out.acv.row.gap_before_expansion','(before expansion)');" +
-  "var tkTitle=tk('calc_out.section.acv_calculator','\\uD83D\\uDE80 ACV Calculator');" +
-  "var tkHealthSection=tk('calc_out.section.health','\\uD83E\\uDE7A Health:');" +
-  "var tkInputsSection=tk('calc_out.section.inputs_snapshot','\\uD83D\\uDCCA Inputs Snapshot:');" +
-  "var tkWhatIfSection=tk('calc_out.section.what_if','\\uD83D\\uDD04 What-If:');" +
-  "var tkBreakEvenSection=tk('calc_out.section.break_even','\\u2696\\uFE0F Break-Even:');" +
-  "var tkMilestoneSection=tk('calc_out.section.milestone','\\uD83C\\uDFAF Milestone:');" +
-  "var tkLabelTotalContractValue=tk('calc_out.label.total_contract_value','Total contract value');" +
-  "var tkLabelNumberOfCustomers=tk('calc_out.label.number_of_customers','Number of customers');" +
-  "var tkLabelAnnualExpansionRate=tk('calc_out.label.annual_expansion_rate','Annual expansion rate');" +
-  "var tkLabelTargetForExcellent=tk('calc_out.label.target_for_excellent','Target for \\uD83D\\uDFE2 Excellent');" +
-  "var tkLabelGapToExcellent=tk('calc_out.label.gap_to_excellent','Gap to \\uD83D\\uDFE2');" +
-  "var tkLabelNextTier=tk('calc_out.label.next_tier','Next tier');" +
-  "var tkLabelGapToNextTier=tk('calc_out.label.gap_to_next_tier','Gap to next tier');" +
-  "var r2='';" +
-  "r2+=tkTitle+'\\n\\n';" +
-  "r2+=tkHealthSection+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 '+tkHealthAcvSummary+'\\n';" +
-  "r2+='\\u2022 '+tkExpansionAdjusted+'\\n';" +
-  "r2+='\\u2022 '+tkFormula+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tkInputsSection+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tkLabelTotalContractValue+': '+money(totalContractValue)+'\\n';" +
-  "r2+='\\u2022 '+tkContractLength+'\\n';" +
-  "r2+='\\u2022 '+tkLabelNumberOfCustomers+': '+numCustomers+'\\n';" +
-  "r2+='\\u2022 '+tkLabelAnnualExpansionRate+': '+expansionRate+'%\\n';" +
-  "r2+='\\u2022 '+tkInputsAcvSummary+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tkWhatIfSection+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tkWhatifExpansion+'\\n';" +
-  "r2+='\\u2022 '+tkWhatifContract+'\\n';" +
-  "r2+='\\u2022 '+tkWhatifCustomers+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tkBreakEvenSection+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tkLabelTargetForExcellent+': '+money(targetAnnual)+'/year ACV\\n';" +
-  "r2+='\\u2022 '+tkLabelGapToExcellent+': '+money(gapToExcellent)+'/year\\n';" +
-  "r2+='\\u2022 '+tkPathA+'\\n';" +
-  "r2+='\\u2022 '+tkPathB+'\\n';" +
-  "r2+='\\u2022 '+tkNote+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tkMilestoneSection+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tkLabelNextTier+': '+nextTier+'\\n';" +
-  "r2+='\\u2022 '+tkLabelGapToNextTier+': '+money(Math.max(0,gapToNext))+' '+tkGapSuffix+'\\n';" +
-  "r2+='\\u2022 '+tkAtCurrentPace+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let F=function(e){return Number.isNaN(e)?0:Math.max(0,e)},M=function(e,c){return c<=0?0:e/c},v=function(e,c){return c<=0?0:e/c},m=function(e){return Math.round(e*12)},A=function(e,c){return e*(100+c)/100},O=function(e){return e>=C.excellent[0]?"excellent":e>=C.good[0]?"good":e>=C.warning[0]?"warning":"critical"},P=function(e,c,s){var r=E(e);return Array.isArray(r)?r.join(\`
+\`):String(r)};var xt=F,ft=M,vt=v,mt=m,wt=A,yt=O,bt=P,n=tk,J={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},q='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',n=new Function("return "+q)(),C={excellent:[5e4,null],good:[1e4,5e4],warning:[2e3,1e4],critical:[0,2e3]},x={excellent:"Excellent — ACV ≥ $50,000/year; enterprise-grade contracts",good:"Good — ACV $10,000–$50,000/year; mid-market sweet spot",warning:"Warning — ACV $2,000–$10,000/year; SMB pricing tier",critical:"Critical — ACV < $2,000/year; micro-transaction, focus on upsell"},f={warning:"🟠 Warning ($2,000)",good:"🟡 Good ($10,000)",excellent:"🟢 Excellent ($50,000)",top:"top tier maintained"},E=function(e){const c=F(parseFloat(e.totalContractValue)||0),s=Math.max(1,parseFloat(e.contractLength)||1),r=Math.max(1,parseFloat(e.numCustomers)||1),i=F(parseFloat(e.expansionRate)||0),d=M(c,r),G=v(d,s),u=Math.round(G*100)/100,a=m(G),o=A(a,i),t=L=>"$"+Math.round(L).toLocaleString("en-US"),_=L=>"$"+L.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),l=O(a),B=J[l],I=l==="excellent"?n("calc_out.acv.row.health_excellent",x.excellent):l==="good"?n("calc_out.acv.row.health_good",x.good):l==="warning"?n("calc_out.acv.row.health_warning",x.warning):n("calc_out.acv.row.health_critical",x.critical),V=A(a,20),w=o>0?(V-o)/o*100:0,$=m(v(d,24)),y=a>0?($-a)/a*100:0,N=m(v(M(c,24),s)),b=a>0?(N-a)/a*100:0,S=5e4,K=Math.max(0,S-a),U=a>0?S/a*c:0,W=Math.max(0,U-c),j=c>0?Math.floor(c/S):0,St=Math.max(0,r-j);let h,p;l==="critical"?(h=2e3-a,p=n("calc_out.acv.row.next_tier_warning",f.warning)):l==="warning"?(h=1e4-a,p=n("calc_out.acv.row.next_tier_good",f.good)):l==="good"?(h=5e4-a,p=n("calc_out.acv.row.next_tier_excellent",f.excellent)):(h=0,p=n("calc_out.acv.row.top_tier_maintained",f.top));let g;l==="critical"?g=JSON.stringify({code:"acv_micro_transaction",params:{acv:t(a),monthly:_(u),expanded:t(o)}}):l==="warning"?g=JSON.stringify({code:"acv_smb_tier",params:{acv:t(a),monthly:_(u),expanded:t(o)}}):l==="good"?g=JSON.stringify({code:"acv_mid_market",params:{acv:t(a),monthly:_(u),expanded:t(o)}}):g=JSON.stringify({code:"acv_enterprise_grade",params:{acv:t(a),monthly:_(u),expanded:t(o)}});const R=n("calc_out.acv.row.health_acv_summary","Base ACV: "+t(d)+"  ·  Monthly: "+_(u)+"/month  ·  Annual: "+t(a)+"/year",{base:t(d),monthly:_(u),annual:t(a)}),z=n("calc_out.acv.row.expansion_adjusted","Expansion-adjusted ("+i+"%): "+t(o)+"/year",{rate:String(i),expanded:t(o)}),Q=n("calc_out.acv.row.formula","Formula: "+t(c)+" ÷ "+r+" customers ÷ "+s+" months × 12 × (1 + "+i+"%) = "+t(o)+"/year",{tcv:t(c),cust:String(r),months:String(s),rate:String(i),expanded:t(o)}),Y=n("calc_out.acv.row.contract_length","Contract length: "+s+" months",{months:String(s)}),Z=n("calc_out.acv.row.inputs_acv_summary","Base ACV: "+t(d)+"  ·  Monthly: "+_(u)+"  ·  Annual: "+t(a)+"  ·  Expansion-adjusted: "+t(o),{base:t(d),monthly:_(u),annual:t(a),expanded:t(o)}),D=n("calc_out.acv.row.whatif_expansion_rate_20","Expansion rate "+i+"%→20%: "+t(V)+"/year ("+(w>=0?"+":"")+w.toFixed(1)+"% vs current expanded)",{rate:String(i),expanded20:t(V),lift:(w>=0?"+":"")+w.toFixed(1)+"%"}),H=n("calc_out.acv.row.whatif_contract_length_24","Contract length "+s+"→24 months: "+t($)+"/year base ("+(y>=0?"+":"")+y.toFixed(1)+"%)",{months:String(s),annual24:t($),shift:(y>=0?"+":"")+y.toFixed(1)}),X=n("calc_out.acv.row.whatif_customers_24","Customers "+r+"→24: "+t(N)+"/year base ("+(b>=0?"+":"")+b.toFixed(1)+"%)",{cust:String(r),annual24c:t(N),shift:(b>=0?"+":"")+b.toFixed(1)}),k=n("calc_out.acv.row.path_a_raise_contract_value","Path A — raise total contract value by "+t(W)+" (same customers, larger deals)",{amount:t(W)}),T=n("calc_out.acv.row.path_b_reduce_customers","Path B — reduce to ~"+j+" or fewer customers (each ≥ $50K target; fewer, higher-value contracts)",{n:String(j)}),tt=n("calc_out.acv.row.note_more_customers_lower_acv","Note: adding more customers at the same per-customer value reduces per-customer ACV"),nt=n("calc_out.acv.row.at_current_pace","At current pace: ~"+t(o)+"/year per-customer revenue (with "+i+"% expansion)",{expanded:t(o),rate:String(i)}),at=l==="excellent"?n("calc_out.acv.row.gap_already_at_top","(already at top)"):n("calc_out.acv.row.gap_before_expansion","(before expansion)"),et=n("calc_out.section.acv_calculator","🚀 ACV Calculator"),ct=n("calc_out.section.health","🩺 Health:"),ot=n("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:"),rt=n("calc_out.section.what_if","🔄 What-If:"),lt=n("calc_out.section.break_even","⚖️ Break-Even:"),it=n("calc_out.section.milestone","🎯 Milestone:"),st=n("calc_out.label.total_contract_value","Total contract value"),ut=n("calc_out.label.number_of_customers","Number of customers"),_t=n("calc_out.label.annual_expansion_rate","Annual expansion rate"),dt=n("calc_out.label.target_for_excellent","Target for 🟢 Excellent"),ht=n("calc_out.label.gap_to_excellent","Gap to 🟢"),pt=n("calc_out.label.next_tier","Next tier"),gt=n("calc_out.label.gap_to_next_tier","Gap to next tier");return[et+\`
+
+\`+ct+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+B+" "+I+\`
+• \`+R+\`
+• \`+z+\`
+• \`+Q+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+ot+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+st+": "+t(c)+\`
+• \`+Y+\`
+• \`+ut+": "+r+\`
+• \`+_t+": "+i+\`%
+• \`+Z+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+rt+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+D+\`
+• \`+H+\`
+• \`+X+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+lt+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+dt+": "+t(S)+\`/year ACV
+• \`+ht+": "+t(K)+\`/year
+• \`+k+\`
+• \`+T+\`
+• \`+tt+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+it+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+pt+": "+p+\`
+• \`+gt+": "+t(Math.max(0,h))+" "+at+\`
+• \`+nt+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+g+\`
+\`]};return[P(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

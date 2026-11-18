@@ -190,117 +190,69 @@ function calculateFreelanceRate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var ai=cnn(parseFloat(inputs.annualIncome)||0);" +
-  "var ex=cnn(parseFloat(inputs.expenses)||0);" +
-  "var bh=cnn(parseFloat(inputs.billableHrs)||0);" +
-  "var pr=cnn(parseFloat(inputs.profit)||0);" +
-  "var ni=ai-ex;" +
-  "var br=bh>0?(ni+pr)/bh:0;" +
-  "var mm=1.5;" +
-  "var em=2;" +
-  "var sm=1.25;" +
-  "var hr=Math.ceil(br);" +
-  "var dr=hr*8;" +
-  "var wr=dr*5;" +
-  "var mr=wr*4.33;" +
-  "var yr=mr*12;" +
-  "var sr=Math.ceil(br*sm);" +
-  "var xr=Math.ceil(br*em);" +
-  "var ber=bh>0?ex/bh:0;" +
-  "var bm=75;" +
-  "var jr=Math.round(bm*0.6);" +
-  "var mdr=Math.round(bm*1.0);" +
-  "var snr=Math.round(bm*1.6);" +
-  "var exm=Math.round(bm*2.5);" +
-  "var rvm=br/mdr;" +
-  "var tj = rvm>=1.5 ? JSON.stringify({code:'freelance_rate_premium',params:{}}) : rvm>=1.0 ? JSON.stringify({code:'freelance_rate_market',params:{}}) : rvm>=0.7 ? JSON.stringify({code:'freelance_rate_below_market',params:{}}) : JSON.stringify({code:'freelance_rate_entry',params:{}});" +
-  "var ut=bh>1200?'\\uD83D\\uDFE2':bh>900?'\\uD83D\\uDFE1':'\\uD83D\\uDFE0';" +
-  "var er=ai>0?(ex/ai)*100:0;" +
-  "var pm=ai>0?(pr/ai)*100:0;" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function fmt2(n){return '$'+n.toFixed(2)}" +
-  "function pct(n){return n.toFixed(1)+'%'}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  // ⚠️ 每个分支**单独写出 code 字面量**（动态拼码 ⇒ 静态扫描器认不出 ⇒ locale 落库后仍红）
-  "var rh=" +
-  "rvm>=1.5?tk('calc_out.freelance_rate.row.health_premium','\\uD83D\\uDFE2 Premium \\u2014 top 10% of market. You charge what top-tier experts charge.'):" +
-  "rvm>=1.0?tk('calc_out.freelance_rate.row.health_market','\\uD83D\\uDFE2 Market-rate \\u2014 competitive for your skill level.'):" +
-  "rvm>=0.7?tk('calc_out.freelance_rate.row.health_below_market','\\uD83D\\uDFE1 Below market \\u2014 clients see you as a bargain. Test raising rates.'):" +
-  "tk('calc_out.freelance_rate.row.health_entry','\\uD83D\\uDFE0 Entry-level \\u2014 focus on building portfolio to justify higher rates.');" +
-  "var erow=" +
-  "er<15?tk('calc_out.freelance_rate.row.expenses_lean','\\uD83D\\uDFE2 Expenses at '+pct(er)+' of income \\u2014 lean operation.',{pct:pct(er)}):" +
-  "er<30?tk('calc_out.freelance_rate.row.expenses_manageable','\\uD83D\\uDFE1 Expenses at '+pct(er)+' of income \\u2014 manageable.',{pct:pct(er)}):" +
-  "tk('calc_out.freelance_rate.row.expenses_trim','\\uD83D\\uDFE0 Expenses at '+pct(er)+' of income \\u2014 trim to lift margin.',{pct:pct(er)});" +
-  "var prow=" +
-  "pm>=30?tk('calc_out.freelance_rate.row.profit_healthy','\\uD83D\\uDFE2 Profit margin '+pct(pm)+' \\u2014 healthy solopreneur margin.',{pct:pct(pm)}):" +
-  "pm>=15?tk('calc_out.freelance_rate.row.profit_workable','\\uD83D\\uDFE1 Profit margin '+pct(pm)+' \\u2014 workable, room to grow.',{pct:pct(pm)}):" +
-  "tk('calc_out.freelance_rate.row.profit_too_thin','\\uD83D\\uDD34 Profit margin '+pct(pm)+' \\u2014 too thin; raise rate.',{pct:pct(pm)});" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='$calc_out.section.freelance_rate_calculator|\\uD83D\\uDCBC Freelance Rate Calculator|\\n\\n';" +
-  "r+='$calc_out.section.freelance_rate_snapshot|\\uD83D\\uDCB0 Target Rate Snapshot:|\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 $calc_out.label.target_annual_net|Target Annual Net|:    '+fmt(ai)+'/yr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.business_expenses','Business Expenses:   '+fmt(ex)+'/yr  ('+pct(er)+' of target)',{expenses:fmt(ex),pct:pct(er)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.desired_profit','Desired Profit:      '+fmt(pr)+'/yr  ('+pct(pm)+' margin)',{profit:fmt(pr),pct:pct(pm)})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.billable_hours|Billable Hours|:      '+loc(bh)+' hrs/yr\\n';" +
-  "r+='\\u2022 $calc_out.label.required_hourly_rate|Required Hourly Rate|: '+fmt2(br)+'/hr\\n\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.freelance_rate_multipliers|\\uD83D\\uDCD0 Rate Multipliers:|\\n';" +
-  "r+='\\u2022 $calc_out.label.base_rate_1x|1x base rate|:        '+fmt(hr)+'/hr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.multiplier_skilled','1.25x skilled:       '+fmt(sr)+'/hr  (proven track record)',{rate:fmt(sr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.multiplier_premium','1.5x premium:        '+fmt(Math.ceil(br*mm))+'/hr  (specialized niche)',{rate:fmt(Math.ceil(br*mm))})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.multiplier_expert','2x expert:           '+fmt(xr)+'/hr  (top-tier authority)',{rate:fmt(xr)})+'\\n\\n';" +
-  "r+='\\u2022 $calc_out.label.daily_rate_8hrs|Daily Rate (8 hrs)|:   '+fmt(dr)+'/day\\n';" +
-  "r+='\\u2022 $calc_out.label.weekly_rate_5days|Weekly Rate (5 days)|: '+fmt(wr)+'/wk\\n';" +
-  "r+='\\u2022 $calc_out.label.monthly_rate|Monthly Rate|:         '+fmt(mr)+'/mo\\n';" +
-  "r+='\\u2022 $calc_out.label.yearly_rate|Yearly Rate|:          '+fmt(yr)+'/yr\\n\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.freelance_rate_market_position|\\uD83E\\uDE7A Market Position:|\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+rh+'\\n';" +
-  "r+='\\u2022 '+ut+' '+tk('calc_out.freelance_rate.row.billable_utilization','Billable utilization: '+loc(bh)+' hrs/yr  (industry: 900-1,400)',{hours:loc(bh)})+'\\n';" +
-  "r+='\\u2022 '+erow+'\\n';" +
-  "r+='\\u2022 '+prow+'\\n';" +
-  "r+='\\n$calc_out.section.freelance_rate_ladder|\\uD83C\\uDFAF Rate Ladder (market context):|\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.tier_junior','Junior:       '+fmt(jr)+'/hr  (entry, building portfolio)',{rate:fmt(jr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.tier_mid','Mid-Level:    '+fmt(mdr)+'/hr  (3-5 yrs, market median)',{rate:fmt(mdr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.tier_senior','Senior:       '+fmt(snr)+'/hr  (6-10 yrs, specialist)',{rate:fmt(snr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.tier_expert','Expert:       '+fmt(exm)+'/hr  (10+ yrs, top authority)',{rate:fmt(exm)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.your_rate','Your rate:    '+fmt(hr)+'/hr  ('+pct(rvm*100)+' of market median)',{rate:fmt(hr),pct:pct(rvm*100)})+'\\n\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.freelance_rate_break_even|\\u2696\\uFE0F Break-Even Rate:|\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 $calc_out.label.break_even_expenses_only|Break-even (expenses only)|: '+fmt2(ber)+'/hr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.break_even_with_profit','Break-even + profit:        '+fmt2(br)+'/hr  (your required rate)',{rate:fmt2(br)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.raise_impact','At current billable hrs ('+loc(bh)+'), every $10/hr raise adds '+fmt(10*bh)+'/yr',{hours:loc(bh),amount:fmt(10*bh)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.target_1_5x_income','To hit $'+loc(ai*1.5)+'/yr net: raise to '+fmt2(bh>0?(ai*1.5)/bh:0)+'/hr',{target:'$'+loc(ai*1.5),rate:fmt2(bh>0?(ai*1.5)/bh:0)})+'\\n\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-    "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  // ⚠️ P168 B3-8 §0.6：**双美元号修复** —— fmt() 自带 '$'，这里不再多拼一个
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.whatif_raise_20','Raise rate 20%:  '+fmt(Math.ceil(br*1.2))+'/hr \\u2192 '+fmt(Math.ceil(br*1.2)*bh)+'/yr gross',{rate:fmt(Math.ceil(br*1.2)),gross:fmt(Math.ceil(br*1.2)*bh)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.whatif_raise_50','Raise rate 50%:  '+fmt(Math.ceil(br*1.5))+'/hr \\u2192 '+fmt(Math.ceil(br*1.5)*bh)+'/yr gross',{rate:fmt(Math.ceil(br*1.5)),gross:fmt(Math.ceil(br*1.5)*bh)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.whatif_cut_expenses','Cut expenses 25%:  Save '+fmt(ex*0.25)+'/yr \\u2192 break-even drops to '+fmt2((ex*0.75)/Math.max(bh,1))+'/hr',{savings:fmt(ex*0.25),rate:fmt2((ex*0.75)/Math.max(bh,1))})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.whatif_more_hours','+200 billable hrs/yr:  Same rate \\u2192 '+fmt(hr*(bh+200))+'/yr gross (was '+fmt(hr*bh)+')',{gross:fmt(hr*(bh+200)),was:fmt(hr*bh)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_rate.row.whatif_expert_tier','Move to expert tier (2x):  '+fmt(xr)+'/hr \\u2192 '+fmt(xr*bh)+'/yr gross',{rate:fmt(xr),gross:fmt(xr*bh)})+'\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: '+tj;" +
-  "results.push(r);" +
-  "var scs=[{l:'Junior (60%)',m:0.6},{l:'Mid (100%)',m:1.0},{l:'Skilled (125%)',m:1.25},{l:'Premium (150%)',m:1.5},{l:'Expert (200%)',m:2.0}];" +
-  "for(var i=0;i<scs.length;i++){" +
-  "var s=scs[i];" +
-  "var rt=Math.ceil(br*s.m);" +
-  "var sday='$'+(rt*8).toLocaleString();" +
-  "var smon='$'+Math.round(rt*8*5*4.33).toLocaleString();" +
-  "var syr='$'+Math.round(rt*bh).toLocaleString();" +
-  "var shrs=loc(bh);" +
-  "var lbl=i===0?'$calc_out.label.scenario_junior|Junior (60%)|':i===1?'$calc_out.label.scenario_mid|Mid (100%)|':i===2?'$calc_out.label.scenario_skilled|Skilled (125%)|':i===3?'$calc_out.label.scenario_premium|Premium (150%)|':'$calc_out.label.scenario_expert|Expert (200%)|';" +
-  "results.push(lbl+': '+tk('calc_out.freelance_rate.row.scenario_rate_day','$'+rt+'/hr \\u2192 '+sday+'/day',{rate:'$'+rt,day:sday})+' | '+tk('calc_out.freelance_rate.row.scenario_month',smon+'/mo',{month:smon})+' | '+tk('calc_out.freelance_rate.row.scenario_year',syr+'/yr at '+shrs+' hrs',{year:syr,hours:shrs}));" +
-  "}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let b=function(o){return Number.isNaN(o)?0:Math.max(0,o)},M=function(o){const n=b(parseFloat(o.annualIncome)||0),i=b(parseFloat(o.expenses)||0),t=b(parseFloat(o.billableHrs)||0),w=b(parseFloat(o.profit)||0),g=[],A=n-i,a=t>0?(A+w)/t:0,R=1.5,I=2,C=1.25,u=Math.ceil(a),v=u*8,S=v*5,E=S*4.33,D=E*12,F=Math.ceil(a*C),y=Math.ceil(a*I),Y=t>0?i/t:0,e=c=>"$"+Math.round(c).toLocaleString(),p=c=>"$"+c.toFixed(2),l=c=>c.toFixed(1)+"%",h=c=>Math.round(c).toLocaleString(),ee=[{tier:"Junior",pct:60,label:"junior"},{tier:"Mid-Level",pct:100,label:"mid"},{tier:"Senior",pct:160,label:"senior"},{tier:"Expert",pct:250,label:"expert"}],m=75,j=Math.round(m*.6),x=Math.round(m*1),J=Math.round(m*1.6),N=Math.round(m*2.5),f=a/x,W=f>=1.5?r("calc_out.freelance_rate.row.health_premium","🟢 Premium — top 10% of market. You charge what top-tier experts charge."):f>=1?r("calc_out.freelance_rate.row.health_market","🟢 Market-rate — competitive for your skill level."):f>=.7?r("calc_out.freelance_rate.row.health_below_market","🟡 Below market — clients see you as a bargain. Test raising rates."):r("calc_out.freelance_rate.row.health_entry","🟠 Entry-level — focus on building portfolio to justify higher rates."),K=f>=1.5?JSON.stringify({code:"freelance_rate_premium",params:{}}):f>=1?JSON.stringify({code:"freelance_rate_market",params:{}}):f>=.7?JSON.stringify({code:"freelance_rate_below_market",params:{}}):JSON.stringify({code:"freelance_rate_entry",params:{}}),V=t>1200?"🟢":t>900?"🟡":"🟠",s=n>0?i/n*100:0,_=n>0?w/n*100:0,G=s<15?r("calc_out.freelance_rate.row.expenses_lean","🟢 Expenses at "+l(s)+" of income — lean operation.",{pct:l(s)}):s<30?r("calc_out.freelance_rate.row.expenses_manageable","🟡 Expenses at "+l(s)+" of income — manageable.",{pct:l(s)}):r("calc_out.freelance_rate.row.expenses_trim","🟠 Expenses at "+l(s)+" of income — trim to lift margin.",{pct:l(s)}),Q=_>=30?r("calc_out.freelance_rate.row.profit_healthy","🟢 Profit margin "+l(_)+" — healthy solopreneur margin.",{pct:l(_)}):_>=15?r("calc_out.freelance_rate.row.profit_workable","🟡 Profit margin "+l(_)+" — workable, room to grow.",{pct:l(_)}):r("calc_out.freelance_rate.row.profit_too_thin","🔴 Profit margin "+l(_)+" — too thin; raise rate.",{pct:l(_)});g.push(\`$calc_out.section.freelance_rate_calculator|💼 Freelance Rate Calculator|
+
+$calc_out.section.freelance_rate_snapshot|💰 Target Rate Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.target_annual_net|Target Annual Net|:    \`+e(n)+\`/yr
+• \`+r("calc_out.freelance_rate.row.business_expenses","Business Expenses:   "+e(i)+"/yr  ("+l(s)+" of target)",{expenses:e(i),pct:l(s)})+\`
+• \`+r("calc_out.freelance_rate.row.desired_profit","Desired Profit:      "+e(w)+"/yr  ("+l(_)+" margin)",{profit:e(w),pct:l(_)})+\`
+• $calc_out.label.billable_hours|Billable Hours|:      \`+h(t)+\` hrs/yr
+• $calc_out.label.required_hourly_rate|Required Hourly Rate|: \`+p(a)+\`/hr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.freelance_rate_multipliers|📐 Rate Multipliers:|
+• $calc_out.label.base_rate_1x|1x base rate|:        \`+e(u)+\`/hr
+• \`+r("calc_out.freelance_rate.row.multiplier_skilled","1.25x skilled:       "+e(F)+"/hr  (proven track record)",{rate:e(F)})+\`
+• \`+r("calc_out.freelance_rate.row.multiplier_premium","1.5x premium:        "+e(Math.ceil(a*R))+"/hr  (specialized niche)",{rate:e(Math.ceil(a*R))})+\`
+• \`+r("calc_out.freelance_rate.row.multiplier_expert","2x expert:           "+e(y)+"/hr  (top-tier authority)",{rate:e(y)})+\`
+
+• $calc_out.label.daily_rate_8hrs|Daily Rate (8 hrs)|:   \`+e(v)+\`/day
+• $calc_out.label.weekly_rate_5days|Weekly Rate (5 days)|: \`+e(S)+\`/wk
+• $calc_out.label.monthly_rate|Monthly Rate|:         \`+e(E)+\`/mo
+• $calc_out.label.yearly_rate|Yearly Rate|:          \`+e(D)+\`/yr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.freelance_rate_market_position|🩺 Market Position:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+W+\`
+• \`+V+" "+r("calc_out.freelance_rate.row.billable_utilization","Billable utilization: "+h(t)+" hrs/yr  (industry: 900-1,400)",{hours:h(t)})+\`
+• \`+G+\`
+• \`+Q+\`
+
+$calc_out.section.freelance_rate_ladder|🎯 Rate Ladder (market context):|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+r("calc_out.freelance_rate.row.tier_junior","Junior:       "+e(j)+"/hr  (entry, building portfolio)",{rate:e(j)})+\`
+• \`+r("calc_out.freelance_rate.row.tier_mid","Mid-Level:    "+e(x)+"/hr  (3-5 yrs, market median)",{rate:e(x)})+\`
+• \`+r("calc_out.freelance_rate.row.tier_senior","Senior:       "+e(J)+"/hr  (6-10 yrs, specialist)",{rate:e(J)})+\`
+• \`+r("calc_out.freelance_rate.row.tier_expert","Expert:       "+e(N)+"/hr  (10+ yrs, top authority)",{rate:e(N)})+\`
+• \`+r("calc_out.freelance_rate.row.your_rate","Your rate:    "+e(u)+"/hr  ("+l(f*100)+" of market median)",{rate:e(u),pct:l(f*100)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.freelance_rate_break_even|⚖️ Break-Even Rate:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.break_even_expenses_only|Break-even (expenses only)|: \`+p(Y)+\`/hr
+• \`+r("calc_out.freelance_rate.row.break_even_with_profit","Break-even + profit:        "+p(a)+"/hr  (your required rate)",{rate:p(a)})+\`
+• \`+r("calc_out.freelance_rate.row.raise_impact","At current billable hrs ("+h(t)+"), every $10/hr raise adds "+e(10*t)+"/yr",{hours:h(t),amount:e(10*t)})+\`
+• \`+r("calc_out.freelance_rate.row.target_1_5x_income","To hit $"+h(n*1.5)+"/yr net: raise to "+p(t>0?n*1.5/t:0)+"/hr",{target:"$"+h(n*1.5),rate:p(t>0?n*1.5/t:0)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+r("calc_out.freelance_rate.row.whatif_raise_20","Raise rate 20%:  "+e(Math.ceil(a*1.2))+"/hr → "+e(Math.ceil(a*1.2)*t)+"/yr gross",{rate:e(Math.ceil(a*1.2)),gross:e(Math.ceil(a*1.2)*t)})+\`
+• \`+r("calc_out.freelance_rate.row.whatif_raise_50","Raise rate 50%:  "+e(Math.ceil(a*1.5))+"/hr → "+e(Math.ceil(a*1.5)*t)+"/yr gross",{rate:e(Math.ceil(a*1.5)),gross:e(Math.ceil(a*1.5)*t)})+\`
+• \`+r("calc_out.freelance_rate.row.whatif_cut_expenses","Cut expenses 25%:  Save "+e(i*.25)+"/yr → break-even drops to "+p(i*.75/Math.max(t,1))+"/hr",{savings:e(i*.25),rate:p(i*.75/Math.max(t,1))})+\`
+• \`+r("calc_out.freelance_rate.row.whatif_more_hours","+200 billable hrs/yr:  Same rate → "+e(u*(t+200))+"/yr gross (was "+e(u*t)+")",{gross:e(u*(t+200)),was:e(u*t)})+\`
+• \`+r("calc_out.freelance_rate.row.whatif_expert_tier","Move to expert tier (2x):  "+e(y)+"/hr → "+e(y*t)+"/yr gross",{rate:e(y),gross:e(y*t)})+\`
+
+💡 Tip: \`+K);const L=[{label:"Junior (60%)",mult:.6},{label:"Mid (100%)",mult:1},{label:"Skilled (125%)",mult:1.25},{label:"Premium (150%)",mult:1.5},{label:"Expert (200%)",mult:2}];for(let c=0;c<L.length;c++){const U=L[c],d=Math.ceil(a*U.mult),P="$"+(d*8).toLocaleString(),q="$"+Math.round(d*8*5*4.33).toLocaleString(),B="$"+Math.round(d*t).toLocaleString(),O=h(t),X=c===0?"$calc_out.label.scenario_junior|Junior (60%)|":c===1?"$calc_out.label.scenario_mid|Mid (100%)|":c===2?"$calc_out.label.scenario_skilled|Skilled (125%)|":c===3?"$calc_out.label.scenario_premium|Premium (150%)|":"$calc_out.label.scenario_expert|Expert (200%)|";g.push(X+": "+r("calc_out.freelance_rate.row.scenario_rate_day","$"+d+"/hr → "+P+"/day",{rate:"$"+d,day:P})+" | "+r("calc_out.freelance_rate.row.scenario_month",q+"/mo",{month:q})+" | "+r("calc_out.freelance_rate.row.scenario_year",B+"/yr at "+O+" hrs",{year:B,hours:O}))}return g},$=function(o,n,i){var t=z(o);return Array.isArray(t)?t.join(\`
+\`):String(t)};var Z=b,k=M,T=$,r=tk,H='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+H)(),z=function(o){return M(o)};return[$(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-freelance-rate-calculator',

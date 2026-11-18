@@ -5,6 +5,9 @@
 // ----------------------------------
 //   G6 守的是「**已令牌化**的 45 个引擎两侧必须逐字一致」⇒ **其余 55 个引擎没人管**。
 //   实测全仓：100 个引擎 · 一致 **68** · **漂移 32**（B3-7 之前是 55 条漂移 ⇒ 令牌化确实在销账）。
+//   ⭐ 2026-11-18 B3-10：这 32 条**已全部修完**（客户端 customFn 改为服务端同一份代码的派生物）
+//     ⇒ DRIFT_DEBT 清零；「台账必须非空」那条断言同步移除（它守的是「欠账存在」这个**回溯型**不变量
+//     ⇒ 修好之后反而挡住修复）⇒ 改成守**目标型**不变量的「测量必须覆盖每一个引擎」。
 //   ⇒ 这 32 条是「静态卡片与动态卡片**内容矛盾**」的已知欠账，但此前**不可见、不可守**。
 //
 // 三件事（缺一不可）
@@ -59,38 +62,6 @@ export interface DriftRow {
  * · `note` 是人写的理由（决定这条归 B3-10 的哪一类修法）。
  */
 export const DRIFT_DEBT: Record<string, { kind: DriftKind; note: string }> = {
-  'solopreneur-openai-token-calculator': { kind: 'missing-section', note: "客户端少 18 行：连「📅 Pricing last updated」行都没有，整段被截掉" },
-  'solopreneur-unit-economics-calculator': { kind: 'missing-section', note: "客户端少 15 行；verdict 措辞也不同（you recover vs recover）" },
-  'solopreneur-ltv-calculator': { kind: 'missing-section', note: "客户端少 11 行（💡 Tip 段与后续内容缺失）" },
-  'solopreneur-break-even-calculator': { kind: 'missing-section', note: "客户端少 8 行（verdict 句被截断成半句）" },
-  'solopreneur-customer-health-score-calculator': { kind: 'missing-section', note: "客户端少 32 行（整个 Health 区块没了）" },
-  'solopreneur-burn-multiple-rule-of-40-calculator': { kind: 'wording', note: "客户端把 health 带 emoji 换成 💡（服务端 🟡）" },
-  'solopreneur-compound-interest-calculator': { kind: 'wording', note: "客户端丢了「Rate 7%」前缀（只剩「strong」）" },
-  'solopreneur-time-to-value-calculator': { kind: 'wording', note: "客户端用「TTV YELLOW Good」代替「Time-to-Value: 🟡 Good」" },
-  'solopreneur-power-user-curve-calculator': { kind: 'wording', note: "客户端文案更短且截断（70.0/20.0 → 70.0/20）" },
-  'solopreneur-fully-loaded-employee-cost-calculator': { kind: 'wording', note: "客户端丢了总成本（$177,600 total）" },
-  'solopreneur-time-to-productivity-calculator': { kind: 'wording', note: "客户端复杂度标签丢失且多了 Role 行" },
-  'solopreneur-productivity-ramp-curve-calculator': { kind: 'wording', note: "客户端百分比精度不同（50.0% → 50%）" },
-  'solopreneur-comp-banding-calculator': { kind: 'wording', note: "客户端分位对比口径不同（Below P75 by $25,000 vs vs P25 $130,000）" },
-  'solopreneur-equity-refresh-calculator': { kind: 'wording', note: "客户端丢了股数明细（8% of pool = 12,000 shares）" },
-  'solopreneur-attrition-cost-calculator': { kind: 'wording', note: "客户端百分比精度不同（68.2% → 68%）" },
-  'solopreneur-cost-per-support-ticket-calculator': { kind: 'wording', note: "客户端多带 health emoji（服务端无 emoji）⇒ 两边 emoji 规则不一致" },
-  'solopreneur-deflection-rate-calculator': { kind: 'wording', note: "客户端金额丢了 $ 且顺序不同（$40,500/mo net → 40,500 net/mo）" },
-  'solopreneur-support-capacity-planning-calculator': { kind: 'wording', note: "客户端 handle time 口径不同（90,000 min/mo handle time → 90,000 total handle min/mo）" },
-  'solopreneur-gdpr-fine-calculator': { kind: 'wording', note: "客户端带 🔴 emoji 且金额/币种顺序不同（€1,600,000 → 1,600,000 €）" },
-  'solopreneur-dsar-cost-calculator': { kind: 'wording', note: "客户端带 🟡 emoji 且金额丢 €（€99,750 → 99,750 €）" },
-  'solopreneur-consent-revenue-impact-calculator': { kind: 'wording', note: "客户端带 🟠 emoji 且金额丢 €（€64,000/mo → 64,000 €）" },
-  'solopreneur-dpa-cost-calculator': { kind: 'wording', note: "客户端带 🟠 emoji 且金额丢 €（€2,100/DPA → 2,100 €/DPA）" },
-  'solopreneur-kb-coverage-rate-calculator': { kind: 'content', note: "客户端带 🟡 emoji、服务端不带 ⇒ 同长度不同内容" },
-  'solopreneur-article-freshness-calculator': { kind: 'content', note: "客户端带 🟡 emoji、服务端不带 ⇒ 同长度不同内容" },
-  'solopreneur-search-effectiveness-calculator': { kind: 'wording', note: "客户端带 🟡 emoji、服务端不带 ⇒ emoji 规则不一致" },
-  'solopreneur-deflection-quality-calculator': { kind: 'content', note: "客户端带 🟡 emoji 且后续内容长度不同" },
-  'solopreneur-documentation-roi-calculator': { kind: 'wording', note: "客户端带 🟡 emoji 且金额格式不同" },
-  'solopreneur-article-helpfulness-calculator': { kind: 'wording', note: "客户端带 🟡 emoji 且百分比精度不同" },
-  'solopreneur-arr-multiple-valuation-calculator': { kind: 'content', note: "客户端把 health 带 emoji 换成 💡（服务端 🟡）" },
-  'solopreneur-remote-vs-office-calculator': { kind: 'content', note: "客户端把 health 带 emoji 换成 💡（服务端 🟡）" },
-  'solopreneur-dscr-calculator': { kind: 'content', note: "客户端把 health 带 emoji 换成 💡（服务端 🟡）" },
-  'solopreneur-csat-calculator': { kind: 'content', note: "行数与字符数都相同但内容不同（CI/排序差异）⇒ 需逐行 diff 定位" },
 };
 
 function joinText(out: unknown): string {
@@ -121,6 +92,29 @@ function firstDiff(sLines: string[], cLines: string[]): { index: number; s: stri
 }
 
 /** 跑一遍：只返回**漂移**的引擎（一致的直接跳过） */
+/**
+ * 覆盖率：每个**带 customFn** 的引擎都必须能被 `new Function` **成功构造**。
+ *
+ * ⭐ 2026-11-18 B3-10：台账清零后，「台账必须非空」那条断言已移除（它守的是「欠账存在」
+ *   这个**回溯型**不变量 ⇒ 修好之后反而挡住修复）⇒ 改成守**目标型**不变量：测量不许漏引擎。
+ *   顺带堵上真空绿：customFn 语法错误 ⇒ 该页动态卡片整页空白，必须显式报出来而不是被 catch 掉。
+ */
+export function customFnCoverage(): { withCustomFn: number; parseFailures: string[] } {
+  const engines = getAllEngines() as any[];
+  const parseFailures: string[] = [];
+  let withCustomFn = 0;
+  for (const e of engines) {
+    const cf = e.clientConfig && e.clientConfig.customFn;
+    if (typeof cf !== 'string' || cf.length === 0) continue;
+    withCustomFn++;
+    try {
+      new Function('inputs', 'pick', 'fill', cf);
+    } catch (err: any) {
+      parseFailures.push(e.slug + '：' + String(err && err.message));
+    }
+  }
+  return { withCustomFn, parseFailures };
+}
 export function measureDrift(engines: any[], defaults: Record<string, Record<string, string>>): DriftRow[] {
   const rows: DriftRow[] = [];
   for (const e of engines) {

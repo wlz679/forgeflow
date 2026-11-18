@@ -51,33 +51,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  // Matches P12-1 pattern; results array flattening in [slug].astro is a holistic concern
-  var total = cnn(Number(inputs.monthly_tickets) || 0);
-  var matched = cnn(Number(inputs.tickets_with_kb_match) || 0);
-  var articles = cnn(Number(inputs.total_articles) || 0);
-  if (matched > total) matched = total;
-  var coverage = total > 0 ? matched / total : 0;
-  var gap = Math.max(0, total - matched);
-  var gapR = Math.max(0, 1 - coverage);
-  var band = coverage >= 0.85 ? 'Excellent' : coverage >= 0.60 ? 'Good' : coverage >= 0.40 ? 'Warning' : 'Critical';
-  var emoji = coverage >= 0.85 ? '🟢' : coverage >= 0.60 ? '🟡' : coverage >= 0.40 ? '🟠' : '🔴';
-  var altCoverage = 0.85;
-  var altMatched = altCoverage * total;
-  var lift = Math.max(0, altMatched - matched);
-  var atCost24 = lift * 24;
-  var needArticles = articles > 0 ? Math.ceil(Math.max(0, total * 0.85 - matched) / Math.max(1, total / articles)) : 0;\n  var tipParams = { coverage: (coverage*100).toFixed(1), gapPct: (gapR*100).toFixed(1), gapTickets: gap.toFixed(0), total: total.toFixed(0), articles: articles.toFixed(0) };
-  var tipJson = coverage >= 0.85 ? JSON.stringify({ code: 'kbcover_excellent', params: tipParams }) : coverage >= 0.60 ? JSON.stringify({ code: 'kbcover_good', params: tipParams }) : coverage >= 0.40 ? JSON.stringify({ code: 'kbcover_warning', params: tipParams }) : JSON.stringify({ code: 'kbcover_critical', params: tipParams });
-  return [
-    '🩺 KB Coverage Health: ' + emoji + ' ' + band + ' (' + (coverage*100).toFixed(1) + '% coverage · ' + (gapR*100).toFixed(1) + '% gap · ' + gap.toLocaleString() + ' tickets/mo without KB)',
-    '📊 Snapshot: ' + matched.toLocaleString() + ' of ' + total.toLocaleString() + ' tickets matched (' + (coverage*100).toFixed(1) + '%) · ' + articles.toLocaleString() + ' articles in KB',
-    '🔄 What-If: if coverage climbs to 85% (Excellent), ~' + Math.round(lift).toLocaleString() + ' more tickets/mo find KB (at ~$24/ticket = ~$' + Math.round(atCost24).toLocaleString() + '/mo saved)',
-    '⚖️ Break-Even: to hit ≥85% (Excellent), need ~' + Math.round(lift).toLocaleString() + ' more matched tickets OR ~' + needArticles + ' net new articles',
-    '🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics',
-    '💡 Tip: ' + tipJson,
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,e){return e>0?t/e:0},m=function(t,e){return Math.max(0,e-t)},u=function(t){return Math.max(0,1-t)},f=function(t){return t>=n.excellent.threshold?"excellent":t>=n.good.threshold?"good":t>=n.warning.threshold?"warning":"critical"},i=function(t){return(t*100).toFixed(1)+"%"},r=function(t){return Math.round(t).toLocaleString()},x=function(t,e,c){var a=k(t);return Array.isArray(a)?a.join(\`
+\`):String(a)};var K=l,C=g,J=m,O=u,N=f,I=i,P=r,R=x,n={excellent:{threshold:.85,label:"Excellent",message:"Comprehensive KB coverage."},good:{threshold:.6,label:"Good",message:"Healthy match rate."},warning:{threshold:.4,label:"Warning",message:"Significant KB gaps."},critical:{threshold:null,label:"Critical",message:"KB largely non-existent."}},k=function(t){const e=l(Number(t.monthly_tickets)||0),c=Math.min(l(Number(t.tickets_with_kb_match)||0),e),a=l(Number(t.total_articles)||0),o=g(c,e),p=m(c,e),b=u(o),v=f(o),y=n[v],h=n.excellent.threshold,_=h*e,d=Math.max(0,_-c),M=d*24,w=a>0?Math.ceil(Math.max(0,e*h-c)/Math.max(1,e/a)):0,s={coverage:(o*100).toFixed(1),gapPct:(b*100).toFixed(1),gapTickets:p.toFixed(0),total:e.toFixed(0),articles:a.toFixed(0)},F=o>=n.excellent.threshold?JSON.stringify({code:"kbcover_excellent",params:s}):o>=n.good.threshold?JSON.stringify({code:"kbcover_good",params:s}):o>=n.warning.threshold?JSON.stringify({code:"kbcover_warning",params:s}):JSON.stringify({code:"kbcover_critical",params:s});return["🩺 KB Coverage Health: "+y.label+" ("+i(o)+" coverage · "+i(b)+" gap · "+r(p)+" tickets/mo without KB)","📊 Snapshot: "+r(c)+" of "+r(e)+" tickets matched ("+i(o)+") · "+r(a)+" articles in KB","🔄 What-If: if coverage climbs to "+i(h)+" (Excellent), ~"+r(d)+" more tickets/mo find KB (at ~$24/ticket = ~$"+r(M)+"/mo saved)","⚖️ Break-Even: to hit "+i(n.excellent.threshold)+" (Excellent), need ~"+r(d)+" more matched tickets OR ~"+w+" net new articles","🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics","💡 Tip: "+F]};return[x(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

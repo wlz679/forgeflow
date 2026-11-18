@@ -277,106 +277,56 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function dvRaw(o,d,w,c){if(c<=0)return 0;return (o*d*(w/100))/c;}" +
-  "function dv(o,d,w,c){return Math.round(dvRaw(o,d,w,c)*100)/100;}" +
-  "function mv(d){return Math.round(d*30*100)/100;}" +
-  "function av(d){return Math.round(d*365*100)/100;}" +
-  "function band(v){if(v>=5000)return 'excellent';if(v>=2000)return 'good';if(v>=500)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var o=cnn(parseFloat(inputs.openOpps)||0);" +
-  "var d=cnn(parseFloat(inputs.avgDealSize)||0);" +
-  "var w=cnn(parseFloat(inputs.winRate)||0);" +
-  "var c=Math.max(1,parseFloat(inputs.cycleDays)||1);" +
-  "var dailyRaw=dvRaw(o,d,w,c);" +
-  "var daily=dv(o,d,w,c);" +
-  "var mo=mv(dailyRaw);" +
-  "var yr=av(dailyRaw);" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function moneyExact(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}" +
-  "var bd=band(daily);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?tk('calc_out.sales_velocity.row.health_excellent','Excellent \\u2014 revenue throughput \\u2265 $5,000/day; sales engine humming'):bd==='good'?tk('calc_out.sales_velocity.row.health_good','Good \\u2014 productive sales engine; room to compress cycle or lift win rate'):bd==='warning'?tk('calc_out.sales_velocity.row.health_warning','Warning \\u2014 slow velocity; pipeline needs more volume or faster cycle'):tk('calc_out.sales_velocity.row.health_critical','Critical \\u2014 sales engine stalling; urgent funnel audit needed');" +
-  "var wr30=dv(o,d,30,c);" +
-  "var cy30=dv(o,d,w,30);" +
-  "var wr30pct=daily>0?((wr30-daily)/daily)*100:0;" +
-  "var cy30pct=daily>0?((cy30-daily)/daily)*100:0;" +
-  "var wrn=(o*d)>0?(5000*c)/(o*d)*100:0;" +
-  "var cyn=daily>0?(o*d*(w/100))/5000:0;" +
-  "var gn,nt;" +
-  "if(bd==='critical'){gn=500-daily;nt=tk('calc_out.sales_velocity.row.next_tier_warning','\\uD83D\\uDFE0 Warning ($500)');}" +
-  "else if(bd==='warning'){gn=2000-daily;nt=tk('calc_out.sales_velocity.row.next_tier_good','\\uD83D\\uDFE1 Good ($2,000)');}" +
-  "else if(bd==='good'){gn=5000-daily;nt=tk('calc_out.sales_velocity.row.next_tier_excellent','\\uD83D\\uDFE2 Excellent ($5,000)');}" +
-  "else{gn=0;nt=tk('calc_out.sales_velocity.row.top_tier_maintained','top tier maintained');}" +
-  "var dailyStr=moneyExact(daily);" +
-  "var monthlyStr=moneyExact(mo);" +
-  "var annualStr=moneyExact(yr);" +
-  "var openOppsStr=String(o);" +
-  "var dealSizeStr=money(d);" +
-  "var winRatePctStr=w+'%';" +
-  "var cycleDaysStr=String(c);" +
-  "var winRate30DailyStr=money(wr30);" +
-  "var winRate30LiftStr=(wr30pct>=0?'+':'')+wr30pct.toFixed(1)+'%';" +
-  "var cycle30DailyStr=money(cy30);" +
-  "var cycle30LiftStr=(cy30pct>=0?'+':'')+cy30pct.toFixed(1)+'%';" +
-  "var combinedDailyStr=money(dv(o,d,30,30));" +
-  "var winRateNeededStr=wrn.toFixed(1);" +
-  "var cycleDaysNeededStr=String(Math.max(1,Math.ceil(cyn)));" +
-  "var moreOppsStr=String(daily>0?Math.ceil((5000-daily)/(d*(w/100)/c)):0);" +
-  "var gapToNextStr=money(Math.max(0,gn));" +
-  "var gapSuffix=bd==='excellent'?' '+tk('calc_out.sales_velocity.row.gap_already_at_top','(already at top)'):'';" +
-  "var tkVelocitySummary=tk('calc_out.sales_velocity.row.velocity_summary','Daily velocity: '+dailyStr+'/day  \\u00B7  Monthly: '+monthlyStr+'  \\u00B7  Annual: '+annualStr,{daily:dailyStr,monthly:monthlyStr,annual:annualStr});" +
-  "var tkFormula=tk('calc_out.sales_velocity.row.formula','Formula: (opps \\u00D7 deal size \\u00D7 win rate) \\u00F7 cycle = ('+openOppsStr+' \\u00D7 '+dealSizeStr+' \\u00D7 '+winRatePctStr+') \\u00F7 '+cycleDaysStr+' days',{opps:openOppsStr,deal:dealSizeStr,win:winRatePctStr,cycle:cycleDaysStr});" +
-  "var tkSalesCycle=tk('calc_out.sales_velocity.row.sales_cycle','Sales cycle: '+cycleDaysStr+' days',{days:cycleDaysStr});" +
-  "var tkWhatIfWinRate=tk('calc_out.sales_velocity.row.whatif_win_rate_30','Win rate '+winRatePctStr+'\\u219230%: '+winRate30DailyStr+'/day ('+winRate30LiftStr+' lift)',{win:winRatePctStr,daily:winRate30DailyStr,lift:winRate30LiftStr});" +
-  "var tkWhatIfCycle=tk('calc_out.sales_velocity.row.whatif_cycle_30','Cycle '+cycleDaysStr+'\\u219230 days: '+cycle30DailyStr+'/day ('+cycle30LiftStr+' lift)',{cycle:cycleDaysStr,daily:cycle30DailyStr,lift:cycle30LiftStr});" +
-  "var tkWhatIfCombined=tk('calc_out.sales_velocity.row.whatif_combined','Combined (win rate 30% AND cycle 30d): '+combinedDailyStr+'/day',{daily:combinedDailyStr});" +
-  "var tkPathA=tk('calc_out.sales_velocity.row.break_even_path_a','Path A \\u2014 lift win rate to '+winRateNeededStr+'% (cycle unchanged)',{rate:winRateNeededStr});" +
-  "var tkPathB=tk('calc_out.sales_velocity.row.break_even_path_b','Path B \\u2014 compress cycle to '+cycleDaysNeededStr+' days (win rate unchanged)',{days:cycleDaysNeededStr});" +
-  "var tkPathC=tk('calc_out.sales_velocity.row.break_even_path_c','Path C \\u2014 add '+moreOppsStr+' more open opps (everything else unchanged)',{opps:moreOppsStr});" +
-  "var tkAtCurrentPace=tk('calc_out.sales_velocity.row.at_current_pace','At current pace: ~'+annualStr+'/year revenue contribution',{annual:annualStr});" +
-  "var tip='';" +
-  "if(bd==='critical'){tip=tk('calc_out.sales_velocity.row.tip_critical','\\uD83D\\uDCA1 Tip: Daily velocity < $500 is a critical sales engine stall \\u2014 at this pace you will not cover quota. Audit the funnel end-to-end: lead quality (MQL\\u2192SQL conversion), qualification rigor, sales playbook adherence, win/loss reasons. Even a 2\\u00D7 cycle compression or doubling win rate is the minimum viable move.');}" +
-  "else if(bd==='warning'){tip=tk('calc_out.sales_velocity.row.tip_warning','\\uD83D\\uDCA1 Tip: Daily velocity $500\\u2013$2,000 is below productive. The two fastest levers are win rate (better qualification, stronger close skills) and cycle compression (faster follow-up, fewer proposal revisions). Doubling open opps without improving win rate or cycle just inflates pipeline noise \\u2014 fix the conversion engine first.');}" +
-  "else if(bd==='good'){tip=tk('calc_out.sales_velocity.row.tip_good','\\uD83D\\uDCA1 Tip: Daily velocity $2,000\\u2013$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps \\× size \\u00D7 win rate \\u00F7 cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5\\u20132\\u00D7 lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size.');}" +
-  "else{tip=tk('calc_out.sales_velocity.row.tip_excellent','\\uD83D\\uDCA1 Tip: Excellent velocity \\u2014 sales engine is generating \\u2265 $5K/day. Maintain cadence; protect top performers from burnout and avoid pipeline complacency. Watch for stale late-stage deals (>1.5\\u00D7 cycle) that quietly slip, and rebalance marketing spend toward channels that consistently fill the top of funnel with qualified opps.');}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.sales_velocity_calculator|\\uD83D\\uDE80 Sales Velocity Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 '+tkVelocitySummary+'\\n';" +
-  "r2+='\\u2022 '+tkFormula+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.open_opportunities|Open opportunities|: '+openOppsStr+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.average_deal_size|Average deal size|: '+dealSizeStr+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.win_rate|Win rate|: '+winRatePctStr+'\\n';" +
-  "r2+='\\u2022 '+tkSalesCycle+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.daily_monthly_annual_velocity|Daily / Monthly / Annual velocity|: '+dailyStr+' / '+monthlyStr+' / '+annualStr+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tkWhatIfWinRate+'\\n';" +
-  "r2+='\\u2022 '+tkWhatIfCycle+'\\n';" +
-  "r2+='\\u2022 '+tkWhatIfCombined+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.target_for_excellent|Target for \\uD83D\\uDFE2 Excellent|: $5,000/day\\n';" +
-  "r2+='\\u2022 '+tkPathA+'\\n';" +
-  "r2+='\\u2022 '+tkPathB+'\\n';" +
-  "r2+='\\u2022 '+tkPathC+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.next_tier|Next tier|: '+nt+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.gap_to_next_tier|Gap to next tier|: '+gapToNextStr+gapSuffix+'\\n';" +
-  "r2+='\\u2022 '+tkAtCurrentPace+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(e){return Number.isNaN(e)?0:Math.max(0,e)},w=function(e,l,n,a){return a<=0?0:e*l*(n/100)/a},s=function(e,l,n,a){const i=w(e,l,n,a);return Math.round(i*100)/100},D=function(e){return Math.round(e*30*100)/100},F=function(e){return Math.round(e*365*100)/100},M=function(e){return e>=g.excellent[0]?"excellent":e>=g.good[0]?"good":e>=g.warning[0]?"warning":"critical"},C=function(e,l,n){var a=U(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var st=f,ut=w,yt=s,_t=D,pt=F,dt=M,ht=C,t=tk,K={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},Q='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+Q)(),g={excellent:[5e3,null],good:[2e3,5e3],warning:[500,2e3],critical:[0,500]},U=function(e){const l=f(parseFloat(e.openOpps)||0),n=f(parseFloat(e.avgDealSize)||0),a=f(parseFloat(e.winRate)||0),i=Math.max(1,parseFloat(e.cycleDays)||1),N=w(l,n,a,i),c=s(l,n,a,i),V=D(N),B=F(N),u=$=>"$"+Math.round($).toLocaleString("en-US"),v=$=>"$"+$.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),o=M(c),J=K[o],X=o==="excellent"?t("calc_out.sales_velocity.row.health_excellent","Excellent — revenue throughput ≥ $5,000/day; sales engine humming"):o==="good"?t("calc_out.sales_velocity.row.health_good","Good — productive sales engine; room to compress cycle or lift win rate"):o==="warning"?t("calc_out.sales_velocity.row.health_warning","Warning — slow velocity; pipeline needs more volume or faster cycle"):t("calc_out.sales_velocity.row.health_critical","Critical — sales engine stalling; urgent funnel audit needed"),P=s(l,n,30,i),q=s(l,n,a,30),W=c>0?(P-c)/c*100:0,E=c>0?(q-c)/c*100:0,Y=l*n>0?5e3*i/(l*n)*100:0,Z=c>0?l*n*(a/100)/5e3:0;let y,_;o==="critical"?(y=500-c,_=t("calc_out.sales_velocity.row.next_tier_warning","🟠 Warning ($500)")):o==="warning"?(y=2e3-c,_=t("calc_out.sales_velocity.row.next_tier_good","🟡 Good ($2,000)")):o==="good"?(y=5e3-c,_=t("calc_out.sales_velocity.row.next_tier_excellent","🟢 Excellent ($5,000)")):(y=0,_=t("calc_out.sales_velocity.row.top_tier_maintained","top tier maintained"));let p;o==="critical"?p=t("calc_out.sales_velocity.row.tip_critical","💡 Tip: Daily velocity < $500 is a critical sales engine stall — at this pace you will not cover quota. Audit the funnel end-to-end: lead quality (MQL→SQL conversion), qualification rigor, sales playbook adherence, win/loss reasons. Even a 2× cycle compression or doubling win rate is the minimum viable move."):o==="warning"?p=t("calc_out.sales_velocity.row.tip_warning","💡 Tip: Daily velocity $500–$2,000 is below productive. The two fastest levers are win rate (better qualification, stronger close skills) and cycle compression (faster follow-up, fewer proposal revisions). Doubling open opps without improving win rate or cycle just inflates pipeline noise — fix the conversion engine first."):o==="good"?p=t("calc_out.sales_velocity.row.tip_good","💡 Tip: Daily velocity $2,000–$5,000 is productive. To reach Excellent, identify the weakest of the four levers (opps × size × win rate ÷ cycle) and invest there. Often cycle compression (e.g. self-serve trial, async demos) gives 1.5–2× lift without more headcount. Pair with pipeline value to make sure velocity growth is not masking deteriorating deal size."):p=t("calc_out.sales_velocity.row.tip_excellent","💡 Tip: Excellent velocity — sales engine is generating ≥ $5K/day. Maintain cadence; protect top performers from burnout and avoid pipeline complacency. Watch for stale late-stage deals (>1.5× cycle) that quietly slip, and rebalance marketing spend toward channels that consistently fill the top of funnel with qualified opps.");const m=v(c),S=v(V),d=v(B),x=String(l),b=u(n),h=a+"%",r=String(i),O=u(P),R=(W>=0?"+":"")+W.toFixed(1)+"%",z=u(q),j=(E>=0?"+":"")+E.toFixed(1)+"%",A=u(s(l,n,30,30)),L=Y.toFixed(1),I=String(Math.max(1,Math.ceil(Z))),G=String(c>0?Math.ceil((5e3-c)/(n*(a/100)/i)):0),H=u(Math.max(0,y)),k=t("calc_out.sales_velocity.row.velocity_summary","Daily velocity: "+m+"/day  ·  Monthly: "+S+"  ·  Annual: "+d,{daily:m,monthly:S,annual:d}),T=t("calc_out.sales_velocity.row.formula","Formula: (opps × deal size × win rate) ÷ cycle = ("+x+" × "+b+" × "+h+") ÷ "+r+" days",{opps:x,deal:b,win:h,cycle:r}),tt=t("calc_out.sales_velocity.row.sales_cycle","Sales cycle: "+r+" days",{days:r}),et=t("calc_out.sales_velocity.row.whatif_win_rate_30","Win rate "+h+"→30%: "+O+"/day ("+R+" lift)",{win:h,daily:O,lift:R}),nt=t("calc_out.sales_velocity.row.whatif_cycle_30","Cycle "+r+"→30 days: "+z+"/day ("+j+" lift)",{cycle:r,daily:z,lift:j}),at=t("calc_out.sales_velocity.row.whatif_combined","Combined (win rate 30% AND cycle 30d): "+A+"/day",{daily:A}),lt=t("calc_out.sales_velocity.row.break_even_path_a","Path A — lift win rate to "+L+"% (cycle unchanged)",{rate:L}),ct=t("calc_out.sales_velocity.row.break_even_path_b","Path B — compress cycle to "+I+" days (win rate unchanged)",{days:I}),ot=t("calc_out.sales_velocity.row.break_even_path_c","Path C — add "+G+" more open opps (everything else unchanged)",{opps:G}),it=t("calc_out.sales_velocity.row.at_current_pace","At current pace: ~"+d+"/year revenue contribution",{annual:d}),rt=o==="excellent"?" "+t("calc_out.sales_velocity.row.gap_already_at_top","(already at top)"):"";return[\`$calc_out.section.sales_velocity_calculator|🚀 Sales Velocity Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+J+" "+X+\`
+• \`+k+\`
+• \`+T+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.open_opportunities|Open opportunities|: \`+x+\`
+• $calc_out.label.average_deal_size|Average deal size|: \`+b+\`
+• $calc_out.label.win_rate|Win rate|: \`+h+\`
+• \`+tt+\`
+• $calc_out.label.daily_monthly_annual_velocity|Daily / Monthly / Annual velocity|: \`+m+" / "+S+" / "+d+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+et+\`
+• \`+nt+\`
+• \`+at+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.target_for_excellent|Target for 🟢 Excellent|: $5,000/day
+• \`+lt+\`
+• \`+ct+\`
+• \`+ot+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.next_tier|Next tier|: \`+_+\`
+• $calc_out.label.gap_to_next_tier|Gap to next tier|: \`+H+rt+\`
+• \`+it+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+p+\`
+\`]};return[C(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

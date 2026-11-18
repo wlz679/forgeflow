@@ -200,76 +200,57 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function cROAS(s,r){if(s<=0)return Infinity;return r/s;}" +
-  "function cNetROAS(s,r,m){if(s<=0)return Infinity;return((r*(m/100))-s)/s*100;}" +
-  "function cNetProf(s,r,m){return r*(m/100)-s;}" +
-  "function ecpm(s,r){if(r<=0)return Infinity;return(s/r)*1000;}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var as=cnn(parseFloat(inputs.adSpend)||0);" +
-  "var rev=cnn(parseFloat(inputs.revenue)||0);" +
-  "var gm=cnn(parseFloat(inputs.grossMargin)||0);" +
-  "var aw=inputs.attributionWindow||'28d';" +
-  "if(as===0){return['$calc_out.section.roas_calculator|\\u23F0 ROAS Calculator|\\n\\n'+tk('calc_out.roas.row.enter_inputs_required','\\uD83D\\uDCCA Enter ad spend and revenue to see your return on ad spend ratio (ROAS), net profit margin after ad costs, and projected scaling outcomes.')];}" +
-  "var roas=cROAS(as,rev);" +
-  "var nr=cNetROAS(as,rev,gm);" +
-  "var np=cNetProf(as,rev,gm);" +
-  "var cpmV=ecpm(as,rev);" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function money2(n){return '$'+n.toLocaleString('en-US',{maximumFractionDigits:2});}" +
-  "var he='',hl='',hr='';" +
-  "if(roas>=4){he='\\uD83D\\uDFE2';hl='Excellent \\u2014 ROAS \\u2265 4.0x; profitable and scalable';hr=tk('calc_out.roas.row.health_excellent',he+' '+hl);}" +
-  "else if(roas>=2){he='\\uD83D\\uDFE1';hl='Good \\u2014 ROAS 2.0\\u20134.0x; profitable with room to optimize';hr=tk('calc_out.roas.row.health_good',he+' '+hl);}" +
-  "else if(roas>=1){he='\\uD83D\\uDFE0';hl='Warning \\u2014 ROAS 1.0\\u20132.0x; breaking even on revenue; margin is critical';hr=tk('calc_out.roas.row.health_warning',he+' '+hl);}" +
-  "else{he='\\uD83D\\uDD34';hl='Critical \\u2014 ROAS < 1.0x; losing money per ad dollar';hr=tk('calc_out.roas.row.health_critical',he+' '+hl);}" +
-  "var ru=rev*1.2,sd=as*0.8;" +
-  "var rU=ru/as,rSD=rev/sd,rB=ru/sd;" +
-  "var npRU=ru*(gm/100)-as;var npSD=rev*(gm/100)-sd;" +
-  "var beR=gm>0?as/(gm/100):as;var beROAS=beR/as;" +
-  "var rinc=rev>0?((beR-rev)/rev)*100:0;" +
-  "var s2rev=rev*2;var s2sp=as*2;var s2pf=s2rev*(gm/100)-s2sp;" +
-  "var annR=rev*12;var annNP=np*12;" +
-  "var tip='';" +
-  "if(roas<1){tip=JSON.stringify({code:'roas_critical',params:{roas:roas.toFixed(2)}});}" +
-  "else if(roas>=4){tip=JSON.stringify({code:'roas_excellent',params:{roas:roas.toFixed(2)}});}" +
-  "else if(roas>=2){tip=JSON.stringify({code:'roas_good',params:{roas:roas.toFixed(2)}});}" +
-  "else{if(gm<50){tip=JSON.stringify({code:'roas_warning_thin_margin',params:{roas:roas.toFixed(2),grossMargin:gm.toFixed(1)}});}else{tip=JSON.stringify({code:'roas_warning_funnel',params:{roas:roas.toFixed(2),attributionWindow:aw}});}}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.roas_calculator|\\u23F0 ROAS Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.roas_health|\\uD83E\\uDE7A Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+hr+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.gross_roas|Gross ROAS|: '+roas.toFixed(2)+'x  \\u00B7  $calc_out.label.net_profit_margin|Net profit margin|: '+nr.toFixed(1)+'%\\n';" +
-  "r2+='\\u2022 $calc_out.label.attribution|Attribution|: '+aw+'  \\u00B7  $calc_out.label.effective_cost_per_1k_revenue|Effective cost per $1K revenue|: '+money2(cpmV)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.roas_inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.ad_spend|Ad spend|:     '+money(as)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.revenue|Revenue|:      '+money(rev)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.gross_margin|Gross margin|: '+gm.toFixed(1)+'%\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.net_profit_after_ad_cost','Net profit:   '+money(np)+'  (after ad cost)',{profit:money(np)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.attribution|Attribution|:  '+aw+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.roas_what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.whatif_revenue_up_20','+20% revenue: ROAS = '+rU.toFixed(2)+'x \\u00B7 net profit = '+money(npRU),{roas:rU.toFixed(2)+'x',profit:money(npRU)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.whatif_spend_down_20','\\u221220% spend:   ROAS = '+rSD.toFixed(2)+'x \\u00B7 net profit = '+money(npSD),{roas:rSD.toFixed(2)+'x',profit:money(npSD)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.whatif_both','Both:         ROAS = '+rB.toFixed(2)+'x (compound gain)',{roas:rB.toFixed(2)+'x'})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.roas_break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.break_even_revenue','Break-even revenue: '+money(beR)+'  (at '+gm.toFixed(0)+'% margin \\u2192 ROAS = '+beROAS.toFixed(2)+'x)',{revenue:money(beR),margin:gm.toFixed(0),roas:beROAS.toFixed(2)+'x'})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.revenue_lift_needed','Revenue lift needed: '+rinc.toFixed(1)+'% to break even on net profit',{lift:rinc.toFixed(1)+'%'})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.raise_gross_margin','Or raise gross margin to '+((as/rev)*100).toFixed(1)+'% on current revenue to break even',{margin:((as/rev)*100).toFixed(1)+'%'})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.roas_milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.scale_2x','Scale 2x at current ratio: revenue = '+money(s2rev)+' \\u00B7 profit = '+money(s2pf)+'/period',{revenue:money(s2rev),profit:money(s2pf)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.projection_12_month','12-month projection:        revenue = '+money(annR)+' \\u00B7 net profit = '+money(annNP),{revenue:money(annR),profit:money(annNP)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.roas.row.assumes_constant_ratio','(Assumes constant ratio \\u2014 actual scaling often degrades 10\\u201330% as audience saturates)')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(e){return Number.isNaN(e)?0:Math.max(0,e)},F=function(e,t){return e<=0?1/0:t/e},b=function(e,t,n){return e<=0?1/0:(t*(n/100)-e)/e*100},S=function(e,t,n){return t*(n/100)-e},m=function(e,t){return t<=0?1/0:e/t*1e3},O=function(e,t,n){var a=U(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var K=f,z=F,D=b,B=S,Q=m,V=O,r=tk,P='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+P)(),u={excellent:4,good:[2,4],warning:[1,2],critical:0},U=function(e){const t=f(parseFloat(e.adSpend)||0),n=f(parseFloat(e.revenue)||0),a=f(parseFloat(e.grossMargin)||0),p=e.attributionWindow||"28d";if(t===0)return[\`$calc_out.section.roas_calculator|⏰ ROAS Calculator|
+
+\`+r("calc_out.roas.row.enter_inputs_required","📊 Enter ad spend and revenue to see your return on ad spend ratio (ROAS), net profit margin after ad costs, and projected scaling outcomes.")];const i=F(t,n),W=b(t,n,a),g=S(t,n,a),C=m(t,n),o=w=>"$"+Math.round(w).toLocaleString("en-US"),E=w=>"$"+w.toLocaleString("en-US",{maximumFractionDigits:2});let c,s,_;i>=u.excellent?(c="🟢",s="Excellent — ROAS ≥ 4.0x; profitable and scalable",_=r("calc_out.roas.row.health_excellent",c+" "+s)):i>=u.good[0]?(c="🟡",s="Good — ROAS 2.0–4.0x; profitable with room to optimize",_=r("calc_out.roas.row.health_good",c+" "+s)):i>=u.warning[0]?(c="🟠",s="Warning — ROAS 1.0–2.0x; breaking even on revenue; margin is critical",_=r("calc_out.roas.row.health_warning",c+" "+s)):(c="🔴",s="Critical — ROAS < 1.0x; losing money per ad dollar",_=r("calc_out.roas.row.health_critical",c+" "+s));const x=n*1.2,v=t*.8,R=x/t,y=n/v,$=x/v,A=x*(a/100)-t,N=n*(a/100)-v,d=a>0?t/(a/100):t,j=d/t,I=n>0?(d-n)/n*100:0,h=n*2,G=t*2,J=h*(a/100)-G,M=n*12,q=g*12;let l;return i<1?l=JSON.stringify({code:"roas_critical",params:{roas:i.toFixed(2)}}):i>=u.excellent?l=JSON.stringify({code:"roas_excellent",params:{roas:i.toFixed(2)}}):i>=u.good[0]?l=JSON.stringify({code:"roas_good",params:{roas:i.toFixed(2)}}):a<50?l=JSON.stringify({code:"roas_warning_thin_margin",params:{roas:i.toFixed(2),grossMargin:a.toFixed(1)}}):l=JSON.stringify({code:"roas_warning_funnel",params:{roas:i.toFixed(2),attributionWindow:p}}),[\`$calc_out.section.roas_calculator|⏰ ROAS Calculator|
+
+$calc_out.section.roas_health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+_+\`
+• $calc_out.label.gross_roas|Gross ROAS|: \`+i.toFixed(2)+"x  ·  $calc_out.label.net_profit_margin|Net profit margin|: "+W.toFixed(1)+\`%
+• $calc_out.label.attribution|Attribution|: \`+p+"  ·  $calc_out.label.effective_cost_per_1k_revenue|Effective cost per $1K revenue|: "+E(C)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.roas_inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.ad_spend|Ad spend|:     \`+o(t)+\`
+• $calc_out.label.revenue|Revenue|:      \`+o(n)+\`
+• $calc_out.label.gross_margin|Gross margin|: \`+a.toFixed(1)+\`%
+• \`+r("calc_out.roas.row.net_profit_after_ad_cost","Net profit:   "+o(g)+"  (after ad cost)",{profit:o(g)})+\`
+• $calc_out.label.attribution|Attribution|:  \`+p+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.roas_what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+r("calc_out.roas.row.whatif_revenue_up_20","+20% revenue: ROAS = "+R.toFixed(2)+"x · net profit = "+o(A),{roas:R.toFixed(2)+"x",profit:o(A)})+\`
+• \`+r("calc_out.roas.row.whatif_spend_down_20","−20% spend:   ROAS = "+y.toFixed(2)+"x · net profit = "+o(N),{roas:y.toFixed(2)+"x",profit:o(N)})+\`
+• \`+r("calc_out.roas.row.whatif_both","Both:         ROAS = "+$.toFixed(2)+"x (compound gain)",{roas:$.toFixed(2)+"x"})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.roas_break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+r("calc_out.roas.row.break_even_revenue","Break-even revenue: "+o(d)+"  (at "+a.toFixed(0)+"% margin → ROAS = "+j.toFixed(2)+"x)",{revenue:o(d),margin:a.toFixed(0),roas:j.toFixed(2)+"x"})+\`
+• \`+r("calc_out.roas.row.revenue_lift_needed","Revenue lift needed: "+I.toFixed(1)+"% to break even on net profit",{lift:I.toFixed(1)+"%"})+\`
+• \`+r("calc_out.roas.row.raise_gross_margin","Or raise gross margin to "+(t/n*100).toFixed(1)+"% on current revenue to break even",{margin:(t/n*100).toFixed(1)+"%"})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.roas_milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+r("calc_out.roas.row.scale_2x","Scale 2x at current ratio: revenue = "+o(h)+" · profit = "+o(J)+"/period",{revenue:o(h),profit:o(J)})+\`
+• \`+r("calc_out.roas.row.projection_12_month","12-month projection:        revenue = "+o(M)+" · net profit = "+o(q),{revenue:o(M),profit:o(q)})+\`
+• \`+r("calc_out.roas.row.assumes_constant_ratio","(Assumes constant ratio — actual scaling often degrades 10–30% as audience saturates)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+l+\`
+\`]};return[O(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

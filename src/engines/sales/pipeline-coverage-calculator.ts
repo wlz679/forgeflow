@@ -278,101 +278,56 @@ const customFn =
   // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
   //   ⚠️ 页面只渲染 results[0] ⇒ 保持**单元素数组**返回形态（整份输出本来就是一段）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function cR(pv,qt){if(qt<=0)return 0;return pv/qt;}" +
-  "function wP(pv,wr){return pv*(wr/100);}" +
-  "function wC(pv,wr,qt){if(qt<=0)return 0;return wP(pv,wr)/qt;}" +
-  "function gp(qt,wpv){return qt-wpv;}" +
-  "function rAP(gv,wr){if(wr<=0)return 0;return gv/(wr/100);}" +
-  "function band(v){if(v>=3)return 'excellent';if(v>=2)return 'good';if(v>=1)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var qt=cnn(parseFloat(inputs.quotaTarget)||0);" +
-  "var pv=cnn(parseFloat(inputs.pipelineValue)||0);" +
-  "var wr=cnn(parseFloat(inputs.winRate)||0);" +
-  "if(qt===0&&pv===0&&wr===0){" +
-    "return['$calc_out.section.pipeline_coverage_calculator|\\uD83C\\uDFAF Pipeline Coverage Calculator|\\n\\n'+tk('calc_out.pipeline_coverage.row.enter_values','\\uD83C\\uDFAF Enter your quota target, current pipeline value, and expected win rate to see your pipeline-to-quota coverage ratio with the B2B SaaS 3x rule diagnostic.')];" +
-  "}" +
-  "var cv=cR(pv,qt);" +
-  "var wpv=wP(pv,wr);" +
-  "var wc=wC(pv,wr,qt);" +
-  "var gv=gp(qt,wpv);" +
-  "var rap=rAP(gv,wr);" +
-  "var bd=band(cv);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 3x rule satisfied; comfortable pipeline cushion':bd==='good'?'Good \\u2014 2.0x\\u20133.0x; approaching 3x rule, monitor stage progression':bd==='warning'?'Warning \\u2014 1.0x\\u20132.0x; under the 2x comfort zone, at risk if win rate slips':'Critical \\u2014 < 1.0x; pipeline shortfall, urgent top-of-funnel rebuild';" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function moneyK(n){var r=Math.round(n);if(r>=1000000)return '$'+(r/1000000).toFixed(r%1000000===0?0:2)+'M';if(r>=1000)return '$'+Math.round(r/1000)+'K';return '$'+r.toLocaleString('en-US');}" +
-  "function fR1(n){if(!isFinite(n))return '\\u2014x';return n.toFixed(1)+'x';}" +
-  "function fR2(n){if(!isFinite(n))return '\\u2014x';return n.toFixed(2)+'x';}" +
-  "var imp=2000000;" +
-  "var impCv=cR(imp,qt);" +
-  "var impBd=band(impCv);" +
-  "var impWc=wC(imp,wr,qt);" +
-  "var ibw=50;" +
-  "var ibwW=wP(pv,ibw);" +
-  "var ibwWc=wC(pv,ibw,qt);" +
-  "var ibp=imp;" +
-  "var ibt=ibw;" +
-  "var ibtw=wP(ibp,ibt);" +
-  "var ibtwc=wC(ibp,ibt,qt);" +
-  "var ibtc=cR(ibp,qt);" +
-  "var ibtBd=band(ibtc);" +
-  "var thr3=3*qt;" +
-  "var g3=Math.max(0,thr3-pv);" +
-  "var thr1=wr>0?qt/(wr/100):1/0;" +
-  "var g1=isFinite(thr1)?Math.max(0,thr1-pv):0;" +
-  "var wr1x=pv>0?(qt/pv)*100:0;" +
-  "var gn,nt,ntrow;" +
-  "if(bd==='critical'){gn=1.0-cv;nt='\\uD83D\\uDFE0 Warning (1.0x)';ntrow=tk('calc_out.pipeline_coverage.row.tier_critical',nt);}" +
-  "else if(bd==='warning'){gn=2.0-cv;nt='\\uD83D\\uDFE1 Good (2.0x)';ntrow=tk('calc_out.pipeline_coverage.row.tier_good',nt);}" +
-  "else if(bd==='good'){gn=3.0-cv;nt='\\uD83D\\uDFE2 Excellent (3x rule)';ntrow=tk('calc_out.pipeline_coverage.row.tier_excellent',nt);}" +
-  "else{gn=0;nt='top tier maintained (3x rule)';ntrow=tk('calc_out.pipeline_coverage.row.tier_top_maintained',nt);}" +
-  "var tip='';" +
-  "if(bd==='critical'){tip='Pipeline < 1.0x means you do not even have enough pipeline to cover quota, win or lose. The 3x rule is a distant goal \\u2014 focus first on getting to 1.0x. This requires either: (a) aggressive top-of-funnel (cold outbound, paid lead-gen, partnerships), or (b) raising quota targets down only after the gap closes. A pipeline review is overdue; weekly forecast calls are essential. Aim for 1.0x within 30 days, 2.0x within 60.';}" +
-  "else if(bd==='warning'){tip='1.0x\\u20132.0x is the danger zone \\u2014 you have enough pipeline to hit quota, but no cushion for slippage. The 3x rule (\\u2265 3.0x) is the B2B SaaS benchmark for reliable attainment. Push toward 2.0x first: late-stage acceleration (Negotiation\\u2192Closing), increase top-of-funnel activity by 30\\u201350%, and audit deal-stage conversion. A 10% win rate improvement is often faster than doubling Discovery count \\u2014 pair with sales velocity (P8-2) to find your best lever.';}" +
-  "else if(bd==='good'){tip='2.0x\\u20133.0x is approaching the 3x rule \\u2014 you are close. The final 1.0x jump is harder than the previous one (diminishing returns from raw pipeline growth). Focus on stage quality: ensure Negotiation and Closing deals are well-qualified, not bloated with low-probability late-stage deals. Maintain weekly pipeline review cadence; do not let 2.5x slip back to 2.0x during seasonal dips. To get to \\uD83D\\uDFE2, identify 2\\u20133 stretch opportunities at 80%+ probability.';}" +
-  "else{tip='Excellent \\u2014 3x rule satisfied. You have a comfortable cushion: even if 1 in 3 deals slips, you should still hit quota. Do not get complacent: top-of-funnel decay is invisible until the quarter after. Maintain cadence; audit stage hygiene (no stale Closing deals >30 days that may quietly drop to 50% probability). Use this cushion strategically \\u2014 invest in expansion/upsell on existing accounts, or test higher-margin pricing motions.';}" +
-  "var hrow=bd==='excellent'?tk('calc_out.pipeline_coverage.row.health_excellent',he+' '+hl):bd==='good'?tk('calc_out.pipeline_coverage.row.health_good',he+' '+hl):bd==='warning'?tk('calc_out.pipeline_coverage.row.health_warning',he+' '+hl):tk('calc_out.pipeline_coverage.row.health_critical',he+' '+hl);" +
-  "var g3row=tk('calc_out.pipeline_coverage.row.gap_to_3x_rule','Gap to 3x rule: '+money(g3)+' more pipeline needed',{gap:money(g3)});" +
-  "var g1row=tk('calc_out.pipeline_coverage.row.gap_to_1x_break_even','Gap to 1x break-even: '+money(g1)+' (or win rate \\u2192 '+Math.round(wr1x)+'% at current pipeline)',{gap:money(g1),rate:String(Math.round(wr1x))});" +
-  "var gnrow=bd==='excellent'?tk('calc_out.pipeline_coverage.row.gap_to_next_tier_maintained','0x (3x rule maintained)'):tk('calc_out.pipeline_coverage.row.gap_to_next_tier_growth',fR1(gn)+' of pipeline growth',{gap:fR1(gn)});" +
-  "var b1row=isFinite(thr1)?tk('calc_out.pipeline_coverage.row.breakeven_1x','1x break-even (\\uD83D\\uDFE0 Warning lower bound): need pipeline \\u2265 '+money(thr1)+' (gap: '+money(g1)+')',{target:money(thr1),gap:money(g1)}):tk('calc_out.pipeline_coverage.row.breakeven_1x_impossible','1x break-even (\\uD83D\\uDFE0 Warning lower bound): need pipeline \\u2265 '+money(thr1)+' (impossible: win rate is 0)');" +
-  "var tiprow=bd==='critical'?tk('calc_out.pipeline_coverage.row.tip_critical','\\uD83D\\uDCA1 Tip: '+tip):bd==='warning'?tk('calc_out.pipeline_coverage.row.tip_warning','\\uD83D\\uDCA1 Tip: '+tip):bd==='good'?tk('calc_out.pipeline_coverage.row.tip_good','\\uD83D\\uDCA1 Tip: '+tip):tk('calc_out.pipeline_coverage.row.tip_excellent','\\uD83D\\uDCA1 Tip: '+tip);" +
-  "var r2='';" +
-  "r2+='$calc_out.section.pipeline_coverage_calculator|\\uD83C\\uDFAF Pipeline Coverage Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+hrow+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.coverage_ratio','Coverage ratio: '+fR1(cv)+' (pipeline / quota)',{ratio:fR1(cv)})+'  \\u00B7  '+tk('calc_out.pipeline_coverage.row.weighted_coverage','Weighted coverage: '+fR2(wc)+' (after '+wr+'% win rate)',{coverage:fR2(wc),rate:String(wr)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.required_additional_pipeline|Required additional pipeline|: '+money(rap)+'  \\u00B7  $calc_out.label.gap_to_quota_weighted|Gap to quota (weighted)|: '+money(Math.max(0,gv))+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.quota_target|Quota target|: '+money(qt)+'  \\u00B7  $calc_out.label.current_pipeline|Current pipeline|: '+money(pv)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.expected_win_rate|Expected win rate|: '+wr+'%  \\u00B7  '+tk('calc_out.pipeline_coverage.row.three_x_rule_target','3x rule target: '+money(thr3)+' (3\\u00D7 quota)',{target:money(thr3)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.weighted_pipeline|Weighted pipeline|: '+money(wpv)+'  \\u00B7  $calc_out.label.coverage|Coverage|: '+fR1(cv)+'  \\u00B7  $calc_out.label.weighted_coverage|Weighted coverage|: '+fR2(wc)+'\\n';" +
-  "r2+='\\u2022 '+g3row+'  \\u00B7  '+g1row+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.whatif_pipeline','If pipeline '+moneyK(pv)+'\\u2192'+moneyK(imp)+': '+fR1(impCv)+' ('+impBd+'); weighted '+fR2(impWc),{from:moneyK(pv),to:moneyK(imp),cov:fR1(impCv),band:impBd,weighted:fR2(impWc)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.whatif_win_rate','If win rate '+wr+'%\\u2192'+ibw+'%: weighted '+fR2(ibwWc)+' (covRatio unchanged at '+fR1(cv)+', still '+bd+'); weighted pipeline = '+money(ibwW),{from:String(wr),to:String(ibw),weighted:fR2(ibwWc),cov:fR1(cv),band:bd,pipeline:money(ibwW)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.whatif_both','If both ('+moneyK(ibp)+' + '+ibt+'%): '+fR1(ibtc)+' ('+ibtBd+'); weighted '+fR2(ibtwc)+' = '+money(ibtw),{pipe:moneyK(ibp),win:String(ibt),cov:fR1(ibtc),band:ibtBd,weighted:fR2(ibtwc),pipeline:money(ibtw)})+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.breakeven_3x','3x rule (\\uD83D\\uDFE2 Excellent): need pipeline \\u2265 '+money(thr3)+' (gap: '+money(g3)+')',{target:money(thr3),gap:money(g3)})+'\\n';" +
-  "r2+='\\u2022 '+b1row+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.breakeven_alternative','Alternative: at current pipeline '+moneyK(pv)+', win rate \\u2192 '+Math.round(wr1x)+'% to hit 1x break-even (3x rule unreachable via win rate alone \\u2014 needs more pipeline)',{pipeline:moneyK(pv),rate:String(Math.round(wr1x))})+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.next_tier|Next tier|: '+ntrow+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.gap_to_next_tier|Gap to next tier|: '+gnrow+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.pipeline_coverage.row.milestone_summary','Milestone summary: '+fR1(cv)+' current  \\u00B7  need '+fR1(Math.max(cv,1.0))+' for 1x  \\u00B7  need 2.0x for \\uD83D\\uDFE1  \\u00B7  need 3.0x for \\uD83D\\uDFE2 (3x rule)',{current:fR1(cv),for1x:fR1(Math.max(cv,1.0))})+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+=tiprow+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let C=function(n){return Number.isNaN(n)?0:Math.max(0,n)},F=function(n,t){return t<=0?0:n/t},w=function(n,t){return n*(t/100)},v=function(n,t,o){return o<=0?0:w(n,t)/o},A=function(n,t){return n-t},K=function(n,t){return t<=0?0:n/(t/100)},S=function(n){return n>=N.excellent[0]?"excellent":n>=N.good[0]?"good":n>=N.warning[0]?"warning":"critical"},O=function(n,t,o){var a=k(n);return Array.isArray(a)?a.join(\`
+\`):String(a)};var re=C,ae=F,le=w,ce=v,pe=A,ue=K,se=S,ge=O,e=tk,H={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},T='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+T)(),N={excellent:[3,null],good:[2,3],warning:[1,2],critical:[0,1]},k=function(n){const t=C(parseFloat(n.quotaTarget)||0),o=C(parseFloat(n.pipelineValue)||0),a=C(parseFloat(n.winRate)||0);if(t===0&&o===0&&a===0)return[\`$calc_out.section.pipeline_coverage_calculator|🎯 Pipeline Coverage Calculator|
+
+\`+e("calc_out.pipeline_coverage.row.enter_values","🎯 Enter your quota target, current pipeline value, and expected win rate to see your pipeline-to-quota coverage ratio with the B2B SaaS 3x rule diagnostic.")];const c=F(o,t),U=w(o,a),j=v(o,a,t),V=A(t,U),ee=K(V,a),r=S(c),W=H[r],B=r==="excellent"?"Excellent — 3x rule satisfied; comfortable pipeline cushion":r==="good"?"Good — 2.0x–3.0x; approaching 3x rule, monitor stage progression":r==="warning"?"Warning — 1.0x–2.0x; under the 2x comfort zone, at risk if win rate slips":"Critical — < 1.0x; pipeline shortfall, urgent top-of-funnel rebuild",i=u=>"$"+Math.round(u).toLocaleString("en-US"),s=u=>{const f=Math.round(u);return f>=1e6?"$"+(f/1e6).toFixed(f%1e6===0?0:2)+"M":f>=1e3?"$"+Math.round(f/1e3)+"K":"$"+f.toLocaleString("en-US")},l=u=>isFinite(u)?u.toFixed(1)+"x":"—x",p=u=>isFinite(u)?u.toFixed(2)+"x":"—x",x=2e6,I=F(x,t),z=S(I),D=v(x,a,t),b=50,J=w(o,b),L=v(o,b,t),y=x,R=b,Q=w(y,R),Y=v(y,R,t),X=F(y,t),Z=S(X),q=3*t,P=Math.max(0,q-o),d=a>0?t/(a/100):1/0,E=isFinite(d)?Math.max(0,d-o):0,G=o>0?t/o*100:0;let h,g,M;r==="critical"?(h=1-c,g="🟠 Warning (1.0x)",M=e("calc_out.pipeline_coverage.row.tier_critical",g)):r==="warning"?(h=2-c,g="🟡 Good (2.0x)",M=e("calc_out.pipeline_coverage.row.tier_good",g)):r==="good"?(h=3-c,g="🟢 Excellent (3x rule)",M=e("calc_out.pipeline_coverage.row.tier_excellent",g)):(h=0,g="top tier maintained (3x rule)",M=e("calc_out.pipeline_coverage.row.tier_top_maintained",g));let _;r==="critical"?_="Pipeline < 1.0x means you do not even have enough pipeline to cover quota, win or lose. The 3x rule is a distant goal — focus first on getting to 1.0x. This requires either: (a) aggressive top-of-funnel (cold outbound, paid lead-gen, partnerships), or (b) raising quota targets down only after the gap closes. A pipeline review is overdue; weekly forecast calls are essential. Aim for 1.0x within 30 days, 2.0x within 60.":r==="warning"?_="1.0x–2.0x is the danger zone — you have enough pipeline to hit quota, but no cushion for slippage. The 3x rule (≥ 3.0x) is the B2B SaaS benchmark for reliable attainment. Push toward 2.0x first: late-stage acceleration (Negotiation→Closing), increase top-of-funnel activity by 30–50%, and audit deal-stage conversion. A 10% win rate improvement is often faster than doubling Discovery count — pair with sales velocity (P8-2) to find your best lever.":r==="good"?_="2.0x–3.0x is approaching the 3x rule — you are close. The final 1.0x jump is harder than the previous one (diminishing returns from raw pipeline growth). Focus on stage quality: ensure Negotiation and Closing deals are well-qualified, not bloated with low-probability late-stage deals. Maintain weekly pipeline review cadence; do not let 2.5x slip back to 2.0x during seasonal dips. To get to 🟢, identify 2–3 stretch opportunities at 80%+ probability.":_="Excellent — 3x rule satisfied. You have a comfortable cushion: even if 1 in 3 deals slips, you should still hit quota. Do not get complacent: top-of-funnel decay is invisible until the quarter after. Maintain cadence; audit stage hygiene (no stale Closing deals >30 days that may quietly drop to 50% probability). Use this cushion strategically — invest in expansion/upsell on existing accounts, or test higher-margin pricing motions.";let $;r==="critical"?$=e("calc_out.pipeline_coverage.row.tip_critical","💡 Tip: "+_):r==="warning"?$=e("calc_out.pipeline_coverage.row.tip_warning","💡 Tip: "+_):r==="good"?$=e("calc_out.pipeline_coverage.row.tip_good","💡 Tip: "+_):$=e("calc_out.pipeline_coverage.row.tip_excellent","💡 Tip: "+_);let m;r==="excellent"?m=e("calc_out.pipeline_coverage.row.health_excellent",W+" "+B):r==="good"?m=e("calc_out.pipeline_coverage.row.health_good",W+" "+B):r==="warning"?m=e("calc_out.pipeline_coverage.row.health_warning",W+" "+B):m=e("calc_out.pipeline_coverage.row.health_critical",W+" "+B);const te=e("calc_out.pipeline_coverage.row.gap_to_3x_rule","Gap to 3x rule: "+i(P)+" more pipeline needed",{gap:i(P)}),ie=e("calc_out.pipeline_coverage.row.gap_to_1x_break_even","Gap to 1x break-even: "+i(E)+" (or win rate → "+Math.round(G)+"% at current pipeline)",{gap:i(E),rate:String(Math.round(G))}),ne=r==="excellent"?e("calc_out.pipeline_coverage.row.gap_to_next_tier_maintained","0x (3x rule maintained)"):e("calc_out.pipeline_coverage.row.gap_to_next_tier_growth",l(h)+" of pipeline growth",{gap:l(h)}),oe=isFinite(d)?e("calc_out.pipeline_coverage.row.breakeven_1x","1x break-even (🟠 Warning lower bound): need pipeline ≥ "+i(d)+" (gap: "+i(E)+")",{target:i(d),gap:i(E)}):e("calc_out.pipeline_coverage.row.breakeven_1x_impossible","1x break-even (🟠 Warning lower bound): need pipeline ≥ "+i(d)+" (impossible: win rate is 0)");return[\`$calc_out.section.pipeline_coverage_calculator|🎯 Pipeline Coverage Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+m+\`
+• \`+e("calc_out.pipeline_coverage.row.coverage_ratio","Coverage ratio: "+l(c)+" (pipeline / quota)",{ratio:l(c)})+"  ·  "+e("calc_out.pipeline_coverage.row.weighted_coverage","Weighted coverage: "+p(j)+" (after "+a+"% win rate)",{coverage:p(j),rate:String(a)})+\`
+• $calc_out.label.required_additional_pipeline|Required additional pipeline|: \`+i(ee)+"  ·  $calc_out.label.gap_to_quota_weighted|Gap to quota (weighted)|: "+i(Math.max(0,V))+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.quota_target|Quota target|: \`+i(t)+"  ·  $calc_out.label.current_pipeline|Current pipeline|: "+i(o)+\`
+• $calc_out.label.expected_win_rate|Expected win rate|: \`+a+"%  ·  "+e("calc_out.pipeline_coverage.row.three_x_rule_target","3x rule target: "+i(q)+" (3× quota)",{target:i(q)})+\`
+• $calc_out.label.weighted_pipeline|Weighted pipeline|: \`+i(U)+"  ·  $calc_out.label.coverage|Coverage|: "+l(c)+"  ·  $calc_out.label.weighted_coverage|Weighted coverage|: "+p(j)+\`
+• \`+te+"  ·  "+ie+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.pipeline_coverage.row.whatif_pipeline","If pipeline "+s(o)+"→"+s(x)+": "+l(I)+" ("+z+"); weighted "+p(D),{from:s(o),to:s(x),cov:l(I),band:z,weighted:p(D)})+\`
+• \`+e("calc_out.pipeline_coverage.row.whatif_win_rate","If win rate "+a+"%→"+b+"%: weighted "+p(L)+" (covRatio unchanged at "+l(c)+", still "+r+"); weighted pipeline = "+i(J),{from:String(a),to:String(b),weighted:p(L),cov:l(c),band:r,pipeline:i(J)})+\`
+• \`+e("calc_out.pipeline_coverage.row.whatif_both","If both ("+s(y)+" + "+R+"%): "+l(X)+" ("+Z+"); weighted "+p(Y)+" = "+i(Q),{pipe:s(y),win:String(R),cov:l(X),band:Z,weighted:p(Y),pipeline:i(Q)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.pipeline_coverage.row.breakeven_3x","3x rule (🟢 Excellent): need pipeline ≥ "+i(q)+" (gap: "+i(P)+")",{target:i(q),gap:i(P)})+\`
+• \`+oe+\`
+• \`+e("calc_out.pipeline_coverage.row.breakeven_alternative","Alternative: at current pipeline "+s(o)+", win rate → "+Math.round(G)+"% to hit 1x break-even (3x rule unreachable via win rate alone — needs more pipeline)",{pipeline:s(o),rate:String(Math.round(G))})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.next_tier|Next tier|: \`+M+\`
+• $calc_out.label.gap_to_next_tier|Gap to next tier|: \`+ne+\`
+• \`+e("calc_out.pipeline_coverage.row.milestone_summary","Milestone summary: "+l(c)+" current  ·  need "+l(Math.max(c,1))+" for 1x  ·  need 2.0x for 🟡  ·  need 3.0x for 🟢 (3x rule)",{current:l(c),for1x:l(Math.max(c,1))})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+$+\`
+\`]};return[O(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

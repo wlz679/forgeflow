@@ -142,91 +142,67 @@ function calculateTimeValue(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var annualIncome=cnn(parseFloat(inputs.annualIncome)||0);" +
-  "var hoursPerWeek=cnn(parseFloat(inputs.hoursPerWeek)||0);" +
-  "var weeksPerYear=cnn(parseFloat(inputs.weeksPerYear)||0);" +
-  "var totalHours=hoursPerWeek*weeksPerYear;" +
-  "var hourlyRate=totalHours>0?annualIncome/totalHours:0;" +
-  "var dailyRate=hourlyRate*8;" +
-  "var perMinute=hourlyRate/60;" +
-  "var perSecond=perMinute/60;" +
-  "var monthlyValue=annualIncome/12;" +
-  "var perWeek=hourlyRate*hoursPerWeek;" +
-  "var workingDays=weeksPerYear*5;" +
-  "var contextSwitch=hourlyRate*0.5;" +
-  "var twoHrDailyWaste=hourlyRate*2;" +
-  "var yearlyWaste=twoHrDailyWaste*workingDays;" +
-  "var incomeGoal200K=200000;" +
-  "var yearsTo200K=hourlyRate>0&&perWeek>0?Math.max(0,(incomeGoal200K-annualIncome)/(perWeek*weeksPerYear)):0;" +
-  "var rateToReach200K=totalHours>0?incomeGoal200K/totalHours:0;" +
-  "function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" +
-  "function money(n){return '$'+fmt(n)}" +
-  "var rateInt='$'+Math.round(hourlyRate);" +
-  "var healthRow=hourlyRate>=200?tk('calc_out.time_value.row.health_top5','\\uD83D\\uDFE2 Time wealth '+rateInt+'/hr is top 5%. Every hour compounds \\u2014 guard focus fiercely.',{rate:rateInt}):hourlyRate>=100?tk('calc_out.time_value.row.health_strong','\\uD83D\\uDFE2 '+rateInt+'/hr is strong. Above-median for skilled knowledge work.',{rate:rateInt}):hourlyRate>=50?tk('calc_out.time_value.row.health_average','\\uD83D\\uDFE1 '+rateInt+'/hr is average. Solid baseline; raise rate or reduce wasted hours.',{rate:rateInt}):hourlyRate>=25?tk('calc_out.time_value.row.health_below_median','\\uD83D\\uDFE0 '+rateInt+'/hr is below median. Skill-up or move upmarket.',{rate:rateInt}):tk('calc_out.time_value.row.health_entry','\\uD83D\\uDD34 '+rateInt+'/hr is entry-level. Focus on higher-leverage activities.',{rate:rateInt});" +
-  "var workloadRow=hoursPerWeek<=35?tk('calc_out.time_value.row.workload_sustainable','\\uD83D\\uDFE2 '+hoursPerWeek+' hrs/wk \\u2014 sustainable, low burnout risk.',{hours:String(hoursPerWeek)}):hoursPerWeek<=45?tk('calc_out.time_value.row.workload_standard','\\uD83D\\uDFE1 '+hoursPerWeek+' hrs/wk \\u2014 standard, watch for creep.',{hours:String(hoursPerWeek)}):hoursPerWeek<=55?tk('calc_out.time_value.row.workload_high','\\uD83D\\uDFE0 '+hoursPerWeek+' hrs/wk \\u2014 high load, consider trimming.',{hours:String(hoursPerWeek)}):tk('calc_out.time_value.row.workload_burnout','\\uD83D\\uDD34 '+hoursPerWeek+' hrs/wk \\u2014 burnout territory. Reduce or delegate.',{hours:String(hoursPerWeek)});" +
-  "var weeksRow=weeksPerYear>=48?tk('calc_out.time_value.row.weeks_full_time','\\uD83D\\uDFE2 '+weeksPerYear+' wks/yr \\u2014 standard full-time.',{weeks:String(weeksPerYear)}):weeksPerYear>=44?tk('calc_out.time_value.row.weeks_some_rest','\\uD83D\\uDFE1 '+weeksPerYear+' wks/yr \\u2014 some rest, add more for sustainability.',{weeks:String(weeksPerYear)}):tk('calc_out.time_value.row.weeks_overworked','\\uD83D\\uDD34 '+weeksPerYear+' wks/yr \\u2014 overworked. Take vacation.',{weeks:String(weeksPerYear)});" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='$calc_out.section.time_value_calculator|\\u23F0 Time Value Calculator|\\n\\n';" +
-  "r+='$calc_out.section.time_value_snapshot|\\uD83D\\uDCB0 Time Wealth Snapshot:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 $calc_out.label.annual_income|Annual Income|:        '+money(annualIncome)+'/yr\\n';" +
-  "r+='\\u2022 $calc_out.label.effective_hourly_rate|Effective $/Hour|:      '+money(hourlyRate)+'/hr\\n';" +
-  "r+='\\u2022 $calc_out.label.effective_per_minute|Effective $/Minute|:    '+money(perMinute)+'/min\\n';" +
-  "r+='\\u2022 $calc_out.label.effective_per_second|Effective $/Second|:    '+money(perSecond)+'/sec\\n';" +
-  "r+='\\u2022 $calc_out.label.daily_rate_8hrs|Daily Rate (8 hrs)|:    '+money(dailyRate)+'/day\\n';" +
-  "r+='\\u2022 $calc_out.label.weekly_value|Weekly Value|:          '+money(perWeek)+'/wk\\n';" +
-  "r+='\\u2022 $calc_out.label.monthly_value|Monthly Value|:         '+money(monthlyValue)+'/mo\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.time_value_ratios|\\uD83D\\uDCD0 Time-to-Value Ratios:|\\n';" +
-  "r+='\\u2022 $calc_out.label.one_hour_of_work|1 hr of work|:        '+money(hourlyRate)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.one_day_of_work_8hrs|1 day of work (8 hrs)|:  '+money(dailyRate)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.one_week_40hrs|1 week (40 hrs)|:     '+money(perWeek)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.one_month|1 month|:             '+money(monthlyValue)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.one_year|1 year|:              '+money(annualIncome)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.cost_per_15min_interruption|Cost per 15-min interruption|:  '+money(hourlyRate/4)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.cost_per_context_switch|Cost per context switch|:  '+money(contextSwitch)+' (30 min refocus)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.time_value_utilization_health|\\uD83E\\uDE7A Utilization Health:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+healthRow+'\\n';" +
-  "r+='\\u2022 '+workloadRow+'\\n';" +
-  "r+='\\u2022 '+weeksRow+'\\n';" +
-  "r+='\\n$calc_out.section.time_value_time_to_goal|\\uD83C\\uDFAF Time-to-Goal:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.target_200k_income','Target $200K/yr income:  Need '+money(rateToReach200K)+'/hr at current hours',{rate:money(rateToReach200K)})+'\\n';" +
-  "r+='\\u2022 '+(yearsTo200K>0?tk('calc_out.time_value.row.years_to_200k_remaining','Years to $200K at current pace:  '+yearsTo200K.toFixed(1)+' yrs (after raises)',{years:yearsTo200K.toFixed(1)}):tk('calc_out.time_value.row.years_to_200k_reached','Years to $200K at current pace:  Already there!'))+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.to_earn_300k','To earn $300K/yr:           Need '+money(totalHours>0?300000/totalHours:0)+'/hr',{rate:money(totalHours>0?300000/totalHours:0)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.to_earn_500k','To earn $500K/yr:           Need '+money(totalHours>0?500000/totalHours:0)+'/hr',{rate:money(totalHours>0?500000/totalHours:0)})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.time_value_work_leisure_breakeven|\\u2696\\uFE0F Work vs Leisure Break-Even:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.wasted_hour_daily_cost','1 hr wasted daily costs:     '+money(yearlyWaste/weeksPerYear)+'/wk in productivity',{weekly:money(yearlyWaste/weeksPerYear)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.yearly_waste_2h','Yearly waste @2 hrs/day:  '+money(yearlyWaste)+'/yr in lost productivity',{yearly:money(yearlyWaste)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.break_even_hour','Break-even: work 1 hr earns '+money(hourlyRate)+' \\u2014 guard this hour.',{rate:money(hourlyRate)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.four_day_week_equivalent','4-day workweek equivalent: same income in '+Math.round(weeksPerYear*4/5)+' wks  (cut 1 day/wk)',{weeks:String(Math.round(weeksPerYear*4/5))})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.whatif_cut_wasted_hour','Cut 1 hr/day wasted:  Save '+money(hourlyRate*workingDays)+'/yr in productivity',{save:money(hourlyRate*workingDays)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.whatif_cut_all_meetings','Cut all meetings (5/wk @ 1hr):  Save '+money(hourlyRate*5*weeksPerYear)+'/yr',{save:money(hourlyRate*5*weeksPerYear)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.whatif_raise_rate_25','Raise hourly rate by 25%:  Annual income '+money(annualIncome)+' \\u2192 '+money(annualIncome*1.25),{from:money(annualIncome),to:money(annualIncome*1.25)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.whatif_add_passive_income','Add $500/mo passive income:  Annual '+money(annualIncome+6000)+'/yr  (saves '+(6000/Math.max(hourlyRate*totalHours,1)*100).toFixed(0)+'% of working time)',{annual:money(annualIncome+6000),pct:(6000/Math.max(hourlyRate*totalHours,1)*100).toFixed(0)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.time_value.row.whatif_four_day_week','Move to 4-day workweek:  Same '+money(annualIncome)+'/yr in '+Math.round(weeksPerYear*4/5)+' weeks',{annual:money(annualIncome),weeks:String(Math.round(weeksPerYear*4/5))})+'\\n\\n';" +
-  "r+=tk('calc_out.time_value.row.tip_interruptions','\\uD83D\\uDCA1 Tip: At '+money(hourlyRate)+'/hr, every interruption has a price. Block 90-min focus windows, batch email into 2x daily windows, and say no to meetings without agendas. The biggest unlock is rarely working more hours \\u2014 it is reclaiming the hours you already have.',{rate:money(hourlyRate)});" +
-  "results.push(r);" +
-  "var incomes=[30000,60000,100000,150000,250000,500000];" +
-  "for(var i=0;i<incomes.length;i++){" +
-  "var inc=incomes[i];" +
-  "var h=totalHours>0?inc/totalHours:0;" +
-  "var mn=h/60;" +
-  "var sc=mn/60;" +
-  "var y=(h*2)*workingDays;" +
-  "results.push('$calc_out.label.comparison|Comparison|: '+tk('calc_out.time_value.row.comparison_income_hourly','$'+inc.toLocaleString()+'/yr \\u2192 $'+fmt(h)+'/hr',{income:'$'+inc.toLocaleString(),hourly:'$'+fmt(h)})+' | '+tk('calc_out.time_value.row.comparison_per_minute','$'+fmt(mn)+'/min',{value:'$'+fmt(mn)})+' | '+tk('calc_out.time_value.row.comparison_per_second','$'+fmt(sc)+'/sec',{value:'$'+fmt(sc)})+' | '+tk('calc_out.time_value.row.comparison_yearly_waste','Yearly waste @2hrs/day: '+money(y),{waste:money(y)}));" +
-  "}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let _=function(l){return Number.isNaN(l)?0:Math.max(0,l)},g=function(l){const n=_(parseFloat(l.annualIncome)||0),c=_(parseFloat(l.hoursPerWeek)||0),r=_(parseFloat(l.weeksPerYear)||0),y=[],o=c*r,a=o>0?n/o:0,b=a*8,S=a/60,N=S/60,k=n/12,w=a*c,h=r*5,I=a*.5,O=a,C=a*.5,m=a*2*h,F=2e5,d=a>0&&w>0?Math.max(0,(F-n)/(w*r)):0,M=o>0?F/o:0,u=s=>s.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),e=s=>"$"+u(s),L=s=>s.toFixed(1)+"%",i="$"+Math.round(a),D=a>=200?t("calc_out.time_value.row.health_top5","🟢 Time wealth "+i+"/hr is top 5%. Every hour compounds — guard focus fiercely.",{rate:i}):a>=100?t("calc_out.time_value.row.health_strong","🟢 "+i+"/hr is strong. Above-median for skilled knowledge work.",{rate:i}):a>=50?t("calc_out.time_value.row.health_average","🟡 "+i+"/hr is average. Solid baseline; raise rate or reduce wasted hours.",{rate:i}):a>=25?t("calc_out.time_value.row.health_below_median","🟠 "+i+"/hr is below median. Skill-up or move upmarket.",{rate:i}):t("calc_out.time_value.row.health_entry","🔴 "+i+"/hr is entry-level. Focus on higher-leverage activities.",{rate:i}),E=c<=35?t("calc_out.time_value.row.workload_sustainable","🟢 "+c+" hrs/wk — sustainable, low burnout risk.",{hours:String(c)}):c<=45?t("calc_out.time_value.row.workload_standard","🟡 "+c+" hrs/wk — standard, watch for creep.",{hours:String(c)}):c<=55?t("calc_out.time_value.row.workload_high","🟠 "+c+" hrs/wk — high load, consider trimming.",{hours:String(c)}):t("calc_out.time_value.row.workload_burnout","🔴 "+c+" hrs/wk — burnout territory. Reduce or delegate.",{hours:String(c)}),q=r>=48?t("calc_out.time_value.row.weeks_full_time","🟢 "+r+" wks/yr — standard full-time.",{weeks:String(r)}):r>=44?t("calc_out.time_value.row.weeks_some_rest","🟡 "+r+" wks/yr — some rest, add more for sustainability.",{weeks:String(r)}):t("calc_out.time_value.row.weeks_overworked","🔴 "+r+" wks/yr — overworked. Take vacation.",{weeks:String(r)});y.push(\`$calc_out.section.time_value_calculator|⏰ Time Value Calculator|
+
+$calc_out.section.time_value_snapshot|💰 Time Wealth Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.annual_income|Annual Income|:        \`+e(n)+\`/yr
+• $calc_out.label.effective_hourly_rate|Effective $/Hour|:      \`+e(a)+\`/hr
+• $calc_out.label.effective_per_minute|Effective $/Minute|:    \`+e(S)+\`/min
+• $calc_out.label.effective_per_second|Effective $/Second|:    \`+e(N)+\`/sec
+• $calc_out.label.daily_rate_8hrs|Daily Rate (8 hrs)|:    \`+e(b)+\`/day
+• $calc_out.label.weekly_value|Weekly Value|:          \`+e(w)+\`/wk
+• $calc_out.label.monthly_value|Monthly Value|:         \`+e(k)+\`/mo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.time_value_ratios|📐 Time-to-Value Ratios:|
+• $calc_out.label.one_hour_of_work|1 hr of work|:        \`+e(a)+\`
+• $calc_out.label.one_day_of_work_8hrs|1 day of work (8 hrs)|:  \`+e(b)+\`
+• $calc_out.label.one_week_40hrs|1 week (40 hrs)|:     \`+e(w)+\`
+• $calc_out.label.one_month|1 month|:             \`+e(k)+\`
+• $calc_out.label.one_year|1 year|:              \`+e(n)+\`
+• $calc_out.label.cost_per_15min_interruption|Cost per 15-min interruption|:  \`+e(a/4)+\`
+• $calc_out.label.cost_per_context_switch|Cost per context switch|:  \`+e(C)+\` (30 min refocus)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.time_value_utilization_health|🩺 Utilization Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+D+\`
+• \`+E+\`
+• \`+q+\`
+
+$calc_out.section.time_value_time_to_goal|🎯 Time-to-Goal:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.time_value.row.target_200k_income","Target $200K/yr income:  Need "+e(M)+"/hr at current hours",{rate:e(M)})+\`
+• \`+(d>0?t("calc_out.time_value.row.years_to_200k_remaining","Years to $200K at current pace:  "+d.toFixed(1)+" yrs (after raises)",{years:d.toFixed(1)}):t("calc_out.time_value.row.years_to_200k_reached","Years to $200K at current pace:  Already there!"))+\`
+• \`+t("calc_out.time_value.row.to_earn_300k","To earn $300K/yr:           Need "+e(o>0?3e5/o:0)+"/hr",{rate:e(o>0?3e5/o:0)})+\`
+• \`+t("calc_out.time_value.row.to_earn_500k","To earn $500K/yr:           Need "+e(o>0?5e5/o:0)+"/hr",{rate:e(o>0?5e5/o:0)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.time_value_work_leisure_breakeven|⚖️ Work vs Leisure Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.time_value.row.wasted_hour_daily_cost","1 hr wasted daily costs:     "+e(m/r)+"/wk in productivity",{weekly:e(m/r)})+\`
+• \`+t("calc_out.time_value.row.yearly_waste_2h","Yearly waste @2 hrs/day:  "+e(m)+"/yr in lost productivity",{yearly:e(m)})+\`
+• \`+t("calc_out.time_value.row.break_even_hour","Break-even: work 1 hr earns "+e(a)+" — guard this hour.",{rate:e(a)})+\`
+• \`+t("calc_out.time_value.row.four_day_week_equivalent","4-day workweek equivalent: same income in "+Math.round(r*4/5)+" wks  (cut 1 day/wk)",{weeks:String(Math.round(r*4/5))})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.time_value.row.whatif_cut_wasted_hour","Cut 1 hr/day wasted:  Save "+e(a*h)+"/yr in productivity",{save:e(a*h)})+\`
+• \`+t("calc_out.time_value.row.whatif_cut_all_meetings","Cut all meetings (5/wk @ 1hr):  Save "+e(a*5*r)+"/yr",{save:e(a*5*r)})+\`
+• \`+t("calc_out.time_value.row.whatif_raise_rate_25","Raise hourly rate by 25%:  Annual income "+e(n)+" → "+e(n*1.25),{from:e(n),to:e(n*1.25)})+\`
+• \`+t("calc_out.time_value.row.whatif_add_passive_income","Add $500/mo passive income:  Annual "+e(n+6e3)+"/yr  (saves "+(6e3/Math.max(a*o,1)*100).toFixed(0)+"% of working time)",{annual:e(n+6e3),pct:(6e3/Math.max(a*o,1)*100).toFixed(0)})+\`
+• \`+t("calc_out.time_value.row.whatif_four_day_week","Move to 4-day workweek:  Same "+e(n)+"/yr in "+Math.round(r*4/5)+" weeks",{annual:e(n),weeks:String(Math.round(r*4/5))})+\`
+
+\`+t("calc_out.time_value.row.tip_interruptions","💡 Tip: At "+e(a)+"/hr, every interruption has a price. Block 90-min focus windows, batch email into 2x daily windows, and say no to meetings without agendas. The biggest unlock is rarely working more hours — it is reclaiming the hours you already have.",{rate:e(a)}));const x=[3e4,6e4,1e5,15e4,25e4,5e5];for(let s=0;s<x.length;s++){const f=x[s],v=o>0?f/o:0,p=v/60,R=p/60,W=v*2*h;y.push("$calc_out.label.comparison|Comparison|: "+t("calc_out.time_value.row.comparison_income_hourly","$"+f.toLocaleString()+"/yr → $"+u(v)+"/hr",{income:"$"+f.toLocaleString(),hourly:"$"+u(v)})+" | "+t("calc_out.time_value.row.comparison_per_minute","$"+u(p)+"/min",{value:"$"+u(p)})+" | "+t("calc_out.time_value.row.comparison_per_second","$"+u(R)+"/sec",{value:"$"+u(R)})+" | "+t("calc_out.time_value.row.comparison_yearly_waste","Yearly waste @2hrs/day: "+e(W),{waste:e(W)}))}return y},$=function(l,n,c){var r=K(l);return Array.isArray(r)?r.join(\`
+\`):String(r)};var H=_,Y=g,j=$,t=tk,A='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+A)(),K=function(l){return g(l)};return[$(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-time-value-calculator',

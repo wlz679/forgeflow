@@ -317,106 +317,78 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
 // ============== customFn ==============
 
 const customFn =
-  "function r40(g,m){return g+m;}" +
-  "function r40h(s){if(s>=40)return{e:'\\uD83D\\uDFE2',l:'PASS \\u2014 top-quartile efficiency'};if(s>=25)return{e:'\\uD83D\\uDCA1',l:'borderline \\u2014 close to Rule of 40'};if(s>=10)return{e:'\\uD83D\\uDFE0',l:'below \\u2014 needs improvement'};return{e:'\\uD83D\\uDD34',l:'fail \\u2014 burning without growth'};}" +
-  "function bm(b,arr){if(arr<=0)return Infinity;return b/arr;}" +
-  "function bmh(r){if(r<1)return{e:'\\uD83D\\uDFE2',l:'great \\u2014 <$1 burned per $1 ARR'};if(r<1.5)return{e:'\\uD83D\\uDCA1',l:'good \\u2014 efficient growth'};if(r<3)return{e:'\\uD83D\\uDFE0',l:'concerning \\u2014 needs tightening'};return{e:'\\uD83D\\uDD34',l:'inefficient \\u2014 too much burn'};}" +
-  "function quad(g,m){var hg=g>=40;var pm=m>=0;if(hg&&pm)return{e:'\\uD83D\\uDFE2',l:'Stars (high growth + positive margin)'};if(hg&&!pm)return{e:'\\uD83D\\uDCA1',l:'Growers (high growth + negative margin)'};if(!hg&&pm)return{e:'\\uD83D\\uDCA1',l:'Profitable Plowhorses (low growth + positive margin)'};return{e:'\\uD83D\\uDD34',l:'Zombies (low growth + negative margin)'};}" +
-  "function sb(r,st){if(!isFinite(r))return'\\u2014 (no new ARR)';var B={seed:{great:2,good:3},a:{great:1.5,good:2},b:{great:1,good:1.5}};var b=B[st];if(r<b.great)return'\\uD83D\\uDFE2 top-quartile for '+st;if(r<b.good)return'\\uD83D\\uDCA1 on par for '+st;return'\\uD83D\\uDFE0 above median for '+st;}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  // intentionally NOT clamped: semantically can be negative
-  "var g=parseFloat(inputs.revenueGrowth)||0;" +
-  "var m=parseFloat(inputs.profitMargin)||0;" +
-  "var nb=cnn(parseFloat(inputs.netBurn)||0);" +
-  "var nA=cnn(parseFloat(inputs.netNewARR)||0);" +
-  "if(g===0&&m===0&&nb===0&&nA===0){return['\\u23F0 Burn Multiple / Rule of 40 Calculator\\n\\n\\uD83D\\uDCB0 Enter revenue growth, profit margin, net burn, and net new ARR to see Rule of 40 score and Burn Multiple.'];}" +
-  "var s=r40(g,m);" +
-  "var sh=r40h(s);" +
-  "var b2=bm(nb,nA);" +
-  "var bh2=bmh(b2);" +
-  "var q=quad(g,m);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return'$'+fmt(n);}" +
-  "function pct1(n){return n.toFixed(1)+'%';}" +
-  "function ratS(n){return isFinite(n)?n.toFixed(2):'\\u221E';}" +
-  "var qc='';" +
-  "if(g>=40){" +
-    "qc+='                Margin \\u2192\\n';" +
-    "qc+='              Negative        Positive\\n';" +
-    "qc+='            \\u250C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u252C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510\\n';" +
-    "qc+='Growth High \\u2502  Growers '+(q.l.indexOf('Growers')>=0?'\\u25C0':' ')+'   \\u2502   Stars '+(q.l.indexOf('Stars')>=0?'\\u25C0':' ')+'  \\u2502\\n';" +
-    "qc+='            \\u251C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u253C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2524\\n';" +
-    "qc+='       Low  \\u2502  Zombies    \\u2502  Plowhorses \\u2502\\n';" +
-    "qc+='            \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2534\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518';" +
-  "}else{" +
-    "qc+='                Margin \\u2192\\n';" +
-    "qc+='              Negative        Positive\\n';" +
-    "qc+='            \\u250C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u252C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2510\\n';" +
-    "qc+='Growth High \\u2502  Growers    \\u2502   Stars     \\u2502\\n';" +
-    "qc+='            \\u251C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u253C\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2524\\n';" +
-    "qc+='       Low  \\u2502  Zombies '+(q.l.indexOf('Zombies')>=0?'\\u25C0':' ')+'  \\u2502  Plowhorses '+(q.l.indexOf('Plowhorses')>=0?'\\u25C0':' ')+'\\u2502\\n';" +
-    "qc+='            \\u2514\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2534\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2500\\u2518';" +
-  "}" +
-  "var dbl=nA*2;" +
-  "var bmDbl=bm(nb,dbl);" +
-  "var r40Im=r40(g,m+20);" +
-  "var hb=nb/2;" +
-  "var bmHb=bm(hb,nA);" +
-  "var addA=nb+5000000;" +
-  "var bmAa=bm(nb,addA);" +
-  "var reqA=nb;" +
-  "var tip='';" +
-  "if(!isFinite(b2)||b2>3)tip='\\uD83D\\uDCA1 Tip: Burn Multiple >3 is inefficient. Either cut non-revenue-generating spend (overhead, R&D) or invest more in sales/marketing efficiency.';" +
-  "else if(s<0)tip='\\uD83D\\uDCA1 Tip: Rule of 40 below 0% \\u2014 burning cash without growing fast enough. Refocus on product-market fit or fundraising.';" +
-  "else if(s>=40&&isFinite(b2)&&b2<1.5)tip='\\uD83D\\uDCA1 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.';" +
-  "else tip='\\uD83D\\uDCA1 Tip: Healthy SaaS hits Rule of 40 with Burn Multiple <1.5. If you are <1, you are top-quartile. If >3, fix the model or extend runway before raising.';" +
-  "var r2='';" +
-  "r2+='\\u23F0 Burn Multiple / Rule of 40 Calculator\\n\\n';" +
-  "r2+='\\uD83D\\uDCB0 Metrics Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Revenue Growth:   '+pct1(g)+'\\n';" +
-  "r2+='\\u2022 Profit Margin:    '+pct1(m)+'\\n';" +
-  "r2+='\\u2022 Net Burn:         '+money(nb)+'\\n';" +
-  "r2+='\\u2022 Net New ARR:      '+money(nA)+'\\n';" +
-  "r2+='\\u2022 Period:           implied quarterly (annualize if needed)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCD0 Rule of 40 Result:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Sum:  '+pct1(g)+' + '+pct1(m)+' = '+pct1(s)+'\\n';" +
-  "r2+='\\u2022 Verdict:  '+sh.e+' '+sh.l+'\\n';" +
-  "r2+='\\u2022 Component breakdown:  Growth '+pct1(g)+' + Margin '+pct1(m)+' = '+pct1(s)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Burn Multiple Result:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Ratio:  $'+ratS(b2)+' burned per $1 of new ARR\\n';" +
-  "r2+='\\u2022 Verdict:  '+bh2.e+' '+bh2.l+'\\n';" +
-  "r2+='\\u2022 Capital efficiency:  Each $1 of new ARR costs $'+ratS(b2)+' in cash\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF SaaS Health Quadrant:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Your quadrant:  '+q.e+' '+q.l+'\\n';" +
-  "r2+=qc+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Capital Efficiency Benchmarks:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Seed:        '+sb(b2,'seed')+'  (median Burn Multiple 2-3)\\n';" +
-  "r2+='\\u2022 Series A:    '+sb(b2,'a')+'  (median Burn Multiple 1.5-2)\\n';" +
-  "r2+='\\u2022 Series B+:   '+sb(b2,'b')+'  (median Burn Multiple 1-1.5)\\n';" +
-  "r2+='\\u2022 Your ratio:  $'+ratS(b2)+' per $1 ARR\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 2\\u00d7 growth (new ARR $'+fmt(dbl)+'):       Burn Multiple $'+ratS(bmDbl)+' per $1 ARR\\n';" +
-  "r2+='\\u2022 Improve margin by 20pp:        Rule of 40 \\u2192 '+pct1(r40Im)+'\\n';" +
-  "r2+='\\u2022 Cut burn 50% ($'+fmt(hb)+'):           Burn Multiple $'+ratS(bmHb)+' per $1 ARR\\n';" +
-  "r2+='\\u2022 Add $5M ARR (new ARR $'+fmt(addA)+'):    Burn Multiple $'+ratS(bmAa)+' per $1 ARR\\n';" +
-  "r2+='\\u2022 Aim for Burn Multiple <1:      requires net new ARR > $'+fmt(reqA)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var results=[r2];" +
-  "var combos=[{g:50,m:-20},{g:100,m:-20},{g:150,m:0},{g:200,m:10},{g:300,m:20}];" +
-  "for(var j=0;j<combos.length;j++){var c=combos[j];var s2=r40(c.g,c.m);var h2=r40h(s2);results.push('Comparison: '+c.g+'% growth + '+c.m+'% margin = '+pct1(s2)+' (Rule of 40) \\u2192 '+h2.e+' '+h2.l.split(' \\u2014 ')[0]);}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let b=function(n){return Number.isNaN(n)?0:Math.max(0,n)},p=function(n,e){return n+e},w=function(n){return n>=40?{emoji:"🟢",label:"PASS — top-quartile efficiency"}:n>=25?{emoji:"🟡",label:"borderline — close to Rule of 40"}:n>=10?{emoji:"🟠",label:"below — needs improvement"}:{emoji:"🔴",label:"fail — burning without growth"}},c=function(n,e){return e<=0?1/0:n/e},A=function(n){return n<1?{emoji:"🟢",label:"great — <$1 burned per $1 ARR"}:n<1.5?{emoji:"🟡",label:"good — efficient growth"}:n<3?{emoji:"🟠",label:"concerning — needs tightening"}:{emoji:"🔴",label:"inefficient — too much burn"}},M=function(n,e){const t=n>=40,r=e>=0;return t&&r?{emoji:"🟢",label:"Stars (high growth + positive margin)"}:t&&!r?{emoji:"🟡",label:"Growers (high growth + negative margin)"}:!t&&r?{emoji:"🟡",label:"Profitable Plowhorses (low growth + positive margin)"}:{emoji:"🔴",label:"Zombies (low growth + negative margin)"}},R=function(n,e){if(!isFinite(n))return"— (no new ARR)";const r={seed:{great:2,good:3},a:{great:1.5,good:2},b:{great:1,good:1.5}}[e];return n<r.great?"🟢 top-quartile for "+e:n<r.good?"🟡 on par for "+e:"🟠 above median for "+e},v=function(n){const e=parseFloat(n.revenueGrowth)||0,t=parseFloat(n.profitMargin)||0,r=b(parseFloat(n.netBurn)||0),f=b(parseFloat(n.netNewARR)||0);if(e===0&&t===0&&r===0&&f===0)return[\`⏰ Burn Multiple / Rule of 40 Calculator
+
+💰 Enter revenue growth, profit margin, net burn, and net new ARR to see Rule of 40 score and Burn Multiple.\`];const m=p(e,t),S=w(m),a=c(r,f),$=A(a),u=M(e,t),g=o=>o.toLocaleString("en-US",{maximumFractionDigits:0}),y=o=>"$"+g(o),l=o=>o.toFixed(1)+"%",s=o=>isFinite(o)?o.toFixed(2):"∞";let i="";e>=40?(i+=\`                Margin →
+\`,i+=\`              Negative        Positive
+\`,i+=\`            ┌─────────────┬─────────────┐
+\`,i+="Growth High │  Growers "+(u.label.includes("Growers")?"◀":" ")+"   │   Stars "+(u.label.includes("Stars")?"◀":" ")+\`  │
+\`,i+=\`            ├─────────────┼─────────────┤
+\`,i+=\`       Low  │  Zombies    │  Plowhorses │
+\`,i+="            └─────────────┴─────────────┘"):(i+=\`                Margin →
+\`,i+=\`              Negative        Positive
+\`,i+=\`            ┌─────────────┬─────────────┐
+\`,i+=\`Growth High │  Growers    │   Stars     │
+\`,i+=\`            ├─────────────┼─────────────┤
+\`,i+="       Low  │  Zombies "+(u.label.includes("Zombies")?"◀":" ")+"  │  Plowhorses "+(u.label.includes("Plowhorses")?"◀":" ")+\`│
+\`,i+="            └─────────────┴─────────────┘");const j=f*2,C=c(r,j),x=p(e,t+20),F=r/2,I=c(F,f),_=r+5e6,E=c(r,_),H=r;let h;!isFinite(a)||a>3?h="💡 Tip: Burn Multiple >3 is inefficient. Either cut non-revenue-generating spend (overhead, R&D) or invest more in sales/marketing efficiency.":m<0?h="💡 Tip: Rule of 40 below 0% — burning cash without growing fast enough. Refocus on product-market fit or fundraising.":m>=40&&isFinite(a)&&a<1.5?h="💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.":h="💡 Tip: Healthy SaaS hits Rule of 40 with Burn Multiple <1.5. If you are <1, you are top-quartile. If >3, fix the model or extend runway before raising.";const q=[\`⏰ Burn Multiple / Rule of 40 Calculator
+
+💰 Metrics Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Revenue Growth:   \`+l(e)+\`
+• Profit Margin:    \`+l(t)+\`
+• Net Burn:         \`+y(r)+\`
+• Net New ARR:      \`+y(f)+\`
+• Period:           implied quarterly (annualize if needed)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Rule of 40 Result:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Sum:  \`+l(e)+" + "+l(t)+" = "+l(m)+\`
+• Verdict:  \`+S.emoji+" "+S.label+\`
+• Component breakdown:  Growth \`+l(e)+" + Margin "+l(t)+" = "+l(m)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Burn Multiple Result:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Ratio:  $\`+s(a)+\` burned per $1 of new ARR
+• Verdict:  \`+$.emoji+" "+$.label+\`
+• Capital efficiency:  Each $1 of new ARR costs $\`+s(a)+\` in cash
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 SaaS Health Quadrant:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Your quadrant:  \`+u.emoji+" "+u.label+\`
+\`+i+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Capital Efficiency Benchmarks:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Seed:        \`+R(a,"seed")+\`  (median Burn Multiple 2-3)
+• Series A:    \`+R(a,"a")+\`  (median Burn Multiple 1.5-2)
+• Series B+:   \`+R(a,"b")+\`  (median Burn Multiple 1-1.5)
+• Your ratio:  $\`+s(a)+\` per $1 ARR
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 2× growth (new ARR $\`+g(j)+"):       Burn Multiple $"+s(C)+\` per $1 ARR
+• Improve margin by 20pp:        Rule of 40 → \`+l(x)+\`
+• Cut burn 50% ($\`+g(F)+"):           Burn Multiple $"+s(I)+\` per $1 ARR
+• Add $5M ARR (new ARR $\`+g(_)+"):    Burn Multiple $"+s(E)+\` per $1 ARR
+• Aim for Burn Multiple <1:      requires net new ARR > $\`+g(H)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+h],G=[{g:50,m:-20},{g:100,m:-20},{g:150,m:0},{g:200,m:10},{g:300,m:20}];for(let o=0;o<G.length;o++){const d=G[o],N=p(d.g,d.m),P=w(N);q.push("Comparison: "+d.g+"% growth + "+d.m+"% margin = "+l(N)+" (Rule of 40) → "+P.emoji+" "+P.label.split(" — ")[0])}return q},B=function(n,e,t){var r=k(n);return Array.isArray(r)?r.join(\`
+\`):String(r)};var T=b,D=p,Z=w,L=c,U=A,V=M,Y=R,z=v,K=B,k=function(n){return v(n)};return[B(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

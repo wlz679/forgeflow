@@ -188,92 +188,85 @@ function planPricing(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var pt=inputs.productType||'SaaS';" +
-  "var tc=inputs.targetCustomer||'b2b';" +
-  "var cp=cnn(parseFloat(inputs.competitorPrice)||0);" +
-  "var bp=cp||29;" +
-  "var tm=0.70;" +
-  "var ac=0.03;" +
-  "var tiers=[" +
-  "{n:'Starter',l:Math.max(5,Math.round(bp*0.5)),m:Math.max(9,Math.round(bp*0.6)),h:Math.max(15,Math.round(bp*0.7)),mg:0.85,c:1000}," +
-  "{n:'Pro',l:Math.max(19,Math.round(bp*1.0)),m:Math.max(29,Math.round(bp*1.3)),h:Math.max(49,Math.round(bp*1.7)),mg:0.75,c:400}," +
-  "{n:'Max',l:Math.max(49,Math.round(bp*2.0)),m:Math.max(79,Math.round(bp*2.5)),h:Math.max(149,Math.round(bp*4.0)),mg:0.70,c:80}," +
-  "{n:'Enterprise',l:Math.max(199,Math.round(bp*5)),m:Math.max(499,Math.round(bp*10)),h:Math.max(999,Math.round(bp*20)),mg:0.65,c:12}" +
-  "];" +
-  "var models=[" +
-  "{n:'Flat-Rate',b:'Simple tools with one clear use case. Best for early-stage products.',l:Math.max(5,Math.round(bp*0.7)),m:bp,h:Math.round(bp*1.5),t:'Keep it simple \\u2014 one price, all features. Add a free trial to reduce friction.'}," +
-  "{n:'Tiered',b:'Products with power users who will pay more for advanced features.',l:Math.max(9,Math.round(bp*0.5)),m:bp,h:Math.round(bp*2.5),t:'3 tiers work best: Starter \\u2192 Pro \\u2192 Enterprise. The middle tier should be the obvious choice (anchor pricing).'}," +
-  "{n:'Usage-Based',b:'API products, AI tools, or any product where value scales with usage.',l:Math.max(5,Math.round(bp*0.4)),m:Math.round(bp*1.2),h:Math.round(bp*3),t:'Charge per unit (API calls, seats, credits). Include a generous free tier to drive adoption.'}," +
-  "{n:'Freemium',b:'B2C products or tools that benefit from network effects and word-of-mouth.',l:0,m:Math.round(bp*0.8)||12,h:Math.round(bp*1.8),t:'Free plan must be genuinely useful but leave room for upgrade. 3-5% free-to-paid conversion is good.'}" +
-  "];" +
-  "var at={'b2b':'B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.','b2c':'B2C users prefer monthly subscriptions with easy cancellation. Focus on instant value and social proof.','developers':'Developers expect API-first pricing, generous free tiers, and transparent docs. They hate hidden fees.','creators':'Creators value revenue-share models or flat fees. Keep pricing predictable so they can forecast their margins.'};" +
-  "var prt={'SaaS':'SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.','ebook':'Ebooks typically sell for $9-$49. Bundle with templates/checklists to increase perceived value.','course':'Online courses range $49-$999. Price based on transformation value, not content length. Cohorts justify premium pricing.','template':'Templates sell for $5-$49. Bundle them into packs to raise AOV. Notion/Gumroad are popular distribution channels.','newsletter':'Newsletters convert 5-15% of free readers to paid. Typical paid tiers: $5-$15/mo or $50-$150/yr.'};" +
-  "var pr=0;if(tc==='developers')pr=2;else if(tc==='b2b')pr=1;else if(pt==='newsletter')pr=0;" +
-  "var tout=tiers.map(function(t){var mr=t.m*t.c;var cc=t.m*(1-t.mg);var ltv=(t.m-cc)/ac;var be=Math.ceil(2000/t.mg/t.m);return{n:t.n,l:t.l,m:t.m,h:t.h,mg:t.mg,c:t.c,mr:mr,ltv:ltv,be:be};});" +
-  "var tmr=tout.reduce(function(s,t){return s+t.mr},0);" +
-  "var tc2=tout.reduce(function(s,t){return s+t.c},0);" +
-  "var arpu=tc2>0?tmr/tc2:0;" +
-  "var wm=tmr>0?tout.reduce(function(s,t){return s+t.mg*t.mr},0)/tmr:0;" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function pct(n){return n.toFixed(1)+'%'}" +
-  "var r='';" +
-  "r+='\\uD83C\\uDFAF SaaS Pricing Planner\\n\\n';" +
-  "r+='\\uD83D\\uDCE6 Product: '+pt+'  |  \\uD83D\\uDC64 Target: '+tc+'  |  \\uD83D\\uDCB0 Competitor: '+(cp?'$'+cp+'/mo':'N/A')+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Tier Snapshot:\\n';" +
-  "r+='\\u2022 Starter:      '+fmt(tout[0].m)+'/mo  \\u00d7 '+tout[0].c+' customers = '+fmt(tout[0].mr)+' MRR\\n';" +
-  "r+='\\u2022 Pro:            '+fmt(tout[1].m)+'/mo  \\u00d7 '+tout[1].c+' customers = '+fmt(tout[1].mr)+' MRR\\n';" +
-  "r+='\\u2022 Max:            '+fmt(tout[2].m)+'/mo  \\u00d7 '+tout[2].c+' customers = '+fmt(tout[2].mr)+' MRR\\n';" +
-  "r+='\\u2022 Enterprise: '+fmt(tout[3].m)+'/mo  \\u00d7 '+tout[3].c+' customers = '+fmt(tout[3].mr)+' MRR\\n';" +
-  "r+='\\u2022 Total MRR:                  '+fmt(tmr)+'\\n';" +
-  "r+='\\u2022 Total Customers:       '+tc2.toLocaleString()+'\\n';" +
-  "r+='\\u2022 ARPU:                            '+fmt(arpu)+'/mo\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 Key Metrics:\\n';" +
-  "r+='\\u2022 Weighted Gross Margin:    '+pct(wm*100)+'  (blended across tiers)\\n';" +
-  "r+='\\u2022 Target Margin:                    '+pct(tm*100)+'  (industry benchmark: 70-80%)\\n';" +
-  "r+='\\u2022 ARPU by Tier:                     $'+tiers[0].m+' / $'+tiers[1].m+' / $'+tiers[2].m+' / $'+tiers[3].m+'\\n';" +
-  "r+='\\u2022 Margin by Tier:                '+pct(tiers[0].mg*100)+' / '+pct(tiers[1].mg*100)+' / '+pct(tiers[2].mg*100)+' / '+pct(tiers[3].mg*100)+'\\n';" +
-  "r+='\\u2022 Enterprise % of MRR:        '+pct((tout[3].mr/Math.max(tmr,1))*100)+'  (high = strong moat)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Pricing Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "var ut=tiers.filter(function(t){return t.mg<0.5});" +
-  "if(ut.length===0){r+='\\u2022 \\uD83D\\uDFE2 All tiers above 50% margin \\u2014 healthy pricing structure.\\n';}else{r+='\\u2022 \\uD83D\\uDD34 '+ut.length+' tier(s) below 50% margin: '+ut.map(function(t){return t.n}).join(', ')+' \\u2014 review feature costs.\\n';}" +
-  "if(tout[3].mr/tmr>0.25){r+='\\u2022 \\uD83D\\uDFE2 Enterprise = '+pct((tout[3].mr/tmr)*100)+' of MRR \\u2014 strong enterprise traction.\\n';}else if(tout[3].mr/tmr>0.10){r+='\\u2022 \\uD83D\\uDFE1 Enterprise = '+pct((tout[3].mr/tmr)*100)+' of MRR \\u2014 healthy mix.\\n';}else{r+='\\u2022 \\uD83D\\uDFE0 Enterprise = only '+pct((tout[3].mr/Math.max(tmr,1))*100)+' of MRR \\u2014 opportunity to expand upmarket.\\n';}" +
-  "if(wm>=tm){r+='\\u2022 \\uD83D\\uDFE2 Blended margin ('+pct(wm*100)+') hits target.\\n';}else{r+='\\u2022 \\uD83D\\uDFE1 Blended margin ('+pct(wm*100)+') below target \\u2014 raise prices or cut costs.\\n';}" +
-  "if(cp>0&&tiers[1].m<cp*0.7){r+='\\u2022 \\uD83D\\uDFE2 Pro tier well below competitor \\u2014 could raise 20-30% without losing deals.\\n';}else if(cp>0&&tiers[1].m>cp*1.3){r+='\\u2022 \\uD83D\\uDFE0 Pro tier 30%+ above competitor \\u2014 risk of price objection.\\n';}" +
-  "r+='\\n\\uD83C\\uDFAF LTV by Tier:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Starter:           $'+Math.round(tout[0].ltv).toLocaleString()+'  ('+pct(tiers[0].mg*100)+' margin, '+pct(ac*100)+' monthly churn)\\n';" +
-  "r+='\\u2022 Pro:                  $'+Math.round(tout[1].ltv).toLocaleString()+'  ('+pct(tiers[1].mg*100)+' margin)\\n';" +
-  "r+='\\u2022 Max:                  $'+Math.round(tout[2].ltv).toLocaleString()+'  ('+pct(tiers[2].mg*100)+' margin)\\n';" +
-  "r+='\\u2022 Enterprise:    $'+Math.round(tout[3].ltv).toLocaleString()+'  ('+pct(tiers[3].mg*100)+' margin)\\n';" +
-  "r+='\\u2022 Average LTV:      $'+Math.round(tout.reduce(function(s,t){return s+t.ltv*t.c},0)/Math.max(tc2,1)).toLocaleString()+'\\n';" +
-  "r+='\\u2022 LTV Formula:      (Price \\u00d7 Margin) / Monthly Churn\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Break-Even Customers per Tier:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Starter:           ~'+tout[0].be+' customers  to break even on $2K/mo costs\\n';" +
-  "r+='\\u2022 Pro:                  ~'+tout[1].be+' customers  to break even on $2K/mo costs\\n';" +
-  "r+='\\u2022 Max:                  ~'+tout[2].be+' customers  to break even on $2K/mo costs\\n';" +
-  "r+='\\u2022 Enterprise:    ~'+tout[3].be+' customers  to break even on $2K/mo costs\\n';" +
-  "r+='\\u2022 (Assumes $2K/mo fixed costs per tier \\u2014 adjust based on actual overhead)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Raise all tiers 20%:   Pro becomes $'+Math.round(tiers[1].m*1.2)+'/mo, MRR \\u2192 '+fmt(tmr*1.2)+'  (test willingness to pay)\\n';" +
-  "r+='\\u2022 Cut Starter by 50%:    Convert funnel to Pro \\u2014 gain $'+Math.round(tiers[1].m*0.3*tiers[0].c)+'/mo\\n';" +
-  "r+='\\u2022 Add annual discount (15% off):   $'+Math.round(tiers[1].m*12*0.85)+'/yr  vs $'+(tiers[1].m*12)+'/yr monthly\\n';" +
-  "r+='\\u2022 Move 10% of Pro users to Max:   +$'+Math.round((tiers[2].m-tiers[1].m)*tiers[1].c*0.1).toLocaleString()+'/mo MRR\\n';" +
-  "r+='\\u2022 Drop lowest-margin tier ('+(ut[0]&&ut[0].n||'none')+'):   refocus on profitable tiers\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: '+models[pr].t+'\\n\\n';" +
-  "r+='\\uD83D\\uDCCC Recommended Action: Launch with Tiered model, Pro at $'+tiers[1].m+'/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.';" +
-  "var results=[r];" +
-  "for(var i=0;i<models.length;i++){var m=models[i];var ic=i===pr?'\\u2B50':'\\u2022';results.push(ic+' '+m.n+': $'+m.l+' \\u2013 $'+m.m+' \\u2013 $'+m.h+'/mo\\n  '+m.b);}" +
-  "results.push('\\uD83C\\uDFAF Audience Insight:\\n'+(at[tc]||at['b2b'])+'\\n\\n\\uD83D\\uDCE6 Product Insight:\\n'+(prt[pt]||prt['SaaS'])+'\\n\\n\\uD83D\\uDE80 Next step: Pick one model, launch at the Pro tier ($'+tiers[1].m+'/mo), and adjust pricing after collecting 100+ conversion data points.');" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let v=function(u){return Number.isNaN(u)?0:Math.max(0,u)},$=function(u){const d=u.productType||"SaaS",l=u.targetCustomer||"b2b",s=v(parseFloat(u.competitorPrice)||0),t=s||29,x=.7,P=.03,e=[{name:"Starter",low:Math.max(5,Math.round(t*.5)),mid:Math.max(9,Math.round(t*.6)),high:Math.max(15,Math.round(t*.7)),margin:.85,customers:1e3},{name:"Pro",low:Math.max(19,Math.round(t*1)),mid:Math.max(29,Math.round(t*1.3)),high:Math.max(49,Math.round(t*1.7)),margin:.75,customers:400},{name:"Max",low:Math.max(49,Math.round(t*2)),mid:Math.max(79,Math.round(t*2.5)),high:Math.max(149,Math.round(t*4)),margin:.7,customers:80},{name:"Enterprise",low:Math.max(199,Math.round(t*5)),mid:Math.max(499,Math.round(t*10)),high:Math.max(999,Math.round(t*20)),margin:.65,customers:12}],y=[{name:"Flat-Rate",best:"Simple tools with one clear use case. Best for early-stage products.",low:Math.max(5,Math.round(t*.7)),mid:t,high:Math.round(t*1.5),tip:"Keep it simple — one price, all features. Add a free trial to reduce friction."},{name:"Tiered",best:"Products with power users who will pay more for advanced features.",low:Math.max(9,Math.round(t*.5)),mid:t,high:Math.round(t*2.5),tip:"3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing)."},{name:"Usage-Based",best:"API products, AI tools, or any product where value scales with usage.",low:Math.max(5,Math.round(t*.4)),mid:Math.round(t*1.2),high:Math.round(t*3),tip:"Charge per unit (API calls, seats, credits). Include a generous free tier to drive adoption."},{name:"Freemium",best:"B2C products or tools that benefit from network effects and word-of-mouth.",low:0,mid:Math.round(t*.8)||12,high:Math.round(t*1.8),tip:"Free plan must be genuinely useful but leave room for upgrade. 3-5% free-to-paid conversion is good."}],R={b2b:"B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.",b2c:"B2C users prefer monthly subscriptions with easy cancellation. Focus on instant value and social proof.",developers:"Developers expect API-first pricing, generous free tiers, and transparent docs. They hate hidden fees.",creators:"Creators value revenue-share models or flat fees. Keep pricing predictable so they can forecast their margins."},S={SaaS:"SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.",ebook:"Ebooks typically sell for $9-$49. Bundle with templates/checklists to increase perceived value.",course:"Online courses range $49-$999. Price based on transformation value, not content length. Cohorts justify premium pricing.",template:"Templates sell for $5-$49. Bundle them into packs to raise AOV. Notion/Gumroad are popular distribution channels.",newsletter:"Newsletters convert 5-15% of free readers to paid. Typical paid tiers: $5-$15/mo or $50-$150/yr."};let h=0;l==="developers"?h=2:l==="b2b"?h=1:d==="newsletter"&&(h=0);const n=e.map(r=>{const a=r.mid*r.customers,b=r.mid*(1-r.margin),C=(r.mid-b)/P,A=Math.ceil(2e3/r.margin/r.mid);return{...r,monthlyMrr:a,costPerCustomer:b,ltv:C,breakEvenCustomers:A}}),i=n.reduce((r,a)=>r+a.monthlyMrr,0),p=n.reduce((r,a)=>r+a.customers,0),k=p>0?i/p:0,g=i>0?n.reduce((r,a)=>r+a.margin*a.monthlyMrr,0)/i:0,M=[],m=r=>"$"+Math.round(r).toLocaleString(),o=r=>r.toFixed(1)+"%";let c=\`🎯 SaaS Pricing Planner
+
+📦 Product: \`+d+"  |  👤 Target: "+l+"  |  💰 Competitor: "+(s?"$"+s+"/mo":"N/A")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 Tier Snapshot:
+• Starter:      \`+m(e[0].mid)+"/mo  × "+e[0].customers+" customers = "+m(n[0].monthlyMrr)+\` MRR
+• Pro:            \`+m(e[1].mid)+"/mo  × "+e[1].customers+" customers = "+m(n[1].monthlyMrr)+\` MRR
+• Max:            \`+m(e[2].mid)+"/mo  × "+e[2].customers+" customers = "+m(n[2].monthlyMrr)+\` MRR
+• Enterprise: \`+m(e[3].mid)+"/mo  × "+e[3].customers+" customers = "+m(n[3].monthlyMrr)+\` MRR
+• Total MRR:                  \`+m(i)+\`
+• Total Customers:       \`+p.toLocaleString()+\`
+• ARPU:                            \`+m(k)+\`/mo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Key Metrics:
+• Weighted Gross Margin:    \`+o(g*100)+\`  (blended across tiers)
+• Target Margin:                    \`+o(x*100)+\`  (industry benchmark: 70-80%)
+• ARPU by Tier:                     $\`+e[0].mid+" / $"+e[1].mid+" / $"+e[2].mid+" / $"+e[3].mid+\`
+• Margin by Tier:                \`+o(e[0].margin*100)+" / "+o(e[1].margin*100)+" / "+o(e[2].margin*100)+" / "+o(e[3].margin*100)+\`
+• Enterprise % of MRR:        \`+o(n[3].monthlyMrr/Math.max(i,1)*100)+\`  (high = strong moat)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Pricing Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`;const f=e.filter(r=>r.margin<.5);f.length===0?c+=\`• 🟢 All tiers above 50% margin — healthy pricing structure.
+\`:c+="• 🔴 "+f.length+" tier(s) below 50% margin: "+f.map(r=>r.name).join(", ")+\` — review feature costs.
+\`,n[3].monthlyMrr/i>.25?c+="• 🟢 Enterprise = "+o(n[3].monthlyMrr/i*100)+\` of MRR — strong enterprise traction.
+\`:n[3].monthlyMrr/i>.1?c+="• 🟡 Enterprise = "+o(n[3].monthlyMrr/i*100)+\` of MRR — healthy mix.
+\`:c+="• 🟠 Enterprise = only "+o(n[3].monthlyMrr/Math.max(i,1)*100)+\` of MRR — opportunity to expand upmarket.
+\`,g>=x?c+="• 🟢 Blended margin ("+o(g*100)+\`) hits target.
+\`:c+="• 🟡 Blended margin ("+o(g*100)+\`) below target — raise prices or cut costs.
+\`,s>0&&e[1].mid<s*.7?c+=\`• 🟢 Pro tier well below competitor — could raise 20-30% without losing deals.
+\`:s>0&&e[1].mid>s*1.3&&(c+=\`• 🟠 Pro tier 30%+ above competitor — risk of price objection.
+\`),c+=\`
+🎯 LTV by Tier:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Starter:           $\`+Math.round(n[0].ltv).toLocaleString()+"  ("+o(e[0].margin*100)+" margin, "+o(P*100)+\` monthly churn)
+• Pro:                  $\`+Math.round(n[1].ltv).toLocaleString()+"  ("+o(e[1].margin*100)+\` margin)
+• Max:                  $\`+Math.round(n[2].ltv).toLocaleString()+"  ("+o(e[2].margin*100)+\` margin)
+• Enterprise:    $\`+Math.round(n[3].ltv).toLocaleString()+"  ("+o(e[3].margin*100)+\` margin)
+• Average LTV:      $\`+Math.round(n.reduce((r,a)=>r+a.ltv*a.customers,0)/Math.max(p,1)).toLocaleString()+\`
+• LTV Formula:      (Price × Margin) / Monthly Churn
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even Customers per Tier:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Starter:           ~\`+n[0].breakEvenCustomers+\` customers  to break even on $2K/mo costs
+• Pro:                  ~\`+n[1].breakEvenCustomers+\` customers  to break even on $2K/mo costs
+• Max:                  ~\`+n[2].breakEvenCustomers+\` customers  to break even on $2K/mo costs
+• Enterprise:    ~\`+n[3].breakEvenCustomers+\` customers  to break even on $2K/mo costs
+• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Raise all tiers 20%:   Pro becomes $\`+Math.round(e[1].mid*1.2)+"/mo, MRR → "+m(i*1.2)+\`  (test willingness to pay)
+• Cut Starter by 50%:    Convert funnel to Pro — gain $\`+Math.round(e[1].mid*.3*e[0].customers)+\`/mo
+• Add annual discount (15% off):   $\`+Math.round(e[1].mid*12*.85)+"/yr  vs $"+e[1].mid*12+\`/yr monthly
+• Move 10% of Pro users to Max:   +$\`+Math.round((e[2].mid-e[1].mid)*e[1].customers*.1).toLocaleString()+\`/mo MRR
+• Drop lowest-margin tier (\`+(f[0]?.name||"none")+\`):   refocus on profitable tiers
+
+💡 Tip: \`+y[h].tip+\`
+
+📌 Recommended Action: Launch with Tiered model, Pro at $\`+e[1].mid+"/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.",M.push(c);for(let r=0;r<y.length;r++){const a=y[r],b=r===h?"⭐":"•";M.push(b+" "+a.name+": $"+a.low+" – $"+a.mid+" – $"+a.high+\`/mo
+  \`+a.best)}return M.push(\`🎯 Audience Insight:
+\`+(R[l]||R.b2b)+\`
+
+📦 Product Insight:
+\`+(S[d]||S.SaaS)+\`
+
+🚀 Next step: Pick one model, launch at the Pro tier ($\`+e[1].mid+"/mo), and adjust pricing after collecting 100+ conversion data points."),M},w=function(u,d,l){var s=T(u);return Array.isArray(s)?s.join(\`
+\`):String(s)};var E=v,L=$,B=w,T=function(u){return $(u)};return[w(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-saas-pricing-planner',

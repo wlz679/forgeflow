@@ -148,106 +148,80 @@ function calculateFreelanceTax(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var ai=cnn(parseFloat(inputs.annualIncome)||0);" +
-  "var be=cnn(parseFloat(inputs.businessExpenses)||0);" +
-  "var rc=cnn(parseFloat(inputs.retirementContribution)||0);" +
-  "var fs=inputs.filingStatus||'single';" +
-  "var st=cnn(parseFloat(inputs.stateTaxRate)||0);" +
-  "var country=inputs.country||'us';" +
-  "var tr={us:{rate:0.30,label:'US (Self-Employed, approx)',cur:'$'},uk:{rate:0.25,label:'UK (Sole Trader, approx)',cur:'\\u00A3'},canada:{rate:0.26,label:'Canada (Sole Proprietor, approx)',cur:'C$'},australia:{rate:0.275,label:'Australia (Sole Trader, approx)',cur:'A$'},germany:{rate:0.35,label:'Germany (Freiberufler, approx)',cur:'\\u20AC'}};" +
-  "var ti=tr[country]||tr['us'];" +
-  "var rd=Math.min(rc,ai*0.25);" +
-  "var tx=Math.max(0,ai-be-rd);" +
-  "var ft=tx*ti.rate;" +
-  "var stx=country==='us'?tx*(st/100):0;" +
-  "var se=country==='us'?tx*0.153*0.9235:0;" +
-  "var tt=ft+stx+se;" +
-  "var efr=ai>0?(tt/ai)*100:0;" +
-  "var mr=country==='us'?ti.rate*100+st:ti.rate*100;" +
-  "var qp=tt/4;" +
-  "var mts=tt/12;" +
-  "var ati=ai-tt;" +
-  "var mth=ati/12;" +
-  "var sd={single:14600,married:29200,hoh:21900};" +
-  "var std=sd[fs]||14600;" +
-  "var seb=ai>80000&&(se+tt*0.05)>ai*0.15;" +
-  "function fmt(n){return ti.cur+Math.round(n).toLocaleString()}" +
-  "function fmt2(n){return ti.cur+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" +
-  "function pct(n){return n.toFixed(1)}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='$calc_out.section.freelance_tax_calculator|\\uD83E\\uDDFE Freelance Tax Calculator|\\n\\n';" +
-  "r+='\\uD83C\\uDF0D $calc_out.label.country|Country|: '+ti.label+'  |  $calc_out.label.filing|Filing|: '+fs.toUpperCase()+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.freelance_tax_take_home_breakdown|\\uD83D\\uDCB0 Take-Home Breakdown:|\\n';" +
-  "r+='\\u2022 $calc_out.label.gross_income|Gross Income|:           '+fmt(ai)+'/yr\\n';" +
-  "r+='\\u2022 $calc_out.label.business_expenses|Business Expenses|:     -'+fmt(be)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.retirement_deduction','Retirement Deduction:  -'+fmt(rd)+'  (SEP-IRA / Solo 401k)',{amount:fmt(rd)})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.standard_deduction|Standard Deduction|:     -'+ti.cur+loc(std)+'  ('+fs+')\\n';" +
-  "r+='\\u2022 $calc_out.label.taxable_income|Taxable Income|:          '+fmt(tx)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.total_tax_owed|Total Tax Owed|:         -'+fmt(tt)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.net_take_home|Net Take-Home|:           '+fmt(ati)+'/yr\\n';" +
-  "r+='\\u2022 $calc_out.label.monthly_take_home|Monthly Take-Home|:     '+fmt2(mth)+'/mo\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.key_metrics|\\uD83D\\uDCD0 Key Metrics:|\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.effective_tax_rate','Effective Tax Rate:    '+pct(efr)+'%  (after all deductions)',{rate:pct(efr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.marginal_tax_rate','Marginal Tax Rate:    '+pct(mr)+'%  (rate on next dollar earned)',{rate:pct(mr)})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.quarterly_payment|Quarterly Payment|:    '+fmt2(qp)+'/quarter\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.monthly_tax_savings','Monthly Tax Savings:  '+fmt2(mts)+'/mo  (set this aside!)',{amount:fmt2(mts)})+'\\n';" +
-  "if(country==='us'){r+='\\u2022 '+tk('calc_out.freelance_tax.row.self_employment_tax','Self-Employment Tax:  '+fmt(se)+'  (15.3% on 92.35% of net)',{amount:fmt(se)})+'\\n';}else{r+='\\u2022 '+tk('calc_out.freelance_tax.row.country_tax_burden','Country tax burden:   '+pct(ti.rate*100)+'% effective combined rate',{rate:pct(ti.rate*100)})+'\\n';}" +
-  "if(stx>0)r+='\\u2022 '+tk('calc_out.freelance_tax.row.state_tax','State Tax ('+pct(st)+'%):           '+fmt(stx),{rate:pct(st),amount:fmt(stx)})+'\\n';" +
-  "r+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.freelance_tax_efficiency|\\uD83E\\uDE7A Tax Efficiency:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(efr<20)r+='\\u2022 '+tk('calc_out.freelance_tax.row.effective_rate_low','\\uD83D\\uDFE2 Effective rate '+pct(efr)+'% is low. You are optimizing deductions well.',{rate:pct(efr)})+'\\n';" +
-  "else if(efr<30)r+='\\u2022 '+tk('calc_out.freelance_tax.row.effective_rate_moderate','\\uD83D\\uDFE1 Effective rate '+pct(efr)+'% is moderate. Standard for self-employed.',{rate:pct(efr)})+'\\n';" +
-  "else if(efr<40)r+='\\u2022 '+tk('calc_out.freelance_tax.row.effective_rate_high','\\uD83D\\uDFE0 Effective rate '+pct(efr)+'% is high. Look for more deductions.',{rate:pct(efr)})+'\\n';" +
-  "else r+='\\u2022 '+tk('calc_out.freelance_tax.row.effective_rate_very_high','\\uD83D\\uDD34 Effective rate '+pct(efr)+'% is very high. Recheck filing status & deductions.',{rate:pct(efr)})+'\\n';" +
-  "if(be>ai*0.1){r+='\\u2022 '+tk('calc_out.freelance_tax.row.business_expenses_solid','\\uD83D\\uDFE2 Business expenses are '+pct((be/ai)*100)+'% of income \\u2014 solid deduction rate.',{rate:pct((be/ai)*100)})+'\\n';}else{r+='\\u2022 '+tk('calc_out.freelance_tax.row.business_expenses_low','\\uD83D\\uDFE1 Business expenses are only '+pct((be/Math.max(ai,1))*100)+'% of income. Most freelancers deduct 10-20%.',{rate:pct((be/Math.max(ai,1))*100)})+'\\n';}" +
-  "if(rc>0){r+='\\u2022 '+tk('calc_out.freelance_tax.row.retirement_contributing','\\uD83D\\uDFE2 Contributing '+fmt(rc)+'/yr to retirement \\u2014 reduces taxable income now.',{amount:fmt(rc)})+'\\n';}else{r+='\\u2022 '+tk('calc_out.freelance_tax.row.retirement_none','\\uD83D\\uDFE1 No retirement contribution set. SEP-IRA allows up to 25% of net earnings (~$66K cap).')+'\\n';}" +
-  "r+='\\n$calc_out.section.freelance_tax_quarterly_plan|\\uD83C\\uDFAF Quarterly Payment Plan:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 $calc_out.label.q1_apr_15|Q1 (Apr 15)|:           '+fmt2(qp)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.q2_jun_15|Q2 (Jun 15)|:           '+fmt2(qp)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.q3_sep_15|Q3 (Sep 15)|:           '+fmt2(qp)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.q4_jan_15|Q4 (Jan 15)|:           '+fmt2(qp)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.annual_total|Annual Total|:           '+fmt(tt)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.set_aside_per_month|Set Aside Per Month|:  '+fmt2(mts)+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.freelance_tax_w2_breakeven|\\u2696\\uFE0F Self-Employed vs W-2 Break-Even:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(seb){r+='\\u2022 '+tk('calc_out.freelance_tax.row.w2_above_80k','\\uD83D\\uDFE1 Above $80K/yr: SE tax + admin may make W-2 worthwhile. Compare job offers with full benefits.')+'\\n';}else{r+='\\u2022 '+tk('calc_out.freelance_tax.row.w2_beats','\\uD83D\\uDFE2 Self-employment still beats W-2 at this income. Tax savings from deductions outweigh SE tax.')+'\\n';}" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.se_tax_burden','SE Tax Burden:        '+fmt(se)+'/yr  (only paid by self-employed)',{amount:fmt(se)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.equivalent_w2_salary','Equivalent W-2 Salary: '+fmt(ai*0.78)+'  (typical 22% total W-2 tax + benefits)',{amount:fmt(ai*0.78)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.net_tax_savings','Net Tax Savings:       '+fmt(ai*0.22-tt)+'/yr  vs W-2 equivalent',{amount:fmt(ai*0.22-tt)})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.whatif_raise_retirement','Raise retirement to max (25% of net):  Save '+fmt(Math.min(ai*0.25,66000)*ti.rate)+'/yr in taxes',{save:fmt(Math.min(ai*0.25,66000)*ti.rate)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.whatif_switch_filing','Switch to '+(fs==='single'?'married':'single')+' filing:  Standard deduction doubles to '+ti.cur+loc(sd[fs==='single'?'married':'single']),{status:(fs==='single'?'married':'single'),amount:ti.cur+loc(sd[fs==='single'?'married':'single'])})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.whatif_track_expenses','Track $5K more in expenses:  Save '+fmt(5000*ti.rate)+'/yr  (at '+pct(ti.rate*100)+'% rate)',{save:fmt(5000*ti.rate),rate:pct(ti.rate*100)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.whatif_scorp','Form S-Corp (US):  Save ~'+fmt(se*0.5)+'/yr  once net income exceeds $60-80K',{save:fmt(se*0.5)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.freelance_tax.row.whatif_mileage','Track mileage (~$0.67/mi):  Save $1-3K/yr for active freelancers')+'\\n\\n';" +
-  "r+=tk('calc_out.freelance_tax.row.tip_set_aside','\\uD83D\\uDCA1 Tip: Set aside '+pct(mr)+'% of every invoice the moment it lands. Treat tax savings like a non-negotiable expense. Quarterly deadlines are firm \\u2014 missing them costs 3-5% in underpayment penalties on top of what you owe.',{rate:pct(mr)})+'\\n\\n';" +
-  "r+=tk('calc_out.freelance_tax.row.set_aside_monthly','\\uD83D\\uDCCC Set This Aside Monthly: '+fmt2(mts)+'  (transfer on the 1st of each month to a separate account)',{amount:fmt2(mts)});" +
-  "results.push(r);" +
-  "var incomes=[30000,60000,100000,150000,250000];" +
-  "for(var i=0;i<incomes.length;i++){" +
-  "var inc=incomes[i];" +
-  "var tx2=Math.max(0,inc-be-rd);" +
-  "var ft2=tx2*ti.rate;" +
-  "var stx2=country==='us'?tx2*(st/100):0;" +
-  "var se2=country==='us'?tx2*0.153*0.9235:0;" +
-  "var tot=ft2+stx2+se2;" +
-  "var at=inc-tot;" +
-  "var m=at/12;" +
-  "var ef=inc>0?(tot/inc)*100:0;" +
-  "results.push('$calc_out.label.comparison|Comparison|: '+tk('calc_out.freelance_tax.row.comparison_income',ti.cur+loc(inc)+'/yr',{income:ti.cur+loc(inc)})+' \\u2192 '+tk('calc_out.freelance_tax.row.comparison_tax','Tax: '+ti.cur+loc(tot),{tax:ti.cur+loc(tot)})+' | '+tk('calc_out.freelance_tax.row.comparison_effective_rate','Effective rate: '+pct(ef)+'%',{rate:pct(ef)})+' | '+tk('calc_out.freelance_tax.row.comparison_take_home','Take-home: '+fmt2(m)+'/mo',{take_home:fmt2(m)}));" +
-  "}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let p=function(c){return Number.isNaN(c)?0:Math.max(0,c)},C=function(c){const r=p(parseFloat(c.annualIncome)||0),i=p(parseFloat(c.businessExpenses)||0),u=p(parseFloat(c.retirementContribution)||0),x=c.filingStatus||"single",h=p(parseFloat(c.stateTaxRate)||0),m=c.country||"us",R={us:{rate:.3,label:"US (Self-Employed, approx)",currency:"$"},uk:{rate:.25,label:"UK (Sole Trader, approx)",currency:"£"},canada:{rate:.26,label:"Canada (Sole Proprietor, approx)",currency:"C$"},australia:{rate:.275,label:"Australia (Sole Trader, approx)",currency:"A$"},germany:{rate:.35,label:"Germany (Freiberufler, approx)",currency:"€"}},n=R[m]||R.us,g=Math.min(u,r*.25),v=Math.max(0,r-i-g),W=v*n.rate,S=m==="us"?v*(h/100):0,f=m==="us"?v*.153*.9235:0,_=W+S+f,o=r>0?_/r*100:0,$=m==="us"?n.rate*100+h:n.rate*100,w=_/4,b=_/12,I=r-_,B=I/12,M={single:14600,married:29200,hoh:21900},Q=M[x]||14600,T=r>8e4&&f+_*.05>r*.15,F=[],t=s=>n.currency+Math.round(s).toLocaleString(),l=s=>n.currency+s.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),a=s=>s.toFixed(1),d=s=>Math.round(s).toLocaleString();F.push(\`$calc_out.section.freelance_tax_calculator|🧾 Freelance Tax Calculator|
+
+🌍 $calc_out.label.country|Country|: \`+n.label+"  |  $calc_out.label.filing|Filing|: "+x.toUpperCase()+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.freelance_tax_take_home_breakdown|💰 Take-Home Breakdown:|
+• $calc_out.label.gross_income|Gross Income|:           \`+t(r)+\`/yr
+• $calc_out.label.business_expenses|Business Expenses|:     -\`+t(i)+\`
+• \`+e("calc_out.freelance_tax.row.retirement_deduction","Retirement Deduction:  -"+t(g)+"  (SEP-IRA / Solo 401k)",{amount:t(g)})+\`
+• $calc_out.label.standard_deduction|Standard Deduction|:     -\`+n.currency+d(Q)+"  ("+x+\`)
+• $calc_out.label.taxable_income|Taxable Income|:          \`+t(v)+\`
+• $calc_out.label.total_tax_owed|Total Tax Owed|:         -\`+t(_)+\`
+• $calc_out.label.net_take_home|Net Take-Home|:           \`+t(I)+\`/yr
+• $calc_out.label.monthly_take_home|Monthly Take-Home|:     \`+l(B)+\`/mo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.key_metrics|📐 Key Metrics:|
+• \`+e("calc_out.freelance_tax.row.effective_tax_rate","Effective Tax Rate:    "+a(o)+"%  (after all deductions)",{rate:a(o)})+\`
+• \`+e("calc_out.freelance_tax.row.marginal_tax_rate","Marginal Tax Rate:    "+a($)+"%  (rate on next dollar earned)",{rate:a($)})+\`
+• $calc_out.label.quarterly_payment|Quarterly Payment|:    \`+l(w)+\`/quarter
+• \`+e("calc_out.freelance_tax.row.monthly_tax_savings","Monthly Tax Savings:  "+l(b)+"/mo  (set this aside!)",{amount:l(b)})+\`
+\`+(m==="us"?"• "+e("calc_out.freelance_tax.row.self_employment_tax","Self-Employment Tax:  "+t(f)+"  (15.3% on 92.35% of net)",{amount:t(f)})+\`
+\`:"• "+e("calc_out.freelance_tax.row.country_tax_burden","Country tax burden:   "+a(n.rate*100)+"% effective combined rate",{rate:a(n.rate*100)})+\`
+\`)+(S>0?"• "+e("calc_out.freelance_tax.row.state_tax","State Tax ("+a(h)+"%):           "+t(S),{rate:a(h),amount:t(S)})+\`
+\`:"")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.freelance_tax_efficiency|🩺 Tax Efficiency:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(o<20?"• "+e("calc_out.freelance_tax.row.effective_rate_low","🟢 Effective rate "+a(o)+"% is low. You are optimizing deductions well.",{rate:a(o)})+\`
+\`:o<30?"• "+e("calc_out.freelance_tax.row.effective_rate_moderate","🟡 Effective rate "+a(o)+"% is moderate. Standard for self-employed.",{rate:a(o)})+\`
+\`:o<40?"• "+e("calc_out.freelance_tax.row.effective_rate_high","🟠 Effective rate "+a(o)+"% is high. Look for more deductions.",{rate:a(o)})+\`
+\`:"• "+e("calc_out.freelance_tax.row.effective_rate_very_high","🔴 Effective rate "+a(o)+"% is very high. Recheck filing status & deductions.",{rate:a(o)})+\`
+\`)+(i>r*.1?"• "+e("calc_out.freelance_tax.row.business_expenses_solid","🟢 Business expenses are "+a(i/r*100)+"% of income — solid deduction rate.",{rate:a(i/r*100)})+\`
+\`:"• "+e("calc_out.freelance_tax.row.business_expenses_low","🟡 Business expenses are only "+a(i/Math.max(r,1)*100)+"% of income. Most freelancers deduct 10-20%.",{rate:a(i/Math.max(r,1)*100)})+\`
+\`)+(u>0?"• "+e("calc_out.freelance_tax.row.retirement_contributing","🟢 Contributing "+t(u)+"/yr to retirement — reduces taxable income now.",{amount:t(u)})+\`
+\`:"• "+e("calc_out.freelance_tax.row.retirement_none","🟡 No retirement contribution set. SEP-IRA allows up to 25% of net earnings (~$66K cap).")+\`
+\`)+\`
+$calc_out.section.freelance_tax_quarterly_plan|🎯 Quarterly Payment Plan:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.q1_apr_15|Q1 (Apr 15)|:           \`+l(w)+\`
+• $calc_out.label.q2_jun_15|Q2 (Jun 15)|:           \`+l(w)+\`
+• $calc_out.label.q3_sep_15|Q3 (Sep 15)|:           \`+l(w)+\`
+• $calc_out.label.q4_jan_15|Q4 (Jan 15)|:           \`+l(w)+\`
+• $calc_out.label.annual_total|Annual Total|:           \`+t(_)+\`
+• $calc_out.label.set_aside_per_month|Set Aside Per Month|:  \`+l(b)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.freelance_tax_w2_breakeven|⚖️ Self-Employed vs W-2 Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(T?"• "+e("calc_out.freelance_tax.row.w2_above_80k","🟡 Above $80K/yr: SE tax + admin may make W-2 worthwhile. Compare job offers with full benefits.")+\`
+\`:"• "+e("calc_out.freelance_tax.row.w2_beats","🟢 Self-employment still beats W-2 at this income. Tax savings from deductions outweigh SE tax.")+\`
+\`)+"• "+e("calc_out.freelance_tax.row.se_tax_burden","SE Tax Burden:        "+t(f)+"/yr  (only paid by self-employed)",{amount:t(f)})+\`
+• \`+e("calc_out.freelance_tax.row.equivalent_w2_salary","Equivalent W-2 Salary: "+t(r*.78)+"  (typical 22% total W-2 tax + benefits)",{amount:t(r*.78)})+\`
+• \`+e("calc_out.freelance_tax.row.net_tax_savings","Net Tax Savings:       "+t(r*.22-_)+"/yr  vs W-2 equivalent",{amount:t(r*.22-_)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.freelance_tax.row.whatif_raise_retirement","Raise retirement to max (25% of net):  Save "+t(Math.min(r*.25,66e3)*n.rate)+"/yr in taxes",{save:t(Math.min(r*.25,66e3)*n.rate)})+\`
+• \`+e("calc_out.freelance_tax.row.whatif_switch_filing","Switch to "+(x==="single"?"married":"single")+" filing:  Standard deduction doubles to "+n.currency+d(M[x==="single"?"married":"single"]),{status:x==="single"?"married":"single",amount:n.currency+d(M[x==="single"?"married":"single"])})+\`
+• \`+e("calc_out.freelance_tax.row.whatif_track_expenses","Track $5K more in expenses:  Save "+t(5e3*n.rate)+"/yr  (at "+a(n.rate*100)+"% rate)",{save:t(5e3*n.rate),rate:a(n.rate*100)})+\`
+• \`+e("calc_out.freelance_tax.row.whatif_scorp","Form S-Corp (US):  Save ~"+t(f*.5)+"/yr  once net income exceeds $60-80K",{save:t(f*.5)})+\`
+• \`+e("calc_out.freelance_tax.row.whatif_mileage","Track mileage (~$0.67/mi):  Save $1-3K/yr for active freelancers")+\`
+
+\`+e("calc_out.freelance_tax.row.tip_set_aside","💡 Tip: Set aside "+a($)+"% of every invoice the moment it lands. Treat tax savings like a non-negotiable expense. Quarterly deadlines are firm — missing them costs 3-5% in underpayment penalties on top of what you owe.",{rate:a($)})+\`
+
+\`+e("calc_out.freelance_tax.row.set_aside_monthly","📌 Set This Aside Monthly: "+l(b)+"  (transfer on the 1st of each month to a separate account)",{amount:l(b)}));const j=[3e4,6e4,1e5,15e4,25e4];for(let s=0;s<j.length;s++){const y=j[s],q=Math.max(0,y-i-g),U=q*n.rate,H=m==="us"?q*(h/100):0,L=m==="us"?q*.153*.9235:0,E=U+H+L,D=(y-E)/12,K=y>0?E/y*100:0;F.push("$calc_out.label.comparison|Comparison|: "+e("calc_out.freelance_tax.row.comparison_income",n.currency+d(y)+"/yr",{income:n.currency+d(y)})+" → "+e("calc_out.freelance_tax.row.comparison_tax","Tax: "+n.currency+d(E),{tax:n.currency+d(E)})+" | "+e("calc_out.freelance_tax.row.comparison_effective_rate","Effective rate: "+a(K)+"%",{rate:a(K)})+" | "+e("calc_out.freelance_tax.row.comparison_take_home","Take-home: "+l(D)+"/mo",{take_home:l(D)}))}return F},A=function(c,r,i){var u=P(c);return Array.isArray(u)?u.join(\`
+\`):String(u)};var O=p,J=C,G=A,e=tk,N='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+N)(),P=function(c){return C(c)};return[A(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-freelance-tax-calculator',

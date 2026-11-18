@@ -223,77 +223,60 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function interp(r1,r2,m1,m2,m){if(m2===m1)return r1;return r1+(r2-r1)*(m-m1)/(m2-m1);}" +
-  "function retAt(m,t){if(m<=1)return t.m1;if(m<=2)return t.m1+(t.m2-t.m1)*(m-1);if(m<=3)return t.m2+(t.m3-t.m2)*(m-2);if(m<=6)return t.m3+(t.m6-t.m3)*(m-3)/3;if(m<=12)return t.m6+(t.m12-t.m6)*(m-6)/6;return t.m12;}" +
-  "function cumLTV(cs,t,rpm,months){if(cs<=0)return 0;var total=0;for(var m=1;m<=months;m++){var ret=retAt(m,t)/100;total+=cs*ret*rpm;}return total;}" +
-  "function bigDrop(t){var rates=[t.m1,t.m2,t.m3,t.m6,t.m12];var months=[1,2,3,6,12];var mx=0;var dm=1;for(var i=1;i<rates.length;i++){var drop=rates[i-1]-rates[i];if(drop>mx){mx=drop;dm=months[i-1];}}return dm;}" +
-  "function retH(m6){if(m6>=90)return'excellent';if(m6>=70)return'good';if(m6>=50)return'warning';return'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var cs=cnn(parseFloat(inputs.cohortSize)||0);" +
-  "var t={m1:cnn(Math.min(100,parseFloat(inputs.m1Retention)||0)),m2:cnn(Math.min(100,parseFloat(inputs.m2Retention)||0)),m3:cnn(Math.min(100,parseFloat(inputs.m3Retention)||0)),m6:cnn(Math.min(100,parseFloat(inputs.m6Retention)||0)),m12:cnn(Math.min(100,parseFloat(inputs.m12Retention)||0))};" +
-  "var rpm=cnn(parseFloat(inputs.revenuePerUser)||0);" +
-  "if(cs===0){return['$calc_out.section.cohort_retention_calculator|\\u23F0 Cohort Retention Calculator|\\n\\n'+tk('calc_out.cohort_retention.row.enter_inputs_required','\\uD83D\\uDCCA Enter cohort size, monthly retention rates (M1/M2/M3/M6/M12), and monthly revenue per user to see cumulative LTV, decay curve, and biggest drop month.')];}" +
-  "var ltv12=cumLTV(cs,t,rpm,12);var ltv6=cumLTV(cs,t,rpm,6);" +
-  "var bnd=retH(t.m6);var dm=bigDrop(t);" +
-  "var dPct=dm===1?t.m1-t.m2:dm===2?t.m2-t.m3:dm===3?t.m3-t.m6:t.m6-t.m12;" +
-  "var hE='',hL='';" +
-  "if(bnd==='excellent'){hE='\\uD83D\\uDFE2';hL=tk('calc_out.cohort_retention.row.health_excellent','Excellent \\u2014 M6 retention \\u2265 90%; product-market fit strong');}" +
-  "else if(bnd==='good'){hE='\\uD83D\\uDFE1';hL=tk('calc_out.cohort_retention.row.health_good','Good \\u2014 M6 retention 70\\u201390%; healthy cohort decay');}" +
-  "else if(bnd==='warning'){hE='\\uD83D\\uDFE0';hL=tk('calc_out.cohort_retention.row.health_warning','Warning \\u2014 M6 retention 50\\u201370%; investigate onboarding');}" +
-  "else{hE='\\uD83D\\uDD34';hL=tk('calc_out.cohort_retention.row.health_critical','Critical \\u2014 M6 retention < 50%; high churn, fix product before scaling');}" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function fmt(n){return n.toFixed(1)+'%';}" +
-  "var imp={m1:Math.min(100,t.m1+10),m2:t.m2,m3:t.m3,m6:t.m6,m12:t.m12};" +
-  "var impLTV=cumLTV(cs,imp,rpm,12);var gain=impLTV-ltv12;" +
-  "var target=90;var gap=Math.max(0,target-t.m6);" +
-  "var perLTV=ltv12/cs;var annRev=ltv12;" +
-  "var payMonths=(perLTV>0&&rpm>0)?(perLTV/rpm).toFixed(1)+' months':'n/a';" +
-  "var tip='';" +
-  "if(bnd==='excellent'){tip=tk('calc_out.cohort_retention.row.tip_excellent','\\uD83D\\uDCA1 Tip: Excellent retention. Scale acquisition aggressively \\u2014 focus on doubling down on channels that bring similar cohorts (lookalike audiences).');}" +
-  "else if(dm===1&&bnd!=='critical'){tip=tk('calc_out.cohort_retention.row.tip_biggest_drop_m1_m2','\\uD83D\\uDCA1 Tip: Biggest drop between M1 and M2 (\\u2212'+dPct.toFixed(1)+'pp). Audit onboarding, activation emails, and first-use experience. A 10pp M1 retention lift cascades to substantial LTV gain.',{drop:dPct.toFixed(1)});}" +
-  "else if(dm>=3&&bnd==='warning'){tip=tk('calc_out.cohort_retention.row.tip_steady_decay_m6','\\uD83D\\uDCA1 Tip: Steady decay curve but M6 retention only '+fmt(t.m6)+'. Your product holds early users but loses them at the 3-month mark. Look for usage-pattern cliffs (feature adoption, billing cycles).',{m6:fmt(t.m6)});}" +
-  "else if(bnd==='critical'){tip=tk('calc_out.cohort_retention.row.tip_critical_m6','\\uD83D\\uDCA1 Tip: M6 retention < 50% is dangerously low. Stop scaling acquisition \\u2014 fix product-market fit first. Talk to churned users, identify the moment they left, and rebuild that journey.');}" +
-  "else{tip=tk('calc_out.cohort_retention.row.tip_add_data','\\uD83D\\uDCA1 Tip: Add data to see stage-specific recommendations.');}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.cohort_retention_calculator|\\u23F0 Cohort Retention Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+hE+' '+hL+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cohort_retention.row.biggest_drop','Biggest drop: between M'+dm+' and the next checkpoint (\\u2212'+dPct.toFixed(1)+'pp)',{month:String(dm),drop:dPct.toFixed(1)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.ltv_12mo|12-mo LTV|: '+money(ltv12)+'  \\u00B7  $calc_out.label.per_user_ltv|per-user|: '+money(perLTV)+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.cohort_size|Cohort size|:     '+cs.toLocaleString('en-US')+' users\\n';" +
-  "r2+='\\u2022 $calc_out.label.m1_retention|M1 retention|:    '+fmt(t.m1)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.m2_retention|M2 retention|:    '+fmt(t.m2)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.m3_retention|M3 retention|:    '+fmt(t.m3)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.m6_retention|M6 retention|:    '+fmt(t.m6)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.m12_retention|M12 retention|:   '+fmt(t.m12)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.revenue_per_user_mo|Revenue/user/mo|: '+money(rpm)+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cohort_retention.row.whatif_m1_plus_10pp','M1 retention +10pp ('+fmt(t.m1)+' \\u2192 '+fmt(imp.m1)+'):',{from:fmt(t.m1),to:fmt(imp.m1)})+'\\n';" +
-  "r2+='  \\u2022 $calc_out.label.ltv_12mo|12-mo LTV|: '+money(ltv12)+' \\u2192 '+money(impLTV)+' (+'+money(gain)+')\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.cohort_retention.row.whatif_gain','Gain: '+((gain/Math.max(ltv12,1))*100).toFixed(1)+'% LTV increase',{pct:((gain/Math.max(ltv12,1))*100).toFixed(1)})+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cohort_retention.row.breakeven_target_m6','To hit \\uD83D\\uDFE2 M6 retention ('+target+'%):',{target:String(target)})+'\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.cohort_retention.row.breakeven_current_gap','Current M6: '+fmt(t.m6)+'  \\u00B7  Gap: +'+gap.toFixed(1)+'pp needed',{m6:fmt(t.m6),gap:gap.toFixed(1)})+'\\n';" +
-  "r2+='  \\u2022 $calc_out.label.ltv_gain_6mo_at_target|6-mo LTV gain at target|: '+money(cumLTV(cs,Object.assign({},t,{m6:target}),rpm,6)-ltv6)+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.per_user_ltv_12mo|Per-user LTV (12-mo)|: '+money(perLTV)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.cohort_total_ltv|Cohort total LTV|:     '+money(annRev)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cohort_retention.row.cac_profitable','If CAC < '+money(perLTV)+': profitable unit economics',{cac:money(perLTV)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cohort_retention.row.cac_payback','CAC payback: '+payMonths+' (if 100% retention forever \\u2014 actually longer due to decay)',{months:payMonths})+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+=tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let u=function(t){return Number.isNaN(t)?0:Math.max(0,t)},b=function(t,n){return t<=1?n.m1:t<=2?n.m1+(n.m2-n.m1)*(t-1):t<=3?n.m2+(n.m3-n.m2)*(t-2):t<=6?n.m3+(n.m6-n.m3)*(t-3)/3:t<=12?n.m6+(n.m12-n.m6)*(t-6)/6:n.m12},p=function(t,n,e,r){if(t<=0)return 0;let c=0;for(let l=1;l<=r;l++){const a=b(l,n)/100;c+=t*a*e}return c},F=function(t){const n=[t.m1,t.m2,t.m3,t.m6,t.m12],e=[1,2,3,6,12];let r=0,c=1;for(let l=1;l<n.length;l++){const a=n[l-1]-n[l];a>r&&(r=a,c=e[l-1])}return c},$=function(t){return t>=g.excellent?"excellent":t>=g.good[0]?"good":t>=g.warning[0]?"warning":"critical"},C=function(t,n,e){var r=j(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var G=u,U=b,z=p,E=F,P=$,I=C,o=tk,R='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',o=new Function("return "+R)(),g={excellent:90,good:[70,90],warning:[50,70],critical:0},j=function(t){const n=u(parseFloat(t.cohortSize)||0),e={m1:u(Math.min(100,parseFloat(t.m1Retention)||0)),m2:u(Math.min(100,parseFloat(t.m2Retention)||0)),m3:u(Math.min(100,parseFloat(t.m3Retention)||0)),m6:u(Math.min(100,parseFloat(t.m6Retention)||0)),m12:u(Math.min(100,parseFloat(t.m12Retention)||0))},r=u(parseFloat(t.revenuePerUser)||0);if(n===0)return[\`$calc_out.section.cohort_retention_calculator|⏰ Cohort Retention Calculator|
+
+\`+o("calc_out.cohort_retention.row.enter_inputs_required","📊 Enter cohort size, monthly retention rates (M1/M2/M3/M6/M12), and monthly revenue per user to see cumulative LTV, decay curve, and biggest drop month.")];const c=p(n,e,r,12),l=p(n,e,r,6),a=$(e.m6),_=F(e),M=_===1?e.m1-e.m2:_===2?e.m2-e.m3:_===3?e.m3-e.m6:e.m6-e.m12;let d,f;a==="excellent"?(d="🟢",f=o("calc_out.cohort_retention.row.health_excellent","Excellent — M6 retention ≥ 90%; product-market fit strong")):a==="good"?(d="🟡",f=o("calc_out.cohort_retention.row.health_good","Good — M6 retention 70–90%; healthy cohort decay")):a==="warning"?(d="🟠",f=o("calc_out.cohort_retention.row.health_warning","Warning — M6 retention 50–70%; investigate onboarding")):(d="🔴",f=o("calc_out.cohort_retention.row.health_critical","Critical — M6 retention < 50%; high churn, fix product before scaling"));const s=x=>"$"+Math.round(x).toLocaleString("en-US"),i=x=>x.toFixed(1)+"%",w={m1:Math.min(100,e.m1+10),m2:e.m2,m3:e.m3,m6:e.m6,m12:e.m12},S=p(n,w,r,12),y=S-c,v=g.excellent,L=Math.max(0,v-e.m6),m=c/n,q=c;let h;a==="excellent"?h=o("calc_out.cohort_retention.row.tip_excellent","💡 Tip: Excellent retention. Scale acquisition aggressively — focus on doubling down on channels that bring similar cohorts (lookalike audiences)."):_===1&&a!=="critical"?h=o("calc_out.cohort_retention.row.tip_biggest_drop_m1_m2","💡 Tip: Biggest drop between M1 and M2 (−"+M.toFixed(1)+"pp). Audit onboarding, activation emails, and first-use experience. A 10pp M1 retention lift cascades to substantial LTV gain.",{drop:M.toFixed(1)}):_>=3&&a==="warning"?h=o("calc_out.cohort_retention.row.tip_steady_decay_m6","💡 Tip: Steady decay curve but M6 retention only "+i(e.m6)+". Your product holds early users but loses them at the 3-month mark. Look for usage-pattern cliffs (feature adoption, billing cycles).",{m6:i(e.m6)}):a==="critical"?h=o("calc_out.cohort_retention.row.tip_critical_m6","💡 Tip: M6 retention < 50% is dangerously low. Stop scaling acquisition — fix product-market fit first. Talk to churned users, identify the moment they left, and rebuild that journey."):h=o("calc_out.cohort_retention.row.tip_add_data","💡 Tip: Add data to see stage-specific recommendations.");const V=m>0&&r>0?(m/r).toFixed(1)+" months":"n/a";return[\`$calc_out.section.cohort_retention_calculator|⏰ Cohort Retention Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+d+" "+f+\`
+• \`+o("calc_out.cohort_retention.row.biggest_drop","Biggest drop: between M"+_+" and the next checkpoint (−"+M.toFixed(1)+"pp)",{month:String(_),drop:M.toFixed(1)})+\`
+• $calc_out.label.ltv_12mo|12-mo LTV|: \`+s(c)+"  ·  $calc_out.label.per_user_ltv|per-user|: "+s(m)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.cohort_size|Cohort size|:     \`+n.toLocaleString("en-US")+\` users
+• $calc_out.label.m1_retention|M1 retention|:    \`+i(e.m1)+\`
+• $calc_out.label.m2_retention|M2 retention|:    \`+i(e.m2)+\`
+• $calc_out.label.m3_retention|M3 retention|:    \`+i(e.m3)+\`
+• $calc_out.label.m6_retention|M6 retention|:    \`+i(e.m6)+\`
+• $calc_out.label.m12_retention|M12 retention|:   \`+i(e.m12)+\`
+• $calc_out.label.revenue_per_user_mo|Revenue/user/mo|: \`+s(r)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+o("calc_out.cohort_retention.row.whatif_m1_plus_10pp","M1 retention +10pp ("+i(e.m1)+" → "+i(w.m1)+"):",{from:i(e.m1),to:i(w.m1)})+\`
+  • $calc_out.label.ltv_12mo|12-mo LTV|: \`+s(c)+" → "+s(S)+" (+"+s(y)+\`)
+  • \`+o("calc_out.cohort_retention.row.whatif_gain","Gain: "+(y/Math.max(c,1)*100).toFixed(1)+"% LTV increase",{pct:(y/Math.max(c,1)*100).toFixed(1)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+o("calc_out.cohort_retention.row.breakeven_target_m6","To hit 🟢 M6 retention ("+v+"%):",{target:String(v)})+\`
+  • \`+o("calc_out.cohort_retention.row.breakeven_current_gap","Current M6: "+i(e.m6)+"  ·  Gap: +"+L.toFixed(1)+"pp needed",{m6:i(e.m6),gap:L.toFixed(1)})+\`
+  • $calc_out.label.ltv_gain_6mo_at_target|6-mo LTV gain at target|: \`+s(p(n,{...e,m6:v},r,6)-l)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.per_user_ltv_12mo|Per-user LTV (12-mo)|: \`+s(m)+\`
+• $calc_out.label.cohort_total_ltv|Cohort total LTV|:     \`+s(q)+\`
+• \`+o("calc_out.cohort_retention.row.cac_profitable","If CAC < "+s(m)+": profitable unit economics",{cac:s(m)})+\`
+• \`+o("calc_out.cohort_retention.row.cac_payback","CAC payback: "+V+" (if 100% retention forever — actually longer due to decay)",{months:V})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+h+\`
+\`]};return[C(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

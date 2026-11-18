@@ -151,97 +151,78 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var sal=cnn(parseFloat(inputs.annualSalary)||0);" +
-  "var bp=cnn(parseFloat(inputs.benefitsPercentage)||0);" +
-  "var loc1=inputs.location||'us';" +
-  "var tr={us:0.0765,uk:0.138,europe:0.20,asia:0.12,remote:0.10};" +
-  "var or={us:0.25,uk:0.20,europe:0.22,asia:0.15,remote:0.10};" +
-  "var txR=tr[loc1]||0.0765;" +
-  "var ohR=or[loc1]||0.25;" +
-  "var bc=sal*(bp/100);" +
-  "var et=sal*txR;" +
-  "var oh=sal*ohR;" +
-  "var tac=sal+bc+et+oh;" +
-  "var mc=tac/12;" +
-  "var tm=sal>0?tac/sal:0;" +
-  "var fyc=tac*1.15;" +
-  "var con=sal*1.05;" +
-  "var ftbe=con>tac;" +
-  "function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  "function pct(v,t){return t>0?((v/t)*100).toFixed(1)+'%':'0%'}" +
-  "var ll={us:'United States',uk:'United Kingdom',europe:'Europe (EU avg)',asia:'Asia (regional avg)',remote:'Global Remote'};" +
-  "var r='';" +
-  "r+='\\uD83D\\uDCBC Employee Cost Calculator\\n\\n';" +
-  "r+='\\uD83D\\uDCCD Location: '+ll[loc1]+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 True Cost Breakdown:\\n';" +
-  "r+='\\u2022 Base Salary:                $'+loc(sal)+'/yr  ('+pct(sal,tac)+' of total)\\n';" +
-  "r+='\\u2022 Benefits ('+bp+'%):          $'+loc(bc)+'/yr  ('+pct(bc,tac)+')\\n';" +
-  "r+='\\u2022 Employer Tax ('+(txR*100).toFixed(1)+'%):      $'+loc(et)+'/yr  ('+pct(et,tac)+')\\n';" +
-  "r+='\\u2022 Overhead ('+(ohR*100).toFixed(0)+'%):           $'+loc(oh)+'/yr  ('+pct(oh,tac)+')\\n';" +
-  "r+='\\u2022 Total Annual Cost:        $'+loc(tac)+'/yr\\n';" +
-  "r+='\\u2022 Monthly Cost:                $'+fmt(mc)+'/mo\\n';" +
-  "r+='\\u2022 True Cost Multiplier:    '+tm.toFixed(2)+'x base salary\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 Key Metrics:\\n';" +
-  "r+='\\u2022 Loaded vs Base Ratio:    '+tm.toFixed(2)+'x  (1.2-1.8x typical)\\n';" +
-  "r+='\\u2022 First-Year Cost (incl. onboarding):   $'+loc(fyc)+'\\n';" +
-  "r+='\\u2022 Ongoing Annual Cost:        $'+loc(tac)+'\\n';" +
-  "r+='\\u2022 Year-1 Premium:                $'+loc(fyc-tac)+'  ('+pct(fyc-tac,tac)+' ramp-up)\\n';" +
-  "r+='\\u2022 Benefits per Hour:           $'+(bc/2080).toFixed(2)+'  (over 2,080 work hours/yr)\\n';" +
-  "r+='\\u2022 Effective Hourly Cost:    $'+(tac/2080).toFixed(2)+'/hr\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Cost Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(tm<=1.4)r+='\\u2022 \\uD83D\\uDFE2 Lean multiplier ('+tm.toFixed(2)+'x) \\u2014 efficient operation.\\n';" +
-  "else if(tm<=1.8)r+='\\u2022 \\uD83D\\uDFE2 Standard multiplier ('+tm.toFixed(2)+'x) \\u2014 typical for full-time staff.\\n';" +
-  "else if(tm<=2.2)r+='\\u2022 \\uD83D\\uDFE0 High multiplier ('+tm.toFixed(2)+'x) \\u2014 review overhead/benefits ratio.\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDD34 Excessive multiplier ('+tm.toFixed(2)+'x) \\u2014 likely heavy overhead or benefits.\\n';" +
-  "var tj = tm<=1.4 ? JSON.stringify({code:'employee_cost_lean',params:{multiplier:tm.toFixed(1)}}) : tm<=1.8 ? JSON.stringify({code:'employee_cost_standard',params:{multiplier:tm.toFixed(1)}}) : tm<=2.2 ? JSON.stringify({code:'employee_cost_high',params:{multiplier:tm.toFixed(1)}}) : JSON.stringify({code:'employee_cost_excessive',params:{multiplier:tm.toFixed(1)}});" +
-  "if(sal>=150000)r+='\\u2022 \\u26A0\\uFE0F Senior hire at $'+loc(sal)+'/yr \\u2014 clear ROI must be established.\\n';" +
-  "else if(sal>=80000)r+='\\u2022 \\uD83D\\uDFE2 Mid-level hire at $'+loc(sal)+'/yr \\u2014 standard team member.\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDFE2 Junior hire at $'+loc(sal)+'/yr \\u2014 low-risk entry-level role.\\n';" +
-  "if(bp>=30)r+='\\u2022 \\uD83D\\uDFE2 Benefits ratio ('+bp+'%) is competitive.\\n';" +
-  "else if(bp>=20)r+='\\u2022 \\uD83D\\uDFE1 Benefits ratio ('+bp+'%) is below US average (30-35%).\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDFE0 Benefits ratio ('+bp+'%) is very low \\u2014 may hurt retention.\\n';" +
-  "r+='\\n\\uD83C\\uDFAF Annual Projection:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Year 1 (with onboarding):    $'+loc(fyc)+'\\n';" +
-  "r+='\\u2022 Year 2 (full productivity):  $'+loc(tac)+'  (-'+((fyc-tac)/fyc*100).toFixed(1)+'%)\\n';" +
-  "r+='\\u2022 Year 3 (with 3% raise):           $'+loc(tac*1.03)+'  (+3%)\\n';" +
-  "r+='\\u2022 Year 5 (with 3%/yr raises):    $'+loc(tac*Math.pow(1.03,4))+'\\n';" +
-  "r+='\\u2022 5-Year Total:                            $'+loc(fyc+tac+tac*1.03+tac*Math.pow(1.03,2)+tac*Math.pow(1.03,3)+tac*Math.pow(1.03,4))+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Full-Time vs Contractor Break-Even:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(ftbe)r+='\\u2022 \\uD83D\\uDFE2 Full-time is cheaper than a contractor at this level. Hire directly.\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDFE1 Contractor cheaper at $'+loc(con)+'/yr \\u2014 consider contractor for short-term needs.\\n';" +
-  "r+='\\u2022 Full-Time Annual Cost:          $'+loc(tac)+'\\n';" +
-  "r+='\\u2022 Contractor Equivalent:            $'+loc(con)+'/yr  (no benefits/tax overhead)\\n';" +
-  "r+='\\u2022 Savings with Full-Time:           $'+loc(con-tac)+'/yr  (vs contractor)\\n';" +
-  "r+='\\u2022 Break-Even Point:                  '+(ftbe?'Already crossed':'~'+Math.ceil((tac-con)/(sal*0.05))+' months at this salary')+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Add 10% performance bonus:   Total \\u2192 $'+loc(tac*1.1)+'  (Multiplier '+(tac*1.1/sal).toFixed(2)+'x)\\n';" +
-  "r+='\\u2022 Cut benefits to 20%:                Save $'+loc(bc-sal*0.20)+'/yr  (Total \\u2192 $'+loc(sal+sal*0.20+et+oh)+')\\n';" +
-  "r+='\\u2022 Increase training budget ($5K):  Total \\u2192 $'+loc(tac+5000)+'  (better retention)\\n';" +
-  "r+='\\u2022 Hire in Asia instead:                 ~$'+loc(sal*0.4)+'/yr  (40% of US cost)\\n';" +
-  "r+='\\u2022 Remote (anywhere):                         ~$'+loc(sal*0.7)+'/yr  (saves office overhead)\\n\\n';" +
-  "r+='\uD83D\uDCA1 Tip: '+tj;" +
-  "var results=[r];" +
-  "var salaries=[40000,60000,80000,120000,180000];" +
-  "for(var i=0;i<salaries.length;i++){" +
-  "var s=salaries[i];" +
-  "var b=s*(bp/100);" +
-  "var e=s*txR;" +
-  "var o=s*ohR;" +
-  "var t=s+b+e+o;" +
-  "results.push('Comparison: $'+loc(s)+' salary \\u2192 Total $'+loc(t)+'/yr ($'+fmt(t/12)+'/mo) | Multiplier '+(t/s).toFixed(2)+'x');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(a){return Number.isNaN(a)?0:Math.max(0,a)},g=function(a){const t=f(parseFloat(a.annualSalary)||0),i=f(parseFloat(a.benefitsPercentage)||0),c=a.location||"us",w={us:.0765,uk:.138,europe:.2,asia:.12,remote:.1},M={us:.25,uk:.2,europe:.22,asia:.15,remote:.1},v=w[c]||.0765,x=M[c]||.25,d=t*(i/100),p=t*v,h=t*x,n=t+d+p+h,k=n/12,o=t>0?n/t:0,u=n*1.15,A=o<=1.4?JSON.stringify({code:"employee_cost_lean",params:{multiplier:o.toFixed(1)}}):o<=1.8?JSON.stringify({code:"employee_cost_standard",params:{multiplier:o.toFixed(1)}}):o<=2.2?JSON.stringify({code:"employee_cost_high",params:{multiplier:o.toFixed(1)}}):JSON.stringify({code:"employee_cost_excessive",params:{multiplier:o.toFixed(1)}}),r=n,m=t*1.05,b=m>n,S=s=>s.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),e=s=>Math.round(s).toLocaleString(),y=(s,l)=>l>0?(s/l*100).toFixed(1)+"%":"0%",B={us:"United States",uk:"United Kingdom",europe:"Europe (EU avg)",asia:"Asia (regional avg)",remote:"Global Remote"},$=[];$.push(\`💼 Employee Cost Calculator
+
+📍 Location: \`+B[c]+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 True Cost Breakdown:
+• Base Salary:                $\`+e(t)+"/yr  ("+y(t,n)+\` of total)
+• Benefits (\`+i+"%):          $"+e(d)+"/yr  ("+y(d,n)+\`)
+• Employer Tax (\`+(v*100).toFixed(1)+"%):      $"+e(p)+"/yr  ("+y(p,n)+\`)
+• Overhead (\`+(x*100).toFixed(0)+"%):           $"+e(h)+"/yr  ("+y(h,n)+\`)
+• Total Annual Cost:        $\`+e(n)+\`/yr
+• Monthly Cost:                $\`+S(k)+\`/mo
+• True Cost Multiplier:    \`+o.toFixed(2)+\`x base salary
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Key Metrics:
+• Loaded vs Base Ratio:    \`+o.toFixed(2)+\`x  (1.2-1.8x typical)
+• First-Year Cost (incl. onboarding):   $\`+e(u)+\`
+• Ongoing Annual Cost:        $\`+e(r)+\`
+• Year-1 Premium:                $\`+e(u-r)+"  ("+y(u-r,r)+\` ramp-up)
+• Benefits per Hour:           $\`+(d/2080).toFixed(2)+\`  (over 2,080 work hours/yr)
+• Effective Hourly Cost:    $\`+(n/2080).toFixed(2)+\`/hr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Cost Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(o<=1.4?"• 🟢 Lean multiplier ("+o.toFixed(2)+\`x) — efficient operation.
+\`:o<=1.8?"• 🟢 Standard multiplier ("+o.toFixed(2)+\`x) — typical for full-time staff.
+\`:o<=2.2?"• 🟠 High multiplier ("+o.toFixed(2)+\`x) — review overhead/benefits ratio.
+\`:"• 🔴 Excessive multiplier ("+o.toFixed(2)+\`x) — likely heavy overhead or benefits.
+\`)+(t>=15e4?"• ⚠️ Senior hire at $"+e(t)+\`/yr — clear ROI must be established.
+\`:t>=8e4?"• 🟢 Mid-level hire at $"+e(t)+\`/yr — standard team member.
+\`:"• 🟢 Junior hire at $"+e(t)+\`/yr — low-risk entry-level role.
+\`)+(i>=30?"• 🟢 Benefits ratio ("+i+\`%) is competitive.
+\`:i>=20?"• 🟡 Benefits ratio ("+i+\`%) is below US average (30-35%).
+\`:"• 🟠 Benefits ratio ("+i+\`%) is very low — may hurt retention.
+\`)+\`
+🎯 Annual Projection:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Year 1 (with onboarding):    $\`+e(u)+\`
+• Year 2 (full productivity):  $\`+e(r)+"  (-"+((u-r)/u*100).toFixed(1)+\`%)
+• Year 3 (with 3% raise):           $\`+e(r*1.03)+\`  (+3%)
+• Year 5 (with 3%/yr raises):    $\`+e(r*Math.pow(1.03,4))+\`
+• 5-Year Total:                            $\`+e(u+r+r*1.03+r*Math.pow(1.03,2)+r*Math.pow(1.03,3)+r*Math.pow(1.03,4))+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Full-Time vs Contractor Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(b?\`• 🟢 Full-time is cheaper than a contractor at this level. Hire directly.
+\`:"• 🟡 Contractor cheaper at $"+e(m)+\`/yr — consider contractor for short-term needs.
+\`)+"• Full-Time Annual Cost:          $"+e(n)+\`
+• Contractor Equivalent:            $\`+e(m)+\`/yr  (no benefits/tax overhead)
+• Savings with Full-Time:           $\`+e(m-n)+\`/yr  (vs contractor)
+• Break-Even Point:                  \`+(b?"Already crossed":"~"+Math.ceil((n-m)/(t*.05))+" months at this salary")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Add 10% performance bonus:   Total → $\`+e(n*1.1)+"  (Multiplier "+(n*1.1/t).toFixed(2)+\`x)
+• Cut benefits to 20%:                Save $\`+e(d-t*.2)+"/yr  (Total → $"+e(t+t*.2+p+h)+\`)
+• Increase training budget ($5K):  Total → $\`+e(n+5e3)+\`  (better retention)
+• Hire in Asia instead:                 ~$\`+e(t*.4)+\`/yr  (40% of US cost)
+• Remote (anywhere):                         ~$\`+e(t*.7)+\`/yr  (saves office overhead)
+
+💡 Tip: \`+A);const _=[4e4,6e4,8e4,12e4,18e4];for(let s=0;s<_.length;s++){const l=_[s],E=l*(i/100),N=l*v,R=l*x,F=l+E+N+R;$.push("Comparison: $"+e(l)+" salary → Total $"+e(F)+"/yr ($"+S(F/12)+"/mo) | Multiplier "+(F/l).toFixed(2)+"x")}return $},C=function(a,t,i){var c=T(a);return Array.isArray(c)?c.join(\`
+\`):String(c)};var Y=f,O=g,H=C,T=function(a){return g(a)};return[C(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-employee-cost-calculator',

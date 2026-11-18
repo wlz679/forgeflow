@@ -56,31 +56,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cnn=function(x){return Math.max(0,x)};
-  var cs = cnn(Number(inputs.current_shares) || 0);
-  var ys = cnn(Number(inputs.years_since_grant) || 0);
-  var rp = cnn(Number(inputs.refresh_pool_pct) || 0);
-  var ts = cnn(Number(inputs.total_company_shares) || 0);
-  var rc = inputs.role_criticality || 'Med';
-  var poolSize = ts * rp / 100;
-  var rtp = rc === 'High' ? 0.15 : rc === 'Low' ? 0.03 : 0.08;
-  var yf = ys >= 4 ? 1.0 : 1.0 + (4 - ys) / 4;
-  var shares = Math.round(poolSize * rtp * yf);
-  var dil = ts === 0 ? 0 : shares / ts * 100;
-  var band = dil >= 0.20 ? 'Excellent' : dil >= 0.10 ? 'Good' : dil >= 0.05 ? 'Warning' : 'Critical';
-  var emoji = dil >= 0.20 ? '🟢' : dil >= 0.10 ? '🟡' : dil >= 0.05 ? '🟠' : '🔴';
-  var altShares = Math.round(poolSize * (rc === 'High' ? 0.15 : 0.08) * yf);
-  return [
-    '🩺 Equity Refresh: ' + emoji + ' ' + band + ' (' + shares.toLocaleString() + ' shares, ' + dil.toFixed(2) + '% dilution)',
-    '📊 Snapshot: Pool ' + Math.round(poolSize).toLocaleString() + ' shares · Criticality ' + rc + ' (' + (rtp * 100).toFixed(0) + '% of pool) · Years factor ' + yf.toFixed(2),
-    '🔄 What-If: if criticality is High, refresh = ' + altShares.toLocaleString() + ' shares (' + (ts === 0 ? 0 : altShares / ts * 100).toFixed(2) + '% dilution)',
-    '⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High',
-    '🎯 Milestone: Refresh at year 4 anniversary; pair with our [Compensation Banding Calculator] (P11-4) for cash+equity total',
-    '💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal.'
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let n=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,i,t,r,o){const a=r*t/100,l=u[o],c=i>=4?1:1+(4-i)/4,h=Math.round(a*l*c),d=r===0?0:h/r*100;return{shares:h,dilutionPct:d}},m=function(e){return e>=s.excellent.threshold?"excellent":e>=s.good.threshold?"good":e>=s.warning.threshold?"warning":"critical"},g=function(e){return e.toFixed(2)+"%"},y=function(e,i,t){var r=k(e);return Array.isArray(r)?r.join(\`
+\`):String(r)};var x=n,M=p,F=m,S=g,N=y,s={excellent:{threshold:.2,label:"🟢 Excellent",message:"Top-quartile refresh — strong retention signal, employee sees real upside."},good:{threshold:.1,label:"🟡 Good",message:"Solid refresh grant — competitive with market, retains key employees."},warning:{threshold:.05,label:"🟠 Warning",message:"Below market — employee may not see meaningful upside vs. original grant."},critical:{threshold:null,label:"🔴 Critical",message:"Trivial refresh — retention risk; employee likely shopping for new equity."}},u={High:.15,Med:.08,Low:.03},k=function(e){const i=n(Number(e.current_shares)||0),t=n(Number(e.years_since_grant)||0),r=n(Number(e.refresh_pool_pct)||0),o=n(Number(e.total_company_shares)||0),a=e.role_criticality||"Med",{shares:l,dilutionPct:c}=p(i,t,r,o,a),h=m(c),d=s[h],f=o*r/100,b=u[a],v=t>=4?1:1+(4-t)/4,_=Math.round(f*u.High*v),w=o===0?0:_/o*100;return["🩺 Equity Refresh: "+d.label+" ("+l.toLocaleString()+" shares, "+g(c)+" dilution)","📊 Snapshot: Pool "+Math.round(f).toLocaleString()+" shares · Criticality "+a+" ("+(b*100).toFixed(0)+"% of pool = "+Math.round(f*b).toLocaleString()+" shares) · Years factor "+v.toFixed(2)+" · Net: "+l.toLocaleString()+" shares","🔄 What-If: if criticality is High, refresh = "+_.toLocaleString()+" shares ("+g(w)+" dilution)","⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High (target 28,125+ shares)","🎯 Milestone: Refresh at year 4 anniversary; pair with [Compensation Banding Calculator] (P11-4) for cash + equity total","💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles."]};return[y(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

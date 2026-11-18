@@ -224,99 +224,72 @@ function calculateRentalYield(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity) ==============
 
 const customFn =
-  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
-  //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function mPI(p,r,n){if(n<=0)return 0;if(r===0)return p/n;return(p*r)/(1-Math.pow(1+r,-n));}" +
-  "function annMort(la,irp,ty){if(la<=0)return 0;return mPI(la,irp/100/12,ty*12)*12;}" +
-  "function effAR(mr,vrp){return mr*12*(1-vrp/100);}" +
-  "function annCF(pp,dp,la,irp,lty,mr,mep,vrp){return effAR(mr,vrp)-annMort(la,irp,lty)-mep*12;}" +
-  "function tCI(dp,pp){return dp+pp*0.03;}" +
-  "function gY(pp,mr){if(pp<=0)return 0;return(mr*12/pp)*100;}" +
-  "function cOCR(pp,dp,la,irp,lty,mr,mep,vrp){var tci=tCI(dp,pp);if(tci<=0)return 0;return(annCF(pp,dp,la,irp,lty,mr,mep,vrp)/tci)*100;}" +
-  "function cocH(c){if(c>=8&&c<=12)return{e:'\\uD83D\\uDFE2',l:'strong cash-on-cash return \\u2014 8-12% range'};if((c>=4&&c<8)||(c>12&&c<=15))return{e:'\\uD83D\\uDCA1',l:'marginal \\u2014 outside 8-12% band (low HCOL or high-yield risk)'};return{e:'\\uD83D\\uDFE0',l:'outlier \\u2014 cash-on-cash outside 4-15% range; verify assumptions'};}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var pp=cnn(parseFloat(inputs.purchasePrice)||0);" +
-  "var dp=cnn(parseFloat(inputs.downPayment)||0);" +
-  "var la=cnn(parseFloat(inputs.loanAmount)||0);" +
-  "var irp=parseFloat(inputs.interestRate)||0;" +
-  "var lty=cnn(parseFloat(inputs.loanTermYears)||0);" +
-  "var mr=cnn(parseFloat(inputs.monthlyRent)||0);" +
-  "var mep=cnn(parseFloat(inputs.monthlyExpenses)||0);" +
-  "var vrp=parseFloat(inputs.vacancyRate)||0;" +
-  "var appr=parseFloat(inputs.annualAppreciation)||0;" +
-  "if(pp<=0){return['$calc_out.section.rental_yield_calculator_short|\\u23F0 Rental Yield Calculator|\\n\\n$calc_out.rental_yield.row.enter_inputs|\\uD83D\\uDCB0 Enter purchase price and rent to see your gross/net/cash-on-cash yields, mortgage breakdown, and health assessment.|'];}" +
-  "var gY2=gY(pp,mr);var effRent=effAR(mr,vrp);var annM=annMort(la,irp,lty);" +
-  "var cf=annCF(pp,dp,la,irp,lty,mr,mep,vrp);" +
-  "var tci=tCI(dp,pp);" +
-  "var coc=cOCR(pp,dp,la,irp,lty,mr,mep,vrp);" +
-  "var nY=pp<=0?0:(cf/pp)*100;" +
-  "var hl=cocH(coc);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return '$'+fmt(n);}" +
-  "var cocVac5=cOCR(pp,dp,la,irp,lty,mr,mep,vrp+5);" +
-  "var cocRent200=cOCR(pp,dp,la,irp,lty,mr+200,mep,vrp);" +
-  "var cocRateMin=cOCR(pp,dp,la,Math.max(0,irp-1),lty,mr,mep,vrp);" +
-  "var cocTerm15=cOCR(pp,dp,la,irp,15,mr,mep,vrp);" +
-  "var coc100=cOCR(pp,pp,0,irp,lty,mr,mep,vrp);" +
-  "var ltvPct=(la/Math.max(1,pp)*100).toFixed(0);" +
-  "var hlLabel=coc>=8&&coc<=12?tk('calc_out.rental_yield.row.health_strong','strong cash-on-cash return \\u2014 8-12% range'):(coc>=4&&coc<8)||(coc>12&&coc<=15)?tk('calc_out.rental_yield.row.health_marginal','marginal \\u2014 outside 8-12% band (low HCOL or high-yield risk)'):tk('calc_out.rental_yield.row.health_outlier','outlier \\u2014 cash-on-cash outside 4-15% range; verify assumptions');" +
-  "var tip='';" +
-  "if(cf<0){tip=tk('calc_out.rental_yield.row.tip_negative_cash_flow','\\uD83D\\uDCA1 Tip: Negative cash flow means rent does not cover mortgage + expenses. You subsidize monthly \\u2014 common in appreciation markets (SF/NYC). Reserve 6-12 months of negative cash flow as a safety buffer.');}" +
-  "else if(coc<8){tip=tk('calc_out.rental_yield.row.tip_below_target','\\uD83D\\uDCA1 Tip: Cash-on-cash below 8% lags S&P 500 historical return (~7-10%). Either negotiate a lower price, increase rent, or reduce expenses to reach 8%+ threshold.');}" +
-  "else{tip=tk('calc_out.rental_yield.row.tip_strong','\\uD83D\\uDCA1 Tip: Strong cash-on-cash (8-12%) on a leveraged rental beats most passive investments. Reinvest cash flow into next property to compound \\u2014 the BRRRR strategy captures this loop.');}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.rental_yield_calculator|\\u23F0 Rental Yield / Cash-on-Cash Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.rental_yield_snapshot|\\uD83D\\uDCB0 Investment Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.purchase_price|Purchase price|:        '+money(pp)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.down_payment|Down payment|:          '+money(dp)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.loan_amount|Loan amount|:           '+money(la)+'  '+tk('calc_out.rental_yield.row.loan_ltv','('+ltvPct+'% LTV)',{ltv:ltvPct})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.total_cash_invested|Total cash invested|:   '+money(tci)+'  '+tk('calc_out.rental_yield.row.down_plus_closing','(down + 3% closing)')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.rental_yield_cash_flow|\\uD83D\\uDCD0 Annual Cash Flow:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.gross_rent_annual|Gross rent (annual)|:   '+money(mr*12)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.effective_rent_post_vacancy|Effective rent (post-vacancy)|: '+money(effRent)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.annual_mortgage_pi|Annual mortgage P&I|:   '+money(annM)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.annual_opex|Annual OpEx|:           '+money(mep*12)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.net_annual_cash_flow|Net annual cash flow|:  '+money(cf)+(cf<0?'  '+tk('calc_out.rental_yield.row.negative_cash_flow','\\u26A0\\uFE0F negative'):'')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.rental_yield_health|\\uD83E\\uDE7A Yield Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+hl.e+' '+hlLabel+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.gross_yield|Gross yield|:           '+gY2.toFixed(2)+'%  '+tk('calc_out.rental_yield.row.gross_yield_basis','(annual rent / price)')+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.net_yield|Net yield|:             '+nY.toFixed(2)+'%  '+tk('calc_out.rental_yield.row.net_yield_basis','(cash flow / price)')+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.cash_on_cash_return|Cash-on-cash return|:   '+coc.toFixed(2)+'%  '+tk('calc_out.rental_yield.row.coc_basis','(cash flow / cash invested)')+'\\n';" +
-  "if(cf<0){r2+='\\u2022 '+tk('calc_out.rental_yield.row.out_of_pocket_burden','\\u26A0\\uFE0F Out-of-pocket burden: '+money(-cf)+'/yr',{amount:money(-cf)})+'\\n';}" +
-  "r2+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.rental_yield_benchmarks|\\uD83C\\uDFAF Yield Benchmarks:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.benchmark_gross_yield','Gross yield:    <8% low \\u00B7 8-10% typical \\u00B7 >12% high')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.benchmark_cash_on_cash','Cash-on-cash:   <6% low \\u00B7 8-12% strong \\u00B7 >15% high-yield (verify)')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.benchmark_sp500','S&P comparison: ~7-10% historical avg with zero work')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.goal_threshold','Goal threshold:  Aim for CoC \\u2265 8% AND gross \\u2265 8%')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.rental_yield_composition|\\u2696\\uFE0F Return Composition:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.yield_component','Yield component:       '+coc.toFixed(2)+'% CoC annually',{coc:coc.toFixed(2)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.principal_paydown','Principal paydown:     ~1-3% annual equity build (mortgage dependent)')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.appreciation_y1','Appreciation (Y1):     '+appr.toFixed(1)+'% user-specified',{appr:appr.toFixed(1)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.total_estimated_return','Total estimated return: '+(coc+appr).toFixed(1)+'% (sum of components)',{total:(coc+appr).toFixed(1)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.whatif_vacancy_plus_5pp','Vacancy +5pp:                 CoC \\u2192 '+cocVac5.toFixed(2)+'%',{coc:cocVac5.toFixed(2)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.whatif_rent_plus_200','Rent +$200/mo:                CoC \\u2192 '+cocRent200.toFixed(2)+'%',{coc:cocRent200.toFixed(2)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.whatif_rate_minus_1pp','Rate -1pp:                    CoC \\u2192 '+cocRateMin.toFixed(2)+'%',{coc:cocRateMin.toFixed(2)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.whatif_term_30_to_15','Term 30y \\u2192 15y:               CoC \\u2192 '+cocTerm15.toFixed(2)+'%',{coc:cocTerm15.toFixed(2)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.rental_yield.row.whatif_100_down','100% down (vs current LTV):   CoC \\u2192 '+coc100.toFixed(2)+'% (no leverage)',{coc:coc100.toFixed(2)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var results=[r2];" +
-  "var cocRow=[4,6,8,10,12,15];" +
-  "for(var ci=0;ci<cocRow.length;ci++){var c=cocRow[ci];var flow=money((c/100)*tci);results.push(tk('calc_out.rental_yield.row.comparison_coc','Comparison: target '+c+'% CoC on $'+fmt(tci)+' cash invested \\u2192 annual cash flow '+flow,{target:String(c),invested:'$'+fmt(tci),flow:flow}));}" +
-  "return results;";
+  // P168 B3-10: client = verbatim mirror of the server generate() (same logic, same order).
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let i=function(t){return Number.isNaN(t)?0:Math.max(0,t)},F=function(t,e,a){return a<=0?0:e===0?t/a:t*e/(1-Math.pow(1+e,-a))},g=function(t,e,a){if(t<=0)return 0;const l=e/100/12;return F(t,l,a*12)*12},m=function(t,e){return t*12*(1-e/100)},s=function(t){return m(t.monthlyRent,t.vacancyRate)-g(t.loanAmount,t.interestRate,t.loanTermYears)-t.monthlyExpenses*12},v=function(t,e){const a=e*.03;return t+a},C=function(t,e){return t<=0?0:e*12/t*100},R=function(t){return t.purchasePrice<=0?0:s(t)/t.purchasePrice*100},_=function(t){const e=v(t.downPayment,t.purchasePrice);return e<=0?0:s(t)/e*100},x=function(t){return t>=8&&t<=12?{emoji:"🟢",label:"strong cash-on-cash return — 8-12% range"}:t>=4&&t<8||t>12&&t<=15?{emoji:"🟡",label:"marginal — outside 8-12% band (low HCOL or high-yield risk)"}:{emoji:"🟠",label:"outlier — cash-on-cash outside 4-15% range; verify assumptions"}},$=function(t){const e=i(parseFloat(t.purchasePrice)||0),a=i(parseFloat(t.downPayment)||0),l=i(parseFloat(t.loanAmount)||0),y=parseFloat(t.interestRate)||0,A=i(parseFloat(t.loanTermYears)||0),h=i(parseFloat(t.monthlyRent)||0),S=i(parseFloat(t.monthlyExpenses)||0),p=parseFloat(t.vacancyRate)||0;if(e<=0)return[\`$calc_out.section.rental_yield_calculator_short|⏰ Rental Yield Calculator|
+
+$calc_out.rental_yield.row.enter_inputs|💰 Enter purchase price and rent to see your gross/net/cash-on-cash yields, mortgage breakdown, and health assessment.|\`];const o={purchasePrice:e,downPayment:a,loanAmount:l,interestRate:y,loanTermYears:A,monthlyRent:h,monthlyExpenses:S,vacancyRate:p},I=C(e,h),z=m(h,p),B=g(l,y,A),d=s(o),f=v(a,e),J=R(o),c=_(o),K=x(c),U=c>=8&&c<=12?n("calc_out.rental_yield.row.health_strong","strong cash-on-cash return — 8-12% range"):c>=4&&c<8||c>12&&c<=15?n("calc_out.rental_yield.row.health_marginal","marginal — outside 8-12% band (low HCOL or high-yield risk)"):n("calc_out.rental_yield.row.health_outlier","outlier — cash-on-cash outside 4-15% range; verify assumptions"),b=u=>u.toLocaleString("en-US",{maximumFractionDigits:0}),r=u=>"$"+b(u),P=(l/Math.max(1,e)*100).toFixed(0),N=(parseFloat(t.annualAppreciation)||0).toFixed(1),j=(c+(parseFloat(t.annualAppreciation)||0)).toFixed(1),lt=s({...o,vacancyRate:p+5}),st=s({...o,monthlyRent:h+200}),it=s({...o,interestRate:Math.max(0,y-1)}),_t=s({...o,loanTermYears:15}),E=_({...o,vacancyRate:p+5}),M=_({...o,monthlyRent:h+200}),L=_({...o,interestRate:Math.max(0,y-1)}),O=_({...o,loanTermYears:15}),q=_({...o,downPayment:e,loanAmount:0});let w;d<0?w=n("calc_out.rental_yield.row.tip_negative_cash_flow","💡 Tip: Negative cash flow means rent does not cover mortgage + expenses. You subsidize monthly — common in appreciation markets (SF/NYC). Reserve 6-12 months of negative cash flow as a safety buffer."):c<8?w=n("calc_out.rental_yield.row.tip_below_target","💡 Tip: Cash-on-cash below 8% lags S&P 500 historical return (~7-10%). Either negotiate a lower price, increase rent, or reduce expenses to reach 8%+ threshold."):w=n("calc_out.rental_yield.row.tip_strong","💡 Tip: Strong cash-on-cash (8-12%) on a leveraged rental beats most passive investments. Reinvest cash flow into next property to compound — the BRRRR strategy captures this loop.");const D=[\`$calc_out.section.rental_yield_calculator|⏰ Rental Yield / Cash-on-Cash Calculator|
+
+$calc_out.section.rental_yield_snapshot|💰 Investment Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.purchase_price|Purchase price|:        \`+r(e)+\`
+• $calc_out.label.down_payment|Down payment|:          \`+r(a)+\`
+• $calc_out.label.loan_amount|Loan amount|:           \`+r(l)+"  "+n("calc_out.rental_yield.row.loan_ltv","("+P+"% LTV)",{ltv:P})+\`
+• $calc_out.label.total_cash_invested|Total cash invested|:   \`+r(f)+"  "+n("calc_out.rental_yield.row.down_plus_closing","(down + 3% closing)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.rental_yield_cash_flow|📐 Annual Cash Flow:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.gross_rent_annual|Gross rent (annual)|:   \`+r(h*12)+\`
+• $calc_out.label.effective_rent_post_vacancy|Effective rent (post-vacancy)|: \`+r(z)+\`
+• $calc_out.label.annual_mortgage_pi|Annual mortgage P&I|:   \`+r(B)+\`
+• $calc_out.label.annual_opex|Annual OpEx|:           \`+r(S*12)+\`
+• $calc_out.label.net_annual_cash_flow|Net annual cash flow|:  \`+r(d)+(d<0?"  "+n("calc_out.rental_yield.row.negative_cash_flow","⚠️ negative"):"")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.rental_yield_health|🩺 Yield Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+K.emoji+" "+U+\`
+• $calc_out.label.gross_yield|Gross yield|:           \`+I.toFixed(2)+"%  "+n("calc_out.rental_yield.row.gross_yield_basis","(annual rent / price)")+\`
+• $calc_out.label.net_yield|Net yield|:             \`+J.toFixed(2)+"%  "+n("calc_out.rental_yield.row.net_yield_basis","(cash flow / price)")+\`
+• $calc_out.label.cash_on_cash_return|Cash-on-cash return|:   \`+c.toFixed(2)+"%  "+n("calc_out.rental_yield.row.coc_basis","(cash flow / cash invested)")+\`
+\`+(d<0?"• "+n("calc_out.rental_yield.row.out_of_pocket_burden","⚠️ Out-of-pocket burden: "+r(-d)+"/yr",{amount:r(-d)})+\`
+\`:"")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.rental_yield_benchmarks|🎯 Yield Benchmarks:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+n("calc_out.rental_yield.row.benchmark_gross_yield","Gross yield:    <8% low · 8-10% typical · >12% high")+\`
+• \`+n("calc_out.rental_yield.row.benchmark_cash_on_cash","Cash-on-cash:   <6% low · 8-12% strong · >15% high-yield (verify)")+\`
+• \`+n("calc_out.rental_yield.row.benchmark_sp500","S&P comparison: ~7-10% historical avg with zero work")+\`
+• \`+n("calc_out.rental_yield.row.goal_threshold","Goal threshold:  Aim for CoC ≥ 8% AND gross ≥ 8%")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.rental_yield_composition|⚖️ Return Composition:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+n("calc_out.rental_yield.row.yield_component","Yield component:       "+c.toFixed(2)+"% CoC annually",{coc:c.toFixed(2)})+\`
+• \`+n("calc_out.rental_yield.row.principal_paydown","Principal paydown:     ~1-3% annual equity build (mortgage dependent)")+\`
+• \`+n("calc_out.rental_yield.row.appreciation_y1","Appreciation (Y1):     "+N+"% user-specified",{appr:N})+\`
+• \`+n("calc_out.rental_yield.row.total_estimated_return","Total estimated return: "+j+"% (sum of components)",{total:j})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+n("calc_out.rental_yield.row.whatif_vacancy_plus_5pp","Vacancy +5pp:                 CoC → "+E.toFixed(2)+"%",{coc:E.toFixed(2)})+\`
+• \`+n("calc_out.rental_yield.row.whatif_rent_plus_200","Rent +$200/mo:                CoC → "+M.toFixed(2)+"%",{coc:M.toFixed(2)})+\`
+• \`+n("calc_out.rental_yield.row.whatif_rate_minus_1pp","Rate -1pp:                    CoC → "+L.toFixed(2)+"%",{coc:L.toFixed(2)})+\`
+• \`+n("calc_out.rental_yield.row.whatif_term_30_to_15","Term 30y → 15y:               CoC → "+O.toFixed(2)+"%",{coc:O.toFixed(2)})+\`
+• \`+n("calc_out.rental_yield.row.whatif_100_down","100% down (vs current LTV):   CoC → "+q.toFixed(2)+"% (no leverage)",{coc:q.toFixed(2)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+w],W=[4,6,8,10,12,15];for(const u of W){const V=r(u/100*f);D.push(n("calc_out.rental_yield.row.comparison_coc","Comparison: target "+u+"% CoC on $"+b(f)+" cash invested → annual cash flow "+V,{target:String(u),invested:"$"+b(f),flow:V}))}return D},Y=function(t,e,a){var l=H(t);return Array.isArray(l)?l.join(\`
+\`):String(l)};var Q=i,X=F,Z=g,T=m,k=s,tt=v,nt=C,et=R,at=_,ot=x,ct=$,rt=Y,n=tk,G='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',n=new Function("return "+G)(),H=function(t){return $(t)};return[Y(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

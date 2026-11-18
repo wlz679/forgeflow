@@ -335,122 +335,73 @@ function calculateSafe(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function sShares(i,c,e){var ep=c-i;if(ep<=0||e<=0)return 0;return i*e/ep;}" +
-  "function cpFn(c,ep,e){if(ep<=0||e<=0)return 0;return ep/e;}" +
-  "function dpFn(nr,e,dr){if(nr<=0||e<=0)return Infinity;return nr/e*(1-dr/100);}" +
-  "function cvpFn(c,d){return Math.min(c,d);}" +
-  "function ownFn(s,e){var t=e+s;if(t<=0)return 0;return s/t;}" +
-  // ⚠️ P168 B3-8 漂移裁定：'standard cap' / 'moderate discount' 客户端原本是 💡 ⇒ 改回服务端的服务端健康带 🟡
-  "function dhFn(r){if(r<5)return{e:'\\uD83D\\uDFE0',l:'low cap \\u2014 aggressive for founder'};if(r<=10)return{e:'\\uD83D\\uDFE1',l:'standard cap'};return{e:'\\uD83D\\uDFE2',l:'founder-friendly cap'};}" +
-  "function dishFn(d){if(d===0)return{e:'\\uD83D\\uDFE2',l:'no discount (post-money standard)'};if(d<=15)return{e:'\\uD83D\\uDFE1',l:'moderate discount'};if(d<=25)return{e:'\\uD83D\\uDFE0',l:'high discount'};return{e:'\\uD83D\\uDD34',l:'very high discount \\u2014 unusual'};}" +
-  "function typeFn(c,d){if(c>0&&d===0)return'Post-Money SAFE (YC Standard)';if(c>0&&d>0)return'Post-Money SAFE with Discount';if(c<=0&&d>0)return'Discount-Only SAFE (Pre-Conversion)';return'Custom SAFE';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var i=cnn(parseFloat(inputs.investmentAmount)||0);" +
-  "var c=cnn(parseFloat(inputs.postMoneyCap)||0);" +
-  "var d=cnn(parseFloat(inputs.discountRate)||0);" +
-  "var e=cnn(parseFloat(inputs.existingShares)||0);" +
-  "var nr=cnn(parseFloat(inputs.nextRoundValuation)||0);" +
-  "if(c>0&&c<=i){return['$calc_out.section.safe_convertible_note_calculator|\\u23F0 SAFE / Convertible Note Calculator|\\n\\n'+tk('calc_out.safe_convertible_note.row.error_cap_not_exceeding_investment','\\uD83D\\uDCB0 The post-money cap ($'+c.toLocaleString()+') must exceed the investment amount ($'+i.toLocaleString()+'). A SAFE cannot have a cap lower than the investment it represents.',{cap:'$'+c.toLocaleString(),investment:'$'+i.toLocaleString()})];}" +
-  "if(i<=0||c<=0||e<=0){return['$calc_out.section.safe_convertible_note_calculator|\\u23F0 SAFE / Convertible Note Calculator|\\n\\n'+tk('calc_out.safe_convertible_note.row.enter_inputs_required','\\uD83D\\uDCB0 Enter investment amount, post-money cap, and existing fully diluted shares to see SAFE conversion mechanics.')];}" +
-  "var ep=c-i;" +
-  "var cp=cpFn(c,ep,e);" +
-  "var dp=dpFn(nr>0?nr:c,e,d);" +
-  "var cvp=cvpFn(cp,dp);" +
-  "var sShares1=i/cvp;" +
-  "var own=ownFn(sShares1,e);" +
-  "var eOwn=1-own;" +
-  "var r=c/i;" +
-  "var dh=dhFn(r);" +
-  "var dish=dishFn(d);" +
-  "var type=typeFn(c,d);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return'$'+fmt(n);}" +
-  "function money2(n){return'$'+n.toFixed(2);}" +
-  "function pct(n){return(n*100).toFixed(1)+'%';}" +
-  "function shares(n){return Math.round(n).toLocaleString('en-US');}" +
-  "var sb=Math.round(own*20);" +
-  "var eb=20-sb;" +
-  "var pie='\\u2593'.repeat(eb)+'\\u2591'.repeat(sb)+'  $calc_out.label.existing|Existing| '+pct(eOwn)+'  |  SAFE '+pct(own);" +
-  "var effPost=cvp*(e+sShares1);" +
-  "var capGov=cvp===cp;" +
-  "var dblSh=sShares(i*2,c,e);" +
-  "var dblOwn=ownFn(dblSh,e);" +
-  "var lc=i*6;" +
-  "var lcSh=lc>i?sShares(i,lc,e):0;" +
-  "var lcOwn=lc>i?ownFn(lcSh,e):0;" +
-  "var wdcvp=cvpFn(cp,dpFn(c,e,20));" +
-  "var wdSh=i/wdcvp;" +
-  "var wdOwn=ownFn(wdSh,e);" +
-  "var ncSh=sShares(i,100000000,e);" +
-  "var ncOwn=ownFn(ncSh,e);" +
-  "var prSh=sShares(250000,4000000,e);" +
-  "var stSh=prSh+sShares1;" +
-  "var stOwn=ownFn(stSh,e);" +
-  "var ratioTxt=r.toFixed(1);" +
-  "var dealHealthRow=dh.l==='standard cap'?tk('calc_out.safe_convertible_note.row.deal_health_standard',dh.l+' (cap is '+ratioTxt+'\\u00D7 investment)',{ratio:ratioTxt}):dh.l==='low cap \\u2014 aggressive for founder'?tk('calc_out.safe_convertible_note.row.deal_health_low_cap',dh.l+' (cap is '+ratioTxt+'\\u00D7 investment)',{ratio:ratioTxt}):tk('calc_out.safe_convertible_note.row.deal_health_founder_friendly',dh.l+' (cap is '+ratioTxt+'\\u00D7 investment)',{ratio:ratioTxt});" +
-  "var discountHealthRow=dish.l==='no discount (post-money standard)'?tk('calc_out.safe_convertible_note.row.discount_health_none',dish.l):dish.l==='moderate discount'?tk('calc_out.safe_convertible_note.row.discount_health_moderate',dish.l):dish.l==='high discount'?tk('calc_out.safe_convertible_note.row.discount_health_high',dish.l):tk('calc_out.safe_convertible_note.row.discount_health_very_high',dish.l);" +
-  "var typeRow=type==='Post-Money SAFE (YC Standard)'?tk('calc_out.safe_convertible_note.row.type_post_money_standard',type):type==='Post-Money SAFE with Discount'?tk('calc_out.safe_convertible_note.row.type_post_money_discount',type):type==='Discount-Only SAFE (Pre-Conversion)'?tk('calc_out.safe_convertible_note.row.type_discount_only',type):tk('calc_out.safe_convertible_note.row.type_custom',type);" +
-  "var discountPriceRow=d>0?tk('calc_out.safe_convertible_note.row.discount_price','Discount Price:      '+money2(dp)+' per share  (next round \\u00D7 (1 \\u2212 discount))',{price:money2(dp)}):tk('calc_out.safe_convertible_note.row.discount_price_none','Discount Price:      n/a (no discount)');" +
-  "var conversionPriceRow=capGov?tk('calc_out.safe_convertible_note.row.conversion_price_cap_governs','Conversion Price:    '+money2(cvp)+' per share  \\u2190 CAP GOVERNS',{price:money2(cvp)}):tk('calc_out.safe_convertible_note.row.conversion_price_discount_governs','Conversion Price:    '+money2(cvp)+' per share  \\u2190 DISCOUNT GOVERNS',{price:money2(cvp)});" +
-  "var effectivePostMoneyRow=capGov?tk('calc_out.safe_convertible_note.row.effective_post_money_cap','Effective post-money at conversion: '+money(effPost)+'  (cap governs)',{value:money(effPost)}):tk('calc_out.safe_convertible_note.row.effective_post_money_discount','Effective post-money at conversion: '+money(effPost)+'  (discount governs)',{value:money(effPost)});" +
-  "var tip='';" +
-  "if(d===0)tip=tk('calc_out.safe_convertible_note.row.tip_no_discount','\\uD83D\\uDCA1 Tip: Post-money SAFE (YC standard) protects founders by fixing SAFE holder\\u2019s post-money % at conversion. Avoid pre-money SAFE with discount unless investor is strategic.');" +
-  "else if(d>15&&r<8)tip=tk('calc_out.safe_convertible_note.row.tip_aggressive_terms','\\uD83D\\uDCA1 Tip: Aggressive terms: low cap + high discount = double protection for investor. Push back on discount if cap is already low.');" +
-  "else if(eOwn<0.5)tip=tk('calc_out.safe_convertible_note.row.tip_heavy_dilution','\\uD83D\\uDCA1 Tip: Heavy dilution ahead. Consider raising smaller, increasing your cap, or negotiating a higher cap with investor.');" +
-  "else tip=tk('calc_out.safe_convertible_note.row.tip_standard_terms','\\uD83D\\uDCA1 Tip: Standard terms: $5M post-money cap on $500K raise \\u2192 ~10% dilution. If investor asks for >20% discount, that\\u2019s a red flag. Pro-rata rights are negotiable but rarely granted at SAFE stage.');" +
-  "var r2='';" +
-  "r2+='$calc_out.section.safe_convertible_note_calculator|\\u23F0 SAFE / Convertible Note Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.deal_snapshot|\\uD83D\\uDCB0 Deal Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.investment_amount|Investment|:          '+money(i)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.post_money_cap|Post-Money Cap|:      '+money(c)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.discount_rate|Discount Rate|:       '+d+'%\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.effective_pre_money','Effective Pre-Money: '+money(ep)+'  (cap \\u2212 investment)',{value:money(ep)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.safe_type|SAFE Type|:           '+typeRow+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.safe_convertible_note_conversion_mechanics|\\uD83D\\uDCD0 Conversion Mechanics:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.cap_price','Cap Price:           '+money2(cp)+' per share  (post-money cap / (existing + SAFE shares))',{price:money2(cp)})+'\\n';" +
-  "r2+='\\u2022 '+discountPriceRow+'\\n';" +
-  "r2+='\\u2022 '+conversionPriceRow+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.shares_issued','Shares Issued:       '+shares(sShares1)+'  ('+money(i)+' \\u00F7 '+money2(cvp)+')',{shares:shares(sShares1),investment:money(i),price:money2(cvp)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.safe_ownership','SAFE Ownership:      '+pct(own)+' at conversion',{pct:pct(own)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.deal_health|\\uD83E\\uDE7A Deal Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+dh.e+' '+dealHealthRow+'\\n';" +
-  "r2+='\\u2022 '+dish.e+' '+discountHealthRow+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.conversion_trigger','Conversion trigger:  whichever is lower (cap or discount) at next priced round')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.safe_convertible_note_ownership_outcomes|\\uD83C\\uDFAF Ownership Outcomes:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.existing_pool_header','Existing Pool (founder + prior investors + options):')+'\\n';" +
-  "r2+='    '+tk('calc_out.safe_convertible_note.row.pre_safe','pre-SAFE:  100.0%  ('+shares(e)+' shares)',{shares:shares(e)})+'\\n';" +
-  "r2+='    '+tk('calc_out.safe_convertible_note.row.post_safe','post-SAFE: '+pct(eOwn)+'  ('+shares(e)+' of '+shares(e+sShares1)+' shares)',{pct:pct(eOwn),existing:shares(e),total:shares(e+sShares1)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.safe_holder','SAFE Holder: '+pct(own)+'  ('+shares(sShares1)+' shares at conversion)',{pct:pct(own),shares:shares(sShares1)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.pie|Pie|: '+pie+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.safe_convertible_note_dilution_analysis|\\u2696\\uFE0F Dilution Analysis:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.existing_pool_dilution','Existing pool dilution: \\u2212'+pct(own)+'  (from 100% to '+pct(eOwn)+')',{diluted:pct(own),remaining:pct(eOwn)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.safe_as_pct_of_post','SAFE-as-%-of-post: '+pct(own),{pct:pct(own)})+'\\n';" +
-  "r2+='\\u2022 '+effectivePostMoneyRow+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.cap_sensitivity','Cap sensitivity: at 2\\u00D7 cap ($'+fmt(c*2)+'), SAFE holder would get '+pct(ownFn(sShares(i,c*2,e),e))+' instead of '+pct(own),{cap:'$'+fmt(c*2),at2x:pct(ownFn(sShares(i,c*2,e),e)),now:pct(own)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.whatif_double_safe','Double the SAFE ($'+fmt(i*2)+'):            existing pool drops to '+pct(1-dblOwn)+', SAFE holder rises to '+pct(dblOwn),{amount:'$'+fmt(i*2),existing:pct(1-dblOwn),safe:pct(dblOwn)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.whatif_lower_cap','Lower cap to $'+fmt(lc)+':                SAFE holder gets '+pct(lcOwn)+', existing pool drops to '+pct(1-lcOwn),{cap:'$'+fmt(lc),safe:pct(lcOwn),existing:pct(1-lcOwn)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.whatif_add_discount','Add 20% discount:                conversion at '+money2(wdcvp)+' per share, SAFE holder gets '+pct(wdOwn),{price:money2(wdcvp),safe:pct(wdOwn)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.whatif_no_cap','No cap (cap = $100M):            effectively discount-only, SAFE holder gets '+pct(ncOwn),{safe:pct(ncOwn)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.safe_convertible_note.row.whatif_stack_prior_safe','Stack with prior $250K SAFE at $4M cap: cumulative SAFE ownership '+pct(stOwn),{total:pct(stOwn)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var results=[r2];" +
-  "var caps=[1000000,3000000,5000000,10000000,20000000];" +
-  "for(var j=0;j<caps.length;j++){var cj=caps[j];var sj=sShares(i,cj,e);var oj=ownFn(sj,e);results.push('$calc_out.label.comparison|Comparison|: '+tk('calc_out.safe_convertible_note.row.comparison_detail','$'+fmt(cj)+' cap on $'+fmt(i)+' SAFE \\u2192 SAFE holder gets '+pct(oj)+' ('+shares(sj)+' shares)',{cap:'$'+fmt(cj),investment:'$'+fmt(i),own:pct(oj),shares:shares(sj)}));}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let g=function(o){return Number.isNaN(o)?0:Math.max(0,o)},h=function(o,e,c){const r=e-o;return r<=0||c<=0?0:o*c/r},I=function(o,e,c){return e<=0||c<=0?0:e/c},P=function(o,e,c){return o<=0||e<=0?1/0:o/e*(1-c/100)},M=function(o,e){return Math.min(o,e)},p=function(o,e){const c=e+o;return c<=0?0:o/c},q=function(o){return o<5?{emoji:"🟠",label:"low cap — aggressive for founder"}:o<=10?{emoji:"🟡",label:"standard cap"}:{emoji:"🟢",label:"founder-friendly cap"}},H=function(o){return o===0?{emoji:"🟢",label:"no discount (post-money standard)"}:o<=15?{emoji:"🟡",label:"moderate discount"}:o<=25?{emoji:"🟠",label:"high discount"}:{emoji:"🔴",label:"very high discount — unusual"}},G=function(o,e){return o>0&&e===0?"Post-Money SAFE (YC Standard)":o>0&&e>0?"Post-Money SAFE with Discount":o<=0&&e>0?"Discount-Only SAFE (Pre-Conversion)":"Custom SAFE"},K=function(o){const e=g(parseFloat(o.investmentAmount)||0),c=g(parseFloat(o.postMoneyCap)||0),r=g(parseFloat(o.discountRate)||0),s=g(parseFloat(o.existingShares)||0),V=g(parseFloat(o.nextRoundValuation)||0);if(c>0&&c<=e)return[\`$calc_out.section.safe_convertible_note_calculator|⏰ SAFE / Convertible Note Calculator|
+
+\`+t("calc_out.safe_convertible_note.row.error_cap_not_exceeding_investment","💰 The post-money cap ($"+c.toLocaleString()+") must exceed the investment amount ($"+e.toLocaleString()+"). A SAFE cannot have a cap lower than the investment it represents.",{cap:"$"+c.toLocaleString(),investment:"$"+e.toLocaleString()})];if(e<=0||c<=0||s<=0)return[\`$calc_out.section.safe_convertible_note_calculator|⏰ SAFE / Convertible Note Calculator|
+
+\`+t("calc_out.safe_convertible_note.row.enter_inputs_required","💰 Enter investment amount, post-money cap, and existing fully diluted shares to see SAFE conversion mechanics.")];const D=c-e,E=I(c,D,s),O=P(V>0?V:c,s,r),d=M(E,O),v=e/d,i=p(v,s),y=1-i,j=c/e,S=q(j),w=H(r),b=G(c,r),u=a=>a.toLocaleString("en-US",{maximumFractionDigits:0}),f=a=>"$"+u(a),l=a=>"$"+a.toFixed(2),n=a=>(a*100).toFixed(1)+"%",_=a=>Math.round(a).toLocaleString("en-US"),Y=Math.round(i*20),tt=20-Y,et="▓".repeat(tt)+"░".repeat(Y)+"  $calc_out.label.existing|Existing| "+n(y)+"  |  SAFE "+n(i),m=d*(s+v),B=d===E,ot=h(e*2,c,s),C=p(ot,s),A=e*6,nt=A>e?h(e,A,s):0,x=A>e?p(nt,s):0,N=M(E,P(c,s,20)),ct=e/N,J=p(ct,s),st=h(e,1e8,s),W=p(st,s),rt=h(25e4,4e6,s)+v,z=p(rt,s);let $;r===0?$=t("calc_out.safe_convertible_note.row.tip_no_discount","💡 Tip: Post-money SAFE (YC standard) protects founders by fixing SAFE holder’s post-money % at conversion. Avoid pre-money SAFE with discount unless investor is strategic."):r>15&&j<8?$=t("calc_out.safe_convertible_note.row.tip_aggressive_terms","💡 Tip: Aggressive terms: low cap + high discount = double protection for investor. Push back on discount if cap is already low."):y<.5?$=t("calc_out.safe_convertible_note.row.tip_heavy_dilution","💡 Tip: Heavy dilution ahead. Consider raising smaller, increasing your cap, or negotiating a higher cap with investor."):$=t("calc_out.safe_convertible_note.row.tip_standard_terms","💡 Tip: Standard terms: $5M post-money cap on $500K raise → ~10% dilution. If investor asks for >20% discount, that’s a red flag. Pro-rata rights are negotiable but rarely granted at SAFE stage.");const F=j.toFixed(1),it=S.label==="standard cap"?t("calc_out.safe_convertible_note.row.deal_health_standard",S.label+" (cap is "+F+"× investment)",{ratio:F}):S.label==="low cap — aggressive for founder"?t("calc_out.safe_convertible_note.row.deal_health_low_cap",S.label+" (cap is "+F+"× investment)",{ratio:F}):t("calc_out.safe_convertible_note.row.deal_health_founder_friendly",S.label+" (cap is "+F+"× investment)",{ratio:F}),at=w.label==="no discount (post-money standard)"?t("calc_out.safe_convertible_note.row.discount_health_none",w.label):w.label==="moderate discount"?t("calc_out.safe_convertible_note.row.discount_health_moderate",w.label):w.label==="high discount"?t("calc_out.safe_convertible_note.row.discount_health_high",w.label):t("calc_out.safe_convertible_note.row.discount_health_very_high",w.label),lt=t(b==="Post-Money SAFE (YC Standard)"?"calc_out.safe_convertible_note.row.type_post_money_standard":b==="Post-Money SAFE with Discount"?"calc_out.safe_convertible_note.row.type_post_money_discount":b==="Discount-Only SAFE (Pre-Conversion)"?"calc_out.safe_convertible_note.row.type_discount_only":"calc_out.safe_convertible_note.row.type_custom",b),_t=r>0?t("calc_out.safe_convertible_note.row.discount_price","Discount Price:      "+l(O)+" per share  (next round × (1 − discount))",{price:l(O)}):t("calc_out.safe_convertible_note.row.discount_price_none","Discount Price:      n/a (no discount)"),ut=B?t("calc_out.safe_convertible_note.row.conversion_price_cap_governs","Conversion Price:    "+l(d)+" per share  ← CAP GOVERNS",{price:l(d)}):t("calc_out.safe_convertible_note.row.conversion_price_discount_governs","Conversion Price:    "+l(d)+" per share  ← DISCOUNT GOVERNS",{price:l(d)}),pt=B?t("calc_out.safe_convertible_note.row.effective_post_money_cap","Effective post-money at conversion: "+f(m)+"  (cap governs)",{value:f(m)}):t("calc_out.safe_convertible_note.row.effective_post_money_discount","Effective post-money at conversion: "+f(m)+"  (discount governs)",{value:f(m)}),Q=[\`$calc_out.section.safe_convertible_note_calculator|⏰ SAFE / Convertible Note Calculator|
+
+$calc_out.section.deal_snapshot|💰 Deal Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.investment_amount|Investment|:          \`+f(e)+\`
+• $calc_out.label.post_money_cap|Post-Money Cap|:      \`+f(c)+\`
+• $calc_out.label.discount_rate|Discount Rate|:       \`+r+\`%
+• \`+t("calc_out.safe_convertible_note.row.effective_pre_money","Effective Pre-Money: "+f(D)+"  (cap − investment)",{value:f(D)})+\`
+• $calc_out.label.safe_type|SAFE Type|:           \`+lt+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.safe_convertible_note_conversion_mechanics|📐 Conversion Mechanics:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.safe_convertible_note.row.cap_price","Cap Price:           "+l(E)+" per share  (post-money cap / (existing + SAFE shares))",{price:l(E)})+\`
+• \`+_t+\`
+• \`+ut+\`
+• \`+t("calc_out.safe_convertible_note.row.shares_issued","Shares Issued:       "+_(v)+"  ("+f(e)+" ÷ "+l(d)+")",{shares:_(v),investment:f(e),price:l(d)})+\`
+• \`+t("calc_out.safe_convertible_note.row.safe_ownership","SAFE Ownership:      "+n(i)+" at conversion",{pct:n(i)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.deal_health|🩺 Deal Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+S.emoji+" "+it+\`
+• \`+w.emoji+" "+at+\`
+• \`+t("calc_out.safe_convertible_note.row.conversion_trigger","Conversion trigger:  whichever is lower (cap or discount) at next priced round")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.safe_convertible_note_ownership_outcomes|🎯 Ownership Outcomes:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.safe_convertible_note.row.existing_pool_header","Existing Pool (founder + prior investors + options):")+\`
+    \`+t("calc_out.safe_convertible_note.row.pre_safe","pre-SAFE:  100.0%  ("+_(s)+" shares)",{shares:_(s)})+\`
+    \`+t("calc_out.safe_convertible_note.row.post_safe","post-SAFE: "+n(y)+"  ("+_(s)+" of "+_(s+v)+" shares)",{pct:n(y),existing:_(s),total:_(s+v)})+\`
+• \`+t("calc_out.safe_convertible_note.row.safe_holder","SAFE Holder: "+n(i)+"  ("+_(v)+" shares at conversion)",{pct:n(i),shares:_(v)})+\`
+• $calc_out.label.pie|Pie|: \`+et+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.safe_convertible_note_dilution_analysis|⚖️ Dilution Analysis:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.safe_convertible_note.row.existing_pool_dilution","Existing pool dilution: −"+n(i)+"  (from 100% to "+n(y)+")",{diluted:n(i),remaining:n(y)})+\`
+• \`+t("calc_out.safe_convertible_note.row.safe_as_pct_of_post","SAFE-as-%-of-post: "+n(i),{pct:n(i)})+\`
+• \`+pt+\`
+• \`+t("calc_out.safe_convertible_note.row.cap_sensitivity","Cap sensitivity: at 2× cap ($"+u(c*2)+"), SAFE holder would get "+n(p(h(e,c*2,s),s))+" instead of "+n(i),{cap:"$"+u(c*2),at2x:n(p(h(e,c*2,s),s)),now:n(i)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.safe_convertible_note.row.whatif_double_safe","Double the SAFE ($"+u(e*2)+"):            existing pool drops to "+n(1-C)+", SAFE holder rises to "+n(C),{amount:"$"+u(e*2),existing:n(1-C),safe:n(C)})+\`
+• \`+t("calc_out.safe_convertible_note.row.whatif_lower_cap","Lower cap to $"+u(A)+":                SAFE holder gets "+n(x)+", existing pool drops to "+n(1-x),{cap:"$"+u(A),safe:n(x),existing:n(1-x)})+\`
+• \`+t("calc_out.safe_convertible_note.row.whatif_add_discount","Add 20% discount:                conversion at "+l(N)+" per share, SAFE holder gets "+n(J),{price:l(N),safe:n(J)})+\`
+• \`+t("calc_out.safe_convertible_note.row.whatif_no_cap","No cap (cap = $100M):            effectively discount-only, SAFE holder gets "+n(W),{safe:n(W)})+\`
+• \`+t("calc_out.safe_convertible_note.row.whatif_stack_prior_safe","Stack with prior $250K SAFE at $4M cap: cumulative SAFE ownership "+n(z),{total:n(z)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+$],X=[1e6,3e6,5e6,1e7,2e7];for(let a=0;a<X.length;a++){const R=X[a],L=h(e,R,s),Z=p(L,s);Q.push("$calc_out.label.comparison|Comparison|: "+t("calc_out.safe_convertible_note.row.comparison_detail","$"+u(R)+" cap on $"+u(e)+" SAFE → SAFE holder gets "+n(Z)+" ("+_(L)+" shares)",{cap:"$"+u(R),investment:"$"+u(e),own:n(Z),shares:_(L)}))}return Q},U=function(o,e,c){var r=k(o);return Array.isArray(r)?r.join(\`
+\`):String(r)};var ft=g,dt=h,vt=I,ht=P,wt=M,bt=p,gt=q,yt=H,St=G,Ft=K,Et=U,t=tk,T='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+T)(),k=function(o){return K(o)};return[U(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

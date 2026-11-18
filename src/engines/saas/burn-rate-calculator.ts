@@ -247,40 +247,86 @@ function calculateBurnRate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
-  //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function bar(p){var w=Math.round(p*20);var r='';for(var i=0;i<20;i++)r+=i<w?'█':'░';return r}" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}function pct(n,t){return t>0?((n/t)*100).toFixed(1)+'%':'0.0%'}" +
-  "var cnn=function(x){return Math.max(0,x)};var mr=cnn(parseFloat(inputs.monthlyRevenue)||0);var tc=cnn(parseFloat(inputs.teamCost)||0);var ic=cnn(parseFloat(inputs.infraCost)||0);var mc=cnn(parseFloat(inputs.marketingCost)||0);var oc=cnn(parseFloat(inputs.opsCost)||0);var cc=cnn(parseFloat(inputs.currentCash)||0);var nnr=cnn(parseFloat(inputs.netNewRevenue)||0);" +
-  "var gb=tc+ic+mc+oc;var nb=gb-mr;var rm=0;" +
-  "var r='$calc_out.section.burn_rate_cash_flow_health_check|\\uD83D\\uDD25 Cash Flow Health Check|\\n\\n';" +
-  "r+='$calc_out.section.burn_rate_burn_summary|\\uD83D\\uDCB8 Burn Summary|\\n\\u2022 $calc_out.label.gross_burn|Gross Burn|:    '+fmt(gb)+'/mo\\n\\u2022 $calc_out.label.net_burn|Net Burn|:      '+fmt(nb)+'/mo'+(mr>0?'  $calc_out.burn_rate.row.net_burn_gross_minus_revenue|(Gross \\u2212 Revenue)|\\n':'  $calc_out.burn_rate.row.net_burn_no_revenue|(no revenue yet)|\\n')+'\\u2022 $calc_out.label.annual_burn|Annual Burn|:   '+fmt(nb*12)+'/yr\\n';" +
-  "if(nb>0)r+='\\u2022 '+tk('calc_out.burn_rate.row.to_break_even','To break even: Need +'+fmt(nb)+'/mo more revenue (or cut costs by same amount)',{amount:fmt(nb)})+'\\n';" +
-  "r+='\\n$calc_out.section.burn_rate_runway|\\u23F3 Runway|\\n\\u2022 $calc_out.label.current_cash|Current Cash|:      '+fmt(cc)+'\\n';" +
-  "if(nb<=0){r+='\\u2022 '+tk('calc_out.burn_rate.row.status_cashflow_positive','Status:            \\u2705 Cash-flow positive! No burn concern.')+'\\n';}" +
-  "else if(cc<=0){r+='\\u2022 '+tk('calc_out.burn_rate.row.status_no_cash_reserve','Status:            \\u26A0\\uFE0F No cash reserve \\u2014 enter your balance to estimate runway.')+'\\n';}" +
-  "else{rm=cc/nb;var now=new Date();var ro=new Date(now.getTime()+rm*30.44*86400000);var mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];var rol=mn[ro.getMonth()]+' '+ro.getFullYear();r+='\\u2022 $calc_out.label.remaining_runway|Remaining Runway|:  '+rm.toFixed(1)+' months\\n\\u2022 $calc_out.label.est_cash_run_out|Est. Cash Run-out|:   '+rol+'\\n';" +
-  "if(rm>12)r+='\\u2022 '+tk('calc_out.burn_rate.row.assessment_healthy','Assessment:        \\uD83D\\uDFE2 Healthy \\u2014 over a year of runway.')+'\\n';else if(rm>6)r+='\\u2022 '+tk('calc_out.burn_rate.row.assessment_manageable','Assessment:        \\uD83D\\uDFE1 Manageable \\u2014 6\\u201312 months. Plan ahead.')+'\\n';else if(rm>3)r+='\\u2022 '+tk('calc_out.burn_rate.row.assessment_tight','Assessment:        \\uD83D\\uDFE0 Tight \\u2014 3\\u20136 months. Cut costs or raise revenue now.')+'\\n';else r+='\\u2022 '+tk('calc_out.burn_rate.row.assessment_critical','Assessment:        \\uD83D\\uDD34 Critical \\u2014 under 3 months. Immediate action required.')+'\\n';}" +
-  "if(nnr>0){var bm=nb/nnr;var bml=bm<1?'\\uD83D\\uDFE2':bm<=2?'\\uD83D\\uDFE1':'\\uD83D\\uDD34';r+='\\n$calc_out.section.burn_rate_burn_multiple|\\uD83D\\uDCC8 Burn Multiple|\\n\\u2022 $calc_out.label.net_new_revenue|Net New Revenue|:  '+fmt(nnr)+'/mo\\n\\u2022 $calc_out.label.burn_multiple|Burn Multiple|:    '+bm.toFixed(1)+'\\u00D7 '+bml+'\\n';if(bm<1)r+='\\u2022 '+tk('calc_out.burn_rate.row.insight_great','Insight:          You\\'re adding more revenue than you\\'re burning. Great trajectory!')+'\\n';else if(bm<=2)r+='\\u2022 '+tk('calc_out.burn_rate.row.insight_moderate','Insight:          Moderate efficiency. Aim to bring this below 1.0\\u00D7.')+'\\n';else r+='\\u2022 '+tk('calc_out.burn_rate.row.insight_burning_faster','Insight:          Burning much faster than you\\'re adding revenue. Need to improve efficiency.')+'\\n';}" +
-  "r+='\\n$calc_out.section.burn_rate_default_alive_dead_status|\\uD83D\\uDC80 Default Alive/Dead Status|\\n';if(nb<=0){r+='\\u2022 '+tk('calc_out.burn_rate.row.default_alive_cashflow_positive','Status:  \\u2705 Default Alive: cash-flow positive')+'\\n';}else if(cc>0){if(rm>24)r+='\\u2022 '+tk('calc_out.burn_rate.row.default_alive_24plus','Status:  \\uD83D\\uDFE2 Default Alive: 24+ months runway')+'\\n';else if(rm>12)r+='\\u2022 '+tk('calc_out.burn_rate.row.default_alive_12_24','Status:  \\uD83D\\uDFE1 Default Alive: 12-24 months')+'\\n';else r+='\\u2022 '+tk('calc_out.burn_rate.row.default_dead_under_12','Status:  \\uD83D\\uDD34 Default Dead: under 12 months \\u2014 need growth or funding to survive')+'\\n';}else{r+='\\u2022 '+tk('calc_out.burn_rate.row.default_dead_under_12','Status:  \\uD83D\\uDD34 Default Dead: under 12 months \\u2014 need growth or funding to survive')+'\\n';}" +
-  "if(gb>0){r+='\\n$calc_out.section.burn_rate_cost_structure|\\uD83D\\uDCCA Cost Structure|\\n';var cats=[['Team','$calc_out.label.team|Team|',tc],['Marketing','$calc_out.label.marketing|Marketing|',mc],['Infrastructure','$calc_out.label.infrastructure|Infrastructure|',ic],['Operations','$calc_out.label.operations|Operations|',oc]];for(var i=0;i<cats.length;i++){var lb=cats[i][0];var lbTok=cats[i][1];var ct=cats[i][2];if(ct>0){var sh=ct/gb;r+='\\u2022 '+lbTok;for(var j=lb.length;j<14;j++)r+=' ';r+=' '+pct(ct,gb)+'  '+bar(sh)+'\\n';}}}" +
-  "var orw=(nb>0&&cc>0)?cc/nb:Infinity;" +
-  "if(nb>0&&cc>0){var cuts=[0.1,0.2,0.3];r+='\\n$calc_out.section.burn_rate_cost_cut_scenarios|\\uD83D\\uDD04 Cost-Cut Scenarios|\\n';for(var ci=0;ci<cuts.length;ci++){var cut=cuts[ci];var sv=gb*cut;var rnb=nb-sv;var pl=Math.round(cut*100)+'%';if(rnb<=0){r+='\\u2022 '+tk('calc_out.burn_rate.row.cut_scenario_cashflow_positive','Cut '+pl+': Save '+fmt(sv)+'/mo \\u2014 \\u2705 Cash-flow positive!',{pct:pl,savings:fmt(sv)})+'\\n';}else{var nrw=cc/rnb;var ext=nrw-orw;r+='\\u2022 '+tk('calc_out.burn_rate.row.cut_scenario','Cut '+pl+': Save '+fmt(sv)+'/mo \\u2014 Net burn '+fmt(rnb)+'/mo \\u2014 Runway '+nrw.toFixed(1)+' mo (+'+ext.toFixed(1)+' extra)',{pct:pl,savings:fmt(sv),net_burn:fmt(rnb),runway:nrw.toFixed(1),extra:ext.toFixed(1)})+'\\n';}}}" +
-  "var bh='\\n\\n$calc_out.section.burn_rate_burn_health|\\uD83E\\uDE7A Burn Health:|\\n'+'\\u2501'.repeat(54)+'\\n\\u2022 ';" +
-  "if(nb<=0){r+=bh+tk('calc_out.burn_rate.row.burn_health_default_alive','\\uD83D\\uDFE2 Default alive \\u2014 revenue \\u2265 expenses. No burn. Focus on growth and reinvestment.');}" +
-  "else if(cc<=0){r+=bh+tk('calc_out.burn_rate.row.burn_health_no_cash','\\uD83D\\uDD34 No cash. Cannot compute runway. Bootstrap, raise, or shut down.');}" +
-  "else if(isFinite(orw)&&orw<3){r+=bh+tk('calc_out.burn_rate.row.burn_health_critical','\\uD83D\\uDD34 Runway '+orw.toFixed(1)+' months \\u2014 critical. Raise capital NOW or cut burn 50%+ this month.',{runway:orw.toFixed(1)});}" +
-  "else if(isFinite(orw)&&orw<6){r+=bh+tk('calc_out.burn_rate.row.burn_health_warning','\\uD83D\\uDFE0 Runway '+orw.toFixed(1)+' months \\u2014 warning zone. Start raising or cut burn in next 2 months.',{runway:orw.toFixed(1)});}" +
-  "else if(isFinite(orw)&&orw<12){r+=bh+tk('calc_out.burn_rate.row.burn_health_adequate','\\uD83D\\uDFE1 Runway '+orw.toFixed(1)+' months \\u2014 adequate for now. Plan Series A or accelerate revenue.',{runway:orw.toFixed(1)});}" +
-  "else{r+=bh+tk('calc_out.burn_rate.row.burn_health_comfortable','\\uD83D\\uDFE2 Runway '+orw.toFixed(1)+' months \\u2014 comfortable. Default dead is years away. Focus on growth.',{runway:orw.toFixed(1)});}" +
-  "r+='\\n\\n$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n'+'\\u2501'.repeat(54);" +
-  "if(isFinite(orw)&&nb>0){var rr20=cc/(nb-mr*0.2);var ce20=cc/(nb*0.8);var r1m=cc+1000000;var nrw2=r1m/nb;r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.whatif_raise_revenue_20','Raise revenue 20%:  Runway '+orw.toFixed(1)+' \\u2192 '+rr20.toFixed(1)+' mo',{from:orw.toFixed(1),to:rr20.toFixed(1)});r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.whatif_cut_expenses_20','Cut expenses 20%:  Runway '+orw.toFixed(1)+' \\u2192 '+ce20.toFixed(1)+' mo',{from:orw.toFixed(1),to:ce20.toFixed(1)});r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.whatif_raise_1m','Raise $1M (6-month runway extension at current burn):  '+nrw2.toFixed(1)+' mo',{months:nrw2.toFixed(1)});r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.whatif_hit_default_alive','Hit default alive (revenue = expenses):  \\u221E runway (focus on growth)');if(mr>0){var gn=((gb-mr)/mr)*100;r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.whatif_growth_needed','Growth needed monthly to break even:  +'+gn.toFixed(1)+'% revenue',{pct:gn.toFixed(1)});}}else{r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.whatif_cannot_model','\\u26A0\\uFE0F Cannot model \\u2014 ensure cash > 0 and net burn > 0.');}" +
-  "if(nb>0&&cc>0){r+='\\n\\n$calc_out.section.burn_rate_break_even|\\u2696\\uFE0F Break-Even|\\n'+'\\u2500'.repeat(54);var gp=mr>0?((nb/mr)*100):0;if(gp>0){r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.break_even_need_revenue','\\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue ('+gp.toFixed(0)+'% growth) to hit break-even',{amount:fmt(nb),growth:gp.toFixed(0)});}else{r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.break_even_need_revenue_no_base','\\uD83D\\uDFE1 Need +'+fmt(nb)+'/mo revenue (no revenue baseline)',{amount:fmt(nb)});}r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.break_even_cut_costs','Or cut costs by '+fmt(nb)+'/mo (e.g., '+Math.round((nb/gb)*100)+'% of current gross burn)',{amount:fmt(nb),pct:String(Math.round((nb/gb)*100))});r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.break_even_runway','Break-even runway: \\u221E (no burn = no runway concern)');}else if(nb<=0){r+='\\n\\n$calc_out.section.burn_rate_break_even|\\u2696\\uFE0F Break-Even|\\n'+'\\u2500'.repeat(54);r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.break_even_already','\\uD83D\\uDFE2 Already at break-even \\u2014 revenue \\u2265 expenses. Focus on reinvestment.');}" +
-  "if(nb>0&&cc>0){r+='\\n\\n$calc_out.section.burn_rate_runway_milestones|\\uD83C\\uDFAF Runway Milestones|\\n'+'\\u2500'.repeat(54);var mms=[6,12,18,24];for(var mi=0;mi<mms.length;mi++){var cn=mms[mi]*nb;var st;if(cc>=cn)st='\\uD83D\\uDFE2';else if(cc>=cn*0.7)st='\\uD83D\\uDFE1';else if(cc>=cn*0.4)st='\\uD83D\\uDFE0';else st='\\uD83D\\uDD34';r+='\\n\\u2022 '+tk('calc_out.burn_rate.row.milestone_runway',mms[mi]+'-month runway:  need $'+Math.round(cn).toLocaleString()+' cash  (you have: '+fmt(cc)+')  '+st,{months:String(mms[mi]),needed:Math.round(cn).toLocaleString(),cash:fmt(cc),status:st});}}" +
-  "if(nb>5)r+='\\n\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify({code:'burn_high_burn',params:{}});else if(nb>0)r+='\\n\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify({code:'burn_positive_burn',params:{}});else r+='\\n\\n\\uD83D\\uDCA1 Tip: '+JSON.stringify({code:'burn_cashflow_positive',params:{}});" +
-  "return [r];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let h=function(_){return Number.isNaN(_)?0:Math.max(0,_)},m=function(_){const r=Math.round(_*20);return"█".repeat(r)+"░".repeat(20-r)},y=function(_){const r=c=>"$"+Math.round(c).toLocaleString(),F=(c,a)=>a>0?(c/a*100).toFixed(1)+"%":"0.0%",l=h(parseFloat(_.monthlyRevenue)||0),x=h(parseFloat(_.teamCost)||0),S=h(parseFloat(_.infraCost)||0),$=h(parseFloat(_.marketingCost)||0),C=h(parseFloat(_.opsCost)||0),s=h(parseFloat(_.currentCash)||0),v=h(parseFloat(_.netNewRevenue)||0),f=x+S+$+C,n=f-l;let e=\`$calc_out.section.burn_rate_cash_flow_health_check|🔥 Cash Flow Health Check|
+
+\`;e+=\`$calc_out.section.burn_rate_burn_summary|💸 Burn Summary|
+\`,e+="• $calc_out.label.gross_burn|Gross Burn|:    "+r(f)+\`/mo
+\`,e+="• $calc_out.label.net_burn|Net Burn|:      "+r(n)+"/mo",l>0?e+=\`  $calc_out.burn_rate.row.net_burn_gross_minus_revenue|(Gross − Revenue)|
+\`:e+=\`  $calc_out.burn_rate.row.net_burn_no_revenue|(no revenue yet)|
+\`,e+="• $calc_out.label.annual_burn|Annual Burn|:   "+r(n*12)+\`/yr
+\`,n>0&&(e+="• "+t("calc_out.burn_rate.row.to_break_even","To break even: Need +"+r(n)+"/mo more revenue (or cut costs by same amount)",{amount:r(n)})+\`
+\`);let w=0;if(e+=\`
+$calc_out.section.burn_rate_runway|⏳ Runway|
+\`,e+="• $calc_out.label.current_cash|Current Cash|:      "+r(s)+\`
+\`,n<=0)e+="• "+t("calc_out.burn_rate.row.status_cashflow_positive","Status:            ✅ Cash-flow positive! No burn concern.")+\`
+\`;else if(s<=0)e+="• "+t("calc_out.burn_rate.row.status_no_cash_reserve","Status:            ⚠️ No cash reserve — enter your balance to estimate runway.")+\`
+\`;else{w=s/n;const c=new Date,a=new Date(c.getTime()+w*30.44*24*60*60*1e3),u=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][a.getMonth()]+" "+a.getFullYear();e+="• $calc_out.label.remaining_runway|Remaining Runway|:  "+w.toFixed(1)+\` months
+\`,e+="• $calc_out.label.est_cash_run_out|Est. Cash Run-out|:   "+u+\`
+\`,w>12?e+="• "+t("calc_out.burn_rate.row.assessment_healthy","Assessment:        🟢 Healthy — over a year of runway.")+\`
+\`:w>6?e+="• "+t("calc_out.burn_rate.row.assessment_manageable","Assessment:        🟡 Manageable — 6–12 months. Plan ahead.")+\`
+\`:w>3?e+="• "+t("calc_out.burn_rate.row.assessment_tight","Assessment:        🟠 Tight — 3–6 months. Cut costs or raise revenue now.")+\`
+\`:e+="• "+t("calc_out.burn_rate.row.assessment_critical","Assessment:        🔴 Critical — under 3 months. Immediate action required.")+\`
+\`}if(v>0){const c=n/v;e+=\`
+$calc_out.section.burn_rate_burn_multiple|📈 Burn Multiple|
+\`,e+="• $calc_out.label.net_new_revenue|Net New Revenue|:  "+r(v)+\`/mo
+\`,e+="• $calc_out.label.burn_multiple|Burn Multiple|:    "+c.toFixed(1)+"× ",c<1?(e+=\`🟢
+\`,e+="• "+t("calc_out.burn_rate.row.insight_great","Insight:          You're adding more revenue than you're burning. Great trajectory!")+\`
+\`):c<=2?(e+=\`🟡
+\`,e+="• "+t("calc_out.burn_rate.row.insight_moderate","Insight:          Moderate efficiency. Aim to bring this below 1.0×.")+\`
+\`):(e+=\`🔴
+\`,e+="• "+t("calc_out.burn_rate.row.insight_burning_faster","Insight:          Burning much faster than you're adding revenue. Need to improve efficiency.")+\`
+\`)}if(e+=\`
+$calc_out.section.burn_rate_default_alive_dead_status|💀 Default Alive/Dead Status|
+\`,n<=0?e+="• "+t("calc_out.burn_rate.row.default_alive_cashflow_positive","Status:  ✅ Default Alive: cash-flow positive")+\`
+\`:s>0?w>24?e+="• "+t("calc_out.burn_rate.row.default_alive_24plus","Status:  🟢 Default Alive: 24+ months runway")+\`
+\`:w>12?e+="• "+t("calc_out.burn_rate.row.default_alive_12_24","Status:  🟡 Default Alive: 12-24 months")+\`
+\`:e+="• "+t("calc_out.burn_rate.row.default_dead_under_12","Status:  🔴 Default Dead: under 12 months — need growth or funding to survive")+\`
+\`:e+="• "+t("calc_out.burn_rate.row.default_dead_under_12","Status:  🔴 Default Dead: under 12 months — need growth or funding to survive")+\`
+\`,f>0){e+=\`
+$calc_out.section.burn_rate_cost_structure|📊 Cost Structure|
+\`;const c=[["Team","$calc_out.label.team|Team|",x],["Marketing","$calc_out.label.marketing|Marketing|",$],["Infrastructure","$calc_out.label.infrastructure|Infrastructure|",S],["Operations","$calc_out.label.operations|Operations|",C]];for(const[a,i,u]of c)if(u>0){const b=u/f;e+="• "+i+" ".repeat(Math.max(0,14-a.length))+" "+F(u,f).padStart(6)+"  "+m(b)+\`
+\`}}const o=n>0&&s>0?s/n:1/0;if(n>0&&s>0){const c=[.1,.2,.3];e+=\`
+$calc_out.section.burn_rate_cost_cut_scenarios|🔄 Cost-Cut Scenarios|
+\`;for(const a of c){const i=f*a,u=n-i,b=Math.round(a*100)+"%";if(u<=0)e+="• "+t("calc_out.burn_rate.row.cut_scenario_cashflow_positive","Cut "+b+": Save "+r(i)+"/mo — ✅ Cash-flow positive!",{pct:b,savings:r(i)})+\`
+\`;else{const g=s/u,N=g-o;e+="• "+t("calc_out.burn_rate.row.cut_scenario","Cut "+b+": Save "+r(i)+"/mo — Net burn "+r(u)+"/mo — Runway "+g.toFixed(1)+" mo (+"+N.toFixed(1)+" extra)",{pct:b,savings:r(i),net_burn:r(u),runway:g.toFixed(1),extra:N.toFixed(1)})+\`
+\`}}}const d=\`
+
+$calc_out.section.burn_rate_burn_health|🩺 Burn Health:|
+\`+"━".repeat(54)+\`
+• \`;if(n<=0?e+=d+t("calc_out.burn_rate.row.burn_health_default_alive","🟢 Default alive — revenue ≥ expenses. No burn. Focus on growth and reinvestment."):s<=0?e+=d+t("calc_out.burn_rate.row.burn_health_no_cash","🔴 No cash. Cannot compute runway. Bootstrap, raise, or shut down."):isFinite(o)&&o<3?e+=d+t("calc_out.burn_rate.row.burn_health_critical","🔴 Runway "+o.toFixed(1)+" months — critical. Raise capital NOW or cut burn 50%+ this month.",{runway:o.toFixed(1)}):isFinite(o)&&o<6?e+=d+t("calc_out.burn_rate.row.burn_health_warning","🟠 Runway "+o.toFixed(1)+" months — warning zone. Start raising or cut burn in next 2 months.",{runway:o.toFixed(1)}):isFinite(o)&&o<12?e+=d+t("calc_out.burn_rate.row.burn_health_adequate","🟡 Runway "+o.toFixed(1)+" months — adequate for now. Plan Series A or accelerate revenue.",{runway:o.toFixed(1)}):e+=d+t("calc_out.burn_rate.row.burn_health_comfortable","🟢 Runway "+o.toFixed(1)+" months — comfortable. Default dead is years away. Focus on growth.",{runway:o.toFixed(1)}),e+=\`
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+\`+"━".repeat(54),isFinite(o)&&n>0){const c=s/(n-l*.2),a=s/(n*.8),u=(s+1e6)/n;if(e+=\`
+• \`+t("calc_out.burn_rate.row.whatif_raise_revenue_20","Raise revenue 20%:  Runway "+o.toFixed(1)+" → "+c.toFixed(1)+" mo",{from:o.toFixed(1),to:c.toFixed(1)}),e+=\`
+• \`+t("calc_out.burn_rate.row.whatif_cut_expenses_20","Cut expenses 20%:  Runway "+o.toFixed(1)+" → "+a.toFixed(1)+" mo",{from:o.toFixed(1),to:a.toFixed(1)}),e+=\`
+• \`+t("calc_out.burn_rate.row.whatif_raise_1m","Raise $1M (6-month runway extension at current burn):  "+u.toFixed(1)+" mo",{months:u.toFixed(1)}),e+=\`
+• \`+t("calc_out.burn_rate.row.whatif_hit_default_alive","Hit default alive (revenue = expenses):  ∞ runway (focus on growth)"),l>0){const b=(f-l)/l*100;e+=\`
+• \`+t("calc_out.burn_rate.row.whatif_growth_needed","Growth needed monthly to break even:  +"+b.toFixed(1)+"% revenue",{pct:b.toFixed(1)})}}else e+=\`
+• \`+t("calc_out.burn_rate.row.whatif_cannot_model","⚠️ Cannot model — ensure cash > 0 and net burn > 0.");if(n>0&&s>0){e+=\`
+
+$calc_out.section.burn_rate_break_even|⚖️ Break-Even|
+\`+"─".repeat(54);const c=l+n,a=l>0?n/l*100:0;a>0?e+=\`
+• \`+t("calc_out.burn_rate.row.break_even_need_revenue","🟡 Need +"+r(n)+"/mo revenue ("+a.toFixed(0)+"% growth) to hit break-even",{amount:r(n),growth:a.toFixed(0)}):e+=\`
+• \`+t("calc_out.burn_rate.row.break_even_need_revenue_no_base","🟡 Need +"+r(n)+"/mo revenue (no revenue baseline)",{amount:r(n)});const i=Math.round(n/f*100);e+=\`
+• \`+t("calc_out.burn_rate.row.break_even_cut_costs","Or cut costs by "+r(n)+"/mo (e.g., "+i+"% of current gross burn)",{amount:r(n),pct:String(i)}),e+=\`
+• \`+t("calc_out.burn_rate.row.break_even_runway","Break-even runway: ∞ (no burn = no runway concern)")}else n<=0&&(e+=\`
+
+$calc_out.section.burn_rate_break_even|⚖️ Break-Even|
+\`+"─".repeat(54),e+=\`
+• \`+t("calc_out.burn_rate.row.break_even_already","🟢 Already at break-even — revenue ≥ expenses. Focus on reinvestment."));if(n>0&&s>0){e+=\`
+
+$calc_out.section.burn_rate_runway_milestones|🎯 Runway Milestones|
+\`+"─".repeat(54);const c=[6,12,18,24];for(const a of c){const i=a*n;let u;s>=i?u="🟢":s>=i*.7?u="🟡":s>=i*.4?u="🟠":u="🔴",e+=\`
+• \`+t("calc_out.burn_rate.row.milestone_runway",a+"-month runway:  need $"+Math.round(i).toLocaleString()+" cash  (you have: "+r(s)+")  "+u,{months:String(a),needed:Math.round(i).toLocaleString(),cash:r(s),status:u})}}return n>5?e+=\`
+
+💡 Tip: \`+JSON.stringify({code:"burn_high_burn",params:{}}):n>0?e+=\`
+
+💡 Tip: \`+JSON.stringify({code:"burn_positive_burn",params:{}}):e+=\`
+
+💡 Tip: \`+JSON.stringify({code:"burn_cashflow_positive",params:{}}),[e]},p=function(_,r,F){var l=M(_);return Array.isArray(l)?l.join(\`
+\`):String(l)};var A=h,B=m,D=y,O=p,t=tk,R='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+R)(),M=function(_){return y(_)};return[p(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: "solopreneur-burn-rate-calculator",

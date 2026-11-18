@@ -146,103 +146,56 @@ function calculate(inputs: Record<string, string>): string[] {
 // GENERATED from calculate() — if you edit calculate(), mirror the change here.
 
 const customFn =
-  "function expMRR(u,c){return u+c;}\n" +
-  "function expPct(s,u,c){if(s===0)return 0;return expMRR(u,c)/s;}\n" +
-  "function cnn(x){return Number.isNaN(x)?0:Math.max(0,x);}\n" +
-  "function bandOf(v){if(v>=0.25)return 'excellent';if(v>=0.15)return 'good';if(v>=0.05)return 'warning';return 'critical';}\n" +
-  "var bandEmoji={excellent:'\ud83d\udfe2',good:'\ud83d\udfe1',warning:'\ud83d\udfe0',critical:'\ud83d\udd34'};\n" +
-  "var __calc=function(inputs){\n" +
-  "  const startingMRR = cnn(parseFloat(inputs.startingMRR) || 0);\n" +
-  "  const upsellMRR = cnn(parseFloat(inputs.upsellMRR) || 0);\n" +
-  "  const crossSellMRR = cnn(parseFloat(inputs.crossSellMRR) || 0);\n" +
-  "\n" +
-  "  if (startingMRR === 0 && upsellMRR === 0 && crossSellMRR === 0) {\n" +
-  "    return [\n" +
-  "      '\ud83d\udcca Expansion Revenue Calculator\\n\\n\ud83d\udcca Enter starting MRR, upsell MRR, and cross-sell MRR to see your expansion revenue percentage \u2014 the top-line growth lever from existing customers.',\n" +
-  "    ];\n" +
-  "  }\n" +
-  "\n" +
-  "  const totalExpansion = expMRR(upsellMRR, crossSellMRR);\n" +
-  "  const ratio = expPct(startingMRR, upsellMRR, crossSellMRR);\n" +
-  "\n" +
-  "  const money = (n) => '$' + Math.round(n).toLocaleString('en-US');\n" +
-  "  const pctInt = (n) => Math.round(n * 100).toString();\n" +
-  "  const pct1 = (n) => n.toFixed(1);\n" +
-  "\n" +
-  "  const band = bandOf(ratio);\n" +
-  "  const healthEmoji = bandEmoji[band];\n" +
-  "  const healthLabel =\n" +
-  "    band === 'excellent'\n" +
-  "      ? 'Excellent \u2014 Expansion \u2265 25%; best-in-class mid-market expansion motion'\n" +
-  "      : band === 'good'\n" +
-  "      ? 'Good \u2014 Expansion 15\u201325%; top-quartile mid-market expansion'\n" +
-  "      : band === 'warning'\n" +
-  "      ? 'Warning \u2014 Expansion 5\u201315%; motion exists but underweight'\n" +
-  "      : 'Critical \u2014 Expansion < 5%; no expansion motion, pure retention play';\n" +
-  "\n" +
-  "  // What-If: what if we doubled upsell, or added cross-sell, or both?\n" +
-  "  const expDoubleUpsell = expPct(startingMRR, upsellMRR * 2, crossSellMRR);\n" +
-  "  const expDoubleBoth = expPct(startingMRR, upsellMRR * 2, crossSellMRR * 2);\n" +
-  "  const expPureCrossSell = expPct(startingMRR, 0, crossSellMRR);\n" +
-  "  const liftDU = expDoubleUpsell - ratio;\n" +
-  "  const liftDB = expDoubleBoth - ratio;\n" +
-  "\n" +
-  "  // Break-Even: gap to Excellent (\u22650.25)\n" +
-  "  const targetExpansion = 0.25 * startingMRR;\n" +
-  "  const gapToExcellent = Math.max(0, targetExpansion - totalExpansion);\n" +
-  "\n" +
-  "  // Milestone: gap to next tier\n" +
-  "  let gapToNext, nextTier;\n" +
-  "  if (band === 'critical') { gapToNext = 0.05 * startingMRR - totalExpansion; nextTier = '\ud83d\udfe0 Warning (5%)'; }\n" +
-  "  else if (band === 'warning') { gapToNext = 0.15 * startingMRR - totalExpansion; nextTier = '\ud83d\udfe1 Good (15%)'; }\n" +
-  "  else if (band === 'good') { gapToNext = 0.25 * startingMRR - totalExpansion; nextTier = '\ud83d\udfe2 Excellent (25%)'; }\n" +
-  "  else { gapToNext = 0; nextTier = 'top tier maintained'; }\n" +
-  "\n" +
-  "  // Tip: band-driven\n" +
-  "  let tip;\n" +
-  "  if (band === 'critical') tip = 'Expansion < 5% means you are not growing revenue from existing customers \u2014 pure retention play. Identify accounts getting high value but underpaying; build a price-increase motion on the top decile. Add cross-sell on accounts already using 1 product.';\n" +
-  "  else if (band === 'warning') tip = 'Expansion 5\u201315% is motion but underweight. Audit which accounts expanded and what triggered it \u2014 replicate the playbook. Common levers: seat expansion on growing teams, tier upgrades after usage threshold, cross-sell on product-fit accounts.';\n" +
-  "  else if (band === 'good') tip = 'Expansion 15\u201325% is healthy mid-market motion. Push to Excellent (\u226525%) by focusing on the top 20% of accounts \u2014 a 10% price increase on high-value accounts often moves expansion more than broad-stroke campaigns.';\n" +
-  "  else tip = 'Expansion \u2265 25% is best-in-class. Maintain the engine: monitor usage trends, identify expansion-ready accounts quarterly, and protect champion relationships. Pair with NRR (P9-1) to confirm expansion is offsetting churn.';\n" +
-  "\n" +
-  "  const r =\n" +
-  "    '\ud83d\udcca Expansion Revenue Calculator\\n\\n' +\n" +
-  "    '\ud83e\ude7a Health:\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "    '\u2022 ' + healthEmoji + ' ' + healthLabel + '\\n' +\n" +
-  "    '\u2022 Expansion: ' + pctInt(ratio) + '% of starting MRR  \u00b7  Total expansion: ' + money(totalExpansion) + '\\n' +\n" +
-  "    '\u2022 Upsell: ' + money(upsellMRR) + '  \u00b7  Cross-sell: ' + money(crossSellMRR) + '\\n\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "    '\ud83d\udcca Inputs Snapshot:\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "    '\u2022 Starting MRR: ' + money(startingMRR) + '\\n' +\n" +
-  "    '\u2022 Upsell MRR (more usage): +' + money(upsellMRR) + '\\n' +\n" +
-  "    '\u2022 Cross-sell MRR (new product): +' + money(crossSellMRR) + '\\n' +\n" +
-  "    '\u2022 Total Expansion MRR: ' + money(totalExpansion) + '\\n' +\n" +
-  "    '\u2022 Expansion %: ' + ratio.toFixed(4) + ' (' + pctInt(ratio) + '%) of starting MRR\\n\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "    '\ud83d\udd04 What-If:\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "    '\u2022 Double upsell (+' + money(upsellMRR) + ' \u2192 +' + money(upsellMRR * 2) + '): Expansion ' + pctInt(expDoubleUpsell) + '% (+' + pct1(liftDU * 100) + 'pp)\\n' +\n" +
-  "    '\u2022 Double both (upsell + cross-sell): Expansion ' + pctInt(expDoubleBoth) + '% (+' + pct1(liftDB * 100) + 'pp)\\n' +\n" +
-  "    '\u2022 Pure cross-sell (no upsell): Expansion ' + pctInt(expPureCrossSell) + '%\\n\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "    '\u2696\ufe0f Break-Even:\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "    '\u2022 Target for \ud83d\udfe2 Excellent: Expansion \u2265 25% (expansion MRR \u2265 ' + money(targetExpansion) + ')\\n' +\n" +
-  "    '\u2022 Current expansion: ' + money(totalExpansion) + '  \u00b7  Gap to \ud83d\udfe2: ' + money(gapToExcellent) + '\\n' +\n" +
-  "    '\u2022 Action: add ' + money(gapToExcellent) + ' in expansion MRR (upsell + cross-sell)\\n\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "    '\ud83c\udfaf Milestone:\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "    '\u2022 Next tier: ' + nextTier + '\\n' +\n" +
-  "    '\u2022 Gap to next tier: ' + money(Math.max(0, gapToNext)) + ' more expansion MRR' + (band === 'excellent' ? ' (already at top)' : '') + '\\n\\n' +\n" +
-  "    '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "    '\ud83d\udca1 Tip: ' + tip + '\\n';\n" +
-  "\n" +
-  "  return [r];\n" +
-  "};\n" +
-  "return __calc(inputs);";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(n){return Number.isNaN(n)?0:Math.max(0,n)},R=function(n,e){return n+e},l=function(n,e,o){return n===0?0:R(e,o)/n},h=function(n){return n>=f.excellent[0]?"excellent":n>=f.good[0]?"good":n>=f.warning[0]?"warning":"critical"},m=function(n,e,o){var i=_(n);return Array.isArray(i)?i.join(\`
+\`):String(i)};var N=d,P=R,T=l,U=h,G=m,v={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},f={excellent:[.25,null],good:[.15,.25],warning:[.05,.15],critical:[0,.05]},_=function(n){const e=d(parseFloat(n.startingMRR)||0),o=d(parseFloat(n.upsellMRR)||0),i=d(parseFloat(n.crossSellMRR)||0);if(e===0&&o===0&&i===0)return[\`📊 Expansion Revenue Calculator
+
+📊 Enter starting MRR, upsell MRR, and cross-sell MRR to see your expansion revenue percentage — the top-line growth lever from existing customers.\`];const s=R(o,i),r=l(e,o,i),t=g=>"$"+Math.round(g).toLocaleString("en-US"),c=g=>Math.round(g*100).toString(),E=g=>g.toFixed(1),a=h(r),k=v[a],C=a==="excellent"?"Excellent — Expansion ≥ 25%; best-in-class mid-market expansion motion":a==="good"?"Good — Expansion 15–25%; top-quartile mid-market expansion":a==="warning"?"Warning — Expansion 5–15%; motion exists but underweight":"Critical — Expansion < 5%; no expansion motion, pure retention play",M=l(e,o*2,i),y=l(e,o*2,i*2),F=l(e,0,i),S=M-r,D=y-r,b=.25*e,w=Math.max(0,b-s);let p,u;a==="critical"?(p=.05*e-s,u="🟠 Warning (5%)"):a==="warning"?(p=.15*e-s,u="🟡 Good (15%)"):a==="good"?(p=.25*e-s,u="🟢 Excellent (25%)"):(p=0,u="top tier maintained");let x;return a==="critical"?x="Expansion < 5% means you are not growing revenue from existing customers — pure retention play. Identify accounts getting high value but underpaying; build a price-increase motion on the top decile. Add cross-sell on accounts already using 1 product.":a==="warning"?x="Expansion 5–15% is motion but underweight. Audit which accounts expanded and what triggered it — replicate the playbook. Common levers: seat expansion on growing teams, tier upgrades after usage threshold, cross-sell on product-fit accounts.":a==="good"?x="Expansion 15–25% is healthy mid-market motion. Push to Excellent (≥25%) by focusing on the top 20% of accounts — a 10% price increase on high-value accounts often moves expansion more than broad-stroke campaigns.":x="Expansion ≥ 25% is best-in-class. Maintain the engine: monitor usage trends, identify expansion-ready accounts quarterly, and protect champion relationships. Pair with NRR (P9-1) to confirm expansion is offsetting churn.",[\`📊 Expansion Revenue Calculator
+
+🩺 Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+k+" "+C+\`
+• Expansion: \`+c(r)+"% of starting MRR  ·  Total expansion: "+t(s)+\`
+• Upsell: \`+t(o)+"  ·  Cross-sell: "+t(i)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Inputs Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Starting MRR: \`+t(e)+\`
+• Upsell MRR (more usage): +\`+t(o)+\`
+• Cross-sell MRR (new product): +\`+t(i)+\`
+• Total Expansion MRR: \`+t(s)+\`
+• Expansion %: \`+r.toFixed(4)+" ("+c(r)+\`%) of starting MRR
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Double upsell (+\`+t(o)+" → +"+t(o*2)+"): Expansion "+c(M)+"% (+"+E(S*100)+\`pp)
+• Double both (upsell + cross-sell): Expansion \`+c(y)+"% (+"+E(D*100)+\`pp)
+• Pure cross-sell (no upsell): Expansion \`+c(F)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Target for 🟢 Excellent: Expansion ≥ 25% (expansion MRR ≥ \`+t(b)+\`)
+• Current expansion: \`+t(s)+"  ·  Gap to 🟢: "+t(w)+\`
+• Action: add \`+t(w)+\` in expansion MRR (upsell + cross-sell)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Milestone:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Next tier: \`+u+\`
+• Gap to next tier: \`+t(Math.max(0,p))+" more expansion MRR"+(a==="excellent"?" (already at top)":"")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+x+\`
+\`]};return[m(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

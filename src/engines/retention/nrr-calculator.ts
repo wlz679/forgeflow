@@ -185,84 +185,58 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  "function nrm(s,e,d,c){return s+e-d-c;}" +
-  "function nr(s,e,d,c){if(s===0)return 0;return nrm(s,e,d,c)/s;}" +
-  "function band(v){if(v>=1.20)return 'excellent';if(v>=1.10)return 'good';if(v>=1.00)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var sm=cnn(parseFloat(inputs.startingMRR)||0);" +
-  "var em=cnn(parseFloat(inputs.expansionMRR)||0);" +
-  "var dm=cnn(parseFloat(inputs.downgradeMRR)||0);" +
-  "var cm=cnn(parseFloat(inputs.churnedMRR)||0);" +
-  "if(sm===0&&em===0&&dm===0&&cm===0){" +
-    "return['\\uD83D\\uDCCA NRR Calculator\\n\\n\\uD83D\\uDCCA Enter your starting MRR, expansion MRR (upsell + cross-sell), downgrade MRR, and churned MRR to see your Net Revenue Retention ratio \\u2014 the headline SaaS metric every board reports.'];" +
-  "}" +
-  "var ret=nrm(sm,em,dm,cm);" +
-  "var r=nr(sm,em,dm,cm);" +
-  "var g=(r-1)*100;" +
-  "var lm=dm+cm;" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function pi(n){return Math.round(n*100).toString();}" +
-  "function p1(n){return n.toFixed(1);}" +
-  "var bd=band(r);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 NRR \\u2265 120%; top-quartile SaaS (OpenView / ICONIQ benchmarks)':bd==='good'?'Good \\u2014 NRR 110\\u2013120%; expansion covers churn with margin to spare':bd==='warning'?'Warning \\u2014 NRR 100\\u2013110%; expansion barely offsets churn, fragile':'Critical \\u2014 NRR < 100%; net revenue contraction, urgent intervention';" +
-  "var nhc=nr(sm,em,dm,cm/2);" +
-  "var nde=nr(sm,em*2,dm,cm);" +
-  "var nzd=nr(sm,em,0,cm);" +
-  "var lhc=nhc-r;" +
-  "var lde=nde-r;" +
-  "var lzd=nzd-r;" +
-  "var tr=1.20*sm;" +
-  "var ge=Math.max(0,tr-ret);" +
-  "var aen=ge;" +
-  "var gn,nt,ac;" +
-  "if(bd==='critical'){gn=1.00*sm-ret;nt='\\uD83D\\uDFE0 Warning (100%)';}" +
-  "else if(bd==='warning'){gn=1.10*sm-ret;nt='\\uD83D\\uDFE1 Good (110%)';}" +
-  "else if(bd==='good'){gn=1.20*sm-ret;nt='\\uD83D\\uDFE2 Excellent (120%)';}" +
-  "else{gn=0;nt='top tier maintained';}" +
-  "ac=sm*Math.pow(1+g/100,12);" +
-  "var tip='';" +
-  "if(bd==='critical'){tip='NRR < 100% means you are shrinking your existing-customer revenue base every month. Stop the bleed first: audit the top 5 churned accounts for the actual reason (champion left? product gap? pricing?), then build a save playbook. Expansion is meaningless if you are losing ground faster.';}" +
-  "else if(bd==='warning'){tip='NRR 100\\u2013110% is fragile \\u2014 one bad quarter of churn can flip you under 100%. Double down on customer success: quarterly business reviews, usage monitoring (red-flag accounts before they churn), and a price-increase motion for accounts getting value but underpaying.';}" +
-  "else if(bd==='good'){tip='NRR 110\\u2013120% is healthy B2B SaaS. To push to Excellent (\\u2265120%), focus on the customers who are getting the most value \\u2014 offer them higher tiers, more seats, or premium support. A 10% price increase on your top 20% of accounts often moves NRR more than 50 new logos.';}" +
-  "else{tip='NRR \\u2265 120% is top-quartile SaaS. Maintain the engine: keep NPS high, monitor usage trends weekly, and protect your champion relationships. The risk at this level is overconfidence \\u2014 even top-quartile NRR can slip 5pp in two quarters if you stop investing in CS.';}" +
-  "var r2='';" +
-  "r2+='\\uD83D\\uDCCA NRR Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 NRR: '+pi(r)+'%  \\u00B7  Growth above baseline: +'+p1(g)+'%\\n';" +
-  "r2+='\\u2022 Net retained MRR: '+money(ret)+'  \\u00B7  Lost MRR (downgrade + churn): '+money(lm)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Starting MRR:           '+money(sm)+'\\n';" +
-  "r2+='\\u2022 Expansion MRR (upsell + cross-sell):  +'+money(em)+'\\n';" +
-  "r2+='\\u2022 Downgrade MRR:         -'+money(dm)+'\\n';" +
-  "r2+='\\u2022 Churned MRR:           -'+money(cm)+'\\n';" +
-  "r2+='\\u2022 Net retained MRR:      '+money(ret)+' (starting + expansion \\u2212 downgrade \\u2212 churn)\\n';" +
-  "r2+='\\u2022 NRR ratio: '+r.toFixed(4)+' ('+pi(r)+'%)  \\u00B7  Lost as % of start: '+p1(sm>0?(lm/sm)*100:0)+'%\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Halve churn ('+money(cm/2)+' instead of '+money(cm)+'): NRR '+pi(nhc)+'% (+'+p1(lhc*100)+'pp)\\n';" +
-  "r2+='\\u2022 Double expansion (+'+money(em)+' \\u2192 +'+money(em*2)+'): NRR '+pi(nde)+'% (+'+p1(lde*100)+'pp)\\n';" +
-  "r2+='\\u2022 Eliminate downgrades (-'+money(dm)+' \\u2192 0): NRR '+pi(nzd)+'% (+'+p1(lzd*100)+'pp)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Target for \\uD83D\\uDFE2 Excellent: NRR \\u2265 120% (retained MRR \\u2265 '+money(tr)+')\\n';" +
-  "r2+='\\u2022 Current net retained: '+money(ret)+'  \\u00B7  Gap to \\uD83D\\uDFE2: '+money(ge)+'\\n';" +
-  "r2+='\\u2022 Action: add '+money(aen)+' in expansion MRR (or equivalent via churn/downgrade reduction)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Next tier: '+nt+'\\n';" +
-  "r2+='\\u2022 Gap to next tier: '+money(Math.max(0,gn))+' more retained MRR'+(bd==='excellent'?' (already at top)':'')+'\\n';" +
-  "r2+='\\u2022 Annual compounded projection: ~'+money(ac)+'/year MRR (if NRR compounds for 12 months)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(n){return Number.isNaN(n)?0:Math.max(0,n)},x=function(n,e,r,o){return n+e-r-o},u=function(n,e,r,o){return n===0?0:x(n,e,r,o)/n},M=function(n){return n>=m.excellent[0]?"excellent":n>=m.good[0]?"good":n>=m.warning[0]?"warning":"critical"},N=function(n,e,r){var o=F(n);return Array.isArray(o)?o.join(\`
+\`):String(o)};var W=l,A=x,B=u,L=M,O=N,_={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},m={excellent:[1.2,null],good:[1.1,1.2],warning:[1,1.1],critical:[0,1]},F=function(n){const e=l(parseFloat(n.startingMRR)||0),r=l(parseFloat(n.expansionMRR)||0),o=l(parseFloat(n.downgradeMRR)||0),i=l(parseFloat(n.churnedMRR)||0);if(e===0&&r===0&&o===0&&i===0)return[\`📊 NRR Calculator
+
+📊 Enter your starting MRR, expansion MRR (upsell + cross-sell), downgrade MRR, and churned MRR to see your Net Revenue Retention ratio — the headline SaaS metric every board reports.\`];const c=x(e,r,o,i),s=u(e,r,o,i),v=(s-1)*100,w=o+i,t=f=>"$"+Math.round(f).toLocaleString("en-US"),R=f=>Math.round(f*100).toString(),d=f=>f.toFixed(1),a=M(s),q=_[a],D=a==="excellent"?"Excellent — NRR ≥ 120%; top-quartile SaaS (OpenView / ICONIQ benchmarks)":a==="good"?"Good — NRR 110–120%; expansion covers churn with margin to spare":a==="warning"?"Warning — NRR 100–110%; expansion barely offsets churn, fragile":"Critical — NRR < 100%; net revenue contraction, urgent intervention",y=u(e,r,o,i/2),b=u(e,r*2,o,i),S=u(e,r,0,i),G=y-s,I=b-s,T=S-s,E=1.2*e,C=Math.max(0,E-c),j=C;let p,g,k;a==="critical"?(p=1*e-c,g="🟠 Warning (100%)"):a==="warning"?(p=1.1*e-c,g="🟡 Good (110%)"):a==="good"?(p=1.2*e-c,g="🟢 Excellent (120%)"):(p=0,g="top tier maintained"),k=e*Math.pow(1+v/100,12);let h;return a==="critical"?h="NRR < 100% means you are shrinking your existing-customer revenue base every month. Stop the bleed first: audit the top 5 churned accounts for the actual reason (champion left? product gap? pricing?), then build a save playbook. Expansion is meaningless if you are losing ground faster.":a==="warning"?h="NRR 100–110% is fragile — one bad quarter of churn can flip you under 100%. Double down on customer success: quarterly business reviews, usage monitoring (red-flag accounts before they churn), and a price-increase motion for accounts getting value but underpaying.":a==="good"?h="NRR 110–120% is healthy B2B SaaS. To push to Excellent (≥120%), focus on the customers who are getting the most value — offer them higher tiers, more seats, or premium support. A 10% price increase on your top 20% of accounts often moves NRR more than 50 new logos.":h="NRR ≥ 120% is top-quartile SaaS. Maintain the engine: keep NPS high, monitor usage trends weekly, and protect your champion relationships. The risk at this level is overconfidence — even top-quartile NRR can slip 5pp in two quarters if you stop investing in CS.",[\`📊 NRR Calculator
+
+🩺 Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+q+" "+D+\`
+• NRR: \`+R(s)+"%  ·  Growth above baseline: +"+d(v)+\`%
+• Net retained MRR: \`+t(c)+"  ·  Lost MRR (downgrade + churn): "+t(w)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Inputs Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Starting MRR:           \`+t(e)+\`
+• Expansion MRR (upsell + cross-sell):  +\`+t(r)+\`
+• Downgrade MRR:         -\`+t(o)+\`
+• Churned MRR:           -\`+t(i)+\`
+• Net retained MRR:      \`+t(c)+\` (starting + expansion − downgrade − churn)
+• NRR ratio: \`+s.toFixed(4)+" ("+R(s)+"%)  ·  Lost as % of start: "+d(e>0?w/e*100:0)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Halve churn (\`+t(i/2)+" instead of "+t(i)+"): NRR "+R(y)+"% (+"+d(G*100)+\`pp)
+• Double expansion (+\`+t(r)+" → +"+t(r*2)+"): NRR "+R(b)+"% (+"+d(I*100)+\`pp)
+• Eliminate downgrades (-\`+t(o)+" → 0): NRR "+R(S)+"% (+"+d(T*100)+\`pp)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Target for 🟢 Excellent: NRR ≥ 120% (retained MRR ≥ \`+t(E)+\`)
+• Current net retained: \`+t(c)+"  ·  Gap to 🟢: "+t(C)+\`
+• Action: add \`+t(j)+\` in expansion MRR (or equivalent via churn/downgrade reduction)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Milestone:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Next tier: \`+g+\`
+• Gap to next tier: \`+t(Math.max(0,p))+" more retained MRR"+(a==="excellent"?" (already at top)":"")+\`
+• Annual compounded projection: ~\`+t(k)+\`/year MRR (if NRR compounds for 12 months)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+h+\`
+\`]};return[N(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

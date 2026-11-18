@@ -363,76 +363,60 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function mR(t,cr,a){return t*(cr/100)*a;}" +
-  "function mNR(r,cc){return r-cc;}" +
-  "function aM(m){if(m==='first-touch'||m==='last-touch')return 1.0;if(m==='linear')return 0.7;return 1.0;}" +
-  "function t12T(mr,mnv,mcc,am){var rl=-mr*mcc;var pg=(12-mr)*mnv*am-(12-mr)*mcc;return rl+pg;}" +
-  "function cHB(cr){if(cr>=3)return'excellent';if(cr>=1)return'good';if(cr>=0.3)return'warning';return'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var mp=cnn(parseFloat(inputs.monthlyPieces)||0);" +
-  "var mtr=cnn(Math.min(11,parseFloat(inputs.monthsToRank)||0));" +
-  "var pmt=cnn(parseFloat(inputs.peakMonthlyTraffic)||0);" +
-  "var cr=cnn(parseFloat(inputs.conversionRate)||0);" +
-  "var aov=cnn(parseFloat(inputs.aov)||0);" +
-  "var mcc=cnn(parseFloat(inputs.monthlyContentCost)||0);" +
-  "var am=inputs.attributionModel||'last-touch';" +
-  "if(pmt===0){return[tk('calc_out.section.content_marketing_roi_calculator','\\u23F0 Content Marketing ROI Calculator')+'\\n\\n'+tk('calc_out.content_marketing_roi.row.enter_inputs','\\uD83D\\uDCCA Enter monthly content pieces, months to rank, peak organic traffic, conversion rate, AOV, content cost, and attribution model to see SEO ramp-up curve, 12-month ROI, and steady-state projections.')];}" +
-  "var mR2=mR(pmt,cr,aov);var mN=mNR(mR2,mcc);var aM2=aM(am);" +
-  "var t12=t12T(mtr,mR2,mcc,aM2);var acc=mcc*12;var t12ROI=acc>0?(t12/acc)*100:0;" +
-  "var hB=cHB(cr);" +
-  "var hRow=hB==='excellent'?tk('calc_out.content_marketing_roi.row.health_excellent','\\u2022 \\uD83D\\uDFE2 Excellent \\u2014 CR \\u2265 3%; content converts above average'):hB==='good'?tk('calc_out.content_marketing_roi.row.health_good','\\u2022 \\uD83D\\uDFE1 Good \\u2014 CR 1\\u20133%; healthy content funnel'):hB==='warning'?tk('calc_out.content_marketing_roi.row.health_warning','\\u2022 \\uD83D\\uDFE0 Warning \\u2014 CR 0.3\\u20131%; landing pages need optimization'):tk('calc_out.content_marketing_roi.row.health_critical','\\u2022 \\uD83D\\uDD34 Critical \\u2014 CR < 0.3%; traffic not converting');" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "var nCR=cr+1;var nMR=mR(pmt,nCR,aov);var n12=t12T(mtr,nMR,mcc,aM2);" +
-  "var nROI=acc>0?(n12/acc)*100:0;" +
-  "var beCR=mtr<12&&pmt>0&&aov>0&&aM2>0?(12*mcc)/((12-mtr)*pmt*aov*aM2)*100:0;" +
-  "var sMN=mN*aM2;var aSt=sMN*12;" +
-  "var tipTok;" +
-  "if(hB==='excellent'&&t12>0){tipTok=tk('calc_out.content_marketing_roi.row.tip_excellent','\\uD83D\\uDCA1 Tip: Excellent CR + positive 12-mo ROI. Scale content production \\u2014 '+mp+' \\u2192 '+(mp*1.5).toFixed(0)+' pieces/month doubles your SEO reach with similar conversion economics.',{pieces:String(mp),scaled:(mp*1.5).toFixed(0)});}" +
-  "else if(mtr>6){tipTok=tk('calc_out.content_marketing_roi.row.tip_long_ramp','\\uD83D\\uDCA1 Tip: Ramp-up of '+mtr+' months is long. Reduce by targeting lower-competition keywords (long-tail), or invest in link-building to accelerate ranking. Each month saved improves ROI ~'+((mcc/Math.max(acc,1))*100).toFixed(0)+'%.',{months:String(mtr),pct:((mcc/Math.max(acc,1))*100).toFixed(0)});}" +
-  "else if(cr<1){tipTok=tk('calc_out.content_marketing_roi.row.tip_low_conversion','\\uD83D\\uDCA1 Tip: Conversion rate < 1% suggests landing page / offer mismatch. Audit your top 10 posts \\u2014 are they sending traffic to relevant, conversion-optimized pages? Often a CTA tweak doubles CR.');}" +
-  "else if(t12<0){tipTok=tk('calc_out.content_marketing_roi.row.tip_negative_roi','\\uD83D\\uDCA1 Tip: 12-month ROI is negative. Either reduce content cost, accelerate ranking (lower-competition keywords), or improve conversion rate. Each lever tested separately.');}" +
-  "else{tipTok=tk('calc_out.content_marketing_roi.row.tip_healthy','\\uD83D\\uDCA1 Tip: Healthy content ROI. A/B test attribution model \\u2014 first/last-touch claim full credit, linear distributes 0.7x. Adjust based on your actual sales cycle.');}" +
-  "var r2='';" +
-  "r2+=tk('calc_out.section.content_marketing_roi_calculator','\\u23F0 Content Marketing ROI Calculator')+'\\n\\n';" +
-  "r2+=tk('calc_out.section.health','\\uD83E\\uDE7A Health:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=hRow+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.steady_state_monthly_net','Steady-state monthly net')+': '+money(sMN)+'  \\u00B7  '+tk('calc_out.label.annual','Annual')+': '+money(aSt)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.twelve_month_roi','12-month ROI')+': '+(t12ROI>0?t12ROI.toFixed(0)+'%':t12ROI.toFixed(0)+'%')+'  \\u00B7  '+tk('calc_out.content_marketing_roi.row.attribution','Attribution: '+am+' ('+(aM2*100).toFixed(0)+'% credit)',{model:am,credit:(aM2*100).toFixed(0)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.inputs_snapshot','\\uD83D\\uDCCA Inputs Snapshot:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.monthly_pieces','Monthly pieces')+':        '+mp+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.content_marketing_roi.row.months_to_rank','Months to rank:        '+mtr+' (ramp-up)',{months:String(mtr)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.peak_monthly_traffic','Peak monthly traffic')+':  '+fmt(pmt)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.conversion_rate','Conversion rate')+':       '+cr.toFixed(1)+'%\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.aov','AOV')+':                   '+money(aov)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.monthly_content_cost','Monthly content cost')+':  '+money(mcc)+'  \\u00B7  '+tk('calc_out.label.annual','Annual')+': '+money(acc)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.what_if','\\uD83D\\uDD04 What-If:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.conversion_rate_plus_1pp','Conversion rate +1pp')+' ('+cr.toFixed(1)+'% \\u2192 '+nCR.toFixed(1)+'%):\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.label.twelve_month_total','12-mo total')+': '+money(t12)+' \\u2192 '+money(n12)+' (+'+money(n12-t12)+')\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.label.roi','ROI')+': '+t12ROI.toFixed(0)+'% \\u2192 '+nROI.toFixed(0)+'%\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.break_even','\\u2696\\uFE0F Break-Even:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.required_conversion_rate','Required conversion rate to break even at 12-mo')+': '+beCR.toFixed(2)+'%\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.label.currently','Currently')+': '+cr.toFixed(1)+'%\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.label.gap','Gap')+': '+((beCR-cr)>0?'+':'')+(beCR-cr).toFixed(2)+'pp\\n';" +
-  "r2+='  \\u2022 '+tk('calc_out.label.reduce_content_cost_by','Or reduce content cost by')+' '+(((mcc-(acc/12*(beCR*0.01/cr*0.01)))/mcc)*100).toFixed(0)+'%\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.milestone','\\uD83C\\uDFAF Milestone:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.content_marketing_roi.row.milestone_ramp_up','Ramp-up: '+mtr+' months \\u00D7 '+money(mcc)+' = '+money(mtr*mcc)+' sunk',{months:String(mtr),cost:money(mcc),sunk:money(mtr*mcc)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.content_marketing_roi.row.milestone_steady_state','Steady state (post-month '+mtr+'): '+money(sMN)+'/month net',{months:String(mtr),net:money(sMN)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.annual_steady_state_projection','Annual steady-state projection')+': '+money(aSt)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.twelve_month_cumulative','12-mo cumulative')+': '+money(t12)+' net  ('+t12ROI.toFixed(0)+'% ROI)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tipTok+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(n){return Number.isNaN(n)?0:Math.max(0,n)},m=function(n,a,o){return n*(a/100)*o},R=function(n,a){return n-a},C=function(n){return n==="first-touch"||n==="last-touch"?1:n==="linear"?.7:1},b=function(n,a,o,r){const i=-n*o,u=(12-n)*a*r-(12-n)*o;return i+u},M=function(n){return n>=y.excellent?"excellent":n>=y.good[0]?"good":n>=y.warning[0]?"warning":"critical"},O=function(n,a,o){var r=A(n);return Array.isArray(r)?r.join(\`
+\`):String(r)};var V=s,W=m,$=R,B=C,J=b,K=M,L=O,t=tk,j='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+j)(),y={excellent:3,good:[1,3],warning:[.3,1],critical:0},A=function(n){const a=s(parseFloat(n.monthlyPieces)||0),o=s(Math.min(11,parseFloat(n.monthsToRank)||0)),r=s(parseFloat(n.peakMonthlyTraffic)||0),i=s(parseFloat(n.conversionRate)||0),u=s(parseFloat(n.aov)||0),c=s(parseFloat(n.monthlyContentCost)||0),w=n.attributionModel||"last-touch";if(r===0)return[t("calc_out.section.content_marketing_roi_calculator","⏰ Content Marketing ROI Calculator")+\`
+
+\`+t("calc_out.content_marketing_roi.row.enter_inputs","📊 Enter monthly content pieces, months to rank, peak organic traffic, conversion rate, AOV, content cost, and attribution model to see SEO ramp-up curve, 12-month ROI, and steady-state projections.")];const S=m(r,i,u),q=R(S,c),_=C(w),h=b(o,S,c,_),l=c*12,d=l>0?h/l*100:0,g=M(i),N=g==="excellent"?t("calc_out.content_marketing_roi.row.health_excellent","• 🟢 Excellent — CR ≥ 3%; content converts above average"):g==="good"?t("calc_out.content_marketing_roi.row.health_good","• 🟡 Good — CR 1–3%; healthy content funnel"):g==="warning"?t("calc_out.content_marketing_roi.row.health_warning","• 🟠 Warning — CR 0.3–1%; landing pages need optimization"):t("calc_out.content_marketing_roi.row.health_critical","• 🔴 Critical — CR < 0.3%; traffic not converting"),e=F=>"$"+Math.round(F).toLocaleString("en-US"),G=F=>F.toLocaleString("en-US",{maximumFractionDigits:0}),I=i+1,z=m(r,I,u),x=b(o,z,c,_),U=l>0?x/l*100:0,f=o<12&&r>0&&u>0&&_>0?12*c/((12-o)*r*u*_)*100:0,v=q*_,E=v*12;let p;return g==="excellent"&&h>0?p=t("calc_out.content_marketing_roi.row.tip_excellent","💡 Tip: Excellent CR + positive 12-mo ROI. Scale content production — "+a+" → "+(a*1.5).toFixed(0)+" pieces/month doubles your SEO reach with similar conversion economics.",{pieces:String(a),scaled:(a*1.5).toFixed(0)}):o>6?p=t("calc_out.content_marketing_roi.row.tip_long_ramp","💡 Tip: Ramp-up of "+o+" months is long. Reduce by targeting lower-competition keywords (long-tail), or invest in link-building to accelerate ranking. Each month saved improves ROI ~"+(c/Math.max(l,1)*100).toFixed(0)+"%.",{months:String(o),pct:(c/Math.max(l,1)*100).toFixed(0)}):i<1?p=t("calc_out.content_marketing_roi.row.tip_low_conversion","💡 Tip: Conversion rate < 1% suggests landing page / offer mismatch. Audit your top 10 posts — are they sending traffic to relevant, conversion-optimized pages? Often a CTA tweak doubles CR."):h<0?p=t("calc_out.content_marketing_roi.row.tip_negative_roi","💡 Tip: 12-month ROI is negative. Either reduce content cost, accelerate ranking (lower-competition keywords), or improve conversion rate. Each lever tested separately."):p=t("calc_out.content_marketing_roi.row.tip_healthy","💡 Tip: Healthy content ROI. A/B test attribution model — first/last-touch claim full credit, linear distributes 0.7x. Adjust based on your actual sales cycle."),[t("calc_out.section.content_marketing_roi_calculator","⏰ Content Marketing ROI Calculator")+\`
+
+\`+t("calc_out.section.health","🩺 Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+N+\`
+• \`+t("calc_out.label.steady_state_monthly_net","Steady-state monthly net")+": "+e(v)+"  ·  "+t("calc_out.label.annual","Annual")+": "+e(E)+\`
+• \`+t("calc_out.label.twelve_month_roi","12-month ROI")+": "+(d>0,d.toFixed(0)+"%")+"  ·  "+t("calc_out.content_marketing_roi.row.attribution","Attribution: "+w+" ("+(_*100).toFixed(0)+"% credit)",{model:w,credit:(_*100).toFixed(0)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.label.monthly_pieces","Monthly pieces")+":        "+a+\`
+• \`+t("calc_out.content_marketing_roi.row.months_to_rank","Months to rank:        "+o+" (ramp-up)",{months:String(o)})+\`
+• \`+t("calc_out.label.peak_monthly_traffic","Peak monthly traffic")+":  "+G(r)+\`
+• \`+t("calc_out.label.conversion_rate","Conversion rate")+":       "+i.toFixed(1)+\`%
+• \`+t("calc_out.label.aov","AOV")+":                   "+e(u)+\`
+• \`+t("calc_out.label.monthly_content_cost","Monthly content cost")+":  "+e(c)+"  ·  "+t("calc_out.label.annual","Annual")+": "+e(l)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.what_if","🔄 What-If:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.label.conversion_rate_plus_1pp","Conversion rate +1pp")+" ("+i.toFixed(1)+"% → "+I.toFixed(1)+\`%):
+  • \`+t("calc_out.label.twelve_month_total","12-mo total")+": "+e(h)+" → "+e(x)+" (+"+e(x-h)+\`)
+  • \`+t("calc_out.label.roi","ROI")+": "+d.toFixed(0)+"% → "+U.toFixed(0)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.break_even","⚖️ Break-Even:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.label.required_conversion_rate","Required conversion rate to break even at 12-mo")+": "+f.toFixed(2)+\`%
+  • \`+t("calc_out.label.currently","Currently")+": "+i.toFixed(1)+\`%
+  • \`+t("calc_out.label.gap","Gap")+": "+(f-i>0?"+":"")+(f-i).toFixed(2)+\`pp
+  • \`+t("calc_out.label.reduce_content_cost_by","Or reduce content cost by")+" "+((c-l/12*(f*.01/i*.01))/c*100).toFixed(0)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.content_marketing_roi.row.milestone_ramp_up","Ramp-up: "+o+" months × "+e(c)+" = "+e(o*c)+" sunk",{months:String(o),cost:e(c),sunk:e(o*c)})+\`
+• \`+t("calc_out.content_marketing_roi.row.milestone_steady_state","Steady state (post-month "+o+"): "+e(v)+"/month net",{months:String(o),net:e(v)})+\`
+• \`+t("calc_out.label.annual_steady_state_projection","Annual steady-state projection")+": "+e(E)+\`
+• \`+t("calc_out.label.twelve_month_cumulative","12-mo cumulative")+": "+e(h)+" net  ("+d.toFixed(0)+\`% ROI)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+p+\`
+\`]};return[O(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

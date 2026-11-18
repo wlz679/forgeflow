@@ -48,28 +48,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cnn=function(x){return Math.max(0,x)};
-  var base = cnn(Number(inputs.base_salary) || 0);
-  var ben = cnn(Number(inputs.benefits_pct) || 0);
-  var tax = cnn(Number(inputs.payroll_tax_pct) || 0);
-  var ovh = cnn(Number(inputs.overhead_pct) || 0);
-  var total = base + base * (ben + tax + ovh) / 100;
-  var mult = base === 0 ? 0 : total / base;
-  var band = mult <= 1.25 ? 'Excellent' : mult <= 1.40 ? 'Good' : mult <= 1.60 ? 'Warning' : 'Critical';
-  var emoji = mult <= 1.25 ? '🟢' : mult <= 1.40 ? '🟡' : mult <= 1.60 ? '🟠' : '🔴';
-  var benAmt = base * ben / 100, taxAmt = base * tax / 100, ovhAmt = base * ovh / 100;
-  var cutToEx = total - base * 1.25;
-  return [
-    '🩺 Fully-Loaded Health: ' + emoji + ' ' + band + ' (' + mult.toFixed(2) + 'x base)',
-    '📊 Snapshot: Total ' + total.toLocaleString() + ' = Base ' + base.toLocaleString() + ' + Benefits ' + benAmt.toLocaleString() + ' + Tax ' + taxAmt.toLocaleString() + ' + Overhead ' + ovhAmt.toLocaleString(),
-    '🔄 What-If: if benefits drop to 20%, total drops to ' + Math.round(base + base * (20 + tax + ovh) / 100).toLocaleString() + ' (' + ((base + base * (20 + tax + ovh) / 100) / base).toFixed(2) + 'x)',
-    '⚖️ Break-Even: to hit 🟢 Excellent (≤1.25x), must cut ' + Math.round(cutToEx).toLocaleString() + ' from benefits/tax/overhead combined',
-    '🎯 Milestone: re-benchmark benefits + tax components every Q2 — they drift with healthcare inflation',
-    '💡 Tip: BLS ECEC tracks national avg ~1.30x — companies consistently >1.5x have bloated overhead (often equipment or management).'
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},d=function(e,t,a,n){return e+e*(t+a+n)/100},u=function(e,t){return t===0?0:e/t},f=function(e){return e<=o.excellent.threshold?"excellent":e<=o.good.threshold?"good":e<=o.warning.threshold?"warning":"critical"},r=function(e){return"$"+Math.round(e).toLocaleString()},i=function(e){return e.toFixed(2)+"x"},s=function(e){return e.toFixed(1)+"%"},b=function(e,t,a){var n=p(e);return Array.isArray(n)?n.join(\`
+\`):String(n)};var M=l,q=d,E=u,N=f,S=r,I=i,W=s,j=b,o={excellent:{threshold:1.25,label:"🟢 Excellent",message:"Lean cost structure — benefits + tax + overhead all in line with BLS averages."},good:{threshold:1.4,label:"🟡 Good",message:"Typical mid-market SaaS overhead — small optimization room in benefits or equipment."},warning:{threshold:1.6,label:"🟠 Warning",message:"Above-market overhead — investigate benefits vendor, equipment refresh, or management bloat."},critical:{threshold:null,label:"🔴 Critical",message:"Severely bloated overhead — every hire costs >60% above base salary."}},p=function(e){const t=l(Number(e.base_salary)||0),a=l(Number(e.benefits_pct)||0),n=l(Number(e.payroll_tax_pct)||0),c=l(Number(e.overhead_pct)||0),h=d(t,a,n,c),m=u(h,t),y=f(m),x=o[y],_=t*a/100,k=t*n/100,C=t*c/100,w=t*o.excellent.threshold,F=h-w,v=t+t*(20+n+c)/100,g=u(v,t);return["🩺 Fully-Loaded Health: "+x.label+" ("+i(m)+" base · "+r(h)+" total)","📊 Snapshot: Total "+r(h)+" = Base "+r(t)+" + Benefits "+s(a)+" ("+r(_)+") + Payroll Tax "+s(n)+" ("+r(k)+") + Overhead "+s(c)+" ("+r(C)+")","🔄 What-If: if benefits drop to 20%, total drops to "+r(v)+" ("+i(g)+", "+(g<m?"improvement":"worsening")+")","⚖️ Break-Even: to hit 🟢 Excellent ("+i(o.excellent.threshold)+" ceiling), must cut "+r(F)+" from benefits + tax + overhead combined","🎯 Milestone: re-benchmark benefits + tax components every Q2 — healthcare inflation averages 5-7%/yr","💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer."]};return[b(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

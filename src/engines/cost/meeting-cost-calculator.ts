@@ -119,102 +119,84 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var att=cnn(parseFloat(inputs.attendees)||0);" +
-  "var ahr=cnn(parseFloat(inputs.avgHourlyRate)||0);" +
-  "var mm=cnn(parseFloat(inputs.meetingMinutes)||0);" +
-  "var mpw=cnn(parseFloat(inputs.meetingsPerWeek)||0);" +
-  "var hpm=mm/60;" +
-  "var cpm=att*ahr*hpm;" +
-  "var cpmin=mm>0?cpm/mm:0;" +
-  "var wh=att*hpm*mpw;" +
-  "var wc=cpm*mpw;" +
-  "var ac=wc*48;" +
-  "var qc=ac/4;" +
-  "var ah=wh*48;" +
-  "var csm=1.5;" +
-  "var tcwc=ac*csm;" +
-  "var async=wc*0.1;" +
-  "var asbe=cpm>0&&async<cpm;" +
-  "var tp=(att*mpw*48).toLocaleString();" +
-  "function fmt(n){return n.toFixed(2)}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  "var r='';" +
-  "r+='\\u23F0 Meeting Cost Calculator\\n\\n';" +
-  "r+='\\uD83D\\uDCCB Meeting Setup:\\n';" +
-  "r+='\\u2022 Attendees:                       '+att+' people\\n';" +
-  "r+='\\u2022 Avg Hourly Rate:           $'+loc(ahr)+'/hr\\n';" +
-  "r+='\\u2022 Meeting Length:             '+mm+' min  ('+fmt(hpm)+' hrs)\\n';" +
-  "r+='\\u2022 Meetings Per Week:      '+mpw+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Cost Snapshot:\\n';" +
-  "r+='\\u2022 Cost Per Meeting:           $'+fmt(cpm)+'\\n';" +
-  "r+='\\u2022 Cost Per Minute:                $'+fmt(cpmin)+'\\n';" +
-  "r+='\\u2022 Cost Per Person:                $'+fmt(mm>0?cpm/att:0)+'\\n';" +
-  "r+='\\u2022 Weekly Cost:                       $'+fmt(wc)+'  ('+fmt(wh)+' person-hrs)\\n';" +
-  "r+='\\u2022 Quarterly Cost:                  $'+loc(qc)+'\\n';" +
-  "r+='\\u2022 Annual Cost:                          $'+loc(ac)+'  ('+loc(ah)+' person-hrs)\\n';" +
-  "r+='\\u2022 True Cost (with context switch):  $'+loc(tcwc)+'/yr  (\\u00d71.5 overhead)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 Key Metrics:\\n';" +
-  "r+='\\u2022 Person-Hours / Meeting:    '+fmt(att*hpm)+' hrs\\n';" +
-  "r+='\\u2022 Person-Hours / Year:           '+loc(ah)+' hrs  (\\u2248 '+(ah/2080).toFixed(2)+' FTE)\\n';" +
-  "r+='\\u2022 Meetings / Year:                       '+(mpw*48)+' meetings\\n';" +
-  "r+='\\u2022 Total Person-Attendances:   '+tp+' person-events\\n';" +
-  "r+='\\u2022 Average Per-Attendee Cost:    $'+fmt(mm>0?cpm/att:0)+'/meeting  ($'+fmt(mm>0?(cpm/att)*mpw*48:0)+'/yr)\\n';" +
-  "r+='\\u2022 Weekly Time Burn:                       '+fmt(wh)+' hrs of team time\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Meeting Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(wc<100)r+='\\u2022 \\uD83D\\uDFE2 Low cost \\u2014 efficient use of meeting time.\\n';" +
-  "else if(wc<500)r+='\\u2022 \\uD83D\\uDFE1 Moderate \\u2014 review quarterly for necessity.\\n';" +
-  "else if(wc<2000)r+='\\u2022 \\uD83D\\uDFE0 Significant \\u2014 try async or shorter formats.\\n';" +
-  "else if(wc<10000)r+='\\u2022 \\uD83D\\uDD34 Heavy \\u2014 organizational drag, audit urgently.\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDEA8 Critical \\u2014 slash meetings ruthlessly.\\n';" +
-  "if(ah>=2000)r+='\\u2022 \\u26A0\\uFE0F '+loc(ah)+' person-hours/yr = 1+ FTE spent in meetings.\\n';" +
-  "else if(ah>=500)r+='\\u2022 \\u26A0\\uFE0F '+loc(ah)+' person-hours/yr is significant (\\u2248 25% of 1 FTE).\\n';" +
-  "else r+='\\u2022 \\u2705 '+loc(ah)+' person-hours/yr is manageable.\\n';" +
-  "if(mm>60)r+='\\u2022 \\uD83D\\uDFE0 Meetings over 60 min \\u2014 context-switch cost dominates the value.\\n';" +
-  "else if(mm>=30)r+='\\u2022 \\uD83D\\uDFE1 30-60 min meetings \\u2014 typical but consider tightening to 25 or 45.\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDFE2 Under 30 min \\u2014 good timebox discipline.\\n';" +
-  "r+='\\n\\uD83C\\uDFAF Quarterly & Annual Projection:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 1 Quarter:                              $'+loc(qc)+'  ('+loc(ah/4)+' person-hrs)\\n';" +
-  "r+='\\u2022 2 Quarters:                            $'+loc(qc*2)+'\\n';" +
-  "r+='\\u2022 3 Quarters:                            $'+loc(qc*3)+'\\n';" +
-  "r+='\\u2022 Full Year:                                  $'+loc(ac)+'  ('+loc(ah)+' person-hrs)\\n';" +
-  "r+='\\u2022 2 Years (run-rate):                  $'+loc(ac*2)+'\\n';" +
-  "r+='\\u2022 Annual Equivalent FTEs:           '+(ah/2080).toFixed(2)+' FTE  ($'+loc(ahr*2080)+' salary each)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Async vs Sync Break-Even:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(asbe)r+='\\u2022 \\uD83D\\uDFE2 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $'+fmt(cpm)+'/meeting.\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDFE1 Meeting is justified \\u2014 value exceeds async cost only if decision is required.\\n';" +
-  "r+='\\u2022 Meeting Cost:                          $'+fmt(cpm)+'/meeting\\n';" +
-  "r+='\\u2022 Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)\\n';" +
-  "r+='\\u2022 Break-Even Decision Rule:  Save meeting for decisions; document everything else async.\\n';" +
-  "r+='\\u2022 Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Cut attendees in half:                    Save $'+loc(wc*0.5*48)+'/yr  ('+(att/2)+' core + async for others)\\n';" +
-  "r+='\\u2022 Shorten by 25%:                            Save $'+loc(wc*0.25*48)+'/yr  ('+(mm*0.75)+' min instead of '+mm+')\\n';" +
-  "r+='\\u2022 Cut frequency by 1/wk:                  Save $'+loc((cpm)*48)+'/yr  (down to '+(mpw-1)+' meetings/wk)\\n';" +
-  "r+='\\u2022 Replace with async update:           Save $'+loc(wc*48)+'/yr  (Loom + Slack thread)\\n';" +
-  "r+='\\u2022 Switch to 25-min default:              Save $'+loc(wc*0.17*48)+'/yr  (vs 30-min default)\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year \\u2014 worth optimizing.';" +
-  "var results=[r];" +
-  "var mls=[5,10,15,20,30,45,60,90,120];" +
-  "for(var i=0;i<mls.length;i++){" +
-  "var mi=mls[i];" +
-  "var hr=mi/60;" +
-  "var co=att*ahr*hr;" +
-  "var cw=co*mpw;" +
-  "var cy=cw*48;" +
-  "var hy=att*hr*mpw*48;" +
-  "results.push('Comparison: '+mi+' min meeting \\u2192 $'+fmt(co)+'/meeting | $'+fmt(cw)+'/wk | $'+loc(cy)+'/yr | '+loc(hy)+' hrs/yr');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let u=function(o){return Number.isNaN(o)?0:Math.max(0,o)},p=function(o){const s=u(parseFloat(o.attendees)||0),g=u(parseFloat(o.avgHourlyRate)||0),n=u(parseFloat(o.meetingMinutes)||0),c=u(parseFloat(o.meetingsPerWeek)||0),h=n/60,r=s*g*h,P=n>0?r/n:0,d=s*h*c,i=r*c,y=i*48,m=y/4,a=d*48,F=y*1.5,A=i*.1,x=r>0&&A<r,E=(s*c*48).toLocaleString(),t=l=>l.toFixed(2),e=l=>Math.round(l).toLocaleString(),f=[];f.push(\`⏰ Meeting Cost Calculator
+
+📋 Meeting Setup:
+• Attendees:                       \`+s+\` people
+• Avg Hourly Rate:           $\`+e(g)+\`/hr
+• Meeting Length:             \`+n+" min  ("+t(h)+\` hrs)
+• Meetings Per Week:      \`+c+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 Cost Snapshot:
+• Cost Per Meeting:           $\`+t(r)+\`
+• Cost Per Minute:                $\`+t(P)+\`
+• Cost Per Person:                $\`+t(n>0?r/s:0)+\`
+• Weekly Cost:                       $\`+t(i)+"  ("+t(d)+\` person-hrs)
+• Quarterly Cost:                  $\`+e(m)+\`
+• Annual Cost:                          $\`+e(y)+"  ("+e(a)+\` person-hrs)
+• True Cost (with context switch):  $\`+e(F)+\`/yr  (×1.5 overhead)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Key Metrics:
+• Person-Hours / Meeting:    \`+t(s*h)+\` hrs
+• Person-Hours / Year:           \`+e(a)+" hrs  (≈ "+(a/2080).toFixed(2)+\` FTE)
+• Meetings / Year:                       \`+c*48+\` meetings
+• Total Person-Attendances:   \`+E+\` person-events
+• Average Per-Attendee Cost:    $\`+t(n>0?r/s:0)+"/meeting  ($"+t(n>0?r/s*c*48:0)+\`/yr)
+• Weekly Time Burn:                       \`+t(d)+\` hrs of team time
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Meeting Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(i<100?\`• 🟢 Low cost — efficient use of meeting time.
+\`:i<500?\`• 🟡 Moderate — review quarterly for necessity.
+\`:i<2e3?\`• 🟠 Significant — try async or shorter formats.
+\`:i<1e4?\`• 🔴 Heavy — organizational drag, audit urgently.
+\`:\`• 🚨 Critical — slash meetings ruthlessly.
+\`)+(a>=2e3?"• ⚠️ "+e(a)+\` person-hours/yr = 1+ FTE spent in meetings.
+\`:a>=500?"• ⚠️ "+e(a)+\` person-hours/yr is significant (≈ 25% of 1 FTE).
+\`:"• ✅ "+e(a)+\` person-hours/yr is manageable.
+\`)+(n>60?\`• 🟠 Meetings over 60 min — context-switch cost dominates the value.
+\`:n>=30?\`• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.
+\`:\`• 🟢 Under 30 min — good timebox discipline.
+\`)+\`
+🎯 Quarterly & Annual Projection:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 1 Quarter:                              $\`+e(m)+"  ("+e(a/4)+\` person-hrs)
+• 2 Quarters:                            $\`+e(m*2)+\`
+• 3 Quarters:                            $\`+e(m*3)+\`
+• Full Year:                                  $\`+e(y)+"  ("+e(a)+\` person-hrs)
+• 2 Years (run-rate):                  $\`+e(y*2)+\`
+• Annual Equivalent FTEs:           \`+(a/2080).toFixed(2)+" FTE  ($"+e(g*2080)+\` salary each)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Async vs Sync Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(x?"• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $"+t(r)+\`/meeting.
+\`:\`• 🟡 Meeting is justified — value exceeds async cost only if decision is required.
+\`)+"• Meeting Cost:                          $"+t(r)+\`/meeting
+• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)
+• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.
+• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Cut attendees in half:                    Save $\`+e(i*.5*48)+"/yr  ("+s/2+\` core + async for others)
+• Shorten by 25%:                            Save $\`+e(i*.25*48)+"/yr  ("+n*.75+" min instead of "+n+\`)
+• Cut frequency by 1/wk:                  Save $\`+e(r*48)+"/yr  (down to "+(c-1)+\` meetings/wk)
+• Replace with async update:           Save $\`+e(i*48)+\`/yr  (Loom + Slack thread)
+• Switch to 25-min default:              Save $\`+e(i*.17*48)+\`/yr  (vs 30-min default)
+
+💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.\`);const v=[5,10,15,20,30,45,60,90,120];for(let l=0;l<v.length;l++){const C=v[l],M=C/60,k=s*g*M,w=k*c,_=w*48,H=s*M*c*48;f.push("Comparison: "+C+" min meeting → $"+t(k)+"/meeting | $"+t(w)+"/wk | $"+e(_)+"/yr | "+e(H)+" hrs/yr")}return f},$=function(o,s,g){var n=S(o);return Array.isArray(n)?n.join(\`
+\`):String(n)};var T=u,b=p,L=$,S=function(o){return p(o)};return[$(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-meeting-cost-calculator',

@@ -128,78 +128,38 @@ function calculate(inputs: Record<string, string>): string[] {
 // customFn 内不引用任何模块作用域变量，也不含 import。
 
 const customFn =
-  "function cnn(x){return Number.isNaN(x)?0:Math.max(0,x);}\n" +
-  "function rmrr(s,d,c){return s-d-c;}\n" +
-  "function grrf(s,d,c){if(s===0)return 0;return rmrr(s,d,c)/s;}\n" +
-  "function bandOf(v){if(v>=0.95)return 'excellent';if(v>=0.90)return 'good';if(v>=0.80)return 'warning';return 'critical';}\n" +
-  "var BM={excellent:'\uD83D\uDFE2',good:'\uD83D\uDFE1',warning:'\uD83D\uDFE0',critical:'\uD83D\uDD34'};\n" +
-  "const startingMRR = cnn(parseFloat(inputs.startingMRR) || 0);\n" +
-  "const downgradeMRR = cnn(parseFloat(inputs.downgradeMRR) || 0);\n" +
-  "const churnedMRR = cnn(parseFloat(inputs.churnedMRR) || 0);\n" +
-  "if (startingMRR === 0 && downgradeMRR === 0 && churnedMRR === 0) {\n" +
-  "return [\n" +
-  "'\uD83D\uDCCA GRR Calculator\\n\\n\uD83D\uDCCA Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention \u2014 the pure retention signal. GRR \u2264 100% always.',\n" +
-  "];\n" +
-  "}\n" +
-  "const retained = rmrr(startingMRR, downgradeMRR, churnedMRR);\n" +
-  "const ratio = grrf(startingMRR, downgradeMRR, churnedMRR);\n" +
-  "const lostMRR = downgradeMRR + churnedMRR;\n" +
-  "const lostPct = startingMRR > 0 ? (lostMRR / startingMRR) * 100 : 0;\n" +
-  "const money = (n) => '$' + Math.round(n).toLocaleString('en-US');\n" +
-  "const pctInt = (n) => Math.round(n * 100).toString();\n" +
-  "const pct1 = (n) => n.toFixed(1);\n" +
-  "const band = bandOf(ratio);\n" +
-  "const healthEmoji = BM[band];\n" +
-  "const healthLabel =\n" +
-  "band === 'excellent'\n" +
-  "? 'Excellent \u2014 GRR \u2265 95%; best-in-class SaaS retention, minimal churn leakage'\n" +
-  ": band === 'good'\n" +
-  "? 'Good \u2014 GRR 90\u201395%; SaaS Capital median, healthy retention engine'\n" +
-  ": band === 'warning'\n" +
-  "? 'Warning \u2014 GRR 80\u201390%; high churn, mid-market median, intervention needed'\n" +
-  ": 'Critical \u2014 GRR < 80%; severe churn, unsustainable, urgent intervention';\n" +
-  "const grrHC = grrf(startingMRR, downgradeMRR, churnedMRR / 2);\n" +
-  "const grrZD = grrf(startingMRR, 0, churnedMRR);\n" +
-  "const grrHB = grrf(startingMRR, downgradeMRR / 2, churnedMRR / 2);\n" +
-  "const liftHC = grrHC - ratio;\n" +
-  "const liftZD = grrZD - ratio;\n" +
-  "const liftHB = grrHB - ratio;\n" +
-  "const targetRetained = 0.95 * startingMRR;\n" +
-  "const gapToExcellent = Math.max(0, targetRetained - retained);\n" +
-  "let gapToNext, nextTier;\n" +
-  "if (band === 'critical') { gapToNext = 0.80 * startingMRR - retained; nextTier = '\uD83D\uDFE0 Warning (80%)'; }\n" +
-  "else if (band === 'warning') { gapToNext = 0.90 * startingMRR - retained; nextTier = '\uD83D\uDFE1 Good (90%)'; }\n" +
-  "else if (band === 'good') { gapToNext = 0.95 * startingMRR - retained; nextTier = '\uD83D\uDFE2 Excellent (95%)'; }\n" +
-  "else { gapToNext = 0; nextTier = 'top tier maintained'; }\n" +
-  "const annualCompounded = startingMRR * Math.pow(1 - lostPct / 100, 12);\n" +
-  "let tip;\n" +
-  "if (band === 'critical') tip = 'GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage.';\n" +
-  "else if (band === 'warning') tip = 'GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.';\n" +
-  "else if (band === 'good') tip = 'GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR.';\n" +
-  "else tip = 'GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.';\n" +
-  "const r =\n" +
-  "'\uD83D\uDCCA GRR Calculator\\n\\n' +\n" +
-  "'\uD83E\uDE7A Health:\\n' +\n" +
-  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "'\u2022 ' + healthEmoji + ' ' + healthLabel + '\\n' +\n" +
-  "'\u2022 GRR: ' + pctInt(ratio) + '%  \u00B7  Lost as % of start: ' + pct1(lostPct) + '%\\n' +\n" +
-  "'\u2022 Retained MRR: ' + money(retained) + '  \u00B7  Lost MRR (downgrade + churn): ' + money(lostMRR) + '\\n\\n' +\n" +
-  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "'\uD83D\uDCCA Inputs Snapshot:\\n' +\n" +
-  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "'\u2022 Starting MRR:           ' + money(startingMRR) + '\\n' +\n" +
-  "'\u2022 Downgrade MRR:         -' + money(downgradeMRR) + '\\n' +\n" +
-  "'\u2022 Churned MRR:           -' + money(churnedMRR) + '\\n' +\n" +
-  "'\u2022 Retained MRR:           ' + money(retained) + ' (starting - downgrade - churn)\\n' +\n" +
-  "'\u2022 GRR ratio: ' + ratio.toFixed(4) + ' (' + pctInt(ratio) + '%)  \u00B7  Lost as % of start: ' + pct1(lostPct) + '%\\n\\n' +\n" +
-  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "'\uD83C\uDFAF Milestone:\\n' +\n" +
-  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n' +\n" +
-  "'\u2022 Next tier: ' + nextTier + '\\n' +\n" +
-  "'\u2022 Gap: ' + money(Math.max(0, gapToNext)) + ' more retained MRR' +\n" +
-  "'\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\\n\\n' +\n" +
-  "'\uD83D\uDCA1 Tip: ' + tip + '\\n';\n" +
-  "return [r];\n";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,n,e){return t-n-e},c=function(t,n,e){return t===0?0:f(t,n,e)/t},M=function(t){return t>=h.excellent[0]?"excellent":t>=h.good[0]?"good":t>=h.warning[0]?"warning":"critical"},m=function(t,n,e){var r=v(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var N=d,E=f,B=c,D=M,L=m,y={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},h={excellent:[.95,null],good:[.9,.95],warning:[.8,.9],critical:[0,.8]},v=function(t){const n=d(parseFloat(t.startingMRR)||0),e=d(parseFloat(t.downgradeMRR)||0),r=d(parseFloat(t.churnedMRR)||0);if(n===0&&e===0&&r===0)return[\`📊 GRR Calculator
+
+📊 Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention — the pure retention signal. GRR ≤ 100% always.\`];const s=f(n,e,r),a=c(n,e,r),w=e+r,p=n>0?w/n*100:0,i=g=>"$"+Math.round(g).toLocaleString("en-US"),x=g=>Math.round(g*100).toString(),G=g=>g.toFixed(1),o=M(a),S=y[o],b=o==="excellent"?"Excellent — GRR ≥ 95%; best-in-class SaaS retention, minimal churn leakage":o==="good"?"Good — GRR 90–95%; SaaS Capital median, healthy retention engine":o==="warning"?"Warning — GRR 80–90%; high churn, mid-market median, intervention needed":"Critical — GRR < 80%; severe churn, unsustainable, urgent intervention",C=c(n,e,r/2),_=c(n,0,r),k=c(n,e/2,r/2),j=C-a,I=_-a,P=k-a,F=.95*n,T=Math.max(0,F-s);let l,R;o==="critical"?(l=.8*n-s,R="🟠 Warning (80%)"):o==="warning"?(l=.9*n-s,R="🟡 Good (90%)"):o==="good"?(l=.95*n-s,R="🟢 Excellent (95%)"):(l=0,R="top tier maintained");const W=n*Math.pow(1-p/100,12);let u;return o==="critical"?u="GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage.":o==="warning"?u="GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.":o==="good"?u="GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR.":u="GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.",[\`📊 GRR Calculator
+
+🩺 Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+S+" "+b+\`
+• GRR: \`+x(a)+"%  ·  Lost as % of start: "+G(p)+\`%
+• Retained MRR: \`+i(s)+"  ·  Lost MRR (downgrade + churn): "+i(w)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Inputs Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Starting MRR:           \`+i(n)+\`
+• Downgrade MRR:         -\`+i(e)+\`
+• Churned MRR:           -\`+i(r)+\`
+• Retained MRR:           \`+i(s)+\` (starting - downgrade - churn)
+• GRR ratio: \`+a.toFixed(4)+" ("+x(a)+"%)  ·  Lost as % of start: "+G(p)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Milestone:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Next tier: \`+R+\`
+• Gap: \`+i(Math.max(0,l))+\` more retained MRR━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+u+\`
+\`]};return[m(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

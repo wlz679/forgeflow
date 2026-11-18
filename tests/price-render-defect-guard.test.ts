@@ -20,6 +20,10 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
+
+// ⚠️ P168 B3-10：扫引擎源码时必须**去掉「生成区」**（客户端 customFn 的派生副本）——
+//   否则副本里被折叠的标量表 / 压缩器的改名会**误伤**「不得写死 X」型判据。
+import { stripGeneratedRegion, generatedRegion, foldedNumber } from './_generated-region.ts';
 import { resolve } from 'node:path';
 
 import PRICING from '../src/data/ai-pricing.json';
@@ -77,7 +81,7 @@ function pushStatementEnd(lines: string[], i: number): number {
  *   ⇒ 这里取**整条 push 语句覆盖到的所有行**；逐行判据本身不变。
  */
 function pushLines(rel: string): Array<[number, string]> {
-  const src = readFileSync(resolve(root, rel), 'utf-8');
+  const src = stripGeneratedRegion(readFileSync(resolve(root, rel), 'utf-8'));
   const lines = src.split('\n');
   const out: Array<[number, string]> = [];
   let i = 0;
@@ -117,7 +121,7 @@ test('D2：倍数不得是写死的字面量，必须由当前单价算出', () 
 });
 
 test('D3：训练引擎的 Spot/Reserved 折扣带必须来自数据集，不得写死单一百分比', () => {
-  const src = readFileSync(resolve(root, TRAINING_ENGINE), 'utf-8');
+  const src = stripGeneratedRegion(readFileSync(resolve(root, TRAINING_ENGINE), 'utf-8'));
   const gpu: any = (PRICING as any).gpu;
   const providers = Object.values(gpu.providers) as any[];
   assert.ok(providers.length > 0, '数据集 gpu.providers 不能为空');
@@ -140,9 +144,32 @@ test('D3：训练引擎的 Spot/Reserved 折扣带必须来自数据集，不得
   assert.ok(/spotMult/.test(src), '训练引擎没有引用 spotMult ⇒ 现货折扣带没有单一真相源');
   assert.ok(/reservedMult/.test(src), '训练引擎没有引用 reservedMult ⇒ 预留折扣带没有单一真相源');
 
-  // customFn 侧也必须带同一组带（由 codegen 从数据集生成）
-  assert.ok(/SPMIN/.test(src), 'customFn 缺少 SPMIN/SPMAX（现货带）');
-  assert.ok(/RPMIN/.test(src), 'customFn 缺少 RPMIN/RPMAX（预留带）');
+  // ⚠️ P168 B3-10：客户端 customFn 不再是「平行实现」，而是**服务端同一份代码的派生副本**
+  //   ⇒ 旧的「customFn 里必须出现 SPMIN/SPMAX 这两个**变量名**」已经失效
+  //   （压缩器把变量名改写了 ⇒ 名字不在了，但**值**在 —— 那才是要守的东西）。
+  //   ⇒ 改守「生成区里带着**数据集当前算出来的折扣带**」⇒ 副本陈旧 ⇒ 这里会红。
+  const region = generatedRegion(readFileSync(resolve(root, TRAINING_ENGINE), 'utf-8'));
+  assert.ok(region.length > 0, '训练引擎没有生成区（客户端 customFn 副本）');
+  //   折扣带在生成区里是**运行时算出来的**（`Math.min(...mults.map(p=>p.spotMult))`）
+  //   ⇒ 落盘的是**折叠后的乘数** ⇒ 要守的是「乘数 == 数据集当前值」。
+  // ⚠️ 锚点用**数据集里的 provider key**（`runpod` / `vastai`），不是展示名（`Vast.ai`）
+  //   ⇒ 拿展示名当锚点 ⇒ 查不到 ⇒ null ⇒ 假红。
+  for (const [key, p] of Object.entries(gpu.providers) as any[]) {
+    const foldedSpot = foldedNumber(region, key + ':{', 'spotMult');
+    const foldedReserved = foldedNumber(region, key + ':{', 'reservedMult');
+    assert.equal(
+      foldedSpot,
+      Number(p.spotMult),
+      `the generated client customFn carries a stale spotMult for ${p.name} — ` +
+        `the copy is folded from the server code ⇒ re-run scripts/codegen-customfn.mjs`,
+    );
+    assert.equal(
+      foldedReserved,
+      Number(p.reservedMult),
+      `the generated client customFn carries a stale reservedMult for ${p.name} — ` +
+        `the copy is folded from the server code ⇒ re-run scripts/codegen-customfn.mjs`,
+    );
+  }
 });
 
 test('D3b：训练引擎输出的折扣带 == 数据集按供应商算出的带', () => {
@@ -177,7 +204,7 @@ test('D3b：训练引擎输出的折扣带 == 数据集按供应商算出的带'
  *     （输出，不是代码），里面出现 $0.003 是合法的。
  */
 test('D2b：图片引擎不得出现数据集拥有的单价字面量（0.003 / 0.04 / 0.08）', () => {
-  const src = readFileSync(resolve(root, IMAGE_ENGINE), 'utf-8');
+  const src = stripGeneratedRegion(readFileSync(resolve(root, IMAGE_ENGINE), 'utf-8'));
   const arith = src
     .split('\n')
     .map((l, i) => [i + 1, l] as [number, string])
@@ -203,7 +230,7 @@ test('D2b：图片引擎不得出现数据集拥有的单价字面量（0.003 / 
  * （`const sd4Ratio = 13;`）它看不见。这是 P163 变异台子 R2b 暴露的洞。
  */
 test('D2c：倍数必须除以数据集单价（不得除以数字字面量）', () => {
-  const src = readFileSync(resolve(root, IMAGE_ENGINE), 'utf-8');
+  const src = stripGeneratedRegion(readFileSync(resolve(root, IMAGE_ENGINE), 'utf-8'));
   const literalDiv = src
     .split('\n')
     .map((l, i) => [i + 1, l] as [number, string])
@@ -226,7 +253,7 @@ test('D2c：倍数必须除以数据集单价（不得除以数字字面量）',
  * 是同一个数的两个副本 —— 数据集一改就会打架。
  */
 test('D3c：训练引擎的 full-FT 倍数必须由 loraSpeedup 派生', () => {
-  const src = readFileSync(resolve(root, TRAINING_ENGINE), 'utf-8');
+  const src = stripGeneratedRegion(readFileSync(resolve(root, TRAINING_ENGINE), 'utf-8'));
   assert.ok(
     /\/\s*LORA_EPOCH_SPEEDUP\b/.test(src),
     '训练引擎没有「除以 LORA_EPOCH_SPEEDUP」的倍数计算 ⇒ full-FT 倍数不是由数据集派生的',

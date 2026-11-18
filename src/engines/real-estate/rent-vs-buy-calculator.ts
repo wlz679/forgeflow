@@ -472,94 +472,78 @@ function calculateRentVsBuy(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function monthlyPI(p,r,n){if(n<=0)return 0;if(r===0)return p/n;return(p*r)/(1-Math.pow(1+r,-n));}" +
-  "function totalRentPaidSeries(mr,gr,y){var g=gr/100;if(y<=0)return 0;if(g===0)return mr*12*y;return mr*12*(Math.pow(1+g,y)-1)/g;}" +
-  "function opportunityGain(dp,ar,y){if(y<=0)return 0;return dp*(Math.pow(1+ar/100,y)-1);}" +
-  "function futureValue(hp,ap,y){return hp*Math.pow(1+ap/100,y);}" +
-  "function netCostBuy(homePrice,downPayment,mortgageRate,yearsToStay,annualAppreciation){var principal=homePrice-downPayment;var monthlyRate=mortgageRate/100/12;var n=yearsToStay*12;var monthly=monthlyPI(principal,monthlyRate,n);var totalMortgagePaid=monthly*n;var fv=futureValue(homePrice,annualAppreciation,yearsToStay);var sellingCosts=fv*0.06;var netProceeds=fv-sellingCosts;var buyClosingCosts=homePrice*0.03;var initialOutlay=downPayment+buyClosingCosts;var monthlyPropertyTaxMaint=homePrice*0.012/12;var totalHoldingCosts=monthlyPropertyTaxMaint*n;var cost=initialOutlay+totalMortgagePaid+totalHoldingCosts-netProceeds;return{initialOutlay:initialOutlay,totalMortgagePaid:totalMortgagePaid,totalHoldingCosts:totalHoldingCosts,sellingCosts:sellingCosts,netProceeds:netProceeds,netCostBuy:cost};}" +
-  "function totalRentCost(mr,ri,dp,y){var trp=totalRentPaidSeries(mr,ri,y);var og=opportunityGain(dp,7,y);return{totalRentPaid:trp,opportunityGain:og,total:trp-og};}" +
-  "function verdict(savings){if(savings>30000)return{e:'\\uD83D\\uDFE2',l:tk('calc_out.rent_vs_buy.row.verdict_buy_strongly_favored','BUY strongly favored \\u2014 buying saves > $30K over renting')};if(savings>=-30000)return{e:'\\uD83D\\uDFE1',l:tk('calc_out.rent_vs_buy.row.verdict_close_call','CLOSE call \\u2014 within $30K; sensitivity matters')};return{e:'\\uD83D\\uDFE0',l:tk('calc_out.rent_vs_buy.row.verdict_rent_favored','RENT favored \\u2014 renting saves > $30K over buying')};}" +
-  "var clampNonNegative=function(x){return Math.max(0,x)};" +
-  "var monthlyRent=clampNonNegative(parseFloat(inputs.monthlyRent)||0);" +
-  "var homePrice=clampNonNegative(parseFloat(inputs.homePrice)||0);" +
-  "var downPayment=clampNonNegative(parseFloat(inputs.downPayment)||0);" +
-  "var mortgageRate=parseFloat(inputs.mortgageRate)||0;" +
-  "var yearsToStay=clampNonNegative(parseFloat(inputs.yearsToStay)||0);" +
-  "var annualAppreciation=parseFloat(inputs.annualAppreciation)||0;" +
-  "var annualRentIncrease=parseFloat(inputs.annualRentIncrease)||0;" +
-  "if(yearsToStay<=0){return['$calc_out.section.rent_vs_buy_calculator|\\u23F0 Rent-vs-Buy Calculator|'+'\\n\\n'+'$calc_out.rent_vs_buy.row.enter_years_required|\\uD83D\\uDCB0 Enter years you plan to stay (>0). This is the horizon for the comparison.|'];}" +
-  "if(homePrice<=0&&monthlyRent<=0){return['$calc_out.section.rent_vs_buy_calculator|\\u23F0 Rent-vs-Buy Calculator|'+'\\n\\n'+'$calc_out.rent_vs_buy.row.enter_inputs_required|\\uD83D\\uDCB0 Enter rent, home price, and down payment to compare total cost over your stay horizon.|'];}" +
-  "var effHomePrice=homePrice>0?homePrice:monthlyRent*200;" +
-  "var effDown=downPayment>0?downPayment:effHomePrice*0.2;" +
-  "var buyRes=netCostBuy(effHomePrice,effDown,mortgageRate,yearsToStay,annualAppreciation);" +
-  "var rentRes=totalRentCost(monthlyRent,annualRentIncrease,effDown,yearsToStay);" +
-  "var savings=rentRes.total-buyRes.netCostBuy;" +
-  "var v=verdict(savings);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return '$'+fmt(n);}" +
-  "var horizonYears=[3,5,7,10,15,30];" +
-  "var horizonRows=horizonYears.map(function(h){var buyH=netCostBuy(effHomePrice,effDown,mortgageRate,h,annualAppreciation);var rentH=totalRentCost(monthlyRent,annualRentIncrease,effDown,h);var s=rentH.total-buyH.netCostBuy;var winner=s>30000?'BUY':s<-30000?'RENT':'CLOSE';return{h:h,buy:buyH.netCostBuy,rent:rentH.total,s:s,winner:winner};});" +
-  "var breakevenYr=null;" +
-  "for(var bi=0;bi<horizonRows.length-1;bi++){var a=horizonRows[bi];var b=horizonRows[bi+1];if(a.s<0&&b.s>=0){var t=-a.s/(b.s-a.s);breakevenYr=a.h+t*(b.h-a.h);break;}else if(a.s>=0&&b.s<0){var t=a.s/(a.s-b.s);breakevenYr=a.h+t*(b.h-a.h);break;}}" +
-  "var breakevenLabel=breakevenYr!==null?breakevenYr.toFixed(1)+' years':'beyond 30 years';" +
-  "var r2='';" +
-  "r2+='$calc_out.section.rent_vs_buy_calculator|\\u23F0 Rent-vs-Buy Calculator|'+'\\n\\n';" +
-  "r2+='$calc_out.section.decision_snapshot|\\uD83D\\uDCB0 Decision Snapshot:|'+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.years_to_plan_to_stay','\\u2022 Years you plan to stay:  '+yearsToStay+' years',{years:yearsToStay})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.current_monthly_rent','Current monthly rent')+':    ' + money(monthlyRent)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.home_price_assumed','Home price (assumed)')+':    ' + money(effHomePrice)+'\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.down_payment_assumed','\\u2022 Down payment (assumed):  '+money(effDown)+'  (20% if not specified)',{amount:money(effDown)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.verdict','Verdict')+':                 ' + v.e + ' '+v.l+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.cost_breakdown|\\uD83D\\uDCD0 Cost Breakdown:|'+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.buying_cost_over_years','Buying cost (over '+yearsToStay+' years):',{years:yearsToStay})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.down_plus_closing','Down + closing')+':         ' + money(buyRes.initialOutlay)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.total_mortgage_paid','Total mortgage paid')+':    ' + money(buyRes.totalMortgagePaid)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.property_tax_maint','Property tax + maint')+':   ' + money(buyRes.totalHoldingCosts)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.selling_costs_at_end','Selling costs (at end)')+': ' + money(buyRes.sellingCosts)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.net_proceeds_sale','Net proceeds (sale)')+':    ' + money(buyRes.netProceeds)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.net_cost_of_buying','Net cost of buying')+':     ' + money(buyRes.netCostBuy)+'\\n\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.renting_cost_over_years','Renting cost (over '+yearsToStay+' years):',{years:yearsToStay})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.total_rent_paid','Total rent paid')+':        ' + money(rentRes.totalRentPaid)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.opportunity_gain_7pct','Opportunity gain (7%)')+': -' + money(rentRes.opportunityGain)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.net_cost_of_renting','Net cost of renting')+':    ' + money(rentRes.total)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.verdict_health|\\uD83E\\uDE7A Verdict Health:|'+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+v.e+' '+v.l+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.savings_rent_vs_buy','Savings (rent vs buy)')+':  ' + money(savings)+'\\n';" +
-  "r2+='  '+tk('calc_out.rent_vs_buy.row.savings_positive_note','(positive = buying was cheaper by this much)')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.side_by_side|\\u2696\\uFE0F Side-by-Side:|'+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.buying_net_cost','Buying net cost')+':  ' + money(buyRes.netCostBuy)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.renting_net_cost','Renting net cost')+': ' + money(rentRes.total)+'\\n';" +
-  "r2+=(savings>0?tk('calc_out.rent_vs_buy.row.difference_buying_cheaper','\\u2022 Difference:       '+money(Math.abs(savings))+' (buying cheaper)',{amount:money(Math.abs(savings))}):savings<0?tk('calc_out.rent_vs_buy.row.difference_renting_cheaper','\\u2022 Difference:       '+money(Math.abs(savings))+' (renting cheaper)',{amount:money(Math.abs(savings))}):tk('calc_out.rent_vs_buy.row.difference_equal','\\u2022 Difference:       '+money(Math.abs(savings))+' (equal)',{amount:money(Math.abs(savings))}))+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  // 🎯 Stay-Horizon Milestone (matches calculate() output, uses pre-computed hrows + brkL)
-  "r2+='$calc_out.section.stay_horizon_milestone|\\uD83C\\uDFAF Stay-Horizon Milestone:|'+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.horizon_intro','At different stay horizons, the math flips:')+'\\n';" +
-  "for(var him=0;him<horizonRows.length;him++){var hr=horizonRows[him];var sign=hr.s>=0?'+':'-';var amount=fmt(Math.abs(hr.s));var lbl=(hr.winner==='BUY'?'buy wins':hr.winner==='RENT'?'rent wins':'close').padEnd(10);r2+=(hr.winner==='BUY'?tk('calc_out.rent_vs_buy.row.horizon_buy_wins','\\u2022 '+hr.h+'y: '+lbl+'('+sign+'$'+amount+')',{years:hr.h,sign:sign,amount:amount}):hr.winner==='RENT'?tk('calc_out.rent_vs_buy.row.horizon_rent_wins','\\u2022 '+hr.h+'y: '+lbl+'('+sign+'$'+amount+')',{years:hr.h,sign:sign,amount:amount}):tk('calc_out.rent_vs_buy.row.horizon_close','\\u2022 '+hr.h+'y: '+lbl+'('+sign+'$'+amount+')',{years:hr.h,sign:sign,amount:amount}))+'\\n';}" +
-  "r2+=tk('calc_out.rent_vs_buy.row.breakeven_note','\\uD83D\\uDCA1 Breakeven \\u2248 '+breakevenLabel+' \\u2014 selling + closing costs (~9%) recouped at this horizon.',{breakeven:breakevenLabel})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|'+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.whatif_stay_horizon_5y','\\u2022 Stay 5 years:  runs the comparison at 5y horizon',{years:'5'})+'\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.whatif_stay_horizon_10y','\\u2022 Stay 10 years: runs the comparison at 10y horizon',{years:'10'})+'\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.whatif_stay_horizon_15y','\\u2022 Stay 15 years: runs the comparison at 15y horizon',{years:'15'})+'\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.whatif_appreciation_plus_2pp','\\u2022 Appreciation +2pp: rerun with '+(annualAppreciation+2)+'% (boost buying math)',{appreciation:annualAppreciation+2})+'\\n';" +
-  "r2+=tk('calc_out.rent_vs_buy.row.whatif_down_20','\\u2022 20% down (vs current): rerun with $'+fmt(effHomePrice*0.2)+' down',{down:fmt(effHomePrice*0.2)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "var rentBuyTipParams={savings:money(Math.abs(savings)),years:String(yearsToStay),breakeven:breakevenLabel};" +
-  "var rentBuyTip=savings>30000?{code:'rentbuy_buy',params:rentBuyTipParams}:savings>=-30000?{code:'rentbuy_close',params:rentBuyTipParams}:{code:'rentbuy_rent',params:rentBuyTipParams};" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+JSON.stringify(rentBuyTip);" +
-  "var results=[r2];" +
-  "for(var hi=0;hi<horizonRows.length;hi++){var hr=horizonRows[hi];var buy=money(hr.buy);var rent=money(hr.rent);var savingsText=money(hr.s);results.push(hr.winner==='BUY'?tk('calc_out.rent_vs_buy.row.comparison_buy_favored','Comparison: '+hr.h+'-year stay \\u2192 buy '+buy+' vs rent '+rent+' \\u2192 BUY favored (savings '+savingsText+')',{years:hr.h,buy:buy,rent:rent,savings:savingsText}):hr.winner==='RENT'?tk('calc_out.rent_vs_buy.row.comparison_rent_favored','Comparison: '+hr.h+'-year stay \\u2192 buy '+buy+' vs rent '+rent+' \\u2192 RENT favored (savings '+savingsText+')',{years:hr.h,buy:buy,rent:rent,savings:savingsText}):tk('calc_out.rent_vs_buy.row.comparison_close','Comparison: '+hr.h+'-year stay \\u2192 buy '+buy+' vs rent '+rent+' \\u2192 CLOSE (savings '+savingsText+')',{years:hr.h,buy:buy,rent:rent,savings:savingsText}));}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(t){return Number.isNaN(t)?0:Math.max(0,t)},M=function(t,c,s){return s<=0?0:c===0?t/s:t*c/(1-Math.pow(1+c,-s))},N=function(t,c,s){const u=c/100;return s<=0?0:u===0?t*12*s:t*12*(Math.pow(1+u,s)-1)/u},E=function(t,c,s){return s<=0?0:t*(Math.pow(1+c/100,s)-1)},F=function(t,c,s){return t*Math.pow(1+c/100,s)},C=function(t){const c=t.homePrice-t.downPayment,s=t.mortgageRate/100/12,u=t.yearsToStay*12,l=M(c,s,u)*u,h=F(t.homePrice,t.annualAppreciation,t.yearsToStay),g=h*.06,b=h-g,p=t.homePrice*.03,y=t.downPayment+p,_=t.homePrice*.012/12*u,f=y+l+_-b;return{initialOutlay:y,totalMortgagePaid:l,totalHoldingCosts:_,sellingCosts:g,netProceeds:b,netCostBuy:f}},R=function(t){const c=N(t.monthlyRent,t.annualRentIncrease,t.yearsToStay),s=E(t.downPayment,7,t.yearsToStay);return{totalRentPaid:c,opportunityGain:s,total:c-s}},j=function(t){return t>3e4?{emoji:"🟢",label:n("calc_out.rent_vs_buy.row.verdict_buy_strongly_favored","BUY strongly favored — buying saves > $30K over renting")}:t>=-3e4?{emoji:"🟡",label:n("calc_out.rent_vs_buy.row.verdict_close_call","CLOSE call — within $30K; sensitivity matters")}:{emoji:"🟠",label:n("calc_out.rent_vs_buy.row.verdict_rent_favored","RENT favored — renting saves > $30K over buying")}},O=function(t){const c=d(parseFloat(t.monthlyRent)||0),s=d(parseFloat(t.homePrice)||0),u=d(parseFloat(t.downPayment)||0),B=parseFloat(t.mortgageRate)||0,l=d(parseFloat(t.yearsToStay)||0),h=parseFloat(t.annualAppreciation)||0,g=parseFloat(t.annualRentIncrease)||0;if(l<=0)return[\`$calc_out.section.rent_vs_buy_calculator|⏰ Rent-vs-Buy Calculator|
+
+$calc_out.rent_vs_buy.row.enter_years_required|💰 Enter years you plan to stay (>0). This is the horizon for the comparison.|\`];if(s<=0&&c<=0)return[\`$calc_out.section.rent_vs_buy_calculator|⏰ Rent-vs-Buy Calculator|
+
+$calc_out.rent_vs_buy.row.enter_inputs_required|💰 Enter rent, home price, and down payment to compare total cost over your stay horizon.|\`];const b=s>0?s:c*200,p=u>0?u:b*.2,y=C({homePrice:b,downPayment:p,mortgageRate:B,yearsToStay:l,annualAppreciation:h}),v=R({monthlyRent:c,annualRentIncrease:g,downPayment:p,yearsToStay:l}),_=v.total-y.netCostBuy,f=j(_),m=o=>o.toLocaleString("en-US",{maximumFractionDigits:0}),r=o=>"$"+m(o),w=[3,5,7,10,15,30].map(o=>{const e=C({homePrice:b,downPayment:p,mortgageRate:B,yearsToStay:o,annualAppreciation:h}),a=R({monthlyRent:c,annualRentIncrease:g,downPayment:p,yearsToStay:o}),i=a.total-e.netCostBuy,A=i>3e4?"BUY":i<-3e4?"RENT":"CLOSE";return{h:o,buy:e.netCostBuy,rent:a.total,s:i,winner:A}});let S=null;for(let o=0;o<w.length-1;o++){const e=w[o],a=w[o+1];if(e.s<0&&a.s>=0){const i=-e.s/(a.s-e.s);S=e.h+i*(a.h-e.h);break}else if(e.s>=0&&a.s<0){const i=e.s/(e.s-a.s);S=e.h+i*(a.h-e.h);break}}const z=S!==null?S.toFixed(1)+" years":"beyond 30 years",$={savings:r(Math.abs(_)),years:String(l),breakeven:z},H=_>3e4?{code:"rentbuy_buy",params:$}:_>=-3e4?{code:"rentbuy_close",params:$}:{code:"rentbuy_rent",params:$},x=w.map(o=>{const e=o.s>=0?"+":"-",a=m(Math.abs(o.s)),i=(o.winner==="BUY"?"buy wins":o.winner==="RENT"?"rent wins":"close").padEnd(10);return o.winner==="BUY"?n("calc_out.rent_vs_buy.row.horizon_buy_wins","• "+o.h+"y: "+i+"("+e+"$"+a+")",{years:String(o.h),sign:e,amount:a}):o.winner==="RENT"?n("calc_out.rent_vs_buy.row.horizon_rent_wins","• "+o.h+"y: "+i+"("+e+"$"+a+")",{years:String(o.h),sign:e,amount:a}):n("calc_out.rent_vs_buy.row.horizon_close","• "+o.h+"y: "+i+"("+e+"$"+a+")",{years:String(o.h),sign:e,amount:a})}),P=[\`$calc_out.section.rent_vs_buy_calculator|⏰ Rent-vs-Buy Calculator|
+
+$calc_out.section.decision_snapshot|💰 Decision Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+n("calc_out.rent_vs_buy.row.years_to_plan_to_stay","• Years you plan to stay:  "+l+" years",{years:String(l)})+\`
+• \`+n("calc_out.label.current_monthly_rent","Current monthly rent")+":    "+r(c)+\`
+• \`+n("calc_out.label.home_price_assumed","Home price (assumed)")+":    "+r(b)+\`
+\`+n("calc_out.rent_vs_buy.row.down_payment_assumed","• Down payment (assumed):  "+r(p)+"  (20% if not specified)",{amount:r(p)})+\`
+• \`+n("calc_out.label.verdict","Verdict")+":                 "+f.emoji+" "+f.label+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.cost_breakdown|📐 Cost Breakdown:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+n("calc_out.rent_vs_buy.row.buying_cost_over_years","Buying cost (over "+l+" years):",{years:String(l)})+\`
+• \`+n("calc_out.label.down_plus_closing","Down + closing")+":         "+r(y.initialOutlay)+\`
+• \`+n("calc_out.label.total_mortgage_paid","Total mortgage paid")+":    "+r(y.totalMortgagePaid)+\`
+• \`+n("calc_out.label.property_tax_maint","Property tax + maint")+":   "+r(y.totalHoldingCosts)+\`
+• \`+n("calc_out.label.selling_costs_at_end","Selling costs (at end)")+": "+r(y.sellingCosts)+\`
+• \`+n("calc_out.label.net_proceeds_sale","Net proceeds (sale)")+":    "+r(y.netProceeds)+\`
+• \`+n("calc_out.label.net_cost_of_buying","Net cost of buying")+":     "+r(y.netCostBuy)+\`
+
+\`+n("calc_out.rent_vs_buy.row.renting_cost_over_years","Renting cost (over "+l+" years):",{years:String(l)})+\`
+• \`+n("calc_out.label.total_rent_paid","Total rent paid")+":        "+r(v.totalRentPaid)+\`
+• \`+n("calc_out.label.opportunity_gain_7pct","Opportunity gain (7%)")+": -"+r(v.opportunityGain)+\`
+• \`+n("calc_out.label.net_cost_of_renting","Net cost of renting")+":    "+r(v.total)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.verdict_health|🩺 Verdict Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+f.emoji+" "+f.label+\`
+• \`+n("calc_out.label.savings_rent_vs_buy","Savings (rent vs buy)")+":  "+r(_)+\`
+  \`+n("calc_out.rent_vs_buy.row.savings_positive_note","(positive = buying was cheaper by this much)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.side_by_side|⚖️ Side-by-Side:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+n("calc_out.label.buying_net_cost","Buying net cost")+":  "+r(y.netCostBuy)+\`
+• \`+n("calc_out.label.renting_net_cost","Renting net cost")+": "+r(v.total)+\`
+\`+(_>0?n("calc_out.rent_vs_buy.row.difference_buying_cheaper","• Difference:       "+r(Math.abs(_))+" (buying cheaper)",{amount:r(Math.abs(_))}):_<0?n("calc_out.rent_vs_buy.row.difference_renting_cheaper","• Difference:       "+r(Math.abs(_))+" (renting cheaper)",{amount:r(Math.abs(_))}):n("calc_out.rent_vs_buy.row.difference_equal","• Difference:       "+r(Math.abs(_))+" (equal)",{amount:r(Math.abs(_))}))+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.stay_horizon_milestone|🎯 Stay-Horizon Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+n("calc_out.rent_vs_buy.row.horizon_intro","At different stay horizons, the math flips:")+\`
+\`+x.join(\`
+\`)+\`
+\`+n("calc_out.rent_vs_buy.row.breakeven_note","💡 Breakeven ≈ "+z+" — selling + closing costs (~9%) recouped at this horizon.",{breakeven:z})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+n("calc_out.rent_vs_buy.row.whatif_stay_horizon_5y","• Stay 5 years:  runs the comparison at 5y horizon",{years:"5"})+\`
+\`+n("calc_out.rent_vs_buy.row.whatif_stay_horizon_10y","• Stay 10 years: runs the comparison at 10y horizon",{years:"10"})+\`
+\`+n("calc_out.rent_vs_buy.row.whatif_stay_horizon_15y","• Stay 15 years: runs the comparison at 15y horizon",{years:"15"})+\`
+\`+n("calc_out.rent_vs_buy.row.whatif_appreciation_plus_2pp","• Appreciation +2pp: rerun with "+(h+2)+"% (boost buying math)",{appreciation:String(h+2)})+\`
+\`+n("calc_out.rent_vs_buy.row.whatif_down_20","• 20% down (vs current): rerun with $"+m(b*.2)+" down",{down:m(b*.2)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+JSON.stringify(H)];for(const o of w){const e=r(o.buy),a=r(o.rent),i=r(o.s);o.winner==="BUY"?P.push(n("calc_out.rent_vs_buy.row.comparison_buy_favored","Comparison: "+o.h+"-year stay → buy "+e+" vs rent "+a+" → BUY favored (savings "+i+")",{years:String(o.h),buy:e,rent:a,savings:i})):o.winner==="RENT"?P.push(n("calc_out.rent_vs_buy.row.comparison_rent_favored","Comparison: "+o.h+"-year stay → buy "+e+" vs rent "+a+" → RENT favored (savings "+i+")",{years:String(o.h),buy:e,rent:a,savings:i})):P.push(n("calc_out.rent_vs_buy.row.comparison_close","Comparison: "+o.h+"-year stay → buy "+e+" vs rent "+a+" → CLOSE (savings "+i+")",{years:String(o.h),buy:e,rent:a,savings:i}))}return P},Y=function(t,c,s){var u=q(t);return Array.isArray(u)?u.join(\`
+\`):String(u)};var U=d,L=M,I=N,K=E,G=F,J=C,V=R,W=j,Q=O,X=Y,n=tk,D='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',n=new Function("return "+D)(),q=function(t){return O(t)};return[Y(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

@@ -58,35 +58,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var revenue = cnn(Number(inputs.annual_revenue_global) || 0);
-  var finePct = Number(String(inputs.max_fine_pct).replace('%','')) || 4;
-  var violations = cnn(Number(inputs.violations_per_year) || 0);
-  var industryStr = String(inputs.industry_risk_multiplier);
-  var industryMult = industryStr.indexOf('0.8') >= 0 ? 0.8 : industryStr.indexOf('1.0') >= 0 ? 1.0 : industryStr.indexOf('1.4') >= 0 ? 1.4 : industryStr.indexOf('1.6') >= 0 ? 1.6 : 0.8;
-  var maxFine = revenue * (finePct / 100);
-  var perViolation = maxFine * industryMult;
-  var annual = perViolation * violations;
-  var ratio = revenue > 0 ? annual / revenue : 0;
-  var band = ratio < 0.0025 ? 'Excellent' : ratio < 0.01 ? 'Good' : ratio < 0.02 ? 'Warning' : 'Critical';
-  var emoji = ratio < 0.0025 ? '🟢' : ratio < 0.01 ? '🟡' : ratio < 0.02 ? '🟠' : '🔴';
-  var altFinePct = 2;
-  var altMaxFine = revenue * (altFinePct / 100);
-  var altPerViolation = altMaxFine * industryMult;
-  var altAnnual = altPerViolation * violations;
-  var lift = Math.max(0, annual - altAnnual);
-  var needViolations = altPerViolation > 0 ? Math.ceil(altAnnual / altPerViolation) : 0;
-  var tipTxt = ratio < 0.0025 ? JSON.stringify({code:'gdpr_mature',params:{ratio:(ratio*100).toFixed(2)}}) : ratio < 0.01 ? JSON.stringify({code:'gdpr_manageable',params:{ratio:(ratio*100).toFixed(2)}}) : ratio < 0.02 ? JSON.stringify({code:'gdpr_full_programme',params:{ratio:(ratio*100).toFixed(2)}}) : JSON.stringify({code:'gdpr_escalate',params:{ratio:(ratio*100).toFixed(2)}});
-  return [
-    '🩺 GDPR Fine Risk: ' + emoji + ' ' + band + ' (annual exposure ' + Math.round(annual).toLocaleString() + ' € / ' + (ratio*100).toFixed(2) + '% of revenue)',
-    '📊 Snapshot: ' + Math.round(revenue).toLocaleString() + ' € global revenue · ' + violations.toLocaleString() + ' violations/yr · ' + finePct + '% cap tier · industry ' + industryMult.toFixed(1) + '× · per-violation ' + Math.round(perViolation).toLocaleString() + ' € · annual exposure ' + Math.round(annual).toLocaleString() + ' €',
-    '🔄 What-If: if tier drops to 2% (procedural), annual exposure drops to ' + Math.round(altAnnual).toLocaleString() + ' € (' + (altAnnual*100/Math.max(1,revenue)).toFixed(2) + '% — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.',
-    '⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~' + needViolations + ' violation/yr OR move to 2% tier (procedural-only violations)',
-    '🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).',
-    '💡 Tip: ' + tipTxt,
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,n){return e*(n/100)},d=function(e,n){return e*n},f=function(e,n){return e*n},y=function(e,n){return n>0?e/n:0},b=function(e){return e<i.excellent.threshold?"excellent":e<i.good.threshold?"good":e<i.warning.threshold?"warning":"critical"},a=function(e){return"€"+Math.round(e).toLocaleString()},t=function(e){return(e*100).toFixed(2)+"%"},v=function(e){return Math.round(e).toLocaleString()},M=function(e,n,p){var r=S(e);return Array.isArray(r)?r.join(\`
+\`):String(r)};var P=s,I=u,J=d,R=f,C=y,V=b,E=a,G=t,W=v,j=M,i={excellent:{threshold:.0025,label:"Excellent",message:"Low exposure — mature compliance."},good:{threshold:.01,label:"Good",message:"Manageable exposure."},warning:{threshold:.02,label:"Warning",message:"Significant exposure."},critical:{threshold:null,label:"Critical",message:"Fine-tier cap likely to hit."}},S=function(e){const n=s(Number(e.annual_revenue_global)||0),p=Number(String(e.max_fine_pct).replace("%",""))||4,r=s(Number(e.violations_per_year)||0),l=String(e.industry_risk_multiplier),g=l.indexOf("0.8")>=0?.8:l.indexOf("1.0")>=0?1:l.indexOf("1.4")>=0?1.4:l.indexOf("1.6")>=0?1.6:.8,F=u(n,p),O=d(F,g),m=f(O,r),o=y(m,n),c=b(o),k=i[c],h=2,N=u(n,h),x=d(N,g),_=f(x,r),w=x>0?Math.ceil(_/x):0;return["🩺 GDPR Fine Risk: "+k.label+" (annual exposure "+a(m)+" / "+t(o)+" of revenue)","📊 Snapshot: "+a(n)+" global revenue · "+v(r)+" violations/yr · "+p+"% cap tier · industry "+g.toFixed(1)+"× · per-violation "+a(O)+" · annual exposure "+a(m),"🔄 What-If: if tier drops to "+h+"% (procedural), annual exposure drops to "+a(_)+" ("+t(_/Math.max(1,n))+" — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.","⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~"+w+" violation/yr OR move to "+h+"% tier (procedural-only violations)","🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).","💡 Tip: "+JSON.stringify(c==="excellent"?{code:"gdpr_mature",params:{ratio:t(o).replace("%","")}}:c==="good"?{code:"gdpr_manageable",params:{ratio:t(o).replace("%","")}}:c==="warning"?{code:"gdpr_full_programme",params:{ratio:t(o).replace("%","")}}:{code:"gdpr_escalate",params:{ratio:t(o).replace("%","")}})]};return[M(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

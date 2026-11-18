@@ -75,59 +75,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var cmpCost = cnn(Number(inputs.cmp_monthly_cost) || 0);
-  var dsars = cnn(Number(inputs.dsars_per_month) || 0);
-  var hours = cnn(Number(inputs.hours_per_dsar) || 0);
-  var rate = cnn(Number(inputs.hourly_rate_dpo) || 0);
-  var uplift = cnn(Number(inputs.automation_uplift_pct) || 0);
-  var dsarSavings = dsars * 12 * hours * (uplift / 100) * rate;
-  var cmpAnnual = cmpCost * 12;
-  var net = dsarSavings - cmpAnnual;
-  var roiPct = cmpAnnual > 0 ? (net / cmpAnnual) * 100 : -Infinity;
-  var monthlySavings = dsarSavings / 12;
-  var payback = monthlySavings > 0 ? cmpAnnual / monthlySavings : Infinity;
-  var roiDec = roiPct / 100;
-  var band = roiDec >= 4.0 ? 'Excellent' : roiDec >= 1.5 ? 'Good' : roiDec >= 0.5 ? 'Warning' : 'Critical';
-  var emoji = roiDec >= 4.0 ? '🟢' : roiDec >= 1.5 ? '🟡' : roiDec >= 0.5 ? '🟠' : '🔴';
-  var altDsars = 200;
-  var altSavings = altDsars * 12 * hours * (uplift / 100) * rate;
-  var altNet = altSavings - cmpAnnual;
-  var altRoiPct = cmpAnnual > 0 ? (altNet / cmpAnnual) * 100 : -Infinity;
-  var altRoiDec = altRoiPct / 100;
-  var altBand = altRoiDec >= 4.0 ? 'Excellent' : altRoiDec >= 1.5 ? 'Good' : altRoiDec >= 0.5 ? 'Warning' : 'Critical';
-  var altEmoji = altRoiDec >= 4.0 ? '🟢' : altRoiDec >= 1.5 ? '🟡' : altRoiDec >= 0.5 ? '🟠' : '🔴';
-  var altText = altSavings > dsarSavings ? 'climb to' : 'drop to';
-  var targetSavings = 5 * cmpAnnual;
-  // Keep targetUplift in percentage form (0-100) to match uplift's units, so delta math is consistent.
-  var targetUplift = (dsars * 12 * hours * rate) > 0 ? Math.min(100, (targetSavings / (dsars * 12 * hours * rate)) * 100) : uplift;
-  var targetDsars = (12 * hours * (uplift / 100) * rate) > 0 ? Math.ceil(targetSavings / (12 * hours * (uplift / 100) * rate)) : dsars;
-  var upliftDelta = targetUplift - uplift;
-  var dsarDelta = targetDsars - dsars;
-  var upliftEasier = Math.abs(upliftDelta / Math.max(uplift, 0.0001)) <= Math.abs(dsarDelta / Math.max(dsars, 0.0001));
-  var alreadyExcellent = roiDec >= 4.0;
-  var netNegative = net < 0;
-  var easierPath;
-  if (alreadyExcellent) {
-    easierPath = 'already 🟢 Excellent (ROI ≥' + roiPct.toFixed(1) + '%) — no uplift needed';
-  } else if (netNegative) {
-    easierPath = 'CMP is unprofitable at current settings. Either reduce CMP cost to ≤€' + Math.round(dsarSavings / 12).toLocaleString() + '/mo (so annual cost < annual savings) or increase DSAR volume / automation uplift until net ≥ 0.';
-  } else if (upliftEasier) {
-    easierPath = 'lift CMP automation uplift to ≥' + targetUplift.toFixed(1) + '% (current ' + uplift.toFixed(1) + '%, +' + upliftDelta.toFixed(1) + 'pp).';
-  } else {
-    easierPath = 'grow DSAR volume to ≥' + targetDsars + '/mo (current ' + dsars + '/mo, +' + dsarDelta + ').';
-  }
-  var paybackStr = payback === Infinity ? 'never' : payback.toFixed(1) + ' months';
-  return [
-    '🩺 CMP ROI: ' + emoji + ' ' + band + ' (net €' + Math.round(net).toLocaleString() + '/yr · ' + roiPct.toFixed(1) + '% ROI · payback ' + paybackStr + ')',
-    '📊 Snapshot: ' + dsars.toLocaleString() + ' DSARs/mo × 12 = ' + (dsars * 12).toLocaleString() + '/yr × ' + hours.toFixed(2) + ' hr × ' + rate.toFixed(0) + ' €/hr × ' + uplift.toFixed(0) + '% uplift = €' + Math.round(dsarSavings).toLocaleString() + ' savings · – €' + Math.round(cmpAnnual).toLocaleString() + ' CMP cost = €' + Math.round(net).toLocaleString() + ' net',
-    '🔄 What-If: if DSAR volume climbs to ' + altDsars + '/mo, annual savings ' + altText + ' €' + Math.round(altSavings).toLocaleString() + ', net €' + Math.round(altNet).toLocaleString() + ' (' + altEmoji + ' ' + altBand + ').',
-    '⚖️ Break-Even: easiest path to 🟢 Excellent (ROI ≥ 400%): ' + easierPath,
-    '🎯 Milestone: re-baseline quarterly + after any CMP vendor switch. IAB TCF v2.2 re-certification happens every 12 months — plan a re-evaluation around it.',
-    '💡 Tip: pair with [DSAR Processing Cost] (L-2) — CMP reduces DSAR volume via consent logging. Also pair with [Cookie Consent Revenue Impact] (L-3) — premium CMP lifts consent rate. Use our [Break-Even Calculator] (B-7) to size payback against other tooling investments.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},v=function(t,n,o,e){return t*12*n*(e/100)*o},P=function(t){return t*12},b=function(t,n){return t-n},y=function(t,n){return n>0?t/n*100:-1/0},x=function(t,n){return n>0?t/n:1/0},M=function(t){const n=t/100;return n>=u.excellent.threshold?"excellent":n>=u.good.threshold?"good":n>=u.warning.threshold?"warning":"critical"},s=function(t){return"€"+Math.round(t).toLocaleString()},r=function(t,n){return t.toFixed(n)},C=function(t){return t.toFixed(1)+"%"},R=function(t,n,o){var e=O(t);return Array.isArray(e)?e.join(\`
+\`):String(e)};var Q=c,V=v,X=P,Y=b,Z=y,$=x,T=M,H=s,tt=r,nt=C,et=R,u={excellent:{threshold:4,label:"Excellent",message:"CMP pays back 5×+."},good:{threshold:1.5,label:"Good",message:"CMP pays for itself."},warning:{threshold:.5,label:"Warning",message:"CMP under-saving."},critical:{threshold:null,label:"Critical",message:"CMP costs more than it saves."}},O=function(t){const n=c(Number(t.cmp_monthly_cost)||0),o=c(Number(t.dsars_per_month)||0),e=c(Number(t.hours_per_dsar)||0),i=c(Number(t.hourly_rate_dpo)||0),a=c(Number(t.automation_uplift_pct)||0),f=v(o,e,i,a),l=P(n),m=b(f,l),g=y(m,l),j=f/12,S=x(l,j),A=M(g),L=u[A],p=g/100,U=p>=4?"🟢":p>=1.5?"🟡":p>=.5?"🟠":"🔴",I=200,_=v(I,e,i,a),k=b(_,l),d=y(k,l),W=M(d),q=d/100>=4?"🟢":d/100>=1.5?"🟡":d/100>=.5?"🟠":"🔴",z=_>f?"climb to":"drop to",D=5*l,w=o*12*e*i>0?Math.min(100,D/(o*12*e*i)*100):a,N=12*e*(a/100)*i>0?Math.ceil(D/(12*e*(a/100)*i)):o,E=w-a,F=N-o,B=Math.abs(E/Math.max(a,1e-4))<=Math.abs(F/Math.max(o,1e-4)),G=p>=4,K=m<0;let h;G?h="already 🟢 Excellent (ROI ≥"+C(g)+") — no uplift needed":K?h="CMP is unprofitable at current settings. Either reduce CMP cost to ≤"+Math.round(f/12).toLocaleString()+" €/mo (so annual cost < annual savings) or increase DSAR volume / automation uplift until net ≥ 0.":B?h="lift CMP automation uplift to ≥"+r(w,1)+"% (current "+r(a,1)+"%, +"+r(E,1)+"pp).":h="grow DSAR volume to ≥"+N+"/mo (current "+o+"/mo, +"+F+").";const J=S===1/0?"never":r(S,1)+" months";return["🩺 CMP ROI: "+U+" "+L.label+" (net "+s(m)+"/yr · "+C(g)+" ROI · payback "+J+")","📊 Snapshot: "+o.toLocaleString()+" DSARs/mo × 12 = "+(o*12).toLocaleString()+"/yr × "+r(e,2)+" hr × "+r(i,0)+" €/hr × "+r(a,0)+"% uplift = "+s(f)+" savings · – "+s(l)+" CMP cost = "+s(m)+" net","🔄 What-If: if DSAR volume climbs to "+I+"/mo, annual savings "+z+" "+s(_)+", net "+s(k)+" ("+q+" "+u[W].label+").","⚖️ Break-Even: easiest path to 🟢 Excellent (ROI ≥ 400%): "+h,"🎯 Milestone: re-baseline quarterly + after any CMP vendor switch. IAB TCF v2.2 re-certification happens every 12 months — plan a re-evaluation around it.","💡 Tip: pair with [DSAR Processing Cost] (L-2) — CMP reduces DSAR volume via consent logging. Also pair with [Cookie Consent Revenue Impact] (L-3) — premium CMP lifts consent rate. Use our [Break-Even Calculator] (B-7) to size payback against other tooling investments."]};return[R(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

@@ -192,104 +192,90 @@ const customFn =
   // P168 B3-7：⭐ 前置与服务端 makeToken **同一份**实现（CALC_OUTPUT_MAKE_TOKEN_JS）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
   // ⚠️ 局部变量名与服务端 calculateValuation **同名** ⇒ params 的表达式两侧同义可求值。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function clampNonNegative(x){return Number.isNaN(x)?0:Math.max(0,x)};" +
-  "var annualRevenue=clampNonNegative(parseFloat(inputs.annualRevenue)||0);" +
-  // intentionally NOT clamped: semantically can be negative (negative growth / negative margin)
-  "var growthRate=parseFloat(inputs.growthRate)||0;" +
-  "var profitMargin=parseFloat(inputs.profitMargin)||0;" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function pct(n){return n.toFixed(1)+'%'}" +
-  "var lowMultiple=3;var highMultiple=8;var baseMultiple=5;" +
-  "if(growthRate>=100){lowMultiple=8;highMultiple=15;baseMultiple=10;}" +
-  "else if(growthRate>=50){lowMultiple=6;highMultiple=12;baseMultiple=8;}" +
-  "else if(growthRate>=30){lowMultiple=5;highMultiple=10;baseMultiple=7;}" +
-  "else if(growthRate>=10){lowMultiple=4;highMultiple=8;baseMultiple=5.5;}" +
-  "if(profitMargin>=30){lowMultiple+=1;highMultiple+=1;baseMultiple+=0.5;}" +
-  "else if(profitMargin<10&&profitMargin>0){lowMultiple=Math.max(2,lowMultiple-1);highMultiple=Math.max(3,highMultiple-2);baseMultiple=Math.max(2.5,baseMultiple-1);}" +
-  "var valuationLow=annualRevenue*lowMultiple;var valuationHigh=annualRevenue*highMultiple;var valuationBase=annualRevenue*baseMultiple;" +
-  "var profit=annualRevenue*(profitMargin/100);" +
-  "var exitValue=profit>0?profit*baseMultiple*1.5:valuationBase;" +
-  "var mainResult='';" +
-  "mainResult+=tk('calc_out.section.saas_valuation_estimate','💰 SaaS Valuation Estimate')+'\\n\\n';" +
-  "mainResult+='• '+tk('calc_out.label.annual_revenue','Annual Revenue (ARR)')+': '+fmt(annualRevenue)+'\\n';" +
-  "mainResult+='• '+tk('calc_out.label.yoy_growth_rate','YoY Growth Rate')+': '+pct(growthRate)+'\\n';" +
-  "mainResult+='• '+tk('calc_out.label.profit_margin','Profit Margin')+': '+pct(profitMargin)+'\\n';" +
-  "mainResult+='• '+tk('calc_out.label.annual_profit','Annual Profit')+': '+fmt(profit)+'\\n\\n';" +
-  "mainResult+='━━━━━━━━━━━━━━━━━━━━\\n\\n';" +
-  "mainResult+=tk('calc_out.section.valuation_range','📊 Valuation Range (Revenue Multiple):')+'\\n\\n';" +
-  "mainResult+='• '+tk('calc_out.label.conservative','Conservative')+' ('+lowMultiple.toFixed(1)+'x): '+fmt(valuationLow)+'\\n';" +
-  "mainResult+='• '+tk('calc_out.label.base_case','Base Case')+' ('+baseMultiple.toFixed(1)+'x): '+fmt(valuationBase)+'\\n';" +
-  "mainResult+='• '+tk('calc_out.label.optimistic','Optimistic')+' ('+highMultiple.toFixed(1)+'x): '+fmt(valuationHigh)+'\\n\\n';" +
-  "mainResult+='• '+tk('calc_out.label.estimated_exit_value','Estimated Exit Value')+': '+fmt(exitValue)+'\\n\\n';" +
-  "mainResult+='━━━━━━━━━━━━━━━━━━━━\\n\\n';" +
-  "if(growthRate>=50){mainResult+=tk('calc_out.saas_valuation.row.assessment_high_growth','🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.')+'\\n\\n';}" +
-  "else if(growthRate>=20){mainResult+=tk('calc_out.saas_valuation.row.assessment_solid_growth','📈 Solid growth trajectory. Improving your growth rate from '+pct(growthRate)+' to 30%+ could increase your valuation multiple by 2-3x.',{growth:pct(growthRate)})+'\\n\\n';}" +
-  "else{mainResult+=tk('calc_out.saas_valuation.row.assessment_steady','💪 Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.')+'\\n\\n';}" +
-  "var valTipParams={multiple:baseMultiple.toFixed(1)+'x',valuation:fmt(valuationBase),growth:pct(growthRate),margin:pct(profitMargin)};" +
-  "var valTip=baseMultiple<5?{code:'saasval_floor',params:valTipParams}:(baseMultiple<10?{code:'saasval_median',params:valTipParams}:{code:'saasval_premium',params:valTipParams});" +
-  "mainResult+='💡 Tip: '+JSON.stringify(valTip);" +
-  "if(annualRevenue>0){" +
-  "var raisedGrowth=Math.min(150,growthRate+30);" +
-  "var raisedMult=raisedGrowth>=100?10:raisedGrowth>=50?8:raisedGrowth>=30?7:5.5;" +
-  "var raisedVal=annualRevenue*raisedMult;" +
-  "var raisedProfit=profitMargin+10;" +
-  "var profitMult=baseMultiple+(raisedProfit>=30?0.5:0);" +
-  "var profitVal=annualRevenue*profitMult;" +
-  "mainResult+='\\n\\n'+tk('calc_out.section.what_if_growth_margin','🔄 What-If Scenarios')+'\\n';" +
-  "mainResult+='• '+tk('calc_out.saas_valuation.row.whatif_growth_raised','If growth → '+raisedGrowth.toFixed(0)+'% YoY:  multiple '+raisedMult.toFixed(1)+'x  → $'+Math.round(raisedVal).toLocaleString()+' (vs $'+Math.round(valuationBase).toLocaleString()+')',{growth:raisedGrowth.toFixed(0)+'% YoY',mult:raisedMult.toFixed(1)+'x',val:'$'+Math.round(raisedVal).toLocaleString(),base:'$'+Math.round(valuationBase).toLocaleString()})+'\\n';" +
-  "mainResult+='• '+tk('calc_out.saas_valuation.row.whatif_margin_raised','If margin → '+raisedProfit.toFixed(0)+'%:  multiple '+profitMult.toFixed(1)+'x  → $'+Math.round(profitVal).toLocaleString(),{margin:raisedProfit.toFixed(0)+'%',mult:profitMult.toFixed(1)+'x',val:'$'+Math.round(profitVal).toLocaleString()})+'\\n';" +
-  "mainResult+='• '+tk('calc_out.label.distress_floor_2x','Distress floor (2x)')+':  $'+Math.round(annualRevenue*2).toLocaleString()+'  '+tk('calc_out.label.asset_only_sale','(asset-only sale)')+'\\n';" +
-  "}" +
-  "if(annualRevenue<=0){mainResult+='\\n\\n'+tk('calc_out.section.valuation_health','🩺 Valuation Health:')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• '+tk('calc_out.saas_valuation.row.health_zero_revenue','🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning.');}" +
-  "else if(valuationBase<=0){mainResult+='\\n\\n'+tk('calc_out.section.valuation_health','🩺 Valuation Health:')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• '+tk('calc_out.saas_valuation.row.health_zero_multiple','🔴 Multiple is 0 or negative. No reasonable valuation can be derived.');}" +
-  "else if(annualRevenue<100000){mainResult+='\\n\\n'+tk('calc_out.section.valuation_health','🩺 Valuation Health:')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• '+tk('calc_out.saas_valuation.row.health_pre_revenue','🟡 Pre-revenue / seed stage. Most investors won\\'t use revenue multiple. Focus on traction, growth, and team before valuation conversations.');}" +
-  "else if(annualRevenue<1000000){mainResult+='\\n\\n'+tk('calc_out.section.valuation_health','🩺 Valuation Health:')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• '+tk('calc_out.saas_valuation.row.health_early_revenue','🟠 Early revenue ($'+(annualRevenue/1000).toFixed(0)+'K ARR). Typical seed-to-Series A range. Multiple: 5-15x depending on growth rate.',{arr_k:'$'+(annualRevenue/1000).toFixed(0)+'K'});}" +
-  "else if(annualRevenue<10000000){mainResult+='\\n\\n'+tk('calc_out.section.valuation_health','🩺 Valuation Health:')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• '+tk('calc_out.saas_valuation.row.health_mid_stage','🟢 Mid-stage ($'+(annualRevenue/1000000).toFixed(1)+'M ARR). Series A-B range. Multiple: 8-20x. Growth rate is the #1 multiple driver.',{arr_m:'$'+(annualRevenue/1000000).toFixed(1)+'M'});}" +
-  "else{mainResult+='\\n\\n'+tk('calc_out.section.valuation_health','🩺 Valuation Health:')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n• '+tk('calc_out.saas_valuation.row.health_late_stage','🟢 Late-stage ($'+(annualRevenue/1000000).toFixed(1)+'M ARR). Series C+ range. Multiple: 10-30x. Profitability and net dollar retention matter more.',{arr_m:'$'+(annualRevenue/1000000).toFixed(1)+'M'});}" +
-  "mainResult+='\\n\\n'+tk('calc_out.section.what_if_growth_margin','🔄 What-If Scenarios')+':\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';" +
-  "if(annualRevenue>0&&baseMultiple>0){" +
-  "var doubleRev=annualRevenue*2;" +
-  "var valAtDouble=doubleRev*baseMultiple;" +
-  "var valAtHigherMult=annualRevenue*(baseMultiple*1.5);" +
-  "var valAtProfitable=annualRevenue*baseMultiple*1.3;" +
-  "mainResult+='\\n• '+tk('calc_out.label.double_arr_12m','Double ARR (next 12 months at 100% growth)')+':  '+fmt(annualRevenue)+' → '+fmt(doubleRev)+'  | '+tk('calc_out.label.valuation','Valuation')+' '+fmt(valAtDouble);" +
-  "mainResult+='\\n• '+tk('calc_out.label.boost_multiple_50pct','Boost multiple 50% (better growth/profitability story)')+':  '+tk('calc_out.label.valuation','Valuation')+' '+fmt(valAtHigherMult)+'  '+tk('calc_out.label.no_arr_change','(no ARR change)');" +
-  "mainResult+='\\n• '+tk('calc_out.label.reach_profitability','Reach profitability (typically +30% multiple)')+':  '+tk('calc_out.label.valuation','Valuation')+' '+fmt(valAtProfitable);" +
-  "if(growthRate>0){" +
-  "var t2Growth=annualRevenue*Math.pow(1+growthRate/100,2);" +
-  "var valAtT2=t2Growth*baseMultiple;" +
-  "mainResult+='\\n• '+tk('calc_out.label.at_current_growth_2y','At current growth ('+growthRate+'% YoY) in 2 years',{growth:String(growthRate)+'%'})+':  ARR '+fmt(t2Growth)+'  | '+tk('calc_out.label.valuation','Valuation')+' '+fmt(valAtT2)+'  (+'+fmt(valAtT2-valuationBase)+')';" +
-  "}" +
-  "}else{mainResult+='\\n• '+tk('calc_out.saas_valuation.row.whatif_cannot_model','⚠️ Cannot model — enter ARR and multiple to see scenarios.');}" +
-  "if(annualRevenue>0){" +
-  "mainResult+='\\n\\n'+tk('calc_out.section.break_even_multiple','⚖️ Break-Even Multiple')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';" +
-  "if(baseMultiple<3){" +
-  "mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_below_floor','🔴 Current multiple '+baseMultiple.toFixed(1)+'x is below 3x SaaS floor — investors won\\'t bite.',{mult:baseMultiple.toFixed(1)});" +
-  "mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_to_reach_3x','To reach 3x floor:  need growth '+Math.max(10,growthRate).toFixed(0)+'%+  AND  margin '+Math.max(20,profitMargin).toFixed(0)+'%+',{growth:Math.max(10,growthRate).toFixed(0),margin:Math.max(20,profitMargin).toFixed(0)});" +
-  "}else if(baseMultiple<5){" +
-  "mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_at_saas_floor','🟡 Current multiple '+baseMultiple.toFixed(1)+'x is at SaaS floor. Below market median (5-8x).',{mult:baseMultiple.toFixed(1)});" +
-  "mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_to_reach_5x','To reach 5x (median):  grow 30%+ YoY, OR push margin above 20%');" +
-  "}else if(baseMultiple<10){" +
-  "mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_at_market_median','🟢 Current multiple '+baseMultiple.toFixed(1)+'x is at market median. Strong position.',{mult:baseMultiple.toFixed(1)});" +
-  "mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_to_reach_10x','To reach 10x+ (premium):  sustain 50%+ growth OR reach profitability');" +
-  "}else{mainResult+='\\n• '+tk('calc_out.saas_valuation.row.breakeven_premium','🟢 Premium multiple '+baseMultiple.toFixed(1)+'x. Maintain growth and margin to justify.',{mult:baseMultiple.toFixed(1)});}" +
-  "}" +
-  "if(annualRevenue>0){" +
-  "mainResult+='\\n\\n'+tk('calc_out.section.valuation_milestones','🎯 Valuation Milestones')+'\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';" +
-  "var milestones=[{arr:1e6,label:'$1M ARR'},{arr:1e7,label:'$10M ARR'},{arr:1e8,label:'$100M ARR'}];" +
-  "for(var mi=0;mi<milestones.length;mi++){" +
-  "var m=milestones[mi];" +
-  "if(annualRevenue>=m.arr){mainResult+='\\n• '+m.label+':  '+tk('calc_out.saas_valuation.row.milestone_reached','✅ reached  (current: $'+(annualRevenue/1e6).toFixed(1)+'M)',{current:(annualRevenue/1e6).toFixed(1)+'M'});}" +
-  "else if(growthRate>0){var yearsToReach=Math.log(m.arr/annualRevenue)/Math.log(1+growthRate/100);if(isFinite(yearsToReach)&&yearsToReach<20){mainResult+='\\n• '+m.label+':  '+tk('calc_out.saas_valuation.row.milestone_years',yearsToReach.toFixed(1)+' years  (at '+growthRate.toFixed(0)+'% YoY growth)',{years:yearsToReach.toFixed(1),growth:growthRate.toFixed(0)});}else{mainResult+='\\n• '+m.label+':  '+tk('calc_out.saas_valuation.row.milestone_unrealistic','unrealistic at current growth — accelerate or accept smaller scale');}}" +
-  "else{mainResult+='\\n• '+m.label+':  '+tk('calc_out.saas_valuation.row.milestone_zero_growth','zero growth — not reachable without acceleration');}" +
-  "}" +
-  "}" +
-  // ⚠️ results 快照必须在**所有** mainResult 追加之后（Break-Even / Milestones 两段也在内）
-  "var results=[mainResult];" +
-  "var multipleScenarios=[{multiple:2,token:tk('calc_out.label.scenario_distressed_sale','Distressed Sale (2x)')},{multiple:4,token:tk('calc_out.label.scenario_flat_growth','Flat Growth (4x)')},{multiple:6,token:tk('calc_out.label.scenario_steady_growth','Steady Growth (6x)')},{multiple:10,token:tk('calc_out.label.scenario_high_growth','High Growth (10x)')},{multiple:15,token:tk('calc_out.label.scenario_hyper_growth','Hyper-Growth (15x)')}];" +
-  "for(var i=0;i<multipleScenarios.length;i++){var val=annualRevenue*multipleScenarios[i].multiple;results.push(multipleScenarios[i].token+': '+fmt(annualRevenue)+' ARR × '+multipleScenarios[i].multiple+'x = '+fmt(val)+' '+tk('calc_out.label.valuation_suffix','valuation'));}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let M=function(c){return Number.isNaN(c)?0:Math.max(0,c)},y=function(c){const a=M(parseFloat(c.annualRevenue)||0),o=parseFloat(c.growthRate)||0,s=parseFloat(c.profitMargin)||0,b=[],r=i=>"$"+Math.round(i).toLocaleString(),v=i=>i.toFixed(1)+"%";let u=3,_=8,e=5;o>=100?(u=8,_=15,e=10):o>=50?(u=6,_=12,e=8):o>=30?(u=5,_=10,e=7):o>=10&&(u=4,_=8,e=5.5),s>=30?(u+=1,_+=1,e+=.5):s<10&&s>0&&(u=Math.max(2,u-1),_=Math.max(3,_-2),e=Math.max(2.5,e-1));const $=a*u,V=a*_,g=a*e,m=a*(s/100),Y=m>0?m*e*1.5:g;let l=t("calc_out.section.saas_valuation_estimate","💰 SaaS Valuation Estimate")+\`
+
+• \`+t("calc_out.label.annual_revenue","Annual Revenue (ARR)")+": "+r(a)+\`
+• \`+t("calc_out.label.yoy_growth_rate","YoY Growth Rate")+": "+v(o)+\`
+• \`+t("calc_out.label.profit_margin","Profit Margin")+": "+v(s)+\`
+• \`+t("calc_out.label.annual_profit","Annual Profit")+": "+r(m)+\`
+
+━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.valuation_range","📊 Valuation Range (Revenue Multiple):")+\`
+
+• \`+t("calc_out.label.conservative","Conservative")+" ("+u.toFixed(1)+"x): "+r($)+\`
+• \`+t("calc_out.label.base_case","Base Case")+" ("+e.toFixed(1)+"x): "+r(g)+\`
+• \`+t("calc_out.label.optimistic","Optimistic")+" ("+_.toFixed(1)+"x): "+r(V)+\`
+
+• \`+t("calc_out.label.estimated_exit_value","Estimated Exit Value")+": "+r(Y)+\`
+
+━━━━━━━━━━━━━━━━━━━━
+
+\`;o>=50?l+=t("calc_out.saas_valuation.row.assessment_high_growth","🚀 You have high-growth SaaS metrics. Your multiple range reflects the premium that high-growth companies command. Focus on sustaining growth while improving margins.")+\`
+
+\`:o>=20?l+=t("calc_out.saas_valuation.row.assessment_solid_growth","📈 Solid growth trajectory. Improving your growth rate from "+v(o)+" to 30%+ could increase your valuation multiple by 2-3x.",{growth:v(o)})+\`
+
+\`:l+=t("calc_out.saas_valuation.row.assessment_steady","💪 Steady business. To increase valuation, focus on either accelerating growth or improving profit margins above 20%. Higher margins directly increase your multiple.")+\`
+
+\`;const F={multiple:e.toFixed(1)+"x",valuation:r(g),growth:v(o),margin:v(s)};let w;if(e<5?w={code:"saasval_floor",params:F}:e<10?w={code:"saasval_median",params:F}:w={code:"saasval_premium",params:F},l+="💡 Tip: "+JSON.stringify(w),a>0){const i=Math.min(150,o+30),n=i>=100?10:i>=50?8:i>=30?7:5.5,h=a*n,f=s+10,d=e+(f>=30?.5:0),p=a*d;l+=\`
+
+\`+t("calc_out.section.what_if_growth_margin","🔄 What-If Scenarios")+\`
+\`,l+="• "+t("calc_out.saas_valuation.row.whatif_growth_raised","If growth → "+i.toFixed(0)+"% YoY:  multiple "+n.toFixed(1)+"x  → $"+Math.round(h).toLocaleString()+" (vs $"+Math.round(g).toLocaleString()+")",{growth:i.toFixed(0)+"% YoY",mult:n.toFixed(1)+"x",val:"$"+Math.round(h).toLocaleString(),base:"$"+Math.round(g).toLocaleString()})+\`
+\`,l+="• "+t("calc_out.saas_valuation.row.whatif_margin_raised","If margin → "+f.toFixed(0)+"%:  multiple "+d.toFixed(1)+"x  → $"+Math.round(p).toLocaleString(),{margin:f.toFixed(0)+"%",mult:d.toFixed(1)+"x",val:"$"+Math.round(p).toLocaleString()})+\`
+\`,l+="• "+t("calc_out.label.distress_floor_2x","Distress floor (2x)")+":  $"+Math.round(a*2).toLocaleString()+"  "+t("calc_out.label.asset_only_sale","(asset-only sale)")+\`
+\`}if(a<=0?l+=\`
+
+\`+t("calc_out.section.valuation_health","🩺 Valuation Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.saas_valuation.row.health_zero_revenue","🔴 Revenue is 0 or negative. SaaS valuation requires recurring revenue. Build MRR first before exit planning."):g<=0?l+=\`
+
+\`+t("calc_out.section.valuation_health","🩺 Valuation Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.saas_valuation.row.health_zero_multiple","🔴 Multiple is 0 or negative. No reasonable valuation can be derived."):a<1e5?l+=\`
+
+\`+t("calc_out.section.valuation_health","🩺 Valuation Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.saas_valuation.row.health_pre_revenue","🟡 Pre-revenue / seed stage. Most investors won't use revenue multiple. Focus on traction, growth, and team before valuation conversations."):a<1e6?l+=\`
+
+\`+t("calc_out.section.valuation_health","🩺 Valuation Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.saas_valuation.row.health_early_revenue","🟠 Early revenue ($"+(a/1e3).toFixed(0)+"K ARR). Typical seed-to-Series A range. Multiple: 5-15x depending on growth rate.",{arr_k:"$"+(a/1e3).toFixed(0)+"K"}):a<1e7?l+=\`
+
+\`+t("calc_out.section.valuation_health","🩺 Valuation Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.saas_valuation.row.health_mid_stage","🟢 Mid-stage ($"+(a/1e6).toFixed(1)+"M ARR). Series A-B range. Multiple: 8-20x. Growth rate is the #1 multiple driver.",{arr_m:"$"+(a/1e6).toFixed(1)+"M"}):l+=\`
+
+\`+t("calc_out.section.valuation_health","🩺 Valuation Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.saas_valuation.row.health_late_stage","🟢 Late-stage ($"+(a/1e6).toFixed(1)+"M ARR). Series C+ range. Multiple: 10-30x. Profitability and net dollar retention matter more.",{arr_m:"$"+(a/1e6).toFixed(1)+"M"}),l+=\`
+
+\`+t("calc_out.section.what_if_growth_margin","🔄 What-If Scenarios")+\`:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\`,a>0&&e>0){const i=a*2,n=i*e,h=a*(e*1.5),f=a*e*1.3;if(l+=\`
+• \`+t("calc_out.label.double_arr_12m","Double ARR (next 12 months at 100% growth)")+":  "+r(a)+" → "+r(i)+"  | "+t("calc_out.label.valuation","Valuation")+" "+r(n),l+=\`
+• \`+t("calc_out.label.boost_multiple_50pct","Boost multiple 50% (better growth/profitability story)")+":  "+t("calc_out.label.valuation","Valuation")+" "+r(h)+"  "+t("calc_out.label.no_arr_change","(no ARR change)"),l+=\`
+• \`+t("calc_out.label.reach_profitability","Reach profitability (typically +30% multiple)")+":  "+t("calc_out.label.valuation","Valuation")+" "+r(f),o>0){const d=a*Math.pow(1+o/100,2),p=d*e;l+=\`
+• \`+t("calc_out.label.at_current_growth_2y","At current growth ("+o+"% YoY) in 2 years",{growth:String(o)+"%"})+":  ARR "+r(d)+"  | "+t("calc_out.label.valuation","Valuation")+" "+r(p)+"  (+"+r(p-g)+")"}}else l+=\`
+• \`+t("calc_out.saas_valuation.row.whatif_cannot_model","⚠️ Cannot model — enter ARR and multiple to see scenarios.");if(a>0&&(l+=\`
+
+\`+t("calc_out.section.break_even_multiple","⚖️ Break-Even Multiple")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\`,e<3?(l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_below_floor","🔴 Current multiple "+e.toFixed(1)+"x is below 3x SaaS floor — investors won't bite.",{mult:e.toFixed(1)}),l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_to_reach_3x","To reach 3x floor:  need growth "+Math.max(10,o).toFixed(0)+"%+  AND  margin "+Math.max(20,s).toFixed(0)+"%+",{growth:Math.max(10,o).toFixed(0),margin:Math.max(20,s).toFixed(0)})):e<5?(l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_at_saas_floor","🟡 Current multiple "+e.toFixed(1)+"x is at SaaS floor. Below market median (5-8x).",{mult:e.toFixed(1)}),l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_to_reach_5x","To reach 5x (median):  grow 30%+ YoY, OR push margin above 20%")):e<10?(l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_at_market_median","🟢 Current multiple "+e.toFixed(1)+"x is at market median. Strong position.",{mult:e.toFixed(1)}),l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_to_reach_10x","To reach 10x+ (premium):  sustain 50%+ growth OR reach profitability")):l+=\`
+• \`+t("calc_out.saas_valuation.row.breakeven_premium","🟢 Premium multiple "+e.toFixed(1)+"x. Maintain growth and margin to justify.",{mult:e.toFixed(1)})),a>0){l+=\`
+
+\`+t("calc_out.section.valuation_milestones","🎯 Valuation Milestones")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\`;const i=[{arr:1e6,label:"$1M ARR"},{arr:1e7,label:"$10M ARR"},{arr:1e8,label:"$100M ARR"}];for(const n of i)if(a>=n.arr)l+=\`
+• \`+n.label+":  "+t("calc_out.saas_valuation.row.milestone_reached","✅ reached  (current: $"+(a/1e6).toFixed(1)+"M)",{current:(a/1e6).toFixed(1)+"M"});else if(o>0){const h=Math.log(n.arr/a)/Math.log(1+o/100);isFinite(h)&&h<20?l+=\`
+• \`+n.label+":  "+t("calc_out.saas_valuation.row.milestone_years",h.toFixed(1)+" years  (at "+o.toFixed(0)+"% YoY growth)",{years:h.toFixed(1),growth:o.toFixed(0)}):l+=\`
+• \`+n.label+":  "+t("calc_out.saas_valuation.row.milestone_unrealistic","unrealistic at current growth — accelerate or accept smaller scale")}else l+=\`
+• \`+n.label+":  "+t("calc_out.saas_valuation.row.milestone_zero_growth","zero growth — not reachable without acceleration")}b.push(l);const x=[{multiple:2,token:t("calc_out.label.scenario_distressed_sale","Distressed Sale (2x)")},{multiple:4,token:t("calc_out.label.scenario_flat_growth","Flat Growth (4x)")},{multiple:6,token:t("calc_out.label.scenario_steady_growth","Steady Growth (6x)")},{multiple:10,token:t("calc_out.label.scenario_high_growth","High Growth (10x)")},{multiple:15,token:t("calc_out.label.scenario_hyper_growth","Hyper-Growth (15x)")}];for(let i=0;i<x.length;i++){const n=a*x[i].multiple;b.push(x[i].token+": "+r(a)+" ARR × "+x[i].multiple+"x = "+r(n)+" "+t("calc_out.label.valuation_suffix","valuation"))}return b},R=function(c,a,o){var s=A(c);return Array.isArray(s)?s.join(\`
+\`):String(s)};var H=M,L=y,C=R,t=tk,S='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+S)(),A=function(c){return y(c)};return[R(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 
 

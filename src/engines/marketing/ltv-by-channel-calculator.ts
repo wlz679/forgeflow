@@ -300,71 +300,58 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-9：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function cCAC(s,c){if(c<=0)return Infinity;return s/c;}" +
-  "function cRatio(l,c){if(c<=0||!isFinite(c))return 0;return l/c;}" +
-  "function totalsF(cs){return cs.reduce((a,c)=>({ts:a.ts+c.spend,tc:a.tc+c.conversions}),{ts:0,tc:0});}" +
-  "function bCAC(cs){var t=totalsF(cs);if(t.tc<=0)return Infinity;return t.ts/t.tc;}" +
-  "function rankF(cs){return[...cs].sort(function(a,b){if(!isFinite(a.cac)&&!isFinite(b.cac))return 0;if(!isFinite(a.cac))return 1;if(!isFinite(b.cac))return -1;return b.ratio-a.ratio;});}" +
-  "function hBand(r){if(!isFinite(r)||r<=0)return'\\u26AA';if(r>=3)return'\\uD83D\\uDFE2';if(r>=1)return'\\uD83D\\uDFE1';if(r>=0.5)return'\\uD83D\\uDFE0';return'\\uD83D\\uDD34';}" +
-  "var ch=[];var anyData=false;" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "for(var i=1;i<=5;i++){var sp=cnn(parseFloat(inputs['ch'+i+'_spend'])||0);var cv=cnn(parseFloat(inputs['ch'+i+'_conv'])||0);var lv=cnn(parseFloat(inputs['ch'+i+'_ltv'])||0);if(sp>0||cv>0||lv>0)anyData=true;var cac=cCAC(sp,cv);ch.push({id:'Ch'+i,spend:sp,conversions:cv,ltv:lv,cac:cac,ratio:cRatio(lv,cac)});}" +
-  "if(!anyData){return['$calc_out.section.ltv_by_channel_calculator|\\u23F0 LTV by Channel Calculator|\\n\\n'+tk('calc_out.ltv_by_channel.row.enter_inputs_required','\\uD83D\\uDCCA Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.')];}" +
-  "var ranked=rankF(ch);" +
-  "var winner=ranked.find(function(c){return isFinite(c.cac);});" +
-  "var loser=[...ranked].reverse().find(function(c){return isFinite(c.cac);});" +
-  "var t=totalsF(ch);var blen=bCAC(ch);" +
-  "var blRatio=t.tc>0?ch.reduce(function(a,c){return a+c.ltv*c.conversions;},0)/t.tc/blen:0;" +
-  "var finiteRatios=ch.filter(function(c){return isFinite(c.cac)&&c.ratio>0;}).map(function(c){return c.ratio;});" +
-  "var tEmo='',tLab='';" +
-  "if(finiteRatios.length===0){tEmo='\\u26AA';tLab=tk('calc_out.ltv_by_channel.row.health_no_channels','No channels with conversions \\u2014 enter conversion counts to compare');}" +
-  "else{var minR=Math.min.apply(null,finiteRatios);" +
-  "if(minR>=3){tEmo='\\uD83D\\uDFE2';tLab=tk('calc_out.ltv_by_channel.row.health_all_green','All channels \\uD83D\\uDFE2 \\u2014 every channel > 3x LTV:CAC; scale aggressively');}" +
-  "else if(minR>=1){tEmo='\\uD83D\\uDFE1';tLab=tk('calc_out.ltv_by_channel.row.health_all_yellow','All channels \\uD83D\\uDFE1 \\u2014 every channel > 1x but some < 3x; reallocate to top performers');}" +
-  "else if(minR>=0.5){tEmo='\\uD83D\\uDFE0';tLab=tk('calc_out.ltv_by_channel.row.health_some_orange','At least one channel \\uD83D\\uDFE0 \\u2014 0.5-1x LTV:CAC; investigate creative/targeting');}" +
-  "else{tEmo='\\uD83D\\uDD34';tLab=tk('calc_out.ltv_by_channel.row.health_some_red','At least one channel \\uD83D\\uDD34 \\u2014 losing money on that channel; pause or rework');}}" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "function money0(n){return isFinite(n)?'$'+n.toFixed(2):'\\u221E';}" +
-  "var realloc='';" +
-  "if(winner&&loser&&winner.id!==loser.id){var ra=loser.spend*0.25;var nws=winner.spend+ra;var nwc=nws/winner.conversions;var nwr=winner.ltv/nwc;var nls=loser.spend-ra;var nlc=nls/Math.max(loser.conversions,1);var nlr=loser.ltv/nlc;realloc=tk('calc_out.ltv_by_channel.row.whatif_shift_25pct','Shift 25% from '+loser.id+' \\u2192 '+winner.id+':',{from:loser.id,to:winner.id})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.whatif_winner_ratio',winner.id+': ratio '+winner.ratio.toFixed(2)+'x \\u2192 '+nwr.toFixed(2)+'x (CAC rises)',{id:winner.id,from:winner.ratio.toFixed(2),to:nwr.toFixed(2)})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.whatif_loser_ratio',loser.id+': ratio '+loser.ratio.toFixed(2)+'x \\u2192 '+nlr.toFixed(2)+'x (improves if convs stay)',{id:loser.id,from:loser.ratio.toFixed(2),to:nlr.toFixed(2)});}else{realloc=tk('calc_out.ltv_by_channel.row.whatif_need_second_channel','Add a 2nd channel to compare (currently only one valid channel).');}" +
-  "var lc=finiteRatios.length>0?ch.filter(function(c){return isFinite(c.cac)&&c.ratio>0;}).reduce(function(min,c){return c.ratio<min.ratio?c:min;}):null;" +
-  "var beT='';" +
-  "if(lc){var tgtCAC=lc.ltv/1;var curCAC=lc.cac;var cut=curCAC-tgtCAC;beT=tk('calc_out.ltv_by_channel.row.breakeven_push_to_green','To push '+lc.id+' from '+lc.ratio.toFixed(2)+'x to \\uD83D\\uDFE2 (\\u22653.0x):',{id:lc.id,ratio:lc.ratio.toFixed(2)})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.breakeven_target_cac','Target CAC: '+money0(tgtCAC)+' (currently '+money0(curCAC)+')',{target:money0(tgtCAC),current:money0(curCAC)})+'\\n  \\u2022 '+tk('calc_out.ltv_by_channel.row.breakeven_cut_cac','Need to cut CAC by '+money0(cut)+' \\u2014 improve CR by '+((cut/curCAC)*100).toFixed(0)+'% OR reduce spend '+((cut/curCAC)*100).toFixed(0)+'%',{cut:money0(cut),pct:((cut/curCAC)*100).toFixed(0)});}else{beT=tk('calc_out.ltv_by_channel.row.breakeven_need_conversions','Enter conversion counts to see break-even targets.');}" +
-  "var ms='';" +
-  "if(winner&&isFinite(winner.cac)){var sRev=winner.conversions*2*winner.ltv;var sProf=sRev-winner.spend*2;ms=tk('calc_out.ltv_by_channel.row.milestone_scaling','Scaling '+winner.id+' 2x (same ratio):',{id:winner.id})+'\\n  \\u2022 $calc_out.label.revenue|Revenue|: '+money(sRev)+'\\n  \\u2022 $calc_out.label.profit_after_ad_cost|Profit (after ad cost)|: '+money(sProf);}else{ms=tk('calc_out.ltv_by_channel.row.milestone_need_data','Enter data to project scaling outcomes.');}" +
-  "var tip='';" +
-  "if(finiteRatios.length===0){tip=JSON.stringify({code:'ltv_no_data',params:{}});}else if(winner&&loser&&winner.id===loser.id){tip=JSON.stringify({code:'ltv_single_channel',params:{}});}else if(winner&&loser){var wr=winner.ratio;var lr=loser.ratio;if(wr>=3&&lr<1){tip=JSON.stringify({code:'ltv_strong_winner',params:{winner:winner.id,winnerRatio:wr.toFixed(1),loser:loser.id,loserRatio:lr.toFixed(1)}});}else if(wr>=3&&lr>=1){tip=JSON.stringify({code:'ltv_both_healthy',params:{winner:winner.id,ratio:(wr/lr).toFixed(1),loser:loser.id}});}else if(wr<3&&lr<1){tip=JSON.stringify({code:'ltv_no_green',params:{}});}else{tip=JSON.stringify({code:'ltv_similar_ratios',params:{}});}}else{tip=JSON.stringify({code:'ltv_no_data',params:{}});}" +
-  "var tr=ranked.map(function(c,i){var e=hBand(c.ratio);var cs=isFinite(c.cac)?money0(c.cac):'\\u221E (no conv)';var rs=isFinite(c.cac)?c.ratio.toFixed(2)+'x':'\\u2014';var rk=i===0?'\\uD83C\\uDFC6 ':'   ';return rk+e+' '+tk('calc_out.ltv_by_channel.row.channel_row',c.id+'  \\u00B7  spend '+money(c.spend)+' \\u00B7 conv '+c.conversions+' \\u00B7 LTV '+money(c.ltv)+' \\u00B7 CAC '+cs+' \\u00B7 '+rs,{id:c.id,spend:money(c.spend),conv:String(c.conversions),ltv:money(c.ltv),cac:cs,ratio:rs});}).join('\\n');" +
-  "var r2='';" +
-  "r2+='$calc_out.section.ltv_by_channel_calculator|\\u23F0 LTV by Channel Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tEmo+' '+tLab+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.winner|Winner|: '+(winner?winner.id+' ('+winner.ratio.toFixed(2)+'x)':'n/a')+'  \\u00B7  $calc_out.label.loser|Loser|: '+(loser?loser.id+' ('+loser.ratio.toFixed(2)+'x)':'n/a')+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.blended_cac|Blended CAC|: '+(isFinite(blen)?money0(blen):'\\u221E')+'  \\u00B7  $calc_out.label.blended_ltv_cac|Blended LTV:CAC|: '+(isFinite(blRatio)?blRatio.toFixed(2)+'x':'\\u2014')+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+=tr+'\\n\\n';" +
-  "r2+='\\u2022 $calc_out.label.total_spend|Total spend|:  '+money(t.ts)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.total_conv|Total conv|:   '+t.tc+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.blended_cac|Blended CAC|:  '+(isFinite(blen)?money0(blen):'\\u221E')+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+=realloc+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+=beT+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+=ms+'\\n\\n';" +
-    "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let w=function(o){return Number.isNaN(o)?0:Math.max(0,o)},O=function(o,i){return i<=0?1/0:o/i},A=function(o,i){return i<=0||!isFinite(i)?0:o/i},x=function(o){return o.reduce((i,l)=>({totalSpend:i.totalSpend+l.spend,totalConv:i.totalConv+l.conversions}),{totalSpend:0,totalConv:0})},j=function(o){const{totalSpend:i,totalConv:l}=x(o);return l<=0?1/0:i/l},L=function(o){return[...o].sort((i,l)=>!isFinite(i.cac)&&!isFinite(l.cac)?0:isFinite(i.cac)?isFinite(l.cac)?l.ratio-i.ratio:-1:1)},N=function(o){return!isFinite(o)||o<=0?"⚪":o>=u.excellent?"🟢":o>=u.good[0]?"🟡":o>=u.warning[0]?"🟠":"🔴"},J=function(o,i,l){var v=I(o);return Array.isArray(v)?v.join(\`
+\`):String(v)};var P=w,K=O,U=A,z=x,G=j,Q=L,X=N,Y=J,r=tk,q='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+q)(),u={excellent:3,good:[1,3],warning:[.5,1],critical:0},I=function(o){const i=[];let l=!1;for(let n=1;n<=5;n++){const e=w(parseFloat(o[\`ch\${n}_spend\`])||0),c=w(parseFloat(o[\`ch\${n}_conv\`])||0),_=w(parseFloat(o[\`ch\${n}_ltv\`])||0);(e>0||c>0||_>0)&&(l=!0);const g=O(e,c),C=A(_,g);i.push({id:\`Ch\${n}\`,spend:e,conversions:c,ltv:_,cac:g,ratio:C})}if(!l)return[\`$calc_out.section.ltv_by_channel_calculator|⏰ LTV by Channel Calculator|
+
+\`+r("calc_out.ltv_by_channel.row.enter_inputs_required","📊 Enter spend, conversions, and LTV per user for up to 5 marketing channels. See ranked LTV:CAC ratios, channel winners, and reallocation suggestions.")];const v=L(i),t=v.find(n=>isFinite(n.cac)),a=[...v].reverse().find(n=>isFinite(n.cac)),{totalSpend:M,totalConv:m}=x(i),y=j(i),V=m>0?i.reduce((n,e)=>n+e.ltv*e.conversions,0)/m/y:0;let p,b;const F=i.filter(n=>isFinite(n.cac)&&n.ratio>0).map(n=>n.ratio);if(F.length===0)p="⚪",b=r("calc_out.ltv_by_channel.row.health_no_channels","No channels with conversions — enter conversion counts to compare");else{const n=Math.min(...F);n>=u.excellent?(p="🟢",b=r("calc_out.ltv_by_channel.row.health_all_green","All channels 🟢 — every channel > 3x LTV:CAC; scale aggressively")):n>=u.good[0]?(p="🟡",b=r("calc_out.ltv_by_channel.row.health_all_yellow","All channels 🟡 — every channel > 1x but some < 3x; reallocate to top performers")):n>=u.warning[0]?(p="🟠",b=r("calc_out.ltv_by_channel.row.health_some_orange","At least one channel 🟠 — 0.5-1x LTV:CAC; investigate creative/targeting")):(p="🔴",b=r("calc_out.ltv_by_channel.row.health_some_red","At least one channel 🔴 — losing money on that channel; pause or rework"))}const h=n=>"$"+Math.round(n).toLocaleString("en-US"),s=n=>isFinite(n)?"$"+n.toFixed(2):"∞";let S;if(t&&a&&t.id!==a.id){const n=a.spend*.25,c=(t.spend+n)/t.conversions,_=t.ltv/c,C=(a.spend-n)/Math.max(a.conversions,1),W=a.ltv/C;S=r("calc_out.ltv_by_channel.row.whatif_shift_25pct","Shift 25% from "+a.id+" → "+t.id+":",{from:a.id,to:t.id})+\`
+  • \`+r("calc_out.ltv_by_channel.row.whatif_winner_ratio",t.id+": ratio "+t.ratio.toFixed(2)+"x → "+_.toFixed(2)+"x (CAC rises)",{id:t.id,from:t.ratio.toFixed(2),to:_.toFixed(2)})+\`
+  • \`+r("calc_out.ltv_by_channel.row.whatif_loser_ratio",a.id+": ratio "+a.ratio.toFixed(2)+"x → "+W.toFixed(2)+"x (improves if convs stay)",{id:a.id,from:a.ratio.toFixed(2),to:W.toFixed(2)})}else S=r("calc_out.ltv_by_channel.row.whatif_need_second_channel","Add a 2nd channel to compare (currently only one valid channel).");let $;const f=F.length>0?i.filter(n=>isFinite(n.cac)&&n.ratio>0).reduce((n,e)=>e.ratio<n.ratio?e:n):null;if(f){const n=f.ltv/u.good[0],e=f.cac,c=e-n;$=r("calc_out.ltv_by_channel.row.breakeven_push_to_green","To push "+f.id+" from "+f.ratio.toFixed(2)+"x to 🟢 (≥3.0x):",{id:f.id,ratio:f.ratio.toFixed(2)})+\`
+  • \`+r("calc_out.ltv_by_channel.row.breakeven_target_cac","Target CAC: "+s(n)+" (currently "+s(e)+")",{target:s(n),current:s(e)})+\`
+  • \`+r("calc_out.ltv_by_channel.row.breakeven_cut_cac","Need to cut CAC by "+s(c)+" — improve CR by "+(c/e*100).toFixed(0)+"% OR reduce spend "+(c/e*100).toFixed(0)+"%",{cut:s(c),pct:(c/e*100).toFixed(0)})}else $=r("calc_out.ltv_by_channel.row.breakeven_need_conversions","Enter conversion counts to see break-even targets.");let R;if(t&&isFinite(t.cac)){const n=t.conversions*2*t.ltv,e=n-t.spend*2;R=r("calc_out.ltv_by_channel.row.milestone_scaling","Scaling "+t.id+" 2x (same ratio):",{id:t.id})+\`
+  • $calc_out.label.revenue|Revenue|: \`+h(n)+\`
+  • $calc_out.label.profit_after_ad_cost|Profit (after ad cost)|: \`+h(e)}else R=r("calc_out.ltv_by_channel.row.milestone_need_data","Enter data to project scaling outcomes.");let d;if(F.length===0)d=JSON.stringify({code:"ltv_no_data",params:{}});else if(t&&a&&t.id===a.id)d=JSON.stringify({code:"ltv_single_channel",params:{}});else if(t&&a){const n=t.ratio,e=a.ratio;n>=3&&e<1?d=JSON.stringify({code:"ltv_strong_winner",params:{winner:t.id,winnerRatio:n.toFixed(1),loser:a.id,loserRatio:e.toFixed(1)}}):n>=3&&e>=1?d=JSON.stringify({code:"ltv_both_healthy",params:{winner:t.id,ratio:(n/e).toFixed(1),loser:a.id}}):n<3&&e<1?d=JSON.stringify({code:"ltv_no_green",params:{}}):d=JSON.stringify({code:"ltv_similar_ratios",params:{}})}else d=JSON.stringify({code:"ltv_no_data",params:{}});const E=v.map((n,e)=>{const c=N(n.ratio),_=isFinite(n.cac)?s(n.cac):"∞ (no conv)",g=isFinite(n.cac)?n.ratio.toFixed(2)+"x":"—";return(e===0?"🏆 ":"   ")+c+" "+r("calc_out.ltv_by_channel.row.channel_row",n.id+"  ·  spend "+h(n.spend)+" · conv "+n.conversions+" · LTV "+h(n.ltv)+" · CAC "+_+" · "+g,{id:n.id,spend:h(n.spend),conv:String(n.conversions),ltv:h(n.ltv),cac:_,ratio:g})}).join(\`
+\`);return[\`$calc_out.section.ltv_by_channel_calculator|⏰ LTV by Channel Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+p+" "+b+\`
+• $calc_out.label.winner|Winner|: \`+(t?t.id+" ("+t.ratio.toFixed(2)+"x)":"n/a")+"  ·  $calc_out.label.loser|Loser|: "+(a?a.id+" ("+a.ratio.toFixed(2)+"x)":"n/a")+\`
+• $calc_out.label.blended_cac|Blended CAC|: \`+(isFinite(y)?s(y):"∞")+"  ·  $calc_out.label.blended_ltv_cac|Blended LTV:CAC|: "+(isFinite(V)?V.toFixed(2)+"x":"—")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+E+\`
+
+• $calc_out.label.total_spend|Total spend|:  \`+h(M)+\`
+• $calc_out.label.total_conv|Total conv|:   \`+m+\`
+• $calc_out.label.blended_cac|Blended CAC|:  \`+(isFinite(y)?s(y):"∞")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+S+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+$+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+R+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+d+\`
+\`]};return[J(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

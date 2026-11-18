@@ -381,8 +381,14 @@ test('P168 B3-7 G2b：引擎源码里的 "$" + 字母 必须都是 token 形态'
   const problems: string[] = [];
   for (const [slug, file] of engineFileBySlug()) {
     const src = readFileSync(file, 'utf8');
+    // ⚠️ 扫描面 = **服务端区域**（生成区要排除）—— P168 B3-10 起，客户端 customFn 是
+    //   服务端代码的**生成副本**（scripts/customfn-port.ts 产出，带 FFK-SERVER-DERIVED 标记）
+    //   ⇒ ① 扫它是**重复**（服务端那份已经扫过）；
+    //   ② 压缩器的**改名**会在副本里造出 `$t` 之类的**标识符**
+    //      ⇒ 被本判据误当成「$ + 字母」⇒ 假红（实测 cart-abandonment / quota-attainment）。
+    const scan = src.replace(/FFK-SERVER-DERIVED:start[\s\S]*?FFK-SERVER-DERIVED:end/g, '');
     // '$' + 字母：只允许 token 形态（source 级扫描 ⇒ 覆盖 staticExamples 里的字符串字面量）
-    for (const m of src.matchAll(/\$([a-z][A-Za-z0-9_]*)/g)) {
+    for (const m of scan.matchAll(/\$([a-z][A-Za-z0-9_]*)/g)) {
       if (m[0].startsWith('$calc_out')) continue;
       problems.push(slug + '：源码里出现 "$' + m[1] + '"（既不是金额也不是 token）');
     }

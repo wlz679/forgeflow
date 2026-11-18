@@ -57,52 +57,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var dpas = cnn(Number(inputs.dpas_per_quarter) || 0);
-  var rounds = cnn(Number(inputs.avg_negotiation_rounds) || 0);
-  var hoursPerRound = cnn(Number(inputs.hours_per_round) || 0);
-  var rate = cnn(Number(inputs.legal_hourly_rate) || 0);
-  var redlines = cnn(Number(inputs.redlines_per_dpa) || 0);
-  var baseHours = rounds * hoursPerRound;
-  var multiplier = 1 + redlines * 0.05;
-  var perDPA = baseHours * rate * multiplier;
-  var annual = dpas * 4 * perDPA;
-  var band = annual < 100000 ? 'Excellent' : annual < 300000 ? 'Good' : annual < 600000 ? 'Warning' : 'Critical';
-  var emoji = annual < 100000 ? '🟢' : annual < 300000 ? '🟡' : annual < 600000 ? '🟠' : '🔴';
-  var altRounds = 2;
-  var altBaseHours = altRounds * hoursPerRound;
-  var altAnnual = dpas * 4 * altBaseHours * rate * multiplier;
-  var altBand = altAnnual < 100000 ? 'Excellent' : altAnnual < 300000 ? 'Good' : altAnnual < 600000 ? 'Warning' : 'Critical';
-  var altEmoji = altAnnual < 100000 ? '🟢' : altAnnual < 300000 ? '🟡' : altAnnual < 600000 ? '🟠' : '🔴';
-  var targetAnnual = 99999;
-  var targetDpas = (4 * baseHours * rate * multiplier) > 0 ? targetAnnual / (4 * baseHours * rate * multiplier) : dpas;
-  var dpaReductionPct = dpas > 0 ? Math.min(100, Math.max(0, (dpas - targetDpas) / dpas * 100)) : 0;
-  var targetMultiplier = (dpas * 4 * baseHours * rate) > 0 ? targetAnnual / (dpas * 4 * baseHours * rate) : multiplier;
-  var targetRedlines = (targetMultiplier - 1) / 0.05;
-  var redlineReductionPct = redlines > 0 && targetRedlines >= 0 ? Math.min(100, Math.max(0, (redlines - targetRedlines) / redlines * 100)) : Infinity;
-  var newAnnualAt1_2 = dpas * 4 * (1.2 * hoursPerRound) * rate * multiplier;
-  var roundsViable = rounds > 1.2 && newAnnualAt1_2 < 100000;
-  var roundsReductionPct = roundsViable ? Math.min(100, Math.max(0, (rounds - 1.2) / rounds * 100)) : Infinity;
-  var alreadyExcellent = annual < 100000;
-  var paths = [
-    { pct: redlineReductionPct, label: 'reduce average redlines to ≤' + targetRedlines.toFixed(1) + '/DPA (' + redlineReductionPct.toFixed(1) + '% fewer)' },
-    { pct: dpaReductionPct, label: 'reduce DPA volume to ≤' + targetDpas.toFixed(1) + '/quarter (' + dpaReductionPct.toFixed(1) + '% fewer)' }
-  ];
-  if (roundsViable) paths.push({ pct: roundsReductionPct, label: 'reduce average rounds to ≤1.2 (template-first, ' + roundsReductionPct.toFixed(1) + '% fewer)' });
-  paths.sort(function(a, b) { return a.pct - b.pct; });
-  var easierPath = alreadyExcellent ? 'already below €100K — no reduction needed' : paths[0].label;
-  var altVerb = altAnnual < annual ? 'drops to' : 'is already optimal at';
-  var altDisplayed = altAnnual < annual ? altAnnual : annual;
-  return [
-    '🩺 DPA Cost: ' + emoji + ' ' + band + ' (annual cost €' + Math.floor(annual).toLocaleString() + ' · ' + Math.round(perDPA).toLocaleString() + ' €/DPA · ' + baseHours.toFixed(2) + ' base hr/DPA)',
-    '📊 Snapshot: ' + dpas.toLocaleString() + ' DPAs/q × 4 = ' + (dpas * 4).toLocaleString() + '/yr · ' + rounds.toFixed(1) + ' rounds × ' + hoursPerRound.toFixed(2) + ' hr = ' + baseHours.toFixed(2) + ' base hr · ' + redlines.toFixed(1) + ' redlines × 5% → ' + multiplier.toFixed(2) + '× · ' + Math.round(rate).toLocaleString() + ' €/hr',
-    '🔄 What-If: if average rounds drop to 2 (template-first approach), annual cost ' + altVerb + ' ' + Math.round(altDisplayed).toLocaleString() + ' € (' + altEmoji + ' ' + altBand + ').',
-    '⚖️ Break-Even: easiest path to 🟢 Excellent (<€100K): ' + easierPath + '.',
-    '🎯 Milestone: re-baseline quarterly and track DPA turnaround alongside sales-cycle days; template-first playbooks should cut the median negotiation to 2 rounds within two quarters.',
-    '💡 Tip: pair with our [Pipeline Value Calculator] (P8-1) because DPA rounds delay deal close. Also pair with [GDPR Fine Calculator] (L-1) because compliance cost compounds with sales-cycle risk.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(e){return Number.isNaN(e)?0:Math.max(0,e)},f=function(e,t){return e*t},p=function(e){return 1+e*.05},b=function(e,t,r,a){return e*4*t*r*p(a)},w=function(e,t,r){return e*t*p(r)},m=function(e){return e<c.excellent.threshold?"excellent":e<c.good.threshold?"good":e<c.warning.threshold?"warning":"critical"},g=function(e){return"€"+Math.round(e).toLocaleString()},n=function(e,t){return e.toFixed(t)},M=function(e,t,r){var a=q(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var Q=d,S=f,U=p,X=b,Y=w,Z=m,$=g,E=n,B=M,c={excellent:{threshold:1e5,label:"Excellent",message:"Lean legal ops."},good:{threshold:3e5,label:"Good",message:"Manageable DPA cost."},warning:{threshold:6e5,label:"Warning",message:"Legal ops DPA-bound."},critical:{threshold:null,label:"Critical",message:"Disproportionate DPA drag."}},q=function(e){const t=d(Number(e.dpas_per_quarter)||0),r=d(Number(e.avg_negotiation_rounds)||0),a=d(Number(e.hours_per_round)||0),o=d(Number(e.legal_hourly_rate)||0),s=d(Number(e.redlines_per_dpa)||0),i=f(r,a),h=p(s),C=w(i,o,s),l=b(t,i,o,s),F=m(l),I=c[F],j=l<1e5?"🟢":l<3e5?"🟡":l<6e5?"🟠":"🔴",x=2,K=f(x,a),u=b(t,K,o,s),N=m(u),V=u<1e5?"🟢":u<3e5?"🟡":u<6e5?"🟠":"🔴",P=c.excellent.threshold-1,D=4*i*o*h>0?P/(4*i*o*h):t,v=t>0?Math.min(100,Math.max(0,(t-D)/t*100)):0,y=((t*4*i*o>0?P/(t*4*i*o):h)-1)/.05,A=s>0&&y>=0?Math.min(100,Math.max(0,(s-y)/s*100)):1/0,G=t*4*(1.2*a)*o*h,R=r>1.2&&G<P,k=R?Math.min(100,Math.max(0,(r-1.2)/r*100)):1/0,W=l<c.excellent.threshold?"already below €100K — no reduction needed":(()=>{const _=[{pct:A,label:"reduce average redlines to ≤"+n(y,1)+"/DPA ("+n(A,1)+"% fewer)"},{pct:v,label:"reduce DPA volume to ≤"+n(D,1)+"/quarter ("+n(v,1)+"% fewer)"}];return R&&_.push({pct:k,label:"reduce average rounds to ≤1.2 (template-first, "+n(k,1)+"% fewer)"}),_.sort((J,O)=>J.pct-O.pct),_[0].label})(),L=u<l?"drops to":"is already optimal at",z=u<l?u:l;return["🩺 DPA Cost: "+j+" "+I.label+" (annual cost €"+Math.floor(l).toLocaleString()+" · "+g(C)+"/DPA · "+n(i,2)+" base hr/DPA)","📊 Snapshot: "+t.toLocaleString()+" DPAs/q × 4 = "+(t*4).toLocaleString()+"/yr · "+n(r,1)+" rounds × "+n(a,2)+" hr = "+n(i,2)+" base hr · "+n(s,1)+" redlines × 5% → "+n(h,2)+"× · "+g(o)+"/hr","🔄 What-If: if average rounds drop to "+x+" (template-first approach), annual cost "+L+" "+g(z)+" ("+V+" "+c[N].label+").","⚖️ Break-Even: easiest path to 🟢 Excellent (<€100K): "+W+".","🎯 Milestone: re-baseline quarterly and track DPA turnaround alongside sales-cycle days; template-first playbooks should cut the median negotiation to 2 rounds within two quarters.","💡 Tip: pair with our [Pipeline Value Calculator] (P8-1) because DPA rounds delay deal close. Also pair with [GDPR Fine Calculator] (L-1) because compliance cost compounds with sales-cycle risk."]};return[M(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

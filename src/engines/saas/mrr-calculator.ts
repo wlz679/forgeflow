@@ -270,151 +270,87 @@ function calculateMRR(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var subs=cnn(parseInt(inputs.subscriberCount)||0);" +
-  "var price=cnn(parseFloat(inputs.monthlyPrice)||0);" +
-  "var churnRate=cnn(parseFloat(inputs.monthlyChurnRate)||0);" +
-  "var expansionMrr=cnn(parseFloat(inputs.expansionMrr)||0);" +
-  "var newSubs=cnn(parseInt(inputs.newSubsPerMonth)||0);" +
-  "var contractionMrr=cnn(parseFloat(inputs.contractionMrr)||0);" +
-  "var reactivationMrr=cnn(parseFloat(inputs.reactivationMrr)||0);" +
-  "function fmt(n){return '$'+n.toLocaleString(void 0,{minimumFractionDigits:2,maximumFractionDigits:2})}" +
-  "function pct(n){return n.toFixed(1)+'%'}" +
-  "function mn(n){return n>=0?'+'+fmt(n):fmt(n)}" +
-  "var startingMRR=subs*price;" +
-  "var newMRR=newSubs*price;" +
-  "var churnedMRR=subs*(churnRate/100)*price;" +
-  "var endingMRR=startingMRR+newMRR+expansionMrr+reactivationMrr-contractionMrr-churnedMRR;" +
-  "var netChange=endingMRR-startingMRR;" +
-  "var growthRate=startingMRR>0?(netChange/startingMRR)*100:0;" +
-  "var nrr=startingMRR>0?(startingMRR+expansionMrr-contractionMrr-churnedMRR)/startingMRR*100:null;" +
-  "var grr=startingMRR>0?(startingMRR-contractionMrr-churnedMRR)/startingMRR*100:null;" +
-  "var lossesTotal=contractionMrr+churnedMRR;" +
-  "var quickRatio=lossesTotal>0?(newMRR+expansionMrr+reactivationMrr)/lossesTotal:null;" +
-  "var maxMRR=churnRate>0?newMRR/(churnRate/100):null;" +
-  "var cteRatio=expansionMrr>0?contractionMrr/expansionMrr*100:null;" +
-  "var today=new Date();var mnths=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];" +
-  "function dl(m){var d=new Date(today.getTime()+m*30.44*86400000);return mnths[d.getMonth()]+' '+d.getFullYear()}" +
-  "var r=tk('calc_out.section.mrr_health_dashboard','\\uD83D\\uDCCA MRR Health Dashboard')+'\\n\\n';" +
-  // 1. Snapshot
-  "r+=tk('calc_out.section.mrr_snapshot','\\uD83D\\uDCB0 MRR Snapshot')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.starting_mrr','Starting MRR')+':      '+fmt(startingMRR)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.ending_mrr','Ending MRR')+':        '+fmt(endingMRR)+'  '+tk('calc_out.mrr.row.ending_mrr_after_month','(after 1 month)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.arr_x12','ARR (\\u00d712)')+':         '+fmt(startingMRR*12)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.subscribers','Subscribers')+':       '+subs.toLocaleString()+'  @ '+fmt(price)+'/mo\\n';" +
-  "if(startingMRR>0){r+='\\u2022 '+tk('calc_out.label.monthly_growth','Monthly Growth')+':    '+(growthRate>=0?'+':'')+pct(growthRate)+'\\n';}" +
-  // 2. Waterfall
-  "r+='\\n'+tk('calc_out.section.mrr_waterfall','\\uD83D\\uDCC8 MRR Waterfall')+'\\n';" +
-  "r+='  '+tk('calc_out.label.starting_mrr','Starting MRR')+':       '+fmt(startingMRR).padStart(10)+'\\n';" +
-  "r+='  + '+tk('calc_out.label.new_mrr','New MRR')+':         +'+fmt(newMRR).padStart(9)+'  '+tk('calc_out.mrr.row.new_mrr_detail','('+newSubs+' new subs \\u00d7 '+fmt(price)+')',{new_subs:String(newSubs),price:fmt(price)})+'\\n';" +
-  "r+='  + '+tk('calc_out.label.expansion_mrr','Expansion MRR')+':   +'+fmt(expansionMrr).padStart(9)+'  '+tk('calc_out.mrr.row.expansion_mrr_detail','(upgrades & add-ons)')+'\\n';" +
-  "r+='  + '+tk('calc_out.label.reactivation','Reactivation')+':    +'+fmt(reactivationMrr).padStart(9)+'  '+tk('calc_out.mrr.row.reactivation_detail','(returned customers)')+'\\n';" +
-  "r+='  \\u2212 '+tk('calc_out.label.contraction','Contraction')+':     \\u2212'+fmt(contractionMrr).padStart(9)+'  '+tk('calc_out.mrr.row.contraction_detail','(downgrades)')+'\\n';" +
-  "r+='  \\u2212 '+tk('calc_out.label.churn','Churn')+':           \\u2212'+fmt(churnedMRR).padStart(9)+'  '+tk('calc_out.mrr.row.churn_detail','('+pct(churnRate)+' of '+subs.toLocaleString()+' subs)',{churn_rate:pct(churnRate),subs:subs.toLocaleString()})+'\\n';" +
-  "r+='  = '+tk('calc_out.label.ending_mrr','Ending MRR')+':       '+fmt(endingMRR).padStart(10)+'\\n';" +
-  "r+='  '+tk('calc_out.label.net_change','Net Change')+':         '+mn(netChange).padStart(10)+'  '+tk('calc_out.mrr.row.net_change_mom','('+(growthRate>=0?'+':'')+pct(growthRate)+' MoM)',{growth_rate:(growthRate>=0?'+':'')+pct(growthRate)})+'\\n';" +
-  "if(startingMRR<=0){r+='  '+tk('calc_out.label.assessment','Assessment')+':         '+tk('calc_out.mrr.row.assessment_no_data','\\u26a0\\ufe0f  Enter subscribers and price to see growth analysis.')+'\\n';}" +
-  "else if(growthRate>=10){r+='  '+tk('calc_out.label.assessment','Assessment')+':         '+tk('calc_out.mrr.row.assessment_excellent','\\uD83D\\uDFE2 Excellent \\u2014 10%+ MoM growth is top-tier.')+'\\n';}" +
-  "else if(growthRate>=5){r+='  '+tk('calc_out.label.assessment','Assessment')+':         '+tk('calc_out.mrr.row.assessment_healthy','\\uD83D\\uDFE1 Healthy \\u2014 5\\u201310% MoM. Sustainable trajectory.')+'\\n';}" +
-  "else if(growthRate>=0){r+='  '+tk('calc_out.label.assessment','Assessment')+':         '+tk('calc_out.mrr.row.assessment_slow','\\uD83D\\uDFE0 Slow \\u2014 under 5% MoM. Fix acquisition or retention.')+'\\n';}" +
-  "else{r+='  '+tk('calc_out.label.assessment','Assessment')+':         '+tk('calc_out.mrr.row.assessment_shrinking','\\uD83D\\uDD34 Shrinking \\u2014 negative net MRR. Act now.')+'\\n';}" +
-  // 3. Key SaaS Metrics
-  "r+='\\n'+tk('calc_out.section.key_saas_metrics','\\uD83D\\uDCD0 Key SaaS Metrics')+'\\n';" +
-  "if(nrr!==null){" +
-  "var nc;if(nrr>=120)nc=tk('calc_out.mrr.row.nrr_exceptional','\\uD83D\\uDFE2 Exceptional \\u2014 growing 20%+ from existing customers');" +
-  "else if(nrr>=110)nc=tk('calc_out.mrr.row.nrr_best_in_class','\\uD83D\\uDFE2 Best-in-class \\u2014 above 110% NRR');" +
-  "else if(nrr>=100)nc=tk('calc_out.mrr.row.nrr_positive','\\uD83D\\uDFE1 Positive \\u2014 existing base growing slightly');" +
-  "else nc=tk('calc_out.mrr.row.nrr_shrinking','\\uD83D\\uDFE0 Shrinking \\u2014 losing revenue from existing customers');" +
-  "r+='\\u2022 '+tk('calc_out.label.nrr_net_revenue_retention','NRR (Net Revenue Retention)')+':  '+pct(nrr)+'  '+nc+'\\n';" +
-  "var gc;if(grr>=90)gc=tk('calc_out.mrr.row.grr_healthy','\\uD83D\\uDFE2 >90% is healthy');" +
-  "else if(grr>=80)gc=tk('calc_out.mrr.row.grr_watch','\\uD83D\\uDFE1 80\\u201390% \\u2014 watch for trends');" +
-  "else gc=tk('calc_out.mrr.row.grr_attention','\\uD83D\\uDFE0 <80% \\u2014 retention needs attention');" +
-  "r+='\\u2022 '+tk('calc_out.label.grr_gross_revenue_retention','GRR (Gross Revenue Retention)')+': '+pct(grr)+'  '+gc+'\\n';" +
-  "}else{r+='\\u2022 '+tk('calc_out.mrr.row.nrr_unavailable','NRR: \\u2014 (enter subscribers and price to calculate)')+'\\n';r+='\\u2022 '+tk('calc_out.mrr.row.grr_unavailable','GRR: \\u2014')+'\\n';}" +
-  "if(quickRatio!==null){" +
-  "var qc;if(quickRatio>=4)qc=tk('calc_out.mrr.row.quick_ratio_highly_efficient','\\uD83D\\uDFE2 >4 is highly efficient');" +
-  "else if(quickRatio>=2)qc=tk('calc_out.mrr.row.quick_ratio_ok','\\uD83D\\uDFE1 2\\u20134 is OK');" +
-  "else if(quickRatio>=1)qc=tk('calc_out.mrr.row.quick_ratio_weak','\\uD83D\\uDFE0 1\\u20132 is weak');" +
-  "else qc=tk('calc_out.mrr.row.quick_ratio_shrinking','\\uD83D\\uDD34 <1 \\u2014 you are shrinking');" +
-  "r+='\\u2022 '+tk('calc_out.label.saas_quick_ratio','SaaS Quick Ratio')+':              '+quickRatio.toFixed(1)+'x  '+qc+'\\n';" +
-  "}else{r+='\\u2022 '+tk('calc_out.label.saas_quick_ratio','SaaS Quick Ratio')+':              \\u221e  '+tk('calc_out.mrr.row.quick_ratio_no_losses','\\uD83D\\uDFE2 No contraction or churn losses!')+'\\n';}" +
-  "if(maxMRR!==null){" +
-  "r+='\\u2022 '+tk('calc_out.label.growth_ceiling_max_mrr','Growth Ceiling (Max MRR)')+':      '+fmt(maxMRR)+'/mo  '+tk('calc_out.mrr.row.growth_ceiling_at_churn','at '+pct(churnRate)+' churn',{churn_rate:pct(churnRate)})+'\\n';" +
-  "var hcc=newMRR/((churnRate/2)/100);" +
-  "r+='  \\u2192 '+tk('calc_out.mrr.row.halving_churn_ceiling','Halving churn to '+pct(churnRate/2)+' would lift ceiling to '+fmt(hcc)+'/mo',{half_churn:pct(churnRate/2),ceiling:fmt(hcc)})+'\\n';" +
-  "}else{r+='\\u2022 '+tk('calc_out.label.growth_ceiling_max_mrr','Growth Ceiling (Max MRR)')+':      \\u221e  '+tk('calc_out.mrr.row.growth_ceiling_unlimited','(no churn \\u2014 unlimited growth)')+'\\n';}" +
-  // 4. Churn & Contraction Health
-  "r+='\\n'+tk('calc_out.section.churn_contraction_health','\\uD83E\\uDE7A Churn & Contraction Health')+'\\n';" +
-  "if(churnRate<=0&&subs>0){r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':     '+pct(churnRate)+' '+tk('calc_out.mrr.row.monthly_churn_none','\\u2014 \\u2705 No churn detected.')+'\\n';}" +
-  "else if(churnRate>0&&churnRate<=2){r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':     '+pct(churnRate)+' '+tk('calc_out.mrr.row.monthly_churn_great','\\u2014 \\uD83D\\uDFE2 Great. Under 2% is best-in-class.')+'\\n';}" +
-  "else if(churnRate<=3){r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':     '+pct(churnRate)+' '+tk('calc_out.mrr.row.monthly_churn_good','\\u2014 \\uD83D\\uDFE1 Good for SMB SaaS. Aim for under 2%.')+'\\n';}" +
-  "else if(churnRate<=5){r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':     '+pct(churnRate)+' '+tk('calc_out.mrr.row.monthly_churn_elevated','\\u2014 \\uD83D\\uDFE0 Elevated. Every point you reduce compounds.')+'\\n';}" +
-  "else if(churnRate>5){r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':     '+pct(churnRate)+' '+tk('calc_out.mrr.row.monthly_churn_critical','\\u2014 \\uD83D\\uDD34 Critical. Retention is your #1 problem.')+'\\n';}" +
-  "else{r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':     '+pct(churnRate)+'\\n';}" +
-  "if(churnRate>0&&subs>0){var cc=Math.round(subs*churnRate/100);var ar=Math.pow(1-churnRate/100,12)*100;r+='\\u2022 '+tk('calc_out.label.subs_lost_mo','Subs Lost/Mo')+':      ~'+cc+' '+tk('calc_out.mrr.row.subs_lost_of','of '+subs.toLocaleString(),{subs:subs.toLocaleString()})+'\\n';r+='\\u2022 '+tk('calc_out.label.annual_retention','Annual Retention')+':  '+ar.toFixed(1)+'% '+tk('calc_out.mrr.row.annual_retention_after_12m','(after 12 months of churn)')+'\\n';}" +
-  "if(contractionMrr>0){" +
-  "r+='\\u2022 '+tk('calc_out.label.contraction_mrr','Contraction MRR')+':   '+fmt(contractionMrr)+'\\n';" +
-  "if(expansionMrr<=0){r+='  \\u2192 '+tk('calc_out.mrr.row.contraction_no_expansion','\\uD83D\\uDD34 Contraction with no expansion \\u2014 investigate immediately.')+'\\n';}" +
-  "else if(cteRatio!==null&&cteRatio>100){r+='  \\u2192 '+tk('calc_out.mrr.row.contraction_exceeds_expansion','\\uD83D\\uDD34 Contraction exceeds expansion \\u2014 value delivery problem.')+'\\n';}" +
-  "else if(cteRatio!==null&&cteRatio>50){r+='  \\u2192 '+tk('calc_out.mrr.row.contraction_eats_expansion','\\uD83D\\uDFE0 Contraction eats '+cteRatio.toFixed(0)+'% of expansion \\u2014 watch closely.',{cte:cteRatio.toFixed(0)})+'\\n';}" +
-  "else{r+='  \\u2192 '+tk('calc_out.mrr.row.contraction_well_managed','\\uD83D\\uDFE2 Contraction at '+(cteRatio!==null?cteRatio.toFixed(0):'\\u2014')+'% of expansion \\u2014 well-managed.',{cte:(cteRatio!==null?cteRatio.toFixed(0):'\\u2014')})+'\\n';}" +
-  "}else{r+='\\u2022 '+tk('calc_out.label.contraction_mrr','Contraction MRR')+':   $0.00 '+tk('calc_out.mrr.row.contraction_none','\\u2014 \\u2705 No contraction. All revenue losses are from full churn.')+'\\n';}" +
-  // 5. Milestones
-  "if(startingMRR>0&&netChange!==0){" +
-  "r+='\\n'+tk('calc_out.section.mrr_milestone_projections','\\uD83C\\uDFAF MRR Milestone Projections')+'\\n';" +
-  "r+='   '+tk('calc_out.mrr.row.milestone_assumption','(assuming constant net change of '+mn(netChange)+'/mo)',{net_change:mn(netChange)})+'\\n';" +
-  "var milestones=netChange>0?[5e3,1e4,2e4,5e4,1e5]:[5e3,1e4,2e4,5e4,1e5].filter(function(m){return m<startingMRR});var anyShown=false;" +
-  "for(var mi=0;mi<milestones.length;mi++){var ms=milestones[mi];" +
-  "if(netChange>0&&startingMRR>=ms)continue;if(netChange<0&&startingMRR<=ms)continue;" +
-  "var mtr=Math.abs((ms-startingMRR)/netChange);if(mtr>120)continue;" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.milestone',fmt(ms)+' MRR:  '+mtr.toFixed(1)+' months  (~'+dl(mtr)+')',{milestone:fmt(ms),months:mtr.toFixed(1),date:dl(mtr)})+'\\n';anyShown=true;}" +
-  "if(!anyShown){r+='\\u2022 '+tk('calc_out.mrr.row.milestones_exhausted','All standard milestones reached or beyond projection range.')+'\\n';}" +
-  "}else if(startingMRR>0&&netChange===0){" +
-  "r+='\\n'+tk('calc_out.section.mrr_milestone_projections','\\uD83C\\uDFAF MRR Milestone Projections')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.milestone_flat','Net change is zero \\u2014 MRR is flat. Add growth inputs to see projections.')+'\\n';}" +
-  // 6. What-If
-  "if(startingMRR>0){" +
-  "r+='\\n'+tk('calc_out.section.what_if_scenarios','\\uD83D\\uDD04 What-If Scenarios:')+'\\n';" +
-  // Scenario A: reduce churn
-  "if(churnRate>1&&maxMRR!==null){" +
-  "var newChurn=Math.max(1,churnRate-2);var newMaxMRR=newMRR/(newChurn/100);var ag=(newMaxMRR-maxMRR)*12;" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.whatif_churn_drop','If churn drops '+pct(churnRate)+' \\u2192 '+pct(newChurn)+':',{from:pct(churnRate),to:pct(newChurn)})+'\\n';" +
-  "r+='  '+tk('calc_out.label.max_mrr','Max MRR')+': '+fmt(maxMRR)+' \\u2192 '+fmt(newMaxMRR)+' (+'+fmt(newMaxMRR-maxMRR)+')\\n';" +
-  "if(ag>0){r+='  '+tk('calc_out.label.annual_revenue_potential','Annual revenue potential')+': +'+fmt(ag)+'\\n';}" +
-  "}else if(churnRate>0&&churnRate<=1&&maxMRR!==null){" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.whatif_churn_already_low','Churn is already very low at '+pct(churnRate)+' \\u2014 keep it up! Max MRR: '+fmt(maxMRR)+'/mo.',{churn:pct(churnRate),max:fmt(maxMRR)})+'\\n';}" +
-  // Scenario B: expansion to 25%
-  "var targetExpansion=newMRR*0.25;" +
-  "if(newMRR>0){" +
-  "if(expansionMrr>=targetExpansion){" +
-  "var cpct=newMRR>0?(expansionMrr/newMRR*100).toFixed(0):'\\u2014';" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.whatif_expansion_on_target','Expansion at '+cpct+'% of new MRR \\u2014 \\u2705 already exceeding 25% target.',{pct:cpct})+'\\n';" +
-  "}else{" +
-  "var gap=targetExpansion-expansionMrr;var newNRR=nrr!==null?(startingMRR+targetExpansion-contractionMrr-churnedMRR)/startingMRR*100:null;" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.whatif_expansion_growth','If expansion grows to 25% of new MRR:')+'\\n';" +
-  "r+='  '+tk('calc_out.label.target_expansion','Target Expansion')+': '+fmt(targetExpansion)+'/mo '+tk('calc_out.mrr.row.whatif_expansion_target_gap','(+'+fmt(gap)+' needed)',{gap:fmt(gap)})+'\\n';" +
-  "if(nrr!==null&&newNRR!==null){r+='  '+tk('calc_out.label.nrr_would_rise','NRR would rise')+': '+pct(nrr)+' \\u2192 '+pct(newNRR)+'\\n';}" +
-  "}}" +
-  // Scenario C: halve contraction
-  "if(contractionMrr>0){" +
-  "var savings=contractionMrr/2;var newNetChange=netChange+savings;" +
-  "var newNRR2=nrr!==null?(startingMRR+expansionMrr-savings-churnedMRR)/startingMRR*100:null;" +
-  "r+='\\u2022 '+tk('calc_out.mrr.row.whatif_contraction_cut','If contraction is cut by 50%:')+'\\n';" +
-  "r+='  '+tk('calc_out.label.savings','Savings')+': +'+fmt(savings)+'/mo\\n';" +
-  "r+='  '+tk('calc_out.label.net_change_improves','Net Change improves')+': '+mn(netChange)+' \\u2192 '+mn(newNetChange)+'/mo';" +
-  "if(netChange!==0){var pi=Math.abs((newNetChange-netChange)/netChange*100);r+=' (+'+pi.toFixed(0)+'%)';}r+='\\n';" +
-  "if(nrr!==null&&newNRR2!==null){r+='  '+tk('calc_out.label.nrr_improves','NRR improves')+': '+pct(nrr)+' \\u2192 '+pct(newNRR2)+'\\n';}" +
-  "}" +
-  "}" +
-  "if(startingMRR>0&&price>0){var beSubs=Math.ceil((churnedMRR+contractionMrr-expansionMrr-reactivationMrr)/price);var beNote=beSubs<0?'\\u2022 '+tk('calc_out.mrr.row.break_even_below_zero','\\uD83D\\uDFE2 Break-even below 0 \\u2014 your expansion + reactivation already outpaces losses.'):newSubs>=beSubs?'\\u2022 '+tk('calc_out.mrr.row.break_even_above','\\uD83D\\uDFE2 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re growing above break-even ('+newSubs+' actual).',{be:String(beSubs),actual:String(newSubs)}):'\\u2022 '+tk('calc_out.mrr.row.break_even_below','\\uD83D\\uDD34 Break-even new subs/mo: '+beSubs+'  \\u2014 you\\'re below break-even ('+newSubs+' actual). MRR is shrinking.',{be:String(beSubs),actual:String(newSubs)});r+='\\n'+tk('calc_out.section.break_even_growth','\\u2696\\uFE0F Break-Even Growth')+'\\n'+beNote+'\\n';}" +
-  "var tipStr;" +
-  "if(nrr!==null&&nrr>=110){tipStr='\\uD83D\\uDCA1 Tip: Best-in-class NRR \\u2014 protect the expansion motion that drives it. Don\\'t fix what isn\\'t broken.';}" +
-  "else if(churnRate<2&&churnRate>0){tipStr='\\uD83D\\uDCA1 Tip: Sub-2% churn is your unfair advantage. Don\\'t raise prices until you\\'ve maxed expansion revenue per account.';}" +
-  "else if(churnRate>=5){tipStr='\\uD83D\\uDCA1 Tip: Lowering churn from '+churnRate.toFixed(1)+'% to 3% roughly doubles customer lifetime. Retention is your #1 lever right now.';}" +
-  "else{tipStr='\\uD83D\\uDCA1 Tip: Track your Quick Ratio weekly \\u2014 above 4 means growth is efficient. Below 2 means you\\'re scaling losses faster than gains.';}" +
-  "r+='\\n'+tipStr+'\\n';" +
-  "return [r];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let M=function(u){return Number.isNaN(u)?0:Math.max(0,u)},E=function(u){const w=M(parseInt(u.subscriberCount)||0),d=M(parseFloat(u.monthlyPrice)||0),n=M(parseFloat(u.monthlyChurnRate)||0),h=M(parseFloat(u.expansionMrr)||0),y=M(parseInt(u.newSubsPerMonth)||0),g=M(parseFloat(u.contractionMrr)||0),F=M(parseFloat(u.reactivationMrr)||0),c=o=>"$"+o.toLocaleString(void 0,{minimumFractionDigits:2,maximumFractionDigits:2}),e=o=>o.toFixed(1)+"%",x=o=>o>=0?"+"+c(o):c(o),a=w*d,b=y*d,v=w*(n/100)*d,N=a+b+h+F-g-v,s=N-a,p=a>0?s/a*100:0,_=a>0?(a+h-g-v)/a*100:null,A=a>0?(a-g-v)/a*100:null,j=g+v,S=j>0?(b+h+F)/j:null,m=n>0?b/(n/100):null,R=h>0?g/h*100:null,B=new Date,I=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],G=o=>{const l=new Date(B.getTime()+o*30.44*864e5);return I[l.getMonth()]+" "+l.getFullYear()};let r=t("calc_out.section.mrr_health_dashboard","📊 MRR Health Dashboard")+\`
+
+\`;if(r+=t("calc_out.section.mrr_snapshot","💰 MRR Snapshot")+\`
+\`,r+="• "+t("calc_out.label.starting_mrr","Starting MRR")+":      "+c(a)+\`
+\`,r+="• "+t("calc_out.label.ending_mrr","Ending MRR")+":        "+c(N)+"  "+t("calc_out.mrr.row.ending_mrr_after_month","(after 1 month)")+\`
+\`,r+="• "+t("calc_out.label.arr_x12","ARR (×12)")+":         "+c(a*12)+\`
+\`,r+="• "+t("calc_out.label.subscribers","Subscribers")+":       "+w.toLocaleString()+"  @ "+c(d)+\`/mo
+\`,a>0&&(r+="• "+t("calc_out.label.monthly_growth","Monthly Growth")+":    "+(p>=0?"+":"")+e(p)+\`
+\`),r+=\`
+\`+t("calc_out.section.mrr_waterfall","📈 MRR Waterfall")+\`
+\`,r+="  "+t("calc_out.label.starting_mrr","Starting MRR")+":       "+c(a).padStart(10)+\`
+\`,r+="  + "+t("calc_out.label.new_mrr","New MRR")+":         +"+c(b).padStart(9)+"  "+t("calc_out.mrr.row.new_mrr_detail","("+y+" new subs × "+c(d)+")",{new_subs:String(y),price:c(d)})+\`
+\`,r+="  + "+t("calc_out.label.expansion_mrr","Expansion MRR")+":   +"+c(h).padStart(9)+"  "+t("calc_out.mrr.row.expansion_mrr_detail","(upgrades & add-ons)")+\`
+\`,r+="  + "+t("calc_out.label.reactivation","Reactivation")+":    +"+c(F).padStart(9)+"  "+t("calc_out.mrr.row.reactivation_detail","(returned customers)")+\`
+\`,r+="  − "+t("calc_out.label.contraction","Contraction")+":     −"+c(g).padStart(9)+"  "+t("calc_out.mrr.row.contraction_detail","(downgrades)")+\`
+\`,r+="  − "+t("calc_out.label.churn","Churn")+":           −"+c(v).padStart(9)+"  "+t("calc_out.mrr.row.churn_detail","("+e(n)+" of "+w.toLocaleString()+" subs)",{churn_rate:e(n),subs:w.toLocaleString()})+\`
+\`,r+="  = "+t("calc_out.label.ending_mrr","Ending MRR")+":       "+c(N).padStart(10)+\`
+\`,r+="  "+t("calc_out.label.net_change","Net Change")+":         "+x(s).padStart(10)+"  "+t("calc_out.mrr.row.net_change_mom","("+(p>=0?"+":"")+e(p)+" MoM)",{growth_rate:(p>=0?"+":"")+e(p)})+\`
+\`,a<=0?r+="  "+t("calc_out.label.assessment","Assessment")+":         "+t("calc_out.mrr.row.assessment_no_data","⚠️  Enter subscribers and price to see growth analysis.")+\`
+\`:p>=10?r+="  "+t("calc_out.label.assessment","Assessment")+":         "+t("calc_out.mrr.row.assessment_excellent","🟢 Excellent — 10%+ MoM growth is top-tier.")+\`
+\`:p>=5?r+="  "+t("calc_out.label.assessment","Assessment")+":         "+t("calc_out.mrr.row.assessment_healthy","🟡 Healthy — 5–10% MoM. Sustainable trajectory.")+\`
+\`:p>=0?r+="  "+t("calc_out.label.assessment","Assessment")+":         "+t("calc_out.mrr.row.assessment_slow","🟠 Slow — under 5% MoM. Fix acquisition or retention.")+\`
+\`:r+="  "+t("calc_out.label.assessment","Assessment")+":         "+t("calc_out.mrr.row.assessment_shrinking","🔴 Shrinking — negative net MRR. Act now.")+\`
+\`,r+=\`
+\`+t("calc_out.section.key_saas_metrics","📐 Key SaaS Metrics")+\`
+\`,_!==null){let o;_>=120?o=t("calc_out.mrr.row.nrr_exceptional","🟢 Exceptional — growing 20%+ from existing customers"):_>=110?o=t("calc_out.mrr.row.nrr_best_in_class","🟢 Best-in-class — above 110% NRR"):_>=100?o=t("calc_out.mrr.row.nrr_positive","🟡 Positive — existing base growing slightly"):o=t("calc_out.mrr.row.nrr_shrinking","🟠 Shrinking — losing revenue from existing customers"),r+="• "+t("calc_out.label.nrr_net_revenue_retention","NRR (Net Revenue Retention)")+":  "+e(_)+"  "+o+\`
+\`;let l;A>=90?l=t("calc_out.mrr.row.grr_healthy","🟢 >90% is healthy"):A>=80?l=t("calc_out.mrr.row.grr_watch","🟡 80–90% — watch for trends"):l=t("calc_out.mrr.row.grr_attention","🟠 <80% — retention needs attention"),r+="• "+t("calc_out.label.grr_gross_revenue_retention","GRR (Gross Revenue Retention)")+": "+e(A)+"  "+l+\`
+\`}else r+="• "+t("calc_out.mrr.row.nrr_unavailable","NRR: — (enter subscribers and price to calculate)")+\`
+\`,r+="• "+t("calc_out.mrr.row.grr_unavailable","GRR: —")+\`
+\`;if(S!==null){let o;S>=4?o=t("calc_out.mrr.row.quick_ratio_highly_efficient","🟢 >4 is highly efficient"):S>=2?o=t("calc_out.mrr.row.quick_ratio_ok","🟡 2–4 is OK"):S>=1?o=t("calc_out.mrr.row.quick_ratio_weak","🟠 1–2 is weak"):o=t("calc_out.mrr.row.quick_ratio_shrinking","🔴 <1 — you are shrinking"),r+="• "+t("calc_out.label.saas_quick_ratio","SaaS Quick Ratio")+":              "+S.toFixed(1)+"x  "+o+\`
+\`}else r+="• "+t("calc_out.label.saas_quick_ratio","SaaS Quick Ratio")+":              ∞  "+t("calc_out.mrr.row.quick_ratio_no_losses","🟢 No contraction or churn losses!")+\`
+\`;if(m!==null){r+="• "+t("calc_out.label.growth_ceiling_max_mrr","Growth Ceiling (Max MRR)")+":      "+c(m)+"/mo  "+t("calc_out.mrr.row.growth_ceiling_at_churn","at "+e(n)+" churn",{churn_rate:e(n)})+\`
+\`;const o=b/(n/2/100);r+="  → "+t("calc_out.mrr.row.halving_churn_ceiling","Halving churn to "+e(n/2)+" would lift ceiling to "+c(o)+"/mo",{half_churn:e(n/2),ceiling:c(o)})+\`
+\`}else r+="• "+t("calc_out.label.growth_ceiling_max_mrr","Growth Ceiling (Max MRR)")+":      ∞  "+t("calc_out.mrr.row.growth_ceiling_unlimited","(no churn — unlimited growth)")+\`
+\`;if(r+=\`
+\`+t("calc_out.section.churn_contraction_health","🩺 Churn & Contraction Health")+\`
+\`,n<=0&&w>0?r+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":     "+e(n)+" "+t("calc_out.mrr.row.monthly_churn_none","— ✅ No churn detected.")+\`
+\`:n>0&&n<=2?r+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":     "+e(n)+" "+t("calc_out.mrr.row.monthly_churn_great","— 🟢 Great. Under 2% is best-in-class.")+\`
+\`:n<=3?r+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":     "+e(n)+" "+t("calc_out.mrr.row.monthly_churn_good","— 🟡 Good for SMB SaaS. Aim for under 2%.")+\`
+\`:n<=5?r+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":     "+e(n)+" "+t("calc_out.mrr.row.monthly_churn_elevated","— 🟠 Elevated. Every point you reduce compounds.")+\`
+\`:n>5?r+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":     "+e(n)+" "+t("calc_out.mrr.row.monthly_churn_critical","— 🔴 Critical. Retention is your #1 problem.")+\`
+\`:r+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":     "+e(n)+\`
+\`,n>0&&w>0){const o=Math.round(w*n/100),l=Math.pow(1-n/100,12)*100;r+="• "+t("calc_out.label.subs_lost_mo","Subs Lost/Mo")+":      ~"+o+" "+t("calc_out.mrr.row.subs_lost_of","of "+w.toLocaleString(),{subs:w.toLocaleString()})+\`
+\`,r+="• "+t("calc_out.label.annual_retention","Annual Retention")+":  "+l.toFixed(1)+"% "+t("calc_out.mrr.row.annual_retention_after_12m","(after 12 months of churn)")+\`
+\`}if(g>0?(r+="• "+t("calc_out.label.contraction_mrr","Contraction MRR")+":   "+c(g)+\`
+\`,h<=0?r+="  → "+t("calc_out.mrr.row.contraction_no_expansion","🔴 Contraction with no expansion — investigate immediately.")+\`
+\`:R!==null&&R>100?r+="  → "+t("calc_out.mrr.row.contraction_exceeds_expansion","🔴 Contraction exceeds expansion — value delivery problem.")+\`
+\`:R!==null&&R>50?r+="  → "+t("calc_out.mrr.row.contraction_eats_expansion","🟠 Contraction eats "+R.toFixed(0)+"% of expansion — watch closely.",{cte:R.toFixed(0)})+\`
+\`:r+="  → "+t("calc_out.mrr.row.contraction_well_managed","🟢 Contraction at "+(R!==null?R.toFixed(0):"—")+"% of expansion — well-managed.",{cte:R!==null?R.toFixed(0):"—"})+\`
+\`):r+="• "+t("calc_out.label.contraction_mrr","Contraction MRR")+":   $0.00 "+t("calc_out.mrr.row.contraction_none","— ✅ No contraction. All revenue losses are from full churn.")+\`
+\`,a>0&&s!==0){r+=\`
+\`+t("calc_out.section.mrr_milestone_projections","🎯 MRR Milestone Projections")+\`
+\`,r+="   "+t("calc_out.mrr.row.milestone_assumption","(assuming constant net change of "+x(s)+"/mo)",{net_change:x(s)})+\`
+\`;const o=s>0?[5e3,1e4,2e4,5e4,1e5]:[5e3,1e4,2e4,5e4,1e5].filter(i=>i<a);let l=!1;for(const i of o){if(s>0&&a>=i||s<0&&a<=i)continue;const f=Math.abs((i-a)/s);f>120||(r+="• "+t("calc_out.mrr.row.milestone",c(i)+" MRR:  "+f.toFixed(1)+" months  (~"+G(f)+")",{milestone:c(i),months:f.toFixed(1),date:G(f)})+\`
+\`,l=!0)}l||(r+="• "+t("calc_out.mrr.row.milestones_exhausted","All standard milestones reached or beyond projection range.")+\`
+\`)}else a>0&&s===0&&(r+=\`
+\`+t("calc_out.section.mrr_milestone_projections","🎯 MRR Milestone Projections")+\`
+\`,r+="• "+t("calc_out.mrr.row.milestone_flat","Net change is zero — MRR is flat. Add growth inputs to see projections.")+\`
+\`);if(a>0){if(r+=\`
+\`+t("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
+\`,n>1&&m!==null){const l=Math.max(1,n-2),i=b/(l/100),f=(i-m)*12;r+="• "+t("calc_out.mrr.row.whatif_churn_drop","If churn drops "+e(n)+" → "+e(l)+":",{from:e(n),to:e(l)})+\`
+\`,r+="  "+t("calc_out.label.max_mrr","Max MRR")+": "+c(m)+" → "+c(i)+" (+"+c(i-m)+\`)
+\`,f>0&&(r+="  "+t("calc_out.label.annual_revenue_potential","Annual revenue potential")+": +"+c(f)+\`
+\`)}else n>0&&n<=1&&m!==null&&(r+="• "+t("calc_out.mrr.row.whatif_churn_already_low","Churn is already very low at "+e(n)+" — keep it up! Max MRR: "+c(m)+"/mo.",{churn:e(n),max:c(m)})+\`
+\`);const o=b*.25;if(b>0)if(h>=o){const l=b>0?(h/b*100).toFixed(0):"—";r+="• "+t("calc_out.mrr.row.whatif_expansion_on_target","Expansion at "+l+"% of new MRR — ✅ already exceeding 25% target.",{pct:l})+\`
+\`}else{const l=o-h,i=_!==null?(a+o-g-v)/a*100:null;r+="• "+t("calc_out.mrr.row.whatif_expansion_growth","If expansion grows to 25% of new MRR:")+\`
+\`,r+="  "+t("calc_out.label.target_expansion","Target Expansion")+": "+c(o)+"/mo "+t("calc_out.mrr.row.whatif_expansion_target_gap","(+"+c(l)+" needed)",{gap:c(l)})+\`
+\`,_!==null&&i!==null&&(r+="  "+t("calc_out.label.nrr_would_rise","NRR would rise")+": "+e(_)+" → "+e(i)+\`
+\`)}if(g>0){const l=g/2,i=s+l,f=_!==null?(a+h-l-v)/a*100:null;if(r+="• "+t("calc_out.mrr.row.whatif_contraction_cut","If contraction is cut by 50%:")+\`
+\`,r+="  "+t("calc_out.label.savings","Savings")+": +"+c(l)+\`/mo
+\`,r+="  "+t("calc_out.label.net_change_improves","Net Change improves")+": "+x(s)+" → "+x(i)+"/mo",s!==0){const P=Math.abs((i-s)/s*100);r+=" (+"+P.toFixed(0)+"%)"}r+=\`
+\`,_!==null&&f!==null&&(r+="  "+t("calc_out.label.nrr_improves","NRR improves")+": "+e(_)+" → "+e(f)+\`
+\`)}}if(a>0&&d>0){const o=Math.ceil((v+g-h-F)/d),l=o<0?"• "+t("calc_out.mrr.row.break_even_below_zero","🟢 Break-even below 0 — your expansion + reactivation already outpaces losses."):y>=o?"• "+t("calc_out.mrr.row.break_even_above","🟢 Break-even new subs/mo: "+o+"  — you're growing above break-even ("+y+" actual).",{be:String(o),actual:String(y)}):"• "+t("calc_out.mrr.row.break_even_below","🔴 Break-even new subs/mo: "+o+"  — you're below break-even ("+y+" actual). MRR is shrinking.",{be:String(o),actual:String(y)});r+=\`
+\`+t("calc_out.section.break_even_growth","⚖️ Break-Even Growth")+\`
+\`+l+\`
+\`}let C;return _!==null&&_>=110?C="💡 Tip: Best-in-class NRR — protect the expansion motion that drives it. Don't fix what isn't broken.":n<2&&n>0?C="💡 Tip: Sub-2% churn is your unfair advantage. Don't raise prices until you've maxed expansion revenue per account.":n>=5?C="💡 Tip: Lowering churn from "+n.toFixed(1)+"% to 3% roughly doubles customer lifetime. Retention is your #1 lever right now.":C="💡 Tip: Track your Quick Ratio weekly — above 4 means growth is efficient. Below 2 means you're scaling losses faster than gains.",r+=\`
+\`+C+\`
+\`,[r]},q=function(u,w,d){var n=L(u);return Array.isArray(n)?n.join(\`
+\`):String(n)};var O=M,H=E,J=q,t=tk,D='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+D)(),L=function(u){return E(u)};return[q(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: "solopreneur-mrr-calculator",

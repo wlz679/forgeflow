@@ -291,92 +291,71 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  "function mPI(p,r,n){if(n<=0)return 0;if(r===0)return p/n;return(p*r)/(1-Math.pow(1+r,-n));}" +
-  "function tI(p,r,n){return mPI(p,r,n)*n-p;}" +
-  "function ltv2(p,h){if(h<=0)return 0;return p/h*100;}" +
-  "function ppByY(y,p,r,n){var m=Math.min(y*12,n);if(n<=0)return 0;if(r===0)return p*(m/n);var b=(p*(Math.pow(1+r,n)-Math.pow(1+r,m)))/(Math.pow(1+r,n)-1);return p-b;}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var hp=cnn(parseFloat(inputs.homePrice)||0);" +
-  "var dp=cnn(parseFloat(inputs.downPayment)||0);" +
-  "var lty=cnn(parseFloat(inputs.loanTermYears)||0);" +
-  "var ir=parseFloat(inputs.interestRate)||0;" +
-  "if(hp===0){return['\\u23F0 Mortgage Calculator\\n\\n\\uD83D\\uDCB0 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.'];}" +
-  "if(dp>=hp){return['\\u23F0 Mortgage Calculator\\n\\n\\uD83D\\uDCB0 Down payment ('+hp.toLocaleString('en-US')+') >= home price \\u2014 no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments.'];}" +
-  "if(lty<=0){return['\\u23F0 Mortgage Calculator\\n\\n\\uD83D\\uDCB0 Loan term must be > 0 years. Typical mortgages are 15, 20, or 30 years.'];}" +
-  "var prin=hp-dp;" +
-  "var mr=ir/100/12;" +
-  "var n2=lty*12;" +
-  "var monthly=mPI(prin,mr,n2);" +
-  "var ti=tI(prin,mr,n2);" +
-  "var tc=hp+ti;" +
-  "var lvP=ltv2(prin,hp);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return '$'+fmt(n);}" +
-  "function pct2(n){return n.toFixed(2)+'%';}" +
-  "var ratio=hp>0?monthly/hp:0;" +
-  "var hlE='',hlL='';" +
-  "if(ratio<0.010){hlE='\\uD83D\\uDFE2';hlL='affordable \\u2014 P&I under 1.0% of home price';}" +
-  "else if(ratio<0.013){hlE='\\uD83D\\uDCA1';hlL='moderate \\u2014 P&I between 1.0-1.3% of home price';}" +
-  "else{hlE='\\uD83D\\uDFE0';hlL='stretched \\u2014 P&I over 1.3% of home price; verify 28% DTI rule';}" +
-  "var m15=mPI(prin,mr,180);var ti15=tI(prin,mr,180);" +
-  "var m20=mPI(prin,mr,240);var ti20=tI(prin,mr,240);" +
-  "var p5=ppByY(5,prin,mr,n2);var p15=ppByY(15,prin,mr,n2);var p30=ppByY(30,prin,mr,n2);" +
-  "var rmi=Math.max(0,ir-1);var rpi=ir+1;" +
-  "var mMinus=mPI(prin,rmi/100/12,n2);var mPlus=mPI(prin,rpi/100/12,n2);" +
-  "var dp20=hp*0.20;var prin20=hp-dp20;var m20d=mPI(prin20,mr,n2);" +
-  "var extraYears=ti>0?Math.ceil(ti/200/12):0;" +
-  "var tip='';" +
-  "if(lvP>=80){tip='\\uD83D\\uDCA1 Tip: LTV \\u2265 80% typically requires Private Mortgage Insurance (PMI) \\u2014 adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.';}" +
-  "else if(lty>=30){tip='\\uD83D\\uDCA1 Tip: 30-year term gives lowest monthly payment but highest total interest. Compare with 15-year \\u2014 higher payment but ~50% less total interest paid.';}" +
-  "else{tip='\\uD83D\\uDCA1 Tip: Shortening your term from 30 to 15 years typically saves 50%+ on total interest. Run the comparison below to see the dollar difference for your loan.';}" +
-  "var r2='';" +
-  "r2+='\\u23F0 Mortgage Calculator\\n\\n';" +
-  "r2+='\\uD83D\\uDCB0 Loan Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Home price:           '+money(hp)+'\\n';" +
-  "r2+='\\u2022 Down payment:         '+money(dp)+'  ('+pct2((dp/hp)*100)+')\\n';" +
-  "r2+='\\u2022 Loan amount:          '+money(prin)+'\\n';" +
-  "r2+='\\u2022 Loan term:            '+lty+' years ('+n2+' months)\\n';" +
-  "r2+='\\u2022 Interest rate:        '+ir+'% APR\\n';" +
-  "r2+='\\u2022 LTV:                  '+pct2(lvP)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCD0 Monthly Payment:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Monthly P&I:          '+money(monthly)+'\\n';" +
-  "r2+='\\u2022 Total interest paid: '+money(ti)+'  (over loan term)\\n';" +
-  "r2+='\\u2022 Total cost (price + interest): '+money(tc)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Affordability Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+hlE+' '+hlL+'\\n';" +
-  "r2+='\\u2022 P&I as % of home price: '+pct2(ratio*100)+'\\n';" +
-  "r2+='\\u2022 Rule of thumb: P&I should be \\u2264 28% of monthly gross income\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Loan Term Comparison:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 15-year: '+money(m15)+'/mo \\u00B7 '+money(ti15)+' total interest\\n';" +
-  "r2+='\\u2022 20-year: '+money(m20)+'/mo \\u00B7 '+money(ti20)+' total interest\\n';" +
-  "r2+='\\u2022 '+lty+'-year: '+money(monthly)+'/mo \\u00B7 '+money(ti)+' total interest  \\u2190 current\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Amortization Milestones:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 After year 5:  '+money(p5)+' principal paid ('+pct2((p5/prin)*100)+' of loan)\\n';" +
-  "r2+='\\u2022 After year 15: '+money(p15)+' principal paid ('+pct2((p15/prin)*100)+' of loan)\\n';" +
-  "if(lty>=30){r2+='\\u2022 After year 30: '+money(p30)+' (loan fully paid)\\n';}" +
-  "r2+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Rate -1pp ('+rmi.toFixed(1)+'%):     monthly \\u2192 '+money(mMinus)+'\\n';" +
-  "r2+='\\u2022 Rate +1pp ('+rpi.toFixed(1)+'%):     monthly \\u2192 '+money(mPlus)+'\\n';" +
-  "r2+='\\u2022 Extra $200/mo payment:    helps pay off ~'+extraYears+' months earlier\\n';" +
-  "r2+='\\u2022 20% down (vs current):   loan '+money(prin20)+' \\u00B7 monthly '+money(m20d)+'\\n';" +
-  "r2+='\\u2022 15-year refinance:        see comparison above\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var results=[r2];" +
-  "var prices=[200000,400000,600000,800000,1000000,1500000];" +
-  "for(var pi=0;pi<prices.length;pi++){var pp=prices[pi];var prinP=pp-dp;if(prinP<=0){results.push('Comparison: home '+money(pp)+' with '+money(dp)+' down \\u2192 loan = $0 (no payment)');continue;}var mp=mPI(prinP,mr,n2);results.push('Comparison: '+money(pp)+' home with '+money(dp)+' down ('+pct2((dp/pp)*100)+') \\u2192 '+money(mp)+'/mo at '+ir+'%');}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(e){return Number.isNaN(e)?0:Math.max(0,e)},c=function(e,n,o){return o<=0?0:n===0?e/o:e*n/(1-Math.pow(1+n,-o))},h=function(e,n,o){return c(e,n,o)*o-e},v=function(e,n){return n<=0?0:e/n*100},y=function(e,n,o,a){const m=Math.min(e*12,a);if(a<=0)return 0;if(o===0)return n*(m/a);const r=n*(Math.pow(1+o,a)-Math.pow(1+o,m))/(Math.pow(1+o,a)-1);return n-r},I=function(e){const n=f(parseFloat(e.homePrice)||0),o=f(parseFloat(e.downPayment)||0),a=f(parseFloat(e.loanTermYears)||0),m=parseFloat(e.interestRate)||0;if(n===0)return[\`⏰ Mortgage Calculator
+
+💰 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.\`];if(o>=n)return[\`⏰ Mortgage Calculator
+
+💰 Down payment (\`+n.toLocaleString("en-US")+") >= home price — no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments."];if(a<=0)return[\`⏰ Mortgage Calculator
+
+💰 Loan term must be > 0 years. Typical mortgages are 15, 20, or 30 years.\`];const r=n-o,i=m/100/12,s=a*12,M=c(r,i,s),u=h(r,i,s),E=n+u,_=v(r,n),N=l=>l.toLocaleString("en-US",{maximumFractionDigits:0}),t=l=>"$"+N(l),p=l=>l.toFixed(2)+"%";let d,w;const P=n>0?M/n:0;P<.01?(d="🟢",w="affordable — P&I under 1.0% of home price"):P<.013?(d="🟡",w="moderate — P&I between 1.0-1.3% of home price"):(d="🟠",w="stretched — P&I over 1.3% of home price; verify 28% DTI rule");const k=c(r,i,180),R=h(r,i,180),Y=c(r,i,240),$=h(r,i,240),C=y(5,r,i,s),F=y(15,r,i,s),j=y(30,r,i,s),L=Math.max(0,m-1),A=m+1,q=c(r,L/100/12,s),z=c(r,A/100/12,s),H=n*.2,S=n-H,U=c(S,i,s),V=u>0?Math.ceil(u/200/12):0;let g;_>=80?g="💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.":a>=30?g="💡 Tip: 30-year term gives lowest monthly payment but highest total interest. Compare with 15-year — higher payment but ~50% less total interest paid.":g="💡 Tip: Shortening your term from 30 to 15 years typically saves 50%+ on total interest. Run the comparison below to see the dollar difference for your loan.";const b=[\`⏰ Mortgage Calculator
+
+💰 Loan Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Home price:           \`+t(n)+\`
+• Down payment:         \`+t(o)+"  ("+p(o/n*100)+\`)
+• Loan amount:          \`+t(r)+\`
+• Loan term:            \`+a+" years ("+s+\` months)
+• Interest rate:        \`+m+\`% APR
+• LTV:                  \`+p(_)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Monthly Payment:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Monthly P&I:          \`+t(M)+\`
+• Total interest paid: \`+t(u)+\`  (over loan term)
+• Total cost (price + interest): \`+t(E)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Affordability Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+d+" "+w+\`
+• P&I as % of home price: \`+p(P*100)+\`
+• Rule of thumb: P&I should be ≤ 28% of monthly gross income
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Loan Term Comparison:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 15-year: \`+t(k)+"/mo · "+t(R)+\` total interest
+• 20-year: \`+t(Y)+"/mo · "+t($)+\` total interest
+• \`+a+"-year: "+t(M)+"/mo · "+t(u)+\` total interest  ← current
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Amortization Milestones:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• After year 5:  \`+t(C)+" principal paid ("+p(C/r*100)+\` of loan)
+• After year 15: \`+t(F)+" principal paid ("+p(F/r*100)+\` of loan)
+\`+(a>=30?"• After year 30: "+t(j)+\` (loan fully paid)
+\`:"")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Rate -1pp (\`+L.toFixed(1)+"%):     monthly → "+t(q)+\`
+• Rate +1pp (\`+A.toFixed(1)+"%):     monthly → "+t(z)+\`
+• Extra $200/mo payment:    helps pay off ~\`+V+\` months earlier
+• 20% down (vs current):   loan \`+t(S)+" · monthly "+t(U)+\`
+• 15-year refinance:        see comparison above
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+g],K=[2e5,4e5,6e5,8e5,1e6,15e5];for(const l of K){const x=l-o;if(x<=0){b.push("Comparison: home "+t(l)+" with "+t(o)+" down → loan = $0 (no payment)");continue}const W=c(x,i,s);b.push("Comparison: "+t(l)+" home with "+t(o)+" down ("+p(o/l*100)+") → "+t(W)+"/mo at "+m+"%")}return b},T=function(e,n,o){var a=D(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var B=f,G=c,J=h,O=v,Q=y,X=I,Z=T,D=function(e){return I(e)};return[T(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

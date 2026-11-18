@@ -179,81 +179,70 @@ function calculateCapRate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function effGI(ari,vrp){return ari*(1-vrp/100);}" +
-  "function noi(pv,ari,ae,vr){return effGI(ari,vr)-ae;}" +
-  "function capR(pv,ari,ae,vr){if(pv<=0)return 0;return(noi(pv,ari,ae,vr)/pv)*100;}" +
-  "function cocAC(pv,ari,ae,vr){return capR(pv,ari,ae,vr);}" +
-  "function implV(noi,tcr){if(tcr<=0)return 0;return noi/(tcr/100);}" +
-  "function cRH(c){if(c>=5&&c<=9)return{e:'\\uD83D\\uDFE2',l:'typical residential \\u2014 cap rate in 5-9% range'};if((c>=3&&c<5)||(c>9&&c<=12))return{e:'\\uD83D\\uDFE1',l:'marginal \\u2014 outside typical band (low HCOL or high-distressed)'};return{e:'\\uD83D\\uDFE0',l:'outlier \\u2014 cap rate outside 3-12% range; verify market assumptions'};}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var pv=cnn(parseFloat(inputs.propertyValue)||0);" +
-  "var ari=cnn(parseFloat(inputs.annualRentIncome)||0);" +
-  "var ae=cnn(parseFloat(inputs.annualExpenses)||0);" +
-  "var vr=parseFloat(inputs.vacancyRate)||0;" +
-  "if(pv<=0){return['$calc_out.section.cap_rate_calculator|\\u23F0 Cap Rate Calculator|\\n\\n'+tk('calc_out.cap_rate.row.enter_inputs_required','\\uD83D\\uDCB0 Enter property value, annual rent, expenses, and vacancy rate to see your cap rate, NOI, and stage benchmarks.')];}" +
-  "if(vr>=100){return['$calc_out.section.cap_rate_calculator|\\u23F0 Cap Rate Calculator|\\n\\n'+tk('calc_out.cap_rate.row.vacancy_100_or_more','\\uD83D\\uDCB0 Vacancy \\u2265 100% would yield zero effective income. Cap rate math does not apply at this vacancy level.')];}" +
-  "var egi=effGI(ari,vr);var NOI=noi(pv,ari,ae,vr);var cap=capR(pv,ari,ae,vr);var coc=cocAC(pv,ari,ae,vr);var impl7=implV(NOI,7);var hl=cRH(cap).l;var he=cRH(cap).e;" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return '$'+fmt(n);}" +
-  "var egiP=effGI(ari+3600,vr);var NOIp=egiP-ae;var capP=(NOIp/pv)*100;" +
-  "var NOIl=egi-ae*0.9;var capL=(NOIl/pv)*100;" +
-  "var egiV=effGI(ari,vr+5);var NOIv=egiV-ae;var capV=(NOIv/pv)*100;" +
-  "var impl8=implV(NOI,8);var impl10=implV(NOI,10);" +
-  "var tip='';" +
-  "if(cap>12){tip=tk('calc_out.cap_rate.row.tip_high_risk','\\uD83D\\uDCA1 Tip: Cap rate above 12% signals higher risk \\u2014 distressed area, deferred maintenance, or soft rental market. Verify the rent and expense assumptions before investing.');}" +
-  "else if(cap<3){tip=tk('calc_out.cap_rate.row.tip_low_cap','\\uD83D\\uDCA1 Tip: Cap rate below 3% (low HCOL/coastal markets like SF/NYC) compresses cash flow. Verify appreciation potential \\u2014 these deals work on capital gains, not yield.');}" +
-  "else{tip=tk('calc_out.cap_rate.row.tip_excludes_financing','\\uD83D\\uDCA1 Tip: Cap rate excludes financing. For leveraged ROI, use a Cash-on-Cash calculator instead \\u2014 same NOI, divided by your actual cash invested (down payment + closing costs).');}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.cap_rate_calculator|\\u23F0 Cap Rate Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.cap_rate_property_snapshot|\\uD83D\\uDCB0 Property Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.property_value|Property value|:        '+money(pv)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.gross_rental_income','Gross rental income:   '+money(ari)+'  (annual)',{rent:money(ari)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.vacancy_rate|Vacancy rate|:          '+vr+'%\\n';" +
-  "r2+='\\u2022 $calc_out.label.effective_gross_income|Effective gross income|:'+money(egi)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.operating_expenses','Operating expenses:    '+money(ae)+'  (annual)',{expenses:money(ae)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.net_operating_income|Net Operating Income|:  '+money(NOI)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.cap_rate_math|\\uD83D\\uDCD0 Cap Rate Math:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.cap_rate_math','Cap rate:    '+cap.toFixed(2)+'%  (NOI / value \\u00D7 100)',{cap:cap.toFixed(2)+'%'})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.all_cash_return','All-cash return: '+coc.toFixed(2)+'%  (same as cap when no financing)',{ret:coc.toFixed(2)+'%'})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.implied_value_7pct_target|Implied value at 7% target|: '+money(impl7)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.cap_rate_health|\\uD83E\\uDE7A Cap Rate Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+(hl.indexOf('typical residential')===0?tk('calc_out.cap_rate.row.health_typical',he+' '+hl):hl.indexOf('marginal')===0?tk('calc_out.cap_rate.row.health_marginal',he+' '+hl):tk('calc_out.cap_rate.row.health_outlier',he+' '+hl))+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.cap_rate_market_benchmarks|\\uD83C\\uDFAF Market Benchmarks (Class A/B/C by city tier):|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.benchmark_class_a','Class A urban (NYC/SF):  3-5%   cap rate')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.benchmark_class_b','Class B mid-tier cities: 5-8%   cap rate')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.benchmark_class_c','Class C value-add:       8-12%  cap rate')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.benchmark_distressed','Distressed:              >12%   cap rate (verify assumptions)')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.benchmark_rural','Rural / low-tier:        10-15% cap rate (often appreciation-limited)')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.cap_rate_implied_value|\\u2696\\uFE0F Implied Value (Reverse Calc):|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.implied_value_5pct','Target cap rate 5%:  value = '+money(implV(NOI,5)),{value:money(implV(NOI,5))})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.implied_value_7pct','Target cap rate 7%:  value = '+money(impl7)+'  \\u2190 current',{value:money(impl7)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.implied_value_8pct','Target cap rate 8%:  value = '+money(impl8),{value:money(impl8)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.implied_value_10pct','Target cap rate 10%: value = '+money(impl10),{value:money(impl10)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.cap_rate_what_if|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.whatif_vacancy_plus_5pp','Vacancy +5pp ('+(vr+5)+'%):    cap \\u2192 '+capV.toFixed(2)+'%',{vacancy:(vr+5)+'%',cap:capV.toFixed(2)+'%'})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.whatif_expenses_minus_10','Expenses \\u221210%:               cap \\u2192 '+capL.toFixed(2)+'%',{cap:capL.toFixed(2)+'%'})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.whatif_rent_plus_300','Rent +$300/mo (extra):       cap \\u2192 '+capP.toFixed(2)+'%',{cap:capP.toFixed(2)+'%'})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.whatif_target_8pct','Target 8% cap (better yield): value = '+money(impl8),{value:money(impl8)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.cap_rate.row.whatif_target_10pct','Target 10% cap:               value = '+money(impl10),{value:money(impl10)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var cmp=[];" +
-  "var tcs=[3,5,7,9,11,13];" +
-  "for(var ti=0;ti<tcs.length;ti++){var t=tcs[ti];var v=implV(NOI,t);cmp.push('$calc_out.label.comparison|Comparison|: '+tk('calc_out.cap_rate.row.comparison_implied_value','target '+t+'% cap on NOI '+money(NOI)+' \\u2192 implied value '+money(v),{target:String(t),noi:money(NOI),value:money(v)})+(t===7?'  '+tk('calc_out.cap_rate.row.comparison_current_heuristic','\\u2190 current heuristic'):''));}" +
-  "r2+='\\n'+cmp.join('\\n');" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(a){return Number.isNaN(a)?0:Math.max(0,a)},_=function(a,c){return a*(1-c/100)},g=function(a){return _(a.annualRentIncome,a.vacancyRate)-a.annualExpenses},y=function(a){return a.propertyValue<=0?0:g(a)/a.propertyValue*100},b=function(a){return y(a)},s=function(a,c){return c<=0?0:a/(c/100)},x=function(a){return a>=5&&a<=9?{emoji:"🟢",label:"typical residential — cap rate in 5-9% range"}:a>=3&&a<5||a>9&&a<=12?{emoji:"🟡",label:"marginal — outside typical band (low HCOL or high-distressed)"}:{emoji:"🟠",label:"outlier — cap rate outside 3-12% range; verify market assumptions"}},C=function(a){const c=f(parseFloat(a.propertyValue)||0),p=f(parseFloat(a.annualRentIncome)||0),r=f(parseFloat(a.annualExpenses)||0),l=parseFloat(a.vacancyRate)||0;if(c<=0)return[\`$calc_out.section.cap_rate_calculator|⏰ Cap Rate Calculator|
+
+\`+e("calc_out.cap_rate.row.enter_inputs_required","💰 Enter property value, annual rent, expenses, and vacancy rate to see your cap rate, NOI, and stage benchmarks.")];if(l>=100)return[\`$calc_out.section.cap_rate_calculator|⏰ Cap Rate Calculator|
+
+\`+e("calc_out.cap_rate.row.vacancy_100_or_more","💰 Vacancy ≥ 100% would yield zero effective income. Cap rate math does not apply at this vacancy level.")];const w={propertyValue:c,annualRentIncome:p,annualExpenses:r,vacancyRate:l},F=_(p,l),n=g(w),u=y(w),O=b(w),m=s(n,7),o=x(u),G=o.label.indexOf("typical residential")===0?e("calc_out.cap_rate.row.health_typical",o.emoji+" "+o.label):o.label.indexOf("marginal")===0?e("calc_out.cap_rate.row.health_marginal",o.emoji+" "+o.label):e("calc_out.cap_rate.row.health_outlier",o.emoji+" "+o.label),q=i=>i.toLocaleString("en-US",{maximumFractionDigits:0}),t=i=>"$"+q(i),N=(_(p+3600,l)-r)/c*100,$=(F-r*.9)/c*100,j=(_(p,l+5)-r)/c*100,d=s(n,8),v=s(n,10);let h;u>12?h=e("calc_out.cap_rate.row.tip_high_risk","💡 Tip: Cap rate above 12% signals higher risk — distressed area, deferred maintenance, or soft rental market. Verify the rent and expense assumptions before investing."):u<3?h=e("calc_out.cap_rate.row.tip_low_cap","💡 Tip: Cap rate below 3% (low HCOL/coastal markets like SF/NYC) compresses cash flow. Verify appreciation potential — these deals work on capital gains, not yield."):h=e("calc_out.cap_rate.row.tip_excludes_financing","💡 Tip: Cap rate excludes financing. For leveraged ROI, use a Cash-on-Cash calculator instead — same NOI, divided by your actual cash invested (down payment + closing costs).");const E=[\`$calc_out.section.cap_rate_calculator|⏰ Cap Rate Calculator|
+
+$calc_out.section.cap_rate_property_snapshot|💰 Property Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.property_value|Property value|:        \`+t(c)+\`
+• \`+e("calc_out.cap_rate.row.gross_rental_income","Gross rental income:   "+t(p)+"  (annual)",{rent:t(p)})+\`
+• $calc_out.label.vacancy_rate|Vacancy rate|:          \`+l+\`%
+• $calc_out.label.effective_gross_income|Effective gross income|:\`+t(F)+\`
+• \`+e("calc_out.cap_rate.row.operating_expenses","Operating expenses:    "+t(r)+"  (annual)",{expenses:t(r)})+\`
+• $calc_out.label.net_operating_income|Net Operating Income|:  \`+t(n)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.cap_rate_math|📐 Cap Rate Math:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.cap_rate.row.cap_rate_math","Cap rate:    "+u.toFixed(2)+"%  (NOI / value × 100)",{cap:u.toFixed(2)+"%"})+\`
+• \`+e("calc_out.cap_rate.row.all_cash_return","All-cash return: "+O.toFixed(2)+"%  (same as cap when no financing)",{ret:O.toFixed(2)+"%"})+\`
+• $calc_out.label.implied_value_7pct_target|Implied value at 7% target|: \`+t(m)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.cap_rate_health|🩺 Cap Rate Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+G+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.cap_rate_market_benchmarks|🎯 Market Benchmarks (Class A/B/C by city tier):|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.cap_rate.row.benchmark_class_a","Class A urban (NYC/SF):  3-5%   cap rate")+\`
+• \`+e("calc_out.cap_rate.row.benchmark_class_b","Class B mid-tier cities: 5-8%   cap rate")+\`
+• \`+e("calc_out.cap_rate.row.benchmark_class_c","Class C value-add:       8-12%  cap rate")+\`
+• \`+e("calc_out.cap_rate.row.benchmark_distressed","Distressed:              >12%   cap rate (verify assumptions)")+\`
+• \`+e("calc_out.cap_rate.row.benchmark_rural","Rural / low-tier:        10-15% cap rate (often appreciation-limited)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.cap_rate_implied_value|⚖️ Implied Value (Reverse Calc):|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.cap_rate.row.implied_value_5pct","Target cap rate 5%:  value = "+t(s(n,5)),{value:t(s(n,5))})+\`
+• \`+e("calc_out.cap_rate.row.implied_value_7pct","Target cap rate 7%:  value = "+t(m)+"  ← current",{value:t(m)})+\`
+• \`+e("calc_out.cap_rate.row.implied_value_8pct","Target cap rate 8%:  value = "+t(d),{value:t(d)})+\`
+• \`+e("calc_out.cap_rate.row.implied_value_10pct","Target cap rate 10%: value = "+t(v),{value:t(v)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.cap_rate_what_if|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.cap_rate.row.whatif_vacancy_plus_5pp","Vacancy +5pp ("+(l+5)+"%):    cap → "+j.toFixed(2)+"%",{vacancy:l+5+"%",cap:j.toFixed(2)+"%"})+\`
+• \`+e("calc_out.cap_rate.row.whatif_expenses_minus_10","Expenses −10%:               cap → "+$.toFixed(2)+"%",{cap:$.toFixed(2)+"%"})+\`
+• \`+e("calc_out.cap_rate.row.whatif_rent_plus_300","Rent +$300/mo (extra):       cap → "+N.toFixed(2)+"%",{cap:N.toFixed(2)+"%"})+\`
+• \`+e("calc_out.cap_rate.row.whatif_target_8pct","Target 8% cap (better yield): value = "+t(d),{value:t(d)})+\`
+• \`+e("calc_out.cap_rate.row.whatif_target_10pct","Target 10% cap:               value = "+t(v),{value:t(v)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+h],A=[3,5,7,9,11,13];for(const i of A){const S=s(n,i);E.push("$calc_out.label.comparison|Comparison|: "+e("calc_out.cap_rate.row.comparison_implied_value","target "+i+"% cap on NOI "+t(n)+" → implied value "+t(S),{target:String(i),noi:t(n),value:t(S)})+(i===7?"  "+e("calc_out.cap_rate.row.comparison_current_heuristic","← current heuristic"):""))}return E},I=function(a,c,p){var r=R(a);return Array.isArray(r)?r.join(\`
+\`):String(r)};var L=f,B=_,D=g,H=y,M=b,Y=s,z=x,J=C,K=I,e=tk,V='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+V)(),R=function(a){return C(a)};return[I(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

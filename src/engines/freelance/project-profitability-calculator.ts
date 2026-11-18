@@ -133,101 +133,84 @@ function calculateProjectProfitability(inputs: Record<string, string>): string[]
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var pr=cnn(parseFloat(inputs.projectRevenue)||0);" +
-  "var he=cnn(parseFloat(inputs.hoursEstimated)||0);" +
-  "var hc=cnn(parseFloat(inputs.hourlyCost)||0);" +
-  "var mc=cnn(parseFloat(inputs.materialCost)||0);" +
-  "var tlc=he*hc;" +
-  "var tc=tlc+mc;" +
-  "var profit=pr-tc;" +
-  "var ehr=he>0?pr/he:0;" +
-  "var crhr=he>0?tc/he:0;" +
-  "var pm=pr>0?(profit/pr)*100:0;" +
-  "var ann=profit*12;" +
-  "var beh=hc>0&&ehr>0?tc/ehr:0;" +
-  "var ber=he>0?tc/he:0;" +
-  "var cm=hc>0?ehr/hc:0;" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function fmt2(n){return '$'+n.toFixed(2)}" +
-  "function pct1(n){return n.toFixed(1)}" +
-  "function loc(n){return n.toLocaleString()}" +
-  "var results=[];" +
-  "var r='';" +
-  "r+=tk('calc_out.section.project_profitability_calculator','\\uD83D\\uDCB0 Project Profitability Calculator')+'\\n\\n';" +
-  "r+=tk('calc_out.section.revenue_and_costs','\\uD83D\\uDCCB Revenue & Costs:')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.project_revenue','Project Revenue')+':       '+fmt(pr)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.hours_estimated','Hours Estimated')+':       '+loc(he)+' hrs\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.hourly_cost_rate','Hourly Cost Rate')+':      '+fmt(hc)+'/hr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.total_labor_cost','Total Labor Cost')+':      '+fmt(tlc)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.material_cost','Material Cost')+':         '+fmt(mc)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.total_cost','Total Cost')+':            '+fmt(tc)+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tk('calc_out.section.net_profit_and_margin','\\uD83D\\uDCB0 Net Profit + Margin:')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.net_profit','Net Profit')+':            '+fmt(profit)+(profit<0?'  '+tk('calc_out.label.loss_marker','(LOSS)'):'')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.profit_margin','Profit Margin')+':         '+pct1(pm)+'%  '+tk('calc_out.label.industry_margin_note','(industry: 20-40% for healthy freelance work)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.total_cost_ratio','Total Cost Ratio')+':      '+pct1(pr>0?(tc/pr)*100:0)+'%  '+tk('calc_out.label.lower_is_better','(lower is better)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.material_cost_pct','Material Cost %')+':       '+pct1(pr>0?(mc/pr)*100:0)+'%  '+tk('calc_out.label.of_revenue','of revenue')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.labor_cost_pct','Labor Cost %')+':          '+pct1(pr>0?(tlc/pr)*100:0)+'%  '+tk('calc_out.label.of_revenue','of revenue')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.annualized_12x','Annualized (12x)')+':      '+fmt(ann)+'/yr  '+tk('calc_out.label.if_repeatable','(if repeatable)')+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tk('calc_out.section.key_metrics','\\uD83D\\uDCD0 Key Metrics:')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.effective_hourly_rate','Effective $/Hour')+':      '+fmt2(ehr)+'/hr  '+tk('calc_out.label.revenue_div_hours','(revenue \\u00F7 hours)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.cost_recovery_hourly','Cost Recovery $/Hour')+':  '+fmt2(crhr)+'/hr  '+tk('calc_out.label.total_cost_div_hours','(total cost \\u00F7 hours)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.cost_vs_cost_rate','Cost vs Cost Rate')+':     '+(cm>0?cm.toFixed(2)+'x':'N/A')+'  '+tk('calc_out.label.target_over_2x','(target >2x)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.profit_per_hour','Profit per Hour')+':       '+fmt2(he>0?profit/he:0)+'/hr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.break_even_hours','Break-Even Hours')+':      '+pct1(beh)+' hrs  '+tk('calc_out.label.hours_to_cover_costs','(hours at current rate to cover costs)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.industry_benchmarks','Industry Benchmarks')+':   '+tk('calc_out.label.benchmark_consulting','Consulting 50%+')+' | '+tk('calc_out.label.benchmark_saas_services','SaaS services 30-50%')+' | '+tk('calc_out.label.benchmark_productized','Productized 40-60%')+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tk('calc_out.section.margin_health','\\uD83E\\uDE7A Margin Health:')+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(pm>30){r+='\\u2022 '+tk('calc_out.project_profitability.row.margin_healthy','\\uD83D\\uDFE2 Margin '+pct1(pm)+'% is healthy. Strong pricing power.',{margin:pct1(pm)})+'\\n';}" +
-  "else if(pm>=15){r+='\\u2022 '+tk('calc_out.project_profitability.row.margin_workable_tight','\\uD83D\\uDFE1 Margin '+pct1(pm)+'% is workable but tight. Watch scope creep.',{margin:pct1(pm)})+'\\n';}" +
-  "else if(pm>=5){r+='\\u2022 '+tk('calc_out.project_profitability.row.margin_thin','\\uD83D\\uDFE0 Margin '+pct1(pm)+'% is thin. One delay kills profit.',{margin:pct1(pm)})+'\\n';}" +
-  "else if(pm>0){r+='\\u2022 '+tk('calc_out.project_profitability.row.margin_very_thin','\\uD83D\\uDFE0 Margin '+pct1(pm)+'% is very thin. Reconsider pricing.',{margin:pct1(pm)})+'\\n';}" +
-  "else{r+='\\u2022 '+tk('calc_out.project_profitability.row.margin_losing_money','\\uD83D\\uDD34 Margin '+pct1(pm)+'% \\u2014 losing money. Cut costs or raise price immediately.',{margin:pct1(pm)})+'\\n';}" +
-  "if(ehr>=hc*2&&hc>0){r+='\\u2022 '+tk('calc_out.project_profitability.row.earning_sustainable','\\uD83D\\uDFE2 Earning '+cm.toFixed(1)+'x cost rate \\u2014 sustainable model.',{mult:cm.toFixed(1)})+'\\n';}" +
-  "else if(ehr>=hc&&hc>0){r+='\\u2022 '+tk('calc_out.project_profitability.row.earning_breakeven','\\uD83D\\uDFE1 Earning '+cm.toFixed(1)+'x cost rate \\u2014 break-even territory.',{mult:cm.toFixed(1)})+'\\n';}" +
-  "else if(hc>0){r+='\\u2022 '+tk('calc_out.project_profitability.row.earning_below_cost','\\uD83D\\uDD34 Earning less than cost rate \\u2014 you subsidize the client.')+'\\n';}" +
-  "if(mc>pr*0.2){r+='\\u2022 '+tk('calc_out.project_profitability.row.materials_high','\\uD83D\\uDFE1 Materials are '+pct1((mc/pr)*100)+'% of revenue \\u2014 verify pricing covers this.',{pct:pct1((mc/pr)*100)})+'\\n';}" +
-  "else if(mc>0){r+='\\u2022 '+tk('calc_out.project_profitability.row.materials_reasonable','\\uD83D\\uDFE2 Materials are '+pct1((mc/pr)*100)+'% of revenue \\u2014 reasonable.',{pct:pct1((mc/pr)*100)})+'\\n';}" +
-  "r+='\\n'+tk('calc_out.section.annualized_profit','\\uD83C\\uDFAF Annualized Profit:')+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.repeat_1x_month','Repeat 1\\u00D7/month')+':       '+fmt(ann)+'/yr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.repeat_2x_month','Repeat 2\\u00D7/month')+':       '+fmt(ann*2)+'/yr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.repeat_4x_month','Repeat 4\\u00D7/month')+':       '+fmt(ann*4)+'/yr  '+tk('calc_out.label.full_pipeline','(full pipeline)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.at_10pct_margin_uplift','At 10% margin uplift')+':  '+fmt((profit+pr*0.1)*12)+'/yr  '+tk('calc_out.label.price_up_10pct','(price +10%)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.project_profitability.row.target_profit_projects','Target Profit: $50K/yr \\u2192 '+Math.ceil(50000/Math.max(profit,1))+' projects like this per year',{n:String(Math.ceil(50000/Math.max(profit,1)))})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tk('calc_out.section.profitable_hourly','\\u2696\\uFE0F Profitable Hourly:')+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.break_even_rate','Break-Even Rate')+':       '+fmt2(ber)+'/hr  '+tk('calc_out.label.charge_to_cover_costs','(charge this to cover costs)')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.for_30pct_margin','For 30% Margin')+':        '+fmt2(ber/0.7)+'/hr  '+tk('calc_out.label.current_rate_note','(current: '+fmt2(ehr)+')',{cur:fmt2(ehr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.for_50pct_margin','For 50% Margin')+':        '+fmt2(ber/0.5)+'/hr\\n';" +
-  "r+='\\u2022 '+tk('calc_out.label.to_earn_100_per_hour','To Earn $100/hr')+':       '+fmt2(100+crhr)+'/hr  '+tk('calc_out.label.bill_rate_cost_plus_target','bill rate (cost + target)')+'\\n';" +
-  "if(ehr>ber){r+='\\u2022 '+tk('calc_out.project_profitability.row.current_rate_beats_breakeven','\\uD83D\\uDFE2 Current rate '+fmt2(ehr)+'/hr beats break-even.',{rate:fmt2(ehr)})+'\\n';}" +
-  "else{r+='\\u2022 '+tk('calc_out.project_profitability.row.current_rate_below_breakeven','\\uD83D\\uDD34 Current rate '+fmt2(ehr)+'/hr is below break-even '+fmt2(ber)+'/hr.',{rate:fmt2(ehr),be:fmt2(ber)})+'\\n';}" +
-  "r+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+=tk('calc_out.section.what_if_scenarios','\\uD83D\\uDD04 What-If Scenarios:')+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.project_profitability.row.whatif_cut_hours_20','Cut hours 20%:  Profit '+fmt(profit-he*0.2*hc)+'  (margin '+pct1(pr>0?((profit-he*0.2*hc)/pr)*100:0)+'%)',{profit:fmt(profit-he*0.2*hc),margin:pct1(pr>0?((profit-he*0.2*hc)/pr)*100:0)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.project_profitability.row.whatif_raise_price_15','Raise price 15%:  Profit '+fmt(profit+pr*0.15)+'  (margin '+pct1(((profit+pr*0.15)/(pr*1.15))*100)+'%)',{profit:fmt(profit+pr*0.15),margin:pct1(((profit+pr*0.15)/(pr*1.15))*100)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.project_profitability.row.whatif_cut_materials_30','Cut materials 30%:  Profit '+fmt(profit+mc*0.3)+'  (margin '+pct1(((profit+mc*0.3)/pr)*100)+'%)',{profit:fmt(profit+mc*0.3),margin:pct1(((profit+mc*0.3)/pr)*100)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.project_profitability.row.whatif_for_50pct_margin','For 50% margin:  Target price '+fmt(tc*2)+'  (current: '+fmt(pr)+')',{price:fmt(tc*2),cur:fmt(pr)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.project_profitability.row.whatif_combine','Combine (15% price + 10% fewer hours):  Profit '+fmt((profit+pr*0.15)-(he*0.1*hc)),{profit:fmt((profit+pr*0.15)-(he*0.1*hc))})+'\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Track ACTUAL hours on every project for 3 months. Estimation bias is the #1 profit killer for solopreneurs \\u2014 most underestimate by 20-30%. Your effective hourly rate tells the real story of whether a project was worth your time.';" +
-  "results.push(r);" +
-  "var rates=[25,40,60,80,100,120,150,200,250];" +
-  "for(var i=0;i<rates.length;i++){" +
-  "var rate=rates[i];" +
-  "var lab=he*rate;" +
-  "var tot=lab+mc;" +
-  "var prof=pr-tot;" +
-  "var mar=pr>0?(prof/pr)*100:0;" +
-  "results.push(tk('calc_out.project_profitability.row.rate_at_cost','At $'+rate+'/hr cost:',{rate:'$'+rate})+' '+tk('calc_out.project_profitability.row.rate_total','Total $'+loc(tot),{total:'$'+loc(tot)})+' | '+tk('calc_out.project_profitability.row.rate_profit','Profit '+fmt(prof),{profit:fmt(prof)})+' | '+tk('calc_out.project_profitability.row.rate_margin','Margin '+pct1(mar)+'%',{margin:pct1(mar)})+' | '+tk('calc_out.project_profitability.row.rate_eff','Eff '+fmt2(ehr),{eff:fmt2(ehr)})+'/hr');" +
-  "}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let g=function(u){return Number.isNaN(u)?0:Math.max(0,u)},x=function(u){const r=g(parseFloat(u.projectRevenue)||0),i=g(parseFloat(u.hoursEstimated)||0),l=g(parseFloat(u.hourlyCost)||0),s=g(parseFloat(u.materialCost)||0),v=[],w=i*l,b=w+s,c=r-b,_=i>0?r/i:0,P=i>0?b/i:0,n=r>0?c/r*100:0,y=c*12,$=l>0&&_>0?b/_:0,f=i>0?b/i:0,h=l>0?_/l:0,a=p=>"$"+Math.round(p).toLocaleString(),e=p=>"$"+p.toFixed(2),o=p=>p.toFixed(1),j=p=>p.toLocaleString();v.push(t("calc_out.section.project_profitability_calculator","💰 Project Profitability Calculator")+\`
+
+\`+t("calc_out.section.revenue_and_costs","📋 Revenue & Costs:")+\`
+• \`+t("calc_out.label.project_revenue","Project Revenue")+":       "+a(r)+\`
+• \`+t("calc_out.label.hours_estimated","Hours Estimated")+":       "+j(i)+\` hrs
+• \`+t("calc_out.label.hourly_cost_rate","Hourly Cost Rate")+":      "+a(l)+\`/hr
+• \`+t("calc_out.label.total_labor_cost","Total Labor Cost")+":      "+a(w)+\`
+• \`+t("calc_out.label.material_cost","Material Cost")+":         "+a(s)+\`
+• \`+t("calc_out.label.total_cost","Total Cost")+":            "+a(b)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.net_profit_and_margin","💰 Net Profit + Margin:")+\`
+• \`+t("calc_out.label.net_profit","Net Profit")+":            "+a(c)+(c<0?"  "+t("calc_out.label.loss_marker","(LOSS)"):"")+\`
+• \`+t("calc_out.label.profit_margin","Profit Margin")+":         "+o(n)+"%  "+t("calc_out.label.industry_margin_note","(industry: 20-40% for healthy freelance work)")+\`
+• \`+t("calc_out.label.total_cost_ratio","Total Cost Ratio")+":      "+o(r>0?b/r*100:0)+"%  "+t("calc_out.label.lower_is_better","(lower is better)")+\`
+• \`+t("calc_out.label.material_cost_pct","Material Cost %")+":       "+o(r>0?s/r*100:0)+"%  "+t("calc_out.label.of_revenue","of revenue")+\`
+• \`+t("calc_out.label.labor_cost_pct","Labor Cost %")+":          "+o(r>0?w/r*100:0)+"%  "+t("calc_out.label.of_revenue","of revenue")+\`
+• \`+t("calc_out.label.annualized_12x","Annualized (12x)")+":      "+a(y)+"/yr  "+t("calc_out.label.if_repeatable","(if repeatable)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.key_metrics","📐 Key Metrics:")+\`
+• \`+t("calc_out.label.effective_hourly_rate","Effective $/Hour")+":      "+e(_)+"/hr  "+t("calc_out.label.revenue_div_hours","(revenue ÷ hours)")+\`
+• \`+t("calc_out.label.cost_recovery_hourly","Cost Recovery $/Hour")+":  "+e(P)+"/hr  "+t("calc_out.label.total_cost_div_hours","(total cost ÷ hours)")+\`
+• \`+t("calc_out.label.cost_vs_cost_rate","Cost vs Cost Rate")+":     "+(h>0?h.toFixed(2)+"x":"N/A")+"  "+t("calc_out.label.target_over_2x","(target >2x)")+\`
+• \`+t("calc_out.label.profit_per_hour","Profit per Hour")+":       "+e(i>0?c/i:0)+\`/hr
+• \`+t("calc_out.label.break_even_hours","Break-Even Hours")+":      "+o($)+" hrs  "+t("calc_out.label.hours_to_cover_costs","(hours at current rate to cover costs)")+\`
+• \`+t("calc_out.label.industry_benchmarks","Industry Benchmarks")+":   "+t("calc_out.label.benchmark_consulting","Consulting 50%+")+" | "+t("calc_out.label.benchmark_saas_services","SaaS services 30-50%")+" | "+t("calc_out.label.benchmark_productized","Productized 40-60%")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.margin_health","🩺 Margin Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(n>30?"• "+t("calc_out.project_profitability.row.margin_healthy","🟢 Margin "+o(n)+"% is healthy. Strong pricing power.",{margin:o(n)})+\`
+\`:n>=15?"• "+t("calc_out.project_profitability.row.margin_workable_tight","🟡 Margin "+o(n)+"% is workable but tight. Watch scope creep.",{margin:o(n)})+\`
+\`:n>=5?"• "+t("calc_out.project_profitability.row.margin_thin","🟠 Margin "+o(n)+"% is thin. One delay kills profit.",{margin:o(n)})+\`
+\`:n>0?"• "+t("calc_out.project_profitability.row.margin_very_thin","🟠 Margin "+o(n)+"% is very thin. Reconsider pricing.",{margin:o(n)})+\`
+\`:"• "+t("calc_out.project_profitability.row.margin_losing_money","🔴 Margin "+o(n)+"% — losing money. Cut costs or raise price immediately.",{margin:o(n)})+\`
+\`)+(_>=l*2&&l>0?"• "+t("calc_out.project_profitability.row.earning_sustainable","🟢 Earning "+h.toFixed(1)+"x cost rate — sustainable model.",{mult:h.toFixed(1)})+\`
+\`:_>=l&&l>0?"• "+t("calc_out.project_profitability.row.earning_breakeven","🟡 Earning "+h.toFixed(1)+"x cost rate — break-even territory.",{mult:h.toFixed(1)})+\`
+\`:l>0?"• "+t("calc_out.project_profitability.row.earning_below_cost","🔴 Earning less than cost rate — you subsidize the client.")+\`
+\`:"")+(s>r*.2?"• "+t("calc_out.project_profitability.row.materials_high","🟡 Materials are "+o(s/r*100)+"% of revenue — verify pricing covers this.",{pct:o(s/r*100)})+\`
+\`:s>0?"• "+t("calc_out.project_profitability.row.materials_reasonable","🟢 Materials are "+o(s/r*100)+"% of revenue — reasonable.",{pct:o(s/r*100)})+\`
+\`:"")+\`
+\`+t("calc_out.section.annualized_profit","🎯 Annualized Profit:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.label.repeat_1x_month","Repeat 1×/month")+":       "+a(y)+\`/yr
+• \`+t("calc_out.label.repeat_2x_month","Repeat 2×/month")+":       "+a(y*2)+\`/yr
+• \`+t("calc_out.label.repeat_4x_month","Repeat 4×/month")+":       "+a(y*4)+"/yr  "+t("calc_out.label.full_pipeline","(full pipeline)")+\`
+• \`+t("calc_out.label.at_10pct_margin_uplift","At 10% margin uplift")+":  "+a((c+r*.1)*12)+"/yr  "+t("calc_out.label.price_up_10pct","(price +10%)")+\`
+• \`+t("calc_out.project_profitability.row.target_profit_projects","Target Profit: $50K/yr → "+Math.ceil(5e4/Math.max(c,1))+" projects like this per year",{n:String(Math.ceil(5e4/Math.max(c,1)))})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.profitable_hourly","⚖️ Profitable Hourly:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.label.break_even_rate","Break-Even Rate")+":       "+e(f)+"/hr  "+t("calc_out.label.charge_to_cover_costs","(charge this to cover costs)")+\`
+• \`+t("calc_out.label.for_30pct_margin","For 30% Margin")+":        "+e(f/.7)+"/hr  "+t("calc_out.label.current_rate_note","(current: "+e(_)+")",{cur:e(_)})+\`
+• \`+t("calc_out.label.for_50pct_margin","For 50% Margin")+":        "+e(f/.5)+\`/hr
+• \`+t("calc_out.label.to_earn_100_per_hour","To Earn $100/hr")+":       "+e(100+P)+"/hr  "+t("calc_out.label.bill_rate_cost_plus_target","bill rate (cost + target)")+\`
+\`+(_>f?"• "+t("calc_out.project_profitability.row.current_rate_beats_breakeven","🟢 Current rate "+e(_)+"/hr beats break-even.",{rate:e(_)})+\`
+\`:"• "+t("calc_out.project_profitability.row.current_rate_below_breakeven","🔴 Current rate "+e(_)+"/hr is below break-even "+e(f)+"/hr.",{rate:e(_),be:e(f)})+\`
+\`)+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.project_profitability.row.whatif_cut_hours_20","Cut hours 20%:  Profit "+a(c-i*.2*l)+"  (margin "+o(r>0?(c-i*.2*l)/r*100:0)+"%)",{profit:a(c-i*.2*l),margin:o(r>0?(c-i*.2*l)/r*100:0)})+\`
+• \`+t("calc_out.project_profitability.row.whatif_raise_price_15","Raise price 15%:  Profit "+a(c+r*.15)+"  (margin "+o((c+r*.15)/(r*1.15)*100)+"%)",{profit:a(c+r*.15),margin:o((c+r*.15)/(r*1.15)*100)})+\`
+• \`+t("calc_out.project_profitability.row.whatif_cut_materials_30","Cut materials 30%:  Profit "+a(c+s*.3)+"  (margin "+o((c+s*.3)/r*100)+"%)",{profit:a(c+s*.3),margin:o((c+s*.3)/r*100)})+\`
+• \`+t("calc_out.project_profitability.row.whatif_for_50pct_margin","For 50% margin:  Target price "+a(b*2)+"  (current: "+a(r)+")",{price:a(b*2),cur:a(r)})+\`
+• \`+t("calc_out.project_profitability.row.whatif_combine","Combine (15% price + 10% fewer hours):  Profit "+a(c+r*.15-i*.1*l),{profit:a(c+r*.15-i*.1*l)})+\`
+
+💡 Tip: Track ACTUAL hours on every project for 3 months. Estimation bias is the #1 profit killer for solopreneurs — most underestimate by 20-30%. Your effective hourly rate tells the real story of whether a project was worth your time.\`);const R=[25,40,60,80,100,120,150,200,250];for(let p=0;p<R.length;p++){const d=R[p],C=i*d+s,M=r-C,E=r>0?M/r*100:0;v.push(t("calc_out.project_profitability.row.rate_at_cost","At $"+d+"/hr cost:",{rate:"$"+d})+" "+t("calc_out.project_profitability.row.rate_total","Total $"+j(C),{total:"$"+j(C)})+" | "+t("calc_out.project_profitability.row.rate_profit","Profit "+a(M),{profit:a(M)})+" | "+t("calc_out.project_profitability.row.rate_margin","Margin "+o(E)+"%",{margin:o(E)})+" | "+t("calc_out.project_profitability.row.rate_eff","Eff "+e(_),{eff:e(_)})+"/hr")}return v},F=function(u,r,i){var l=H(u);return Array.isArray(l)?l.join(\`
+\`):String(l)};var A=g,z=x,N=F,t=tk,S='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+S)(),H=function(u){return x(u)};return[F(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-project-profitability-calculator',

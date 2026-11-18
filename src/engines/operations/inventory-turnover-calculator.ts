@@ -194,77 +194,58 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function tr(c,i){if(i<=0)return 0;return c/i;}" +
-  "function dts(c,i,p){var r=tr(c,i);if(r<=0)return 0;return p/r;}" +
-  "var BM={general:6,apparel:4,electronics:6,grocery:12,furniture:3};" +
-  "function bm(ind){return BM[ind]!=null?BM[ind]:6;}" +
-  "function band(r){if(r>=6)return 'excellent';if(r>=4)return 'good';if(r>=2)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var cogs=cnn(parseFloat(inputs.annualCOGS)||0);" +
-  "var inv=cnn(parseFloat(inputs.avgInventory)||0);" +
-  "var pd=Math.max(1,parseFloat(inputs.periodDays)||365);" +
-  "var ind=inputs.industry||'general';" +
-  "if(cogs===0||inv===0){return['$calc_out.section.inventory_turnover_calculator|\\u23F0 Inventory Turnover Calculator|\\n\\n'+tk('calc_out.inventory_turnover.row.enter_inputs_required','\\uD83D\\uDCCA Enter your annual COGS and average inventory value to see how many times your inventory cycles per year, how many days to sell, and how you compare to your industry benchmark.')];}" +
-  "var r=tr(cogs,inv);" +
-  "var d=dts(cogs,inv,pd);" +
-  "var b=bm(ind);" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "var bd=band(r);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 inventory cycles \\u2265 6x/year; capital is working efficiently':bd==='good'?'Good \\u2014 typical retail range; room to optimize SKU mix':bd==='warning'?'Warning \\u2014 slow turn; capital trapped in slow movers':'Critical \\u2014 turn < 2x/year; urgent SKU rationalization needed';" +
-  "var cogsD=cogs*0.9;var cogsU=cogs*1.1;" +
-  "var rD=cogsD/inv;var rU=cogsU/inv;" +
-  "var dD=pd/rD;var dU=pd/rU;" +
-  "var cfD=inv-cogsD/b;var cfU=inv-cogsU/b;" +
-  "var tI=cogs/b;" +
-  "var iD=inv-tI;var iDp=(iD/inv)*100;" +
-  "var rP1=r+1;var tIP1=cogs/rP1;var cfP1=inv-tIP1;" +
-  "var healthLabelRow=bd==='excellent'?tk('calc_out.inventory_turnover.row.band_excellent',hl):bd==='good'?tk('calc_out.inventory_turnover.row.band_good',hl):bd==='warning'?tk('calc_out.inventory_turnover.row.band_warning',hl):tk('calc_out.inventory_turnover.row.band_critical',hl);" +
-  "var statusRow=r>=b?tk('calc_out.inventory_turnover.row.status_above_benchmark','above benchmark'):tk('calc_out.inventory_turnover.row.status_below_benchmark','below benchmark');" +
-  "var actionRow=iD>0?tk('calc_out.inventory_turnover.row.action_reduce','Action: reduce inventory by '+money(iD)+' to hit \\uD83D\\uDFE2',{delta:money(iD)}):tk('calc_out.inventory_turnover.row.action_already_below','Action: inventory is already below \\uD83D\\uDFE2 target');" +
-  "var tip='';" +
-  "if(bd==='critical'){tip=tk('calc_out.inventory_turnover.row.tip_critical','\\uD83D\\uDCA1 Tip: Turnover < 2x/year is a red flag. Audit slow-moving SKUs, run clearance promotions on deadstock, and renegotiate supplier minimum order quantities (MOQs). Consider a SKU rationalization pass to cut the bottom 20%.');}" +
-  "else if(bd==='warning'){tip=tk('calc_out.inventory_turnover.row.tip_warning','\\uD83D\\uDCA1 Tip: 2\\u20134x turnover means ~90\\u2013180 days of stock on hand. Identify your slowest-moving SKUs (top 20% by days-on-hand) and apply markdown ladders. A 10% COGS reduction through better demand forecasting could push you to the healthy band.');}" +
-  "else if(bd==='good'){tip=tk('calc_out.inventory_turnover.row.tip_good','\\uD83D\\uDCA1 Tip: 4\\u20136x is solid retail territory. To reach the excellent band, optimize SKU mix by killing bottom-decile performers, tighten reorder points to reduce safety stock, and negotiate faster supplier lead times.');}" +
-  "else{tip=tk('calc_out.inventory_turnover.row.tip_excellent','\\uD83D\\uDCA1 Tip: Excellent turnover \\u2014 capital is working efficiently. Watch for stockout risk as turnover rises; pair this metric with a stockout cost tracker (P7-3) to ensure fast turn is not buying you lost sales.');}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.inventory_turnover_calculator|\\u23F0 Inventory Turnover Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+healthLabelRow+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.turnover_ratio|Turnover ratio|: '+r.toFixed(2)+'x/year  \\u00B7  $calc_out.label.days_to_sell|Days to sell|: '+d.toFixed(1)+' days\\n';" +
-  "r2+='\\u2022 $calc_out.label.industry_benchmark|Industry benchmark|: '+ind+' = '+b+'x/year  \\u00B7  $calc_out.label.your_status|Your status|: '+statusRow+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.annual_cogs|Annual COGS|:        '+money(cogs)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.average_inventory|Average inventory|:  '+money(inv)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.period_days|Period|:             '+pd+' days\\n';" +
-  "r2+='\\u2022 '+'$calc_out.label.industry|Industry|:'+'           '+tk('calc_out.inventory_turnover.row.industry_benchmark_value',ind+' (benchmark '+b+'x)',{industry:ind,benchmark:String(b)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.turnover_ratio|Turnover ratio|:     '+r.toFixed(2)+'x/year\\n';" +
-  "r2+='\\u2022 $calc_out.label.days_to_sell|Days to sell|:       '+d.toFixed(1)+' days\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.whatif_cogs_minus_10','COGS \\u221210% (slower sales): turnover = '+rD.toFixed(2)+'x \\u00B7 days to sell = '+dD.toFixed(1),{ratio:rD.toFixed(2),days:dD.toFixed(1)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.whatif_cogs_plus_10','COGS +10% (faster sales): turnover = '+rU.toFixed(2)+'x \\u00B7 days to sell = '+dU.toFixed(1),{ratio:rU.toFixed(2),days:dU.toFixed(1)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.capital_freed_vs_benchmark','Capital freed (vs benchmark): '+(cfD>=0?'+':'')+money(cfD)+' at \\u221210%, '+(cfU>=0?'+':'')+money(cfU)+' at +10%',{down:(cfD>=0?'+':'')+money(cfD),up:(cfU>=0?'+':'')+money(cfU)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.target_inventory_green','Target inventory for \\uD83D\\uDFE2: '+money(tI)+'  (at '+b+'x benchmark)',{target:money(tI),benchmark:String(b)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.current_vs_target','Current vs target: '+(iD>=0?'+':'')+money(iD)+' ('+(iDp>=0?'+':'')+iDp.toFixed(1)+'%)',{delta:(iD>=0?'+':'')+money(iD),pct:(iDp>=0?'+':'')+iDp.toFixed(1)+'%'})+'\\n';" +
-  "r2+='\\u2022 '+actionRow+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.milestone_ratio_plus_1','Improve ratio by +1: target inventory = '+money(tIP1),{target:money(tIP1)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.milestone_capital_freed','Capital freed if ratio +1: '+money(cfP1)+' (one-time working-capital release)',{amount:money(cfP1)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.inventory_turnover.row.milestone_12mo_impact','12-mo operating impact: every $1 of inventory reduction = ~$0.15\\u20130.25 of annual carrying-cost savings (use P7-2 to size)')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let w=function(n){return Number.isNaN(n)?0:Math.max(0,n)},h=function(n,o){return o<=0?0:n/o},F=function(n,o,e){const a=h(n,o);return a<=0?0:e/a},$=function(n){return q[n]??6},S=function(n){return n>=p.excellent?"excellent":n>=p.good[0]?"good":n>=p.warning[0]?"warning":"critical"},C=function(n,o,e){var a=z(n);return Array.isArray(a)?a.join(\`
+\`):String(a)};var J=w,L=h,Q=F,Y=$,V=S,X=C,t=tk,P={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},j='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+j)(),p={excellent:6,good:[4,6],warning:[2,4],critical:0},q={general:6,apparel:4,electronics:6,grocery:12,furniture:3},z=function(n){const o=w(parseFloat(n.annualCOGS)||0),e=w(parseFloat(n.avgInventory)||0),a=Math.max(1,parseFloat(n.periodDays)||365),_=n.industry||"general";if(o===0||e===0)return[\`$calc_out.section.inventory_turnover_calculator|⏰ Inventory Turnover Calculator|
+
+\`+t("calc_out.inventory_turnover.row.enter_inputs_required","📊 Enter your annual COGS and average inventory value to see how many times your inventory cycles per year, how many days to sell, and how you compare to your industry benchmark.")];const s=h(o,e),I=F(o,e,a),c=$(_),r=W=>"$"+Math.round(W).toLocaleString("en-US"),i=S(s),E=P[i],y=i==="excellent"?"Excellent — inventory cycles ≥ 6x/year; capital is working efficiently":i==="good"?"Good — typical retail range; room to optimize SKU mix":i==="warning"?"Warning — slow turn; capital trapped in slow movers":"Critical — turn < 2x/year; urgent SKU rationalization needed",O=o*.9,U=o*1.1,f=O/e,b=U/e,D=a/f,G=a/b,v=e-O/c,d=e-U/c,x=o/c,l=e-x,g=l/e*100,M=s+1,m=o/M,K=e-m;let u;i==="critical"?u=t("calc_out.inventory_turnover.row.tip_critical","💡 Tip: Turnover < 2x/year is a red flag. Audit slow-moving SKUs, run clearance promotions on deadstock, and renegotiate supplier minimum order quantities (MOQs). Consider a SKU rationalization pass to cut the bottom 20%."):i==="warning"?u=t("calc_out.inventory_turnover.row.tip_warning","💡 Tip: 2–4x turnover means ~90–180 days of stock on hand. Identify your slowest-moving SKUs (top 20% by days-on-hand) and apply markdown ladders. A 10% COGS reduction through better demand forecasting could push you to the healthy band."):i==="good"?u=t("calc_out.inventory_turnover.row.tip_good","💡 Tip: 4–6x is solid retail territory. To reach the excellent band, optimize SKU mix by killing bottom-decile performers, tighten reorder points to reduce safety stock, and negotiate faster supplier lead times."):u=t("calc_out.inventory_turnover.row.tip_excellent","💡 Tip: Excellent turnover — capital is working efficiently. Watch for stockout risk as turnover rises; pair this metric with a stockout cost tracker (P7-3) to ensure fast turn is not buying you lost sales.");const A=t(i==="excellent"?"calc_out.inventory_turnover.row.band_excellent":i==="good"?"calc_out.inventory_turnover.row.band_good":i==="warning"?"calc_out.inventory_turnover.row.band_warning":"calc_out.inventory_turnover.row.band_critical",y),N=s>=c?t("calc_out.inventory_turnover.row.status_above_benchmark","above benchmark"):t("calc_out.inventory_turnover.row.status_below_benchmark","below benchmark"),R=l>0?t("calc_out.inventory_turnover.row.action_reduce","Action: reduce inventory by "+r(l)+" to hit 🟢",{delta:r(l)}):t("calc_out.inventory_turnover.row.action_already_below","Action: inventory is already below 🟢 target");return[\`$calc_out.section.inventory_turnover_calculator|⏰ Inventory Turnover Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+E+" "+A+\`
+• $calc_out.label.turnover_ratio|Turnover ratio|: \`+s.toFixed(2)+"x/year  ·  $calc_out.label.days_to_sell|Days to sell|: "+I.toFixed(1)+\` days
+• $calc_out.label.industry_benchmark|Industry benchmark|: \`+_+" = "+c+"x/year  ·  $calc_out.label.your_status|Your status|: "+N+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.annual_cogs|Annual COGS|:        \`+r(o)+\`
+• $calc_out.label.average_inventory|Average inventory|:  \`+r(e)+\`
+• $calc_out.label.period_days|Period|:             \`+a+\` days
+• $calc_out.label.industry|Industry|:           \`+t("calc_out.inventory_turnover.row.industry_benchmark_value",_+" (benchmark "+c+"x)",{industry:_,benchmark:String(c)})+\`
+• $calc_out.label.turnover_ratio|Turnover ratio|:     \`+s.toFixed(2)+\`x/year
+• $calc_out.label.days_to_sell|Days to sell|:       \`+I.toFixed(1)+\` days
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.inventory_turnover.row.whatif_cogs_minus_10","COGS −10% (slower sales): turnover = "+f.toFixed(2)+"x · days to sell = "+D.toFixed(1),{ratio:f.toFixed(2),days:D.toFixed(1)})+\`
+• \`+t("calc_out.inventory_turnover.row.whatif_cogs_plus_10","COGS +10% (faster sales): turnover = "+b.toFixed(2)+"x · days to sell = "+G.toFixed(1),{ratio:b.toFixed(2),days:G.toFixed(1)})+\`
+• \`+t("calc_out.inventory_turnover.row.capital_freed_vs_benchmark","Capital freed (vs benchmark): "+(v>=0?"+":"")+r(v)+" at −10%, "+(d>=0?"+":"")+r(d)+" at +10%",{down:(v>=0?"+":"")+r(v),up:(d>=0?"+":"")+r(d)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.inventory_turnover.row.target_inventory_green","Target inventory for 🟢: "+r(x)+"  (at "+c+"x benchmark)",{target:r(x),benchmark:String(c)})+\`
+• \`+t("calc_out.inventory_turnover.row.current_vs_target","Current vs target: "+(l>=0?"+":"")+r(l)+" ("+(g>=0?"+":"")+g.toFixed(1)+"%)",{delta:(l>=0?"+":"")+r(l),pct:(g>=0?"+":"")+g.toFixed(1)+"%"})+\`
+• \`+R+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.inventory_turnover.row.milestone_ratio_plus_1","Improve ratio by +1: target inventory = "+r(m),{target:r(m)})+\`
+• \`+t("calc_out.inventory_turnover.row.milestone_capital_freed","Capital freed if ratio +1: "+r(K)+" (one-time working-capital release)",{amount:r(K)})+\`
+• \`+t("calc_out.inventory_turnover.row.milestone_12mo_impact","12-mo operating impact: every $1 of inventory reduction = ~$0.15–0.25 of annual carrying-cost savings (use P7-2 to size)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+u+\`
+\`]};return[C(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

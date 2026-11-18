@@ -311,106 +311,76 @@ function calculateBRRRR(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function stage1Cash(p,d){var dpRate=d/100;return{downPayment:p*dpRate,closingBuy:p*0.03,total:p*dpRate+p*0.03,initialLoan:p*(1-dpRate)};}" +
-  "function stage2Cash(rehabCost,initialLoan,interestRatePct,holdingMonths){var monthlyHoldCost=initialLoan*(interestRatePct/100/12)+200;var holdingCost=monthlyHoldCost*holdingMonths;return{totalStage2Cash:rehabCost,holdingCost:holdingCost};}" +
-  "function refiCalc(afterRepairValue,initialLoan){var refiLTV=0.75;var refiLoan=afterRepairValue*refiLTV;var cashOutFromRefi=refiLoan-initialLoan;return{refiLoan:refiLoan,cashOutFromRefi:cashOutFromRefi};}" +
-  "function monthlyPI(principal,monthlyRate,n){if(n<=0)return 0;if(monthlyRate===0)return principal/n;return(principal*monthlyRate)/(1-Math.pow(1+monthlyRate,-n));}" +
-  "function postRefiAnnualCashFlow(monthlyRent,vacancyRate,monthlyExpenses,refiLoan,interestRate,loanTermYears){var effRent=monthlyRent*12*(1-vacancyRate/100);var mortgage=monthlyPI(refiLoan,interestRate/100/12,loanTermYears*12)*12;return effRent-mortgage-monthlyExpenses*12;}" +
-  "function cashTally(totalStage1Cash,totalStage2Cash,holdingCost,interimRent,cashOutFromRefi){var cashOut=totalStage1Cash+totalStage2Cash+holdingCost;var cashIn=interimRent+cashOutFromRefi;return{cashOut:cashOut,cashIn:cashIn,cashLeftInDeal:cashOut-cashIn};}" +
-  "function forcedAppreciation(afterRepairValue,purchasePrice,rehabCost){return afterRepairValue-purchasePrice-rehabCost;}" +
-  "function seventyRuleCheck(afterRepairValue,purchasePrice,rehabCost){var maxAllowedBid=afterRepairValue*0.7-rehabCost;var gap=purchasePrice-maxAllowedBid;return{maxAllowedBid:maxAllowedBid,gap:gap};}" +
-  "function cashOnCashReturnBRRRR(annualCashFlow,cashLeftInDeal){if(cashLeftInDeal<=0)return Infinity;if(annualCashFlow<=0)return 0;return(annualCashFlow/cashLeftInDeal)*100;}" +
-  "function brrrrHealth(cashLeftInDeal,cashOut){if(cashOut<=0)return{emoji:'\\uD83D\\uDFE2',label:'cash-out success \\u2014 full capital returned'};var ratio=(cashLeftInDeal/cashOut)*100;if(ratio<=0)return{emoji:'\\uD83D\\uDFE2',label:'cash-out success \\u2014 full capital returned via refi'};if(ratio<=15)return{emoji:'\\uD83D\\uDFE1',label:'small cash-in (\\u226415%) \\u2014 deal workable'};return{emoji:'\\uD83D\\uDFE0',label:'significant cash-in (>15%) \\u2014 capital still trapped'};}" +
-  "var clampNonNegative=function(x){return Number.isNaN(x)?0:Math.max(0,x)};" +
-  "var purchasePrice=clampNonNegative(parseFloat(inputs.purchasePrice)||0);" +
-  "var rehabCost=clampNonNegative(parseFloat(inputs.rehabCost)||0);" +
-  "var afterRepairValue=clampNonNegative(parseFloat(inputs.afterRepairValue)||0);" +
-  "var downPaymentPct=clampNonNegative(parseFloat(inputs.downPaymentPct)||0);" +
-  "var interestRate=parseFloat(inputs.interestRate)||0;" +
-  "var loanTermYears=clampNonNegative(parseFloat(inputs.loanTermYears)||0);" +
-  "var monthlyRent=clampNonNegative(parseFloat(inputs.monthlyRent)||0);" +
-  "var monthlyExpenses=clampNonNegative(parseFloat(inputs.monthlyExpenses)||0);" +
-  "var vacancyRate=parseFloat(inputs.vacancyRate)||0;" +
-  "var holdingMonths=clampNonNegative(parseFloat(inputs.holdingMonths)||0);" +
-  "if(purchasePrice<=0||afterRepairValue<=0){return[tk('calc_out.section.brrrr_calculator','\\u23F0 BRRRR Calculator')+'\\n\\n'+tk('calc_out.brrrr.row.missing_price_or_arv','\\uD83D\\uDCB0 Enter purchase price, rehab cost, and after-repair value (ARV) to see your 5-stage BRRRR analysis.')];}" +
-  "if(downPaymentPct<0||downPaymentPct>=100){return[tk('calc_out.section.brrrr_calculator','\\u23F0 BRRRR Calculator')+'\\n\\n'+tk('calc_out.brrrr.row.invalid_down_payment_pct','\\uD83D\\uDCB0 Down payment percentage must be 0-99. Typical BRRRR: 20-30% down (some investors use 0% via hard money).')];}" +
-  "if(afterRepairValue<purchasePrice+rehabCost){return[tk('calc_out.section.brrrr_calculator','\\u23F0 BRRRR Calculator')+'\\n\\n'+tk('calc_out.brrrr.row.arv_below_total_cost','\\uD83D\\uDCB0 ARV ('+afterRepairValue.toLocaleString('en-US')+') is less than purchase + rehab ('+(purchasePrice+rehabCost).toLocaleString('en-US')+'). This deal does not work as BRRRR \\u2014 consider flipping instead.',{arv:afterRepairValue.toLocaleString('en-US'),total:(purchasePrice+rehabCost).toLocaleString('en-US')})];}" +
-  "var s1=stage1Cash(purchasePrice,downPaymentPct);" +
-  "var s2=stage2Cash(rehabCost,s1.initialLoan,interestRate,holdingMonths);" +
-  "var interimRent=monthlyRent*Math.max(0,Math.min(2,holdingMonths-1));" +
-  "var refi=refiCalc(afterRepairValue,s1.initialLoan);" +
-  "var cf=postRefiAnnualCashFlow(monthlyRent,vacancyRate,monthlyExpenses,refi.refiLoan,interestRate,loanTermYears);" +
-  "var tally=cashTally(s1.total,s2.totalStage2Cash,s2.holdingCost,interimRent,refi.cashOutFromRefi);" +
-  "var forced=forcedAppreciation(afterRepairValue,purchasePrice,rehabCost);" +
-  "var seventy=seventyRuleCheck(afterRepairValue,purchasePrice,rehabCost);" +
-  "var coc=cashOnCashReturnBRRRR(cf,tally.cashLeftInDeal);" +
-  "var health=brrrrHealth(tally.cashLeftInDeal,tally.cashOut);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return '$'+fmt(n);}" +
-  "var cocStr=isFinite(coc)?coc.toFixed(2)+'%':'\\u221E (cash-out success)';" +
-  "var seventyDealTag=seventy.gap<=0?' '+tk('calc_out.brrrr.row.within_70_rule','\\u2705 within 70% rule'):' '+tk('calc_out.brrrr.row.above_70_rule','\\u26A0\\uFE0F above 70% rule');" +
-  "var tip='';" +
-  "if(tally.cashLeftInDeal<=0){tip=tk('calc_out.brrrr.row.tip_cash_out_success','\\uD83D\\uDCA1 Tip: \\uD83C\\uDF89 Cash-out success \\u2014 full capital returned via refi. The \"R\" in BRRRR worked. Repeat: deploy the recovered cash into the next deal to compound.');}" +
-  "else if(tally.cashLeftInDeal/tally.cashOut>0.15){tip=tk('calc_out.brrrr.row.tip_significant_cash_in','\\uD83D\\uDCA1 Tip: Significant cash trapped. Either: (1) negotiate lower purchase price, (2) reduce rehab scope, (3) add value (rehab more aggressively). 70% rule is a quick screen \\u2014 failing it means ARV likely won\\u0027t support the deal.');}" +
-  "else{tip=tk('calc_out.brrrr.row.tip_small_cash_in','\\uD83D\\uDCA1 Tip: Small cash-in is workable if monthly cash flow is positive. Run the Rental Yield (P5-4) for sustained ROI. BRRRR is most powerful when chained: 12-month cycle from buy \\u2192 refi \\u2192 next property.');}" +
-  "var healthToken=health.label==='cash-out success \\u2014 full capital returned'?tk('calc_out.brrrr.row.health_cash_out_full','\\uD83D\\uDFE2 cash-out success \\u2014 full capital returned'):health.label==='cash-out success \\u2014 full capital returned via refi'?tk('calc_out.brrrr.row.health_cash_out_via_refi','\\uD83D\\uDFE2 cash-out success \\u2014 full capital returned via refi'):health.label==='small cash-in (\\u226415%) \\u2014 deal workable'?tk('calc_out.brrrr.row.health_small_cash_in','\\uD83D\\uDFE1 small cash-in (\\u226415%) \\u2014 deal workable'):tk('calc_out.brrrr.row.health_significant_cash_in','\\uD83D\\uDFE0 significant cash-in (>15%) \\u2014 capital still trapped');" +
-  "var r2='';" +
-  "r2+=tk('calc_out.section.brrrr_calculator_headline','\\u23F0 BRRRR Calculator (Buy Rehab Rent Refinance Repeat)')+'\\n\\n';" +
-  "r2+=tk('calc_out.section.deal_snapshot','\\uD83D\\uDCB0 Deal Snapshot:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.purchase_price','Purchase price')+':        '+money(purchasePrice)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.rehab_cost','Rehab cost')+':            '+money(rehabCost)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.after_repair_value','After-Repair Value')+':   '+money(afterRepairValue)+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.forced_appreciation','\\u2022 Forced appreciation:  '+money(forced)+'  (ARV - price - rehab)',{forced:money(forced)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.total_cash_invested','Total cash invested')+':   '+money(tally.cashOut)+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.cash_returned_via_refi','\\u2022 Cash returned via refi: '+money(tally.cashIn-interimRent)+' ('+money(refi.cashOutFromRefi)+' refi + '+money(interimRent)+' rent)',{returned:money(tally.cashIn-interimRent),refi:money(refi.cashOutFromRefi),rent:money(interimRent)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.cash_left_in_deal','Cash LEFT in deal')+':     '+money(tally.cashLeftInDeal)+(tally.cashLeftInDeal<=0?' '+tk('calc_out.brrrr.row.cash_out_badge','\\uD83C\\uDF89 cash-out!'):'')+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.post_refi_coc_return','Post-refi CoC return')+':  '+cocStr+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.five_stage_breakdown','\\uD83D\\uDCD0 5-Stage Breakdown:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.brrrr.row.stage_buy','1. BUY:        down '+money(s1.downPayment)+' + closing '+money(s1.closingBuy)+' = '+money(s1.total)+' (initial loan '+money(s1.initialLoan)+')',{down:money(s1.downPayment),closing:money(s1.closingBuy),total:money(s1.total),loan:money(s1.initialLoan)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.stage_rehab','2. REHAB:      '+money(rehabCost)+' + holding '+money(s2.holdingCost)+' (utilities/insurance over '+holdingMonths+'mo)',{rehab:money(rehabCost),holding:money(s2.holdingCost),months:String(holdingMonths)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.stage_rent','3. RENT:       '+money(interimRent)+' interim rent (during rehab/hold)',{interim:money(interimRent)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.stage_refinance','4. REFINANCE:  refi loan '+money(refi.refiLoan)+' at 75% LTV \\u2192 cash back '+money(refi.cashOutFromRefi),{refiLoan:money(refi.refiLoan),cashBack:money(refi.cashOutFromRefi)})+(refi.cashOutFromRefi<0?' '+tk('calc_out.brrrr.row.cash_in_badge','(cash-in!)'):'')+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.stage_repeat','5. REPEAT:     CoC return '+cocStr,{coc:cocStr})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.deal_health','\\uD83E\\uDE7A Deal Health:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+healthToken+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.cash_left_cash_out_ratio','Cash left/cash out ratio')+': '+((tally.cashLeftInDeal/Math.max(1,tally.cashOut))*100).toFixed(1)+'%\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.label.cash_flow_post_refi','Cash flow (post-refi)')+':  '+money(cf)+'/yr\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.brrrr_targets','\\uD83C\\uDFAF BRRRR Targets:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.brrrr.row.rule_70','\\u2022 70% rule: ARV \\u00D7 0.7 = '+money(afterRepairValue*0.7)+' should cover (price + rehab)',{cap:money(afterRepairValue*0.7)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.max_bid_70','\\u2022 Max bid at 70% rule:  '+money(seventy.maxAllowedBid)+' ('+money(seventy.gap)+' gap)',{maxBid:money(seventy.maxAllowedBid),gap:money(seventy.gap)})+seventyDealTag+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.recommended_hold','\\u2022 Recommended hold:     3-9 months (rehab timeline)')+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.refi_ltv','\\u2022 Refi LTV:             70-75% of ARV typical')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.forced_appreciation','\\u2696\\uFE0F Forced Appreciation:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+=tk('calc_out.brrrr.row.arv_gain_from_rehab','\\u2022 ARV gain from rehab:   '+money(forced)+' ('+((forced/purchasePrice)*100).toFixed(0)+'% of purchase)',{gain:money(forced),pct:((forced/purchasePrice)*100).toFixed(0)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.without_rehab','\\u2022 Without rehab:        would have appreciated with market only')+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.forcing_appreciation','\\u2022 Forcing appreciation  is the active skill in BRRRR')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tk('calc_out.section.what_if_scenarios','\\uD83D\\uDD04 What-If Scenarios:')+'\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "var coc2=postRefiAnnualCashFlow(monthlyRent,vacancyRate,monthlyExpenses,refiCalc(afterRepairValue-20000,s1.initialLoan).refiLoan,interestRate,loanTermYears);" +
-  "var tally2=cashTally(s1.total,rehabCost-10000,s2.holdingCost,interimRent,refi.cashOutFromRefi-20000);" +
-  "var refi2=refiCalc(afterRepairValue-20000,s1.initialLoan);" +
-  "r2+=tk('calc_out.brrrr.row.whatif_rehab_minus_10k','\\u2022 Rehab -$10K:           cash-in '+money(tally2.cashLeftInDeal)+'  (less trapped)',{cld:money(tally2.cashLeftInDeal)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.whatif_arv_minus_20k','\\u2022 ARV -$20K:             refi '+money(refiCalc(afterRepairValue-20000,s1.initialLoan).refiLoan)+', CF '+money(coc2)+'/yr',{refi:money(refiCalc(afterRepairValue-20000,s1.initialLoan).refiLoan),cf:money(coc2)})+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.whatif_refi_ltv','\\u2022 Refi LTV 75% (current) \\u00B7 80% (test): higher cash-out at more risk')+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.whatif_term','\\u2022 Term 30y (current) vs 15y: see Rental Yield for the impact')+'\\n';" +
-  "r2+=tk('calc_out.brrrr.row.whatif_down_25','\\u2022 25% down (vs current '+downPaymentPct+'%): less cash-in but more mortgage',{dp:String(downPaymentPct)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var results=[r2];" +
-  "var lifts=[10000,30000,50000,70000,100000,150000];" +
-  "for(var li=0;li<lifts.length;li++){var lift=lifts[li];var arv2=purchasePrice+rehabCost+lift;var t=cashTally(s1.total,rehabCost,s2.holdingCost,interimRent,refiCalc(arv2,s1.initialLoan).cashOutFromRefi);results.push(tk('calc_out.brrrr.row.comparison_lift','Comparison: ARV '+money(arv2)+' (+'+money(lift)+' lift) \\u2192 cash left '+money(t.cashLeftInDeal),{arv:money(arv2),lift:money(lift),left:money(t.cashLeftInDeal)})+(t.cashLeftInDeal<=0?' '+tk('calc_out.brrrr.row.cash_out_badge_cmp','\\uD83C\\uDF89 cash-out'):''));}" +
-  "return results;";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(r){return Number.isNaN(r)?0:Math.max(0,r)},D=function(r,a){const c=a/100,e=r*c,n=r*.03,u=r*(1-c);return{downPayment:e,closingBuy:n,total:e+n,initialLoan:u}},I=function(r,a,c,e){const u=(a*(c/100/12)+200)*e;return{totalStage2Cash:r,holdingCost:u}},f=function(r,a){const e=r*.75,n=e-a;return{refiLoan:e,cashOutFromRefi:n}},A=function(r,a,c){return c<=0?0:a===0?r/c:r*a/(1-Math.pow(1+a,-c))},v=function(r){const a=r.monthlyRent*12*(1-r.vacancyRate/100),c=A(r.refiLoan,r.interestRate/100/12,r.loanTermYears*12)*12;return a-c-r.monthlyExpenses*12},R=function(r){const a=r.totalStage1Cash+r.totalStage2Cash+r.holdingCost,c=r.interimRent+r.cashOutFromRefi;return{cashOut:a,cashIn:c,cashLeftInDeal:a-c}},V=function(r,a,c){return r-a-c},E=function(r,a,c){const e=r*.7-c,n=a-e;return{maxAllowedBid:e,gap:n}},P=function(r,a){return a<=0?1/0:r<=0?0:r/a*100},j=function(r,a){if(a<=0)return{emoji:"🟢",label:"cash-out success — full capital returned"};const c=r/a*100;return c<=0?{emoji:"🟢",label:"cash-out success — full capital returned via refi"}:c<=15?{emoji:"🟡",label:"small cash-in (≤15%) — deal workable"}:{emoji:"🟠",label:"significant cash-in (>15%) — capital still trapped"}},M=function(r){const a=s(parseFloat(r.purchasePrice)||0),c=s(parseFloat(r.rehabCost)||0),e=s(parseFloat(r.afterRepairValue)||0),n=s(parseFloat(r.downPaymentPct)||0),u=parseFloat(r.interestRate)||0,U=s(parseFloat(r.loanTermYears)||0),C=s(parseFloat(r.monthlyRent)||0),Y=s(parseFloat(r.monthlyExpenses)||0),q=parseFloat(r.vacancyRate)||0,p=s(parseFloat(r.holdingMonths)||0);if(a<=0||e<=0)return[t("calc_out.section.brrrr_calculator","⏰ BRRRR Calculator")+\`
+
+\`+t("calc_out.brrrr.row.missing_price_or_arv","💰 Enter purchase price, rehab cost, and after-repair value (ARV) to see your 5-stage BRRRR analysis.")];if(n<0||n>=100)return[t("calc_out.section.brrrr_calculator","⏰ BRRRR Calculator")+\`
+
+\`+t("calc_out.brrrr.row.invalid_down_payment_pct","💰 Down payment percentage must be 0-99. Typical BRRRR: 20-30% down (some investors use 0% via hard money).")];if(e<a+c)return[t("calc_out.section.brrrr_calculator","⏰ BRRRR Calculator")+\`
+
+\`+t("calc_out.brrrr.row.arv_below_total_cost","💰 ARV ("+e.toLocaleString("en-US")+") is less than purchase + rehab ("+(a+c).toLocaleString("en-US")+"). This deal does not work as BRRRR — consider flipping instead.",{arv:e.toLocaleString("en-US"),total:(a+c).toLocaleString("en-US")})];const l=D(a,n),d=I(c,l.initialLoan,u,p),b=C*Math.max(0,Math.min(2,p-1)),_=f(e,l.initialLoan),H=v({monthlyRent:C,vacancyRate:q,monthlyExpenses:Y,refiLoan:_.refiLoan,interestRate:u,loanTermYears:U}),i=R({totalStage1Cash:l.total,totalStage2Cash:d.totalStage2Cash,holdingCost:d.holdingCost,interimRent:b,cashOutFromRefi:_.cashOutFromRefi}),L=V(e,a,c),F=E(e,a,c),$=P(H,i.cashLeftInDeal),S=j(i.cashLeftInDeal,i.cashOut),it=h=>h.toLocaleString("en-US",{maximumFractionDigits:0}),o=h=>"$"+it(h),lt=v({monthlyRent:C,vacancyRate:q,monthlyExpenses:Y,refiLoan:f(e-2e4,l.initialLoan).refiLoan,interestRate:u,loanTermYears:U}),st=R({totalStage1Cash:l.total,totalStage2Cash:c-1e4,holdingCost:d.holdingCost,interimRent:b,cashOutFromRefi:_.cashOutFromRefi-2e4}),B=isFinite($)?$.toFixed(2)+"%":"∞ (cash-out success)",Ot=(e*.7).toLocaleString("en-US",{maximumFractionDigits:0}),ut=F.gap<=0?" "+t("calc_out.brrrr.row.within_70_rule","✅ within 70% rule"):" "+t("calc_out.brrrr.row.above_70_rule","⚠️ above 70% rule");let g;i.cashLeftInDeal<=0?g=t("calc_out.brrrr.row.tip_cash_out_success",'💡 Tip: 🎉 Cash-out success — full capital returned via refi. The "R" in BRRRR worked. Repeat: deploy the recovered cash into the next deal to compound.'):i.cashLeftInDeal/i.cashOut>.15?g=t("calc_out.brrrr.row.tip_significant_cash_in","💡 Tip: Significant cash trapped. Either: (1) negotiate lower purchase price, (2) reduce rehab scope, (3) add value (rehab more aggressively). 70% rule is a quick screen — failing it means ARV likely won't support the deal."):g=t("calc_out.brrrr.row.tip_small_cash_in","💡 Tip: Small cash-in is workable if monthly cash flow is positive. Run the Rental Yield (P5-4) for sustained ROI. BRRRR is most powerful when chained: 12-month cycle from buy → refi → next property.");const K=o(l.downPayment),W=o(l.closingBuy),G=o(l.total),J=o(l.initialLoan),z=o(c),Q=o(d.holdingCost),w=o(b),X=o(_.refiLoan),m=o(_.cashOutFromRefi),y=o(L),Z=o(e*.7),T=o(F.maxAllowedBid),k=o(F.gap),xt=o(i.cashOut),tt=o(i.cashIn-b),ht=o(i.cashLeftInDeal),rt=o(st.cashLeftInDeal),at=o(f(e-2e4,l.initialLoan).refiLoan),ct=o(lt),_t=S.label==="cash-out success — full capital returned"?t("calc_out.brrrr.row.health_cash_out_full","🟢 cash-out success — full capital returned"):S.label==="cash-out success — full capital returned via refi"?t("calc_out.brrrr.row.health_cash_out_via_refi","🟢 cash-out success — full capital returned via refi"):S.label==="small cash-in (≤15%) — deal workable"?t("calc_out.brrrr.row.health_small_cash_in","🟡 small cash-in (≤15%) — deal workable"):t("calc_out.brrrr.row.health_significant_cash_in","🟠 significant cash-in (>15%) — capital still trapped"),ot=[t("calc_out.section.brrrr_calculator_headline","⏰ BRRRR Calculator (Buy Rehab Rent Refinance Repeat)")+\`
+
+\`+t("calc_out.section.deal_snapshot","💰 Deal Snapshot:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+t("calc_out.label.purchase_price","Purchase price")+":        "+o(a)+\`
+• \`+t("calc_out.label.rehab_cost","Rehab cost")+":            "+o(c)+\`
+• \`+t("calc_out.label.after_repair_value","After-Repair Value")+":   "+o(e)+\`
+\`+t("calc_out.brrrr.row.forced_appreciation","• Forced appreciation:  "+y+"  (ARV - price - rehab)",{forced:y})+\`
+• \`+t("calc_out.label.total_cash_invested","Total cash invested")+":   "+o(i.cashOut)+\`
+\`+t("calc_out.brrrr.row.cash_returned_via_refi","• Cash returned via refi: "+tt+" ("+m+" refi + "+w+" rent)",{returned:tt,refi:m,rent:w})+\`
+• \`+t("calc_out.label.cash_left_in_deal","Cash LEFT in deal")+":     "+ht+(i.cashLeftInDeal<=0?" "+t("calc_out.brrrr.row.cash_out_badge","🎉 cash-out!"):"")+\`
+• \`+t("calc_out.label.post_refi_coc_return","Post-refi CoC return")+":  "+B+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.five_stage_breakdown","📐 5-Stage Breakdown:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.brrrr.row.stage_buy","1. BUY:        down "+K+" + closing "+W+" = "+G+" (initial loan "+J+")",{down:K,closing:W,total:G,loan:J})+\`
+\`+t("calc_out.brrrr.row.stage_rehab","2. REHAB:      "+z+" + holding "+Q+" (utilities/insurance over "+p+"mo)",{rehab:z,holding:Q,months:String(p)})+\`
+\`+t("calc_out.brrrr.row.stage_rent","3. RENT:       "+w+" interim rent (during rehab/hold)",{interim:w})+\`
+\`+t("calc_out.brrrr.row.stage_refinance","4. REFINANCE:  refi loan "+X+" at 75% LTV → cash back "+m,{refiLoan:X,cashBack:m})+(_.cashOutFromRefi<0?" "+t("calc_out.brrrr.row.cash_in_badge","(cash-in!)"):"")+\`
+\`+t("calc_out.brrrr.row.stage_repeat","5. REPEAT:     CoC return "+B,{coc:B})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.deal_health","🩺 Deal Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+_t+\`
+• \`+t("calc_out.label.cash_left_cash_out_ratio","Cash left/cash out ratio")+": "+(i.cashLeftInDeal/Math.max(1,i.cashOut)*100).toFixed(1)+\`%
+• \`+t("calc_out.label.cash_flow_post_refi","Cash flow (post-refi)")+":  "+o(H)+\`/yr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.brrrr_targets","🎯 BRRRR Targets:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.brrrr.row.rule_70","• 70% rule: ARV × 0.7 = "+Z+" should cover (price + rehab)",{cap:Z})+\`
+\`+t("calc_out.brrrr.row.max_bid_70","• Max bid at 70% rule:  "+T+" ("+k+" gap)",{maxBid:T,gap:k})+ut+\`
+\`+t("calc_out.brrrr.row.recommended_hold","• Recommended hold:     3-9 months (rehab timeline)")+\`
+\`+t("calc_out.brrrr.row.refi_ltv","• Refi LTV:             70-75% of ARV typical")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.forced_appreciation","⚖️ Forced Appreciation:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.brrrr.row.arv_gain_from_rehab","• ARV gain from rehab:   "+y+" ("+(L/a*100).toFixed(0)+"% of purchase)",{gain:y,pct:(L/a*100).toFixed(0)})+\`
+\`+t("calc_out.brrrr.row.without_rehab","• Without rehab:        would have appreciated with market only")+\`
+\`+t("calc_out.brrrr.row.forcing_appreciation","• Forcing appreciation  is the active skill in BRRRR")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.brrrr.row.whatif_rehab_minus_10k","• Rehab -$10K:           cash-in "+rt+"  (less trapped)",{cld:rt})+\`
+\`+t("calc_out.brrrr.row.whatif_arv_minus_20k","• ARV -$20K:             refi "+at+", CF "+ct+"/yr",{refi:at,cf:ct})+\`
+\`+t("calc_out.brrrr.row.whatif_refi_ltv","• Refi LTV 75% (current) · 80% (test): higher cash-out at more risk")+\`
+\`+t("calc_out.brrrr.row.whatif_term","• Term 30y (current) vs 15y: see Rental Yield for the impact")+\`
+\`+t("calc_out.brrrr.row.whatif_down_25","• 25% down (vs current "+n+"%): less cash-in but more mortgage",{dp:String(n)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+g],ft=[1e4,3e4,5e4,7e4,1e5,15e4];for(const h of ft){const O=a+c+h,x=R({totalStage1Cash:l.total,totalStage2Cash:c,holdingCost:d.holdingCost,interimRent:b,cashOutFromRefi:f(O,l.initialLoan).cashOutFromRefi}),dt=x.cashLeftInDeal<=0?" "+t("calc_out.brrrr.row.cash_out_badge_cmp","🎉 cash-out"):"";ot.push(t("calc_out.brrrr.row.comparison_lift","Comparison: ARV "+o(O)+" (+"+o(h)+" lift) → cash left "+o(x.cashLeftInDeal),{arv:o(O),lift:o(h),left:o(x.cashLeftInDeal)})+dt)}return ot},N=function(r,a,c){var e=nt(r);return Array.isArray(e)?e.join(\`
+\`):String(e)};var bt=s,Rt=D,pt=I,gt=f,wt=A,mt=v,yt=R,vt=V,Ct=E,Lt=P,Ft=j,St=M,Bt=N,t=tk,et='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+et)(),nt=function(r){return M(r)};return[N(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

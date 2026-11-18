@@ -128,99 +128,81 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var mt=cnn(parseFloat(inputs.monthlyTraffic)||0);" +
-  "var cr=cnn(parseFloat(inputs.conversionRate)||0);" +
-  "var ac=cnn(parseFloat(inputs.avgCommission)||0);" +
-  "var mc2=cnn(parseFloat(inputs.monthlyCost)||0);" +
-  "var mconv=mt*(cr/100);" +
-  "var mi=mconv*ac;" +
-  "var ai=mi*12;" +
-  "var ipt=mt>0?(mi/mt)*1000:0;" +
-  "var epv=mt>0?mi/mt:0;" +
-  "var net=mi-mc2;" +
-  "var bet=epv>0?mc2/epv:0;" +
-  "function fmt(n){return '$'+n.toFixed(2)}" +
-  "function fmt0(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function pct2(n){return n.toFixed(2)}" +
-  "function pct1(n){return n.toFixed(1)}" +
-  "function loc(n){return n.toLocaleString()}" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='\\uD83D\\uDD17 Affiliate Income Calculator\\n\\n';" +
-  "r+='\\uD83D\\uDCCA Your Traffic & Conversions:\\n';" +
-  "r+='\\u2022 Monthly Traffic:       '+loc(mt)+' visitors\\n';" +
-  "r+='\\u2022 Conversion Rate:       '+pct2(cr)+'%\\n';" +
-  "r+='\\u2022 Avg Commission:        '+fmt(ac)+'\\n';" +
-  "r+='\\u2022 Monthly Conversions:   '+loc(Math.round(mconv))+' sales\\n';" +
-  "r+='\\u2022 Monthly Cost:          '+fmt0(mc2)+'  (hosting, tools, content)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Revenue Snapshot:\\n';" +
-  "r+='\\u2022 Monthly Income:        '+fmt0(mi)+'/mo\\n';" +
-  "r+='\\u2022 Annual Income:         '+fmt0(ai)+'/yr\\n';" +
-  "r+='\\u2022 Per 1K Visitors:       '+fmt(ipt)+'/1K  (EPC \\u2014 earnings per click-adjacent)\\n';" +
-  "r+='\\u2022 Earnings Per Visitor:  '+'$'+epv.toFixed(4)+'\\n';" +
-  "r+='\\u2022 Net (after costs):     '+fmt0(net)+'/mo  (margin '+pct1(mi>0?(net/mi)*100:0)+'%)\\n';" +
-  "r+='\\u2022 Annual Net:            '+fmt0(net*12)+'/yr\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 CTR/EPC Funnel:\\n';" +
-  "r+='\\u2022 Traffic Impressions:   '+loc(mt)+'\\n';" +
-  "r+='\\u2022 Conversions:           '+loc(Math.round(mconv))+'  (rate '+pct2(cr)+'%)\\n';" +
-  "r+='\\u2022 Revenue per Click:     '+(mconv>0?fmt(mi/mconv):'$0')+'  (avg commission)\\n';" +
-  "r+='\\u2022 Revenue per Visitor:   '+'$'+epv.toFixed(4)+'  (key efficiency metric)\\n';" +
-  "r+='\\u2022 Annualized Visitors:   '+loc(mt*12)+'/yr\\n';" +
-  "r+='\\u2022 Industry Benchmark:    CTR 1-3% | EPC $0.10-1.00 | Aff. sites $20-50/1K visitors\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Funnel Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(cr>3){r+='\\u2022 \\uD83D\\uDFE2 CTR '+pct2(cr)+'% is strong (industry avg 1-3%).\\n';}" +
-  "else if(cr>=1){r+='\\u2022 \\uD83D\\uDFE1 CTR '+pct2(cr)+'% is on industry average.\\n';}" +
-  "else if(cr>=0.5){r+='\\u2022 \\uD83D\\uDFE0 CTR '+pct2(cr)+'% is below average \\u2014 improve targeting.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 CTR '+pct2(cr)+'% is weak \\u2014 review offer-market fit.\\n';}" +
-  "if(ipt>=50){r+='\\u2022 \\uD83D\\uDFE2 EPC '+fmt(ipt)+'/1K \\u2014 top-quartile affiliate performance.\\n';}" +
-  "else if(ipt>=20){r+='\\u2022 \\uD83D\\uDFE1 EPC '+fmt(ipt)+'/1K \\u2014 solid performance.\\n';}" +
-  "else if(ipt>=5){r+='\\u2022 \\uD83D\\uDFE0 EPC '+fmt(ipt)+'/1K \\u2014 below average; optimize offers.\\n';}" +
-  "else if(mt>0){r+='\\u2022 \\uD83D\\uDD34 EPC '+fmt(ipt)+'/1K \\u2014 very low; rethink affiliate programs.\\n';}" +
-  "if(mi>0&&net>0){r+='\\u2022 \\uD83D\\uDFE2 Net margin '+pct1((net/mi)*100)+'% after costs.\\n';}" +
-  "else if(mc2>0&&net<=0){r+='\\u2022 \\uD83D\\uDD34 Costs exceed revenue \\u2014 unprofitable. Cut costs or grow traffic.\\n';}" +
-  "r+='\\n\\uD83C\\uDFAF Scale Projection:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='Assuming '+pct2(cr)+'% CTR and '+fmt(ac)+' commission:\\n';" +
-  "var tls=[{l:'1K visitors/mo',v:1000},{l:'10K visitors/mo',v:10000},{l:'100K visitors/mo',v:100000},{l:'500K visitors/mo',v:500000},{l:'1M visitors/mo',v:1000000}];" +
-  "for(var i=0;i<tls.length;i++){" +
-  "var mc3=tls[i].v*(cr/100);" +
-  "var mi2=mc3*ac;" +
-  "r+='\\u2022 '+tls[i].l+':  '+fmt0(mi2)+'/mo  ('+fmt0(mi2*12)+'/yr)\\n';" +
-  "}" +
-  "r+='\\n\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Break-Even Traffic:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Costs/Month:           '+fmt0(mc2)+'\\n';" +
-  "r+='\\u2022 Earnings/Visitor:      '+'$'+epv.toFixed(4)+'\\n';" +
-  "r+='\\u2022 Break-Even Traffic:    '+loc(Math.ceil(bet))+' visitors/mo\\n';" +
-  "if(mt>=bet){r+='\\u2022 \\uD83D\\uDFE2 Current traffic ('+loc(mt)+') covers costs.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 Need '+loc(Math.ceil(bet-mt))+' more visitors to break even.\\n';}" +
-  "r+='\\u2022 To Net $5K/mo:         '+loc(Math.ceil((5000+mc2)/Math.max(epv,0.0001)))+' visitors/mo\\n';" +
-  "r+='\\u2022 To Net $10K/mo:        '+loc(Math.ceil((10000+mc2)/Math.max(epv,0.0001)))+' visitors/mo\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Raise CTR 50%:  '+fmt0(mi*1.5)+'/mo  (better targeting + landing page)\\n';" +
-  "r+='\\u2022 Higher commission (+50%):  '+fmt0(mi*1.5)+'/mo  (recurring SaaS programs)\\n';" +
-  "r+='\\u2022 2x traffic:  '+fmt0(mi*2)+'/mo  (SEO + paid ads)\\n';" +
-  "r+='\\u2022 All three combined:  '+fmt0(mi*4.5)+'/mo  (max upside)\\n';" +
-  "r+='\\u2022 Cut costs 50%:  Net '+fmt0(net+mc2*0.5)+'/mo  (drop expensive tools)\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds '+fmt0(50000*0.01*ac)+'/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.';" +
-  "results.push(r);" +
-  "var tla=[1000,5000,10000,25000,50000,100000,250000,500000,1000000];" +
-  "for(var i=0;i<tla.length;i++){" +
-  "var t=tla[i];" +
-  "var mc4=t*(cr/100);" +
-  "var mi3=mc4*ac;" +
-  "var ai2=mi3*12;" +
-  "results.push(loc(t)+' visitors/mo: '+fmt(mi3)+'/mo | '+fmt0(ai2)+'/yr | '+loc(Math.round(mc4))+' sales');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let h=function(s){return Number.isNaN(s)?0:Math.max(0,s)},M=function(s){const i=h(parseFloat(s.monthlyTraffic)||0),t=h(parseFloat(s.conversionRate)||0),a=h(parseFloat(s.avgCommission)||0),l=h(parseFloat(s.monthlyCost)||0),p=[],C=i*(t/100),e=C*a,E=e*12,m=i>0?e/i*1e3:0,f=i>0?e/i:0,v=e-l,y=f>0?l/f:0,c=n=>"$"+n.toFixed(2),o=n=>"$"+Math.round(n).toLocaleString(),u=n=>n.toFixed(2),R=n=>n.toFixed(1),r=n=>n.toLocaleString(),k=[{label:"1K visitors/mo",val:1e3},{label:"10K visitors/mo",val:1e4},{label:"100K visitors/mo",val:1e5},{label:"500K visitors/mo",val:5e5},{label:"1M visitors/mo",val:1e6}];p.push(\`🔗 Affiliate Income Calculator
+
+📊 Your Traffic & Conversions:
+• Monthly Traffic:       \`+r(i)+\` visitors
+• Conversion Rate:       \`+u(t)+\`%
+• Avg Commission:        \`+c(a)+\`
+• Monthly Conversions:   \`+r(Math.round(C))+\` sales
+• Monthly Cost:          \`+o(l)+\`  (hosting, tools, content)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 Revenue Snapshot:
+• Monthly Income:        \`+o(e)+\`/mo
+• Annual Income:         \`+o(E)+\`/yr
+• Per 1K Visitors:       \`+c(m)+\`/1K  (EPC — earnings per click-adjacent)
+• Earnings Per Visitor:  $\`+f.toFixed(4)+\`
+• Net (after costs):     \`+o(v)+"/mo  (margin "+R(e>0?v/e*100:0)+\`%)
+• Annual Net:            \`+o(v*12)+\`/yr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 CTR/EPC Funnel:
+• Traffic Impressions:   \`+r(i)+\`
+• Conversions:           \`+r(Math.round(C))+"  (rate "+u(t)+\`%)
+• Revenue per Click:     \`+(C>0?c(e/C):"$0")+\`  (avg commission)
+• Revenue per Visitor:   $\`+f.toFixed(4)+\`  (key efficiency metric)
+• Annualized Visitors:   \`+r(i*12)+\`/yr
+• Industry Benchmark:    CTR 1-3% | EPC $0.10-1.00 | Aff. sites $20-50/1K visitors
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Funnel Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(t>3?"• 🟢 CTR "+u(t)+\`% is strong (industry avg 1-3%).
+\`:t>=1?"• 🟡 CTR "+u(t)+\`% is on industry average.
+\`:t>=.5?"• 🟠 CTR "+u(t)+\`% is below average — improve targeting.
+\`:"• 🔴 CTR "+u(t)+\`% is weak — review offer-market fit.
+\`)+(m>=50?"• 🟢 EPC "+c(m)+\`/1K — top-quartile affiliate performance.
+\`:m>=20?"• 🟡 EPC "+c(m)+\`/1K — solid performance.
+\`:m>=5?"• 🟠 EPC "+c(m)+\`/1K — below average; optimize offers.
+\`:i>0?"• 🔴 EPC "+c(m)+\`/1K — very low; rethink affiliate programs.
+\`:"")+(e>0&&v>0?"• 🟢 Net margin "+R(v/e*100)+\`% after costs.
+\`:l>0&&v<=0?\`• 🔴 Costs exceed revenue — unprofitable. Cut costs or grow traffic.
+\`:"")+\`
+🎯 Scale Projection:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Assuming \`+u(t)+"% CTR and "+c(a)+\` commission:
+\`+(()=>{let n="";for(const g of k){const d=g.val*(t/100)*a;n+="• "+g.label+":  "+o(d)+"/mo  ("+o(d*12)+\`/yr)
+\`}return n})()+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even Traffic:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Costs/Month:           \`+o(l)+\`
+• Earnings/Visitor:      $\`+f.toFixed(4)+\`
+• Break-Even Traffic:    \`+r(Math.ceil(y))+\` visitors/mo
+\`+(i>=y?"• 🟢 Current traffic ("+r(i)+\`) covers costs.
+\`:"• 🔴 Need "+r(Math.ceil(y-i))+\` more visitors to break even.
+\`)+"• To Net $5K/mo:         "+r(Math.ceil((5e3+l)/Math.max(f,1e-4)))+\` visitors/mo
+• To Net $10K/mo:        \`+r(Math.ceil((1e4+l)/Math.max(f,1e-4)))+\` visitors/mo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Raise CTR 50%:  \`+o(e*1.5)+\`/mo  (better targeting + landing page)
+• Higher commission (+50%):  \`+o(e*1.5)+\`/mo  (recurring SaaS programs)
+• 2x traffic:  \`+o(e*2)+\`/mo  (SEO + paid ads)
+• All three combined:  \`+o(e*4.5)+\`/mo  (max upside)
+• Cut costs 50%:  Net \`+o(v+l*.5)+\`/mo  (drop expensive tools)
+
+💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds \`+o(5e4*.01*a)+"/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.");const F=[1e3,5e3,1e4,25e3,5e4,1e5,25e4,5e5,1e6];for(let n=0;n<F.length;n++){const g=F[n],T=g*(t/100),d=T*a,x=d*12;p.push(r(g)+" visitors/mo: "+c(d)+"/mo | "+o(x)+"/yr | "+r(Math.round(T))+" sales")}return p},b=function(s,i,t){var a=K(s);return Array.isArray(a)?a.join(\`
+\`):String(a)};var A=h,P=M,N=b,K=function(s){return M(s)};return[b(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-affiliate-income-calculator',

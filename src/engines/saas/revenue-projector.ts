@@ -476,225 +476,147 @@ function projectRevenue(inputs: Record<string, string>): string[] {
 // customFn mirrors the TypeScript function for client-side execution.
 // Emoji characters use unicode escapes so the JS string survives bundling.
 const customFn =
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}\n" +
-  "function pct(n){return n.toFixed(1)+'%'}\n" +
-  "var cnn=function(x){return Math.max(0,x)};\n" +
-  "var mr=cnn(parseFloat(inputs.currentMrr)||0);\n" +
-  "var gr=cnn(parseFloat(inputs.monthlyGrowthRate)||0);\n" +
-  "var cr=cnn(parseFloat(inputs.monthlyChurnRate)||0);\n" +
-  "var ex=cnn(parseFloat(inputs.monthlyExpenses)||0);\n" +
-  "var cash=cnn(parseFloat(inputs.cashOnHand)||0);\n" +
-  "var arpu=cnn(parseFloat(inputs.arpu)||0);\n" +
-  "var cgr=cnn(parseFloat(inputs.customGrowthRate)||0);\n" +
-  "var cac=cnn(parseFloat(inputs.cac)||0);\n" +
-  "var mo=cnn(parseInt(inputs.months)||12);\n" +
-  "var nr=(gr-cr)/100;\n" +
-  "var annRate=(Math.pow(1+nr,12)-1)*100;\n" +
-  "var end=mr*Math.pow(1+nr,mo);\n" +
-  "var total=0;for(var i=1;i<=mo;i++)total+=mr*Math.pow(1+nr,i);\n" +
-  "var mult=mr>0?end/mr:0;\n" +
-  "var subs=arpu>0?Math.round(mr/arpu):0;\n" +
-  "var netInc=mr-ex;\n" +
-  "var annProfit=netInc*12;\n" +
-  "var pMargin=mr>0?(netInc/mr)*100:0;\n" +
-  "var isProf=netInc>=0;\n" +
-  "var rZero=ex>0?cash/ex:null;\n" +
-  "var mBurn=ex-mr;\n" +
-  "var rCurr=mBurn>0?cash/mBurn:Infinity;\n" +
-  "function rColor(m){if(m===Infinity)return '\\uD83D\\uDFE2';if(m>=18)return '\\uD83D\\uDFE2';if(m>=6)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "var beMonths=null;\n" +
-  "if(mr>=ex&&ex>0)beMonths=0;\n" +
-  "else if(mr>0&&nr>0&&ex>0)beMonths=Math.ceil(Math.log(ex/mr)/Math.log(1+nr));\n" +
-  "var netNew=mr*nr;\n" +
-  "var cNr=cgr>0?(cgr-cr)/100:0;var hasCustom=cgr>0;\n" +
-  "var cacPb=null;if(cac>0&&arpu>0&&cr>0&&cr<100)cacPb=cac/(arpu*(1-cr/100));\n" +
-  "function pbColor(m){if(m<=12)return '\\uD83D\\uDFE2';if(m<=24)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "var ltvC=arpu>0&&cr>0?arpu/(cr/100):0;\n" +
-  "var ltvCRatio=cac>0&&ltvC>0?ltvC/cac:null;\n" +
-  "function lcColor(r){if(r>=3)return '\\uD83D\\uDFE2';if(r>=1)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "var bm=mBurn>0&&netNew>0?mBurn/netNew:null;\n" +
-  "function bmColor(b){if(b<1)return '\\uD83D\\uDFE2';if(b<=2)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "var mrrExp=ex>0?mr/ex:null;\n" +
-  "function r2Color(r){if(r>=2)return '\\uD83D\\uDFE2';if(r>=1)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "var r40=nr*100+pMargin;\n" +
-  "function r40Color(v){if(v>=40)return '\\uD83D\\uDFE2';if(v>=20)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "function mthsTo(t){if(mr<=0||nr<=0)return null;if(mr>=t)return 0;return Math.ceil(Math.log(t/mr)/Math.log(1+nr));}\n" +
-  "function ngColor(r){if(r>=10)return tk('calc_out.label.growth_status_exceptional','\\uD83D\\uDFE2 Exceptional');if(r>=5)return tk('calc_out.label.growth_status_healthy','\\uD83D\\uDFE1 Healthy');if(r>=0)return tk('calc_out.label.growth_status_slow','\\uD83D\\uDFE0 Slow');return tk('calc_out.label.growth_status_shrinking','\\uD83D\\uDD34 Shrinking');}\n" +
-  "function phase(m){if(m<1000)return tk('calc_out.label.phase_validation','Validation (<$1K MRR)');if(m<10000)return tk('calc_out.label.phase_early_traction','Early Traction ($1K\\u2013$10K MRR)');if(m<100000)return tk('calc_out.label.phase_scaling','Scaling ($10K\\u2013$100K MRR)');return tk('calc_out.label.phase_growth','Growth (>$100K MRR)');}\n" +
-  "var r='';\n" +
-  "r+=tk('calc_out.section.revenue_projector_revenue_snapshot','\\uD83D\\uDCCA Revenue Snapshot')+'\\n\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.starting_mrr','Starting MRR')+':           '+fmt(mr)+'/mo\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.ending_mrr','Ending MRR')+':             '+fmt(end)+'/mo  ('+tk('calc_out.revenue_projector.row.after_n_months','after '+mo+' months',{months:String(mo)})+')\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.arr_equivalent','ARR Equivalent')+':         '+fmt(end*12)+'/yr\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.total_revenue','Total Revenue')+':          '+fmt(total)+' '+tk('calc_out.revenue_projector.row.over_n_months','over '+mo+' months',{months:String(mo)})+'\\n\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.gross_monthly_growth','Gross Monthly Growth')+':   +'+pct(gr)+'  ('+tk('calc_out.revenue_projector.row.new_and_expansion','new + expansion')+')\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.monthly_churn','Monthly Churn')+':          \\u2212'+pct(cr)+'  ('+tk('calc_out.revenue_projector.row.lost_revenue','lost revenue')+')\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.net_monthly_growth','Net Monthly Growth')+':     '+(nr>=0?'+':'')+pct(nr*100)+'  ('+tk('calc_out.revenue_projector.row.effective','effective')+')  '+ngColor(nr*100)+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.growth_multiple','Growth Multiple')+':        '+mult.toFixed(1)+'\\u00d7   ('+tk('calc_out.revenue_projector.row.n_month_mrr_expansion',mo+'-month MRR expansion',{months:String(mo)})+')\\n';\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_mrr_milestones','\\uD83D\\uDCC8 MRR Milestones')+'\\n';\n" +
-  "var maxQ=Math.min(Math.floor(mo/3),8);\n" +
-  "for(var q=1;q<=maxQ;q++){var mth=q*3;var mAt=mr*Math.pow(1+nr,mth);r+=tk('calc_out.revenue_projector.row.quarter_milestone','\\u2022 Q'+q+' (Month '+mth+'):  '+fmt(mAt)+'/mo',{q:String(q),month:String(mth),mrr:fmt(mAt)})+(q===maxQ?'  \\u2190 target':'')+'\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_key_milestones','\\uD83C\\uDFAF Key Milestones')+'\\n';\n" +
-  "var tgts=[10000,25000,50000,100000];var anyShown=false;\n" +
-  "if(mr>0&&nr>0){for(var ti=0;ti<tgts.length;ti++){var tg=tgts[ti];if(tg<=mr)continue;var mth2=mthsTo(tg);if(mth2!==null&&mth2>0){anyShown=true;if(mth2<=60){var fastR=nr+0.02;var slowR=Math.max(0.001,nr-0.02);var fastM=Math.ceil(Math.log(tg/mr)/Math.log(1+fastR));var slowM=Math.ceil(Math.log(tg/mr)/Math.log(1+slowR));r+=tk('calc_out.revenue_projector.row.milestone','\\u2022 $'+Math.round(tg/1000)+'K MRR:  '+mth2+' months ['+fastM+'\\u2013'+slowM+']',{target:'$'+Math.round(tg/1000)+'K MRR',months:String(mth2),fast:String(fastM),slow:String(slowM)})+'\\n';}else{r+=tk('calc_out.revenue_projector.row.milestone_far','\\u2022 $'+Math.round(tg/1000)+'K MRR:  >5 years',{target:'$'+Math.round(tg/1000)+'K MRR'})+'\\n';}}}}\n" +
-  "if(!anyShown&&mr>0){if(nr<=0){r+=tk('calc_out.revenue_projector.row.no_milestones','With zero or negative net growth, no milestones can be projected.')+'\\n';}}\n" +
-  "if(anyShown){r+=tk('calc_out.revenue_projector.row.milestone_range','  Range shows \\u00b12% net growth variation.')+'\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_monthly_mrr_breakdown','\\uD83D\\uDCC5 Monthly MRR Breakdown')+'\\n';\n" +
-  "var showMo=mo===12?12:Math.min(mo,6);\n" +
-  "for(var im=1;im<=showMo;im++){var mAtM=mr*Math.pow(1+nr,im);var dlt=mAtM-(mr*Math.pow(1+nr,im-1));r+=tk('calc_out.revenue_projector.row.month_progress','Month '+(' '+im).slice(-2)+':  '+fmt(mAtM)+'/mo  (+'+fmt(dlt)+')',{month:(' '+im).slice(-2),mrr:fmt(mAtM),delta:fmt(dlt)})+(im%3===0?'  \\u2190 Q'+(im/3):'')+'\\n';}\n" +
-  "if(mo>showMo){var endM=mr*Math.pow(1+nr,mo);var endD=endM-(mr*Math.pow(1+nr,mo-1));r+='  ...\\n';r+=tk('calc_out.revenue_projector.row.month_target','Month '+mo+':  '+fmt(endM)+'/mo  (+'+fmt(endD)+')  \\u2190 target',{month:String(mo),mrr:fmt(endM),delta:fmt(endD)})+'\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_growth_scenarios','\\uD83D\\uDD04 Growth Scenarios ('+mo+'-Month Outlook)',{months:String(mo)})+'\\n';\n" +
-  "if(mr>0){\n" +
-  "var scRates=[{r:Math.max(1,Math.round(nr*100*0.5)),c:'calc_out.label.growth_scenario_conservative',l:'\\uD83D\\uDC22 Conservative'},{r:Math.round(nr*100),c:'calc_out.label.growth_scenario_current_pace',l:'\\uD83D\\uDCC8 Current Pace'},{r:Math.max(1,Math.round(nr*100*1.5)),c:'calc_out.label.growth_scenario_aggressive',l:'\\uD83D\\uDE80 Aggressive'},{r:Math.min(50,Math.round(nr*100*2)),c:'calc_out.label.growth_scenario_hyper_growth',l:'\\uD83D\\uDD25 Hyper-Growth'}];\n" +
-  "var seen={};\n" +
-  "for(var si=0;si<scRates.length;si++){var sc=scRates[si];if(seen[sc.r]||sc.r<=0)continue;seen[sc.r]=true;\n" +
-  "var scEnd=mr*Math.pow(1+sc.r/100,mo);\n" +
-  "var sc10k=mr>0&&sc.r>0?Math.ceil(Math.log(10000/mr)/Math.log(1+sc.r/100)):null;\n" +
-  "r+='\\u2022 '+tk(sc.c,sc.l);\n" +
-  "r+=' '.repeat(Math.max(1,24-sc.l.length));\n" +
-  "r+='+'+pct(sc.r)+'/mo  \\u2192  '+fmt(scEnd)+'/mo';\n" +
-  "if(sc10k!==null&&sc10k>0)r+='  |  '+tk('calc_out.revenue_projector.row.to_10k','$10K in '+sc10k+' mo',{months:String(sc10k)});\n" +
-  "r+='\\n';}\n" +
-  "if(hasCustom){\n" +
-  "var cuEnd=mr*Math.pow(1+cNr,mo);\n" +
-  "var cu10k=mr>0&&cNr>0?Math.ceil(Math.log(10000/mr)/Math.log(1+cNr)):null;\n" +
-  "var cuLabel='\\u2022 \\uD83C\\uDFAF Custom (+'+pct(cgr)+'/mo)';\n" +
-  "r+='\\u2022 '+tk('calc_out.revenue_projector.row.custom_scenario','\\uD83C\\uDFAF Custom (+'+pct(cgr)+'/mo)',{rate:pct(cgr)});for(var cp=cuLabel.length;cp<24;cp++)r+=' ';\n" +
-  "r+='\\u2192  '+fmt(cuEnd)+'/mo';\n" +
-  "if(cu10k!==null&&cu10k>0)r+='  |  '+tk('calc_out.revenue_projector.row.to_10k','$10K in '+cu10k+' mo',{months:String(cu10k)});\n" +
-  "r+='\\n';\n" +
-  "}else{\n" +
-  "r+=tk('calc_out.revenue_projector.row.custom_hint','\\u2022 \\uD83C\\uDFAF Custom: enter a growth rate above to see your target')+'\\n';\n" +
-  "}\n" +
-  "}else{r+=tk('calc_out.revenue_projector.row.enter_mrr_scenarios','Enter your current MRR to see growth scenarios.')+'\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_what_if_analysis','\\uD83D\\uDD04 What-If Analysis')+'\\n';\n" +
-  "if(mr>0){\n" +
-  "if(cr>0){\n" +
-  "var cutCR=Math.max(0,cr-1);\n" +
-  "var cutNR=(gr-cutCR)/100;\n" +
-  "var cutEnd=mr*Math.pow(1+cutNR,mo);\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_cut_churn_head','A) Cut churn '+pct(cr)+' \\u2192 '+pct(cutCR)+':',{churn:pct(cr),cut:pct(cutCR)})+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_net_growth','   Net growth: +'+pct(nr*100)+' \\u2192 +'+pct(cutNR*100),{from:pct(nr*100),to:pct(cutNR*100)})+' | '+tk('calc_out.revenue_projector.row.whatif_end_mrr','End MRR: '+fmt(end)+' \\u2192 '+fmt(cutEnd)+' (+'+fmt(cutEnd-end)+')',{from:fmt(end),to:fmt(cutEnd),delta:fmt(cutEnd-end)})+'\\n\\n';\n" +
-  "}else{r+=tk('calc_out.revenue_projector.row.whatif_churn_zero','A) Churn is already 0% \\u2014 no improvement needed here.')+'\\n\\n';}\n" +
-  "var boostG=gr*1.2;var boostNR=(boostG-cr)/100;var boostEnd=mr*Math.pow(1+boostNR,mo);\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_boost_head','B) Boost gross growth +20%:')+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_gross','   Gross: +'+pct(gr)+' \\u2192 +'+pct(boostG),{from:pct(gr),to:pct(boostG)})+' | '+tk('calc_out.revenue_projector.row.whatif_end_mrr','End MRR: '+fmt(end)+' \\u2192 '+fmt(boostEnd)+' (+'+fmt(boostEnd-end)+')',{from:fmt(end),to:fmt(boostEnd),delta:fmt(boostEnd-end)})+'\\n\\n';\n" +
-  "if(ex>0){\n" +
-  "var redEx=ex*0.8;var sav=ex-redEx;\n" +
-  "if(isProf){\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_cut_expenses_head','C) Cut expenses 20%:')+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_expenses','   Expenses: '+fmt(ex)+'/mo \\u2192 '+fmt(redEx)+'/mo',{from:fmt(ex),to:fmt(redEx)})+' | '+tk('calc_out.revenue_projector.row.whatif_monthly_savings','Monthly savings: +'+fmt(sav)+'/mo',{savings:fmt(sav)})+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_profit_increase','   Profit increases: '+fmt(netInc)+'/mo \\u2192 '+fmt(netInc+sav)+'/mo',{from:fmt(netInc),to:fmt(netInc+sav)})+'\\n';\n" +
-  "}else{\n" +
-  "var newBurn=redEx-mr;var newRw=newBurn>0?cash/newBurn:Infinity;\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_cut_expenses_head','C) Cut expenses 20%:')+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_expenses','   Expenses: '+fmt(ex)+'/mo \\u2192 '+fmt(redEx)+'/mo',{from:fmt(ex),to:fmt(redEx)})+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_monthly_burn','   Monthly burn: '+fmt(mBurn)+'/mo \\u2192 '+(newBurn>0?fmt(newBurn)+'/mo':'profitable'),{from:fmt(mBurn),to:newBurn>0?fmt(newBurn)+'/mo':'profitable'})+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.whatif_runway','   Runway: '+(rCurr===Infinity?'\\u221e':rCurr.toFixed(1)+' mo')+' \\u2192 '+(newRw===Infinity?'\\u221e':newRw.toFixed(1)+' mo'),{from:rCurr===Infinity?'\\u221e':rCurr.toFixed(1)+' mo',to:newRw===Infinity?'\\u221e':newRw.toFixed(1)+' mo'})+'\\n';\n" +
-  "}\n" +
-  "}else{r+=tk('calc_out.revenue_projector.row.whatif_need_expenses','C) Enter monthly expenses to see cost-cutting impact.')+'\\n';}\n" +
-  "}else{r+=tk('calc_out.revenue_projector.row.enter_mrr_what_if','Enter your current MRR to see what-if scenarios.')+'\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_runway_breakeven','\\uD83D\\uDCB0 Runway & Breakeven')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.cash_on_hand','Cash on Hand')+':            '+fmt(cash)+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.monthly_expenses','Monthly Expenses')+':        '+fmt(ex)+'/mo\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.monthly_net_revenue','Monthly Net Revenue')+':     '+fmt(mr)+'/mo  (MRR)\\n\\n';\n" +
-  "if(isProf&&ex>0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.monthly_profit','Monthly Profit')+':          +'+fmt(netInc)+'  \\uD83D\\uDFE2 '+tk('calc_out.revenue_projector.row.revenue_covers_expenses','Revenue covers expenses.')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.runway_zero_revenue','Runway (zero-revenue)')+':   '+(rZero!==null?rZero.toFixed(1)+' months':'\\u2014')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.runway_current_pace','Runway (current pace)')+':   \\u221e (profitable)\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.breakeven','Breakeven')+':               '+tk('calc_out.revenue_projector.row.breakeven_already','\\u2705 Already breakeven')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.annualized_profit','Annualized Profit')+':       +'+fmt(annProfit)+'/yr\\n';\n" +
-  "}else if(ex>0&&nr>0&&beMonths!==null&&beMonths>0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.monthly_burn','Monthly Burn')+':            \\u2212'+fmt(mBurn)+'/mo  '+rColor(rCurr)+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.runway_zero_revenue','Runway (zero-revenue)')+':   '+(rZero!==null?rZero.toFixed(1)+' months':'\\u2014')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.runway_current_pace','Runway (current pace)')+':   '+rCurr.toFixed(1)+' months  '+rColor(rCurr)+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.breakeven','Breakeven')+':               '+tk('calc_out.revenue_projector.row.breakeven_in_months',beMonths+' months from now',{months:String(beMonths)})+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.breakeven_reaches','  \\u2192 MRR reaches '+fmt(ex)+'/mo covering all expenses.',{amount:fmt(ex)+'/mo'})+'\\n';\n" +
-  "}else if(ex>0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.monthly_burn','Monthly Burn')+':            \\u2212'+fmt(mBurn)+'/mo  '+rColor(rCurr)+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.runway_zero_revenue','Runway (zero-revenue)')+':   '+(rZero!==null?rZero.toFixed(1)+' months':'\\u2014')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.runway_current_pace','Runway (current pace)')+':   '+(rCurr===Infinity?'\\u221e':rCurr.toFixed(1)+' months')+'  '+rColor(rCurr)+'\\n';\n" +
-  "if(beMonths===null){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.breakeven','Breakeven')+':               '+tk('calc_out.revenue_projector.row.breakeven_not_reachable','Not reachable at current growth rate.')+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.cut_expenses_now','  \\u2192 Cut expenses or boost growth immediately.')+'\\n';\n" +
-  "}\n" +
-  "}else{r+=tk('calc_out.revenue_projector.row.need_monthly_expenses_runway','Enter your monthly expenses to see runway and breakeven analysis.')+'\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_burn_efficiency_metrics','\\uD83E\\uDE7A Burn & Efficiency Metrics')+'\\n';\n" +
-  "if(ex>0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.gross_burn','Gross Burn')+':              '+fmt(ex)+'/mo  ('+tk('calc_out.revenue_projector.row.total_expenses','total expenses')+')\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.net_burn','Net Burn')+':                '+(mBurn>0?'\\u2212'+fmt(mBurn)+'/mo':'+'+fmt(-mBurn)+'/mo (profit)')+'  '+(isProf?'\\uD83D\\uDFE2':'\\uD83D\\uDD34')+'\\n\\n';\n" +
-  "if(bm!==null){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.burn_multiple','Burn Multiple')+':           '+bm.toFixed(1)+'\\u00d7  '+bmColor(bm)+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.burn_multiple_legend','  = net burn \\u00f7 net new MRR')+' | <1.0\\u00d7 \\uD83D\\uDFE2 | 1.0\\u20132.0\\u00d7 \\uD83D\\uDFE1 | >2.0\\u00d7 \\uD83D\\uDD34\\n\\n';\n" +
-  "}else if(isProf){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.burn_multiple','Burn Multiple')+':           '+tk('calc_out.revenue_projector.row.burn_multiple_na_profitable','N/A (profitable)')+'\\n\\n';\n" +
-  "}else{\n" +
-  "r+='\\u2022 '+tk('calc_out.label.burn_multiple','Burn Multiple')+':           '+tk('calc_out.revenue_projector.row.burn_multiple_na_no_new_mrr','N/A (no net new MRR)')+'\\n\\n';\n" +
-  "}\n" +
-  "r+='\\u2022 '+tk('calc_out.label.rule_of_40','Rule of 40')+':              '+pct(r40)+'  '+r40Color(r40)+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.rule_of_40_legend','  = net growth '+pct(nr*100)+' + profit margin '+pct(pMargin),{growth:pct(nr*100),margin:pct(pMargin)})+'\\n';\n" +
-  "r+='  | \\u226540% \\uD83D\\uDFE2 | 20-40% \\uD83D\\uDFE1 | <20% \\uD83D\\uDD34\\n\\n';\n" +
-  "if(mrrExp!==null){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.mrr_expense_ratio','MRR / Expense Ratio')+':     '+mrrExp.toFixed(2)+'\\u00d7  '+r2Color(mrrExp)+'\\n';\n" +
-  "r+='  \\u22652.0 \\uD83D\\uDFE2 | 1.0-2.0 \\uD83D\\uDFE1 | <1.0 \\uD83D\\uDD34\\n\\n';\n" +
-  "}\n" +
-  "if(arpu>0&&cr>0){\n" +
-  "var ltv=arpu/(cr/100);var ltvR=ltv/arpu;\n" +
-  "function ltvColor(r){if(r>=36)return '\\uD83D\\uDFE2';if(r>=12)return '\\uD83D\\uDFE1';return '\\uD83D\\uDD34';}\n" +
-  "r+='\\u2022 '+tk('calc_out.label.ltv_customer_lifetime','LTV (Customer Lifetime)')+': '+fmt(ltv)+'  ('+ltvR.toFixed(0)+'\\u00d7 ARPU)  '+ltvColor(ltvR)+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.ltv_legend','  = ARPU \\u00f7 monthly churn')+' | \\u226536\\u00d7 \\uD83D\\uDFE2 | 12-36\\u00d7 \\uD83D\\uDFE1 | <12\\u00d7 \\uD83D\\uDD34\\n\\n';\n" +
-  "}else if(arpu>0&&cr===0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.ltv_customer_lifetime','LTV (Customer Lifetime)')+': \\u221e  (zero churn) \\uD83D\\uDFE2\\n\\n';\n" +
-  "}\n" +
-  "}else{r+=tk('calc_out.revenue_projector.row.need_monthly_expenses_burn','Enter monthly expenses to see burn and efficiency metrics.')+'\\n\\n';}\n" +
-  "if(cac>0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.cac_customer_acq_cost','CAC (Customer Acq. Cost)')+': '+fmt(cac)+'\\n';\n" +
-  "if(cacPb!==null){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.cac_payback_period','CAC Payback Period')+':       '+cacPb.toFixed(1)+' months  '+pbColor(cacPb)+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.cac_payback_legend','  = CAC \\u00f7 (ARPU \\u00d7 (1 \\u2212 churn rate))')+' | <12mo \\uD83D\\uDFE2 | 12-24mo \\uD83D\\uDFE1 | >24mo \\uD83D\\uDD34\\n';\n" +
-  "}else if(arpu<=0||cr<=0){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.cac_payback_period','CAC Payback Period')+':       '+tk('calc_out.revenue_projector.row.enter_arpu_and_churn','\\u2014 (enter ARPU and churn rate)')+'\\n';\n" +
-  "}\n" +
-  "if(ltvCRatio!==null){\n" +
-  "r+='\\u2022 '+tk('calc_out.label.ltv_cac_ratio','LTV:CAC Ratio')+':            '+ltvCRatio.toFixed(1)+'\\u00d7  '+lcColor(ltvCRatio)+'\\n';\n" +
-  "r+=tk('calc_out.revenue_projector.row.ltv_cac_legend','  = LTV \\u00f7 CAC')+' | \\u22653\\u00d7 \\uD83D\\uDFE2 | 1-3\\u00d7 \\uD83D\\uDFE1 | <1\\u00d7 \\uD83D\\uDD34\\n';\n" +
-  "}\n" +
-  "r+='\\n';\n" +
-  "}\n" +
-  "if(arpu>0&&subs>0){r+='\\u2022 '+tk('calc_out.label.monthly_arpu','Monthly ARPU')+':            '+fmt(arpu)+'\\n';r+='\\u2022 '+tk('calc_out.label.subscribers','Subscribers')+':             '+subs+' (currentMrr \\u00f7 ARPU)\\n';}\n" +
-  "r+='\\n'+tk('calc_out.section.revenue_projector_action_plan','\\uD83C\\uDFAF Action Plan')+'\\n';\n" +
-  "r+='\\u2022 '+tk('calc_out.label.stage','Stage')+': '+phase(mr)+'\\n';\n" +
-  "if(isProf&&ex>0)r+=tk('calc_out.revenue_projector.row.burn_profitable','\\u2022 Burn:  \\u2705 Profitable \\u2014 reinvest 30% of profit into growth.')+'\\n';\n" +
-  "else if(ex>0&&rCurr>=12)r+=tk('calc_out.revenue_projector.row.burn_healthy_runway','\\u2022 Burn:  \\uD83D\\uDFE1 Burning cash but healthy runway. Watch burn rate.')+'\\n';\n" +
-  "else if(ex>0&&rCurr<12)r+=tk('calc_out.revenue_projector.row.burn_critical','\\u2022 Burn:  \\uD83D\\uDD34 Critical runway \\u2014 cut costs or accelerate revenue.')+'\\n';\n" +
-  "else r+=tk('calc_out.revenue_projector.row.burn_need_expenses','\\u2022 Burn:  Enter expenses to assess burn.')+'\\n';\n" +
-  "if(nr>=0.1)r+=tk('calc_out.revenue_projector.row.growth_exceptional','\\u2022 Growth: \\uD83D\\uDD25 Exceptional (+'+pct(nr*100)+' net) \\u2014 sustain by staying close to customers.',{rate:pct(nr*100)})+'\\n';\n" +
-  "else if(nr>=0.05)r+=tk('calc_out.revenue_projector.row.growth_strong','\\u2022 Growth: \\uD83D\\uDE80 Strong (+'+pct(nr*100)+' net) \\u2014 compound is working for you.',{rate:pct(nr*100)})+'\\n';\n" +
-  "else if(nr>0)r+=tk('calc_out.revenue_projector.row.growth_steady','\\u2022 Growth: \\uD83D\\uDCC8 Steady (+'+pct(nr*100)+' net) \\u2014 small gains compound over time.',{rate:pct(nr*100)})+'\\n';\n" +
-  "else if(mr>0)r+=tk('calc_out.revenue_projector.row.growth_stalled','\\u2022 Growth: \\uD83D\\uDC22 Stalled ('+pct(nr*100)+' net) \\u2014 add a second acquisition channel.',{rate:pct(nr*100)})+'\\n';\n" +
-  "if(isProf&&nr>=0.03)r+=tk('calc_out.revenue_projector.row.risk_low','\\u2022 Risk:  \\uD83D\\uDFE2 Low \\u2014 profitable + growing. Focus on moat and scale.')+'\\n';\n" +
-  "else if(isProf&&nr>0)r+=tk('calc_out.revenue_projector.row.risk_moderate','\\u2022 Risk:  \\uD83D\\uDFE1 Moderate \\u2014 profitable but slow growth. Boost marketing.')+'\\n';\n" +
-  "else if(!isProf&&rCurr>=12)r+=tk('calc_out.revenue_projector.row.risk_manageable','\\u2022 Risk:  \\uD83D\\uDFE1 Manageable \\u2014 burning but decent runway. Plan breakeven path.')+'\\n';\n" +
-  "else if(!isProf&&rCurr<12&&rCurr>=6)r+=tk('calc_out.revenue_projector.row.risk_elevated','\\u2022 Risk:  \\uD83D\\uDFE0 Elevated \\u2014 under 12 months runway. Prioritize revenue growth.')+'\\n';\n" +
-  "else if(!isProf&&rCurr<6)r+=tk('calc_out.revenue_projector.row.risk_urgent','\\u2022 Risk:  \\uD83D\\uDD34 Urgent \\u2014 under 6 months runway. Cut expenses now.')+'\\n';\n" +
-  "var prio=1;r+='\\n'+tk('calc_out.section.revenue_projector_top_priorities','\\uD83D\\uDD25 Top Priorities:')+'\\n';\n" +
-  "if(cr>0&&mr>0){\n" +
-  "var fasterCut=Math.max(0,cr-1);\n" +
-  "r+=tk('calc_out.revenue_projector.row.priority_cut_churn','  '+prio+'. Cut churn from '+pct(cr)+' \\u2192 '+pct(fasterCut)+' \\u2192 $10K MRR sooner.',{n:String(prio),churn:pct(cr),cut:pct(fasterCut)})+'\\n';\n" +
-  "prio++;}\n" +
-  "if(isProf&&ex>0){r+=tk('calc_out.revenue_projector.row.priority_reinvest','  '+prio+'. With '+fmt(netInc)+'/mo profit, reinvest in ads or part-time help.',{n:String(prio),profit:fmt(netInc)+'/mo'})+'\\n';prio++;}\n" +
-  "if(rCurr<12&&mr>0){r+=tk('calc_out.revenue_projector.row.priority_runway','  '+prio+'. Runway under 12 months \\u2014 build a breakeven plan this week.',{n:String(prio)})+'\\n';prio++;}\n" +
-  "if(nr<0.02&&mr>0){r+=tk('calc_out.revenue_projector.row.priority_growth','  '+prio+'. Growth under 2%/mo \\u2014 test one new acquisition channel.',{n:String(prio)})+'\\n';prio++;}\n" +
-  "if(prio===1){r+=tk('calc_out.revenue_projector.row.priority_healthy','  1. Runway is healthy. Focus on product quality and customer retention.')+'\\n';}\n" +
-  "if(mr>0||ex>0){var beMRR2=ex;var beLab=mr>=beMRR2?'\\uD83D\\uDFE2':'\\uD83D\\uDD34';r+='\\n'+tk('calc_out.section.revenue_projector_break_even_revenue','\\u2696\\uFE0F Break-Even Revenue')+'\\n';r+='\\u2022 '+beLab+' '+tk('calc_out.label.break_even_mrr','Break-even MRR')+': '+fmt(ex)+'/mo ('+tk('calc_out.revenue_projector.row.covers_monthly_expenses','covers monthly expenses')+')\\n';if(mr>=beMRR2){r+=tk('calc_out.revenue_projector.row.current_mrr_above_breakeven','\\u2022 Current MRR '+fmt(mr)+' is above break-even by '+fmt(mr-beMRR2)+'/mo.',{mrr:fmt(mr),gap:fmt(mr-beMRR2)+'/mo'})+'\\n';}else{var gap2=beMRR2-mr;r+=tk('calc_out.revenue_projector.row.gap_to_break_even','\\u2022 Gap to break-even: '+fmt(gap2)+'/mo. Closing this puts you at default-alive.',{gap:fmt(gap2)+'/mo'})+'\\n';}}\n" +
-  "var tipStr;\n" +
-  "if(cash>0&&rCurr>18){tipStr=tk('calc_out.revenue_projector.row.tip_runway_18','\\uD83D\\uDCA1 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) \\u2014 not conservative hoarding.');}\n" +
-  "else if(rCurr>0&&rCurr<=6){tipStr=tk('calc_out.revenue_projector.row.tip_sub6','\\uD83D\\uDCA1 Tip: Sub-6-month runway means raise now or cut hard. Delaying 30 days = raising from a weaker position. Cut discretionary spend first.');}\n" +
-  "else if(mBurn>0&&mr>0&&mr/ex<0.3){tipStr=tk('calc_out.revenue_projector.row.tip_low_coverage','\\uD83D\\uDCA1 Tip: Your revenue covers under 30% of expenses. Focus 80% of effort on the 1-2 channels with highest ROI, not on cost-cutting.');}\n" +
-  "else{tipStr=tk('calc_out.revenue_projector.row.tip_reproject','\\uD83D\\uDCA1 Tip: Re-project monthly. Inputs change (churn, hiring, ad costs). The plan that got you here won\\'t get you there.');}\n" +
-  "r+='\\n'+tipStr+'\\n';\n" +
-  "return [r];\n";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let R=function(v){return Number.isNaN(v)?0:Math.max(0,v)},L=function(v){const o=r=>"$"+Math.round(r).toLocaleString(),l=r=>r.toFixed(1)+"%",n=R(parseFloat(v.currentMrr)||0),x=R(parseFloat(v.monthlyGrowthRate)||0),s=R(parseFloat(v.monthlyChurnRate)||0),u=R(parseFloat(v.monthlyExpenses)||0),F=R(parseFloat(v.cashOnHand)||0),b=R(parseFloat(v.arpu)||0),E=R(parseFloat(v.customGrowthRate)||0),C=R(parseFloat(v.cac)||0),i=R(parseInt(v.months)||12),c=(x-s)/100,ht=(Math.pow(1+c,12)-1)*100,d=n*Math.pow(1+c,i);let U=0;for(let r=1;r<=i;r++)U+=n*Math.pow(1+c,r);const X=n>0?d/n:0,V=b>0?Math.round(n/b):0,j=n-u,T=j*12,G=n>0?j/n*100:0,M=j>=0,N=E>0?(E-s)/100:0,k=E>0,K=C>0&&b>0&&s>0&&s<100?C/(b*(1-s/100)):null;function tt(r){return r<=12?"🟢":r<=24?"🟡":"🔴"}const H=b>0&&s>0?b/(s/100):0,$=C>0&&H>0?H/C:null;function et(r){return r>=3?"🟢":r>=1?"🟡":"🔴"}const S=u>0?F/u:null,y=u-n,p=y>0?F/y:1/0;function B(r){return r===1/0||r>=18?"🟢":r>=6?"🟡":"🔴"}let m=null;n>=u&&u>0?m=0:n>0&&c>0&&u>0&&(m=Math.ceil(Math.log(u/n)/Math.log(1+c)));const Q=n*c,q=y>0&&Q>0?y/Q:null;function rt(r){return r<1?"🟢":r<=2?"🟡":"🔴"}const z=u>0?n/u:null;function ot(r){return r>=2?"🟢":r>=1?"🟡":"🔴"}const W=c*100+G;function nt(r){return r>=40?"🟢":r>=20?"🟡":"🔴"}function ct(r){return n<=0||c<=0?null:n>=r?0:Math.ceil(Math.log(r/n)/Math.log(1+c))}function lt(r){return r>=10?t("calc_out.label.growth_status_exceptional","🟢 Exceptional"):r>=5?t("calc_out.label.growth_status_healthy","🟡 Healthy"):r>=0?t("calc_out.label.growth_status_slow","🟠 Slow"):t("calc_out.label.growth_status_shrinking","🔴 Shrinking")}function ut(r){return r<1e3?t("calc_out.label.phase_validation","Validation (<$1K MRR)"):r<1e4?t("calc_out.label.phase_early_traction","Early Traction ($1K–$10K MRR)"):r<1e5?t("calc_out.label.phase_scaling","Scaling ($10K–$100K MRR)"):t("calc_out.label.phase_growth","Growth (>$100K MRR)")}let e="";e+=t("calc_out.section.revenue_projector_revenue_snapshot","📊 Revenue Snapshot")+\`
+
+\`,e+="• "+t("calc_out.label.starting_mrr","Starting MRR")+":           "+o(n)+\`/mo
+\`,e+="• "+t("calc_out.label.ending_mrr","Ending MRR")+":             "+o(d)+"/mo  ("+t("calc_out.revenue_projector.row.after_n_months","after "+i+" months",{months:String(i)})+\`)
+\`,e+="• "+t("calc_out.label.arr_equivalent","ARR Equivalent")+":         "+o(d*12)+\`/yr
+\`,e+="• "+t("calc_out.label.total_revenue","Total Revenue")+":          "+o(U)+" "+t("calc_out.revenue_projector.row.over_n_months","over "+i+" months",{months:String(i)})+\`
+
+\`,e+="• "+t("calc_out.label.gross_monthly_growth","Gross Monthly Growth")+":   +"+l(x)+"  ("+t("calc_out.revenue_projector.row.new_and_expansion","new + expansion")+\`)
+\`,e+="• "+t("calc_out.label.monthly_churn","Monthly Churn")+":          −"+l(s)+"  ("+t("calc_out.revenue_projector.row.lost_revenue","lost revenue")+\`)
+\`,e+="• "+t("calc_out.label.net_monthly_growth","Net Monthly Growth")+":     "+(c>=0?"+":"")+l(c*100)+"  ("+t("calc_out.revenue_projector.row.effective","effective")+")  "+lt(c*100)+\`
+\`,e+="• "+t("calc_out.label.growth_multiple","Growth Multiple")+":        "+X.toFixed(1)+"×   ("+t("calc_out.revenue_projector.row.n_month_mrr_expansion",i+"-month MRR expansion",{months:String(i)})+\`)
+\`,e+=\`
+\`+t("calc_out.section.revenue_projector_mrr_milestones","📈 MRR Milestones")+\`
+\`;const D=Math.min(Math.floor(i/3),8);for(let r=1;r<=D;r++){const _=r*3,a=n*Math.pow(1+c,_);e+=t("calc_out.revenue_projector.row.quarter_milestone","• Q"+r+" (Month "+_+"):  "+o(a)+"/mo",{q:String(r),month:String(_),mrr:o(a)})+(r===D?"  ← target":"")+\`
+\`}e+=\`
+\`+t("calc_out.section.revenue_projector_key_milestones","🎯 Key Milestones")+\`
+\`;const at=[1e4,25e3,5e4,1e5];let I=!1;if(n>0&&c>0){for(const r of at){if(r<=n)continue;const _=ct(r);if(_!==null&&_>0)if(I=!0,_<=60){const a=c+.02,h=Math.max(.001,c-.02),w=Math.ceil(Math.log(r/n)/Math.log(1+a)),f=Math.ceil(Math.log(r/n)/Math.log(1+h));e+=t("calc_out.revenue_projector.row.milestone","• $"+Math.round(r/1e3)+"K MRR:  "+_+" months ["+w+"–"+f+"]",{target:"$"+Math.round(r/1e3)+"K MRR",months:String(_),fast:String(w),slow:String(f)})+\`
+\`}else e+=t("calc_out.revenue_projector.row.milestone_far","• $"+Math.round(r/1e3)+"K MRR:  >5 years",{target:"$"+Math.round(r/1e3)+"K MRR"})+\`
+\`}I&&(e+=t("calc_out.revenue_projector.row.milestone_range","  Range shows ±2% net growth variation.")+\`
+\`)}!I&&n>0&&c<=0&&(e+=t("calc_out.revenue_projector.row.no_milestones","With zero or negative net growth, no milestones can be projected.")+\`
+\`),e+=\`
+\`+t("calc_out.section.revenue_projector_monthly_mrr_breakdown","📅 Monthly MRR Breakdown")+\`
+\`;const J=i===12?12:Math.min(i,6);for(let r=1;r<=J;r++){const _=n*Math.pow(1+c,r),a=_-n*Math.pow(1+c,r-1);e+=t("calc_out.revenue_projector.row.month_progress","Month "+String(r).padStart(2," ")+":  "+o(_)+"/mo  (+"+o(a)+")",{month:String(r).padStart(2," "),mrr:o(_),delta:o(a)})+(r%3===0?"  ← Q"+r/3:"")+\`
+\`}if(i>J){const r=n*Math.pow(1+c,i),_=r-n*Math.pow(1+c,i-1);e+=\`  ...
+\`,e+=t("calc_out.revenue_projector.row.month_target","Month "+i+":  "+o(r)+"/mo  (+"+o(_)+")  ← target",{month:String(i),mrr:o(r),delta:o(_)})+\`
+\`}if(e+=\`
+\`+t("calc_out.section.revenue_projector_growth_scenarios","🔄 Growth Scenarios ("+i+"-Month Outlook)",{months:String(i)})+\`
+\`,n>0){const r=[{r:Math.max(1,Math.round(c*100*.5)),code:"calc_out.label.growth_scenario_conservative",label:"🐢 Conservative"},{r:Math.round(c*100),code:"calc_out.label.growth_scenario_current_pace",label:"📈 Current Pace"},{r:Math.max(1,Math.round(c*100*1.5)),code:"calc_out.label.growth_scenario_aggressive",label:"🚀 Aggressive"},{r:Math.min(50,Math.round(c*100*2)),code:"calc_out.label.growth_scenario_hyper_growth",label:"🔥 Hyper-Growth"}],_=new Set;for(const a of r){if(_.has(a.r)||a.r<=0)continue;_.add(a.r);const h=n*Math.pow(1+a.r/100,i),w=n>0&&a.r>0?Math.ceil(Math.log(1e4/n)/Math.log(1+a.r/100)):null;e+="• "+t(a.code,a.label),e+=" ".repeat(Math.max(1,24-a.label.length)),e+="+"+l(a.r)+"/mo  →  "+o(h)+"/mo",w!==null&&w>0&&(e+="  |  "+t("calc_out.revenue_projector.row.to_10k","$10K in "+w+" mo",{months:String(w)})),e+=\`
+\`}if(k){const a=n*Math.pow(1+N,i),h=n>0&&N>0?Math.ceil(Math.log(1e4/n)/Math.log(1+N)):null,w="🎯 Custom (+"+l(E)+"/mo)";e+="• "+t("calc_out.revenue_projector.row.custom_scenario",w,{rate:l(E)});for(let f=w.length;f<24;f++)e+=" ";e+="→  "+o(a)+"/mo",h!==null&&h>0&&(e+="  |  "+t("calc_out.revenue_projector.row.to_10k","$10K in "+h+" mo",{months:String(h)})),e+=\`
+\`}else e+=t("calc_out.revenue_projector.row.custom_hint","• 🎯 Custom: enter a growth rate above to see your target")+\`
+\`}else e+=t("calc_out.revenue_projector.row.enter_mrr_scenarios","Enter your current MRR to see growth scenarios.")+\`
+\`;if(e+=\`
+\`+t("calc_out.section.revenue_projector_what_if_analysis","🔄 What-If Analysis")+\`
+\`,n>0){if(s>0){const h=Math.max(0,s-1),w=(x-h)/100,f=n*Math.pow(1+w,i);e+=t("calc_out.revenue_projector.row.whatif_cut_churn_head","A) Cut churn "+l(s)+" → "+l(h)+":",{churn:l(s),cut:l(h)})+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_net_growth","   Net growth: +"+l(c*100)+" → +"+l(w*100),{from:l(c*100),to:l(w*100)})+" | "+t("calc_out.revenue_projector.row.whatif_end_mrr","End MRR: "+o(d)+" → "+o(f)+" (+"+o(f-d)+")",{from:o(d),to:o(f),delta:o(f-d)})+\`
+
+\`}else e+=t("calc_out.revenue_projector.row.whatif_churn_zero","A) Churn is already 0% — no improvement needed here.")+\`
+
+\`;const r=x*1.2,_=(r-s)/100,a=n*Math.pow(1+_,i);if(e+=t("calc_out.revenue_projector.row.whatif_boost_head","B) Boost gross growth +20%:")+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_gross","   Gross: +"+l(x)+" → +"+l(r),{from:l(x),to:l(r)})+" | "+t("calc_out.revenue_projector.row.whatif_end_mrr","End MRR: "+o(d)+" → "+o(a)+" (+"+o(a-d)+")",{from:o(d),to:o(a),delta:o(a-d)})+\`
+
+\`,u>0){const h=u*.8,w=u-h;if(M)e+=t("calc_out.revenue_projector.row.whatif_cut_expenses_head","C) Cut expenses 20%:")+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_expenses","   Expenses: "+o(u)+"/mo → "+o(h)+"/mo",{from:o(u),to:o(h)})+" | "+t("calc_out.revenue_projector.row.whatif_monthly_savings","Monthly savings: +"+o(w)+"/mo",{savings:o(w)})+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_profit_increase","   Profit increases: "+o(j)+"/mo → "+o(j+w)+"/mo",{from:o(j),to:o(j+w)})+\`
+\`;else{const f=h-n,P=f>0?F/f:1/0;e+=t("calc_out.revenue_projector.row.whatif_cut_expenses_head","C) Cut expenses 20%:")+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_expenses","   Expenses: "+o(u)+"/mo → "+o(h)+"/mo",{from:o(u),to:o(h)})+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_monthly_burn","   Monthly burn: "+o(y)+"/mo → "+(f>0?o(f)+"/mo":"profitable"),{from:o(y),to:f>0?o(f)+"/mo":"profitable"})+\`
+\`,e+=t("calc_out.revenue_projector.row.whatif_runway","   Runway: "+(p===1/0?"∞":p.toFixed(1)+" mo")+" → "+(P===1/0?"∞":P.toFixed(1)+" mo"),{from:p===1/0?"∞":p.toFixed(1)+" mo",to:P===1/0?"∞":P.toFixed(1)+" mo"})+\`
+\`}}else e+=t("calc_out.revenue_projector.row.whatif_need_expenses","C) Enter monthly expenses to see cost-cutting impact.")+\`
+\`}else e+=t("calc_out.revenue_projector.row.enter_mrr_what_if","Enter your current MRR to see what-if scenarios.")+\`
+\`;if(e+=\`
+\`+t("calc_out.section.revenue_projector_runway_breakeven","💰 Runway & Breakeven")+\`
+\`,e+="• "+t("calc_out.label.cash_on_hand","Cash on Hand")+":            "+o(F)+\`
+\`,e+="• "+t("calc_out.label.monthly_expenses","Monthly Expenses")+":        "+o(u)+\`/mo
+\`,e+="• "+t("calc_out.label.monthly_net_revenue","Monthly Net Revenue")+":     "+o(n)+\`/mo  (MRR)
+
+\`,M&&u>0?(e+="• "+t("calc_out.label.monthly_profit","Monthly Profit")+":          +"+o(j)+"  🟢 "+t("calc_out.revenue_projector.row.revenue_covers_expenses","Revenue covers expenses.")+\`
+\`,e+="• "+t("calc_out.label.runway_zero_revenue","Runway (zero-revenue)")+":   "+(S!==null?S.toFixed(1)+" months":"—")+\`
+\`,e+="• "+t("calc_out.label.runway_current_pace","Runway (current pace)")+\`:   ∞ (profitable)
+\`,e+="• "+t("calc_out.label.breakeven","Breakeven")+":               "+t("calc_out.revenue_projector.row.breakeven_already","✅ Already breakeven")+\`
+\`,e+="• "+t("calc_out.label.annualized_profit","Annualized Profit")+":       +"+o(T)+\`/yr
+\`):u>0&&c>0&&m!==null&&m>0?(e+="• "+t("calc_out.label.monthly_burn","Monthly Burn")+":            −"+o(y)+"/mo  "+B(p)+\`
+\`,e+="• "+t("calc_out.label.runway_zero_revenue","Runway (zero-revenue)")+":   "+(S!==null?S.toFixed(1)+" months":"—")+\`
+\`,e+="• "+t("calc_out.label.runway_current_pace","Runway (current pace)")+":   "+p.toFixed(1)+" months  "+B(p)+\`
+\`,e+="• "+t("calc_out.label.breakeven","Breakeven")+":               "+t("calc_out.revenue_projector.row.breakeven_in_months",m+" months from now",{months:String(m)})+\`
+\`,e+=t("calc_out.revenue_projector.row.breakeven_reaches","  → MRR reaches "+o(u)+"/mo covering all expenses.",{amount:o(u)+"/mo"})+\`
+\`):u>0?(e+="• "+t("calc_out.label.monthly_burn","Monthly Burn")+":            −"+o(y)+"/mo  "+B(p)+\`
+\`,e+="• "+t("calc_out.label.runway_zero_revenue","Runway (zero-revenue)")+":   "+(S!==null?S.toFixed(1)+" months":"—")+\`
+\`,e+="• "+t("calc_out.label.runway_current_pace","Runway (current pace)")+":   "+(p===1/0?"∞":p.toFixed(1)+" months")+"  "+B(p)+\`
+\`,m===null&&(e+="• "+t("calc_out.label.breakeven","Breakeven")+":               "+t("calc_out.revenue_projector.row.breakeven_not_reachable","Not reachable at current growth rate.")+\`
+\`,e+=t("calc_out.revenue_projector.row.cut_expenses_now","  → Cut expenses or boost growth immediately.")+\`
+\`)):e+=t("calc_out.revenue_projector.row.need_monthly_expenses_runway","Enter your monthly expenses to see runway and breakeven analysis.")+\`
+\`,e+=\`
+\`+t("calc_out.section.revenue_projector_burn_efficiency_metrics","🩺 Burn & Efficiency Metrics")+\`
+\`,u>0)if(e+="• "+t("calc_out.label.gross_burn","Gross Burn")+":              "+o(u)+"/mo  ("+t("calc_out.revenue_projector.row.total_expenses","total expenses")+\`)
+\`,e+="• "+t("calc_out.label.net_burn","Net Burn")+":                "+(y>0?"−"+o(y)+"/mo":"+"+o(-y)+"/mo (profit)")+"  "+(M?"🟢":"🔴")+\`
+
+\`,q!==null?(e+="• "+t("calc_out.label.burn_multiple","Burn Multiple")+":           "+q.toFixed(1)+"×  "+rt(q)+\`
+\`,e+=t("calc_out.revenue_projector.row.burn_multiple_legend","  = net burn ÷ net new MRR")+\` | <1.0× 🟢 | 1.0–2.0× 🟡 | >2.0× 🔴
+
+\`):M?e+="• "+t("calc_out.label.burn_multiple","Burn Multiple")+":           "+t("calc_out.revenue_projector.row.burn_multiple_na_profitable","N/A (profitable)")+\`
+
+\`:e+="• "+t("calc_out.label.burn_multiple","Burn Multiple")+":           "+t("calc_out.revenue_projector.row.burn_multiple_na_no_new_mrr","N/A (no net new MRR)")+\`
+
+\`,e+="• "+t("calc_out.label.rule_of_40","Rule of 40")+":              "+l(W)+"  "+nt(W)+\`
+\`,e+=t("calc_out.revenue_projector.row.rule_of_40_legend","  = net growth "+l(c*100)+" + profit margin "+l(G),{growth:l(c*100),margin:l(G)})+\`
+\`,e+=\`  | ≥40% 🟢 | 20-40% 🟡 | <20% 🔴
+
+\`,z!==null&&(e+="• "+t("calc_out.label.mrr_expense_ratio","MRR / Expense Ratio")+":     "+z.toFixed(2)+"×  "+ot(z)+\`
+\`,e+=\`  ≥2.0 🟢 | 1.0-2.0 🟡 | <1.0 🔴
+
+\`),b>0&&s>0){let a=function(h){return h>=36?"🟢":h>=12?"🟡":"🔴"};var pt=a;const r=b/(s/100),_=r/b;e+="• "+t("calc_out.label.ltv_customer_lifetime","LTV (Customer Lifetime)")+": "+o(r)+"  ("+_.toFixed(0)+"× ARPU)  "+a(_)+\`
+\`,e+=t("calc_out.revenue_projector.row.ltv_legend","  = ARPU ÷ monthly churn")+\` | ≥36× 🟢 | 12-36× 🟡 | <12× 🔴
+
+\`}else b>0&&s===0&&(e+="• "+t("calc_out.label.ltv_customer_lifetime","LTV (Customer Lifetime)")+\`: ∞  (zero churn) 🟢
+
+\`);else e+=t("calc_out.revenue_projector.row.need_monthly_expenses_burn","Enter monthly expenses to see burn and efficiency metrics.")+\`
+
+\`;C>0&&(e+="• "+t("calc_out.label.cac_customer_acq_cost","CAC (Customer Acq. Cost)")+": "+o(C)+\`
+\`,K!==null?(e+="• "+t("calc_out.label.cac_payback_period","CAC Payback Period")+":       "+K.toFixed(1)+" months  "+tt(K)+\`
+\`,e+=t("calc_out.revenue_projector.row.cac_payback_legend","  = CAC ÷ (ARPU × (1 − churn rate))")+\` | <12mo 🟢 | 12-24mo 🟡 | >24mo 🔴
+\`):(b<=0||s<=0)&&(e+="• "+t("calc_out.label.cac_payback_period","CAC Payback Period")+":       "+t("calc_out.revenue_projector.row.enter_arpu_and_churn","— (enter ARPU and churn rate)")+\`
+\`),$!==null&&(e+="• "+t("calc_out.label.ltv_cac_ratio","LTV:CAC Ratio")+":            "+$.toFixed(1)+"×  "+et($)+\`
+\`,e+=t("calc_out.revenue_projector.row.ltv_cac_legend","  = LTV ÷ CAC")+\` | ≥3× 🟢 | 1-3× 🟡 | <1× 🔴
+\`),e+=\`
+\`),b>0&&V>0&&(e+="• "+t("calc_out.label.monthly_arpu","Monthly ARPU")+":            "+o(b)+\`
+\`,e+="• "+t("calc_out.label.subscribers","Subscribers")+":             "+V+\` (currentMrr ÷ ARPU)
+\`),e+=\`
+\`+t("calc_out.section.revenue_projector_action_plan","🎯 Action Plan")+\`
+\`,e+="• "+t("calc_out.label.stage","Stage")+": "+ut(n)+\`
+\`,M&&u>0?e+=t("calc_out.revenue_projector.row.burn_profitable","• Burn:  ✅ Profitable — reinvest 30% of profit into growth.")+\`
+\`:u>0&&p>=12?e+=t("calc_out.revenue_projector.row.burn_healthy_runway","• Burn:  🟡 Burning cash but healthy runway. Watch burn rate.")+\`
+\`:u>0&&p<12?e+=t("calc_out.revenue_projector.row.burn_critical","• Burn:  🔴 Critical runway — cut costs or accelerate revenue.")+\`
+\`:e+=t("calc_out.revenue_projector.row.burn_need_expenses","• Burn:  Enter expenses to assess burn.")+\`
+\`,c>=.1?e+=t("calc_out.revenue_projector.row.growth_exceptional","• Growth: 🔥 Exceptional (+"+l(c*100)+" net) — sustain by staying close to customers.",{rate:l(c*100)})+\`
+\`:c>=.05?e+=t("calc_out.revenue_projector.row.growth_strong","• Growth: 🚀 Strong (+"+l(c*100)+" net) — compound is working for you.",{rate:l(c*100)})+\`
+\`:c>0?e+=t("calc_out.revenue_projector.row.growth_steady","• Growth: 📈 Steady (+"+l(c*100)+" net) — small gains compound over time.",{rate:l(c*100)})+\`
+\`:n>0&&(e+=t("calc_out.revenue_projector.row.growth_stalled","• Growth: 🐢 Stalled ("+l(c*100)+" net) — add a second acquisition channel.",{rate:l(c*100)})+\`
+\`),M&&c>=.03?e+=t("calc_out.revenue_projector.row.risk_low","• Risk:  🟢 Low — profitable + growing. Focus on moat and scale.")+\`
+\`:M&&c>0?e+=t("calc_out.revenue_projector.row.risk_moderate","• Risk:  🟡 Moderate — profitable but slow growth. Boost marketing.")+\`
+\`:!M&&p>=12?e+=t("calc_out.revenue_projector.row.risk_manageable","• Risk:  🟡 Manageable — burning but decent runway. Plan breakeven path.")+\`
+\`:!M&&p<12&&p>=6?e+=t("calc_out.revenue_projector.row.risk_elevated","• Risk:  🟠 Elevated — under 12 months runway. Prioritize revenue growth.")+\`
+\`:!M&&p<6&&(e+=t("calc_out.revenue_projector.row.risk_urgent","• Risk:  🔴 Urgent — under 6 months runway. Cut expenses now.")+\`
+\`),e+=\`
+\`+t("calc_out.section.revenue_projector_top_priorities","🔥 Top Priorities:")+\`
+\`;let g=1;if(s>0&&n>0&&(e+=t("calc_out.revenue_projector.row.priority_cut_churn","  "+g+". Cut churn from "+l(s)+" → "+l(Math.max(0,s-1))+" → $10K MRR sooner.",{n:String(g),churn:l(s),cut:l(Math.max(0,s-1))})+\`
+\`,g++),M&&u>0&&(e+=t("calc_out.revenue_projector.row.priority_reinvest","  "+g+". With "+o(j)+"/mo profit, reinvest in ads or part-time help.",{n:String(g),profit:o(j)+"/mo"})+\`
+\`,g++),p<12&&n>0&&(e+=t("calc_out.revenue_projector.row.priority_runway","  "+g+". Runway under 12 months — build a breakeven plan this week.",{n:String(g)})+\`
+\`,g++),c<.02&&n>0&&(e+=t("calc_out.revenue_projector.row.priority_growth","  "+g+". Growth under 2%/mo — test one new acquisition channel.",{n:String(g)})+\`
+\`,g++),g===1&&(e+=t("calc_out.revenue_projector.row.priority_healthy","  1. Runway is healthy. Focus on product quality and customer retention.")+\`
+\`),n>0||u>0){const r=u,_=n>=r?"🟢":"🔴";if(e+=\`
+\`+t("calc_out.section.revenue_projector_break_even_revenue","⚖️ Break-Even Revenue")+\`
+\`,e+="• "+_+" "+t("calc_out.label.break_even_mrr","Break-even MRR")+": "+o(u)+"/mo ("+t("calc_out.revenue_projector.row.covers_monthly_expenses","covers monthly expenses")+\`)
+\`,n>=r)e+=t("calc_out.revenue_projector.row.current_mrr_above_breakeven","• Current MRR "+o(n)+" is above break-even by "+o(n-r)+"/mo.",{mrr:o(n),gap:o(n-r)+"/mo"})+\`
+\`;else{const a=r-n;e+=t("calc_out.revenue_projector.row.gap_to_break_even","• Gap to break-even: "+o(a)+"/mo. Closing this puts you at default-alive.",{gap:o(a)+"/mo"})+\`
+\`}}let A;return F>0&&p>18?A=t("calc_out.revenue_projector.row.tip_runway_18","💡 Tip: Runway above 18 months is a competitive advantage. Use it for bold bets (new channels, hiring, product) — not conservative hoarding."):p>0&&p<=6?A=t("calc_out.revenue_projector.row.tip_sub6","💡 Tip: Sub-6-month runway means raise now or cut hard. Delaying 30 days = raising from a weaker position. Cut discretionary spend first."):y>0&&n>0&&n/u<.3?A=t("calc_out.revenue_projector.row.tip_low_coverage","💡 Tip: Your revenue covers under 30% of expenses. Focus 80% of effort on the 1-2 channels with highest ROI, not on cost-cutting."):A=t("calc_out.revenue_projector.row.tip_reproject","💡 Tip: Re-project monthly. Inputs change (churn, hiring, ad costs). The plan that got you here won't get you there."),e+=\`
+\`+A+\`
+\`,[e]},O=function(v,o,l){var n=Z(v);return Array.isArray(n)?n.join(\`
+\`):String(n)};var _t=R,st=L,it=O,t=tk,Y='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+Y)(),Z=function(v){return L(v)};return[O(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: "solopreneur-revenue-projector",

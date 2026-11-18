@@ -37,37 +37,11 @@ function fmtInt(n: number): string { return Math.round(n).toLocaleString(); }
 // ⚠️ 客户端原本与服务端**漂移**：emoji 写成 GREEN/YELLOW 文字、Break-Even 写 20%（服务端 20.0%）、
 //    What-If / Milestone / Tip 三整句不同 ⇒ 一律以**服务端**为准。
 const customFn =
-  // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
-  //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "function fmtPct(x){return (x*100).toFixed(1)+'%'}" +
-  "function fmtInt(n){return Math.round(n).toLocaleString()}" +
-  "var HEALTH_BANDS={excellent:{threshold:0.40,label:'🟢 Excellent'},good:{threshold:0.20,label:'🟡 Good'},warning:{threshold:0.10,label:'🟠 Warning'},critical:{threshold:0,label:'🔴 Critical'}};" +
-  "var featureUsers=cnn(Number(inputs['feature_users']));" +
-  "var activeUsers=cnn(Number(inputs['active_users']));" +
-  "if (activeUsers <= 0) return [tk('calc_out.feature_adoption.row.error_active_users_zero','Total active users must be > 0.')];" +
-  "if (featureUsers > activeUsers) featureUsers = activeUsers;" +
-  "var adoption=featureUsers/activeUsers;" +
-  "var band=adoption>=0.40?'excellent':adoption>=0.20?'good':adoption>=0.10?'warning':'critical';" +
-  "var bandInfo=HEALTH_BANDS[band];" +
-  "var denom=inputs['WAU_vs_MAU']||'WAU';" +
-  "var nonAdopters=Math.max(0,activeUsers-featureUsers);" +
-  "var targetFu=Math.ceil(activeUsers*HEALTH_BANDS.good.threshold);" +
-  "var l10=Math.min(activeUsers,featureUsers+nonAdopters*0.10);" +
-  "var needMore=Math.max(0,Math.ceil(activeUsers*(adoption+0.10))-featureUsers);" +
-  "var ratePct=fmtPct(adoption);" +
-  "var bandFallback=bandInfo.label+' ('+ratePct+' adoption)';" +
-  "var bandParams={pct:ratePct};" +
-  "var bandRow=band==='excellent'?tk('calc_out.feature_adoption.row.band_excellent',bandFallback,bandParams):band==='good'?tk('calc_out.feature_adoption.row.band_good',bandFallback,bandParams):band==='warning'?tk('calc_out.feature_adoption.row.band_warning',bandFallback,bandParams):tk('calc_out.feature_adoption.row.band_critical',bandFallback,bandParams);" +
-  "return [" +
-  "  tk('calc_out.label.feature_adoption','Feature Adoption')+': '+bandRow," +
-  "  tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.feature_adoption.row.snapshot_detail',fmtInt(featureUsers)+' of '+fmtInt(activeUsers)+' '+denom+' users used this feature. Non-adopters: '+fmtInt(nonAdopters),{feature_users:fmtInt(featureUsers),active_users:fmtInt(activeUsers),denom:denom,non_adopters:fmtInt(nonAdopters)})," +
-  "  tk('calc_out.feature_adoption.row.whatif_convert_10pct','What-If: if 10% of non-adopters convert this quarter, adoption rises to '+fmtPct(l10/activeUsers),{lifted:fmtPct(l10/activeUsers)})," +
-  "  tk('calc_out.feature_adoption.row.break_even_target','Break-Even: to hit Good ('+fmtPct(HEALTH_BANDS.good.threshold)+' adoption), need at least '+targetFu.toLocaleString()+' feature users (currently '+fmtInt(featureUsers)+')',{target_pct:fmtPct(HEALTH_BANDS.good.threshold),target:targetFu.toLocaleString(),current:fmtInt(featureUsers)})," +
-  "  tk('calc_out.feature_adoption.row.milestone_plus_10pp','Milestone: lifting adoption by +10 percentage points requires '+fmtInt(needMore)+' more feature users (target '+fmtInt(Math.ceil(activeUsers*(adoption+0.10)))+' from '+fmtInt(featureUsers)+')',{more:fmtInt(needMore),target:fmtInt(Math.ceil(activeUsers*(adoption+0.10))),current:fmtInt(featureUsers)})," +
-  "  tk('calc_out.feature_adoption.row.tip_activation_pairing','Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look \"stuck\" but require different interventions.')," +
-  "];";
+  // P168 B3-10: client = verbatim mirror of the server generate() (same logic, same order).
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(t){return Number.isNaN(t)?0:Math.max(0,t)},_=function(t,c){return c<=0?0:t>=c?1:t/c},h=function(t){return t>=a.excellent.threshold?"excellent":t>=a.good.threshold?"good":t>=a.warning.threshold?"warning":"critical"},i=function(t){return(t*100).toFixed(1)+"%"},e=function(t){return Math.round(t).toLocaleString()},g=function(t,c,n){var o=y(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var j=f,W=_,C=h,N=i,O=e,P=g,r=tk,x='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+x)(),a={excellent:{threshold:.4,label:"🟢 Excellent",message:"Broad feature appeal — the feature is core to the user experience."},good:{threshold:.2,label:"🟡 Good",message:"Healthy adoption; consider promoting deeper engagement among non-adopters."},warning:{threshold:.1,label:"🟠 Warning",message:"Niche adoption — most active users do not use this feature."},critical:{threshold:0,label:"🔴 Critical",message:"Dead feature — consider deprecation or repositioning."}},y=function(t){const c=f(Number(t.feature_users)),n=f(Number(t.active_users));if(n<=0)return[r("calc_out.feature_adoption.row.error_active_users_zero","Total active users must be > 0.")];const o=Math.min(c,n),u=_(o,n),s=h(u),F=a[s],b=t.WAU_vs_MAU||"WAU",p=Math.max(0,n-o),v=Math.ceil(n*a.good.threshold),w=Math.min(n,o+p*.1)/n,m=Math.max(0,Math.ceil(n*(u+.1))-o),M=i(u),l=F.label+" ("+M+" adoption)",d={pct:M},q=r(s==="excellent"?"calc_out.feature_adoption.row.band_excellent":s==="good"?"calc_out.feature_adoption.row.band_good":s==="warning"?"calc_out.feature_adoption.row.band_warning":"calc_out.feature_adoption.row.band_critical",l,d);return[r("calc_out.label.feature_adoption","Feature Adoption")+": "+q,r("calc_out.label.snapshot","Snapshot")+": "+r("calc_out.feature_adoption.row.snapshot_detail",e(o)+" of "+e(n)+" "+b+" users used this feature. Non-adopters: "+e(p),{feature_users:e(o),active_users:e(n),denom:b,non_adopters:e(p)}),r("calc_out.feature_adoption.row.whatif_convert_10pct","What-If: if 10% of non-adopters convert this quarter, adoption rises to "+i(w),{lifted:i(w)}),r("calc_out.feature_adoption.row.break_even_target","Break-Even: to hit Good ("+i(a.good.threshold)+" adoption), need at least "+v.toLocaleString()+" feature users (currently "+e(o)+")",{target_pct:i(a.good.threshold),target:v.toLocaleString(),current:e(o)}),r("calc_out.feature_adoption.row.milestone_plus_10pp","Milestone: lifting adoption by +10 percentage points requires "+e(m)+" more feature users (target "+e(Math.ceil(n*(u+.1)))+" from "+e(o)+")",{more:e(m),target:e(Math.ceil(n*(u+.1))),current:e(o)}),r("calc_out.feature_adoption.row.tip_activation_pairing",'Tip: Pair with the Activation Rate Calculator to distinguish adopted-but-inactive users from non-adopted — both look "stuck" but require different interventions.')]};return[g(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-feature-adoption-calculator',

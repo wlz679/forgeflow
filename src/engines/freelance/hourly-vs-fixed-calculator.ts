@@ -155,92 +155,72 @@ function calculatePricingModel(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var aig=cnn(parseFloat(inputs.annualIncomeGoal)||0);" +
-  "var bhw=cnn(parseFloat(inputs.billableHoursPerWeek)||0);" +
-  "var woy=cnn(parseFloat(inputs.weeksOffPerYear)||0);" +
-  "var axe=cnn(parseFloat(inputs.annualExpenses)||0);" +
-  "var SEP='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501';" +
-  "var ww=52-woy;" +
-  "var abh=bhw*ww;" +
-  "var nag=aig+axe;" +
-  "var rh=abh>0?nag/abh:0;" +
-  "var rd=rh*8;" +
-  "var rw=rh*bhw;" +
-  "var mr=nag/12;" +
-  "var pf4=nag/Math.max(ww/4,1);" +
-  "var util=bhw>0?Math.min(100,Math.round((bhw/40)*100)):0;" +
-  "function fmt2(n){return n.toFixed(2);}" +
-  "function fmt0(n){return '$'+Math.round(n).toLocaleString();}" +
-  "function loc(n){return n.toLocaleString();}" +
-  "var main='\\uD83D\\uDCBC Hourly vs Fixed Pricing Model\\n\\n';" +
-  "main+='\\uD83D\\uDCB0 Required Rate Snapshot:\\n'+SEP+'\\n';" +
-  "main+='\\u2022 Annual Income Goal:        '+fmt0(aig)+'\\n';" +
-  "main+='\\u2022 Annual Expenses:           '+fmt0(axe)+'\\n';" +
-  "main+='\\u2022 Net Target (income+exp):   '+fmt0(nag)+'\\n';" +
-  "main+='\\u2022 Billable Hours/Week:       '+bhw+' hrs\\n';" +
-  "main+='\\u2022 Weeks Off Per Year:        '+woy+' wks\\n';" +
-  "main+='\\u2022 Working Weeks:             '+ww+' wks\\n';" +
-  "main+='\\u2022 Annual Billable Hours:     '+loc(abh)+' hrs\\n\\n';" +
-  "main+='\\uD83D\\uDCD0 Key Metrics:\\n'+SEP+'\\n';" +
-  "main+='\\u2022 Required Hourly Rate:      $'+fmt2(rh)+'/hr  (after expenses)\\n';" +
-  "main+='\\u2022 Daily Rate (8 hrs):        '+fmt0(rd)+'/day\\n';" +
-  "main+='\\u2022 Weekly Rate:               '+fmt0(rw)+'/wk\\n';" +
-  "main+='\\u2022 Monthly Retainer:          '+fmt0(mr)+'/mo\\n';" +
-  "main+='\\u2022 Fixed Project (4-week):    '+fmt0(pf4)+'/project\\n';" +
-  "main+='\\u2022 Utilization Rate:          '+util+'% of 40-hr work week\\n\\n';" +
-  "main+='\\uD83E\\uDE7A Rate Health:\\n'+SEP+'\\n';" +
-  "if(rh<=0){main+='\\u2022 \\u26A0\\uFE0F Enter your annual income goal and billable hours to see a rate assessment.\\n';}" +
-  "else if(rh<=50){main+='\\u2022 \\uD83D\\uDFE2 Rate $'+fmt2(rh)+'/hr is achievable for most freelancers with standard services. Focus on pipeline and client retention.\\n';}" +
-  "else if(rh<=100){main+='\\u2022 \\uD83D\\uDFE1 Rate $'+fmt2(rh)+'/hr is mid-market \\u2014 requires solid expertise and client trust. Specialize deeply to justify this rate.\\n';}" +
-  "else if(rh<=200){main+='\\u2022 \\uD83D\\uDFE0 Rate $'+fmt2(rh)+'/hr is premium positioning \\u2014 demands clear ROI for clients. Case studies, social proof, and niche expertise are essential.\\n';}" +
-  "else{main+='\\u2022 \\uD83D\\uDD34 Rate $'+fmt2(rh)+'/hr is elite tier \\u2014 top 1% territory. You need a strong personal brand, published authority, and enterprise clients.\\n';}" +
-  "if(bhw>=30){main+='\\u2022 \\uD83D\\uDFE2 '+bhw+' billable hrs/wk is full-time sustainable.\\n';}" +
-  "else if(bhw>=20){main+='\\u2022 \\uD83D\\uDFE1 '+bhw+' billable hrs/wk means '+(100-Math.round(bhw/40*100))+'% non-billable time \\u2014 work on pipeline.\\n';}" +
-  "else{main+='\\u2022 \\uD83D\\uDD34 '+bhw+' billable hrs/wk is hard to make a full living. Increase capacity or raise rates.\\n';}" +
-  "if(util>=75){main+='\\u2022 \\uD83D\\uDFE2 Utilization at '+util+'% \\u2014 sustainable without burnout.\\n';}" +
-  "else if(util>=50){main+='\\u2022 \\uD83D\\uDFE1 Utilization at '+util+'% \\u2014 healthy but could push to 75%.\\n';}" +
-  "else{main+='\\u2022 \\uD83D\\uDD34 Utilization at '+util+'% \\u2014 too much slack or non-billable work.\\n';}" +
-  "var expRatio=axe/Math.max(aig,1);" +
-  "if(expRatio<0.1){main+='\\u2022 \\uD83D\\uDFE2 Expenses are '+Math.round(expRatio*100)+'% of income target \\u2014 lean operation.\\n';}" +
-  "else if(expRatio<0.25){main+='\\u2022 \\uD83D\\uDFE1 Expenses are '+Math.round(expRatio*100)+'% of income target \\u2014 watch overhead.\\n';}" +
-  "else{main+='\\u2022 \\uD83D\\uDFE0 Expenses are '+Math.round(expRatio*100)+'% of income target \\u2014 cut overhead before raising rates.\\n';}" +
-  "main+='\\n';" +
-  "main+='\\uD83C\\uDFAF Income Ladder:\\n'+SEP+'\\n';" +
-  "var ladder=[30000,60000,100000,150000,200000,300000];" +
-  "for(var li=0;li<ladder.length;li++){var g=ladder[li];var net=g+axe;var hr2=abh>0?net/abh:0;var ret=net/12;main+='\\u2022 $'+loc(g)+'/yr  \\u2192  $'+fmt2(hr2)+'/hr  |  $'+loc(Math.round(ret))+'/mo retainer\\n';}" +
-  "main+='\\n';" +
-  "main+='\\u2696\\uFE0F Hourly vs Fixed Project Break-Even:\\n'+SEP+'\\n';" +
-  "var h4w=bhw*4;" +
-  "var h4wRev=rh*h4w;" +
-  "if(rh>0&&h4w>0){" +
-  "var fth=pf4/h4w;" +
-  "main+='\\u2022 Hourly model, 4 weeks:   '+fmt0(h4wRev)+' for '+h4w+' hrs\\n';" +
-  "main+='\\u2022 Fixed model, 4 weeks:    '+fmt0(pf4)+' for '+h4w+' hrs (assumes same effort)\\n';" +
-  "if(pf4>h4wRev*1.1){main+='\\u2022 \\uD83D\\uDFE2 Fixed-fee projects pay '+Math.round((pf4/h4wRev-1)*100)+'% more for the same hours. Charge fixed when scope is clear.\\n';}" +
-  "else if(pf4<h4wRev*0.9){main+='\\u2022 \\uD83D\\uDD34 Fixed-fee projects pay '+Math.round((1-pf4/h4wRev)*100)+'% less than hourly. Avoid fixed-fee unless scope is well-defined.\\n';}" +
-  "else{main+='\\u2022 \\uD83D\\uDFE1 Hourly and fixed-fee are roughly equivalent at this rate. Pick based on client preference and scope clarity.\\n';}" +
-  "main+='\\u2022 Break-even fixed project rate: $'+fmt2(fth)+'/hr (same hourly, all-in price).\\n';" +
-  "}else{main+='\\u2022 Enter billable hours to compare hourly vs fixed-fee models.\\n';}" +
-  "main+='\\n';" +
-  "main+='\\uD83D\\uDD04 What-If Scenarios:\\n'+SEP+'\\n';" +
-  "if(rh>0){" +
-  "var raise20=rh*1.2;" +
-  "var cutExp=abh>0?(nag*0.8)/abh:0;" +
-  "var add5h=abh>0?nag/((bhw+5)*ww):0;" +
-  "var cutWks=abh>0?nag/(bhw*(ww-2)):0;" +
-  "main+='\\u2022 Raise rate 20%:        New rate $'+fmt2(raise20)+'/hr  (need only '+Math.round(abh/1.2)+' billable hrs/yr)\\n';" +
-  "main+='\\u2022 Cut expenses 20%:      New rate $'+fmt2(cutExp)+'/hr  (saves '+fmt0(axe*0.2)+'/yr)\\n';" +
-  "main+='\\u2022 Add 5 billable hrs/wk: New rate $'+fmt2(add5h)+'/hr  (more income, same goal)\\n';" +
-  "main+='\\u2022 Cut 2 weeks off:       New rate $'+fmt2(cutWks)+'/hr  (compress to '+(ww-2)+' working wks)\\n';" +
-  "}else{main+='\\u2022 \\u26A0\\uFE0F Cannot model \\u2014 enter annual income goal and billable hours.\\n';}" +
-  "main+='\\u2022 2 income sources: Split goal in half, lower hourly pressure on each.\\n\\n';" +
-  "var tip=rh>200?'Premium tier \\u2014 focus on enterprise clients and thought leadership. Don\\'t discount; it devalues your brand.':rh>100?'Mid-market tier \\u2014 your differentiator is depth, not breadth. Specialize in 1-2 industries and become the obvious expert.':rh>50?'Standard tier \\u2014 your differentiator is reliability and process. Document your workflow and offer guarantees to command higher rates.':'Entry tier \\u2014 focus on volume and client retention. Build a referral engine before raising rates.';" +
-  "main+='\\uD83D\\uDCA1 Top Lever: '+tip+'\\n';" +
-  "var results=[main];" +
-  "var goals=[30000,60000,100000,150000,200000,300000];" +
-  "for(var gi=0;gi<goals.length;gi++){var g=goals[gi];var net=g+axe;var hr=abh>0?net/abh:0;var ret=net/12;results.push('$'+loc(g)+'/yr \\u2192 $'+fmt2(hr)+'/hr  |  $'+loc(Math.round(ret))+'/mo retainer  |  $'+loc(Math.round(hr*8))+'/day');}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let w=function(s){return Number.isNaN(s)?0:Math.max(0,s)},v=function(s){const u=w(parseFloat(s.annualIncomeGoal)||0),r=w(parseFloat(s.billableHoursPerWeek)||0),f=w(parseFloat(s.weeksOffPerYear)||0),i=w(parseFloat(s.annualExpenses)||0),m="━".repeat(41),p=52-f,a=r*p,d=u+i,n=a>0?d/a:0,E=n*8,W=n*r,H=d/12,h=d/Math.max(p/4,1),y=r>0?Math.min(100,Math.round(r/40*100)):0,o=t=>t.toFixed(2),l=t=>"$"+Math.round(t).toLocaleString(),b=t=>t.toLocaleString();let e=\`💼 Hourly vs Fixed Pricing Model
+
+\`;e+=\`💰 Required Rate Snapshot:
+\`+m+\`
+\`,e+="• Annual Income Goal:        "+l(u)+\`
+\`,e+="• Annual Expenses:           "+l(i)+\`
+\`,e+="• Net Target (income+exp):   "+l(d)+\`
+\`,e+="• Billable Hours/Week:       "+r+\` hrs
+\`,e+="• Weeks Off Per Year:        "+f+\` wks
+\`,e+="• Working Weeks:             "+p+\` wks
+\`,e+="• Annual Billable Hours:     "+b(a)+\` hrs
+
+\`,e+=\`📐 Key Metrics:
+\`+m+\`
+\`,e+="• Required Hourly Rate:      $"+o(n)+\`/hr  (after expenses)
+\`,e+="• Daily Rate (8 hrs):        "+l(E)+\`/day
+\`,e+="• Weekly Rate:               "+l(W)+\`/wk
+\`,e+="• Monthly Retainer:          "+l(H)+\`/mo
+\`,e+="• Fixed Project (4-week):    "+l(h)+\`/project
+\`,e+="• Utilization Rate:          "+y+\`% of 40-hr work week
+
+\`,e+=\`🩺 Rate Health:
+\`+m+\`
+\`,n<=0?e+=\`• ⚠️ Enter your annual income goal and billable hours to see a rate assessment.
+\`:n<=50?e+="• 🟢 Rate $"+o(n)+\`/hr is achievable for most freelancers with standard services. Focus on pipeline and client retention.
+\`:n<=100?e+="• 🟡 Rate $"+o(n)+\`/hr is mid-market — requires solid expertise and client trust. Specialize deeply to justify this rate.
+\`:n<=200?e+="• 🟠 Rate $"+o(n)+\`/hr is premium positioning — demands clear ROI for clients. Case studies, social proof, and niche expertise are essential.
+\`:e+="• 🔴 Rate $"+o(n)+\`/hr is elite tier — top 1% territory. You need a strong personal brand, published authority, and enterprise clients.
+\`,r>=30?e+="• 🟢 "+r+\` billable hrs/wk is full-time sustainable.
+\`:r>=20?e+="• 🟡 "+r+" billable hrs/wk means "+(100-Math.round(r/40*100))+\`% non-billable time — work on pipeline.
+\`:e+="• 🔴 "+r+\` billable hrs/wk is hard to make a full living. Increase capacity or raise rates.
+\`,y>=75?e+="• 🟢 Utilization at "+y+\`% — sustainable without burnout.
+\`:y>=50?e+="• 🟡 Utilization at "+y+\`% — healthy but could push to 75%.
+\`:e+="• 🔴 Utilization at "+y+\`% — too much slack or non-billable work.
+\`,i/Math.max(u,1)<.1?e+="• 🟢 Expenses are "+Math.round(i/Math.max(u,1)*100)+\`% of income target — lean operation.
+\`:i/Math.max(u,1)<.25?e+="• 🟡 Expenses are "+Math.round(i/Math.max(u,1)*100)+\`% of income target — watch overhead.
+\`:e+="• 🟠 Expenses are "+Math.round(i/Math.max(u,1)*100)+\`% of income target — cut overhead before raising rates.
+\`,e+=\`
+\`,e+=\`🎯 Income Ladder:
+\`+m+\`
+\`;const P=[3e4,6e4,1e5,15e4,2e5,3e5];for(const t of P){const c=t+i,x=a>0?c/a:0,M=c/12;e+="• $"+b(t)+"/yr  →  $"+o(x)+"/hr  |  $"+b(Math.round(M))+\`/mo retainer
+\`}e+=\`
+\`,e+=\`⚖️ Hourly vs Fixed Project Break-Even:
+\`+m+\`
+\`;const g=r*4,k=n*g;if(n>0&&g>0){const t=k,c=h/g;e+="• Hourly model, 4 weeks:   "+l(k)+" for "+g+\` hrs
+\`,e+="• Fixed model, 4 weeks:    "+l(h)+" for "+g+\` hrs (assumes same effort)
+\`,h>k*1.1?e+="• 🟢 Fixed-fee projects pay "+Math.round((h/k-1)*100)+\`% more for the same hours. Charge fixed when scope is clear.
+\`:h<k*.9?e+="• 🔴 Fixed-fee projects pay "+Math.round((1-h/k)*100)+\`% less than hourly. Avoid fixed-fee unless scope is well-defined.
+\`:e+=\`• 🟡 Hourly and fixed-fee are roughly equivalent at this rate. Pick based on client preference and scope clarity.
+\`,e+="• Break-even fixed project rate: $"+o(c)+\`/hr (same hourly, all-in price).
+\`}else e+=\`• Enter billable hours to compare hourly vs fixed-fee models.
+\`;if(e+=\`
+\`,e+=\`🔄 What-If Scenarios:
+\`+m+\`
+\`,n>0){const t=n*1.2,c=a>0?d*.8/a:0,x=a>0?d/((r+5)*p):0,M=a>0?d/(r*(p-2)):0;e+="• Raise rate 20%:        New rate $"+o(t)+"/hr  (need only "+Math.round(a/1.2)+\` billable hrs/yr)
+\`,e+="• Cut expenses 20%:      New rate $"+o(c)+"/hr  (saves "+l(i*.2)+\`/yr)
+\`,e+="• Add 5 billable hrs/wk: New rate $"+o(x)+\`/hr  (more income, same goal)
+\`,e+="• Cut 2 weeks off:       New rate $"+o(M)+"/hr  (compress to "+(p-2)+\` working wks)
+\`}else e+=\`• ⚠️ Cannot model — enter annual income goal and billable hours.
+\`;e+=\`• 2 income sources: Split goal in half, lower hourly pressure on each.
+
+\`;const _=n>200?"Premium tier — focus on enterprise clients and thought leadership. Don't discount; it devalues your brand.":n>100?"Mid-market tier — your differentiator is depth, not breadth. Specialize in 1-2 industries and become the obvious expert.":n>50?"Standard tier — your differentiator is reliability and process. Document your workflow and offer guarantees to command higher rates.":"Entry tier — focus on volume and client retention. Build a referral engine before raising rates.";e+="💡 Top Lever: "+_+\`
+\`;const R=[e],j=[3e4,6e4,1e5,15e4,2e5,3e5];for(const t of j){const c=t+i,x=a>0?c/a:0,M=c/12;R.push("$"+b(t)+"/yr → $"+o(x)+"/hr  |  $"+b(Math.round(M))+"/mo retainer  |  $"+b(Math.round(x*8))+"/day")}return R},$=function(s,u,r){var f=F(s);return Array.isArray(f)?f.join(\`
+\`):String(f)};var N=w,S=v,A=$,F=function(s){return v(s)};return[$(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-hourly-vs-fixed-calculator',

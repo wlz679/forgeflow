@@ -59,41 +59,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var kbCost = cnn(Number(inputs.kb_team_monthly_cost) || 0);
-  var deflected = cnn(Number(inputs.deflected_tickets_monthly) || 0);
-  var costPer = cnn(Number(inputs.cost_per_ticket) || 0);
-  var articles = cnn(Number(inputs.articles_total) || 0);
-  var target = cnn(Number(inputs.roi_target_pct) || 0);
-  var gross = deflected * costPer;
-  var net = gross - kbCost;
-  var roi = kbCost > 0 ? (net / kbCost) * 100 : -Infinity;
-  var roiDec = roi / 100;
-  var costPerArt = articles > 0 ? kbCost / articles : Infinity;
-  var gap = target - roi;
-  var isExc = roiDec >= 4.0 && costPerArt <= 50;
-  var band = isExc ? 'Excellent' : roiDec >= 1.5 ? 'Good' : roiDec >= 0.5 ? 'Warning' : 'Critical';
-  var emoji = isExc ? '🟢' : roiDec >= 1.5 ? '🟡' : roiDec >= 0.5 ? '🟠' : '🔴';
-  var costWarn = (roiDec >= 4.0 && costPerArt > 50) ? ' — ROI excellent but $' + costPerArt.toFixed(2) + '/article >$50 caps it to Good' : '';
-  var roiStr = isFinite(roi) ? roi.toFixed(0) + '%' : 'n/a';
-  var costPerArtStr = isFinite(costPerArt) ? '$' + costPerArt.toFixed(2) : 'n/a';
-  var excDeflected = costPer > 0 ? (5 * kbCost) / costPer : 0;
-  var excGross = excDeflected * costPer;
-  var excNet = excGross - kbCost;
-  var targetGross = kbCost * (1 + target / 100);
-  var targetDeflected = costPer > 0 ? targetGross / costPer : 0;
-  var targetDelta = targetDeflected - deflected;
-  var kbCostForTarget = target > -100 ? gross / (1 + target / 100) : 0;
-  return [
-    '🩺 Documentation ROI Health: ' + emoji + ' ' + band + ' (' + roiStr + ' ROI · ' + (net >= 0 ? '' : '-') + '$' + Math.abs(Math.round(net)).toLocaleString() + '/mo net savings · ' + costPerArtStr + '/article/mo)' + costWarn,
-    '📊 Snapshot: ' + Math.round(deflected).toLocaleString() + ' tickets deflected × $' + costPer + '/ticket = $' + Math.round(gross).toLocaleString() + '/mo gross · minus $' + Math.round(kbCost).toLocaleString() + '/mo KB cost = ' + (net >= 0 ? '' : '-') + '$' + Math.abs(Math.round(net)).toLocaleString() + '/mo net · ' + Math.round(articles).toLocaleString() + ' articles · ROI ' + roiStr + ' vs ' + target + '% target (' + gap.toFixed(0) + 'pp gap)',
-    '🔄 What-If: if deflection climbs to ' + Math.round(excDeflected).toLocaleString() + '/mo (from ' + Math.round(deflected).toLocaleString() + ', see K-1 Coverage), gross = $' + Math.round(excGross).toLocaleString() + '/mo, net = $' + Math.round(excNet).toLocaleString() + '/mo, ROI hits 400% (Excellent)',
-    '⚖️ Break-Even: to hit your ' + target + '% ROI target, deflect ' + Math.round(targetDeflected).toLocaleString() + '/mo (' + (targetDelta >= 0 ? '+' : '') + Math.round(targetDelta).toLocaleString() + '/mo) OR cut KB cost below $' + Math.round(kbCostForTarget).toLocaleString() + '/mo',
-    '🎯 Milestone: cost/article = ' + costPerArtStr + '/mo across ' + Math.round(articles).toLocaleString() + ' articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.',
-    '💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},m=function(t,e){return t*e},h=function(t,e){return e>0?(t-e)/e:-1/0},b=function(t,e){return e>0?t/e:1/0},_=function(t,e){const n=t/100;return n>=l.excellent.threshold&&(e===void 0||e<=50)?"excellent":n>=l.good.threshold?"good":n>=l.warning.threshold?"warning":"critical"},s=function(t){return"$"+Math.round(t).toLocaleString()},d=function(t){return"$"+t.toFixed(2)},r=function(t){return Math.round(t).toLocaleString()},p=function(t,e,n){var o=N(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var C=c,W=m,E=h,P=b,j=_,q=s,z=d,J=r,L=p,l={excellent:{threshold:4,label:"Excellent",message:"KB is a profit center."},good:{threshold:1.5,label:"Good",message:"KB pays for itself."},warning:{threshold:.5,label:"Warning",message:"Marginal return — review spend."},critical:{threshold:null,label:"Critical",message:"KB spend exceeds savings."}},N=function(t){const e=c(Number(t.kb_team_monthly_cost)||0),n=c(Number(t.deflected_tickets_monthly)||0),o=c(Number(t.cost_per_ticket)||0),g=c(Number(t.articles_total)||0),i=c(Number(t.roi_target_pct)||0),f=m(n,o),x=f-e,v=h(f,e),u=v*100,a=b(e,g),w=i-u,M=_(u,a),$=l[M],B=v>=4&&a>50?" — ROI excellent but "+d(a)+"/article >$50 caps it to Good":"",I=isFinite(u)?u.toFixed(0)+"%":"n/a",K=isFinite(a)?d(a):"n/a",y=(x>=0?"":"-")+"$"+Math.abs(Math.round(x)).toLocaleString(),R=o>0?5*e/o:0,O=R*o,D=O-e,G=e*(1+i/100),k=o>0?G/o:0,F=k-n,S=i>-100?f/(1+i/100):0;return["🩺 Documentation ROI Health: "+$.label+" ("+I+" ROI · "+y+"/mo net savings · "+K+"/article/mo)"+B,"📊 Snapshot: "+r(n)+" tickets deflected × $"+o+"/ticket = "+s(f)+"/mo gross · minus "+s(e)+"/mo KB cost = "+y+"/mo net · "+r(g)+" articles · ROI "+I+" vs "+i+"% target ("+w.toFixed(0)+"pp gap)","🔄 What-If: if deflection climbs to "+r(R)+"/mo (from "+r(n)+", see K-1 Coverage), gross = "+s(O)+"/mo, net = "+s(D)+"/mo, ROI hits 400% (Excellent)","⚖️ Break-Even: to hit your "+i+"% ROI target, deflect "+r(k)+"/mo ("+(F>=0?"+":"")+r(F)+"/mo) OR cut KB cost below "+s(S)+"/mo","🎯 Milestone: cost/article = "+K+"/mo across "+r(g)+" articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.","💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection."]};return[p(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

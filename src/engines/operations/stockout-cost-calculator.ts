@@ -206,77 +206,58 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "function lir(lpd,days){return lpd*days;}" +
-  "function ll(lir,lcr,ltv,rr){return lir*(lcr/100)*ltv*(1-rr/100);}" +
-  "function tc(lir,ll){return lir+ll;}" +
-  "function cpct(t,rev){if(rev<=0)return 0;return (t/rev)*100;}" +
-  "function band(p){if(p<5)return 'excellent';if(p<10)return 'good';if(p<15)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var lpd=cnn(parseFloat(inputs.lostSalesPerDay)||0);" +
-  "var days=cnn(parseFloat(inputs.avgStockoutDays)||0);" +
-  "var lcr=cnn(Math.min(100,parseFloat(inputs.lostCustomerRate)||0));" +
-  "var ltv=cnn(parseFloat(inputs.customerLTV)||0);" +
-  "var rev=cnn(parseFloat(inputs.annualRevenue)||0);" +
-  "var rr=cnn(Math.min(100,parseFloat(inputs.recoveryRate)||0));" +
-  "if(lpd===0||rev===0){return['$calc_out.section.stockout_cost_calculator|\\u23F0 Stockout Cost Calculator|\\n\\n'+tk('calc_out.stockout_cost.row.enter_inputs_required','\\uD83D\\uDCCA Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.')];}" +
-  "var lirV=lir(lpd,days);" +
-  "var llV=ll(lirV,lcr,ltv,rr);" +
-  "var tcV=tc(lirV,llV);" +
-  "var pct=cpct(tcV,rev);" +
-  "function money(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "var recCap=lirV*(lcr/100)*ltv*(rr/100);" +
-  "var lostCust=lirV*(lcr/100);" +
-  "var bd=band(pct);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?tk('calc_out.stockout_cost.row.health_excellent','Excellent \\u2014 stockout cost < 5% of revenue'):bd==='good'?tk('calc_out.stockout_cost.row.health_good','Good \\u2014 5\\u201310% of revenue lost to stockouts; tighten safety stock'):bd==='warning'?tk('calc_out.stockout_cost.row.health_warning','Warning \\u2014 10\\u201315% of revenue lost; reorder point review needed'):tk('calc_out.stockout_cost.row.health_critical','Critical \\u2014 \\u2265 15% of revenue lost; urgent: switch to multi-supplier');" +
-  "var days50=days*0.5;var lir50=lir(lpd,days50);var ll50=ll(lir50,lcr,ltv,rr);var tc50=tc(lir50,ll50);var pct50=cpct(tc50,rev);var sav50=tcV-tc50;" +
-  "var rr25=25;var ll25=ll(lirV,lcr,ltv,rr25);var tc25=tc(lirV,ll25);var savRec=tcV-tc25;" +
-  "var costDay=lpd+lpd*(lcr/100)*ltv*(1-rr/100);var targetTc=rev*0.05;var maxDays=costDay>0?targetTc/costDay:Infinity;" +
-  "var annSav50=sav50;" +
-  "var tipP={cost:money(tcV),pct:pct.toFixed(2)+'%',immediate:money(lirV),ltv:money(llV)};" +
-  "var tip='';" +
-  "if(bd==='critical'){tip=JSON.stringify({code:'stockout_critical',params:tipP});}" +
-  "else if(bd==='warning'){tip=JSON.stringify({code:'stockout_serious',params:tipP});}" +
-  "else if(bd==='good'){tip=JSON.stringify({code:'stockout_measurable',params:tipP});}" +
-  "else{tip=JSON.stringify({code:'stockout_excellent',params:tipP});}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.stockout_cost_calculator|\\u23F0 Stockout Cost Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.total_stockout_cost','Total stockout cost: '+money(tcV)+'/year  \\u00B7  '+pct.toFixed(2)+'% of annual revenue',{cost:money(tcV),pct:pct.toFixed(2)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.lost_breakdown','Lost immediate: '+money(lirV)+'  \\u00B7  Lost LTV: '+money(llV)+'  \\u00B7  Recovery captures: '+money(recCap),{immediate:money(lirV),ltv:money(llV),recovery:money(recCap)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 $calc_out.label.lost_sales_per_day|Lost sales per day|:       '+money(lpd)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.stockout_duration','Stockout duration:        '+days+' days  \\u00B7  cumulative: '+money(lirV),{days:String(days),cumulative:money(lirV)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.customer_loss_rate','Customer loss rate:       '+lcr.toFixed(1)+'%  \\u00B7  applies to '+money(lirV)+' = '+money(lostCust)+' lost-customers',{rate:lcr.toFixed(1),applies:money(lirV),lost:money(lostCust)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.customer_ltv|Customer LTV|:             '+money(ltv)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.recovery_rate','Recovery rate:            '+rr.toFixed(1)+'%  \\u00B7  recaptures '+money(recCap),{rate:rr.toFixed(1),recaptured:money(recCap)})+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.annual_revenue_stockout|Annual revenue|:           '+money(rev)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.stockout_cost_to_revenue|Stockout cost / revenue|:  '+pct.toFixed(2)+'%\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.whatif_cut_days_50','Cut stockout days by 50%: total cost = '+money(tc50)+' ('+pct50.toFixed(2)+'%)  \\u00B7  annual savings = '+money(sav50),{cost:money(tc50),pct:pct50.toFixed(2),savings:money(sav50)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.whatif_recovery_25','Raise recovery rate to 25%: total cost = '+money(tc25)+'  \\u00B7  additional savings = '+money(savRec),{cost:money(tc25),savings:money(savRec)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.whatif_combined','Combined (50% less days + 25% recovery): see Milestone below')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+(isFinite(maxDays)?tk('calc_out.stockout_cost.row.break_even_max_days','Max stockout days for \\uD83D\\uDFE2 (< 5% of revenue): '+maxDays.toFixed(1)+' days',{days:maxDays.toFixed(1)}):tk('calc_out.stockout_cost.row.break_even_max_days_na','Max stockout days for \\uD83D\\uDFE2 (< 5% of revenue): N/A (cost per day = 0)'))+'\\n';" +
-  "r2+='\\u2022 '+(days>maxDays?tk('calc_out.stockout_cost.row.break_even_current_vs_target_reduce','Current vs target: reduce stockout days by '+(days-maxDays).toFixed(1)+' to hit \\uD83D\\uDFE2',{days:(days-maxDays).toFixed(1)}):tk('calc_out.stockout_cost.row.break_even_current_vs_target_below','Current vs target: already below target'))+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.milestone_12mo_savings','12-mo savings if stockout cut 50%: '+money(annSav50),{savings:money(annSav50)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.milestone_reinvested_8pct','Reinvested at 8% return: '+money(annSav50*0.08)+'/yr additional',{amount:money(annSav50*0.08)})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.stockout_cost.row.milestone_compounded_3y','Compounded over 3 years: '+money(annSav50*1.08*3-annSav50*3)+' (vs $0 reinvested)',{amount:money(annSav50*1.08*3-annSav50*3)})+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let u=function(o){return Number.isNaN(o)?0:Math.max(0,o)},b=function(o,c){return o*c},f=function(o,c,r,s){return o*(c/100)*r*(1-s/100)},w=function(o,c){return o+c},S=function(o,c){return c<=0?0:o/c*100},D=function(o){return o<x.excellent?"excellent":o<x.good[1]?"good":o<x.warning[1]?"warning":"critical"},R=function(o,c,r){var s=E(o);return Array.isArray(s)?s.join(\`
+\`):String(s)};var z=u,A=b,Q=f,X=w,Y=S,Z=D,B=R,e=tk,V={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},q='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+q)(),x={excellent:5,good:[5,10],warning:[10,15],critical:15},E=function(o){const c=u(parseFloat(o.lostSalesPerDay)||0),r=u(parseFloat(o.avgStockoutDays)||0),s=u(Math.min(100,parseFloat(o.lostCustomerRate)||0)),i=u(parseFloat(o.customerLTV)||0),y=u(parseFloat(o.annualRevenue)||0),_=u(Math.min(100,parseFloat(o.recoveryRate)||0));if(c===0||y===0)return[\`$calc_out.section.stockout_cost_calculator|⏰ Stockout Cost Calculator|
+
+\`+e("calc_out.stockout_cost.row.enter_inputs_required","📊 Enter your lost sales per day, stockout duration, customer loss rate, customer LTV, annual revenue, and win-back rate to see total stockout cost and how it impacts your bottom line.")];const n=b(c,r),m=f(n,s,i,_),d=w(n,m),g=S(d,y),h=n*(s/100)*i*(_/100),L=n*(s/100),t=K=>"$"+Math.round(K).toLocaleString("en-US"),l=D(g),J=V[l],U=l==="excellent"?e("calc_out.stockout_cost.row.health_excellent","Excellent — stockout cost < 5% of revenue"):l==="good"?e("calc_out.stockout_cost.row.health_good","Good — 5–10% of revenue lost to stockouts; tighten safety stock"):l==="warning"?e("calc_out.stockout_cost.row.health_warning","Warning — 10–15% of revenue lost; reorder point review needed"):e("calc_out.stockout_cost.row.health_critical","Critical — ≥ 15% of revenue lost; urgent: switch to multi-supplier"),I=r*.5,M=b(c,I),P=f(M,s,i,_),F=w(M,P),N=S(F,y),C=d-F,W=f(n,s,i,25),$=w(n,W),O=d-$,j=c+c*(s/100)*i*(1-_/100),G=y*.05,v=j>0?G/j:1/0,a=C,k={cost:t(d),pct:g.toFixed(2)+"%",immediate:t(n),ltv:t(m)};let p;return l==="critical"?p=JSON.stringify({code:"stockout_critical",params:k}):l==="warning"?p=JSON.stringify({code:"stockout_serious",params:k}):l==="good"?p=JSON.stringify({code:"stockout_measurable",params:k}):p=JSON.stringify({code:"stockout_excellent",params:k}),[\`$calc_out.section.stockout_cost_calculator|⏰ Stockout Cost Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+J+" "+U+\`
+• \`+e("calc_out.stockout_cost.row.total_stockout_cost","Total stockout cost: "+t(d)+"/year  ·  "+g.toFixed(2)+"% of annual revenue",{cost:t(d),pct:g.toFixed(2)})+\`
+• \`+e("calc_out.stockout_cost.row.lost_breakdown","Lost immediate: "+t(n)+"  ·  Lost LTV: "+t(m)+"  ·  Recovery captures: "+t(h),{immediate:t(n),ltv:t(m),recovery:t(h)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.lost_sales_per_day|Lost sales per day|:       \`+t(c)+\`
+• \`+e("calc_out.stockout_cost.row.stockout_duration","Stockout duration:        "+r+" days  ·  cumulative: "+t(n),{days:String(r),cumulative:t(n)})+\`
+• \`+e("calc_out.stockout_cost.row.customer_loss_rate","Customer loss rate:       "+s.toFixed(1)+"%  ·  applies to "+t(n)+" = "+t(L)+" lost-customers",{rate:s.toFixed(1),applies:t(n),lost:t(L)})+\`
+• $calc_out.label.customer_ltv|Customer LTV|:             \`+t(i)+\`
+• \`+e("calc_out.stockout_cost.row.recovery_rate","Recovery rate:            "+_.toFixed(1)+"%  ·  recaptures "+t(h),{rate:_.toFixed(1),recaptured:t(h)})+\`
+• $calc_out.label.annual_revenue_stockout|Annual revenue|:           \`+t(y)+\`
+• $calc_out.label.stockout_cost_to_revenue|Stockout cost / revenue|:  \`+g.toFixed(2)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.stockout_cost.row.whatif_cut_days_50","Cut stockout days by 50%: total cost = "+t(F)+" ("+N.toFixed(2)+"%)  ·  annual savings = "+t(C),{cost:t(F),pct:N.toFixed(2),savings:t(C)})+\`
+• \`+e("calc_out.stockout_cost.row.whatif_recovery_25","Raise recovery rate to 25%: total cost = "+t($)+"  ·  additional savings = "+t(O),{cost:t($),savings:t(O)})+\`
+• \`+e("calc_out.stockout_cost.row.whatif_combined","Combined (50% less days + 25% recovery): see Milestone below")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+(isFinite(v)?e("calc_out.stockout_cost.row.break_even_max_days","Max stockout days for 🟢 (< 5% of revenue): "+v.toFixed(1)+" days",{days:v.toFixed(1)}):e("calc_out.stockout_cost.row.break_even_max_days_na","Max stockout days for 🟢 (< 5% of revenue): N/A (cost per day = 0)"))+\`
+• \`+(r>v?e("calc_out.stockout_cost.row.break_even_current_vs_target_reduce","Current vs target: reduce stockout days by "+(r-v).toFixed(1)+" to hit 🟢",{days:(r-v).toFixed(1)}):e("calc_out.stockout_cost.row.break_even_current_vs_target_below","Current vs target: already below target"))+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.stockout_cost.row.milestone_12mo_savings","12-mo savings if stockout cut 50%: "+t(a),{savings:t(a)})+\`
+• \`+e("calc_out.stockout_cost.row.milestone_reinvested_8pct","Reinvested at 8% return: "+t(a*.08)+"/yr additional",{amount:t(a*.08)})+\`
+• \`+e("calc_out.stockout_cost.row.milestone_compounded_3y","Compounded over 3 years: "+t(a*1.08*3-a*3)+" (vs $0 reinvested)",{amount:t(a*1.08*3-a*3)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+p+\`
+\`]};return[R(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

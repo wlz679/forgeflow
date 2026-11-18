@@ -1,571 +1,130 @@
 #!/usr/bin/env node
 // scripts/codegen-customfn.mjs
-// Regenerate the data table section of customFn for each engine from PRICING.
-// Each engine has a config that maps JSON field names to customFn field names.
-// Run after sync-pricing.mjs to keep client-side data fresh.
+// P168 B3-10 —— 重生成每个引擎的**客户端 customFn**，内容 = 服务端那份代码。
 //
-// Note: this only regenerates the data table. The customFn's logic (the
-// part AFTER the data table) is left untouched.
+// 为什么不再是「只重生成数据表」
+// ============================
+// 旧版（P141~P163）：本脚本只重生成 customFn 里的**数据表**（`var M={…}`），
+//   **逻辑**部分是手抄的镜像 ⇒ 服务端一升级客户端就跟不上。
+//   ⇒ B3-10 实测：全仓 100 个引擎欠账 **61** 条（58 条 customFn 返回多元素 + 32 条服务端↔客户端漂移，并集 61）。
 //
-// --check mode: regenerate in memory and diff against disk. Exit 1 if any drift.
-// Useful for CI: catch out-of-sync customFn tables without mutating files.
+// 现在：客户端 customFn **整段**由服务端代码派生（scripts/customfn-port.ts，TS AST + transpile）。
+//   ① 漂移在**结构上**不可能发生 —— 不是「测过了没漂」，是「同一份代码」。
+//   ② 数据表仍然是「算好的交互态子集」：折叠在**本次生成时**对着当前
+//      src/data/ai-pricing.json 求值 ⇒ 每周的价格同步照样进浏览器
+//      ⇒ P156 的「客户端最小数据架构」不被破坏。
+//   ③ 生成是**确定性的**（实测：100 个引擎二次生成逐字节一致）⇒ --check 不会假红。
 //
-// P141-B1-T2: LLM engines (openai/claude/gemini/deepseek) render via inline
-// model-shard output (one-line customFn literal with \n escapes — equivalent
-// to buildCustomFn({outputFormat:'model-shard', ...})). Non-LLM engines
-// (image/gpu/training) keep the hand-minified multi-line path because
-// buildCustomFn's model-shard mode assumes homogeneous per-record fields,
-// while image/gpu/training have heterogeneous fields per model. Stay on this
-// dual-renderer until buildCustomFn learns multi-shape records (B1-T3+ follow-up).
+// --check：只算不写；任一引擎漂移 ⇒ exit 1。任一引擎移植失败 ⇒ exit 1（**不静默跳过**）。
+//
+// 用法（必须从仓库根跑）：
+//   node scripts/codegen-customfn.mjs            # 生成
+//   node scripts/codegen-customfn.mjs --check    # 只查漂移
 
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
-const PRICING_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing.json');
-// P156: the interactive model set lives in ONE place (src/data/ai-pricing-popular.json)
-// so this generator and the TypeScript engines can never disagree about which
-// models are selectable. Read it as JSON (not an import) because this file runs
-// on plain node without a TS loader.
-const POPULAR_PATH = path.join(ROOT, 'src', 'data', 'ai-pricing-popular.json');
-
-const PRICING = JSON.parse(fs.readFileSync(PRICING_PATH, 'utf8'));
-const POPULAR = JSON.parse(fs.readFileSync(POPULAR_PATH, 'utf8'));
 const CHECK_MODE = process.argv.includes('--check');
-// P141-B1-T2: buildCustomFn-style model-shard render is the default codegen path
-// for LLM engines. `--legacy-codegen` opt-out (escape hatch) keeps the hand-minified
-// multi-line renderer if model-shard regresses.
-const USE_BUILD_CUSTOMFN = !process.argv.includes('--legacy-codegen');
+const PORT_SENTINEL = '__FFK_PORT_JSON__';
+const NL = String.fromCharCode(10);
 
-// ============================================================
-// Per-engine config: how to render the data table for customFn
-// ============================================================
-
-const FAMILY_SHORT = {
-  // openai
-  'gpt6': 'g6', 'gpt5': 'g5', 'gpt41': 'g41', 'o-series': 'os', 'legacy': 'lg',
-  // claude
-  'mythos': 'mythos', 'claude5x': 'claude5x', 'claude4x': 'claude4x',
-  // gemini
-  'flash35': 'flash35', 'pro': 'pro', 'flash3': 'flash3',
-  // deepseek
-  'v4': 'v4',
-};
-
-const ICON = {
-  'gem4': '★', 'flash35': '●', 'pro': '▲', 'flash3': '◆', 'legacy': '◇',
-};
-
-const ENGINES = [
-  {
-    file: 'openai-token-calculator.ts',
-        subdir: 'ai-cost',
-    provider: 'openai',
-    // Only include these models in customFn (default-selected + first preset).
-    // Full list (120+ models) stays in PRICING.json but isn't bundled.
-    // When user selects an unlisted model, customFn returns 0/no data (graceful degrade).
-    // P156: the list itself now lives in src/data/ai-pricing-popular.json so the
-    // build-time engine and this generator share one truth.
-    popularKeys: POPULAR.popularModelKeys.openai,
-    tableStart: '"var M={};" +',
-    tableEndMarker: 'Family icons',
-    fieldMap: (m) => {
-      const parts = [
-        `i:${fmt(m.input)}`,
-        `o:${fmt(m.output)}`,
-        `f:'${FAMILY_SHORT[m.family] || 'lg'}'`,
-        `c:'${m.contextWindow}'`,
-      ];
-      if (m.batchInput != null) parts.push(`bi:${fmt(m.batchInput)}`);
-      if (m.batchOutput != null) parts.push(`bo:${fmt(m.batchOutput)}`);
-      parts.push(`n:'${m.name.replace(/'/g, "\\'")}'`);
-      if (m.reasoningMultiplier) parts.push(`rm:${m.reasoningMultiplier}`);
-      parts.push(`od:${m.order}`);
-      return parts.join(',');
-    },
-  },
-  {
-    file: 'claude-api-cost-calculator.ts',
-        subdir: 'ai-cost',
-    provider: 'anthropic',
-    popularKeys: POPULAR.popularModelKeys.anthropic,
-    tableStart: '"var M={" +',
-    tableEndMarker: 'Family icons',
-    // P164: 跨供应商对比的代表模型。
-    //
-    // 「选哪个模型」与「展示名叫什么」是**编辑决定** —— 数据集的 name 字段有
-    // 自己的大小写约定（`Deepseek Chat`），站内编辑口径是 `DeepSeek Chat`，
-    // 所以 label 保留手写；但**价格一律从数据集派生**。
-    //
-    // 之前这张表是手写的，而且已经漂了：DeepSeek Chat 手写 0.14/0.28，
-    // 数据集实际 0.28/0.42（差 2 倍 / 1.5 倍）⇒ 页面上跨供应商对比一直在
-    // 用错价。
-    // P164: 跨供应商对比的代表模型 —— **唯一一份**在
-    // src/data/ai-pricing-popular.json 的 crossProviderModels 里，
-    // 服务端那两个引擎也读它 ⇒ 这个脚本不许再写一遍模型 key
-    // （tests/ai-cost-scope-guard.test.ts 会红：交互集只能有一个真相源）。
-    // label 是编辑口径（数据集的 name 字段大小写约定不同），价格一律派生。
-    crossProvider: POPULAR.crossProviderModels.claude,
-    fieldMap: (m) => {
-      const parts = [
-        `i:${fmt(m.input)}`,
-        `o:${fmt(m.output)}`,
-        `n:'${m.name.replace(/'/g, "\\'")}'`,
-        `f:'${FAMILY_SHORT[m.family] || 'legacy'}'`,
-        `cw:'${m.contextWindow}'`,
-        `mo:'${m.maxOutput || '64K'}'`,
-      ];
-      if (m.batchInput != null) parts.push(`bi:${fmt(m.batchInput)}`);
-      if (m.batchOutput != null) parts.push(`bo:${fmt(m.batchOutput)}`);
-      parts.push(`od:${m.order}`);
-      return parts.join(',');
-    },
-  },
-  {
-    file: 'gemini-api-cost-calculator.ts',
-        subdir: 'ai-cost',
-    provider: 'google',
-    popularKeys: POPULAR.popularModelKeys.google,
-    tableStart: '"var M={" +',
-    tableEndMarker: 'var FL=',
-    // P164: 跨供应商对比的代表模型 —— 见 claude 引擎那一条的注释。
-    // gemini 这边漂得更狠：DeepSeek V4 Flash 手写 0.14/0.28，数据集实际
-    // 0.3/1.2（差 2.1 倍 / 4.3 倍）。
-    crossProvider: POPULAR.crossProviderModels.gemini,
-    fieldMap: (m) => {
-      const parts = [
-        `i:${fmt(m.input)}`,
-        `o:${fmt(m.output)}`,
-        `bi:${fmt(m.batchInput || 0)}`,
-        `bo:${fmt(m.batchOutput || 0)}`,
-        `n:'${m.name.replace(/'/g, "\\'")}'`,
-        `f:'${m.family}'`,
-        `ic:'${ICON[m.family] || '◇'}'`,
-        `cw:'${m.contextWindow}'`,
-        `od:${m.order}`,
-        `sc:${m.supportsCache ? 'true' : 'false'}`,
-        `sb:${m.supportsBatch ? 'true' : 'false'}`,
-      ];
-      return parts.join(',');
-    },
-  },
-  {
-    file: 'deepseek-api-cost-calculator.ts',
-        subdir: 'ai-cost',
-    provider: 'deepseek',
-    popularKeys: POPULAR.popularModelKeys.deepseek,
-    tableStart: '"var M={" +',
-    tableEndMarker: 'var FI=',
-    fieldMap: (m) => {
-      return [
-        `i:${fmt(m.input)}`,
-        `o:${fmt(m.output)}`,
-        `n:'${m.name.replace(/'/g, "\\'")}'`,
-        `f:'${m.family}'`,
-        `cw:'${m.contextWindow}'`,
-        `od:${m.order}`,
-      ].join(',');
-    },
-  },
-  // Special: ai-api-cost-comparison has nested P = { provider: {n, m: [...] } }
-  {
-    file: 'ai-api-cost-comparison.ts',
-        subdir: 'ai-cost',
-    tableStart: '"var P={',
-    tableEndMarker: 'Provider initials + colors',
-    custom: true, // skip generic generator
-    provider: 'all', // use all providers
-    // Bundle filter: 1 model per provider (cheapest flagship) keeps cross-provider
-    // comparison useful without bundling all 245 models. The 4 flagship models are
-    // the canonical "cheapest in each family" — users comparing providers usually
-    // want to see this side-by-side.
-    // P156: the flagship list now lives in src/data/ai-pricing-popular.json.
-    popularKeys: Object.fromEntries(
-      Object.entries(POPULAR.comparisonFlagshipKeys).map(([pk, key]) => [pk, [key]]),
-    ),
-  },
-  // Non-LLM engines
-  {
-    file: 'ai-image-generation-cost-calculator.ts',
-        subdir: 'ai-cost',
-    tableStart: '"var PS={" +',
-    tableEndMarker: 'var ST=',
-    fieldMap: (m) => {
-      const parts = [
-        `n:'${m.name.replace(/'/g, "\\'")}'`,
-        `pi:${fmt(m.perImage)}`,
-        `is:${m.isSubscription ? 'true' : 'false'}`,
-        `sr:'${(m.subRange || '').replace(/'/g, "\\'")}'`,
-        `q:'${m.quality.replace(/'/g, "\\'")}'`,
-        `rs:[${m.resolutions.map((r) => `'${r}'`).join(',')}]`,
-        `od:${m.order}`,
-      ];
-      return parts.join(',');
-    },
-    isImage: true,
-  },
-  {
-    file: 'gpu-cloud-cost-calculator.ts',
-        subdir: 'ai-cost',
-    tableStart: '"var PS2={" +',
-    tableEndMarker: 'var SCPG2=',
-    fieldMap: (m) => {
-      const rates = Object.entries(m.rates).map(([g, r]) => `${g}:${fmt(r)}`).join(',');
-      return [
-        `n:'${m.name.replace(/'/g, "\\'")}'`,
-        `sm:${fmt(m.spotMult)}`,
-        `rm:${fmt(m.reservedMult)}`,
-        `r:{${rates}}`,
-        `od:${m.order}`,
-      ].join(',');
-    },
-    isGpu: true,
-  },
-  {
-    file: 'ai-training-cost-estimator.ts',
-        subdir: 'ai-cost',
-    tableStart: '"var GT={" +',
-    tableEndMarker: '"var MS={" +',
-    fieldMap: (m) => {
-      return [
-        `hr:${fmt(m.hourlyRate)}`,
-        `n:'${m.name.replace(/'/g, "\\'")}'`,
-        `od:${m.order}`,
-      ].join(',');
-    },
-    isTrainingGpu: true,
-  },
-  {
-    file: 'ai-training-cost-estimator.ts',
-        subdir: 'ai-cost',
-    tableStart: '"var MS={" +',
-    tableEndMarker: 'var SCG=',
-    fieldMap: (m) => {
-      const parts = [];
-      if (m.h200 != null) parts.push(`h200:${m.h200}`);
-      if (m.h100 != null) parts.push(`h100:${m.h100}`);
-      if (m.a100 != null) parts.push(`a100:${m.a100}`);
-      if (m.l40s != null) parts.push(`l40s:${m.l40s}`);
-      parts.push(`n:'${m.name.replace(/'/g, "\\'")}'`);
-      parts.push(`isL:${m.isLoRA ? 'true' : 'false'}`);
-      parts.push(`od:${m.order}`);
-      return parts.join(',');
-    },
-    isTrainingModel: true,
-  },
-  {
-    // P163 D3：训练引擎 customFn 的**标量常量**（存储单价 / 数据处理单价 /
-    // LoRA epoch 速度 / Spot 与 Reserved 折扣带）原先是手写副本 ——
-    // 数据集一刷新就漂。
-    //
-    // 这条配置让 codegen 从 ai-pricing.json 生成这段常量，
-    // 于是 customFn 与服务端 calculate() 读的是同一份真相源。
-    file: 'ai-training-cost-estimator.ts',
-    subdir: 'ai-cost',
-    tableStart: '"var SCG=',
-    tableEndMarker: '"function fm2',
-    isTrainingScalars: true,
-  },
-];
-
-// ============================================================
-// Custom generator for ai-api-cost-comparison (nested structure)
-// ============================================================
-/**
- * Returns the new full file content with the comparison table replaced.
- * Returns null if markers are not found.
- */
-function buildComparisonTableContent(filePath) {
-  const c = fs.readFileSync(filePath, 'utf8');
-
-  // Find the comparison engine config (has popularKeys per-provider)
-  const compEngine = ENGINES.find((e) => e.file === 'ai-api-cost-comparison.ts');
-  const popularKeys = compEngine?.popularKeys;
-
-  // Generate new provider data, with `var P={` opening line
-  const providerKeys = Object.keys(PRICING.llm);
-  const providerLines = ['  "var P={" +'];
-  providerKeys.forEach((pk, idx) => {
-    const pv = PRICING.llm[pk];
-    let modelEntries = Object.entries(pv.models);
-    // Apply popularKeys filter for the comparison engine
-    if (popularKeys && popularKeys[pk]) {
-      const keep = new Set(popularKeys[pk]);
-      modelEntries = modelEntries.filter(([k]) => keep.has(k));
-    }
-    const sorted = modelEntries.sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
-    const modelParts = sorted.map(([mk, mv]) => `{k:'${mk}',n:'${mv.name.replace(/'/g, "\\'")}',i:${fmt(mv.input)},o:${fmt(mv.output)},cw:'${mv.contextWindow}'}`);
-    const modelStr = modelParts.join(',');
-    const isLast = idx === providerKeys.length - 1;
-    const tail = isLast ? ']}};" +' : ']}," +';
-    providerLines.push(`  "${pk}:{n:'${pv.name}',m:[${modelStr}${tail}`);
-  });
-  const newBlock = providerLines.join('\n');
-
-  // Find the first provider line OR the "var P={" opening line (idempotent).
-  // The original has `"var P={" +` on its own line; earlier codegen runs may
-  // have added duplicates, so we look for the EARLIEST match and ensure we
-  // only emit ONE "var P={" + in the output.
-  const lines = c.split('\n');
-  const startIdx = lines.findIndex((l) =>
-    /^\s*"(var P=\{|(openai|anthropic|google|deepseek|azure|aws):\{)/.test(l)
-  );
-  const endIdx = lines.findIndex((l, i) => i > startIdx && l.includes('Provider initials + colors'));
-
-  if (startIdx < 0 || endIdx < 0) return null;
-
-  // Replace lines [startIdx, endIdx) with the new block (no trailing blank line —
-  // the next string in the customFn concat is on the very next line)
-  const newLines = [
-    ...lines.slice(0, startIdx),
-    newBlock,
-    ...lines.slice(endIdx),
-  ];
-  return newLines.join('\n');
+function walk(dir, acc) {
+  for (const entry of fs.readdirSync(dir)) {
+    const p = path.join(dir, entry);
+    const st = fs.statSync(p);
+    if (st.isDirectory()) walk(p, acc);
+    else if (entry.endsWith('.ts')) acc.push(p);
+  }
+  return acc;
 }
 
-function fmt(n) {
-  if (n == null) return '0';
-  // Round to 4 decimal places to avoid 0.09999999
-  return Number(n.toFixed(4)).toString();
+/** 收集所有「有 customFn」的引擎 —— 客户端 customFn 必须永远是服务端派生的 */
+function collectEngines() {
+  const out = [];
+  for (const f of walk(path.join(ROOT, 'src', 'engines'), [])) {
+    const src = fs.readFileSync(f, 'utf8');
+    if (src.indexOf('customFn') < 0) continue;
+    const m = src.match(/slug:\s*['"]([^'"]+)['"]/);
+    if (!m) continue;
+    out.push({ file: path.relative(ROOT, f).split(path.sep).join('/'), slug: m[1] });
+  }
+  out.sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
+  return out;
 }
 
-function generateTable(engine) {
-  // Determine the data source
-  let entries;
-  if (engine.isTrainingScalars) {
-    // P163 D3：标量常量表（不是记录集合）—— 直接生成一行常量声明。
-    const providers = Object.values(PRICING.gpu.providers);
-    const spotMults = providers.map((p) => p.spotMult);
-    const reservedMults = providers.map((p) => p.reservedMult);
-    const spotMin = Math.min(...spotMults);
-    const spotMax = Math.max(...spotMults);
-    const resMin = Math.min(...reservedMults);
-    const resMax = Math.max(...reservedMults);
-    const line =
-      `"var SCG=${fmt(PRICING.gpu.storagePerGB)};var DPCG=${fmt(PRICING.training.dataProcessPerGB)};` +
-      `var LES=${fmt(PRICING.training.loraSpeedup)};` +
-      `var SPMIN=${fmt(spotMin)};var SPMAX=${fmt(spotMax)};` +
-      `var RPMIN=${fmt(resMin)};var RPMAX=${fmt(resMax)};" +`;
-    return '  ' + line;
-  }
-  if (engine.isImage) entries = Object.entries(PRICING.image.providers);
-  else if (engine.isGpu) entries = Object.entries(PRICING.gpu.providers);
-  else if (engine.isTrainingGpu) entries = Object.entries(PRICING.training.gpuTypes);
-  else if (engine.isTrainingModel) entries = Object.entries(PRICING.training.modelSizes);
-  else entries = Object.entries(PRICING.llm[engine.provider].models);
+const ENGINES = collectEngines();
 
-  // Apply popularKeys filter (bundle-size optimization)
-  if (engine.popularKeys && Array.isArray(engine.popularKeys)) {
-    const keep = new Set(engine.popularKeys);
-    entries = entries.filter(([k]) => keep.has(k));
-  }
-
-  const sorted = entries.sort(([, a], [, b]) => (a.order || 99) - (b.order || 99));
-
-  // P141-B1-T2: LLM engine (homogeneous per-record fields) renders inline as
-  // model-shard output (one customFn string literal with \n escapes). Equivalent
-  // to buildCustomFn({outputFormat:'model-shard', ...}). T2 inline (not via
-  // callBuildCustomFn) — engine.fieldMap closure over fmt/FAMILY_SHORT/ICON
-  // can't serialize across spawn-tsx; T3+ buildCustomFn learns multi-shape
-  // records → switch to callBuildCustomFn.
-  const isLlmEngine = !engine.isImage && !engine.isGpu && !engine.isTrainingGpu && !engine.isTrainingModel;
-  if (USE_BUILD_CUSTOMFN && isLlmEngine) {
-    const fieldByKey = Object.fromEntries(sorted.map(([k, m]) => [k, engine.fieldMap(m, k)]));
-    const openaiStyle = engine.file === 'openai-token-calculator.ts';
-    const varName = 'M';
-    const srcLines = openaiStyle
-      ? [`var ${varName}={};`, ...sorted.map(([k]) => `${varName}['${k}']={${fieldByKey[k]}};`)]
-      : [`var ${varName}={${sorted.map(([k]) => `'${k}':{${fieldByKey[k]}}`).join(',')}};`];
-    // P164: 跨供应商对比表（XP）—— 价格从数据集派生，展示名是编辑口径。
-    //
-    // 它必须和 M 表在**同一个表区**里，所以引擎文件里不再手写这张表；
-    // codegen 把它紧跟在 M 后面一起生成。这样「表区结束标记」的个数不变
-    // （不需要改 tests/codegen-marker-presence.test.ts 的钉死值）。
-    if (engine.crossProvider) {
-      const xpParts = engine.crossProvider.map((c) => {
-        const m = PRICING.llm[c.provider]?.models?.[c.model];
-        if (!m) {
-          throw new Error(
-            `[codegen-customfn] ${engine.file}: cross-provider model ` +
-              `${c.provider}/${c.model} is missing from ai-pricing.json`,
-          );
-        }
-        return `${c.key}:{i:${fmt(m.input)},o:${fmt(m.output)},n:'${c.label.replace(/'/g, "\\'")}'}`;
-      });
-      srcLines.push(`var XP={${xpParts.join(',')}};`);
-    }
-    const src = srcLines.join('\n');
-    // 防御性 verify:确保 src 真的可被 new Function 解析(否则 regenerate 后会让 customFn 整体失效)
-    try {
-      new Function('inputs', 'pick', 'fill', src);
-    } catch (e) {
-      throw new Error(`model-shard output not parseable for ${engine.file}: ${e.message}\n  src: ${src.slice(0, 200)}`);
-    }
-    // 转义为 JS string literal — customFn 字段是 `"..." + "..." + ...;` 拼接形式
-    // 需转义:反斜杠 → \\, 双引号 → \", 换行 → \n
-    const escaped = src.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-    return `  "${escaped}" +`;
-  }
-
-  // Non-LLM engine (image/gpu/training — heterogeneous per-record fields):
-  // hand-minified multi-line '...' + '...' + 格式。buildCustomFn model-shard
-  // 不支持异构 record,所以保留 hand-minified path(B1-T3+ follow-up: buildCustomFn
-  // 学 multi-shape records 后切到 callBuildCustomFn)。
-  // Openai format: M['key']={...};
-  // Other format: 'key':{...},
-  // Each engine has a tableStart (the declaration line emitted by the codegen,
-  // e.g. "var M={" +). The previous version only prepended the declaration
-  // for openai-token-calculator and relied on the existing declaration line
-  // being preserved for other engines — but that's fragile: any future edit
-  // that moves/regenerates the table without preserving the wrapping line
-  // (e.g. a stale GitHub Action sync-pricing run after a manual fix) would
-  // silently drop the declaration. Always prepend the wrapping AND close
-  // the last entry with `};` for idempotence.
-  if (engine.file === 'openai-token-calculator.ts') {
-    const lines = sorted.map(([k, m]) => `  "M['${k}']={${engine.fieldMap(m, k)}};" +`).join('\n');
-    return (engine.tableStart ? `  ${engine.tableStart}\n` : '  "var M={};" +\n') + lines;
-  } else {
-    const lines = sorted.map(([k, m], i) => {
-      // Last entry closes the object literal: drop trailing comma, add '};'
-      // so the resulting runtime is `var M={...}};var FI=...;` (semicolon
-      // between `}` and next statement is required by ASI).
-      const isLast = i === sorted.length - 1;
-      const sep = isLast ? '};' : ',';
-      return `  "'${k}':{${engine.fieldMap(m, k)}}${sep}" +`;
-    }).join('\n');
-    // Prepend tableStart (e.g. "var M={" +). If tableStart already ends with
-    // "{" we don't add another; if it ends with "{...}" (like openai's
-    // "var M={};" +), we use it as-is.
-    return (engine.tableStart ? `  ${engine.tableStart}\n` : '') + lines;
-  }
+if (process.argv.includes('--legacy-codegen')) {
+  console.log('[codegen-customfn] 注：--legacy-codegen 已无意义（旧的手抄镜像通路已下线），本次按新通路执行。');
 }
 
-/**
- * Returns the new full file content with the data table replaced.
- * Returns null if markers are not found.
- */
-function buildTableContent(filePath, engine) {
-  const c = fs.readFileSync(filePath, 'utf8');
-  const newTable = generateTable(engine);
+console.log('[codegen-customfn] ' + (CHECK_MODE ? 'Checking' : 'Regenerating') +
+  ' client customFn from server code for ' + ENGINES.length + ' engine(s)...');
 
-  const lines = c.split('\n');
-
-  // Find end marker
-  const endIdx = lines.findIndex((l) => l.includes(engine.tableEndMarker));
-  if (endIdx < 0) return null;
-
-  // Find start: prefer the tableStart marker (the declaration line emitted
-  // by the codegen, e.g. `"var M={" +`). Falling back to first data line
-  // makes regen non-idempotent when the marker exists but the data block
-  // has additional lines before it (legacy content from older regen runs).
-  let startIdx = -1;
-  if (engine.tableStart) {
-    startIdx = lines.findIndex((l) => l.includes(engine.tableStart));
-  }
-  if (startIdx < 0) {
-    // No tableStart marker found (or engine without one). Fall back to
-    // first data line matching the engine's data shape.
-    // Note: model names can contain `.` (e.g. gemini-3.5-flash), so the
-    // key char class is [\w.-]+ not just [\w-]+.
-    if (engine.file === 'openai-token-calculator.ts') {
-      startIdx = lines.findIndex((l) => l.includes("M['") && l.includes('i:') && l.includes('o:'));
-    } else if (engine.isImage) {
-      startIdx = lines.findIndex((l) => /'[\w.-]+':\{n:/.test(l) && l.includes('pi:'));
-    } else if (engine.isGpu) {
-      startIdx = lines.findIndex((l) => /'[\w.-]+':\{n:/.test(l) && l.includes('sm:'));
-    } else if (engine.isTrainingGpu) {
-      startIdx = lines.findIndex((l) => /'[\w.-]+':\{hr:/.test(l) && l.includes('n:'));
-    } else if (engine.isTrainingModel) {
-      startIdx = lines.findIndex((l) => /'[\w.-]+':\{(h200|h100|a100):/.test(l));
-    } else {
-      // Standard LLM (claude/gemini/deepseek)
-      startIdx = lines.findIndex((l) => /'[\w.-]+':\{i:/.test(l) && l.includes('o:'));
-    }
-  }
-  if (startIdx < 0) return null;
-
-  const newLines = [
-    ...lines.slice(0, startIdx),
-    newTable,
-    '',
-    ...lines.slice(endIdx),
-  ];
-  return newLines.join('\n');
+if (ENGINES.length === 0) {
+  console.error('[codegen-customfn] ✗ 没找到任何带 customFn 的引擎 —— 这是「静默跳过」的典型形态，直接判失败。');
+  process.exit(1);
 }
 
-// ============================================================
-// Main
-// ============================================================
-// P141-B1-T2: inline model-shard render (in `generateTable`) is the default
-// codegen path for LLM engines. (Escape hatch: `--legacy-codegen` reverts to
-// the hand-minified multi-line renderer.)
+// 1) 写批次清单（移植器按清单逐个处理）
+const listFile = path.join(os.tmpdir(), 'ffk-customfn-port-batch.json');
+fs.writeFileSync(listFile, JSON.stringify(ENGINES.map((e) => ({ file: e.file, slug: e.slug }))), 'utf8');
 
-console.log('[codegen-customfn] ' + (CHECK_MODE ? 'Checking' : 'Regenerating') + ' customFn data tables from PRICING...');
+// 2) 调移植器（需要 tsx 才能加载 TS 模块做折叠求值）
+const portArgs = ['--import', 'tsx', path.join(ROOT, 'scripts', 'customfn-port.ts'), '--batch', listFile];
+if (CHECK_MODE) portArgs.push('--check');
+const proc = spawnSync(process.execPath, portArgs, {
+  cwd: ROOT,
+  encoding: 'utf8',
+  maxBuffer: 64 * 1024 * 1024,
+});
 
-let driftCount = 0;
-let writeCount = 0;
-
-for (const engine of ENGINES) {
-  const fp = path.join(ROOT, 'src', 'engines', engine.subdir, engine.file);
-  const newContent = engine.custom
-    ? buildComparisonTableContent(fp)
-    : buildTableContent(fp, engine);
-
-  if (newContent == null) {
-    console.log(`  ⚠ ${engine.file}: markers not found (skipped)`);
-    continue;
-  }
-
-  const current = fs.readFileSync(fp, 'utf8');
-  const hasDrift = current !== newContent;
-
-  if (CHECK_MODE) {
-    if (hasDrift) {
-      console.error(`  ✗ ${engine.file}: drift detected`);
-      driftCount++;
-    } else {
-      console.log(`  ✓ ${engine.file}`);
-    }
-  } else {
-    if (hasDrift) {
-      fs.writeFileSync(fp, newContent);
-      writeCount++;
-    }
-    // Count for the tag
-    let count;
-    if (engine.isImage) count = Object.keys(PRICING.image.providers).length;
-    else if (engine.isGpu) count = Object.keys(PRICING.gpu.providers).length;
-    else if (engine.isTrainingGpu) count = Object.keys(PRICING.training.gpuTypes).length;
-    else if (engine.isTrainingModel) count = Object.keys(PRICING.training.modelSizes).length;
-    else if (engine.isTrainingScalars) count = Object.keys(PRICING.gpu.providers).length;
-    else if (engine.custom) {
-      const totalModels = Object.values(PRICING.llm).reduce((s, p) => s + Object.keys(p.models).length, 0);
-      const filtered = engine.popularKeys
-        ? Object.values(engine.popularKeys).reduce((s, arr) => s + arr.length, 0)
-        : totalModels;
-      console.log(`  ✓ ${engine.file} (${filtered}/${totalModels} popular)`);
-      continue;
-    } else count = Object.keys(PRICING.llm[engine.provider].models).length;
-    const filtered = engine.popularKeys && Array.isArray(engine.popularKeys)
-      ? engine.popularKeys.length
-      : count;
-    const tag = engine.popularKeys ? ` (${filtered}/${count} popular)` : ` (${count})`;
-    console.log(`  ${hasDrift ? '✓' : ' '} ${engine.file}${tag}`);
-  }
+if (proc.status !== 0) {
+  console.error('[codegen-customfn] ✗ 移植器失败（exit ' + proc.status + '）');
+  if (proc.stderr) console.error(proc.stderr);
+  process.exit(1);
 }
+
+const marker = (proc.stdout || '').split(NL).find((l) => l.startsWith(PORT_SENTINEL));
+if (!marker) {
+  console.error('[codegen-customfn] ✗ 移植器没有返回 JSON 结果');
+  if (proc.stdout) console.error(proc.stdout);
+  process.exit(1);
+}
+const results = JSON.parse(marker.slice(PORT_SENTINEL.length)).results;
+
+// 3) 报告 —— 移植失败直接判失败（旧脚本这里是「⚠ markers not found (skipped)」⇒ 静默跳过）
+const failed = results.filter((r) => !r.ok);
+if (failed.length > 0) {
+  console.error('');
+  console.error('[codegen-customfn] ✗ ' + failed.length + ' engine(s) 移植失败（不静默跳过）：');
+  for (const r of failed) console.error('  ✗ ' + r.file + ' :: ' + r.note);
+  process.exit(1);
+}
+
+const drifted = results.filter((r) => r.changed);
 
 if (CHECK_MODE) {
-  if (driftCount > 0) {
-    console.error(`\n[codegen-customfn] ✗ ${driftCount} engine(s) have drift. Re-run without --check to update.`);
-    process.exit(1);
-  } else {
-    console.log(`\n[codegen-customfn] ✓ No drift detected.`);
-    process.exit(0);
+  for (const r of results) {
+    if (r.changed) console.error('  ✗ ' + r.file + ': drift detected');
+    else console.log('  ✓ ' + r.file);
   }
-} else {
-  console.log(`\n[codegen-customfn] Done. ${writeCount} engine(s) updated.`);
+  if (drifted.length > 0) {
+    console.error('');
+    console.error('[codegen-customfn] ✗ ' + drifted.length + ' engine(s) have drift. Re-run without --check to update.');
+    process.exit(1);
+  }
+  console.log('');
+  console.log('[codegen-customfn] ✓ No drift detected.');
   process.exit(0);
 }
+
+for (const r of drifted) console.log('  ✓ ' + r.file + ' (updated)');
+console.log('');
+console.log('[codegen-customfn] Done. ' + drifted.length + ' engine(s) updated.');
+process.exit(0);

@@ -230,73 +230,58 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var ZS={90:1.28,95:1.65,99:2.33};" +
-  "function zScore(sl){return ZS[sl]!=null?ZS[sl]:1.65;}" +
-  "function ltd(d,l){return d*l;}" +
-  "function ss(z,sd,l,rp){if(rp<=0)return 0;return z*sd*Math.sqrt(l/rp);}" +
-  "function rop(l,s){return l+s;}" +
-  "function band(sl){if(sl>=95)return 'excellent';if(sl>=90)return 'good';if(sl>=85)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var add=cnn(parseFloat(inputs.avgDailyDemand)||0);" +
-  "var ltd2=cnn(parseFloat(inputs.leadTimeDays)||0);" +
-  "var sl=parseInt(inputs.serviceLevel||'95',10);" +
-  "var dsd=cnn(parseFloat(inputs.demandStdDev)||0);" +
-  "var rp=Math.max(1,parseFloat(inputs.reviewPeriod)||7);" +
-  "if(add===0||ltd2===0){return['$calc_out.section.reorder_point_calculator|\\u23F0 Reorder Point Calculator|\\n\\n'+tk('calc_out.reorder_point.row.enter_inputs_required','\\uD83D\\uDCCA Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.')];}" +
-  "var z=zScore(sl);" +
-  "var ltdV=ltd(add,ltd2);" +
-  "var ssV=ss(z,dsd,ltd2,rp);" +
-  "var ropV=rop(ltdV,ssV);" +
-  "var bd=band(sl);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?tk('calc_out.reorder_point.row.health_excellent','Excellent \\u2014 service level \\u2265 95%; reorder point accounts for demand variability'):bd==='good'?tk('calc_out.reorder_point.row.health_good','Good \\u2014 90% service level; typical retail, raise to 95% for high-margin / critical SKU'):bd==='warning'?tk('calc_out.reorder_point.row.health_warning','Warning \\u2014 85% service level; risky; 15% of cycles will stockout'):tk('calc_out.reorder_point.row.health_critical','Critical \\u2014 < 85% service level; default risk tolerance; reorder point too low');" +
-  "var lt2=ltd2*2;var ltdD=ltd(add,lt2);var ssD=ss(z,dsd,lt2,rp);var ropD=rop(ltdD,ssD);var ssDelta=ssD-ssV;" +
-  "var z99=zScore(99);var ss99=ss(z99,dsd,ltd2,rp);var rop99=rop(ltdV,ss99);var ssInc99=ss99-ssV;" +
-  "var minSL=95;var slGap=minSL-sl;" +
-  "var invH=ssV;var moFreq=30/rp;var annStkout=invH*moFreq*12;" +
-  "var tip='';" +
-  "if(bd==='critical'){tip=tk('calc_out.reorder_point.row.tip_critical','\\uD83D\\uDCA1 Tip: < 85% service level will stockout 15%+ of cycles. Raise SL to 95% immediately (typical for most SKUs), or to 99% for high-margin / critical / perishable inventory. Cost of safety stock is far less than cost of stockouts (use P7-3 to compare).');}" +
-  "else if(bd==='warning'){tip=tk('calc_out.reorder_point.row.tip_warning','\\uD83D\\uDCA1 Tip: 85% service level means ~15% of cycles will stockout. For most SKUs, 95% SL is the right target \\u2014 the safety-stock cost increase (\\u224830% more buffer) is small relative to the stockout cost avoided.');}" +
-  "else if(bd==='good'){tip=tk('calc_out.reorder_point.row.tip_good','\\uD83D\\uDCA1 Tip: 90% service level is solid retail. To upgrade to \\uD83D\\uDFE2, increase to 95% SL (typically +25% safety stock buffer). Reserve 99% SL for high-margin / critical / perishable SKUs only.');}" +
-  "else{tip=tk('calc_out.reorder_point.row.tip_excellent','\\uD83D\\uDCA1 Tip: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.');}" +
-  "var r2='';" +
-  "r2+='$calc_out.section.reorder_point_calculator|\\u23F0 Reorder Point Calculator|\\n\\n';" +
-  "r2+='$calc_out.section.health|\\uD83E\\uDE7A Health:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.health_summary','Service level: '+sl+'%  \\u00B7  Z-score: '+z.toFixed(2)+'  \\u00B7  Reorder point: '+Math.round(ropV)+' units',{sl:String(sl),z:z.toFixed(2),rop:String(Math.round(ropV))})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.lead_time_and_safety_stock','Lead-time demand: '+Math.round(ltdV)+' units  \\u00B7  Safety stock: '+Math.round(ssV)+' units',{ltd:String(Math.round(ltdV)),ss:String(Math.round(ssV))})+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.inputs_snapshot|\\uD83D\\uDCCA Inputs Snapshot:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.avg_daily_demand|Avg daily demand|:        '+add+' units/day\\n';" +
-  "r2+='\\u2022 $calc_out.label.supplier_lead_time|Supplier lead time|:      '+ltd2+' days\\n';" +
-  "r2+='\\u2022 $calc_out.label.service_level|Service level|:           '+sl+'%  (Z = '+z.toFixed(2)+')\\n';" +
-  "r2+='\\u2022 $calc_out.label.demand_std_deviation|Demand std deviation|:    '+dsd+' units/day\\n';" +
-  "r2+='\\u2022 $calc_out.label.review_period|Review period|:           '+rp+' days\\n';" +
-  "r2+='\\u2022 $calc_out.label.lead_time_demand|Lead-time demand|:        '+Math.round(ltdV)+' units\\n';" +
-  "r2+='\\u2022 $calc_out.label.safety_stock|Safety stock|:            '+Math.round(ssV)+' units\\n';" +
-  "r2+='\\u2022 $calc_out.label.reorder_point|Reorder point|:           '+Math.round(ropV)+' units\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.what_if|\\uD83D\\uDD04 What-If:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.whatif_lead_time_doubles','Lead time doubles: ROP = '+Math.round(ropD)+' units  \\u00B7  safety stock grows by '+Math.round(ssDelta)+' units (\\u221A2 factor)',{rop:String(Math.round(ropD)),delta:String(Math.round(ssDelta))})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.whatif_service_level_99','Service level raised to 99% (Z='+z99.toFixed(2)+'): ROP = '+Math.round(rop99)+' units  \\u00B7  safety stock grows by '+Math.round(ssInc99)+' units',{z:z99.toFixed(2),rop:String(Math.round(rop99)),delta:String(Math.round(ssInc99))})+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.break_even|\\u2696\\uFE0F Break-Even:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 $calc_out.label.min_service_level_for_excellent|Min service level for \\uD83D\\uDFE2|: '+minSL+'%\\n';" +
-  "r2+='\\u2022 '+(slGap>0?tk('calc_out.reorder_point.row.current_vs_target_raise','Current vs target: raise SL by '+slGap+'pp to hit \\uD83D\\uDFE2',{gap:String(slGap)}):slGap===0?tk('calc_out.reorder_point.row.current_vs_target_at_target','Current vs target: at target'):tk('calc_out.reorder_point.row.current_vs_target_above_target','Current vs target: already above target'))+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+='$calc_out.section.milestone|\\uD83C\\uDFAF Milestone:|\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.inventory_headroom','Inventory headroom (safety stock): '+Math.round(invH)+' units above lead-time demand',{headroom:String(Math.round(invH))})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.order_frequency','Order frequency: ~'+moFreq.toFixed(1)+' orders/month  \\u00B7  ~'+Math.round(moFreq*12)+' orders/year',{monthly:moFreq.toFixed(1),yearly:String(Math.round(moFreq*12))})+'\\n';" +
-  "r2+='\\u2022 '+tk('calc_out.reorder_point.row.annual_stockout_avoided','Annual stockout risk avoided: '+Math.round(annStkout)+' units not stocked out',{units:String(Math.round(annStkout))})+'\\n\\n';" +
-  "r2+='\\u2501'.repeat(41)+'\\n\\n';" +
-  "r2+=tip+'\\n';" +
-  "return [r2];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let _=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t){return j[t]??1.65},m=function(t,o){return t*o},v=function(t,o,n,r){return r<=0?0:t*o*Math.sqrt(n/r)},h=function(t,o){return t+o},M=function(t){return t>=y.excellent?"excellent":t>=y.good?"good":t>=y.warning?"warning":"critical"},F=function(t,o,n){var r=E(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var Q=_,X=g,Y=m,B=v,T=h,tt=M,et=F,e=tk,O={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},P='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+P)(),y={excellent:95,good:90,warning:85,critical:0},j={90:1.28,95:1.65,99:2.33},E=function(t){const o=_(parseFloat(t.avgDailyDemand)||0),n=_(parseFloat(t.leadTimeDays)||0),r=parseInt(t.serviceLevel||"95",10),p=_(parseFloat(t.demandStdDev)||0),c=Math.max(1,parseFloat(t.reviewPeriod)||7);if(o===0||n===0)return[\`$calc_out.section.reorder_point_calculator|⏰ Reorder Point Calculator|
+
+\`+e("calc_out.reorder_point.row.enter_inputs_required","📊 Enter your average daily demand, supplier lead time, service level, demand std dev, and review period to compute when to reorder and how much safety stock to carry.")];const l=g(r),s=m(o,n),a=v(l,p,n,c),w=h(s,a),i=M(r),K=O[i],z=i==="excellent"?e("calc_out.reorder_point.row.health_excellent","Excellent — service level ≥ 95%; reorder point accounts for demand variability"):i==="good"?e("calc_out.reorder_point.row.health_good","Good — 90% service level; typical retail, raise to 95% for high-margin / critical SKU"):i==="warning"?e("calc_out.reorder_point.row.health_warning","Warning — 85% service level; risky; 15% of cycles will stockout"):e("calc_out.reorder_point.row.health_critical","Critical — < 85% service level; default risk tolerance; reorder point too low"),x=n*2,A=m(o,x),$=v(l,p,x,c),D=h(A,$),k=$-a,S=g(99),L=v(S,p,n,c),q=h(s,L),R=L-a,C=95,f=C-r,b=a,d=30/c,I=b*d*12;let u;i==="critical"?u=e("calc_out.reorder_point.row.tip_critical","💡 Tip: < 85% service level will stockout 15%+ of cycles. Raise SL to 95% immediately (typical for most SKUs), or to 99% for high-margin / critical / perishable inventory. Cost of safety stock is far less than cost of stockouts (use P7-3 to compare)."):i==="warning"?u=e("calc_out.reorder_point.row.tip_warning","💡 Tip: 85% service level means ~15% of cycles will stockout. For most SKUs, 95% SL is the right target — the safety-stock cost increase (≈30% more buffer) is small relative to the stockout cost avoided."):i==="good"?u=e("calc_out.reorder_point.row.tip_good","💡 Tip: 90% service level is solid retail. To upgrade to 🟢, increase to 95% SL (typically +25% safety stock buffer). Reserve 99% SL for high-margin / critical / perishable SKUs only."):u=e("calc_out.reorder_point.row.tip_excellent","💡 Tip: 95% service level is the recommended baseline. Reorder quarterly to match demand variability shifts (seasonal products may need SL tuning). Pair with stockout cost (P7-3) to verify safety-stock investment pays off.");const U=e("calc_out.reorder_point.row.health_summary","Service level: "+r+"%  ·  Z-score: "+l.toFixed(2)+"  ·  Reorder point: "+Math.round(w)+" units",{sl:String(r),z:l.toFixed(2),rop:String(Math.round(w))}),W=e("calc_out.reorder_point.row.lead_time_and_safety_stock","Lead-time demand: "+Math.round(s)+" units  ·  Safety stock: "+Math.round(a)+" units",{ltd:String(Math.round(s)),ss:String(Math.round(a))}),N=e("calc_out.reorder_point.row.whatif_lead_time_doubles","Lead time doubles: ROP = "+Math.round(D)+" units  ·  safety stock grows by "+Math.round(k)+" units (√2 factor)",{rop:String(Math.round(D)),delta:String(Math.round(k))}),Z=e("calc_out.reorder_point.row.whatif_service_level_99","Service level raised to 99% (Z="+S.toFixed(2)+"): ROP = "+Math.round(q)+" units  ·  safety stock grows by "+Math.round(R)+" units",{z:S.toFixed(2),rop:String(Math.round(q)),delta:String(Math.round(R))}),G=f>0?e("calc_out.reorder_point.row.current_vs_target_raise","Current vs target: raise SL by "+f+"pp to hit 🟢",{gap:String(f)}):f===0?e("calc_out.reorder_point.row.current_vs_target_at_target","Current vs target: at target"):e("calc_out.reorder_point.row.current_vs_target_above_target","Current vs target: already above target"),J=e("calc_out.reorder_point.row.inventory_headroom","Inventory headroom (safety stock): "+Math.round(b)+" units above lead-time demand",{headroom:String(Math.round(b))}),V=e("calc_out.reorder_point.row.order_frequency","Order frequency: ~"+d.toFixed(1)+" orders/month  ·  ~"+Math.round(d*12)+" orders/year",{monthly:d.toFixed(1),yearly:String(Math.round(d*12))}),H=e("calc_out.reorder_point.row.annual_stockout_avoided","Annual stockout risk avoided: "+Math.round(I)+" units not stocked out",{units:String(Math.round(I))});return[\`$calc_out.section.reorder_point_calculator|⏰ Reorder Point Calculator|
+
+$calc_out.section.health|🩺 Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+K+" "+z+\`
+• \`+U+\`
+• \`+W+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.avg_daily_demand|Avg daily demand|:        \`+o+\` units/day
+• $calc_out.label.supplier_lead_time|Supplier lead time|:      \`+n+\` days
+• $calc_out.label.service_level|Service level|:           \`+r+"%  (Z = "+l.toFixed(2)+\`)
+• $calc_out.label.demand_std_deviation|Demand std deviation|:    \`+p+\` units/day
+• $calc_out.label.review_period|Review period|:           \`+c+\` days
+• $calc_out.label.lead_time_demand|Lead-time demand|:        \`+Math.round(s)+\` units
+• $calc_out.label.safety_stock|Safety stock|:            \`+Math.round(a)+\` units
+• $calc_out.label.reorder_point|Reorder point|:           \`+Math.round(w)+\` units
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.what_if|🔄 What-If:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+N+\`
+• \`+Z+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.min_service_level_for_excellent|Min service level for 🟢|: \`+C+\`%
+• \`+G+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.milestone|🎯 Milestone:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+J+\`
+• \`+V+\`
+• \`+H+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+u+\`
+\`]};return[F(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

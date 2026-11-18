@@ -51,31 +51,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var total = cnn(Number(inputs.total_searches) || 0);
-  var withClick = cnn(Number(inputs.searches_with_click) || 0);
-  var noRes = cnn(Number(inputs.searches_no_result) || 0);
-  if (withClick > total) withClick = total;
-  if (noRes > total) noRes = total;
-  var ctrV = total > 0 ? withClick / total : 0;
-  var noResR = total > 0 ? noRes / total : 0;
-  var abandoned = Math.max(0, total - withClick - noRes);
-  var band = (ctrV >= 0.85 && noResR <= 0.05) ? 'Excellent' : (ctrV >= 0.70 && noResR <= 0.10) ? 'Good' : (ctrV >= 0.55 && noResR <= 0.20) ? 'Warning' : 'Critical';
-  var emoji = (ctrV >= 0.85 && noResR <= 0.05) ? '🟢' : (ctrV >= 0.70 && noResR <= 0.10) ? '🟡' : (ctrV >= 0.55 && noResR <= 0.20) ? '🟠' : '🔴';
-  var altCtr = 0.85;
-  var lift = Math.max(0, altCtr * total - withClick);
-  var fewerTickets = lift * 0.5;
-  var noResLift = Math.max(0, noRes - 0.05 * total);
-  return [
-    '🩺 Search Effectiveness Health: ' + emoji + ' ' + band + ' (CTR ' + (ctrV*100).toFixed(1) + '% / no-result ' + (noResR*100).toFixed(1) + '%)',
-    '📊 Snapshot: ' + total.toLocaleString() + ' searches/mo · ' + withClick.toLocaleString() + ' with click (' + (ctrV*100).toFixed(1) + '% CTR) · ' + noRes.toLocaleString() + ' no-result (' + (noResR*100).toFixed(1) + '%) · ' + abandoned.toLocaleString() + ' abandoned/dwell',
-    '🔄 What-If: if CTR climbs to 85% (Excellent), ' + Math.round(lift).toLocaleString() + ' more searches find answers → at ~50% click-to-ticket-prevention rate, ~' + Math.round(fewerTickets).toLocaleString() + ' fewer tickets/mo',
-    '⚖️ Break-Even: to hit Excellent (CTR ≥85% AND no-result ≤5%), need ' + Math.round(lift).toLocaleString() + ' more clicks OR ' + Math.round(noResLift).toLocaleString() + ' fewer no-result searches',
-    '🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly',
-    '💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},f=function(e,n){return n>0?e/n:0},h=function(e,n){return n>0?e/n:0},g=function(e,n,o){return Math.max(0,e-n-o)},m=function(e,n){return e>=t.excellent.ctr&&n<=t.excellent.noResult?"excellent":e>=t.good.ctr&&n<=t.good.noResult?"good":e>=t.warning.ctr&&n<=t.warning.noResult?"warning":"critical"},c=function(e){return(e*100).toFixed(1)+"%"},r=function(e){return Math.round(e).toLocaleString()},d=function(e,n,o){var s=R(e);return Array.isArray(s)?s.join(\`
+\`):String(s)};var C=l,M=f,v=h,_=g,q=m,K=c,F=r,I=d,t={excellent:{ctr:.85,noResult:.05,label:"Excellent",message:"Search is working - users find answers quickly."},good:{ctr:.7,noResult:.1,label:"Good",message:"Search mostly works - room for query tuning."},warning:{ctr:.55,noResult:.2,label:"Warning",message:"Search struggles - missing content or bad synonyms."},critical:{ctr:null,noResult:null,label:"Critical",message:"Search is failing users."}},R=function(e){const n=l(Number(e.total_searches)||0),o=Math.min(l(Number(e.searches_with_click)||0),n),s=Math.min(l(Number(e.searches_no_result)||0),n),a=f(o,n),i=h(s,n),b=g(n,o,s),w=m(a,i),x=t[w],k=t.excellent.ctr,u=Math.max(0,k*n-o),y=u*.5,p=Math.max(0,s-t.excellent.noResult*n);return["🩺 Search Effectiveness Health: "+x.label+" (CTR "+c(a)+" / no-result "+c(i)+")","📊 Snapshot: "+r(n)+" searches/mo · "+r(o)+" with click ("+c(a)+" CTR) · "+r(s)+" no-result ("+c(i)+") · "+r(b)+" abandoned/dwell","🔄 What-If: if CTR climbs to "+c(k)+" (Excellent), "+r(u)+" more searches find answers → at ~50% click-to-ticket-prevention rate, ~"+r(y)+" fewer tickets/mo","⚖️ Break-Even: to hit Excellent (CTR ≥"+c(t.excellent.ctr)+" AND no-result ≤"+c(t.excellent.noResult)+"), need "+r(u)+" more clicks OR "+r(p)+" fewer no-result searches",'🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly',"💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries."]};return[d(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

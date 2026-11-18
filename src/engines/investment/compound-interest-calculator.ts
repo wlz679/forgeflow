@@ -184,99 +184,63 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
 // ============== customFn — minified JS string, runs in browser via new Function ==============
 
 const customFn =
-  "function fv(p,mc,r,f,y){if(r===0||y===0)return p+mc*12*y;var rr=r/100;if(f==='monthly'){var rm=rr/12;var n=y*12;return p*Math.pow(1+rm,n)+mc*((Math.pow(1+rm,n)-1)/rm);}return p*Math.pow(1+rr,y)+mc*12*((Math.pow(1+rr,y)-1)/rr);}function sfv(p,mc,r,y){return p*(1+(r/100)*y)+mc*12*y;}function y2t(t,p,mc,r,f){if(fv(p,mc,r,f,50)<t)return Infinity;for(var y=0.5;y<=50;y+=0.5){if(fv(p,mc,r,f,y)>=t)return y;}return Infinity;}" +
-  "function rh(r){if(r>=7)return'\\uD83D\\uDFE2 strong (S&P 500 historical)';if(r>=4)return'\\uD83D\\uDCA1 average (HYSA / CDs)';if(r>=1)return'\\uD83D\\uDFE0 low (basic savings account)';return'\\uD83D\\uDD34 below inflation \\u2014 consider alternatives';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var p=cnn(parseFloat(inputs.principal)||0);" +
-  "var mc=cnn(parseFloat(inputs.monthlyContribution)||0);" +
-  "var ar=cnn(parseFloat(inputs.annualRate)||0);" +
-  "var cf=inputs.compoundFrequency==='annually'?'annually':'monthly';" +
-  "var y=Math.min(50,cnn(parseFloat(inputs.years)||0));" +
-  "var fv1=fv(p,mc,ar,cf,y);" +
-  "var sf=sfv(p,mc,ar,y);" +
-  "var tc=p+mc*12*y;" +
-  "var ti=fv1-tc;" +
-  "var mu=tc>0?fv1/tc:0;" +
-  "var hh=rh(ar);" +
-  "var ca=fv1-sf;" +
-  "function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}" +
-  "function money(n){return'$'+fmt(n);}" +
-  "function rat(a,b){return b>0?((a/b)*100).toFixed(1)+'%':'0.0%';}" +
-  "var ms=[5,10,15,20,y].filter(function(yy,i,a){return a.indexOf(yy)===i;}).sort(function(a,b){return a-b;});" +
-  "var msec='';" +
-  "for(var i=0;i<ms.length;i++){" +
-  "var yy=ms[i];" +
-  "var fvy=fv(p,mc,ar,cf,yy);" +
-  "var cy=p+mc*12*yy;" +
-  "var iy=fvy-cy;" +
-  "var fl=fvy>0?Math.min(20,Math.round((iy/fvy)*20)):0;" +
-  "var br='\\u2588'.repeat(fl)+'\\u2591'.repeat(20-fl);" +
-  "msec+='\\u2022 Year '+yy+': '+money(fvy)+'  (contributed '+money(cy)+' / interest '+money(iy)+')\\n';" +
-  "msec+='  '+br+' '+rat(iy,fvy)+' from compounding\\n';" +
-  "}" +
-  "var gt=[100000,500000,1000000];" +
-  "var gs='';" +
-  "for(var i=0;i<gt.length;i++){" +
-  "var tg=gt[i];" +
-  "var yt=y2t(tg,p,mc,ar,cf);" +
-  "gs+='\\u2022 '+money(tg)+': '+(yt===Infinity?'never (within 50 yrs at current pace \\u2014 try higher rate or contribution)':yt<=y?'already reached (year '+yt+')':Math.round(yt)+' years from now (year '+Math.round(yt)+')')+'\\n';" +
-  "}" +
-  "var tip='';" +
-  "if(y>=30){tip='\\uD83D\\uDCA1 Tip: Time in the market beats timing the market. $'+fmt(mc)+'/mo for '+y+' years at '+ar+'% builds '+money(fv1)+'. Starting 10 years earlier typically doubles the final balance.';}" +
-  "else if(p===0&&mc>0){tip='\\uD83D\\uDCA1 Tip: Starting from $0 is fine \\u2014 the habit of consistent contributions matters more than the seed amount. $'+fmt(mc)+'/mo for '+y+' years builds '+money(fv1)+'.';}" +
-  "else if(ar<1){tip='\\uD83D\\uDCA1 Tip: At '+ar+'% you are likely below inflation (~3%). Consider HYSA, I-bonds, or index funds to keep pace with rising costs.';}" +
-  "else{tip='\\uD83D\\uDCA1 Tip: Compounding multiplies money over time. Reinvest all interest \\u2014 withdrawal breaks the chain. The '+ar+'% rate you selected ('+hh+') compounds most effectively over '+y+' years.';}" +
-  "var r='';" +
-  "r+='\\u23F0 Compound Interest Calculator\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Growth Snapshot:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Principal:                '+money(p)+'\\n';" +
-  "r+='\\u2022 Total Contributions:      '+money(mc*12*y)+'  ($'+fmt(mc)+'/mo \\u00d7 12 \\u00d7 '+y+')\\n';" +
-  "r+='\\u2022 Total Interest Earned:    '+money(ti)+'\\n';" +
-  "r+='\\u2022 Final Balance:            '+money(fv1)+'\\n';" +
-  "r+='\\u2022 Multiplier:               '+mu.toFixed(2)+'x growth on contributions\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 Milestone Growth:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+=msec+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Compounding Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+hh+'\\n';" +
-  "if(cf==='monthly')r+='\\u2022 \\uD83D\\uDFE2 Monthly compounding \\u2014 APY boost over annual is ~'+((Math.pow(1+ar/100/12,12)-1)*100).toFixed(3)+'%\\n';" +
-  "else r+='\\u2022 \\uD83D\\uDCA1 Annual compounding \\u2014 switching to monthly adds ~'+((Math.pow(1+ar/100/12,12)-1)*100-ar).toFixed(3)+'% APY\\n';" +
-  "r+='\\u2022 Contribution ratio:       '+rat(tc,fv1)+' of final balance from contributions\\n';" +
-  "r+='\\u2022 Interest ratio:           '+rat(ti,fv1)+' of final balance from compounding\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83C\\uDFAF Time-to-Goal Milestones:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+=gs+'\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Compound vs Simple Break-Even:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Simple Interest Final:    '+money(sf)+'\\n';" +
-  "r+='\\u2022 Compound Interest Final:  '+money(fv1)+'\\n';" +
-  "r+='\\u2022 Compound Advantage:       '+money(ca)+'  ('+rat(ca,sf)+' extra)\\n';" +
-  "r+='\\u2022 Rule: Compound interest = interest on interest. Time is the multiplier.\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Add $100/mo extra:               '+money(fv(p,mc+100,ar,cf,y)-fv1)+' more at final\\n';" +
-  "r+='\\u2022 Increase rate by 1%:             '+money(fv(p,mc,ar+1,cf,y)-fv1)+' more at final\\n';" +
-  "r+='\\u2022 Extend period by 5 years:        '+money(fv(p,mc,ar,cf,y+5)-fv1)+' more at final\\n';" +
-  "if(cf==='annually')r+='\\u2022 Switch to monthly compounding:  '+money(fv(p,mc,ar,'monthly',y)-fv1)+' more at final\\n';" +
-  "else r+='\\u2022 Switch to annual compounding:   '+money(fv1-fv(p,mc,ar,'annually',y))+' less at final\\n';" +
-  "r+='\\u2022 Delay start by 1 year:           '+money(fv1-fv(p,mc,ar,cf,y-1))+' lost (cost of procrastination)\\n\\n';" +
-  "r+=tip;" +
-  "var results=[r];" +
-  "var rates=[2,4,7,10,15];" +
-  "for(var i=0;i<rates.length;i++){" +
-  "var r2=rates[i];" +
-  "var fvR=fv(p,mc,r2,cf,y);" +
-  "var intR=fvR-tc;" +
-  "results.push('Comparison: '+r2+'% rate for '+y+' years \\u2192 '+money(fvR)+' (interest '+money(intR)+')');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,i,o,n,r){if(o===0||r===0)return e+i*12*r;const t=o/100;if(n==="monthly"){const m=t/12,p=r*12,w=e*Math.pow(1+m,p),y=i*((Math.pow(1+m,p)-1)/m);return w+y}const c=e*Math.pow(1+t,r),h=i*12*((Math.pow(1+t,r)-1)/t);return c+h},S=function(e,i,o,n){const r=i*12*n;return e*(1+o/100*n)+r},C=function(e,i,o,n,r){if(u(i,o,n,r,50)<e)return 1/0;for(let t=.5;t<=50;t+=.5)if(u(i,o,n,r,t)>=e)return t;return 1/0},T=function(e){return e>=7?{emoji:"🟢",label:"strong (S&P 500 historical)"}:e>=4?{emoji:"🟡",label:"average (HYSA / CDs)"}:e>=1?{emoji:"🟠",label:"low (basic savings account)"}:{emoji:"🔴",label:"below inflation — consider alternatives"}},I=function(e){const i=d(parseFloat(e.principal)||0),o=d(parseFloat(e.monthlyContribution)||0),n=d(parseFloat(e.annualRate)||0),r=e.compoundFrequency==="annually"?"annually":"monthly",t=Math.min(50,d(parseFloat(e.years)||0)),c=u(i,o,n,r,t),h=S(i,o,n,t),m=i+o*12*t,p=c-m,w=m>0?c/m:0,y=T(n),x=c-h,g=l=>l.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),a=l=>"$"+g(l),v=(l,s)=>s>0?(l/s*100).toFixed(1)+"%":"0.0%",P=[5,10,15,20,t].filter((l,s,f)=>f.indexOf(l)===s).sort((l,s)=>l-s);let M="";for(const l of P){const s=u(i,o,n,r,l),f=i+o*12*l,F=s-f,k=s>0?Math.min(20,Math.round(F/s*20)):0,R="█".repeat(k)+"░".repeat(20-k);M+="• Year "+l+": "+a(s)+"  (contributed "+a(f)+" / interest "+a(F)+\`)
+\`,M+="  "+R+" "+v(F,s)+\` from compounding
+\`}const $=[1e5,5e5,1e6];let A="";for(const l of $){const s=C(l,i,o,n,r);A+="• "+a(l)+": "+(s===1/0?"never (within 50 yrs at current pace — try higher rate or contribution)":s<=t?"already reached (year "+s+")":Math.round(s)+" years from now (year "+Math.round(s)+")")+\`
+\`}let b;t>=30?b="💡 Tip: Time in the market beats timing the market. $"+g(o)+"/mo for "+t+" years at "+n+"% builds "+a(c)+". Starting 10 years earlier typically doubles the final balance.":i===0&&o>0?b="💡 Tip: Starting from $0 is fine — the habit of consistent contributions matters more than the seed amount. $"+g(o)+"/mo for "+t+" years builds "+a(c)+".":n<1?b="💡 Tip: At "+n+"% you are likely below inflation (~3%). Consider HYSA, I-bonds, or index funds to keep pace with rising costs.":b="💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The "+n+"% rate you selected ("+y.label+") compounds most effectively over "+t+"+ years.";const Y=[\`⏰ Compound Interest Calculator
+
+💰 Growth Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Principal:                \`+a(i)+\`
+• Total Contributions:      \`+a(o*12*t)+"  ($"+g(o)+"/mo × 12 × "+t+\`)
+• Total Interest Earned:    \`+a(p)+\`
+• Final Balance:            \`+a(c)+\`
+• Multiplier:               \`+w.toFixed(2)+\`x growth on contributions
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Milestone Growth:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+M+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Compounding Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+y.emoji+" Rate "+n+"% is "+y.label+\`
+\`+(r==="monthly"?"• 🟢 Monthly compounding — APY boost over annual is ~"+((Math.pow(1+n/100/12,12)-1)*100).toFixed(3)+\`%
+\`:"• 🟡 Annual compounding — switching to monthly adds ~"+((Math.pow(1+n/100/12,12)-1)*100-n).toFixed(3)+\`% APY
+\`)+"• Contribution ratio:       "+v(m,c)+\` of final balance from contributions
+• Interest ratio:           \`+v(p,c)+\` of final balance from compounding
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Time-to-Goal Milestones:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+A+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Compound vs Simple Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Simple Interest Final:    \`+a(h)+\`
+• Compound Interest Final:  \`+a(c)+\`
+• Compound Advantage:       \`+a(x)+"  ("+v(x,h)+\` extra)
+• Rule: Compound interest = interest on interest. Time is the multiplier.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Add $100/mo extra:               \`+a(u(i,o+100,n,r,t)-c)+\` more at final
+• Increase rate by 1%:             \`+a(u(i,o,n+1,r,t)-c)+\` more at final
+• Extend period by 5 years:        \`+a(u(i,o,n,r,t+5)-c)+\` more at final
+\`+(r==="annually"?"• Switch to monthly compounding:  "+a(u(i,o,n,"monthly",t)-c)+\` more at final
+\`:"• Switch to annual compounding:   "+a(c-u(i,o,n,"annually",t))+\` less at final
+\`)+"• Delay start by 1 year:           "+a(c-u(i,o,n,r,t-1))+\` lost (cost of procrastination)
+
+\`+b],D=[2,4,7,10,15];for(const l of D){const s=u(i,o,l,r,t),f=s-m;Y.push("Comparison: "+l+"% rate for "+t+" years → "+a(s)+" (interest "+a(f)+")")}return Y},_=function(e,i,o){var n=j(e);return Array.isArray(n)?n.join(\`
+\`):String(n)};var E=d,N=u,G=S,H=C,B=T,q=I,K=_,j=function(e){return I(e)};return[_(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine — to be filled in Step 6 ==============
 

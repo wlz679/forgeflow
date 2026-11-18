@@ -148,102 +148,84 @@ function calculateEmailRevenue(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 服务端与客户端输出逐字节相同，不可能漂移；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var sc=cnn(parseFloat(inputs.subscriberCount)||0);" +
-  "var orate=cnn(parseFloat(inputs.openRate)||0);" +
-  "var crate=cnn(parseFloat(inputs.clickRate)||0);" +
-  "var cvr=cnn(parseFloat(inputs.conversionRate)||0);" +
-  "var aov=cnn(parseFloat(inputs.avgOrderValue)||0);" +
-  "var epm=cnn(parseFloat(inputs.emailsPerMonth)||4);" +
-  "var unrate=cnn(parseFloat(inputs.unsubscribeRate)||0.5);" +
-  "var opens=sc*(orate/100);" +
-  "var clicks=opens*(crate/100);" +
-  "var convs=clicks*(cvr/100);" +
-  "var rps=convs*aov;" +
-  "var mr=rps*epm;" +
-  "var ar=mr*12;" +
-  "var rpsub=sc>0?ar/sc:0;" +
-  "var rpsps=sc>0?rps/sc:0;" +
-  "function fmt(n){return '$'+n.toFixed(2)}" +
-  "function fmt0(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function pct2(n){return n.toFixed(2)}" +
-  "function pct1(n){return n.toFixed(1)}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  "var r='';" +
-  "r+='$calc_out.section.email_list_revenue_calculator|\\uD83D\\uDCE7 Email List Revenue Calculator|\\n\\n';" +
-  "r+='$calc_out.section.email_list_revenue_funnel_metrics|\\uD83D\\uDCCA Funnel Metrics:|\\n';" +
-  "r+='\\u2022 $calc_out.label.subscribers|Subscribers|:           '+loc(sc)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.open_rate','Open Rate:             '+pct1(orate)+'%  \\u2192 '+loc(opens)+' opens',{rate:pct1(orate),opens:loc(opens)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.click_rate','Click Rate:            '+pct1(crate)+'%  \\u2192 '+loc(clicks)+' clicks',{rate:pct1(crate),clicks:loc(clicks)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.conversion_rate','Conversion Rate:       '+pct1(cvr)+'%  \\u2192 '+convs.toFixed(2)+' conversions',{rate:pct1(cvr),conversions:convs.toFixed(2)})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.avg_order_value|Avg Order Value|:       '+fmt(aov)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.emails_per_month','Emails/Month:          '+epm+'  (industry avg 2-8)',{emails:String(epm)})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.monthly_unsubscribes|Monthly Unsubscribes|:  ~'+pct1(unrate)+'%  ('+loc(sc*unrate/100)+'/mo)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.email_list_revenue_revenue_snapshot|\\uD83D\\uDCB0 Revenue Snapshot:|\\n';" +
-  "r+='\\u2022 $calc_out.label.revenue_per_send|Revenue Per Send|:      '+fmt(rps)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.monthly_revenue|Monthly Revenue|:       '+fmt0(mr)+'/mo\\n';" +
-  "r+='\\u2022 $calc_out.label.annual_revenue_email|Annual Revenue|:        '+fmt0(ar)+'/yr\\n';" +
-  "r+='\\u2022 $calc_out.label.per_subscriber_yr|Per Subscriber (yr)|:   '+fmt(rpsub)+'/sub/yr\\n';" +
-  "r+='\\u2022 $calc_out.label.per_subscriber_mo|Per Subscriber (mo)|:   '+'$'+(rpsub/12).toFixed(2)+'/sub/mo\\n';" +
-  "r+='\\u2022 $calc_out.label.per_send_per_sub|Per Send Per Sub|:      '+'$'+rpsps.toFixed(4)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.total_annual_conversions','Total Annual Conversions: '+loc(convs*epm*12)+' sales/yr',{conversions:loc(convs*epm*12)})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.email_list_revenue_list_economics|\\uD83D\\uDCD0 List Economics:|\\n';" +
-  "r+='\\u2022 $calc_out.label.revenue_send|Revenue/Send|:          '+fmt(rps)+'\\n';" +
-  "r+='\\u2022 $calc_out.label.revenue_1000_opens|Revenue/1000 Opens|:    '+'$'+(opens>0?((convs*aov)/opens*1000).toFixed(2):'0.00')+'\\n';" +
-  "r+='\\u2022 $calc_out.label.revenue_1000_clicks|Revenue/1000 Clicks|:   '+'$'+(clicks>0?((convs*aov)/clicks*1000).toFixed(2):'0.00')+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.click_to_open_rate','Click-to-Open Rate:    '+pct1(opens>0?(clicks/opens)*100:0)+'%  (CTOR \\u2014 industry: 10-15%)',{rate:pct1(opens>0?(clicks/opens)*100:0)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.revenue_per_email','Revenue per Email:     '+fmt(rps)+' (per send)',{revenue:fmt(rps)})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.industry_benchmark_email|Industry Benchmark|:    '+tk('calc_out.email_list_revenue.row.benchmark_baseline','$1-2/sub/yr baseline')+' | '+tk('calc_out.email_list_revenue.row.benchmark_top_performers','$5-20/sub/yr top performers')+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.email_list_revenue_list_health|\\uD83E\\uDE7A List Health:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+(orate>25?tk('calc_out.email_list_revenue.row.health_open_strong','\\uD83D\\uDFE2 Open rate '+pct1(orate)+'% is strong (industry avg 20-25%).',{rate:pct1(orate)}):orate>=15?tk('calc_out.email_list_revenue.row.health_open_average','\\uD83D\\uDFE1 Open rate '+pct1(orate)+'% is on industry average.',{rate:pct1(orate)}):orate>=10?tk('calc_out.email_list_revenue.row.health_open_below','\\uD83D\\uDFE0 Open rate '+pct1(orate)+'% is below average \\u2014 test subject lines.',{rate:pct1(orate)}):tk('calc_out.email_list_revenue.row.health_open_weak','\\uD83D\\uDD34 Open rate '+pct1(orate)+'% is weak \\u2014 clean list, test sender reputation.',{rate:pct1(orate)}))+'\\n';" +
-  "r+='\\u2022 '+(crate>=4?tk('calc_out.email_list_revenue.row.health_click_healthy','\\uD83D\\uDFE2 Click rate '+pct1(crate)+'% is healthy.',{rate:pct1(crate)}):crate>=2?tk('calc_out.email_list_revenue.row.health_click_ok','\\uD83D\\uDFE1 Click rate '+pct1(crate)+'% is OK \\u2014 test better CTAs.',{rate:pct1(crate)}):tk('calc_out.email_list_revenue.row.health_click_weak','\\uD83D\\uDD34 Click rate '+pct1(crate)+'% is weak \\u2014 rewrite for relevance.',{rate:pct1(crate)}))+'\\n';" +
-  "r+=(rpsub>=5?'\\u2022 '+tk('calc_out.email_list_revenue.row.monetization_strong','\\uD83D\\uDFE2 '+fmt(rpsub)+'/sub/yr \\u2014 strong monetization.',{value:fmt(rpsub)})+'\\n':rpsub>=2?'\\u2022 '+tk('calc_out.email_list_revenue.row.monetization_workable','\\uD83D\\uDFE1 '+fmt(rpsub)+'/sub/yr \\u2014 workable, improvable.',{value:fmt(rpsub)})+'\\n':rpsub>=0.5?'\\u2022 '+tk('calc_out.email_list_revenue.row.monetization_below','\\uD83D\\uDFE0 '+fmt(rpsub)+'/sub/yr \\u2014 below benchmark.',{value:fmt(rpsub)})+'\\n':sc>0?'\\u2022 '+tk('calc_out.email_list_revenue.row.monetization_very_low','\\uD83D\\uDD34 '+fmt(rpsub)+'/sub/yr \\u2014 very low.',{value:fmt(rpsub)})+'\\n':'');" +
-  "r+='\\u2022 '+(unrate<0.3?tk('calc_out.email_list_revenue.row.unsub_strong','\\uD83D\\uDFE2 Unsub rate '+pct1(unrate)+'% \\u2014 strong list retention.',{rate:pct1(unrate)}):unrate<1?tk('calc_out.email_list_revenue.row.unsub_typical','\\uD83D\\uDFE1 Unsub rate '+pct1(unrate)+'% \\u2014 typical.',{rate:pct1(unrate)}):tk('calc_out.email_list_revenue.row.unsub_too_high','\\uD83D\\uDD34 Unsub rate '+pct1(unrate)+'% \\u2014 too high, prune inactive subs.',{rate:pct1(unrate)}))+'\\n';" +
-  "r+='\\n$calc_out.section.email_list_revenue_list_growth_projection|\\uD83C\\uDFAF List Growth Projection:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+=tk('calc_out.email_list_revenue.row.growth_assumption','Assuming '+pct1(unrate)+'% monthly churn and 10% monthly net growth:',{churn:pct1(unrate)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.net_monthly_growth','Net monthly growth:    '+pct1(10-unrate)+'%  (10% new - '+pct1(unrate)+'% churn)',{growth:pct1(10-unrate),churn:pct1(unrate)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.list_in_6_months','List in 6 months:      '+loc(sc*Math.pow(1+(0.10-unrate/100),6))+'  (compound)',{subs:loc(sc*Math.pow(1+(0.10-unrate/100),6))})+'\\n';" +
-  "r+='\\u2022 $calc_out.label.list_in_12_months|List in 12 months|:     '+loc(sc*Math.pow(1+(0.10-unrate/100),12))+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.revenue_in_12_months','Revenue in 12 months:  '+fmt0(ar*Math.pow(1+(0.10-unrate/100),12))+'/yr  (projected)',{revenue:fmt0(ar*Math.pow(1+(0.10-unrate/100),12))+'/yr'})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.net_adds_needed','Net adds needed:       '+loc(sc*0.10)+' new subs/mo to sustain',{adds:loc(sc*0.10)})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.email_list_revenue_per_sub_break_even|\\u2696\\uFE0F Per-Sub Value Break-Even:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 $calc_out.label.current_per_sub_yr|Current $/sub/yr|:      '+fmt(rpsub)+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.industry_target','Industry target:       $1-2/sub/yr  (avg lists)')+'\\n';" +
-  "r+='\\u2022 $calc_out.label.top_performer|Top performer|:         $5-20/sub/yr\\n';" +
-  "r+='\\u2022 '+(rpsub>=2?tk('calc_out.email_list_revenue.row.breakeven_above','\\uD83D\\uDFE2 Above $2/sub/yr \\u2014 monetizing well.'):rpsub>=1?tk('calc_out.email_list_revenue.row.breakeven_baseline','\\uD83D\\uDFE1 At $1-2/sub/yr \\u2014 meeting baseline.'):tk('calc_out.email_list_revenue.row.breakeven_below','\\uD83D\\uDD34 Below $1/sub/yr \\u2014 focus on segmentation + offer quality.'))+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.to_hit_5k','To hit $5K/yr:         '+loc(5000/Math.max(rpsub,0.01))+' engaged subscribers',{subs:loc(5000/Math.max(rpsub,0.01))})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.to_hit_50k','To hit $50K/yr:        '+loc(50000/Math.max(rpsub,0.01))+' engaged subscribers',{subs:loc(50000/Math.max(rpsub,0.01))})+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='$calc_out.section.email_list_revenue_what_if_scenarios|\\uD83D\\uDD04 What-If Scenarios:|\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.whatif_raise_open_rate','Raise open rate 2x:    Annual '+fmt0(ar*2)+'  (better subject lines + send time)',{annual:fmt0(ar*2)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.whatif_raise_click_rate','Raise click rate 2x:   Annual '+fmt0(ar*2)+'  (clearer CTAs + better content)',{annual:fmt0(ar*2)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.whatif_double_subscribers','2x subscribers:        Annual '+fmt0(ar*2)+'  (lead magnets + list growth)',{annual:fmt0(ar*2)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.whatif_all_combined','All combined:          Annual '+fmt0(ar*8)+'  (max upside)',{annual:fmt0(ar*8)})+'\\n';" +
-  "r+='\\u2022 '+tk('calc_out.email_list_revenue.row.whatif_double_emails','Send 2x more emails:   Annual '+fmt0(ar*2)+'  (more touch points)',{annual:fmt0(ar*2)})+'\\n\\n';" +
-  "r+=tk('calc_out.email_list_revenue.row.tip_segmentation','\\uD83D\\uDCA1 Tip: The industry benchmark is $1-2 per subscriber per year. To beat this, segment your list by interest and past purchases, then send targeted offers. A segmented campaign can generate 760% more revenue than a broadcast to everyone.');" +
-  "var cmp=[];" +
-  "var ls=[500,1000,2500,5000,10000,25000,50000,100000,250000];" +
-  "for(var i=0;i<ls.length;i++){" +
-  "var s=ls[i];" +
-  "var o=s*(orate/100);" +
-  "var c=o*(crate/100);" +
-  "var co=c*(cvr/100);" +
-  "var rev=co*aov;" +
-  "var m=rev*epm;" +
-  "var a=m*12;" +
-  "cmp.push(tk('calc_out.email_list_revenue.row.comparison_list_size',loc(s)+' subs',{size:loc(s)})+': '+tk('calc_out.email_list_revenue.row.comparison_monthly',fmt(m)+'/mo',{monthly:fmt(m)+'/mo'})+' | '+tk('calc_out.email_list_revenue.row.comparison_annual',fmt0(a)+'/yr',{annual:fmt0(a)+'/yr'})+' | '+tk('calc_out.email_list_revenue.row.comparison_per_sub',fmt(s>0?a/s:0)+'/sub/yr',{per_sub:fmt(s>0?a/s:0)+'/sub/yr'}));" +
-  "}" +
-  "r+='\\n'+cmp.join('\\n');" +
-  "return [r];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let h=function(c){return Number.isNaN(c)?0:Math.max(0,c)},F=function(c){const _=h(parseFloat(c.subscriberCount)||0),s=h(parseFloat(c.openRate)||0),o=h(parseFloat(c.clickRate)||0),g=h(parseFloat(c.conversionRate)||0),m=h(parseFloat(c.avgOrderValue)||0),p=h(parseFloat(c.emailsPerMonth)||4),n=h(parseFloat(c.unsubscribeRate)||.5),R=[],v=_*(s/100),w=v*(o/100),y=w*(g/100),$=y*m,M=$*p,u=M*12,r=_>0?u/_:0,P=_>0?$/_:0,L=m>0&&g>0&&o>0&&s>0?1/(s/100)/(o/100)/(g/100)/m/p*12:0,l=b=>"$"+b.toFixed(2),i=b=>"$"+Math.round(b).toLocaleString(),N=b=>b.toFixed(2),t=b=>b.toFixed(1),a=b=>Math.round(b).toLocaleString();R.push(\`$calc_out.section.email_list_revenue_calculator|📧 Email List Revenue Calculator|
+
+$calc_out.section.email_list_revenue_funnel_metrics|📊 Funnel Metrics:|
+• $calc_out.label.subscribers|Subscribers|:           \`+a(_)+\`
+• \`+e("calc_out.email_list_revenue.row.open_rate","Open Rate:             "+t(s)+"%  → "+a(v)+" opens",{rate:t(s),opens:a(v)})+\`
+• \`+e("calc_out.email_list_revenue.row.click_rate","Click Rate:            "+t(o)+"%  → "+a(w)+" clicks",{rate:t(o),clicks:a(w)})+\`
+• \`+e("calc_out.email_list_revenue.row.conversion_rate","Conversion Rate:       "+t(g)+"%  → "+y.toFixed(2)+" conversions",{rate:t(g),conversions:y.toFixed(2)})+\`
+• $calc_out.label.avg_order_value|Avg Order Value|:       \`+l(m)+\`
+• \`+e("calc_out.email_list_revenue.row.emails_per_month","Emails/Month:          "+p+"  (industry avg 2-8)",{emails:String(p)})+\`
+• $calc_out.label.monthly_unsubscribes|Monthly Unsubscribes|:  ~\`+t(n)+"%  ("+a(_*n/100)+\`/mo)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.email_list_revenue_revenue_snapshot|💰 Revenue Snapshot:|
+• $calc_out.label.revenue_per_send|Revenue Per Send|:      \`+l($)+\`
+• $calc_out.label.monthly_revenue|Monthly Revenue|:       \`+i(M)+\`/mo
+• $calc_out.label.annual_revenue_email|Annual Revenue|:        \`+i(u)+\`/yr
+• $calc_out.label.per_subscriber_yr|Per Subscriber (yr)|:   \`+l(r)+\`/sub/yr
+• $calc_out.label.per_subscriber_mo|Per Subscriber (mo)|:   $\`+(r/12).toFixed(2)+\`/sub/mo
+• $calc_out.label.per_send_per_sub|Per Send Per Sub|:      $\`+P.toFixed(4)+\`
+• \`+e("calc_out.email_list_revenue.row.total_annual_conversions","Total Annual Conversions: "+a(y*p*12)+" sales/yr",{conversions:a(y*p*12)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.email_list_revenue_list_economics|📐 List Economics:|
+• $calc_out.label.revenue_send|Revenue/Send|:          \`+l($)+\`
+• $calc_out.label.revenue_1000_opens|Revenue/1000 Opens|:    $\`+(v>0?(y*m/v*1e3).toFixed(2):"0.00")+\`
+• $calc_out.label.revenue_1000_clicks|Revenue/1000 Clicks|:   $\`+(w>0?(y*m/w*1e3).toFixed(2):"0.00")+\`
+• \`+e("calc_out.email_list_revenue.row.click_to_open_rate","Click-to-Open Rate:    "+t(v>0?w/v*100:0)+"%  (CTOR — industry: 10-15%)",{rate:t(v>0?w/v*100:0)})+\`
+• \`+e("calc_out.email_list_revenue.row.revenue_per_email","Revenue per Email:     "+l($)+" (per send)",{revenue:l($)})+\`
+• $calc_out.label.industry_benchmark_email|Industry Benchmark|:    \`+e("calc_out.email_list_revenue.row.benchmark_baseline","$1-2/sub/yr baseline")+" | "+e("calc_out.email_list_revenue.row.benchmark_top_performers","$5-20/sub/yr top performers")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.email_list_revenue_list_health|🩺 List Health:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+(s>25?e("calc_out.email_list_revenue.row.health_open_strong","🟢 Open rate "+t(s)+"% is strong (industry avg 20-25%).",{rate:t(s)}):s>=15?e("calc_out.email_list_revenue.row.health_open_average","🟡 Open rate "+t(s)+"% is on industry average.",{rate:t(s)}):s>=10?e("calc_out.email_list_revenue.row.health_open_below","🟠 Open rate "+t(s)+"% is below average — test subject lines.",{rate:t(s)}):e("calc_out.email_list_revenue.row.health_open_weak","🔴 Open rate "+t(s)+"% is weak — clean list, test sender reputation.",{rate:t(s)}))+\`
+• \`+(o>=4?e("calc_out.email_list_revenue.row.health_click_healthy","🟢 Click rate "+t(o)+"% is healthy.",{rate:t(o)}):o>=2?e("calc_out.email_list_revenue.row.health_click_ok","🟡 Click rate "+t(o)+"% is OK — test better CTAs.",{rate:t(o)}):e("calc_out.email_list_revenue.row.health_click_weak","🔴 Click rate "+t(o)+"% is weak — rewrite for relevance.",{rate:t(o)}))+\`
+\`+(r>=5?"• "+e("calc_out.email_list_revenue.row.monetization_strong","🟢 "+l(r)+"/sub/yr — strong monetization.",{value:l(r)})+\`
+\`:r>=2?"• "+e("calc_out.email_list_revenue.row.monetization_workable","🟡 "+l(r)+"/sub/yr — workable, improvable.",{value:l(r)})+\`
+\`:r>=.5?"• "+e("calc_out.email_list_revenue.row.monetization_below","🟠 "+l(r)+"/sub/yr — below benchmark.",{value:l(r)})+\`
+\`:_>0?"• "+e("calc_out.email_list_revenue.row.monetization_very_low","🔴 "+l(r)+"/sub/yr — very low.",{value:l(r)})+\`
+\`:"")+"• "+(n<.3?e("calc_out.email_list_revenue.row.unsub_strong","🟢 Unsub rate "+t(n)+"% — strong list retention.",{rate:t(n)}):n<1?e("calc_out.email_list_revenue.row.unsub_typical","🟡 Unsub rate "+t(n)+"% — typical.",{rate:t(n)}):e("calc_out.email_list_revenue.row.unsub_too_high","🔴 Unsub rate "+t(n)+"% — too high, prune inactive subs.",{rate:t(n)}))+\`
+
+$calc_out.section.email_list_revenue_list_growth_projection|🎯 List Growth Projection:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+e("calc_out.email_list_revenue.row.growth_assumption","Assuming "+t(n)+"% monthly churn and 10% monthly net growth:",{churn:t(n)})+\`
+• \`+e("calc_out.email_list_revenue.row.net_monthly_growth","Net monthly growth:    "+t(10-n)+"%  (10% new - "+t(n)+"% churn)",{growth:t(10-n),churn:t(n)})+\`
+• \`+e("calc_out.email_list_revenue.row.list_in_6_months","List in 6 months:      "+a(_*Math.pow(1+(.1-n/100),6))+"  (compound)",{subs:a(_*Math.pow(1+(.1-n/100),6))})+\`
+• $calc_out.label.list_in_12_months|List in 12 months|:     \`+a(_*Math.pow(1+(.1-n/100),12))+\`
+• \`+e("calc_out.email_list_revenue.row.revenue_in_12_months","Revenue in 12 months:  "+i(u*Math.pow(1+(.1-n/100),12))+"/yr  (projected)",{revenue:i(u*Math.pow(1+(.1-n/100),12))+"/yr"})+\`
+• \`+e("calc_out.email_list_revenue.row.net_adds_needed","Net adds needed:       "+a(_*.1)+" new subs/mo to sustain",{adds:a(_*.1)})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.email_list_revenue_per_sub_break_even|⚖️ Per-Sub Value Break-Even:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• $calc_out.label.current_per_sub_yr|Current $/sub/yr|:      \`+l(r)+\`
+• \`+e("calc_out.email_list_revenue.row.industry_target","Industry target:       $1-2/sub/yr  (avg lists)")+\`
+• $calc_out.label.top_performer|Top performer|:         $5-20/sub/yr
+• \`+(r>=2?e("calc_out.email_list_revenue.row.breakeven_above","🟢 Above $2/sub/yr — monetizing well."):r>=1?e("calc_out.email_list_revenue.row.breakeven_baseline","🟡 At $1-2/sub/yr — meeting baseline."):e("calc_out.email_list_revenue.row.breakeven_below","🔴 Below $1/sub/yr — focus on segmentation + offer quality."))+\`
+• \`+e("calc_out.email_list_revenue.row.to_hit_5k","To hit $5K/yr:         "+a(5e3/Math.max(r,.01))+" engaged subscribers",{subs:a(5e3/Math.max(r,.01))})+\`
+• \`+e("calc_out.email_list_revenue.row.to_hit_50k","To hit $50K/yr:        "+a(5e4/Math.max(r,.01))+" engaged subscribers",{subs:a(5e4/Math.max(r,.01))})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+$calc_out.section.email_list_revenue_what_if_scenarios|🔄 What-If Scenarios:|
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+e("calc_out.email_list_revenue.row.whatif_raise_open_rate","Raise open rate 2x:    Annual "+i(u*2)+"  (better subject lines + send time)",{annual:i(u*2)})+\`
+• \`+e("calc_out.email_list_revenue.row.whatif_raise_click_rate","Raise click rate 2x:   Annual "+i(u*2)+"  (clearer CTAs + better content)",{annual:i(u*2)})+\`
+• \`+e("calc_out.email_list_revenue.row.whatif_double_subscribers","2x subscribers:        Annual "+i(u*2)+"  (lead magnets + list growth)",{annual:i(u*2)})+\`
+• \`+e("calc_out.email_list_revenue.row.whatif_all_combined","All combined:          Annual "+i(u*8)+"  (max upside)",{annual:i(u*8)})+\`
+• \`+e("calc_out.email_list_revenue.row.whatif_double_emails","Send 2x more emails:   Annual "+i(u*2)+"  (more touch points)",{annual:i(u*2)})+\`
+
+\`+e("calc_out.email_list_revenue.row.tip_segmentation","💡 Tip: The industry benchmark is $1-2 per subscriber per year. To beat this, segment your list by interest and past purchases, then send targeted offers. A segmented campaign can generate 760% more revenue than a broadcast to everyone."));const A=[500,1e3,2500,5e3,1e4,25e3,5e4,1e5,25e4];for(let b=0;b<A.length;b++){const d=A[b],S=d*(s/100)*(o/100)*(g/100)*m*p,f=S*12;R.push(e("calc_out.email_list_revenue.row.comparison_list_size",a(d)+" subs",{size:a(d)})+": "+e("calc_out.email_list_revenue.row.comparison_monthly",l(S)+"/mo",{monthly:l(S)+"/mo"})+" | "+e("calc_out.email_list_revenue.row.comparison_annual",i(f)+"/yr",{annual:i(f)+"/yr"})+" | "+e("calc_out.email_list_revenue.row.comparison_per_sub",l(d>0?f/d:0)+"/sub/yr",{per_sub:l(d>0?f/d:0)+"/sub/yr"}))}return R},x=function(c,_,s){var o=O(c);return Array.isArray(o)?o.join(\`
+\`):String(o)};var j=h,z=F,E=x,e=tk,C='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+C)(),O=function(c){return F(c)};return[x(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-email-list-revenue-calculator',

@@ -50,34 +50,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cnn=function(x){return Math.max(0,x)};
-  var t1c = cnn(Number(inputs.t1_cost) || 0);
-  var t2c = cnn(Number(inputs.t2_cost) || 0);
-  var t3c = cnn(Number(inputs.t3_cost) || 0);
-  var t1s = cnn(Number(inputs.t1_share) || 0);
-  var t2s = cnn(Number(inputs.t2_share) || 0);
-  var vol = cnn(Number(inputs.monthly_volume) || 0);
-  var t3s = 100 - t1s - t2s;
-  if (t3s < 0) t3s = 0;
-  var avg = (t1c * t1s + t2c * t2s + t3c * t3s) / 100;
-  var monthly = avg * vol;
-  var band = avg <= 10 ? 'Excellent' : avg <= 25 ? 'Good' : avg <= 50 ? 'Warning' : 'Critical';
-  var emoji = avg <= 10 ? '🟢' : avg <= 25 ? '🟡' : avg <= 50 ? '🟠' : '🔴';
-  var altAvg = (t1c * t1s + t2c * t2s + t3c * 10) / 100;
-  var targetWeighted = 10 * 100;
-  var currentWeighted = t1c * t1s + t2c * t2s + t3c * t3s;
-  var t3Cut = Math.max(0, Math.round((currentWeighted - targetWeighted) / Math.max(t3s, 1)));
-  return [
-    '🩺 Cost-per-Ticket Health: ' + emoji + ' ' + band + ' ($' + avg.toFixed(2) + '/ticket · $' + Math.round(monthly).toLocaleString() + '/mo)',
-    '📊 Snapshot: T1 ' + t1s + '% × $' + t1c + ' + T2 ' + t2s + '% × $' + t2c + ' + T3 ' + t3s + '% × $' + t3c + ' = $' + avg.toFixed(2) + ' weighted · $' + Math.round(monthly).toLocaleString() + '/mo total',
-    '🔄 What-If: if T3 share drops to 10%, avg drops to $' + altAvg.toFixed(2) + ' (would be ' + (altAvg <= 10 ? '🟢 Excellent' : altAvg <= 25 ? '🟡 Good' : altAvg <= 50 ? '🟠 Warning' : '🔴 Critical') + ')',
-    '⚖️ Break-Even: to hit 🟢 Excellent ($10.00 ceiling), cut T3 cost to ≤$' + t3Cut + '/ticket OR push T3 share ≤5%',
-    '🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly',
-    '💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,r,c,e,n){const s=100-e-n;return(t*e+r*n+c*s)/100},b=function(t,r){return t*r},h=function(t){return t<=a.excellent.threshold?"excellent":t<=a.good.threshold?"good":t<=a.warning.threshold?"warning":"critical"},u=function(t){return"$"+Math.round(t).toLocaleString()},o=function(t){return"$"+t.toFixed(2)},f=function(t,r,c){var e=x(t);return Array.isArray(e)?e.join(\`
+\`):String(e)};var T=l,$=d,N=b,W=h,F=u,I=o,S=f,a={excellent:{threshold:10,label:"Excellent",message:"Lean support cost."},good:{threshold:25,label:"Good",message:"Healthy multi-tier mix."},warning:{threshold:50,label:"Warning",message:"Above-market cost."},critical:{threshold:null,label:"Critical",message:"Severely bloated cost."}},x=function(t){const r=l(Number(t.t1_cost)||0),c=l(Number(t.t2_cost)||0),e=l(Number(t.t3_cost)||0),n=l(Number(t.t1_share)||0),s=l(Number(t.t2_share)||0),y=l(Number(t.monthly_volume)||0),m=Math.max(0,100-n-s),i=d(r,c,e,n,s),g=b(i,y),_=h(i),v=a[_],k=(r*n+c*s+e*10)/100,p=h(k),C=a.excellent.threshold*100,M=r*n+c*s+e*m,w=Math.max(0,(M-C)/Math.max(m,1));return["🩺 Cost-per-Ticket Health: "+v.label+" ("+o(i)+"/ticket · "+u(g)+"/mo)","📊 Snapshot: T1 "+n+"% × "+o(r)+" + T2 "+s+"% × "+o(c)+" + T3 "+m+"% × "+o(e)+" = "+o(i)+" weighted · "+u(g)+"/mo total","🔄 What-If: if T3 share drops to 10%, avg drops to "+o(k)+" (would be "+a[p].label+")","⚖️ Break-Even: to hit 🟢 Excellent ("+o(a.excellent.threshold)+" ceiling), cut T3 cost to ≤$"+Math.round(w)+"/ticket OR push T3 share ≤5%","🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly","💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume."]};return[f(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

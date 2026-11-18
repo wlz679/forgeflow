@@ -28,8 +28,8 @@
 
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve, join } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -95,25 +95,27 @@ test('P156: every comparison flagship is also in its provider interactive set', 
 // 2. One single source of truth
 // ---------------------------------------------------------------------------
 
-test('P156: the codegen script reads the shared list instead of redefining it', () => {
-  assert.ok(
-    codeGenSrc.includes('ai-pricing-popular.json'),
-    'scripts/codegen-customfn.mjs must read src/data/ai-pricing-popular.json',
-  );
-});
-
-test('P156: the codegen script hard-codes NO model key of its own', () => {
-  const allKeys = Object.values(POPULAR_KEYS).flat();
-  const codegenKeys = Object.values(FLAGSHIP_KEYS);
-  const leaked = [...allKeys, ...codegenKeys].filter((key) =>
-    codeGenSrc.includes(`'${key}'`) || codeGenSrc.includes(`"${key}"`),
-  );
+test('P156: the interactive model set comes from the shared module (not from a local copy)', () => {
+  // ⚠️ P168 B3-10：客户端 customFn 改为**服务端同一份代码派生** ⇒ 白名单不再由任何脚本持有，
+  //   而是由**折叠服务端自己的 pickInteractiveModels(...) 调用**得到
+  //   ⇒ 真相源仍是 src/data/ai-pricing-popular.json（经 ai-pricing-popular.ts 导出）。
+  //   ⇒ 判据从「codegen 必须读那个 json」改成「**引擎的模型表必须来自共享 picker**」。
+  const engineFiles = readdirSync(ENGINE_DIR).filter((f) => f.endsWith('.ts'));
+  const offenders: string[] = [];
+  let checked = 0;
+  for (const f of engineFiles) {
+    const src = readFileSync(join(ENGINE_DIR, f), 'utf8');
+    if (!/pick(Interactive|Flagship)Models/.test(src)) continue;
+    checked++;
+    if (!/from ['"][^'"]*ai-pricing-popular['"]/.test(src)) offenders.push(f);
+  }
+  assert.ok(checked > 0, 'no AI-cost engine uses the shared picker — the scan is broken');
   assert.deepEqual(
-    leaked,
+    offenders,
     [],
-    'these model keys are hard-coded in scripts/codegen-customfn.mjs — the interactive ' +
-      'set must live in exactly one place (src/data/ai-pricing-popular.json), otherwise ' +
-      'the bundled client table and the build-time engine silently diverge',
+    `these engine(s) use the shared picker but do NOT import it from src/data/ai-pricing-popular: ${offenders.join(', ')}` +
+      ' — the interactive set must live in exactly one place, otherwise the bundled client table' +
+      ' and the build-time engine silently diverge',
   );
 });
 

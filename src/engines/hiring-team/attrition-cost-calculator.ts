@@ -50,33 +50,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var cnn=function(x){return Math.max(0,x)};
-  var sal = cnn(Number(inputs.annual_salary) || 0);
-  var rec = cnn(Number(inputs.recruiting_cost) || 0);
-  var rw = cnn(Number(inputs.ramp_weeks) || 0);
-  var lpm = cnn(Number(inputs.lost_productivity_months) || 0);
-  var role = inputs.role_level || 'IC';
-  var mult = role === 'Manager' ? 1.5 : 1.0;
-  var rampC = (sal / 52) * rw * 0.5;
-  var lpC = (sal / 12) * lpm * mult;
-  var total = rec + rampC + lpC;
-  var pct = sal === 0 ? 0 : total / sal * 100;
-  var band = pct <= 50 ? 'Excellent' : pct <= 100 ? 'Good' : pct <= 200 ? 'Warning' : 'Critical';
-  var emoji = pct <= 50 ? '🟢' : pct <= 100 ? '🟡' : pct <= 200 ? '🟠' : '🔴';
-  var altTotal = rec + rampC + (sal / 12) * lpm * 1.5;
-  var altPct = sal === 0 ? 0 : altTotal / sal * 100;
-  var targetLpm = Math.floor((sal * 0.5 - rec - rampC) * 12 / sal / mult);
-  return [
-    '🩺 Attrition Cost: ' + emoji + ' ' + band + ' ($' + Math.round(total).toLocaleString() + ' = ' + pct.toFixed(0) + '% of salary)',
-    '📊 Snapshot: Recruiting $' + rec.toLocaleString() + ' + Ramp $' + Math.round(rampC).toLocaleString() + ' + Lost productivity $' + Math.round(lpC).toLocaleString() + ' (role ' + role + ')',
-    '🔄 What-If: if role is Manager, lost prod = $' + Math.round(sal/12*lpm*1.5).toLocaleString() + ' → total = $' + Math.round(altTotal).toLocaleString() + ' (' + altPct.toFixed(0) + '%)',
-    '⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ ' + (targetLpm < 0 ? '0 (impossible — recruiting + ramp alone > 50%)' : targetLpm),
-    '🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review',
-    '💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.'
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,n,i,r,l){const s=l==="Manager"?1.5:1,c=n,u=t/52*i*.5,g=t/12*r*s,f=c+u+g,h=t===0?0:f/t*100;return{recruitingCost:c,rampCost:u,lostProductivityCost:g,total:f,pctOfSalary:h}},y=function(t){return t<=a.excellent.threshold?"excellent":t<=a.good.threshold?"good":t<=a.warning.threshold?"warning":"critical"},e=function(t){return"$"+Math.round(t).toLocaleString()},m=function(t){return t.toFixed(1)+"%"},p=function(t,n,i){var r=_(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var k=o,w=d,x=y,M=e,N=m,I=p,a={excellent:{threshold:50,label:"🟢 Excellent",message:"Lean attrition cost — strong retention practices or low-friction backfill."},good:{threshold:100,label:"🟡 Good",message:"Typical attrition cost — within SHRM benchmark range; flag >1.5x salary."},warning:{threshold:200,label:"🟠 Warning",message:"High attrition cost — flight risk concentrated in critical roles; investigate manager tenure."},critical:{threshold:null,label:"🔴 Critical",message:"Severe attrition cost (>2x salary) — every leaver is a major business event."}},_=function(t){const n=o(Number(t.annual_salary)||0),i=o(Number(t.recruiting_cost)||0),r=o(Number(t.ramp_weeks)||0),l=o(Number(t.lost_productivity_months)||0),s=t.role_level||"IC",{recruitingCost:c,rampCost:u,lostProductivityCost:g,total:f,pctOfSalary:h}=d(n,i,r,l,s),b=y(h),C=a[b],v=d(n,i,r,l,"Manager");return["🩺 Attrition Cost: "+C.label+" ("+e(f)+" = "+m(h)+" of salary)","📊 Snapshot: Recruiting "+e(c)+" + Ramp "+e(u)+" + Lost productivity "+e(g)+" (role "+s+")","🔄 What-If: if role is Manager, lost prod = "+e(v.lostProductivityCost)+" → total = "+e(v.total)+" ("+m(v.pctOfSalary)+")","⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ 4 OR cut recruiting/ramp costs proportionally","🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review","💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early."]};return[p(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

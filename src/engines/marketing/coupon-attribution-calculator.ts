@@ -242,106 +242,68 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var cv=cnn(parseFloat(inputs.couponValue)||0);" +
-  "var rr=cnn(parseFloat(inputs.redemptionRate)||0);" +
-  // P168 B3-7：params 表达式用**服务端同名变量**（客户端核销率变量名是 rr）。
-  "var redemptionRate=rr;" +
-  "var aov=cnn(parseFloat(inputs.avgOrderValue)||0);" +
-  "var br=cnn(parseFloat(inputs.baselineRevenue)||0);" +
-  "var cp=cnn(parseFloat(inputs.cannibalizationPct)||0);" +
-  'if(br===0){return["$calc_out.section.coupon_attribution_calculator|Coupon Attribution Calculator|\\n\\n$calc_out.coupon_attribution.row.enter_inputs_required|Enter your baseline revenue, coupon value, redemption rate, AOV, and cannibalization % to compute the true ROI of your coupon campaign.|"];}' +
-  "var rd=rr/100,cd=cp/100;" +
-  "var tcr=br*rd*aov;" +
-  "var cc=br*rd*cv;" +
-  "var incr=tcr*(1-cd);" +
-  "var canLoss=tcr-incr;" +
-  "var net=incr-cc;" +
-  "var roi=cc>0?net/cc:0;" +
-  'function money(n){return "$"+Math.round(n).toLocaleString("en-US");}' +
-  'function pct(n){return (n*100).toFixed(0)+"%";}' +
-  'var band=roi>=1?"good":(roi>=0?"warning":"critical");' +
-  'var he=band==="good"?"🟢":(band==="warning"?"🟡":"🔴");' +
-  // P168 B3-7：三档文案取自 HEALTH_BANDS（与服务端**同一份**原文 ⇒ 逐字节相同）。
-  'var hl=band==="good"?"$calc_out.coupon_attribution.row.health_good|' + HEALTH_BANDS.good.label + '|":(band==="warning"?"$calc_out.coupon_attribution.row.health_warning|' + HEALTH_BANDS.warning.label + '|":"$calc_out.coupon_attribution.row.health_critical|' + HEALTH_BANDS.critical.label + '|");' +
-  "var wrR=rr*1.2;" +
-  "var wrRev=br*(wrR/100)*aov;" +
-  "var wrCost=br*(wrR/100)*cv;" +
-  "var wrIncr=wrRev*(1-cd);" +
-  "var wrNet=wrIncr-wrCost;" +
-  "var wrROI=wrCost>0?wrNet/wrCost:0;" +
-  "var whCV=cv*0.5;" +
-  "var whCost=br*rd*whCV;" +
-  "var whNet=incr-whCost;" +
-  "var whROI=whCost>0?whNet/whCost:0;" +
-  "var wcP=Math.max(0,cp-10);" +
-  "var wcIncr=tcr*(1-wcP/100);" +
-  "var wcNet=wcIncr-cc;" +
-  "var wcROI=cc>0?wcNet/cc:0;" +
-  "var beCann=tcr>0?Math.max(0,(1-cc/tcr)*100):100;" +
-  "var canHead=cp<=beCann?beCann-cp:0;" +
-  // P168 B3-7：params 表达式用**服务端同名变量**（客户端余量变量名是 canHead）。
-  "var cannibalHeadroom=canHead;" +
-  "var annNet=net*12;" +
-  "var annCC=cc*12;" +
-  "var annIncr=incr*12;" +
-  'var tip="";' +
-  "if(band===\"critical\"){tip=tk('calc_out.coupon_attribution.row.tip_critical','💡 Tip: Coupons are destroying value. Either raise coupon value (smaller discount), tighten targeting so redemption comes from genuinely incremental buyers, or run a holdout test to measure real cannibalization before scaling. Most teams discover true cannibalization is 50–70%, not the 30% they assumed.');}" +
-  "else if(band===\"good\"){tip=tk('calc_out.coupon_attribution.row.tip_good','💡 Tip: Healthy true ROI. Lock in this audience * offer * channel combination as a template; A/B test only one variable at a time (discount depth, audience, creative) so you can attribute the next +20pp of ROI to a specific lever. Document the cannibalization % you measured — it is the single most-cited number in coupon post-mortems.');}" +
-  "else{if(cp>50){tip=tk('calc_out.coupon_attribution.row.tip_warning_high_cannibalization','💡 Tip: High cannibalization is the dominant drag on ROI. Run a 50/50 holdout (no-coupon cohort) for one cycle to measure true incremental conversion; if observed cannibalization is >50%, switch to dollar-off vs. percent-off and cap the discount at the smallest value that still clears your margin floor.');}else{tip=tk('calc_out.coupon_attribution.row.tip_warning_low_cannibalization','💡 Tip: Coupon barely profitable. Tighten redemption targeting (exclude recent purchasers / email subscribers already at LTV ceiling), shorten the campaign window to avoid stacking with other promos, or reduce discount depth by 25–50%. A 10pp drop in cannibalization alone often doubles true ROI.');}}" +
-  // P168 B3-7：带 params 的行 token 化（fallback 与 params 取同一个变量）。
-  "var tkAov=tk('calc_out.coupon_attribution.row.formula_baseline_x_rate_x_aov','(baseline x '+redemptionRate.toFixed(1)+'% x AOV)',{rate:redemptionRate.toFixed(1)});" +
-  "var tkDiscount=tk('calc_out.coupon_attribution.row.formula_baseline_x_rate_x_discount','(baseline x '+redemptionRate.toFixed(1)+'% x discount)',{rate:redemptionRate.toFixed(1)});" +
-  "var tkWr=tk('calc_out.coupon_attribution.row.whatif_redemption_plus_20','+20% redemption: true ROI = '+pct(wrROI)+' * net gain = '+money(wrNet),{roi:pct(wrROI),net:money(wrNet)});" +
-  "var tkWh=tk('calc_out.coupon_attribution.row.whatif_coupon_value_minus_50','-50% coupon value: true ROI = '+pct(whROI)+' * net gain = '+money(whNet),{roi:pct(whROI),net:money(whNet)});" +
-  "var tkWc=tk('calc_out.coupon_attribution.row.whatif_cannibalization_minus_10pp','-10pp cannibalization: true ROI = '+pct(wcROI)+' * net gain = '+money(wcNet),{roi:pct(wcROI),net:money(wcNet)});" +
-  "var tkHeadroom=tk('calc_out.coupon_attribution.row.headroom','Headroom: '+cannibalHeadroom.toFixed(1)+'pp before net revenue gain hits zero',{headroom:cannibalHeadroom.toFixed(1)+'pp'});" +
-  'var r="";' +
-  'r+="$calc_out.section.coupon_attribution_calculator|Coupon Attribution Calculator|\\n\\n";' +
-  'r+="$calc_out.section.health|🩺 Health:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+he+" "+hl+"\\n";' +
-  'r+="* $calc_out.label.true_roi|True ROI|: "+pct(roi)+"  *  $calc_out.label.net_revenue_gain|Net revenue gain|: "+money(net)+"\\n";' +
-  'r+="* $calc_out.label.cannibalization|Cannibalization|: "+cp.toFixed(0)+"%  *  $calc_out.label.coupon_cost|Coupon cost|: "+money(cc)+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* $calc_out.label.coupon_value|Coupon value|:        "+money(cv)+"\\n";' +
-  'r+="* $calc_out.label.redemption_rate|Redemption rate|:     "+rr.toFixed(1)+"%\\n";' +
-  'r+="* $calc_out.label.average_order_value|Average order value|: "+money(aov)+"\\n";' +
-  'r+="* $calc_out.label.baseline_revenue|Baseline revenue|:    "+money(br)+"\\n";' +
-  'r+="* $calc_out.label.cannibalization|Cannibalization|:     "+cp.toFixed(0)+"%\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.revenue_breakdown|💰 Revenue Breakdown:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* $calc_out.label.total_coupon_revenue|Total coupon revenue|: "+money(tcr)+"  "+tkAov+"\\n";' +
-  'r+="* $calc_out.label.cannibalization_loss|Cannibalization loss|: "+money(canLoss)+"  $calc_out.coupon_attribution.row.formula_orders_would_happen|(orders that would have happened anyway)|\\n";' +
-  'r+="* $calc_out.label.incremental_revenue|Incremental revenue|:  "+money(incr)+"  $calc_out.coupon_attribution.row.formula_after_cannibalization|(after cannibalization adjustment)|\\n";' +
-  'r+="* $calc_out.label.coupon_cost|Coupon cost|:          "+money(cc)+"  "+tkDiscount+"\\n";' +
-  'r+="* $calc_out.label.net_revenue_gain|Net revenue gain|:     "+money(net)+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.what_if|🔄 What-If:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+tkWr+"\\n";' +
-  'r+="* "+tkWh+"\\n";' +
-  'r+="* "+tkWc+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.break_even|⚖️ Break-Even:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* $calc_out.label.cannibalization_ceiling|Cannibalization ceiling|: "+beCann.toFixed(1)+"%  $calc_out.coupon_attribution.row.cannibalization_ceiling_note|(above this, coupons destroy value)|\\n";' +
-  'r+="* "+tkHeadroom+"\\n";' +
-  'r+="* $calc_out.coupon_attribution.row.break_even_one_dollar|At break-even, every coupon dollar returns exactly one coupon dollar in net revenue|\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.milestone|🎯 Milestone:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* $calc_out.label.annualized_net_gain|Annualized net gain|: "+money(annNet)+"  $calc_out.coupon_attribution.row.milestone_cadence_note|(at 1 campaign/month cadence)|\\n";' +
-  'r+="* $calc_out.label.annual_incremental_revenue|Annual incremental revenue|: "+money(annIncr)+"\\n";' +
-  'r+="* $calc_out.label.annual_coupon_cost|Annual coupon cost|: "+money(annCC)+"\\n";' +
-  'r+="* $calc_out.coupon_attribution.row.milestone_assumption|(Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)|\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+=tip+"\\n";' +
-  "return [r];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let u=function(o){return Number.isNaN(o)?0:Math.max(0,o)},x=function(o){return o>=_.good.threshold?"good":o>=_.warning.threshold?"warning":"critical"},I=function(o,p,a){var i=P(o);return Array.isArray(i)?i.join(\`
+\`):String(i)};var T=u,nn=x,tn=I,t=tk,q='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+q)(),_={good:{threshold:1,label:"Good — true ROI >= 100%; coupon creates incremental profit"},warning:{threshold:0,label:"Warning — true ROI 0–100%; coupon barely profitable, fragile"},critical:{threshold:null,label:"Critical — true ROI < 0%; coupon destroys value"}},M={good:"🟢",warning:"🟡",critical:"🔴"},W={good:t("calc_out.coupon_attribution.row.health_good",_.good.label),warning:t("calc_out.coupon_attribution.row.health_warning",_.warning.label),critical:t("calc_out.coupon_attribution.row.health_critical",_.critical.label)},P=function(o){const p=u(parseFloat(o.couponValue)||0),a=u(parseFloat(o.redemptionRate)||0),i=u(parseFloat(o.avgOrderValue)||0),c=u(parseFloat(o.baselineRevenue)||0),r=u(parseFloat(o.cannibalizationPct)||0);if(c===0)return[\`$calc_out.section.coupon_attribution_calculator|Coupon Attribution Calculator|
+
+$calc_out.coupon_attribution.row.enter_inputs_required|Enter your baseline revenue, coupon value, redemption rate, AOV, and cannibalization % to compute the true ROI of your coupon campaign.|\`];const g=a/100,C=r/100,s=c*g*i,e=c*g*p,b=s*(1-C),E=s-b,h=b-e,O=e>0?h/e:0,n=z=>"$"+Math.round(z).toLocaleString("en-US"),l=z=>(z*100).toFixed(0)+"%",v=x(O),G=M[v],S=W[v],F=a*1.2,k=c*(F/100)*i,w=c*(F/100)*p,m=k*(1-C)-w,V=w>0?m/w:0,J=p*.5,f=c*g*J,$=b-f,j=f>0?$/f:0,K=Math.max(0,r-10),y=s*(1-K/100)-e,A=e>0?y/e:0,R=s>0?Math.max(0,(1-e/s)*100):100,N=r<=R?R-r:0,L=h*12,U=e*12,B=b*12;let d;v==="critical"?d=t("calc_out.coupon_attribution.row.tip_critical","💡 Tip: Coupons are destroying value. Either raise coupon value (smaller discount), tighten targeting so redemption comes from genuinely incremental buyers, or run a holdout test to measure real cannibalization before scaling. Most teams discover true cannibalization is 50–70%, not the 30% they assumed."):v==="good"?d=t("calc_out.coupon_attribution.row.tip_good","💡 Tip: Healthy true ROI. Lock in this audience * offer * channel combination as a template; A/B test only one variable at a time (discount depth, audience, creative) so you can attribute the next +20pp of ROI to a specific lever. Document the cannibalization % you measured — it is the single most-cited number in coupon post-mortems."):r>50?d=t("calc_out.coupon_attribution.row.tip_warning_high_cannibalization","💡 Tip: High cannibalization is the dominant drag on ROI. Run a 50/50 holdout (no-coupon cohort) for one cycle to measure true incremental conversion; if observed cannibalization is >50%, switch to dollar-off vs. percent-off and cap the discount at the smallest value that still clears your margin floor."):d=t("calc_out.coupon_attribution.row.tip_warning_low_cannibalization","💡 Tip: Coupon barely profitable. Tighten redemption targeting (exclude recent purchasers / email subscribers already at LTV ceiling), shorten the campaign window to avoid stacking with other promos, or reduce discount depth by 25–50%. A 10pp drop in cannibalization alone often doubles true ROI.");const Q=t("calc_out.coupon_attribution.row.formula_baseline_x_rate_x_aov","(baseline x "+a.toFixed(1)+"% x AOV)",{rate:a.toFixed(1)}),X=t("calc_out.coupon_attribution.row.formula_baseline_x_rate_x_discount","(baseline x "+a.toFixed(1)+"% x discount)",{rate:a.toFixed(1)}),Y=t("calc_out.coupon_attribution.row.whatif_redemption_plus_20","+20% redemption: true ROI = "+l(V)+" * net gain = "+n(m),{roi:l(V),net:n(m)}),Z=t("calc_out.coupon_attribution.row.whatif_coupon_value_minus_50","-50% coupon value: true ROI = "+l(j)+" * net gain = "+n($),{roi:l(j),net:n($)}),D=t("calc_out.coupon_attribution.row.whatif_cannibalization_minus_10pp","-10pp cannibalization: true ROI = "+l(A)+" * net gain = "+n(y),{roi:l(A),net:n(y)}),H=t("calc_out.coupon_attribution.row.headroom","Headroom: "+N.toFixed(1)+"pp before net revenue gain hits zero",{headroom:N.toFixed(1)+"pp"});return[\`$calc_out.section.coupon_attribution_calculator|Coupon Attribution Calculator|
+
+$calc_out.section.health|🩺 Health:|
+------------------------------------------------
+* \`+G+" "+S+\`
+* $calc_out.label.true_roi|True ROI|: \`+l(O)+"  *  $calc_out.label.net_revenue_gain|Net revenue gain|: "+n(h)+\`
+* $calc_out.label.cannibalization|Cannibalization|: \`+r.toFixed(0)+"%  *  $calc_out.label.coupon_cost|Coupon cost|: "+n(e)+\`
+
+------------------------------------------------
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+------------------------------------------------
+* $calc_out.label.coupon_value|Coupon value|:        \`+n(p)+\`
+* $calc_out.label.redemption_rate|Redemption rate|:     \`+a.toFixed(1)+\`%
+* $calc_out.label.average_order_value|Average order value|: \`+n(i)+\`
+* $calc_out.label.baseline_revenue|Baseline revenue|:    \`+n(c)+\`
+* $calc_out.label.cannibalization|Cannibalization|:     \`+r.toFixed(0)+\`%
+
+------------------------------------------------
+
+$calc_out.section.revenue_breakdown|💰 Revenue Breakdown:|
+------------------------------------------------
+* $calc_out.label.total_coupon_revenue|Total coupon revenue|: \`+n(s)+"  "+Q+\`
+* $calc_out.label.cannibalization_loss|Cannibalization loss|: \`+n(E)+\`  $calc_out.coupon_attribution.row.formula_orders_would_happen|(orders that would have happened anyway)|
+* $calc_out.label.incremental_revenue|Incremental revenue|:  \`+n(b)+\`  $calc_out.coupon_attribution.row.formula_after_cannibalization|(after cannibalization adjustment)|
+* $calc_out.label.coupon_cost|Coupon cost|:          \`+n(e)+"  "+X+\`
+* $calc_out.label.net_revenue_gain|Net revenue gain|:     \`+n(h)+\`
+
+------------------------------------------------
+
+$calc_out.section.what_if|🔄 What-If:|
+------------------------------------------------
+* \`+Y+\`
+* \`+Z+\`
+* \`+D+\`
+
+------------------------------------------------
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+------------------------------------------------
+* $calc_out.label.cannibalization_ceiling|Cannibalization ceiling|: \`+R.toFixed(1)+\`%  $calc_out.coupon_attribution.row.cannibalization_ceiling_note|(above this, coupons destroy value)|
+* \`+H+\`
+* $calc_out.coupon_attribution.row.break_even_one_dollar|At break-even, every coupon dollar returns exactly one coupon dollar in net revenue|
+
+------------------------------------------------
+
+$calc_out.section.milestone|🎯 Milestone:|
+------------------------------------------------
+* $calc_out.label.annualized_net_gain|Annualized net gain|: \`+n(L)+\`  $calc_out.coupon_attribution.row.milestone_cadence_note|(at 1 campaign/month cadence)|
+* $calc_out.label.annual_incremental_revenue|Annual incremental revenue|: \`+n(B)+\`
+* $calc_out.label.annual_coupon_cost|Annual coupon cost|: \`+n(U)+\`
+* $calc_out.coupon_attribution.row.milestone_assumption|(Assumes constant redemption + cannibalization — refresh quarterly with new cohort data)|
+
+------------------------------------------------
+
+\`+d+\`
+\`]};return[I(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

@@ -6,7 +6,11 @@
 // P164 的 customfn-contract-guard 断言的是「非空字符串数组」，多元素数组同样满足
 // ⇒ 它结构上看不见这个缺陷；这里守独立的不变量：返回数组长度必须为 1。
 //
-// DEBT = 当前欠账清单（**58 个** · 2026-11-18 实测）：不得新增；修好必须销账；每条必须真的丢内容。
+// DEBT = 当前欠账清单（**0 条** · 2026-11-18 B3-10 实测清零）：不得新增；修好必须销账；每条必须真的丢内容。
+// ⭐ 2026-11-18 B3-10：58 条多元素欠账**全部修完**（客户端 customFn 改为「服务端同一份代码」的派生物
+//   ⇒ 单元素契约对全仓 100 个引擎成立 ⇒ DEBT 清零。
+//   ⚠️ 配套：原「DEBT 必须非空」断言已**移除**（它守的是「欠账存在」这个**回溯型**不变量 ⇒ 修好后反而
+//   会挡住修复）⇒ 换成 G15c 守**目标型**不变量：**测量必须覆盖每一个引擎**。
 // 台账只能变小不能变大，每次变动都在 diff 里看得见。
 //
 // ⚠️⚠️ 2026-11-18 **修正漏账**（54 → 58，**这 4 条不是新增欠账，而是原来漏测的**）：
@@ -19,70 +23,11 @@
 import { test } from 'node:test';
 import { codegenDefaults } from './scripts/p168-server-client-parity.ts';
 import { strict as assert } from 'node:assert';
+import { EXPECTED_ENGINE_COUNT } from './engine-count.ts';
 
 const NL = String.fromCharCode(10);
 
-const DEBT = new Set<string>([
-  // ↓ 2026-11-18 修正漏账（codegen 默认口径下才多元素，synthetic 口径漏测）
-  'solopreneur-safe-convertible-note-calculator',
-  'solopreneur-mortgage-calculator',
-  'solopreneur-brrrr-calculator',
-  'solopreneur-power-user-curve-calculator',
-  'solopreneur-project-profitability-calculator',
-  'solopreneur-openai-token-calculator',
-  'solopreneur-time-value-calculator',
-  'solopreneur-freelance-tax-calculator',
-  'solopreneur-rent-vs-buy-calculator',
-  'solopreneur-freelance-rate-calculator',
-  'solopreneur-activation-rate-calculator',
-  'solopreneur-feature-adoption-calculator',
-  'solopreneur-rental-yield-calculator',
-  'solopreneur-funnel-step-calculator',
-  'solopreneur-meeting-cost-calculator',
-  'solopreneur-stickiness-calculator',
-  'solopreneur-stripe-fee-calculator',
-  'solopreneur-breach-notification-cost-calculator',
-  'solopreneur-cmp-roi-calculator',
-  'solopreneur-saas-pricing-planner',
-  'solopreneur-consent-revenue-impact-calculator',
-  'solopreneur-dpa-cost-calculator',
-  'solopreneur-article-helpfulness-calculator',
-  'solopreneur-dsar-cost-calculator',
-  'solopreneur-documentation-roi-calculator',
-  'solopreneur-affiliate-income-calculator',
-  'solopreneur-saas-valuation-calculator',
-  'solopreneur-gdpr-fine-calculator',
-  'solopreneur-deflection-quality-calculator',
-  'solopreneur-course-pricing-calculator',
-  'solopreneur-deflection-rate-calculator',
-  'solopreneur-resolution-time-calculator',
-  'solopreneur-search-effectiveness-calculator',
-  'solopreneur-first-response-time-calculator',
-  'solopreneur-article-freshness-calculator',
-  'solopreneur-cost-per-support-ticket-calculator',
-  'solopreneur-csat-calculator',
-  'solopreneur-support-capacity-planning-calculator',
-  'solopreneur-time-to-value-calculator',
-  'solopreneur-productivity-ramp-curve-calculator',
-  'solopreneur-equity-refresh-calculator',
-  'solopreneur-attrition-cost-calculator',
-  'solopreneur-kb-coverage-rate-calculator',
-  'solopreneur-fully-loaded-employee-cost-calculator',
-  'solopreneur-remote-vs-office-calculator',
-  'solopreneur-time-to-productivity-calculator',
-  'solopreneur-comp-banding-calculator',
-  'solopreneur-employee-cost-calculator',
-  'solopreneur-renewal-rate-calculator',
-  'solopreneur-ltv-calculator',
-  'solopreneur-burn-multiple-rule-of-40-calculator',
-  'solopreneur-compound-interest-calculator',
-  'solopreneur-hourly-vs-fixed-calculator',
-  'solopreneur-equity-dilution-calculator',
-  'solopreneur-productivity-score',
-  'solopreneur-arr-multiple-valuation-calculator',
-  'solopreneur-sponsorship-rate-calculator',
-  'solopreneur-dscr-calculator',
-]);
+const DEBT = new Set<string>([]);
 
 function pick(a: unknown[]): unknown {
   return a[Math.floor(Math.random() * a.length)];
@@ -126,6 +71,30 @@ function loadEngines(): Promise<any[]> {
  *   （走的是另一个分支）⇒ 只测 synthetic ⇒ 台账**少算了 4 条真欠账**。
  * ⇒ 现在两种口径都测，取「元素数更多 / 丢字符更多」的那次 ⇒ 台账覆盖真实场景。
  */
+/**
+ * 覆盖率：每个**带 customFn** 的引擎都必须能被 `new Function` **成功构造**。
+ *
+ * ⭐⭐ 2026-11-18 B3-10 实测堵上的真空绿漏洞：原探针里
+ *   `try { new Function(...) } catch { continue; }` ⇒ customFn **语法错误**的引擎被**静默跳过**
+ *   ⇒ 该页动态卡片整页空白，而 G15 完全看不见（G6 能看见：它的 catch 会记成一条 drift 行）。
+ * ⇒ 本函数把「构造失败」显式收集起来 ⇒ 语法错误不再是静默的。
+ */
+async function parseCoverage(): Promise<{ withCustomFn: number; parseFailures: string[] }> {
+  const engines = await loadEngines();
+  const parseFailures: string[] = [];
+  let withCustomFn = 0;
+  for (const e of engines) {
+    const body = e.clientConfig?.customFn;
+    if (typeof body !== 'string' || !body.length) continue;
+    withCustomFn++;
+    try {
+      new Function('inputs', 'pick', 'fill', body);
+    } catch (err: any) {
+      parseFailures.push(e.slug + '：' + String(err && err.message));
+    }
+  }
+  return { withCustomFn, parseFailures };
+}
 async function probe(): Promise<Map<string, { elements: number; lost: number }>> {
   const engines = await loadEngines();
   const defaults = codegenDefaults();
@@ -135,7 +104,7 @@ async function probe(): Promise<Map<string, { elements: number; lost: number }>>
     if (typeof body !== 'string' || !body.length) continue;
     let fn: any;
     try { fn = new Function('inputs', 'pick', 'fill', body); } catch { continue; }
-    const inputSets: Record<string, string>[] = [];
+    const inputSets: Record<string, unknown>[] = [];
     const d = defaults[e.slug];
     if (d) inputSets.push(d);
     inputSets.push(syntheticInputs(e));
@@ -175,6 +144,21 @@ test('G15b: 台账里的每一条欠账都必须真的丢内容（lost > 0）', 
   assert.deepEqual(empty, [], 'these DEBT entries do not describe a real truncation.\n' + empty.join('\n'));
 });
 
-test('G15c: 防真空绿 —— 台账非空', () => {
-  assert.ok(DEBT.size > 0, 'DEBT must not be empty: an empty ledger would make G15 vacuous.');
+test('G15c: 防真空绿 —— 测量必须覆盖每一个带 customFn 的引擎（不是「台账非空」）', async () => {
+  // ⭐ 台账清零是**合法结局**（B3-10 已把 58 条多元素全部修完）⇒ 原来那条「DEBT 必须非空」
+  //   守的是「欠账存在」这个**回溯型**不变量 ⇒ 修好之后它反而会**挡住修复**。
+  // ⇒ 换成守**目标型**不变量：**测量不许漏掉任何一个引擎**。
+  // ⭐⭐ 顺带堵上一个真空绿漏洞：原探针里 `try { new Function(...) } catch { continue; }`
+  //   ⇒ customFn **语法错误**的引擎被**静默跳过** ⇒ 该页动态卡片整页空白而 G15 完全看不见。
+  const cov = await parseCoverage();
+  assert.equal(
+    cov.withCustomFn,
+    EXPECTED_ENGINE_COUNT,
+    '带 customFn 的引擎数应等于引擎总数（少了 = 那个引擎根本没有动态实现）',
+  );
+  assert.deepEqual(
+    cov.parseFailures,
+    [],
+    'customFn 语法错误 ⇒ 该页动态卡片整页空白（且旧探针会静默跳过它）：' + cov.parseFailures.join(' | '),
+  );
 });

@@ -334,107 +334,80 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
 // ============== customFn ==============
 
 const customFn =
-  "function oc(hc,s,o,ots){if(hc<=0)return 0;return hc*(s+12*o)+hc*ots;}" +
-  "function rc(hc,s,r,ots){if(hc<=0)return 0;return hc*(s+12*r)+hc*ots;}" +
-  "function hcFn(hc,s,o,r,ots){if(hc<=0)return 0;var m=0.5*o+0.5*r;return hc*(s+12*m)+hc*ots;}" +
-  "function adj(rc2,pd){var f=1+pd/100;if(f<=0)return Infinity;return rc2/f;}" +
-  "function dhFn(sv,pd){var pp=pd>=0;var sp=sv>0;if(sp&&pp)return{e:'\\uD83D\\uDFE2',l:'STRONG \\u2014 remote saves money AND is more productive'};if(sp&&pd>=-10)return{e:'\\uD83D\\uDCA1',l:'MODERATE \\u2014 remote saves money but slight productivity loss'};if(!sp&&pp)return{e:'\\uD83D\\uDCA1',l:'MODERATE \\u2014 office saves money but remote is more productive'};return{e:'\\uD83D\\uDFE0',l:'WEAK \\u2014 office is cheaper AND remote is less productive'};}" +
-  "function pps(o,r){return 12*(o-r);}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var hc=cnn(parseFloat(inputs.headcount)||0);" +
-  "var s=cnn(parseFloat(inputs.avgSalary)||0);" +
-  "var o=cnn(parseFloat(inputs.officeOverheadPerPerson)||0);" +
-  "var r=cnn(parseFloat(inputs.remoteStipendPerPerson)||0);" +
-  "var ots=cnn(parseFloat(inputs.oneTimeSetupPerPerson)||0);" +
-  "var pd=parseFloat(inputs.productivityDelta)||0;" +
-  "if(hc===0){return['\\u23F0 Remote vs In-Office Cost Calculator\\n\\n\\uD83D\\uDCB0 Enter headcount > 0 to compare office vs remote cost structures.'];}" +
-  "if(s===0&&o===0&&r===0){return['\\u23F0 Remote vs In-Office Cost Calculator\\n\\n\\uD83D\\uDCB0 Enter average salary and overhead values to see the cost comparison.'];}" +
-  "var ocv=oc(hc,s,o,ots);" +
-  "var rcv=rc(hc,s,r,ots);" +
-  "var hcv=hcFn(hc,s,o,r,ots);" +
-  "var arcv=adj(rcv,pd);" +
-  "var sv=ocv-rcv;" +
-  "var dh=dhFn(sv,pd);" +
-  "var ppsv=pps(o,r);" +
-  "function fmt(n){return n.toLocaleString('en-US',{maximumFractionDigits:0});}" +
-  "function money(n){return'$'+fmt(n);}" +
-  "var mx=Math.max(ocv,rcv,hcv);" +
-  "function sc(n){return Math.round((n/mx)*50);}" +
-  "function br(n){var a=sc(n);return'\\u2593'.repeat(a)+'\\u2591'.repeat(50-a);}" +
-  "function pc(n){return((n/mx)*100).toFixed(0)+'%';}" +
-  "var chrt='                '+'0%'.padStart(4)+'      '+'50%'.padStart(4)+'     '+'100%'.padStart(4)+'\\n';" +
-  "chrt+='Office Only  \\u2502'+br(ocv)+'\\u2502 '+money(ocv)+' ('+pc(ocv)+')\\n';" +
-  "chrt+='Hybrid 50/50 \\u2502'+br(hcv)+'\\u2502 '+money(hcv)+' ('+pc(hcv)+')\\n';" +
-  "chrt+='Remote Only  \\u2502'+br(rcv)+'\\u2502 '+money(rcv)+' ('+pc(rcv)+')';" +
-  "var hdCost=hc*(s+12*o*0.7)+hc*ots;" +
-  "var hdSv=ocv-hdCost;" +
-  "var rs1000=rc(hc,s,1000,ots);" +
-  "var rsDelta=rs1000-rcv;" +
-  "var tdOh=0.4*o+0.6*r;" +
-  "var tdCost=hc*(s+12*tdOh)+hc*ots;" +
-  "var tdDelta=tdCost-rcv;" +
-  "var fhOc=5*(s+12*o)+5*ots;" +
-  "var fhRc=5*(s+12*r)+5*ots;" +
-  "var fhSv=fhOc-fhRc;" +
-  "var tip='';" +
-  "if(pd<=-10)tip='\\uD83D\\uDCA1 Tip: Significant remote productivity loss. Consider hybrid (2-3 days in office) to balance cost savings with collaboration.';" +
-  "else if(o<800)tip='\\uD83D\\uDCA1 Tip: Low office cost. Remote savings may not justify the loss of in-person collaboration. Stay in office.';" +
-  "else if(hc>=50)tip='\\uD83D\\uDCA1 Tip: At >50 people, collaboration and culture become more important. Many companies mandate 2-3 days in office at this scale (Stripe, Apple).';" +
-  "else tip='\\uD83D\\uDCA1 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.';" +
-  "var r2='';" +
-  "r2+='\\u23F0 Remote vs In-Office Cost Calculator\\n\\n';" +
-  "r2+='\\uD83D\\uDCB0 Cost Comparison (Annual):\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Office Only:    '+money(ocv)+'  ('+money(ocv/hc)+' per person)\\n';" +
-  "r2+='\\u2022 Remote Only:    '+money(rcv)+'  ('+money(rcv/hc)+' per person)\\n';" +
-  "r2+='\\u2022 Hybrid 50/50:   '+money(hcv)+'  (50% office overhead, 50% remote stipend)\\n';" +
-  "r2+='\\u2022 Savings:        '+(sv>0?money(sv)+' by going remote':sv<0?money(-sv)+' by staying in office':'$0 \\u2014 costs equal')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCD0 Per-Employee Breakdown:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Salary:                      '+money(s)+' /yr\\n';" +
-  "r2+='\\u2022 Office overhead (12 mo):     '+money(12*o)+' /yr ('+money(o)+' /mo)\\n';" +
-  "r2+='\\u2022 Remote stipend (12 mo):      '+money(12*r)+' /yr ('+money(r)+' /mo)\\n';" +
-  "r2+='\\u2022 One-time setup:              '+money(ots)+' (amortized over 1 year)\\n';" +
-  "r2+='\\u2022 Per-employee office total:   '+money(s+12*o+ots)+'\\n';" +
-  "r2+='\\u2022 Per-employee remote total:   '+money(s+12*r+ots)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Decision Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+dh.e+' '+dh.l+'\\n';" +
-  "r2+='\\u2022 Per-person annual savings:   '+money(ppsv)+' (office - remote overhead)\\n';" +
-  "r2+='\\u2022 Productivity: '+(pd>0?'\\uD83D\\uDFE2 remote is '+pd+'% more productive':pd<0?'\\uD83D\\uDFE0 remote is '+Math.abs(pd)+'% less productive':'\\uD83D\\uDCA1 neutral (no productivity adjustment)')+'\\n';" +
-  "r2+='\\u2022 3-year TCO: office '+money(ocv*3)+' vs remote '+money(rcv*3)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Break-Even Analysis:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Per-person annual savings:  '+money(ppsv)+'\\n';" +
-  "r2+='\\u2022 Current savings (\\u00d7 '+hc+' people):     '+money(ppsv*hc)+'\\n';" +
-  "r2+='\\u2022 3-year cumulative savings:  '+money(ppsv*hc*3)+'\\n';" +
-  "r2+='\\u2022 Note: break-even is per-person (not per headcount) because cost difference is constant per person.\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Productivity-Adjusted Comparison:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Raw remote cost:             '+money(rcv)+'\\n';" +
-  "r2+='\\u2022 Productivity adjustment:     '+(pd>0?'+':'')+pd+'%\\n';" +
-  "r2+='\\u2022 Productivity-adjusted cost:  '+money(arcv)+' (effective cost per unit of work)\\n';" +
-  "r2+='\\u2022 Net effect: '+(arcv<ocv?'\\uD83D\\uDFE2 remote is cheaper after productivity':'\\uD83D\\uDFE0 office is cheaper after productivity')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Hot-desk (30% less office):           office cost '+money(hdCost)+' (save '+money(hdSv)+')\\n';" +
-  "r2+='\\u2022 Remote stipend \\u2192 $1,000:                remote cost '+money(rs1000)+' (+'+money(rsDelta)+')\\n';" +
-  "r2+='\\u2022 2-day in-office hybrid:                cost '+money(tdCost)+' (+'+money(tdDelta)+' vs full remote)\\n';" +
-  "r2+='\\u2022 Hire 5 more (marginal):                office +'+money(fhOc)+' vs remote +'+money(fhRc)+' (save '+money(fhSv)+')\\n';" +
-  "r2+='\\u2022 Switch to fully remote today:          save '+money(sv)+' /yr\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=chrt+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+=tip;" +
-  "var results=[r2];" +
-  "var counts=[5,10,25,50,100];" +
-  "for(var j=0;j<counts.length;j++){var hc2=counts[j];var o2=oc(hc2,s,o,ots);var r2c=rc(hc2,s,r,ots);var sv2=o2-r2c;results.push('Comparison: '+hc2+' employees: office '+money(o2)+' vs remote '+money(r2c)+' \\u2014 save '+money(sv2)+' /yr by going remote');}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let m=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,o,n,r){return t<=0?0:t*(o+12*n)+t*r},d=function(t,o,n,r){return t<=0?0:t*(o+12*n)+t*r},C=function(t,o,n,r,a){if(t<=0)return 0;const s=.5*n+.5*r;return t*(o+12*s)+t*a},P=function(t,o){const n=1+o/100;return n<=0?1/0:t/n},D=function(t,o){const n=o>=0,r=t>0;return r&&n?{emoji:"🟢",label:"STRONG — remote saves money AND is more productive"}:r&&o>=-10?{emoji:"🟡",label:"MODERATE — remote saves money but slight productivity loss"}:!r&&n?{emoji:"🟡",label:"MODERATE — office saves money but remote is more productive"}:{emoji:"🟠",label:"WEAK — office is cheaper AND remote is less productive"}},R=function(t,o){return 12*(t-o)},A=function(t){const o=m(parseFloat(t.headcount)||0),n=m(parseFloat(t.avgSalary)||0),r=m(parseFloat(t.officeOverheadPerPerson)||0),a=m(parseFloat(t.remoteStipendPerPerson)||0),s=m(parseFloat(t.oneTimeSetupPerPerson)||0),l=parseFloat(t.productivityDelta)||0;if(o===0)return[\`⏰ Remote vs In-Office Cost Calculator
+
+💰 Enter headcount > 0 to compare office vs remote cost structures.\`];if(n===0&&r===0&&a===0)return[\`⏰ Remote vs In-Office Cost Calculator
+
+💰 Enter average salary and overhead values to see the cost comparison.\`];const f=g(o,n,r,s),c=d(o,n,a,s),p=C(o,n,r,a,s),w=P(c,l),u=f-c,T=D(u,l),y=R(r,a),L=i=>i.toLocaleString("en-US",{maximumFractionDigits:0}),e=i=>"$"+L(i),_=Math.max(f,c,p),E=i=>Math.round(i/_*50),b=i=>"▓".repeat(E(i))+"░".repeat(50-E(i)),S=i=>(i/_*100).toFixed(0)+"%";let h="                "+"0%".padStart(4)+"      "+"50%".padStart(4)+"     "+"100%".padStart(4)+\`
+\`;h+="Office Only  │"+b(f)+"│ "+e(f)+" ("+S(f)+\`)
+\`,h+="Hybrid 50/50 │"+b(p)+"│ "+e(p)+" ("+S(p)+\`)
+\`,h+="Remote Only  │"+b(c)+"│ "+e(c)+" ("+S(c)+")";const F=o*(n+12*r*.7)+o*s,W=f-F,k=d(o,n,1e3,s),q=k-c,z=.4*r+.6*a,N=o*(n+12*z)+o*s,G=N-c,se=r+n/12,H=5*(n+12*r)+5*s,M=5*(n+12*a)+5*s,U=H-M,J=u;let v;l<=-10?v="💡 Tip: Significant remote productivity loss. Consider hybrid (2-3 days in office) to balance cost savings with collaboration.":r<800?v="💡 Tip: Low office cost. Remote savings may not justify the loss of in-person collaboration. Stay in office.":o>=50?v="💡 Tip: At >50 people, collaboration and culture become more important. Many companies mandate 2-3 days in office at this scale (Stripe, Apple).":v="💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.";const x=[\`⏰ Remote vs In-Office Cost Calculator
+
+💰 Cost Comparison (Annual):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Office Only:    \`+e(f)+"  ("+e(f/o)+\` per person)
+• Remote Only:    \`+e(c)+"  ("+e(c/o)+\` per person)
+• Hybrid 50/50:   \`+e(p)+\`  (50% office overhead, 50% remote stipend)
+• Savings:        \`+(u>0?e(u)+" by going remote":u<0?e(-u)+" by staying in office":"$0 — costs equal")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Per-Employee Breakdown:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Salary:                      \`+e(n)+\` /yr
+• Office overhead (12 mo):     \`+e(12*r)+" /yr ("+e(r)+\` /mo)
+• Remote stipend (12 mo):      \`+e(12*a)+" /yr ("+e(a)+\` /mo)
+• One-time setup:              \`+e(s)+\` (amortized over 1 year)
+• Per-employee office total:   \`+e(n+12*r+s)+\`
+• Per-employee remote total:   \`+e(n+12*a+s)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Decision Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+T.emoji+" "+T.label+\`
+• Per-person annual savings:   \`+e(y)+\` (office - remote overhead)
+• Productivity: \`+(l>0?"🟢 remote is "+l+"% more productive":l<0?"🟠 remote is "+Math.abs(l)+"% less productive":"🟡 neutral (no productivity adjustment)")+\`
+• 3-year TCO: office \`+e(f*3)+" vs remote "+e(c*3)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Break-Even Analysis:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Per-person annual savings:  \`+e(y)+\`
+• Current savings (× \`+o+" people):     "+e(y*o)+\`
+• 3-year cumulative savings:  \`+e(y*o*3)+\`
+• Note: break-even is per-person (not per headcount) because cost difference is constant per person.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Productivity-Adjusted Comparison:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Raw remote cost:             \`+e(c)+\`
+• Productivity adjustment:     \`+(l>0?"+":"")+l+\`%
+• Productivity-adjusted cost:  \`+e(w)+\` (effective cost per unit of work)
+• Net effect: \`+(w<f?"🟢 remote is cheaper after productivity":"🟠 office is cheaper after productivity")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Hot-desk (30% less office):           office cost \`+e(F)+" (save "+e(W)+\`)
+• Remote stipend → $1,000:                remote cost \`+e(k)+" (+"+e(q)+\`)
+• 2-day in-office hybrid:                cost \`+e(N)+" (+"+e(G)+\` vs full remote)
+• Hire 5 more (marginal):                office +\`+e(H)+" vs remote +"+e(M)+" (save "+e(U)+\`)
+• Switch to fully remote today:          save \`+e(J)+\` /yr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+h+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+v],I=[5,10,25,50,100];for(let i=0;i<I.length;i++){const O=I[i],$=g(O,n,r,s),B=d(O,n,a,s),Q=$-B;x.push("Comparison: "+O+" employees: office "+e($)+" vs remote "+e(B)+" — save "+e(Q)+" /yr by going remote")}return x},j=function(t,o,n){var r=K(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var V=m,X=g,Y=d,Z=C,ee=P,te=D,oe=R,ne=A,re=j,K=function(t){return A(t)};return[j(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

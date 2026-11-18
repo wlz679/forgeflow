@@ -356,144 +356,71 @@ function calculate(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-8：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var mt=cnn(parseFloat(inputs.monthlyTraffic)||0);" +
-  "var car=cnn(parseFloat(inputs.cartAddRate)||0);" +
-  "var cab=cnn(parseFloat(inputs.cartAbandonmentRate)||0);" +
-  "var aov=cnn(parseFloat(inputs.avgOrderValue)||0);" +
-  "var rr=cnn(parseFloat(inputs.recoveryRate)||0);" +
-  "var rcps=cnn(parseFloat(inputs.recoveryCostPerSend)||0);" +
-  'if(mt===0){return["$calc_out.section.cart_abandonment_cost_calculator|Cart Abandonment Cost Calculator|\\n\\n"+tk("calc_out.cart_abandonment_cost.row.enter_inputs_required","Enter your monthly traffic, cart add rate, abandonment rate, AOV, recovery rate, and recovery cost per send to compute the recovery ROI of your cart recovery campaign.")];}' +
-  "var ar=car/100,abr=cab/100,recR=rr/100;" +
-  "var cc=mt*ar;" +
-  "var co=cc*(1-abr);" +
-  "var ac=cc*abr;" +
-  "var lr=ac*aov;" +
-  "var rev=lr*recR;" +
-  "var cost=ac*rcps;" +
-  "var net=rev-cost;" +
-  "var roi=cost>0?rev/cost:0;" +
-  'function money(n){return "$"+Math.round(n).toLocaleString("en-US");}' +
-  'function money2(n){return "$"+n.toLocaleString("en-US",{maximumFractionDigits:2});}' +
-  'function pct(n){return (n*100).toFixed(0)+"%";}' +
-  'var band=roi>=3?"good":(roi>=2?"caution":(roi>=1?"warning":"critical"));' +
-  'var he=band==="good"?"🟢":(band==="caution"?"🟡":(band==="warning"?"🟠":"🔴"));' +
-  'var hl=band==="good"?tk("calc_out.cart_abandonment_cost.row.health_good","Good — recovery ROI ≥ 300%; recovery spend is highly profitable"):(band==="caution"?tk("calc_out.cart_abandonment_cost.row.health_caution","Caution — recovery ROI 200–300%; profitable but room to optimize"):(band==="warning"?tk("calc_out.cart_abandonment_cost.row.health_warning","Warning — recovery ROI 100–200%; recovery spend is fragile"):tk("calc_out.cart_abandonment_cost.row.health_critical","Critical — recovery ROI < 100%; recovery spend destroys value")));' +
-  "var wrRR=rr*1.5;" +
-  "var wrR=lr*(wrRR/100);" +
-  "var wrC=ac*rcps;" +
-  "var wrN=wrR-wrC;" +
-  "var wrROI=wrC>0?wrR/wrC:0;" +
-  "var whCPS=rcps*0.75;" +
-  "var whC=ac*whCPS;" +
-  "var whN=rev-whC;" +
-  "var whROI=whC>0?rev/whC:0;" +
-  "var wcRate=Math.max(0,cab-10);" +
-  "var wcAc=cc*(wcRate/100);" +
-  "var wcLr=wcAc*aov;" +
-  "var wcR=wcLr*recR;" +
-  "var wcC=wcAc*rcps;" +
-  "var wcN=wcR-wcC;" +
-  "var wcROI=wcC>0?wcR/wcC:0;" +
-  "var beRR=aov>0?(rcps/aov)*100:100;" +
-  "var recHead=rr>=beRR?rr-beRR:0;" +
-  "var annNet=net*12;" +
-  "var annLR=lr*12;" +
-  "var annRev=rev*12;" +
-  "var roiPct=pct(roi);" +
-  "var netGainStr=money(net);" +
-  "var abandonRateStr=cab.toFixed(0);" +
-  "var recoveryRateStr=rr.toFixed(0);" +
-  "var trafficStr=mt.toLocaleString('en-US');" +
-  "var addRateStr=car.toFixed(0);" +
-  "var aovStr=money(aov);" +
-  "var costPerSendStr=money2(rcps);" +
-  "var cartCreationsStr=Math.round(cc).toLocaleString('en-US');" +
-  "var completedOrdersStr=Math.round(co).toLocaleString('en-US');" +
-  "var conversionRateStr=(100-cab).toFixed(0);" +
-  "var abandonedCartsStr=Math.round(ac).toLocaleString('en-US');" +
-  "var lostRevenueStr=money(lr);" +
-  "var recoverableRevenueStr=money(rev);" +
-  "var recoveryCostStr=money(cost);" +
-  "var whatIfRoiStr=pct(wrROI);" +
-  "var whatIfNetStr=money(wrN);" +
-  "var whatIfCostRoiStr=pct(whROI);" +
-  "var whatIfCostNetStr=money(whN);" +
-  "var whatIfAbandonRoiStr=pct(wcROI);" +
-  "var whatIfAbandonNetStr=money(wcN);" +
-  "var breakEvenRateStr=beRR.toFixed(2);" +
-  "var headroomStr=recHead.toFixed(2);" +
-  "var annualNetGainStr=money(annNet);" +
-  "var annualLostRevenueStr=money(annLR);" +
-  "var annualRecoveredStr=money(annRev);" +
-  'var tkCartCreations=tk("calc_out.cart_abandonment_cost.row.cart_creations","Cart creations:       "+cartCreationsStr+"  (traffic x "+addRateStr+"% add rate)",{creations:cartCreationsStr,add_rate:addRateStr});' +
-  'var tkCompletedOrders=tk("calc_out.cart_abandonment_cost.row.completed_orders","Completed orders:     "+completedOrdersStr+"  ("+conversionRateStr+"% conversion)",{orders:completedOrdersStr,conversion:conversionRateStr});' +
-  'var tkAbandonedCarts=tk("calc_out.cart_abandonment_cost.row.abandoned_carts","Abandoned carts:      "+abandonedCartsStr+"  (cart creations x "+abandonRateStr+"%)",{carts:abandonedCartsStr,rate:abandonRateStr});' +
-  'var tkLostRevenue=tk("calc_out.cart_abandonment_cost.row.lost_revenue","Lost revenue:         "+lostRevenueStr+"  (abandoned x AOV)",{lost:lostRevenueStr});' +
-  'var tkRecoverableRevenue=tk("calc_out.cart_abandonment_cost.row.recoverable_revenue","Recoverable revenue:  "+recoverableRevenueStr+"  (lost x "+recoveryRateStr+"% recovery)",{revenue:recoverableRevenueStr,rate:recoveryRateStr});' +
-  'var tkRecoveryCost=tk("calc_out.cart_abandonment_cost.row.recovery_cost","Recovery cost:        "+recoveryCostStr+"  (abandoned x cost/send)",{cost:recoveryCostStr});' +
-  'var tkWhatIfRecoveryRate=tk("calc_out.cart_abandonment_cost.row.whatif_recovery_rate_up_50pct","+50% recovery rate: recovery ROI = "+whatIfRoiStr+" * net gain = "+whatIfNetStr,{roi:whatIfRoiStr,net:whatIfNetStr});' +
-  'var tkWhatIfCostPerSend=tk("calc_out.cart_abandonment_cost.row.whatif_cost_per_send_down_25pct","-25% cost per send: recovery ROI = "+whatIfCostRoiStr+" * net gain = "+whatIfCostNetStr,{roi:whatIfCostRoiStr,net:whatIfCostNetStr});' +
-  'var tkWhatIfAbandonment=tk("calc_out.cart_abandonment_cost.row.whatif_abandonment_down_10pp","-10pp abandonment:  recovery ROI = "+whatIfAbandonRoiStr+" * net gain = "+whatIfAbandonNetStr,{roi:whatIfAbandonRoiStr,net:whatIfAbandonNetStr});' +
-  'var tkMinRecoveryRate=tk("calc_out.cart_abandonment_cost.row.min_recovery_rate_for_100pct_roi","Minimum recovery rate for 100% ROI: "+breakEvenRateStr+"%  (cost/send / AOV)",{rate:breakEvenRateStr});' +
-  'var tkHeadroom=tk("calc_out.cart_abandonment_cost.row.headroom","Headroom: "+headroomStr+"pp before recovery ROI hits 100%",{headroom:headroomStr});' +
-  'var tkBreakEvenNote=tk("calc_out.cart_abandonment_cost.row.break_even_explanation","At break-even, every recovery dollar returns exactly one recovery dollar in recovered revenue");' +
-  'var tkAnnualizedNetGain=tk("calc_out.cart_abandonment_cost.row.annualized_net_gain","Annualized net gain:    "+annualNetGainStr+"  (at current monthly run-rate)",{gain:annualNetGainStr});' +
-  'var tkAssumesConstantRates=tk("calc_out.cart_abandonment_cost.row.assumes_constant_rates","(Assumes constant traffic + rates — refresh quarterly with new funnel data)");' +
-  'var tip="";' +
-  'if(band==="critical"){tip=tk("calc_out.cart_abandonment_cost.row.tip_critical","💡 Tip: Recovery spend is destroying value. Either lower recovery cost per send (switch from SMS to email, or move to triggered drip sequences rather than one-shot blasts), or focus recovery on high-AOV segments where the recovery economics work. A $0.50 send against an $80 AOV is profitable above 0.625% recovery rate; below that, the math fails.");}' +
-  'else if(band==="good"){tip=tk("calc_out.cart_abandonment_cost.row.tip_good","💡 Tip: Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline.");}' +
-  'else if(band==="caution"){tip=tk("calc_out.cart_abandonment_cost.row.tip_caution","💡 Tip: Profitable but with headroom. The two main levers: lift recovery rate from 8% toward 12% (SMS add-on typically triples email recovery at marginal cost) and lower cost per send by moving to email-dominant sequences. Either alone pushes ROI into 🟢; both compound to ~3x.");}' +
-  'else{if(rcps>1){tip=tk("calc_out.cart_abandonment_cost.row.tip_warning_sms_cost","💡 Tip: SMS costs ($1+ per send) dominate the recovery math. Test email-only sequences first (Klaviyo/Mailchimp average 8% recovery at ~$0.05/send) before scaling SMS to high-AOV carts only. Alternatively, move to triggered in-app messages at near-zero cost.");}else{tip=tk("calc_out.cart_abandonment_cost.row.tip_warning_low_roi","💡 Tip: Recovery barely covers its cost. Two main levers: (1) lift recovery rate from 8% toward 15% via SMS add-on, better subject lines, and dynamic product personalization, (2) lower cost per send by moving to email-dominant sequences. Either alone doubles ROI; both compound to ~5x.");}}' +
-  'var r="";' +
-  'r+="$calc_out.section.cart_abandonment_cost_calculator|Cart Abandonment Cost Calculator|\\n\\n";' +
-  'r+="$calc_out.section.health|🩺 Health:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+he+" "+hl+"\\n";' +
-  'r+="* $calc_out.label.recovery_roi|Recovery ROI|: "+roiPct+"  *  $calc_out.label.net_gain|Net gain|: "+netGainStr+"\\n";' +
-  'r+="* $calc_out.label.abandonment_rate|Abandonment rate|: "+abandonRateStr+"%  *  $calc_out.label.recovery_rate|Recovery rate|: "+recoveryRateStr+"%\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* $calc_out.label.monthly_traffic|Monthly traffic|:           "+trafficStr+"\\n";' +
-  'r+="* $calc_out.label.cart_add_rate|Cart add rate|:             "+addRateStr+"%\\n";' +
-  'r+="* $calc_out.label.cart_abandonment_rate|Cart abandonment rate|:     "+abandonRateStr+"%\\n";' +
-  'r+="* $calc_out.label.average_order_value|Average order value|:       "+aovStr+"\\n";' +
-  'r+="* $calc_out.label.recovery_rate|Recovery rate|:             "+recoveryRateStr+"%\\n";' +
-  'r+="* $calc_out.label.recovery_cost_per_send|Recovery cost per send|:    "+costPerSendStr+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.cart_abandonment_cost_breakdown|💰 Cost Breakdown:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+tkCartCreations+"\\n";' +
-  'r+="* "+tkCompletedOrders+"\\n";' +
-  'r+="* "+tkAbandonedCarts+"\\n";' +
-  'r+="* "+tkLostRevenue+"\\n";' +
-  'r+="* "+tkRecoverableRevenue+"\\n";' +
-  'r+="* "+tkRecoveryCost+"\\n";' +
-  'r+="* $calc_out.label.net_gain|Net gain|:             "+netGainStr+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.what_if|🔄 What-If:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+tkWhatIfRecoveryRate+"\\n";' +
-  'r+="* "+tkWhatIfCostPerSend+"\\n";' +
-  'r+="* "+tkWhatIfAbandonment+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.break_even|⚖️ Break-Even:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+tkMinRecoveryRate+"\\n";' +
-  'r+="* "+tkHeadroom+"\\n";' +
-  'r+="* "+tkBreakEvenNote+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+="$calc_out.section.milestone|🎯 Milestone:|\\n";' +
-  'r+="------------------------------------------------\\n";' +
-  'r+="* "+tkAnnualizedNetGain+"\\n";' +
-  'r+="* $calc_out.label.annual_lost_revenue|Annual lost revenue|:    "+annualLostRevenueStr+"\\n";' +
-  'r+="* $calc_out.label.annual_recovered|Annual recovered|:       "+annualRecoveredStr+"\\n";' +
-  'r+="* "+tkAssumesConstantRates+"\\n\\n";' +
-  'r+="------------------------------------------------\\n\\n";' +
-  'r+=tip+"\\n";' +
-  "return [r];";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let r=function(e){return Number.isNaN(e)?0:Math.max(0,e)},A=function(e){return e>=w.good.threshold?"good":e>=w.caution.threshold?"caution":e>=w.warning.threshold?"warning":"critical"},$=function(e,v,R){var n=et(e);return Array.isArray(n)?n.join(\`
+\`):String(n)};var Pt=r,Ut=A,Wt=$,t=tk,T='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+T)(),w={good:{threshold:3,label:"Good — recovery ROI ≥ 300%; recovery spend is highly profitable"},caution:{threshold:2,label:"Caution — recovery ROI 200–300%; profitable but room to optimize"},warning:{threshold:1,label:"Warning — recovery ROI 100–200%; recovery spend is fragile"},critical:{threshold:null,label:"Critical — recovery ROI < 100%; recovery spend destroys value"}},tt={good:"🟢",caution:"🟡",warning:"🟠",critical:"🔴"},et=function(e){const v=r(parseFloat(e.monthlyTraffic)||0),R=r(parseFloat(e.cartAddRate)||0),n=r(parseFloat(e.cartAbandonmentRate)||0),i=r(parseFloat(e.avgOrderValue)||0),d=r(parseFloat(e.recoveryRate)||0),a=r(parseFloat(e.recoveryCostPerSend)||0);if(v===0)return[\`$calc_out.section.cart_abandonment_cost_calculator|Cart Abandonment Cost Calculator|
+
+\`+t("calc_out.cart_abandonment_cost.row.enter_inputs_required","Enter your monthly traffic, cart add rate, abandonment rate, AOV, recovery rate, and recovery cost per send to compute the recovery ROI of your cart recovery campaign.")];const ot=R/100,x=n/100,F=d/100,b=v*ot,nt=b*(1-x),_=b*x,h=_*i,s=h*F,y=_*a,M=s-y,N=y>0?s/y:0,o=u=>"$"+Math.round(u).toLocaleString("en-US"),rt=u=>"$"+u.toLocaleString("en-US",{maximumFractionDigits:2}),m=u=>(u*100).toFixed(0)+"%",c=A(N),at=tt[c],ct=c==="good"?t("calc_out.cart_abandonment_cost.row.health_good","Good — recovery ROI ≥ 300%; recovery spend is highly profitable"):c==="caution"?t("calc_out.cart_abandonment_cost.row.health_caution","Caution — recovery ROI 200–300%; profitable but room to optimize"):c==="warning"?t("calc_out.cart_abandonment_cost.row.health_warning","Warning — recovery ROI 100–200%; recovery spend is fragile"):t("calc_out.cart_abandonment_cost.row.health_critical","Critical — recovery ROI < 100%; recovery spend destroys value"),st=d*1.5,q=h*(st/100),g=_*a,lt=q-g,it=g>0?q/g:0,dt=a*.75,S=_*dt,_t=s-S,ut=S>0?s/S:0,vt=Math.max(0,n-10),L=b*(vt/100),E=L*i*F,O=L*a,bt=E-O,ht=O>0?E/O:0,C=i>0?a/i*100:100,yt=d>=C?d-C:0,mt=M*12,pt=h*12,ft=s*12;let l;c==="critical"?l=t("calc_out.cart_abandonment_cost.row.tip_critical","💡 Tip: Recovery spend is destroying value. Either lower recovery cost per send (switch from SMS to email, or move to triggered drip sequences rather than one-shot blasts), or focus recovery on high-AOV segments where the recovery economics work. A $0.50 send against an $80 AOV is profitable above 0.625% recovery rate; below that, the math fails."):c==="good"?l=t("calc_out.cart_abandonment_cost.row.tip_good","💡 Tip: Healthy recovery ROI. Scale recovery volume — add SMS to the email sequence (SMS recovery rate is typically 3x email), test send timing (1h vs 24h vs 72h after abandonment), and segment by cart value to push recovery on high-AOV carts first. Each additional 1pp of recovery rate lifts ROI by ~12.8x at this baseline."):c==="caution"?l=t("calc_out.cart_abandonment_cost.row.tip_caution","💡 Tip: Profitable but with headroom. The two main levers: lift recovery rate from 8% toward 12% (SMS add-on typically triples email recovery at marginal cost) and lower cost per send by moving to email-dominant sequences. Either alone pushes ROI into 🟢; both compound to ~3x."):a>1?l=t("calc_out.cart_abandonment_cost.row.tip_warning_sms_cost","💡 Tip: SMS costs ($1+ per send) dominate the recovery math. Test email-only sequences first (Klaviyo/Mailchimp average 8% recovery at ~$0.05/send) before scaling SMS to high-AOV carts only. Alternatively, move to triggered in-app messages at near-zero cost."):l=t("calc_out.cart_abandonment_cost.row.tip_warning_low_roi","💡 Tip: Recovery barely covers its cost. Two main levers: (1) lift recovery rate from 8% toward 15% via SMS add-on, better subject lines, and dynamic product personalization, (2) lower cost per send by moving to email-dominant sequences. Either alone doubles ROI; both compound to ~5x.");const wt=m(N),V=o(M),p=n.toFixed(0),f=d.toFixed(0),Rt=v.toLocaleString("en-US"),I=R.toFixed(0),gt=o(i),St=rt(a),j=Math.round(b).toLocaleString("en-US"),z=Math.round(nt).toLocaleString("en-US"),G=(100-n).toFixed(0),P=Math.round(_).toLocaleString("en-US"),U=o(h),W=o(s),K=o(y),B=m(it),H=o(lt),J=m(ut),D=o(_t),Q=m(ht),X=o(bt),Y=C.toFixed(2),Z=yt.toFixed(2),k=o(mt),Ot=o(pt),Ct=o(ft),It=t("calc_out.cart_abandonment_cost.row.cart_creations","Cart creations:       "+j+"  (traffic x "+I+"% add rate)",{creations:j,add_rate:I}),At=t("calc_out.cart_abandonment_cost.row.completed_orders","Completed orders:     "+z+"  ("+G+"% conversion)",{orders:z,conversion:G}),$t=t("calc_out.cart_abandonment_cost.row.abandoned_carts","Abandoned carts:      "+P+"  (cart creations x "+p+"%)",{carts:P,rate:p}),xt=t("calc_out.cart_abandonment_cost.row.lost_revenue","Lost revenue:         "+U+"  (abandoned x AOV)",{lost:U}),Ft=t("calc_out.cart_abandonment_cost.row.recoverable_revenue","Recoverable revenue:  "+W+"  (lost x "+f+"% recovery)",{revenue:W,rate:f}),Mt=t("calc_out.cart_abandonment_cost.row.recovery_cost","Recovery cost:        "+K+"  (abandoned x cost/send)",{cost:K}),Nt=t("calc_out.cart_abandonment_cost.row.whatif_recovery_rate_up_50pct","+50% recovery rate: recovery ROI = "+B+" * net gain = "+H,{roi:B,net:H}),qt=t("calc_out.cart_abandonment_cost.row.whatif_cost_per_send_down_25pct","-25% cost per send: recovery ROI = "+J+" * net gain = "+D,{roi:J,net:D}),Lt=t("calc_out.cart_abandonment_cost.row.whatif_abandonment_down_10pp","-10pp abandonment:  recovery ROI = "+Q+" * net gain = "+X,{roi:Q,net:X}),Et=t("calc_out.cart_abandonment_cost.row.min_recovery_rate_for_100pct_roi","Minimum recovery rate for 100% ROI: "+Y+"%  (cost/send / AOV)",{rate:Y}),Vt=t("calc_out.cart_abandonment_cost.row.headroom","Headroom: "+Z+"pp before recovery ROI hits 100%",{headroom:Z}),jt=t("calc_out.cart_abandonment_cost.row.break_even_explanation","At break-even, every recovery dollar returns exactly one recovery dollar in recovered revenue"),zt=t("calc_out.cart_abandonment_cost.row.annualized_net_gain","Annualized net gain:    "+k+"  (at current monthly run-rate)",{gain:k}),Gt=t("calc_out.cart_abandonment_cost.row.assumes_constant_rates","(Assumes constant traffic + rates — refresh quarterly with new funnel data)");return[\`$calc_out.section.cart_abandonment_cost_calculator|Cart Abandonment Cost Calculator|
+
+$calc_out.section.health|🩺 Health:|
+------------------------------------------------
+* \`+at+" "+ct+\`
+* $calc_out.label.recovery_roi|Recovery ROI|: \`+wt+"  *  $calc_out.label.net_gain|Net gain|: "+V+\`
+* $calc_out.label.abandonment_rate|Abandonment rate|: \`+p+"%  *  $calc_out.label.recovery_rate|Recovery rate|: "+f+\`%
+
+------------------------------------------------
+
+$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|
+------------------------------------------------
+* $calc_out.label.monthly_traffic|Monthly traffic|:           \`+Rt+\`
+* $calc_out.label.cart_add_rate|Cart add rate|:             \`+I+\`%
+* $calc_out.label.cart_abandonment_rate|Cart abandonment rate|:     \`+p+\`%
+* $calc_out.label.average_order_value|Average order value|:       \`+gt+\`
+* $calc_out.label.recovery_rate|Recovery rate|:             \`+f+\`%
+* $calc_out.label.recovery_cost_per_send|Recovery cost per send|:    \`+St+\`
+
+------------------------------------------------
+
+$calc_out.section.cart_abandonment_cost_breakdown|💰 Cost Breakdown:|
+------------------------------------------------
+* \`+It+\`
+* \`+At+\`
+* \`+$t+\`
+* \`+xt+\`
+* \`+Ft+\`
+* \`+Mt+\`
+* $calc_out.label.net_gain|Net gain|:             \`+V+\`
+
+------------------------------------------------
+
+$calc_out.section.what_if|🔄 What-If:|
+------------------------------------------------
+* \`+Nt+\`
+* \`+qt+\`
+* \`+Lt+\`
+
+------------------------------------------------
+
+$calc_out.section.break_even|⚖️ Break-Even:|
+------------------------------------------------
+* \`+Et+\`
+* \`+Vt+\`
+* \`+jt+\`
+
+------------------------------------------------
+
+$calc_out.section.milestone|🎯 Milestone:|
+------------------------------------------------
+* \`+zt+\`
+* $calc_out.label.annual_lost_revenue|Annual lost revenue|:    \`+Ot+\`
+* $calc_out.label.annual_recovered|Annual recovered|:       \`+Ct+\`
+* \`+Gt+\`
+
+------------------------------------------------
+
+\`+l+\`
+\`]};return[$(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

@@ -70,39 +70,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: [
-      "var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {",
-      "  var t1Target = cnn(Number(inputs.t1_target_min) || 0);",
-      "  var t2Target = cnn(Number(inputs.t2_target_hr) || 0);",
-      "  var t3Target = cnn(Number(inputs.t3_target_hr) || 0);",
-      "  var t1 = cnn(Number(inputs.t1_attainment) || 0);",
-      "  var t2 = cnn(Number(inputs.t2_attainment) || 0);",
-      "  var t3 = cnn(Number(inputs.t3_attainment) || 0);",
-      "  var LIFT_PCT = 5;",  // mirrors src LIFT_PERCENT constant (customFn has no module scope)
-      "  var overall = (t1 + t2 + t3) / 3;",
-      "  var band = overall >= 90 ? 'Excellent' : overall >= 80 ? 'Good' : overall >= 60 ? 'Warning' : 'Critical';",
-      "  var emoji = overall >= 90 ? '🟢' : overall >= 80 ? '🟡' : overall >= 60 ? '🟠' : '🔴';",
-      "  var targetLine = 'T1 ≤' + t1Target + ' min · T2 ≤' + t2Target + 'h · T3 ≤' + t3Target + 'h';",
-      "  var ifT1 = Math.min(100, t1 + LIFT_PCT);",
-      "  var ifOverall = (ifT1 + t2 + t3) / 3;",
-      "  var ifBand = ifOverall >= 90 ? 'Excellent' : ifOverall >= 80 ? 'Good' : ifOverall >= 60 ? 'Warning' : 'Critical';",
-      "  var ifEmoji = ifOverall >= 90 ? '🟢' : ifOverall >= 80 ? '🟡' : ifOverall >= 60 ? '🟠' : '🔴';",
-      "  var gap = Math.max(0, 90 - overall);",
-      "  var totalPp = gap * 3;",
-      "  var spread = Math.max(t1, t2, t3) - Math.min(t1, t2, t3);",
-      "  var lowName = t1 <= t2 && t1 <= t3 ? 'T1' : t2 <= t3 ? 'T2' : 'T3';",
-      "  var lowValue = Math.min(t1, t2, t3);",
-      "  return [",
-      "    '🩺 First Response SLA Health: ' + emoji + ' ' + band + ' (' + overall.toFixed(1) + '% in-SLA · ' + targetLine + ')',",
-      "    '📊 Snapshot: T1 ' + t1.toFixed(1) + '% within ' + t1Target + ' min · T2 ' + t2.toFixed(1) + '% within ' + t2Target + 'h · T3 ' + t3.toFixed(1) + '% within ' + t3Target + 'h → equal-weighted overall ' + overall.toFixed(1) + '%',",
-      "    '🔄 What-If: lifting T1 by +5pp to ' + ifT1.toFixed(1) + '% moves overall SLA to ' + ifOverall.toFixed(1) + '% (would be ' + ifEmoji + ' ' + ifBand + ')',",
-      "    '⚖️ Break-Even: to hit 🟢 Excellent (90.0%), close ' + gap.toFixed(1) + 'pp overall — about ' + totalPp.toFixed(1) + 'pp total tier percentage-points if spread evenly',",
-      "    '🎯 Milestone: weakest tier is ' + lowName + ' at ' + lowValue.toFixed(1) + '%; tier spread is ' + spread.toFixed(1) + 'pp. Stabilize the weakest queue before tightening targets.',",
-      "    '💡 Tip: T1 attainment <80% usually signals queue overflow OR shift coverage gap; check T1 headcount before changing the SLA target.'",
-      "  ];",
-      "}",
-      "return run(inputs, pick, fill);",
-    ].join('\n'),
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let i=function(e){return Number.isNaN(e)?0:Math.max(0,e)},g=function(e,t,n){return(e+t+n)/3},m=function(e){return Math.max(0,s.excellent.threshold-e)},d=function(e,t,n){return Math.max(e,t,n)-Math.min(e,t,n)},f=function(e){return e>=s.excellent.threshold?"excellent":e>=s.good.threshold?"good":e>=s.warning.threshold?"warning":"critical"},r=function(e){return e.toFixed(1)+"%"},u=function(e){return e.toFixed(1)+"pp"},v=function(e,t,n){return"T1 ≤"+e+" min · T2 ≤"+t+"h · T3 ≤"+n+"h"},b=function(e,t,n){const a=[{name:"T1",value:e},{name:"T2",value:t},{name:"T3",value:n}];return a.sort((l,o)=>l.value-o.value||l.name.localeCompare(o.name)),a[0]},_=function(e,t,n){var a=k(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var C=i,I=g,L=m,O=d,R=f,j=r,z=u,G=v,K=b,P=_,s={excellent:{threshold:90,label:"🟢 Excellent",message:"World-class SLA reliability."},good:{threshold:80,label:"🟡 Good",message:"Healthy response coverage."},warning:{threshold:60,label:"🟠 Warning",message:"SLA misses are visible."},critical:{threshold:null,label:"🔴 Critical",message:"Urgent queue coverage gap."}},y=5,k=function(e){const t=i(Number(e.t1_target_min)||0),n=i(Number(e.t2_target_hr)||0),a=i(Number(e.t3_target_hr)||0),l=i(Number(e.t1_attainment)||0),o=i(Number(e.t2_attainment)||0),c=i(Number(e.t3_attainment)||0),h=g(l,o,c),M=f(h),F=s[M],N=v(t,n,a),p=Math.min(100,l+y),T=g(p,o,c),q=f(T),w=m(h),S=w*3,W=d(l,o,c),x=b(l,o,c);return["🩺 First Response SLA Health: "+F.label+" ("+r(h)+" in-SLA · "+N+")","📊 Snapshot: T1 "+r(l)+" within "+t+" min · T2 "+r(o)+" within "+n+"h · T3 "+r(c)+" within "+a+"h → equal-weighted overall "+r(h),"🔄 What-If: lifting T1 by +5pp to "+r(p)+" moves overall SLA to "+r(T)+" (would be "+s[q].label+")","⚖️ Break-Even: to hit 🟢 Excellent (90.0%), close "+u(w)+" overall — about "+u(S)+" total tier percentage-points if spread evenly","🎯 Milestone: weakest tier is "+x.name+" at "+r(x.value)+"; tier spread is "+u(W)+". Stabilize the weakest queue before tightening targets.","💡 Tip: T1 attainment <80% usually signals queue overflow OR shift coverage gap; check T1 headcount before changing the SLA target."]};return[_(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

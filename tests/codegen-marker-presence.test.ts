@@ -12,7 +12,7 @@
 //
 // Class taxonomy:
 //   Class A (T1-T2): HTML comment markers in check-engine-count-by-category.mjs
-//   Class B (T3-T5): tableEndMarker values in codegen-customfn.mjs
+//   Class B (T3): 「重生成不能漏掉引擎」（P168 B3-10 起：codegen 不再按 marker 定位表区）
 //   Class C (T6-T7): 'staticExamples: [' marker + --check integration smoke
 //
 // Why tests/ root: P22b ESM trap — tests/run.mjs reads tests/*.test.ts only.
@@ -29,40 +29,23 @@ const ROOT = path.join(__dirname, '..');
 
 // === Source files under test ===
 const ENGINE_COUNT_CHECK_SCRIPT = path.join(ROOT, 'scripts/check-engine-count-by-category.mjs');
-const CUSTOMFN_SCRIPT = path.join(ROOT, 'scripts/codegen-customfn.mjs');
 const EXAMPLES_SCRIPT = path.join(ROOT, 'scripts/codegen-examples.mjs');
+const ENGINE_DIR = path.join(ROOT, 'src', 'engines');
+
+/** 递归列出目录下的 .ts 文件 */
+function walk(dir: string, acc: string[]): string[] {
+  for (const entry of fs.readdirSync(dir)) {
+    const p = path.join(dir, entry);
+    if (fs.statSync(p).isDirectory()) walk(p, acc);
+    else if (entry.endsWith('.ts')) acc.push(p);
+  }
+  return acc;
+}
 
 // === Load all 3 sources once ===
 const ENGINE_COUNT_CHECK_SOURCE = fs.readFileSync(ENGINE_COUNT_CHECK_SCRIPT, 'utf8');
-const CUSTOMFN_SOURCE = fs.readFileSync(CUSTOMFN_SCRIPT, 'utf8');
 const EXAMPLES_SOURCE = fs.readFileSync(EXAMPLES_SCRIPT, 'utf8');
 
-// === Class B: tableEndMarker list (P50 ground truth, byte-for-byte) ===
-// Source line refs (verify against scripts/codegen-customfn.mjs if drifted):
-//   'var FL='                       — line 117 (openai-token-calculator)
-//   'Family icons'                  — line 73 / 95 (2 engines share; unique count = 1)
-//   'var FI='                       — line 141 (gemini-api-cost-calculator)
-//   'var ST='                       — line 175 (deepseek-api-cost-calculator)
-//   'var SCPG2='                    — line 194 (ai-api-cost-comparison)
-//   '"var MS={" +'                  — line 211 (ai-image-generation-cost-calculator)
-//   'var SCG='                      — line 225 (gpu-cloud-cost-calculator)
-//   'Provider initials + colors'    — line 158 (ai-training-cost-estimator 模型表)
-//   '"function fm2'                 — line 249 (ai-training-cost-estimator 标量表, P163 新增)
-//
-// ⚠️ P163：训练引擎现在有**两个**表区（模型表 + 标量表）⇒ 第 9 个 marker。
-//   标量表（SCG/DPCG/LES/SPMIN/SPMAX/RPMIN/RPMAX）由 codegen 从数据集注入，
-//   不再是引擎里的一份手写副本 ⇒ 训练引擎的 Spot/Reserved 折扣带不会与数据集漂移。
-const TABLE_END_MARKERS = [
-  'var FL=',
-  'Family icons',
-  'var FI=',
-  'var ST=',
-  'var SCPG2=',
-  '"var MS={" +',
-  'var SCG=',
-  'Provider initials + colors',
-  '"function fm2',
-];
 
 // === Class A: HTML comment markers ===
 const HTML_MARKER_START = '<!-- codegen:start engine-count -->';
@@ -101,46 +84,32 @@ test('T2: HTML markers are unique (no accidental duplication)', () => {
   assert.equal(endCount, 1, `Expected 1 occurrence of end marker, found ${endCount}`);
 });
 
-// ===== Class B: tableEndMarker (T3 + T4 + T5) =====
-
-// T3: codegen-customfn.mjs source contains all 9 expected tableEndMarker strings
-test('T3: scripts/codegen-customfn.mjs contains all 9 tableEndMarker values', () => {
-  for (const marker of TABLE_END_MARKERS) {
-    assert.ok(
-      CUSTOMFN_SOURCE.includes(marker),
-      `Missing tableEndMarker in source: "${marker}". If a marker was renamed, ` +
-        `update TABLE_END_MARKERS in this test file (scripts/codegen-customfn.mjs is source of truth).`
-    );
+// ===== Class B: 「重生成不能漏掉引擎」（P168 B3-10 起） =====
+//
+// 旧架构：codegen 用**字面 marker** 去定位 customFn 里的表区 ⇒ marker 改名 ⇒
+//   静默跳过 ⇒ --check 仍 PASS ⇒ 那张表从此不再与数据集同步。
+// 新架构：codegen **不再定位表区**（整段由 scripts/customfn-port.ts 用 AST 重新派生）⇒
+//   「静默跳过」的新形态是：**某个引擎压根没进重生成清单** ⇒
+//   它的客户端 customFn 永远停在手抄镜像 ⇒ 照样会漂。
+// ⇒ 判据：**声明了自定义客户端**（clientConfig.type === 'custom'）的引擎，
+//   **必须**都进重生成清单（= 文件里带 customFn）。
+test('T3: every engine that declares a custom client config is covered by the regeneration', () => {
+  const declared: string[] = [];
+  const uncovered: string[] = [];
+  for (const f of walk(ENGINE_DIR, [])) {
+    const src = fs.readFileSync(f, 'utf8');
+    if (!/type:\s*'custom'/.test(src)) continue;
+    const rel = path.relative(ROOT, f);
+    declared.push(rel);
+    if (!src.includes('customFn')) uncovered.push(rel);
   }
-});
-
-// T4: 9 unique marker values (not 8, not 10 — accounts for 'Family icons' dual-engine reuse)
-test('T4: codegen-customfn.mjs has exactly 9 unique tableEndMarker values', () => {
-  const matches = CUSTOMFN_SOURCE.match(/tableEndMarker:\s*'([^']+)'/g) || [];
-  const unique = new Set(matches.map((m) => m.match(/'([^']+)'/)![1]));
-  assert.equal(
-    unique.size,
-    TABLE_END_MARKERS.length,
-    `Expected ${TABLE_END_MARKERS.length} unique tableEndMarker values, found ${unique.size}: ` +
-      `${[...unique].join(', ')}`
-  );
-});
-
-// T5: marker array presence matches TABLE_END_MARKERS (defense against drift)
-test('T5: TABLE_END_MARKERS matches codegen-customfn.mjs source exactly', () => {
-  const sourceMarkers = [
-    ...new Set(
-      (CUSTOMFN_SOURCE.match(/tableEndMarker:\s*'([^']+)'/g) || []).map(
-        (m) => m.match(/'([^']+)'/)![1]
-      )
-    ),
-  ].sort();
-  const testMarkers = [...TABLE_END_MARKERS].sort();
+  assert.ok(declared.length > 0, 'no engine declares a custom client config — the scan is broken');
   assert.deepEqual(
-    sourceMarkers,
-    testMarkers,
-    `TABLE_END_MARKERS drift detected.\nSource has: ${sourceMarkers.join(' | ')}\n` +
-      `Test has:  ${testMarkers.join(' | ')}`
+    uncovered,
+    [],
+    `these engine(s) declare a custom client config but carry NO customFn: ${uncovered.join(', ')}` +
+      ' — the regeneration would silently skip them ⇒ their client customFn stays a' +
+      ' hand-written mirror ⇒ the drift this batch closed would come straight back',
   );
 });
 

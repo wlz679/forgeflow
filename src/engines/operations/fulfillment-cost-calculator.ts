@@ -201,82 +201,60 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  "var AVGRC=4.5;" +
-  "function lmo(p,pa){return p+pa;}" +
-  "function lcpo(lm,lr){return(lm/60)*lr;}" +
-  "function rpo(rp){return(rp/100)*AVGRC;}" +
-  "function poc(lc,sc,pc,rh){return lc+sc+pc+rh;}" +
-  "function mt(poc,opm){return poc*opm;}" +
-  "function at(mt){return mt*12;}" +
-  "function band(p){if(p<5)return 'excellent';if(p<10)return 'good';if(p<20)return 'warning';return 'critical';}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var opm=cnn(parseFloat(inputs.ordersPerMonth)||0);" +
-  "var pk=cnn(parseFloat(inputs.pickMin)||0);" +
-  "var pa=cnn(parseFloat(inputs.packMin)||0);" +
-  "var sc=cnn(parseFloat(inputs.shippingCost)||0);" +
-  "var pc=cnn(parseFloat(inputs.packagingCost)||0);" +
-  "var lr=cnn(parseFloat(inputs.laborRate)||0);" +
-  "var rr=cnn(Math.min(100,parseFloat(inputs.returnRate)||0));" +
-  "if(opm===0){return['\\u23F0 Order Fulfillment Cost Calculator\\n\\n\\uD83D\\uDCCA Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.'];}" +
-  "var lm=lmo(pk,pa);" +
-  "var lc=lcpo(lm,lr);" +
-  "var rh=rpo(rr);" +
-  "var poC=poc(lc,sc,pc,rh);" +
-  "var moT=mt(poC,opm);" +
-  "var annT=at(moT);" +
-  "function money(n){return '$'+n.toLocaleString('en-US',{maximumFractionDigits:2});}" +
-  "function moneyR(n){return '$'+Math.round(n).toLocaleString('en-US');}" +
-  "var bd=band(poC);" +
-  "var he=bd==='excellent'?'\\uD83D\\uDFE2':bd==='good'?'\\uD83D\\uDFE1':bd==='warning'?'\\uD83D\\uDFE0':'\\uD83D\\uDD34';" +
-  "var hl=bd==='excellent'?'Excellent \\u2014 per-order cost < $5; efficient fulfillment':bd==='good'?'Good \\u2014 $5\\u2013$10 per order; typical retail range':bd==='warning'?'Warning \\u2014 $10\\u2013$20 per order; high; automate or batch':'Critical \\u2014 \\u2265 $20 per order; restructure or switch to 3PL';" +
-  "var rr3=3;var rh3=rpo(rr3);var po3=poc(lc,sc,pc,rh3);var savR=moT-mt(po3,opm);" +
-  "var lm25=lm*0.75;var lc25=lcpo(lm25,lr);var poL25=poc(lc25,sc,pc,rh);var savL=moT-mt(poL25,opm);" +
-  "var fixed=sc+pc+rh;var tlc=5.0-fixed;var tlm=lr>0&&tlc>0?(tlc*60)/lr:Infinity;var lhr=lm-tlm;" +
-  "var annSav1=1*opm*12;" +
-  "var tip='';" +
-  "if(bd==='critical'){tip='\\u2265 $20 per order is unsustainable. Switch to a 3PL (typical $3\\u2013$8/order), negotiate shipping rates (50%+ savings possible at scale), and audit SKU-level fulfillment complexity (top 20% of SKUs often drive 80% of cost).';}" +
-  "else if(bd==='warning'){tip='$10\\u2013$20 per order is high. Batch pick (process 5+ orders at once), automate packaging (tape dispensers, dunnage systems), and audit return reasons (often 30\\u201350% reducible via better product descriptions).';}" +
-  "else if(bd==='good'){tip='$5\\u2013$10 per order is typical retail. To reach \\uD83D\\uDFE2, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).';}" +
-  "else{tip='Excellent fulfillment cost. Keep monitoring \\u2014 as you scale, revisit 3PL pricing (often $3\\u2013$5/order), renegotiate carrier rates annually, and watch for return-rate creep (each +1% return adds $0.05/order).';}" +
-  "var r2='';" +
-  "r2+='\\u23F0 Order Fulfillment Cost Calculator\\n\\n';" +
-  "r2+='\\uD83E\\uDE7A Health:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 '+he+' '+hl+'\\n';" +
-  "r2+='\\u2022 Per-order cost: '+money(poC)+'  \\u00B7  Monthly total: '+moneyR(moT)+'  \\u00B7  Annual: '+moneyR(annT)+'\\n';" +
-  "r2+='\\u2022 Industry benchmark: $5\\u2013$10/order  \\u00B7  Your status: '+(poC<5?'below benchmark':poC<10?'in benchmark':poC<20?'above benchmark':'critical')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCCA Inputs Snapshot:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Orders per month:        '+opm+'\\n';" +
-  "r2+='\\u2022 Pick time:               '+pk+' min/order\\n';" +
-  "r2+='\\u2022 Pack time:               '+pa+' min/order\\n';" +
-  "r2+='\\u2022 Labor rate:              '+money(lr)+'/hr\\n';" +
-  "r2+='\\u2022 Labor cost:              '+money(lc)+'/order  ('+lm+' min)\\n';" +
-  "r2+='\\u2022 Shipping cost:           '+money(sc)+'/order\\n';" +
-  "r2+='\\u2022 Packaging cost:          '+money(pc)+'/order\\n';" +
-  "r2+='\\u2022 Return rate:             '+rr.toFixed(1)+'%  \\u00B7  handling = '+money(rh)+'/order\\n';" +
-  "r2+='\\u2022 Per-order total:         '+money(poC)+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDD04 What-If:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Returns drop to 3%: per-order = '+money(po3)+'  \\u00B7  monthly savings = '+moneyR(savR)+'\\n';" +
-  "r2+='\\u2022 Labor 25% faster: per-order = '+money(poL25)+'  \\u00B7  monthly savings = '+moneyR(savL)+'\\n';" +
-  "r2+='\\u2022 Combined (3% returns + 25% faster labor): see Milestone\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\u2696\\uFE0F Break-Even:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 Max labor min for \\uD83D\\uDFE2 (< $5/order total): '+(isFinite(tlm)?tlm.toFixed(1)+' min':'N/A (fixed costs alone exceed $5)')+'\\n';" +
-  "r2+='\\u2022 Labor headroom: '+(lhr>0?'reduce pick+pack by '+lhr.toFixed(1)+' min to hit \\uD83D\\uDFE2':lhr===0?'at threshold':'already below target')+'\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83C\\uDFAF Milestone:\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r2+='\\u2022 12-mo savings if cost drops $1/order: '+moneyR(annSav1)+'\\n';" +
-  "r2+='\\u2022 Reinvested at 8% return: '+moneyR(annSav1*0.08)+'/yr additional\\n';" +
-  "r2+='\\u2022 Compounded over 3 years: '+moneyR(annSav1*1.08*3-annSav1*3)+' (vs $0 reinvested)\\n\\n';" +
-  "r2+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r2+='\\uD83D\\uDCA1 Tip: '+tip+'\\n';" +
-  "return [r2];";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let t=function(n){return Number.isNaN(n)?0:Math.max(0,n)},M=function(n,r){return n+r},v=function(n,r){return n/60*r},$=function(n){return n/100*K},g=function(n,r,c,o){return n+r+c+o},f=function(n,r){return n*r},L=function(n){return n*12},P=function(n){return n<k.excellent?"excellent":n<k.good[1]?"good":n<k.warning[1]?"warning":"critical"},R=function(n,r,c){var o=U(n);return Array.isArray(o)?o.join(\`
+\`):String(o)};var z=t,A=M,B=v,H=$,J=g,Q=f,V=L,X=P,Z=R,I={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},K=4.5,k={excellent:5,good:[5,10],warning:[10,20],critical:20},U=function(n){const r=t(parseFloat(n.ordersPerMonth)||0),c=t(parseFloat(n.pickMin)||0),o=t(parseFloat(n.packMin)||0),l=t(parseFloat(n.shippingCost)||0),d=t(parseFloat(n.packagingCost)||0),u=t(parseFloat(n.laborRate)||0),S=t(Math.min(100,parseFloat(n.returnRate)||0));if(r===0)return[\`⏰ Order Fulfillment Cost Calculator
+
+📊 Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.\`];const h=M(c,o),w=v(h,u),m=$(S),a=g(w,l,d,m),b=f(a,r),N=L(b),e=F=>"$"+F.toLocaleString("en-US",{maximumFractionDigits:2}),i=F=>"$"+Math.round(F).toLocaleString("en-US"),s=P(a),O=I[s],T=s==="excellent"?"Excellent — per-order cost < $5; efficient fulfillment":s==="good"?"Good — $5–$10 per order; typical retail range":s==="warning"?"Warning — $10–$20 per order; high; automate or batch":"Critical — ≥ $20 per order; restructure or switch to 3PL",j=$(3),_=g(w,l,d,j),W=b-f(_,r),G=h*.75,Y=v(G,u),D=g(Y,l,d,m),q=b-f(D,r),E=5-(l+d+m),x=u>0&&E>0?E*60/u:1/0,C=h-x,y=1*r*12;let p;return s==="critical"?p="≥ $20 per order is unsustainable. Switch to a 3PL (typical $3–$8/order), negotiate shipping rates (50%+ savings possible at scale), and audit SKU-level fulfillment complexity (top 20% of SKUs often drive 80% of cost).":s==="warning"?p="$10–$20 per order is high. Batch pick (process 5+ orders at once), automate packaging (tape dispensers, dunnage systems), and audit return reasons (often 30–50% reducible via better product descriptions).":s==="good"?p="$5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).":p="Excellent fulfillment cost. Keep monitoring — as you scale, revisit 3PL pricing (often $3–$5/order), renegotiate carrier rates annually, and watch for return-rate creep (each +1% return adds $0.05/order).",[\`⏰ Order Fulfillment Cost Calculator
+
+🩺 Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+O+" "+T+\`
+• Per-order cost: \`+e(a)+"  ·  Monthly total: "+i(b)+"  ·  Annual: "+i(N)+\`
+• Industry benchmark: $5–$10/order  ·  Your status: \`+(a<5?"below benchmark":a<10?"in benchmark":a<20?"above benchmark":"critical")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Inputs Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Orders per month:        \`+r+\`
+• Pick time:               \`+c+\` min/order
+• Pack time:               \`+o+\` min/order
+• Labor rate:              \`+e(u)+\`/hr
+• Labor cost:              \`+e(w)+"/order  ("+h+\` min)
+• Shipping cost:           \`+e(l)+\`/order
+• Packaging cost:          \`+e(d)+\`/order
+• Return rate:             \`+S.toFixed(1)+"%  ·  handling = "+e(m)+\`/order
+• Per-order total:         \`+e(a)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Returns drop to 3%: per-order = \`+e(_)+"  ·  monthly savings = "+i(W)+\`
+• Labor 25% faster: per-order = \`+e(D)+"  ·  monthly savings = "+i(q)+\`
+• Combined (3% returns + 25% faster labor): see Milestone
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Max labor min for 🟢 (< $5/order total): \`+(isFinite(x)?x.toFixed(1)+" min":"N/A (fixed costs alone exceed $5)")+\`
+• Labor headroom: \`+(C>0?"reduce pick+pack by "+C.toFixed(1)+" min to hit 🟢":C===0?"at threshold":"already below target")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Milestone:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• 12-mo savings if cost drops $1/order: \`+i(y)+\`
+• Reinvested at 8% return: \`+i(y*.08)+\`/yr additional
+• Compounded over 3 years: \`+i(y*1.08*3-y*3)+\` (vs $0 reinvested)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+p+\`
+\`]};return[R(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
 

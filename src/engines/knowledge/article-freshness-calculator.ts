@@ -46,31 +46,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var total = cnn(Number(inputs.total_articles) || 0);
-  var up12 = cnn(Number(inputs.articles_updated_12mo) || 0);
-  var up6 = cnn(Number(inputs.articles_updated_6mo) || 0);
-  var target = cnn(Number(inputs.target_freshness_pct) || 0);
-  if (up12 > total) up12 = total;
-  if (up6 > up12) up6 = up12;
-  var fresh12 = total > 0 ? up12 / total : 0;
-  var fresh6 = total > 0 ? up6 / total : 0;
-  var stale = Math.max(0, total - up12);
-  var band = fresh12 >= 0.80 ? 'Excellent' : fresh12 >= 0.55 ? 'Good' : fresh12 >= 0.40 ? 'Warning' : 'Critical';
-  var emoji = fresh12 >= 0.80 ? '🟢' : fresh12 >= 0.55 ? '🟡' : fresh12 >= 0.40 ? '🟠' : '🔴';
-  var altFresh = 0.80;
-  var lift = Math.max(0, altFresh * total - up12);
-  var monthsAt10 = lift > 0 ? Math.ceil(lift / 10) : 0;
-  return [
-    '🩺 Article Freshness Health: ' + emoji + ' ' + band + ' (' + (fresh12*100).toFixed(1) + '% fresh in 12mo - ' + stale.toLocaleString() + ' stale)',
-    '📊 Snapshot: ' + up12.toLocaleString() + '/' + total.toLocaleString() + ' updated 12mo - ' + up6.toLocaleString() + '/' + total.toLocaleString() + ' updated 6mo - ' + stale.toLocaleString() + ' stale - target ' + target + '% (' + Math.abs(target - fresh12*100).toFixed(1) + 'pp gap)',
-    '🔄 What-If: if 12mo freshness climbs to 80% (Excellent), ' + Math.round(lift).toLocaleString() + ' more articles reviewed (~10/mo cadence)',
-    '⚖️ Break-Even: to hit >=80% (Excellent), need ' + Math.round(lift).toLocaleString() + ' more articles reviewed; at 10/mo cadence = ~' + monthsAt10 + ' months',
-    '🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo',
-    '💡 Tip: stale articles are the silent killer - ' + (stale*100/Math.max(1,total)).toFixed(0) + '% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let o=function(e){return Number.isNaN(e)?0:Math.max(0,e)},d=function(e,t){return t>0?e/t:0},u=function(e,t){return Math.max(0,t-e)},m=function(e){return e>=n.excellent.threshold?"excellent":e>=n.good.threshold?"good":e>=n.warning.threshold?"warning":"critical"},i=function(e){return(e*100).toFixed(1)+"%"},r=function(e){return Math.round(e).toLocaleString()},f=function(e,t,a){var l=b(e);return Array.isArray(l)?l.join(\`
+\`):String(l)};var y=o,M=d,F=u,K=m,k=i,N=r,P=f,n={excellent:{threshold:.8,label:"Excellent",message:"Fresh KB - most articles reviewed recently."},good:{threshold:.55,label:"Good",message:"Healthy review cadence."},warning:{threshold:.4,label:"Warning",message:"Stale content creeping in."},critical:{threshold:null,label:"Critical",message:"KB content outdated."}},b=function(e){const t=o(Number(e.total_articles)||0),a=Math.min(o(Number(e.articles_updated_12mo)||0),t),l=Math.min(o(Number(e.articles_updated_6mo)||0),a),g=o(Number(e.target_freshness_pct)||0),c=d(a,t),I=t>0?l/t:0,h=u(a,t),w=m(c),_=n[w],p=n.excellent.threshold,s=Math.max(0,p*t-a),v=s>0?Math.ceil(s/10):0,x=g-c*100;return["🩺 Article Freshness Health: "+_.label+" ("+i(c)+" fresh in 12mo - "+r(h)+" stale)","📊 Snapshot: "+r(a)+"/"+r(t)+" updated 12mo - "+r(l)+"/"+r(t)+" updated 6mo - "+r(h)+" stale - target "+g+"% ("+(x>=0?"+":"")+x.toFixed(1)+"pp gap)","🔄 What-If: if 12mo freshness climbs to "+i(p)+" (Excellent), "+r(s)+" more articles reviewed (~10/mo cadence)","⚖️ Break-Even: to hit "+i(n.excellent.threshold)+" (Excellent), need "+r(s)+" more articles reviewed; at 10/mo cadence = ~"+v+" months","🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo","💡 Tip: stale articles are the silent killer - "+Math.round(h*100/Math.max(1,t))+"% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen."]};return[f(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

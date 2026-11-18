@@ -124,106 +124,81 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var tmi=cnn(parseFloat(inputs.targetMonthlyIncome)||0);" +
-  "var ebm=cnn(parseFloat(inputs.estimatedBuyersPerMonth)||0);" +
-  "var pf=cnn(parseFloat(inputs.platformFee)||0);" +
-  "var fm=1/(1-pf/100);" +
-  "var op=ebm>0?(tmi/ebm)*fm:0;" +
-  "var bp=ebm>0?tmi/ebm:0;" +
-  "var gr=op*ebm;" +
-  "var pt=gr*(pf/100);" +
-  "var nr=gr-pt;" +
-  "var pps=op;" +
-  "var ar=nr*12;" +
-  "var ltv=pps*1.5;" +
-  "var eh=40;" +
-  "var pphoe=eh>0?ar/(eh*12):0;" +
-  "var lc=0.02;" +
-  "var es=ebm>0?Math.round(ebm/lc):0;" +
-  "var lr=es*lc*pps*0.7;" +
-  "var cp=pps*3.5;" +
-  "var cn=cp*ebm*0.3;" +
-  "var ssa=nr*12;" +
-  "var ca=cn*12;" +
-  "function fmt(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}" +
-  "function fmt2(n){return '$'+n.toFixed(2)}" +
-  "function pct(n){return n.toFixed(1)+'%'}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='\\uD83C\\uDF93 Course Pricing Calculator\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Revenue Projection:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Target Monthly Income:    '+fmt(tmi)+'\\n';" +
-  "r+='\\u2022 Est. Buyers/Month:        '+loc(ebm)+'\\n';" +
-  "r+='\\u2022 Platform Fee:             '+pct(pf)+'\\n';" +
-  "r+='\\u2022 Optimal Price:           '+fmt2(op)+'/student\\n';" +
-  "r+='\\u2022 Breakeven Price:         '+fmt2(bp)+'/student  (before fees)\\n';" +
-  "r+='\\u2022 Gross Revenue:           '+fmt(gr)+'/mo\\n';" +
-  "r+='\\u2022 Platform Takes:          '+fmt(pt)+'/mo\\n';" +
-  "r+='\\u2022 Net Revenue:             '+fmt(nr)+'/mo\\n';" +
-  "r+='\\u2022 Annual Net Revenue:      '+fmt(ar)+'/yr\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 Pricing Metrics:\\n';" +
-  "r+='\\u2022 Price per Student:         '+fmt2(pps)+'\\n';" +
-  "r+='\\u2022 $/Hour of Creation:      '+fmt(pphoe)+'/hr  ('+fmt2(ar/Math.max(eh*12,1))+' earned per hour invested)\\n';" +
-  "r+='\\u2022 Estimated LTV (with upsell):  '+fmt2(ltv)+'  (1.5x base price)\\n';" +
-  "r+='\\u2022 Gross Margin:            '+pct(100-pf)+'  (after platform fee)\\n';" +
-  "r+='\\u2022 Annual Course Earnings:  '+fmt(ar)+'/yr  (at this monthly run rate)\\n';" +
-  "r+='\\u2022 Payback to course creator:  ~'+Math.round(eh*12/Math.max(nr,1)*100)/100+' months to recoup creation effort\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Pricing Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(pphoe>=1000){r+='\\u2022 \\uD83D\\uDFE2 $'+Math.round(pphoe)+'/hr-of-effort is excellent \\u2014 course pays back creation time many times over.\\n';}" +
-  "else if(pphoe>=500){r+='\\u2022 \\uD83D\\uDFE2 $'+Math.round(pphoe)+'/hr-of-effort is strong \\u2014 solid creator economics.\\n';}" +
-  "else if(pphoe>=200){r+='\\u2022 \\uD83D\\uDFE1 $'+Math.round(pphoe)+'/hr-of-effort is workable \\u2014 could price higher for premium tier.\\n';}" +
-  "else if(pphoe>=50){r+='\\u2022 \\uD83D\\uDFE0 $'+Math.round(pphoe)+'/hr-of-effort is low \\u2014 underpriced or under-selling.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 $'+Math.round(pphoe)+'/hr-of-effort is too low \\u2014 raise price or grow audience.\\n';}" +
-  "if(op>=200){r+='\\u2022 \\uD83D\\uDFE2 Price point '+fmt2(op)+' is in the premium tier \\u2014 high-quality courses command this.\\n';}" +
-  "else if(op>=50){r+='\\u2022 \\uD83D\\uDFE1 Price point '+fmt2(op)+' is mid-market \\u2014 sweet spot for volume.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDFE0 Price point '+fmt2(op)+' is budget \\u2014 need high conversion to hit income goal.\\n';}" +
-  "if(ebm>=50){r+='\\u2022 \\uD83D\\uDFE2 '+loc(ebm)+' buyers/mo is a solid funnel size.\\n';}" +
-  "else if(ebm>=20){r+='\\u2022 \\uD83D\\uDFE1 '+loc(ebm)+' buyers/mo is workable but tight.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 Under 20 buyers/mo \\u2014 review channel strategy.\\n';}" +
-  "if(pf<=5){r+='\\u2022 \\uD83D\\uDFE2 Platform fee '+pct(pf)+' is low (self-hosted or Podia).\\n';}" +
-  "else if(pf<=15){r+='\\u2022 \\uD83D\\uDFE1 Platform fee '+pct(pf)+' is standard (Teachable, Thinkific).\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDFE0 Platform fee '+pct(pf)+' is high \\u2014 consider self-hosted.\\n';}" +
-  "r+='\\n\\uD83C\\uDFAF Launch Revenue:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Email list needed:        ~'+loc(es)+'  (at 2% conversion)\\n';" +
-  "r+='\\u2022 Launch revenue (30% off):  '+fmt(lr)+'\\n';" +
-  "r+='\\u2022 Sustained monthly:        '+fmt(nr)+'/mo\\n';" +
-  "r+='\\u2022 12-month projection:      '+fmt(ar)+'/yr\\n';" +
-  "r+='\\u2022 With upsell to cohort:    '+fmt(cn*12+ar)+'/yr potential\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Self-Study vs Cohort Break-Even:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Self-study annual:      '+fmt(ssa)+'/yr\\n';" +
-  "r+='\\u2022 Cohort premium:          '+fmt2(cp)+'/student  (3.5x self-study)\\n';" +
-  "r+='\\u2022 Cohort annual (30% take): '+fmt(ca)+'/yr\\n';" +
-  "r+='\\u2022 Cohort takes more time:  +10-15 hrs/wk of your time\\n';" +
-  "r+='\\u2022 Break-even: cohort needs 30% take rate to beat self-study\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Raise price 30%:        '+fmt2(op*1.3)+'/student  ('+fmt(op*1.3*ebm*(1-pf/100))+'/mo net)\\n';" +
-  "r+='\\u2022 Double buyers (2x reach): '+fmt(nr*2)+'/mo  ('+fmt(nr*24)+'/yr)\\n';" +
-  "r+='\\u2022 Self-host (0% fee):     '+fmt(op*ebm)+'/mo gross (saves '+fmt(pt)+'/mo)\\n';" +
-  "r+='\\u2022 Add cohort tier (30% take):  +'+fmt(cn*12)+'/yr\\n';" +
-  "r+='\\u2022 Bundle w/ coaching:     +'+fmt(op*0.5*ebm*0.2*12)+'/yr  (20% take coaching upsell)\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% \\u2014 buyers who can\\'t afford $497 upfront will pay $199 \\u00d7 3 = $597.';" +
-  "results.push(r);" +
-  "var pp=[29,49,97,147,197,297,497,697,997];" +
-  "for(var i=0;i<pp.length;i++){" +
-  "var p=pp[i];" +
-  "var gr2=p*ebm;" +
-  "var f=gr2*(pf/100);" +
-  "var n=gr2-f;" +
-  "var an=n*12;" +
-  "results.push('At $'+p+' price: '+loc(Math.round(n))+'/mo net  ('+loc(Math.round(an))+'/yr) at '+loc(ebm)+' buyers/mo');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(i){return Number.isNaN(i)?0:Math.max(0,i)},M=function(i){const m=f(parseFloat(i.targetMonthlyIncome)||0),n=f(parseFloat(i.estimatedBuyersPerMonth)||0),t=f(parseFloat(i.platformFee)||0),y=[],A=1/(1-t/100),o=n>0?m/n*A:0,C=n>0?m/n:0,g=o*n,v=g*(t/100),c=g-v,d=o,l=c*12,E=d*1.5,p=40,s=p>0?l/(p*12):0,k=.02,w=n>0?Math.round(n/k):0,T=w*k*d*.7,S=d*3.5,P=S*n*.3,B=c*12,N=P*12,e=r=>"$"+r.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),a=r=>"$"+r.toFixed(2),h=r=>r.toFixed(1)+"%",u=r=>Math.round(r).toLocaleString();y.push(\`🎓 Course Pricing Calculator
+
+💰 Revenue Projection:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Target Monthly Income:    \`+e(m)+\`
+• Est. Buyers/Month:        \`+u(n)+\`
+• Platform Fee:             \`+h(t)+\`
+• Optimal Price:           \`+a(o)+\`/student
+• Breakeven Price:         \`+a(C)+\`/student  (before fees)
+• Gross Revenue:           \`+e(g)+\`/mo
+• Platform Takes:          \`+e(v)+\`/mo
+• Net Revenue:             \`+e(c)+\`/mo
+• Annual Net Revenue:      \`+e(l)+\`/yr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Pricing Metrics:
+• Price per Student:         \`+a(d)+\`
+• $/Hour of Creation:      \`+e(s)+"/hr  ("+a(l/Math.max(p*12,1))+\` earned per hour invested)
+• Estimated LTV (with upsell):  \`+a(E)+\`  (1.5x base price)
+• Gross Margin:            \`+h(100-t)+\`  (after platform fee)
+• Annual Course Earnings:  \`+e(l)+\`/yr  (at this monthly run rate)
+• Payback to course creator:  ~\`+Math.round(p*12/Math.max(c,1)*100)/100+\` months to recoup creation effort
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Pricing Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(s>=1e3?"• 🟢 $"+Math.round(s)+\`/hr-of-effort is excellent — course pays back creation time many times over.
+\`:s>=500?"• 🟢 $"+Math.round(s)+\`/hr-of-effort is strong — solid creator economics.
+\`:s>=200?"• 🟡 $"+Math.round(s)+\`/hr-of-effort is workable — could price higher for premium tier.
+\`:s>=50?"• 🟠 $"+Math.round(s)+\`/hr-of-effort is low — underpriced or under-selling.
+\`:"• 🔴 $"+Math.round(s)+\`/hr-of-effort is too low — raise price or grow audience.
+\`)+(o>=200?"• 🟢 Price point "+a(o)+\` is in the premium tier — high-quality courses command this.
+\`:o>=50?"• 🟡 Price point "+a(o)+\` is mid-market — sweet spot for volume.
+\`:"• 🟠 Price point "+a(o)+\` is budget — need high conversion to hit income goal.
+\`)+(n>=50?"• 🟢 "+u(n)+\` buyers/mo is a solid funnel size.
+\`:n>=20?"• 🟡 "+u(n)+\` buyers/mo is workable but tight.
+\`:\`• 🔴 Under 20 buyers/mo — review channel strategy.
+\`)+(t<=5?"• 🟢 Platform fee "+h(t)+\` is low (self-hosted or Podia).
+\`:t<=15?"• 🟡 Platform fee "+h(t)+\` is standard (Teachable, Thinkific).
+\`:"• 🟠 Platform fee "+h(t)+\` is high — consider self-hosted.
+\`)+\`
+🎯 Launch Revenue:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Email list needed:        ~\`+u(w)+\`  (at 2% conversion)
+• Launch revenue (30% off):  \`+e(T)+\`
+• Sustained monthly:        \`+e(c)+\`/mo
+• 12-month projection:      \`+e(l)+\`/yr
+• With upsell to cohort:    \`+e(P*12+l)+\`/yr potential
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Self-Study vs Cohort Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Self-study annual:      \`+e(B)+\`/yr
+• Cohort premium:          \`+a(S)+\`/student  (3.5x self-study)
+• Cohort annual (30% take): \`+e(N)+\`/yr
+• Cohort takes more time:  +10-15 hrs/wk of your time
+• Break-even: cohort needs 30% take rate to beat self-study
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Raise price 30%:        \`+a(o*1.3)+"/student  ("+e(o*1.3*n*(1-t/100))+\`/mo net)
+• Double buyers (2x reach): \`+e(c*2)+"/mo  ("+e(c*24)+\`/yr)
+• Self-host (0% fee):     \`+e(o*n)+"/mo gross (saves "+e(v)+\`/mo)
+• Add cohort tier (30% take):  +\`+e(P*12)+\`/yr
+• Bundle w/ coaching:     +\`+e(o*.5*n*.2*12)+\`/yr  (20% take coaching upsell)
+
+💡 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% — buyers who can't afford $497 upfront will pay $199 × 3 = $597.\`);const F=[29,49,97,147,197,297,497,697,997];for(let r=0;r<F.length;r++){const $=F[r],x=$*n,L=x*(t/100),_=x-L,D=_*12;y.push("At $"+$+" price: "+u(Math.round(_))+"/mo net  ("+u(Math.round(D))+"/yr) at "+u(n)+" buyers/mo")}return y},b=function(i,m,n){var t=R(i);return Array.isArray(t)?t.join(\`
+\`):String(t)};var H=f,I=M,j=b,R=function(i){return M(i)};return[b(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-course-pricing-calculator',

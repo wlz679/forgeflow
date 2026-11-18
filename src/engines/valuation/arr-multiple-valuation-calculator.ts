@@ -302,15 +302,78 @@ function calculateARRMultiple(inputs: Record<string, string>): string[] {
 // ============== customFn ==============
 
 const customFn =
-  "function am(v,a){if(a<=0)return Infinity;return v/a;}" +
-  "function em(g,m){return 5+g/10+m/5;}" +
-  "function mh(act,exp){if(exp<=0)return{e:'\\uD83D\\uDCA1',l:'neutral (no expected baseline)'};var r=act/exp;if(r>=0.7&&r<=1.3)return{e:'\\uD83D\\uDFE2',l:'reasonable \\u2014 within 30% of expected'};if(r>=0.4&&r<=1.6)return{e:'\\uD83D\\uDCA1',l:'above/below market \\u2014 30-60% off expected'};return{e:'\\uD83D\\uDFE0',l:'outlier \\u2014 >60% off expected'};}" +
-  "function mt(g){if(g<20)return{e:'\\uD83D\\uDCA1',l:'Slow growth',r:'3-8x'};if(g<50)return{e:'\\uD83D\\uDFE2',l:'Medium growth',r:'8-15x'};if(g<100)return{e:'\\uD83D\\uDFE2',l:'Fast growth',r:'15-25x'};return{e:'\\uD83D\\uDFE2',l:'Hyper growth',r:'25-40x'};}" +
-  "function fv(a,g,fm){return a*(1+g/100)*fm;}" +
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var arr=cnn(parseFloat(inputs.arr)||0);" +
-  "var val=cnn(parseFloat(inputs.valuation)||0);" +
-  // intentionally NOT clamped: semantically can be negative
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(u){return Number.isNaN(u)?0:Math.max(0,u)},g=function(u,t){return t<=0?1/0:u/t},c=function(u,t){return 5+u/10+t/5},F=function(u,t){if(t<=0)return{emoji:"🟡",label:"neutral (no expected baseline)"};const e=u/t;return e>=.7&&e<=1.3?{emoji:"🟢",label:"reasonable — within 30% of expected"}:e>=.4&&e<=1.6?{emoji:"🟡",label:"above/below market — 30-60% off expected"}:{emoji:"🟠",label:"outlier — >60% off expected"}},M=function(u){return u<20?{emoji:"🟡",label:"Slow growth",range:"3-8x"}:u<50?{emoji:"🟢",label:"Medium growth",range:"8-15x"}:u<100?{emoji:"🟢",label:"Fast growth",range:"15-25x"}:{emoji:"🟢",label:"Hyper growth",range:"25-40x"}},w=function(u,t,e){return u*(1+t/100)*e},b=function(u){const t=f(parseFloat(u.arr)||0),e=f(parseFloat(u.valuation)||0),r=parseFloat(u.growthRate)||0,o=parseFloat(u.profitMargin)||0;if(t===0&&e===0)return[\`⏰ ARR Multiple / Valuation Multiplier Calculator
+
+💰 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.\`];if(t===0)return[\`⏰ ARR Multiple / Valuation Multiplier Calculator
+
+💰 Enter ARR > 0 to compute valuation multiples. ARR (Annual Recurring Revenue) is the foundational metric for SaaS valuation.\`];const n=g(e,t),p=c(r,o),A=F(n,p),l=M(r),L=w(t,r,10),H=w(t,r,20),D=t*(1+r/100),k=g(e,D),S=a=>a.toLocaleString("en-US",{maximumFractionDigits:0}),i=a=>"$"+S(a),s=a=>isFinite(a)?a.toFixed(2)+"x":"∞",x=40,v=parseFloat(l.range.split("-")[0]),R=parseFloat(l.range.split("-")[1].replace("x","")),m=a=>Math.max(0,Math.min(x,Math.round(a/40*x)));let d="";d+=" 0x"+" ".repeat(x-4)+\`40x
+\`,d+=" "+"─".repeat(m(v))+"┤"+"─".repeat(Math.max(0,m(n)-m(v)-1))+(n>=v&&n<=R?"●":"◆")+"─".repeat(Math.max(0,m(R)-m(n)-1))+"┤"+"─".repeat(Math.max(0,x-m(R)))+" "+l.range+\`
+\`,d+="           ▲ you: "+s(n);const _=c(Math.min(200,r*2),o),I=c(r,o+20),P=n*.8,T=t*10,B=t*20;let h;n>30?h="💡 Tip: Hyper-growth premium. Make sure you can sustain 100%+ growth for 3+ years — investors will haircut your multiple if growth slows.":n<5?h="💡 Tip: Low multiple. Either growth is slow, retention is weak, or the market does not believe in the model. Cut burn and demonstrate PMF before next round.":h="💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.";const j=[\`⏰ ARR Multiple / Valuation Multiplier Calculator
+
+💰 Valuation Snapshot:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• ARR:                \`+i(t)+\`
+• Valuation:          \`+i(e)+\`
+• Multiple:           \`+s(n)+\`  (valuation / ARR)
+• Growth Rate:        \`+r+\`%
+• Profit Margin:      \`+o+\`%
+• Rule of 40 sum:     \`+(r+o).toFixed(1)+\`%  (growth + margin)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Multiple Determination:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Base:               5.00x  (mature SaaS floor)
+• Growth contribution: +\`+(r/10).toFixed(2)+"x  (growth "+r+\`% / 10)
+• Margin contribution: +\`+(o/5).toFixed(2)+"x  (margin "+o+\`% / 5)
+• Expected multiple:   \`+p.toFixed(2)+\`x  (5 + growth/10 + margin/5)
+• Actual multiple:     \`+s(n)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Multiple Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+A.emoji+" "+A.label+\`
+• Ratio (actual / expected): \`+(n/p).toFixed(2)+\`x
+• Interpretation:  \`+(n>p?"premium — investors pay above market for your growth+margin profile":n<p?"discount — your growth+margin profile suggests a higher multiple":"aligned with market expectations")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 Multiple Ranges by Stage:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Slow growth (<20%):    3-8x
+• Medium growth (20-50%): 8-15x
+• Fast growth (50-100%):  15-25x
+• Hyper growth (>100%):   25-40x
+• Your tier:  \`+l.emoji+" "+l.label+" ("+l.range+\`)
+\`+d+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Forward Valuation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Current ARR:           \`+i(t)+\`
+• Projected ARR (12 mo): \`+i(D)+"  (current × (1 + "+r+\`%))
+• Implied fwd multiple:  \`+s(k)+\`  (at current valuation)
+• At forward 10x:        \`+i(L)+\`  (next round target)
+• At forward 20x:        \`+i(H)+\`  (aggressive target)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Double growth (\`+Math.min(200,r*2)+"%):    expected multiple → "+_.toFixed(2)+\`x
+• Improve margin +20pp:           expected multiple → \`+I.toFixed(2)+\`x (+4x)
+• Cut valuation 20%:               multiple → \`+P.toFixed(2)+\`x
+• Target 10x multiple:             required valuation = \`+i(T)+\`
+• Sell at 20x multiple:            required valuation = \`+i(B)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+h],C=[5e5,1e6,5e6,1e7,5e7];for(let a=0;a<C.length;a++){const E=C[a],G=g(e,E);j.push("Comparison: $"+S(E)+" ARR at "+i(e)+" valuation → "+s(G)+" multiple")}return j},y=function(u,t,e){var r=V(u);return Array.isArray(r)?r.join(\`
+\`):String(r)};var q=f,N=g,$=c,U=F,W=M,Y=w,K=b,z=y,V=function(u){return b(u)};return[y(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
   "var gr=parseFloat(inputs.growthRate)||0;" +
   "var pm=parseFloat(inputs.profitMargin)||0;" +
   "if(arr===0&&val===0){return['\\u23F0 ARR Multiple / Valuation Multiplier Calculator\\n\\n\\uD83D\\uDCB0 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.'];}" +

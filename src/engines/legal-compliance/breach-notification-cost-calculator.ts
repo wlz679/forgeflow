@@ -61,48 +61,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var breaches = cnn(Number(inputs.breaches_per_year) || 0);
-  var subjects = cnn(Number(inputs.data_subjects_per_breach) || 0);
-  var cps = cnn(Number(inputs.notification_cost_per_subject) || 0);
-  var remediation = cnn(Number(inputs.remediation_cost_per_breach) || 0);
-  var notifCost = subjects * cps;
-  var perBreach = notifCost + remediation;
-  var annual = breaches * perBreach;
-  var band = annual < 50000 ? 'Excellent' : annual < 250000 ? 'Good' : annual < 1000000 ? 'Warning' : 'Critical';
-  var emoji = annual < 50000 ? '🟢' : annual < 250000 ? '🟡' : annual < 1000000 ? '🟠' : '🔴';
-  var altBreaches = 0.3;
-  var altAnnual = altBreaches * perBreach;
-  var altBand = altAnnual < 50000 ? 'Excellent' : altAnnual < 250000 ? 'Good' : altAnnual < 1000000 ? 'Warning' : 'Critical';
-  var altEmoji = altAnnual < 50000 ? '🟢' : altAnnual < 250000 ? '🟡' : altAnnual < 1000000 ? '🟠' : '🔴';
-  var altText = altAnnual < annual ? 'drops to' : 'stays at';
-  var targetAnnual = 49999;
-  var targetBreaches = perBreach > 0 ? targetAnnual / perBreach : breaches;
-  var breachReductionPct = breaches > 0 ? Math.min(100, Math.max(0, (breaches - targetBreaches) / breaches * 100)) : 0;
-  var viableSubjectsCut = remediation < targetAnnual;
-  var targetSubjectsRaw = viableSubjectsCut ? (targetAnnual - remediation) / Math.max(cps, 0.0001) : 0;
-  var targetSubjects = Math.max(0, targetSubjectsRaw);
-  var subjectReductionPct = subjects > 0 ? Math.min(100, Math.max(0, (subjects - targetSubjects) / subjects * 100)) : 100;
-  var easierPath;
-  if (annual < 50000) {
-    easierPath = 'already below €50K — no reduction needed';
-  } else if (!viableSubjectsCut) {
-    easierPath = 'reduce breach frequency to ≤' + targetBreaches.toFixed(2) + '/yr (' + breachReductionPct.toFixed(1) + '% fewer — ~1 breach every ' + (1 / Math.max(targetBreaches, 0.0001)).toFixed(1) + ' years). Subject reduction alone cannot reach Excellent because remediation (€' + remediation.toLocaleString() + ') alone exceeds the threshold.';
-  } else if (breachReductionPct <= subjectReductionPct) {
-    easierPath = 'reduce breach frequency to ≤' + targetBreaches.toFixed(2) + '/yr (' + breachReductionPct.toFixed(1) + '% fewer — ~1 breach every ' + (1 / Math.max(targetBreaches, 0.0001)).toFixed(1) + ' years).';
-  } else {
-    easierPath = 'reduce subjects at risk to ≤' + targetSubjects.toFixed(0) + '/breach (' + subjectReductionPct.toFixed(1) + '% fewer) via data minimization. Remediation floor must drop below €50K to leave headroom.';
-  }
-  return [
-    '🩺 Breach Notification Cost: ' + emoji + ' ' + band + ' (annual cost €' + Math.round(annual).toLocaleString() + ' · €' + Math.round(perBreach).toLocaleString() + '/breach · €' + Math.round(notifCost).toLocaleString() + ' notification)',
-    '📊 Snapshot: ' + breaches.toLocaleString() + ' breach/yr × ' + subjects.toLocaleString() + ' subjects × ' + cps.toFixed(2) + ' €/subject = €' + Math.round(notifCost).toLocaleString() + ' notification · + €' + Math.round(remediation).toLocaleString() + ' remediation = €' + Math.round(perBreach).toLocaleString() + '/breach · annual €' + Math.round(annual).toLocaleString(),
-    '🔄 What-If: if breaches drop to 0.3/yr (3 in 10 years), annual cost ' + altText + ' €' + Math.round(altAnnual).toLocaleString() + ' (' + altEmoji + ' ' + altBand + ').',
-    '⚖️ Break-Even: easiest path to 🟢 Excellent (<€50K): ' + easierPath,
-    '🎯 Milestone: re-baseline annually + after any incident. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/). GDPR Art. 33: notify supervisory authority within 72h; Art. 34: notify data subjects without undue delay if high risk.',
-    '💡 Tip: pair with [GDPR Fine Calculator] (L-1) — a single breach fills the violations budget. Also pair with our [NRR Calculator] (R-1) — breach exposure compounds with customer churn.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let u=function(e){return Number.isNaN(e)?0:Math.max(0,e)},x=function(e,t){return e*t},_=function(e,t){return e+t},f=function(e,t){return e*t},m=function(e){return e<o.excellent.threshold?"excellent":e<o.good.threshold?"good":e<o.warning.threshold?"warning":"critical"},r=function(e){return"€"+Math.round(e).toLocaleString()},a=function(e,t){return e.toFixed(t)},j=function(e,t,i){var c=k(e);return Array.isArray(c)?c.join(\`
+\`):String(c)};var G=u,I=x,W=_,z=f,O=m,B=r,E=a,J=j,o={excellent:{threshold:5e4,label:"Excellent",message:"No breaches or small-scale."},good:{threshold:25e4,label:"Good",message:"Manageable breach exposure."},warning:{threshold:1e6,label:"Warning",message:"Significant exposure."},critical:{threshold:null,label:"Critical",message:"Severe exposure."}},k=function(e){const t=u(Number(e.breaches_per_year)||0),i=u(Number(e.data_subjects_per_breach)||0),c=u(Number(e.notification_cost_per_subject)||0),h=u(Number(e.remediation_cost_per_breach)||0),g=x(i,c),s=_(g,h),n=f(t,s),C=m(n),S=o[C],N=n<5e4?"🟢":n<25e4?"🟡":n<1e6?"🟠":"🔴",w=.3,l=f(w,s),P=m(l),F=l<5e4?"🟢":l<25e4?"🟡":l<1e6?"🟠":"🔴",y=o.excellent.threshold-1,b=s>0?y/s:t,p=t>0?Math.min(100,Math.max(0,(t-b)/t*100)):0,v=h<y,K=v?(y-h)/Math.max(c,1e-4):0,M=Math.max(0,K),R=i>0?Math.min(100,Math.max(0,(i-M)/i*100)):100;let d;n<o.excellent.threshold?d="already below €50K — no reduction needed":v?p<=R?d="reduce breach frequency to ≤"+a(b,2)+"/yr ("+a(p,1)+"% fewer — ~1 breach every "+a(1/Math.max(b,1e-4),1)+" years).":d="reduce subjects at risk to ≤"+a(M,0)+"/breach ("+a(R,1)+"% fewer) via data minimization. Remediation floor must drop below €50K to leave headroom.":d="reduce breach frequency to ≤"+a(b,2)+"/yr ("+a(p,1)+"% fewer — ~1 breach every "+a(1/Math.max(b,1e-4),1)+" years). Subject reduction alone cannot reach Excellent because remediation (€"+h.toLocaleString()+") alone exceeds the threshold.";const q=l<n?"drops to":"stays at";return["🩺 Breach Notification Cost: "+N+" "+S.label+" (annual cost "+r(n)+" · "+r(s)+"/breach · "+r(g)+" notification)","📊 Snapshot: "+t.toLocaleString()+" breach/yr × "+i.toLocaleString()+" subjects × "+a(c,2)+" €/subject = "+r(g)+" notification · + "+r(h)+" remediation = "+r(s)+"/breach · annual "+r(n),"🔄 What-If: if breaches drop to "+w+"/yr (3 in 10 years), annual cost "+q+" "+r(l)+" ("+F+" "+o[P].label+").","⚖️ Break-Even: easiest path to 🟢 Excellent (<€50K): "+d,"🎯 Milestone: re-baseline annually + after any incident. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/). GDPR Art. 33: notify supervisory authority within 72h; Art. 34: notify data subjects without undue delay if high risk.","💡 Tip: pair with [GDPR Fine Calculator] (L-1) — a single breach fills the violations budget. Also pair with our [NRR Calculator] (R-1) — breach exposure compounds with customer churn."]};return[j(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

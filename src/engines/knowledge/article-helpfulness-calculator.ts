@@ -56,35 +56,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `var cnn=function(x){return Math.max(0,x)};function run(inputs, pick, fill) {
-  var views = cnn(Number(inputs.total_article_views) || 0);
-  var helpful = cnn(Number(inputs.helpful_votes) || 0);
-  var unhelp = cnn(Number(inputs.unhelpful_votes) || 0);
-  var articles = cnn(Number(inputs.total_articles) || 0);
-  var target = cnn(Number(inputs.target_helpful_pct) || 0);
-  var totalV = helpful + unhelp;
-  if (helpful > totalV) helpful = totalV;
-  if (unhelp > totalV) unhelp = totalV;
-  var hpct = totalV > 0 ? helpful / totalV : 0;
-  var vr = views > 0 ? totalV / views : 0;
-  var gap = target - hpct * 100;
-  var band = (hpct >= 0.85 && vr >= 0.15) ? 'Excellent' : (hpct >= 0.70 && vr >= 0.08) ? 'Good' : hpct >= 0.55 ? 'Warning' : 'Critical';
-  var emoji = (hpct >= 0.85 && vr >= 0.15) ? '🟢' : (hpct >= 0.70 && vr >= 0.08) ? '🟡' : hpct >= 0.55 ? '🟠' : '🔴';
-  var altHpct = 0.85;
-  var liftHelpful = Math.max(0, altHpct * totalV - helpful);
-  var altVr = 0.15;
-  var liftVotes = Math.max(0, altVr * views - totalV);
-  var bottom20Count = Math.ceil(articles * 0.2);
-  return [
-    '🩺 Article Helpfulness Health: ' + emoji + ' ' + band + ' (' + (hpct*100).toFixed(1) + '% helpful · ' + (vr*100).toFixed(1) + '% vote-rate · ' + Math.round(helpful).toLocaleString() + ' 👍 / ' + Math.round(totalV).toLocaleString() + ' votes)',
-    '📊 Snapshot: ' + Math.round(views).toLocaleString() + ' article views/mo · ' + Math.round(totalV).toLocaleString() + ' votes (' + (vr*100).toFixed(1) + '% vote-rate) · ' + (hpct*100).toFixed(1) + '% helpful · target ' + target + '% (' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp gap) · ' + Math.round(articles).toLocaleString() + ' articles',
-    '🔄 What-If: if helpful climbs to 85% (Excellent) at same vote-rate, ~' + Math.round(liftHelpful).toLocaleString() + ' more 👍 votes/mo - usually = rewrite top-20 unhelpful articles',
-    '⚖️ Break-Even: to hit Excellent (helpful ≥85% AND vote-rate ≥15%), need ' + Math.round(liftHelpful).toLocaleString() + ' more 👍 OR ' + Math.round(liftVotes).toLocaleString() + ' more total votes - audit bottom ~' + bottom20Count + ' articles',
-    '🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom',
-    '💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps.',
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let a=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,e){const s=t+e;return s>0?t/s:0},m=function(t,e){return e>0?t/e:0},d=function(t,e){return t>=l.excellent.threshold1&&e>=l.excellent.threshold2?"excellent":t>=l.good.threshold1&&e>=l.good.threshold2?"good":t>=l.warning.threshold1?"warning":"critical"},r=function(t){return(t*100).toFixed(1)+"%"},o=function(t){return Math.round(t).toLocaleString()},b=function(t,e,s){var c=y(t);return Array.isArray(c)?c.join(\`
+\`):String(c)};var N=a,V=f,W=m,K=d,U=r,j=o,G=b,l={excellent:{threshold1:.85,threshold2:.15,label:"Excellent",message:"Articles helping customers."},good:{threshold1:.7,threshold2:.08,label:"Good",message:"Helpful content overall."},warning:{threshold1:.55,label:"Warning",message:"Notable unhelpful share — audit bottom-20."},critical:{threshold:null,label:"Critical",message:"Vote loop broken — improve UI prompt + content."}},y=function(t){const e=a(Number(t.total_article_views)||0),s=a(Number(t.helpful_votes)||0),c=a(Number(t.unhelpful_votes)||0),n=s+c,h=Math.min(s,n),M=Math.min(c,n),g=a(Number(t.total_articles)||0),v=a(Number(t.target_helpful_pct)||0),i=f(h,M),u=m(n,e),x=v-i*100,k=d(i,u),C=l[k],p=l.excellent.threshold1,_=l.excellent.threshold2,w=Math.max(0,p*n-h),F=Math.max(0,_*e-n),I=Math.ceil(g*.2);return["🩺 Article Helpfulness Health: "+C.label+" ("+r(i)+" helpful · "+r(u)+" vote-rate · "+o(h)+" 👍 / "+o(n)+" votes)","📊 Snapshot: "+o(e)+" article views/mo · "+o(n)+" votes ("+r(u)+" vote-rate) · "+r(i)+" helpful · target "+v+"% ("+(x>=0?"+":"")+x.toFixed(1)+"pp gap) · "+o(g)+" articles","🔄 What-If: if helpful climbs to "+r(p)+" (Excellent) at same vote-rate, ~"+o(w)+" more 👍 votes/mo - usually = rewrite top-20 unhelpful articles","⚖️ Break-Even: to hit Excellent (helpful ≥"+r(p)+" AND vote-rate ≥"+r(_)+"), need "+o(w)+" more 👍 OR "+o(F)+" more total votes - audit bottom ~"+I+" articles",'🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom',"💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps."]};return[b(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

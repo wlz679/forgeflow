@@ -70,35 +70,10 @@ function calculateActivation(inputs: Record<string, string>): string[] {
 const customFn =
   // P168 B3-7：⭐ 前置 token 构造器（服务端 makeToken 的**同一份**实现）
   //   ⇒ 两端输出逐字节相同，不可能漂；new Function 的签名不变（仍是 3 个参数）。
-  CALC_OUTPUT_MAKE_TOKEN_JS +
-  "var cnn=function(x){return isNaN(x)?0:Math.max(0,x)};" +
-  "function fmtPct(x){return (x*100).toFixed(1)+'%'}" +
-  "function fmtInt(n){return Math.round(n).toLocaleString()}" +
-  "var HEALTH_BANDS={excellent:{threshold:0.40,label:'🟢 Excellent'},good:{threshold:0.25,label:'🟡 Good'},warning:{threshold:0.15,label:'🟠 Warning'},critical:{threshold:0,label:'🔴 Critical'}};" +
-  "function run(inputs, pick, fill) {" +
-  "  var signups=cnn(Number(inputs['signups']));" +
-  "  var activated=cnn(Number(inputs['activated']));" +
-  "  if (signups<=0) return [tk('calc_out.activation_rate.row.error_signups_zero','Signups must be > 0.')];" +
-  "  if (activated>signups) activated=signups;" +
-  "  var rate=activated>=signups?1.0:activated/signups;" +
-  "  var band=rate>=HEALTH_BANDS.excellent.threshold?'excellent':rate>=HEALTH_BANDS.good.threshold?'good':rate>=HEALTH_BANDS.warning.threshold?'warning':'critical';" +
-  "  var bandInfo=HEALTH_BANDS[band];" +
-  "  var days=inputs['period_days']||'7';" +
-  "  var nonActivated=Math.max(0,signups-activated);" +
-  "  var targetActivated=Math.ceil(signups*HEALTH_BANDS.good.threshold);" +
-  "  var ratePct=fmtPct(rate);" +
-  "  var bandFallback=bandInfo.label+' ('+ratePct+' within '+days+' days)';" +
-  "  var bandParams={rate:ratePct,days:String(days)};" +
-  "  var bandRow=band==='excellent'?tk('calc_out.activation_rate.row.activation_excellent',bandFallback,bandParams):band==='good'?tk('calc_out.activation_rate.row.activation_good',bandFallback,bandParams):band==='warning'?tk('calc_out.activation_rate.row.activation_warning',bandFallback,bandParams):tk('calc_out.activation_rate.row.activation_critical',bandFallback,bandParams);" +
-  "  return [" +
-  "    tk('calc_out.label.activation','Activation')+': '+bandRow," +
-  "    tk('calc_out.label.snapshot','Snapshot')+': '+tk('calc_out.activation_rate.row.snapshot_detail',fmtInt(activated)+' of '+fmtInt(signups)+' signups reached the aha-moment in '+days+' days.',{activated:fmtInt(activated),signups:fmtInt(signups),days:String(days)})+' '+tk('calc_out.label.non_activated','Non-activated')+': '+fmtInt(nonActivated)," +
-  "    tk('calc_out.activation_rate.row.whatif_reduce_ttv','What-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)')," +
-  "    tk('calc_out.activation_rate.row.break_even_target','Break-Even: to hit Good ('+fmtPct(HEALTH_BANDS.good.threshold)+' activation), need at least '+targetActivated.toLocaleString()+' activated signups (currently '+fmtInt(activated)+')',{target_pct:fmtPct(HEALTH_BANDS.good.threshold),target:targetActivated.toLocaleString(),current:fmtInt(activated)})," +
-  "    tk('calc_out.activation_rate.row.milestone_aha_definition','Milestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions')," +
-  "    tk('calc_out.activation_rate.row.tip_downstream_ttv','Tip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.')," +
-  "  ];" +
-  "} return run(inputs, pick, fill);";
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let h=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,e){return e<=0?0:t>=e?1:t/e},v=function(t){return t>=r.excellent.threshold?"excellent":t>=r.good.threshold?"good":t>=r.warning.threshold?"warning":"critical"},c=function(t){return(t*100).toFixed(1)+"%"},n=function(t){return Math.round(t).toLocaleString()},_=function(t){const e=h(Number(t.signups));let i=h(Number(t.activated));if(e<=0)return[a("calc_out.activation_rate.row.error_signups_zero","Signups must be > 0.")];i>e&&(i=e);const o=g(i,e),l=v(o),s=t.period_days||"7",m=Math.max(0,e-i),p=Math.ceil(e*r.good.threshold),w=c(o),u=r[l].label+" ("+w+" within "+s+" days)",d={rate:w,days:String(s)},x=a(l==="excellent"?"calc_out.activation_rate.row.activation_excellent":l==="good"?"calc_out.activation_rate.row.activation_good":l==="warning"?"calc_out.activation_rate.row.activation_warning":"calc_out.activation_rate.row.activation_critical",u,d);return[a("calc_out.label.activation","Activation")+": "+x,a("calc_out.label.snapshot","Snapshot")+": "+a("calc_out.activation_rate.row.snapshot_detail",n(i)+" of "+n(e)+" signups reached the aha-moment in "+s+" days.",{activated:n(i),signups:n(e),days:String(s)})+" "+a("calc_out.label.non_activated","Non-activated")+": "+n(m),a("calc_out.activation_rate.row.whatif_reduce_ttv","What-If: reducing time-to-value typically lifts activation by +5 to +10 percentage points (each day saved = more users reach aha within window)"),a("calc_out.activation_rate.row.break_even_target","Break-Even: to hit Good ("+c(r.good.threshold)+" activation), need at least "+p.toLocaleString()+" activated signups (currently "+n(i)+")",{target_pct:c(r.good.threshold),target:p.toLocaleString(),current:n(i)}),a("calc_out.activation_rate.row.milestone_aha_definition","Milestone: narrowing the aha-moment definition (what does activation MEAN for YOUR product?) often reveals leaks hidden in vague definitions"),a("calc_out.activation_rate.row.tip_downstream_ttv","Tip: Activation rate is downstream of TTV - pair with the Time-to-Value Calculator (P10-5) to diagnose why users are not activating.")]},f=function(t,e,i){var o=y(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var F=h,M=g,S=v,j=c,q=n,O=_,C=f,a=tk,b='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',a=new Function("return "+b)(),r={excellent:{threshold:.4,label:"🟢 Excellent",message:"Strong onboarding — most signups reach the aha-moment within the period."},good:{threshold:.25,label:"🟡 Good",message:"Healthy activation; identify the missing step to lift to Excellent."},warning:{threshold:.15,label:"🟠 Warning",message:"Material activation gap — most signups never reach the core value moment."},critical:{threshold:0,label:"🔴 Critical",message:"Severe activation gap — diagnose signup-to-aha flow urgently."}},y=function(t){return _(t)};return[f(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-activation-rate-calculator',

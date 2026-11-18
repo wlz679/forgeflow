@@ -126,98 +126,79 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var pmv=cnn(parseFloat(inputs.companyValuation)||0);" +
-  "var inv=cnn(parseFloat(inputs.investmentAmount)||0);" +
-  "var fs=cnn(parseInt(inputs.founderShares)||0);" +
-  "var postv=pmv+inv;" +
-  "var ioPct=postv>0?(inv/postv)*100:0;" +
-  "var ish=pmv>0?Math.round(fs*(inv/pmv)):0;" +
-  "var tsa=fs+ish;" +
-  "var foPct=tsa>0?(fs/tsa)*100:100;" +
-  "var dil=100-foPct;" +
-  "var pps=fs>0?pmv/fs:0;" +
-  "var opp=10;" +
-  "var opsh=Math.round(tsa*(opp/(100-opp)));" +
-  "var foPool=tsa+opsh>0?(fs/(tsa+opsh))*100:foPct;" +
-  "var ev=pmv*10;" +
-  "var fExit=(foPct/100)*ev;" +
-  "var fExitD=(foPool/100)*ev;" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function fmt2(n){return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}" +
-  "function pct2(n){return n.toFixed(2)}" +
-  "function pct1(n){return n.toFixed(1)}" +
-  "function loc(n){return n.toLocaleString()}" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='\\uD83D\\uDCCA Equity Dilution Calculator\\n\\n';" +
-  "r+='\\uD83C\\uDFE2 Pre-Money Valuation:  '+fmt(pmv)+'\\n';" +
-  "r+='\\uD83D\\uDCB0 Investment Amount:    '+fmt(inv)+'\\n';" +
-  "r+='\\uD83C\\uDFD7\\uFE0F Founder Shares (initial): '+loc(fs)+'\\n';" +
-  "r+='\\uD83D\\uDCB5 Price Per Share:      '+fmt2(pps)+'\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Cap Table Snapshot:\\n';" +
-  "r+='\\u2022 Post-Money Valuation:  '+fmt(postv)+'\\n';" +
-  "r+='\\u2022 Total Shares (after): '+loc(tsa)+'\\n';" +
-  "r+='\\u2022 Founder Ownership:    '+pct2(foPct)+'%  ('+loc(fs)+' shares)\\n';" +
-  "r+='\\u2022 Investor Ownership:  '+pct2(ioPct)+'%  ('+loc(ish)+' shares)\\n';" +
-  "r+='\\u2022 Option Pool (10%):    '+pct2(100*opsh/(tsa+opsh))+'%  ('+loc(opsh)+' shares reserved)\\n';" +
-  "r+='\\u2022 Founder (after pool): '+pct2(foPool)+'%\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 Dilution per Round:\\n';" +
-  "r+='\\u2022 Founder Dilution:      '+pct2(dil)+'%  (pre-investment: 100%, post: '+pct2(foPct)+'%)\\n';" +
-  "r+='\\u2022 Dilution per $1K:    '+(inv>0?pct2((dil/inv)*1000)+' pp':'0.00 pp')+'\\n';" +
-  "r+='\\u2022 Investor $/pp:        '+(inv>0&&dil>0?fmt(inv/dil):'$0')+'\\n';" +
-  "r+='\\u2022 Pool Impact:         ~'+pct2(foPct-foPool)+'% additional from option pool\\n';" +
-  "r+='\\u2022 Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Founder Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "if(foPct>60){r+='\\u2022 \\uD83D\\uDFE2 Founder retains '+pct2(foPct)+'% \\u2014 strong control after this round.\\n';}" +
-  "else if(foPct>=40){r+='\\u2022 \\uD83D\\uDFE1 Founder at '+pct2(foPct)+'% \\u2014 minority control. Watch for blocking rights.\\n';}" +
-  "else if(foPct>=20){r+='\\u2022 \\uD83D\\uDFE0 Founder at '+pct2(foPct)+'% \\u2014 losing majority. Negotiate board seats.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 Founder at '+pct2(foPct)+'% \\u2014 minority stake. Investors likely control board.\\n';}" +
-  "if(dil<=20){r+='\\u2022 \\uD83D\\uDFE2 Round dilutes only '+pct2(dil)+'% \\u2014 within healthy seed/Series A range.\\n';}" +
-  "else if(dil<=35){r+='\\u2022 \\uD83D\\uDFE1 Round dilutes '+pct2(dil)+'% \\u2014 aggressive but workable for late stages.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 Round dilutes '+pct2(dil)+'% \\u2014 excessive. Renegotiate valuation or raise less.\\n';}" +
-  "if(pps>0&&pmv>0){r+='\\u2022 \\uD83D\\uDFE2 Price/share '+fmt2(pps)+' sets floor for next round.\\n';}" +
-  "r+='\\n\\uD83C\\uDFAF Exit Value by Round:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='Assuming '+fmt(ev)+' exit (10x pre-money):\\n';" +
-  "r+='\\u2022 Founder Take:           '+fmt(fExit)+'  ('+pct2(foPct)+'%)\\n';" +
-  "r+='\\u2022 Investor Take:         '+fmt((ioPct/100)*ev)+'\\n';" +
-  "r+='\\u2022 With Option Pool:    Founder '+fmt(fExitD)+'  ('+pct2(foPool)+'%)\\n';" +
-  "r+='\\u2022 Break-Even Multiplier:  '+(inv>0&&foPct>0?((inv/0.01)/foPct).toFixed(1):'\\u221E')+'x  (min exit for VC to clear 1% return)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Dilution Threshold:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Loss of majority control at 50% stake\\n';" +
-  "r+='\\u2022 Founders below 20% typically lose board seats\\n';" +
-  "r+='\\u2022 Current founder stake: '+pct2(foPct)+'%\\n';" +
-  "if(foPct>50){r+='\\u2022 \\uD83D\\uDFE2 Above 50% \\u2014 you control major decisions.\\n';}" +
-  "else if(foPct>20){r+='\\u2022 \\uD83D\\uDFE1 Below 50% \\u2014 investors have blocking rights on key votes.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDD34 Below 20% \\u2014 minority protection only. Investors effectively control company.\\n';}" +
-  "r+='\\u2022 Acceptable next round: Dilution <25% to retain '+pct2(foPct*0.75)+'% stake\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Raise half ($'+Math.round(inv/2).toLocaleString()+'):  Dilution '+(postv>0?pct2((inv/2)/(pmv+(inv/2))*100):'0.00')+'%  \\u2192 Founder keeps '+pct2(100-(inv/2)/(pmv+(inv/2))*100)+'%\\n';" +
-  "r+='\\u2022 Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) \\u2014 plan for additional 5-10% dilution at next round\\n';" +
-  "r+='\\u2022 Smaller rounds, twice:  Two $'+Math.round(inv/2).toLocaleString()+' rounds \\u2192 similar total dilution but more milestone-based\\n';" +
-  "r+='\\u2022 Negotiate valuation +25%:  Pre $'+Math.round(pmv*1.25).toLocaleString()+' \\u2192 Dilution drops to '+(pmv*1.25+inv>0?pct2(inv/(pmv*1.25+inv)*100):'0.00')+'%\\n';" +
-  "r+='\\u2022 Keep smaller option pool (5%):  Founder at '+pct2(fs/(tsa+tsa*(5/(100-5)))*100)+'% vs current '+pct2(foPool)+'%\\n\\n';" +
-  "var dtP={dilution:pct2(dil),founderStake:pct2(foPct)};" +
-  "var dtT=JSON.stringify(dil<=20?{code:'dilution_healthy',params:dtP}:dil<=35?{code:'dilution_aggressive',params:dtP}:{code:'dilution_excessive',params:dtP});" +
-  "r+='\\uD83D\\uDCA1 Tip: '+dtT;" +
-  "results.push(r);" +
-  "var exs=[ev*0.5,ev,ev*2,ev*5,ev*10];" +
-  "for(var i=0;i<exs.length;i++){" +
-  "var e=exs[i];" +
-  "var ft=(foPct/100)*e;" +
-  "var it=(ioPct/100)*e;" +
-  "results.push('Exit @ '+fmt(e)+': Founder '+fmt(ft)+' ('+pct2(foPct)+'%) | Investor '+fmt(it)+' ('+pct2(ioPct)+'%)');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let m=function(l){return Number.isNaN(l)?0:Math.max(0,l)},k=function(l){const e=m(parseFloat(l.companyValuation)||0),t=m(parseFloat(l.investmentAmount)||0),r=m(parseInt(l.founderShares)||0),y=[],f=e+t,v=f>0?t/f*100:0,P=e>0?Math.round(r*(t/e)):0,u=r+P,o=u>0?r/u*100:100,s=100-o,S=r>0?e/r:0,b=10,d=Math.round(u*(b/(100-b))),p=u+d>0?r/(u+d)*100:o,c=e*10,D=o/100*c,M=p/100*c,a=i=>"$"+Math.round(i).toLocaleString(),_=i=>i.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),n=i=>i.toFixed(2),L=i=>i.toFixed(1),h=i=>i.toLocaleString(),g={dilution:n(s),founderStake:n(o)},I=s<=20?{code:"dilution_healthy",params:g}:s<=35?{code:"dilution_aggressive",params:g}:{code:"dilution_excessive",params:g};y.push(\`📊 Equity Dilution Calculator
+
+🏢 Pre-Money Valuation:  \`+a(e)+\`
+💰 Investment Amount:    \`+a(t)+\`
+🏗️ Founder Shares (initial): \`+h(r)+\`
+💵 Price Per Share:      \`+_(S)+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💰 Cap Table Snapshot:
+• Post-Money Valuation:  \`+a(f)+\`
+• Total Shares (after): \`+h(u)+\`
+• Founder Ownership:    \`+n(o)+"%  ("+h(r)+\` shares)
+• Investor Ownership:  \`+n(v)+"%  ("+h(P)+\` shares)
+• Option Pool (10%):    \`+n(100*d/(u+d))+"%  ("+h(d)+\` shares reserved)
+• Founder (after pool): \`+n(p)+\`%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 Dilution per Round:
+• Founder Dilution:      \`+n(s)+"%  (pre-investment: 100%, post: "+n(o)+\`%)
+• Dilution per $1K:    \`+(t>0?n(s/t*1e3)+" pp":"0.00 pp")+\`
+• Investor $/pp:        \`+(t>0&&s>0?a(t/s):"$0")+\`
+• Pool Impact:         ~\`+n(o-p)+\`% additional from option pool
+• Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Founder Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(o>60?"• 🟢 Founder retains "+n(o)+\`% — strong control after this round.
+\`:o>=40?"• 🟡 Founder at "+n(o)+\`% — minority control. Watch for blocking rights.
+\`:o>=20?"• 🟠 Founder at "+n(o)+\`% — losing majority. Negotiate board seats.
+\`:"• 🔴 Founder at "+n(o)+\`% — minority stake. Investors likely control board.
+\`)+(s<=20?"• 🟢 Round dilutes only "+n(s)+\`% — within healthy seed/Series A range.
+\`:s<=35?"• 🟡 Round dilutes "+n(s)+\`% — aggressive but workable for late stages.
+\`:"• 🔴 Round dilutes "+n(s)+\`% — excessive. Renegotiate valuation or raise less.
+\`)+(S>0&&e>0?"• 🟢 Price/share "+_(S)+\` sets floor for next round.
+\`:"")+\`
+🎯 Exit Value by Round:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Assuming \`+a(c)+\` exit (10x pre-money):
+• Founder Take:           \`+a(D)+"  ("+n(o)+\`%)
+• Investor Take:         \`+a(v/100*c)+\`
+• With Option Pool:    Founder \`+a(M)+"  ("+n(p)+\`%)
+• Break-Even Multiplier:  \`+(t>0&&o>0?(t/.01/o).toFixed(1):"∞")+\`x  (min exit for VC to clear 1% return)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Dilution Threshold:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Loss of majority control at 50% stake
+• Founders below 20% typically lose board seats
+• Current founder stake: \`+n(o)+\`%
+\`+(o>50?\`• 🟢 Above 50% — you control major decisions.
+\`:o>20?\`• 🟡 Below 50% — investors have blocking rights on key votes.
+\`:\`• 🔴 Below 20% — minority protection only. Investors effectively control company.
+\`)+"• Acceptable next round: Dilution <25% to retain "+n(o*.75)+\`% stake
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Raise half ($\`+Math.round(t/2).toLocaleString()+"):  Dilution "+(f>0?n(t/2/(e+t/2)*100):"0.00")+"%  → Founder keeps "+n(100-t/2/(e+t/2)*100)+\`%
+• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round
+• Smaller rounds, twice:  Two $\`+Math.round(t/2).toLocaleString()+\` rounds → similar total dilution but more milestone-based
+• Negotiate valuation +25%:  Pre $\`+Math.round(e*1.25).toLocaleString()+" → Dilution drops to "+(e*1.25+t>0?n(t/(e*1.25+t)*100):"0.00")+\`%
+• Keep smaller option pool (5%):  Founder at \`+n(r/(u+u*(5/95))*100)+"% vs current "+n(p)+\`%
+
+💡 Tip: \`+JSON.stringify(I));const A=[c*.5,c,c*2,c*5,c*10];for(let i=0;i<A.length;i++){const F=A[i],T=o/100*F,E=v/100*F;y.push("Exit @ "+a(F)+": Founder "+a(T)+" ("+n(o)+"%) | Investor "+a(E)+" ("+n(v)+"%)")}return y},x=function(l,e,t){var r=w(l);return Array.isArray(r)?r.join(\`
+\`):String(r)};var O=m,R=k,V=x,w=function(l){return k(l)};return[x(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-equity-dilution-calculator',

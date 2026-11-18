@@ -125,96 +125,71 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  "var cnn=function(x){return Math.max(0,x)};" +
-  "var dl=cnn(parseInt(inputs.monthlyDownloads)||0);" +
-  "var subs=cnn(parseInt(inputs.emailSubscribers)||0);" +
-  "var fol=cnn(parseInt(inputs.socialFollowers)||0);" +
-  "var ct=inputs.contentType||'newsletter';" +
-  "var cr={podcast:25,newsletter:40,youtube:20,blog:15};" +
-  "var cpm=cr[ct]||20;" +
-  "var pv=dl>0?(dl/1000)*cpm:0;" +
-  "var nv=(subs/1000)*cpm;" +
-  "var sv=(fol/1000)*cpm*0.5;" +
-  "var ppv=pv+nv+sv;" +
-  "var bv=ppv*4;" +
-  "var mv=ppv*4;" +
-  "var av=mv*12;" +
-  "var ta=dl+subs+fol;" +
-  "var th;" +
-  "if(cpm>=25)th='\\uD83D\\uDFE2 Premium CPM \\u2014 top-tier brand deals.';" +
-  "else if(cpm>=15)th='\\uD83D\\uDFE1 Standard CPM \\u2014 workable rate for content type.';" +
-  "else th='\\uD83D\\uDD34 Low CPM \\u2014 limited monetization potential. Focus on engagement.';" +
-  "var em=ta>0?Math.min(2,Math.max(0.5,ta/50000)):1;" +
-  "var ar=ppv*em;" +
-  "var y1=(1000/1000)*cpm*4*12;" +
-  "var y2=(10000/1000)*cpm*4*12;" +
-  "var y3=(100000/1000)*cpm*4*12;" +
-  "var tl={podcast:'Podcast',newsletter:'Newsletter',youtube:'YouTube Channel',blog:'Blog'};" +
-  "function fmt(n){return '$'+Math.round(n).toLocaleString()}" +
-  "function pct(n){return n.toFixed(1)+'%'}" +
-  "function loc(n){return Math.round(n).toLocaleString()}" +
-  "var results=[];" +
-  "var r='';" +
-  "r+='\\uD83C\\uDF99\\uFE0F Sponsorship Rate Calculator\\n\\n';" +
-  "r+='\\uD83D\\uDCB0 Rate Estimate:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Content Type:        '+tl[ct]+'\\n';" +
-  "r+='\\u2022 CPM:                $'+cpm+' / 1,000 impressions\\n';" +
-  "r+='\\u2022 Per Post Value:     '+fmt(ppv)+'\\n';" +
-  "r+='\\u2022 Bundle (4 posts):    '+fmt(bv)+'\\n';" +
-  "r+='\\u2022 Monthly (4 posts):   '+fmt(mv)+'/mo\\n';" +
-  "r+='\\u2022 Annual Revenue:      '+fmt(av)+'/yr\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDCD0 CPM by Niche:\\n';" +
-  "r+='\\u2022 Podcast:           $25 CPM  (host-read ads, $18-50 range)\\n';" +
-  "r+='\\u2022 Newsletter:        $40 CPM  (high engagement, $30-60 range)\\n';" +
-  "r+='\\u2022 YouTube:           $20 CPM  (direct sponsorships, $15-30 range)\\n';" +
-  "r+='\\u2022 Blog:              $15 CPM  (display + direct, $10-25 range)\\n';" +
-  "r+='\\u2022 B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)\\n';" +
-  "r+='\\u2022 Lifestyle / General:      $5-15 CPM  (commodity)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83E\\uDE7A Rate Health:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 '+th+'\\n';" +
-  "if(ta>=100000){r+='\\u2022 \\uD83D\\uDFE2 Large creator tier \\u2014 multiple sponsor slots/yr, premium CPMs.\\n';}" +
-  "else if(ta>=25000){r+='\\u2022 \\uD83D\\uDFE1 Mid-tier \\u2014 competitive CPM, 1-2 sponsor slots/yr typical.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDFE0 Micro-influencer \\u2014 building toward monetization threshold (10K+).\\n';}" +
-  "if(em>=1.2){r+='\\u2022 \\uD83D\\uDFE2 Audience-to-deal ratio strong \\u2014 sponsors see value at this scale.\\n';}" +
-  "else if(em>=0.8){r+='\\u2022 \\uD83D\\uDFE1 Standard ratio \\u2014 focus on growing niche engagement.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDFE0 Small audience \\u2014 engagement metrics matter more than reach.\\n';}" +
-  "if(cpm>=25){r+='\\u2022 \\uD83D\\uDFE2 CPM $'+cpm+' commands brand attention in this vertical.\\n';}" +
-  "else{r+='\\u2022 \\uD83D\\uDFE0 CPM $'+cpm+' is below premium \\u2014 niche specialization helps.\\n';}" +
-  "r+='\\n\\uD83C\\uDFAF Revenue at Scale:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 At 1,000 audience:     $'+loc(y1)+'/yr  (entry)\\n';" +
-  "r+='\\u2022 At 10,000 audience:    $'+loc(y2)+'/yr  (mid-tier)\\n';" +
-  "r+='\\u2022 At 100,000 audience:   $'+loc(y3)+'/yr  (premium)\\n';" +
-  "r+='\\u2022 Current:                '+fmt(av)+'/yr  ('+loc(ta)+' audience)\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\u2696\\uFE0F Per-Post vs Bundle Break-Even:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Per-post only:        '+fmt(ppv*12)+'/yr  (1 post/mo, 12 placements)\\n';" +
-  "r+='\\u2022 4-post bundle/mo:     '+fmt(mv*12)+'/yr  (4x exposure)\\n';" +
-  "r+='\\u2022 Bundle premium:       +'+pct((bv-ppv)/Math.max(ppv,1)*100)+' revenue vs per-post\\n';" +
-  "r+='\\u2022 Break-even bundle size: need 4+ committed sponsors for retainer\\n\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n\\n';" +
-  "r+='\\uD83D\\uDD04 What-If Scenarios:\\n';" +
-  "r+='\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\u2501\\n';" +
-  "r+='\\u2022 Grow engagement 50%:  Rate '+fmt(ppv)+' \\u2192 '+fmt(ppv*1.5)+'/post  ('+fmt(ppv*1.5*12*4)+'/yr)\\n';" +
-  "r+='\\u2022 Raise CPM 25% (negotiate):  Rate '+fmt(ppv)+' \\u2192 '+fmt(ppv*1.25)+'/post  ('+fmt(ppv*1.25*12*4)+'/yr)\\n';" +
-  "r+='\\u2022 Longer bundle (8 posts/mo):  Revenue '+fmt(mv)+' \\u2192 '+fmt(ppv*8)+'/mo  ('+fmt(ppv*8*12)+'/yr)\\n';" +
-  "r+='\\u2022 2x audience growth:  Revenue '+fmt(av)+' \\u2192 '+fmt(av*2)+'/yr\\n';" +
-  "r+='\\u2022 Switch to premium niche (B2B/finance):  CPM $'+cpm+' \\u2192 $50  \\u2192 '+fmt((ta/1000)*50*4*12)+'/yr\\n\\n';" +
-  "r+='\\uD83D\\uDCA1 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) \\u2014 a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.';" +
-  "results.push(r);" +
-  "var sizes=[1000,5000,15000,50000,200000];" +
-  "for(var i=0;i<sizes.length;i++){" +
-  "var a=sizes[i];" +
-  "var val=(a/1000)*cpm*4;" +
-  "var yr=val*12;" +
-  "results.push('At '+a.toLocaleString()+' audience: $'+loc(val)+'/mo  ($'+loc(yr)+'/yr) as '+tl[ct].toLowerCase()+' sponsor');" +
-  "}" +
-  "return results;";
+  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(o){return Number.isNaN(o)?0:Math.max(0,o)},h=function(o){const l=c(parseInt(o.monthlyDownloads)||0),d=c(parseInt(o.emailSubscribers)||0),s=c(parseInt(o.socialFollowers)||0),p=o.contentType||"newsletter",y=[],t={podcast:25,newsletter:40,youtube:20,blog:15}[p]||20,v=l>0?l/1e3*t:0,S=d/1e3*t,A=s/1e3*t*.5,n=v+S+A,P=n*4,u=n*4,m=u*12,a=l+d+s,z=a>=1e5?"large creator":a>=25e3?"mid-tier":"micro-influencer",B=t>=25?"🟢 Premium CPM — top-tier brand deals.":t>=15?"🟡 Standard CPM — workable rate for content type.":"🔴 Low CPM — limited monetization potential. Focus on engagement.",g=a>0?Math.min(2,Math.max(.5,a/5e4)):1,K=n*g,R=1e3/1e3*t*4*12,_=1e4/1e3*t*4*12,L=1e5/1e3*t*4*12,C={podcast:"Podcast",newsletter:"Newsletter",youtube:"YouTube Channel",blog:"Blog"},e=r=>"$"+Math.round(r).toLocaleString(),k=r=>r.toFixed(1)+"%",i=r=>Math.round(r).toLocaleString();y.push(\`🎙️ Sponsorship Rate Calculator
+
+💰 Rate Estimate:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Content Type:        \`+C[p]+\`
+• CPM:                $\`+t+\` / 1,000 impressions
+• Per Post Value:     \`+e(n)+\`
+• Bundle (4 posts):    \`+e(P)+\`
+• Monthly (4 posts):   \`+e(u)+\`/mo
+• Annual Revenue:      \`+e(m)+\`/yr
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📐 CPM by Niche:
+• Podcast:           $25 CPM  (host-read ads, $18-50 range)
+• Newsletter:        $40 CPM  (high engagement, $30-60 range)
+• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)
+• Blog:              $15 CPM  (display + direct, $10-25 range)
+• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)
+• Lifestyle / General:      $5-15 CPM  (commodity)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🩺 Rate Health:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• \`+B+\`
+\`+(a>=1e5?\`• 🟢 Large creator tier — multiple sponsor slots/yr, premium CPMs.
+\`:a>=25e3?\`• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.
+\`:\`• 🟠 Micro-influencer — building toward monetization threshold (10K+).
+\`)+(g>=1.2?\`• 🟢 Audience-to-deal ratio strong — sponsors see value at this scale.
+\`:g>=.8?\`• 🟡 Standard ratio — focus on growing niche engagement.
+\`:\`• 🟠 Small audience — engagement metrics matter more than reach.
+\`)+(t>=25?"• 🟢 CPM $"+t+\` commands brand attention in this vertical.
+\`:"• 🟠 CPM $"+t+\` is below premium — niche specialization helps.
+\`)+\`
+🎯 Revenue at Scale:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• At 1,000 audience:     $\`+i(R)+\`/yr  (entry)
+• At 10,000 audience:    $\`+i(_)+\`/yr  (mid-tier)
+• At 100,000 audience:   $\`+i(L)+\`/yr  (premium)
+• Current:                \`+e(m)+"/yr  ("+i(a)+\` audience)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚖️ Per-Post vs Bundle Break-Even:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Per-post only:        \`+e(n*12)+\`/yr  (1 post/mo, 12 placements)
+• 4-post bundle/mo:     \`+e(u*12)+\`/yr  (4x exposure)
+• Bundle premium:       +\`+k((P-n)/Math.max(n,1)*100)+\` revenue vs per-post
+• Break-even bundle size: need 4+ committed sponsors for retainer
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 What-If Scenarios:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Grow engagement 50%:  Rate \`+e(n)+" → "+e(n*1.5)+"/post  ("+e(n*1.5*12*4)+\`/yr)
+• Raise CPM 25% (negotiate):  Rate \`+e(n)+" → "+e(n*1.25)+"/post  ("+e(n*1.25*12*4)+\`/yr)
+• Longer bundle (8 posts/mo):  Revenue \`+e(u)+" → "+e(n*8)+"/mo  ("+e(n*8*12)+\`/yr)
+• 2x audience growth:  Revenue \`+e(m)+" → "+e(m*2)+\`/yr
+• Switch to premium niche (B2B/finance):  CPM $\`+t+" → $50  → "+e(a/1e3*50*4*12)+\`/yr
+
+💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.\`);const b=[1e3,5e3,15e3,5e4,2e5];for(let r=0;r<b.length;r++){const $=b[r],w=$/1e3*t*4,V=w*12;y.push("At "+$.toLocaleString()+" audience: $"+i(w)+"/mo  ($"+i(V)+"/yr) as "+C[p].toLowerCase()+" sponsor")}return y},M=function(o,l,d){var s=f(o);return Array.isArray(s)?s.join(\`
+\`):String(s)};var x=c,N=h,T=M,f=function(o){return h(o)};return[M(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
   slug: 'solopreneur-sponsorship-rate-calculator',

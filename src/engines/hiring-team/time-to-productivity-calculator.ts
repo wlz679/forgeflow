@@ -51,26 +51,10 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `function run(inputs, pick, fill) {
-  var role = inputs.role_level || 'IC';
-  var cnn=function(x){return Math.max(0,x)};
-  var weeks = cnn(Number(inputs.ramp_weeks) || 0);
-  var cplx = inputs.industry_complexity || 'Med';
-  var mult = cplx === 'Low' ? 0.75 : cplx === 'High' ? 1.4 : 1.0;
-  var adj = weeks * mult;
-  var t = role === 'Manager' ? { ex: 8, gd: 16, wn: 26 } : { ex: 4, gd: 8, wn: 16 };
-  var band = adj <= t.ex ? 'Excellent' : adj <= t.gd ? 'Good' : adj <= t.wn ? 'Warning' : 'Critical';
-  var emoji = adj <= t.ex ? '🟢' : adj <= t.gd ? '🟡' : adj <= t.wn ? '🟠' : '🔴';
-  return [
-    '🩺 Ramp Health: ' + emoji + ' ' + band + ' (' + adj.toFixed(1).replace(/\\.0$/, '') + 'w for ' + role + ')',
-    '📊 Snapshot: ' + weeks + 'w base × ' + mult + 'x (' + cplx + ') = ' + adj.toFixed(1).replace(/\\.0$/, '') + 'w. Role: ' + role,
-    '🔄 What-If: if complexity drops to Low, ramp = ' + (weeks * 0.75).toFixed(1).replace(/\\.0$/, '') + 'w (would be ' + ((weeks * 0.75) <= t.ex ? 'Excellent' : (weeks * 0.75) <= t.gd ? 'Good' : (weeks * 0.75) <= t.wn ? 'Warning' : 'Critical') + ')',
-    '⚖️ Break-Even: to hit ' + (role === 'IC' ? '🟢 Excellent (≤4w)' : '🟢 Excellent (≤8w)') + ', need ' + (role === 'IC' ? '4w × ' + (4 / weeks).toFixed(2) : '8w × ' + (8 / weeks).toFixed(2)) + ' base ramp',
-    '🎯 Milestone: Plan first 90-day OKRs to land at week 12; pair with our [Productivity Ramp Curve Calculator] (P11-3)',
-    '💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs without 6mo management prep.'
-  ];
-}
-return run(inputs, pick, fill);`,
+    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(e){return Number.isNaN(e)?0:Math.max(0,e)},l=function(e,t){return e*(t==="Low"?.75:t==="High"?1.4:1)},i=function(e,t){const n=o[t];return e<=n.excellent.threshold?"excellent":e<=n.good.threshold?"good":e<=n.warning.threshold?"warning":"critical"},r=function(e){return e.toFixed(1).replace(/\\.0$/,"")+"w"},d=function(e,t,n){var a=u(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var w=c,x=l,I=i,C=r,v=d,o={IC:{excellent:{threshold:4,label:"🟢 Excellent",message:"Fast ramp — IC reaches productivity in under a month."},good:{threshold:8,label:"🟡 Good",message:"Healthy IC ramp — under 2 months to first meaningful output."},warning:{threshold:16,label:"🟠 Warning",message:"Slow IC ramp — likely missing documentation, mentorship, or scoped first project."},critical:{threshold:1/0,label:"🔴 Critical",message:"IC ramp >4 months — onboarding program needs immediate overhaul."}},Manager:{excellent:{threshold:8,label:"🟢 Excellent",message:"Fast Manager ramp — leadership transition completed in under 2 months."},good:{threshold:16,label:"🟡 Good",message:"Typical Manager ramp — first 90 days complete with team alignment."},warning:{threshold:26,label:"🟠 Warning",message:"Slow Manager ramp — likely missing executive sponsorship or team context."},critical:{threshold:1/0,label:"🔴 Critical",message:"Manager ramp >6 months — succession risk and team disengagement likely."}}},u=function(e){const t=e.role_level||"IC",n=c(Number(e.ramp_weeks)||0),a=e.industry_complexity||"Med",s=l(n,a),g=i(s,t),p=o[t][g],m=l(n,"Low"),f=i(m,t),y=o[t][f],h=o[t].excellent.threshold,b=h/n;return["🩺 Ramp Health: "+p.label+" ("+r(s)+" for "+t+")","📊 Snapshot: "+n+"w base × "+(a==="Low"?"0.75":a==="High"?"1.40":"1.00")+" ("+a+" complexity) = "+r(s)+" adjusted","🔄 What-If: if complexity drops to Low, ramp = "+r(m)+" (would be "+y.label+")","⚖️ Break-Even: to hit 🟢 Excellent ("+(t==="IC"?"≤4w":"≤8w")+" ceiling), need base ramp of "+r(h)+" — i.e. "+b.toFixed(2)+"x your current "+n+"w","🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve","💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep."]};return[d(inputs,pick,fill)]}finally{}
+/* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
   // Goal 含"决策"+"该不该"双关键词 → 通过 T1 zod refine 校验

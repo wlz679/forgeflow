@@ -14,7 +14,8 @@
 import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { PILOT_SLUGS, loadParityRows, measureParity } from './scripts/p168-server-client-parity.ts';
-import { DRIFT_DEBT, loadDriftRows, measureDrift } from './scripts/p168-server-client-drift-ledger.ts';
+import { DRIFT_DEBT, loadDriftRows, measureDrift, customFnCoverage } from './scripts/p168-server-client-drift-ledger.ts';
+import { EXPECTED_ENGINE_COUNT } from './engine-count.ts';
 
 test('P168 B3-7 G6：试点引擎的客户端 customFn 输出 ≡ 服务端 generate() 输出', () => {
   const rows = loadParityRows(PILOT_SLUGS);
@@ -95,10 +96,21 @@ test('P168 B3-10 G6-debt-b：台账里每条的分类必须与实测一致（台
   );
 });
 
-test('P168 B3-10 G6-debt-c：防真空绿 —— 台账非空且实测确有漂移', () => {
-  assert.ok(Object.keys(DRIFT_DEBT).length > 0, 'DRIFT_DEBT must not be empty: an empty ledger would make the drift assertions vacuous.');
-  const rows = loadDriftRows();
-  assert.ok(rows.length > 0, 'no drift measured at all - either the measurement broke or the ledger is stale.');
+test('P168 B3-10 G6-debt-c：防真空绿 —— 测量必须覆盖每一个带 customFn 的引擎（不是「台账非空」）', () => {
+  // ⭐ 台账清零是**合法结局**（B3-10 已把 32 条漂移全部修完）⇒ 原来这条「台账必须非空」
+  //   守的是「欠账存在」这个**回溯型**不变量 ⇒ 修好之后它反而会**挡住修复**。
+  // ⇒ 换成守**目标型**不变量：**测量不许漏掉任何一个引擎**。
+  const cov = customFnCoverage();
+  assert.equal(
+    cov.withCustomFn,
+    EXPECTED_ENGINE_COUNT,
+    '带 customFn 的引擎数应等于引擎总数（少了 = 那个引擎根本没有动态实现）',
+  );
+  assert.deepEqual(
+    cov.parseFailures,
+    [],
+    'customFn 语法错误 ⇒ 该页动态卡片整页空白：' + cov.parseFailures.join(' | '),
+  );
 });
 
 test('P168 B3-10 G6-debt 自检：造一个「客户端整段缺失」的假引擎，分类器必须看得见', () => {
