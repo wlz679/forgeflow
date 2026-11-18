@@ -129,16 +129,32 @@ function git(cmd: string): string {
   return execSync(cmd, { cwd: root, encoding: 'utf-8' }).trim();
 }
 
-/** Parse "Total commits: NNN" from CHANGELOG.md header section (before first `---`). */
-function extractChangelogCommitCount(): number {
-  const text = readText('CHANGELOG.md');
+/**
+ * ⭐⭐ P168 B3-9 实测踩坑：解析口径必须是「头部的**专用行**」，不能是「头部区域里第一个匹配」。
+ *
+ * 原实现用「Total commits + 任意非数字 + 数字」取**第一个**匹配 ⇒ 只要头部 blockquote 里出现
+ * 一句提到该字段的说明（例如「…与 `git rev-list --count HEAD` 对齐（容忍漂移 ≤ 5）」），
+ * 那个 **5** 就会被当成计数 ⇒ 漂移算成 1,414 ⇒ 守卫**假红**（实测踩中 ⇒ CI 连红两次）。
+ *
+ * ⇒ 改成**行首锚定**：必须是 blockquote 里**以该字段名开头**的那一行（可带 markdown 粗体），
+ *   数字紧随其后 ⇒ 正文里的任何提及都不再能劫持解析。
+ *   （正则刻意**不用反斜杠转义**：`[ ]` 代替 `\s`、`[0-9]+` 代替 `\d`、`[*]{0,2}` 代替 `\*{0,2}`
+ *    ⇒ 少一层转义 ⇒ 少一个能悄悄写错的字符）
+ */
+const COMMIT_COUNT_RE = /^ *>[ ]*[*]{0,2}Total commits[ ]*[:：][ ]*[*]{0,2}[ ]*([0-9]+)/m;
+
+/** Parse "Total commits: NNN" from a CHANGELOG.md text (header = before the first `---`). */
+function extractCommitCountFrom(text: string): number {
   const headerEnd = text.indexOf('\n---\n');
   const header = headerEnd >= 0 ? text.slice(0, headerEnd) : text;
-  // Tolerant: handles `Total commits: N` / `**Total commits:** N` (markdown bold).
-  // Pattern: "Total commits" + any non-digit markup chars + digits.
-  const m = header.match(/Total commits[^0-9\n]*(\d+)/);
+  const m = header.match(COMMIT_COUNT_RE);
   if (!m) throw new Error(`"Total commits: N" not found in CHANGELOG.md header`);
   return parseInt(m[1], 10);
+}
+
+/** Parse "Total commits: NNN" from CHANGELOG.md header section (before first `---`). */
+function extractChangelogCommitCount(): number {
+  return extractCommitCountFrom(readText('CHANGELOG.md'));
 }
 
 /** Parse "最后更新: YYYY-MM-DD" from CHANGELOG.md header section. */
@@ -351,5 +367,42 @@ test('AGENTS.md invariant matrix matches reality (meta-guard)', () => {
       `\n\nFix: update AGENTS.md / CHANGELOG.md to match reality, then re-run. ` +
       `This guard prevents documentation-drift (P121-P124 build-dep suites + ` +
       `P130→P131 commit count off-by-5 + P46 phantom I/V letters).`
+  );
+});
+
+/**
+ * 自检：头部里的**任何提及**都不许劫持「提交计数」的解析。
+ *
+ * ⚠️ 为什么必须与解析实现**同文件**：AGENTS.md 的「N build-dep suites / N source-only / 合计」
+ *   是套件计数不变量 ⇒ **新增一个测试文件就会让那三个数字漂** ⇒ 自检只能寄生在本文件里
+ *   （同一个 build-dep 套件 ⇒ 套件数不变）。
+ * ⚠️ 本文件顶部有 skip-guard ⇒ 必须带 `RUN_BUILD_TESTS=1` 才真跑（CI 会带）
+ *   ⇒ 配套纪律：**本地单跑本文件是「真空绿」（文件级 ✔、0 个子测试）**。
+ */
+test('提交计数解析只认头部的专用行（不被正文提及劫持）', () => {
+  const real = extractChangelogCommitCount();
+  assert.ok(real > 0, 'the real header count must parse');
+
+  // 诱饵：正文里提到该字段 + 一个更小的数字 ⇒ 必须被忽略
+  const decoy = [
+    '> **最后更新:** 2026-11-18 (B3-9)',
+    '> 守卫要求 Total commits 与 git rev-list --count HEAD 对齐（容忍漂移 ≤ 5）',
+    '> **Total commits:** ' + real + ' across 91 active days',
+    '',
+    '---',
+    '',
+    'body mentions Total commits: 999',
+  ].join('\n');
+  assert.equal(extractCommitCountFrom(decoy), real, 'a mention in prose must not hijack the parse');
+
+  // 无粗体形态也要认（容忍 markdown 变体）
+  const plain = ['> Total commits: ' + real, '---'].join('\n');
+  assert.equal(extractCommitCountFrom(plain), real, 'the unbolded form must still parse');
+
+  // 专用行不在头部 ⇒ 报「没测到」而不是静默通过
+  assert.throws(
+    () => extractCommitCountFrom('> nothing here\n---\nbody'),
+    /not found/,
+    'a missing dedicated line must fail loudly, never silently pass',
   );
 });
