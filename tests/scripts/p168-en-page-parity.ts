@@ -87,7 +87,19 @@ export function baselineShaFor(slug: string): string {
   return baselineFor(slug);
 }
 
-/** 取基线提交里该引擎的 staticExamples[0]（token 化之前的英文输出） */
+/**
+ * ⭐⭐ P168 B3-11：基线可能是**已令牌化**的提交 —— 基线侧必须与「现在侧」
+ *   用**同一个渲染器**处理，否则必然不等（结构不同 ⇒ 假红）。
+ *
+ *   背景：B3-11 修了 12 个引擎的 defaultInputs（此前键名与引擎 inputs[].name 对不上
+ *   ⇒ staticExamples[0] 是「拿错输入算出来的」）⇒ 其中 8 个已令牌化引擎的英文页
+ *   **合法地**变了 ⇒ 它们的基线**重钉**到 B3-11 提交（该提交的 staticExamples[0]
+ *   已是 token 文本）⇒ 必须渲染成英文再比。
+ *
+ *   ⭐ 承重性不变：基线侧是 **git 里冻结的**内容，现在侧是**活的源码**
+ *   ⇒ 之后任何人改了引擎的英文输出 ⇒ 两边不等 ⇒ G9 变红。
+ *   （若基线也取自活的源码 ⇒ 两边恒等 ⇒ 真空绿 ⇒ 那样就没有守卫了。）
+ */
 export function baselineStaticExample(file: string, sha?: string): string | null {
   const use = sha ?? BASELINE_SHA;
   let src: string;
@@ -102,7 +114,10 @@ export function baselineStaticExample(file: string, sha?: string): string | null
   //   ⇒ 改成：`[` 之后**跳过注释与空白**，再取字符串字面量。
   const m = src.match(/staticExamples:\s*\[(?:[^'\]]*?)?'((?:[^'\\]|\\.)*)'/);
   if (!m) return null;
-  return m[1].replace(/\\n/g, NL).replace(/\\'/g, "'");
+  const literal = m[1].replace(/\\n/g, NL).replace(/\\'/g, "'");
+  // ⭐ 与「现在侧」用同一个渲染器：基线若是令牌化提交 ⇒ 渲染成英文兜底再比
+  //   （令牌化前的基线是纯英文 ⇒ 渲染是恒等变换 ⇒ 旧行为不变）
+  return renderCalcOutput(literal, {});
 }
 
 /**
@@ -112,7 +127,12 @@ export function baselineStaticExample(file: string, sha?: string): string | null
  *   ⇒ 它不是「英文页被改了」，而是「时间在走」⇒ 归一化掉。
  */
 export function normalizeDates(text: string): string {
-  return text.replace(/\(~[A-Z][a-z]{2} \d{4}\)/g, '(~DATE)');
+  return text
+    .replace(/\(~[A-Z][a-z]{2} \d{4}\)/g, '(~DATE)')
+    // ⭐ P168 B3-11：burn-rate 的 run-out 日期也要归一化
+    //   —— codegen 用 REFERENCE_DATE（2026-07-15）固化 ⇒ 产物里是「Feb 2027」，
+    //      实时跑用当天日期 ⇒ 「Jun 2027」⇒ 必然差一个月份 ⇒ 不是「英文页被改了」，是「时间在走」。
+    .replace(/(Est\. Cash Run-out:[ ]*)[A-Z][a-z]{2} \d{4}/g, '$1DATE');
 }
 
 /**

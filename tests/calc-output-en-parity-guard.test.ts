@@ -65,7 +65,7 @@ test('P168 B3-7 G9 检测器自检：未记录的差异必须被抓出来', () =
   }
 });
 
-test('P168 B3-7 G9 基线自检：基线必须钉在 token 化之前（不得用 HEAD）', () => {
+test('P168 B3-7 G9 基线自检：基线必须是固定 SHA（不得用 HEAD）且渲染后是纯英文', () => {
   // ⚠️ 2026-11-13 实测：基线若用 HEAD ⇒ 本批一提交，HEAD 就是「已 token 化」的版本
   //   ⇒ 基线里全是 token 原文 ⇒ 与「渲染后的英文」必然不等 ⇒ **G9 提交后必红**（CI 必红）。
   //   ⇒ 基线必须是**固定 SHA**，且必须能自证「它是 token 化之前的版本」。
@@ -77,7 +77,7 @@ test('P168 B3-7 G9 基线自检：基线必须钉在 token 化之前（不得用
     assert.notEqual(sha, 'HEAD', slug + '：基线不得用 HEAD（一提交就失去意义）');
     const head = baselineStaticExample(PILOT_FILES[slug], sha);
     assert.ok(head !== null, slug + '：基线 ' + sha + ' 取不到（浅克隆？）');
-    assert.ok(!head.includes('$calc_out.'), slug + '：基线里出现了 token ⇒ 基线不是 token 化之前的版本');
+    assert.ok(!head.includes('$calc_out.'), slug + '：基线渲染后仍残留 token ⇒ 基线不是可渲染的英文基线');
   }
 });
 

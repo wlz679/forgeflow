@@ -1,0 +1,91 @@
+{
+  "solopreneur-openai-token-calculator": {
+    "models": "gpt-5,gpt-5-mini,gpt-4o",
+    "inputTokens": "1000",
+    "outputTokens": "500",
+    "requestsPerDay": "100",
+    "pricingMode": "realtime",
+    "cacheHitRate": "0",
+    "growthRate": "0"
+  },
+  "solopreneur-claude-api-cost-calculator": {
+    "models": "claude-sonnet-4-6,claude-haiku-4-5,claude-fable-5",
+    "inputTokens": "1000",
+    "outputTokens": "500",
+    "requestsPerDay": "100",
+    "pricingMode": "realtime",
+    "cacheHitRate": "0",
+    "growthRate": "0"
+  },
+  "solopreneur-gemini-api-cost-calculator": {
+    "models": "gemini-3.5-flash,gemini-3.1-pro",
+    "inputTokens": "1000",
+    "outputTokens": "500",
+    "requestsPerDay": "100",
+    "pricingMode": "realtime",
+    "cacheHitRate": "0",
+    "growthRate": "0"
+  },
+  "solopreneur-deepseek-api-cost-calculator": {
+    "models": "deepseek-v4-flash,deepseek-v4-pro-promo",
+    "inputTokens": "1000",
+    "outputTokens": "500",
+    "requestsPerDay": "100",
+    "pricingMode": "realtime",
+    "cacheHitRate": "0",
+    "growthRate": "0"
+  },
+  "solopreneur-ai-api-cost-comparison": {
+    "models": "gpt-5-mini,claude-sonnet-4-6,gemini-3.5-flash,deepseek-v4-flash",
+    "inputTokens": "1000",
+    "outputTokens": "500",
+    "requestsPerDay": "100"
+  },
+  "solopreneur-ltv-calculator": {
+    "monthlyRevenuePerUser": "100",
+    "grossMargin": "70",
+    "monthlyChurn": "5",
+    "customerAcquisitionCost": "300"
+  },
+  "solopreneur-cac-calculator": {
+    "marketingSpend": "5000",
+    "salesSpend": "3000",
+    "newCustomers": "100"
+  },
+  "solopreneur-burn-rate-calculator": {
+    "currentCash": "500000",
+    "monthlyRevenue": "20000",
+    "monthlyExpenses": "60000"
+  },
+  "solopreneur-break-even-calculator": {
+    "fixedCosts": "10000",
+    "pricePerUnit": "50",
+    "variableCostPerUnit": "20"
+  },
+  "solopreneur-market-size-estimator": {
+    "totalPopulation": "10000000",
+    "targetPercentage": "10",
+    "penetrationRate": "5",
+    "avgRevenuePerCustomer": "100"
+  },
+  "solopreneur-mrr-calculator": {
+    "subscriberCount": "500",
+    "monthlyPrice": "29",
+    "monthlyChurnRate": "3",
+    "expansionMRR": "800",
+    "newSubsPerMonth": "100",
+    "contractionMRR": "150",
+    "reactivationMRR": "100"
+  },
+  "solopreneur-revenue-projector": {
+    "currentMRR": "5000",
+    "monthlyGrowthRate": "8",
+    "monthlyChurnRate": "3",
+    "monthlyExpenses": "3000",
+    "cashOnHand": "60000",
+    "arpu": "25",
+    "customGrowthRate": "0",
+    "cac": "200",
+    "months": "12"
+  }
+}
