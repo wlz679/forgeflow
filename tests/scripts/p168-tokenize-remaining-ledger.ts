@@ -32,7 +32,7 @@
 // 用法（必须从仓库根跑）：
 //   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-tokenize-remaining-ledger.ts           # 摘要 + 逐引擎降序表
 //   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-tokenize-remaining-ledger.ts --json    # 机器可读
-//   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-tokenize-remaining-ledger.ts --emit    # 打印台账源码块（贴回 ZH_EN_DEBT）
+//   node node_modules/tsx/dist/cli.mjs tests/scripts/p168-tokenize-remaining-ledger.ts --emit    # 台账源码块（**独立模式**：stdout 只有这块，可重定向后原样贴回 ZH_EN_DEBT）
 //
 // ⚠️ 本文件**不是** test（文件名不带 .test.ts）⇒ 不进 walkTestSuites 的套件计数。
 
@@ -177,7 +177,13 @@ if (isCli()) {
   const ledgerSet = new Set(Object.keys(ZH_EN_DEBT));
   const diff = [...measuredSet].filter((s) => !ledgerSet.has(s)).length
     + [...ledgerSet].filter((s) => !measuredSet.has(s)).length;
-  if (json) {
+  // ⭐ --emit 是**独立模式**：stdout **只有**台账源码块（不含表格/汇总行）
+  //   ⇒ 重定向到文件即可**原样**贴回 ZH_EN_DEBT（不夹带别的行 ⇒ 贴回不产生垃圾）。
+  if (emit) {
+    for (const r of [...debt].sort((a, b) => bySlug(a.slug, b.slug))) {
+      console.log("  '" + r.slug + "': " + r.zhEn + ',');
+    }
+  } else if (json) {
     console.log(JSON.stringify({
       root: MEASURED_ROOT,
       scanned: rows.length,
@@ -195,13 +201,6 @@ if (isCli()) {
     console.log('台账：' + ledgerEntries + ' 条 / 上限 ' + DEBT_MAX + ' · 登记 ' + ledgerRows + ' 行 · 与实测'
       + (diff === 0 ? '一致 ✓' : '不一致 ✗（差 ' + diff + ' 条）'));
     console.log('—— ' + debt.length + ' 个引擎 · zh 整行英文合计 ' + debtRows + ' 行');
-  }
-  if (emit) {
-    console.log('');
-    console.log('// ── 台账（贴回上面的 ZH_EN_DEBT）──');
-    for (const r of [...debt].sort((a, b) => bySlug(a.slug, b.slug))) {
-      console.log("  '" + r.slug + "': " + r.zhEn + ',');
-    }
   }
   process.exitCode = 0;
 }

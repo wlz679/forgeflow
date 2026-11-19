@@ -85,7 +85,9 @@ test('P168 B3-13 T1：实测有欠账的引擎集合 ≡ 台账 ZH_EN_DEBT（双
       + '⇒ 本次比较无意义（先补构建：pnpm build:full）',
   );
   const measured = new Set(debtRows(rows).map((r) => r.slug));
-  const newly = [...measured].filter((s) => !(s in ZH_EN_DEBT)).sort();
+  // ⚠️ 用 Object.hasOwn 而不是 `in` —— `in` 会走原型链（'toString' in ZH_EN_DEBT === true）
+  //   ⇒ 一个与 Object.prototype 撞名的 slug 会被误判成「在台账里」。
+  const newly = [...measured].filter((s) => !Object.hasOwn(ZH_EN_DEBT, s)).sort();
   const fixed = Object.keys(ZH_EN_DEBT).filter((s) => !measured.has(s)).sort();
   assert.deepEqual(
     newly,
