@@ -91,6 +91,22 @@ export function extractAll(only: string[]) {
   for (const e of use) {
     const meta = bySlug.get(e.slug)!;
     const srcTpl = sourceTemplates(resolve(ROOT, meta.file));
+    // ⭐⭐ 2026-11-19 B3-13 组 2（实测修）：探针/手工模板**按引擎 alias 归位**
+    //   ⇒ 为什么必须修（实测踩坑）：probeTpl 是**全局**的（探针一次跑完 55 个引擎）
+    //     ⇒ 此前它被塞进**每个**引擎的 codes 集合 ⇒ ① 引擎 A 的 code 会被引擎 B 的循环
+    //       用「探针模板」**覆盖**（newKeys[c] = tpl 是全局 map，后写者胜）
+    //       ② 文档写的优先级「源码推导 > 运行时 > 探针 > 手工」**实际没生效**
+    //   ⇒ 探针模板是「取值换回占位符」推出来的 ⇒ 有两个已知缺陷：
+    //     · **数值被冻结**：取值后面跟 '.'（句号）⇒ 边界规则不让替换
+    //       （实测：calc_out.compound_interest.row.tip_from_zero 的 $260,463 被冻住）
+    //     · **占位符被吞**：两个 param 的取值恰好相同 ⇒ 归属歧义
+    //       （实测：calc_out.unit_economics.row.lever_reduce_cac 的 {to} 被吞成 {from}）
+    //   ⇒ 这两个 code 的**源码推导（结构化）本来就是对的** ⇒ 只要别让探针覆盖它就行。
+    //   ⇒ 归位约定与探针自己的 perEngine 统计一致（code 含 '.' + alias + '.'）。
+    const probeForEngine: Record<string, string> = {};
+    for (const c of Object.keys(probeTpl)) if (c.includes('.' + meta.alias + '.')) probeForEngine[c] = probeTpl[c];
+    const manualForEngine: Record<string, string> = {};
+    for (const c of Object.keys(MANUAL_BRANCH_TEMPLATES)) if (c.includes('.' + meta.alias + '.')) manualForEngine[c] = MANUAL_BRANCH_TEMPLATES[c];
     const runtime: Record<string, string> = {};
     const texts: string[] = [];
     const inputs = defs[e.slug];
@@ -108,12 +124,12 @@ export function extractAll(only: string[]) {
     }
     let newCount = 0;
     let conflict = 0;
-    const codes = new Set([...Object.keys(srcTpl), ...Object.keys(runtime), ...Object.keys(probeTpl), ...Object.keys(MANUAL_BRANCH_TEMPLATES)]);
+    const codes = new Set([...Object.keys(srcTpl), ...Object.keys(runtime), ...Object.keys(probeForEngine), ...Object.keys(manualForEngine)]);
     for (const c of codes) {
       const s = srcTpl[c];
       const r = runtime[c];
-      const p = probeTpl[c];
-      const m = MANUAL_BRANCH_TEMPLATES[c];
+      const p = probeForEngine[c];
+      const m = manualForEngine[c];
       if (s !== undefined && r !== undefined && s !== r) { conflict++; conflicts.push(e.slug + ' :: ' + c + '\n    src=' + JSON.stringify(s) + '\n    run=' + JSON.stringify(r)); }
       // ⭐ 优先级：源码推导 > 默认运行时的实测 > 分支探针 > 手工补（死分支）
       //   ⭐ 源码优先的理由：源码推导是**结构化**的（按参数表达式回填），

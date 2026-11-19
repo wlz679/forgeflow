@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateProductivity(inputs: Record<string, string>): string[] {
   const deepWork = clampNonNegative(parseInt(inputs.weeklyDeepWorkHours) || 0);
@@ -35,44 +38,74 @@ function calculateProductivity(inputs: Record<string, string>): string[] {
 
   const fmt = (n: number) => n.toString();
 
-  let main = '📈 Productivity Score: ' + score + '/100\n\n';
+  let main = makeToken('calc_out.productivity_score.row.title', '📈 Productivity Score: ' + score + '/100', { score: String(score) }) + '\n\n';
 
   // 💰 Snapshot
   main += '💰 Score Snapshot:\n' + SEP + '\n';
-  main += '• Total Score:          ' + score + '/100\n';
-  main += '• Weekly Deep Work:    ' + deepWork + ' hours\n';
-  main += '• Tools in Stack:      ' + tools + ' tools\n';
-  main += '• Weekly Meetings:     ' + meetings + ' meetings\n';
-  main += '• Total Work Hours:    ' + (deepWork + meetings + 5) + ' hrs/wk  (deep work + meetings + admin)\n\n';
+  main += makeToken('calc_out.productivity_score.row.total_score', '• Total Score:          ' + score + '/100', { score: String(score) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.weekly_deep_work', '• Weekly Deep Work:    ' + deepWork + ' hours', { hours: String(deepWork) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.tools_in_stack', '• Tools in Stack:      ' + tools + ' tools', { count: String(tools) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.weekly_meetings', '• Weekly Meetings:     ' + meetings + ' meetings', { count: String(meetings) }) + '\n';
+  // ⭐ 局部变量承接（2026-11-19 B3-13 组 2 实测修）：兜底里的表达式与 params 里的表达式
+  //   必须是**同一份源码文本** ⇒ 否则源码模板推导会把 'deepWork + meetings + 5' 拆成
+  //   两个 {hours} ⇒ 模板污染（{hours}{hours}5）⇒ 与运行时反推不一致 ⇒ 报 conflict。
+  const totalWorkHours = deepWork + meetings + 5;
+  main += makeToken('calc_out.productivity_score.row.total_work_hours', '• Total Work Hours:    ' + totalWorkHours + ' hrs/wk  (deep work + meetings + admin)', { hours: String(totalWorkHours) }) + '\n\n';
 
   // 📐 Key Metrics
   main += '📐 Key Metrics:\n' + SEP + '\n';
   const deepWorkPct = Math.min(100, Math.round((deepWork / 40) * 100));
   const meetingsVsDeep = deepWork > 0 ? (meetings / deepWork * 100).toFixed(0) : '∞';
-  main += '• Deep Work % of week:     ' + deepWorkPct + '%  (target: 40%+)\n';
-  main += '• Meetings-to-Deep Ratio:  ' + meetingsVsDeep + '%  (lower is better)\n';
-  main += '• Tool Efficiency Score:   ' + (tools >= 3 && tools <= 5 ? '🟢 Optimal (3–5)' : tools < 3 ? '🟠 Under-tooled' : '🟠 Over-tooled') + '\n';
-  main += '• Productivity Tier:       ' + (score >= 85 ? 'A — Elite' : score >= 70 ? 'B — Solid' : score >= 50 ? 'C — Growing' : score >= 30 ? 'D — Needs Work' : 'F — Urgent') + '\n\n';
+  main += makeToken('calc_out.productivity_score.row.deep_work_pct', '• Deep Work % of week:     ' + deepWorkPct + '%  (target: 40%+)', { pct: String(deepWorkPct) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.meetings_to_deep_ratio', '• Meetings-to-Deep Ratio:  ' + meetingsVsDeep + '%  (lower is better)', { ratio: meetingsVsDeep }) + '\n';
+  main += (tools >= 3 && tools <= 5
+    ? makeToken('calc_out.productivity_score.row.tool_efficiency_optimal', '• Tool Efficiency Score:   🟢 Optimal (3–5)')
+    : tools < 3
+      ? makeToken('calc_out.productivity_score.row.tool_efficiency_under', '• Tool Efficiency Score:   🟠 Under-tooled')
+      : makeToken('calc_out.productivity_score.row.tool_efficiency_over', '• Tool Efficiency Score:   🟠 Over-tooled')) + '\n';
+  // ⚠️ 「D — Needs Work」/「F — Urgent」两档**永远到不了**（score 只增不减 ⇒ 恒 ≥ 50）
+  //   ⇒ 不给它们造 locale 码（否则 G2 缺键），保留成普通英文字符串。
+  main += (score >= 85
+    ? makeToken('calc_out.productivity_score.row.tier_elite', '• Productivity Tier:       A — Elite')
+    : score >= 70
+      ? makeToken('calc_out.productivity_score.row.tier_solid', '• Productivity Tier:       B — Solid')
+      : score >= 50
+        ? makeToken('calc_out.productivity_score.row.tier_growing', '• Productivity Tier:       C — Growing')
+        : score >= 30
+          ? '• Productivity Tier:       D — Needs Work'
+          : '• Productivity Tier:       F — Urgent') + '\n\n';
 
   // 🩺 Health
   main += '🩺 Productivity Health:\n' + SEP + '\n';
-  if (score >= 90) main += '• 🟢 Score ' + score + '/100 — peak performer. Protect what is working.\n';
-  else if (score >= 75) main += '• 🟢 Score ' + score + '/100 — strong systems. Keep iterating.\n';
-  else if (score >= 60) main += '• 🟡 Score ' + score + '/100 — solid baseline. Room to grow in the weakest area.\n';
-  else if (score >= 45) main += '• 🟠 Score ' + score + '/100 — below average. Focus on the #1 lever below.\n';
-  else main += '• 🔴 Score ' + score + '/100 — struggling. Fundamental changes needed.\n';
+  // ⚠️ 「struggling」档（score < 45）**永远到不了**（score 恒 ≥ 50）⇒ 保留普通英文字符串。
+  main += (score >= 90
+    ? makeToken('calc_out.productivity_score.row.health_peak', '• 🟢 Score ' + score + '/100 — peak performer. Protect what is working.', { score: String(score) })
+    : score >= 75
+      ? makeToken('calc_out.productivity_score.row.health_strong', '• 🟢 Score ' + score + '/100 — strong systems. Keep iterating.', { score: String(score) })
+      : score >= 60
+        ? makeToken('calc_out.productivity_score.row.health_solid', '• 🟡 Score ' + score + '/100 — solid baseline. Room to grow in the weakest area.', { score: String(score) })
+        : score >= 45
+          ? makeToken('calc_out.productivity_score.row.health_below_avg', '• 🟠 Score ' + score + '/100 — below average. Focus on the #1 lever below.', { score: String(score) })
+          : '• 🔴 Score ' + score + '/100 — struggling. Fundamental changes needed.') + '\n';
 
-  if (deepWork >= 20) main += '• 🟢 Deep work hours in top quartile (20+ hrs/wk).\n';
-  else if (deepWork >= 10) main += '• 🟡 Deep work hours OK but not exceptional. Push for 20+.\n';
-  else main += '• 🔴 Deep work is too low — biggest improvement area. Aim for 15–20 hrs/wk.\n';
+  main += (deepWork >= 20
+    ? makeToken('calc_out.productivity_score.row.deep_work_top', '• 🟢 Deep work hours in top quartile (20+ hrs/wk).')
+    : deepWork >= 10
+      ? makeToken('calc_out.productivity_score.row.deep_work_ok', '• 🟡 Deep work hours OK but not exceptional. Push for 20+.')
+      : makeToken('calc_out.productivity_score.row.deep_work_low', '• 🔴 Deep work is too low — biggest improvement area. Aim for 15–20 hrs/wk.')) + '\n';
 
-  if (meetings <= 2) main += '• 🟢 Meeting load is light. Your maker time is protected.\n';
-  else if (meetings <= 5) main += '• 🟡 Meeting load is moderate. Batch them to one day if possible.\n';
-  else main += '• 🔴 Meeting load is heavy. Cut 50% and replace with async updates.\n';
+  main += (meetings <= 2
+    ? makeToken('calc_out.productivity_score.row.meeting_light', '• 🟢 Meeting load is light. Your maker time is protected.')
+    : meetings <= 5
+      ? makeToken('calc_out.productivity_score.row.meeting_moderate', '• 🟡 Meeting load is moderate. Batch them to one day if possible.')
+      : makeToken('calc_out.productivity_score.row.meeting_heavy', '• 🔴 Meeting load is heavy. Cut 50% and replace with async updates.')) + '\n';
 
-  if (tools >= 3 && tools <= 5) main += '• 🟢 Tool stack is optimal. You have what you need, no bloat.\n';
-  else if (tools < 3) main += '• 🟡 Tool stack is light. Consider adding 1–2 automation tools.\n';
-  else main += '• 🟠 Tool stack has bloat. Audit and cut what you haven\'t used in 2 weeks.\n\n';
+  // ⚠️ 各分支的行尾换行符必须与基线逐字一致（基线：optimal/light 各为 '\n'，bloat 为 '\n\n'）。
+  main += (tools >= 3 && tools <= 5
+    ? makeToken('calc_out.productivity_score.row.tool_optimal', '• 🟢 Tool stack is optimal. You have what you need, no bloat.') + '\n'
+    : tools < 3
+      ? makeToken('calc_out.productivity_score.row.tool_light', '• 🟡 Tool stack is light. Consider adding 1–2 automation tools.') + '\n'
+      : makeToken('calc_out.productivity_score.row.tool_bloat', '• 🟠 Tool stack has bloat. Audit and cut what you haven\'t used in 2 weeks.') + '\n\n');
 
   // 🎯 Improvement Projection
   main += '🎯 Improvement Projection:\n' + SEP + '\n';
@@ -80,45 +113,50 @@ function calculateProductivity(inputs: Record<string, string>): string[] {
   const cutMtg = meetings > 5 ? 20 : meetings > 2 ? 10 : 0;
   const trimTools = tools > 5 ? 10 : tools < 3 ? 7 : 0;
   const projection30 = Math.min(100, score + add5DW + cutMtg + trimTools);
-  main += '• Current score:                ' + score + '/100\n';
-  main += '• +5 deep work hrs/wk:          +' + add5DW + ' pts → ' + Math.min(100, score + add5DW) + '/100\n';
-  main += '• Cut meetings to 2/wk:         +' + cutMtg + ' pts → ' + Math.min(100, score + cutMtg) + '/100\n';
-  main += '• Trim tools to 3–5:            +' + trimTools + ' pts → ' + Math.min(100, score + trimTools) + '/100\n';
-  main += '• All three in 30 days:         ' + projection30 + '/100\n';
-  if (score >= 85) main += '• Target: maintain score and protect deep work time.\n';
-  else if (projection30 >= 85) main += '• Target: 85+ achievable within 30 days with focused effort.\n';
-  else main += '• Target: +20 pts in 30 days. Focus on the lowest sub-score first.\n\n';
+  main += makeToken('calc_out.productivity_score.row.current_score', '• Current score:                ' + score + '/100', { score: String(score) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.projection_add_5dw', '• +5 deep work hrs/wk:          +' + add5DW + ' pts → ' + Math.min(100, score + add5DW) + '/100', { add: String(add5DW), after: Math.min(100, score + add5DW) + '/100' }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.projection_cut_mtg', '• Cut meetings to 2/wk:         +' + cutMtg + ' pts → ' + Math.min(100, score + cutMtg) + '/100', { add: String(cutMtg), after: Math.min(100, score + cutMtg) + '/100' }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.projection_trim_tools', '• Trim tools to 3–5:            +' + trimTools + ' pts → ' + Math.min(100, score + trimTools) + '/100', { add: String(trimTools), after: Math.min(100, score + trimTools) + '/100' }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.projection_all_three', '• All three in 30 days:         ' + projection30 + '/100', { score: projection30 + '/100' }) + '\n';
+  // ⚠️ 各分支的行尾换行符必须与基线逐字一致（基线：maintain/85 各为 '\n'，target_20 为 '\n\n'）。
+  main += (score >= 85
+    ? makeToken('calc_out.productivity_score.row.target_maintain', '• Target: maintain score and protect deep work time.') + '\n'
+    : projection30 >= 85
+      ? makeToken('calc_out.productivity_score.row.target_85', '• Target: 85+ achievable within 30 days with focused effort.') + '\n'
+      : makeToken('calc_out.productivity_score.row.target_20', '• Target: +20 pts in 30 days. Focus on the lowest sub-score first.') + '\n\n');
 
   // ⚖️ Break-even
   main += '⚖️ Deep Work vs Shallow Work Break-Even:\n' + SEP + '\n';
   const totalHours = 40;
   const shallowHours = totalHours - deepWork - meetings;
   if (deepWork >= 15 && meetings <= 3) {
-    main += '• 🟢 Your mix is healthy: ' + deepWork + 'h deep + ' + meetings + 'h meetings + ' + shallowHours + 'h admin.\n';
+    main += makeToken('calc_out.productivity_score.row.mix_healthy', '• 🟢 Your mix is healthy: ' + deepWork + 'h deep + ' + meetings + 'h meetings + ' + shallowHours + 'h admin.', { deep: String(deepWork), meetings: String(meetings), admin: String(shallowHours) }) + '\n';
   } else if (deepWork < 10 && meetings > 5) {
-    main += '• 🔴 Your mix is inverted: only ' + deepWork + 'h deep but ' + meetings + 'h meetings. The 4:1 meeting:deep ratio is costing you output.\n';
+    main += makeToken('calc_out.productivity_score.row.mix_inverted', '• 🔴 Your mix is inverted: only ' + deepWork + 'h deep but ' + meetings + 'h meetings. The 4:1 meeting:deep ratio is costing you output.', { deep: String(deepWork), meetings: String(meetings) }) + '\n';
   } else if (deepWork < meetings) {
-    main += '• 🟠 You spend more time in meetings than in deep work. Flip this ratio.\n';
+    main += makeToken('calc_out.productivity_score.row.mix_more_meetings', '• 🟠 You spend more time in meetings than in deep work. Flip this ratio.') + '\n';
   } else {
-    main += '• 🟡 Your mix is workable but improvable. Aim for 2x deep work vs meetings.\n';
+    main += makeToken('calc_out.productivity_score.row.mix_workable', '• 🟡 Your mix is workable but improvable. Aim for 2x deep work vs meetings.') + '\n';
   }
-  main += '• Break-even: at 15+ hrs/wk deep work, you compound skills. Below 10, you are treading water.\n';
-  main += '• Cal Newport\'s research: 4 hours/day of deep work = full-time knowledge worker output.\n\n';
+  main += makeToken('calc_out.productivity_score.row.break_even_threshold', '• Break-even: at 15+ hrs/wk deep work, you compound skills. Below 10, you are treading water.') + '\n';
+  main += makeToken('calc_out.productivity_score.row.cal_newport', '• Cal Newport\'s research: 4 hours/day of deep work = full-time knowledge worker output.') + '\n\n';
 
   // 🔄 What-If Scenarios
   main += '🔄 What-If Scenarios:\n' + SEP + '\n';
-  main += '• Add 5 deep work hrs/wk:           +' + add5DW + ' pts (max +25 from deep work alone)\n';
-  main += '• Cut meetings to 2/wk:             +' + cutMtg + ' pts (full +20 if currently >5)\n';
-  main += '• Trim tool stack to 3–5 core tools: +' + trimTools + ' pts (full +10 if currently >5)\n';
-  main += '• Block all meetings to Thursdays:  no score change but recovers 4+ hrs/wk for deep work\n';
-  main += '• Quit one recurring meeting:       +5 to +10 pts and reclaims 1–2 hrs/wk\n\n';
+  main += makeToken('calc_out.productivity_score.row.whatif_add_5dw', '• Add 5 deep work hrs/wk:           +' + add5DW + ' pts (max +25 from deep work alone)', { add: String(add5DW) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.whatif_cut_mtg', '• Cut meetings to 2/wk:             +' + cutMtg + ' pts (full +20 if currently >5)', { add: String(cutMtg) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.whatif_trim_tools', '• Trim tool stack to 3–5 core tools: +' + trimTools + ' pts (full +10 if currently >5)', { add: String(trimTools) }) + '\n';
+  main += makeToken('calc_out.productivity_score.row.whatif_block_thursdays', '• Block all meetings to Thursdays:  no score change but recovers 4+ hrs/wk for deep work') + '\n';
+  main += makeToken('calc_out.productivity_score.row.whatif_quit_meeting', '• Quit one recurring meeting:       +5 to +10 pts and reclaims 1–2 hrs/wk') + '\n\n';
 
-  // 💡 Tip
-  const topLever = deepWork < 10 ? 'Increase deep work hours. Block 2–3 hour morning sessions with zero distractions. Phone in another room, email closed, no Slack.' :
-    meetings > 5 ? 'Cut meetings by 50%. Replace them with Loom videos or written updates. The async tax is real but smaller than the meeting tax.' :
-    tools > 5 ? 'Audit and reduce your tool stack. Fewer tools = less context switching. Cut any subscription you haven\'t used in the last 2 weeks.' :
-    'You are on track. Protect your current systems. The next 5 points come from going deeper, not wider.';
-  main += '💡 Top Lever: ' + topLever + '\n';
+  // 💡 Top Lever
+  main += (deepWork < 10
+    ? makeToken('calc_out.productivity_score.row.top_lever_deep_work', '💡 Top Lever: Increase deep work hours. Block 2–3 hour morning sessions with zero distractions. Phone in another room, email closed, no Slack.')
+    : meetings > 5
+      ? makeToken('calc_out.productivity_score.row.top_lever_meetings', '💡 Top Lever: Cut meetings by 50%. Replace them with Loom videos or written updates. The async tax is real but smaller than the meeting tax.')
+      : tools > 5
+        ? makeToken('calc_out.productivity_score.row.top_lever_tools', '💡 Top Lever: Audit and reduce your tool stack. Fewer tools = less context switching. Cut any subscription you haven\'t used in the last 2 weeks.')
+        : makeToken('calc_out.productivity_score.row.top_lever_track', '💡 Top Lever: You are on track. Protect your current systems. The next 5 points come from going deeper, not wider.')) + '\n';
 
   const results: string[] = [main];
 
@@ -136,79 +174,85 @@ function calculateProductivity(inputs: Record<string, string>): string[] {
     if (s.t >= 3 && s.t <= 5) sScore += 15; else if (s.t >= 1 && s.t <= 2) sScore += 8; else if (s.t >= 6 && s.t <= 8) sScore += 5;
     if (s.m <= 2) sScore += 20; else if (s.m <= 5) sScore += 10;
     sScore = Math.max(10, Math.min(100, sScore));
-    results.push(s.label + ': ' + sScore + '/100 — Deep Work ' + s.dw + 'h | Tools ' + s.t + ' | Meetings ' + s.m + '/wk');
+    // ⭐ 局部变量承接（2026-11-19 B3-13 组 2 实测修）：'s.t' / 's.m' 直接写进兜底 ⇒
+  //   源码模板推导会把 's' / 't' 当成两个标识符分别替换 ⇒ 模板污染（{count}.{count}）
+  //   ⇒ 必须是**标识符**（与 unit_economics 的 costCut 同一处理）。
+    const toolCount = s.t;
+    const meetingCount = s.m;
+    results.push(
+      // ⭐ 参数边界：'deep' 必须带上单位 'h'，'score' 必须只带数值 ⇒
+      //   否则运行时反推会把 '40'（后面紧跟字母 h）/'100'（后面紧跟 /100）判为「不匹配」
+      //   ⇒ 模板里的数值被**冻结**（源码推导 vs 运行时反推不一致 ⇒ 报 conflict）。
+      makeToken('calc_out.productivity_score.row.archetype_head', s.label + ': ' + (sScore + '/100') + ' — Deep Work ' + (s.dw + 'h'), { label: s.label, score: sScore + '/100', deep: s.dw + 'h' }) +
+      ' | ' +
+      makeToken('calc_out.productivity_score.row.archetype_tools', 'Tools ' + toolCount, { count: String(toolCount) }) +
+      ' | ' +
+      makeToken('calc_out.productivity_score.row.archetype_meetings', 'Meetings ' + meetingCount + '/wk', { count: String(meetingCount) }),
+    );
   }
 
   return results;
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let c=function(a){return Number.isNaN(a)?0:Math.max(0,a)},k=function(a){const t=c(parseInt(a.weeklyDeepWorkHours)||0),s=c(parseInt(a.toolsUsed)||0),n=c(parseInt(a.meetingsPerWeek)||0),u="━".repeat(41);let o=50;const h=[],l=[];t>=30?(o+=25,h.push("Elite deep work hours — you are in the top 5% of solopreneurs.")):t>=20?(o+=20,h.push("Strong deep work routine. This is the sweet spot for sustained productivity.")):t>=10?(o+=10,l.push("Aim for 15–20 hours of deep work per week. Block 3–4 hour morning sessions.")):t>=5?(o+=5,l.push("Deep work is your highest-leverage activity. Try scheduling 2-hour blocks each morning before checking email.")):l.push("Critical: You need dedicated deep work time. Start with 2-hour blocks, 3x per week. No phone, no email, no Slack."),s>=3&&s<=5?(o+=15,h.push("Perfect tool stack size. Enough to automate, not so many that you drown in subscriptions.")):s>=1&&s<=2?(o+=8,l.push("Consider adding 1–2 tools for automation (Zapier, Make) and project management (Notion, Linear).")):s>=6&&s<=8?(o+=5,l.push("You might have too many tools. Audit your subscriptions — cut any you haven't used in 2 weeks.")):s>8?l.push("Tool overload! You likely have redundant tools. Cancel half and watch your focus improve. Tool-switching is a hidden productivity killer."):l.push("Using zero tools? At minimum, get a to-do app and a calendar. They are force multipliers."),n<=2?(o+=20,h.push("Minimal meetings — you protect your maker time. This is the solopreneur advantage.")):n<=5?(o+=10,l.push("Try to batch all meetings on one day (e.g., Thursday). This keeps the rest of the week meeting-free.")):n<=10?(o+=0,l.push("That is a lot of meetings for a solopreneur. Ask: can this be an email? Can it be async (Loom)? Cut 50%.")):l.push("Too many meetings. You are running a company, not attending one. Replace recurring meetings with async updates. Your deep work is suffering."),o=Math.max(10,Math.min(100,o));const D=i=>i.toString();let e="📈 Productivity Score: "+o+\`/100
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let h=function(a){return Number.isNaN(a)?0:Math.max(0,a)},y=function(a){const r=h(parseInt(a.weeklyDeepWorkHours)||0),s=h(parseInt(a.toolsUsed)||0),i=h(parseInt(a.meetingsPerWeek)||0),_="━".repeat(41);let o=50;const w=[],l=[];r>=30?(o+=25,w.push("Elite deep work hours — you are in the top 5% of solopreneurs.")):r>=20?(o+=20,w.push("Strong deep work routine. This is the sweet spot for sustained productivity.")):r>=10?(o+=10,l.push("Aim for 15–20 hours of deep work per week. Block 3–4 hour morning sessions.")):r>=5?(o+=5,l.push("Deep work is your highest-leverage activity. Try scheduling 2-hour blocks each morning before checking email.")):l.push("Critical: You need dedicated deep work time. Start with 2-hour blocks, 3x per week. No phone, no email, no Slack."),s>=3&&s<=5?(o+=15,w.push("Perfect tool stack size. Enough to automate, not so many that you drown in subscriptions.")):s>=1&&s<=2?(o+=8,l.push("Consider adding 1–2 tools for automation (Zapier, Make) and project management (Notion, Linear).")):s>=6&&s<=8?(o+=5,l.push("You might have too many tools. Audit your subscriptions — cut any you haven't used in 2 weeks.")):s>8?l.push("Tool overload! You likely have redundant tools. Cancel half and watch your focus improve. Tool-switching is a hidden productivity killer."):l.push("Using zero tools? At minimum, get a to-do app and a calendar. They are force multipliers."),i<=2?(o+=20,w.push("Minimal meetings — you protect your maker time. This is the solopreneur advantage.")):i<=5?(o+=10,l.push("Try to batch all meetings on one day (e.g., Thursday). This keeps the rest of the week meeting-free.")):i<=10?(o+=0,l.push("That is a lot of meetings for a solopreneur. Ask: can this be an email? Can it be async (Loom)? Cut 50%.")):l.push("Too many meetings. You are running a company, not attending one. Replace recurring meetings with async updates. Your deep work is suffering."),o=Math.max(10,Math.min(100,o));const Y=c=>c.toString();let e=t("calc_out.productivity_score.row.title","📈 Productivity Score: "+o+"/100",{score:String(o)})+\`
 
 \`;e+=\`💰 Score Snapshot:
-\`+u+\`
-\`,e+="• Total Score:          "+o+\`/100
-\`,e+="• Weekly Deep Work:    "+t+\` hours
-\`,e+="• Tools in Stack:      "+s+\` tools
-\`,e+="• Weekly Meetings:     "+n+\` meetings
-\`,e+="• Total Work Hours:    "+(t+n+5)+\` hrs/wk  (deep work + meetings + admin)
+\`+_+\`
+\`,e+=t("calc_out.productivity_score.row.total_score","• Total Score:          "+o+"/100",{score:String(o)})+\`
+\`,e+=t("calc_out.productivity_score.row.weekly_deep_work","• Weekly Deep Work:    "+r+" hours",{hours:String(r)})+\`
+\`,e+=t("calc_out.productivity_score.row.tools_in_stack","• Tools in Stack:      "+s+" tools",{count:String(s)})+\`
+\`,e+=t("calc_out.productivity_score.row.weekly_meetings","• Weekly Meetings:     "+i+" meetings",{count:String(i)})+\`
+\`;const f=r+i+5;e+=t("calc_out.productivity_score.row.total_work_hours","• Total Work Hours:    "+f+" hrs/wk  (deep work + meetings + admin)",{hours:String(f)})+\`
 
 \`,e+=\`📐 Key Metrics:
-\`+u+\`
-\`;const v=Math.min(100,Math.round(t/40*100)),b=t>0?(n/t*100).toFixed(0):"∞";e+="• Deep Work % of week:     "+v+\`%  (target: 40%+)
-\`,e+="• Meetings-to-Deep Ratio:  "+b+\`%  (lower is better)
-\`,e+="• Tool Efficiency Score:   "+(s>=3&&s<=5?"🟢 Optimal (3–5)":s<3?"🟠 Under-tooled":"🟠 Over-tooled")+\`
-\`,e+="• Productivity Tier:       "+(o>=85?"A — Elite":o>=70?"B — Solid":o>=50?"C — Growing":o>=30?"D — Needs Work":"F — Urgent")+\`
+\`+_+\`
+\`;const m=Math.min(100,Math.round(r/40*100)),S=r>0?(i/r*100).toFixed(0):"∞";e+=t("calc_out.productivity_score.row.deep_work_pct","• Deep Work % of week:     "+m+"%  (target: 40%+)",{pct:String(m)})+\`
+\`,e+=t("calc_out.productivity_score.row.meetings_to_deep_ratio","• Meetings-to-Deep Ratio:  "+S+"%  (lower is better)",{ratio:S})+\`
+\`,e+=(s>=3&&s<=5?t("calc_out.productivity_score.row.tool_efficiency_optimal","• Tool Efficiency Score:   🟢 Optimal (3–5)"):s<3?t("calc_out.productivity_score.row.tool_efficiency_under","• Tool Efficiency Score:   🟠 Under-tooled"):t("calc_out.productivity_score.row.tool_efficiency_over","• Tool Efficiency Score:   🟠 Over-tooled"))+\`
+\`,e+=(o>=85?t("calc_out.productivity_score.row.tier_elite","• Productivity Tier:       A — Elite"):o>=70?t("calc_out.productivity_score.row.tier_solid","• Productivity Tier:       B — Solid"):o>=50?t("calc_out.productivity_score.row.tier_growing","• Productivity Tier:       C — Growing"):o>=30?"• Productivity Tier:       D — Needs Work":"• Productivity Tier:       F — Urgent")+\`
 
 \`,e+=\`🩺 Productivity Health:
-\`+u+\`
-\`,o>=90?e+="• 🟢 Score "+o+\`/100 — peak performer. Protect what is working.
-\`:o>=75?e+="• 🟢 Score "+o+\`/100 — strong systems. Keep iterating.
-\`:o>=60?e+="• 🟡 Score "+o+\`/100 — solid baseline. Room to grow in the weakest area.
-\`:o>=45?e+="• 🟠 Score "+o+\`/100 — below average. Focus on the #1 lever below.
-\`:e+="• 🔴 Score "+o+\`/100 — struggling. Fundamental changes needed.
-\`,t>=20?e+=\`• 🟢 Deep work hours in top quartile (20+ hrs/wk).
-\`:t>=10?e+=\`• 🟡 Deep work hours OK but not exceptional. Push for 20+.
-\`:e+=\`• 🔴 Deep work is too low — biggest improvement area. Aim for 15–20 hrs/wk.
-\`,n<=2?e+=\`• 🟢 Meeting load is light. Your maker time is protected.
-\`:n<=5?e+=\`• 🟡 Meeting load is moderate. Batch them to one day if possible.
-\`:e+=\`• 🔴 Meeting load is heavy. Cut 50% and replace with async updates.
-\`,s>=3&&s<=5?e+=\`• 🟢 Tool stack is optimal. You have what you need, no bloat.
-\`:s<3?e+=\`• 🟡 Tool stack is light. Consider adding 1–2 automation tools.
-\`:e+=\`• 🟠 Tool stack has bloat. Audit and cut what you haven't used in 2 weeks.
+\`+_+\`
+\`,e+=(o>=90?t("calc_out.productivity_score.row.health_peak","• 🟢 Score "+o+"/100 — peak performer. Protect what is working.",{score:String(o)}):o>=75?t("calc_out.productivity_score.row.health_strong","• 🟢 Score "+o+"/100 — strong systems. Keep iterating.",{score:String(o)}):o>=60?t("calc_out.productivity_score.row.health_solid","• 🟡 Score "+o+"/100 — solid baseline. Room to grow in the weakest area.",{score:String(o)}):o>=45?t("calc_out.productivity_score.row.health_below_avg","• 🟠 Score "+o+"/100 — below average. Focus on the #1 lever below.",{score:String(o)}):"• 🔴 Score "+o+"/100 — struggling. Fundamental changes needed.")+\`
+\`,e+=(r>=20?t("calc_out.productivity_score.row.deep_work_top","• 🟢 Deep work hours in top quartile (20+ hrs/wk)."):r>=10?t("calc_out.productivity_score.row.deep_work_ok","• 🟡 Deep work hours OK but not exceptional. Push for 20+."):t("calc_out.productivity_score.row.deep_work_low","• 🔴 Deep work is too low — biggest improvement area. Aim for 15–20 hrs/wk."))+\`
+\`,e+=(i<=2?t("calc_out.productivity_score.row.meeting_light","• 🟢 Meeting load is light. Your maker time is protected."):i<=5?t("calc_out.productivity_score.row.meeting_moderate","• 🟡 Meeting load is moderate. Batch them to one day if possible."):t("calc_out.productivity_score.row.meeting_heavy","• 🔴 Meeting load is heavy. Cut 50% and replace with async updates."))+\`
+\`,e+=s>=3&&s<=5?t("calc_out.productivity_score.row.tool_optimal","• 🟢 Tool stack is optimal. You have what you need, no bloat.")+\`
+\`:s<3?t("calc_out.productivity_score.row.tool_light","• 🟡 Tool stack is light. Consider adding 1–2 automation tools.")+\`
+\`:t("calc_out.productivity_score.row.tool_bloat","• 🟠 Tool stack has bloat. Audit and cut what you haven't used in 2 weeks.")+\`
 
 \`,e+=\`🎯 Improvement Projection:
-\`+u+\`
-\`;const d=Math.min(25,t+5>=30?25:t+5>=20?20:t+5>=10?10:5),p=n>5?20:n>2?10:0,m=s>5?10:s<3?7:0,w=Math.min(100,o+d+p+m);e+="• Current score:                "+o+\`/100
-\`,e+="• +5 deep work hrs/wk:          +"+d+" pts → "+Math.min(100,o+d)+\`/100
-\`,e+="• Cut meetings to 2/wk:         +"+p+" pts → "+Math.min(100,o+p)+\`/100
-\`,e+="• Trim tools to 3–5:            +"+m+" pts → "+Math.min(100,o+m)+\`/100
-\`,e+="• All three in 30 days:         "+w+\`/100
-\`,o>=85?e+=\`• Target: maintain score and protect deep work time.
-\`:w>=85?e+=\`• Target: 85+ achievable within 30 days with focused effort.
-\`:e+=\`• Target: +20 pts in 30 days. Focus on the lowest sub-score first.
+\`+_+\`
+\`;const u=Math.min(25,r+5>=30?25:r+5>=20?20:r+5>=10?10:5),d=i>5?20:i>2?10:0,p=s>5?10:s<3?7:0,g=Math.min(100,o+u+d+p);e+=t("calc_out.productivity_score.row.current_score","• Current score:                "+o+"/100",{score:String(o)})+\`
+\`,e+=t("calc_out.productivity_score.row.projection_add_5dw","• +5 deep work hrs/wk:          +"+u+" pts → "+Math.min(100,o+u)+"/100",{add:String(u),after:Math.min(100,o+u)+"/100"})+\`
+\`,e+=t("calc_out.productivity_score.row.projection_cut_mtg","• Cut meetings to 2/wk:         +"+d+" pts → "+Math.min(100,o+d)+"/100",{add:String(d),after:Math.min(100,o+d)+"/100"})+\`
+\`,e+=t("calc_out.productivity_score.row.projection_trim_tools","• Trim tools to 3–5:            +"+p+" pts → "+Math.min(100,o+p)+"/100",{add:String(p),after:Math.min(100,o+p)+"/100"})+\`
+\`,e+=t("calc_out.productivity_score.row.projection_all_three","• All three in 30 days:         "+g+"/100",{score:g+"/100"})+\`
+\`,e+=o>=85?t("calc_out.productivity_score.row.target_maintain","• Target: maintain score and protect deep work time.")+\`
+\`:g>=85?t("calc_out.productivity_score.row.target_85","• Target: 85+ achievable within 30 days with focused effort.")+\`
+\`:t("calc_out.productivity_score.row.target_20","• Target: +20 pts in 30 days. Focus on the lowest sub-score first.")+\`
 
 \`,e+=\`⚖️ Deep Work vs Shallow Work Break-Even:
-\`+u+\`
-\`;const T=40-t-n;t>=15&&n<=3?e+="• 🟢 Your mix is healthy: "+t+"h deep + "+n+"h meetings + "+T+\`h admin.
-\`:t<10&&n>5?e+="• 🔴 Your mix is inverted: only "+t+"h deep but "+n+\`h meetings. The 4:1 meeting:deep ratio is costing you output.
-\`:t<n?e+=\`• 🟠 You spend more time in meetings than in deep work. Flip this ratio.
-\`:e+=\`• 🟡 Your mix is workable but improvable. Aim for 2x deep work vs meetings.
-\`,e+=\`• Break-even: at 15+ hrs/wk deep work, you compound skills. Below 10, you are treading water.
-\`,e+=\`• Cal Newport's research: 4 hours/day of deep work = full-time knowledge worker output.
+\`+_+\`
+\`;const b=40-r-i;r>=15&&i<=3?e+=t("calc_out.productivity_score.row.mix_healthy","• 🟢 Your mix is healthy: "+r+"h deep + "+i+"h meetings + "+b+"h admin.",{deep:String(r),meetings:String(i),admin:String(b)})+\`
+\`:r<10&&i>5?e+=t("calc_out.productivity_score.row.mix_inverted","• 🔴 Your mix is inverted: only "+r+"h deep but "+i+"h meetings. The 4:1 meeting:deep ratio is costing you output.",{deep:String(r),meetings:String(i)})+\`
+\`:r<i?e+=t("calc_out.productivity_score.row.mix_more_meetings","• 🟠 You spend more time in meetings than in deep work. Flip this ratio.")+\`
+\`:e+=t("calc_out.productivity_score.row.mix_workable","• 🟡 Your mix is workable but improvable. Aim for 2x deep work vs meetings.")+\`
+\`,e+=t("calc_out.productivity_score.row.break_even_threshold","• Break-even: at 15+ hrs/wk deep work, you compound skills. Below 10, you are treading water.")+\`
+\`,e+=t("calc_out.productivity_score.row.cal_newport","• Cal Newport's research: 4 hours/day of deep work = full-time knowledge worker output.")+\`
 
 \`,e+=\`🔄 What-If Scenarios:
-\`+u+\`
-\`,e+="• Add 5 deep work hrs/wk:           +"+d+\` pts (max +25 from deep work alone)
-\`,e+="• Cut meetings to 2/wk:             +"+p+\` pts (full +20 if currently >5)
-\`,e+="• Trim tool stack to 3–5 core tools: +"+m+\` pts (full +10 if currently >5)
-\`,e+=\`• Block all meetings to Thursdays:  no score change but recovers 4+ hrs/wk for deep work
-\`,e+=\`• Quit one recurring meeting:       +5 to +10 pts and reclaims 1–2 hrs/wk
+\`+_+\`
+\`,e+=t("calc_out.productivity_score.row.whatif_add_5dw","• Add 5 deep work hrs/wk:           +"+u+" pts (max +25 from deep work alone)",{add:String(u)})+\`
+\`,e+=t("calc_out.productivity_score.row.whatif_cut_mtg","• Cut meetings to 2/wk:             +"+d+" pts (full +20 if currently >5)",{add:String(d)})+\`
+\`,e+=t("calc_out.productivity_score.row.whatif_trim_tools","• Trim tool stack to 3–5 core tools: +"+p+" pts (full +10 if currently >5)",{add:String(p)})+\`
+\`,e+=t("calc_out.productivity_score.row.whatif_block_thursdays","• Block all meetings to Thursdays:  no score change but recovers 4+ hrs/wk for deep work")+\`
+\`,e+=t("calc_out.productivity_score.row.whatif_quit_meeting","• Quit one recurring meeting:       +5 to +10 pts and reclaims 1–2 hrs/wk")+\`
 
-\`;const S=t<10?"Increase deep work hours. Block 2–3 hour morning sessions with zero distractions. Phone in another room, email closed, no Slack.":n>5?"Cut meetings by 50%. Replace them with Loom videos or written updates. The async tax is real but smaller than the meeting tax.":s>5?"Audit and reduce your tool stack. Fewer tools = less context switching. Cut any subscription you haven't used in the last 2 weeks.":"You are on track. Protect your current systems. The next 5 points come from going deeper, not wider.";e+="💡 Top Lever: "+S+\`
-\`;const g=[e],M=[{dw:40,t:4,m:1,label:"Peak Performer"},{dw:25,t:3,m:2,label:"Ideal Solopreneur"},{dw:15,t:5,m:4,label:"Balanced Grinder"},{dw:8,t:2,m:3,label:"Side Hustler"},{dw:5,t:8,m:12,label:"Meeting-Heavy Founder"}];for(const i of M){let r=50;i.dw>=30?r+=25:i.dw>=20?r+=20:i.dw>=10?r+=10:i.dw>=5&&(r+=5),i.t>=3&&i.t<=5?r+=15:i.t>=1&&i.t<=2?r+=8:i.t>=6&&i.t<=8&&(r+=5),i.m<=2?r+=20:i.m<=5&&(r+=10),r=Math.max(10,Math.min(100,r)),g.push(i.label+": "+r+"/100 — Deep Work "+i.dw+"h | Tools "+i.t+" | Meetings "+i.m+"/wk")}return g},f=function(a,t,s){var n=y(a);return Array.isArray(n)?n.join(\`
-\`):String(n)};var W=c,x=k,C=f,y=function(a){return k(a)};return[f(inputs,pick,fill)]}finally{}
+\`,e+=(r<10?t("calc_out.productivity_score.row.top_lever_deep_work","💡 Top Lever: Increase deep work hours. Block 2–3 hour morning sessions with zero distractions. Phone in another room, email closed, no Slack."):i>5?t("calc_out.productivity_score.row.top_lever_meetings","💡 Top Lever: Cut meetings by 50%. Replace them with Loom videos or written updates. The async tax is real but smaller than the meeting tax."):s>5?t("calc_out.productivity_score.row.top_lever_tools","💡 Top Lever: Audit and reduce your tool stack. Fewer tools = less context switching. Cut any subscription you haven't used in the last 2 weeks."):t("calc_out.productivity_score.row.top_lever_track","💡 Top Lever: You are on track. Protect your current systems. The next 5 points come from going deeper, not wider."))+\`
+\`;const M=[e],D=[{dw:40,t:4,m:1,label:"Peak Performer"},{dw:25,t:3,m:2,label:"Ideal Solopreneur"},{dw:15,t:5,m:4,label:"Balanced Grinder"},{dw:8,t:2,m:3,label:"Side Hustler"},{dw:5,t:8,m:12,label:"Meeting-Heavy Founder"}];for(const c of D){let n=50;c.dw>=30?n+=25:c.dw>=20?n+=20:c.dw>=10?n+=10:c.dw>=5&&(n+=5),c.t>=3&&c.t<=5?n+=15:c.t>=1&&c.t<=2?n+=8:c.t>=6&&c.t<=8&&(n+=5),c.m<=2?n+=20:c.m<=5&&(n+=10),n=Math.max(10,Math.min(100,n));const x=c.t,P=c.m;M.push(t("calc_out.productivity_score.row.archetype_head",c.label+": "+(n+"/100")+" — Deep Work "+(c.dw+"h"),{label:c.label,score:n+"/100",deep:c.dw+"h"})+" | "+t("calc_out.productivity_score.row.archetype_tools","Tools "+x,{count:String(x)})+" | "+t("calc_out.productivity_score.row.archetype_meetings","Meetings "+P+"/wk",{count:String(P)}))}return M},v=function(a,r,s){var i=W(a);return Array.isArray(i)?i.join(\`
+\`):String(i)};var A=h,F=y,j=v,t=tk,C='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+C)(),W=function(a){return y(a)};return[v(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -239,11 +283,16 @@ const engine: ToolEngine = {
     return calculateProductivity(inputs);
   },
   staticExamples: [
-    '📈 Productivity Score: 85/100\n\n💰 Score Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Total Score:          85/100\n• Weekly Deep Work:    15 hours\n• Tools in Stack:      5 tools\n• Weekly Meetings:     3 meetings\n• Total Work Hours:    23 hrs/wk  (deep work + meetings + admin)\n\n📐 Key Metrics:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Deep Work % of week:     38%  (target: 40%+)\n• Meetings-to-Deep Ratio:  20%  (lower is better)\n• Tool Efficiency Score:   🟢 Optimal (3–5)\n• Productivity Tier:       A — Elite\n\n🩺 Productivity Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Score 85/100 — strong systems. Keep iterating.\n• 🟡 Deep work hours OK but not exceptional. Push for 20+.\n• 🟡 Meeting load is moderate. Batch them to one day if possible.\n• 🟢 Tool stack is optimal. You have what you need, no bloat.\n🎯 Improvement Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Current score:                85/100\n• +5 deep work hrs/wk:          +20 pts → 100/100\n• Cut meetings to 2/wk:         +10 pts → 95/100\n• Trim tools to 3–5:            +0 pts → 85/100\n• All three in 30 days:         100/100\n• Target: maintain score and protect deep work time.\n⚖️ Deep Work vs Shallow Work Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Your mix is healthy: 15h deep + 3h meetings + 22h admin.\n• Break-even: at 15+ hrs/wk deep work, you compound skills. Below 10, you are treading water.\n• Cal Newport\'s research: 4 hours/day of deep work = full-time knowledge worker output.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Add 5 deep work hrs/wk:           +20 pts (max +25 from deep work alone)\n• Cut meetings to 2/wk:             +10 pts (full +20 if currently >5)\n• Trim tool stack to 3–5 core tools: +0 pts (full +10 if currently >5)\n• Block all meetings to Thursdays:  no score change but recovers 4+ hrs/wk for deep work\n• Quit one recurring meeting:       +5 to +10 pts and reclaims 1–2 hrs/wk\n\n💡 Top Lever: You are on track. Protect your current systems. The next 5 points come from going deeper, not wider.\n\nPeak Performer: 100/100 — Deep Work 40h | Tools 4 | Meetings 1/wk\nIdeal Solopreneur: 100/100 — Deep Work 25h | Tools 3 | Meetings 2/wk\nBalanced Grinder: 85/100 — Deep Work 15h | Tools 5 | Meetings 4/wk\nSide Hustler: 73/100 — Deep Work 8h | Tools 2 | Meetings 3/wk\nMeeting-Heavy Founder: 60/100 — Deep Work 5h | Tools 8 | Meetings 12/wk',
-    'Peak Performer: 100/100 — Deep Work 40h | Tools 4 | Meetings 1/wk',
-    'Ideal Solopreneur: 95/100 — Deep Work 25h | Tools 3 | Meetings 2/wk',
-    'Balanced Grinder: 75/100 — Deep Work 15h | Tools 5 | Meetings 4/wk',
-    'Side Hustler: 58/100 — Deep Work 8h | Tools 2 | Meetings 3/wk',
+    '$calc_out.productivity_score.row.title{"score":"85"}|📈 Productivity Score: 85/100|\n\n💰 Score Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.productivity_score.row.total_score{"score":"85"}|• Total Score:          85/100|\n$calc_out.productivity_score.row.weekly_deep_work{"hours":"15"}|• Weekly Deep Work:    15 hours|\n$calc_out.productivity_score.row.tools_in_stack{"count":"5"}|• Tools in Stack:      5 tools|\n$calc_out.productivity_score.row.weekly_meetings{"count":"3"}|• Weekly Meetings:     3 meetings|\n$calc_out.productivity_score.row.total_work_hours{"hours":"23"}|• Total Work Hours:    23 hrs/wk  (deep work + meetings + admin)|\n\n📐 Key Metrics:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.productivity_score.row.deep_work_pct{"pct":"38"}|• Deep Work % of week:     38%  (target: 40%+)|\n$calc_out.productivity_score.row.meetings_to_deep_ratio{"ratio":"20"}|• Meetings-to-Deep Ratio:  20%  (lower is better)|\n$calc_out.productivity_score.row.tool_efficiency_optimal|• Tool Efficiency Score:   🟢 Optimal (3–5)|\n$calc_out.productivity_score.row.tier_elite|• Productivity Tier:       A — Elite|\n\n🩺 Productivity Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.productivity_score.row.health_strong{"score":"85"}|• 🟢 Score 85/100 — strong systems. Keep iterating.|\n$calc_out.productivity_score.row.deep_work_ok|• 🟡 Deep work hours OK but not exceptional. Push for 20+.|\n$calc_out.productivity_score.row.meeting_moderate|• 🟡 Meeting load is moderate. Batch them to one day if possible.|\n$calc_out.productivity_score.row.tool_optimal|• 🟢 Tool stack is optimal. You have what you need, no bloat.|\n🎯 Improvement Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.productivity_score.row.current_score{"score":"85"}|• Current score:                85/100|\n$calc_out.productivity_score.row.projection_add_5dw{"add":"20","after":"100/100"}|• +5 deep work hrs/wk:          +20 pts → 100/100|\n$calc_out.productivity_score.row.projection_cut_mtg{"add":"10","after":"95/100"}|• Cut meetings to 2/wk:         +10 pts → 95/100|\n$calc_out.productivity_score.row.projection_trim_tools{"add":"0","after":"85/100"}|• Trim tools to 3–5:            +0 pts → 85/100|\n$calc_out.productivity_score.row.projection_all_three{"score":"100/100"}|• All three in 30 days:         100/100|\n$calc_out.productivity_score.row.target_maintain|• Target: maintain score and protect deep work time.|\n⚖️ Deep Work vs Shallow Work Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.productivity_score.row.mix_healthy{"deep":"15","meetings":"3","admin":"22"}|• 🟢 Your mix is healthy: 15h deep + 3h meetings + 22h admin.|\n$calc_out.productivity_score.row.break_even_threshold|• Break-even: at 15+ hrs/wk deep work, you compound skills. Below 10, you are treading water.|\n$calc_out.productivity_score.row.cal_newport|• Cal Newport\'s research: 4 hours/day of deep work = full-time knowledge worker output.|\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.productivity_score.row.whatif_add_5dw{"add":"20"}|• Add 5 deep work hrs/wk:           +20 pts (max +25 from deep work alone)|\n$calc_out.productivity_score.row.whatif_cut_mtg{"add":"10"}|• Cut meetings to 2/wk:             +10 pts (full +20 if currently >5)|\n$calc_out.productivity_score.row.whatif_trim_tools{"add":"0"}|• Trim tool stack to 3–5 core tools: +0 pts (full +10 if currently >5)|\n$calc_out.productivity_score.row.whatif_block_thursdays|• Block all meetings to Thursdays:  no score change but recovers 4+ hrs/wk for deep work|\n$calc_out.productivity_score.row.whatif_quit_meeting|• Quit one recurring meeting:       +5 to +10 pts and reclaims 1–2 hrs/wk|\n\n$calc_out.productivity_score.row.top_lever_track|💡 Top Lever: You are on track. Protect your current systems. The next 5 points come from going deeper, not wider.|\n\n$calc_out.productivity_score.row.archetype_head{"label":"Peak Performer","score":"100/100","deep":"40h"}|Peak Performer: 100/100 — Deep Work 40h| | $calc_out.productivity_score.row.archetype_tools{"count":"4"}|Tools 4| | $calc_out.productivity_score.row.archetype_meetings{"count":"1"}|Meetings 1/wk|\n$calc_out.productivity_score.row.archetype_head{"label":"Ideal Solopreneur","score":"100/100","deep":"25h"}|Ideal Solopreneur: 100/100 — Deep Work 25h| | $calc_out.productivity_score.row.archetype_tools{"count":"3"}|Tools 3| | $calc_out.productivity_score.row.archetype_meetings{"count":"2"}|Meetings 2/wk|\n$calc_out.productivity_score.row.archetype_head{"label":"Balanced Grinder","score":"85/100","deep":"15h"}|Balanced Grinder: 85/100 — Deep Work 15h| | $calc_out.productivity_score.row.archetype_tools{"count":"5"}|Tools 5| | $calc_out.productivity_score.row.archetype_meetings{"count":"4"}|Meetings 4/wk|\n$calc_out.productivity_score.row.archetype_head{"label":"Side Hustler","score":"73/100","deep":"8h"}|Side Hustler: 73/100 — Deep Work 8h| | $calc_out.productivity_score.row.archetype_tools{"count":"2"}|Tools 2| | $calc_out.productivity_score.row.archetype_meetings{"count":"3"}|Meetings 3/wk|\n$calc_out.productivity_score.row.archetype_head{"label":"Meeting-Heavy Founder","score":"60/100","deep":"5h"}|Meeting-Heavy Founder: 60/100 — Deep Work 5h| | $calc_out.productivity_score.row.archetype_tools{"count":"8"}|Tools 8| | $calc_out.productivity_score.row.archetype_meetings{"count":"12"}|Meetings 12/wk|',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
   ],
   faq: [
     { q: 'What counts as deep work?', a: 'Deep work = focused, uninterrupted time on your most cognitively demanding tasks (coding, writing, strategy, design). No email, Slack, social media, or phone. 50+ minute blocks minimum.' },

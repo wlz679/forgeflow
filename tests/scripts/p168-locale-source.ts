@@ -299,7 +299,12 @@ export function sourceTemplatesWithOrigin(file: string): { tpl: Record<string, s
   const lit: Record<string, string> = {};
   const litRe = /\$((?:calc_out\.)[a-z0-9_.]+)(?:\{([^{}]*)\})?\|([^|\n]*)\|/g;
   while ((m = litRe.exec(src)) !== null) {
-    let original = m[3];
+    // ⭐ 2026-11-19 B3-13 组 2（实测修）：字面量分支扫的是**源码原文** ⇒ 源码里
+    //   字符串字面量把 ' 写成 \' ⇒ 取到的英文模板残留一个**反斜杠**（"you\'re"）
+    //   ⇒ 落库后英文页会多出反斜杠 ⇒ locale 模板渲染 ≠ 英文兜底 ⇒ G8/parity 守卫变红。
+    //   （ctor 分支不受影响：它走 new Function 求值 ⇒ 转义已被 JS 解析掉。）
+    //   ⇒ 这里按「JS 字符串字面量」规则还原：\' → ' ，\\ → \
+    let original = m[3].replace(/\\(['\\])/g, '$1');
     if (m[2]) {
       let params: Record<string, string> = {};
       try { params = JSON.parse('{' + m[2] + '}'); } catch { params = {}; }
@@ -319,7 +324,16 @@ export function sourceTemplatesWithOrigin(file: string): { tpl: Record<string, s
   const out: Record<string, string> = {};
   for (const code of Object.keys(ctor)) {
     const keys = ctorParams[code] ?? [];
-    const complete = keys.length > 0 && keys.every((k) => ctor[code].includes('{' + k + '}'));
+    // ⭐⭐ 2026-11-19 B3-13 组 2（实测修）：**无参数**的 token 也算「推导完整」
+    //   ⇒ 旧规则 `keys.length > 0` 把「没有 param 可回填」的 token 一律判为**不完整**
+    //   ⇒ 构造器分支的模板被丢弃 ⇒ 而字面量分支（读 staticExamples 的烘焙值）若也没有这个 code
+    //     （例：只在死分支/边界分支出现的 token，staticExamples 里没有）
+    //   ⇒ 该 code **被静默丢掉**（既不进 newKeys 也不进 noTemplateMissing）
+    //   ⇒ 引擎声明了它、locale 里却没有 ⇒ G2/G12 红。
+    //   （实测：remote_vs_office 的 health_moderate_savings / health_weak / need_inputs /
+    //     tip_productivity_loss 四个**无参** token 就是这样丢的。）
+    //   ⇒ 无参 token 本来就没有「要回填的参数」⇒ 构造器模板**天然完整**。
+    const complete = keys.every((k) => ctor[code].includes('{' + k + '}'));
     if (complete) { out[code] = ctor[code]; origin[code] = 'constructor'; }
   }
   for (const code of Object.keys(lit)) {

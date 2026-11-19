@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -63,19 +66,32 @@ export function productivityAdjustedRemote(
 /**
  * Decision health based on cost savings + productivity direction.
  */
+/**
+ * 决策健康度的**档位键**（P168 B3-13：每档一个 code 字面量 ⇒ zh 页能整行中文）。
+ */
+export type DecisionHealthBand = 'strong' | 'moderate_savings' | 'moderate_productivity' | 'weak';
+
 export function decisionHealth(
   savings: number,
   productivityDelta: number,
-): { emoji: string; label: string } {
+): { emoji: string; label: string; band: DecisionHealthBand } {
   const productivityPositive = productivityDelta >= 0;
   const savingsPositive = savings > 0;
-  if (savingsPositive && productivityPositive)
-    return { emoji: '🟢', label: 'STRONG — remote saves money AND is more productive' };
-  if (savingsPositive && productivityDelta >= -10)
-    return { emoji: '🟡', label: 'MODERATE — remote saves money but slight productivity loss' };
-  if (!savingsPositive && productivityPositive)
-    return { emoji: '🟡', label: 'MODERATE — office saves money but remote is more productive' };
-  return { emoji: '🟠', label: 'WEAK — office is cheaper AND remote is less productive' };
+  const band: DecisionHealthBand =
+    savingsPositive && productivityPositive
+      ? 'strong'
+      : savingsPositive && productivityDelta >= -10
+        ? 'moderate_savings'
+        : !savingsPositive && productivityPositive
+          ? 'moderate_productivity'
+          : 'weak';
+  if (band === 'strong')
+    return { emoji: '🟢', label: 'STRONG — remote saves money AND is more productive', band };
+  if (band === 'moderate_savings')
+    return { emoji: '🟡', label: 'MODERATE — remote saves money but slight productivity loss', band };
+  if (band === 'moderate_productivity')
+    return { emoji: '🟡', label: 'MODERATE — office saves money but remote is more productive', band };
+  return { emoji: '🟠', label: 'WEAK — office is cheaper AND remote is less productive', band };
 }
 
 /**
@@ -102,13 +118,19 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
   if (headcount === 0) {
     return [
       '⏰ Remote vs In-Office Cost Calculator\n\n' +
-        '💰 Enter headcount > 0 to compare office vs remote cost structures.',
+        makeToken(
+          'calc_out.remote_vs_office.row.need_headcount',
+          '💰 Enter headcount > 0 to compare office vs remote cost structures.',
+        ),
     ];
   }
   if (avgSalary === 0 && officeOverhead === 0 && remoteStipend === 0) {
     return [
       '⏰ Remote vs In-Office Cost Calculator\n\n' +
-        '💰 Enter average salary and overhead values to see the cost comparison.',
+        makeToken(
+          'calc_out.remote_vs_office.row.need_inputs',
+          '💰 Enter average salary and overhead values to see the cost comparison.',
+        ),
     ];
   }
 
@@ -118,6 +140,8 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
   const adjustedRemote = productivityAdjustedRemote(remoteCost, productivityDelta);
   const savings = officeCost - remoteCost;
   const dh = decisionHealth(savings, productivityDelta);
+  // ⭐ 局部变量承接（2026-11-19 B3-13 组 2 实测修）：见下方 productivity_down 注释。
+  const productivityDownPct = Math.abs(productivityDelta);
   const pps = perPersonSavings(officeOverhead, remoteStipend);
 
   // Format helpers
@@ -155,42 +179,42 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
   // 5. Switch to fully remote (12-month savings projection)
   const switchToRemote12mo = savings;
 
-  // Tip selection
+  // Tip selection（P168 B3-13：每个分支一个 code 字面量 ⇒ zh 页整行中文）
   let tip: string;
   if (productivityDelta <= -10) {
-    tip =
-      '💡 Tip: Significant remote productivity loss. Consider hybrid (2-3 days in office) to balance cost savings with collaboration.';
+    tip = makeToken(
+      'calc_out.remote_vs_office.row.tip_productivity_loss',
+      '💡 Tip: Significant remote productivity loss. Consider hybrid (2-3 days in office) to balance cost savings with collaboration.',
+    );
   } else if (officeOverhead < 800) {
-    tip =
-      '💡 Tip: Low office cost. Remote savings may not justify the loss of in-person collaboration. Stay in office.';
+    tip = makeToken(
+      'calc_out.remote_vs_office.row.tip_low_office',
+      '💡 Tip: Low office cost. Remote savings may not justify the loss of in-person collaboration. Stay in office.',
+    );
   } else if (headcount >= 50) {
-    tip =
-      '💡 Tip: At >50 people, collaboration and culture become more important. Many companies mandate 2-3 days in office at this scale (Stripe, Apple).';
+    tip = makeToken(
+      'calc_out.remote_vs_office.row.tip_large_team',
+      '💡 Tip: At >50 people, collaboration and culture become more important. Many companies mandate 2-3 days in office at this scale (Stripe, Apple).',
+    );
   } else {
-    tip =
-      '💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.';
+    tip = makeToken(
+      'calc_out.remote_vs_office.row.tip_default',
+      '💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.',
+    );
   }
 
   const r =
     '⏰ Remote vs In-Office Cost Calculator\n\n' +
-    '💰 Cost Comparison (Annual):\n' +
+    makeToken('calc_out.remote_vs_office.row.section_cost_comparison', '💰 Cost Comparison (Annual):') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Office Only:    ' +
-    money(officeCost) +
-    '  (' +
-    money(officeCost / headcount) +
-    ' per person)\n' +
-    '• Remote Only:    ' +
-    money(remoteCost) +
-    '  (' +
-    money(remoteCost / headcount) +
-    ' per person)\n' +
-    '• Hybrid 50/50:   ' +
-    money(hybridCost) +
-    '  (50% office overhead, 50% remote stipend)\n' +
-    '• Savings:        ' +
-    (savings > 0 ? money(savings) + ' by going remote' : savings < 0 ? money(-savings) + ' by staying in office' : '$0 — costs equal') +
-    '\n\n' +
+    makeToken('calc_out.remote_vs_office.row.cost_office_only', '• Office Only:    ' + money(officeCost) + '  (' + money(officeCost / headcount) + ' per person)', { office: money(officeCost), per_person: money(officeCost / headcount) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.cost_remote_only', '• Remote Only:    ' + money(remoteCost) + '  (' + money(remoteCost / headcount) + ' per person)', { remote: money(remoteCost), per_person: money(remoteCost / headcount) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.cost_hybrid', '• Hybrid 50/50:   ' + money(hybridCost) + '  (50% office overhead, 50% remote stipend)', { hybrid: money(hybridCost) }) + '\n' +
+    (savings > 0
+      ? makeToken('calc_out.remote_vs_office.row.savings_remote', '• Savings:        ' + money(savings) + ' by going remote', { savings: money(savings) })
+      : savings < 0
+        ? makeToken('calc_out.remote_vs_office.row.savings_office', '• Savings:        ' + money(-savings) + ' by staying in office', { savings: money(-savings) })
+        : makeToken('calc_out.remote_vs_office.row.savings_equal', '• Savings:        $0 — costs equal')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Per-Employee Breakdown:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -207,99 +231,57 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
     ' /yr (' +
     money(remoteStipend) +
     ' /mo)\n' +
-    '• One-time setup:              ' +
-    money(oneTimeSetup) +
-    ' (amortized over 1 year)\n' +
-    '• Per-employee office total:   ' +
-    money(avgSalary + 12 * officeOverhead + oneTimeSetup) +
-    '\n' +
-    '• Per-employee remote total:   ' +
-    money(avgSalary + 12 * remoteStipend + oneTimeSetup) +
-    '\n\n' +
+    makeToken('calc_out.remote_vs_office.row.one_time_setup', '• One-time setup:              ' + money(oneTimeSetup) + ' (amortized over 1 year)', { setup: money(oneTimeSetup) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.per_employee_office_total', '• Per-employee office total:   ' + money(avgSalary + 12 * officeOverhead + oneTimeSetup), { total: money(avgSalary + 12 * officeOverhead + oneTimeSetup) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.per_employee_remote_total', '• Per-employee remote total:   ' + money(avgSalary + 12 * remoteStipend + oneTimeSetup), { total: money(avgSalary + 12 * remoteStipend + oneTimeSetup) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Decision Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' +
-    dh.emoji +
-    ' ' +
-    dh.label +
-    '\n' +
-    '• Per-person annual savings:   ' +
-    money(pps) +
-    ' (office - remote overhead)\n' +
-    '• Productivity: ' +
+    (dh.band === 'strong'
+      ? makeToken('calc_out.remote_vs_office.row.health_strong', '• 🟢 STRONG — remote saves money AND is more productive')
+      : dh.band === 'moderate_savings'
+        ? makeToken('calc_out.remote_vs_office.row.health_moderate_savings', '• 🟡 MODERATE — remote saves money but slight productivity loss')
+        : dh.band === 'moderate_productivity'
+          ? makeToken('calc_out.remote_vs_office.row.health_moderate_productivity', '• 🟡 MODERATE — office saves money but remote is more productive')
+          : makeToken('calc_out.remote_vs_office.row.health_weak', '• 🟠 WEAK — office is cheaper AND remote is less productive')) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.per_person_annual_savings', '• Per-person annual savings:   ' + money(pps) + ' (office - remote overhead)', { savings: money(pps) }) + '\n' +
     (productivityDelta > 0
-      ? '🟢 remote is ' + productivityDelta + '% more productive'
+      ? makeToken('calc_out.remote_vs_office.row.productivity_up', '• Productivity: 🟢 remote is ' + productivityDelta + '% more productive', { pct: String(productivityDelta) })
       : productivityDelta < 0
-        ? '🟠 remote is ' + Math.abs(productivityDelta) + '% less productive'
-        : '🟡 neutral (no productivity adjustment)') +
-    '\n' +
-    '• 3-year TCO: office ' +
-    money(officeCost * 3) +
-    ' vs remote ' +
-    money(remoteCost * 3) +
-    '\n\n' +
+        // ⭐ 局部变量承接（2026-11-19 B3-13 组 2 实测修）：'Math.abs(productivityDelta)' 直接写进
+        //   兜底 ⇒ 源码模板推导会把 'Math' / 'abs' / 'productivityDelta' 当三个标识符分别替换
+        //   ⇒ 模板污染（相邻字符串字面量 ⇒ new Function 抛 SyntaxError ⇒ 推导返回 null
+        //   ⇒ 该 code 被静默丢掉 ⇒ locale 缺键 ⇒ G2/G12 红）⇒ 必须是**标识符**。
+        ? makeToken('calc_out.remote_vs_office.row.productivity_down', '• Productivity: 🟠 remote is ' + productivityDownPct + '% less productive', { pct: String(productivityDownPct) })
+        : makeToken('calc_out.remote_vs_office.row.productivity_neutral', '• Productivity: 🟡 neutral (no productivity adjustment)')) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.tco_3y', '• 3-year TCO: office ' + money(officeCost * 3) + ' vs remote ' + money(remoteCost * 3), { office: money(officeCost * 3), remote: money(remoteCost * 3) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🎯 Break-Even Analysis:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Per-person annual savings:  ' +
-    money(pps) +
-    '\n' +
-    '• Current savings (× ' +
-    headcount +
-    ' people):     ' +
-    money(pps * headcount) +
-    '\n' +
-    '• 3-year cumulative savings:  ' +
-    money(pps * headcount * 3) +
-    '\n' +
-    '• Note: break-even is per-person (not per headcount) because cost difference is constant per person.\n\n' +
+    makeToken('calc_out.remote_vs_office.row.breakeven_per_person_savings', '• Per-person annual savings:  ' + money(pps), { savings: money(pps) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.breakeven_current_savings', '• Current savings (× ' + headcount + ' people):     ' + money(pps * headcount), { people: String(headcount), savings: money(pps * headcount) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.breakeven_cumulative_savings', '• 3-year cumulative savings:  ' + money(pps * headcount * 3), { savings: money(pps * headcount * 3) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.breakeven_note', '• Note: break-even is per-person (not per headcount) because cost difference is constant per person.') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Productivity-Adjusted Comparison:\n' +
+    makeToken('calc_out.remote_vs_office.row.section_productivity_adjusted', '⚖️ Productivity-Adjusted Comparison:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Raw remote cost:             ' +
-    money(remoteCost) +
-    '\n' +
+    makeToken('calc_out.remote_vs_office.row.raw_remote_cost', '• Raw remote cost:             ' + money(remoteCost), { cost: money(remoteCost) }) + '\n' +
     '• Productivity adjustment:     ' +
     (productivityDelta > 0 ? '+' : '') +
     productivityDelta +
     '%\n' +
-    '• Productivity-adjusted cost:  ' +
-    money(adjustedRemote) +
-    ' (effective cost per unit of work)\n' +
-    '• Net effect: ' +
+    makeToken('calc_out.remote_vs_office.row.adjusted_remote_cost', '• Productivity-adjusted cost:  ' + money(adjustedRemote) + ' (effective cost per unit of work)', { cost: money(adjustedRemote) }) + '\n' +
     (adjustedRemote < officeCost
-      ? '🟢 remote is cheaper after productivity'
-      : '🟠 office is cheaper after productivity') +
-    '\n\n' +
+      ? makeToken('calc_out.remote_vs_office.row.net_effect_remote', '• Net effect: 🟢 remote is cheaper after productivity')
+      : makeToken('calc_out.remote_vs_office.row.net_effect_office', '• Net effect: 🟠 office is cheaper after productivity')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Hot-desk (30% less office):           office cost ' +
-    money(hotDeskCost) +
-    ' (save ' +
-    money(hotDeskSavings) +
-    ')\n' +
-    '• Remote stipend → $1,000:                remote cost ' +
-    money(remoteStipend1000) +
-    ' (+' +
-    money(stipendDelta) +
-    ')\n' +
-    '• 2-day in-office hybrid:                cost ' +
-    money(twoDayCost) +
-    ' (+' +
-    money(twoDayDelta) +
-    ' vs full remote)\n' +
-    '• Hire 5 more (marginal):                office +' +
-    money(fiveHireOffice) +
-    ' vs remote +' +
-    money(fiveHireRemote) +
-    ' (save ' +
-    money(fiveHireSavings) +
-    ')\n' +
-    '• Switch to fully remote today:          save ' +
-    money(switchToRemote12mo) +
-    ' /yr\n\n' +
+    makeToken('calc_out.remote_vs_office.row.whatif_hot_desk', '• Hot-desk (30% less office):           office cost ' + money(hotDeskCost) + ' (save ' + money(hotDeskSavings) + ')', { cost: money(hotDeskCost), save: money(hotDeskSavings) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.whatif_stipend_1000', '• Remote stipend → $1,000:                remote cost ' + money(remoteStipend1000) + ' (+' + money(stipendDelta) + ')', { cost: money(remoteStipend1000), delta: money(stipendDelta) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.whatif_two_day_hybrid', '• 2-day in-office hybrid:                cost ' + money(twoDayCost) + ' (+' + money(twoDayDelta) + ' vs full remote)', { cost: money(twoDayCost), delta: money(twoDayDelta) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.whatif_hire_5', '• Hire 5 more (marginal):                office +' + money(fiveHireOffice) + ' vs remote +' + money(fiveHireRemote) + ' (save ' + money(fiveHireSavings) + ')', { office: money(fiveHireOffice), remote: money(fiveHireRemote), save: money(fiveHireSavings) }) + '\n' +
+    makeToken('calc_out.remote_vs_office.row.whatif_switch_remote', '• Switch to fully remote today:          save ' + money(switchToRemote12mo) + ' /yr', { save: money(switchToRemote12mo) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     chart +
     '\n\n' +
@@ -316,15 +298,19 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
     const rc = remoteAnnualCost(hc, avgSalary, remoteStipend, oneTimeSetup);
     const sv = oc - rc;
     results.push(
-      'Comparison: ' +
-        hc +
-        ' employees: office ' +
-        money(oc) +
-        ' vs remote ' +
-        money(rc) +
-        ' — save ' +
-        money(sv) +
-        ' /yr by going remote',
+      makeToken(
+        'calc_out.remote_vs_office.row.comparison_row',
+        'Comparison: ' +
+          hc +
+          ' employees: office ' +
+          money(oc) +
+          ' vs remote ' +
+          money(rc) +
+          ' — save ' +
+          money(sv) +
+          ' /yr by going remote',
+        { count: String(hc), office: money(oc), remote: money(rc), save: money(sv) },
+      ),
     );
   }
 
@@ -334,79 +320,79 @@ function calculateRemoteOffice(inputs: Record<string, string>): string[] {
 // ============== customFn ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let m=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,o,n,r){return t<=0?0:t*(o+12*n)+t*r},d=function(t,o,n,r){return t<=0?0:t*(o+12*n)+t*r},C=function(t,o,n,r,a){if(t<=0)return 0;const s=.5*n+.5*r;return t*(o+12*s)+t*a},P=function(t,o){const n=1+o/100;return n<=0?1/0:t/n},D=function(t,o){const n=o>=0,r=t>0;return r&&n?{emoji:"🟢",label:"STRONG — remote saves money AND is more productive"}:r&&o>=-10?{emoji:"🟡",label:"MODERATE — remote saves money but slight productivity loss"}:!r&&n?{emoji:"🟡",label:"MODERATE — office saves money but remote is more productive"}:{emoji:"🟠",label:"WEAK — office is cheaper AND remote is less productive"}},R=function(t,o){return 12*(t-o)},A=function(t){const o=m(parseFloat(t.headcount)||0),n=m(parseFloat(t.avgSalary)||0),r=m(parseFloat(t.officeOverheadPerPerson)||0),a=m(parseFloat(t.remoteStipendPerPerson)||0),s=m(parseFloat(t.oneTimeSetupPerPerson)||0),l=parseFloat(t.productivityDelta)||0;if(o===0)return[\`⏰ Remote vs In-Office Cost Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let p=function(r){return Number.isNaN(r)?0:Math.max(0,r)},h=function(r,o,c,s){return r<=0?0:r*(o+12*c)+r*s},y=function(r,o,c,s){return r<=0?0:r*(o+12*c)+r*s},F=function(r,o,c,s,i){if(r<=0)return 0;const n=.5*c+.5*s;return r*(o+12*n)+r*i},M=function(r,o){const c=1+o/100;return c<=0?1/0:r/c},H=function(r,o){const c=o>=0,s=r>0,i=s&&c?"strong":s&&o>=-10?"moderate_savings":!s&&c?"moderate_productivity":"weak";return i==="strong"?{emoji:"🟢",label:"STRONG — remote saves money AND is more productive",band:i}:i==="moderate_savings"?{emoji:"🟡",label:"MODERATE — remote saves money but slight productivity loss",band:i}:i==="moderate_productivity"?{emoji:"🟡",label:"MODERATE — office saves money but remote is more productive",band:i}:{emoji:"🟠",label:"WEAK — office is cheaper AND remote is less productive",band:i}},q=function(r,o){return 12*(r-o)},x=function(r){const o=p(parseFloat(r.headcount)||0),c=p(parseFloat(r.avgSalary)||0),s=p(parseFloat(r.officeOverheadPerPerson)||0),i=p(parseFloat(r.remoteStipendPerPerson)||0),n=p(parseFloat(r.oneTimeSetupPerPerson)||0),l=parseFloat(r.productivityDelta)||0;if(o===0)return[\`⏰ Remote vs In-Office Cost Calculator
 
-💰 Enter headcount > 0 to compare office vs remote cost structures.\`];if(n===0&&r===0&&a===0)return[\`⏰ Remote vs In-Office Cost Calculator
+\`+t("calc_out.remote_vs_office.row.need_headcount","💰 Enter headcount > 0 to compare office vs remote cost structures.")];if(c===0&&s===0&&i===0)return[\`⏰ Remote vs In-Office Cost Calculator
 
-💰 Enter average salary and overhead values to see the cost comparison.\`];const f=g(o,n,r,s),c=d(o,n,a,s),p=C(o,n,r,a,s),w=P(c,l),u=f-c,T=D(u,l),y=R(r,a),L=i=>i.toLocaleString("en-US",{maximumFractionDigits:0}),e=i=>"$"+L(i),_=Math.max(f,c,p),E=i=>Math.round(i/_*50),b=i=>"▓".repeat(E(i))+"░".repeat(50-E(i)),S=i=>(i/_*100).toFixed(0)+"%";let h="                "+"0%".padStart(4)+"      "+"50%".padStart(4)+"     "+"100%".padStart(4)+\`
-\`;h+="Office Only  │"+b(f)+"│ "+e(f)+" ("+S(f)+\`)
-\`,h+="Hybrid 50/50 │"+b(p)+"│ "+e(p)+" ("+S(p)+\`)
-\`,h+="Remote Only  │"+b(c)+"│ "+e(c)+" ("+S(c)+")";const F=o*(n+12*r*.7)+o*s,W=f-F,k=d(o,n,1e3,s),q=k-c,z=.4*r+.6*a,N=o*(n+12*z)+o*s,G=N-c,se=r+n/12,H=5*(n+12*r)+5*s,M=5*(n+12*a)+5*s,U=H-M,J=u;let v;l<=-10?v="💡 Tip: Significant remote productivity loss. Consider hybrid (2-3 days in office) to balance cost savings with collaboration.":r<800?v="💡 Tip: Low office cost. Remote savings may not justify the loss of in-person collaboration. Stay in office.":o>=50?v="💡 Tip: At >50 people, collaboration and culture become more important. Many companies mandate 2-3 days in office at this scale (Stripe, Apple).":v="💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.";const x=[\`⏰ Remote vs In-Office Cost Calculator
+\`+t("calc_out.remote_vs_office.row.need_inputs","💰 Enter average salary and overhead values to see the cost comparison.")];const _=h(o,c,s,n),a=y(o,c,i,n),m=F(o,c,s,i,n),b=M(a,l),u=_-a,S=H(u,l),$=Math.abs(l),v=q(s,i),Z=f=>f.toLocaleString("en-US",{maximumFractionDigits:0}),e=f=>"$"+Z(f),K=Math.max(_,a,m),W=f=>Math.round(f/K*50),O=f=>"▓".repeat(W(f))+"░".repeat(50-W(f)),P=f=>(f/K*100).toFixed(0)+"%";let w="                "+"0%".padStart(4)+"      "+"50%".padStart(4)+"     "+"100%".padStart(4)+\`
+\`;w+="Office Only  │"+O(_)+"│ "+e(_)+" ("+P(_)+\`)
+\`,w+="Hybrid 50/50 │"+O(m)+"│ "+e(m)+" ("+P(m)+\`)
+\`,w+="Remote Only  │"+O(a)+"│ "+e(a)+" ("+P(a)+")";const C=o*(c+12*s*.7)+o*n,B=_-C,D=y(o,c,1e3,n),G=D-a,T=.4*s+.6*i,A=o*(c+12*T)+o*n,L=A-a,ae=s+c/12,R=5*(c+12*s)+5*n,j=5*(c+12*i)+5*n,z=R-j,J=u;let d;l<=-10?d=t("calc_out.remote_vs_office.row.tip_productivity_loss","💡 Tip: Significant remote productivity loss. Consider hybrid (2-3 days in office) to balance cost savings with collaboration."):s<800?d=t("calc_out.remote_vs_office.row.tip_low_office","💡 Tip: Low office cost. Remote savings may not justify the loss of in-person collaboration. Stay in office."):o>=50?d=t("calc_out.remote_vs_office.row.tip_large_team","💡 Tip: At >50 people, collaboration and culture become more important. Many companies mandate 2-3 days in office at this scale (Stripe, Apple)."):d=t("calc_out.remote_vs_office.row.tip_default","💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.");const U=[\`⏰ Remote vs In-Office Cost Calculator
 
-💰 Cost Comparison (Annual):
+\`+t("calc_out.remote_vs_office.row.section_cost_comparison","💰 Cost Comparison (Annual):")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Office Only:    \`+e(f)+"  ("+e(f/o)+\` per person)
-• Remote Only:    \`+e(c)+"  ("+e(c/o)+\` per person)
-• Hybrid 50/50:   \`+e(p)+\`  (50% office overhead, 50% remote stipend)
-• Savings:        \`+(u>0?e(u)+" by going remote":u<0?e(-u)+" by staying in office":"$0 — costs equal")+\`
+\`+t("calc_out.remote_vs_office.row.cost_office_only","• Office Only:    "+e(_)+"  ("+e(_/o)+" per person)",{office:e(_),per_person:e(_/o)})+\`
+\`+t("calc_out.remote_vs_office.row.cost_remote_only","• Remote Only:    "+e(a)+"  ("+e(a/o)+" per person)",{remote:e(a),per_person:e(a/o)})+\`
+\`+t("calc_out.remote_vs_office.row.cost_hybrid","• Hybrid 50/50:   "+e(m)+"  (50% office overhead, 50% remote stipend)",{hybrid:e(m)})+\`
+\`+(u>0?t("calc_out.remote_vs_office.row.savings_remote","• Savings:        "+e(u)+" by going remote",{savings:e(u)}):u<0?t("calc_out.remote_vs_office.row.savings_office","• Savings:        "+e(-u)+" by staying in office",{savings:e(-u)}):t("calc_out.remote_vs_office.row.savings_equal","• Savings:        $0 — costs equal"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Per-Employee Breakdown:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Salary:                      \`+e(n)+\` /yr
-• Office overhead (12 mo):     \`+e(12*r)+" /yr ("+e(r)+\` /mo)
-• Remote stipend (12 mo):      \`+e(12*a)+" /yr ("+e(a)+\` /mo)
-• One-time setup:              \`+e(s)+\` (amortized over 1 year)
-• Per-employee office total:   \`+e(n+12*r+s)+\`
-• Per-employee remote total:   \`+e(n+12*a+s)+\`
+• Salary:                      \`+e(c)+\` /yr
+• Office overhead (12 mo):     \`+e(12*s)+" /yr ("+e(s)+\` /mo)
+• Remote stipend (12 mo):      \`+e(12*i)+" /yr ("+e(i)+\` /mo)
+\`+t("calc_out.remote_vs_office.row.one_time_setup","• One-time setup:              "+e(n)+" (amortized over 1 year)",{setup:e(n)})+\`
+\`+t("calc_out.remote_vs_office.row.per_employee_office_total","• Per-employee office total:   "+e(c+12*s+n),{total:e(c+12*s+n)})+\`
+\`+t("calc_out.remote_vs_office.row.per_employee_remote_total","• Per-employee remote total:   "+e(c+12*i+n),{total:e(c+12*i+n)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Decision Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+T.emoji+" "+T.label+\`
-• Per-person annual savings:   \`+e(y)+\` (office - remote overhead)
-• Productivity: \`+(l>0?"🟢 remote is "+l+"% more productive":l<0?"🟠 remote is "+Math.abs(l)+"% less productive":"🟡 neutral (no productivity adjustment)")+\`
-• 3-year TCO: office \`+e(f*3)+" vs remote "+e(c*3)+\`
+\`+(S.band==="strong"?t("calc_out.remote_vs_office.row.health_strong","• 🟢 STRONG — remote saves money AND is more productive"):S.band==="moderate_savings"?t("calc_out.remote_vs_office.row.health_moderate_savings","• 🟡 MODERATE — remote saves money but slight productivity loss"):S.band==="moderate_productivity"?t("calc_out.remote_vs_office.row.health_moderate_productivity","• 🟡 MODERATE — office saves money but remote is more productive"):t("calc_out.remote_vs_office.row.health_weak","• 🟠 WEAK — office is cheaper AND remote is less productive"))+\`
+\`+t("calc_out.remote_vs_office.row.per_person_annual_savings","• Per-person annual savings:   "+e(v)+" (office - remote overhead)",{savings:e(v)})+\`
+\`+(l>0?t("calc_out.remote_vs_office.row.productivity_up","• Productivity: 🟢 remote is "+l+"% more productive",{pct:String(l)}):l<0?t("calc_out.remote_vs_office.row.productivity_down","• Productivity: 🟠 remote is "+$+"% less productive",{pct:String($)}):t("calc_out.remote_vs_office.row.productivity_neutral","• Productivity: 🟡 neutral (no productivity adjustment)"))+\`
+\`+t("calc_out.remote_vs_office.row.tco_3y","• 3-year TCO: office "+e(_*3)+" vs remote "+e(a*3),{office:e(_*3),remote:e(a*3)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🎯 Break-Even Analysis:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Per-person annual savings:  \`+e(y)+\`
-• Current savings (× \`+o+" people):     "+e(y*o)+\`
-• 3-year cumulative savings:  \`+e(y*o*3)+\`
-• Note: break-even is per-person (not per headcount) because cost difference is constant per person.
+\`+t("calc_out.remote_vs_office.row.breakeven_per_person_savings","• Per-person annual savings:  "+e(v),{savings:e(v)})+\`
+\`+t("calc_out.remote_vs_office.row.breakeven_current_savings","• Current savings (× "+o+" people):     "+e(v*o),{people:String(o),savings:e(v*o)})+\`
+\`+t("calc_out.remote_vs_office.row.breakeven_cumulative_savings","• 3-year cumulative savings:  "+e(v*o*3),{savings:e(v*o*3)})+\`
+\`+t("calc_out.remote_vs_office.row.breakeven_note","• Note: break-even is per-person (not per headcount) because cost difference is constant per person.")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Productivity-Adjusted Comparison:
+\`+t("calc_out.remote_vs_office.row.section_productivity_adjusted","⚖️ Productivity-Adjusted Comparison:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Raw remote cost:             \`+e(c)+\`
+\`+t("calc_out.remote_vs_office.row.raw_remote_cost","• Raw remote cost:             "+e(a),{cost:e(a)})+\`
 • Productivity adjustment:     \`+(l>0?"+":"")+l+\`%
-• Productivity-adjusted cost:  \`+e(w)+\` (effective cost per unit of work)
-• Net effect: \`+(w<f?"🟢 remote is cheaper after productivity":"🟠 office is cheaper after productivity")+\`
+\`+t("calc_out.remote_vs_office.row.adjusted_remote_cost","• Productivity-adjusted cost:  "+e(b)+" (effective cost per unit of work)",{cost:e(b)})+\`
+\`+(b<_?t("calc_out.remote_vs_office.row.net_effect_remote","• Net effect: 🟢 remote is cheaper after productivity"):t("calc_out.remote_vs_office.row.net_effect_office","• Net effect: 🟠 office is cheaper after productivity"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Hot-desk (30% less office):           office cost \`+e(F)+" (save "+e(W)+\`)
-• Remote stipend → $1,000:                remote cost \`+e(k)+" (+"+e(q)+\`)
-• 2-day in-office hybrid:                cost \`+e(N)+" (+"+e(G)+\` vs full remote)
-• Hire 5 more (marginal):                office +\`+e(H)+" vs remote +"+e(M)+" (save "+e(U)+\`)
-• Switch to fully remote today:          save \`+e(J)+\` /yr
+\`+t("calc_out.remote_vs_office.row.whatif_hot_desk","• Hot-desk (30% less office):           office cost "+e(C)+" (save "+e(B)+")",{cost:e(C),save:e(B)})+\`
+\`+t("calc_out.remote_vs_office.row.whatif_stipend_1000","• Remote stipend → $1,000:                remote cost "+e(D)+" (+"+e(G)+")",{cost:e(D),delta:e(G)})+\`
+\`+t("calc_out.remote_vs_office.row.whatif_two_day_hybrid","• 2-day in-office hybrid:                cost "+e(A)+" (+"+e(L)+" vs full remote)",{cost:e(A),delta:e(L)})+\`
+\`+t("calc_out.remote_vs_office.row.whatif_hire_5","• Hire 5 more (marginal):                office +"+e(R)+" vs remote +"+e(j)+" (save "+e(z)+")",{office:e(R),remote:e(j),save:e(z)})+\`
+\`+t("calc_out.remote_vs_office.row.whatif_switch_remote","• Switch to fully remote today:          save "+e(J)+" /yr",{save:e(J)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-\`+h+\`
+\`+w+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-\`+v],I=[5,10,25,50,100];for(let i=0;i<I.length;i++){const O=I[i],$=g(O,n,r,s),B=d(O,n,a,s),Q=$-B;x.push("Comparison: "+O+" employees: office "+e($)+" vs remote "+e(B)+" — save "+e(Q)+" /yr by going remote")}return x},j=function(t,o,n){var r=K(t);return Array.isArray(r)?r.join(\`
-\`):String(r)};var V=m,X=g,Y=d,Z=C,ee=P,te=D,oe=R,ne=A,re=j,K=function(t){return A(t)};return[j(inputs,pick,fill)]}finally{}
+\`+d],Q=[5,10,25,50,100];for(let f=0;f<Q.length;f++){const g=Q[f],E=h(g,c,s,n),N=y(g,c,i,n),V=E-N;U.push(t("calc_out.remote_vs_office.row.comparison_row","Comparison: "+g+" employees: office "+e(E)+" vs remote "+e(N)+" — save "+e(V)+" /yr by going remote",{count:String(g),office:e(E),remote:e(N),save:e(V)}))}return U},I=function(r,o,c){var s=Y(r);return Array.isArray(s)?s.join(\`
+\`):String(s)};var k=p,ee=h,te=y,oe=F,re=M,ce=H,se=q,ie=x,ne=I,t=tk,X='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+X)(),Y=function(r){return x(r)};return[I(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -468,7 +454,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateRemoteOffice(inputs);
   },
-  staticExamples: ['⏰ Remote vs In-Office Cost Calculator\n\n💰 Cost Comparison (Annual):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Office Only:    $1,010,000  ($101,000 per person)\n• Remote Only:    $890,000  ($89,000 per person)\n• Hybrid 50/50:   $950,000  (50% office overhead, 50% remote stipend)\n• Savings:        $120,000 by going remote\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Per-Employee Breakdown:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Salary:                      $80,000 /yr\n• Office overhead (12 mo):     $18,000 /yr ($1,500 /mo)\n• Remote stipend (12 mo):      $6,000 /yr ($500 /mo)\n• One-time setup:              $3,000 (amortized over 1 year)\n• Per-employee office total:   $101,000\n• Per-employee remote total:   $89,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Decision Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 STRONG — remote saves money AND is more productive\n• Per-person annual savings:   $12,000 (office - remote overhead)\n• Productivity: 🟡 neutral (no productivity adjustment)\n• 3-year TCO: office $3,030,000 vs remote $2,670,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Break-Even Analysis:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Per-person annual savings:  $12,000\n• Current savings (× 10 people):     $120,000\n• 3-year cumulative savings:  $360,000\n• Note: break-even is per-person (not per headcount) because cost difference is constant per person.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Productivity-Adjusted Comparison:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raw remote cost:             $890,000\n• Productivity adjustment:     0%\n• Productivity-adjusted cost:  $890,000 (effective cost per unit of work)\n• Net effect: 🟢 remote is cheaper after productivity\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Hot-desk (30% less office):           office cost $956,000 (save $54,000)\n• Remote stipend → $1,000:                remote cost $950,000 (+$60,000)\n• 2-day in-office hybrid:                cost $938,000 (+$48,000 vs full remote)\n• Hire 5 more (marginal):                office +$505,000 vs remote +$445,000 (save $60,000)\n• Switch to fully remote today:          save $120,000 /yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n                  0%       50%     100%\nOffice Only  │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│ $1,010,000 (100%)\nHybrid 50/50 │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░│ $950,000 (94%)\nRemote Only  │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░│ $890,000 (88%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.\nComparison: 5 employees: office $505,000 vs remote $445,000 — save $60,000 /yr by going remote\nComparison: 10 employees: office $1,010,000 vs remote $890,000 — save $120,000 /yr by going remote\nComparison: 25 employees: office $2,525,000 vs remote $2,225,000 — save $300,000 /yr by going remote\nComparison: 50 employees: office $5,050,000 vs remote $4,450,000 — save $600,000 /yr by going remote\nComparison: 100 employees: office $10,100,000 vs remote $8,900,000 — save $1,200,000 /yr by going remote'],
+  staticExamples: ['⏰ Remote vs In-Office Cost Calculator\n\n$calc_out.remote_vs_office.row.section_cost_comparison|💰 Cost Comparison (Annual):|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.remote_vs_office.row.cost_office_only{"office":"$1,010,000","per_person":"$101,000"}|• Office Only:    $1,010,000  ($101,000 per person)|\n$calc_out.remote_vs_office.row.cost_remote_only{"remote":"$890,000","per_person":"$89,000"}|• Remote Only:    $890,000  ($89,000 per person)|\n$calc_out.remote_vs_office.row.cost_hybrid{"hybrid":"$950,000"}|• Hybrid 50/50:   $950,000  (50% office overhead, 50% remote stipend)|\n$calc_out.remote_vs_office.row.savings_remote{"savings":"$120,000"}|• Savings:        $120,000 by going remote|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Per-Employee Breakdown:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Salary:                      $80,000 /yr\n• Office overhead (12 mo):     $18,000 /yr ($1,500 /mo)\n• Remote stipend (12 mo):      $6,000 /yr ($500 /mo)\n$calc_out.remote_vs_office.row.one_time_setup{"setup":"$3,000"}|• One-time setup:              $3,000 (amortized over 1 year)|\n$calc_out.remote_vs_office.row.per_employee_office_total{"total":"$101,000"}|• Per-employee office total:   $101,000|\n$calc_out.remote_vs_office.row.per_employee_remote_total{"total":"$89,000"}|• Per-employee remote total:   $89,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Decision Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.remote_vs_office.row.health_strong|• 🟢 STRONG — remote saves money AND is more productive|\n$calc_out.remote_vs_office.row.per_person_annual_savings{"savings":"$12,000"}|• Per-person annual savings:   $12,000 (office - remote overhead)|\n$calc_out.remote_vs_office.row.productivity_neutral|• Productivity: 🟡 neutral (no productivity adjustment)|\n$calc_out.remote_vs_office.row.tco_3y{"office":"$3,030,000","remote":"$2,670,000"}|• 3-year TCO: office $3,030,000 vs remote $2,670,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Break-Even Analysis:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.remote_vs_office.row.breakeven_per_person_savings{"savings":"$12,000"}|• Per-person annual savings:  $12,000|\n$calc_out.remote_vs_office.row.breakeven_current_savings{"people":"10","savings":"$120,000"}|• Current savings (× 10 people):     $120,000|\n$calc_out.remote_vs_office.row.breakeven_cumulative_savings{"savings":"$360,000"}|• 3-year cumulative savings:  $360,000|\n$calc_out.remote_vs_office.row.breakeven_note|• Note: break-even is per-person (not per headcount) because cost difference is constant per person.|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.remote_vs_office.row.section_productivity_adjusted|⚖️ Productivity-Adjusted Comparison:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.remote_vs_office.row.raw_remote_cost{"cost":"$890,000"}|• Raw remote cost:             $890,000|\n• Productivity adjustment:     0%\n$calc_out.remote_vs_office.row.adjusted_remote_cost{"cost":"$890,000"}|• Productivity-adjusted cost:  $890,000 (effective cost per unit of work)|\n$calc_out.remote_vs_office.row.net_effect_remote|• Net effect: 🟢 remote is cheaper after productivity|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.remote_vs_office.row.whatif_hot_desk{"cost":"$956,000","save":"$54,000"}|• Hot-desk (30% less office):           office cost $956,000 (save $54,000)|\n$calc_out.remote_vs_office.row.whatif_stipend_1000{"cost":"$950,000","delta":"$60,000"}|• Remote stipend → $1,000:                remote cost $950,000 (+$60,000)|\n$calc_out.remote_vs_office.row.whatif_two_day_hybrid{"cost":"$938,000","delta":"$48,000"}|• 2-day in-office hybrid:                cost $938,000 (+$48,000 vs full remote)|\n$calc_out.remote_vs_office.row.whatif_hire_5{"office":"$505,000","remote":"$445,000","save":"$60,000"}|• Hire 5 more (marginal):                office +$505,000 vs remote +$445,000 (save $60,000)|\n$calc_out.remote_vs_office.row.whatif_switch_remote{"save":"$120,000"}|• Switch to fully remote today:          save $120,000 /yr|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n                  0%       50%     100%\nOffice Only  │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│ $1,010,000 (100%)\nHybrid 50/50 │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░│ $950,000 (94%)\nRemote Only  │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░│ $890,000 (88%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.remote_vs_office.row.tip_default|💡 Tip: Office costs scale with real estate; remote costs scale with stipends. At <20 people, remote is usually 30-50% cheaper. At >50 people, the calculus shifts.|\n$calc_out.remote_vs_office.row.comparison_row{"count":"5","office":"$505,000","remote":"$445,000","save":"$60,000"}|Comparison: 5 employees: office $505,000 vs remote $445,000 — save $60,000 /yr by going remote|\n$calc_out.remote_vs_office.row.comparison_row{"count":"10","office":"$1,010,000","remote":"$890,000","save":"$120,000"}|Comparison: 10 employees: office $1,010,000 vs remote $890,000 — save $120,000 /yr by going remote|\n$calc_out.remote_vs_office.row.comparison_row{"count":"25","office":"$2,525,000","remote":"$2,225,000","save":"$300,000"}|Comparison: 25 employees: office $2,525,000 vs remote $2,225,000 — save $300,000 /yr by going remote|\n$calc_out.remote_vs_office.row.comparison_row{"count":"50","office":"$5,050,000","remote":"$4,450,000","save":"$600,000"}|Comparison: 50 employees: office $5,050,000 vs remote $4,450,000 — save $600,000 /yr by going remote|\n$calc_out.remote_vs_office.row.comparison_row{"count":"100","office":"$10,100,000","remote":"$8,900,000","save":"$1,200,000"}|Comparison: 100 employees: office $10,100,000 vs remote $8,900,000 — save $1,200,000 /yr by going remote|'],
   faq: [
     {
       q: 'Is it cheaper to be remote or in-office?',

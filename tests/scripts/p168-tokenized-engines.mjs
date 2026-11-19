@@ -85,6 +85,12 @@ export const B3_13_BATCH = [
   { slug: 'solopreneur-employee-cost-calculator', file: 'src/engines/cost/employee-cost-calculator.ts', alias: 'employee_cost', baseline: '94bffb2' },
   { slug: 'solopreneur-equity-dilution-calculator', file: 'src/engines/investment/equity-dilution-calculator.ts', alias: 'equity_dilution', baseline: '94bffb2' },
   { slug: 'solopreneur-saas-pricing-planner', file: 'src/engines/cost/saas-pricing-planner.ts', alias: 'saas_pricing_planner', baseline: '94bffb2' },
+  // P168 B3-13 组 2 —— 次重的 5 个引擎（148 行）。
+  { slug: 'solopreneur-productivity-score', file: 'src/engines/cost/productivity-score.ts', alias: 'productivity_score', baseline: '94bffb2' },
+  { slug: 'solopreneur-remote-vs-office-calculator', file: 'src/engines/cost/remote-vs-office-calculator.ts', alias: 'remote_vs_office', baseline: '94bffb2' },
+  { slug: 'solopreneur-ltv-calculator', file: 'src/engines/valuation/ltv-calculator.ts', alias: 'ltv', baseline: '94bffb2' },
+  { slug: 'solopreneur-compound-interest-calculator', file: 'src/engines/investment/compound-interest-calculator.ts', alias: 'compound_interest', baseline: '94bffb2' },
+  { slug: 'solopreneur-unit-economics-calculator', file: 'src/engines/valuation/unit-economics-calculator.ts', alias: 'unit_economics', baseline: '94bffb2' },
 ];
 
 export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH];

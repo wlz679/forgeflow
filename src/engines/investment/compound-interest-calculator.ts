@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -59,11 +62,16 @@ export function yearsToTarget(
   return Infinity;
 }
 
-export function rateHealth(rate: number): { emoji: string; label: string } {
-  if (rate >= 7) return { emoji: '🟢', label: 'strong (S&P 500 historical)' };
-  if (rate >= 4) return { emoji: '🟡', label: 'average (HYSA / CDs)' };
-  if (rate >= 1) return { emoji: '🟠', label: 'low (basic savings account)' };
-  return { emoji: '🔴', label: 'below inflation — consider alternatives' };
+/**
+ * 利率健康度的**档位键**（P168 B3-13：每档一个 code 字面量 ⇒ zh 页能整行中文）。
+ */
+export type RateHealthBand = 'strong' | 'average' | 'low' | 'below_inflation';
+
+export function rateHealth(rate: number): { emoji: string; label: string; band: RateHealthBand } {
+  if (rate >= 7) return { emoji: '🟢', label: 'strong (S&P 500 historical)', band: 'strong' };
+  if (rate >= 4) return { emoji: '🟡', label: 'average (HYSA / CDs)', band: 'average' };
+  if (rate >= 1) return { emoji: '🟠', label: 'low (basic savings account)', band: 'low' };
+  return { emoji: '🔴', label: 'below inflation — consider alternatives', band: 'below_inflation' };
 }
 
 // ============== calculate() — full 9-section output (v3 standard) ==============
@@ -96,7 +104,7 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
     const interestY = fvY - contribY;
     const filled = fvY > 0 ? Math.min(20, Math.round((interestY / fvY) * 20)) : 0;
     const bar = '█'.repeat(filled) + '░'.repeat(20 - filled);
-    milestoneSection += '• Year ' + y + ': ' + money(fvY) + '  (contributed ' + money(contribY) + ' / interest ' + money(interestY) + ')\n';
+    milestoneSection += makeToken('calc_out.compound_interest.row.milestone_year', '• Year ' + y + ': ' + money(fvY) + '  (contributed ' + money(contribY) + ' / interest ' + money(interestY) + ')', { year: String(y), fv: money(fvY), contributed: money(contribY), interest: money(interestY) }) + '\n';
     milestoneSection += '  ' + bar + ' ' + ratio(interestY, fvY) + ' from compounding\n';
   }
 
@@ -105,22 +113,30 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
   let goalSection = '';
   for (const target of goalTargets) {
     const y = yearsToTarget(target, principal, monthlyContribution, annualRate, compoundFrequency);
-    goalSection += '• ' + money(target) + ': ' +
-      (y === Infinity ? 'never (within 50 yrs at current pace — try higher rate or contribution)' :
-       y <= years ? 'already reached (year ' + y + ')' :
-       Math.round(y) + ' years from now (year ' + Math.round(y) + ')') + '\n';
+    const yearsOut = Math.round(y);
+    goalSection += (y === Infinity
+      ? makeToken('calc_out.compound_interest.row.goal_never', '• ' + money(target) + ': never (within 50 yrs at current pace — try higher rate or contribution)', { target: money(target) })
+      : y <= years
+        ? makeToken('calc_out.compound_interest.row.goal_already', '• ' + money(target) + ': already reached (year ' + y + ')', { target: money(target), year: String(y) })
+        : makeToken('calc_out.compound_interest.row.goal_years', '• ' + money(target) + ': ' + yearsOut + ' years from now (year ' + yearsOut + ')', { target: money(target), years: String(yearsOut) })) + '\n';
   }
 
-  // Tip selection based on inputs
+  // Tip selection based on inputs（P168 B3-13：每分支一个 code 字面量；默认档还要按利率档再拆 ⇒ 档位描述写进兜底）
   let tip: string;
   if (years >= 30) {
-    tip = '💡 Tip: Time in the market beats timing the market. $' + fmt(monthlyContribution) + '/mo for ' + years + ' years at ' + annualRate + '% builds ' + money(fv) + '. Starting 10 years earlier typically doubles the final balance.';
+    tip = makeToken('calc_out.compound_interest.row.tip_long_horizon', '💡 Tip: Time in the market beats timing the market. $' + fmt(monthlyContribution) + '/mo for ' + years + ' years at ' + annualRate + '% builds ' + money(fv) + '. Starting 10 years earlier typically doubles the final balance.', { contrib: fmt(monthlyContribution), years: String(years), rate: String(annualRate), final: money(fv) });
   } else if (principal === 0 && monthlyContribution > 0) {
-    tip = '💡 Tip: Starting from $0 is fine — the habit of consistent contributions matters more than the seed amount. $' + fmt(monthlyContribution) + '/mo for ' + years + ' years builds ' + money(fv) + '.';
+    tip = makeToken('calc_out.compound_interest.row.tip_from_zero', '💡 Tip: Starting from $0 is fine — the habit of consistent contributions matters more than the seed amount. $' + fmt(monthlyContribution) + '/mo for ' + years + ' years builds ' + money(fv) + '.', { contrib: fmt(monthlyContribution), years: String(years), final: money(fv) });
   } else if (annualRate < 1) {
-    tip = '💡 Tip: At ' + annualRate + '% you are likely below inflation (~3%). Consider HYSA, I-bonds, or index funds to keep pace with rising costs.';
+    tip = makeToken('calc_out.compound_interest.row.tip_below_inflation', '💡 Tip: At ' + annualRate + '% you are likely below inflation (~3%). Consider HYSA, I-bonds, or index funds to keep pace with rising costs.', { rate: String(annualRate) });
+  } else if (health.band === 'strong') {
+    tip = makeToken('calc_out.compound_interest.row.tip_default_strong', '💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The ' + annualRate + '% rate you selected (strong (S&P 500 historical)) compounds most effectively over ' + years + '+ years.', { rate: String(annualRate), years: String(years) });
+  } else if (health.band === 'average') {
+    tip = makeToken('calc_out.compound_interest.row.tip_default_average', '💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The ' + annualRate + '% rate you selected (average (HYSA / CDs)) compounds most effectively over ' + years + '+ years.', { rate: String(annualRate), years: String(years) });
+  } else if (health.band === 'low') {
+    tip = makeToken('calc_out.compound_interest.row.tip_default_low', '💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The ' + annualRate + '% rate you selected (low (basic savings account)) compounds most effectively over ' + years + '+ years.', { rate: String(annualRate), years: String(years) });
   } else {
-    tip = '💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The ' + annualRate + '% rate you selected (' + health.label + ') compounds most effectively over ' + years + '+ years.';
+    tip = makeToken('calc_out.compound_interest.row.tip_default_below_inflation', '💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The ' + annualRate + '% rate you selected (below inflation — consider alternatives) compounds most effectively over ' + years + '+ years.', { rate: String(annualRate), years: String(years) });
   }
 
   const r =
@@ -129,9 +145,9 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Principal:                ' + money(principal) + '\n' +
     '• Total Contributions:      ' + money(monthlyContribution * 12 * years) + '  ($' + fmt(monthlyContribution) + '/mo × 12 × ' + years + ')\n' +
-    '• Total Interest Earned:    ' + money(totalInterest) + '\n' +
+    makeToken('calc_out.compound_interest.row.total_interest', '• Total Interest Earned:    ' + money(totalInterest), { interest: money(totalInterest) }) + '\n' +
     '• Final Balance:            ' + money(fv) + '\n' +
-    '• Multiplier:               ' + multiplier.toFixed(2) + 'x growth on contributions\n\n' +
+    makeToken('calc_out.compound_interest.row.multiplier', '• Multiplier:               ' + multiplier.toFixed(2) + 'x growth on contributions', { mult: multiplier.toFixed(2) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Milestone Growth:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
@@ -139,33 +155,39 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Compounding Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + health.emoji + ' Rate ' + annualRate + '% is ' + health.label + '\n' +
+    (health.band === 'strong'
+      ? makeToken('calc_out.compound_interest.row.health_rate_strong', '• 🟢 Rate ' + annualRate + '% is strong (S&P 500 historical)', { rate: String(annualRate) })
+      : health.band === 'average'
+        ? makeToken('calc_out.compound_interest.row.health_rate_average', '• 🟡 Rate ' + annualRate + '% is average (HYSA / CDs)', { rate: String(annualRate) })
+        : health.band === 'low'
+          ? makeToken('calc_out.compound_interest.row.health_rate_low', '• 🟠 Rate ' + annualRate + '% is low (basic savings account)', { rate: String(annualRate) })
+          : makeToken('calc_out.compound_interest.row.health_rate_below_inflation', '• 🔴 Rate ' + annualRate + '% is below inflation — consider alternatives', { rate: String(annualRate) })) + '\n' +
     (compoundFrequency === 'monthly'
-      ? '• 🟢 Monthly compounding — APY boost over annual is ~' + ((Math.pow(1 + annualRate / 100 / 12, 12) - 1) * 100).toFixed(3) + '%\n'
-      : '• 🟡 Annual compounding — switching to monthly adds ~' + ((Math.pow(1 + annualRate / 100 / 12, 12) - 1) * 100 - annualRate).toFixed(3) + '% APY\n') +
-    '• Contribution ratio:       ' + ratio(totalContrib, fv) + ' of final balance from contributions\n' +
-    '• Interest ratio:           ' + ratio(totalInterest, fv) + ' of final balance from compounding\n\n' +
+      ? makeToken('calc_out.compound_interest.row.health_compounding_monthly', '• 🟢 Monthly compounding — APY boost over annual is ~' + ((Math.pow(1 + annualRate / 100 / 12, 12) - 1) * 100).toFixed(3) + '%', { apy: ((Math.pow(1 + annualRate / 100 / 12, 12) - 1) * 100).toFixed(3) }) + '\n'
+      : makeToken('calc_out.compound_interest.row.health_compounding_annual', '• 🟡 Annual compounding — switching to monthly adds ~' + ((Math.pow(1 + annualRate / 100 / 12, 12) - 1) * 100 - annualRate).toFixed(3) + '% APY', { apy: ((Math.pow(1 + annualRate / 100 / 12, 12) - 1) * 100 - annualRate).toFixed(3) }) + '\n') +
+    makeToken('calc_out.compound_interest.row.health_contribution_ratio', '• Contribution ratio:       ' + ratio(totalContrib, fv) + ' of final balance from contributions', { pct: ratio(totalContrib, fv) }) + '\n' +
+    makeToken('calc_out.compound_interest.row.health_interest_ratio', '• Interest ratio:           ' + ratio(totalInterest, fv) + ' of final balance from compounding', { pct: ratio(totalInterest, fv) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🎯 Time-to-Goal Milestones:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     goalSection + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Compound vs Simple Break-Even:\n' +
+    makeToken('calc_out.compound_interest.row.section_break_even', '⚖️ Compound vs Simple Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Simple Interest Final:    ' + money(simpleFv) + '\n' +
-    '• Compound Interest Final:  ' + money(fv) + '\n' +
-    '• Compound Advantage:       ' + money(compoundAdvantage) + '  (' + ratio(compoundAdvantage, simpleFv) + ' extra)\n' +
-    '• Rule: Compound interest = interest on interest. Time is the multiplier.\n\n' +
+    makeToken('calc_out.compound_interest.row.breakeven_simple_final', '• Simple Interest Final:    ' + money(simpleFv), { value: money(simpleFv) }) + '\n' +
+    makeToken('calc_out.compound_interest.row.breakeven_compound_final', '• Compound Interest Final:  ' + money(fv), { value: money(fv) }) + '\n' +
+    makeToken('calc_out.compound_interest.row.breakeven_advantage', '• Compound Advantage:       ' + money(compoundAdvantage) + '  (' + ratio(compoundAdvantage, simpleFv) + ' extra)', { advantage: money(compoundAdvantage), pct: ratio(compoundAdvantage, simpleFv) }) + '\n' +
+    makeToken('calc_out.compound_interest.row.breakeven_rule', '• Rule: Compound interest = interest on interest. Time is the multiplier.') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Add $100/mo extra:               ' + money(futureValue(principal, monthlyContribution + 100, annualRate, compoundFrequency, years) - fv) + ' more at final\n' +
-    '• Increase rate by 1%:             ' + money(futureValue(principal, monthlyContribution, annualRate + 1, compoundFrequency, years) - fv) + ' more at final\n' +
-    '• Extend period by 5 years:        ' + money(futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years + 5) - fv) + ' more at final\n' +
+    makeToken('calc_out.compound_interest.row.whatif_add_100mo', '• Add $100/mo extra:               ' + money(futureValue(principal, monthlyContribution + 100, annualRate, compoundFrequency, years) - fv) + ' more at final', { extra: money(futureValue(principal, monthlyContribution + 100, annualRate, compoundFrequency, years) - fv) }) + '\n' +
+    makeToken('calc_out.compound_interest.row.whatif_rate_plus_1', '• Increase rate by 1%:             ' + money(futureValue(principal, monthlyContribution, annualRate + 1, compoundFrequency, years) - fv) + ' more at final', { extra: money(futureValue(principal, monthlyContribution, annualRate + 1, compoundFrequency, years) - fv) }) + '\n' +
+    makeToken('calc_out.compound_interest.row.whatif_extend_5y', '• Extend period by 5 years:        ' + money(futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years + 5) - fv) + ' more at final', { extra: money(futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years + 5) - fv) }) + '\n' +
     (compoundFrequency === 'annually'
-      ? '• Switch to monthly compounding:  ' + money(futureValue(principal, monthlyContribution, annualRate, 'monthly', years) - fv) + ' more at final\n'
-      : '• Switch to annual compounding:   ' + money(fv - futureValue(principal, monthlyContribution, annualRate, 'annually', years)) + ' less at final\n') +
-    '• Delay start by 1 year:           ' + money(fv - futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years - 1)) + ' lost (cost of procrastination)\n\n' +
+      ? makeToken('calc_out.compound_interest.row.whatif_switch_monthly', '• Switch to monthly compounding:  ' + money(futureValue(principal, monthlyContribution, annualRate, 'monthly', years) - fv) + ' more at final', { extra: money(futureValue(principal, monthlyContribution, annualRate, 'monthly', years) - fv) }) + '\n'
+      : makeToken('calc_out.compound_interest.row.whatif_switch_annual', '• Switch to annual compounding:   ' + money(fv - futureValue(principal, monthlyContribution, annualRate, 'annually', years)) + ' less at final', { loss: money(fv - futureValue(principal, monthlyContribution, annualRate, 'annually', years)) }) + '\n') +
+    makeToken('calc_out.compound_interest.row.whatif_delay_1y', '• Delay start by 1 year:           ' + money(fv - futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years - 1)) + ' lost (cost of procrastination)', { lost: money(fv - futureValue(principal, monthlyContribution, annualRate, compoundFrequency, years - 1)) }) + '\n\n' +
     tip;
 
   const results: string[] = [r];
@@ -175,7 +197,7 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
   for (const r2 of rates) {
     const fvR = futureValue(principal, monthlyContribution, r2, compoundFrequency, years);
     const intR = fvR - totalContrib;
-    results.push('Comparison: ' + r2 + '% rate for ' + years + ' years → ' + money(fvR) + ' (interest ' + money(intR) + ')');
+    results.push(makeToken('calc_out.compound_interest.row.comparison_row', 'Comparison: ' + r2 + '% rate for ' + years + ' years → ' + money(fvR) + ' (interest ' + money(intR) + ')', { rate: String(r2), years: String(years), fv: money(fvR), interest: money(intR) }));
   }
 
   return results;
@@ -184,62 +206,62 @@ function calculateCompoundInterest(inputs: Record<string, string>): string[] {
 // ============== customFn — minified JS string, runs in browser via new Function ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let d=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,i,o,n,r){if(o===0||r===0)return e+i*12*r;const t=o/100;if(n==="monthly"){const m=t/12,p=r*12,w=e*Math.pow(1+m,p),y=i*((Math.pow(1+m,p)-1)/m);return w+y}const c=e*Math.pow(1+t,r),h=i*12*((Math.pow(1+t,r)-1)/t);return c+h},S=function(e,i,o,n){const r=i*12*n;return e*(1+o/100*n)+r},C=function(e,i,o,n,r){if(u(i,o,n,r,50)<e)return 1/0;for(let t=.5;t<=50;t+=.5)if(u(i,o,n,r,t)>=e)return t;return 1/0},T=function(e){return e>=7?{emoji:"🟢",label:"strong (S&P 500 historical)"}:e>=4?{emoji:"🟡",label:"average (HYSA / CDs)"}:e>=1?{emoji:"🟠",label:"low (basic savings account)"}:{emoji:"🔴",label:"below inflation — consider alternatives"}},I=function(e){const i=d(parseFloat(e.principal)||0),o=d(parseFloat(e.monthlyContribution)||0),n=d(parseFloat(e.annualRate)||0),r=e.compoundFrequency==="annually"?"annually":"monthly",t=Math.min(50,d(parseFloat(e.years)||0)),c=u(i,o,n,r,t),h=S(i,o,n,t),m=i+o*12*t,p=c-m,w=m>0?c/m:0,y=T(n),x=c-h,g=l=>l.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),a=l=>"$"+g(l),v=(l,s)=>s>0?(l/s*100).toFixed(1)+"%":"0.0%",P=[5,10,15,20,t].filter((l,s,f)=>f.indexOf(l)===s).sort((l,s)=>l-s);let M="";for(const l of P){const s=u(i,o,n,r,l),f=i+o*12*l,F=s-f,k=s>0?Math.min(20,Math.round(F/s*20)):0,R="█".repeat(k)+"░".repeat(20-k);M+="• Year "+l+": "+a(s)+"  (contributed "+a(f)+" / interest "+a(F)+\`)
-\`,M+="  "+R+" "+v(F,s)+\` from compounding
-\`}const $=[1e5,5e5,1e6];let A="";for(const l of $){const s=C(l,i,o,n,r);A+="• "+a(l)+": "+(s===1/0?"never (within 50 yrs at current pace — try higher rate or contribution)":s<=t?"already reached (year "+s+")":Math.round(s)+" years from now (year "+Math.round(s)+")")+\`
-\`}let b;t>=30?b="💡 Tip: Time in the market beats timing the market. $"+g(o)+"/mo for "+t+" years at "+n+"% builds "+a(c)+". Starting 10 years earlier typically doubles the final balance.":i===0&&o>0?b="💡 Tip: Starting from $0 is fine — the habit of consistent contributions matters more than the seed amount. $"+g(o)+"/mo for "+t+" years builds "+a(c)+".":n<1?b="💡 Tip: At "+n+"% you are likely below inflation (~3%). Consider HYSA, I-bonds, or index funds to keep pace with rising costs.":b="💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The "+n+"% rate you selected ("+y.label+") compounds most effectively over "+t+"+ years.";const Y=[\`⏰ Compound Interest Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let b=function(c){return Number.isNaN(c)?0:Math.max(0,c)},_=function(c,i,e,t,l){if(e===0||l===0)return c+i*12*l;const n=e/100;if(t==="monthly"){const p=n/12,g=l*12,v=c*Math.pow(1+p,g),f=i*((Math.pow(1+p,g)-1)/p);return v+f}const a=c*Math.pow(1+n,l),h=i*12*((Math.pow(1+n,l)-1)/n);return a+h},x=function(c,i,e,t){const l=i*12*t;return c*(1+e/100*t)+l},M=function(c,i,e,t,l){if(_(i,e,t,l,50)<c)return 1/0;for(let n=.5;n<=50;n+=.5)if(_(i,e,t,l,n)>=c)return n;return 1/0},A=function(c){return c>=7?{emoji:"🟢",label:"strong (S&P 500 historical)",band:"strong"}:c>=4?{emoji:"🟡",label:"average (HYSA / CDs)",band:"average"}:c>=1?{emoji:"🟠",label:"low (basic savings account)",band:"low"}:{emoji:"🔴",label:"below inflation — consider alternatives",band:"below_inflation"}},I=function(c){const i=b(parseFloat(c.principal)||0),e=b(parseFloat(c.monthlyContribution)||0),t=b(parseFloat(c.annualRate)||0),l=c.compoundFrequency==="annually"?"annually":"monthly",n=Math.min(50,b(parseFloat(c.years)||0)),a=_(i,e,t,l,n),h=x(i,e,t,n),p=i+e*12*n,g=a-p,v=p>0?a/p:0,f=A(t),S=a-h,y=s=>s.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),o=s=>"$"+y(s),w=(s,u)=>u>0?(s/u*100).toFixed(1)+"%":"0.0%",q=[5,10,15,20,n].filter((s,u,d)=>d.indexOf(s)===u).sort((s,u)=>s-u);let C="";for(const s of q){const u=_(i,e,t,l,s),d=i+e*12*s,F=u-d,P=u>0?Math.min(20,Math.round(F/u*20)):0,N="█".repeat(P)+"░".repeat(20-P);C+=r("calc_out.compound_interest.row.milestone_year","• Year "+s+": "+o(u)+"  (contributed "+o(d)+" / interest "+o(F)+")",{year:String(s),fv:o(u),contributed:o(d),interest:o(F)})+\`
+\`,C+="  "+N+" "+w(F,u)+\` from compounding
+\`}const E=[1e5,5e5,1e6];let Y="";for(const s of E){const u=M(s,i,e,t,l),d=Math.round(u);Y+=(u===1/0?r("calc_out.compound_interest.row.goal_never","• "+o(s)+": never (within 50 yrs at current pace — try higher rate or contribution)",{target:o(s)}):u<=n?r("calc_out.compound_interest.row.goal_already","• "+o(s)+": already reached (year "+u+")",{target:o(s),year:String(u)}):r("calc_out.compound_interest.row.goal_years","• "+o(s)+": "+d+" years from now (year "+d+")",{target:o(s),years:String(d)}))+\`
+\`}let m;n>=30?m=r("calc_out.compound_interest.row.tip_long_horizon","💡 Tip: Time in the market beats timing the market. $"+y(e)+"/mo for "+n+" years at "+t+"% builds "+o(a)+". Starting 10 years earlier typically doubles the final balance.",{contrib:y(e),years:String(n),rate:String(t),final:o(a)}):i===0&&e>0?m=r("calc_out.compound_interest.row.tip_from_zero","💡 Tip: Starting from $0 is fine — the habit of consistent contributions matters more than the seed amount. $"+y(e)+"/mo for "+n+" years builds "+o(a)+".",{contrib:y(e),years:String(n),final:o(a)}):t<1?m=r("calc_out.compound_interest.row.tip_below_inflation","💡 Tip: At "+t+"% you are likely below inflation (~3%). Consider HYSA, I-bonds, or index funds to keep pace with rising costs.",{rate:String(t)}):f.band==="strong"?m=r("calc_out.compound_interest.row.tip_default_strong","💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The "+t+"% rate you selected (strong (S&P 500 historical)) compounds most effectively over "+n+"+ years.",{rate:String(t),years:String(n)}):f.band==="average"?m=r("calc_out.compound_interest.row.tip_default_average","💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The "+t+"% rate you selected (average (HYSA / CDs)) compounds most effectively over "+n+"+ years.",{rate:String(t),years:String(n)}):f.band==="low"?m=r("calc_out.compound_interest.row.tip_default_low","💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The "+t+"% rate you selected (low (basic savings account)) compounds most effectively over "+n+"+ years.",{rate:String(t),years:String(n)}):m=r("calc_out.compound_interest.row.tip_default_below_inflation","💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The "+t+"% rate you selected (below inflation — consider alternatives) compounds most effectively over "+n+"+ years.",{rate:String(t),years:String(n)});const j=[\`⏰ Compound Interest Calculator
 
 💰 Growth Snapshot:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Principal:                \`+a(i)+\`
-• Total Contributions:      \`+a(o*12*t)+"  ($"+g(o)+"/mo × 12 × "+t+\`)
-• Total Interest Earned:    \`+a(p)+\`
-• Final Balance:            \`+a(c)+\`
-• Multiplier:               \`+w.toFixed(2)+\`x growth on contributions
+• Principal:                \`+o(i)+\`
+• Total Contributions:      \`+o(e*12*n)+"  ($"+y(e)+"/mo × 12 × "+n+\`)
+\`+r("calc_out.compound_interest.row.total_interest","• Total Interest Earned:    "+o(g),{interest:o(g)})+\`
+• Final Balance:            \`+o(a)+\`
+\`+r("calc_out.compound_interest.row.multiplier","• Multiplier:               "+v.toFixed(2)+"x growth on contributions",{mult:v.toFixed(2)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Milestone Growth:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+M+\`
+\`+C+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Compounding Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+y.emoji+" Rate "+n+"% is "+y.label+\`
-\`+(r==="monthly"?"• 🟢 Monthly compounding — APY boost over annual is ~"+((Math.pow(1+n/100/12,12)-1)*100).toFixed(3)+\`%
-\`:"• 🟡 Annual compounding — switching to monthly adds ~"+((Math.pow(1+n/100/12,12)-1)*100-n).toFixed(3)+\`% APY
-\`)+"• Contribution ratio:       "+v(m,c)+\` of final balance from contributions
-• Interest ratio:           \`+v(p,c)+\` of final balance from compounding
+\`+(f.band==="strong"?r("calc_out.compound_interest.row.health_rate_strong","• 🟢 Rate "+t+"% is strong (S&P 500 historical)",{rate:String(t)}):f.band==="average"?r("calc_out.compound_interest.row.health_rate_average","• 🟡 Rate "+t+"% is average (HYSA / CDs)",{rate:String(t)}):f.band==="low"?r("calc_out.compound_interest.row.health_rate_low","• 🟠 Rate "+t+"% is low (basic savings account)",{rate:String(t)}):r("calc_out.compound_interest.row.health_rate_below_inflation","• 🔴 Rate "+t+"% is below inflation — consider alternatives",{rate:String(t)}))+\`
+\`+(l==="monthly"?r("calc_out.compound_interest.row.health_compounding_monthly","• 🟢 Monthly compounding — APY boost over annual is ~"+((Math.pow(1+t/100/12,12)-1)*100).toFixed(3)+"%",{apy:((Math.pow(1+t/100/12,12)-1)*100).toFixed(3)})+\`
+\`:r("calc_out.compound_interest.row.health_compounding_annual","• 🟡 Annual compounding — switching to monthly adds ~"+((Math.pow(1+t/100/12,12)-1)*100-t).toFixed(3)+"% APY",{apy:((Math.pow(1+t/100/12,12)-1)*100-t).toFixed(3)})+\`
+\`)+r("calc_out.compound_interest.row.health_contribution_ratio","• Contribution ratio:       "+w(p,a)+" of final balance from contributions",{pct:w(p,a)})+\`
+\`+r("calc_out.compound_interest.row.health_interest_ratio","• Interest ratio:           "+w(g,a)+" of final balance from compounding",{pct:w(g,a)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🎯 Time-to-Goal Milestones:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+A+\`
+\`+Y+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Compound vs Simple Break-Even:
+\`+r("calc_out.compound_interest.row.section_break_even","⚖️ Compound vs Simple Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Simple Interest Final:    \`+a(h)+\`
-• Compound Interest Final:  \`+a(c)+\`
-• Compound Advantage:       \`+a(x)+"  ("+v(x,h)+\` extra)
-• Rule: Compound interest = interest on interest. Time is the multiplier.
+\`+r("calc_out.compound_interest.row.breakeven_simple_final","• Simple Interest Final:    "+o(h),{value:o(h)})+\`
+\`+r("calc_out.compound_interest.row.breakeven_compound_final","• Compound Interest Final:  "+o(a),{value:o(a)})+\`
+\`+r("calc_out.compound_interest.row.breakeven_advantage","• Compound Advantage:       "+o(S)+"  ("+w(S,h)+" extra)",{advantage:o(S),pct:w(S,h)})+\`
+\`+r("calc_out.compound_interest.row.breakeven_rule","• Rule: Compound interest = interest on interest. Time is the multiplier.")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Add $100/mo extra:               \`+a(u(i,o+100,n,r,t)-c)+\` more at final
-• Increase rate by 1%:             \`+a(u(i,o,n+1,r,t)-c)+\` more at final
-• Extend period by 5 years:        \`+a(u(i,o,n,r,t+5)-c)+\` more at final
-\`+(r==="annually"?"• Switch to monthly compounding:  "+a(u(i,o,n,"monthly",t)-c)+\` more at final
-\`:"• Switch to annual compounding:   "+a(c-u(i,o,n,"annually",t))+\` less at final
-\`)+"• Delay start by 1 year:           "+a(c-u(i,o,n,r,t-1))+\` lost (cost of procrastination)
+\`+r("calc_out.compound_interest.row.whatif_add_100mo","• Add $100/mo extra:               "+o(_(i,e+100,t,l,n)-a)+" more at final",{extra:o(_(i,e+100,t,l,n)-a)})+\`
+\`+r("calc_out.compound_interest.row.whatif_rate_plus_1","• Increase rate by 1%:             "+o(_(i,e,t+1,l,n)-a)+" more at final",{extra:o(_(i,e,t+1,l,n)-a)})+\`
+\`+r("calc_out.compound_interest.row.whatif_extend_5y","• Extend period by 5 years:        "+o(_(i,e,t,l,n+5)-a)+" more at final",{extra:o(_(i,e,t,l,n+5)-a)})+\`
+\`+(l==="annually"?r("calc_out.compound_interest.row.whatif_switch_monthly","• Switch to monthly compounding:  "+o(_(i,e,t,"monthly",n)-a)+" more at final",{extra:o(_(i,e,t,"monthly",n)-a)})+\`
+\`:r("calc_out.compound_interest.row.whatif_switch_annual","• Switch to annual compounding:   "+o(a-_(i,e,t,"annually",n))+" less at final",{loss:o(a-_(i,e,t,"annually",n))})+\`
+\`)+r("calc_out.compound_interest.row.whatif_delay_1y","• Delay start by 1 year:           "+o(a-_(i,e,t,l,n-1))+" lost (cost of procrastination)",{lost:o(a-_(i,e,t,l,n-1))})+\`
 
-\`+b],D=[2,4,7,10,15];for(const l of D){const s=u(i,o,l,r,t),f=s-m;Y.push("Comparison: "+l+"% rate for "+t+" years → "+a(s)+" (interest "+a(f)+")")}return Y},_=function(e,i,o){var n=j(e);return Array.isArray(n)?n.join(\`
-\`):String(n)};var E=d,N=u,G=S,H=C,B=T,q=I,K=_,j=function(e){return I(e)};return[_(inputs,pick,fill)]}finally{}
+\`+m],H=[2,4,7,10,15];for(const s of H){const u=_(i,e,s,l,n),d=u-p;j.push(r("calc_out.compound_interest.row.comparison_row","Comparison: "+s+"% rate for "+n+" years → "+o(u)+" (interest "+o(d)+")",{rate:String(s),years:String(n),fv:o(u),interest:o(d)}))}return j},R=function(c,i,e){var t=$(c);return Array.isArray(t)?t.join(\`
+\`):String(t)};var O=b,G=_,z=x,B=M,J=A,K=I,L=R,r=tk,D='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+D)(),$=function(c){return I(c)};return[R(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine — to be filled in Step 6 ==============
@@ -269,7 +291,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateCompoundInterest(inputs);
   },
-  staticExamples: ['⏰ Compound Interest Calculator\n\n💰 Growth Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Principal:                $10,000\n• Total Contributions:      $120,000  ($500/mo × 12 × 20)\n• Total Interest Earned:    $170,851\n• Final Balance:            $300,851\n• Multiplier:               2.31x growth on contributions\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Milestone Growth:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Year 5: $49,973  (contributed $40,000 / interest $9,973)\n  ████░░░░░░░░░░░░░░░░ 20.0% from compounding\n• Year 10: $106,639  (contributed $70,000 / interest $36,639)\n  ███████░░░░░░░░░░░░░ 34.4% from compounding\n• Year 15: $186,971  (contributed $100,000 / interest $86,971)\n  █████████░░░░░░░░░░░ 46.5% from compounding\n• Year 20: $300,851  (contributed $130,000 / interest $170,851)\n  ███████████░░░░░░░░░ 56.8% from compounding\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Compounding Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Rate 7% is strong (S&P 500 historical)\n• 🟢 Monthly compounding — APY boost over annual is ~7.229%\n• Contribution ratio:       43.2% of final balance from contributions\n• Interest ratio:           56.8% of final balance from compounding\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Time-to-Goal Milestones:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• $100,000: already reached (year 9.5)\n• $500,000: 26 years from now (year 26)\n• $1,000,000: 35 years from now (year 35)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Compound vs Simple Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Simple Interest Final:    $144,000\n• Compound Interest Final:  $300,851\n• Compound Advantage:       $156,851  (108.9% extra)\n• Rule: Compound interest = interest on interest. Time is the multiplier.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Add $100/mo extra:               $52,093 more at final\n• Increase rate by 1%:             $42,928 more at final\n• Extend period by 5 years:        $161,439 more at final\n• Switch to annual compounding:   $16,181 less at final\n• Delay start by 1 year:           $26,061 lost (cost of procrastination)\n\n💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The 7% rate you selected (strong (S&P 500 historical)) compounds most effectively over 20+ years.\nComparison: 2% rate for 20 years → $162,312 (interest $32,312)\nComparison: 4% rate for 20 years → $205,613 (interest $75,613)\nComparison: 7% rate for 20 years → $300,851 (interest $170,851)\nComparison: 10% rate for 20 years → $452,965 (interest $322,965)\nComparison: 15% rate for 20 years → $945,775 (interest $815,775)'], // regenerated by scripts/codegen-examples.mjs
+  staticExamples: ['⏰ Compound Interest Calculator\n\n💰 Growth Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Principal:                $10,000\n• Total Contributions:      $120,000  ($500/mo × 12 × 20)\n$calc_out.compound_interest.row.total_interest{"interest":"$170,851"}|• Total Interest Earned:    $170,851|\n• Final Balance:            $300,851\n$calc_out.compound_interest.row.multiplier{"mult":"2.31"}|• Multiplier:               2.31x growth on contributions|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Milestone Growth:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.compound_interest.row.milestone_year{"year":"5","fv":"$49,973","contributed":"$40,000","interest":"$9,973"}|• Year 5: $49,973  (contributed $40,000 / interest $9,973)|\n  ████░░░░░░░░░░░░░░░░ 20.0% from compounding\n$calc_out.compound_interest.row.milestone_year{"year":"10","fv":"$106,639","contributed":"$70,000","interest":"$36,639"}|• Year 10: $106,639  (contributed $70,000 / interest $36,639)|\n  ███████░░░░░░░░░░░░░ 34.4% from compounding\n$calc_out.compound_interest.row.milestone_year{"year":"15","fv":"$186,971","contributed":"$100,000","interest":"$86,971"}|• Year 15: $186,971  (contributed $100,000 / interest $86,971)|\n  █████████░░░░░░░░░░░ 46.5% from compounding\n$calc_out.compound_interest.row.milestone_year{"year":"20","fv":"$300,851","contributed":"$130,000","interest":"$170,851"}|• Year 20: $300,851  (contributed $130,000 / interest $170,851)|\n  ███████████░░░░░░░░░ 56.8% from compounding\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Compounding Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.compound_interest.row.health_rate_strong{"rate":"7"}|• 🟢 Rate 7% is strong (S&P 500 historical)|\n$calc_out.compound_interest.row.health_compounding_monthly{"apy":"7.229"}|• 🟢 Monthly compounding — APY boost over annual is ~7.229%|\n$calc_out.compound_interest.row.health_contribution_ratio{"pct":"43.2%"}|• Contribution ratio:       43.2% of final balance from contributions|\n$calc_out.compound_interest.row.health_interest_ratio{"pct":"56.8%"}|• Interest ratio:           56.8% of final balance from compounding|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Time-to-Goal Milestones:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.compound_interest.row.goal_already{"target":"$100,000","year":"9.5"}|• $100,000: already reached (year 9.5)|\n$calc_out.compound_interest.row.goal_years{"target":"$500,000","years":"26"}|• $500,000: 26 years from now (year 26)|\n$calc_out.compound_interest.row.goal_years{"target":"$1,000,000","years":"35"}|• $1,000,000: 35 years from now (year 35)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.compound_interest.row.section_break_even|⚖️ Compound vs Simple Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.compound_interest.row.breakeven_simple_final{"value":"$144,000"}|• Simple Interest Final:    $144,000|\n$calc_out.compound_interest.row.breakeven_compound_final{"value":"$300,851"}|• Compound Interest Final:  $300,851|\n$calc_out.compound_interest.row.breakeven_advantage{"advantage":"$156,851","pct":"108.9%"}|• Compound Advantage:       $156,851  (108.9% extra)|\n$calc_out.compound_interest.row.breakeven_rule|• Rule: Compound interest = interest on interest. Time is the multiplier.|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.compound_interest.row.whatif_add_100mo{"extra":"$52,093"}|• Add $100/mo extra:               $52,093 more at final|\n$calc_out.compound_interest.row.whatif_rate_plus_1{"extra":"$42,928"}|• Increase rate by 1%:             $42,928 more at final|\n$calc_out.compound_interest.row.whatif_extend_5y{"extra":"$161,439"}|• Extend period by 5 years:        $161,439 more at final|\n$calc_out.compound_interest.row.whatif_switch_annual{"loss":"$16,181"}|• Switch to annual compounding:   $16,181 less at final|\n$calc_out.compound_interest.row.whatif_delay_1y{"lost":"$26,061"}|• Delay start by 1 year:           $26,061 lost (cost of procrastination)|\n\n$calc_out.compound_interest.row.tip_default_strong{"rate":"7","years":"20"}|💡 Tip: Compounding multiplies money over time. Reinvest all interest — withdrawal breaks the chain. The 7% rate you selected (strong (S&P 500 historical)) compounds most effectively over 20+ years.|\n$calc_out.compound_interest.row.comparison_row{"rate":"2","years":"20","fv":"$162,312","interest":"$32,312"}|Comparison: 2% rate for 20 years → $162,312 (interest $32,312)|\n$calc_out.compound_interest.row.comparison_row{"rate":"4","years":"20","fv":"$205,613","interest":"$75,613"}|Comparison: 4% rate for 20 years → $205,613 (interest $75,613)|\n$calc_out.compound_interest.row.comparison_row{"rate":"7","years":"20","fv":"$300,851","interest":"$170,851"}|Comparison: 7% rate for 20 years → $300,851 (interest $170,851)|\n$calc_out.compound_interest.row.comparison_row{"rate":"10","years":"20","fv":"$452,965","interest":"$322,965"}|Comparison: 10% rate for 20 years → $452,965 (interest $322,965)|\n$calc_out.compound_interest.row.comparison_row{"rate":"15","years":"20","fv":"$945,775","interest":"$815,775"}|Comparison: 15% rate for 20 years → $945,775 (interest $815,775)|'], // regenerated by scripts/codegen-examples.mjs
   faq: [
     { q: 'What is compound interest?', a: 'Compound interest is interest calculated on the initial principal and on the accumulated interest from previous periods. Unlike simple interest (which only pays interest on the original principal), compound interest grows your money exponentially because you earn "interest on interest". The longer your money compounds, the steeper the growth curve. A $10,000 deposit at 7% compounded annually becomes $16,289 after 10 years, $76,123 after 30 years, and $199,290 after 40 years.' },
     { q: 'How does compounding frequency affect returns?', a: 'Compounding frequency measures how often interest is added back to your balance and starts earning more interest. Annual compounding adds interest once per year; monthly compounding adds it 12 times per year. The difference is small for typical rates: at 7%, monthly compounding yields 7.229% APY vs 7.000% for annual — a ~0.23% difference per year. Over 30 years on $10K, that translates to about $5,000 more. The bigger lever is rate and time, not frequency.' },
