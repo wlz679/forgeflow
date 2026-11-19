@@ -49,8 +49,17 @@ test('P168 B3-7 G9 检测器自检：未记录的差异必须被抓出来', () =
     normalizeDates('• $20,000.00 MRR: 2.2 months (~Jan 2027)'),
     '日期归一化没把月份差异归一掉',
   );
+  // ①-b P168 B3-11：burn-rate 的 run-out 日期（格式不同：带冒号 + 多空格）也必须归一化
+  assert.equal(
+    normalizeDates('• Est. Cash Run-out:   Feb 2027'),
+    normalizeDates('• Est. Cash Run-out:   Jun 2027'),
+    '日期归一化没把 burn-rate 的 run-out 日期归一掉',
+  );
   // ② 白名单必须只覆盖「已记录的有意改动」
-  assert.ok(ALLOWED_DIFFS['solopreneur-mrr-calculator'], 'mrr 的有意改动没登记');
+  //   ⚠️ P168 B3-11：mrr 原先登记的「What-If Scenarios 冒号」差异**已不存在**
+  //     （基线重钉到 f2a9ff4 ⇒ 那次有意改动进了基线）⇒ 按「白名单不许养肥」移除该条目
+  //     ⇒ 原来这条「mrr 的有意改动没登记」的断言随之**作废并删除**（不是改松）：
+  //     mrr 的「有意改动」现在由**基线**承载（谁动了那一行 ⇒ 与基线不等 ⇒ G9 变红）。
   // ⭐ P168 B3-8：白名单条目会随批次增长（B3-8 新增 $$ 修复与 rental-yield 数值修复）
   //   ⇒ 不能把**数量**写死 ⇒ 改成两条更强的判据：
   //     · 白名单里的每个 slug 都必须是**已令牌化引擎**（不许登记不存在的引擎）；

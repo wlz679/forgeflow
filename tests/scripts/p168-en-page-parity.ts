@@ -43,8 +43,11 @@ export const PILOT_FILES: Record<string, string> = Object.fromEntries(TOKENIZED.
 
 /** ⭐ 已记录的「有意改动」白名单（每条都要写明理由） */
 export const ALLOWED_DIFFS: Record<string, string[]> = {
-  // mrr：`🔄 What-If Scenarios` → `🔄 What-If Scenarios:`（全仓主流写法带冒号；计划已记录）
-  'solopreneur-mrr-calculator': ['🔄 What-If Scenarios:'],
+  // ⚠️ P168 B3-11：mrr 原先登记过「🔄 What-If Scenarios → 🔄 What-If Scenarios:」
+  //   —— 那次**有意**的改动发生在 token 化期间 ⇒ 基线（token 化之前）不含冒号 ⇒ 差异成立。
+  //   ⭐ B3-11 把 mrr 的基线**重钉**到已含冒号的提交 ⇒ 该差异**已不存在**
+  //   ⇒ 条目变成「白名单养肥」⇒ 移除（G9 的「白名单不许养肥」自检也会要求移除它）。
+  //   ⇒ 意图改由**基线**承载：此后任何人动那一行 ⇒ 与基线不等 ⇒ G9 变红。
   // P168 B3-8 Task 7：saas-valuation 的**双美元号**修复（`$$1,000,000` → `$1,000,000`，4 行）
   //   —— 根因：`fmt()` 自带 '$'，调用处又拼了一个 '$' ⇒ 页面出现 `$$`。
   //   ⚠️ 白名单用 `$$` 作标记：修复后该页**已无任何 `$$`** ⇒ 未来任何含 `$$` 的差异
@@ -170,14 +173,19 @@ export function measureEnParity(slugs: string[]): EnParityRow[] {
     const raw = (e.generate ?? e.calculate).call(e, defaults[slug]);
     const text = Array.isArray(raw) ? raw.map(String).join(NL) : String(raw);
     const now = stripPricingBanner(renderCalcOutput(text, {}));
-    const A = normalizeDates(head).split(NL), B = normalizeDates(now).split(NL);
+    // ⭐ P168 B3-11：判定与差异必须用**同一份归一化文本**
+    //   —— 否则出现「原文不等、归一化后相等」的中间态 ⇒ diffs=0 却报「有 0 处未记录差异」。
+    //   日期漂移是「时间在走」，不是「英文页被改了」⇒ 归一化后相等即视为未变。
+    const normHead = normalizeDates(head);
+    const normNow = normalizeDates(now);
+    const A = normHead.split(NL), B = normNow.split(NL);
     const diffs: string[] = [];
     for (let i = 0; i < Math.max(A.length, B.length); i++) {
       if (A[i] !== B[i]) diffs.push('第 ' + (i + 1) + ' 行：HEAD ' + JSON.stringify(A[i]) + ' vs 现在 ' + JSON.stringify(B[i]));
     }
     const allow = ALLOWED_DIFFS[slug] ?? [];
     const allowed = diffs.length > 0 && diffs.every((d) => allow.some((a) => d.includes(a)));
-    rows.push({ slug, same: head === now, allowed, headChars: head.length, nowChars: now.length, diffs });
+    rows.push({ slug, same: normHead === normNow, allowed, headChars: head.length, nowChars: now.length, diffs });
   }
   return rows;
 }

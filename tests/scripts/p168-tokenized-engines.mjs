@@ -75,6 +75,34 @@ export const B3_9_AI_COST = [
 
 export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST];
 
+/**
+ * ⭐⭐ P168 B3-11：基线**重钉**表 —— 8 个引擎的英文页因 defaultInputs 修复而**合法地**变了。
+ *
+ *   背景：B3-11 修了 12 个引擎的 codegen defaultInputs（此前键名与引擎 `inputs[].name`
+ *   对不上 ⇒ staticExamples[0] 是「拿错输入算出来的」）⇒ 其中 8 个**已令牌化**引擎的
+ *   英文页内容随之改变（burn-rate 的「Gross Burn $0/mo」变成「$12,000/mo」…）。
+ *
+ *   ⇒ 它们原先的基线（令牌化**之前**的提交）已经**不再代表合法的英文页状态**
+ *   ⇒ 必须重钉到 B3-11 提交（该提交的 staticExamples[0] 已是新的合法状态）。
+ *
+ *   ⭐ 承重性不变：基线侧是 **git 里冻结的**内容，现在侧是**活的源码**
+ *   ⇒ 之后任何人改了引擎的英文输出 ⇒ 两边不等 ⇒ G9 变红。
+ *   （若基线也取自活的源码 ⇒ 两边恒等 ⇒ 真空绿 ⇒ 那就没有守卫了。）
+ *
+ *   ⚠️ 另有 2 个引擎（openai-token / ai-api-cost-comparison）本批**键对齐但输出不变**
+ *   ⇒ 它们的基线不用动。
+ */
+export const B3_11_REANCHORED = {
+  'solopreneur-claude-api-cost-calculator': 'f2a9ff4',
+  'solopreneur-gemini-api-cost-calculator': 'f2a9ff4',
+  'solopreneur-deepseek-api-cost-calculator': 'f2a9ff4',
+  'solopreneur-cac-calculator': 'f2a9ff4',
+  'solopreneur-burn-rate-calculator': 'f2a9ff4',
+  'solopreneur-market-size-estimator': 'f2a9ff4',
+  'solopreneur-mrr-calculator': 'f2a9ff4',
+  'solopreneur-revenue-projector': 'f2a9ff4'
+};
+
 
 /** 按 slug 取基线 SHA（未知 slug **抛错**，不能静默回落）
  *
@@ -84,5 +112,7 @@ export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_
 export function baselineFor(slug) {
   const hit = TOKENIZED.find((e) => e.slug === slug);
   if (!hit) throw new Error('未知 slug，没有基线：' + slug);
+  // ⭐ P168 B3-11：重钉表优先（那 8 个引擎的英文页已合法改变）
+  if (B3_11_REANCHORED[slug]) return B3_11_REANCHORED[slug];
   return hit.baseline;
 }

@@ -1885,7 +1885,7 @@
   "calc_out.revenue_projector.row.lost_revenue": "lost revenue",
   "calc_out.revenue_projector.row.ltv_cac_legend": "  = LTV ÷ CAC",
   "calc_out.revenue_projector.row.ltv_legend": "  = ARPU ÷ monthly churn",
-  "calc_out.revenue_projector.row.milestone": "• {target}:  {months} months [{months}–{months}]",
+  "calc_out.revenue_projector.row.milestone": "• {target}:  {months} months [{fast}–{slow}]",
   "calc_out.revenue_projector.row.milestone_far": "• {target}:  >5 years",
   "calc_out.revenue_projector.row.milestone_range": "  Range shows ±2% net growth variation.",
   "calc_out.revenue_projector.row.month_progress": "Month {month}:  {mrr}/mo  (+{delta})",

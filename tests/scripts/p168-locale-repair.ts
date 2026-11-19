@@ -39,6 +39,14 @@ const ZH_OVERRIDE: Record<string, string> = {
     '要把 {id} 从 {ratio}x 推到 🟢（≥3.0x）：',
   'calc_out.revenue_projector.row.quarter_milestone':
     '• Q{q}（第 {month} 个月）：  {mrr}/mo',
+  // ⭐ P168 B3-11（2026-11-18）：revenue-projector 的里程碑行模板把区间的**两个端点**
+  //   都写成了 {months}（应是 {fast}–{slow}）⇒ en/zh 模板渲染出来是退化的「[15–15]」。
+  //   ⚠️ 这个模板 bug 此前**被输入缺陷掩盖**：B3-11 之前 codegen 喂的键名对不上
+  //   ⇒ 引擎读到的 MRR 是错的 ⇒ 区间两端恰好相等 ⇒ 模板与兜底「碰巧一致」⇒ 守卫绿。
+  //   ⇒ 修好输入后区间变成真实的「[11–24]」⇒ 模板立刻露馅（G8 / G17 同时报红）。
+  //   ⇒ 修法：**不手改 locale**，走本工具（en 取 literal 候选，zh 走本覆盖表）。
+  'calc_out.revenue_projector.row.milestone':
+    '• {target}：  {months} 个月 [{fast}–{slow}]',
   'calc_out.roas.row.break_even_revenue':
     '盈亏平衡收入: {revenue}  （利润率 {margin}% → ROAS = {roas}）',
   'calc_out.gemini_api_cost.row.health_tier_micro':

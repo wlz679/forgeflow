@@ -1885,7 +1885,7 @@
   "calc_out.revenue_projector.row.lost_revenue": "流失收入",
   "calc_out.revenue_projector.row.ltv_cac_legend": "  = LTV ÷ CAC",
   "calc_out.revenue_projector.row.ltv_legend": "  = ARPU ÷ 月流失率",
-  "calc_out.revenue_projector.row.milestone": "• {target}：  {months} 个月 [{months}–{months}]",
+  "calc_out.revenue_projector.row.milestone": "• {target}：  {months} 个月 [{fast}–{slow}]",
   "calc_out.revenue_projector.row.milestone_far": "• {target}：  >5 年",
   "calc_out.revenue_projector.row.milestone_range": "  区间显示 ±2% 的净增长波动。",
   "calc_out.revenue_projector.row.month_progress": "第 {month} 个月：  {mrr}/mo  (+{delta})",
