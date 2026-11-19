@@ -33,7 +33,9 @@
 //   · 还原**无条件执行**（finally）+ sha256 **逐字节**校验；
 //   · 每条变异必须**真的改到文件**（写完校验 sha256 已变）——
 //     否则「变异没打中」会被误报成「守卫没牙」⇒ 台子会让人去「修」一个根本没坏的守卫；
-//   · **负对照**：未变异时守卫必须绿（绿了才说明下面的红是变异造成的）。
+//   · **负对照**：未变异时守卫必须绿（绿了才说明下面的红是变异造成的）；
+//   · ⭐ **期望标题的解析必须在任何写入之前** —— process.exit() 不展开调用栈 ⇒ finally 还原不执行
+//     ⇒ 解析失败若发生在写入之后，工作区会留下被改坏的受版本控制文件（复审 Important）。
 //
 // ⚠️ 本台子会**临时改写仓库里的文件** ⇒ 不要与全量套件并行跑，且别接进 pnpm check。
 //
@@ -52,7 +54,12 @@ import { resolve } from 'node:path';
 
 const ROOT = resolve(process.cwd());
 const LEDGER = resolve(ROOT, 'tests', 'scripts', 'p168-tokenize-remaining-ledger.ts');
-const GUARD = resolve(ROOT, 'tests', 'tokenize-remaining-ledger-guard.test.ts');
+// ⚠️ 调试/自检用：P168_GUARD_PATH 可让台子跑**别的**守卫文件
+//   （例：验证「标题解析失败时工作区不被改坏」时，指向一个标题不匹配的临时副本）。
+//   ⭐ 台子**只改写** LEDGER / TOKENIZED_LIST；GUARD 只被读取与还原 ⇒ 指到别处不会改坏任何文件。
+const GUARD = process.env.P168_GUARD_PATH
+  ? resolve(process.env.P168_GUARD_PATH)
+  : resolve(ROOT, 'tests', 'tokenize-remaining-ledger-guard.test.ts');
 const TOKENIZED_LIST = resolve(ROOT, 'tests', 'scripts', 'p168-tokenized-engines.mjs');
 
 /** 逐字节 sha256（用 Buffer，不经过 utf-8 解码 ⇒ 行尾/字节差异都能看见） */
@@ -89,7 +96,14 @@ function assertionId(title) {
 }
 
 const ASSERTIONS = guardAssertionTitles();
-/** 取某个 id 对应的**唯一**断言标题（找不到或不唯一 ⇒ 台子停止，绝不猜） */
+/**
+ * 取某个 id 对应的**唯一**断言标题（找不到或不唯一 ⇒ 台子停止，绝不猜）。
+ *
+ * ⚠️⚠️ **只能在「任何写入之前」调用**（复审 Important）：
+ *   process.exit() **不会**展开调用栈 ⇒ 外层 try 的 finally 还原**不会**执行
+ *   ⇒ 若在写入被改文件之后才解析失败，工作区会留下一个**被改坏的受版本控制文件**。
+ *   ⇒ 唯一的调用点在下面的「预解析」里（早于任何 writeFileSync）。
+ */
 function assertionTitle(id) {
   const hit = ASSERTIONS.filter((t) => assertionId(t) === id);
   if (hit.length !== 1) {
@@ -218,6 +232,19 @@ const variants = [
   },
 ];
 
+// ⭐⭐ 期望标题**必须在改任何文件之前**全部解析好（复审 Important —— 修复「exit 跳过 finally 还原」）。
+//
+//   事故形态：process.exit() **不展开调用栈** ⇒ try 的 finally 还原**不会**执行
+//   ⇒ 若「标题解析失败」发生在**写入被改文件之后**（旧写法正是这样：正常模式在写完台账后才解析），
+//      工作区会留下一个**被改坏的受版本控制文件**（例：台账里留着 `export const __BROKEN__ = ;`）
+//      —— 那正是本台子「还原无条件执行（finally）」纪律存在的意义所在。
+//   ⇒ 现在：解析全部提前到**任何 writeFileSync 之前** ⇒ 解析失败时**什么都没改** ⇒ exit 1 是安全的。
+//   （失败依然很响：打印守卫的全部断言标题 + 找不到的 id。）
+const EXPECTED_TITLES = new Map();
+for (const v of variants) EXPECTED_TITLES.set(v.id, assertionTitle(v.expect));
+/** 负对照用的名义期望标题（坏变异不该红任何一条断言；这里只作「对照」用） */
+const NEG_EXPECTED_TITLE = assertionTitle('T2');
+
 const NEGATIVE_CONTROL = process.argv.includes('--negative-control');
 
 let survived = 0;
@@ -245,7 +272,7 @@ try {
     console.log('【负对照模式】注入「台账语法错误」⇒ 守卫文件加载失败 ⇒ TAP 给出文件级 not ok（0 条 ok）');
     writeFileSync(LEDGER, 'export const __BROKEN__ = ;' + NL, 'utf-8');
     const r = runGuard();
-    const j = judge(r, assertionTitle('T2'), 'T2');
+    const j = judge(r, NEG_EXPECTED_TITLE, 'T2');
     console.log('  实测红「' + (r.failed[0] || '(无)') + '」· 红 ' + r.failed.length + ' 条 / 绿 ' + r.passed + ' 条，退出码 ' + r.code);
     const detected = j.verdict === 'RED-BUT-NOT-ISOLATED';
     console.log('  判定：' + j.verdict + (j.reason ? ' —— ' + j.reason : ''));
@@ -274,7 +301,7 @@ try {
         continue;
       }
       const r = runGuard();
-      const expectedTitle = assertionTitle(v.expect);
+      const expectedTitle = EXPECTED_TITLES.get(v.id);
       const j = judge(r, expectedTitle, v.expect);
       if (j.verdict === 'KILLED') { /* killed */ }
       else if (j.verdict === 'SURVIVED') survived++;
