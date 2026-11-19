@@ -4213,8 +4213,7 @@
         "monthlyRent",
         "monthlyExpenses",
         "vacancyRate",
-        "holdingMonths",
-        "sellingCostsPct"
+        "holdingMonths"
       ],
       "engineFile": "src/engines/real-estate/brrrr-calculator.ts",
       "faq": [
@@ -4264,8 +4263,7 @@
         "monthlyRent": "Monthly Rent after Refi ($)",
         "monthlyExpenses": "Monthly OpEx ($)",
         "vacancyRate": "Vacancy Rate (%)",
-        "holdingMonths": "Holding Period (months)",
-        "sellingCostsPct": "Selling Costs if not held (%)"
+        "holdingMonths": "Holding Period (months)"
       },
       "inputPlaceholders": {
         "purchasePrice": "e.g. 150000",
@@ -4277,8 +4275,7 @@
         "monthlyRent": "e.g. 1800",
         "monthlyExpenses": "e.g. 400",
         "vacancyRate": "e.g. 5",
-        "holdingMonths": "e.g. 6",
-        "sellingCostsPct": "e.g. 8"
+        "holdingMonths": "e.g. 6"
       }
     },
     {

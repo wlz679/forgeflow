@@ -165,7 +165,6 @@ export const tools: ToolMeta[] = [
       { name: 'monthlyExpenses', label: 'Monthly OpEx ($)', placeholder: 'e.g. 400', type: 'number' },
       { name: 'vacancyRate', label: 'Vacancy Rate (%)', placeholder: 'e.g. 5', type: 'number' },
       { name: 'holdingMonths', label: 'Holding Period (months)', placeholder: 'e.g. 6', type: 'number' },
-      { name: 'sellingCostsPct', label: 'Selling Costs if not held (%)', placeholder: 'e.g. 8', type: 'number' },
     ],
     keywords: [
       'BRRRR calculator',
