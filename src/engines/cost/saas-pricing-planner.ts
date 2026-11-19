@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function planPricing(inputs: Record<string, string>): string[] {
   const productType = inputs.productType || 'SaaS';
@@ -21,7 +24,7 @@ function planPricing(inputs: Record<string, string>): string[] {
   const models = [
     {
       name: 'Flat-Rate',
-      best: 'Simple tools with one clear use case. Best for early-stage products.',
+      best: makeToken('calc_out.saas_pricing_planner.row.model_flat_rate_best', 'Simple tools with one clear use case. Best for early-stage products.'),
       low: Math.max(5, Math.round(basePrice * 0.7)),
       mid: basePrice,
       high: Math.round(basePrice * 1.5),
@@ -29,7 +32,7 @@ function planPricing(inputs: Record<string, string>): string[] {
     },
     {
       name: 'Tiered',
-      best: 'Products with power users who will pay more for advanced features.',
+      best: makeToken('calc_out.saas_pricing_planner.row.model_tiered_best', 'Products with power users who will pay more for advanced features.'),
       low: Math.max(9, Math.round(basePrice * 0.5)),
       mid: basePrice,
       high: Math.round(basePrice * 2.5),
@@ -37,7 +40,7 @@ function planPricing(inputs: Record<string, string>): string[] {
     },
     {
       name: 'Usage-Based',
-      best: 'API products, AI tools, or any product where value scales with usage.',
+      best: makeToken('calc_out.saas_pricing_planner.row.model_usage_based_best', 'API products, AI tools, or any product where value scales with usage.'),
       low: Math.max(5, Math.round(basePrice * 0.4)),
       mid: Math.round(basePrice * 1.2),
       high: Math.round(basePrice * 3),
@@ -45,7 +48,7 @@ function planPricing(inputs: Record<string, string>): string[] {
     },
     {
       name: 'Freemium',
-      best: 'B2C products or tools that benefit from network effects and word-of-mouth.',
+      best: makeToken('calc_out.saas_pricing_planner.row.model_freemium_best', 'B2C products or tools that benefit from network effects and word-of-mouth.'),
       low: 0,
       mid: Math.round(basePrice * 0.8) || 12,
       high: Math.round(basePrice * 1.8),
@@ -54,18 +57,18 @@ function planPricing(inputs: Record<string, string>): string[] {
   ];
 
   const audienceTips: Record<string, string> = {
-    b2b: 'B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.',
-    b2c: 'B2C users prefer monthly subscriptions with easy cancellation. Focus on instant value and social proof.',
-    developers: 'Developers expect API-first pricing, generous free tiers, and transparent docs. They hate hidden fees.',
-    creators: 'Creators value revenue-share models or flat fees. Keep pricing predictable so they can forecast their margins.',
+    b2b: makeToken('calc_out.saas_pricing_planner.row.audience_b2b', 'B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.'),
+    b2c: makeToken('calc_out.saas_pricing_planner.row.audience_b2c', 'B2C users prefer monthly subscriptions with easy cancellation. Focus on instant value and social proof.'),
+    developers: makeToken('calc_out.saas_pricing_planner.row.audience_developers', 'Developers expect API-first pricing, generous free tiers, and transparent docs. They hate hidden fees.'),
+    creators: makeToken('calc_out.saas_pricing_planner.row.audience_creators', 'Creators value revenue-share models or flat fees. Keep pricing predictable so they can forecast their margins.'),
   };
 
   const productTips: Record<string, string> = {
-    SaaS: 'SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.',
-    ebook: 'Ebooks typically sell for $9-$49. Bundle with templates/checklists to increase perceived value.',
-    course: 'Online courses range $49-$999. Price based on transformation value, not content length. Cohorts justify premium pricing.',
-    template: 'Templates sell for $5-$49. Bundle them into packs to raise AOV. Notion/Gumroad are popular distribution channels.',
-    newsletter: 'Newsletters convert 5-15% of free readers to paid. Typical paid tiers: $5-$15/mo or $50-$150/yr.',
+    SaaS: makeToken('calc_out.saas_pricing_planner.row.product_saas', 'SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.'),
+    ebook: makeToken('calc_out.saas_pricing_planner.row.product_ebook', 'Ebooks typically sell for $9-$49. Bundle with templates/checklists to increase perceived value.'),
+    course: makeToken('calc_out.saas_pricing_planner.row.product_course', 'Online courses range $49-$999. Price based on transformation value, not content length. Cohorts justify premium pricing.'),
+    template: makeToken('calc_out.saas_pricing_planner.row.product_template', 'Templates sell for $5-$49. Bundle them into packs to raise AOV. Notion/Gumroad are popular distribution channels.'),
+    newsletter: makeToken('calc_out.saas_pricing_planner.row.product_newsletter', 'Newsletters convert 5-15% of free readers to paid. Typical paid tiers: $5-$15/mo or $50-$150/yr.'),
   };
 
   let primaryRec = 0;
@@ -95,77 +98,81 @@ function planPricing(inputs: Record<string, string>): string[] {
 
   let mainResult =
     '🎯 SaaS Pricing Planner\n\n' +
-    '📦 Product: ' + productType + '  |  👤 Target: ' + targetCustomer + '  |  💰 Competitor: ' + (competitorPrice ? '$' + competitorPrice + '/mo' : 'N/A') + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.product', '📦 Product: ' + productType, { product: productType }) +
+    '  |  ' +
+    makeToken('calc_out.saas_pricing_planner.row.target', '👤 Target: ' + targetCustomer, { target: targetCustomer }) +
+    '  |  ' +
+    makeToken('calc_out.saas_pricing_planner.row.competitor', '💰 Competitor: ' + (competitorPrice ? '$' + competitorPrice + '/mo' : 'N/A'), { price: (competitorPrice ? '$' + competitorPrice + '/mo' : 'N/A') }) + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💰 Tier Snapshot:\n' +
-    '• Starter:      ' + fmt(tiers[0].mid) + '/mo  × ' + tiers[0].customers + ' customers = ' + fmt(tierOutput[0].monthlyMrr) + ' MRR\n' +
-    '• Pro:            ' + fmt(tiers[1].mid) + '/mo  × ' + tiers[1].customers + ' customers = ' + fmt(tierOutput[1].monthlyMrr) + ' MRR\n' +
-    '• Max:            ' + fmt(tiers[2].mid) + '/mo  × ' + tiers[2].customers + ' customers = ' + fmt(tierOutput[2].monthlyMrr) + ' MRR\n' +
-    '• Enterprise: ' + fmt(tiers[3].mid) + '/mo  × ' + tiers[3].customers + ' customers = ' + fmt(tierOutput[3].monthlyMrr) + ' MRR\n' +
-    '• Total MRR:                  ' + fmt(totalMrr) + '\n' +
-    '• Total Customers:       ' + totalCustomers.toLocaleString() + '\n' +
-    '• ARPU:                            ' + fmt(arpu) + '/mo\n\n' +
+    makeToken('calc_out.saas_pricing_planner.row.tier_starter', '• Starter:      ' + fmt(tiers[0].mid) + '/mo  × ' + tiers[0].customers + ' customers = ' + fmt(tierOutput[0].monthlyMrr) + ' MRR', { price: fmt(tiers[0].mid), customers: String(tiers[0].customers), mrr: fmt(tierOutput[0].monthlyMrr) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.tier_pro', '• Pro:            ' + fmt(tiers[1].mid) + '/mo  × ' + tiers[1].customers + ' customers = ' + fmt(tierOutput[1].monthlyMrr) + ' MRR', { price: fmt(tiers[1].mid), customers: String(tiers[1].customers), mrr: fmt(tierOutput[1].monthlyMrr) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.tier_max', '• Max:            ' + fmt(tiers[2].mid) + '/mo  × ' + tiers[2].customers + ' customers = ' + fmt(tierOutput[2].monthlyMrr) + ' MRR', { price: fmt(tiers[2].mid), customers: String(tiers[2].customers), mrr: fmt(tierOutput[2].monthlyMrr) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.tier_enterprise', '• Enterprise: ' + fmt(tiers[3].mid) + '/mo  × ' + tiers[3].customers + ' customers = ' + fmt(tierOutput[3].monthlyMrr) + ' MRR', { price: fmt(tiers[3].mid), customers: String(tiers[3].customers), mrr: fmt(tierOutput[3].monthlyMrr) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.total_mrr', '• Total MRR:                  ' + fmt(totalMrr), { mrr: fmt(totalMrr) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.total_customers', '• Total Customers:       ' + totalCustomers.toLocaleString(), { customers: totalCustomers.toLocaleString() }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.arpu', '• ARPU:                            ' + fmt(arpu) + '/mo', { arpu: fmt(arpu) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Key Metrics:\n' +
-    '• Weighted Gross Margin:    ' + pct(weightedMargin * 100) + '  (blended across tiers)\n' +
-    '• Target Margin:                    ' + pct(targetMargin * 100) + '  (industry benchmark: 70-80%)\n' +
-    '• ARPU by Tier:                     $' + tiers[0].mid + ' / $' + tiers[1].mid + ' / $' + tiers[2].mid + ' / $' + tiers[3].mid + '\n' +
-    '• Margin by Tier:                ' + pct(tiers[0].margin * 100) + ' / ' + pct(tiers[1].margin * 100) + ' / ' + pct(tiers[2].margin * 100) + ' / ' + pct(tiers[3].margin * 100) + '\n' +
-    '• Enterprise % of MRR:        ' + pct((tierOutput[3].monthlyMrr / Math.max(totalMrr, 1)) * 100) + '  (high = strong moat)\n\n' +
+    makeToken('calc_out.saas_pricing_planner.row.weighted_gross_margin', '• Weighted Gross Margin:    ' + pct(weightedMargin * 100) + '  (blended across tiers)', { margin: pct(weightedMargin * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.target_margin', '• Target Margin:                    ' + pct(targetMargin * 100) + '  (industry benchmark: 70-80%)', { margin: pct(targetMargin * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.arpu_by_tier', '• ARPU by Tier:                     $' + tiers[0].mid + ' / $' + tiers[1].mid + ' / $' + tiers[2].mid + ' / $' + tiers[3].mid, { t0: String(tiers[0].mid), t1: String(tiers[1].mid), t2: String(tiers[2].mid), t3: String(tiers[3].mid) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.margin_by_tier', '• Margin by Tier:                ' + pct(tiers[0].margin * 100) + ' / ' + pct(tiers[1].margin * 100) + ' / ' + pct(tiers[2].margin * 100) + ' / ' + pct(tiers[3].margin * 100), { m0: pct(tiers[0].margin * 100), m1: pct(tiers[1].margin * 100), m2: pct(tiers[2].margin * 100), m3: pct(tiers[3].margin * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.enterprise_mrr_pct', '• Enterprise % of MRR:        ' + pct((tierOutput[3].monthlyMrr / Math.max(totalMrr, 1)) * 100) + '  (high = strong moat)', { pct: pct((tierOutput[3].monthlyMrr / Math.max(totalMrr, 1)) * 100) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Pricing Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
 
   const unhealthyTiers = tiers.filter((t) => t.margin < 0.5);
   if (unhealthyTiers.length === 0) {
-    mainResult += '• 🟢 All tiers above 50% margin — healthy pricing structure.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_all_healthy', '• 🟢 All tiers above 50% margin — healthy pricing structure.') + '\n';
   } else {
     mainResult += '• 🔴 ' + unhealthyTiers.length + ' tier(s) below 50% margin: ' + unhealthyTiers.map((t) => t.name).join(', ') + ' — review feature costs.\n';
   }
   if (tierOutput[3].monthlyMrr / totalMrr > 0.25) {
-    mainResult += '• 🟢 Enterprise = ' + pct((tierOutput[3].monthlyMrr / totalMrr) * 100) + ' of MRR — strong enterprise traction.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_enterprise_strong', '• 🟢 Enterprise = ' + pct((tierOutput[3].monthlyMrr / totalMrr) * 100) + ' of MRR — strong enterprise traction.', { pct: pct((tierOutput[3].monthlyMrr / totalMrr) * 100) }) + '\n';
   } else if (tierOutput[3].monthlyMrr / totalMrr > 0.10) {
-    mainResult += '• 🟡 Enterprise = ' + pct((tierOutput[3].monthlyMrr / totalMrr) * 100) + ' of MRR — healthy mix.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_enterprise_healthy', '• 🟡 Enterprise = ' + pct((tierOutput[3].monthlyMrr / totalMrr) * 100) + ' of MRR — healthy mix.', { pct: pct((tierOutput[3].monthlyMrr / totalMrr) * 100) }) + '\n';
   } else {
-    mainResult += '• 🟠 Enterprise = only ' + pct((tierOutput[3].monthlyMrr / Math.max(totalMrr, 1)) * 100) + ' of MRR — opportunity to expand upmarket.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_enterprise_expand', '• 🟠 Enterprise = only ' + pct((tierOutput[3].monthlyMrr / Math.max(totalMrr, 1)) * 100) + ' of MRR — opportunity to expand upmarket.', { pct: pct((tierOutput[3].monthlyMrr / Math.max(totalMrr, 1)) * 100) }) + '\n';
   }
   if (weightedMargin >= targetMargin) {
-    mainResult += '• 🟢 Blended margin (' + pct(weightedMargin * 100) + ') hits target.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_blended_hits', '• 🟢 Blended margin (' + pct(weightedMargin * 100) + ') hits target.', { margin: pct(weightedMargin * 100) }) + '\n';
   } else {
-    mainResult += '• 🟡 Blended margin (' + pct(weightedMargin * 100) + ') below target — raise prices or cut costs.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_blended_below', '• 🟡 Blended margin (' + pct(weightedMargin * 100) + ') below target — raise prices or cut costs.', { margin: pct(weightedMargin * 100) }) + '\n';
   }
   if (competitorPrice > 0 && tiers[1].mid < competitorPrice * 0.7) {
     mainResult += '• 🟢 Pro tier well below competitor — could raise 20-30% without losing deals.\n';
   } else if (competitorPrice > 0 && tiers[1].mid > competitorPrice * 1.3) {
-    mainResult += '• 🟠 Pro tier 30%+ above competitor — risk of price objection.\n';
+    mainResult += makeToken('calc_out.saas_pricing_planner.row.health_pro_above_competitor', '• 🟠 Pro tier 30%+ above competitor — risk of price objection.') + '\n';
   }
 
   mainResult += '\n🎯 LTV by Tier:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Starter:           $' + Math.round(tierOutput[0].ltv).toLocaleString() + '  (' + pct(tiers[0].margin * 100) + ' margin, ' + pct(assumedChurn * 100) + ' monthly churn)\n' +
-    '• Pro:                  $' + Math.round(tierOutput[1].ltv).toLocaleString() + '  (' + pct(tiers[1].margin * 100) + ' margin)\n' +
-    '• Max:                  $' + Math.round(tierOutput[2].ltv).toLocaleString() + '  (' + pct(tiers[2].margin * 100) + ' margin)\n' +
-    '• Enterprise:    $' + Math.round(tierOutput[3].ltv).toLocaleString() + '  (' + pct(tiers[3].margin * 100) + ' margin)\n' +
-    '• Average LTV:      $' + Math.round(tierOutput.reduce((s, t) => s + t.ltv * t.customers, 0) / Math.max(totalCustomers, 1)).toLocaleString() + '\n' +
-    '• LTV Formula:      (Price × Margin) / Monthly Churn\n\n' +
+    makeToken('calc_out.saas_pricing_planner.row.ltv_starter', '• Starter:           $' + Math.round(tierOutput[0].ltv).toLocaleString() + '  (' + pct(tiers[0].margin * 100) + ' margin, ' + pct(assumedChurn * 100) + ' monthly churn)', { ltv: '$' + Math.round(tierOutput[0].ltv).toLocaleString(), margin: pct(tiers[0].margin * 100), churn: pct(assumedChurn * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.ltv_pro', '• Pro:                  $' + Math.round(tierOutput[1].ltv).toLocaleString() + '  (' + pct(tiers[1].margin * 100) + ' margin)', { ltv: '$' + Math.round(tierOutput[1].ltv).toLocaleString(), margin: pct(tiers[1].margin * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.ltv_max', '• Max:                  $' + Math.round(tierOutput[2].ltv).toLocaleString() + '  (' + pct(tiers[2].margin * 100) + ' margin)', { ltv: '$' + Math.round(tierOutput[2].ltv).toLocaleString(), margin: pct(tiers[2].margin * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.ltv_enterprise', '• Enterprise:    $' + Math.round(tierOutput[3].ltv).toLocaleString() + '  (' + pct(tiers[3].margin * 100) + ' margin)', { ltv: '$' + Math.round(tierOutput[3].ltv).toLocaleString(), margin: pct(tiers[3].margin * 100) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.average_ltv', '• Average LTV:      $' + Math.round(tierOutput.reduce((s, t) => s + t.ltv * t.customers, 0) / Math.max(totalCustomers, 1)).toLocaleString(), { ltv: '$' + Math.round(tierOutput.reduce((s, t) => s + t.ltv * t.customers, 0) / Math.max(totalCustomers, 1)).toLocaleString() }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.ltv_formula', '• LTV Formula:      (Price × Margin) / Monthly Churn') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '⚖️ Break-Even Customers per Tier:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Starter:           ~' + tierOutput[0].breakEvenCustomers + ' customers  to break even on $2K/mo costs\n' +
-    '• Pro:                  ~' + tierOutput[1].breakEvenCustomers + ' customers  to break even on $2K/mo costs\n' +
-    '• Max:                  ~' + tierOutput[2].breakEvenCustomers + ' customers  to break even on $2K/mo costs\n' +
-    '• Enterprise:    ~' + tierOutput[3].breakEvenCustomers + ' customers  to break even on $2K/mo costs\n' +
-    '• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)\n\n' +
+    makeToken('calc_out.saas_pricing_planner.row.breakeven_starter', '• Starter:           ~' + tierOutput[0].breakEvenCustomers + ' customers  to break even on $2K/mo costs', { count: String(tierOutput[0].breakEvenCustomers) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.breakeven_pro', '• Pro:                  ~' + tierOutput[1].breakEvenCustomers + ' customers  to break even on $2K/mo costs', { count: String(tierOutput[1].breakEvenCustomers) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.breakeven_max', '• Max:                  ~' + tierOutput[2].breakEvenCustomers + ' customers  to break even on $2K/mo costs', { count: String(tierOutput[2].breakEvenCustomers) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.breakeven_enterprise', '• Enterprise:    ~' + tierOutput[3].breakEvenCustomers + ' customers  to break even on $2K/mo costs', { count: String(tierOutput[3].breakEvenCustomers) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.breakeven_assumption', '• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Raise all tiers 20%:   Pro becomes $' + Math.round(tiers[1].mid * 1.2) + '/mo, MRR → ' + fmt(totalMrr * 1.2) + '  (test willingness to pay)\n' +
-    '• Cut Starter by 50%:    Convert funnel to Pro — gain $' + Math.round(tiers[1].mid * 0.3 * tiers[0].customers) + '/mo\n' +
-    '• Add annual discount (15% off):   $' + Math.round(tiers[1].mid * 12 * 0.85) + '/yr  vs $' + (tiers[1].mid * 12) + '/yr monthly\n' +
-    '• Move 10% of Pro users to Max:   +$' + Math.round((tiers[2].mid - tiers[1].mid) * tiers[1].customers * 0.1).toLocaleString() + '/mo MRR\n' +
-    '• Drop lowest-margin tier (' + (unhealthyTiers[0]?.name || 'none') + '):   refocus on profitable tiers\n\n' +
+    makeToken('calc_out.saas_pricing_planner.row.whatif_raise_all_20', '• Raise all tiers 20%:   Pro becomes $' + Math.round(tiers[1].mid * 1.2) + '/mo, MRR → ' + fmt(totalMrr * 1.2) + '  (test willingness to pay)', { price: '$' + Math.round(tiers[1].mid * 1.2), mrr: fmt(totalMrr * 1.2) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.whatif_cut_starter_50', '• Cut Starter by 50%:    Convert funnel to Pro — gain $' + Math.round(tiers[1].mid * 0.3 * tiers[0].customers) + '/mo', { gain: '$' + Math.round(tiers[1].mid * 0.3 * tiers[0].customers) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.whatif_annual_discount', '• Add annual discount (15% off):   $' + Math.round(tiers[1].mid * 12 * 0.85) + '/yr  vs $' + (tiers[1].mid * 12) + '/yr monthly', { annual: '$' + Math.round(tiers[1].mid * 12 * 0.85), monthly: '$' + (tiers[1].mid * 12) }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.whatif_move_to_max', '• Move 10% of Pro users to Max:   +$' + Math.round((tiers[2].mid - tiers[1].mid) * tiers[1].customers * 0.1).toLocaleString() + '/mo MRR', { gain: '$' + Math.round((tiers[2].mid - tiers[1].mid) * tiers[1].customers * 0.1).toLocaleString() }) + '\n' +
+    makeToken('calc_out.saas_pricing_planner.row.whatif_drop_tier', '• Drop lowest-margin tier (' + (unhealthyTiers[0]?.name || 'none') + '):   refocus on profitable tiers', { tier: (unhealthyTiers[0]?.name || 'none') }) + '\n\n' +
     '💡 Tip: ' + models[primaryRec].tip + '\n\n' +
-    '📌 Recommended Action: Launch with Tiered model, Pro at $' + tiers[1].mid + '/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.';
+    makeToken('calc_out.saas_pricing_planner.row.recommended_action', '📌 Recommended Action: Launch with Tiered model, Pro at $' + tiers[1].mid + '/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.', { price: String(tiers[1].mid) });
 
   results.push(mainResult);
 
@@ -173,7 +180,7 @@ function planPricing(inputs: Record<string, string>): string[] {
     const m = models[i];
     const icon = i === primaryRec ? '⭐' : '•';
     results.push(
-      icon + ' ' + m.name + ': $' + m.low + ' – $' + m.mid + ' – $' + m.high + '/mo\n' +
+      icon + ' ' + makeToken('calc_out.saas_pricing_planner.row.model_line', m.name + ': $' + m.low + ' – $' + m.mid + ' – $' + m.high + '/mo', { name: m.name, low: '$' + m.low, mid: '$' + m.mid, high: '$' + m.high }) + '\n' +
       '  ' + m.best,
     );
   }
@@ -181,91 +188,91 @@ function planPricing(inputs: Record<string, string>): string[] {
   results.push(
     '🎯 Audience Insight:\n' + (audienceTips[targetCustomer] || audienceTips.b2b) +
     '\n\n📦 Product Insight:\n' + (productTips[productType] || productTips.SaaS) +
-    '\n\n🚀 Next step: Pick one model, launch at the Pro tier ($' + tiers[1].mid + '/mo), and adjust pricing after collecting 100+ conversion data points.',
+    '\n\n' + makeToken('calc_out.saas_pricing_planner.row.next_step', '🚀 Next step: Pick one model, launch at the Pro tier ($' + tiers[1].mid + '/mo), and adjust pricing after collecting 100+ conversion data points.', { price: String(tiers[1].mid) }),
   );
 
   return results;
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let v=function(u){return Number.isNaN(u)?0:Math.max(0,u)},$=function(u){const d=u.productType||"SaaS",l=u.targetCustomer||"b2b",s=v(parseFloat(u.competitorPrice)||0),t=s||29,x=.7,P=.03,e=[{name:"Starter",low:Math.max(5,Math.round(t*.5)),mid:Math.max(9,Math.round(t*.6)),high:Math.max(15,Math.round(t*.7)),margin:.85,customers:1e3},{name:"Pro",low:Math.max(19,Math.round(t*1)),mid:Math.max(29,Math.round(t*1.3)),high:Math.max(49,Math.round(t*1.7)),margin:.75,customers:400},{name:"Max",low:Math.max(49,Math.round(t*2)),mid:Math.max(79,Math.round(t*2.5)),high:Math.max(149,Math.round(t*4)),margin:.7,customers:80},{name:"Enterprise",low:Math.max(199,Math.round(t*5)),mid:Math.max(499,Math.round(t*10)),high:Math.max(999,Math.round(t*20)),margin:.65,customers:12}],y=[{name:"Flat-Rate",best:"Simple tools with one clear use case. Best for early-stage products.",low:Math.max(5,Math.round(t*.7)),mid:t,high:Math.round(t*1.5),tip:"Keep it simple — one price, all features. Add a free trial to reduce friction."},{name:"Tiered",best:"Products with power users who will pay more for advanced features.",low:Math.max(9,Math.round(t*.5)),mid:t,high:Math.round(t*2.5),tip:"3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing)."},{name:"Usage-Based",best:"API products, AI tools, or any product where value scales with usage.",low:Math.max(5,Math.round(t*.4)),mid:Math.round(t*1.2),high:Math.round(t*3),tip:"Charge per unit (API calls, seats, credits). Include a generous free tier to drive adoption."},{name:"Freemium",best:"B2C products or tools that benefit from network effects and word-of-mouth.",low:0,mid:Math.round(t*.8)||12,high:Math.round(t*1.8),tip:"Free plan must be genuinely useful but leave room for upgrade. 3-5% free-to-paid conversion is good."}],R={b2b:"B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.",b2c:"B2C users prefer monthly subscriptions with easy cancellation. Focus on instant value and social proof.",developers:"Developers expect API-first pricing, generous free tiers, and transparent docs. They hate hidden fees.",creators:"Creators value revenue-share models or flat fees. Keep pricing predictable so they can forecast their margins."},S={SaaS:"SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.",ebook:"Ebooks typically sell for $9-$49. Bundle with templates/checklists to increase perceived value.",course:"Online courses range $49-$999. Price based on transformation value, not content length. Cohorts justify premium pricing.",template:"Templates sell for $5-$49. Bundle them into packs to raise AOV. Notion/Gumroad are popular distribution channels.",newsletter:"Newsletters convert 5-15% of free readers to paid. Typical paid tiers: $5-$15/mo or $50-$150/yr."};let h=0;l==="developers"?h=2:l==="b2b"?h=1:d==="newsletter"&&(h=0);const n=e.map(r=>{const a=r.mid*r.customers,b=r.mid*(1-r.margin),C=(r.mid-b)/P,A=Math.ceil(2e3/r.margin/r.mid);return{...r,monthlyMrr:a,costPerCustomer:b,ltv:C,breakEvenCustomers:A}}),i=n.reduce((r,a)=>r+a.monthlyMrr,0),p=n.reduce((r,a)=>r+a.customers,0),k=p>0?i/p:0,g=i>0?n.reduce((r,a)=>r+a.margin*a.monthlyMrr,0)/i:0,M=[],m=r=>"$"+Math.round(r).toLocaleString(),o=r=>r.toFixed(1)+"%";let c=\`🎯 SaaS Pricing Planner
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let S=function(p){return Number.isNaN(p)?0:Math.max(0,p)},$=function(p){const d=p.productType||"SaaS",_=p.targetCustomer||"b2b",l=S(parseFloat(p.competitorPrice)||0),i=l||29,b=.7,v=.03,r=[{name:"Starter",low:Math.max(5,Math.round(i*.5)),mid:Math.max(9,Math.round(i*.6)),high:Math.max(15,Math.round(i*.7)),margin:.85,customers:1e3},{name:"Pro",low:Math.max(19,Math.round(i*1)),mid:Math.max(29,Math.round(i*1.3)),high:Math.max(49,Math.round(i*1.7)),margin:.75,customers:400},{name:"Max",low:Math.max(49,Math.round(i*2)),mid:Math.max(79,Math.round(i*2.5)),high:Math.max(149,Math.round(i*4)),margin:.7,customers:80},{name:"Enterprise",low:Math.max(199,Math.round(i*5)),mid:Math.max(499,Math.round(i*10)),high:Math.max(999,Math.round(i*20)),margin:.65,customers:12}],y=[{name:"Flat-Rate",best:t("calc_out.saas_pricing_planner.row.model_flat_rate_best","Simple tools with one clear use case. Best for early-stage products."),low:Math.max(5,Math.round(i*.7)),mid:i,high:Math.round(i*1.5),tip:"Keep it simple — one price, all features. Add a free trial to reduce friction."},{name:"Tiered",best:t("calc_out.saas_pricing_planner.row.model_tiered_best","Products with power users who will pay more for advanced features."),low:Math.max(9,Math.round(i*.5)),mid:i,high:Math.round(i*2.5),tip:"3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing)."},{name:"Usage-Based",best:t("calc_out.saas_pricing_planner.row.model_usage_based_best","API products, AI tools, or any product where value scales with usage."),low:Math.max(5,Math.round(i*.4)),mid:Math.round(i*1.2),high:Math.round(i*3),tip:"Charge per unit (API calls, seats, credits). Include a generous free tier to drive adoption."},{name:"Freemium",best:t("calc_out.saas_pricing_planner.row.model_freemium_best","B2C products or tools that benefit from network effects and word-of-mouth."),low:0,mid:Math.round(i*.8)||12,high:Math.round(i*1.8),tip:"Free plan must be genuinely useful but leave room for upgrade. 3-5% free-to-paid conversion is good."}],P={b2b:t("calc_out.saas_pricing_planner.row.audience_b2b","B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies."),b2c:t("calc_out.saas_pricing_planner.row.audience_b2c","B2C users prefer monthly subscriptions with easy cancellation. Focus on instant value and social proof."),developers:t("calc_out.saas_pricing_planner.row.audience_developers","Developers expect API-first pricing, generous free tiers, and transparent docs. They hate hidden fees."),creators:t("calc_out.saas_pricing_planner.row.audience_creators","Creators value revenue-share models or flat fees. Keep pricing predictable so they can forecast their margins.")},R={SaaS:t("calc_out.saas_pricing_planner.row.product_saas","SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher."),ebook:t("calc_out.saas_pricing_planner.row.product_ebook","Ebooks typically sell for $9-$49. Bundle with templates/checklists to increase perceived value."),course:t("calc_out.saas_pricing_planner.row.product_course","Online courses range $49-$999. Price based on transformation value, not content length. Cohorts justify premium pricing."),template:t("calc_out.saas_pricing_planner.row.product_template","Templates sell for $5-$49. Bundle them into packs to raise AOV. Notion/Gumroad are popular distribution channels."),newsletter:t("calc_out.saas_pricing_planner.row.product_newsletter","Newsletters convert 5-15% of free readers to paid. Typical paid tiers: $5-$15/mo or $50-$150/yr.")};let h=0;_==="developers"?h=2:_==="b2b"?h=1:d==="newsletter"&&(h=0);const n=r.map(e=>{const o=e.mid*e.customers,f=e.mid*(1-e.margin),L=(e.mid-f)/v,F=Math.ceil(2e3/e.margin/e.mid);return{...e,monthlyMrr:o,costPerCustomer:f,ltv:L,breakEvenCustomers:F}}),c=n.reduce((e,o)=>e+o.monthlyMrr,0),g=n.reduce((e,o)=>e+o.customers,0),C=g>0?c/g:0,m=c>0?n.reduce((e,o)=>e+o.margin*o.monthlyMrr,0)/c:0,w=[],s=e=>"$"+Math.round(e).toLocaleString(),a=e=>e.toFixed(1)+"%";let u=\`🎯 SaaS Pricing Planner
 
-📦 Product: \`+d+"  |  👤 Target: "+l+"  |  💰 Competitor: "+(s?"$"+s+"/mo":"N/A")+\`
+\`+t("calc_out.saas_pricing_planner.row.product","📦 Product: "+d,{product:d})+"  |  "+t("calc_out.saas_pricing_planner.row.target","👤 Target: "+_,{target:_})+"  |  "+t("calc_out.saas_pricing_planner.row.competitor","💰 Competitor: "+(l?"$"+l+"/mo":"N/A"),{price:l?"$"+l+"/mo":"N/A"})+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 💰 Tier Snapshot:
-• Starter:      \`+m(e[0].mid)+"/mo  × "+e[0].customers+" customers = "+m(n[0].monthlyMrr)+\` MRR
-• Pro:            \`+m(e[1].mid)+"/mo  × "+e[1].customers+" customers = "+m(n[1].monthlyMrr)+\` MRR
-• Max:            \`+m(e[2].mid)+"/mo  × "+e[2].customers+" customers = "+m(n[2].monthlyMrr)+\` MRR
-• Enterprise: \`+m(e[3].mid)+"/mo  × "+e[3].customers+" customers = "+m(n[3].monthlyMrr)+\` MRR
-• Total MRR:                  \`+m(i)+\`
-• Total Customers:       \`+p.toLocaleString()+\`
-• ARPU:                            \`+m(k)+\`/mo
+\`+t("calc_out.saas_pricing_planner.row.tier_starter","• Starter:      "+s(r[0].mid)+"/mo  × "+r[0].customers+" customers = "+s(n[0].monthlyMrr)+" MRR",{price:s(r[0].mid),customers:String(r[0].customers),mrr:s(n[0].monthlyMrr)})+\`
+\`+t("calc_out.saas_pricing_planner.row.tier_pro","• Pro:            "+s(r[1].mid)+"/mo  × "+r[1].customers+" customers = "+s(n[1].monthlyMrr)+" MRR",{price:s(r[1].mid),customers:String(r[1].customers),mrr:s(n[1].monthlyMrr)})+\`
+\`+t("calc_out.saas_pricing_planner.row.tier_max","• Max:            "+s(r[2].mid)+"/mo  × "+r[2].customers+" customers = "+s(n[2].monthlyMrr)+" MRR",{price:s(r[2].mid),customers:String(r[2].customers),mrr:s(n[2].monthlyMrr)})+\`
+\`+t("calc_out.saas_pricing_planner.row.tier_enterprise","• Enterprise: "+s(r[3].mid)+"/mo  × "+r[3].customers+" customers = "+s(n[3].monthlyMrr)+" MRR",{price:s(r[3].mid),customers:String(r[3].customers),mrr:s(n[3].monthlyMrr)})+\`
+\`+t("calc_out.saas_pricing_planner.row.total_mrr","• Total MRR:                  "+s(c),{mrr:s(c)})+\`
+\`+t("calc_out.saas_pricing_planner.row.total_customers","• Total Customers:       "+g.toLocaleString(),{customers:g.toLocaleString()})+\`
+\`+t("calc_out.saas_pricing_planner.row.arpu","• ARPU:                            "+s(C)+"/mo",{arpu:s(C)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Key Metrics:
-• Weighted Gross Margin:    \`+o(g*100)+\`  (blended across tiers)
-• Target Margin:                    \`+o(x*100)+\`  (industry benchmark: 70-80%)
-• ARPU by Tier:                     $\`+e[0].mid+" / $"+e[1].mid+" / $"+e[2].mid+" / $"+e[3].mid+\`
-• Margin by Tier:                \`+o(e[0].margin*100)+" / "+o(e[1].margin*100)+" / "+o(e[2].margin*100)+" / "+o(e[3].margin*100)+\`
-• Enterprise % of MRR:        \`+o(n[3].monthlyMrr/Math.max(i,1)*100)+\`  (high = strong moat)
+\`+t("calc_out.saas_pricing_planner.row.weighted_gross_margin","• Weighted Gross Margin:    "+a(m*100)+"  (blended across tiers)",{margin:a(m*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.target_margin","• Target Margin:                    "+a(b*100)+"  (industry benchmark: 70-80%)",{margin:a(b*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.arpu_by_tier","• ARPU by Tier:                     $"+r[0].mid+" / $"+r[1].mid+" / $"+r[2].mid+" / $"+r[3].mid,{t0:String(r[0].mid),t1:String(r[1].mid),t2:String(r[2].mid),t3:String(r[3].mid)})+\`
+\`+t("calc_out.saas_pricing_planner.row.margin_by_tier","• Margin by Tier:                "+a(r[0].margin*100)+" / "+a(r[1].margin*100)+" / "+a(r[2].margin*100)+" / "+a(r[3].margin*100),{m0:a(r[0].margin*100),m1:a(r[1].margin*100),m2:a(r[2].margin*100),m3:a(r[3].margin*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.enterprise_mrr_pct","• Enterprise % of MRR:        "+a(n[3].monthlyMrr/Math.max(c,1)*100)+"  (high = strong moat)",{pct:a(n[3].monthlyMrr/Math.max(c,1)*100)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Pricing Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`;const f=e.filter(r=>r.margin<.5);f.length===0?c+=\`• 🟢 All tiers above 50% margin — healthy pricing structure.
-\`:c+="• 🔴 "+f.length+" tier(s) below 50% margin: "+f.map(r=>r.name).join(", ")+\` — review feature costs.
-\`,n[3].monthlyMrr/i>.25?c+="• 🟢 Enterprise = "+o(n[3].monthlyMrr/i*100)+\` of MRR — strong enterprise traction.
-\`:n[3].monthlyMrr/i>.1?c+="• 🟡 Enterprise = "+o(n[3].monthlyMrr/i*100)+\` of MRR — healthy mix.
-\`:c+="• 🟠 Enterprise = only "+o(n[3].monthlyMrr/Math.max(i,1)*100)+\` of MRR — opportunity to expand upmarket.
-\`,g>=x?c+="• 🟢 Blended margin ("+o(g*100)+\`) hits target.
-\`:c+="• 🟡 Blended margin ("+o(g*100)+\`) below target — raise prices or cut costs.
-\`,s>0&&e[1].mid<s*.7?c+=\`• 🟢 Pro tier well below competitor — could raise 20-30% without losing deals.
-\`:s>0&&e[1].mid>s*1.3&&(c+=\`• 🟠 Pro tier 30%+ above competitor — risk of price objection.
-\`),c+=\`
+\`;const M=r.filter(e=>e.margin<.5);M.length===0?u+=t("calc_out.saas_pricing_planner.row.health_all_healthy","• 🟢 All tiers above 50% margin — healthy pricing structure.")+\`
+\`:u+="• 🔴 "+M.length+" tier(s) below 50% margin: "+M.map(e=>e.name).join(", ")+\` — review feature costs.
+\`,n[3].monthlyMrr/c>.25?u+=t("calc_out.saas_pricing_planner.row.health_enterprise_strong","• 🟢 Enterprise = "+a(n[3].monthlyMrr/c*100)+" of MRR — strong enterprise traction.",{pct:a(n[3].monthlyMrr/c*100)})+\`
+\`:n[3].monthlyMrr/c>.1?u+=t("calc_out.saas_pricing_planner.row.health_enterprise_healthy","• 🟡 Enterprise = "+a(n[3].monthlyMrr/c*100)+" of MRR — healthy mix.",{pct:a(n[3].monthlyMrr/c*100)})+\`
+\`:u+=t("calc_out.saas_pricing_planner.row.health_enterprise_expand","• 🟠 Enterprise = only "+a(n[3].monthlyMrr/Math.max(c,1)*100)+" of MRR — opportunity to expand upmarket.",{pct:a(n[3].monthlyMrr/Math.max(c,1)*100)})+\`
+\`,m>=b?u+=t("calc_out.saas_pricing_planner.row.health_blended_hits","• 🟢 Blended margin ("+a(m*100)+") hits target.",{margin:a(m*100)})+\`
+\`:u+=t("calc_out.saas_pricing_planner.row.health_blended_below","• 🟡 Blended margin ("+a(m*100)+") below target — raise prices or cut costs.",{margin:a(m*100)})+\`
+\`,l>0&&r[1].mid<l*.7?u+=\`• 🟢 Pro tier well below competitor — could raise 20-30% without losing deals.
+\`:l>0&&r[1].mid>l*1.3&&(u+=t("calc_out.saas_pricing_planner.row.health_pro_above_competitor","• 🟠 Pro tier 30%+ above competitor — risk of price objection.")+\`
+\`),u+=\`
 🎯 LTV by Tier:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Starter:           $\`+Math.round(n[0].ltv).toLocaleString()+"  ("+o(e[0].margin*100)+" margin, "+o(P*100)+\` monthly churn)
-• Pro:                  $\`+Math.round(n[1].ltv).toLocaleString()+"  ("+o(e[1].margin*100)+\` margin)
-• Max:                  $\`+Math.round(n[2].ltv).toLocaleString()+"  ("+o(e[2].margin*100)+\` margin)
-• Enterprise:    $\`+Math.round(n[3].ltv).toLocaleString()+"  ("+o(e[3].margin*100)+\` margin)
-• Average LTV:      $\`+Math.round(n.reduce((r,a)=>r+a.ltv*a.customers,0)/Math.max(p,1)).toLocaleString()+\`
-• LTV Formula:      (Price × Margin) / Monthly Churn
+\`+t("calc_out.saas_pricing_planner.row.ltv_starter","• Starter:           $"+Math.round(n[0].ltv).toLocaleString()+"  ("+a(r[0].margin*100)+" margin, "+a(v*100)+" monthly churn)",{ltv:"$"+Math.round(n[0].ltv).toLocaleString(),margin:a(r[0].margin*100),churn:a(v*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.ltv_pro","• Pro:                  $"+Math.round(n[1].ltv).toLocaleString()+"  ("+a(r[1].margin*100)+" margin)",{ltv:"$"+Math.round(n[1].ltv).toLocaleString(),margin:a(r[1].margin*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.ltv_max","• Max:                  $"+Math.round(n[2].ltv).toLocaleString()+"  ("+a(r[2].margin*100)+" margin)",{ltv:"$"+Math.round(n[2].ltv).toLocaleString(),margin:a(r[2].margin*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.ltv_enterprise","• Enterprise:    $"+Math.round(n[3].ltv).toLocaleString()+"  ("+a(r[3].margin*100)+" margin)",{ltv:"$"+Math.round(n[3].ltv).toLocaleString(),margin:a(r[3].margin*100)})+\`
+\`+t("calc_out.saas_pricing_planner.row.average_ltv","• Average LTV:      $"+Math.round(n.reduce((e,o)=>e+o.ltv*o.customers,0)/Math.max(g,1)).toLocaleString(),{ltv:"$"+Math.round(n.reduce((e,o)=>e+o.ltv*o.customers,0)/Math.max(g,1)).toLocaleString()})+\`
+\`+t("calc_out.saas_pricing_planner.row.ltv_formula","• LTV Formula:      (Price × Margin) / Monthly Churn")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚖️ Break-Even Customers per Tier:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Starter:           ~\`+n[0].breakEvenCustomers+\` customers  to break even on $2K/mo costs
-• Pro:                  ~\`+n[1].breakEvenCustomers+\` customers  to break even on $2K/mo costs
-• Max:                  ~\`+n[2].breakEvenCustomers+\` customers  to break even on $2K/mo costs
-• Enterprise:    ~\`+n[3].breakEvenCustomers+\` customers  to break even on $2K/mo costs
-• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)
+\`+t("calc_out.saas_pricing_planner.row.breakeven_starter","• Starter:           ~"+n[0].breakEvenCustomers+" customers  to break even on $2K/mo costs",{count:String(n[0].breakEvenCustomers)})+\`
+\`+t("calc_out.saas_pricing_planner.row.breakeven_pro","• Pro:                  ~"+n[1].breakEvenCustomers+" customers  to break even on $2K/mo costs",{count:String(n[1].breakEvenCustomers)})+\`
+\`+t("calc_out.saas_pricing_planner.row.breakeven_max","• Max:                  ~"+n[2].breakEvenCustomers+" customers  to break even on $2K/mo costs",{count:String(n[2].breakEvenCustomers)})+\`
+\`+t("calc_out.saas_pricing_planner.row.breakeven_enterprise","• Enterprise:    ~"+n[3].breakEvenCustomers+" customers  to break even on $2K/mo costs",{count:String(n[3].breakEvenCustomers)})+\`
+\`+t("calc_out.saas_pricing_planner.row.breakeven_assumption","• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Raise all tiers 20%:   Pro becomes $\`+Math.round(e[1].mid*1.2)+"/mo, MRR → "+m(i*1.2)+\`  (test willingness to pay)
-• Cut Starter by 50%:    Convert funnel to Pro — gain $\`+Math.round(e[1].mid*.3*e[0].customers)+\`/mo
-• Add annual discount (15% off):   $\`+Math.round(e[1].mid*12*.85)+"/yr  vs $"+e[1].mid*12+\`/yr monthly
-• Move 10% of Pro users to Max:   +$\`+Math.round((e[2].mid-e[1].mid)*e[1].customers*.1).toLocaleString()+\`/mo MRR
-• Drop lowest-margin tier (\`+(f[0]?.name||"none")+\`):   refocus on profitable tiers
+\`+t("calc_out.saas_pricing_planner.row.whatif_raise_all_20","• Raise all tiers 20%:   Pro becomes $"+Math.round(r[1].mid*1.2)+"/mo, MRR → "+s(c*1.2)+"  (test willingness to pay)",{price:"$"+Math.round(r[1].mid*1.2),mrr:s(c*1.2)})+\`
+\`+t("calc_out.saas_pricing_planner.row.whatif_cut_starter_50","• Cut Starter by 50%:    Convert funnel to Pro — gain $"+Math.round(r[1].mid*.3*r[0].customers)+"/mo",{gain:"$"+Math.round(r[1].mid*.3*r[0].customers)})+\`
+\`+t("calc_out.saas_pricing_planner.row.whatif_annual_discount","• Add annual discount (15% off):   $"+Math.round(r[1].mid*12*.85)+"/yr  vs $"+r[1].mid*12+"/yr monthly",{annual:"$"+Math.round(r[1].mid*12*.85),monthly:"$"+r[1].mid*12})+\`
+\`+t("calc_out.saas_pricing_planner.row.whatif_move_to_max","• Move 10% of Pro users to Max:   +$"+Math.round((r[2].mid-r[1].mid)*r[1].customers*.1).toLocaleString()+"/mo MRR",{gain:"$"+Math.round((r[2].mid-r[1].mid)*r[1].customers*.1).toLocaleString()})+\`
+\`+t("calc_out.saas_pricing_planner.row.whatif_drop_tier","• Drop lowest-margin tier ("+(M[0]?.name||"none")+"):   refocus on profitable tiers",{tier:M[0]?.name||"none"})+\`
 
 💡 Tip: \`+y[h].tip+\`
 
-📌 Recommended Action: Launch with Tiered model, Pro at $\`+e[1].mid+"/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.",M.push(c);for(let r=0;r<y.length;r++){const a=y[r],b=r===h?"⭐":"•";M.push(b+" "+a.name+": $"+a.low+" – $"+a.mid+" – $"+a.high+\`/mo
-  \`+a.best)}return M.push(\`🎯 Audience Insight:
-\`+(R[l]||R.b2b)+\`
+\`+t("calc_out.saas_pricing_planner.row.recommended_action","📌 Recommended Action: Launch with Tiered model, Pro at $"+r[1].mid+"/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.",{price:String(r[1].mid)}),w.push(u);for(let e=0;e<y.length;e++){const o=y[e],f=e===h?"⭐":"•";w.push(f+" "+t("calc_out.saas_pricing_planner.row.model_line",o.name+": $"+o.low+" – $"+o.mid+" – $"+o.high+"/mo",{name:o.name,low:"$"+o.low,mid:"$"+o.mid,high:"$"+o.high})+\`
+  \`+o.best)}return w.push(\`🎯 Audience Insight:
+\`+(P[_]||P.b2b)+\`
 
 📦 Product Insight:
-\`+(S[d]||S.SaaS)+\`
+\`+(R[d]||R.SaaS)+\`
 
-🚀 Next step: Pick one model, launch at the Pro tier ($\`+e[1].mid+"/mo), and adjust pricing after collecting 100+ conversion data points."),M},w=function(u,d,l){var s=T(u);return Array.isArray(s)?s.join(\`
-\`):String(s)};var E=v,L=$,B=w,T=function(u){return $(u)};return[w(inputs,pick,fill)]}finally{}
+\`+t("calc_out.saas_pricing_planner.row.next_step","🚀 Next step: Pick one model, launch at the Pro tier ($"+r[1].mid+"/mo), and adjust pricing after collecting 100+ conversion data points.",{price:String(r[1].mid)})),w},x=function(p,d,_){var l=A(p);return Array.isArray(l)?l.join(\`
+\`):String(l)};var B=S,j=$,N=x,t=tk,E='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+E)(),A=function(p){return $(p)};return[x(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -296,7 +303,7 @@ const engine: ToolEngine = {
     return planPricing(inputs);
   },
   staticExamples: [
-    '🎯 SaaS Pricing Planner\n\n📦 Product: SaaS  |  👤 Target: b2b  |  💰 Competitor: $29/mo\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Tier Snapshot:\n• Starter:      $17/mo  × 1000 customers = $17,000 MRR\n• Pro:            $38/mo  × 400 customers = $15,200 MRR\n• Max:            $79/mo  × 80 customers = $6,320 MRR\n• Enterprise: $499/mo  × 12 customers = $5,988 MRR\n• Total MRR:                  $44,508\n• Total Customers:       1,492\n• ARPU:                            $30/mo\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n• Weighted Gross Margin:    76.8%  (blended across tiers)\n• Target Margin:                    70.0%  (industry benchmark: 70-80%)\n• ARPU by Tier:                     $17 / $38 / $79 / $499\n• Margin by Tier:                85.0% / 75.0% / 70.0% / 65.0%\n• Enterprise % of MRR:        13.5%  (high = strong moat)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Pricing Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 All tiers above 50% margin — healthy pricing structure.\n• 🟡 Enterprise = 13.5% of MRR — healthy mix.\n• 🟢 Blended margin (76.8%) hits target.\n• 🟠 Pro tier 30%+ above competitor — risk of price objection.\n\n🎯 LTV by Tier:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Starter:           $482  (85.0% margin, 3.0% monthly churn)\n• Pro:                  $950  (75.0% margin)\n• Max:                  $1,843  (70.0% margin)\n• Enterprise:    $10,812  (65.0% margin)\n• Average LTV:      $763\n• LTV Formula:      (Price × Margin) / Monthly Churn\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even Customers per Tier:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Starter:           ~139 customers  to break even on $2K/mo costs\n• Pro:                  ~71 customers  to break even on $2K/mo costs\n• Max:                  ~37 customers  to break even on $2K/mo costs\n• Enterprise:    ~7 customers  to break even on $2K/mo costs\n• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise all tiers 20%:   Pro becomes $46/mo, MRR → $53,410  (test willingness to pay)\n• Cut Starter by 50%:    Convert funnel to Pro — gain $11400/mo\n• Add annual discount (15% off):   $388/yr  vs $456/yr monthly\n• Move 10% of Pro users to Max:   +$1,640/mo MRR\n• Drop lowest-margin tier (none):   refocus on profitable tiers\n\n💡 Tip: 3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing).\n\n📌 Recommended Action: Launch with Tiered model, Pro at $38/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.\n• Flat-Rate: $20 – $29 – $44/mo\n  Simple tools with one clear use case. Best for early-stage products.\n⭐ Tiered: $15 – $29 – $73/mo\n  Products with power users who will pay more for advanced features.\n• Usage-Based: $12 – $35 – $87/mo\n  API products, AI tools, or any product where value scales with usage.\n• Freemium: $0 – $23 – $52/mo\n  B2C products or tools that benefit from network effects and word-of-mouth.\n🎯 Audience Insight:\nB2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.\n\n📦 Product Insight:\nSaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.\n\n🚀 Next step: Pick one model, launch at the Pro tier ($38/mo), and adjust pricing after collecting 100+ conversion data points.',
+    '🎯 SaaS Pricing Planner\n\n$calc_out.saas_pricing_planner.row.product{"product":"SaaS"}|📦 Product: SaaS|  |  $calc_out.saas_pricing_planner.row.target{"target":"b2b"}|👤 Target: b2b|  |  $calc_out.saas_pricing_planner.row.competitor{"price":"$29/mo"}|💰 Competitor: $29/mo|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Tier Snapshot:\n$calc_out.saas_pricing_planner.row.tier_starter{"price":"$17","customers":"1000","mrr":"$17,000"}|• Starter:      $17/mo  × 1000 customers = $17,000 MRR|\n$calc_out.saas_pricing_planner.row.tier_pro{"price":"$38","customers":"400","mrr":"$15,200"}|• Pro:            $38/mo  × 400 customers = $15,200 MRR|\n$calc_out.saas_pricing_planner.row.tier_max{"price":"$79","customers":"80","mrr":"$6,320"}|• Max:            $79/mo  × 80 customers = $6,320 MRR|\n$calc_out.saas_pricing_planner.row.tier_enterprise{"price":"$499","customers":"12","mrr":"$5,988"}|• Enterprise: $499/mo  × 12 customers = $5,988 MRR|\n$calc_out.saas_pricing_planner.row.total_mrr{"mrr":"$44,508"}|• Total MRR:                  $44,508|\n$calc_out.saas_pricing_planner.row.total_customers{"customers":"1,492"}|• Total Customers:       1,492|\n$calc_out.saas_pricing_planner.row.arpu{"arpu":"$30"}|• ARPU:                            $30/mo|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n$calc_out.saas_pricing_planner.row.weighted_gross_margin{"margin":"76.8%"}|• Weighted Gross Margin:    76.8%  (blended across tiers)|\n$calc_out.saas_pricing_planner.row.target_margin{"margin":"70.0%"}|• Target Margin:                    70.0%  (industry benchmark: 70-80%)|\n$calc_out.saas_pricing_planner.row.arpu_by_tier{"t0":"17","t1":"38","t2":"79","t3":"499"}|• ARPU by Tier:                     $17 / $38 / $79 / $499|\n$calc_out.saas_pricing_planner.row.margin_by_tier{"m0":"85.0%","m1":"75.0%","m2":"70.0%","m3":"65.0%"}|• Margin by Tier:                85.0% / 75.0% / 70.0% / 65.0%|\n$calc_out.saas_pricing_planner.row.enterprise_mrr_pct{"pct":"13.5%"}|• Enterprise % of MRR:        13.5%  (high = strong moat)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Pricing Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.saas_pricing_planner.row.health_all_healthy|• 🟢 All tiers above 50% margin — healthy pricing structure.|\n$calc_out.saas_pricing_planner.row.health_enterprise_healthy{"pct":"13.5%"}|• 🟡 Enterprise = 13.5% of MRR — healthy mix.|\n$calc_out.saas_pricing_planner.row.health_blended_hits{"margin":"76.8%"}|• 🟢 Blended margin (76.8%) hits target.|\n$calc_out.saas_pricing_planner.row.health_pro_above_competitor|• 🟠 Pro tier 30%+ above competitor — risk of price objection.|\n\n🎯 LTV by Tier:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.saas_pricing_planner.row.ltv_starter{"ltv":"$482","margin":"85.0%","churn":"3.0%"}|• Starter:           $482  (85.0% margin, 3.0% monthly churn)|\n$calc_out.saas_pricing_planner.row.ltv_pro{"ltv":"$950","margin":"75.0%"}|• Pro:                  $950  (75.0% margin)|\n$calc_out.saas_pricing_planner.row.ltv_max{"ltv":"$1,843","margin":"70.0%"}|• Max:                  $1,843  (70.0% margin)|\n$calc_out.saas_pricing_planner.row.ltv_enterprise{"ltv":"$10,812","margin":"65.0%"}|• Enterprise:    $10,812  (65.0% margin)|\n$calc_out.saas_pricing_planner.row.average_ltv{"ltv":"$763"}|• Average LTV:      $763|\n$calc_out.saas_pricing_planner.row.ltv_formula|• LTV Formula:      (Price × Margin) / Monthly Churn|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even Customers per Tier:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.saas_pricing_planner.row.breakeven_starter{"count":"139"}|• Starter:           ~139 customers  to break even on $2K/mo costs|\n$calc_out.saas_pricing_planner.row.breakeven_pro{"count":"71"}|• Pro:                  ~71 customers  to break even on $2K/mo costs|\n$calc_out.saas_pricing_planner.row.breakeven_max{"count":"37"}|• Max:                  ~37 customers  to break even on $2K/mo costs|\n$calc_out.saas_pricing_planner.row.breakeven_enterprise{"count":"7"}|• Enterprise:    ~7 customers  to break even on $2K/mo costs|\n$calc_out.saas_pricing_planner.row.breakeven_assumption|• (Assumes $2K/mo fixed costs per tier — adjust based on actual overhead)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.saas_pricing_planner.row.whatif_raise_all_20{"price":"$46","mrr":"$53,410"}|• Raise all tiers 20%:   Pro becomes $46/mo, MRR → $53,410  (test willingness to pay)|\n$calc_out.saas_pricing_planner.row.whatif_cut_starter_50{"gain":"$11400"}|• Cut Starter by 50%:    Convert funnel to Pro — gain $11400/mo|\n$calc_out.saas_pricing_planner.row.whatif_annual_discount{"annual":"$388","monthly":"$456"}|• Add annual discount (15% off):   $388/yr  vs $456/yr monthly|\n$calc_out.saas_pricing_planner.row.whatif_move_to_max{"gain":"$1,640"}|• Move 10% of Pro users to Max:   +$1,640/mo MRR|\n$calc_out.saas_pricing_planner.row.whatif_drop_tier{"tier":"none"}|• Drop lowest-margin tier (none):   refocus on profitable tiers|\n\n💡 Tip: 3 tiers work best: Starter → Pro → Enterprise. The middle tier should be the obvious choice (anchor pricing).\n\n$calc_out.saas_pricing_planner.row.recommended_action{"price":"38"}|📌 Recommended Action: Launch with Tiered model, Pro at $38/mo as the anchor. Use Starter as a low-friction entry point and Max/Enterprise to capture expansion revenue.|\n• $calc_out.saas_pricing_planner.row.model_line{"name":"Flat-Rate","low":"$20","mid":"$29","high":"$44"}|Flat-Rate: $20 – $29 – $44/mo|\n  $calc_out.saas_pricing_planner.row.model_flat_rate_best|Simple tools with one clear use case. Best for early-stage products.|\n⭐ $calc_out.saas_pricing_planner.row.model_line{"name":"Tiered","low":"$15","mid":"$29","high":"$73"}|Tiered: $15 – $29 – $73/mo|\n  $calc_out.saas_pricing_planner.row.model_tiered_best|Products with power users who will pay more for advanced features.|\n• $calc_out.saas_pricing_planner.row.model_line{"name":"Usage-Based","low":"$12","mid":"$35","high":"$87"}|Usage-Based: $12 – $35 – $87/mo|\n  $calc_out.saas_pricing_planner.row.model_usage_based_best|API products, AI tools, or any product where value scales with usage.|\n• $calc_out.saas_pricing_planner.row.model_line{"name":"Freemium","low":"$0","mid":"$23","high":"$52"}|Freemium: $0 – $23 – $52/mo|\n  $calc_out.saas_pricing_planner.row.model_freemium_best|B2C products or tools that benefit from network effects and word-of-mouth.|\n🎯 Audience Insight:\n$calc_out.saas_pricing_planner.row.audience_b2b|B2B buyers expect per-seat pricing and annual contracts. They value ROI calculators and case studies.|\n\n📦 Product Insight:\n$calc_out.saas_pricing_planner.row.product_saas|SaaS benchmarks: 50-70% gross margins. Aim for LTV:CAC ratio of 3:1 or higher.|\n\n$calc_out.saas_pricing_planner.row.next_step{"price":"38"}|🚀 Next step: Pick one model, launch at the Pro tier ($38/mo), and adjust pricing after collecting 100+ conversion data points.|',
     '',
     '',
     '',

@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateEmployeeCost(inputs: Record<string, string>): string[] {
   const annualSalary = clampNonNegative(parseFloat(inputs.annualSalary) || 0);
@@ -61,71 +64,83 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
 
   const results: string[] = [];
 
+  // P168 B3-13：📍 地点这一行按**地区分支**各写一个 code 字面量
+  //   ⇒ zh 页能整行中文（而不是把英文地名塞进参数里）。
+  const locationRow =
+    location === 'us' ? makeToken('calc_out.employee_cost.row.location_us', '📍 Location: United States')
+    : location === 'uk' ? makeToken('calc_out.employee_cost.row.location_uk', '📍 Location: United Kingdom')
+    : location === 'europe' ? makeToken('calc_out.employee_cost.row.location_europe', '📍 Location: Europe (EU avg)')
+    : location === 'asia' ? makeToken('calc_out.employee_cost.row.location_asia', '📍 Location: Asia (regional avg)')
+    : location === 'remote' ? makeToken('calc_out.employee_cost.row.location_remote', '📍 Location: Global Remote')
+    : '📍 Location: ' + locLabel[location];
+
   results.push(
     '💼 Employee Cost Calculator\n\n' +
-    '📍 Location: ' + locLabel[location] + '\n' +
+    locationRow + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💰 True Cost Breakdown:\n' +
-    '• Base Salary:                $' + loc(annualSalary) + '/yr  (' + pct(annualSalary, totalAnnualCost) + ' of total)\n' +
-    '• Benefits (' + benefitsPct + '%):          $' + loc(benefitsCost) + '/yr  (' + pct(benefitsCost, totalAnnualCost) + ')\n' +
-    '• Employer Tax (' + (taxRate * 100).toFixed(1) + '%):      $' + loc(employerTax) + '/yr  (' + pct(employerTax, totalAnnualCost) + ')\n' +
-    '• Overhead (' + (overheadRate * 100).toFixed(0) + '%):           $' + loc(overhead) + '/yr  (' + pct(overhead, totalAnnualCost) + ')\n' +
-    '• Total Annual Cost:        $' + loc(totalAnnualCost) + '/yr\n' +
-    '• Monthly Cost:                $' + fmt(monthlyCost) + '/mo\n' +
-    '• True Cost Multiplier:    ' + trueMultiplier.toFixed(2) + 'x base salary\n\n' +
+    makeToken('calc_out.employee_cost.row.true_cost_breakdown', '💰 True Cost Breakdown:') + '\n' +
+    makeToken('calc_out.employee_cost.row.base_salary', '• Base Salary:                $' + loc(annualSalary) + '/yr  (' + pct(annualSalary, totalAnnualCost) + ' of total)', { salary: loc(annualSalary), share: pct(annualSalary, totalAnnualCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.benefits', '• Benefits (' + benefitsPct + '%):          $' + loc(benefitsCost) + '/yr  (' + pct(benefitsCost, totalAnnualCost) + ')', { pct: String(benefitsPct), cost: loc(benefitsCost), share: pct(benefitsCost, totalAnnualCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.employer_tax', '• Employer Tax (' + (taxRate * 100).toFixed(1) + '%):      $' + loc(employerTax) + '/yr  (' + pct(employerTax, totalAnnualCost) + ')', { rate: (taxRate * 100).toFixed(1), cost: loc(employerTax), share: pct(employerTax, totalAnnualCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.overhead', '• Overhead (' + (overheadRate * 100).toFixed(0) + '%):           $' + loc(overhead) + '/yr  (' + pct(overhead, totalAnnualCost) + ')', { rate: (overheadRate * 100).toFixed(0), cost: loc(overhead), share: pct(overhead, totalAnnualCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.total_annual_cost', '• Total Annual Cost:        $' + loc(totalAnnualCost) + '/yr', { cost: loc(totalAnnualCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.monthly_cost', '• Monthly Cost:                $' + fmt(monthlyCost) + '/mo', { cost: fmt(monthlyCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.true_cost_multiplier', '• True Cost Multiplier:    ' + trueMultiplier.toFixed(2) + 'x base salary', { mult: trueMultiplier.toFixed(2) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Key Metrics:\n' +
-    '• Loaded vs Base Ratio:    ' + trueMultiplier.toFixed(2) + 'x  (1.2-1.8x typical)\n' +
-    '• First-Year Cost (incl. onboarding):   $' + loc(firstYearCost) + '\n' +
-    '• Ongoing Annual Cost:        $' + loc(ongoingCost) + '\n' +
-    '• Year-1 Premium:                $' + loc(firstYearCost - ongoingCost) + '  (' + pct(firstYearCost - ongoingCost, ongoingCost) + ' ramp-up)\n' +
-    '• Benefits per Hour:           $' + (benefitsCost / 2080).toFixed(2) + '  (over 2,080 work hours/yr)\n' +
-    '• Effective Hourly Cost:    $' + (totalAnnualCost / 2080).toFixed(2) + '/hr\n\n' +
+    makeToken('calc_out.employee_cost.row.loaded_vs_base_ratio', '• Loaded vs Base Ratio:    ' + trueMultiplier.toFixed(2) + 'x  (1.2-1.8x typical)', { mult: trueMultiplier.toFixed(2) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.first_year_cost', '• First-Year Cost (incl. onboarding):   $' + loc(firstYearCost), { cost: loc(firstYearCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.ongoing_annual_cost', '• Ongoing Annual Cost:        $' + loc(ongoingCost), { cost: loc(ongoingCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.year1_premium', '• Year-1 Premium:                $' + loc(firstYearCost - ongoingCost) + '  (' + pct(firstYearCost - ongoingCost, ongoingCost) + ' ramp-up)', { premium: loc(firstYearCost - ongoingCost), share: pct(firstYearCost - ongoingCost, ongoingCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.benefits_per_hour', '• Benefits per Hour:           $' + (benefitsCost / 2080).toFixed(2) + '  (over 2,080 work hours/yr)', { perhour: (benefitsCost / 2080).toFixed(2) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.effective_hourly_cost', '• Effective Hourly Cost:    $' + (totalAnnualCost / 2080).toFixed(2) + '/hr', { rate: (totalAnnualCost / 2080).toFixed(2) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Cost Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (trueMultiplier <= 1.4
-      ? '• 🟢 Lean multiplier (' + trueMultiplier.toFixed(2) + 'x) — efficient operation.\n'
+      ? makeToken('calc_out.employee_cost.row.health_multiplier_lean', '• 🟢 Lean multiplier (' + trueMultiplier.toFixed(2) + 'x) — efficient operation.', { mult: trueMultiplier.toFixed(2) }) + '\n'
       : trueMultiplier <= 1.8
-      ? '• 🟢 Standard multiplier (' + trueMultiplier.toFixed(2) + 'x) — typical for full-time staff.\n'
+      ? makeToken('calc_out.employee_cost.row.health_multiplier_standard', '• 🟢 Standard multiplier (' + trueMultiplier.toFixed(2) + 'x) — typical for full-time staff.', { mult: trueMultiplier.toFixed(2) }) + '\n'
       : trueMultiplier <= 2.2
-      ? '• 🟠 High multiplier (' + trueMultiplier.toFixed(2) + 'x) — review overhead/benefits ratio.\n'
-      : '• 🔴 Excessive multiplier (' + trueMultiplier.toFixed(2) + 'x) — likely heavy overhead or benefits.\n') +
+      ? makeToken('calc_out.employee_cost.row.health_multiplier_high', '• 🟠 High multiplier (' + trueMultiplier.toFixed(2) + 'x) — review overhead/benefits ratio.', { mult: trueMultiplier.toFixed(2) }) + '\n'
+      : makeToken('calc_out.employee_cost.row.health_multiplier_excessive', '• 🔴 Excessive multiplier (' + trueMultiplier.toFixed(2) + 'x) — likely heavy overhead or benefits.', { mult: trueMultiplier.toFixed(2) }) + '\n') +
     (annualSalary >= 150000
-      ? '• ⚠️ Senior hire at $' + loc(annualSalary) + '/yr — clear ROI must be established.\n'
+      ? makeToken('calc_out.employee_cost.row.health_hire_senior', '• ⚠️ Senior hire at $' + loc(annualSalary) + '/yr — clear ROI must be established.', { salary: loc(annualSalary) }) + '\n'
       : annualSalary >= 80000
-      ? '• 🟢 Mid-level hire at $' + loc(annualSalary) + '/yr — standard team member.\n'
-      : '• 🟢 Junior hire at $' + loc(annualSalary) + '/yr — low-risk entry-level role.\n') +
+      ? makeToken('calc_out.employee_cost.row.health_hire_mid', '• 🟢 Mid-level hire at $' + loc(annualSalary) + '/yr — standard team member.', { salary: loc(annualSalary) }) + '\n'
+      : makeToken('calc_out.employee_cost.row.health_hire_junior', '• 🟢 Junior hire at $' + loc(annualSalary) + '/yr — low-risk entry-level role.', { salary: loc(annualSalary) }) + '\n') +
     (benefitsPct >= 30
-      ? '• 🟢 Benefits ratio (' + benefitsPct + '%) is competitive.\n'
+      ? makeToken('calc_out.employee_cost.row.health_benefits_competitive', '• 🟢 Benefits ratio (' + benefitsPct + '%) is competitive.', { pct: String(benefitsPct) }) + '\n'
       : benefitsPct >= 20
-      ? '• 🟡 Benefits ratio (' + benefitsPct + '%) is below US average (30-35%).\n'
-      : '• 🟠 Benefits ratio (' + benefitsPct + '%) is very low — may hurt retention.\n') +
+      ? makeToken('calc_out.employee_cost.row.health_benefits_below_avg', '• 🟡 Benefits ratio (' + benefitsPct + '%) is below US average (30-35%).', { pct: String(benefitsPct) }) + '\n'
+      : makeToken('calc_out.employee_cost.row.health_benefits_too_low', '• 🟠 Benefits ratio (' + benefitsPct + '%) is very low — may hurt retention.', { pct: String(benefitsPct) }) + '\n') +
     '\n🎯 Annual Projection:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Year 1 (with onboarding):    $' + loc(firstYearCost) + '\n' +
-    '• Year 2 (full productivity):  $' + loc(ongoingCost) + '  (-' + ((firstYearCost - ongoingCost) / firstYearCost * 100).toFixed(1) + '%)\n' +
-    '• Year 3 (with 3% raise):           $' + loc(ongoingCost * 1.03) + '  (+3%)\n' +
-    '• Year 5 (with 3%/yr raises):    $' + loc(ongoingCost * Math.pow(1.03, 4)) + '\n' +
-    '• 5-Year Total:                            $' + loc(firstYearCost + ongoingCost + ongoingCost * 1.03 + ongoingCost * Math.pow(1.03, 2) + ongoingCost * Math.pow(1.03, 3) + ongoingCost * Math.pow(1.03, 4)) + '\n\n' +
+    makeToken('calc_out.employee_cost.row.year1', '• Year 1 (with onboarding):    $' + loc(firstYearCost), { cost: loc(firstYearCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.year2', '• Year 2 (full productivity):  $' + loc(ongoingCost) + '  (-' + ((firstYearCost - ongoingCost) / firstYearCost * 100).toFixed(1) + '%)', { cost: loc(ongoingCost), drop: ((firstYearCost - ongoingCost) / firstYearCost * 100).toFixed(1) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.year3', '• Year 3 (with 3% raise):           $' + loc(ongoingCost * 1.03) + '  (+3%)', { cost: loc(ongoingCost * 1.03) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.year5', '• Year 5 (with 3%/yr raises):    $' + loc(ongoingCost * Math.pow(1.03, 4)), { cost: loc(ongoingCost * Math.pow(1.03, 4)) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.five_year_total', '• 5-Year Total:                            $' + loc(firstYearCost + ongoingCost + ongoingCost * 1.03 + ongoingCost * Math.pow(1.03, 2) + ongoingCost * Math.pow(1.03, 3) + ongoingCost * Math.pow(1.03, 4)), { total: loc(firstYearCost + ongoingCost + ongoingCost * 1.03 + ongoingCost * Math.pow(1.03, 2) + ongoingCost * Math.pow(1.03, 3) + ongoingCost * Math.pow(1.03, 4)) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '⚖️ Full-Time vs Contractor Break-Even:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (fullTimeBreakEven
       ? '• 🟢 Full-time is cheaper than a contractor at this level. Hire directly.\n'
-      : '• 🟡 Contractor cheaper at $' + loc(contractorCost) + '/yr — consider contractor for short-term needs.\n') +
-    '• Full-Time Annual Cost:          $' + loc(totalAnnualCost) + '\n' +
-    '• Contractor Equivalent:            $' + loc(contractorCost) + '/yr  (no benefits/tax overhead)\n' +
-    '• Savings with Full-Time:           $' + loc(contractorCost - totalAnnualCost) + '/yr  (vs contractor)\n' +
-    '• Break-Even Point:                  ' + (fullTimeBreakEven ? 'Already crossed' : '~' + Math.ceil((totalAnnualCost - contractorCost) / (annualSalary * 0.05)) + ' months at this salary') + '\n\n' +
+      : makeToken('calc_out.employee_cost.row.breakeven_contractor_cheaper', '• 🟡 Contractor cheaper at $' + loc(contractorCost) + '/yr — consider contractor for short-term needs.', { cost: loc(contractorCost) }) + '\n') +
+    makeToken('calc_out.employee_cost.row.fulltime_annual_cost', '• Full-Time Annual Cost:          $' + loc(totalAnnualCost), { cost: loc(totalAnnualCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.contractor_equivalent', '• Contractor Equivalent:            $' + loc(contractorCost) + '/yr  (no benefits/tax overhead)', { cost: loc(contractorCost) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.savings_with_fulltime', '• Savings with Full-Time:           $' + loc(contractorCost - totalAnnualCost) + '/yr  (vs contractor)', { savings: loc(contractorCost - totalAnnualCost) }) + '\n' +
+    (fullTimeBreakEven
+      ? '• Break-Even Point:                  Already crossed\n\n'
+      : makeToken('calc_out.employee_cost.row.breakeven_point_months', '• Break-Even Point:                  ~' + Math.ceil((totalAnnualCost - contractorCost) / (annualSalary * 0.05)) + ' months at this salary', { months: String(Math.ceil((totalAnnualCost - contractorCost) / (annualSalary * 0.05))) }) + '\n\n') +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Add 10% performance bonus:   Total → $' + loc(totalAnnualCost * 1.1) + '  (Multiplier ' + (totalAnnualCost * 1.1 / annualSalary).toFixed(2) + 'x)\n' +
-    '• Cut benefits to 20%:                Save $' + loc(benefitsCost - annualSalary * 0.20) + '/yr  (Total → $' + loc(annualSalary + annualSalary * 0.20 + employerTax + overhead) + ')\n' +
-    '• Increase training budget ($5K):  Total → $' + loc(totalAnnualCost + 5000) + '  (better retention)\n' +
-    '• Hire in Asia instead:                 ~$' + loc(annualSalary * 0.4) + '/yr  (40% of US cost)\n' +
-    '• Remote (anywhere):                         ~$' + loc(annualSalary * 0.7) + '/yr  (saves office overhead)\n\n' +
+    makeToken('calc_out.employee_cost.row.whatif_bonus_10', '• Add 10% performance bonus:   Total → $' + loc(totalAnnualCost * 1.1) + '  (Multiplier ' + (totalAnnualCost * 1.1 / annualSalary).toFixed(2) + 'x)', { cost: loc(totalAnnualCost * 1.1), mult: (totalAnnualCost * 1.1 / annualSalary).toFixed(2) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.whatif_benefits_20', '• Cut benefits to 20%:                Save $' + loc(benefitsCost - annualSalary * 0.20) + '/yr  (Total → $' + loc(annualSalary + annualSalary * 0.20 + employerTax + overhead) + ')', { save: loc(benefitsCost - annualSalary * 0.20), total: loc(annualSalary + annualSalary * 0.20 + employerTax + overhead) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.whatif_training_5k', '• Increase training budget ($5K):  Total → $' + loc(totalAnnualCost + 5000) + '  (better retention)', { cost: loc(totalAnnualCost + 5000) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.whatif_hire_asia', '• Hire in Asia instead:                 ~$' + loc(annualSalary * 0.4) + '/yr  (40% of US cost)', { cost: loc(annualSalary * 0.4) }) + '\n' +
+    makeToken('calc_out.employee_cost.row.whatif_remote', '• Remote (anywhere):                         ~$' + loc(annualSalary * 0.7) + '/yr  (saves office overhead)', { cost: loc(annualSalary * 0.7) }) + '\n\n' +
     '💡 Tip: ' + tipJson,
   );
 
@@ -137,7 +152,9 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
     const oh = s * overheadRate;
     const tac = s + bc + et + oh;
     results.push(
-      'Comparison: $' + loc(s) + ' salary → Total $' + loc(tac) + '/yr ($' + fmt(tac / 12) + '/mo) | Multiplier ' + (tac / s).toFixed(2) + 'x',
+      makeToken('calc_out.employee_cost.row.comparison_head', 'Comparison: $' + loc(s) + ' salary → Total $' + loc(tac) + '/yr ($' + fmt(tac / 12) + '/mo)', { salary: loc(s), total: loc(tac), monthly: fmt(tac / 12) }) +
+      ' | ' +
+      makeToken('calc_out.employee_cost.row.comparison_multiplier', 'Multiplier ' + (tac / s).toFixed(2) + 'x', { mult: (tac / s).toFixed(2) }),
     );
   }
 
@@ -151,77 +168,79 @@ function calculateEmployeeCost(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let f=function(a){return Number.isNaN(a)?0:Math.max(0,a)},g=function(a){const t=f(parseFloat(a.annualSalary)||0),i=f(parseFloat(a.benefitsPercentage)||0),c=a.location||"us",w={us:.0765,uk:.138,europe:.2,asia:.12,remote:.1},M={us:.25,uk:.2,europe:.22,asia:.15,remote:.1},v=w[c]||.0765,x=M[c]||.25,d=t*(i/100),p=t*v,h=t*x,n=t+d+p+h,k=n/12,o=t>0?n/t:0,u=n*1.15,A=o<=1.4?JSON.stringify({code:"employee_cost_lean",params:{multiplier:o.toFixed(1)}}):o<=1.8?JSON.stringify({code:"employee_cost_standard",params:{multiplier:o.toFixed(1)}}):o<=2.2?JSON.stringify({code:"employee_cost_high",params:{multiplier:o.toFixed(1)}}):JSON.stringify({code:"employee_cost_excessive",params:{multiplier:o.toFixed(1)}}),r=n,m=t*1.05,b=m>n,S=s=>s.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),e=s=>Math.round(s).toLocaleString(),y=(s,l)=>l>0?(s/l*100).toFixed(1)+"%":"0%",B={us:"United States",uk:"United Kingdom",europe:"Europe (EU avg)",asia:"Asia (regional avg)",remote:"Global Remote"},$=[];$.push(\`💼 Employee Cost Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let x=function(_){return Number.isNaN(_)?0:Math.max(0,_)},b=function(_){const e=x(parseFloat(_.annualSalary)||0),i=x(parseFloat(_.benefitsPercentage)||0),s=_.location||"us",B={us:.0765,uk:.138,europe:.2,asia:.12,remote:.1},L={us:.25,uk:.2,europe:.22,asia:.15,remote:.1},f=B[s]||.0765,v=L[s]||.25,p=e*(i/100),m=e*f,d=e*v,r=e+p+m+d,S=r/12,a=e>0?r/e:0,l=r*1.15,O=a<=1.4?JSON.stringify({code:"employee_cost_lean",params:{multiplier:a.toFixed(1)}}):a<=1.8?JSON.stringify({code:"employee_cost_standard",params:{multiplier:a.toFixed(1)}}):a<=2.2?JSON.stringify({code:"employee_cost_high",params:{multiplier:a.toFixed(1)}}):JSON.stringify({code:"employee_cost_excessive",params:{multiplier:a.toFixed(1)}}),c=r,y=e*1.05,C=y>r,g=h=>h.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),t=h=>Math.round(h).toLocaleString(),u=(h,n)=>n>0?(h/n*100).toFixed(1)+"%":"0%",R={us:"United States",uk:"United Kingdom",europe:"Europe (EU avg)",asia:"Asia (regional avg)",remote:"Global Remote"},F=[],N=s==="us"?o("calc_out.employee_cost.row.location_us","📍 Location: United States"):s==="uk"?o("calc_out.employee_cost.row.location_uk","📍 Location: United Kingdom"):s==="europe"?o("calc_out.employee_cost.row.location_europe","📍 Location: Europe (EU avg)"):s==="asia"?o("calc_out.employee_cost.row.location_asia","📍 Location: Asia (regional avg)"):s==="remote"?o("calc_out.employee_cost.row.location_remote","📍 Location: Global Remote"):"📍 Location: "+R[s];F.push(\`💼 Employee Cost Calculator
 
-📍 Location: \`+B[c]+\`
+\`+N+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💰 True Cost Breakdown:
-• Base Salary:                $\`+e(t)+"/yr  ("+y(t,n)+\` of total)
-• Benefits (\`+i+"%):          $"+e(d)+"/yr  ("+y(d,n)+\`)
-• Employer Tax (\`+(v*100).toFixed(1)+"%):      $"+e(p)+"/yr  ("+y(p,n)+\`)
-• Overhead (\`+(x*100).toFixed(0)+"%):           $"+e(h)+"/yr  ("+y(h,n)+\`)
-• Total Annual Cost:        $\`+e(n)+\`/yr
-• Monthly Cost:                $\`+S(k)+\`/mo
-• True Cost Multiplier:    \`+o.toFixed(2)+\`x base salary
+\`+o("calc_out.employee_cost.row.true_cost_breakdown","💰 True Cost Breakdown:")+\`
+\`+o("calc_out.employee_cost.row.base_salary","• Base Salary:                $"+t(e)+"/yr  ("+u(e,r)+" of total)",{salary:t(e),share:u(e,r)})+\`
+\`+o("calc_out.employee_cost.row.benefits","• Benefits ("+i+"%):          $"+t(p)+"/yr  ("+u(p,r)+")",{pct:String(i),cost:t(p),share:u(p,r)})+\`
+\`+o("calc_out.employee_cost.row.employer_tax","• Employer Tax ("+(f*100).toFixed(1)+"%):      $"+t(m)+"/yr  ("+u(m,r)+")",{rate:(f*100).toFixed(1),cost:t(m),share:u(m,r)})+\`
+\`+o("calc_out.employee_cost.row.overhead","• Overhead ("+(v*100).toFixed(0)+"%):           $"+t(d)+"/yr  ("+u(d,r)+")",{rate:(v*100).toFixed(0),cost:t(d),share:u(d,r)})+\`
+\`+o("calc_out.employee_cost.row.total_annual_cost","• Total Annual Cost:        $"+t(r)+"/yr",{cost:t(r)})+\`
+\`+o("calc_out.employee_cost.row.monthly_cost","• Monthly Cost:                $"+g(S)+"/mo",{cost:g(S)})+\`
+\`+o("calc_out.employee_cost.row.true_cost_multiplier","• True Cost Multiplier:    "+a.toFixed(2)+"x base salary",{mult:a.toFixed(2)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Key Metrics:
-• Loaded vs Base Ratio:    \`+o.toFixed(2)+\`x  (1.2-1.8x typical)
-• First-Year Cost (incl. onboarding):   $\`+e(u)+\`
-• Ongoing Annual Cost:        $\`+e(r)+\`
-• Year-1 Premium:                $\`+e(u-r)+"  ("+y(u-r,r)+\` ramp-up)
-• Benefits per Hour:           $\`+(d/2080).toFixed(2)+\`  (over 2,080 work hours/yr)
-• Effective Hourly Cost:    $\`+(n/2080).toFixed(2)+\`/hr
+\`+o("calc_out.employee_cost.row.loaded_vs_base_ratio","• Loaded vs Base Ratio:    "+a.toFixed(2)+"x  (1.2-1.8x typical)",{mult:a.toFixed(2)})+\`
+\`+o("calc_out.employee_cost.row.first_year_cost","• First-Year Cost (incl. onboarding):   $"+t(l),{cost:t(l)})+\`
+\`+o("calc_out.employee_cost.row.ongoing_annual_cost","• Ongoing Annual Cost:        $"+t(c),{cost:t(c)})+\`
+\`+o("calc_out.employee_cost.row.year1_premium","• Year-1 Premium:                $"+t(l-c)+"  ("+u(l-c,c)+" ramp-up)",{premium:t(l-c),share:u(l-c,c)})+\`
+\`+o("calc_out.employee_cost.row.benefits_per_hour","• Benefits per Hour:           $"+(p/2080).toFixed(2)+"  (over 2,080 work hours/yr)",{perhour:(p/2080).toFixed(2)})+\`
+\`+o("calc_out.employee_cost.row.effective_hourly_cost","• Effective Hourly Cost:    $"+(r/2080).toFixed(2)+"/hr",{rate:(r/2080).toFixed(2)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Cost Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(o<=1.4?"• 🟢 Lean multiplier ("+o.toFixed(2)+\`x) — efficient operation.
-\`:o<=1.8?"• 🟢 Standard multiplier ("+o.toFixed(2)+\`x) — typical for full-time staff.
-\`:o<=2.2?"• 🟠 High multiplier ("+o.toFixed(2)+\`x) — review overhead/benefits ratio.
-\`:"• 🔴 Excessive multiplier ("+o.toFixed(2)+\`x) — likely heavy overhead or benefits.
-\`)+(t>=15e4?"• ⚠️ Senior hire at $"+e(t)+\`/yr — clear ROI must be established.
-\`:t>=8e4?"• 🟢 Mid-level hire at $"+e(t)+\`/yr — standard team member.
-\`:"• 🟢 Junior hire at $"+e(t)+\`/yr — low-risk entry-level role.
-\`)+(i>=30?"• 🟢 Benefits ratio ("+i+\`%) is competitive.
-\`:i>=20?"• 🟡 Benefits ratio ("+i+\`%) is below US average (30-35%).
-\`:"• 🟠 Benefits ratio ("+i+\`%) is very low — may hurt retention.
+\`+(a<=1.4?o("calc_out.employee_cost.row.health_multiplier_lean","• 🟢 Lean multiplier ("+a.toFixed(2)+"x) — efficient operation.",{mult:a.toFixed(2)})+\`
+\`:a<=1.8?o("calc_out.employee_cost.row.health_multiplier_standard","• 🟢 Standard multiplier ("+a.toFixed(2)+"x) — typical for full-time staff.",{mult:a.toFixed(2)})+\`
+\`:a<=2.2?o("calc_out.employee_cost.row.health_multiplier_high","• 🟠 High multiplier ("+a.toFixed(2)+"x) — review overhead/benefits ratio.",{mult:a.toFixed(2)})+\`
+\`:o("calc_out.employee_cost.row.health_multiplier_excessive","• 🔴 Excessive multiplier ("+a.toFixed(2)+"x) — likely heavy overhead or benefits.",{mult:a.toFixed(2)})+\`
+\`)+(e>=15e4?o("calc_out.employee_cost.row.health_hire_senior","• ⚠️ Senior hire at $"+t(e)+"/yr — clear ROI must be established.",{salary:t(e)})+\`
+\`:e>=8e4?o("calc_out.employee_cost.row.health_hire_mid","• 🟢 Mid-level hire at $"+t(e)+"/yr — standard team member.",{salary:t(e)})+\`
+\`:o("calc_out.employee_cost.row.health_hire_junior","• 🟢 Junior hire at $"+t(e)+"/yr — low-risk entry-level role.",{salary:t(e)})+\`
+\`)+(i>=30?o("calc_out.employee_cost.row.health_benefits_competitive","• 🟢 Benefits ratio ("+i+"%) is competitive.",{pct:String(i)})+\`
+\`:i>=20?o("calc_out.employee_cost.row.health_benefits_below_avg","• 🟡 Benefits ratio ("+i+"%) is below US average (30-35%).",{pct:String(i)})+\`
+\`:o("calc_out.employee_cost.row.health_benefits_too_low","• 🟠 Benefits ratio ("+i+"%) is very low — may hurt retention.",{pct:String(i)})+\`
 \`)+\`
 🎯 Annual Projection:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Year 1 (with onboarding):    $\`+e(u)+\`
-• Year 2 (full productivity):  $\`+e(r)+"  (-"+((u-r)/u*100).toFixed(1)+\`%)
-• Year 3 (with 3% raise):           $\`+e(r*1.03)+\`  (+3%)
-• Year 5 (with 3%/yr raises):    $\`+e(r*Math.pow(1.03,4))+\`
-• 5-Year Total:                            $\`+e(u+r+r*1.03+r*Math.pow(1.03,2)+r*Math.pow(1.03,3)+r*Math.pow(1.03,4))+\`
+\`+o("calc_out.employee_cost.row.year1","• Year 1 (with onboarding):    $"+t(l),{cost:t(l)})+\`
+\`+o("calc_out.employee_cost.row.year2","• Year 2 (full productivity):  $"+t(c)+"  (-"+((l-c)/l*100).toFixed(1)+"%)",{cost:t(c),drop:((l-c)/l*100).toFixed(1)})+\`
+\`+o("calc_out.employee_cost.row.year3","• Year 3 (with 3% raise):           $"+t(c*1.03)+"  (+3%)",{cost:t(c*1.03)})+\`
+\`+o("calc_out.employee_cost.row.year5","• Year 5 (with 3%/yr raises):    $"+t(c*Math.pow(1.03,4)),{cost:t(c*Math.pow(1.03,4))})+\`
+\`+o("calc_out.employee_cost.row.five_year_total","• 5-Year Total:                            $"+t(l+c+c*1.03+c*Math.pow(1.03,2)+c*Math.pow(1.03,3)+c*Math.pow(1.03,4)),{total:t(l+c+c*1.03+c*Math.pow(1.03,2)+c*Math.pow(1.03,3)+c*Math.pow(1.03,4))})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚖️ Full-Time vs Contractor Break-Even:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(b?\`• 🟢 Full-time is cheaper than a contractor at this level. Hire directly.
-\`:"• 🟡 Contractor cheaper at $"+e(m)+\`/yr — consider contractor for short-term needs.
-\`)+"• Full-Time Annual Cost:          $"+e(n)+\`
-• Contractor Equivalent:            $\`+e(m)+\`/yr  (no benefits/tax overhead)
-• Savings with Full-Time:           $\`+e(m-n)+\`/yr  (vs contractor)
-• Break-Even Point:                  \`+(b?"Already crossed":"~"+Math.ceil((n-m)/(t*.05))+" months at this salary")+\`
+\`+(C?\`• 🟢 Full-time is cheaper than a contractor at this level. Hire directly.
+\`:o("calc_out.employee_cost.row.breakeven_contractor_cheaper","• 🟡 Contractor cheaper at $"+t(y)+"/yr — consider contractor for short-term needs.",{cost:t(y)})+\`
+\`)+o("calc_out.employee_cost.row.fulltime_annual_cost","• Full-Time Annual Cost:          $"+t(r),{cost:t(r)})+\`
+\`+o("calc_out.employee_cost.row.contractor_equivalent","• Contractor Equivalent:            $"+t(y)+"/yr  (no benefits/tax overhead)",{cost:t(y)})+\`
+\`+o("calc_out.employee_cost.row.savings_with_fulltime","• Savings with Full-Time:           $"+t(y-r)+"/yr  (vs contractor)",{savings:t(y-r)})+\`
+\`+(C?\`• Break-Even Point:                  Already crossed
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`:o("calc_out.employee_cost.row.breakeven_point_months","• Break-Even Point:                  ~"+Math.ceil((r-y)/(e*.05))+" months at this salary",{months:String(Math.ceil((r-y)/(e*.05)))})+\`
+
+\`)+\`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Add 10% performance bonus:   Total → $\`+e(n*1.1)+"  (Multiplier "+(n*1.1/t).toFixed(2)+\`x)
-• Cut benefits to 20%:                Save $\`+e(d-t*.2)+"/yr  (Total → $"+e(t+t*.2+p+h)+\`)
-• Increase training budget ($5K):  Total → $\`+e(n+5e3)+\`  (better retention)
-• Hire in Asia instead:                 ~$\`+e(t*.4)+\`/yr  (40% of US cost)
-• Remote (anywhere):                         ~$\`+e(t*.7)+\`/yr  (saves office overhead)
+\`+o("calc_out.employee_cost.row.whatif_bonus_10","• Add 10% performance bonus:   Total → $"+t(r*1.1)+"  (Multiplier "+(r*1.1/e).toFixed(2)+"x)",{cost:t(r*1.1),mult:(r*1.1/e).toFixed(2)})+\`
+\`+o("calc_out.employee_cost.row.whatif_benefits_20","• Cut benefits to 20%:                Save $"+t(p-e*.2)+"/yr  (Total → $"+t(e+e*.2+m+d)+")",{save:t(p-e*.2),total:t(e+e*.2+m+d)})+\`
+\`+o("calc_out.employee_cost.row.whatif_training_5k","• Increase training budget ($5K):  Total → $"+t(r+5e3)+"  (better retention)",{cost:t(r+5e3)})+\`
+\`+o("calc_out.employee_cost.row.whatif_hire_asia","• Hire in Asia instead:                 ~$"+t(e*.4)+"/yr  (40% of US cost)",{cost:t(e*.4)})+\`
+\`+o("calc_out.employee_cost.row.whatif_remote","• Remote (anywhere):                         ~$"+t(e*.7)+"/yr  (saves office overhead)",{cost:t(e*.7)})+\`
 
-💡 Tip: \`+A);const _=[4e4,6e4,8e4,12e4,18e4];for(let s=0;s<_.length;s++){const l=_[s],E=l*(i/100),N=l*v,R=l*x,F=l+E+N+R;$.push("Comparison: $"+e(l)+" salary → Total $"+e(F)+"/yr ($"+S(F/12)+"/mo) | Multiplier "+(F/l).toFixed(2)+"x")}return $},C=function(a,t,i){var c=T(a);return Array.isArray(c)?c.join(\`
-\`):String(c)};var Y=f,O=g,H=C,T=function(a){return g(a)};return[C(inputs,pick,fill)]}finally{}
+💡 Tip: \`+O);const M=[4e4,6e4,8e4,12e4,18e4];for(let h=0;h<M.length;h++){const n=M[h],U=n*(i/100),Y=n*f,j=n*v,w=n+U+Y+j;F.push(o("calc_out.employee_cost.row.comparison_head","Comparison: $"+t(n)+" salary → Total $"+t(w)+"/yr ($"+g(w/12)+"/mo)",{salary:t(n),total:t(w),monthly:g(w/12)})+" | "+o("calc_out.employee_cost.row.comparison_multiplier","Multiplier "+(w/n).toFixed(2)+"x",{mult:(w/n).toFixed(2)}))}return F},$=function(_,e,i){var s=A(_);return Array.isArray(s)?s.join(\`
+\`):String(s)};var J=x,q=b,H=$,o=tk,E='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',o=new Function("return "+E)(),A=function(_){return b(_)};return[$(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -252,7 +271,7 @@ const engine: ToolEngine = {
     return calculateEmployeeCost(inputs);
   },
   staticExamples: [
-    '💼 Employee Cost Calculator\n\n📍 Location: United States\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 True Cost Breakdown:\n• Base Salary:                $80,000/yr  (61.5% of total)\n• Benefits (30%):          $24,000/yr  (18.4%)\n• Employer Tax (7.6%):      $6,120/yr  (4.7%)\n• Overhead (25%):           $20,000/yr  (15.4%)\n• Total Annual Cost:        $130,120/yr\n• Monthly Cost:                $10,843.33/mo\n• True Cost Multiplier:    1.63x base salary\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n• Loaded vs Base Ratio:    1.63x  (1.2-1.8x typical)\n• First-Year Cost (incl. onboarding):   $149,638\n• Ongoing Annual Cost:        $130,120\n• Year-1 Premium:                $19,518  (15.0% ramp-up)\n• Benefits per Hour:           $11.54  (over 2,080 work hours/yr)\n• Effective Hourly Cost:    $62.56/hr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Cost Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Standard multiplier (1.63x) — typical for full-time staff.\n• 🟢 Mid-level hire at $80,000/yr — standard team member.\n• 🟢 Benefits ratio (30%) is competitive.\n\n🎯 Annual Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Year 1 (with onboarding):    $149,638\n• Year 2 (full productivity):  $130,120  (-13.0%)\n• Year 3 (with 3% raise):           $134,024  (+3%)\n• Year 5 (with 3%/yr raises):    $146,451\n• 5-Year Total:                            $840,463\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Full-Time vs Contractor Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Contractor cheaper at $84,000/yr — consider contractor for short-term needs.\n• Full-Time Annual Cost:          $130,120\n• Contractor Equivalent:            $84,000/yr  (no benefits/tax overhead)\n• Savings with Full-Time:           $-46,120/yr  (vs contractor)\n• Break-Even Point:                  ~12 months at this salary\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Add 10% performance bonus:   Total → $143,132  (Multiplier 1.79x)\n• Cut benefits to 20%:                Save $8,000/yr  (Total → $122,120)\n• Increase training budget ($5K):  Total → $135,120  (better retention)\n• Hire in Asia instead:                 ~$32,000/yr  (40% of US cost)\n• Remote (anywhere):                         ~$56,000/yr  (saves office overhead)\n\n💡 Tip: {"code":"employee_cost_standard","params":{"multiplier":"1.6"}}\nComparison: $40,000 salary → Total $65,060/yr ($5,421.67/mo) | Multiplier 1.63x\nComparison: $60,000 salary → Total $97,590/yr ($8,132.50/mo) | Multiplier 1.63x\nComparison: $80,000 salary → Total $130,120/yr ($10,843.33/mo) | Multiplier 1.63x\nComparison: $120,000 salary → Total $195,180/yr ($16,265.00/mo) | Multiplier 1.63x\nComparison: $180,000 salary → Total $292,770/yr ($24,397.50/mo) | Multiplier 1.63x',
+    '💼 Employee Cost Calculator\n\n$calc_out.employee_cost.row.location_us|📍 Location: United States|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.employee_cost.row.true_cost_breakdown|💰 True Cost Breakdown:|\n$calc_out.employee_cost.row.base_salary{"salary":"80,000","share":"61.5%"}|• Base Salary:                $80,000/yr  (61.5% of total)|\n$calc_out.employee_cost.row.benefits{"pct":"30","cost":"24,000","share":"18.4%"}|• Benefits (30%):          $24,000/yr  (18.4%)|\n$calc_out.employee_cost.row.employer_tax{"rate":"7.6","cost":"6,120","share":"4.7%"}|• Employer Tax (7.6%):      $6,120/yr  (4.7%)|\n$calc_out.employee_cost.row.overhead{"rate":"25","cost":"20,000","share":"15.4%"}|• Overhead (25%):           $20,000/yr  (15.4%)|\n$calc_out.employee_cost.row.total_annual_cost{"cost":"130,120"}|• Total Annual Cost:        $130,120/yr|\n$calc_out.employee_cost.row.monthly_cost{"cost":"10,843.33"}|• Monthly Cost:                $10,843.33/mo|\n$calc_out.employee_cost.row.true_cost_multiplier{"mult":"1.63"}|• True Cost Multiplier:    1.63x base salary|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n$calc_out.employee_cost.row.loaded_vs_base_ratio{"mult":"1.63"}|• Loaded vs Base Ratio:    1.63x  (1.2-1.8x typical)|\n$calc_out.employee_cost.row.first_year_cost{"cost":"149,638"}|• First-Year Cost (incl. onboarding):   $149,638|\n$calc_out.employee_cost.row.ongoing_annual_cost{"cost":"130,120"}|• Ongoing Annual Cost:        $130,120|\n$calc_out.employee_cost.row.year1_premium{"premium":"19,518","share":"15.0%"}|• Year-1 Premium:                $19,518  (15.0% ramp-up)|\n$calc_out.employee_cost.row.benefits_per_hour{"perhour":"11.54"}|• Benefits per Hour:           $11.54  (over 2,080 work hours/yr)|\n$calc_out.employee_cost.row.effective_hourly_cost{"rate":"62.56"}|• Effective Hourly Cost:    $62.56/hr|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Cost Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.employee_cost.row.health_multiplier_standard{"mult":"1.63"}|• 🟢 Standard multiplier (1.63x) — typical for full-time staff.|\n$calc_out.employee_cost.row.health_hire_mid{"salary":"80,000"}|• 🟢 Mid-level hire at $80,000/yr — standard team member.|\n$calc_out.employee_cost.row.health_benefits_competitive{"pct":"30"}|• 🟢 Benefits ratio (30%) is competitive.|\n\n🎯 Annual Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.employee_cost.row.year1{"cost":"149,638"}|• Year 1 (with onboarding):    $149,638|\n$calc_out.employee_cost.row.year2{"cost":"130,120","drop":"13.0"}|• Year 2 (full productivity):  $130,120  (-13.0%)|\n$calc_out.employee_cost.row.year3{"cost":"134,024"}|• Year 3 (with 3% raise):           $134,024  (+3%)|\n$calc_out.employee_cost.row.year5{"cost":"146,451"}|• Year 5 (with 3%/yr raises):    $146,451|\n$calc_out.employee_cost.row.five_year_total{"total":"840,463"}|• 5-Year Total:                            $840,463|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Full-Time vs Contractor Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.employee_cost.row.breakeven_contractor_cheaper{"cost":"84,000"}|• 🟡 Contractor cheaper at $84,000/yr — consider contractor for short-term needs.|\n$calc_out.employee_cost.row.fulltime_annual_cost{"cost":"130,120"}|• Full-Time Annual Cost:          $130,120|\n$calc_out.employee_cost.row.contractor_equivalent{"cost":"84,000"}|• Contractor Equivalent:            $84,000/yr  (no benefits/tax overhead)|\n$calc_out.employee_cost.row.savings_with_fulltime{"savings":"-46,120"}|• Savings with Full-Time:           $-46,120/yr  (vs contractor)|\n$calc_out.employee_cost.row.breakeven_point_months{"months":"12"}|• Break-Even Point:                  ~12 months at this salary|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.employee_cost.row.whatif_bonus_10{"cost":"143,132","mult":"1.79"}|• Add 10% performance bonus:   Total → $143,132  (Multiplier 1.79x)|\n$calc_out.employee_cost.row.whatif_benefits_20{"save":"8,000","total":"122,120"}|• Cut benefits to 20%:                Save $8,000/yr  (Total → $122,120)|\n$calc_out.employee_cost.row.whatif_training_5k{"cost":"135,120"}|• Increase training budget ($5K):  Total → $135,120  (better retention)|\n$calc_out.employee_cost.row.whatif_hire_asia{"cost":"32,000"}|• Hire in Asia instead:                 ~$32,000/yr  (40% of US cost)|\n$calc_out.employee_cost.row.whatif_remote{"cost":"56,000"}|• Remote (anywhere):                         ~$56,000/yr  (saves office overhead)|\n\n💡 Tip: {"code":"employee_cost_standard","params":{"multiplier":"1.6"}}\n$calc_out.employee_cost.row.comparison_head{"salary":"40,000","total":"65,060","monthly":"5,421.67"}|Comparison: $40,000 salary → Total $65,060/yr ($5,421.67/mo)| | $calc_out.employee_cost.row.comparison_multiplier{"mult":"1.63"}|Multiplier 1.63x|\n$calc_out.employee_cost.row.comparison_head{"salary":"60,000","total":"97,590","monthly":"8,132.50"}|Comparison: $60,000 salary → Total $97,590/yr ($8,132.50/mo)| | $calc_out.employee_cost.row.comparison_multiplier{"mult":"1.63"}|Multiplier 1.63x|\n$calc_out.employee_cost.row.comparison_head{"salary":"80,000","total":"130,120","monthly":"10,843.33"}|Comparison: $80,000 salary → Total $130,120/yr ($10,843.33/mo)| | $calc_out.employee_cost.row.comparison_multiplier{"mult":"1.63"}|Multiplier 1.63x|\n$calc_out.employee_cost.row.comparison_head{"salary":"120,000","total":"195,180","monthly":"16,265.00"}|Comparison: $120,000 salary → Total $195,180/yr ($16,265.00/mo)| | $calc_out.employee_cost.row.comparison_multiplier{"mult":"1.63"}|Multiplier 1.63x|\n$calc_out.employee_cost.row.comparison_head{"salary":"180,000","total":"292,770","monthly":"24,397.50"}|Comparison: $180,000 salary → Total $292,770/yr ($24,397.50/mo)| | $calc_out.employee_cost.row.comparison_multiplier{"mult":"1.63"}|Multiplier 1.63x|',
     '',
     '',
     '',

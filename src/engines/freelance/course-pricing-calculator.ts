@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateCoursePricing(inputs: Record<string, string>): string[] {
   const targetMonthlyIncome = clampNonNegative(parseFloat(inputs.targetMonthlyIncome) || 0);
@@ -38,73 +41,73 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
     '🎓 Course Pricing Calculator\n\n' +
     '💰 Revenue Projection:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target Monthly Income:    ' + fmt(targetMonthlyIncome) + '\n' +
-    '• Est. Buyers/Month:        ' + loc(estimatedBuyersPerMonth) + '\n' +
-    '• Platform Fee:             ' + pct(platformFee) + '\n' +
-    '• Optimal Price:           ' + fmt2(optimalPrice) + '/student\n' +
-    '• Breakeven Price:         ' + fmt2(breakevenPrice) + '/student  (before fees)\n' +
-    '• Gross Revenue:           ' + fmt(grossRevenue) + '/mo\n' +
-    '• Platform Takes:          ' + fmt(platformTake) + '/mo\n' +
-    '• Net Revenue:             ' + fmt(netRevenue) + '/mo\n' +
-    '• Annual Net Revenue:      ' + fmt(annualRevenue) + '/yr\n\n' +
+    makeToken('calc_out.course_pricing.row.target_monthly_income', '• Target Monthly Income:    ' + fmt(targetMonthlyIncome), { income: fmt(targetMonthlyIncome) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.est_buyers_per_month', '• Est. Buyers/Month:        ' + loc(estimatedBuyersPerMonth), { buyers: loc(estimatedBuyersPerMonth) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.platform_fee', '• Platform Fee:             ' + pct(platformFee), { fee: pct(platformFee) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.optimal_price', '• Optimal Price:           ' + fmt2(optimalPrice) + '/student', { price: fmt2(optimalPrice) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.breakeven_price', '• Breakeven Price:         ' + fmt2(breakevenPrice) + '/student  (before fees)', { price: fmt2(breakevenPrice) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.gross_revenue', '• Gross Revenue:           ' + fmt(grossRevenue) + '/mo', { revenue: fmt(grossRevenue) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.platform_takes', '• Platform Takes:          ' + fmt(platformTake) + '/mo', { revenue: fmt(platformTake) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.net_revenue', '• Net Revenue:             ' + fmt(netRevenue) + '/mo', { revenue: fmt(netRevenue) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.annual_net_revenue', '• Annual Net Revenue:      ' + fmt(annualRevenue) + '/yr', { revenue: fmt(annualRevenue) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Pricing Metrics:\n' +
-    '• Price per Student:         ' + fmt2(pricePerStudent) + '\n' +
-    '• $/Hour of Creation:      ' + fmt(pricePerHourOfEffort) + '/hr  (' + fmt2(annualRevenue / Math.max(effortHours * 12, 1)) + ' earned per hour invested)\n' +
-    '• Estimated LTV (with upsell):  ' + fmt2(ltv) + '  (1.5x base price)\n' +
-    '• Gross Margin:            ' + pct(100 - platformFee) + '  (after platform fee)\n' +
-    '• Annual Course Earnings:  ' + fmt(annualRevenue) + '/yr  (at this monthly run rate)\n' +
-    '• Payback to course creator:  ~' + Math.round(effortHours * 12 / Math.max(netRevenue, 1) * 100) / 100 + ' months to recoup creation effort\n\n' +
+    makeToken('calc_out.course_pricing.row.price_per_student', '• Price per Student:         ' + fmt2(pricePerStudent), { price: fmt2(pricePerStudent) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.hour_of_creation', '• $/Hour of Creation:      ' + fmt(pricePerHourOfEffort) + '/hr  (' + fmt2(annualRevenue / Math.max(effortHours * 12, 1)) + ' earned per hour invested)', { perhour: fmt(pricePerHourOfEffort), earned: fmt2(annualRevenue / Math.max(effortHours * 12, 1)) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.estimated_ltv', '• Estimated LTV (with upsell):  ' + fmt2(ltv) + '  (1.5x base price)', { ltv: fmt2(ltv) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.gross_margin', '• Gross Margin:            ' + pct(100 - platformFee) + '  (after platform fee)', { margin: pct(100 - platformFee) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.annual_course_earnings', '• Annual Course Earnings:  ' + fmt(annualRevenue) + '/yr  (at this monthly run rate)', { revenue: fmt(annualRevenue) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.payback_months', '• Payback to course creator:  ~' + Math.round(effortHours * 12 / Math.max(netRevenue, 1) * 100) / 100 + ' months to recoup creation effort', { months: String(Math.round(effortHours * 12 / Math.max(netRevenue, 1) * 100) / 100) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Pricing Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (pricePerHourOfEffort >= 1000
-      ? '• 🟢 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is excellent — course pays back creation time many times over.\n'
+      ? makeToken('calc_out.course_pricing.row.health_effort_excellent', '• 🟢 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is excellent — course pays back creation time many times over.', { rate: String(Math.round(pricePerHourOfEffort)) }) + '\n'
       : pricePerHourOfEffort >= 500
-      ? '• 🟢 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is strong — solid creator economics.\n'
+      ? makeToken('calc_out.course_pricing.row.health_effort_strong', '• 🟢 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is strong — solid creator economics.', { rate: String(Math.round(pricePerHourOfEffort)) }) + '\n'
       : pricePerHourOfEffort >= 200
-      ? '• 🟡 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is workable — could price higher for premium tier.\n'
+      ? makeToken('calc_out.course_pricing.row.health_effort_workable', '• 🟡 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is workable — could price higher for premium tier.', { rate: String(Math.round(pricePerHourOfEffort)) }) + '\n'
       : pricePerHourOfEffort >= 50
-      ? '• 🟠 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is low — underpriced or under-selling.\n'
-      : '• 🔴 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is too low — raise price or grow audience.\n') +
+      ? makeToken('calc_out.course_pricing.row.health_effort_low', '• 🟠 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is low — underpriced or under-selling.', { rate: String(Math.round(pricePerHourOfEffort)) }) + '\n'
+      : makeToken('calc_out.course_pricing.row.health_effort_too_low', '• 🔴 $' + Math.round(pricePerHourOfEffort) + '/hr-of-effort is too low — raise price or grow audience.', { rate: String(Math.round(pricePerHourOfEffort)) }) + '\n') +
     (optimalPrice >= 200
-      ? '• 🟢 Price point ' + fmt2(optimalPrice) + ' is in the premium tier — high-quality courses command this.\n'
+      ? makeToken('calc_out.course_pricing.row.health_price_premium', '• 🟢 Price point ' + fmt2(optimalPrice) + ' is in the premium tier — high-quality courses command this.', { price: fmt2(optimalPrice) }) + '\n'
       : optimalPrice >= 50
-      ? '• 🟡 Price point ' + fmt2(optimalPrice) + ' is mid-market — sweet spot for volume.\n'
-      : '• 🟠 Price point ' + fmt2(optimalPrice) + ' is budget — need high conversion to hit income goal.\n') +
+      ? makeToken('calc_out.course_pricing.row.health_price_mid', '• 🟡 Price point ' + fmt2(optimalPrice) + ' is mid-market — sweet spot for volume.', { price: fmt2(optimalPrice) }) + '\n'
+      : makeToken('calc_out.course_pricing.row.health_price_budget', '• 🟠 Price point ' + fmt2(optimalPrice) + ' is budget — need high conversion to hit income goal.', { price: fmt2(optimalPrice) }) + '\n') +
     (estimatedBuyersPerMonth >= 50
-      ? '• 🟢 ' + loc(estimatedBuyersPerMonth) + ' buyers/mo is a solid funnel size.\n'
+      ? makeToken('calc_out.course_pricing.row.health_buyers_solid', '• 🟢 ' + loc(estimatedBuyersPerMonth) + ' buyers/mo is a solid funnel size.', { buyers: loc(estimatedBuyersPerMonth) }) + '\n'
       : estimatedBuyersPerMonth >= 20
-      ? '• 🟡 ' + loc(estimatedBuyersPerMonth) + ' buyers/mo is workable but tight.\n'
-      : '• 🔴 Under 20 buyers/mo — review channel strategy.\n') +
+      ? makeToken('calc_out.course_pricing.row.health_buyers_workable', '• 🟡 ' + loc(estimatedBuyersPerMonth) + ' buyers/mo is workable but tight.', { buyers: loc(estimatedBuyersPerMonth) }) + '\n'
+      : makeToken('calc_out.course_pricing.row.health_buyers_under_20', '• 🔴 Under 20 buyers/mo — review channel strategy.') + '\n') +
     (platformFee <= 5
-      ? '• 🟢 Platform fee ' + pct(platformFee) + ' is low (self-hosted or Podia).\n'
+      ? makeToken('calc_out.course_pricing.row.health_fee_low', '• 🟢 Platform fee ' + pct(platformFee) + ' is low (self-hosted or Podia).', { fee: pct(platformFee) }) + '\n'
       : platformFee <= 15
-      ? '• 🟡 Platform fee ' + pct(platformFee) + ' is standard (Teachable, Thinkific).\n'
-      : '• 🟠 Platform fee ' + pct(platformFee) + ' is high — consider self-hosted.\n') +
+      ? makeToken('calc_out.course_pricing.row.health_fee_standard', '• 🟡 Platform fee ' + pct(platformFee) + ' is standard (Teachable, Thinkific).', { fee: pct(platformFee) }) + '\n'
+      : makeToken('calc_out.course_pricing.row.health_fee_high', '• 🟠 Platform fee ' + pct(platformFee) + ' is high — consider self-hosted.', { fee: pct(platformFee) }) + '\n') +
     '\n🎯 Launch Revenue:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Email list needed:        ~' + loc(estimatedEmailSize) + '  (at 2% conversion)\n' +
-    '• Launch revenue (30% off):  ' + fmt(launchRevenue) + '\n' +
-    '• Sustained monthly:        ' + fmt(netRevenue) + '/mo\n' +
-    '• 12-month projection:      ' + fmt(annualRevenue) + '/yr\n' +
-    '• With upsell to cohort:    ' + fmt(cohortNet * 12 + annualRevenue) + '/yr potential\n\n' +
+    makeToken('calc_out.course_pricing.row.email_list_needed', '• Email list needed:        ~' + loc(estimatedEmailSize) + '  (at 2% conversion)', { list: loc(estimatedEmailSize) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.launch_revenue', '• Launch revenue (30% off):  ' + fmt(launchRevenue), { revenue: fmt(launchRevenue) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.sustained_monthly', '• Sustained monthly:        ' + fmt(netRevenue) + '/mo', { revenue: fmt(netRevenue) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.projection_12m', '• 12-month projection:      ' + fmt(annualRevenue) + '/yr', { revenue: fmt(annualRevenue) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.with_upsell_cohort', '• With upsell to cohort:    ' + fmt(cohortNet * 12 + annualRevenue) + '/yr potential', { revenue: fmt(cohortNet * 12 + annualRevenue) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Self-Study vs Cohort Break-Even:\n' +
+    makeToken('calc_out.course_pricing.row.self_study_vs_cohort_breakeven', '⚖️ Self-Study vs Cohort Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Self-study annual:      ' + fmt(selfStudyAnnual) + '/yr\n' +
-    '• Cohort premium:          ' + fmt2(cohortPrice) + '/student  (3.5x self-study)\n' +
-    '• Cohort annual (30% take): ' + fmt(cohortAnnual) + '/yr\n' +
-    '• Cohort takes more time:  +10-15 hrs/wk of your time\n' +
-    '• Break-even: cohort needs 30% take rate to beat self-study\n\n' +
+    makeToken('calc_out.course_pricing.row.self_study_annual', '• Self-study annual:      ' + fmt(selfStudyAnnual) + '/yr', { revenue: fmt(selfStudyAnnual) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.cohort_premium', '• Cohort premium:          ' + fmt2(cohortPrice) + '/student  (3.5x self-study)', { price: fmt2(cohortPrice) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.cohort_annual', '• Cohort annual (30% take): ' + fmt(cohortAnnual) + '/yr', { revenue: fmt(cohortAnnual) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.cohort_takes_more_time', '• Cohort takes more time:  +10-15 hrs/wk of your time') + '\n' +
+    makeToken('calc_out.course_pricing.row.break_even_cohort', '• Break-even: cohort needs 30% take rate to beat self-study') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Raise price 30%:        ' + fmt2(optimalPrice * 1.3) + '/student  (' + fmt(optimalPrice * 1.3 * estimatedBuyersPerMonth * (1 - platformFee / 100)) + '/mo net)\n' +
-    '• Double buyers (2x reach): ' + fmt(netRevenue * 2) + '/mo  (' + fmt(netRevenue * 24) + '/yr)\n' +
-    '• Self-host (0% fee):     ' + fmt(optimalPrice * estimatedBuyersPerMonth) + '/mo gross (saves ' + fmt(platformTake) + '/mo)\n' +
-    '• Add cohort tier (30% take):  +' + fmt(cohortNet * 12) + '/yr\n' +
-    '• Bundle w/ coaching:     +' + fmt(optimalPrice * 0.5 * estimatedBuyersPerMonth * 0.2 * 12) + '/yr  (20% take coaching upsell)\n\n' +
+    makeToken('calc_out.course_pricing.row.whatif_raise_price_30', '• Raise price 30%:        ' + fmt2(optimalPrice * 1.3) + '/student  (' + fmt(optimalPrice * 1.3 * estimatedBuyersPerMonth * (1 - platformFee / 100)) + '/mo net)', { price: fmt2(optimalPrice * 1.3), net: fmt(optimalPrice * 1.3 * estimatedBuyersPerMonth * (1 - platformFee / 100)) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.whatif_double_buyers', '• Double buyers (2x reach): ' + fmt(netRevenue * 2) + '/mo  (' + fmt(netRevenue * 24) + '/yr)', { monthly: fmt(netRevenue * 2), annual: fmt(netRevenue * 24) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.whatif_self_host', '• Self-host (0% fee):     ' + fmt(optimalPrice * estimatedBuyersPerMonth) + '/mo gross (saves ' + fmt(platformTake) + '/mo)', { gross: fmt(optimalPrice * estimatedBuyersPerMonth), saves: fmt(platformTake) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.whatif_add_cohort_tier', '• Add cohort tier (30% take):  +' + fmt(cohortNet * 12) + '/yr', { revenue: fmt(cohortNet * 12) }) + '\n' +
+    makeToken('calc_out.course_pricing.row.whatif_bundle_coaching', '• Bundle w/ coaching:     +' + fmt(optimalPrice * 0.5 * estimatedBuyersPerMonth * 0.2 * 12) + '/yr  (20% take coaching upsell)', { revenue: fmt(optimalPrice * 0.5 * estimatedBuyersPerMonth * 0.2 * 12) }) + '\n\n' +
     '💡 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% — buyers who can\'t afford $497 upfront will pay $199 × 3 = $597.',
   );
 
@@ -116,7 +119,7 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
     const net = gross - fee;
     const annual = net * 12;
     results.push(
-      'At $' + p + ' price: ' + loc(Math.round(net)) + '/mo net  (' + loc(Math.round(annual)) + '/yr) at ' + loc(estimatedBuyersPerMonth) + ' buyers/mo',
+      makeToken('calc_out.course_pricing.row.price_point', 'At $' + p + ' price: ' + loc(Math.round(net)) + '/mo net  (' + loc(Math.round(annual)) + '/yr) at ' + loc(estimatedBuyersPerMonth) + ' buyers/mo', { price: String(p), net: loc(Math.round(net)), annual: loc(Math.round(annual)), buyers: loc(estimatedBuyersPerMonth) }),
     );
   }
 
@@ -124,80 +127,80 @@ function calculateCoursePricing(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let f=function(i){return Number.isNaN(i)?0:Math.max(0,i)},M=function(i){const m=f(parseFloat(i.targetMonthlyIncome)||0),n=f(parseFloat(i.estimatedBuyersPerMonth)||0),t=f(parseFloat(i.platformFee)||0),y=[],A=1/(1-t/100),o=n>0?m/n*A:0,C=n>0?m/n:0,g=o*n,v=g*(t/100),c=g-v,d=o,l=c*12,E=d*1.5,p=40,s=p>0?l/(p*12):0,k=.02,w=n>0?Math.round(n/k):0,T=w*k*d*.7,S=d*3.5,P=S*n*.3,B=c*12,N=P*12,e=r=>"$"+r.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),a=r=>"$"+r.toFixed(2),h=r=>r.toFixed(1)+"%",u=r=>Math.round(r).toLocaleString();y.push(\`🎓 Course Pricing Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let y=function(_){return Number.isNaN(_)?0:Math.max(0,_)},F=function(_){const f=y(parseFloat(_.targetMonthlyIncome)||0),t=y(parseFloat(_.estimatedBuyersPerMonth)||0),o=y(parseFloat(_.platformFee)||0),m=[],D=1/(1-o/100),n=t>0?f/t*D:0,$=t>0?f/t:0,v=n*t,g=v*(o/100),s=v-g,d=n,a=s*12,C=d*1.5,p=40,i=p>0?a/(p*12):0,R=.02,b=t>0?Math.round(t/R):0,A=b*R*d*.7,M=d*3.5,w=M*t*.3,E=s*12,j=w*12,e=l=>"$"+l.toLocaleString("en-US",{minimumFractionDigits:0,maximumFractionDigits:0}),c=l=>"$"+l.toFixed(2),h=l=>l.toFixed(1)+"%",u=l=>Math.round(l).toLocaleString();m.push(\`🎓 Course Pricing Calculator
 
 💰 Revenue Projection:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Target Monthly Income:    \`+e(m)+\`
-• Est. Buyers/Month:        \`+u(n)+\`
-• Platform Fee:             \`+h(t)+\`
-• Optimal Price:           \`+a(o)+\`/student
-• Breakeven Price:         \`+a(C)+\`/student  (before fees)
-• Gross Revenue:           \`+e(g)+\`/mo
-• Platform Takes:          \`+e(v)+\`/mo
-• Net Revenue:             \`+e(c)+\`/mo
-• Annual Net Revenue:      \`+e(l)+\`/yr
+\`+r("calc_out.course_pricing.row.target_monthly_income","• Target Monthly Income:    "+e(f),{income:e(f)})+\`
+\`+r("calc_out.course_pricing.row.est_buyers_per_month","• Est. Buyers/Month:        "+u(t),{buyers:u(t)})+\`
+\`+r("calc_out.course_pricing.row.platform_fee","• Platform Fee:             "+h(o),{fee:h(o)})+\`
+\`+r("calc_out.course_pricing.row.optimal_price","• Optimal Price:           "+c(n)+"/student",{price:c(n)})+\`
+\`+r("calc_out.course_pricing.row.breakeven_price","• Breakeven Price:         "+c($)+"/student  (before fees)",{price:c($)})+\`
+\`+r("calc_out.course_pricing.row.gross_revenue","• Gross Revenue:           "+e(v)+"/mo",{revenue:e(v)})+\`
+\`+r("calc_out.course_pricing.row.platform_takes","• Platform Takes:          "+e(g)+"/mo",{revenue:e(g)})+\`
+\`+r("calc_out.course_pricing.row.net_revenue","• Net Revenue:             "+e(s)+"/mo",{revenue:e(s)})+\`
+\`+r("calc_out.course_pricing.row.annual_net_revenue","• Annual Net Revenue:      "+e(a)+"/yr",{revenue:e(a)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Pricing Metrics:
-• Price per Student:         \`+a(d)+\`
-• $/Hour of Creation:      \`+e(s)+"/hr  ("+a(l/Math.max(p*12,1))+\` earned per hour invested)
-• Estimated LTV (with upsell):  \`+a(E)+\`  (1.5x base price)
-• Gross Margin:            \`+h(100-t)+\`  (after platform fee)
-• Annual Course Earnings:  \`+e(l)+\`/yr  (at this monthly run rate)
-• Payback to course creator:  ~\`+Math.round(p*12/Math.max(c,1)*100)/100+\` months to recoup creation effort
+\`+r("calc_out.course_pricing.row.price_per_student","• Price per Student:         "+c(d),{price:c(d)})+\`
+\`+r("calc_out.course_pricing.row.hour_of_creation","• $/Hour of Creation:      "+e(i)+"/hr  ("+c(a/Math.max(p*12,1))+" earned per hour invested)",{perhour:e(i),earned:c(a/Math.max(p*12,1))})+\`
+\`+r("calc_out.course_pricing.row.estimated_ltv","• Estimated LTV (with upsell):  "+c(C)+"  (1.5x base price)",{ltv:c(C)})+\`
+\`+r("calc_out.course_pricing.row.gross_margin","• Gross Margin:            "+h(100-o)+"  (after platform fee)",{margin:h(100-o)})+\`
+\`+r("calc_out.course_pricing.row.annual_course_earnings","• Annual Course Earnings:  "+e(a)+"/yr  (at this monthly run rate)",{revenue:e(a)})+\`
+\`+r("calc_out.course_pricing.row.payback_months","• Payback to course creator:  ~"+Math.round(p*12/Math.max(s,1)*100)/100+" months to recoup creation effort",{months:String(Math.round(p*12/Math.max(s,1)*100)/100)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Pricing Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(s>=1e3?"• 🟢 $"+Math.round(s)+\`/hr-of-effort is excellent — course pays back creation time many times over.
-\`:s>=500?"• 🟢 $"+Math.round(s)+\`/hr-of-effort is strong — solid creator economics.
-\`:s>=200?"• 🟡 $"+Math.round(s)+\`/hr-of-effort is workable — could price higher for premium tier.
-\`:s>=50?"• 🟠 $"+Math.round(s)+\`/hr-of-effort is low — underpriced or under-selling.
-\`:"• 🔴 $"+Math.round(s)+\`/hr-of-effort is too low — raise price or grow audience.
-\`)+(o>=200?"• 🟢 Price point "+a(o)+\` is in the premium tier — high-quality courses command this.
-\`:o>=50?"• 🟡 Price point "+a(o)+\` is mid-market — sweet spot for volume.
-\`:"• 🟠 Price point "+a(o)+\` is budget — need high conversion to hit income goal.
-\`)+(n>=50?"• 🟢 "+u(n)+\` buyers/mo is a solid funnel size.
-\`:n>=20?"• 🟡 "+u(n)+\` buyers/mo is workable but tight.
-\`:\`• 🔴 Under 20 buyers/mo — review channel strategy.
-\`)+(t<=5?"• 🟢 Platform fee "+h(t)+\` is low (self-hosted or Podia).
-\`:t<=15?"• 🟡 Platform fee "+h(t)+\` is standard (Teachable, Thinkific).
-\`:"• 🟠 Platform fee "+h(t)+\` is high — consider self-hosted.
+\`+(i>=1e3?r("calc_out.course_pricing.row.health_effort_excellent","• 🟢 $"+Math.round(i)+"/hr-of-effort is excellent — course pays back creation time many times over.",{rate:String(Math.round(i))})+\`
+\`:i>=500?r("calc_out.course_pricing.row.health_effort_strong","• 🟢 $"+Math.round(i)+"/hr-of-effort is strong — solid creator economics.",{rate:String(Math.round(i))})+\`
+\`:i>=200?r("calc_out.course_pricing.row.health_effort_workable","• 🟡 $"+Math.round(i)+"/hr-of-effort is workable — could price higher for premium tier.",{rate:String(Math.round(i))})+\`
+\`:i>=50?r("calc_out.course_pricing.row.health_effort_low","• 🟠 $"+Math.round(i)+"/hr-of-effort is low — underpriced or under-selling.",{rate:String(Math.round(i))})+\`
+\`:r("calc_out.course_pricing.row.health_effort_too_low","• 🔴 $"+Math.round(i)+"/hr-of-effort is too low — raise price or grow audience.",{rate:String(Math.round(i))})+\`
+\`)+(n>=200?r("calc_out.course_pricing.row.health_price_premium","• 🟢 Price point "+c(n)+" is in the premium tier — high-quality courses command this.",{price:c(n)})+\`
+\`:n>=50?r("calc_out.course_pricing.row.health_price_mid","• 🟡 Price point "+c(n)+" is mid-market — sweet spot for volume.",{price:c(n)})+\`
+\`:r("calc_out.course_pricing.row.health_price_budget","• 🟠 Price point "+c(n)+" is budget — need high conversion to hit income goal.",{price:c(n)})+\`
+\`)+(t>=50?r("calc_out.course_pricing.row.health_buyers_solid","• 🟢 "+u(t)+" buyers/mo is a solid funnel size.",{buyers:u(t)})+\`
+\`:t>=20?r("calc_out.course_pricing.row.health_buyers_workable","• 🟡 "+u(t)+" buyers/mo is workable but tight.",{buyers:u(t)})+\`
+\`:r("calc_out.course_pricing.row.health_buyers_under_20","• 🔴 Under 20 buyers/mo — review channel strategy.")+\`
+\`)+(o<=5?r("calc_out.course_pricing.row.health_fee_low","• 🟢 Platform fee "+h(o)+" is low (self-hosted or Podia).",{fee:h(o)})+\`
+\`:o<=15?r("calc_out.course_pricing.row.health_fee_standard","• 🟡 Platform fee "+h(o)+" is standard (Teachable, Thinkific).",{fee:h(o)})+\`
+\`:r("calc_out.course_pricing.row.health_fee_high","• 🟠 Platform fee "+h(o)+" is high — consider self-hosted.",{fee:h(o)})+\`
 \`)+\`
 🎯 Launch Revenue:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Email list needed:        ~\`+u(w)+\`  (at 2% conversion)
-• Launch revenue (30% off):  \`+e(T)+\`
-• Sustained monthly:        \`+e(c)+\`/mo
-• 12-month projection:      \`+e(l)+\`/yr
-• With upsell to cohort:    \`+e(P*12+l)+\`/yr potential
+\`+r("calc_out.course_pricing.row.email_list_needed","• Email list needed:        ~"+u(b)+"  (at 2% conversion)",{list:u(b)})+\`
+\`+r("calc_out.course_pricing.row.launch_revenue","• Launch revenue (30% off):  "+e(A),{revenue:e(A)})+\`
+\`+r("calc_out.course_pricing.row.sustained_monthly","• Sustained monthly:        "+e(s)+"/mo",{revenue:e(s)})+\`
+\`+r("calc_out.course_pricing.row.projection_12m","• 12-month projection:      "+e(a)+"/yr",{revenue:e(a)})+\`
+\`+r("calc_out.course_pricing.row.with_upsell_cohort","• With upsell to cohort:    "+e(w*12+a)+"/yr potential",{revenue:e(w*12+a)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Self-Study vs Cohort Break-Even:
+\`+r("calc_out.course_pricing.row.self_study_vs_cohort_breakeven","⚖️ Self-Study vs Cohort Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Self-study annual:      \`+e(B)+\`/yr
-• Cohort premium:          \`+a(S)+\`/student  (3.5x self-study)
-• Cohort annual (30% take): \`+e(N)+\`/yr
-• Cohort takes more time:  +10-15 hrs/wk of your time
-• Break-even: cohort needs 30% take rate to beat self-study
+\`+r("calc_out.course_pricing.row.self_study_annual","• Self-study annual:      "+e(E)+"/yr",{revenue:e(E)})+\`
+\`+r("calc_out.course_pricing.row.cohort_premium","• Cohort premium:          "+c(M)+"/student  (3.5x self-study)",{price:c(M)})+\`
+\`+r("calc_out.course_pricing.row.cohort_annual","• Cohort annual (30% take): "+e(j)+"/yr",{revenue:e(j)})+\`
+\`+r("calc_out.course_pricing.row.cohort_takes_more_time","• Cohort takes more time:  +10-15 hrs/wk of your time")+\`
+\`+r("calc_out.course_pricing.row.break_even_cohort","• Break-even: cohort needs 30% take rate to beat self-study")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Raise price 30%:        \`+a(o*1.3)+"/student  ("+e(o*1.3*n*(1-t/100))+\`/mo net)
-• Double buyers (2x reach): \`+e(c*2)+"/mo  ("+e(c*24)+\`/yr)
-• Self-host (0% fee):     \`+e(o*n)+"/mo gross (saves "+e(v)+\`/mo)
-• Add cohort tier (30% take):  +\`+e(P*12)+\`/yr
-• Bundle w/ coaching:     +\`+e(o*.5*n*.2*12)+\`/yr  (20% take coaching upsell)
+\`+r("calc_out.course_pricing.row.whatif_raise_price_30","• Raise price 30%:        "+c(n*1.3)+"/student  ("+e(n*1.3*t*(1-o/100))+"/mo net)",{price:c(n*1.3),net:e(n*1.3*t*(1-o/100))})+\`
+\`+r("calc_out.course_pricing.row.whatif_double_buyers","• Double buyers (2x reach): "+e(s*2)+"/mo  ("+e(s*24)+"/yr)",{monthly:e(s*2),annual:e(s*24)})+\`
+\`+r("calc_out.course_pricing.row.whatif_self_host","• Self-host (0% fee):     "+e(n*t)+"/mo gross (saves "+e(g)+"/mo)",{gross:e(n*t),saves:e(g)})+\`
+\`+r("calc_out.course_pricing.row.whatif_add_cohort_tier","• Add cohort tier (30% take):  +"+e(w*12)+"/yr",{revenue:e(w*12)})+\`
+\`+r("calc_out.course_pricing.row.whatif_bundle_coaching","• Bundle w/ coaching:     +"+e(n*.5*t*.2*12)+"/yr  (20% take coaching upsell)",{revenue:e(n*.5*t*.2*12)})+\`
 
-💡 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% — buyers who can't afford $497 upfront will pay $199 × 3 = $597.\`);const F=[29,49,97,147,197,297,497,697,997];for(let r=0;r<F.length;r++){const $=F[r],x=$*n,L=x*(t/100),_=x-L,D=_*12;y.push("At $"+$+" price: "+u(Math.round(_))+"/mo net  ("+u(Math.round(D))+"/yr) at "+u(n)+" buyers/mo")}return y},b=function(i,m,n){var t=R(i);return Array.isArray(t)?t.join(\`
-\`):String(t)};var H=f,I=M,j=b,R=function(i){return M(i)};return[b(inputs,pick,fill)]}finally{}
+💡 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% — buyers who can't afford $497 upfront will pay $199 × 3 = $597.\`);const N=[29,49,97,147,197,297,497,697,997];for(let l=0;l<N.length;l++){const P=N[l],B=P*t,H=B*(o/100),S=B-H,q=S*12;m.push(r("calc_out.course_pricing.row.price_point","At $"+P+" price: "+u(Math.round(S))+"/mo net  ("+u(Math.round(q))+"/yr) at "+u(t)+" buyers/mo",{price:String(P),net:u(Math.round(S)),annual:u(Math.round(q)),buyers:u(t)}))}return m},x=function(_,f,t){var o=O(_);return Array.isArray(o)?o.join(\`
+\`):String(o)};var I=y,z=F,G=x,r=tk,L='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+L)(),O=function(_){return F(_)};return[x(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -228,7 +231,7 @@ const engine: ToolEngine = {
     return calculateCoursePricing(inputs);
   },
   staticExamples: [
-    '🎓 Course Pricing Calculator\n\n💰 Revenue Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target Monthly Income:    $5,000\n• Est. Buyers/Month:        50\n• Platform Fee:             10.0%\n• Optimal Price:           $111.11/student\n• Breakeven Price:         $100.00/student  (before fees)\n• Gross Revenue:           $5,556/mo\n• Platform Takes:          $556/mo\n• Net Revenue:             $5,000/mo\n• Annual Net Revenue:      $60,000/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Pricing Metrics:\n• Price per Student:         $111.11\n• $/Hour of Creation:      $125/hr  ($125.00 earned per hour invested)\n• Estimated LTV (with upsell):  $166.67  (1.5x base price)\n• Gross Margin:            90.0%  (after platform fee)\n• Annual Course Earnings:  $60,000/yr  (at this monthly run rate)\n• Payback to course creator:  ~0.1 months to recoup creation effort\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Pricing Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟠 $125/hr-of-effort is low — underpriced or under-selling.\n• 🟡 Price point $111.11 is mid-market — sweet spot for volume.\n• 🟢 50 buyers/mo is a solid funnel size.\n• 🟡 Platform fee 10.0% is standard (Teachable, Thinkific).\n\n🎯 Launch Revenue:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Email list needed:        ~2,500  (at 2% conversion)\n• Launch revenue (30% off):  $3,889\n• Sustained monthly:        $5,000/mo\n• 12-month projection:      $60,000/yr\n• With upsell to cohort:    $130,000/yr potential\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Self-Study vs Cohort Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Self-study annual:      $60,000/yr\n• Cohort premium:          $388.89/student  (3.5x self-study)\n• Cohort annual (30% take): $70,000/yr\n• Cohort takes more time:  +10-15 hrs/wk of your time\n• Break-even: cohort needs 30% take rate to beat self-study\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise price 30%:        $144.44/student  ($6,500/mo net)\n• Double buyers (2x reach): $10,000/mo  ($120,000/yr)\n• Self-host (0% fee):     $5,556/mo gross (saves $556/mo)\n• Add cohort tier (30% take):  +$70,000/yr\n• Bundle w/ coaching:     +$6,667/yr  (20% take coaching upsell)\n\n💡 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% — buyers who can\'t afford $497 upfront will pay $199 × 3 = $597.\nAt $29 price: 1,305/mo net  (15,660/yr) at 50 buyers/mo\nAt $49 price: 2,205/mo net  (26,460/yr) at 50 buyers/mo\nAt $97 price: 4,365/mo net  (52,380/yr) at 50 buyers/mo\nAt $147 price: 6,615/mo net  (79,380/yr) at 50 buyers/mo\nAt $197 price: 8,865/mo net  (106,380/yr) at 50 buyers/mo\nAt $297 price: 13,365/mo net  (160,380/yr) at 50 buyers/mo\nAt $497 price: 22,365/mo net  (268,380/yr) at 50 buyers/mo\nAt $697 price: 31,365/mo net  (376,380/yr) at 50 buyers/mo\nAt $997 price: 44,865/mo net  (538,380/yr) at 50 buyers/mo',
+    '🎓 Course Pricing Calculator\n\n💰 Revenue Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.course_pricing.row.target_monthly_income{"income":"$5,000"}|• Target Monthly Income:    $5,000|\n$calc_out.course_pricing.row.est_buyers_per_month{"buyers":"50"}|• Est. Buyers/Month:        50|\n$calc_out.course_pricing.row.platform_fee{"fee":"10.0%"}|• Platform Fee:             10.0%|\n$calc_out.course_pricing.row.optimal_price{"price":"$111.11"}|• Optimal Price:           $111.11/student|\n$calc_out.course_pricing.row.breakeven_price{"price":"$100.00"}|• Breakeven Price:         $100.00/student  (before fees)|\n$calc_out.course_pricing.row.gross_revenue{"revenue":"$5,556"}|• Gross Revenue:           $5,556/mo|\n$calc_out.course_pricing.row.platform_takes{"revenue":"$556"}|• Platform Takes:          $556/mo|\n$calc_out.course_pricing.row.net_revenue{"revenue":"$5,000"}|• Net Revenue:             $5,000/mo|\n$calc_out.course_pricing.row.annual_net_revenue{"revenue":"$60,000"}|• Annual Net Revenue:      $60,000/yr|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Pricing Metrics:\n$calc_out.course_pricing.row.price_per_student{"price":"$111.11"}|• Price per Student:         $111.11|\n$calc_out.course_pricing.row.hour_of_creation{"perhour":"$125","earned":"$125.00"}|• $/Hour of Creation:      $125/hr  ($125.00 earned per hour invested)|\n$calc_out.course_pricing.row.estimated_ltv{"ltv":"$166.67"}|• Estimated LTV (with upsell):  $166.67  (1.5x base price)|\n$calc_out.course_pricing.row.gross_margin{"margin":"90.0%"}|• Gross Margin:            90.0%  (after platform fee)|\n$calc_out.course_pricing.row.annual_course_earnings{"revenue":"$60,000"}|• Annual Course Earnings:  $60,000/yr  (at this monthly run rate)|\n$calc_out.course_pricing.row.payback_months{"months":"0.1"}|• Payback to course creator:  ~0.1 months to recoup creation effort|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Pricing Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.course_pricing.row.health_effort_low{"rate":"125"}|• 🟠 $125/hr-of-effort is low — underpriced or under-selling.|\n$calc_out.course_pricing.row.health_price_mid{"price":"$111.11"}|• 🟡 Price point $111.11 is mid-market — sweet spot for volume.|\n$calc_out.course_pricing.row.health_buyers_solid{"buyers":"50"}|• 🟢 50 buyers/mo is a solid funnel size.|\n$calc_out.course_pricing.row.health_fee_standard{"fee":"10.0%"}|• 🟡 Platform fee 10.0% is standard (Teachable, Thinkific).|\n\n🎯 Launch Revenue:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.course_pricing.row.email_list_needed{"list":"2,500"}|• Email list needed:        ~2,500  (at 2% conversion)|\n$calc_out.course_pricing.row.launch_revenue{"revenue":"$3,889"}|• Launch revenue (30% off):  $3,889|\n$calc_out.course_pricing.row.sustained_monthly{"revenue":"$5,000"}|• Sustained monthly:        $5,000/mo|\n$calc_out.course_pricing.row.projection_12m{"revenue":"$60,000"}|• 12-month projection:      $60,000/yr|\n$calc_out.course_pricing.row.with_upsell_cohort{"revenue":"$130,000"}|• With upsell to cohort:    $130,000/yr potential|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.course_pricing.row.self_study_vs_cohort_breakeven|⚖️ Self-Study vs Cohort Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.course_pricing.row.self_study_annual{"revenue":"$60,000"}|• Self-study annual:      $60,000/yr|\n$calc_out.course_pricing.row.cohort_premium{"price":"$388.89"}|• Cohort premium:          $388.89/student  (3.5x self-study)|\n$calc_out.course_pricing.row.cohort_annual{"revenue":"$70,000"}|• Cohort annual (30% take): $70,000/yr|\n$calc_out.course_pricing.row.cohort_takes_more_time|• Cohort takes more time:  +10-15 hrs/wk of your time|\n$calc_out.course_pricing.row.break_even_cohort|• Break-even: cohort needs 30% take rate to beat self-study|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.course_pricing.row.whatif_raise_price_30{"price":"$144.44","net":"$6,500"}|• Raise price 30%:        $144.44/student  ($6,500/mo net)|\n$calc_out.course_pricing.row.whatif_double_buyers{"monthly":"$10,000","annual":"$120,000"}|• Double buyers (2x reach): $10,000/mo  ($120,000/yr)|\n$calc_out.course_pricing.row.whatif_self_host{"gross":"$5,556","saves":"$556"}|• Self-host (0% fee):     $5,556/mo gross (saves $556/mo)|\n$calc_out.course_pricing.row.whatif_add_cohort_tier{"revenue":"$70,000"}|• Add cohort tier (30% take):  +$70,000/yr|\n$calc_out.course_pricing.row.whatif_bundle_coaching{"revenue":"$6,667"}|• Bundle w/ coaching:     +$6,667/yr  (20% take coaching upsell)|\n\n💡 Tip: Most creators underprice their first course. Test a higher launch price with a 30% early-bird discount rather than setting a permanent low price. Adding a payment plan (3 x monthly) at 1.5-2x the one-time price often increases total revenue per student by 20-40% — buyers who can\'t afford $497 upfront will pay $199 × 3 = $597.\n$calc_out.course_pricing.row.price_point{"price":"29","net":"1,305","annual":"15,660","buyers":"50"}|At $29 price: 1,305/mo net  (15,660/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"49","net":"2,205","annual":"26,460","buyers":"50"}|At $49 price: 2,205/mo net  (26,460/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"97","net":"4,365","annual":"52,380","buyers":"50"}|At $97 price: 4,365/mo net  (52,380/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"147","net":"6,615","annual":"79,380","buyers":"50"}|At $147 price: 6,615/mo net  (79,380/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"197","net":"8,865","annual":"106,380","buyers":"50"}|At $197 price: 8,865/mo net  (106,380/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"297","net":"13,365","annual":"160,380","buyers":"50"}|At $297 price: 13,365/mo net  (160,380/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"497","net":"22,365","annual":"268,380","buyers":"50"}|At $497 price: 22,365/mo net  (268,380/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"697","net":"31,365","annual":"376,380","buyers":"50"}|At $697 price: 31,365/mo net  (376,380/yr) at 50 buyers/mo|\n$calc_out.course_pricing.row.price_point{"price":"997","net":"44,865","annual":"538,380","buyers":"50"}|At $997 price: 44,865/mo net  (538,380/yr) at 50 buyers/mo|',
     'At $29 price: 1,305/mo net  (15,660/yr) at 50 buyers/mo',
     'At $49 price: 2,205/mo net  (26,460/yr) at 50 buyers/mo',
     'At $97 price: 4,365/mo net  (52,380/yr) at 50 buyers/mo',

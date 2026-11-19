@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateMeetingCost(inputs: Record<string, string>): string[] {
   const attendees = clampNonNegative(parseFloat(inputs.attendees) || 0);
@@ -30,75 +33,75 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
   results.push(
     '⏰ Meeting Cost Calculator\n\n' +
     '📋 Meeting Setup:\n' +
-    '• Attendees:                       ' + attendees + ' people\n' +
-    '• Avg Hourly Rate:           $' + loc(avgHourlyRate) + '/hr\n' +
-    '• Meeting Length:             ' + meetingMinutes + ' min  (' + fmt(hoursPerMeeting) + ' hrs)\n' +
-    '• Meetings Per Week:      ' + meetingsPerWeek + '\n' +
+    makeToken('calc_out.meeting_cost.row.attendees', '• Attendees:                       ' + attendees + ' people', { count: String(attendees) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.avg_hourly_rate', '• Avg Hourly Rate:           $' + loc(avgHourlyRate) + '/hr', { rate: loc(avgHourlyRate) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.meeting_length', '• Meeting Length:             ' + meetingMinutes + ' min  (' + fmt(hoursPerMeeting) + ' hrs)', { mins: String(meetingMinutes), hrs: fmt(hoursPerMeeting) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.meetings_per_week', '• Meetings Per Week:      ' + meetingsPerWeek, { count: String(meetingsPerWeek) }) + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💰 Cost Snapshot:\n' +
-    '• Cost Per Meeting:           $' + fmt(costPerMeeting) + '\n' +
-    '• Cost Per Minute:                $' + fmt(costPerMinute) + '\n' +
-    '• Cost Per Person:                $' + fmt(meetingMinutes > 0 ? costPerMeeting / attendees : 0) + '\n' +
-    '• Weekly Cost:                       $' + fmt(weeklyCost) + '  (' + fmt(weeklyHours) + ' person-hrs)\n' +
-    '• Quarterly Cost:                  $' + loc(quarterlyCost) + '\n' +
-    '• Annual Cost:                          $' + loc(annualCost) + '  (' + loc(annualHours) + ' person-hrs)\n' +
-    '• True Cost (with context switch):  $' + loc(trueCostWithContext) + '/yr  (×1.5 overhead)\n\n' +
+    makeToken('calc_out.meeting_cost.row.cost_per_meeting', '• Cost Per Meeting:           $' + fmt(costPerMeeting), { cost: fmt(costPerMeeting) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.cost_per_minute', '• Cost Per Minute:                $' + fmt(costPerMinute), { cost: fmt(costPerMinute) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.cost_per_person', '• Cost Per Person:                $' + fmt(meetingMinutes > 0 ? costPerMeeting / attendees : 0), { cost: fmt(meetingMinutes > 0 ? costPerMeeting / attendees : 0) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.weekly_cost', '• Weekly Cost:                       $' + fmt(weeklyCost) + '  (' + fmt(weeklyHours) + ' person-hrs)', { cost: fmt(weeklyCost), hours: fmt(weeklyHours) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.quarterly_cost', '• Quarterly Cost:                  $' + loc(quarterlyCost), { cost: loc(quarterlyCost) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.annual_cost', '• Annual Cost:                          $' + loc(annualCost) + '  (' + loc(annualHours) + ' person-hrs)', { cost: loc(annualCost), hours: loc(annualHours) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.true_cost_context_switch', '• True Cost (with context switch):  $' + loc(trueCostWithContext) + '/yr  (×1.5 overhead)', { cost: loc(trueCostWithContext) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Key Metrics:\n' +
-    '• Person-Hours / Meeting:    ' + fmt(attendees * hoursPerMeeting) + ' hrs\n' +
-    '• Person-Hours / Year:           ' + loc(annualHours) + ' hrs  (≈ ' + (annualHours / 2080).toFixed(2) + ' FTE)\n' +
-    '• Meetings / Year:                       ' + (meetingsPerWeek * 48) + ' meetings\n' +
-    '• Total Person-Attendances:   ' + totalPersons + ' person-events\n' +
-    '• Average Per-Attendee Cost:    $' + fmt(meetingMinutes > 0 ? costPerMeeting / attendees : 0) + '/meeting  ($' + fmt(meetingMinutes > 0 ? (costPerMeeting / attendees) * meetingsPerWeek * 48 : 0) + '/yr)\n' +
-    '• Weekly Time Burn:                       ' + fmt(weeklyHours) + ' hrs of team time\n\n' +
+    makeToken('calc_out.meeting_cost.row.person_hours_per_meeting', '• Person-Hours / Meeting:    ' + fmt(attendees * hoursPerMeeting) + ' hrs', { hours: fmt(attendees * hoursPerMeeting) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.person_hours_per_year', '• Person-Hours / Year:           ' + loc(annualHours) + ' hrs  (≈ ' + (annualHours / 2080).toFixed(2) + ' FTE)', { hours: loc(annualHours), fte: (annualHours / 2080).toFixed(2) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.meetings_per_year', '• Meetings / Year:                       ' + (meetingsPerWeek * 48) + ' meetings', { count: String(meetingsPerWeek * 48) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.total_person_attendances', '• Total Person-Attendances:   ' + totalPersons + ' person-events', { total: totalPersons }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.avg_per_attendee_cost', '• Average Per-Attendee Cost:    $' + fmt(meetingMinutes > 0 ? costPerMeeting / attendees : 0) + '/meeting  ($' + fmt(meetingMinutes > 0 ? (costPerMeeting / attendees) * meetingsPerWeek * 48 : 0) + '/yr)', { cost: fmt(meetingMinutes > 0 ? costPerMeeting / attendees : 0), annual: fmt(meetingMinutes > 0 ? (costPerMeeting / attendees) * meetingsPerWeek * 48 : 0) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.weekly_time_burn', '• Weekly Time Burn:                       ' + fmt(weeklyHours) + ' hrs of team time', { hours: fmt(weeklyHours) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Meeting Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (weeklyCost < 100
-      ? '• 🟢 Low cost — efficient use of meeting time.\n'
+      ? makeToken('calc_out.meeting_cost.row.health_low', '• 🟢 Low cost — efficient use of meeting time.') + '\n'
       : weeklyCost < 500
-      ? '• 🟡 Moderate — review quarterly for necessity.\n'
+      ? makeToken('calc_out.meeting_cost.row.health_moderate', '• 🟡 Moderate — review quarterly for necessity.') + '\n'
       : weeklyCost < 2000
-      ? '• 🟠 Significant — try async or shorter formats.\n'
+      ? makeToken('calc_out.meeting_cost.row.health_significant', '• 🟠 Significant — try async or shorter formats.') + '\n'
       : weeklyCost < 10000
-      ? '• 🔴 Heavy — organizational drag, audit urgently.\n'
-      : '• 🚨 Critical — slash meetings ruthlessly.\n') +
+      ? makeToken('calc_out.meeting_cost.row.health_heavy', '• 🔴 Heavy — organizational drag, audit urgently.') + '\n'
+      : makeToken('calc_out.meeting_cost.row.health_critical', '• 🚨 Critical — slash meetings ruthlessly.') + '\n') +
     (annualHours >= 2000
-      ? '• ⚠️ ' + loc(annualHours) + ' person-hours/yr = 1+ FTE spent in meetings.\n'
+      ? makeToken('calc_out.meeting_cost.row.hours_fte_alert', '• ⚠️ ' + loc(annualHours) + ' person-hours/yr = 1+ FTE spent in meetings.', { hours: loc(annualHours) }) + '\n'
       : annualHours >= 500
-      ? '• ⚠️ ' + loc(annualHours) + ' person-hours/yr is significant (≈ 25% of 1 FTE).\n'
-      : '• ✅ ' + loc(annualHours) + ' person-hours/yr is manageable.\n') +
+      ? makeToken('calc_out.meeting_cost.row.hours_significant', '• ⚠️ ' + loc(annualHours) + ' person-hours/yr is significant (≈ 25% of 1 FTE).', { hours: loc(annualHours) }) + '\n'
+      : makeToken('calc_out.meeting_cost.row.hours_manageable', '• ✅ ' + loc(annualHours) + ' person-hours/yr is manageable.', { hours: loc(annualHours) }) + '\n') +
     (meetingMinutes > 60
-      ? '• 🟠 Meetings over 60 min — context-switch cost dominates the value.\n'
+      ? makeToken('calc_out.meeting_cost.row.length_over_60', '• 🟠 Meetings over 60 min — context-switch cost dominates the value.') + '\n'
       : meetingMinutes >= 30
-      ? '• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.\n'
-      : '• 🟢 Under 30 min — good timebox discipline.\n') +
+      ? makeToken('calc_out.meeting_cost.row.length_30_60', '• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.') + '\n'
+      : makeToken('calc_out.meeting_cost.row.length_under_30', '• 🟢 Under 30 min — good timebox discipline.') + '\n') +
     '\n🎯 Quarterly & Annual Projection:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 1 Quarter:                              $' + loc(quarterlyCost) + '  (' + loc(annualHours / 4) + ' person-hrs)\n' +
-    '• 2 Quarters:                            $' + loc(quarterlyCost * 2) + '\n' +
-    '• 3 Quarters:                            $' + loc(quarterlyCost * 3) + '\n' +
-    '• Full Year:                                  $' + loc(annualCost) + '  (' + loc(annualHours) + ' person-hrs)\n' +
-    '• 2 Years (run-rate):                  $' + loc(annualCost * 2) + '\n' +
-    '• Annual Equivalent FTEs:           ' + (annualHours / 2080).toFixed(2) + ' FTE  ($' + loc(avgHourlyRate * 2080) + ' salary each)\n\n' +
+    makeToken('calc_out.meeting_cost.row.quarter_1', '• 1 Quarter:                              $' + loc(quarterlyCost) + '  (' + loc(annualHours / 4) + ' person-hrs)', { cost: loc(quarterlyCost), hours: loc(annualHours / 4) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.quarter_2', '• 2 Quarters:                            $' + loc(quarterlyCost * 2), { cost: loc(quarterlyCost * 2) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.quarter_3', '• 3 Quarters:                            $' + loc(quarterlyCost * 3), { cost: loc(quarterlyCost * 3) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.full_year', '• Full Year:                                  $' + loc(annualCost) + '  (' + loc(annualHours) + ' person-hrs)', { cost: loc(annualCost), hours: loc(annualHours) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.two_years', '• 2 Years (run-rate):                  $' + loc(annualCost * 2), { cost: loc(annualCost * 2) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.annual_equivalent_fte', '• Annual Equivalent FTEs:           ' + (annualHours / 2080).toFixed(2) + ' FTE  ($' + loc(avgHourlyRate * 2080) + ' salary each)', { fte: (annualHours / 2080).toFixed(2), salary: loc(avgHourlyRate * 2080) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '⚖️ Async vs Sync Break-Even:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (asyncBreakEven
-      ? '• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $' + fmt(costPerMeeting) + '/meeting.\n'
-      : '• 🟡 Meeting is justified — value exceeds async cost only if decision is required.\n') +
-    '• Meeting Cost:                          $' + fmt(costPerMeeting) + '/meeting\n' +
-    '• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)\n' +
-    '• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.\n' +
-    '• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).\n\n' +
+      ? makeToken('calc_out.meeting_cost.row.async_cheaper', '• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $' + fmt(costPerMeeting) + '/meeting.', { cost: fmt(costPerMeeting) }) + '\n'
+      : makeToken('calc_out.meeting_cost.row.meeting_justified', '• 🟡 Meeting is justified — value exceeds async cost only if decision is required.') + '\n') +
+    makeToken('calc_out.meeting_cost.row.meeting_cost', '• Meeting Cost:                          $' + fmt(costPerMeeting) + '/meeting', { cost: fmt(costPerMeeting) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.async_equivalent_cost', '• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)') + '\n' +
+    makeToken('calc_out.meeting_cost.row.break_even_decision_rule', '• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.') + '\n' +
+    makeToken('calc_out.meeting_cost.row.context_switch_penalty', '• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Cut attendees in half:                    Save $' + loc(weeklyCost * 0.5 * 48) + '/yr  (' + (attendees / 2) + ' core + async for others)\n' +
-    '• Shorten by 25%:                            Save $' + loc(weeklyCost * 0.25 * 48) + '/yr  (' + (meetingMinutes * 0.75) + ' min instead of ' + meetingMinutes + ')\n' +
-    '• Cut frequency by 1/wk:                  Save $' + loc((costPerMeeting) * 48) + '/yr  (down to ' + (meetingsPerWeek - 1) + ' meetings/wk)\n' +
-    '• Replace with async update:           Save $' + loc(weeklyCost * 48) + '/yr  (Loom + Slack thread)\n' +
-    '• Switch to 25-min default:              Save $' + loc(weeklyCost * 0.17 * 48) + '/yr  (vs 30-min default)\n\n' +
+    makeToken('calc_out.meeting_cost.row.whatif_cut_attendees', '• Cut attendees in half:                    Save $' + loc(weeklyCost * 0.5 * 48) + '/yr  (' + (attendees / 2) + ' core + async for others)', { save: loc(weeklyCost * 0.5 * 48), core: String(attendees / 2) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.whatif_shorten_25', '• Shorten by 25%:                            Save $' + loc(weeklyCost * 0.25 * 48) + '/yr  (' + (meetingMinutes * 0.75) + ' min instead of ' + meetingMinutes + ')', { save: loc(weeklyCost * 0.25 * 48), newmins: String(meetingMinutes * 0.75), mins: String(meetingMinutes) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.whatif_cut_frequency', '• Cut frequency by 1/wk:                  Save $' + loc((costPerMeeting) * 48) + '/yr  (down to ' + (meetingsPerWeek - 1) + ' meetings/wk)', { save: loc((costPerMeeting) * 48), count: String(meetingsPerWeek - 1) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.whatif_async_update', '• Replace with async update:           Save $' + loc(weeklyCost * 48) + '/yr  (Loom + Slack thread)', { save: loc(weeklyCost * 48) }) + '\n' +
+    makeToken('calc_out.meeting_cost.row.whatif_25min_default', '• Switch to 25-min default:              Save $' + loc(weeklyCost * 0.17 * 48) + '/yr  (vs 30-min default)', { save: loc(weeklyCost * 0.17 * 48) }) + '\n\n' +
     '💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.',
   );
 
@@ -111,7 +114,13 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
     const costYear = costWeek * 48;
     const hrsYear = attendees * hrs * meetingsPerWeek * 48;
     results.push(
-      'Comparison: ' + mins + ' min meeting → $' + fmt(costOne) + '/meeting | $' + fmt(costWeek) + '/wk | $' + loc(costYear) + '/yr | ' + loc(hrsYear) + ' hrs/yr',
+      makeToken('calc_out.meeting_cost.row.comparison_head', 'Comparison: ' + mins + ' min meeting → $' + fmt(costOne) + '/meeting', { mins: String(mins), cost: fmt(costOne) }) +
+      ' | ' +
+      makeToken('calc_out.meeting_cost.row.comparison_week', '$' + fmt(costWeek) + '/wk', { cost: fmt(costWeek) }) +
+      ' | ' +
+      makeToken('calc_out.meeting_cost.row.comparison_year', '$' + loc(costYear) + '/yr', { cost: loc(costYear) }) +
+      ' | ' +
+      makeToken('calc_out.meeting_cost.row.comparison_hours', loc(hrsYear) + ' hrs/yr', { hours: loc(hrsYear) }),
     );
   }
 
@@ -119,83 +128,83 @@ function calculateMeetingCost(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let u=function(o){return Number.isNaN(o)?0:Math.max(0,o)},p=function(o){const s=u(parseFloat(o.attendees)||0),g=u(parseFloat(o.avgHourlyRate)||0),n=u(parseFloat(o.meetingMinutes)||0),c=u(parseFloat(o.meetingsPerWeek)||0),h=n/60,r=s*g*h,P=n>0?r/n:0,d=s*h*c,i=r*c,y=i*48,m=y/4,a=d*48,F=y*1.5,A=i*.1,x=r>0&&A<r,E=(s*c*48).toLocaleString(),t=l=>l.toFixed(2),e=l=>Math.round(l).toLocaleString(),f=[];f.push(\`⏰ Meeting Cost Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let y=function(_){return Number.isNaN(_)?0:Math.max(0,_)},S=function(_){const c=y(parseFloat(_.attendees)||0),g=y(parseFloat(_.avgHourlyRate)||0),o=y(parseFloat(_.meetingMinutes)||0),a=y(parseFloat(_.meetingsPerWeek)||0),w=o/60,r=c*g*w,C=o>0?r/o:0,m=c*w*a,i=r*a,u=i*48,l=u/4,s=m*48,M=u*1.5,H=i*.1,j=r>0&&H<r,F=(c*a*48).toLocaleString(),n=h=>h.toFixed(2),e=h=>Math.round(h).toLocaleString(),p=[];p.push(\`⏰ Meeting Cost Calculator
 
 📋 Meeting Setup:
-• Attendees:                       \`+s+\` people
-• Avg Hourly Rate:           $\`+e(g)+\`/hr
-• Meeting Length:             \`+n+" min  ("+t(h)+\` hrs)
-• Meetings Per Week:      \`+c+\`
+\`+t("calc_out.meeting_cost.row.attendees","• Attendees:                       "+c+" people",{count:String(c)})+\`
+\`+t("calc_out.meeting_cost.row.avg_hourly_rate","• Avg Hourly Rate:           $"+e(g)+"/hr",{rate:e(g)})+\`
+\`+t("calc_out.meeting_cost.row.meeting_length","• Meeting Length:             "+o+" min  ("+n(w)+" hrs)",{mins:String(o),hrs:n(w)})+\`
+\`+t("calc_out.meeting_cost.row.meetings_per_week","• Meetings Per Week:      "+a,{count:String(a)})+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 💰 Cost Snapshot:
-• Cost Per Meeting:           $\`+t(r)+\`
-• Cost Per Minute:                $\`+t(P)+\`
-• Cost Per Person:                $\`+t(n>0?r/s:0)+\`
-• Weekly Cost:                       $\`+t(i)+"  ("+t(d)+\` person-hrs)
-• Quarterly Cost:                  $\`+e(m)+\`
-• Annual Cost:                          $\`+e(y)+"  ("+e(a)+\` person-hrs)
-• True Cost (with context switch):  $\`+e(F)+\`/yr  (×1.5 overhead)
+\`+t("calc_out.meeting_cost.row.cost_per_meeting","• Cost Per Meeting:           $"+n(r),{cost:n(r)})+\`
+\`+t("calc_out.meeting_cost.row.cost_per_minute","• Cost Per Minute:                $"+n(C),{cost:n(C)})+\`
+\`+t("calc_out.meeting_cost.row.cost_per_person","• Cost Per Person:                $"+n(o>0?r/c:0),{cost:n(o>0?r/c:0)})+\`
+\`+t("calc_out.meeting_cost.row.weekly_cost","• Weekly Cost:                       $"+n(i)+"  ("+n(m)+" person-hrs)",{cost:n(i),hours:n(m)})+\`
+\`+t("calc_out.meeting_cost.row.quarterly_cost","• Quarterly Cost:                  $"+e(l),{cost:e(l)})+\`
+\`+t("calc_out.meeting_cost.row.annual_cost","• Annual Cost:                          $"+e(u)+"  ("+e(s)+" person-hrs)",{cost:e(u),hours:e(s)})+\`
+\`+t("calc_out.meeting_cost.row.true_cost_context_switch","• True Cost (with context switch):  $"+e(M)+"/yr  (×1.5 overhead)",{cost:e(M)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Key Metrics:
-• Person-Hours / Meeting:    \`+t(s*h)+\` hrs
-• Person-Hours / Year:           \`+e(a)+" hrs  (≈ "+(a/2080).toFixed(2)+\` FTE)
-• Meetings / Year:                       \`+c*48+\` meetings
-• Total Person-Attendances:   \`+E+\` person-events
-• Average Per-Attendee Cost:    $\`+t(n>0?r/s:0)+"/meeting  ($"+t(n>0?r/s*c*48:0)+\`/yr)
-• Weekly Time Burn:                       \`+t(d)+\` hrs of team time
+\`+t("calc_out.meeting_cost.row.person_hours_per_meeting","• Person-Hours / Meeting:    "+n(c*w)+" hrs",{hours:n(c*w)})+\`
+\`+t("calc_out.meeting_cost.row.person_hours_per_year","• Person-Hours / Year:           "+e(s)+" hrs  (≈ "+(s/2080).toFixed(2)+" FTE)",{hours:e(s),fte:(s/2080).toFixed(2)})+\`
+\`+t("calc_out.meeting_cost.row.meetings_per_year","• Meetings / Year:                       "+a*48+" meetings",{count:String(a*48)})+\`
+\`+t("calc_out.meeting_cost.row.total_person_attendances","• Total Person-Attendances:   "+F+" person-events",{total:F})+\`
+\`+t("calc_out.meeting_cost.row.avg_per_attendee_cost","• Average Per-Attendee Cost:    $"+n(o>0?r/c:0)+"/meeting  ($"+n(o>0?r/c*a*48:0)+"/yr)",{cost:n(o>0?r/c:0),annual:n(o>0?r/c*a*48:0)})+\`
+\`+t("calc_out.meeting_cost.row.weekly_time_burn","• Weekly Time Burn:                       "+n(m)+" hrs of team time",{hours:n(m)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Meeting Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(i<100?\`• 🟢 Low cost — efficient use of meeting time.
-\`:i<500?\`• 🟡 Moderate — review quarterly for necessity.
-\`:i<2e3?\`• 🟠 Significant — try async or shorter formats.
-\`:i<1e4?\`• 🔴 Heavy — organizational drag, audit urgently.
-\`:\`• 🚨 Critical — slash meetings ruthlessly.
-\`)+(a>=2e3?"• ⚠️ "+e(a)+\` person-hours/yr = 1+ FTE spent in meetings.
-\`:a>=500?"• ⚠️ "+e(a)+\` person-hours/yr is significant (≈ 25% of 1 FTE).
-\`:"• ✅ "+e(a)+\` person-hours/yr is manageable.
-\`)+(n>60?\`• 🟠 Meetings over 60 min — context-switch cost dominates the value.
-\`:n>=30?\`• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.
-\`:\`• 🟢 Under 30 min — good timebox discipline.
+\`+(i<100?t("calc_out.meeting_cost.row.health_low","• 🟢 Low cost — efficient use of meeting time.")+\`
+\`:i<500?t("calc_out.meeting_cost.row.health_moderate","• 🟡 Moderate — review quarterly for necessity.")+\`
+\`:i<2e3?t("calc_out.meeting_cost.row.health_significant","• 🟠 Significant — try async or shorter formats.")+\`
+\`:i<1e4?t("calc_out.meeting_cost.row.health_heavy","• 🔴 Heavy — organizational drag, audit urgently.")+\`
+\`:t("calc_out.meeting_cost.row.health_critical","• 🚨 Critical — slash meetings ruthlessly.")+\`
+\`)+(s>=2e3?t("calc_out.meeting_cost.row.hours_fte_alert","• ⚠️ "+e(s)+" person-hours/yr = 1+ FTE spent in meetings.",{hours:e(s)})+\`
+\`:s>=500?t("calc_out.meeting_cost.row.hours_significant","• ⚠️ "+e(s)+" person-hours/yr is significant (≈ 25% of 1 FTE).",{hours:e(s)})+\`
+\`:t("calc_out.meeting_cost.row.hours_manageable","• ✅ "+e(s)+" person-hours/yr is manageable.",{hours:e(s)})+\`
+\`)+(o>60?t("calc_out.meeting_cost.row.length_over_60","• 🟠 Meetings over 60 min — context-switch cost dominates the value.")+\`
+\`:o>=30?t("calc_out.meeting_cost.row.length_30_60","• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.")+\`
+\`:t("calc_out.meeting_cost.row.length_under_30","• 🟢 Under 30 min — good timebox discipline.")+\`
 \`)+\`
 🎯 Quarterly & Annual Projection:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 1 Quarter:                              $\`+e(m)+"  ("+e(a/4)+\` person-hrs)
-• 2 Quarters:                            $\`+e(m*2)+\`
-• 3 Quarters:                            $\`+e(m*3)+\`
-• Full Year:                                  $\`+e(y)+"  ("+e(a)+\` person-hrs)
-• 2 Years (run-rate):                  $\`+e(y*2)+\`
-• Annual Equivalent FTEs:           \`+(a/2080).toFixed(2)+" FTE  ($"+e(g*2080)+\` salary each)
+\`+t("calc_out.meeting_cost.row.quarter_1","• 1 Quarter:                              $"+e(l)+"  ("+e(s/4)+" person-hrs)",{cost:e(l),hours:e(s/4)})+\`
+\`+t("calc_out.meeting_cost.row.quarter_2","• 2 Quarters:                            $"+e(l*2),{cost:e(l*2)})+\`
+\`+t("calc_out.meeting_cost.row.quarter_3","• 3 Quarters:                            $"+e(l*3),{cost:e(l*3)})+\`
+\`+t("calc_out.meeting_cost.row.full_year","• Full Year:                                  $"+e(u)+"  ("+e(s)+" person-hrs)",{cost:e(u),hours:e(s)})+\`
+\`+t("calc_out.meeting_cost.row.two_years","• 2 Years (run-rate):                  $"+e(u*2),{cost:e(u*2)})+\`
+\`+t("calc_out.meeting_cost.row.annual_equivalent_fte","• Annual Equivalent FTEs:           "+(s/2080).toFixed(2)+" FTE  ($"+e(g*2080)+" salary each)",{fte:(s/2080).toFixed(2),salary:e(g*2080)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚖️ Async vs Sync Break-Even:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(x?"• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $"+t(r)+\`/meeting.
-\`:\`• 🟡 Meeting is justified — value exceeds async cost only if decision is required.
-\`)+"• Meeting Cost:                          $"+t(r)+\`/meeting
-• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)
-• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.
-• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).
+\`+(j?t("calc_out.meeting_cost.row.async_cheaper","• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $"+n(r)+"/meeting.",{cost:n(r)})+\`
+\`:t("calc_out.meeting_cost.row.meeting_justified","• 🟡 Meeting is justified — value exceeds async cost only if decision is required.")+\`
+\`)+t("calc_out.meeting_cost.row.meeting_cost","• Meeting Cost:                          $"+n(r)+"/meeting",{cost:n(r)})+\`
+\`+t("calc_out.meeting_cost.row.async_equivalent_cost","• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)")+\`
+\`+t("calc_out.meeting_cost.row.break_even_decision_rule","• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.")+\`
+\`+t("calc_out.meeting_cost.row.context_switch_penalty","• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Cut attendees in half:                    Save $\`+e(i*.5*48)+"/yr  ("+s/2+\` core + async for others)
-• Shorten by 25%:                            Save $\`+e(i*.25*48)+"/yr  ("+n*.75+" min instead of "+n+\`)
-• Cut frequency by 1/wk:                  Save $\`+e(r*48)+"/yr  (down to "+(c-1)+\` meetings/wk)
-• Replace with async update:           Save $\`+e(i*48)+\`/yr  (Loom + Slack thread)
-• Switch to 25-min default:              Save $\`+e(i*.17*48)+\`/yr  (vs 30-min default)
+\`+t("calc_out.meeting_cost.row.whatif_cut_attendees","• Cut attendees in half:                    Save $"+e(i*.5*48)+"/yr  ("+c/2+" core + async for others)",{save:e(i*.5*48),core:String(c/2)})+\`
+\`+t("calc_out.meeting_cost.row.whatif_shorten_25","• Shorten by 25%:                            Save $"+e(i*.25*48)+"/yr  ("+o*.75+" min instead of "+o+")",{save:e(i*.25*48),newmins:String(o*.75),mins:String(o)})+\`
+\`+t("calc_out.meeting_cost.row.whatif_cut_frequency","• Cut frequency by 1/wk:                  Save $"+e(r*48)+"/yr  (down to "+(a-1)+" meetings/wk)",{save:e(r*48),count:String(a-1)})+\`
+\`+t("calc_out.meeting_cost.row.whatif_async_update","• Replace with async update:           Save $"+e(i*48)+"/yr  (Loom + Slack thread)",{save:e(i*48)})+\`
+\`+t("calc_out.meeting_cost.row.whatif_25min_default","• Switch to 25-min default:              Save $"+e(i*.17*48)+"/yr  (vs 30-min default)",{save:e(i*.17*48)})+\`
 
-💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.\`);const v=[5,10,15,20,30,45,60,90,120];for(let l=0;l<v.length;l++){const C=v[l],M=C/60,k=s*g*M,w=k*c,_=w*48,H=s*M*c*48;f.push("Comparison: "+C+" min meeting → $"+t(k)+"/meeting | $"+t(w)+"/wk | $"+e(_)+"/yr | "+e(H)+" hrs/yr")}return f},$=function(o,s,g){var n=S(o);return Array.isArray(n)?n.join(\`
-\`):String(n)};var T=u,b=p,L=$,S=function(o){return p(o)};return[$(inputs,pick,fill)]}finally{}
+💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.\`);const q=[5,10,15,20,30,45,60,90,120];for(let h=0;h<q.length;h++){const f=q[h],P=f/60,d=c*g*P,v=d*a,x=v*48,A=c*P*a*48;p.push(t("calc_out.meeting_cost.row.comparison_head","Comparison: "+f+" min meeting → $"+n(d)+"/meeting",{mins:String(f),cost:n(d)})+" | "+t("calc_out.meeting_cost.row.comparison_week","$"+n(v)+"/wk",{cost:n(v)})+" | "+t("calc_out.meeting_cost.row.comparison_year","$"+e(x)+"/yr",{cost:e(x)})+" | "+t("calc_out.meeting_cost.row.comparison_hours",e(A)+" hrs/yr",{hours:e(A)}))}return p},$=function(_,c,g){var o=E(_);return Array.isArray(o)?o.join(\`
+\`):String(o)};var L=y,W=S,N=$,t=tk,b='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+b)(),E=function(_){return S(_)};return[$(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -227,7 +236,7 @@ const engine: ToolEngine = {
     return calculateMeetingCost(inputs);
   },
   staticExamples: [
-    '⏰ Meeting Cost Calculator\n\n📋 Meeting Setup:\n• Attendees:                       6 people\n• Avg Hourly Rate:           $75/hr\n• Meeting Length:             30 min  (0.50 hrs)\n• Meetings Per Week:      1\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Cost Snapshot:\n• Cost Per Meeting:           $225.00\n• Cost Per Minute:                $7.50\n• Cost Per Person:                $37.50\n• Weekly Cost:                       $225.00  (3.00 person-hrs)\n• Quarterly Cost:                  $2,700\n• Annual Cost:                          $10,800  (144 person-hrs)\n• True Cost (with context switch):  $16,200/yr  (×1.5 overhead)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n• Person-Hours / Meeting:    3.00 hrs\n• Person-Hours / Year:           144 hrs  (≈ 0.07 FTE)\n• Meetings / Year:                       48 meetings\n• Total Person-Attendances:   288 person-events\n• Average Per-Attendee Cost:    $37.50/meeting  ($1800.00/yr)\n• Weekly Time Burn:                       3.00 hrs of team time\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Meeting Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Moderate — review quarterly for necessity.\n• ✅ 144 person-hours/yr is manageable.\n• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.\n\n🎯 Quarterly & Annual Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 1 Quarter:                              $2,700  (36 person-hrs)\n• 2 Quarters:                            $5,400\n• 3 Quarters:                            $8,100\n• Full Year:                                  $10,800  (144 person-hrs)\n• 2 Years (run-rate):                  $21,600\n• Annual Equivalent FTEs:           0.07 FTE  ($156,000 salary each)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Async vs Sync Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $225.00/meeting.\n• Meeting Cost:                          $225.00/meeting\n• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)\n• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.\n• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Cut attendees in half:                    Save $5,400/yr  (3 core + async for others)\n• Shorten by 25%:                            Save $2,700/yr  (22.5 min instead of 30)\n• Cut frequency by 1/wk:                  Save $10,800/yr  (down to 0 meetings/wk)\n• Replace with async update:           Save $10,800/yr  (Loom + Slack thread)\n• Switch to 25-min default:              Save $1,836/yr  (vs 30-min default)\n\n💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.\nComparison: 5 min meeting → $37.50/meeting | $37.50/wk | $1,800/yr | 24 hrs/yr\nComparison: 10 min meeting → $75.00/meeting | $75.00/wk | $3,600/yr | 48 hrs/yr\nComparison: 15 min meeting → $112.50/meeting | $112.50/wk | $5,400/yr | 72 hrs/yr\nComparison: 20 min meeting → $150.00/meeting | $150.00/wk | $7,200/yr | 96 hrs/yr\nComparison: 30 min meeting → $225.00/meeting | $225.00/wk | $10,800/yr | 144 hrs/yr\nComparison: 45 min meeting → $337.50/meeting | $337.50/wk | $16,200/yr | 216 hrs/yr\nComparison: 60 min meeting → $450.00/meeting | $450.00/wk | $21,600/yr | 288 hrs/yr\nComparison: 90 min meeting → $675.00/meeting | $675.00/wk | $32,400/yr | 432 hrs/yr\nComparison: 120 min meeting → $900.00/meeting | $900.00/wk | $43,200/yr | 576 hrs/yr',
+    '⏰ Meeting Cost Calculator\n\n📋 Meeting Setup:\n$calc_out.meeting_cost.row.attendees{"count":"6"}|• Attendees:                       6 people|\n$calc_out.meeting_cost.row.avg_hourly_rate{"rate":"75"}|• Avg Hourly Rate:           $75/hr|\n$calc_out.meeting_cost.row.meeting_length{"mins":"30","hrs":"0.50"}|• Meeting Length:             30 min  (0.50 hrs)|\n$calc_out.meeting_cost.row.meetings_per_week{"count":"1"}|• Meetings Per Week:      1|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Cost Snapshot:\n$calc_out.meeting_cost.row.cost_per_meeting{"cost":"225.00"}|• Cost Per Meeting:           $225.00|\n$calc_out.meeting_cost.row.cost_per_minute{"cost":"7.50"}|• Cost Per Minute:                $7.50|\n$calc_out.meeting_cost.row.cost_per_person{"cost":"37.50"}|• Cost Per Person:                $37.50|\n$calc_out.meeting_cost.row.weekly_cost{"cost":"225.00","hours":"3.00"}|• Weekly Cost:                       $225.00  (3.00 person-hrs)|\n$calc_out.meeting_cost.row.quarterly_cost{"cost":"2,700"}|• Quarterly Cost:                  $2,700|\n$calc_out.meeting_cost.row.annual_cost{"cost":"10,800","hours":"144"}|• Annual Cost:                          $10,800  (144 person-hrs)|\n$calc_out.meeting_cost.row.true_cost_context_switch{"cost":"16,200"}|• True Cost (with context switch):  $16,200/yr  (×1.5 overhead)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Key Metrics:\n$calc_out.meeting_cost.row.person_hours_per_meeting{"hours":"3.00"}|• Person-Hours / Meeting:    3.00 hrs|\n$calc_out.meeting_cost.row.person_hours_per_year{"hours":"144","fte":"0.07"}|• Person-Hours / Year:           144 hrs  (≈ 0.07 FTE)|\n$calc_out.meeting_cost.row.meetings_per_year{"count":"48"}|• Meetings / Year:                       48 meetings|\n$calc_out.meeting_cost.row.total_person_attendances{"total":"288"}|• Total Person-Attendances:   288 person-events|\n$calc_out.meeting_cost.row.avg_per_attendee_cost{"cost":"37.50","annual":"1800.00"}|• Average Per-Attendee Cost:    $37.50/meeting  ($1800.00/yr)|\n$calc_out.meeting_cost.row.weekly_time_burn{"hours":"3.00"}|• Weekly Time Burn:                       3.00 hrs of team time|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Meeting Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.meeting_cost.row.health_moderate|• 🟡 Moderate — review quarterly for necessity.|\n$calc_out.meeting_cost.row.hours_manageable{"hours":"144"}|• ✅ 144 person-hours/yr is manageable.|\n$calc_out.meeting_cost.row.length_30_60|• 🟡 30-60 min meetings — typical but consider tightening to 25 or 45.|\n\n🎯 Quarterly & Annual Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.meeting_cost.row.quarter_1{"cost":"2,700","hours":"36"}|• 1 Quarter:                              $2,700  (36 person-hrs)|\n$calc_out.meeting_cost.row.quarter_2{"cost":"5,400"}|• 2 Quarters:                            $5,400|\n$calc_out.meeting_cost.row.quarter_3{"cost":"8,100"}|• 3 Quarters:                            $8,100|\n$calc_out.meeting_cost.row.full_year{"cost":"10,800","hours":"144"}|• Full Year:                                  $10,800  (144 person-hrs)|\n$calc_out.meeting_cost.row.two_years{"cost":"21,600"}|• 2 Years (run-rate):                  $21,600|\n$calc_out.meeting_cost.row.annual_equivalent_fte{"fte":"0.07","salary":"156,000"}|• Annual Equivalent FTEs:           0.07 FTE  ($156,000 salary each)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Async vs Sync Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.meeting_cost.row.async_cheaper{"cost":"225.00"}|• 🟢 Async (Slack/Loom/Notion) cheaper: ~$0 cost vs $225.00/meeting.|\n$calc_out.meeting_cost.row.meeting_cost{"cost":"225.00"}|• Meeting Cost:                          $225.00/meeting|\n$calc_out.meeting_cost.row.async_equivalent_cost|• Async Equivalent Cost:      ~$0  (writing is free, async tools minimal)|\n$calc_out.meeting_cost.row.break_even_decision_rule|• Break-Even Decision Rule:  Save meeting for decisions; document everything else async.|\n$calc_out.meeting_cost.row.context_switch_penalty|• Context-Switch Penalty:     Meetings cost 1.5x in lost focus (deep-work recovery).|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.meeting_cost.row.whatif_cut_attendees{"save":"5,400","core":"3"}|• Cut attendees in half:                    Save $5,400/yr  (3 core + async for others)|\n$calc_out.meeting_cost.row.whatif_shorten_25{"save":"2,700","newmins":"22.5","mins":"30"}|• Shorten by 25%:                            Save $2,700/yr  (22.5 min instead of 30)|\n$calc_out.meeting_cost.row.whatif_cut_frequency{"save":"10,800","count":"0"}|• Cut frequency by 1/wk:                  Save $10,800/yr  (down to 0 meetings/wk)|\n$calc_out.meeting_cost.row.whatif_async_update{"save":"10,800"}|• Replace with async update:           Save $10,800/yr  (Loom + Slack thread)|\n$calc_out.meeting_cost.row.whatif_25min_default{"save":"1,836"}|• Switch to 25-min default:              Save $1,836/yr  (vs 30-min default)|\n\n💡 Tip: Before scheduling a meeting, calculate its cost. A 30-minute meeting with 6 people at $75/hr costs $225. Ask: could this be an email, a Loom video, or an async document? For recurring meetings, multiply by 52 to see the true annual impact. If a weekly meeting costs $500, that is $26,000/year — worth optimizing.\n$calc_out.meeting_cost.row.comparison_head{"mins":"5","cost":"37.50"}|Comparison: 5 min meeting → $37.50/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"37.50"}|$37.50/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"1,800"}|$1,800/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"24"}|24 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"10","cost":"75.00"}|Comparison: 10 min meeting → $75.00/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"75.00"}|$75.00/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"3,600"}|$3,600/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"48"}|48 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"15","cost":"112.50"}|Comparison: 15 min meeting → $112.50/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"112.50"}|$112.50/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"5,400"}|$5,400/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"72"}|72 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"20","cost":"150.00"}|Comparison: 20 min meeting → $150.00/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"150.00"}|$150.00/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"7,200"}|$7,200/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"96"}|96 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"30","cost":"225.00"}|Comparison: 30 min meeting → $225.00/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"225.00"}|$225.00/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"10,800"}|$10,800/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"144"}|144 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"45","cost":"337.50"}|Comparison: 45 min meeting → $337.50/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"337.50"}|$337.50/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"16,200"}|$16,200/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"216"}|216 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"60","cost":"450.00"}|Comparison: 60 min meeting → $450.00/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"450.00"}|$450.00/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"21,600"}|$21,600/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"288"}|288 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"90","cost":"675.00"}|Comparison: 90 min meeting → $675.00/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"675.00"}|$675.00/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"32,400"}|$32,400/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"432"}|432 hrs/yr|\n$calc_out.meeting_cost.row.comparison_head{"mins":"120","cost":"900.00"}|Comparison: 120 min meeting → $900.00/meeting| | $calc_out.meeting_cost.row.comparison_week{"cost":"900.00"}|$900.00/wk| | $calc_out.meeting_cost.row.comparison_year{"cost":"43,200"}|$43,200/yr| | $calc_out.meeting_cost.row.comparison_hours{"hours":"576"}|576 hrs/yr|',
     '',
     '',
     '',

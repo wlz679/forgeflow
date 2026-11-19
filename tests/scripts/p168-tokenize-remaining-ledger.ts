@@ -59,7 +59,7 @@ export interface ZhEnRow {
  *   ⇒ 那正是「欠账在增长」的情形 ⇒ 必须有一个**独立于实测**的硬上限把它挡住。
  *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（55）就是欠账在长。
  */
-export const DEBT_MAX = 55;
+export const DEBT_MAX = 50;
 
 /**
  * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 55 个引擎）。
@@ -82,7 +82,6 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-compound-interest-calculator': 29,
   'solopreneur-consent-revenue-impact-calculator': 2,
   'solopreneur-cost-per-support-ticket-calculator': 2,
-  'solopreneur-course-pricing-calculator': 38,
   'solopreneur-csat-calculator': 1,
   'solopreneur-customer-health-score-calculator': 14,
   'solopreneur-deflection-quality-calculator': 2,
@@ -91,8 +90,6 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-dpa-cost-calculator': 2,
   'solopreneur-dsar-cost-calculator': 2,
   'solopreneur-dscr-calculator': 24,
-  'solopreneur-employee-cost-calculator': 33,
-  'solopreneur-equity-dilution-calculator': 33,
   'solopreneur-equity-refresh-calculator': 2,
   'solopreneur-expansion-revenue-calculator': 16,
   'solopreneur-first-response-time-calculator': 2,
@@ -104,7 +101,6 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-hourly-vs-fixed-calculator': 26,
   'solopreneur-kb-coverage-rate-calculator': 1,
   'solopreneur-ltv-calculator': 29,
-  'solopreneur-meeting-cost-calculator': 41,
   'solopreneur-mortgage-calculator': 23,
   'solopreneur-nrr-calculator': 16,
   'solopreneur-openai-token-calculator': 27,
@@ -114,7 +110,6 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-productivity-score': 31,
   'solopreneur-remote-vs-office-calculator': 31,
   'solopreneur-resolution-time-calculator': 2,
-  'solopreneur-saas-pricing-planner': 32,
   'solopreneur-search-effectiveness-calculator': 2,
   'solopreneur-sponsorship-rate-calculator': 28,
   'solopreneur-supplier-scorecard-calculator': 17,

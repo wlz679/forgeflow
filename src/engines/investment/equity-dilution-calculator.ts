@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-13：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateEquityDilution(inputs: Record<string, string>): string[] {
   const preMoneyValuation = clampNonNegative(parseFloat(inputs.companyValuation) || 0);
@@ -45,70 +48,74 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
 
   results.push(
     '📊 Equity Dilution Calculator\n\n' +
-    '🏢 Pre-Money Valuation:  ' + fmt(preMoneyValuation) + '\n' +
-    '💰 Investment Amount:    ' + fmt(investmentAmount) + '\n' +
-    '🏗️ Founder Shares (initial): ' + loc(founderShares) + '\n' +
-    '💵 Price Per Share:      ' + fmt2(pricePerShare) + '\n\n' +
+    makeToken('calc_out.equity_dilution.row.pre_money_valuation', '🏢 Pre-Money Valuation:  ' + fmt(preMoneyValuation), { valuation: fmt(preMoneyValuation) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.investment_amount', '💰 Investment Amount:    ' + fmt(investmentAmount), { amount: fmt(investmentAmount) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.founder_shares', '🏗️ Founder Shares (initial): ' + loc(founderShares), { shares: loc(founderShares) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.price_per_share', '💵 Price Per Share:      ' + fmt2(pricePerShare), { price: fmt2(pricePerShare) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '💰 Cap Table Snapshot:\n' +
-    '• Post-Money Valuation:  ' + fmt(postMoneyValuation) + '\n' +
-    '• Total Shares (after): ' + loc(totalSharesAfter) + '\n' +
-    '• Founder Ownership:    ' + pct2(founderOwnershipAfter) + '%  (' + loc(founderShares) + ' shares)\n' +
-    '• Investor Ownership:  ' + pct2(investorOwnershipPct) + '%  (' + loc(investorShares) + ' shares)\n' +
-    '• Option Pool (10%):    ' + pct2(100 * optionPoolShares / (totalSharesAfter + optionPoolShares)) + '%  (' + loc(optionPoolShares) + ' shares reserved)\n' +
-    '• Founder (after pool): ' + pct2(founderOwnershipWithPool) + '%\n\n' +
+    makeToken('calc_out.equity_dilution.row.post_money_valuation', '• Post-Money Valuation:  ' + fmt(postMoneyValuation), { valuation: fmt(postMoneyValuation) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.total_shares_after', '• Total Shares (after): ' + loc(totalSharesAfter), { shares: loc(totalSharesAfter) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.founder_ownership', '• Founder Ownership:    ' + pct2(founderOwnershipAfter) + '%  (' + loc(founderShares) + ' shares)', { stake: pct2(founderOwnershipAfter), shares: loc(founderShares) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.investor_ownership', '• Investor Ownership:  ' + pct2(investorOwnershipPct) + '%  (' + loc(investorShares) + ' shares)', { stake: pct2(investorOwnershipPct), shares: loc(investorShares) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.option_pool', '• Option Pool (10%):    ' + pct2(100 * optionPoolShares / (totalSharesAfter + optionPoolShares)) + '%  (' + loc(optionPoolShares) + ' shares reserved)', { pool: pct2(100 * optionPoolShares / (totalSharesAfter + optionPoolShares)), shares: loc(optionPoolShares) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.founder_after_pool', '• Founder (after pool): ' + pct2(founderOwnershipWithPool) + '%', { stake: pct2(founderOwnershipWithPool) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '📐 Dilution per Round:\n' +
-    '• Founder Dilution:      ' + pct2(dilutionPct) + '%  (pre-investment: 100%, post: ' + pct2(founderOwnershipAfter) + '%)\n' +
-    '• Dilution per $1K:    ' + (investmentAmount > 0 ? pct2((dilutionPct / investmentAmount) * 1000) + ' pp' : '0.00 pp') + '\n' +
-    '• Investor $/pp:        ' + (investmentAmount > 0 && dilutionPct > 0 ? fmt(investmentAmount / dilutionPct) : '$0') + '\n' +
-    '• Pool Impact:         ~' + pct2(founderOwnershipAfter - founderOwnershipWithPool) + '% additional from option pool\n' +
-    '• Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%\n\n' +
+    makeToken('calc_out.equity_dilution.row.founder_dilution', '• Founder Dilution:      ' + pct2(dilutionPct) + '%  (pre-investment: 100%, post: ' + pct2(founderOwnershipAfter) + '%)', { dilution: pct2(dilutionPct), stake: pct2(founderOwnershipAfter) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.dilution_per_1k', '• Dilution per $1K:    ' + (investmentAmount > 0 ? pct2((dilutionPct / investmentAmount) * 1000) + ' pp' : '0.00 pp'), { pp: (investmentAmount > 0 ? pct2((dilutionPct / investmentAmount) * 1000) + ' pp' : '0.00 pp') }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.investor_per_pp', '• Investor $/pp:        ' + (investmentAmount > 0 && dilutionPct > 0 ? fmt(investmentAmount / dilutionPct) : '$0'), { cost: (investmentAmount > 0 && dilutionPct > 0 ? fmt(investmentAmount / dilutionPct) : '$0') }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.pool_impact', '• Pool Impact:         ~' + pct2(founderOwnershipAfter - founderOwnershipWithPool) + '% additional from option pool', { impact: pct2(founderOwnershipAfter - founderOwnershipWithPool) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.industry_benchmark_head', '• Industry Benchmark: Seed 10-20%') +
+    ' | ' +
+    makeToken('calc_out.equity_dilution.row.industry_benchmark_a', 'Series A 15-25%') +
+    ' | ' +
+    makeToken('calc_out.equity_dilution.row.industry_benchmark_b', 'Series B 10-20%') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🩺 Founder Health:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (founderOwnershipAfter > 60
-      ? '• 🟢 Founder retains ' + pct2(founderOwnershipAfter) + '% — strong control after this round.\n'
+      ? makeToken('calc_out.equity_dilution.row.health_founder_strong', '• 🟢 Founder retains ' + pct2(founderOwnershipAfter) + '% — strong control after this round.', { stake: pct2(founderOwnershipAfter) }) + '\n'
       : founderOwnershipAfter >= 40
-      ? '• 🟡 Founder at ' + pct2(founderOwnershipAfter) + '% — minority control. Watch for blocking rights.\n'
+      ? makeToken('calc_out.equity_dilution.row.health_founder_minority', '• 🟡 Founder at ' + pct2(founderOwnershipAfter) + '% — minority control. Watch for blocking rights.', { stake: pct2(founderOwnershipAfter) }) + '\n'
       : founderOwnershipAfter >= 20
-      ? '• 🟠 Founder at ' + pct2(founderOwnershipAfter) + '% — losing majority. Negotiate board seats.\n'
-      : '• 🔴 Founder at ' + pct2(founderOwnershipAfter) + '% — minority stake. Investors likely control board.\n') +
+      ? makeToken('calc_out.equity_dilution.row.health_founder_losing_majority', '• 🟠 Founder at ' + pct2(founderOwnershipAfter) + '% — losing majority. Negotiate board seats.', { stake: pct2(founderOwnershipAfter) }) + '\n'
+      : makeToken('calc_out.equity_dilution.row.health_founder_minority_stake', '• 🔴 Founder at ' + pct2(founderOwnershipAfter) + '% — minority stake. Investors likely control board.', { stake: pct2(founderOwnershipAfter) }) + '\n') +
     (dilutionPct <= 20
-      ? '• 🟢 Round dilutes only ' + pct2(dilutionPct) + '% — within healthy seed/Series A range.\n'
+      ? makeToken('calc_out.equity_dilution.row.health_dilution_healthy', '• 🟢 Round dilutes only ' + pct2(dilutionPct) + '% — within healthy seed/Series A range.', { dilution: pct2(dilutionPct) }) + '\n'
       : dilutionPct <= 35
-      ? '• 🟡 Round dilutes ' + pct2(dilutionPct) + '% — aggressive but workable for late stages.\n'
-      : '• 🔴 Round dilutes ' + pct2(dilutionPct) + '% — excessive. Renegotiate valuation or raise less.\n') +
+      ? makeToken('calc_out.equity_dilution.row.health_dilution_aggressive', '• 🟡 Round dilutes ' + pct2(dilutionPct) + '% — aggressive but workable for late stages.', { dilution: pct2(dilutionPct) }) + '\n'
+      : makeToken('calc_out.equity_dilution.row.health_dilution_excessive', '• 🔴 Round dilutes ' + pct2(dilutionPct) + '% — excessive. Renegotiate valuation or raise less.', { dilution: pct2(dilutionPct) }) + '\n') +
     (pricePerShare > 0 && preMoneyValuation > 0
-      ? '• 🟢 Price/share ' + fmt2(pricePerShare) + ' sets floor for next round.\n'
+      ? makeToken('calc_out.equity_dilution.row.health_price_floor', '• 🟢 Price/share ' + fmt2(pricePerShare) + ' sets floor for next round.', { price: fmt2(pricePerShare) }) + '\n'
       : '') +
     '\n🎯 Exit Value by Round:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    'Assuming ' + fmt(exitValuation) + ' exit (10x pre-money):\n' +
-    '• Founder Take:           ' + fmt(founderExitProceeds) + '  (' + pct2(founderOwnershipAfter) + '%)\n' +
-    '• Investor Take:         ' + fmt((investorOwnershipPct / 100) * exitValuation) + '\n' +
-    '• With Option Pool:    Founder ' + fmt(founderExitProceedsDiluted) + '  (' + pct2(founderOwnershipWithPool) + '%)\n' +
-    '• Break-Even Multiplier:  ' + (investmentAmount > 0 && founderOwnershipAfter > 0 ? ((investmentAmount / 0.01) / founderOwnershipAfter).toFixed(1) : '∞') + 'x  (min exit for VC to clear 1% return)\n\n' +
+    makeToken('calc_out.equity_dilution.row.assuming_exit', 'Assuming ' + fmt(exitValuation) + ' exit (10x pre-money):', { valuation: fmt(exitValuation) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.founder_take', '• Founder Take:           ' + fmt(founderExitProceeds) + '  (' + pct2(founderOwnershipAfter) + '%)', { amount: fmt(founderExitProceeds), stake: pct2(founderOwnershipAfter) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.investor_take', '• Investor Take:         ' + fmt((investorOwnershipPct / 100) * exitValuation), { amount: fmt((investorOwnershipPct / 100) * exitValuation) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.with_option_pool', '• With Option Pool:    Founder ' + fmt(founderExitProceedsDiluted) + '  (' + pct2(founderOwnershipWithPool) + '%)', { amount: fmt(founderExitProceedsDiluted), stake: pct2(founderOwnershipWithPool) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.break_even_multiplier', '• Break-Even Multiplier:  ' + (investmentAmount > 0 && founderOwnershipAfter > 0 ? ((investmentAmount / 0.01) / founderOwnershipAfter).toFixed(1) : '∞') + 'x  (min exit for VC to clear 1% return)', { mult: (investmentAmount > 0 && founderOwnershipAfter > 0 ? ((investmentAmount / 0.01) / founderOwnershipAfter).toFixed(1) : '∞') }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '⚖️ Dilution Threshold:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Loss of majority control at 50% stake\n' +
-    '• Founders below 20% typically lose board seats\n' +
-    '• Current founder stake: ' + pct2(founderOwnershipAfter) + '%\n' +
+    makeToken('calc_out.equity_dilution.row.loss_of_majority_control', '• Loss of majority control at 50% stake') + '\n' +
+    makeToken('calc_out.equity_dilution.row.founders_below_20', '• Founders below 20% typically lose board seats') + '\n' +
+    makeToken('calc_out.equity_dilution.row.current_founder_stake', '• Current founder stake: ' + pct2(founderOwnershipAfter) + '%', { stake: pct2(founderOwnershipAfter) }) + '\n' +
     (founderOwnershipAfter > 50
-      ? '• 🟢 Above 50% — you control major decisions.\n'
+      ? makeToken('calc_out.equity_dilution.row.threshold_above_50', '• 🟢 Above 50% — you control major decisions.') + '\n'
       : founderOwnershipAfter > 20
-      ? '• 🟡 Below 50% — investors have blocking rights on key votes.\n'
-      : '• 🔴 Below 20% — minority protection only. Investors effectively control company.\n') +
-    '• Acceptable next round: Dilution <25% to retain ' + pct2(founderOwnershipAfter * 0.75) + '% stake\n\n' +
+      ? makeToken('calc_out.equity_dilution.row.threshold_below_50', '• 🟡 Below 50% — investors have blocking rights on key votes.') + '\n'
+      : makeToken('calc_out.equity_dilution.row.threshold_below_20', '• 🔴 Below 20% — minority protection only. Investors effectively control company.') + '\n') +
+    makeToken('calc_out.equity_dilution.row.acceptable_next_round', '• Acceptable next round: Dilution <25% to retain ' + pct2(founderOwnershipAfter * 0.75) + '% stake', { stake: pct2(founderOwnershipAfter * 0.75) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     '🔄 What-If Scenarios:\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Raise half ($' + Math.round(investmentAmount / 2).toLocaleString() + '):  Dilution ' + (postMoneyValuation > 0 ? pct2((investmentAmount / 2) / (preMoneyValuation + (investmentAmount / 2)) * 100) : '0.00') + '%  → Founder keeps ' + pct2(100 - (investmentAmount / 2) / (preMoneyValuation + (investmentAmount / 2)) * 100) + '%\n' +
-    '• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round\n' +
-    '• Smaller rounds, twice:  Two $' + Math.round(investmentAmount / 2).toLocaleString() + ' rounds → similar total dilution but more milestone-based\n' +
-    '• Negotiate valuation +25%:  Pre $' + Math.round(preMoneyValuation * 1.25).toLocaleString() + ' → Dilution drops to ' + (preMoneyValuation * 1.25 + investmentAmount > 0 ? pct2(investmentAmount / (preMoneyValuation * 1.25 + investmentAmount) * 100) : '0.00') + '%\n' +
-    '• Keep smaller option pool (5%):  Founder at ' + pct2(founderShares / (totalSharesAfter + totalSharesAfter * (5 / (100 - 5))) * 100) + '% vs current ' + pct2(founderOwnershipWithPool) + '%\n\n' +
+    makeToken('calc_out.equity_dilution.row.whatif_raise_half', '• Raise half ($' + Math.round(investmentAmount / 2).toLocaleString() + '):  Dilution ' + (postMoneyValuation > 0 ? pct2((investmentAmount / 2) / (preMoneyValuation + (investmentAmount / 2)) * 100) : '0.00') + '%  → Founder keeps ' + pct2(100 - (investmentAmount / 2) / (preMoneyValuation + (investmentAmount / 2)) * 100) + '%', { amount: Math.round(investmentAmount / 2).toLocaleString(), dilution: (postMoneyValuation > 0 ? pct2((investmentAmount / 2) / (preMoneyValuation + (investmentAmount / 2)) * 100) : '0.00'), stake: pct2(100 - (investmentAmount / 2) / (preMoneyValuation + (investmentAmount / 2)) * 100) }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.whatif_safe', '• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round') + '\n' +
+    makeToken('calc_out.equity_dilution.row.whatif_smaller_rounds', '• Smaller rounds, twice:  Two $' + Math.round(investmentAmount / 2).toLocaleString() + ' rounds → similar total dilution but more milestone-based', { amount: Math.round(investmentAmount / 2).toLocaleString() }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.whatif_negotiate_valuation', '• Negotiate valuation +25%:  Pre $' + Math.round(preMoneyValuation * 1.25).toLocaleString() + ' → Dilution drops to ' + (preMoneyValuation * 1.25 + investmentAmount > 0 ? pct2(investmentAmount / (preMoneyValuation * 1.25 + investmentAmount) * 100) : '0.00') + '%', { pre: Math.round(preMoneyValuation * 1.25).toLocaleString(), dilution: (preMoneyValuation * 1.25 + investmentAmount > 0 ? pct2(investmentAmount / (preMoneyValuation * 1.25 + investmentAmount) * 100) : '0.00') }) + '\n' +
+    makeToken('calc_out.equity_dilution.row.whatif_smaller_pool', '• Keep smaller option pool (5%):  Founder at ' + pct2(founderShares / (totalSharesAfter + totalSharesAfter * (5 / (100 - 5))) * 100) + '% vs current ' + pct2(founderOwnershipWithPool) + '%', { stake: pct2(founderShares / (totalSharesAfter + totalSharesAfter * (5 / (100 - 5))) * 100), current: pct2(founderOwnershipWithPool) }) + '\n\n' +
     '💡 Tip: ' + JSON.stringify(dilutionTip)
   );
 
@@ -118,7 +125,9 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
     const founderTake = (founderOwnershipAfter / 100) * ev;
     const investorTake = (investorOwnershipPct / 100) * ev;
     results.push(
-      'Exit @ ' + fmt(ev) + ': Founder ' + fmt(founderTake) + ' (' + pct2(founderOwnershipAfter) + '%) | Investor ' + fmt(investorTake) + ' (' + pct2(investorOwnershipPct) + '%)',
+      makeToken('calc_out.equity_dilution.row.exit_head', 'Exit @ ' + fmt(ev) + ': Founder ' + fmt(founderTake) + ' (' + pct2(founderOwnershipAfter) + '%)', { exit: fmt(ev), founder: fmt(founderTake), stake: pct2(founderOwnershipAfter) }) +
+      ' | ' +
+      makeToken('calc_out.equity_dilution.row.exit_investor', 'Investor ' + fmt(investorTake) + ' (' + pct2(investorOwnershipPct) + '%)', { investor: fmt(investorTake), stake: pct2(investorOwnershipPct) }),
     );
   }
 
@@ -126,78 +135,78 @@ function calculateEquityDilution(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let m=function(l){return Number.isNaN(l)?0:Math.max(0,l)},k=function(l){const e=m(parseFloat(l.companyValuation)||0),t=m(parseFloat(l.investmentAmount)||0),r=m(parseInt(l.founderShares)||0),y=[],f=e+t,v=f>0?t/f*100:0,P=e>0?Math.round(r*(t/e)):0,u=r+P,o=u>0?r/u*100:100,s=100-o,S=r>0?e/r:0,b=10,d=Math.round(u*(b/(100-b))),p=u+d>0?r/(u+d)*100:o,c=e*10,D=o/100*c,M=p/100*c,a=i=>"$"+Math.round(i).toLocaleString(),_=i=>i.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),n=i=>i.toFixed(2),L=i=>i.toFixed(1),h=i=>i.toLocaleString(),g={dilution:n(s),founderStake:n(o)},I=s<=20?{code:"dilution_healthy",params:g}:s<=35?{code:"dilution_aggressive",params:g}:{code:"dilution_excessive",params:g};y.push(\`📊 Equity Dilution Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let v=function(_){return Number.isNaN(_)?0:Math.max(0,_)},x=function(_){const e=v(parseFloat(_.companyValuation)||0),i=v(parseFloat(_.investmentAmount)||0),l=v(parseInt(_.founderShares)||0),S=[],f=e+i,y=f>0?i/f*100:0,F=e>0?Math.round(l*(i/e)):0,a=l+F,n=a>0?l/a*100:100,u=100-n,w=l>0?e/l:0,P=10,p=Math.round(a*(P/(100-P))),h=a+p>0?l/(a+p)*100:n,c=e*10,M=n/100*c,A=h/100*c,r=s=>"$"+Math.round(s).toLocaleString(),q=s=>s.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}),t=s=>s.toFixed(2),V=s=>s.toFixed(1),d=s=>s.toLocaleString(),b={dilution:t(u),founderStake:t(n)},E=u<=20?{code:"dilution_healthy",params:b}:u<=35?{code:"dilution_aggressive",params:b}:{code:"dilution_excessive",params:b};S.push(\`📊 Equity Dilution Calculator
 
-🏢 Pre-Money Valuation:  \`+a(e)+\`
-💰 Investment Amount:    \`+a(t)+\`
-🏗️ Founder Shares (initial): \`+h(r)+\`
-💵 Price Per Share:      \`+_(S)+\`
+\`+o("calc_out.equity_dilution.row.pre_money_valuation","🏢 Pre-Money Valuation:  "+r(e),{valuation:r(e)})+\`
+\`+o("calc_out.equity_dilution.row.investment_amount","💰 Investment Amount:    "+r(i),{amount:r(i)})+\`
+\`+o("calc_out.equity_dilution.row.founder_shares","🏗️ Founder Shares (initial): "+d(l),{shares:d(l)})+\`
+\`+o("calc_out.equity_dilution.row.price_per_share","💵 Price Per Share:      "+q(w),{price:q(w)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 💰 Cap Table Snapshot:
-• Post-Money Valuation:  \`+a(f)+\`
-• Total Shares (after): \`+h(u)+\`
-• Founder Ownership:    \`+n(o)+"%  ("+h(r)+\` shares)
-• Investor Ownership:  \`+n(v)+"%  ("+h(P)+\` shares)
-• Option Pool (10%):    \`+n(100*d/(u+d))+"%  ("+h(d)+\` shares reserved)
-• Founder (after pool): \`+n(p)+\`%
+\`+o("calc_out.equity_dilution.row.post_money_valuation","• Post-Money Valuation:  "+r(f),{valuation:r(f)})+\`
+\`+o("calc_out.equity_dilution.row.total_shares_after","• Total Shares (after): "+d(a),{shares:d(a)})+\`
+\`+o("calc_out.equity_dilution.row.founder_ownership","• Founder Ownership:    "+t(n)+"%  ("+d(l)+" shares)",{stake:t(n),shares:d(l)})+\`
+\`+o("calc_out.equity_dilution.row.investor_ownership","• Investor Ownership:  "+t(y)+"%  ("+d(F)+" shares)",{stake:t(y),shares:d(F)})+\`
+\`+o("calc_out.equity_dilution.row.option_pool","• Option Pool (10%):    "+t(100*p/(a+p))+"%  ("+d(p)+" shares reserved)",{pool:t(100*p/(a+p)),shares:d(p)})+\`
+\`+o("calc_out.equity_dilution.row.founder_after_pool","• Founder (after pool): "+t(h)+"%",{stake:t(h)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📐 Dilution per Round:
-• Founder Dilution:      \`+n(s)+"%  (pre-investment: 100%, post: "+n(o)+\`%)
-• Dilution per $1K:    \`+(t>0?n(s/t*1e3)+" pp":"0.00 pp")+\`
-• Investor $/pp:        \`+(t>0&&s>0?a(t/s):"$0")+\`
-• Pool Impact:         ~\`+n(o-p)+\`% additional from option pool
-• Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%
+\`+o("calc_out.equity_dilution.row.founder_dilution","• Founder Dilution:      "+t(u)+"%  (pre-investment: 100%, post: "+t(n)+"%)",{dilution:t(u),stake:t(n)})+\`
+\`+o("calc_out.equity_dilution.row.dilution_per_1k","• Dilution per $1K:    "+(i>0?t(u/i*1e3)+" pp":"0.00 pp"),{pp:i>0?t(u/i*1e3)+" pp":"0.00 pp"})+\`
+\`+o("calc_out.equity_dilution.row.investor_per_pp","• Investor $/pp:        "+(i>0&&u>0?r(i/u):"$0"),{cost:i>0&&u>0?r(i/u):"$0"})+\`
+\`+o("calc_out.equity_dilution.row.pool_impact","• Pool Impact:         ~"+t(n-h)+"% additional from option pool",{impact:t(n-h)})+\`
+\`+o("calc_out.equity_dilution.row.industry_benchmark_head","• Industry Benchmark: Seed 10-20%")+" | "+o("calc_out.equity_dilution.row.industry_benchmark_a","Series A 15-25%")+" | "+o("calc_out.equity_dilution.row.industry_benchmark_b","Series B 10-20%")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🩺 Founder Health:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(o>60?"• 🟢 Founder retains "+n(o)+\`% — strong control after this round.
-\`:o>=40?"• 🟡 Founder at "+n(o)+\`% — minority control. Watch for blocking rights.
-\`:o>=20?"• 🟠 Founder at "+n(o)+\`% — losing majority. Negotiate board seats.
-\`:"• 🔴 Founder at "+n(o)+\`% — minority stake. Investors likely control board.
-\`)+(s<=20?"• 🟢 Round dilutes only "+n(s)+\`% — within healthy seed/Series A range.
-\`:s<=35?"• 🟡 Round dilutes "+n(s)+\`% — aggressive but workable for late stages.
-\`:"• 🔴 Round dilutes "+n(s)+\`% — excessive. Renegotiate valuation or raise less.
-\`)+(S>0&&e>0?"• 🟢 Price/share "+_(S)+\` sets floor for next round.
+\`+(n>60?o("calc_out.equity_dilution.row.health_founder_strong","• 🟢 Founder retains "+t(n)+"% — strong control after this round.",{stake:t(n)})+\`
+\`:n>=40?o("calc_out.equity_dilution.row.health_founder_minority","• 🟡 Founder at "+t(n)+"% — minority control. Watch for blocking rights.",{stake:t(n)})+\`
+\`:n>=20?o("calc_out.equity_dilution.row.health_founder_losing_majority","• 🟠 Founder at "+t(n)+"% — losing majority. Negotiate board seats.",{stake:t(n)})+\`
+\`:o("calc_out.equity_dilution.row.health_founder_minority_stake","• 🔴 Founder at "+t(n)+"% — minority stake. Investors likely control board.",{stake:t(n)})+\`
+\`)+(u<=20?o("calc_out.equity_dilution.row.health_dilution_healthy","• 🟢 Round dilutes only "+t(u)+"% — within healthy seed/Series A range.",{dilution:t(u)})+\`
+\`:u<=35?o("calc_out.equity_dilution.row.health_dilution_aggressive","• 🟡 Round dilutes "+t(u)+"% — aggressive but workable for late stages.",{dilution:t(u)})+\`
+\`:o("calc_out.equity_dilution.row.health_dilution_excessive","• 🔴 Round dilutes "+t(u)+"% — excessive. Renegotiate valuation or raise less.",{dilution:t(u)})+\`
+\`)+(w>0&&e>0?o("calc_out.equity_dilution.row.health_price_floor","• 🟢 Price/share "+q(w)+" sets floor for next round.",{price:q(w)})+\`
 \`:"")+\`
 🎯 Exit Value by Round:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Assuming \`+a(c)+\` exit (10x pre-money):
-• Founder Take:           \`+a(D)+"  ("+n(o)+\`%)
-• Investor Take:         \`+a(v/100*c)+\`
-• With Option Pool:    Founder \`+a(M)+"  ("+n(p)+\`%)
-• Break-Even Multiplier:  \`+(t>0&&o>0?(t/.01/o).toFixed(1):"∞")+\`x  (min exit for VC to clear 1% return)
+\`+o("calc_out.equity_dilution.row.assuming_exit","Assuming "+r(c)+" exit (10x pre-money):",{valuation:r(c)})+\`
+\`+o("calc_out.equity_dilution.row.founder_take","• Founder Take:           "+r(M)+"  ("+t(n)+"%)",{amount:r(M),stake:t(n)})+\`
+\`+o("calc_out.equity_dilution.row.investor_take","• Investor Take:         "+r(y/100*c),{amount:r(y/100*c)})+\`
+\`+o("calc_out.equity_dilution.row.with_option_pool","• With Option Pool:    Founder "+r(A)+"  ("+t(h)+"%)",{amount:r(A),stake:t(h)})+\`
+\`+o("calc_out.equity_dilution.row.break_even_multiplier","• Break-Even Multiplier:  "+(i>0&&n>0?(i/.01/n).toFixed(1):"∞")+"x  (min exit for VC to clear 1% return)",{mult:i>0&&n>0?(i/.01/n).toFixed(1):"∞"})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚖️ Dilution Threshold:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Loss of majority control at 50% stake
-• Founders below 20% typically lose board seats
-• Current founder stake: \`+n(o)+\`%
-\`+(o>50?\`• 🟢 Above 50% — you control major decisions.
-\`:o>20?\`• 🟡 Below 50% — investors have blocking rights on key votes.
-\`:\`• 🔴 Below 20% — minority protection only. Investors effectively control company.
-\`)+"• Acceptable next round: Dilution <25% to retain "+n(o*.75)+\`% stake
+\`+o("calc_out.equity_dilution.row.loss_of_majority_control","• Loss of majority control at 50% stake")+\`
+\`+o("calc_out.equity_dilution.row.founders_below_20","• Founders below 20% typically lose board seats")+\`
+\`+o("calc_out.equity_dilution.row.current_founder_stake","• Current founder stake: "+t(n)+"%",{stake:t(n)})+\`
+\`+(n>50?o("calc_out.equity_dilution.row.threshold_above_50","• 🟢 Above 50% — you control major decisions.")+\`
+\`:n>20?o("calc_out.equity_dilution.row.threshold_below_50","• 🟡 Below 50% — investors have blocking rights on key votes.")+\`
+\`:o("calc_out.equity_dilution.row.threshold_below_20","• 🔴 Below 20% — minority protection only. Investors effectively control company.")+\`
+\`)+o("calc_out.equity_dilution.row.acceptable_next_round","• Acceptable next round: Dilution <25% to retain "+t(n*.75)+"% stake",{stake:t(n*.75)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🔄 What-If Scenarios:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Raise half ($\`+Math.round(t/2).toLocaleString()+"):  Dilution "+(f>0?n(t/2/(e+t/2)*100):"0.00")+"%  → Founder keeps "+n(100-t/2/(e+t/2)*100)+\`%
-• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round
-• Smaller rounds, twice:  Two $\`+Math.round(t/2).toLocaleString()+\` rounds → similar total dilution but more milestone-based
-• Negotiate valuation +25%:  Pre $\`+Math.round(e*1.25).toLocaleString()+" → Dilution drops to "+(e*1.25+t>0?n(t/(e*1.25+t)*100):"0.00")+\`%
-• Keep smaller option pool (5%):  Founder at \`+n(r/(u+u*(5/95))*100)+"% vs current "+n(p)+\`%
+\`+o("calc_out.equity_dilution.row.whatif_raise_half","• Raise half ($"+Math.round(i/2).toLocaleString()+"):  Dilution "+(f>0?t(i/2/(e+i/2)*100):"0.00")+"%  → Founder keeps "+t(100-i/2/(e+i/2)*100)+"%",{amount:Math.round(i/2).toLocaleString(),dilution:f>0?t(i/2/(e+i/2)*100):"0.00",stake:t(100-i/2/(e+i/2)*100)})+\`
+\`+o("calc_out.equity_dilution.row.whatif_safe","• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round")+\`
+\`+o("calc_out.equity_dilution.row.whatif_smaller_rounds","• Smaller rounds, twice:  Two $"+Math.round(i/2).toLocaleString()+" rounds → similar total dilution but more milestone-based",{amount:Math.round(i/2).toLocaleString()})+\`
+\`+o("calc_out.equity_dilution.row.whatif_negotiate_valuation","• Negotiate valuation +25%:  Pre $"+Math.round(e*1.25).toLocaleString()+" → Dilution drops to "+(e*1.25+i>0?t(i/(e*1.25+i)*100):"0.00")+"%",{pre:Math.round(e*1.25).toLocaleString(),dilution:e*1.25+i>0?t(i/(e*1.25+i)*100):"0.00"})+\`
+\`+o("calc_out.equity_dilution.row.whatif_smaller_pool","• Keep smaller option pool (5%):  Founder at "+t(l/(a+a*(5/95))*100)+"% vs current "+t(h)+"%",{stake:t(l/(a+a*(5/95))*100),current:t(h)})+\`
 
-💡 Tip: \`+JSON.stringify(I));const A=[c*.5,c,c*2,c*5,c*10];for(let i=0;i<A.length;i++){const F=A[i],T=o/100*F,E=v/100*F;y.push("Exit @ "+a(F)+": Founder "+a(T)+" ("+n(o)+"%) | Investor "+a(E)+" ("+n(v)+"%)")}return y},x=function(l,e,t){var r=w(l);return Array.isArray(r)?r.join(\`
-\`):String(r)};var O=m,R=k,V=x,w=function(l){return k(l)};return[x(inputs,pick,fill)]}finally{}
+💡 Tip: \`+JSON.stringify(E));const D=[c*.5,c,c*2,c*5,c*10];for(let s=0;s<D.length;s++){const g=D[s],I=n/100*g,O=y/100*g;S.push(o("calc_out.equity_dilution.row.exit_head","Exit @ "+r(g)+": Founder "+r(I)+" ("+t(n)+"%)",{exit:r(g),founder:r(I),stake:t(n)})+" | "+o("calc_out.equity_dilution.row.exit_investor","Investor "+r(O)+" ("+t(y)+"%)",{investor:r(O),stake:t(y)}))}return S},m=function(_,e,i){var l=L(_);return Array.isArray(l)?l.join(\`
+\`):String(l)};var $=v,N=x,R=m,o=tk,j='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',o=new Function("return "+j)(),L=function(_){return x(_)};return[m(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -228,7 +237,7 @@ const engine: ToolEngine = {
     return calculateEquityDilution(inputs);
   },
   staticExamples: [
-    '📊 Equity Dilution Calculator\n\n🏢 Pre-Money Valuation:  $5,000,000\n💰 Investment Amount:    $1,000,000\n🏗️ Founder Shares (initial): 10,000,000\n💵 Price Per Share:      0.50\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Cap Table Snapshot:\n• Post-Money Valuation:  $6,000,000\n• Total Shares (after): 12,000,000\n• Founder Ownership:    83.33%  (10,000,000 shares)\n• Investor Ownership:  16.67%  (2,000,000 shares)\n• Option Pool (10%):    10.00%  (1,333,333 shares reserved)\n• Founder (after pool): 75.00%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Dilution per Round:\n• Founder Dilution:      16.67%  (pre-investment: 100%, post: 83.33%)\n• Dilution per $1K:    0.02 pp\n• Investor $/pp:        $60,000\n• Pool Impact:         ~8.33% additional from option pool\n• Industry Benchmark: Seed 10-20% | Series A 15-25% | Series B 10-20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Founder Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Founder retains 83.33% — strong control after this round.\n• 🟢 Round dilutes only 16.67% — within healthy seed/Series A range.\n• 🟢 Price/share 0.50 sets floor for next round.\n\n🎯 Exit Value by Round:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAssuming $50,000,000 exit (10x pre-money):\n• Founder Take:           $41,666,667  (83.33%)\n• Investor Take:         $8,333,333\n• With Option Pool:    Founder $37,500,001  (75.00%)\n• Break-Even Multiplier:  1200000.0x  (min exit for VC to clear 1% return)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Dilution Threshold:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Loss of majority control at 50% stake\n• Founders below 20% typically lose board seats\n• Current founder stake: 83.33%\n• 🟢 Above 50% — you control major decisions.\n• Acceptable next round: Dilution <25% to retain 62.50% stake\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise half ($500,000):  Dilution 9.09%  → Founder keeps 90.91%\n• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round\n• Smaller rounds, twice:  Two $500,000 rounds → similar total dilution but more milestone-based\n• Negotiate valuation +25%:  Pre $6,250,000 → Dilution drops to 13.79%\n• Keep smaller option pool (5%):  Founder at 79.17% vs current 75.00%\n\n💡 Tip: {"code":"dilution_healthy","params":{"dilution":"16.67","founderStake":"83.33"}}\nExit @ $25,000,000: Founder $20,833,333 (83.33%) | Investor $4,166,667 (16.67%)\nExit @ $50,000,000: Founder $41,666,667 (83.33%) | Investor $8,333,333 (16.67%)\nExit @ $100,000,000: Founder $83,333,333 (83.33%) | Investor $16,666,667 (16.67%)\nExit @ $250,000,000: Founder $208,333,333 (83.33%) | Investor $41,666,667 (16.67%)\nExit @ $500,000,000: Founder $416,666,667 (83.33%) | Investor $83,333,333 (16.67%)',
+    '📊 Equity Dilution Calculator\n\n$calc_out.equity_dilution.row.pre_money_valuation{"valuation":"$5,000,000"}|🏢 Pre-Money Valuation:  $5,000,000|\n$calc_out.equity_dilution.row.investment_amount{"amount":"$1,000,000"}|💰 Investment Amount:    $1,000,000|\n$calc_out.equity_dilution.row.founder_shares{"shares":"10,000,000"}|🏗️ Founder Shares (initial): 10,000,000|\n$calc_out.equity_dilution.row.price_per_share{"price":"0.50"}|💵 Price Per Share:      0.50|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Cap Table Snapshot:\n$calc_out.equity_dilution.row.post_money_valuation{"valuation":"$6,000,000"}|• Post-Money Valuation:  $6,000,000|\n$calc_out.equity_dilution.row.total_shares_after{"shares":"12,000,000"}|• Total Shares (after): 12,000,000|\n$calc_out.equity_dilution.row.founder_ownership{"stake":"83.33","shares":"10,000,000"}|• Founder Ownership:    83.33%  (10,000,000 shares)|\n$calc_out.equity_dilution.row.investor_ownership{"stake":"16.67","shares":"2,000,000"}|• Investor Ownership:  16.67%  (2,000,000 shares)|\n$calc_out.equity_dilution.row.option_pool{"pool":"10.00","shares":"1,333,333"}|• Option Pool (10%):    10.00%  (1,333,333 shares reserved)|\n$calc_out.equity_dilution.row.founder_after_pool{"stake":"75.00"}|• Founder (after pool): 75.00%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Dilution per Round:\n$calc_out.equity_dilution.row.founder_dilution{"dilution":"16.67","stake":"83.33"}|• Founder Dilution:      16.67%  (pre-investment: 100%, post: 83.33%)|\n$calc_out.equity_dilution.row.dilution_per_1k{"pp":"0.02 pp"}|• Dilution per $1K:    0.02 pp|\n$calc_out.equity_dilution.row.investor_per_pp{"cost":"$60,000"}|• Investor $/pp:        $60,000|\n$calc_out.equity_dilution.row.pool_impact{"impact":"8.33"}|• Pool Impact:         ~8.33% additional from option pool|\n$calc_out.equity_dilution.row.industry_benchmark_head|• Industry Benchmark: Seed 10-20%| | $calc_out.equity_dilution.row.industry_benchmark_a|Series A 15-25%| | $calc_out.equity_dilution.row.industry_benchmark_b|Series B 10-20%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Founder Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.equity_dilution.row.health_founder_strong{"stake":"83.33"}|• 🟢 Founder retains 83.33% — strong control after this round.|\n$calc_out.equity_dilution.row.health_dilution_healthy{"dilution":"16.67"}|• 🟢 Round dilutes only 16.67% — within healthy seed/Series A range.|\n$calc_out.equity_dilution.row.health_price_floor{"price":"0.50"}|• 🟢 Price/share 0.50 sets floor for next round.|\n\n🎯 Exit Value by Round:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.equity_dilution.row.assuming_exit{"valuation":"$50,000,000"}|Assuming $50,000,000 exit (10x pre-money):|\n$calc_out.equity_dilution.row.founder_take{"amount":"$41,666,667","stake":"83.33"}|• Founder Take:           $41,666,667  (83.33%)|\n$calc_out.equity_dilution.row.investor_take{"amount":"$8,333,333"}|• Investor Take:         $8,333,333|\n$calc_out.equity_dilution.row.with_option_pool{"amount":"$37,500,001","stake":"75.00"}|• With Option Pool:    Founder $37,500,001  (75.00%)|\n$calc_out.equity_dilution.row.break_even_multiplier{"mult":"1200000.0"}|• Break-Even Multiplier:  1200000.0x  (min exit for VC to clear 1% return)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Dilution Threshold:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.equity_dilution.row.loss_of_majority_control|• Loss of majority control at 50% stake|\n$calc_out.equity_dilution.row.founders_below_20|• Founders below 20% typically lose board seats|\n$calc_out.equity_dilution.row.current_founder_stake{"stake":"83.33"}|• Current founder stake: 83.33%|\n$calc_out.equity_dilution.row.threshold_above_50|• 🟢 Above 50% — you control major decisions.|\n$calc_out.equity_dilution.row.acceptable_next_round{"stake":"62.50"}|• Acceptable next round: Dilution <25% to retain 62.50% stake|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.equity_dilution.row.whatif_raise_half{"amount":"500,000","dilution":"9.09","stake":"90.91"}|• Raise half ($500,000):  Dilution 9.09%  → Founder keeps 90.91%|\n$calc_out.equity_dilution.row.whatif_safe|• Raise via SAFE (no immediate dilution):  Convert later at discount (15-25%) — plan for additional 5-10% dilution at next round|\n$calc_out.equity_dilution.row.whatif_smaller_rounds{"amount":"500,000"}|• Smaller rounds, twice:  Two $500,000 rounds → similar total dilution but more milestone-based|\n$calc_out.equity_dilution.row.whatif_negotiate_valuation{"pre":"6,250,000","dilution":"13.79"}|• Negotiate valuation +25%:  Pre $6,250,000 → Dilution drops to 13.79%|\n$calc_out.equity_dilution.row.whatif_smaller_pool{"stake":"79.17","current":"75.00"}|• Keep smaller option pool (5%):  Founder at 79.17% vs current 75.00%|\n\n💡 Tip: {"code":"dilution_healthy","params":{"dilution":"16.67","founderStake":"83.33"}}\n$calc_out.equity_dilution.row.exit_head{"exit":"$25,000,000","founder":"$20,833,333","stake":"83.33"}|Exit @ $25,000,000: Founder $20,833,333 (83.33%)| | $calc_out.equity_dilution.row.exit_investor{"investor":"$4,166,667","stake":"16.67"}|Investor $4,166,667 (16.67%)|\n$calc_out.equity_dilution.row.exit_head{"exit":"$50,000,000","founder":"$41,666,667","stake":"83.33"}|Exit @ $50,000,000: Founder $41,666,667 (83.33%)| | $calc_out.equity_dilution.row.exit_investor{"investor":"$8,333,333","stake":"16.67"}|Investor $8,333,333 (16.67%)|\n$calc_out.equity_dilution.row.exit_head{"exit":"$100,000,000","founder":"$83,333,333","stake":"83.33"}|Exit @ $100,000,000: Founder $83,333,333 (83.33%)| | $calc_out.equity_dilution.row.exit_investor{"investor":"$16,666,667","stake":"16.67"}|Investor $16,666,667 (16.67%)|\n$calc_out.equity_dilution.row.exit_head{"exit":"$250,000,000","founder":"$208,333,333","stake":"83.33"}|Exit @ $250,000,000: Founder $208,333,333 (83.33%)| | $calc_out.equity_dilution.row.exit_investor{"investor":"$41,666,667","stake":"16.67"}|Investor $41,666,667 (16.67%)|\n$calc_out.equity_dilution.row.exit_head{"exit":"$500,000,000","founder":"$416,666,667","stake":"83.33"}|Exit @ $500,000,000: Founder $416,666,667 (83.33%)| | $calc_out.equity_dilution.row.exit_investor{"investor":"$83,333,333","stake":"16.67"}|Investor $83,333,333 (16.67%)|',
     'Exit @ $25,000,000: Founder $20,833,333 (83.33%) | Investor $4,166,667 (16.67%)',
     'Exit @ $50,000,000: Founder $41,666,667 (83.33%) | Investor $8,333,333 (16.67%)',
     'Exit @ $100,000,000: Founder $83,333,333 (83.33%) | Investor $16,666,667 (16.67%)',

@@ -73,7 +73,21 @@ export const B3_9_AI_COST = [
   { slug: 'solopreneur-gpu-cloud-cost-calculator', file: 'src/engines/ai-cost/gpu-cloud-cost-calculator.ts', alias: 'gpu_cloud_cost', baseline: '5c1bd52' },
 ];
 
-export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST];
+/**
+ * P168 B3-13 组 1 —— 全站 zh 整行英文欠账里**最重的 5 个引擎**（177 行）。
+ *
+ * ⭐ baseline = `94bffb2`（本批令牌化**之前**的最后一个提交）
+ *   —— 不得用 HEAD：一提交就失去意义（G9 会变成「token 对 token」的真空绿）。
+ */
+export const B3_13_BATCH = [
+  { slug: 'solopreneur-meeting-cost-calculator', file: 'src/engines/cost/meeting-cost-calculator.ts', alias: 'meeting_cost', baseline: '94bffb2' },
+  { slug: 'solopreneur-course-pricing-calculator', file: 'src/engines/freelance/course-pricing-calculator.ts', alias: 'course_pricing', baseline: '94bffb2' },
+  { slug: 'solopreneur-employee-cost-calculator', file: 'src/engines/cost/employee-cost-calculator.ts', alias: 'employee_cost', baseline: '94bffb2' },
+  { slug: 'solopreneur-equity-dilution-calculator', file: 'src/engines/investment/equity-dilution-calculator.ts', alias: 'equity_dilution', baseline: '94bffb2' },
+  { slug: 'solopreneur-saas-pricing-planner', file: 'src/engines/cost/saas-pricing-planner.ts', alias: 'saas_pricing_planner', baseline: '94bffb2' },
+];
+
+export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH];
 
 /**
  * ⭐⭐ P168 B3-11：基线**重钉**表 —— 8 个引擎的英文页因 defaultInputs 修复而**合法地**变了。
