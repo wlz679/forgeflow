@@ -24,8 +24,17 @@
 //   M3 塞一条幽灵 slug（不存在的引擎）   → T1 红（集合相等：台账有 / 实测无）
 //   M4 从 TOKENIZED 里删掉一个引擎        → T4 红（源码含 token ≡ TOKENIZED）
 //
+// ⭐⭐⭐ **M1/M2 的锚点必须从「当前台账」动态解析，不能写死 slug**（2026-11-19 Task 5 实测踩坑）
+//   第一版把 M1/M2 写死在两个具体引擎上（meeting-cost / course-pricing）
+//   ⇒ 本批把这 10 个引擎令牌化后**它们已从台账销账** ⇒ 锚点串不存在
+//   ⇒ 变异「没打中」⇒ 台子报 SKIP（而 SKIP 会被算成「存活」⇒ exit 1 ⇒ 验收读起来像「守卫没牙」）。
+//   ⚠️ 这是**同族教训的第三次复发**（P168 B3-4 / B3-8 的变异锚点过期各一次）
+//   ⇒ **锚点必须锚在「一定会变的那部分结构」上**：台账**条目本身**（每销账一次就少一条 ⇒ 位置会变）
+//   ⇒ 改为「解析当前台账 ⇒ 取第一条 / 最后一条 ⇒ 在它身上动手」⇒ 台账怎么变都不会过期。
+//   （TOKENIZED 清单只增不减 ⇒ M4 的锚点不会过期。）
+//
 // ⚠️ M4 的隔离前提：只跑**本守卫这一个测试文件**
-//   tests/calc-output-en-parity-guard.test.ts 里硬编码了 TOKENIZED.length === 45
+//   tests/calc-output-en-parity-guard.test.ts 里硬编码了 TOKENIZED.length === 55
 //   ⇒ 从 TOKENIZED 删掉一个引擎会让**那个**套件也红 ⇒ 判定范围只限本守卫。
 //   （M1/M2/M3 只改台账文件 ⇒ 不影响别的套件，但统一只跑一个文件更省时。）
 //
@@ -46,6 +55,8 @@
 //   --negative-control：注入一条**坏变异**（把台账文件改成语法错误 ⇒ 守卫文件加载失败
 //   ⇒ TAP 给出文件级 not ok / 0 条 ok）⇒ 台子必须把它判成 NOT-ISOLATED，
 //   **绝不能**当成 KILLED。用来证明「检测本身有牙」（详见下面对应输出）。
+//   ⭐ **该模式自身 exit 0 = 证明成立**（与仓库既有台子同约定：B3-9 / B3-12 / title-seo /
+//     decision-support 皆如此）—— 「成功识别出未隔离」是**预期结果**，不是失败。
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -73,6 +84,32 @@ const G0 = sha(GUARD);
 const T0 = sha(TOKENIZED_LIST);
 
 const NL = String.fromCharCode(10);
+
+/**
+ * 解析**当前**台账的条目（slug + 登记行数）—— ⭐ 动态锚点。
+ *
+ * ⚠️ 为什么不能写死 slug（2026-11-19 Task 5 实测踩坑）：
+ *   第一版把 M1/M2 的锚点写死在两个具体引擎上（meeting-cost / course-pricing）
+ *   ⇒ 本批把这 10 个引擎令牌化后**它们已从台账销账** ⇒ 锚点串不存在
+ *   ⇒ 变异「没打中」⇒ 台子报 SKIP（而 SKIP 会被算成「存活」⇒ 读起来像「守卫没牙」）。
+ *   ⇒ 台账**每销账一次就少一条** ⇒ 锚点必须每轮**现取**，不能写死。
+ *
+ * 只解析 ZH_EN_DEBT 块（不扫全文）⇒ 不会误收别的数字字面量。
+ */
+function ledgerEntries(text) {
+  const start = text.indexOf('export const ZH_EN_DEBT');
+  if (start < 0) return [];
+  const end = text.indexOf('};', start);
+  if (end < 0) return [];
+  const block = text.slice(start, end);
+  const re = /^[ \t]*'([^']+)':[ \t]*(\d+),[ \t]*\r?$/gm;
+  const out = [];
+  let m;
+  while ((m = re.exec(block)) !== null) {
+    out.push({ slug: m[1], n: parseInt(m[2], 10) });
+  }
+  return out;
+}
 
 /** 从守卫源码里解析断言标题（**不手抄** —— 守卫改名时台子不会误判） */
 function guardAssertionTitles() {
@@ -196,10 +233,14 @@ const variants = [
     name: '台账里某一条的行数 +1（数字与现实脱节）',
     file: LEDGER,
     orig: LEDGER_ORIG,
-    apply: (t) => t.replace(
-      "'solopreneur-meeting-cost-calculator': 41,",
-      "'solopreneur-meeting-cost-calculator': 42,",
-    ),
+    // ⭐ 动态锚点：取**当前**台账的第一条 ⇒ 台账怎么变都不会打空
+    apply: (t) => {
+      const es = ledgerEntries(t);
+      if (es.length === 0) return t;
+      const e = es[0];
+      const re = new RegExp("('" + e.slug + "':[ \\t]*)" + e.n + ',');
+      return t.replace(re, '$1' + (e.n + 1) + ',');
+    },
     expect: 'T2',
   },
   {
@@ -207,7 +248,14 @@ const variants = [
     name: '删掉台账里一条（该引擎实测仍有欠账）',
     file: LEDGER,
     orig: LEDGER_ORIG,
-    apply: (t) => t.replace(/  'solopreneur-course-pricing-calculator': 38,\r?\n/, ''),
+    // ⭐ 动态锚点：删**当前**台账的最后一条（该引擎实测仍有欠账 ⇒ T1 红）
+    apply: (t) => {
+      const es = ledgerEntries(t);
+      if (es.length === 0) return t;
+      const e = es[es.length - 1];
+      const re = new RegExp("^[ \\t]*'" + e.slug + "':[ \\t]*\\d+,[ \\t]*\\r?\\n", 'm');
+      return t.replace(re, '');
+    },
     expect: 'T1',
   },
   {
@@ -249,6 +297,8 @@ const NEGATIVE_CONTROL = process.argv.includes('--negative-control');
 
 let survived = 0;
 let notIsolated = 0;
+/** 负对照模式专用：「成功识别出未隔离」= 证明成立（该模式自身 exit 0） */
+let negControlProved = false;
 
 // ── 负对照：未变异时守卫必须绿（否则下面的红说明不了问题）────────────────
 const control = runGuard();
@@ -279,9 +329,11 @@ try {
     console.log(detected
       ? '  ✅ 负对照成立 —— 坏变异被判成 NOT-ISOLATED（**没有**被当成 KILLED）⇒ 检测本身有牙。'
       : '  ❌ 负对照失败 —— 坏变异被判成 ' + j.verdict + ' ⇒ 检测失效。');
-    console.log('  ⇒ 本模式按设计 exit 1（台子确实判出了未隔离；正常模式下同一条变异同样 exit 1）。');
-    // 坏变异本身就是「未隔离」⇒ 整轮必须非零退出（不管台子判得对不对）。
-    notIsolated++;
+    console.log('  ⇒ 本模式按设计 exit 0（成功识别出未隔离 = 证明成立；仓库既有台子同约定）。');
+    // ⭐ 坏变异被判成 NOT-ISOLATED 是**预期结果** ⇒ 证明「检测本身有牙」
+    //   ⇒ 该模式自身 exit 0（与 B3-9 / B3-12 / title-seo / decision-support 同约定）。
+    //   ⚠️ 若台子把坏变异当成 KILLED ⇒ 检测失效 ⇒ 必须 exit 1。
+    negControlProved = detected;
   } else {
     for (const v of variants) {
       const origText = v.orig.toString('utf-8');
@@ -328,6 +380,11 @@ try {
     + ' · 守卫 ' + (okG ? '一致 ✓' : '不一致 ✗')
     + ' · 令牌化清单 ' + (okT ? '一致 ✓' : '不一致 ✗'));
   if (!okL || !okG || !okT) process.exit(1);
+}
+if (NEGATIVE_CONTROL) {
+  console.log('负对照证明：' + (negControlProved ? '成立 ✓（坏变异被判成 NOT-ISOLATED）' : '失败 ✗（坏变异被当成 KILLED ⇒ 检测失效）'));
+  // 负对照模式：exit 0 = 证明成立；exit 1 = 检测失效
+  process.exit(negControlProved && survived === 0 ? 0 : 1);
 }
 console.log('存活 ' + survived + ' · 未隔离 ' + notIsolated);
 process.exit(survived === 0 && notIsolated === 0 ? 0 : 1);
