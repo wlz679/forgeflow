@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-11-09",
+  "lastUpdated": "2026-11-23",
   "source": "litellm+manual",
   "llm": {
     "openai": {
@@ -1150,8 +1150,8 @@
           "order": 138
         },
         "gpt-6-rosalind": {
-          "input": 15,
-          "output": 75,
+          "input": 10,
+          "output": 50,
           "name": "GPT 6 Rosalind",
           "family": "gpt6",
           "contextWindow": "922K",
@@ -1172,6 +1172,30 @@
           "family": "gpt6",
           "contextWindow": "922K",
           "order": 141
+        },
+        "gpt-6.2-astra": {
+          "input": 8,
+          "output": 40,
+          "name": "GPT 6.2 Astra",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 142
+        },
+        "gpt-6.2-sol": {
+          "input": 2,
+          "output": 10,
+          "name": "GPT 6.2 Sol",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 143
+        },
+        "gpt-6.2-astra-law": {
+          "input": 8,
+          "output": 40,
+          "name": "GPT 6.2 Astra Law",
+          "family": "gpt6",
+          "contextWindow": "922K",
+          "order": 144
         }
       }
     },
@@ -1443,6 +1467,22 @@
           "maxOutput": "128K",
           "batchInput": 0.05,
           "batchOutput": 0.25
+        },
+        "claude-mythos-5-2": {
+          "input": 8,
+          "output": 40,
+          "name": "Claude Mythos 52",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "order": 29
+        },
+        "claude-fable-5-2": {
+          "input": 8,
+          "output": 40,
+          "name": "Claude Fable 52",
+          "family": "mythos",
+          "contextWindow": "1M",
+          "order": 30
         }
       }
     },
@@ -1766,7 +1806,7 @@
           "output": 2,
           "name": "Gemini 2.5 Flash Native Audio Preview 092025",
           "family": "legacy",
-          "contextWindow": "1M",
+          "contextWindow": "131K",
           "order": 38
         },
         "gemini-2.5-flash-native-audio-preview-12-2025": {
@@ -2034,6 +2074,38 @@
           "family": "legacy",
           "contextWindow": "131K",
           "order": 68
+        },
+        "gemini-4-carbon": {
+          "input": 2,
+          "output": 10,
+          "name": "Gemini 4 Carbon",
+          "family": "gem4",
+          "contextWindow": "1M",
+          "order": 69
+        },
+        "gemini-4-hydrogen": {
+          "input": 1.5,
+          "output": 7.5,
+          "name": "Gemini 4 Hydrogen",
+          "family": "gem4",
+          "contextWindow": "1M",
+          "order": 70
+        },
+        "gemini-4-neon": {
+          "input": 3,
+          "output": 15,
+          "name": "Gemini 4 Neon",
+          "family": "gem4",
+          "contextWindow": "1M",
+          "order": 71
+        },
+        "genie-4": {
+          "input": 1.5,
+          "output": 9,
+          "name": "Genie 4",
+          "family": "legacy",
+          "contextWindow": "1M",
+          "order": 72
         }
       }
     },
