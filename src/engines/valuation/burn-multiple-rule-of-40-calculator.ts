@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -117,31 +120,61 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
   const pct1 = (n: number) => n.toFixed(1) + '%';
   const ratioStr = (n: number) => (isFinite(n) ? n.toFixed(2) : '∞');
 
+  // P168 B3-14：象限图的**标签**令牌化（框线/箭头/空白留在 token 之外 ⇒ 英文页逐字不变）
+  //   ⚠️ 中文模板要**补足空格**保持 ASCII 图的列宽（CJK 占 2 列）。
+  const qMargin = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_margin', 'Margin →');
+  const qNegative = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_negative', 'Negative');
+  const qPositive = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_positive', 'Positive');
+  const qGrowthHigh = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_growth_high', 'Growth High');
+  const qGrowers = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_growers', 'Growers');
+  const qStars = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_stars', 'Stars');
+  const qLow = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_low', 'Low');
+  const qZombies = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_zombies', 'Zombies');
+  const qPlowhorses = makeToken('calc_out.burn_multiple_rule_of_40.row.quad_plowhorses', 'Plowhorses');
+
   // Quadrant chart (ASCII 2x2)
   let quadChart = '';
   if (growthRate >= 40) {
-    quadChart += '                Margin →\n';
-    quadChart += '              Negative        Positive\n';
+    quadChart += '                ' + qMargin + '\n';
+    quadChart += '              ' + qNegative + '        ' + qPositive + '\n';
     quadChart += '            ┌─────────────┬─────────────┐\n';
     quadChart +=
-      'Growth High │  Growers ' +
+      qGrowthHigh +
+      ' │  ' +
+      qGrowers +
+      ' ' +
       (quad.label.includes('Growers') ? '◀' : ' ') +
-      '   │   Stars ' +
+      '   │   ' +
+      qStars +
+      ' ' +
       (quad.label.includes('Stars') ? '◀' : ' ') +
       '  │\n';
     quadChart += '            ├─────────────┼─────────────┤\n';
-    quadChart += '       Low  │  Zombies    │  Plowhorses │\n';
+    quadChart +=
+      '       ' +
+      qLow +
+      '  │  ' +
+      qZombies +
+      '    │  ' +
+      qPlowhorses +
+      ' │\n';
     quadChart += '            └─────────────┴─────────────┘';
   } else {
-    quadChart += '                Margin →\n';
-    quadChart += '              Negative        Positive\n';
+    quadChart += '                ' + qMargin + '\n';
+    quadChart += '              ' + qNegative + '        ' + qPositive + '\n';
     quadChart += '            ┌─────────────┬─────────────┐\n';
-    quadChart += 'Growth High │  Growers    │   Stars     │\n';
+    quadChart += qGrowthHigh + ' │  ' + qGrowers + '    │   ' + qStars + '     │\n';
     quadChart += '            ├─────────────┼─────────────┤\n';
     quadChart +=
-      '       Low  │  Zombies ' +
+      '       ' +
+      qLow +
+      '  │  ' +
+      qZombies +
+      ' ' +
       (quad.label.includes('Zombies') ? '◀' : ' ') +
-      '  │  Plowhorses ' +
+      '  │  ' +
+      qPlowhorses +
+      ' ' +
       (quad.label.includes('Plowhorses') ? '◀' : ' ') +
       '│\n';
     quadChart += '            └─────────────┴─────────────┘';
@@ -165,22 +198,48 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
   // Tip selection
   let tip: string;
   if (!isFinite(bm) || bm > 3) {
-    tip =
-      '💡 Tip: Burn Multiple >3 is inefficient. Either cut non-revenue-generating spend (overhead, R&D) or invest more in sales/marketing efficiency.';
+    tip = makeToken(
+      'calc_out.burn_multiple_rule_of_40.row.tip_inefficient',
+      '💡 Tip: Burn Multiple >3 is inefficient. Either cut non-revenue-generating spend (overhead, R&D) or invest more in sales/marketing efficiency.',
+    );
   } else if (r40 < 0) {
-    tip =
-      '💡 Tip: Rule of 40 below 0% — burning cash without growing fast enough. Refocus on product-market fit or fundraising.';
+    tip = makeToken(
+      'calc_out.burn_multiple_rule_of_40.row.tip_negative_rule40',
+      '💡 Tip: Rule of 40 below 0% — burning cash without growing fast enough. Refocus on product-market fit or fundraising.',
+    );
   } else if (r40 >= 40 && isFinite(bm) && bm < 1.5) {
-    tip =
-      '💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.';
+    tip = makeToken(
+      'calc_out.burn_multiple_rule_of_40.row.tip_top_quartile',
+      '💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.',
+    );
   } else {
-    tip =
-      '💡 Tip: Healthy SaaS hits Rule of 40 with Burn Multiple <1.5. If you are <1, you are top-quartile. If >3, fix the model or extend runway before raising.';
+    tip = makeToken(
+      'calc_out.burn_multiple_rule_of_40.row.tip_healthy',
+      '💡 Tip: Healthy SaaS hits Rule of 40 with Burn Multiple <1.5. If you are <1, you are top-quartile. If >3, fix the model or extend runway before raising.',
+    );
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const netNewArrLabel = money(netNewARR);
+  const growthPctLabel = pct1(growthRate);
+  const marginPctLabel = pct1(profitMargin);
+  const r40Label = pct1(r40);
+  const bmRatioLabel = ratioStr(bm);
+  const benchSeed = stageBenchmark(bm, 'seed');
+  const benchA = stageBenchmark(bm, 'a');
+  const benchB = stageBenchmark(bm, 'b');
+  const doubledArrLabel = fmt(doubledARR);
+  const bmDoubleArrLabel = ratioStr(bmDoubleARR);
+  const r40ImprMarginLabel = pct1(r40ImprMargin);
+  const halfBurnLabel = fmt(halfBurn);
+  const bmHalfBurnLabel = ratioStr(bmHalfBurn);
+  const addArrLabel = fmt(addARR);
+  const bmAddArrLabel = ratioStr(bmAddARR);
+  const reqArrLabel = fmt(reqARRForBM1);
+
   const r =
-    '⏰ Burn Multiple / Rule of 40 Calculator\n\n' +
-    '💰 Metrics Snapshot:\n' +
+    makeToken('calc_out.section.burn_multiple_calculator', '⏰ Burn Multiple / Rule of 40 Calculator') + '\n\n' +
+    makeToken('calc_out.section.burn_multiple_metrics_snapshot', '💰 Metrics Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Revenue Growth:   ' +
     pct1(growthRate) +
@@ -191,12 +250,12 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
     '• Net Burn:         ' +
     money(netBurn) +
     '\n' +
-    '• Net New ARR:      ' +
-    money(netNewARR) +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.net_new_arr', '• Net New ARR:      ' + netNewArrLabel, { value: netNewArrLabel }) +
     '\n' +
-    '• Period:           implied quarterly (annualize if needed)\n\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.period_note', '• Period:           implied quarterly (annualize if needed)') +
+    '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📐 Rule of 40 Result:\n' +
+    makeToken('calc_out.section.burn_multiple_rule_of_40', '📐 Rule of 40 Result:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Sum:  ' +
     pct1(growthRate) +
@@ -205,80 +264,89 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
     ' = ' +
     pct1(r40) +
     '\n' +
-    '• Verdict:  ' +
-    r40h.emoji +
-    ' ' +
-    r40h.label +
+    (r40h.label === 'PASS — top-quartile efficiency'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_rule40_pass', '• Verdict:  🟢 PASS — top-quartile efficiency')
+      : r40h.label === 'borderline — close to Rule of 40'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_rule40_borderline', '• Verdict:  🟡 borderline — close to Rule of 40')
+      : r40h.label === 'below — needs improvement'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_rule40_below', '• Verdict:  🟠 below — needs improvement')
+      : makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_rule40_fail', '• Verdict:  🔴 fail — burning without growth')) +
     '\n' +
-    '• Component breakdown:  Growth ' +
-    pct1(growthRate) +
-    ' + Margin ' +
-    pct1(profitMargin) +
-    ' = ' +
-    pct1(r40) +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.rule40_breakdown', '• Component breakdown:  Growth ' + growthPctLabel + ' + Margin ' + marginPctLabel + ' = ' + r40Label, { growth: growthPctLabel, margin: marginPctLabel, total: r40Label }) +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🩺 Burn Multiple Result:\n' +
+    makeToken('calc_out.section.burn_multiple_result', '🩺 Burn Multiple Result:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Ratio:  $' +
-    ratioStr(bm) +
-    ' burned per $1 of new ARR\n' +
-    '• Verdict:  ' +
-    bmh.emoji +
-    ' ' +
-    bmh.label +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.burn_ratio', '• Ratio:  $' + bmRatioLabel + ' burned per $1 of new ARR', { ratio: bmRatioLabel }) +
     '\n' +
-    '• Capital efficiency:  Each $1 of new ARR costs $' +
-    ratioStr(bm) +
-    ' in cash\n\n' +
+    (bmh.label === 'great — <$1 burned per $1 ARR'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_bm_great', '• Verdict:  🟢 great — <$1 burned per $1 ARR')
+      : bmh.label === 'good — efficient growth'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_bm_good', '• Verdict:  🟡 good — efficient growth')
+      : bmh.label === 'concerning — needs tightening'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_bm_concerning', '• Verdict:  🟠 concerning — needs tightening')
+      : makeToken('calc_out.burn_multiple_rule_of_40.row.verdict_bm_inefficient', '• Verdict:  🔴 inefficient — too much burn')) +
+    '\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.capital_efficiency', '• Capital efficiency:  Each $1 of new ARR costs $' + bmRatioLabel + ' in cash', { ratio: bmRatioLabel }) +
+    '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 SaaS Health Quadrant:\n' +
+    makeToken('calc_out.section.burn_multiple_quadrant', '🎯 SaaS Health Quadrant:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Your quadrant:  ' +
-    quad.emoji +
-    ' ' +
-    quad.label +
+    (quad.label === 'Stars (high growth + positive margin)'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.quadrant_stars', '• Your quadrant:  🟢 Stars (high growth + positive margin)')
+      : quad.label === 'Growers (high growth + negative margin)'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.quadrant_growers', '• Your quadrant:  🟡 Growers (high growth + negative margin)')
+      : quad.label === 'Profitable Plowhorses (low growth + positive margin)'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.quadrant_plowhorses', '• Your quadrant:  🟡 Profitable Plowhorses (low growth + positive margin)')
+      : makeToken('calc_out.burn_multiple_rule_of_40.row.quadrant_zombies', '• Your quadrant:  🔴 Zombies (low growth + negative margin)')) +
     '\n' +
     quadChart +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Capital Efficiency Benchmarks:\n' +
+    makeToken('calc_out.section.burn_multiple_benchmarks', '⚖️ Capital Efficiency Benchmarks:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Seed:        ' +
-    stageBenchmark(bm, 'seed') +
-    '  (median Burn Multiple 2-3)\n' +
-    '• Series A:    ' +
-    stageBenchmark(bm, 'a') +
-    '  (median Burn Multiple 1.5-2)\n' +
-    '• Series B+:   ' +
-    stageBenchmark(bm, 'b') +
-    '  (median Burn Multiple 1-1.5)\n' +
-    '• Your ratio:  $' +
-    ratioStr(bm) +
-    ' per $1 ARR\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If Scenarios:\n' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 2× growth (new ARR $' +
-    fmt(doubledARR) +
-    '):       Burn Multiple $' +
-    ratioStr(bmDoubleARR) +
-    ' per $1 ARR\n' +
-    '• Improve margin by 20pp:        Rule of 40 → ' +
-    pct1(r40ImprMargin) +
+    (benchSeed === '🟢 top-quartile for seed'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_seed_great', '• Seed:        🟢 top-quartile for seed  (median Burn Multiple 2-3)')
+      : benchSeed === '🟡 on par for seed'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_seed_good', '• Seed:        🟡 on par for seed  (median Burn Multiple 2-3)')
+      : benchSeed === '🟠 above median for seed'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_seed_median', '• Seed:        🟠 above median for seed  (median Burn Multiple 2-3)')
+      : makeToken('calc_out.burn_multiple_rule_of_40.row.bench_seed_na', '• Seed:        — (no new ARR)  (median Burn Multiple 2-3)')) +
     '\n' +
-    '• Cut burn 50% ($' +
-    fmt(halfBurn) +
-    '):           Burn Multiple $' +
-    ratioStr(bmHalfBurn) +
-    ' per $1 ARR\n' +
-    '• Add $5M ARR (new ARR $' +
-    fmt(addARR) +
-    '):    Burn Multiple $' +
-    ratioStr(bmAddARR) +
-    ' per $1 ARR\n' +
-    '• Aim for Burn Multiple <1:      requires net new ARR > $' +
-    fmt(reqARRForBM1) +
+    (benchA === '🟢 top-quartile for a'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_a_great', '• Series A:    🟢 top-quartile for a  (median Burn Multiple 1.5-2)')
+      : benchA === '🟡 on par for a'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_a_good', '• Series A:    🟡 on par for a  (median Burn Multiple 1.5-2)')
+      : benchA === '🟠 above median for a'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_a_median', '• Series A:    🟠 above median for a  (median Burn Multiple 1.5-2)')
+      : makeToken('calc_out.burn_multiple_rule_of_40.row.bench_a_na', '• Series A:    — (no new ARR)  (median Burn Multiple 1.5-2)')) +
+    '\n' +
+    (benchB === '🟢 top-quartile for b'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_b_great', '• Series B+:   🟢 top-quartile for b  (median Burn Multiple 1-1.5)')
+      : benchB === '🟡 on par for b'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_b_good', '• Series B+:   🟡 on par for b  (median Burn Multiple 1-1.5)')
+      : benchB === '🟠 above median for b'
+      ? makeToken('calc_out.burn_multiple_rule_of_40.row.bench_b_median', '• Series B+:   🟠 above median for b  (median Burn Multiple 1-1.5)')
+      : makeToken('calc_out.burn_multiple_rule_of_40.row.bench_b_na', '• Series B+:   — (no new ARR)  (median Burn Multiple 1-1.5)')) +
+    '\n' +
+    makeToken(
+      'calc_out.burn_multiple_rule_of_40.row.your_ratio',
+      '• Your ratio:  $' + bmRatioLabel + ' per $1 ARR',
+      { ratio: bmRatioLabel },
+    ) +
+    '\n\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+    makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:') + '\n' +
+    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.whatif_double_growth', '• 2× growth (new ARR $' + doubledArrLabel + '):       Burn Multiple $' + bmDoubleArrLabel + ' per $1 ARR', { arr: doubledArrLabel, ratio: bmDoubleArrLabel }) +
+    '\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.whatif_margin_20pp', '• Improve margin by 20pp:        Rule of 40 → ' + r40ImprMarginLabel, { score: r40ImprMarginLabel }) +
+    '\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.whatif_cut_burn_50', '• Cut burn 50% ($' + halfBurnLabel + '):           Burn Multiple $' + bmHalfBurnLabel + ' per $1 ARR', { burn: halfBurnLabel, ratio: bmHalfBurnLabel }) +
+    '\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.whatif_add_5m_arr', '• Add $5M ARR (new ARR $' + addArrLabel + '):    Burn Multiple $' + bmAddArrLabel + ' per $1 ARR', { arr: addArrLabel, ratio: bmAddArrLabel }) +
+    '\n' +
+    makeToken('calc_out.burn_multiple_rule_of_40.row.whatif_aim_bm_under_1', '• Aim for Burn Multiple <1:      requires net new ARR > $' + reqArrLabel, { arr: reqArrLabel }) +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     tip;
@@ -297,17 +365,33 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
     const c = combos[idx];
     const s = ruleOf40Score(c.g, c.m);
     const h = ruleOf40Health(s);
+    const growthLabel = String(c.g);
+    const marginLabel = String(c.m);
+    const scoreLabel = pct1(s);
+    const verdictLabel = h.label.split(' — ')[0];
+    // ⚠️ 成员访问表达式（h.emoji）会让模板推导**静默失败** ⇒ 先用局部变量承接
+    const verdictEmoji = h.emoji;
     results.push(
-      'Comparison: ' +
-        c.g +
-        '% growth + ' +
-        c.m +
-        '% margin = ' +
-        pct1(s) +
-        ' (Rule of 40) → ' +
-        h.emoji +
-        ' ' +
-        h.label.split(' — ')[0],
+      makeToken(
+        'calc_out.burn_multiple_rule_of_40.row.comparison',
+        'Comparison: ' +
+          growthLabel +
+          '% growth + ' +
+          marginLabel +
+          '% margin = ' +
+          scoreLabel +
+          ' (Rule of 40) → ' +
+          verdictEmoji +
+          ' ' +
+          verdictLabel,
+        {
+          growth: growthLabel,
+          margin: marginLabel,
+          score: scoreLabel,
+          verdict: verdictLabel,
+          emoji: verdictEmoji,
+        },
+      ),
     );
   }
 
@@ -317,77 +401,77 @@ function calculateBurnMultiple(inputs: Record<string, string>): string[] {
 // ============== customFn ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let b=function(n){return Number.isNaN(n)?0:Math.max(0,n)},p=function(n,e){return n+e},w=function(n){return n>=40?{emoji:"🟢",label:"PASS — top-quartile efficiency"}:n>=25?{emoji:"🟡",label:"borderline — close to Rule of 40"}:n>=10?{emoji:"🟠",label:"below — needs improvement"}:{emoji:"🔴",label:"fail — burning without growth"}},c=function(n,e){return e<=0?1/0:n/e},A=function(n){return n<1?{emoji:"🟢",label:"great — <$1 burned per $1 ARR"}:n<1.5?{emoji:"🟡",label:"good — efficient growth"}:n<3?{emoji:"🟠",label:"concerning — needs tightening"}:{emoji:"🔴",label:"inefficient — too much burn"}},M=function(n,e){const t=n>=40,r=e>=0;return t&&r?{emoji:"🟢",label:"Stars (high growth + positive margin)"}:t&&!r?{emoji:"🟡",label:"Growers (high growth + negative margin)"}:!t&&r?{emoji:"🟡",label:"Profitable Plowhorses (low growth + positive margin)"}:{emoji:"🔴",label:"Zombies (low growth + negative margin)"}},R=function(n,e){if(!isFinite(n))return"— (no new ARR)";const r={seed:{great:2,good:3},a:{great:1.5,good:2},b:{great:1,good:1.5}}[e];return n<r.great?"🟢 top-quartile for "+e:n<r.good?"🟡 on par for "+e:"🟠 above median for "+e},v=function(n){const e=parseFloat(n.revenueGrowth)||0,t=parseFloat(n.profitMargin)||0,r=b(parseFloat(n.netBurn)||0),f=b(parseFloat(n.netNewARR)||0);if(e===0&&t===0&&r===0&&f===0)return[\`⏰ Burn Multiple / Rule of 40 Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let R=function(e){return Number.isNaN(e)?0:Math.max(0,e)},g=function(e,t){return e+t},v=function(e){return e>=40?{emoji:"🟢",label:"PASS — top-quartile efficiency"}:e>=25?{emoji:"🟡",label:"borderline — close to Rule of 40"}:e>=10?{emoji:"🟠",label:"below — needs improvement"}:{emoji:"🔴",label:"fail — burning without growth"}},s=function(e,t){return t<=0?1/0:e/t},y=function(e){return e<1?{emoji:"🟢",label:"great — <$1 burned per $1 ARR"}:e<1.5?{emoji:"🟡",label:"good — efficient growth"}:e<3?{emoji:"🟠",label:"concerning — needs tightening"}:{emoji:"🔴",label:"inefficient — too much burn"}},$=function(e,t){const l=e>=40,n=t>=0;return l&&n?{emoji:"🟢",label:"Stars (high growth + positive margin)"}:l&&!n?{emoji:"🟡",label:"Growers (high growth + negative margin)"}:!l&&n?{emoji:"🟡",label:"Profitable Plowhorses (low growth + positive margin)"}:{emoji:"🔴",label:"Zombies (low growth + negative margin)"}},w=function(e,t){if(!isFinite(e))return"— (no new ARR)";const n={seed:{great:2,good:3},a:{great:1.5,good:2},b:{great:1,good:1.5}}[t];return e<n.great?"🟢 top-quartile for "+t:e<n.good?"🟡 on par for "+t:"🟠 above median for "+t},j=function(e){const t=parseFloat(e.revenueGrowth)||0,l=parseFloat(e.profitMargin)||0,n=R(parseFloat(e.netBurn)||0),b=R(parseFloat(e.netNewARR)||0);if(t===0&&l===0&&n===0&&b===0)return[\`⏰ Burn Multiple / Rule of 40 Calculator
 
-💰 Enter revenue growth, profit margin, net burn, and net new ARR to see Rule of 40 score and Burn Multiple.\`];const m=p(e,t),S=w(m),a=c(r,f),$=A(a),u=M(e,t),g=o=>o.toLocaleString("en-US",{maximumFractionDigits:0}),y=o=>"$"+g(o),l=o=>o.toFixed(1)+"%",s=o=>isFinite(o)?o.toFixed(2):"∞";let i="";e>=40?(i+=\`                Margin →
-\`,i+=\`              Negative        Positive
-\`,i+=\`            ┌─────────────┬─────────────┐
-\`,i+="Growth High │  Growers "+(u.label.includes("Growers")?"◀":" ")+"   │   Stars "+(u.label.includes("Stars")?"◀":" ")+\`  │
-\`,i+=\`            ├─────────────┼─────────────┤
-\`,i+=\`       Low  │  Zombies    │  Plowhorses │
-\`,i+="            └─────────────┴─────────────┘"):(i+=\`                Margin →
-\`,i+=\`              Negative        Positive
-\`,i+=\`            ┌─────────────┬─────────────┐
-\`,i+=\`Growth High │  Growers    │   Stars     │
-\`,i+=\`            ├─────────────┼─────────────┤
-\`,i+="       Low  │  Zombies "+(u.label.includes("Zombies")?"◀":" ")+"  │  Plowhorses "+(u.label.includes("Plowhorses")?"◀":" ")+\`│
-\`,i+="            └─────────────┴─────────────┘");const j=f*2,C=c(r,j),x=p(e,t+20),F=r/2,I=c(F,f),_=r+5e6,E=c(r,_),H=r;let h;!isFinite(a)||a>3?h="💡 Tip: Burn Multiple >3 is inefficient. Either cut non-revenue-generating spend (overhead, R&D) or invest more in sales/marketing efficiency.":m<0?h="💡 Tip: Rule of 40 below 0% — burning cash without growing fast enough. Refocus on product-market fit or fundraising.":m>=40&&isFinite(a)&&a<1.5?h="💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.":h="💡 Tip: Healthy SaaS hits Rule of 40 with Burn Multiple <1.5. If you are <1, you are top-quartile. If >3, fix the model or extend runway before raising.";const q=[\`⏰ Burn Multiple / Rule of 40 Calculator
+💰 Enter revenue growth, profit margin, net burn, and net new ARR to see Rule of 40 score and Burn Multiple.\`];const f=g(t,l),q=v(f),_=s(n,b),A=y(_),a=$(t,l),p=i=>i.toLocaleString("en-US",{maximumFractionDigits:0}),P=i=>"$"+p(i),u=i=>i.toFixed(1)+"%",m=i=>isFinite(i)?i.toFixed(2):"∞",F=r("calc_out.burn_multiple_rule_of_40.row.quad_margin","Margin →"),G=r("calc_out.burn_multiple_rule_of_40.row.quad_negative","Negative"),N=r("calc_out.burn_multiple_rule_of_40.row.quad_positive","Positive"),C=r("calc_out.burn_multiple_rule_of_40.row.quad_growth_high","Growth High"),V=r("calc_out.burn_multiple_rule_of_40.row.quad_growers","Growers"),E=r("calc_out.burn_multiple_rule_of_40.row.quad_stars","Stars"),I=r("calc_out.burn_multiple_rule_of_40.row.quad_low","Low"),x=r("calc_out.burn_multiple_rule_of_40.row.quad_zombies","Zombies"),H=r("calc_out.burn_multiple_rule_of_40.row.quad_plowhorses","Plowhorses");let o="";t>=40?(o+="                "+F+\`
+\`,o+="              "+G+"        "+N+\`
+\`,o+=\`            ┌─────────────┬─────────────┐
+\`,o+=C+" │  "+V+" "+(a.label.includes("Growers")?"◀":" ")+"   │   "+E+" "+(a.label.includes("Stars")?"◀":" ")+\`  │
+\`,o+=\`            ├─────────────┼─────────────┤
+\`,o+="       "+I+"  │  "+x+"    │  "+H+\` │
+\`,o+="            └─────────────┴─────────────┘"):(o+="                "+F+\`
+\`,o+="              "+G+"        "+N+\`
+\`,o+=\`            ┌─────────────┬─────────────┐
+\`,o+=C+" │  "+V+"    │   "+E+\`     │
+\`,o+=\`            ├─────────────┼─────────────┤
+\`,o+="       "+I+"  │  "+x+" "+(a.label.includes("Zombies")?"◀":" ")+"  │  "+H+" "+(a.label.includes("Plowhorses")?"◀":" ")+\`│
+\`,o+="            └─────────────┴─────────────┘");const D=b*2,fr=s(n,D),pr=g(t,l+20),Y=n/2,dr=s(Y,b),Z=n+5e6,gr=s(n,Z),wr=n;let d;!isFinite(_)||_>3?d=r("calc_out.burn_multiple_rule_of_40.row.tip_inefficient","💡 Tip: Burn Multiple >3 is inefficient. Either cut non-revenue-generating spend (overhead, R&D) or invest more in sales/marketing efficiency."):f<0?d=r("calc_out.burn_multiple_rule_of_40.row.tip_negative_rule40","💡 Tip: Rule of 40 below 0% — burning cash without growing fast enough. Refocus on product-market fit or fundraising."):f>=40&&isFinite(_)&&_<1.5?d=r("calc_out.burn_multiple_rule_of_40.row.tip_top_quartile","💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation."):d=r("calc_out.burn_multiple_rule_of_40.row.tip_healthy","💡 Tip: Healthy SaaS hits Rule of 40 with Burn Multiple <1.5. If you are <1, you are top-quartile. If >3, fix the model or extend runway before raising.");const z=P(b),O=u(t),U=u(l),J=u(f),c=m(_),S=w(_,"seed"),B=w(_,"a"),M=w(_,"b"),K=p(D),Q=m(fr),W=u(pr),X=p(Y),T=m(dr),k=p(Z),rr=m(gr),er=p(wr),tr=[r("calc_out.section.burn_multiple_calculator","⏰ Burn Multiple / Rule of 40 Calculator")+\`
 
-💰 Metrics Snapshot:
+\`+r("calc_out.section.burn_multiple_metrics_snapshot","💰 Metrics Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Revenue Growth:   \`+l(e)+\`
-• Profit Margin:    \`+l(t)+\`
-• Net Burn:         \`+y(r)+\`
-• Net New ARR:      \`+y(f)+\`
-• Period:           implied quarterly (annualize if needed)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📐 Rule of 40 Result:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Sum:  \`+l(e)+" + "+l(t)+" = "+l(m)+\`
-• Verdict:  \`+S.emoji+" "+S.label+\`
-• Component breakdown:  Growth \`+l(e)+" + Margin "+l(t)+" = "+l(m)+\`
+• Revenue Growth:   \`+u(t)+\`
+• Profit Margin:    \`+u(l)+\`
+• Net Burn:         \`+P(n)+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.net_new_arr","• Net New ARR:      "+z,{value:z})+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.period_note","• Period:           implied quarterly (annualize if needed)")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🩺 Burn Multiple Result:
+\`+r("calc_out.section.burn_multiple_rule_of_40","📐 Rule of 40 Result:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Ratio:  $\`+s(a)+\` burned per $1 of new ARR
-• Verdict:  \`+$.emoji+" "+$.label+\`
-• Capital efficiency:  Each $1 of new ARR costs $\`+s(a)+\` in cash
+• Sum:  \`+u(t)+" + "+u(l)+" = "+u(f)+\`
+\`+(q.label==="PASS — top-quartile efficiency"?r("calc_out.burn_multiple_rule_of_40.row.verdict_rule40_pass","• Verdict:  🟢 PASS — top-quartile efficiency"):q.label==="borderline — close to Rule of 40"?r("calc_out.burn_multiple_rule_of_40.row.verdict_rule40_borderline","• Verdict:  🟡 borderline — close to Rule of 40"):q.label==="below — needs improvement"?r("calc_out.burn_multiple_rule_of_40.row.verdict_rule40_below","• Verdict:  🟠 below — needs improvement"):r("calc_out.burn_multiple_rule_of_40.row.verdict_rule40_fail","• Verdict:  🔴 fail — burning without growth"))+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.rule40_breakdown","• Component breakdown:  Growth "+O+" + Margin "+U+" = "+J,{growth:O,margin:U,total:J})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 SaaS Health Quadrant:
+\`+r("calc_out.section.burn_multiple_result","🩺 Burn Multiple Result:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Your quadrant:  \`+u.emoji+" "+u.label+\`
-\`+i+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.burn_ratio","• Ratio:  $"+c+" burned per $1 of new ARR",{ratio:c})+\`
+\`+(A.label==="great — <$1 burned per $1 ARR"?r("calc_out.burn_multiple_rule_of_40.row.verdict_bm_great","• Verdict:  🟢 great — <$1 burned per $1 ARR"):A.label==="good — efficient growth"?r("calc_out.burn_multiple_rule_of_40.row.verdict_bm_good","• Verdict:  🟡 good — efficient growth"):A.label==="concerning — needs tightening"?r("calc_out.burn_multiple_rule_of_40.row.verdict_bm_concerning","• Verdict:  🟠 concerning — needs tightening"):r("calc_out.burn_multiple_rule_of_40.row.verdict_bm_inefficient","• Verdict:  🔴 inefficient — too much burn"))+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.capital_efficiency","• Capital efficiency:  Each $1 of new ARR costs $"+c+" in cash",{ratio:c})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Capital Efficiency Benchmarks:
+\`+r("calc_out.section.burn_multiple_quadrant","🎯 SaaS Health Quadrant:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Seed:        \`+R(a,"seed")+\`  (median Burn Multiple 2-3)
-• Series A:    \`+R(a,"a")+\`  (median Burn Multiple 1.5-2)
-• Series B+:   \`+R(a,"b")+\`  (median Burn Multiple 1-1.5)
-• Your ratio:  $\`+s(a)+\` per $1 ARR
+\`+(a.label==="Stars (high growth + positive margin)"?r("calc_out.burn_multiple_rule_of_40.row.quadrant_stars","• Your quadrant:  🟢 Stars (high growth + positive margin)"):a.label==="Growers (high growth + negative margin)"?r("calc_out.burn_multiple_rule_of_40.row.quadrant_growers","• Your quadrant:  🟡 Growers (high growth + negative margin)"):a.label==="Profitable Plowhorses (low growth + positive margin)"?r("calc_out.burn_multiple_rule_of_40.row.quadrant_plowhorses","• Your quadrant:  🟡 Profitable Plowhorses (low growth + positive margin)"):r("calc_out.burn_multiple_rule_of_40.row.quadrant_zombies","• Your quadrant:  🔴 Zombies (low growth + negative margin)"))+\`
+\`+o+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If Scenarios:
+\`+r("calc_out.section.burn_multiple_benchmarks","⚖️ Capital Efficiency Benchmarks:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 2× growth (new ARR $\`+g(j)+"):       Burn Multiple $"+s(C)+\` per $1 ARR
-• Improve margin by 20pp:        Rule of 40 → \`+l(x)+\`
-• Cut burn 50% ($\`+g(F)+"):           Burn Multiple $"+s(I)+\` per $1 ARR
-• Add $5M ARR (new ARR $\`+g(_)+"):    Burn Multiple $"+s(E)+\` per $1 ARR
-• Aim for Burn Multiple <1:      requires net new ARR > $\`+g(H)+\`
+\`+(S==="🟢 top-quartile for seed"?r("calc_out.burn_multiple_rule_of_40.row.bench_seed_great","• Seed:        🟢 top-quartile for seed  (median Burn Multiple 2-3)"):S==="🟡 on par for seed"?r("calc_out.burn_multiple_rule_of_40.row.bench_seed_good","• Seed:        🟡 on par for seed  (median Burn Multiple 2-3)"):S==="🟠 above median for seed"?r("calc_out.burn_multiple_rule_of_40.row.bench_seed_median","• Seed:        🟠 above median for seed  (median Burn Multiple 2-3)"):r("calc_out.burn_multiple_rule_of_40.row.bench_seed_na","• Seed:        — (no new ARR)  (median Burn Multiple 2-3)"))+\`
+\`+(B==="🟢 top-quartile for a"?r("calc_out.burn_multiple_rule_of_40.row.bench_a_great","• Series A:    🟢 top-quartile for a  (median Burn Multiple 1.5-2)"):B==="🟡 on par for a"?r("calc_out.burn_multiple_rule_of_40.row.bench_a_good","• Series A:    🟡 on par for a  (median Burn Multiple 1.5-2)"):B==="🟠 above median for a"?r("calc_out.burn_multiple_rule_of_40.row.bench_a_median","• Series A:    🟠 above median for a  (median Burn Multiple 1.5-2)"):r("calc_out.burn_multiple_rule_of_40.row.bench_a_na","• Series A:    — (no new ARR)  (median Burn Multiple 1.5-2)"))+\`
+\`+(M==="🟢 top-quartile for b"?r("calc_out.burn_multiple_rule_of_40.row.bench_b_great","• Series B+:   🟢 top-quartile for b  (median Burn Multiple 1-1.5)"):M==="🟡 on par for b"?r("calc_out.burn_multiple_rule_of_40.row.bench_b_good","• Series B+:   🟡 on par for b  (median Burn Multiple 1-1.5)"):M==="🟠 above median for b"?r("calc_out.burn_multiple_rule_of_40.row.bench_b_median","• Series B+:   🟠 above median for b  (median Burn Multiple 1-1.5)"):r("calc_out.burn_multiple_rule_of_40.row.bench_b_na","• Series B+:   — (no new ARR)  (median Burn Multiple 1-1.5)"))+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.your_ratio","• Your ratio:  $"+c+" per $1 ARR",{ratio:c})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-\`+h],G=[{g:50,m:-20},{g:100,m:-20},{g:150,m:0},{g:200,m:10},{g:300,m:20}];for(let o=0;o<G.length;o++){const d=G[o],N=p(d.g,d.m),P=w(N);q.push("Comparison: "+d.g+"% growth + "+d.m+"% margin = "+l(N)+" (Rule of 40) → "+P.emoji+" "+P.label.split(" — ")[0])}return q},B=function(n,e,t){var r=k(n);return Array.isArray(r)?r.join(\`
-\`):String(r)};var T=b,D=p,Z=w,L=c,U=A,V=M,Y=R,z=v,K=B,k=function(n){return v(n)};return[B(inputs,pick,fill)]}finally{}
+\`+r("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+r("calc_out.burn_multiple_rule_of_40.row.whatif_double_growth","• 2× growth (new ARR $"+K+"):       Burn Multiple $"+Q+" per $1 ARR",{arr:K,ratio:Q})+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.whatif_margin_20pp","• Improve margin by 20pp:        Rule of 40 → "+W,{score:W})+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.whatif_cut_burn_50","• Cut burn 50% ($"+X+"):           Burn Multiple $"+T+" per $1 ARR",{burn:X,ratio:T})+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.whatif_add_5m_arr","• Add $5M ARR (new ARR $"+k+"):    Burn Multiple $"+rr+" per $1 ARR",{arr:k,ratio:rr})+\`
+\`+r("calc_out.burn_multiple_rule_of_40.row.whatif_aim_bm_under_1","• Aim for Burn Multiple <1:      requires net new ARR > $"+er,{arr:er})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+d],nr=[{g:50,m:-20},{g:100,m:-20},{g:150,m:0},{g:200,m:10},{g:300,m:20}];for(let i=0;i<nr.length;i++){const h=nr[i],or=g(h.g,h.m),lr=v(or),ir=String(h.g),ur=String(h.m),_r=u(or),ar=lr.label.split(" — ")[0],cr=lr.emoji;tr.push(r("calc_out.burn_multiple_rule_of_40.row.comparison","Comparison: "+ir+"% growth + "+ur+"% margin = "+_r+" (Rule of 40) → "+cr+" "+ar,{growth:ir,margin:ur,score:_r,verdict:ar,emoji:cr}))}return tr},L=function(e,t,l){var n=br(e);return Array.isArray(n)?n.join(\`
+\`):String(n)};var mr=R,hr=g,Rr=v,vr=s,qr=y,Ar=$,Sr=w,Br=j,Mr=L,r=tk,sr='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+sr)(),br=function(e){return j(e)};return[L(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -437,7 +521,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateBurnMultiple(inputs);
   },
-  staticExamples: ['⏰ Burn Multiple / Rule of 40 Calculator\n\n💰 Metrics Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Revenue Growth:   100.0%\n• Profit Margin:    -20.0%\n• Net Burn:         $2,000,000\n• Net New ARR:      $1,500,000\n• Period:           implied quarterly (annualize if needed)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Rule of 40 Result:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Sum:  100.0% + -20.0% = 80.0%\n• Verdict:  🟢 PASS — top-quartile efficiency\n• Component breakdown:  Growth 100.0% + Margin -20.0% = 80.0%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Burn Multiple Result:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Ratio:  $1.33 burned per $1 of new ARR\n• Verdict:  🟡 good — efficient growth\n• Capital efficiency:  Each $1 of new ARR costs $1.33 in cash\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 SaaS Health Quadrant:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Your quadrant:  🟡 Growers (high growth + negative margin)\n                Margin →\n              Negative        Positive\n            ┌─────────────┬─────────────┐\nGrowth High │  Growers ◀   │   Stars    │\n            ├─────────────┼─────────────┤\n       Low  │  Zombies    │  Plowhorses │\n            └─────────────┴─────────────┘\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Capital Efficiency Benchmarks:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Seed:        🟢 top-quartile for seed  (median Burn Multiple 2-3)\n• Series A:    🟢 top-quartile for a  (median Burn Multiple 1.5-2)\n• Series B+:   🟡 on par for b  (median Burn Multiple 1-1.5)\n• Your ratio:  $1.33 per $1 ARR\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 2× growth (new ARR $3,000,000):       Burn Multiple $0.67 per $1 ARR\n• Improve margin by 20pp:        Rule of 40 → 100.0%\n• Cut burn 50% ($1,000,000):           Burn Multiple $0.67 per $1 ARR\n• Add $5M ARR (new ARR $7,000,000):    Burn Multiple $0.29 per $1 ARR\n• Aim for Burn Multiple <1:      requires net new ARR > $2,000,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.\nComparison: 50% growth + -20% margin = 30.0% (Rule of 40) → 🟡 borderline\nComparison: 100% growth + -20% margin = 80.0% (Rule of 40) → 🟢 PASS\nComparison: 150% growth + 0% margin = 150.0% (Rule of 40) → 🟢 PASS\nComparison: 200% growth + 10% margin = 210.0% (Rule of 40) → 🟢 PASS\nComparison: 300% growth + 20% margin = 320.0% (Rule of 40) → 🟢 PASS'],
+  staticExamples: ['$calc_out.section.burn_multiple_calculator|⏰ Burn Multiple / Rule of 40 Calculator|\n\n$calc_out.section.burn_multiple_metrics_snapshot|💰 Metrics Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Revenue Growth:   100.0%\n• Profit Margin:    -20.0%\n• Net Burn:         $2,000,000\n$calc_out.burn_multiple_rule_of_40.row.net_new_arr{"value":"$1,500,000"}|• Net New ARR:      $1,500,000|\n$calc_out.burn_multiple_rule_of_40.row.period_note|• Period:           implied quarterly (annualize if needed)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.burn_multiple_rule_of_40|📐 Rule of 40 Result:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Sum:  100.0% + -20.0% = 80.0%\n$calc_out.burn_multiple_rule_of_40.row.verdict_rule40_pass|• Verdict:  🟢 PASS — top-quartile efficiency|\n$calc_out.burn_multiple_rule_of_40.row.rule40_breakdown{"growth":"100.0%","margin":"-20.0%","total":"80.0%"}|• Component breakdown:  Growth 100.0% + Margin -20.0% = 80.0%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.burn_multiple_result|🩺 Burn Multiple Result:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.burn_multiple_rule_of_40.row.burn_ratio{"ratio":"1.33"}|• Ratio:  $1.33 burned per $1 of new ARR|\n$calc_out.burn_multiple_rule_of_40.row.verdict_bm_good|• Verdict:  🟡 good — efficient growth|\n$calc_out.burn_multiple_rule_of_40.row.capital_efficiency{"ratio":"1.33"}|• Capital efficiency:  Each $1 of new ARR costs $1.33 in cash|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.burn_multiple_quadrant|🎯 SaaS Health Quadrant:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.burn_multiple_rule_of_40.row.quadrant_growers|• Your quadrant:  🟡 Growers (high growth + negative margin)|\n                $calc_out.burn_multiple_rule_of_40.row.quad_margin|Margin →|\n              $calc_out.burn_multiple_rule_of_40.row.quad_negative|Negative|        $calc_out.burn_multiple_rule_of_40.row.quad_positive|Positive|\n            ┌─────────────┬─────────────┐\n$calc_out.burn_multiple_rule_of_40.row.quad_growth_high|Growth High| │  $calc_out.burn_multiple_rule_of_40.row.quad_growers|Growers| ◀   │   $calc_out.burn_multiple_rule_of_40.row.quad_stars|Stars|    │\n            ├─────────────┼─────────────┤\n       $calc_out.burn_multiple_rule_of_40.row.quad_low|Low|  │  $calc_out.burn_multiple_rule_of_40.row.quad_zombies|Zombies|    │  $calc_out.burn_multiple_rule_of_40.row.quad_plowhorses|Plowhorses| │\n            └─────────────┴─────────────┘\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.burn_multiple_benchmarks|⚖️ Capital Efficiency Benchmarks:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.burn_multiple_rule_of_40.row.bench_seed_great|• Seed:        🟢 top-quartile for seed  (median Burn Multiple 2-3)|\n$calc_out.burn_multiple_rule_of_40.row.bench_a_great|• Series A:    🟢 top-quartile for a  (median Burn Multiple 1.5-2)|\n$calc_out.burn_multiple_rule_of_40.row.bench_b_good|• Series B+:   🟡 on par for b  (median Burn Multiple 1-1.5)|\n$calc_out.burn_multiple_rule_of_40.row.your_ratio{"ratio":"1.33"}|• Your ratio:  $1.33 per $1 ARR|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.burn_multiple_rule_of_40.row.whatif_double_growth{"arr":"3,000,000","ratio":"0.67"}|• 2× growth (new ARR $3,000,000):       Burn Multiple $0.67 per $1 ARR|\n$calc_out.burn_multiple_rule_of_40.row.whatif_margin_20pp{"score":"100.0%"}|• Improve margin by 20pp:        Rule of 40 → 100.0%|\n$calc_out.burn_multiple_rule_of_40.row.whatif_cut_burn_50{"burn":"1,000,000","ratio":"0.67"}|• Cut burn 50% ($1,000,000):           Burn Multiple $0.67 per $1 ARR|\n$calc_out.burn_multiple_rule_of_40.row.whatif_add_5m_arr{"arr":"7,000,000","ratio":"0.29"}|• Add $5M ARR (new ARR $7,000,000):    Burn Multiple $0.29 per $1 ARR|\n$calc_out.burn_multiple_rule_of_40.row.whatif_aim_bm_under_1{"arr":"2,000,000"}|• Aim for Burn Multiple <1:      requires net new ARR > $2,000,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.burn_multiple_rule_of_40.row.tip_top_quartile|💡 Tip: Top-quartile efficiency. Use this in your fundraising narrative and consider raising at premium valuation.|\n$calc_out.burn_multiple_rule_of_40.row.comparison{"growth":"50","margin":"-20","score":"30.0%","verdict":"borderline","emoji":"🟡"}|Comparison: 50% growth + -20% margin = 30.0% (Rule of 40) → 🟡 borderline|\n$calc_out.burn_multiple_rule_of_40.row.comparison{"growth":"100","margin":"-20","score":"80.0%","verdict":"PASS","emoji":"🟢"}|Comparison: 100% growth + -20% margin = 80.0% (Rule of 40) → 🟢 PASS|\n$calc_out.burn_multiple_rule_of_40.row.comparison{"growth":"150","margin":"0","score":"150.0%","verdict":"PASS","emoji":"🟢"}|Comparison: 150% growth + 0% margin = 150.0% (Rule of 40) → 🟢 PASS|\n$calc_out.burn_multiple_rule_of_40.row.comparison{"growth":"200","margin":"10","score":"210.0%","verdict":"PASS","emoji":"🟢"}|Comparison: 200% growth + 10% margin = 210.0% (Rule of 40) → 🟢 PASS|\n$calc_out.burn_multiple_rule_of_40.row.comparison{"growth":"300","margin":"20","score":"320.0%","verdict":"PASS","emoji":"🟢"}|Comparison: 300% growth + 20% margin = 320.0% (Rule of 40) → 🟢 PASS|'],
   faq: [
     {
       q: 'What is the Burn Multiple?',

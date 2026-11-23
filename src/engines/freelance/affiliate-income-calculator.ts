@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
   const monthlyTraffic = clampNonNegative(parseFloat(inputs.monthlyTraffic) || 0);
@@ -31,57 +34,84 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
     { label: '1M visitors/mo', val: 1000000 },
   ];
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const trafficLabel = loc(monthlyTraffic);
+  const conversionsLabel = loc(Math.round(monthlyConversions));
+  const costLabel = fmt0(monthlyCost);
+  const per1kLabel = fmt(incomePerThousand);
+  const epvLabel = '$' + earningsPerVisitor.toFixed(4);
+  const netLabel = fmt0(netMonthly);
+  const netMarginLabel = pct1(monthlyIncome > 0 ? (netMonthly / monthlyIncome) * 100 : 0);
+  const rpcLabel = monthlyConversions > 0 ? fmt(monthlyIncome / monthlyConversions) : '$0';
+  const ctrLabel = pct2(conversionRate);
+  const commissionLabel = fmt(avgCommission);
+  const breakEvenLabel = loc(Math.ceil(breakEvenTraffic));
+  const needMoreLabel = loc(Math.ceil(breakEvenTraffic - monthlyTraffic));
+  const raiseCtrLabel = fmt0(monthlyIncome * 1.5);
+  const doubleTrafficLabel = fmt0(monthlyIncome * 2);
+  const combinedLabel = fmt0(monthlyIncome * 4.5);
+  const cutCostsLabel = fmt0(netMonthly + monthlyCost * 0.5);
+  const tipImpactLabel = fmt0(50000 * 0.01 * avgCommission);
+  const net5kLabel = loc(Math.ceil((5000 + monthlyCost) / Math.max(earningsPerVisitor, 0.0001)));
+  const net10kLabel = loc(Math.ceil((10000 + monthlyCost) / Math.max(earningsPerVisitor, 0.0001)));
+
   results.push(
-    '🔗 Affiliate Income Calculator\n\n' +
-    '📊 Your Traffic & Conversions:\n' +
-    '• Monthly Traffic:       ' + loc(monthlyTraffic) + ' visitors\n' +
+    makeToken('calc_out.section.affiliate_income_calculator', '🔗 Affiliate Income Calculator') + '\n\n' +
+    makeToken('calc_out.section.affiliate_income_traffic', '📊 Your Traffic & Conversions:') + '\n' +
+    makeToken('calc_out.affiliate_income.row.monthly_traffic', '• Monthly Traffic:       ' + trafficLabel + ' visitors', { traffic: trafficLabel }) + '\n' +
     '• Conversion Rate:       ' + pct2(conversionRate) + '%\n' +
     '• Avg Commission:        ' + fmt(avgCommission) + '\n' +
-    '• Monthly Conversions:   ' + loc(Math.round(monthlyConversions)) + ' sales\n' +
-    '• Monthly Cost:          ' + fmt0(monthlyCost) + '  (hosting, tools, content)\n\n' +
+    makeToken('calc_out.affiliate_income.row.monthly_conversions', '• Monthly Conversions:   ' + conversionsLabel + ' sales', { sales: conversionsLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.monthly_cost', '• Monthly Cost:          ' + costLabel + '  (hosting, tools, content)', { cost: costLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💰 Revenue Snapshot:\n' +
+    makeToken('calc_out.section.affiliate_income_revenue_snapshot', '💰 Revenue Snapshot:') + '\n' +
     '• Monthly Income:        ' + fmt0(monthlyIncome) + '/mo\n' +
     '• Annual Income:         ' + fmt0(annualIncome) + '/yr\n' +
-    '• Per 1K Visitors:       ' + fmt(incomePerThousand) + '/1K  (EPC — earnings per click-adjacent)\n' +
-    '• Earnings Per Visitor:  ' + '$' + earningsPerVisitor.toFixed(4) + '\n' +
-    '• Net (after costs):     ' + fmt0(netMonthly) + '/mo  (margin ' + pct1(monthlyIncome > 0 ? (netMonthly / monthlyIncome) * 100 : 0) + '%)\n' +
+    makeToken('calc_out.affiliate_income.row.per_1k_visitors', '• Per 1K Visitors:       ' + per1kLabel + '/1K  (EPC — earnings per click-adjacent)', { value: per1kLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.earnings_per_visitor', '• Earnings Per Visitor:  ' + epvLabel, { value: epvLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.net_after_costs', '• Net (after costs):     ' + netLabel + '/mo  (margin ' + netMarginLabel + '%)', { value: netLabel, margin: netMarginLabel }) + '\n' +
     '• Annual Net:            ' + fmt0(netMonthly * 12) + '/yr\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📐 CTR/EPC Funnel:\n' +
+    makeToken('calc_out.section.affiliate_income_funnel', '📐 CTR/EPC Funnel:') + '\n' +
     '• Traffic Impressions:   ' + loc(monthlyTraffic) + '\n' +
     '• Conversions:           ' + loc(Math.round(monthlyConversions)) + '  (rate ' + pct2(conversionRate) + '%)\n' +
-    '• Revenue per Click:     ' + (monthlyConversions > 0 ? fmt(monthlyIncome / monthlyConversions) : '$0') + '  (avg commission)\n' +
-    '• Revenue per Visitor:   ' + '$' + earningsPerVisitor.toFixed(4) + '  (key efficiency metric)\n' +
+    makeToken('calc_out.affiliate_income.row.revenue_per_click', '• Revenue per Click:     ' + rpcLabel + '  (avg commission)', { value: rpcLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.revenue_per_visitor', '• Revenue per Visitor:   ' + epvLabel + '  (key efficiency metric)', { value: epvLabel }) + '\n' +
     '• Annualized Visitors:   ' + loc(monthlyTraffic * 12) + '/yr\n' +
-    '• Industry Benchmark:    CTR 1-3% | EPC $0.10-1.00 | Aff. sites $20-50/1K visitors\n\n' +
+    makeToken('calc_out.affiliate_income.row.benchmark_ctr', '• Industry Benchmark:    CTR 1-3%') +
+    ' | ' +
+    makeToken('calc_out.affiliate_income.row.benchmark_epc', 'EPC $0.10-1.00') +
+    ' | ' +
+    makeToken('calc_out.affiliate_income.row.benchmark_sites', 'Aff. sites $20-50/1K visitors') +
+    '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🩺 Funnel Health:\n' +
+    makeToken('calc_out.section.affiliate_income_health', '🩺 Funnel Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     (conversionRate > 3
-      ? '• 🟢 CTR ' + pct2(conversionRate) + '% is strong (industry avg 1-3%).\n'
+      ? makeToken('calc_out.affiliate_income.row.health_ctr_strong', '• 🟢 CTR ' + ctrLabel + '% is strong (industry avg 1-3%).', { ctr: ctrLabel }) + '\n'
       : conversionRate >= 1
-      ? '• 🟡 CTR ' + pct2(conversionRate) + '% is on industry average.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_ctr_average', '• 🟡 CTR ' + ctrLabel + '% is on industry average.', { ctr: ctrLabel }) + '\n'
       : conversionRate >= 0.5
-      ? '• 🟠 CTR ' + pct2(conversionRate) + '% is below average — improve targeting.\n'
-      : '• 🔴 CTR ' + pct2(conversionRate) + '% is weak — review offer-market fit.\n') +
+      ? makeToken('calc_out.affiliate_income.row.health_ctr_below', '• 🟠 CTR ' + ctrLabel + '% is below average — improve targeting.', { ctr: ctrLabel }) + '\n'
+      : makeToken('calc_out.affiliate_income.row.health_ctr_weak', '• 🔴 CTR ' + ctrLabel + '% is weak — review offer-market fit.', { ctr: ctrLabel }) + '\n') +
     (incomePerThousand >= 50
-      ? '• 🟢 EPC ' + fmt(incomePerThousand) + '/1K — top-quartile affiliate performance.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_epc_top', '• 🟢 EPC ' + per1kLabel + '/1K — top-quartile affiliate performance.', { value: per1kLabel }) + '\n'
       : incomePerThousand >= 20
-      ? '• 🟡 EPC ' + fmt(incomePerThousand) + '/1K — solid performance.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_epc_solid', '• 🟡 EPC ' + per1kLabel + '/1K — solid performance.', { value: per1kLabel }) + '\n'
       : incomePerThousand >= 5
-      ? '• 🟠 EPC ' + fmt(incomePerThousand) + '/1K — below average; optimize offers.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_epc_below', '• 🟠 EPC ' + per1kLabel + '/1K — below average; optimize offers.', { value: per1kLabel }) + '\n'
       : monthlyTraffic > 0
-      ? '• 🔴 EPC ' + fmt(incomePerThousand) + '/1K — very low; rethink affiliate programs.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_epc_very_low', '• 🔴 EPC ' + per1kLabel + '/1K — very low; rethink affiliate programs.', { value: per1kLabel }) + '\n'
       : '') +
     (monthlyIncome > 0 && netMonthly > 0
-      ? '• 🟢 Net margin ' + pct1((netMonthly / monthlyIncome) * 100) + '% after costs.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_net_margin', '• 🟢 Net margin ' + netMarginLabel + '% after costs.', { margin: netMarginLabel }) + '\n'
       : monthlyCost > 0 && netMonthly <= 0
-      ? '• 🔴 Costs exceed revenue — unprofitable. Cut costs or grow traffic.\n'
+      ? makeToken('calc_out.affiliate_income.row.health_costs_exceed', '• 🔴 Costs exceed revenue — unprofitable. Cut costs or grow traffic.') + '\n'
       : '') +
-    '\n🎯 Scale Projection:\n' +
+    '\n' +
+    makeToken('calc_out.section.affiliate_income_scale_projection', '🎯 Scale Projection:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    'Assuming ' + pct2(conversionRate) + '% CTR and ' + fmt(avgCommission) + ' commission:\n' +
+    makeToken('calc_out.affiliate_income.row.scale_assumption', 'Assuming ' + ctrLabel + '% CTR and ' + commissionLabel + ' commission:', { ctr: ctrLabel, commission: commissionLabel }) + '\n' +
     (() => {
       let out = '';
       for (const tl of trafficLevels) {
@@ -92,25 +122,25 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
       return out;
     })() +
     '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even Traffic:\n' +
+    makeToken('calc_out.section.affiliate_income_break_even', '⚖️ Break-Even Traffic:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Costs/Month:           ' + fmt0(monthlyCost) + '\n' +
     '• Earnings/Visitor:      ' + '$' + earningsPerVisitor.toFixed(4) + '\n' +
-    '• Break-Even Traffic:    ' + loc(Math.ceil(breakEvenTraffic)) + ' visitors/mo\n' +
+    makeToken('calc_out.affiliate_income.row.break_even_traffic', '• Break-Even Traffic:    ' + breakEvenLabel + ' visitors/mo', { traffic: breakEvenLabel }) + '\n' +
     (monthlyTraffic >= breakEvenTraffic
-      ? '• 🟢 Current traffic (' + loc(monthlyTraffic) + ') covers costs.\n'
-      : '• 🔴 Need ' + loc(Math.ceil(breakEvenTraffic - monthlyTraffic)) + ' more visitors to break even.\n') +
-    '• To Net $5K/mo:         ' + loc(Math.ceil((5000 + monthlyCost) / Math.max(earningsPerVisitor, 0.0001))) + ' visitors/mo\n' +
-    '• To Net $10K/mo:        ' + loc(Math.ceil((10000 + monthlyCost) / Math.max(earningsPerVisitor, 0.0001))) + ' visitors/mo\n\n' +
+      ? makeToken('calc_out.affiliate_income.row.break_even_covered', '• 🟢 Current traffic (' + trafficLabel + ') covers costs.', { traffic: trafficLabel }) + '\n'
+      : makeToken('calc_out.affiliate_income.row.break_even_need', '• 🔴 Need ' + needMoreLabel + ' more visitors to break even.', { traffic: needMoreLabel }) + '\n') +
+    '• To Net $5K/mo:         ' + net5kLabel + ' visitors/mo\n' +
+    '• To Net $10K/mo:        ' + net10kLabel + ' visitors/mo\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If Scenarios:\n' +
+    makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Raise CTR 50%:  ' + fmt0(monthlyIncome * 1.5) + '/mo  (better targeting + landing page)\n' +
-    '• Higher commission (+50%):  ' + fmt0(monthlyIncome * 1.5) + '/mo  (recurring SaaS programs)\n' +
-    '• 2x traffic:  ' + fmt0(monthlyIncome * 2) + '/mo  (SEO + paid ads)\n' +
-    '• All three combined:  ' + fmt0(monthlyIncome * 4.5) + '/mo  (max upside)\n' +
-    '• Cut costs 50%:  Net ' + fmt0(netMonthly + monthlyCost * 0.5) + '/mo  (drop expensive tools)\n\n' +
-    '💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds ' + fmt0(50000 * 0.01 * avgCommission) + '/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.',
+    makeToken('calc_out.affiliate_income.row.whatif_raise_ctr', '• Raise CTR 50%:  ' + raiseCtrLabel + '/mo  (better targeting + landing page)', { value: raiseCtrLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.whatif_higher_commission', '• Higher commission (+50%):  ' + raiseCtrLabel + '/mo  (recurring SaaS programs)', { value: raiseCtrLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.whatif_double_traffic', '• 2x traffic:  ' + doubleTrafficLabel + '/mo  (SEO + paid ads)', { value: doubleTrafficLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.whatif_all_combined', '• All three combined:  ' + combinedLabel + '/mo  (max upside)', { value: combinedLabel }) + '\n' +
+    makeToken('calc_out.affiliate_income.row.whatif_cut_costs', '• Cut costs 50%:  Net ' + cutCostsLabel + '/mo  (drop expensive tools)', { value: cutCostsLabel }) + '\n\n' +
+    makeToken('calc_out.affiliate_income.row.tip_conversion_leverage', '💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds ' + tipImpactLabel + '/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.', { value: tipImpactLabel }),
   );
 
   const tlArr = [1000, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000];
@@ -128,80 +158,80 @@ function calculateAffiliateIncome(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let h=function(s){return Number.isNaN(s)?0:Math.max(0,s)},M=function(s){const i=h(parseFloat(s.monthlyTraffic)||0),t=h(parseFloat(s.conversionRate)||0),a=h(parseFloat(s.avgCommission)||0),l=h(parseFloat(s.monthlyCost)||0),p=[],C=i*(t/100),e=C*a,E=e*12,m=i>0?e/i*1e3:0,f=i>0?e/i:0,v=e-l,y=f>0?l/f:0,c=n=>"$"+n.toFixed(2),o=n=>"$"+Math.round(n).toLocaleString(),u=n=>n.toFixed(2),R=n=>n.toFixed(1),r=n=>n.toLocaleString(),k=[{label:"1K visitors/mo",val:1e3},{label:"10K visitors/mo",val:1e4},{label:"100K visitors/mo",val:1e5},{label:"500K visitors/mo",val:5e5},{label:"1M visitors/mo",val:1e6}];p.push(\`🔗 Affiliate Income Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let v=function(a){return Number.isNaN(a)?0:Math.max(0,a)},K=function(a){const e=v(parseFloat(a.monthlyTraffic)||0),r=v(parseFloat(a.conversionRate)||0),s=v(parseFloat(a.avgCommission)||0),_=v(parseFloat(a.monthlyCost)||0),M=[],h=e*(r/100),n=h*s,J=n*12,w=e>0?n/e*1e3:0,u=e>0?n/e:0,m=n-_,F=u>0?_/u:0,p=o=>"$"+o.toFixed(2),i=o=>"$"+Math.round(o).toLocaleString(),E=o=>o.toFixed(2),W=o=>o.toFixed(1),c=o=>o.toLocaleString(),Y=[{label:"1K visitors/mo",val:1e3},{label:"10K visitors/mo",val:1e4},{label:"100K visitors/mo",val:1e5},{label:"500K visitors/mo",val:5e5},{label:"1M visitors/mo",val:1e6}],C=c(e),A=c(Math.round(h)),N=i(_),l=p(w),d="$"+u.toFixed(4),P=i(m),y=W(n>0?m/n*100:0),S=h>0?p(n/h):"$0",f=E(r),$=p(s),I=c(Math.ceil(F)),j=c(Math.ceil(F-e)),L=i(n*1.5),q=i(n*2),V=i(n*4.5),O=i(m+_*.5),B=i(5e4*.01*s),G=c(Math.ceil((5e3+_)/Math.max(u,1e-4))),Q=c(Math.ceil((1e4+_)/Math.max(u,1e-4)));M.push(t("calc_out.section.affiliate_income_calculator","🔗 Affiliate Income Calculator")+\`
 
-📊 Your Traffic & Conversions:
-• Monthly Traffic:       \`+r(i)+\` visitors
-• Conversion Rate:       \`+u(t)+\`%
-• Avg Commission:        \`+c(a)+\`
-• Monthly Conversions:   \`+r(Math.round(C))+\` sales
-• Monthly Cost:          \`+o(l)+\`  (hosting, tools, content)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Revenue Snapshot:
-• Monthly Income:        \`+o(e)+\`/mo
-• Annual Income:         \`+o(E)+\`/yr
-• Per 1K Visitors:       \`+c(m)+\`/1K  (EPC — earnings per click-adjacent)
-• Earnings Per Visitor:  $\`+f.toFixed(4)+\`
-• Net (after costs):     \`+o(v)+"/mo  (margin "+R(e>0?v/e*100:0)+\`%)
-• Annual Net:            \`+o(v*12)+\`/yr
+\`+t("calc_out.section.affiliate_income_traffic","📊 Your Traffic & Conversions:")+\`
+\`+t("calc_out.affiliate_income.row.monthly_traffic","• Monthly Traffic:       "+C+" visitors",{traffic:C})+\`
+• Conversion Rate:       \`+E(r)+\`%
+• Avg Commission:        \`+p(s)+\`
+\`+t("calc_out.affiliate_income.row.monthly_conversions","• Monthly Conversions:   "+A+" sales",{sales:A})+\`
+\`+t("calc_out.affiliate_income.row.monthly_cost","• Monthly Cost:          "+N+"  (hosting, tools, content)",{cost:N})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📐 CTR/EPC Funnel:
-• Traffic Impressions:   \`+r(i)+\`
-• Conversions:           \`+r(Math.round(C))+"  (rate "+u(t)+\`%)
-• Revenue per Click:     \`+(C>0?c(e/C):"$0")+\`  (avg commission)
-• Revenue per Visitor:   $\`+f.toFixed(4)+\`  (key efficiency metric)
-• Annualized Visitors:   \`+r(i*12)+\`/yr
-• Industry Benchmark:    CTR 1-3% | EPC $0.10-1.00 | Aff. sites $20-50/1K visitors
+\`+t("calc_out.section.affiliate_income_revenue_snapshot","💰 Revenue Snapshot:")+\`
+• Monthly Income:        \`+i(n)+\`/mo
+• Annual Income:         \`+i(J)+\`/yr
+\`+t("calc_out.affiliate_income.row.per_1k_visitors","• Per 1K Visitors:       "+l+"/1K  (EPC — earnings per click-adjacent)",{value:l})+\`
+\`+t("calc_out.affiliate_income.row.earnings_per_visitor","• Earnings Per Visitor:  "+d,{value:d})+\`
+\`+t("calc_out.affiliate_income.row.net_after_costs","• Net (after costs):     "+P+"/mo  (margin "+y+"%)",{value:P,margin:y})+\`
+• Annual Net:            \`+i(m*12)+\`/yr
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🩺 Funnel Health:
+\`+t("calc_out.section.affiliate_income_funnel","📐 CTR/EPC Funnel:")+\`
+• Traffic Impressions:   \`+c(e)+\`
+• Conversions:           \`+c(Math.round(h))+"  (rate "+E(r)+\`%)
+\`+t("calc_out.affiliate_income.row.revenue_per_click","• Revenue per Click:     "+S+"  (avg commission)",{value:S})+\`
+\`+t("calc_out.affiliate_income.row.revenue_per_visitor","• Revenue per Visitor:   "+d+"  (key efficiency metric)",{value:d})+\`
+• Annualized Visitors:   \`+c(e*12)+\`/yr
+\`+t("calc_out.affiliate_income.row.benchmark_ctr","• Industry Benchmark:    CTR 1-3%")+" | "+t("calc_out.affiliate_income.row.benchmark_epc","EPC $0.10-1.00")+" | "+t("calc_out.affiliate_income.row.benchmark_sites","Aff. sites $20-50/1K visitors")+\`
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\`+(t>3?"• 🟢 CTR "+u(t)+\`% is strong (industry avg 1-3%).
-\`:t>=1?"• 🟡 CTR "+u(t)+\`% is on industry average.
-\`:t>=.5?"• 🟠 CTR "+u(t)+\`% is below average — improve targeting.
-\`:"• 🔴 CTR "+u(t)+\`% is weak — review offer-market fit.
-\`)+(m>=50?"• 🟢 EPC "+c(m)+\`/1K — top-quartile affiliate performance.
-\`:m>=20?"• 🟡 EPC "+c(m)+\`/1K — solid performance.
-\`:m>=5?"• 🟠 EPC "+c(m)+\`/1K — below average; optimize offers.
-\`:i>0?"• 🔴 EPC "+c(m)+\`/1K — very low; rethink affiliate programs.
-\`:"")+(e>0&&v>0?"• 🟢 Net margin "+R(v/e*100)+\`% after costs.
-\`:l>0&&v<=0?\`• 🔴 Costs exceed revenue — unprofitable. Cut costs or grow traffic.
+
+\`+t("calc_out.section.affiliate_income_health","🩺 Funnel Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(r>3?t("calc_out.affiliate_income.row.health_ctr_strong","• 🟢 CTR "+f+"% is strong (industry avg 1-3%).",{ctr:f})+\`
+\`:r>=1?t("calc_out.affiliate_income.row.health_ctr_average","• 🟡 CTR "+f+"% is on industry average.",{ctr:f})+\`
+\`:r>=.5?t("calc_out.affiliate_income.row.health_ctr_below","• 🟠 CTR "+f+"% is below average — improve targeting.",{ctr:f})+\`
+\`:t("calc_out.affiliate_income.row.health_ctr_weak","• 🔴 CTR "+f+"% is weak — review offer-market fit.",{ctr:f})+\`
+\`)+(w>=50?t("calc_out.affiliate_income.row.health_epc_top","• 🟢 EPC "+l+"/1K — top-quartile affiliate performance.",{value:l})+\`
+\`:w>=20?t("calc_out.affiliate_income.row.health_epc_solid","• 🟡 EPC "+l+"/1K — solid performance.",{value:l})+\`
+\`:w>=5?t("calc_out.affiliate_income.row.health_epc_below","• 🟠 EPC "+l+"/1K — below average; optimize offers.",{value:l})+\`
+\`:e>0?t("calc_out.affiliate_income.row.health_epc_very_low","• 🔴 EPC "+l+"/1K — very low; rethink affiliate programs.",{value:l})+\`
+\`:"")+(n>0&&m>0?t("calc_out.affiliate_income.row.health_net_margin","• 🟢 Net margin "+y+"% after costs.",{margin:y})+\`
+\`:_>0&&m<=0?t("calc_out.affiliate_income.row.health_costs_exceed","• 🔴 Costs exceed revenue — unprofitable. Cut costs or grow traffic.")+\`
 \`:"")+\`
-🎯 Scale Projection:
+\`+t("calc_out.section.affiliate_income_scale_projection","🎯 Scale Projection:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Assuming \`+u(t)+"% CTR and "+c(a)+\` commission:
-\`+(()=>{let n="";for(const g of k){const d=g.val*(t/100)*a;n+="• "+g.label+":  "+o(d)+"/mo  ("+o(d*12)+\`/yr)
-\`}return n})()+\`
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-⚖️ Break-Even Traffic:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Costs/Month:           \`+o(l)+\`
-• Earnings/Visitor:      $\`+f.toFixed(4)+\`
-• Break-Even Traffic:    \`+r(Math.ceil(y))+\` visitors/mo
-\`+(i>=y?"• 🟢 Current traffic ("+r(i)+\`) covers costs.
-\`:"• 🔴 Need "+r(Math.ceil(y-i))+\` more visitors to break even.
-\`)+"• To Net $5K/mo:         "+r(Math.ceil((5e3+l)/Math.max(f,1e-4)))+\` visitors/mo
-• To Net $10K/mo:        \`+r(Math.ceil((1e4+l)/Math.max(f,1e-4)))+\` visitors/mo
-
+\`+t("calc_out.affiliate_income.row.scale_assumption","Assuming "+f+"% CTR and "+$+" commission:",{ctr:f,commission:$})+\`
+\`+(()=>{let o="";for(const b of Y){const g=b.val*(r/100)*s;o+="• "+b.label+":  "+i(g)+"/mo  ("+i(g*12)+\`/yr)
+\`}return o})()+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If Scenarios:
+\`+t("calc_out.section.affiliate_income_break_even","⚖️ Break-Even Traffic:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Raise CTR 50%:  \`+o(e*1.5)+\`/mo  (better targeting + landing page)
-• Higher commission (+50%):  \`+o(e*1.5)+\`/mo  (recurring SaaS programs)
-• 2x traffic:  \`+o(e*2)+\`/mo  (SEO + paid ads)
-• All three combined:  \`+o(e*4.5)+\`/mo  (max upside)
-• Cut costs 50%:  Net \`+o(v+l*.5)+\`/mo  (drop expensive tools)
+• Costs/Month:           \`+i(_)+\`
+• Earnings/Visitor:      $\`+u.toFixed(4)+\`
+\`+t("calc_out.affiliate_income.row.break_even_traffic","• Break-Even Traffic:    "+I+" visitors/mo",{traffic:I})+\`
+\`+(e>=F?t("calc_out.affiliate_income.row.break_even_covered","• 🟢 Current traffic ("+C+") covers costs.",{traffic:C})+\`
+\`:t("calc_out.affiliate_income.row.break_even_need","• 🔴 Need "+j+" more visitors to break even.",{traffic:j})+\`
+\`)+"• To Net $5K/mo:         "+G+\` visitors/mo
+• To Net $10K/mo:        \`+Q+\` visitors/mo
 
-💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds \`+o(5e4*.01*a)+"/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.");const F=[1e3,5e3,1e4,25e3,5e4,1e5,25e4,5e5,1e6];for(let n=0;n<F.length;n++){const g=F[n],T=g*(t/100),d=T*a,x=d*12;p.push(r(g)+" visitors/mo: "+c(d)+"/mo | "+o(x)+"/yr | "+r(Math.round(T))+" sales")}return p},b=function(s,i,t){var a=K(s);return Array.isArray(a)?a.join(\`
-\`):String(a)};var A=h,P=M,N=b,K=function(s){return M(s)};return[b(inputs,pick,fill)]}finally{}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.affiliate_income.row.whatif_raise_ctr","• Raise CTR 50%:  "+L+"/mo  (better targeting + landing page)",{value:L})+\`
+\`+t("calc_out.affiliate_income.row.whatif_higher_commission","• Higher commission (+50%):  "+L+"/mo  (recurring SaaS programs)",{value:L})+\`
+\`+t("calc_out.affiliate_income.row.whatif_double_traffic","• 2x traffic:  "+q+"/mo  (SEO + paid ads)",{value:q})+\`
+\`+t("calc_out.affiliate_income.row.whatif_all_combined","• All three combined:  "+V+"/mo  (max upside)",{value:V})+\`
+\`+t("calc_out.affiliate_income.row.whatif_cut_costs","• Cut costs 50%:  Net "+O+"/mo  (drop expensive tools)",{value:O})+\`
+
+\`+t("calc_out.affiliate_income.row.tip_conversion_leverage","💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds "+B+"/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.",{value:B}));const z=[1e3,5e3,1e4,25e3,5e4,1e5,25e4,5e5,1e6];for(let o=0;o<z.length;o++){const b=z[o],R=b*(r/100),g=R*s,U=g*12;M.push(c(b)+" visitors/mo: "+p(g)+"/mo | "+i(U)+"/yr | "+c(Math.round(R))+" sales")}return M},x=function(a,e,r){var s=D(a);return Array.isArray(s)?s.join(\`
+\`):String(s)};var X=v,Z=K,T=x,t=tk,H='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+H)(),D=function(a){return K(a)};return[x(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -233,7 +263,7 @@ const engine: ToolEngine = {
     return calculateAffiliateIncome(inputs);
   },
   staticExamples: [
-    '🔗 Affiliate Income Calculator\n\n📊 Your Traffic & Conversions:\n• Monthly Traffic:       50,000 visitors\n• Conversion Rate:       2.00%\n• Avg Commission:        $50.00\n• Monthly Conversions:   1,000 sales\n• Monthly Cost:          $200  (hosting, tools, content)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💰 Revenue Snapshot:\n• Monthly Income:        $50,000/mo\n• Annual Income:         $600,000/yr\n• Per 1K Visitors:       $1000.00/1K  (EPC — earnings per click-adjacent)\n• Earnings Per Visitor:  $1.0000\n• Net (after costs):     $49,800/mo  (margin 99.6%)\n• Annual Net:            $597,600/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 CTR/EPC Funnel:\n• Traffic Impressions:   50,000\n• Conversions:           1,000  (rate 2.00%)\n• Revenue per Click:     $50.00  (avg commission)\n• Revenue per Visitor:   $1.0000  (key efficiency metric)\n• Annualized Visitors:   600,000/yr\n• Industry Benchmark:    CTR 1-3% | EPC $0.10-1.00 | Aff. sites $20-50/1K visitors\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Funnel Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 CTR 2.00% is on industry average.\n• 🟢 EPC $1000.00/1K — top-quartile affiliate performance.\n• 🟢 Net margin 99.6% after costs.\n\n🎯 Scale Projection:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nAssuming 2.00% CTR and $50.00 commission:\n• 1K visitors/mo:  $1,000/mo  ($12,000/yr)\n• 10K visitors/mo:  $10,000/mo  ($120,000/yr)\n• 100K visitors/mo:  $100,000/mo  ($1,200,000/yr)\n• 500K visitors/mo:  $500,000/mo  ($6,000,000/yr)\n• 1M visitors/mo:  $1,000,000/mo  ($12,000,000/yr)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even Traffic:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Costs/Month:           $200\n• Earnings/Visitor:      $1.0000\n• Break-Even Traffic:    200 visitors/mo\n• 🟢 Current traffic (50,000) covers costs.\n• To Net $5K/mo:         5,200 visitors/mo\n• To Net $10K/mo:        10,200 visitors/mo\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise CTR 50%:  $75,000/mo  (better targeting + landing page)\n• Higher commission (+50%):  $75,000/mo  (recurring SaaS programs)\n• 2x traffic:  $100,000/mo  (SEO + paid ads)\n• All three combined:  $225,000/mo  (max upside)\n• Cut costs 50%:  Net $49,900/mo  (drop expensive tools)\n\n💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds $25,000/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.\n1,000 visitors/mo: $1000.00/mo | $12,000/yr | 20 sales\n5,000 visitors/mo: $5000.00/mo | $60,000/yr | 100 sales\n10,000 visitors/mo: $10000.00/mo | $120,000/yr | 200 sales\n25,000 visitors/mo: $25000.00/mo | $300,000/yr | 500 sales\n50,000 visitors/mo: $50000.00/mo | $600,000/yr | 1,000 sales\n100,000 visitors/mo: $100000.00/mo | $1,200,000/yr | 2,000 sales\n250,000 visitors/mo: $250000.00/mo | $3,000,000/yr | 5,000 sales\n500,000 visitors/mo: $500000.00/mo | $6,000,000/yr | 10,000 sales\n1,000,000 visitors/mo: $1000000.00/mo | $12,000,000/yr | 20,000 sales',
+    '$calc_out.section.affiliate_income_calculator|🔗 Affiliate Income Calculator|\n\n$calc_out.section.affiliate_income_traffic|📊 Your Traffic & Conversions:|\n$calc_out.affiliate_income.row.monthly_traffic{"traffic":"50,000"}|• Monthly Traffic:       50,000 visitors|\n• Conversion Rate:       2.00%\n• Avg Commission:        $50.00\n$calc_out.affiliate_income.row.monthly_conversions{"sales":"1,000"}|• Monthly Conversions:   1,000 sales|\n$calc_out.affiliate_income.row.monthly_cost{"cost":"$200"}|• Monthly Cost:          $200  (hosting, tools, content)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.affiliate_income_revenue_snapshot|💰 Revenue Snapshot:|\n• Monthly Income:        $50,000/mo\n• Annual Income:         $600,000/yr\n$calc_out.affiliate_income.row.per_1k_visitors{"value":"$1000.00"}|• Per 1K Visitors:       $1000.00/1K  (EPC — earnings per click-adjacent)|\n$calc_out.affiliate_income.row.earnings_per_visitor{"value":"$1.0000"}|• Earnings Per Visitor:  $1.0000|\n$calc_out.affiliate_income.row.net_after_costs{"value":"$49,800","margin":"99.6"}|• Net (after costs):     $49,800/mo  (margin 99.6%)|\n• Annual Net:            $597,600/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.affiliate_income_funnel|📐 CTR/EPC Funnel:|\n• Traffic Impressions:   50,000\n• Conversions:           1,000  (rate 2.00%)\n$calc_out.affiliate_income.row.revenue_per_click{"value":"$50.00"}|• Revenue per Click:     $50.00  (avg commission)|\n$calc_out.affiliate_income.row.revenue_per_visitor{"value":"$1.0000"}|• Revenue per Visitor:   $1.0000  (key efficiency metric)|\n• Annualized Visitors:   600,000/yr\n$calc_out.affiliate_income.row.benchmark_ctr|• Industry Benchmark:    CTR 1-3%| | $calc_out.affiliate_income.row.benchmark_epc|EPC $0.10-1.00| | $calc_out.affiliate_income.row.benchmark_sites|Aff. sites $20-50/1K visitors|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.affiliate_income_health|🩺 Funnel Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.affiliate_income.row.health_ctr_average{"ctr":"2.00"}|• 🟡 CTR 2.00% is on industry average.|\n$calc_out.affiliate_income.row.health_epc_top{"value":"$1000.00"}|• 🟢 EPC $1000.00/1K — top-quartile affiliate performance.|\n$calc_out.affiliate_income.row.health_net_margin{"margin":"99.6"}|• 🟢 Net margin 99.6% after costs.|\n\n$calc_out.section.affiliate_income_scale_projection|🎯 Scale Projection:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.affiliate_income.row.scale_assumption{"ctr":"2.00","commission":"$50.00"}|Assuming 2.00% CTR and $50.00 commission:|\n• 1K visitors/mo:  $1,000/mo  ($12,000/yr)\n• 10K visitors/mo:  $10,000/mo  ($120,000/yr)\n• 100K visitors/mo:  $100,000/mo  ($1,200,000/yr)\n• 500K visitors/mo:  $500,000/mo  ($6,000,000/yr)\n• 1M visitors/mo:  $1,000,000/mo  ($12,000,000/yr)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.affiliate_income_break_even|⚖️ Break-Even Traffic:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Costs/Month:           $200\n• Earnings/Visitor:      $1.0000\n$calc_out.affiliate_income.row.break_even_traffic{"traffic":"200"}|• Break-Even Traffic:    200 visitors/mo|\n$calc_out.affiliate_income.row.break_even_covered{"traffic":"50,000"}|• 🟢 Current traffic (50,000) covers costs.|\n• To Net $5K/mo:         5,200 visitors/mo\n• To Net $10K/mo:        10,200 visitors/mo\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.affiliate_income.row.whatif_raise_ctr{"value":"$75,000"}|• Raise CTR 50%:  $75,000/mo  (better targeting + landing page)|\n$calc_out.affiliate_income.row.whatif_higher_commission{"value":"$75,000"}|• Higher commission (+50%):  $75,000/mo  (recurring SaaS programs)|\n$calc_out.affiliate_income.row.whatif_double_traffic{"value":"$100,000"}|• 2x traffic:  $100,000/mo  (SEO + paid ads)|\n$calc_out.affiliate_income.row.whatif_all_combined{"value":"$225,000"}|• All three combined:  $225,000/mo  (max upside)|\n$calc_out.affiliate_income.row.whatif_cut_costs{"value":"$49,900"}|• Cut costs 50%:  Net $49,900/mo  (drop expensive tools)|\n\n$calc_out.affiliate_income.row.tip_conversion_leverage{"value":"$25,000"}|💡 Tip: Conversion rate is the highest-leverage metric. A 1% CTR improvement at 50K visitors adds $25,000/mo with no extra traffic cost. Focus on review quality, comparison tables, and clear CTAs before scaling traffic.|\n1,000 visitors/mo: $1000.00/mo | $12,000/yr | 20 sales\n5,000 visitors/mo: $5000.00/mo | $60,000/yr | 100 sales\n10,000 visitors/mo: $10000.00/mo | $120,000/yr | 200 sales\n25,000 visitors/mo: $25000.00/mo | $300,000/yr | 500 sales\n50,000 visitors/mo: $50000.00/mo | $600,000/yr | 1,000 sales\n100,000 visitors/mo: $100000.00/mo | $1,200,000/yr | 2,000 sales\n250,000 visitors/mo: $250000.00/mo | $3,000,000/yr | 5,000 sales\n500,000 visitors/mo: $500000.00/mo | $6,000,000/yr | 10,000 sales\n1,000,000 visitors/mo: $1000000.00/mo | $12,000,000/yr | 20,000 sales',
     '1,000 visitors/mo: $1,000.00/mo | $12,000/yr | 20 sales',
     '10,000 visitors/mo: $10,000.00/mo | $120,000/yr | 200 sales',
     '50,000 visitors/mo: $50,000.00/mo | $600,000/yr | 1,000 sales',

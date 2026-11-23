@@ -2,6 +2,9 @@ import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
 import PRICING from "../../data/ai-pricing.json";
 import { pickInteractiveModels } from "../../data/ai-pricing-popular";
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from "../../lib/calc-output-i18n";
 
 // ============================================================
 // Task 1: Updated Model Catalog (14 models, 4 families, June 2026 pricing)
@@ -247,38 +250,76 @@ function calculate(inputs: Record<string, string>): string[] {
   }
 
   const out: string[] = [];
-  out.push('📅 Pricing last updated: ' + (PRICING.lastUpdated || 'unknown') + ' (data synced weekly)');
+  // P168 B3-14：⭐「📅 Pricing last updated」这一行**从卡片正文里去掉** ——
+  //   · 页面用**徽章**显示同一个日期（dataLastUpdated → 「📅 Data updated」）
+  //   · codegen 写 staticExamples[0] 时也会过滤掉它（"UI badge covers it"）
+  //   ⇒ 留在正文里只会与徽章重复（同一形态 ai-api-cost-comparison / ai-training / claude / gemini / deepseek / gpu-cloud 已处理）。
+  //   ⚠️ 这里**保留空元素**⇒ out 数组与 staticExamples[0] 开头的 '\n' 逐字一致 ⇒ 英文页零变化。
   out.push('');
 
   // ================================================================
   // Section 1: Header
   // ================================================================
-  const modeEmoji = pricingMode === "batch" ? "⚡" : "\u{1F534}"; // ⚡ or 🔴
-  const modeLabel =
-    pricingMode === "batch" ? "Batch Pricing" : "Real-time Pricing";
-  let headerLine = modeEmoji + " " + modeLabel;
-  if (cacheHitRate > 0) {
-    headerLine += " | \u{1F4BE} " + cacheHitRate + "% Cache Hit Rate"; // 💾
+  // P168 B3-14：标题与输入摘要令牌化 ⇒ 英文兜底必须与改写前**逐字相同**
+  if (pricingMode === "batch") {
+    out.push(
+      cacheHitRate > 0
+        ? makeToken(
+            "calc_out.openai_token.row.header_batch_cache",
+            "⚡ Batch Pricing | \u{1F4BE} " + cacheHitRate + "% Cache Hit Rate",
+            { cache: String(cacheHitRate) },
+          )
+        : makeToken("calc_out.openai_token.row.header_batch", "⚡ Batch Pricing"),
+    );
+  } else {
+    out.push(
+      cacheHitRate > 0
+        ? makeToken(
+            "calc_out.openai_token.row.header_realtime_cache",
+            "🔴 Real-time Pricing | \u{1F4BE} " + cacheHitRate + "% Cache Hit Rate",
+            { cache: String(cacheHitRate) },
+          )
+        : makeToken("calc_out.openai_token.row.header_realtime", "🔴 Real-time Pricing"),
+    );
   }
-  out.push(headerLine);
   out.push("");
+  const inTokensLabel = lc(inTokens);
+  const outTokensLabel = lc(outTokens);
+  const reqPerDayLabel = lc(reqPerDay);
+  // ⚠️ P168 B3-14：makeToken 会把兜底里的半角 '|' 换成全角 '｜' ⇒ 含 ' | ' 的行必须**拆成多段**
+  //   （分隔符留在 token 之外）⇒ 否则英文页逐字变化（G9 变红）。
   out.push(
-    "\u{1F4E5} Input: " +
-      lc(inTokens) +
-      " tokens/req | " +
-      "\u{1F4E4} Output: " +
-      lc(outTokens) +
-      " tokens/req | " +
-      "\u{1F504} " +
-      lc(reqPerDay) +
-      " reqs/day",
+    makeToken(
+      "calc_out.openai_token.row.input_summary",
+      "\u{1F4E5} Input: " + inTokensLabel + " tokens/req",
+      { in: inTokensLabel },
+    ) +
+      " | " +
+      makeToken(
+        "calc_out.openai_token.row.output_summary",
+        "\u{1F4E4} Output: " + outTokensLabel + " tokens/req",
+        { out: outTokensLabel },
+      ) +
+      " | " +
+      makeToken(
+        "calc_out.openai_token.row.requests_summary",
+        "\u{1F504} " + reqPerDayLabel + " reqs/day",
+        { reqs: reqPerDayLabel },
+      ),
   );
   out.push("");
 
   // ================================================================
   // Section 2: Bar Chart — full-model comparison
   // ================================================================
-  out.push(`\u{1F4CA} Cost Comparison (${allCosts.length} Models)`);
+  const modelCountLabel = String(allCosts.length);
+  out.push(
+    makeToken(
+      "calc_out.section.openai_token_cost_comparison",
+      "\u{1F4CA} Cost Comparison (" + modelCountLabel + " Models)",
+      { models: modelCountLabel },
+    ),
+  );
   out.push("");
   for (const item of allCosts) {
     const icon = FAMILY_ICONS[item.info.family];
@@ -299,21 +340,29 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 3: Detail Cards — selected models
   // ================================================================
-  out.push("\u{1F4CB} Selected Model Details");
+  out.push(makeToken("calc_out.section.ai_api_cost_comparison_selected_models", "\u{1F4CB} Selected Model Details"));
   out.push(SEP.repeat(60));
   for (const item of selectedCosts) {
     const icon = FAMILY_ICONS[item.info.family];
     const dailyCost = item.costPerReq * reqPerDay;
     const monthlyCost = item.monthlyCost;
     const annualCost = monthlyCost * 12;
+    // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+    const modelName = item.info.name;
+    const contextWindow = item.info.contextWindow;
 
     out.push(
-      icon +
-        " " +
-        item.info.name +
-        " | Context: " +
-        item.info.contextWindow +
-        " tokens",
+      makeToken(
+        "calc_out.openai_token.row.model_header",
+        icon + " " + modelName,
+        { icon: icon, name: modelName },
+      ) +
+        " | " +
+        makeToken(
+          "calc_out.openai_token.row.model_context",
+          "Context: " + contextWindow + " tokens",
+          { context: contextWindow },
+        ),
     );
     out.push(DASH.repeat(44));
 
@@ -321,27 +370,71 @@ function calculate(inputs: Record<string, string>): string[] {
     const rm = item.info.reasoningMultiplier || 1;
     const effectiveOut = outTokens * rm;
     const outputCostLine = (effectiveOut / 1_000_000) * item.outputPrice;
+    const inputTokensLabel = pad(lc(inTokens), 7);
+    const inputPriceLabel = fmt(item.inputPrice);
+    const inputCostLabel = fmt(inputCostLine);
     out.push(
-      "Input:  " +
-        pad(lc(inTokens), 7) +
-        " tokens × " +
-        fmt(item.inputPrice) +
-        "/1M → " +
-        fmt(inputCostLine) +
-        "/req",
+      makeToken(
+        "calc_out.openai_token.row.input_cost_line",
+        "Input:  " +
+          inputTokensLabel +
+          " tokens × " +
+          inputPriceLabel +
+          "/1M → " +
+          inputCostLabel +
+          "/req",
+        { tokens: inputTokensLabel, price: inputPriceLabel, cost: inputCostLabel },
+      ),
     );
-    out.push(
-      "Output: " +
-        pad(lc(outTokens), 7) +
-        (rm > 1 ? " visible + ~" + lc(outTokens * (rm - 1)) + " reasoning" : " tokens") +
-        " × " +
-        fmt(item.outputPrice) +
-        "/1M → " +
-        fmt(outputCostLine) +
-        "/req",
-    );
+    const outputTokensLabel = pad(lc(outTokens), 7);
+    const outputPriceLabel = fmt(item.outputPrice);
+    const outputCostLabel = fmt(outputCostLine);
     if (rm > 1) {
-      out.push("🧠 o-series: hidden reasoning tokens (≈×" + rm + " visible) billed at output rate");
+      const reasoningTokensLabel = lc(outTokens * (rm - 1));
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.output_cost_line_reasoning",
+          "Output: " +
+            outputTokensLabel +
+            " visible + ~" +
+            reasoningTokensLabel +
+            " reasoning × " +
+            outputPriceLabel +
+            "/1M → " +
+            outputCostLabel +
+            "/req",
+          {
+            tokens: outputTokensLabel,
+            reasoning: reasoningTokensLabel,
+            price: outputPriceLabel,
+            cost: outputCostLabel,
+          },
+        ),
+      );
+    } else {
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.output_cost_line",
+          "Output: " +
+            outputTokensLabel +
+            " tokens × " +
+            outputPriceLabel +
+            "/1M → " +
+            outputCostLabel +
+            "/req",
+          { tokens: outputTokensLabel, price: outputPriceLabel, cost: outputCostLabel },
+        ),
+      );
+    }
+    if (rm > 1) {
+      const rmLabel = String(rm);
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.reasoning_note",
+          "🧠 o-series: hidden reasoning tokens (≈×" + rmLabel + " visible) billed at output rate",
+          { rm: rmLabel },
+        ),
+      );
     }
     out.push(DASH.repeat(44));
     out.push("Per request:    " + fmt(item.costPerReq));
@@ -356,24 +449,36 @@ function calculate(inputs: Record<string, string>): string[] {
         (inTokens / 1_000_000) * item.info.batchInput +
         (effectiveOut / 1_000_000) * item.info.batchOutput;
       const batchMonthly = batchCPR * reqPerDay * 30;
+      const batchCprLabel = fmt(batchCPR);
+      const batchMonthlyLabel = fmt(batchMonthly);
       out.push(
-        "\u{1F4A1} Batch pricing: " +
-          fmt(batchCPR) +
-          "/req (" +
-          fmt(batchMonthly) +
-          "/mo) — save 50%",
+        makeToken(
+          "calc_out.openai_token.row.batch_pricing",
+          "\u{1F4A1} Batch pricing: " +
+            batchCprLabel +
+            "/req (" +
+            batchMonthlyLabel +
+            "/mo) — save 50%",
+          { cpr: batchCprLabel, monthly: batchMonthlyLabel },
+        ),
       );
     } else {
       const realtimeCPR =
         (inTokens / 1_000_000) * item.info.input +
         (effectiveOut / 1_000_000) * item.info.output;
       const realtimeMonthly = realtimeCPR * reqPerDay * 30;
+      const realtimeCprLabel = fmt(realtimeCPR);
+      const realtimeMonthlyLabel = fmt(realtimeMonthly);
       out.push(
-        "\u{1F534} Real-time: " +
-          fmt(realtimeCPR) +
-          "/req (" +
-          fmt(realtimeMonthly) +
-          "/mo)",
+        makeToken(
+          "calc_out.openai_token.row.realtime_pricing",
+          "\u{1F534} Real-time: " +
+            realtimeCprLabel +
+            "/req (" +
+            realtimeMonthlyLabel +
+            "/mo)",
+          { cpr: realtimeCprLabel, monthly: realtimeMonthlyLabel },
+        ),
       );
     }
 
@@ -387,14 +492,21 @@ function calculate(inputs: Record<string, string>): string[] {
         (inTokens / 1_000_000) * effectiveInput +
         (effectiveOut / 1_000_000) * item.outputPrice;
       const cachedMonthly = cachedCPR * reqPerDay * 30;
+      const cacheRateLabel = String(cacheHitRate);
+      const cachedCprLabel = fmt(cachedCPR);
+      const cachedMonthlyLabel = fmt(cachedMonthly);
       out.push(
-        "\u{1F4BE} With " +
-          cacheHitRate +
-          "% cache hit: " +
-          fmt(cachedCPR) +
-          "/req (" +
-          fmt(cachedMonthly) +
-          "/mo)",
+        makeToken(
+          "calc_out.openai_token.row.cache_hit_line",
+          "\u{1F4BE} With " +
+            cacheRateLabel +
+            "% cache hit: " +
+            cachedCprLabel +
+            "/req (" +
+            cachedMonthlyLabel +
+            "/mo)",
+          { rate: cacheRateLabel, cpr: cachedCprLabel, monthly: cachedMonthlyLabel },
+        ),
       );
     }
 
@@ -405,7 +517,14 @@ function calculate(inputs: Record<string, string>): string[] {
   // Section 4: Growth Projection (only if growthRate > 0)
   // ================================================================
   if (growthRate > 0) {
-    out.push("\u{1F4C8} Growth Projection (" + growthRate + "% monthly)");
+    const growthRateLabel = String(growthRate);
+    out.push(
+      makeToken(
+        "calc_out.section.openai_token_growth_projection",
+        "\u{1F4C8} Growth Projection (" + growthRateLabel + "% monthly)",
+        { rate: growthRateLabel },
+      ),
+    );
     out.push("");
 
     // Build month list
@@ -458,7 +577,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 5: Savings Insights
   // ================================================================
-  out.push("\u{1F4B0} Savings Insights");
+  out.push(makeToken("calc_out.section.openai_token_savings_insights", "\u{1F4B0} Savings Insights"));
   out.push(SEP.repeat(60));
 
   // Cheapest overall
@@ -482,12 +601,18 @@ function calculate(inputs: Record<string, string>): string[] {
       allCosts[0],
     );
   if (bestValue) {
+    const bestValueName = bestValue.info.name;
+    const bestValueCostLabel = fmt(bestValue.monthlyCost);
     out.push(
-      "⭐ Best value (non-legacy, non-Nano): " +
-        bestValue.info.name +
-        " at " +
-        fmt(bestValue.monthlyCost) +
-        "/mo",
+      makeToken(
+        "calc_out.openai_token.row.best_value",
+        "⭐ Best value (non-legacy, non-Nano): " +
+          bestValueName +
+          " at " +
+          bestValueCostLabel +
+          "/mo",
+        { name: bestValueName, cost: bestValueCostLabel },
+      ),
     );
   }
 
@@ -500,16 +625,29 @@ function calculate(inputs: Record<string, string>): string[] {
       c.monthlyCost < min.monthlyCost ? c : min,
     );
     const diff = mostExpSelected.monthlyCost - cheapSelected.monthlyCost;
+    const switchFromName = mostExpSelected.info.name;
+    const switchToName = cheapSelected.info.name;
+    const switchMonthlyLabel = fmt(diff);
+    const switchYearlyLabel = fmt(diff * 12);
     out.push(
-      "\u{1F4B8} Switching from " +
-        mostExpSelected.info.name +
-        " to " +
-        cheapSelected.info.name +
-        " saves " +
-        fmt(diff) +
-        "/mo (" +
-        fmt(diff * 12) +
-        "/yr)",
+      makeToken(
+        "calc_out.openai_token.row.switch_savings",
+        "\u{1F4B8} Switching from " +
+          switchFromName +
+          " to " +
+          switchToName +
+          " saves " +
+          switchMonthlyLabel +
+          "/mo (" +
+          switchYearlyLabel +
+          "/yr)",
+        {
+          from: switchFromName,
+          to: switchToName,
+          monthly: switchMonthlyLabel,
+          yearly: switchYearlyLabel,
+        },
+      ),
     );
   }
 
@@ -524,13 +662,20 @@ function calculate(inputs: Record<string, string>): string[] {
       (outTokens / 1_000_000) * ref.outputPrice;
     const cachedMonthly = cachedCPR * reqPerDay * 30;
     const cacheSaving = ref.monthlyCost - cachedMonthly;
+    const cacheHitRateLabel = String(cacheHitRate);
+    const cacheSavingLabel = fmt(cacheSaving);
+    const cacheRefName = ref.info.name;
     out.push(
-      "\u{1F4BE} Prompt caching at " +
-        cacheHitRate +
-        "% hit rate saves ~" +
-        fmt(cacheSaving) +
-        "/mo on " +
-        ref.info.name,
+      makeToken(
+        "calc_out.openai_token.row.prompt_caching",
+        "\u{1F4BE} Prompt caching at " +
+          cacheHitRateLabel +
+          "% hit rate saves ~" +
+          cacheSavingLabel +
+          "/mo on " +
+          cacheRefName,
+        { rate: cacheHitRateLabel, save: cacheSavingLabel, name: cacheRefName },
+      ),
     );
   }
 
@@ -545,16 +690,31 @@ function calculate(inputs: Record<string, string>): string[] {
   const cheapestCompetitor = dsMonthly < gfMonthly ? "DeepSeek Chat" : "Gemini 2.0 Flash";
   const cheapestCompCost = Math.min(dsMonthly, gfMonthly);
   if (cheapest.monthlyCost > 0) {
+    const crossCostLabel = fmt(cheapestCompCost);
+    const crossSavingLabel = fmt(cheapest.monthlyCost - cheapestCompCost);
+    const crossPctLabel =
+      cheapestCompCost > 0
+        ? ((1 - cheapestCompCost / cheapest.monthlyCost) * 100).toFixed(0)
+        : "0";
     out.push(
-      "\u{1F30D} Cross-provider: " +
-        cheapestCompetitor +
-        " @ " +
-        fmt(cheapestCompCost) +
-        "/mo — saves " +
-        fmt(cheapest.monthlyCost - cheapestCompCost) +
-        "/mo (" +
-        (cheapestCompCost > 0 ? ((1 - cheapestCompCost / cheapest.monthlyCost) * 100).toFixed(0) : "0") +
-        "% cheaper) vs cheapest OpenAI",
+      makeToken(
+        "calc_out.openai_token.row.cross_provider",
+        "\u{1F30D} Cross-provider: " +
+          cheapestCompetitor +
+          " @ " +
+          crossCostLabel +
+          "/mo — saves " +
+          crossSavingLabel +
+          "/mo (" +
+          crossPctLabel +
+          "% cheaper) vs cheapest OpenAI",
+        {
+          provider: cheapestCompetitor,
+          cost: crossCostLabel,
+          saving: crossSavingLabel,
+          pct: crossPctLabel,
+        },
+      ),
     );
   }
 
@@ -563,7 +723,7 @@ function calculate(inputs: Record<string, string>): string[] {
   // ================================================================
   // Section 6: Usage Scenarios — per-model rows
   // ================================================================
-  out.push("\u{1F4C5} Usage Scenarios (monthly costs)");
+  out.push(makeToken("calc_out.section.openai_token_usage_scenarios", "\u{1F4C5} Usage Scenarios (monthly costs)"));
   out.push(SEP.repeat(60));
 
   const scenarioVolumes = [50, 100, 500, 1000, 5000, 10000];
@@ -582,44 +742,144 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // 🩺 Cost Health (v3)
   out.push('');
-  out.push('🩺 Cost Health:');
+  out.push(makeToken("calc_out.section.openai_token_cost_health", '🩺 Cost Health:'));
   out.push(SEP.repeat(60));
   const totalSelectedMonthly = selectedCosts.reduce((s, c) => s + c.monthlyCost, 0);
   const cheapestSelected = selectedCosts.reduce((min, c) => c.monthlyCost < min.monthlyCost ? c : min);
   const expensiveSelected = selectedCosts.reduce((max, c) => c.monthlyCost > max.monthlyCost ? c : max);
   if (selectedCosts.length >= 2) {
     const ratio = expensiveSelected.monthlyCost / Math.max(cheapestSelected.monthlyCost, 0.01);
-    if (ratio >= 50) out.push('• 🔴 Your most expensive selection costs ' + ratio.toFixed(0) + 'x your cheapest — consider mixing tiers (e.g., cheap model for 90% of traffic, premium for 10%).');
-    else if (ratio >= 10) out.push('• 🟠 ' + ratio.toFixed(0) + 'x cost spread across selected models — review if every model needs to be premium.');
-    else out.push('• 🟢 Healthy cost spread (' + ratio.toFixed(1) + 'x) across selected models.');
+    if (ratio >= 50) {
+      const ratioLabel = ratio.toFixed(0);
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_spread_extreme",
+          '• 🔴 Your most expensive selection costs ' + ratioLabel + 'x your cheapest — consider mixing tiers (e.g., cheap model for 90% of traffic, premium for 10%).',
+          { ratio: ratioLabel },
+        ),
+      );
+    } else if (ratio >= 10) {
+      const ratioLabel = ratio.toFixed(0);
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_spread_wide",
+          '• 🟠 ' + ratioLabel + 'x cost spread across selected models — review if every model needs to be premium.',
+          { ratio: ratioLabel },
+        ),
+      );
+    } else {
+      const ratioLabel = ratio.toFixed(1);
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_spread_ok",
+          '• 🟢 Healthy cost spread (' + ratioLabel + 'x) across selected models.',
+          { ratio: ratioLabel },
+        ),
+      );
+    }
   }
   if (cheapestSelected) {
-    const tier = cheapestSelected.monthlyCost < 5 ? '🟢 Micro-tier (under $5/mo)' : cheapestSelected.monthlyCost < 50 ? '🟢 Low-volume tier' : cheapestSelected.monthlyCost < 500 ? '🟡 Mid-volume tier' : '🟠 High-volume tier';
-    out.push('• ' + tier + ' — ' + cheapestSelected.info.name + ' at ' + fmt(cheapestSelected.monthlyCost) + '/mo.');
+    const tierName = cheapestSelected.info.name;
+    const tierCostLabel = fmt(cheapestSelected.monthlyCost);
+    if (cheapestSelected.monthlyCost < 5) {
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_tier_micro",
+          '• 🟢 Micro-tier (under $5/mo) — ' + tierName + ' at ' + tierCostLabel + '/mo.',
+          { name: tierName, cost: tierCostLabel },
+        ),
+      );
+    } else if (cheapestSelected.monthlyCost < 50) {
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_tier_low",
+          '• 🟢 Low-volume tier — ' + tierName + ' at ' + tierCostLabel + '/mo.',
+          { name: tierName, cost: tierCostLabel },
+        ),
+      );
+    } else if (cheapestSelected.monthlyCost < 500) {
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_tier_mid",
+          '• 🟡 Mid-volume tier — ' + tierName + ' at ' + tierCostLabel + '/mo.',
+          { name: tierName, cost: tierCostLabel },
+        ),
+      );
+    } else {
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.health_tier_high",
+          '• 🟠 High-volume tier — ' + tierName + ' at ' + tierCostLabel + '/mo.',
+          { name: tierName, cost: tierCostLabel },
+        ),
+      );
+    }
   }
   if (cacheHitRate === 0) {
-    out.push('• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%. Toggle above to model it.');
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.health_cache_none",
+        '• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%. Toggle above to model it.',
+      ),
+    );
   } else if (cacheHitRate < 30) {
-    out.push('• 🟡 Low cache hit rate (' + cacheHitRate + '%) — review if your prompt has stable system instructions or few-shot examples.');
+    const healthCacheRateLabel = String(cacheHitRate);
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.health_cache_low",
+        '• 🟡 Low cache hit rate (' + healthCacheRateLabel + '%) — review if your prompt has stable system instructions or few-shot examples.',
+        { rate: healthCacheRateLabel },
+      ),
+    );
   } else {
-    out.push('• 🟢 Healthy cache rate (' + cacheHitRate + '%) — keep an eye on cache TTL vs your traffic pattern.');
+    const healthCacheRateLabel = String(cacheHitRate);
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.health_cache_ok",
+        '• 🟢 Healthy cache rate (' + healthCacheRateLabel + '%) — keep an eye on cache TTL vs your traffic pattern.',
+        { rate: healthCacheRateLabel },
+      ),
+    );
   }
   if (pricingMode === 'realtime') {
     const batchSavings = totalSelectedMonthly * 0.5;
-    out.push('• 💡 Switch to batch pricing: save ~' + fmt(batchSavings) + '/mo (50% discount) if latency is not critical.');
+    const batchSavingsLabel = fmt(batchSavings);
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.health_batch_tip",
+        '• 💡 Switch to batch pricing: save ~' + batchSavingsLabel + '/mo (50% discount) if latency is not critical.',
+        { save: batchSavingsLabel },
+      ),
+    );
   }
   out.push('');
 
   // 🔄 What-If Scenarios (v3)
-  out.push('🔄 What-If Scenarios:');
+  out.push(makeToken("calc_out.section.what_if_scenarios", '🔄 What-If Scenarios:'));
   out.push(SEP.repeat(60));
   // Switch to batch
   if (pricingMode === 'realtime') {
     const batchTotal = totalSelectedMonthly * 0.5;
-    out.push('• Switch ALL selected to batch pricing:  ' + fmt(totalSelectedMonthly) + ' → ' + fmt(batchTotal) + '/mo  (save ' + fmt(totalSelectedMonthly - batchTotal) + ')');
+    const currentTotalLabel = fmt(totalSelectedMonthly);
+    const batchTotalLabel = fmt(batchTotal);
+    const batchSaveLabel = fmt(totalSelectedMonthly - batchTotal);
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.whatif_switch_batch",
+        '• Switch ALL selected to batch pricing:  ' + currentTotalLabel + ' → ' + batchTotalLabel + '/mo  (save ' + batchSaveLabel + ')',
+        { from: currentTotalLabel, to: batchTotalLabel, save: batchSaveLabel },
+      ),
+    );
   } else {
     const realtimeTotal = totalSelectedMonthly * 2;
-    out.push('• Switch back to real-time (if latency allows batch):  save vs ' + fmt(realtimeTotal) + '/mo  (50% off currently)');
+    const realtimeTotalLabel = fmt(realtimeTotal);
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.whatif_switch_realtime",
+        '• Switch back to real-time (if latency allows batch):  save vs ' + realtimeTotalLabel + '/mo  (50% off currently)',
+        { value: realtimeTotalLabel },
+      ),
+    );
   }
   // Switch to cheapest popular model
   const popularCheapest = allCosts
@@ -628,21 +888,56 @@ function calculate(inputs: Record<string, string>): string[] {
     const cpr = (inTokens / 1e6) * popularCheapest.info.input + (outTokens / 1e6) * popularCheapest.info.output;
     const newMonthly = cpr * reqPerDay * 30;
     const savings = (cheapestSelected?.monthlyCost ?? 0) - newMonthly;
-    if (savings > 0) out.push('• Switch cheapest to ' + popularCheapest.info.name + ':  save ' + fmt(savings) + '/mo  (similar quality, much cheaper)');
+    if (savings > 0) {
+      const popularName = popularCheapest.info.name;
+      const popularSavingsLabel = fmt(savings);
+      out.push(
+        makeToken(
+          "calc_out.openai_token.row.whatif_switch_cheapest",
+          '• Switch cheapest to ' + popularName + ':  save ' + popularSavingsLabel + '/mo  (similar quality, much cheaper)',
+          { name: popularName, save: popularSavingsLabel },
+        ),
+      );
+    }
   }
   // Double volume
   const doubleVol = totalSelectedMonthly * 2;
-  out.push('• Double volume to ' + lc(reqPerDay * 2) + ' reqs/day:  ' + fmt(doubleVol) + '/mo');
+  const doubleReqsLabel = lc(reqPerDay * 2);
+  const doubleVolLabel = fmt(doubleVol);
+  out.push(
+    makeToken(
+      "calc_out.openai_token.row.whatif_double_volume",
+      '• Double volume to ' + doubleReqsLabel + ' reqs/day:  ' + doubleVolLabel + '/mo',
+      { reqs: doubleReqsLabel, cost: doubleVolLabel },
+    ),
+  );
   // Halve volume
   const halfVol = totalSelectedMonthly / 2;
-  out.push('• Halve volume to ' + lc(Math.max(1, Math.floor(reqPerDay / 2))) + ' reqs/day:  ' + fmt(halfVol) + '/mo');
+  const halfReqsLabel = lc(Math.max(1, Math.floor(reqPerDay / 2)));
+  const halfVolLabel = fmt(halfVol);
+  out.push(
+    makeToken(
+      "calc_out.openai_token.row.whatif_halve_volume",
+      '• Halve volume to ' + halfReqsLabel + ' reqs/day:  ' + halfVolLabel + '/mo',
+      { reqs: halfReqsLabel, cost: halfVolLabel },
+    ),
+  );
   // 50% cache
   if (cacheHitRate < 50) {
     const cacheBoost = 50;
     const cacheFactor = 1 - cacheBoost / 100 * 0.5; // assume 50% of input is cacheable
     const cachedMonthly = totalSelectedMonthly * (0.5 + 0.5 * cacheFactor);
     const cacheSavings = totalSelectedMonthly - cachedMonthly;
-    out.push('• Boost cache hit rate to 50%:  save ~' + fmt(cacheSavings) + '/mo  (' + fmt(totalSelectedMonthly) + ' → ' + fmt(cachedMonthly) + ')');
+    const cacheSaveLabel = fmt(cacheSavings);
+    const cacheFromLabel = fmt(totalSelectedMonthly);
+    const cacheToLabel = fmt(cachedMonthly);
+    out.push(
+      makeToken(
+        "calc_out.openai_token.row.whatif_cache_boost",
+        '• Boost cache hit rate to 50%:  save ~' + cacheSaveLabel + '/mo  (' + cacheFromLabel + ' → ' + cacheToLabel + ')',
+        { save: cacheSaveLabel, from: cacheFromLabel, to: cacheToLabel },
+      ),
+    );
   }
   out.push('');
 
@@ -655,9 +950,9 @@ function calculate(inputs: Record<string, string>): string[] {
 
 const customFn =
   // Model data: full keys matching MODELS constant → {i,o,f,c,bi,bo,n}
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let n=function(c){return c<.01&&c>0?"$"+c.toFixed(4):"$"+c.toFixed(2)},v=function(c){return c.toLocaleString()},g=function(c,T){return c+" ".repeat(Math.max(0,T-c.length))},S=function(c){const T=[...new Set((c.models||B.join(",")).split(",").map(t=>t.trim()).filter(Boolean))],m=Math.max(1,Math.min(1e7,parseInt(c.inputTokens)||1e3)),l=Math.max(1,Math.min(1e7,parseInt(c.outputTokens)||500)),r=Math.max(0,Math.min(1e6,parseInt(c.requestsPerDay)||100)),x=c.pricingMode==="batch"?"batch":"realtime",p=Math.min(100,Math.max(0,parseInt(c.cacheHitRate)||0)),q=Math.min(50,Math.max(0,parseFloat(c.growthRate)||0)),j=parseInt(c.projectionMonths),k=[3,6,12].includes(j)?j:12,f=[];for(const[t,e]of Object.entries(N)){const a=x==="batch"?e.batchInput:e.input,i=x==="batch"?e.batchOutput:e.output,s=e.reasoningMultiplier||1,d=l*s,h=m/1e6*a+d/1e6*i,C=h*r*30;f.push({key:t,info:e,inputPrice:a,outputPrice:i,costPerReq:h,monthlyCost:C})}f.sort((t,e)=>t.info.order-e.info.order);const I=f.reduce((t,e)=>e.monthlyCost<t.monthlyCost?e:t),_=f.reduce((t,e)=>e.monthlyCost>t.monthlyCost?e:t).monthlyCost,u=[];for(const t of T){const e=f.find(a=>a.key===t);e&&u.push(e)}if(u.length===0)for(const t of B){const e=f.find(a=>a.key===t);e&&u.push(e)}const o=[];o.push("📅 Pricing last updated: "+(H.lastUpdated||"unknown")+" (data synced weekly)"),o.push("");const z=x==="batch"?"⚡":"🔴",A=x==="batch"?"Batch Pricing":"Real-time Pricing";let V=z+" "+A;p>0&&(V+=" | 💾 "+p+"% Cache Hit Rate"),o.push(V),o.push(""),o.push("📥 Input: "+v(m)+" tokens/req | 📤 Output: "+v(l)+" tokens/req | 🔄 "+v(r)+" reqs/day"),o.push(""),o.push(\`📊 Cost Comparison (\${f.length} Models)\`),o.push("");for(const t of f){const a=R[t.info.family]+" "+t.info.name,i=g(a,22),s=_>0?Math.max(1,Math.round(t.monthlyCost/_*32)):0,d="█".repeat(s),C=t.key===I.key?" 🏆":"";o.push(i+d+" "+n(t.monthlyCost)+C)}o.push(""),o.push(""),o.push("📋 Selected Model Details"),o.push(F.repeat(60));for(const t of u){const e=R[t.info.family],a=t.costPerReq*r,i=t.monthlyCost,s=i*12;o.push(e+" "+t.info.name+" | Context: "+t.info.contextWindow+" tokens"),o.push(P.repeat(44));const d=m/1e6*t.inputPrice,h=t.info.reasoningMultiplier||1,C=l*h,K=C/1e6*t.outputPrice;if(o.push("Input:  "+g(v(m),7)+" tokens × "+n(t.inputPrice)+"/1M → "+n(d)+"/req"),o.push("Output: "+g(v(l),7)+(h>1?" visible + ~"+v(l*(h-1))+" reasoning":" tokens")+" × "+n(t.outputPrice)+"/1M → "+n(K)+"/req"),h>1&&o.push("🧠 o-series: hidden reasoning tokens (≈×"+h+" visible) billed at output rate"),o.push(P.repeat(44)),o.push("Per request:    "+n(t.costPerReq)),o.push("Daily ("+r+"):    "+n(a)),o.push("Monthly (30d):  "+n(i)),o.push("Annual:         "+n(s)),o.push(P.repeat(44)),x==="realtime"){const y=m/1e6*t.info.batchInput+C/1e6*t.info.batchOutput,M=y*r*30;o.push("💡 Batch pricing: "+n(y)+"/req ("+n(M)+"/mo) — save 50%")}else{const y=m/1e6*t.info.input+C/1e6*t.info.output,M=y*r*30;o.push("🔴 Real-time: "+n(y)+"/req ("+n(M)+"/mo)")}if(p>0){const y=t.inputPrice*(1-p/100)+t.inputPrice*.5*(p/100),M=m/1e6*y+C/1e6*t.outputPrice,Y=M*r*30;o.push("💾 With "+p+"% cache hit: "+n(M)+"/req ("+n(Y)+"/mo)")}o.push("")}if(q>0){o.push("📈 Growth Projection ("+q+"% monthly)"),o.push("");const t=[1];k>=3&&t.push(3),k>=6&&t.push(6),k>=12&&t.push(12),t.includes(k)||t.push(k),t.sort((s,d)=>s-d);let e=g("Month",6);for(const s of u)e+=g(s.info.name,13);e+=g("Cum. Diff",12),o.push(e);let a=P.repeat(5)+" ";for(let s=0;s<u.length;s++)a+=P.repeat(11)+"  ";a+=P.repeat(10),o.push(a);let i=0;for(const s of t){const d=Math.pow(1+q/100,s-1),h=u.map(M=>M.costPerReq*r*30*d),C=Math.min(...h),K=Math.max(...h);i+=K-C;let y=g(String(s),6);for(const M of h)y+=g(n(M),13);y+=g(n(i),12),o.push(y)}o.push("")}o.push("💰 Savings Insights"),o.push(F.repeat(60)),o.push("🏆 Cheapest: "+I.info.name+" at "+n(I.monthlyCost)+"/mo");const G=f.filter(t=>t.info.family!=="legacy"&&!t.info.name.toLowerCase().includes("nano")).reduce((t,e)=>e.monthlyCost<t.monthlyCost?e:t,f[0]);if(G&&o.push("⭐ Best value (non-legacy, non-Nano): "+G.info.name+" at "+n(G.monthlyCost)+"/mo"),u.length>=2){const t=u.reduce((i,s)=>s.monthlyCost>i.monthlyCost?s:i),e=u.reduce((i,s)=>s.monthlyCost<i.monthlyCost?s:i),a=t.monthlyCost-e.monthlyCost;o.push("💸 Switching from "+t.info.name+" to "+e.info.name+" saves "+n(a)+"/mo ("+n(a*12)+"/yr)")}if(p>0&&u.length>0){const t=u[0],e=t.inputPrice*(1-p/100)+t.inputPrice*.5*(p/100),i=(m/1e6*e+l/1e6*t.outputPrice)*r*30,s=t.monthlyCost-i;o.push("💾 Prompt caching at "+p+"% hit rate saves ~"+n(s)+"/mo on "+t.info.name)}const $=(m/1e6*.14+l/1e6*.28)*r*30,D=(m/1e6*.1+l/1e6*.4)*r*30,E=$<D?"DeepSeek Chat":"Gemini 2.0 Flash",W=Math.min($,D);I.monthlyCost>0&&o.push("🌍 Cross-provider: "+E+" @ "+n(W)+"/mo — saves "+n(I.monthlyCost-W)+"/mo ("+(W>0?((1-W/I.monthlyCost)*100).toFixed(0):"0")+"% cheaper) vs cheapest OpenAI"),o.push(""),o.push("📅 Usage Scenarios (monthly costs)"),o.push(F.repeat(60));const J=[50,100,500,1e3,5e3,1e4];for(const t of u){let a=R[t.info.family]+" "+t.info.name+":  ";const i=[];for(const s of J){const d=t.costPerReq*s*30,h=s>=1e3?s/1e3+"K":String(s);i.push(h+"→"+n(d))}a+=i.join("  ·  "),o.push(a)}o.push(""),o.push("🩺 Cost Health:"),o.push(F.repeat(60));const b=u.reduce((t,e)=>t+e.monthlyCost,0),w=u.reduce((t,e)=>e.monthlyCost<t.monthlyCost?e:t),Q=u.reduce((t,e)=>e.monthlyCost>t.monthlyCost?e:t);if(u.length>=2){const t=Q.monthlyCost/Math.max(w.monthlyCost,.01);t>=50?o.push("• 🔴 Your most expensive selection costs "+t.toFixed(0)+"x your cheapest — consider mixing tiers (e.g., cheap model for 90% of traffic, premium for 10%)."):t>=10?o.push("• 🟠 "+t.toFixed(0)+"x cost spread across selected models — review if every model needs to be premium."):o.push("• 🟢 Healthy cost spread ("+t.toFixed(1)+"x) across selected models.")}if(w){const t=w.monthlyCost<5?"🟢 Micro-tier (under $5/mo)":w.monthlyCost<50?"🟢 Low-volume tier":w.monthlyCost<500?"🟡 Mid-volume tier":"🟠 High-volume tier";o.push("• "+t+" — "+w.info.name+" at "+n(w.monthlyCost)+"/mo.")}if(p===0?o.push("• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%. Toggle above to model it."):p<30?o.push("• 🟡 Low cache hit rate ("+p+"%) — review if your prompt has stable system instructions or few-shot examples."):o.push("• 🟢 Healthy cache rate ("+p+"%) — keep an eye on cache TTL vs your traffic pattern."),x==="realtime"){const t=b*.5;o.push("• 💡 Switch to batch pricing: save ~"+n(t)+"/mo (50% discount) if latency is not critical.")}if(o.push(""),o.push("🔄 What-If Scenarios:"),o.push(F.repeat(60)),x==="realtime"){const t=b*.5;o.push("• Switch ALL selected to batch pricing:  "+n(b)+" → "+n(t)+"/mo  (save "+n(b-t)+")")}else{const t=b*2;o.push("• Switch back to real-time (if latency allows batch):  save vs "+n(t)+"/mo  (50% off currently)")}const O=f.reduce((t,e)=>e.info.input+e.info.output<t.info.input+t.info.output?e:t,f[0]);if(O&&O.key!==w?.key){const e=(m/1e6*O.info.input+l/1e6*O.info.output)*r*30,a=(w?.monthlyCost??0)-e;a>0&&o.push("• Switch cheapest to "+O.info.name+":  save "+n(a)+"/mo  (similar quality, much cheaper)")}const X=b*2;o.push("• Double volume to "+v(r*2)+" reqs/day:  "+n(X)+"/mo");const Z=b/2;if(o.push("• Halve volume to "+v(Math.max(1,Math.floor(r/2)))+" reqs/day:  "+n(Z)+"/mo"),p<50){const a=b*.875,i=b-a;o.push("• Boost cache hit rate to 50%:  save ~"+n(i)+"/mo  ("+n(b)+" → "+n(a)+")")}return o.push(""),o},L=function(c,T,m){var l=U(c);return Array.isArray(l)?l.join(\`
-\`):String(l)};var tt=n,ot=v,et=g,nt=S,st=L,H={lastUpdated:"2026-11-09"},N={"gpt-5.5":{input:5,output:30,batchInput:2.5,batchOutput:15,name:"GPT 5.5",family:"gpt5",contextWindow:"1M",order:5},"gpt-5.2":{input:1.75,output:14,batchInput:.875,batchOutput:7,name:"GPT 5.2",family:"gpt5",contextWindow:"272K",order:6},"gpt-5":{input:1.25,output:10,batchInput:.625,batchOutput:5,name:"GPT 5",family:"gpt5",contextWindow:"272K",order:7},"gpt-5-mini":{input:.25,output:2,batchInput:.125,batchOutput:1,name:"GPT 5 Mini",family:"gpt5",contextWindow:"272K",order:8},"gpt-5-nano":{input:.05,output:.4,batchInput:.025,batchOutput:.2,name:"GPT 5 Nano",family:"gpt5",contextWindow:"272K",order:9},"gpt-4.1":{input:2,output:8,batchInput:1,batchOutput:4,name:"GPT 4.1",family:"gpt41",contextWindow:"1M",order:10},"gpt-4.1-mini":{input:.4,output:1.6,batchInput:.2,batchOutput:.8,name:"GPT 4.1 Mini",family:"gpt41",contextWindow:"1M",order:11},"gpt-4.1-nano":{input:.1,output:.4,batchInput:.05,batchOutput:.2,name:"GPT 4.1 Nano",family:"gpt41",contextWindow:"1M",order:12},o3:{input:2,output:8,batchInput:1,batchOutput:4,name:"O3",family:"o-series",contextWindow:"200K",order:13,reasoningMultiplier:4},"o4-mini":{input:1.1,output:4.4,batchInput:.55,batchOutput:2.2,name:"O4 Mini",family:"o-series",contextWindow:"200K",order:14,reasoningMultiplier:4},"gpt-4o":{input:2.5,output:10,batchInput:1.25,batchOutput:5,name:"GPT 4o",family:"legacy",contextWindow:"128K",order:15},"gpt-4o-mini":{input:.15,output:.6,batchInput:.075,batchOutput:.3,name:"GPT 4o Mini",family:"legacy",contextWindow:"128K",order:16},"gpt-4-turbo":{input:10,output:30,batchInput:5,batchOutput:15,name:"GPT 4 Turbo",family:"legacy",contextWindow:"128K",order:17},"gpt-3.5-turbo":{input:.5,output:1.5,batchInput:.25,batchOutput:.75,name:"GPT 3.5 Turbo",family:"legacy",contextWindow:"16K",order:18},"gpt-6-astra":{input:10,output:50,name:"GPT 6 Astra",family:"gpt6",contextWindow:"922K",order:2,batchInput:5,batchOutput:25},"gpt-6-sol":{input:2,output:10,name:"GPT 6 Sol",family:"gpt6",contextWindow:"922K",order:3,batchInput:1,batchOutput:5},"gpt-6-luna":{input:.1,output:.5,name:"GPT 6 Luna",family:"gpt6",contextWindow:"922K",order:4,batchInput:.05,batchOutput:.25},"gpt-6.1-sol":{input:2,output:10,name:"GPT 6.1 Sol",family:"gpt6",contextWindow:"922K",order:1,batchInput:1,batchOutput:5}},B=["gpt-5-mini","gpt-5.5","gpt-4.1"],R={gpt6:"🔷",gpt5:"🔵",gpt41:"🟢","o-series":"🟠",legacy:"⚪"},F="━",P="─",U=function(c){return S(c)};return[L(inputs,pick,fill)]}finally{}
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(u){return u<.01&&u>0?"$"+u.toFixed(4):"$"+u.toFixed(2)},v=function(u){return u.toLocaleString()},w=function(u,B){return u+" ".repeat(Math.max(0,B-u.length))},z=function(u){const B=[...new Set((u.models||J.join(",")).split(",").map(t=>t.trim()).filter(Boolean))],y=Math.max(1,Math.min(1e7,parseInt(u.inputTokens)||1e3)),_=Math.max(1,Math.min(1e7,parseInt(u.outputTokens)||500)),f=Math.max(0,Math.min(1e6,parseInt(u.requestsPerDay)||100)),F=u.pricingMode==="batch"?"batch":"realtime",h=Math.min(100,Math.max(0,parseInt(u.cacheHitRate)||0)),$=Math.min(50,Math.max(0,parseFloat(u.growthRate)||0)),Q=parseInt(u.projectionMonths),W=[3,6,12].includes(Q)?Q:12,g=[];for(const[t,o]of Object.entries(ht)){const a=F==="batch"?o.batchInput:o.input,s=F==="batch"?o.batchOutput:o.output,r=o.reasoningMultiplier||1,i=_*r,p=y/1e6*a+i/1e6*s,l=p*f*30;g.push({key:t,info:o,inputPrice:a,outputPrice:s,costPerReq:p,monthlyCost:l})}g.sort((t,o)=>t.info.order-o.info.order);const q=g.reduce((t,o)=>o.monthlyCost<t.monthlyCost?o:t),U=g.reduce((t,o)=>o.monthlyCost>t.monthlyCost?o:t).monthlyCost,m=[];for(const t of B){const o=g.find(a=>a.key===t);o&&m.push(o)}if(m.length===0)for(const t of J){const o=g.find(a=>a.key===t);o&&m.push(o)}const e=[];e.push(""),F==="batch"?e.push(h>0?n("calc_out.openai_token.row.header_batch_cache","⚡ Batch Pricing | 💾 "+h+"% Cache Hit Rate",{cache:String(h)}):n("calc_out.openai_token.row.header_batch","⚡ Batch Pricing")):e.push(h>0?n("calc_out.openai_token.row.header_realtime_cache","🔴 Real-time Pricing | 💾 "+h+"% Cache Hit Rate",{cache:String(h)}):n("calc_out.openai_token.row.header_realtime","🔴 Real-time Pricing")),e.push("");const X=v(y),Y=v(_),Z=v(f);e.push(n("calc_out.openai_token.row.input_summary","📥 Input: "+X+" tokens/req",{in:X})+" | "+n("calc_out.openai_token.row.output_summary","📤 Output: "+Y+" tokens/req",{out:Y})+" | "+n("calc_out.openai_token.row.requests_summary","🔄 "+Z+" reqs/day",{reqs:Z})),e.push("");const k=String(g.length);e.push(n("calc_out.section.openai_token_cost_comparison","📊 Cost Comparison ("+k+" Models)",{models:k})),e.push("");for(const t of g){const a=D[t.info.family]+" "+t.info.name,s=w(a,22),r=U>0?Math.max(1,Math.round(t.monthlyCost/U*32)):0,i="█".repeat(r),l=t.key===q.key?" 🏆":"";e.push(s+i+" "+c(t.monthlyCost)+l)}e.push(""),e.push(""),e.push(n("calc_out.section.ai_api_cost_comparison_selected_models","📋 Selected Model Details")),e.push(I.repeat(60));for(const t of m){const o=D[t.info.family],a=t.costPerReq*f,s=t.monthlyCost,r=s*12,i=t.info.name,p=t.info.contextWindow;e.push(n("calc_out.openai_token.row.model_header",o+" "+i,{icon:o,name:i})+" | "+n("calc_out.openai_token.row.model_context","Context: "+p+" tokens",{context:p})),e.push(P.repeat(44));const l=y/1e6*t.inputPrice,d=t.info.reasoningMultiplier||1,S=_*d,K=S/1e6*t.outputPrice,O=w(v(y),7),st=c(t.inputPrice),it=c(l);e.push(n("calc_out.openai_token.row.input_cost_line","Input:  "+O+" tokens × "+st+"/1M → "+it+"/req",{tokens:O,price:st,cost:it}));const N=w(v(_),7),V=c(t.outputPrice),H=c(K);if(d>1){const b=v(_*(d-1));e.push(n("calc_out.openai_token.row.output_cost_line_reasoning","Output: "+N+" visible + ~"+b+" reasoning × "+V+"/1M → "+H+"/req",{tokens:N,reasoning:b,price:V,cost:H}))}else e.push(n("calc_out.openai_token.row.output_cost_line","Output: "+N+" tokens × "+V+"/1M → "+H+"/req",{tokens:N,price:V,cost:H}));if(d>1){const b=String(d);e.push(n("calc_out.openai_token.row.reasoning_note","🧠 o-series: hidden reasoning tokens (≈×"+b+" visible) billed at output rate",{rm:b}))}if(e.push(P.repeat(44)),e.push("Per request:    "+c(t.costPerReq)),e.push("Daily ("+f+"):    "+c(a)),e.push("Monthly (30d):  "+c(s)),e.push("Annual:         "+c(r)),e.push(P.repeat(44)),F==="realtime"){const b=y/1e6*t.info.batchInput+S/1e6*t.info.batchOutput,R=b*f*30,x=c(b),L=c(R);e.push(n("calc_out.openai_token.row.batch_pricing","💡 Batch pricing: "+x+"/req ("+L+"/mo) — save 50%",{cpr:x,monthly:L}))}else{const b=y/1e6*t.info.input+S/1e6*t.info.output,R=b*f*30,x=c(b),L=c(R);e.push(n("calc_out.openai_token.row.realtime_pricing","🔴 Real-time: "+x+"/req ("+L+"/mo)",{cpr:x,monthly:L}))}if(h>0){const b=t.inputPrice*(1-h/100)+t.inputPrice*.5*(h/100),R=y/1e6*b+S/1e6*t.outputPrice,x=R*f*30,L=String(h),rt=c(R),ut=c(x);e.push(n("calc_out.openai_token.row.cache_hit_line","💾 With "+L+"% cache hit: "+rt+"/req ("+ut+"/mo)",{rate:L,cpr:rt,monthly:ut}))}e.push("")}if($>0){const t=String($);e.push(n("calc_out.section.openai_token_growth_projection","📈 Growth Projection ("+t+"% monthly)",{rate:t})),e.push("");const o=[1];W>=3&&o.push(3),W>=6&&o.push(6),W>=12&&o.push(12),o.includes(W)||o.push(W),o.sort((i,p)=>i-p);let a=w("Month",6);for(const i of m)a+=w(i.info.name,13);a+=w("Cum. Diff",12),e.push(a);let s=P.repeat(5)+" ";for(let i=0;i<m.length;i++)s+=P.repeat(11)+"  ";s+=P.repeat(10),e.push(s);let r=0;for(const i of o){const p=Math.pow(1+$/100,i-1),l=m.map(O=>O.costPerReq*f*30*p),d=Math.min(...l),S=Math.max(...l);r+=S-d;let K=w(String(i),6);for(const O of l)K+=w(c(O),13);K+=w(c(r),12),e.push(K)}e.push("")}e.push(n("calc_out.section.openai_token_savings_insights","💰 Savings Insights")),e.push(I.repeat(60)),e.push("🏆 Cheapest: "+q.info.name+" at "+c(q.monthlyCost)+"/mo");const E=g.filter(t=>t.info.family!=="legacy"&&!t.info.name.toLowerCase().includes("nano")).reduce((t,o)=>o.monthlyCost<t.monthlyCost?o:t,g[0]);if(E){const t=E.info.name,o=c(E.monthlyCost);e.push(n("calc_out.openai_token.row.best_value","⭐ Best value (non-legacy, non-Nano): "+t+" at "+o+"/mo",{name:t,cost:o}))}if(m.length>=2){const t=m.reduce((l,d)=>d.monthlyCost>l.monthlyCost?d:l),o=m.reduce((l,d)=>d.monthlyCost<l.monthlyCost?d:l),a=t.monthlyCost-o.monthlyCost,s=t.info.name,r=o.info.name,i=c(a),p=c(a*12);e.push(n("calc_out.openai_token.row.switch_savings","💸 Switching from "+s+" to "+r+" saves "+i+"/mo ("+p+"/yr)",{from:s,to:r,monthly:i,yearly:p}))}if(h>0&&m.length>0){const t=m[0],o=t.inputPrice*(1-h/100)+t.inputPrice*.5*(h/100),s=(y/1e6*o+_/1e6*t.outputPrice)*f*30,r=t.monthlyCost-s,i=String(h),p=c(r),l=t.info.name;e.push(n("calc_out.openai_token.row.prompt_caching","💾 Prompt caching at "+i+"% hit rate saves ~"+p+"/mo on "+l,{rate:i,save:p,name:l}))}const T=(y/1e6*.14+_/1e6*.28)*f*30,tt=(y/1e6*.1+_/1e6*.4)*f*30,ot=T<tt?"DeepSeek Chat":"Gemini 2.0 Flash",j=Math.min(T,tt);if(q.monthlyCost>0){const t=c(j),o=c(q.monthlyCost-j),a=j>0?((1-j/q.monthlyCost)*100).toFixed(0):"0";e.push(n("calc_out.openai_token.row.cross_provider","🌍 Cross-provider: "+ot+" @ "+t+"/mo — saves "+o+"/mo ("+a+"% cheaper) vs cheapest OpenAI",{provider:ot,cost:t,saving:o,pct:a}))}e.push(""),e.push(n("calc_out.section.openai_token_usage_scenarios","📅 Usage Scenarios (monthly costs)")),e.push(I.repeat(60));const mt=[50,100,500,1e3,5e3,1e4];for(const t of m){let a=D[t.info.family]+" "+t.info.name+":  ";const s=[];for(const r of mt){const i=t.costPerReq*r*30,p=r>=1e3?r/1e3+"K":String(r);s.push(p+"→"+c(i))}a+=s.join("  ·  "),e.push(a)}e.push(""),e.push(n("calc_out.section.openai_token_cost_health","🩺 Cost Health:")),e.push(I.repeat(60));const C=m.reduce((t,o)=>t+o.monthlyCost,0),M=m.reduce((t,o)=>o.monthlyCost<t.monthlyCost?o:t),ft=m.reduce((t,o)=>o.monthlyCost>t.monthlyCost?o:t);if(m.length>=2){const t=ft.monthlyCost/Math.max(M.monthlyCost,.01);if(t>=50){const o=t.toFixed(0);e.push(n("calc_out.openai_token.row.health_spread_extreme","• 🔴 Your most expensive selection costs "+o+"x your cheapest — consider mixing tiers (e.g., cheap model for 90% of traffic, premium for 10%).",{ratio:o}))}else if(t>=10){const o=t.toFixed(0);e.push(n("calc_out.openai_token.row.health_spread_wide","• 🟠 "+o+"x cost spread across selected models — review if every model needs to be premium.",{ratio:o}))}else{const o=t.toFixed(1);e.push(n("calc_out.openai_token.row.health_spread_ok","• 🟢 Healthy cost spread ("+o+"x) across selected models.",{ratio:o}))}}if(M){const t=M.info.name,o=c(M.monthlyCost);M.monthlyCost<5?e.push(n("calc_out.openai_token.row.health_tier_micro","• 🟢 Micro-tier (under $5/mo) — "+t+" at "+o+"/mo.",{name:t,cost:o})):M.monthlyCost<50?e.push(n("calc_out.openai_token.row.health_tier_low","• 🟢 Low-volume tier — "+t+" at "+o+"/mo.",{name:t,cost:o})):M.monthlyCost<500?e.push(n("calc_out.openai_token.row.health_tier_mid","• 🟡 Mid-volume tier — "+t+" at "+o+"/mo.",{name:t,cost:o})):e.push(n("calc_out.openai_token.row.health_tier_high","• 🟠 High-volume tier — "+t+" at "+o+"/mo.",{name:t,cost:o}))}if(h===0)e.push(n("calc_out.openai_token.row.health_cache_none","• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%. Toggle above to model it."));else if(h<30){const t=String(h);e.push(n("calc_out.openai_token.row.health_cache_low","• 🟡 Low cache hit rate ("+t+"%) — review if your prompt has stable system instructions or few-shot examples.",{rate:t}))}else{const t=String(h);e.push(n("calc_out.openai_token.row.health_cache_ok","• 🟢 Healthy cache rate ("+t+"%) — keep an eye on cache TTL vs your traffic pattern.",{rate:t}))}if(F==="realtime"){const t=C*.5,o=c(t);e.push(n("calc_out.openai_token.row.health_batch_tip","• 💡 Switch to batch pricing: save ~"+o+"/mo (50% discount) if latency is not critical.",{save:o}))}if(e.push(""),e.push(n("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")),e.push(I.repeat(60)),F==="realtime"){const t=C*.5,o=c(C),a=c(t),s=c(C-t);e.push(n("calc_out.openai_token.row.whatif_switch_batch","• Switch ALL selected to batch pricing:  "+o+" → "+a+"/mo  (save "+s+")",{from:o,to:a,save:s}))}else{const t=C*2,o=c(t);e.push(n("calc_out.openai_token.row.whatif_switch_realtime","• Switch back to real-time (if latency allows batch):  save vs "+o+"/mo  (50% off currently)",{value:o}))}const G=g.reduce((t,o)=>o.info.input+o.info.output<t.info.input+t.info.output?o:t,g[0]);if(G&&G.key!==M?.key){const o=(y/1e6*G.info.input+_/1e6*G.info.output)*f*30,a=(M?.monthlyCost??0)-o;if(a>0){const s=G.info.name,r=c(a);e.push(n("calc_out.openai_token.row.whatif_switch_cheapest","• Switch cheapest to "+s+":  save "+r+"/mo  (similar quality, much cheaper)",{name:s,save:r}))}}const _t=C*2,et=v(f*2),nt=c(_t);e.push(n("calc_out.openai_token.row.whatif_double_volume","• Double volume to "+et+" reqs/day:  "+nt+"/mo",{reqs:et,cost:nt}));const dt=C/2,ct=v(Math.max(1,Math.floor(f/2))),at=c(dt);if(e.push(n("calc_out.openai_token.row.whatif_halve_volume","• Halve volume to "+ct+" reqs/day:  "+at+"/mo",{reqs:ct,cost:at})),h<50){const a=C*.875,s=C-a,r=c(s),i=c(C),p=c(a);e.push(n("calc_out.openai_token.row.whatif_cache_boost","• Boost cache hit rate to 50%:  save ~"+r+"/mo  ("+i+" → "+p+")",{save:r,from:i,to:p}))}return e.push(""),e},A=function(u,B,y){var _=lt(u);return Array.isArray(_)?_.join(\`
+\`):String(_)};var bt=c,yt=v,gt=w,wt=z,Ct=A,n=tk,pt='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',n=new Function("return "+pt)(),ht={"gpt-5.5":{input:5,output:30,batchInput:2.5,batchOutput:15,name:"GPT 5.5",family:"gpt5",contextWindow:"1M",order:5},"gpt-5.2":{input:1.75,output:14,batchInput:.875,batchOutput:7,name:"GPT 5.2",family:"gpt5",contextWindow:"272K",order:6},"gpt-5":{input:1.25,output:10,batchInput:.625,batchOutput:5,name:"GPT 5",family:"gpt5",contextWindow:"272K",order:7},"gpt-5-mini":{input:.25,output:2,batchInput:.125,batchOutput:1,name:"GPT 5 Mini",family:"gpt5",contextWindow:"272K",order:8},"gpt-5-nano":{input:.05,output:.4,batchInput:.025,batchOutput:.2,name:"GPT 5 Nano",family:"gpt5",contextWindow:"272K",order:9},"gpt-4.1":{input:2,output:8,batchInput:1,batchOutput:4,name:"GPT 4.1",family:"gpt41",contextWindow:"1M",order:10},"gpt-4.1-mini":{input:.4,output:1.6,batchInput:.2,batchOutput:.8,name:"GPT 4.1 Mini",family:"gpt41",contextWindow:"1M",order:11},"gpt-4.1-nano":{input:.1,output:.4,batchInput:.05,batchOutput:.2,name:"GPT 4.1 Nano",family:"gpt41",contextWindow:"1M",order:12},o3:{input:2,output:8,batchInput:1,batchOutput:4,name:"O3",family:"o-series",contextWindow:"200K",order:13,reasoningMultiplier:4},"o4-mini":{input:1.1,output:4.4,batchInput:.55,batchOutput:2.2,name:"O4 Mini",family:"o-series",contextWindow:"200K",order:14,reasoningMultiplier:4},"gpt-4o":{input:2.5,output:10,batchInput:1.25,batchOutput:5,name:"GPT 4o",family:"legacy",contextWindow:"128K",order:15},"gpt-4o-mini":{input:.15,output:.6,batchInput:.075,batchOutput:.3,name:"GPT 4o Mini",family:"legacy",contextWindow:"128K",order:16},"gpt-4-turbo":{input:10,output:30,batchInput:5,batchOutput:15,name:"GPT 4 Turbo",family:"legacy",contextWindow:"128K",order:17},"gpt-3.5-turbo":{input:.5,output:1.5,batchInput:.25,batchOutput:.75,name:"GPT 3.5 Turbo",family:"legacy",contextWindow:"16K",order:18},"gpt-6-astra":{input:10,output:50,name:"GPT 6 Astra",family:"gpt6",contextWindow:"922K",order:2,batchInput:5,batchOutput:25},"gpt-6-sol":{input:2,output:10,name:"GPT 6 Sol",family:"gpt6",contextWindow:"922K",order:3,batchInput:1,batchOutput:5},"gpt-6-luna":{input:.1,output:.5,name:"GPT 6 Luna",family:"gpt6",contextWindow:"922K",order:4,batchInput:.05,batchOutput:.25},"gpt-6.1-sol":{input:2,output:10,name:"GPT 6.1 Sol",family:"gpt6",contextWindow:"922K",order:1,batchInput:1,batchOutput:5}},J=["gpt-5-mini","gpt-5.5","gpt-4.1"],D={gpt6:"🔷",gpt5:"🔵",gpt41:"🟢","o-series":"🟠",legacy:"⚪"},I="━",P="─",lt=function(u){return z(u)};return[A(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============================================================
@@ -736,7 +1031,7 @@ const engine: ToolEngine = {
     return calculate(inputs);
   },
   staticExamples: [
-    '\n🔴 Real-time Pricing\n\n📥 Input: 1,000 tokens/req | 📤 Output: 500 tokens/req | 🔄 100 reqs/day\n\n📊 Cost Comparison (18 Models)\n\n🔷 GPT 6.1 Sol        ██████ $21.00\n🔷 GPT 6 Astra        ████████████████████████████████ $105.00\n🔷 GPT 6 Sol          ██████ $21.00\n🔷 GPT 6 Luna         █ $1.05\n🔵 GPT 5.5            ██████████████████ $60.00\n🔵 GPT 5.2            ████████ $26.25\n🔵 GPT 5              ██████ $18.75\n🔵 GPT 5 Mini         █ $3.75\n🔵 GPT 5 Nano         █ $0.75 🏆\n🟢 GPT 4.1            █████ $18.00\n🟢 GPT 4.1 Mini       █ $3.60\n🟢 GPT 4.1 Nano       █ $0.90\n🟠 O3                 ████████████████ $54.00\n🟠 O4 Mini            █████████ $29.70\n⚪ GPT 4o              ███████ $22.50\n⚪ GPT 4o Mini         █ $1.35\n⚪ GPT 4 Turbo         ███████████████████████ $75.00\n⚪ GPT 3.5 Turbo       █ $3.75\n\n\n📋 Selected Model Details\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔵 GPT 5 | Context: 272K tokens\n────────────────────────────────────────────\nInput:  1,000   tokens × $1.25/1M → $0.0013/req\nOutput: 500     tokens × $10.00/1M → $0.0050/req\n────────────────────────────────────────────\nPer request:    $0.0063\nDaily (100):    $0.63\nMonthly (30d):  $18.75\nAnnual:         $225.00\n────────────────────────────────────────────\n💡 Batch pricing: $0.0031/req ($9.38/mo) — save 50%\n\n🔵 GPT 5 Mini | Context: 272K tokens\n────────────────────────────────────────────\nInput:  1,000   tokens × $0.25/1M → $0.0003/req\nOutput: 500     tokens × $2.00/1M → $0.0010/req\n────────────────────────────────────────────\nPer request:    $0.0013\nDaily (100):    $0.13\nMonthly (30d):  $3.75\nAnnual:         $45.00\n────────────────────────────────────────────\n💡 Batch pricing: $0.0006/req ($1.88/mo) — save 50%\n\n⚪ GPT 4o | Context: 128K tokens\n────────────────────────────────────────────\nInput:  1,000   tokens × $2.50/1M → $0.0025/req\nOutput: 500     tokens × $10.00/1M → $0.0050/req\n────────────────────────────────────────────\nPer request:    $0.0075\nDaily (100):    $0.75\nMonthly (30d):  $22.50\nAnnual:         $270.00\n────────────────────────────────────────────\n💡 Batch pricing: $0.0037/req ($11.25/mo) — save 50%\n\n💰 Savings Insights\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 Cheapest: GPT 5 Nano at $0.75/mo\n⭐ Best value (non-legacy, non-Nano): GPT 6 Luna at $1.05/mo\n💸 Switching from GPT 4o to GPT 5 Mini saves $18.75/mo ($225.00/yr)\n🌍 Cross-provider: DeepSeek Chat @ $0.84/mo — saves $-0.09/mo (-12% cheaper) vs cheapest OpenAI\n\n📅 Usage Scenarios (monthly costs)\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔵 GPT 5:  50→$9.38  ·  100→$18.75  ·  500→$93.75  ·  1K→$187.50  ·  5K→$937.50  ·  10K→$1875.00\n🔵 GPT 5 Mini:  50→$1.88  ·  100→$3.75  ·  500→$18.75  ·  1K→$37.50  ·  5K→$187.50  ·  10K→$375.00\n⚪ GPT 4o:  50→$11.25  ·  100→$22.50  ·  500→$112.50  ·  1K→$225.00  ·  5K→$1125.00  ·  10K→$2250.00\n\n🩺 Cost Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Healthy cost spread (6.0x) across selected models.\n• 🟢 Micro-tier (under $5/mo) — GPT 5 Mini at $3.75/mo.\n• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%. Toggle above to model it.\n• 💡 Switch to batch pricing: save ~$22.50/mo (50% discount) if latency is not critical.\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Switch ALL selected to batch pricing:  $45.00 → $22.50/mo  (save $22.50)\n• Switch cheapest to GPT 5 Nano:  save $3.00/mo  (similar quality, much cheaper)\n• Double volume to 200 reqs/day:  $90.00/mo\n• Halve volume to 50 reqs/day:  $22.50/mo\n• Boost cache hit rate to 50%:  save ~$5.63/mo  ($45.00 → $39.38)\n',
+    '\n$calc_out.openai_token.row.header_realtime|🔴 Real-time Pricing|\n\n$calc_out.openai_token.row.input_summary{"in":"1,000"}|📥 Input: 1,000 tokens/req| | $calc_out.openai_token.row.output_summary{"out":"500"}|📤 Output: 500 tokens/req| | $calc_out.openai_token.row.requests_summary{"reqs":"100"}|🔄 100 reqs/day|\n\n$calc_out.section.openai_token_cost_comparison{"models":"18"}|📊 Cost Comparison (18 Models)|\n\n🔷 GPT 6.1 Sol        ██████ $21.00\n🔷 GPT 6 Astra        ████████████████████████████████ $105.00\n🔷 GPT 6 Sol          ██████ $21.00\n🔷 GPT 6 Luna         █ $1.05\n🔵 GPT 5.5            ██████████████████ $60.00\n🔵 GPT 5.2            ████████ $26.25\n🔵 GPT 5              ██████ $18.75\n🔵 GPT 5 Mini         █ $3.75\n🔵 GPT 5 Nano         █ $0.75 🏆\n🟢 GPT 4.1            █████ $18.00\n🟢 GPT 4.1 Mini       █ $3.60\n🟢 GPT 4.1 Nano       █ $0.90\n🟠 O3                 ████████████████ $54.00\n🟠 O4 Mini            █████████ $29.70\n⚪ GPT 4o              ███████ $22.50\n⚪ GPT 4o Mini         █ $1.35\n⚪ GPT 4 Turbo         ███████████████████████ $75.00\n⚪ GPT 3.5 Turbo       █ $3.75\n\n\n$calc_out.section.ai_api_cost_comparison_selected_models|📋 Selected Model Details|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.openai_token.row.model_header{"icon":"🔵","name":"GPT 5"}|🔵 GPT 5| | $calc_out.openai_token.row.model_context{"context":"272K"}|Context: 272K tokens|\n────────────────────────────────────────────\n$calc_out.openai_token.row.input_cost_line{"tokens":"1,000  ","price":"$1.25","cost":"$0.0013"}|Input:  1,000   tokens × $1.25/1M → $0.0013/req|\n$calc_out.openai_token.row.output_cost_line{"tokens":"500    ","price":"$10.00","cost":"$0.0050"}|Output: 500     tokens × $10.00/1M → $0.0050/req|\n────────────────────────────────────────────\nPer request:    $0.0063\nDaily (100):    $0.63\nMonthly (30d):  $18.75\nAnnual:         $225.00\n────────────────────────────────────────────\n$calc_out.openai_token.row.batch_pricing{"cpr":"$0.0031","monthly":"$9.38"}|💡 Batch pricing: $0.0031/req ($9.38/mo) — save 50%|\n\n$calc_out.openai_token.row.model_header{"icon":"🔵","name":"GPT 5 Mini"}|🔵 GPT 5 Mini| | $calc_out.openai_token.row.model_context{"context":"272K"}|Context: 272K tokens|\n────────────────────────────────────────────\n$calc_out.openai_token.row.input_cost_line{"tokens":"1,000  ","price":"$0.25","cost":"$0.0003"}|Input:  1,000   tokens × $0.25/1M → $0.0003/req|\n$calc_out.openai_token.row.output_cost_line{"tokens":"500    ","price":"$2.00","cost":"$0.0010"}|Output: 500     tokens × $2.00/1M → $0.0010/req|\n────────────────────────────────────────────\nPer request:    $0.0013\nDaily (100):    $0.13\nMonthly (30d):  $3.75\nAnnual:         $45.00\n────────────────────────────────────────────\n$calc_out.openai_token.row.batch_pricing{"cpr":"$0.0006","monthly":"$1.88"}|💡 Batch pricing: $0.0006/req ($1.88/mo) — save 50%|\n\n$calc_out.openai_token.row.model_header{"icon":"⚪","name":"GPT 4o"}|⚪ GPT 4o| | $calc_out.openai_token.row.model_context{"context":"128K"}|Context: 128K tokens|\n────────────────────────────────────────────\n$calc_out.openai_token.row.input_cost_line{"tokens":"1,000  ","price":"$2.50","cost":"$0.0025"}|Input:  1,000   tokens × $2.50/1M → $0.0025/req|\n$calc_out.openai_token.row.output_cost_line{"tokens":"500    ","price":"$10.00","cost":"$0.0050"}|Output: 500     tokens × $10.00/1M → $0.0050/req|\n────────────────────────────────────────────\nPer request:    $0.0075\nDaily (100):    $0.75\nMonthly (30d):  $22.50\nAnnual:         $270.00\n────────────────────────────────────────────\n$calc_out.openai_token.row.batch_pricing{"cpr":"$0.0037","monthly":"$11.25"}|💡 Batch pricing: $0.0037/req ($11.25/mo) — save 50%|\n\n$calc_out.section.openai_token_savings_insights|💰 Savings Insights|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🏆 Cheapest: GPT 5 Nano at $0.75/mo\n$calc_out.openai_token.row.best_value{"name":"GPT 6 Luna","cost":"$1.05"}|⭐ Best value (non-legacy, non-Nano): GPT 6 Luna at $1.05/mo|\n$calc_out.openai_token.row.switch_savings{"from":"GPT 4o","to":"GPT 5 Mini","monthly":"$18.75","yearly":"$225.00"}|💸 Switching from GPT 4o to GPT 5 Mini saves $18.75/mo ($225.00/yr)|\n$calc_out.openai_token.row.cross_provider{"provider":"DeepSeek Chat","cost":"$0.84","saving":"$-0.09","pct":"-12"}|🌍 Cross-provider: DeepSeek Chat @ $0.84/mo — saves $-0.09/mo (-12% cheaper) vs cheapest OpenAI|\n\n$calc_out.section.openai_token_usage_scenarios|📅 Usage Scenarios (monthly costs)|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🔵 GPT 5:  50→$9.38  ·  100→$18.75  ·  500→$93.75  ·  1K→$187.50  ·  5K→$937.50  ·  10K→$1875.00\n🔵 GPT 5 Mini:  50→$1.88  ·  100→$3.75  ·  500→$18.75  ·  1K→$37.50  ·  5K→$187.50  ·  10K→$375.00\n⚪ GPT 4o:  50→$11.25  ·  100→$22.50  ·  500→$112.50  ·  1K→$225.00  ·  5K→$1125.00  ·  10K→$2250.00\n\n$calc_out.section.openai_token_cost_health|🩺 Cost Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.openai_token.row.health_spread_ok{"ratio":"6.0"}|• 🟢 Healthy cost spread (6.0x) across selected models.|\n$calc_out.openai_token.row.health_tier_micro{"name":"GPT 5 Mini","cost":"$3.75"}|• 🟢 Micro-tier (under $5/mo) — GPT 5 Mini at $3.75/mo.|\n$calc_out.openai_token.row.health_cache_none|• ⚠️ Cache hit rate is 0% — enabling prompt caching on repeated prefixes can cut cost 40-90%. Toggle above to model it.|\n$calc_out.openai_token.row.health_batch_tip{"save":"$22.50"}|• 💡 Switch to batch pricing: save ~$22.50/mo (50% discount) if latency is not critical.|\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.openai_token.row.whatif_switch_batch{"from":"$45.00","to":"$22.50","save":"$22.50"}|• Switch ALL selected to batch pricing:  $45.00 → $22.50/mo  (save $22.50)|\n$calc_out.openai_token.row.whatif_switch_cheapest{"name":"GPT 5 Nano","save":"$3.00"}|• Switch cheapest to GPT 5 Nano:  save $3.00/mo  (similar quality, much cheaper)|\n$calc_out.openai_token.row.whatif_double_volume{"reqs":"200","cost":"$90.00"}|• Double volume to 200 reqs/day:  $90.00/mo|\n$calc_out.openai_token.row.whatif_halve_volume{"reqs":"50","cost":"$22.50"}|• Halve volume to 50 reqs/day:  $22.50/mo|\n$calc_out.openai_token.row.whatif_cache_boost{"save":"$5.63","from":"$45.00","to":"$39.38"}|• Boost cache hit rate to 50%:  save ~$5.63/mo  ($45.00 → $39.38)|\n',
   ],
   faq: [
     {

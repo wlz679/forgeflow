@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -91,7 +94,11 @@ function calculateDSCR(inputs: Record<string, string>): string[] {
   };
 
   if (monthlyRent <= 0 && loanAmount <= 0) {
-    return ['⏰ DSCR Calculator\n\n💰 Enter monthly rent and loan amount to compute DSCR (NOI / annual debt service) and check lender qualification thresholds.'];
+    return [
+      makeToken('calc_out.section.dscr_calculator_short', '⏰ DSCR Calculator') +
+        '\n\n' +
+        makeToken('calc_out.dscr.row.need_inputs', '💰 Enter monthly rent and loan amount to compute DSCR (NOI / annual debt service) and check lender qualification thresholds.'),
+    ];
   }
 
   const noi = annualNOI(args);
@@ -125,60 +132,79 @@ function calculateDSCR(inputs: Record<string, string>): string[] {
 
   let tip: string;
   if (ratio < 1.0) {
-    tip = '💡 Tip: DSCR below 1.0 = property cannot cover debt service from operations. Lenders will deny. Either: (1) reduce loan amount, (2) raise rent, (3) reduce expenses. STR lenders may accept 0.75-1.0 DSCR based on platform bookings (Airbnb); conventional lenders require 1.20+';
+    tip = makeToken('calc_out.dscr.row.tip_below_1', '💡 Tip: DSCR below 1.0 = property cannot cover debt service from operations. Lenders will deny. Either: (1) reduce loan amount, (2) raise rent, (3) reduce expenses. STR lenders may accept 0.75-1.0 DSCR based on platform bookings (Airbnb); conventional lenders require 1.20+');
   } else if (ratio < 1.25) {
-    tip = '💡 Tip: DSCR in 1.0-1.25 zone is "marginal" — many lenders will decline or require larger down payment. Aim for DSCR ≥ 1.25 by either reducing loan, raising rent, or building up reserves that are not counted here.';
+    tip = makeToken('calc_out.dscr.row.tip_marginal', '💡 Tip: DSCR in 1.0-1.25 zone is "marginal" — many lenders will decline or require larger down payment. Aim for DSCR ≥ 1.25 by either reducing loan, raising rent, or building up reserves that are not counted here.');
   } else {
-    tip = '💡 Tip: DSCR ≥ 1.25 qualifies for most conventional and portfolio lenders. STR lenders typically accept 0.75-1.0. If approaching 2.0+, you may be over-paying for the property — explore buying more units or larger loan for better leverage.';
+    tip = makeToken('calc_out.dscr.row.tip_qualifies', '💡 Tip: DSCR ≥ 1.25 qualifies for most conventional and portfolio lenders. STR lenders typically accept 0.75-1.0. If approaching 2.0+, you may be over-paying for the property — explore buying more units or larger loan for better leverage.');
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const rentLabel = money(monthlyRent);
+  const noiLabel = money(noi);
+  const adsLabel = money(ads);
+  const ratioLabel = isFinite(ratio) ? ratio.toFixed(2) + 'x' : '∞';
+  const maxLoan125Label = money(maxLoan125);
+  const maxLoan15Label = money(maxLoan15);
+
   const r =
-    '⏰ DSCR Calculator (Debt Service Coverage Ratio)\n\n' +
-    '💰 Loan Snapshot:\n' +
+    makeToken('calc_out.section.dscr_calculator', '⏰ DSCR Calculator (Debt Service Coverage Ratio)') + '\n\n' +
+    makeToken('calc_out.section.dscr_loan_snapshot', '💰 Loan Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Monthly gross rent:         ' + money(monthlyRent) + '\n' +
+    makeToken('calc_out.dscr.row.monthly_gross_rent', '• Monthly gross rent:         ' + rentLabel, { value: rentLabel }) + '\n' +
     '• Monthly OpEx:                ' + money(monthlyExpenses) + '\n' +
-    '• Annual NOI:                  ' + money(noi) + '  (eff rent - OpEx)\n' +
-    '• Annual debt service:       ' + money(ads) + '  (mortgage P&I × 12)\n' +
+    makeToken('calc_out.dscr.row.annual_noi', '• Annual NOI:                  ' + noiLabel + '  (eff rent - OpEx)', { value: noiLabel }) + '\n' +
+    makeToken('calc_out.dscr.row.annual_debt_service', '• Annual debt service:       ' + adsLabel + '  (mortgage P&I × 12)', { value: adsLabel }) + '\n' +
     '• Loan amount:                 ' + money(loanAmount) + '\n' +
-    '• DSCR ratio:                  ' + (isFinite(ratio) ? ratio.toFixed(2) + 'x' : '∞') + '\n\n' +
+    '• DSCR ratio:                  ' + ratioLabel + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📐 DSCR Math:\n' +
+    makeToken('calc_out.section.dscr_math', '📐 DSCR Math:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• NOI = grossRent × (1 - vacancy) - OpEx\n' +
+    makeToken('calc_out.dscr.row.math_noi_formula', '• NOI = grossRent × (1 - vacancy) - OpEx') + '\n' +
     '        = ' + money(monthlyRent * 12) + ' × (1 - ' + vacancyRate + '%) - ' + money(monthlyExpenses * 12) + '\n' +
     '        = ' + money(noi) + '\n' +
-    '• Debt service = monthlyPI × 12\n' +
+    makeToken('calc_out.dscr.row.math_debt_service_formula', '• Debt service = monthlyPI × 12') + '\n' +
     '                = ' + money(monthlyPI(loanAmount, interestRate / 100 / 12, loanTermYears * 12)) + '/mo × 12\n' +
     '                = ' + money(ads) + '\n' +
-    '• DSCR = NOI / Debt service = ' + (isFinite(ratio) ? ratio.toFixed(2) + 'x' : '∞') + '\n\n' +
+    makeToken('calc_out.dscr.row.math_dscr_formula', '• DSCR = NOI / Debt service = ' + ratioLabel, { ratio: ratioLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🩺 DSCR Health:\n' +
+    makeToken('calc_out.section.dscr_health', '🩺 DSCR Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + health.emoji + ' ' + health.label + '\n' +
-    (ratio >= 1.25 ? '• Most conventional lenders will approve this deal.\n' : ratio >= 1.0 ? '• Many lenders will require larger down payment or decline.\n' : '• Current structure does not qualify. Lenders will deny.\n') +
+    (health.label === 'trivially qualifies — no debt service'
+      ? makeToken('calc_out.dscr.row.health_trivial', '• 🟢 trivially qualifies — no debt service')
+      : health.label === 'qualifies — DSCR ≥ 1.25 (most lenders approve)'
+      ? makeToken('calc_out.dscr.row.health_qualifies', '• 🟢 qualifies — DSCR ≥ 1.25 (most lenders approve)')
+      : health.label === 'marginal — DSCR between 1.0-1.25 (many lenders decline)'
+      ? makeToken('calc_out.dscr.row.health_marginal', '• 🟡 marginal — DSCR between 1.0-1.25 (many lenders decline)')
+      : makeToken('calc_out.dscr.row.health_fails', '• 🔴 fails — DSCR < 1.0 (deal cannot service debt)')) +
+    '\n' +
+    (ratio >= 1.25
+      ? makeToken('calc_out.dscr.row.health_note_approve', '• Most conventional lenders will approve this deal.') + '\n'
+      : ratio >= 1.0
+      ? makeToken('calc_out.dscr.row.health_note_declined', '• Many lenders will require larger down payment or decline.') + '\n'
+      : makeToken('calc_out.dscr.row.health_note_denied', '• Current structure does not qualify. Lenders will deny.') + '\n') +
     '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Lender Thresholds:\n' +
+    makeToken('calc_out.section.dscr_lender_thresholds', '🎯 Lender Thresholds:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Conventional (Fannie/Freddie):  DSCR ≥ 1.20-1.25\n' +
-    '• Portfolio lenders:              DSCR ≥ 1.20\n' +
-    '• Short-term rental (Airbnb):     DSCR 0.75-1.0 (Airbnb-future projections)\n' +
-    '• Commercial (multi-family):     DSCR ≥ 1.20-1.40\n' +
-    '• Hard money / bridge:           DSCR flexible (higher rate)\n\n' +
+    makeToken('calc_out.dscr.row.threshold_conventional', '• Conventional (Fannie/Freddie):  DSCR ≥ 1.20-1.25') + '\n' +
+    makeToken('calc_out.dscr.row.threshold_portfolio', '• Portfolio lenders:              DSCR ≥ 1.20') + '\n' +
+    makeToken('calc_out.dscr.row.threshold_str', '• Short-term rental (Airbnb):     DSCR 0.75-1.0 (Airbnb-future projections)') + '\n' +
+    makeToken('calc_out.dscr.row.threshold_commercial', '• Commercial (multi-family):     DSCR ≥ 1.20-1.40') + '\n' +
+    makeToken('calc_out.dscr.row.threshold_hard_money', '• Hard money / bridge:           DSCR flexible (higher rate)') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Reverse Calc (Max Loan):\n' +
+    makeToken('calc_out.section.dscr_reverse_calc', '⚖️ Reverse Calc (Max Loan):') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• At target DSCR 1.0:   ' + money(maxLoan10) + '\n' +
-    '• At target DSCR 1.25:  ' + money(maxLoan125) + ' ← conventional threshold\n' +
-    '• At target DSCR 1.5:   ' + money(maxLoan15) + ' ← strong buffer\n\n' +
+    makeToken('calc_out.dscr.row.max_loan_125', '• At target DSCR 1.25:  ' + maxLoan125Label + ' ← conventional threshold', { value: maxLoan125Label }) + '\n' +
+    makeToken('calc_out.dscr.row.max_loan_15', '• At target DSCR 1.5:   ' + maxLoan15Label + ' ← strong buffer', { value: maxLoan15Label }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If Scenarios:\n' +
+    makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Vacancy +5pp:               DSCR → ' + (isFinite(ratioVac5) ? ratioVac5.toFixed(2) + 'x' : '∞') + '\n' +
     '• Rate +1pp:                  DSCR → ' + (isFinite(ratioRatePlus1) ? ratioRatePlus1.toFixed(2) + 'x' : '∞') + '\n' +
     '• Term 30y → 15y:             DSCR → ' + (isFinite(ratioTerm15) ? ratioTerm15.toFixed(2) + 'x' : '∞') + '\n' +
     '• OpEx −10%:                  DSCR → ' + (isFinite(ratioExpMinus10) ? ratioExpMinus10.toFixed(2) + 'x' : '∞') + '\n' +
-    '• Target DSCR 1.25 vs 1.0:    see reverse calc above\n\n' +
+    makeToken('calc_out.dscr.row.whatif_target_compare', '• Target DSCR 1.25 vs 1.0:    see reverse calc above') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     tip;
 
@@ -191,8 +217,14 @@ function calculateDSCR(inputs: Record<string, string>): string[] {
       monthlyRent, monthlyExpenses, vacancyRate, interestRate, loanTermYears,
     }, t);
     const lenderTag = t >= 1.25 ? ' qualifies' : t >= 1.0 ? ' marginal' : ' fails';
+    const dscrLabel = t.toFixed(2);
+    const maxLoanLabel = money(maxLoan);
     results.push(
-      'Comparison: at DSCR ' + t.toFixed(2) + 'x → max loan ' + money(maxLoan) + lenderTag,
+      makeToken(
+        'calc_out.dscr.row.comparison',
+        'Comparison: at DSCR ' + dscrLabel + 'x → max loan ' + maxLoanLabel + lenderTag,
+        { dscr: dscrLabel, loan: maxLoanLabel, tag: lenderTag },
+      ),
     );
   }
   return results;
@@ -201,73 +233,73 @@ function calculateDSCR(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let y=function(n){return Number.isNaN(n)?0:Math.max(0,n)},m=function(n,e,t){return t<=0?0:e===0?n/t:n*e/(1-Math.pow(1+e,-t))},d=function(n){return n.monthlyRent*12*(1-n.vacancyRate/100)-n.monthlyExpenses*12},C=function(n){const e=n.interestRate/100/12;return m(n.loanAmount,e,n.loanTermYears*12)*12},h=function(n){const e=C(n),t=d(n);return e===0?1/0:t/e},p=function(n,e){const t=d({...n,loanAmount:0});if(t<=0)return 0;const r=n.interestRate/100/12,s=n.loanTermYears*12;let a=0,i=t*20;for(let c=0;c<50;c++){const f=(a+i)/2,R=m(f,r,s)*12;if(R===0){a=f;continue}t/R>e?a=f:i=f}return(a+i)/2},D=function(n){return isFinite(n)?n>=1.25?{emoji:"🟢",label:"qualifies — DSCR ≥ 1.25 (most lenders approve)"}:n>=1?{emoji:"🟡",label:"marginal — DSCR between 1.0-1.25 (many lenders decline)"}:{emoji:"🔴",label:"fails — DSCR < 1.0 (deal cannot service debt)"}:{emoji:"🟢",label:"trivially qualifies — no debt service"}},x=function(n){const e=y(parseFloat(n.monthlyRent)||0),t=y(parseFloat(n.monthlyExpenses)||0),r=y(parseFloat(n.loanAmount)||0),s=parseFloat(n.interestRate)||0,a=y(parseFloat(n.loanTermYears)||0),i=parseFloat(n.vacancyRate)||0,c={monthlyRent:e,monthlyExpenses:t,vacancyRate:i,loanAmount:r,interestRate:s,loanTermYears:a};if(e<=0&&r<=0)return[\`⏰ DSCR Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let m=function(t){return Number.isNaN(t)?0:Math.max(0,t)},_=function(t,r,e){return e<=0?0:r===0?t/e:t*r/(1-Math.pow(1+r,-e))},f=function(t){return t.monthlyRent*12*(1-t.vacancyRate/100)-t.monthlyExpenses*12},v=function(t){const r=t.interestRate/100/12;return _(t.loanAmount,r,t.loanTermYears*12)*12},g=function(t){const r=v(t),e=f(t);return r===0?1/0:e/r},y=function(t,r){const e=f({...t,loanAmount:0});if(e<=0)return 0;const a=t.interestRate/100/12,s=t.loanTermYears*12;let c=0,l=e*20;for(let i=0;i<50;i++){const h=(c+l)/2,p=_(h,a,s)*12;if(p===0){c=h;continue}e/p>r?c=h:l=h}return(c+l)/2},C=function(t){return isFinite(t)?t>=1.25?{emoji:"🟢",label:"qualifies — DSCR ≥ 1.25 (most lenders approve)"}:t>=1?{emoji:"🟡",label:"marginal — DSCR between 1.0-1.25 (many lenders decline)"}:{emoji:"🔴",label:"fails — DSCR < 1.0 (deal cannot service debt)"}:{emoji:"🟢",label:"trivially qualifies — no debt service"}},w=function(t){const r=m(parseFloat(t.monthlyRent)||0),e=m(parseFloat(t.monthlyExpenses)||0),a=m(parseFloat(t.loanAmount)||0),s=parseFloat(t.interestRate)||0,c=m(parseFloat(t.loanTermYears)||0),l=parseFloat(t.vacancyRate)||0,i={monthlyRent:r,monthlyExpenses:e,vacancyRate:l,loanAmount:a,interestRate:s,loanTermYears:c};if(r<=0&&a<=0)return[n("calc_out.section.dscr_calculator_short","⏰ DSCR Calculator")+\`
 
-💰 Enter monthly rent and loan amount to compute DSCR (NOI / annual debt service) and check lender qualification thresholds.\`];const f=d(c),R=C(c),l=h(c),w=p({monthlyRent:e,monthlyExpenses:t,vacancyRate:i,interestRate:s,loanTermYears:a},1.25),q=p({monthlyRent:e,monthlyExpenses:t,vacancyRate:i,interestRate:s,loanTermYears:a},1),N=p({monthlyRent:e,monthlyExpenses:t,vacancyRate:i,interestRate:s,loanTermYears:a},1.5),g=D(l),O=u=>u.toLocaleString("en-US",{maximumFractionDigits:0}),o=u=>"$"+O(u),j=d({...c,vacancyRate:i+5}),v=R>0?j/R:1/0,P=d({...c}),F=m(r,(s+1)/100/12,a*12)*12,A=F>0?P/F:1/0,T=m(r,s/100/12,180)*12,E=T>0?d(c)/T:1/0,I=m(r,s/100/12,a*12)*12*1,k=e*12*(1-i/100)-t*12*.9,L=I>0?k/I:1/0;let S;l<1?S="💡 Tip: DSCR below 1.0 = property cannot cover debt service from operations. Lenders will deny. Either: (1) reduce loan amount, (2) raise rent, (3) reduce expenses. STR lenders may accept 0.75-1.0 DSCR based on platform bookings (Airbnb); conventional lenders require 1.20+":l<1.25?S='💡 Tip: DSCR in 1.0-1.25 zone is "marginal" — many lenders will decline or require larger down payment. Aim for DSCR ≥ 1.25 by either reducing loan, raising rent, or building up reserves that are not counted here.':S="💡 Tip: DSCR ≥ 1.25 qualifies for most conventional and portfolio lenders. STR lenders typically accept 0.75-1.0. If approaching 2.0+, you may be over-paying for the property — explore buying more units or larger loan for better leverage.";const M=[\`⏰ DSCR Calculator (Debt Service Coverage Ratio)
+\`+n("calc_out.dscr.row.need_inputs","💰 Enter monthly rent and loan amount to compute DSCR (NOI / annual debt service) and check lender qualification thresholds.")];const h=f(i),p=v(i),u=g(i),K=y({monthlyRent:r,monthlyExpenses:e,vacancyRate:l,interestRate:s,loanTermYears:c},1.25),U=y({monthlyRent:r,monthlyExpenses:e,vacancyRate:l,interestRate:s,loanTermYears:c},1),W=y({monthlyRent:r,monthlyExpenses:e,vacancyRate:l,interestRate:s,loanTermYears:c},1.5),R=C(u),B=d=>d.toLocaleString("en-US",{maximumFractionDigits:0}),o=d=>"$"+B(d),G=f({...i,vacancyRate:l+5}),x=p>0?G/p:1/0,Q=f({...i}),F=_(a,(s+1)/100/12,c*12)*12,L=F>0?Q/F:1/0,q=_(a,s/100/12,180)*12,A=q>0?f(i)/q:1/0,E=_(a,s/100/12,c*12)*12*1,X=r*12*(1-l/100)-e*12*.9,I=E>0?X/E:1/0;let b;u<1?b=n("calc_out.dscr.row.tip_below_1","💡 Tip: DSCR below 1.0 = property cannot cover debt service from operations. Lenders will deny. Either: (1) reduce loan amount, (2) raise rent, (3) reduce expenses. STR lenders may accept 0.75-1.0 DSCR based on platform bookings (Airbnb); conventional lenders require 1.20+"):u<1.25?b=n("calc_out.dscr.row.tip_marginal",'💡 Tip: DSCR in 1.0-1.25 zone is "marginal" — many lenders will decline or require larger down payment. Aim for DSCR ≥ 1.25 by either reducing loan, raising rent, or building up reserves that are not counted here.'):b=n("calc_out.dscr.row.tip_qualifies","💡 Tip: DSCR ≥ 1.25 qualifies for most conventional and portfolio lenders. STR lenders typically accept 0.75-1.0. If approaching 2.0+, you may be over-paying for the property — explore buying more units or larger loan for better leverage.");const M=o(r),O=o(h),j=o(p),S=isFinite(u)?u.toFixed(2)+"x":"∞",N=o(K),P=o(W),Y=[n("calc_out.section.dscr_calculator","⏰ DSCR Calculator (Debt Service Coverage Ratio)")+\`
 
-💰 Loan Snapshot:
+\`+n("calc_out.section.dscr_loan_snapshot","💰 Loan Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Monthly gross rent:         \`+o(e)+\`
-• Monthly OpEx:                \`+o(t)+\`
-• Annual NOI:                  \`+o(f)+\`  (eff rent - OpEx)
-• Annual debt service:       \`+o(R)+\`  (mortgage P&I × 12)
-• Loan amount:                 \`+o(r)+\`
-• DSCR ratio:                  \`+(isFinite(l)?l.toFixed(2)+"x":"∞")+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📐 DSCR Math:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• NOI = grossRent × (1 - vacancy) - OpEx
-        = \`+o(e*12)+" × (1 - "+i+"%) - "+o(t*12)+\`
-        = \`+o(f)+\`
-• Debt service = monthlyPI × 12
-                = \`+o(m(r,s/100/12,a*12))+\`/mo × 12
-                = \`+o(R)+\`
-• DSCR = NOI / Debt service = \`+(isFinite(l)?l.toFixed(2)+"x":"∞")+\`
+\`+n("calc_out.dscr.row.monthly_gross_rent","• Monthly gross rent:         "+M,{value:M})+\`
+• Monthly OpEx:                \`+o(e)+\`
+\`+n("calc_out.dscr.row.annual_noi","• Annual NOI:                  "+O+"  (eff rent - OpEx)",{value:O})+\`
+\`+n("calc_out.dscr.row.annual_debt_service","• Annual debt service:       "+j+"  (mortgage P&I × 12)",{value:j})+\`
+• Loan amount:                 \`+o(a)+\`
+• DSCR ratio:                  \`+S+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🩺 DSCR Health:
+\`+n("calc_out.section.dscr_math","📐 DSCR Math:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+g.emoji+" "+g.label+\`
-\`+(l>=1.25?\`• Most conventional lenders will approve this deal.
-\`:l>=1?\`• Many lenders will require larger down payment or decline.
-\`:\`• Current structure does not qualify. Lenders will deny.
+\`+n("calc_out.dscr.row.math_noi_formula","• NOI = grossRent × (1 - vacancy) - OpEx")+\`
+        = \`+o(r*12)+" × (1 - "+l+"%) - "+o(e*12)+\`
+        = \`+o(h)+\`
+\`+n("calc_out.dscr.row.math_debt_service_formula","• Debt service = monthlyPI × 12")+\`
+                = \`+o(_(a,s/100/12,c*12))+\`/mo × 12
+                = \`+o(p)+\`
+\`+n("calc_out.dscr.row.math_dscr_formula","• DSCR = NOI / Debt service = "+S,{ratio:S})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+n("calc_out.section.dscr_health","🩺 DSCR Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(R.label==="trivially qualifies — no debt service"?n("calc_out.dscr.row.health_trivial","• 🟢 trivially qualifies — no debt service"):R.label==="qualifies — DSCR ≥ 1.25 (most lenders approve)"?n("calc_out.dscr.row.health_qualifies","• 🟢 qualifies — DSCR ≥ 1.25 (most lenders approve)"):R.label==="marginal — DSCR between 1.0-1.25 (many lenders decline)"?n("calc_out.dscr.row.health_marginal","• 🟡 marginal — DSCR between 1.0-1.25 (many lenders decline)"):n("calc_out.dscr.row.health_fails","• 🔴 fails — DSCR < 1.0 (deal cannot service debt)"))+\`
+\`+(u>=1.25?n("calc_out.dscr.row.health_note_approve","• Most conventional lenders will approve this deal.")+\`
+\`:u>=1?n("calc_out.dscr.row.health_note_declined","• Many lenders will require larger down payment or decline.")+\`
+\`:n("calc_out.dscr.row.health_note_denied","• Current structure does not qualify. Lenders will deny.")+\`
 \`)+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Lender Thresholds:
+\`+n("calc_out.section.dscr_lender_thresholds","🎯 Lender Thresholds:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Conventional (Fannie/Freddie):  DSCR ≥ 1.20-1.25
-• Portfolio lenders:              DSCR ≥ 1.20
-• Short-term rental (Airbnb):     DSCR 0.75-1.0 (Airbnb-future projections)
-• Commercial (multi-family):     DSCR ≥ 1.20-1.40
-• Hard money / bridge:           DSCR flexible (higher rate)
+\`+n("calc_out.dscr.row.threshold_conventional","• Conventional (Fannie/Freddie):  DSCR ≥ 1.20-1.25")+\`
+\`+n("calc_out.dscr.row.threshold_portfolio","• Portfolio lenders:              DSCR ≥ 1.20")+\`
+\`+n("calc_out.dscr.row.threshold_str","• Short-term rental (Airbnb):     DSCR 0.75-1.0 (Airbnb-future projections)")+\`
+\`+n("calc_out.dscr.row.threshold_commercial","• Commercial (multi-family):     DSCR ≥ 1.20-1.40")+\`
+\`+n("calc_out.dscr.row.threshold_hard_money","• Hard money / bridge:           DSCR flexible (higher rate)")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Reverse Calc (Max Loan):
+\`+n("calc_out.section.dscr_reverse_calc","⚖️ Reverse Calc (Max Loan):")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• At target DSCR 1.0:   \`+o(q)+\`
-• At target DSCR 1.25:  \`+o(w)+\` ← conventional threshold
-• At target DSCR 1.5:   \`+o(N)+\` ← strong buffer
+• At target DSCR 1.0:   \`+o(U)+\`
+\`+n("calc_out.dscr.row.max_loan_125","• At target DSCR 1.25:  "+N+" ← conventional threshold",{value:N})+\`
+\`+n("calc_out.dscr.row.max_loan_15","• At target DSCR 1.5:   "+P+" ← strong buffer",{value:P})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If Scenarios:
+\`+n("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Vacancy +5pp:               DSCR → \`+(isFinite(v)?v.toFixed(2)+"x":"∞")+\`
-• Rate +1pp:                  DSCR → \`+(isFinite(A)?A.toFixed(2)+"x":"∞")+\`
-• Term 30y → 15y:             DSCR → \`+(isFinite(E)?E.toFixed(2)+"x":"∞")+\`
-• OpEx −10%:                  DSCR → \`+(isFinite(L)?L.toFixed(2)+"x":"∞")+\`
-• Target DSCR 1.25 vs 1.0:    see reverse calc above
+• Vacancy +5pp:               DSCR → \`+(isFinite(x)?x.toFixed(2)+"x":"∞")+\`
+• Rate +1pp:                  DSCR → \`+(isFinite(L)?L.toFixed(2)+"x":"∞")+\`
+• Term 30y → 15y:             DSCR → \`+(isFinite(A)?A.toFixed(2)+"x":"∞")+\`
+• OpEx −10%:                  DSCR → \`+(isFinite(I)?I.toFixed(2)+"x":"∞")+\`
+\`+n("calc_out.dscr.row.whatif_target_compare","• Target DSCR 1.25 vs 1.0:    see reverse calc above")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-\`+S],Y=[.8,1,1.25,1.5,2,3];for(const u of Y){const V=p({monthlyRent:e,monthlyExpenses:t,vacancyRate:i,interestRate:s,loanTermYears:a},u),H=u>=1.25?" qualifies":u>=1?" marginal":" fails";M.push("Comparison: at DSCR "+u.toFixed(2)+"x → max loan "+o(V)+H)}return M},b=function(n,e,t){var r=_(n);return Array.isArray(r)?r.join(\`
-\`):String(r)};var z=y,K=m,U=d,W=C,$=h,B=p,G=D,J=x,Q=b,_=function(n){return x(n)};return[b(inputs,pick,fill)]}finally{}
+\`+b],Z=[.8,1,1.25,1.5,2,3];for(const d of Z){const T=y({monthlyRent:r,monthlyExpenses:e,vacancyRate:l,interestRate:s,loanTermYears:c},d),V=d>=1.25?" qualifies":d>=1?" marginal":" fails",H=d.toFixed(2),$=o(T);Y.push(n("calc_out.dscr.row.comparison","Comparison: at DSCR "+H+"x → max loan "+$+V,{dscr:H,loan:$,tag:V}))}return Y},D=function(t,r,e){var a=J(t);return Array.isArray(a)?a.join(\`
+\`):String(a)};var k=m,nn=_,tn=f,rn=v,en=g,on=y,an=C,cn=w,ln=D,n=tk,z='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',n=new Function("return "+z)(),J=function(t){return w(t)};return[D(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -299,7 +331,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateDSCR(inputs);
   },
-  staticExamples: ['⏰ DSCR Calculator (Debt Service Coverage Ratio)\n\n💰 Loan Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Monthly gross rent:         $5,000\n• Monthly OpEx:                $1,500\n• Annual NOI:                  $39,000  (eff rent - OpEx)\n• Annual debt service:       $33,562  (mortgage P&I × 12)\n• Loan amount:                 $400,000\n• DSCR ratio:                  1.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 DSCR Math:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• NOI = grossRent × (1 - vacancy) - OpEx\n        = $60,000 × (1 - 5%) - $18,000\n        = $39,000\n• Debt service = monthlyPI × 12\n                = $2,797/mo × 12\n                = $33,562\n• DSCR = NOI / Debt service = 1.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 DSCR Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 marginal — DSCR between 1.0-1.25 (many lenders decline)\n• Many lenders will require larger down payment or decline.\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Lender Thresholds:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Conventional (Fannie/Freddie):  DSCR ≥ 1.20-1.25\n• Portfolio lenders:              DSCR ≥ 1.20\n• Short-term rental (Airbnb):     DSCR 0.75-1.0 (Airbnb-future projections)\n• Commercial (multi-family):     DSCR ≥ 1.20-1.40\n• Hard money / bridge:           DSCR flexible (higher rate)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Reverse Calc (Max Loan):\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• At target DSCR 1.0:   $464,807\n• At target DSCR 1.25:  $371,846 ← conventional threshold\n• At target DSCR 1.5:   $309,872 ← strong buffer\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Vacancy +5pp:               DSCR → 1.07x\n• Rate +1pp:                  DSCR → 1.06x\n• Term 30y → 15y:             DSCR → 0.88x\n• OpEx −10%:                  DSCR → 1.22x\n• Target DSCR 1.25 vs 1.0:    see reverse calc above\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: DSCR in 1.0-1.25 zone is "marginal" — many lenders will decline or require larger down payment. Aim for DSCR ≥ 1.25 by either reducing loan, raising rent, or building up reserves that are not counted here.\nComparison: at DSCR 0.80x → max loan $581,009 fails\nComparison: at DSCR 1.00x → max loan $464,807 marginal\nComparison: at DSCR 1.25x → max loan $371,846 qualifies\nComparison: at DSCR 1.50x → max loan $309,872 qualifies\nComparison: at DSCR 2.00x → max loan $232,404 qualifies\nComparison: at DSCR 3.00x → max loan $154,936 qualifies'],
+  staticExamples: ['$calc_out.section.dscr_calculator|⏰ DSCR Calculator (Debt Service Coverage Ratio)|\n\n$calc_out.section.dscr_loan_snapshot|💰 Loan Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.dscr.row.monthly_gross_rent{"value":"$5,000"}|• Monthly gross rent:         $5,000|\n• Monthly OpEx:                $1,500\n$calc_out.dscr.row.annual_noi{"value":"$39,000"}|• Annual NOI:                  $39,000  (eff rent - OpEx)|\n$calc_out.dscr.row.annual_debt_service{"value":"$33,562"}|• Annual debt service:       $33,562  (mortgage P&I × 12)|\n• Loan amount:                 $400,000\n• DSCR ratio:                  1.16x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.dscr_math|📐 DSCR Math:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.dscr.row.math_noi_formula|• NOI = grossRent × (1 - vacancy) - OpEx|\n        = $60,000 × (1 - 5%) - $18,000\n        = $39,000\n$calc_out.dscr.row.math_debt_service_formula|• Debt service = monthlyPI × 12|\n                = $2,797/mo × 12\n                = $33,562\n$calc_out.dscr.row.math_dscr_formula{"ratio":"1.16x"}|• DSCR = NOI / Debt service = 1.16x|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.dscr_health|🩺 DSCR Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.dscr.row.health_marginal|• 🟡 marginal — DSCR between 1.0-1.25 (many lenders decline)|\n$calc_out.dscr.row.health_note_declined|• Many lenders will require larger down payment or decline.|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.dscr_lender_thresholds|🎯 Lender Thresholds:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.dscr.row.threshold_conventional|• Conventional (Fannie/Freddie):  DSCR ≥ 1.20-1.25|\n$calc_out.dscr.row.threshold_portfolio|• Portfolio lenders:              DSCR ≥ 1.20|\n$calc_out.dscr.row.threshold_str|• Short-term rental (Airbnb):     DSCR 0.75-1.0 (Airbnb-future projections)|\n$calc_out.dscr.row.threshold_commercial|• Commercial (multi-family):     DSCR ≥ 1.20-1.40|\n$calc_out.dscr.row.threshold_hard_money|• Hard money / bridge:           DSCR flexible (higher rate)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.dscr_reverse_calc|⚖️ Reverse Calc (Max Loan):|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• At target DSCR 1.0:   $464,807\n$calc_out.dscr.row.max_loan_125{"value":"$371,846"}|• At target DSCR 1.25:  $371,846 ← conventional threshold|\n$calc_out.dscr.row.max_loan_15{"value":"$309,872"}|• At target DSCR 1.5:   $309,872 ← strong buffer|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Vacancy +5pp:               DSCR → 1.07x\n• Rate +1pp:                  DSCR → 1.06x\n• Term 30y → 15y:             DSCR → 0.88x\n• OpEx −10%:                  DSCR → 1.22x\n$calc_out.dscr.row.whatif_target_compare|• Target DSCR 1.25 vs 1.0:    see reverse calc above|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.dscr.row.tip_marginal|💡 Tip: DSCR in 1.0-1.25 zone is "marginal" — many lenders will decline or require larger down payment. Aim for DSCR ≥ 1.25 by either reducing loan, raising rent, or building up reserves that are not counted here.|\n$calc_out.dscr.row.comparison{"dscr":"0.80","loan":"$581,009","tag":" fails"}|Comparison: at DSCR 0.80x → max loan $581,009 fails|\n$calc_out.dscr.row.comparison{"dscr":"1.00","loan":"$464,807","tag":" marginal"}|Comparison: at DSCR 1.00x → max loan $464,807 marginal|\n$calc_out.dscr.row.comparison{"dscr":"1.25","loan":"$371,846","tag":" qualifies"}|Comparison: at DSCR 1.25x → max loan $371,846 qualifies|\n$calc_out.dscr.row.comparison{"dscr":"1.50","loan":"$309,872","tag":" qualifies"}|Comparison: at DSCR 1.50x → max loan $309,872 qualifies|\n$calc_out.dscr.row.comparison{"dscr":"2.00","loan":"$232,404","tag":" qualifies"}|Comparison: at DSCR 2.00x → max loan $232,404 qualifies|\n$calc_out.dscr.row.comparison{"dscr":"3.00","loan":"$154,936","tag":" qualifies"}|Comparison: at DSCR 3.00x → max loan $154,936 qualifies|'],
   faq: [
     {
       q: 'What is DSCR?',

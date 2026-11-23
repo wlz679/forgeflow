@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -58,24 +61,30 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
   // Edge: homePrice=0 → prompt
   if (homePrice === 0) {
     return [
-      '⏰ Mortgage Calculator\n\n' +
-        '💰 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.',
+      makeToken('calc_out.section.mortgage_calculator', '⏰ Mortgage Calculator') +
+        '\n\n' +
+        makeToken('calc_out.mortgage.row.need_inputs', '💰 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.'),
     ];
   }
   // Edge: down payment >= home price
   if (downPayment >= homePrice) {
+    const downAmountLabel = homePrice.toLocaleString('en-US');
     return [
-      '⏰ Mortgage Calculator\n\n' +
-        '💰 Down payment (' +
-        homePrice.toLocaleString('en-US') +
-        ') >= home price — no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments.',
+      makeToken('calc_out.section.mortgage_calculator', '⏰ Mortgage Calculator') +
+        '\n\n' +
+        makeToken(
+          'calc_out.mortgage.row.no_loan_needed',
+          '💰 Down payment (' + downAmountLabel + ') >= home price — no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments.',
+          { value: downAmountLabel },
+        ),
     ];
   }
   // Edge: invalid term
   if (loanTermYears <= 0) {
     return [
-      '⏰ Mortgage Calculator\n\n' +
-        '💰 Loan term must be > 0 years. Typical mortgages are 15, 20, or 30 years.',
+      makeToken('calc_out.section.mortgage_calculator', '⏰ Mortgage Calculator') +
+        '\n\n' +
+        makeToken('calc_out.mortgage.row.need_term', '💰 Loan term must be > 0 years. Typical mortgages are 15, 20, or 30 years.'),
     ];
   }
 
@@ -92,19 +101,24 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
   const money = (n: number) => '$' + fmt(n);
   const pct2 = (n: number) => n.toFixed(2) + '%';
 
-  // Health
-  let healthEmoji: string;
-  let healthLabel: string;
+  // Health（健康度各档**各写一个 code 字面量** ⇒ 不动态拼码）
   const ratio = homePrice > 0 ? monthly / homePrice : 0;
+  let healthLine: string;
   if (ratio < 0.010) {
-    healthEmoji = '🟢';
-    healthLabel = 'affordable — P&I under 1.0% of home price';
+    healthLine = makeToken(
+      'calc_out.mortgage.row.health_affordable',
+      '• 🟢 affordable — P&I under 1.0% of home price',
+    );
   } else if (ratio < 0.013) {
-    healthEmoji = '🟡';
-    healthLabel = 'moderate — P&I between 1.0-1.3% of home price';
+    healthLine = makeToken(
+      'calc_out.mortgage.row.health_moderate',
+      '• 🟡 moderate — P&I between 1.0-1.3% of home price',
+    );
   } else {
-    healthEmoji = '🟠';
-    healthLabel = 'stretched — P&I over 1.3% of home price; verify 28% DTI rule';
+    healthLine = makeToken(
+      'calc_out.mortgage.row.health_stretched',
+      '• 🟠 stretched — P&I over 1.3% of home price; verify 28% DTI rule',
+    );
   }
 
   // Term comparison
@@ -131,19 +145,48 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
   // Tip
   let tip: string;
   if (ltvPct >= 80) {
-    tip =
-      '💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.';
+    tip = makeToken(
+      'calc_out.mortgage.row.tip_pmi',
+      '💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.',
+    );
   } else if (loanTermYears >= 30) {
-    tip =
-      '💡 Tip: 30-year term gives lowest monthly payment but highest total interest. Compare with 15-year — higher payment but ~50% less total interest paid.';
+    tip = makeToken(
+      'calc_out.mortgage.row.tip_30_year',
+      '💡 Tip: 30-year term gives lowest monthly payment but highest total interest. Compare with 15-year — higher payment but ~50% less total interest paid.',
+    );
   } else {
-    tip =
-      '💡 Tip: Shortening your term from 30 to 15 years typically saves 50%+ on total interest. Run the comparison below to see the dollar difference for your loan.';
+    tip = makeToken(
+      'calc_out.mortgage.row.tip_shorten',
+      '💡 Tip: Shortening your term from 30 to 15 years typically saves 50%+ on total interest. Run the comparison below to see the dollar difference for your loan.',
+    );
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const totalInterestLabel = money(ti);
+  const totalCostLabel = money(totalCost);
+  const m15Label = money(m15);
+  const ti15Label = money(ti15);
+  const m20Label = money(m20);
+  const ti20Label = money(ti20);
+  const monthlyLabel = money(monthly);
+  const tiLabel = money(ti);
+  const paid5Label = money(paid5);
+  const paid5PctLabel = pct2((paid5 / principal) * 100);
+  const paid15Label = money(paid15);
+  const paid15PctLabel = pct2((paid15 / principal) * 100);
+  const paid30Label = money(paid30);
+  const principal20Label = money(principal20);
+  const monthly20Label = money(monthly20);
+  const ratioPctLabel = pct2(ratio * 100);
+  // ⚠️ params 的值必须是**字符串**（makeToken 的类型是 Record<string, string>）
+  const termYearsLabel = String(loanTermYears);
+  const termMonthsLabel = String(n);
+  const rateLabel = String(interestRate);
+  const extraYearsLabel = String(extraYears);
+
   const r =
-    '⏰ Mortgage Calculator\n\n' +
-    '💰 Loan Snapshot:\n' +
+    makeToken('calc_out.section.mortgage_calculator', '⏰ Mortgage Calculator') + '\n\n' +
+    makeToken('calc_out.section.mortgage_loan_snapshot', '💰 Loan Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Home price:           ' +
     money(homePrice) +
@@ -156,81 +199,100 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
     '• Loan amount:          ' +
     money(principal) +
     '\n' +
-    '• Loan term:            ' +
-    loanTermYears +
-    ' years (' +
-    n +
-    ' months)\n' +
-    '• Interest rate:        ' +
-    interestRate +
-    '% APR\n' +
+    makeToken(
+      'calc_out.mortgage.row.loan_term',
+      '• Loan term:            ' + termYearsLabel + ' years (' + termMonthsLabel + ' months)',
+      { term: termYearsLabel, months: termMonthsLabel },
+    ) +
+    '\n' +
+    makeToken(
+      'calc_out.mortgage.row.interest_rate',
+      '• Interest rate:        ' + rateLabel + '% APR',
+      { rate: rateLabel },
+    ) +
+    '\n' +
     '• LTV:                  ' +
     pct2(ltvPct) +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📐 Monthly Payment:\n' +
+    makeToken('calc_out.section.mortgage_monthly_payment', '📐 Monthly Payment:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Monthly P&I:          ' +
     money(monthly) +
     '\n' +
-    '• Total interest paid: ' +
-    money(ti) +
-    '  (over loan term)\n' +
-    '• Total cost (price + interest): ' +
-    money(totalCost) +
+    makeToken(
+      'calc_out.mortgage.row.total_interest',
+      '• Total interest paid: ' + totalInterestLabel + '  (over loan term)',
+      { value: totalInterestLabel },
+    ) +
+    '\n' +
+    makeToken(
+      'calc_out.mortgage.row.total_cost',
+      '• Total cost (price + interest): ' + totalCostLabel,
+      { value: totalCostLabel },
+    ) +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🩺 Affordability Health:\n' +
+    makeToken('calc_out.section.mortgage_health', '🩺 Affordability Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' +
-    healthEmoji +
-    ' ' +
-    healthLabel +
+    healthLine +
     '\n' +
-    '• P&I as % of home price: ' +
-    pct2(ratio * 100) +
+    makeToken(
+      'calc_out.mortgage.row.pi_as_pct_home_price',
+      '• P&I as % of home price: ' + ratioPctLabel,
+      { value: ratioPctLabel },
+    ) +
     '\n' +
-    '• Rule of thumb: P&I should be ≤ 28% of monthly gross income\n\n' +
+    makeToken(
+      'calc_out.mortgage.row.rule_of_thumb',
+      '• Rule of thumb: P&I should be ≤ 28% of monthly gross income',
+    ) +
+    '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Loan Term Comparison:\n' +
+    makeToken('calc_out.section.mortgage_term_comparison', '🎯 Loan Term Comparison:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 15-year: ' +
-    money(m15) +
-    '/mo · ' +
-    money(ti15) +
-    ' total interest\n' +
-    '• 20-year: ' +
-    money(m20) +
-    '/mo · ' +
-    money(ti20) +
-    ' total interest\n' +
-    '• ' +
-    loanTermYears +
-    '-year: ' +
-    money(monthly) +
-    '/mo · ' +
-    money(ti) +
-    ' total interest  ← current\n\n' +
+    makeToken(
+      'calc_out.mortgage.row.term_15',
+      '• 15-year: ' + m15Label + '/mo · ' + ti15Label + ' total interest',
+      { payment: m15Label, interest: ti15Label },
+    ) +
+    '\n' +
+    makeToken(
+      'calc_out.mortgage.row.term_20',
+      '• 20-year: ' + m20Label + '/mo · ' + ti20Label + ' total interest',
+      { payment: m20Label, interest: ti20Label },
+    ) +
+    '\n' +
+    makeToken(
+      'calc_out.mortgage.row.term_current',
+      '• ' + termYearsLabel + '-year: ' + monthlyLabel + '/mo · ' + tiLabel + ' total interest  ← current',
+      { term: termYearsLabel, payment: monthlyLabel, interest: tiLabel },
+    ) +
+    '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Amortization Milestones:\n' +
+    makeToken('calc_out.section.mortgage_amortization', '⚖️ Amortization Milestones:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• After year 5:  ' +
-    money(paid5) +
-    ' principal paid (' +
-    pct2((paid5 / principal) * 100) +
-    ' of loan)\n' +
-    '• After year 15: ' +
-    money(paid15) +
-    ' principal paid (' +
-    pct2((paid15 / principal) * 100) +
-    ' of loan)\n' +
+    makeToken(
+      'calc_out.mortgage.row.amort_year_5',
+      '• After year 5:  ' + paid5Label + ' principal paid (' + paid5PctLabel + ' of loan)',
+      { value: paid5Label, pct: paid5PctLabel },
+    ) +
+    '\n' +
+    makeToken(
+      'calc_out.mortgage.row.amort_year_15',
+      '• After year 15: ' + paid15Label + ' principal paid (' + paid15PctLabel + ' of loan)',
+      { value: paid15Label, pct: paid15PctLabel },
+    ) +
+    '\n' +
     (loanTermYears >= 30
-      ? '• After year 30: ' +
-        money(paid30) +
-        ' (loan fully paid)\n'
+      ? makeToken(
+          'calc_out.mortgage.row.amort_year_30',
+          '• After year 30: ' + paid30Label + ' (loan fully paid)',
+          { value: paid30Label },
+        ) + '\n'
       : '') +
     '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If Scenarios:\n' +
+    makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Rate -1pp (' +
     rateMinus.toFixed(1) +
@@ -242,15 +304,23 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
     '%):     monthly → ' +
     money(monthlyPlus) +
     '\n' +
-    '• Extra $200/mo payment:    helps pay off ~' +
-    extraYears +
-    ' months earlier\n' +
-    '• 20% down (vs current):   loan ' +
-    money(principal20) +
-    ' · monthly ' +
-    money(monthly20) +
+    makeToken(
+      'calc_out.mortgage.row.whatif_extra_payment',
+      '• Extra $200/mo payment:    helps pay off ~' + extraYearsLabel + ' months earlier',
+      { months: extraYearsLabel },
+    ) +
     '\n' +
-    '• 15-year refinance:        see comparison above\n\n' +
+    makeToken(
+      'calc_out.mortgage.row.whatif_down_20',
+      '• 20% down (vs current):   loan ' + principal20Label + ' · monthly ' + monthly20Label,
+      { loan: principal20Label, monthly: monthly20Label },
+    ) +
+    '\n' +
+    makeToken(
+      'calc_out.mortgage.row.whatif_refi_15',
+      '• 15-year refinance:        see comparison above',
+    ) +
+    '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     tip;
 
@@ -259,29 +329,27 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
   const prices = [200000, 400000, 600000, 800000, 1000000, 1500000];
   for (const p of prices) {
     const prinP = p - downPayment;
+    const priceLabel = money(p);
+    const downLabel = money(downPayment);
     if (prinP <= 0) {
       results.push(
-        'Comparison: home ' +
-          money(p) +
-          ' with ' +
-          money(downPayment) +
-          ' down → loan = $0 (no payment)',
+        makeToken(
+          'calc_out.mortgage.row.comparison_no_loan',
+          'Comparison: home ' + priceLabel + ' with ' + downLabel + ' down → loan = $0 (no payment)',
+          { price: priceLabel, down: downLabel },
+        ),
       );
       continue;
     }
     const m = monthlyPI(prinP, monthlyRate, n);
+    const pctLabel = pct2((downPayment / p) * 100);
+    const monthlyCompareLabel = money(m);
     results.push(
-      'Comparison: ' +
-        money(p) +
-        ' home with ' +
-        money(downPayment) +
-        ' down (' +
-        pct2((downPayment / p) * 100) +
-        ') → ' +
-        money(m) +
-        '/mo at ' +
-        interestRate +
-        '%',
+      makeToken(
+        'calc_out.mortgage.row.comparison',
+        'Comparison: ' + priceLabel + ' home with ' + downLabel + ' down (' + pctLabel + ') → ' + monthlyCompareLabel + '/mo at ' + rateLabel + '%',
+        { price: priceLabel, down: downLabel, pct: pctLabel, monthly: monthlyCompareLabel, rate: rateLabel },
+      ),
     );
   }
 
@@ -291,70 +359,70 @@ function calculateMortgage(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let f=function(e){return Number.isNaN(e)?0:Math.max(0,e)},c=function(e,n,o){return o<=0?0:n===0?e/o:e*n/(1-Math.pow(1+n,-o))},h=function(e,n,o){return c(e,n,o)*o-e},v=function(e,n){return n<=0?0:e/n*100},y=function(e,n,o,a){const m=Math.min(e*12,a);if(a<=0)return 0;if(o===0)return n*(m/a);const r=n*(Math.pow(1+o,a)-Math.pow(1+o,m))/(Math.pow(1+o,a)-1);return n-r},I=function(e){const n=f(parseFloat(e.homePrice)||0),o=f(parseFloat(e.downPayment)||0),a=f(parseFloat(e.loanTermYears)||0),m=parseFloat(e.interestRate)||0;if(n===0)return[\`⏰ Mortgage Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let _=function(n){return Number.isNaN(n)?0:Math.max(0,n)},u=function(n,o,e){return e<=0?0:o===0?n/e:n*o/(1-Math.pow(1+o,-e))},h=function(n,o,e){return u(n,o,e)*e-n},I=function(n,o){return o<=0?0:n/o*100},f=function(n,o,e,c){const m=Math.min(n*12,c);if(c<=0)return 0;if(e===0)return o*(m/c);const a=o*(Math.pow(1+e,c)-Math.pow(1+e,m))/(Math.pow(1+e,c)-1);return o-a},C=function(n){const o=_(parseFloat(n.homePrice)||0),e=_(parseFloat(n.downPayment)||0),c=_(parseFloat(n.loanTermYears)||0),m=parseFloat(n.interestRate)||0;if(o===0)return[t("calc_out.section.mortgage_calculator","⏰ Mortgage Calculator")+\`
 
-💰 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.\`];if(o>=n)return[\`⏰ Mortgage Calculator
+\`+t("calc_out.mortgage.row.need_inputs","💰 Enter home price, down payment, loan term, and interest rate to see your monthly P&I, total interest, and amortization milestones.")];if(e>=o){const l=o.toLocaleString("en-US");return[t("calc_out.section.mortgage_calculator","⏰ Mortgage Calculator")+\`
 
-💰 Down payment (\`+n.toLocaleString("en-US")+") >= home price — no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments."];if(a<=0)return[\`⏰ Mortgage Calculator
+\`+t("calc_out.mortgage.row.no_loan_needed","💰 Down payment ("+l+") >= home price — no loan needed. Consider whether a smaller down payment would let you keep more cash liquid for other investments.",{value:l})]}if(c<=0)return[t("calc_out.section.mortgage_calculator","⏰ Mortgage Calculator")+\`
 
-💰 Loan term must be > 0 years. Typical mortgages are 15, 20, or 30 years.\`];const r=n-o,i=m/100/12,s=a*12,M=c(r,i,s),u=h(r,i,s),E=n+u,_=v(r,n),N=l=>l.toLocaleString("en-US",{maximumFractionDigits:0}),t=l=>"$"+N(l),p=l=>l.toFixed(2)+"%";let d,w;const P=n>0?M/n:0;P<.01?(d="🟢",w="affordable — P&I under 1.0% of home price"):P<.013?(d="🟡",w="moderate — P&I between 1.0-1.3% of home price"):(d="🟠",w="stretched — P&I over 1.3% of home price; verify 28% DTI rule");const k=c(r,i,180),R=h(r,i,180),Y=c(r,i,240),$=h(r,i,240),C=y(5,r,i,s),F=y(15,r,i,s),j=y(30,r,i,s),L=Math.max(0,m-1),A=m+1,q=c(r,L/100/12,s),z=c(r,A/100/12,s),H=n*.2,S=n-H,U=c(S,i,s),V=u>0?Math.ceil(u/200/12):0;let g;_>=80?g="💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.":a>=30?g="💡 Tip: 30-year term gives lowest monthly payment but highest total interest. Compare with 15-year — higher payment but ~50% less total interest paid.":g="💡 Tip: Shortening your term from 30 to 15 years typically saves 50%+ on total interest. Run the comparison below to see the dollar difference for your loan.";const b=[\`⏰ Mortgage Calculator
+\`+t("calc_out.mortgage.row.need_term","💰 Loan term must be > 0 years. Typical mortgages are 15, 20, or 30 years.")];const a=o-e,s=m/100/12,i=c*12,P=u(a,s,i),p=h(a,s,i),et=o+p,A=I(a,o),at=l=>l.toLocaleString("en-US",{maximumFractionDigits:0}),r=l=>"$"+at(l),g=l=>l.toFixed(2)+"%",M=o>0?P/o:0;let y;M<.01?y=t("calc_out.mortgage.row.health_affordable","• 🟢 affordable — P&I under 1.0% of home price"):M<.013?y=t("calc_out.mortgage.row.health_moderate","• 🟡 moderate — P&I between 1.0-1.3% of home price"):y=t("calc_out.mortgage.row.health_stretched","• 🟠 stretched — P&I over 1.3% of home price; verify 28% DTI rule");const ct=u(a,s,180),lt=h(a,s,180),st=u(a,s,240),it=h(a,s,240),x=f(5,a,s,i),q=f(15,a,s,i),ut=f(30,a,s,i),j=Math.max(0,m-1),D=m+1,mt=u(a,j/100/12,i),gt=u(a,D/100/12,i),pt=o*.2,N=o-pt,_t=u(N,s,i),ht=p>0?Math.ceil(p/200/12):0;let w;A>=80?w=t("calc_out.mortgage.row.tip_pmi","💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI."):c>=30?w=t("calc_out.mortgage.row.tip_30_year","💡 Tip: 30-year term gives lowest monthly payment but highest total interest. Compare with 15-year — higher payment but ~50% less total interest paid."):w=t("calc_out.mortgage.row.tip_shorten","💡 Tip: Shortening your term from 30 to 15 years typically saves 50%+ on total interest. Run the comparison below to see the dollar difference for your loan.");const Y=r(p),E=r(et),$=r(ct),z=r(lt),O=r(st),R=r(it),H=r(P),U=r(p),V=r(x),J=g(x/a*100),K=r(q),W=g(q/a*100),B=r(ut),G=r(N),Q=r(_t),X=g(M*100),d=String(c),Z=String(i),b=String(m),T=String(ht),S=[t("calc_out.section.mortgage_calculator","⏰ Mortgage Calculator")+\`
 
-💰 Loan Snapshot:
+\`+t("calc_out.section.mortgage_loan_snapshot","💰 Loan Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Home price:           \`+t(n)+\`
-• Down payment:         \`+t(o)+"  ("+p(o/n*100)+\`)
-• Loan amount:          \`+t(r)+\`
-• Loan term:            \`+a+" years ("+s+\` months)
-• Interest rate:        \`+m+\`% APR
-• LTV:                  \`+p(_)+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📐 Monthly Payment:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Monthly P&I:          \`+t(M)+\`
-• Total interest paid: \`+t(u)+\`  (over loan term)
-• Total cost (price + interest): \`+t(E)+\`
+• Home price:           \`+r(o)+\`
+• Down payment:         \`+r(e)+"  ("+g(e/o*100)+\`)
+• Loan amount:          \`+r(a)+\`
+\`+t("calc_out.mortgage.row.loan_term","• Loan term:            "+d+" years ("+Z+" months)",{term:d,months:Z})+\`
+\`+t("calc_out.mortgage.row.interest_rate","• Interest rate:        "+b+"% APR",{rate:b})+\`
+• LTV:                  \`+g(A)+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🩺 Affordability Health:
+\`+t("calc_out.section.mortgage_monthly_payment","📐 Monthly Payment:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+d+" "+w+\`
-• P&I as % of home price: \`+p(P*100)+\`
-• Rule of thumb: P&I should be ≤ 28% of monthly gross income
+• Monthly P&I:          \`+r(P)+\`
+\`+t("calc_out.mortgage.row.total_interest","• Total interest paid: "+Y+"  (over loan term)",{value:Y})+\`
+\`+t("calc_out.mortgage.row.total_cost","• Total cost (price + interest): "+E,{value:E})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Loan Term Comparison:
+\`+t("calc_out.section.mortgage_health","🩺 Affordability Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 15-year: \`+t(k)+"/mo · "+t(R)+\` total interest
-• 20-year: \`+t(Y)+"/mo · "+t($)+\` total interest
-• \`+a+"-year: "+t(M)+"/mo · "+t(u)+\` total interest  ← current
+\`+y+\`
+\`+t("calc_out.mortgage.row.pi_as_pct_home_price","• P&I as % of home price: "+X,{value:X})+\`
+\`+t("calc_out.mortgage.row.rule_of_thumb","• Rule of thumb: P&I should be ≤ 28% of monthly gross income")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Amortization Milestones:
+\`+t("calc_out.section.mortgage_term_comparison","🎯 Loan Term Comparison:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• After year 5:  \`+t(C)+" principal paid ("+p(C/r*100)+\` of loan)
-• After year 15: \`+t(F)+" principal paid ("+p(F/r*100)+\` of loan)
-\`+(a>=30?"• After year 30: "+t(j)+\` (loan fully paid)
+\`+t("calc_out.mortgage.row.term_15","• 15-year: "+$+"/mo · "+z+" total interest",{payment:$,interest:z})+\`
+\`+t("calc_out.mortgage.row.term_20","• 20-year: "+O+"/mo · "+R+" total interest",{payment:O,interest:R})+\`
+\`+t("calc_out.mortgage.row.term_current","• "+d+"-year: "+H+"/mo · "+U+" total interest  ← current",{term:d,payment:H,interest:U})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.mortgage_amortization","⚖️ Amortization Milestones:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.mortgage.row.amort_year_5","• After year 5:  "+V+" principal paid ("+J+" of loan)",{value:V,pct:J})+\`
+\`+t("calc_out.mortgage.row.amort_year_15","• After year 15: "+K+" principal paid ("+W+" of loan)",{value:K,pct:W})+\`
+\`+(c>=30?t("calc_out.mortgage.row.amort_year_30","• After year 30: "+B+" (loan fully paid)",{value:B})+\`
 \`:"")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If Scenarios:
+\`+t("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Rate -1pp (\`+L.toFixed(1)+"%):     monthly → "+t(q)+\`
-• Rate +1pp (\`+A.toFixed(1)+"%):     monthly → "+t(z)+\`
-• Extra $200/mo payment:    helps pay off ~\`+V+\` months earlier
-• 20% down (vs current):   loan \`+t(S)+" · monthly "+t(U)+\`
-• 15-year refinance:        see comparison above
+• Rate -1pp (\`+j.toFixed(1)+"%):     monthly → "+r(mt)+\`
+• Rate +1pp (\`+D.toFixed(1)+"%):     monthly → "+r(gt)+\`
+\`+t("calc_out.mortgage.row.whatif_extra_payment","• Extra $200/mo payment:    helps pay off ~"+T+" months earlier",{months:T})+\`
+\`+t("calc_out.mortgage.row.whatif_down_20","• 20% down (vs current):   loan "+G+" · monthly "+Q,{loan:G,monthly:Q})+\`
+\`+t("calc_out.mortgage.row.whatif_refi_15","• 15-year refinance:        see comparison above")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-\`+g],K=[2e5,4e5,6e5,8e5,1e6,15e5];for(const l of K){const x=l-o;if(x<=0){b.push("Comparison: home "+t(l)+" with "+t(o)+" down → loan = $0 (no payment)");continue}const W=c(x,i,s);b.push("Comparison: "+t(l)+" home with "+t(o)+" down ("+p(o/l*100)+") → "+t(W)+"/mo at "+m+"%")}return b},T=function(e,n,o){var a=D(e);return Array.isArray(a)?a.join(\`
-\`):String(a)};var B=f,G=c,J=h,O=v,Q=y,X=I,Z=T,D=function(e){return I(e)};return[T(inputs,pick,fill)]}finally{}
+\`+w],ft=[2e5,4e5,6e5,8e5,1e6,15e5];for(const l of ft){const k=l-e,L=r(l),v=r(e);if(k<=0){S.push(t("calc_out.mortgage.row.comparison_no_loan","Comparison: home "+L+" with "+v+" down → loan = $0 (no payment)",{price:L,down:v}));continue}const yt=u(k,s,i),tt=g(e/l*100),ot=r(yt);S.push(t("calc_out.mortgage.row.comparison","Comparison: "+L+" home with "+v+" down ("+tt+") → "+ot+"/mo at "+b+"%",{price:L,down:v,pct:tt,monthly:ot,rate:b}))}return S},F=function(n,o,e){var c=nt(n);return Array.isArray(c)?c.join(\`
+\`):String(c)};var wt=_,dt=u,bt=h,Lt=I,vt=f,Pt=C,Mt=F,t=tk,rt='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+rt)(),nt=function(n){return C(n)};return[F(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -384,7 +452,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateMortgage(inputs);
   },
-  staticExamples: ['⏰ Mortgage Calculator\n\n💰 Loan Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Home price:           $500,000\n• Down payment:         $100,000  (20.00%)\n• Loan amount:          $400,000\n• Loan term:            30 years (360 months)\n• Interest rate:        6.5% APR\n• LTV:                  80.00%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Monthly Payment:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Monthly P&I:          $2,528\n• Total interest paid: $510,178  (over loan term)\n• Total cost (price + interest): $1,010,178\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Affordability Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 affordable — P&I under 1.0% of home price\n• P&I as % of home price: 0.51%\n• Rule of thumb: P&I should be ≤ 28% of monthly gross income\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Loan Term Comparison:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 15-year: $3,484/mo · $227,197 total interest\n• 20-year: $2,982/mo · $315,750 total interest\n• 30-year: $2,528/mo · $510,178 total interest  ← current\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Amortization Milestones:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• After year 5:  $25,556 principal paid (6.39% of loan)\n• After year 15: $109,763 principal paid (27.44% of loan)\n• After year 30: $400,000 (loan fully paid)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Rate -1pp (5.5%):     monthly → $2,271\n• Rate +1pp (7.5%):     monthly → $2,797\n• Extra $200/mo payment:    helps pay off ~213 months earlier\n• 20% down (vs current):   loan $400,000 · monthly $2,528\n• 15-year refinance:        see comparison above\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.\nComparison: $200,000 home with $100,000 down (50.00%) → $632/mo at 6.5%\nComparison: $400,000 home with $100,000 down (25.00%) → $1,896/mo at 6.5%\nComparison: $600,000 home with $100,000 down (16.67%) → $3,160/mo at 6.5%\nComparison: $800,000 home with $100,000 down (12.50%) → $4,424/mo at 6.5%\nComparison: $1,000,000 home with $100,000 down (10.00%) → $5,689/mo at 6.5%\nComparison: $1,500,000 home with $100,000 down (6.67%) → $8,849/mo at 6.5%'],
+  staticExamples: ['$calc_out.section.mortgage_calculator|⏰ Mortgage Calculator|\n\n$calc_out.section.mortgage_loan_snapshot|💰 Loan Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Home price:           $500,000\n• Down payment:         $100,000  (20.00%)\n• Loan amount:          $400,000\n$calc_out.mortgage.row.loan_term{"term":"30","months":"360"}|• Loan term:            30 years (360 months)|\n$calc_out.mortgage.row.interest_rate{"rate":"6.5"}|• Interest rate:        6.5% APR|\n• LTV:                  80.00%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.mortgage_monthly_payment|📐 Monthly Payment:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Monthly P&I:          $2,528\n$calc_out.mortgage.row.total_interest{"value":"$510,178"}|• Total interest paid: $510,178  (over loan term)|\n$calc_out.mortgage.row.total_cost{"value":"$1,010,178"}|• Total cost (price + interest): $1,010,178|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.mortgage_health|🩺 Affordability Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.mortgage.row.health_affordable|• 🟢 affordable — P&I under 1.0% of home price|\n$calc_out.mortgage.row.pi_as_pct_home_price{"value":"0.51%"}|• P&I as % of home price: 0.51%|\n$calc_out.mortgage.row.rule_of_thumb|• Rule of thumb: P&I should be ≤ 28% of monthly gross income|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.mortgage_term_comparison|🎯 Loan Term Comparison:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.mortgage.row.term_15{"payment":"$3,484","interest":"$227,197"}|• 15-year: $3,484/mo · $227,197 total interest|\n$calc_out.mortgage.row.term_20{"payment":"$2,982","interest":"$315,750"}|• 20-year: $2,982/mo · $315,750 total interest|\n$calc_out.mortgage.row.term_current{"term":"30","payment":"$2,528","interest":"$510,178"}|• 30-year: $2,528/mo · $510,178 total interest  ← current|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.mortgage_amortization|⚖️ Amortization Milestones:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.mortgage.row.amort_year_5{"value":"$25,556","pct":"6.39%"}|• After year 5:  $25,556 principal paid (6.39% of loan)|\n$calc_out.mortgage.row.amort_year_15{"value":"$109,763","pct":"27.44%"}|• After year 15: $109,763 principal paid (27.44% of loan)|\n$calc_out.mortgage.row.amort_year_30{"value":"$400,000"}|• After year 30: $400,000 (loan fully paid)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Rate -1pp (5.5%):     monthly → $2,271\n• Rate +1pp (7.5%):     monthly → $2,797\n$calc_out.mortgage.row.whatif_extra_payment{"months":"213"}|• Extra $200/mo payment:    helps pay off ~213 months earlier|\n$calc_out.mortgage.row.whatif_down_20{"loan":"$400,000","monthly":"$2,528"}|• 20% down (vs current):   loan $400,000 · monthly $2,528|\n$calc_out.mortgage.row.whatif_refi_15|• 15-year refinance:        see comparison above|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.mortgage.row.tip_pmi|💡 Tip: LTV ≥ 80% typically requires Private Mortgage Insurance (PMI) — adds 0.5-1.5% to annual payment. Aim for 20% down to avoid PMI.|\n$calc_out.mortgage.row.comparison{"price":"$200,000","down":"$100,000","pct":"50.00%","monthly":"$632","rate":"6.5"}|Comparison: $200,000 home with $100,000 down (50.00%) → $632/mo at 6.5%|\n$calc_out.mortgage.row.comparison{"price":"$400,000","down":"$100,000","pct":"25.00%","monthly":"$1,896","rate":"6.5"}|Comparison: $400,000 home with $100,000 down (25.00%) → $1,896/mo at 6.5%|\n$calc_out.mortgage.row.comparison{"price":"$600,000","down":"$100,000","pct":"16.67%","monthly":"$3,160","rate":"6.5"}|Comparison: $600,000 home with $100,000 down (16.67%) → $3,160/mo at 6.5%|\n$calc_out.mortgage.row.comparison{"price":"$800,000","down":"$100,000","pct":"12.50%","monthly":"$4,424","rate":"6.5"}|Comparison: $800,000 home with $100,000 down (12.50%) → $4,424/mo at 6.5%|\n$calc_out.mortgage.row.comparison{"price":"$1,000,000","down":"$100,000","pct":"10.00%","monthly":"$5,689","rate":"6.5"}|Comparison: $1,000,000 home with $100,000 down (10.00%) → $5,689/mo at 6.5%|\n$calc_out.mortgage.row.comparison{"price":"$1,500,000","down":"$100,000","pct":"6.67%","monthly":"$8,849","rate":"6.5"}|Comparison: $1,500,000 home with $100,000 down (6.67%) → $8,849/mo at 6.5%|'],
   faq: [
     {
       q: 'How is the monthly mortgage payment calculated?',

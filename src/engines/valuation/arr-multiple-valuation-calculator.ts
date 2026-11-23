@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // ============== Math helpers (exported for tests) ==============
 
@@ -85,14 +88,16 @@ function calculateARRMultiple(inputs: Record<string, string>): string[] {
 
   if (arr === 0 && valuation === 0) {
     return [
-      '⏰ ARR Multiple / Valuation Multiplier Calculator\n\n' +
-        '💰 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.',
+      makeToken('calc_out.section.arr_multiple_calculator', '⏰ ARR Multiple / Valuation Multiplier Calculator') +
+        '\n\n' +
+        makeToken('calc_out.arr_multiple_valuation.row.need_inputs', '💰 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.'),
     ];
   }
   if (arr === 0) {
     return [
-      '⏰ ARR Multiple / Valuation Multiplier Calculator\n\n' +
-        '💰 Enter ARR > 0 to compute valuation multiples. ARR (Annual Recurring Revenue) is the foundational metric for SaaS valuation.',
+      makeToken('calc_out.section.arr_multiple_calculator', '⏰ ARR Multiple / Valuation Multiplier Calculator') +
+        '\n\n' +
+        makeToken('calc_out.arr_multiple_valuation.row.need_arr', '💰 Enter ARR > 0 to compute valuation multiples. ARR (Annual Recurring Revenue) is the foundational metric for SaaS valuation.'),
     ];
   }
 
@@ -149,19 +154,39 @@ function calculateARRMultiple(inputs: Record<string, string>): string[] {
   // Tip selection
   let tip: string;
   if (multiple > 30) {
-    tip =
-      '💡 Tip: Hyper-growth premium. Make sure you can sustain 100%+ growth for 3+ years — investors will haircut your multiple if growth slows.';
+    tip = makeToken('calc_out.arr_multiple_valuation.row.tip_hyper_growth', '💡 Tip: Hyper-growth premium. Make sure you can sustain 100%+ growth for 3+ years — investors will haircut your multiple if growth slows.');
   } else if (multiple < 5) {
-    tip =
-      '💡 Tip: Low multiple. Either growth is slow, retention is weak, or the market does not believe in the model. Cut burn and demonstrate PMF before next round.';
+    tip = makeToken('calc_out.arr_multiple_valuation.row.tip_low_multiple', '💡 Tip: Low multiple. Either growth is slow, retention is weak, or the market does not believe in the model. Cut burn and demonstrate PMF before next round.');
   } else {
-    tip =
-      '💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.';
+    tip = makeToken('calc_out.arr_multiple_valuation.row.tip_typical', '💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.');
   }
+
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const multipleLabel = multipleFmt(multiple);
+  const rule40SumLabel = (growthRate + profitMargin).toFixed(1);
+  const growthContributionLabel = (growthRate / 10).toFixed(2);
+  const growthRateLabel = String(growthRate);
+  const marginContributionLabel = (profitMargin / 5).toFixed(2);
+  const profitMarginLabel = String(profitMargin);
+  const expectedLabel = expected.toFixed(2);
+  const actualExpectedRatioLabel = (multiple / expected).toFixed(2);
+  const tierEmoji = tier.emoji;
+  const tierLabel = tier.label;
+  const tierRange = tier.range;
+  const projectedArrLabel = money(projectedARR);
+  const impliedFwdLabel = multipleFmt(impliedFwdMultiple);
+  const fwd10Label = money(fwdVal10);
+  const fwd20Label = money(fwdVal20);
+  const doubleGrowthLabel = String(Math.min(200, growthRate * 2));
+  const doubleGrowthExpectedLabel = doubleGrowthExpected.toFixed(2);
+  const improvedMarginExpectedLabel = improvedMarginExpected.toFixed(2);
+  const cutValMultipleLabel = cutValMultiple.toFixed(2);
+  const target10xLabel = money(target10xVal);
+  const target20xLabel = money(target20xVal);
 
   const r =
     '⏰ ARR Multiple / Valuation Multiplier Calculator\n\n' +
-    '💰 Valuation Snapshot:\n' +
+    makeToken('calc_out.section.arr_multiple_snapshot', '💰 Valuation Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• ARR:                ' +
     money(arr) +
@@ -169,112 +194,76 @@ function calculateARRMultiple(inputs: Record<string, string>): string[] {
     '• Valuation:          ' +
     money(valuation) +
     '\n' +
-    '• Multiple:           ' +
-    multipleFmt(multiple) +
-    '  (valuation / ARR)\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.multiple', '• Multiple:           ' + multipleLabel + '  (valuation / ARR)', { value: multipleLabel }) + '\n' +
     '• Growth Rate:        ' +
     growthRate +
     '%\n' +
     '• Profit Margin:      ' +
     profitMargin +
     '%\n' +
-    '• Rule of 40 sum:     ' +
-    (growthRate + profitMargin).toFixed(1) +
-    '%  (growth + margin)\n\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.rule40_sum', '• Rule of 40 sum:     ' + rule40SumLabel + '%  (growth + margin)', { value: rule40SumLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📐 Multiple Determination:\n' +
+    makeToken('calc_out.section.arr_multiple_determination', '📐 Multiple Determination:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Base:               5.00x  (mature SaaS floor)\n' +
-    '• Growth contribution: +' +
-    (growthRate / 10).toFixed(2) +
-    'x  (growth ' +
-    growthRate +
-    '% / 10)\n' +
-    '• Margin contribution: +' +
-    (profitMargin / 5).toFixed(2) +
-    'x  (margin ' +
-    profitMargin +
-    '% / 5)\n' +
-    '• Expected multiple:   ' +
-    expected.toFixed(2) +
-    'x  (5 + growth/10 + margin/5)\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.base_multiple', '• Base:               5.00x  (mature SaaS floor)') + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.growth_contribution', '• Growth contribution: +' + growthContributionLabel + 'x  (growth ' + growthRateLabel + '% / 10)', { value: growthContributionLabel, growth: growthRateLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.margin_contribution', '• Margin contribution: +' + marginContributionLabel + 'x  (margin ' + profitMarginLabel + '% / 5)', { value: marginContributionLabel, margin: profitMarginLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.expected_multiple', '• Expected multiple:   ' + expectedLabel + 'x  (5 + growth/10 + margin/5)', { value: expectedLabel }) + '\n' +
     '• Actual multiple:     ' +
     multipleFmt(multiple) +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🩺 Multiple Health:\n' +
+    makeToken('calc_out.section.arr_multiple_health', '🩺 Multiple Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' +
-    health.emoji +
-    ' ' +
-    health.label +
+    (health.label === 'neutral (no expected baseline)'
+      ? makeToken('calc_out.arr_multiple_valuation.row.health_neutral', '• 🟡 neutral (no expected baseline)')
+      : health.label === 'reasonable — within 30% of expected'
+      ? makeToken('calc_out.arr_multiple_valuation.row.health_reasonable', '• 🟢 reasonable — within 30% of expected')
+      : health.label === 'above/below market — 30-60% off expected'
+      ? makeToken('calc_out.arr_multiple_valuation.row.health_market', '• 🟡 above/below market — 30-60% off expected')
+      : makeToken('calc_out.arr_multiple_valuation.row.health_outlier', '• 🟠 outlier — >60% off expected')) +
     '\n' +
-    '• Ratio (actual / expected): ' +
-    (multiple / expected).toFixed(2) +
-    'x\n' +
-    '• Interpretation:  ' +
+    makeToken('calc_out.arr_multiple_valuation.row.actual_expected_ratio', '• Ratio (actual / expected): ' + actualExpectedRatioLabel + 'x', { value: actualExpectedRatioLabel }) + '\n' +
     (multiple > expected
-      ? 'premium — investors pay above market for your growth+margin profile'
+      ? makeToken('calc_out.arr_multiple_valuation.row.interpretation_premium', '• Interpretation:  premium — investors pay above market for your growth+margin profile') + '\n'
       : multiple < expected
-        ? 'discount — your growth+margin profile suggests a higher multiple'
-        : 'aligned with market expectations') +
-    '\n\n' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Multiple Ranges by Stage:\n' +
+      ? makeToken('calc_out.arr_multiple_valuation.row.interpretation_discount', '• Interpretation:  discount — your growth+margin profile suggests a higher multiple') + '\n'
+      : makeToken('calc_out.arr_multiple_valuation.row.interpretation_aligned', '• Interpretation:  aligned with market expectations') + '\n') +
+    '\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+    makeToken('calc_out.section.arr_multiple_ranges', '🎯 Multiple Ranges by Stage:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Slow growth (<20%):    3-8x\n' +
     '• Medium growth (20-50%): 8-15x\n' +
     '• Fast growth (50-100%):  15-25x\n' +
     '• Hyper growth (>100%):   25-40x\n' +
-    '• Your tier:  ' +
-    tier.emoji +
-    ' ' +
-    tier.label +
-    ' (' +
-    tier.range +
-    ')\n' +
+    (tier.label === 'Slow growth'
+      ? makeToken('calc_out.arr_multiple_valuation.row.tier_slow', '• Your tier:  ' + tierEmoji + ' ' + tierLabel + ' (' + tierRange + ')')
+      : tier.label === 'Medium growth'
+      ? makeToken('calc_out.arr_multiple_valuation.row.tier_medium', '• Your tier:  ' + tierEmoji + ' ' + tierLabel + ' (' + tierRange + ')')
+      : tier.label === 'Fast growth'
+      ? makeToken('calc_out.arr_multiple_valuation.row.tier_fast', '• Your tier:  ' + tierEmoji + ' ' + tierLabel + ' (' + tierRange + ')')
+      : makeToken('calc_out.arr_multiple_valuation.row.tier_hyper', '• Your tier:  ' + tierEmoji + ' ' + tierLabel + ' (' + tierRange + ')')) +
+    '\n' +
     asciiBar +
     '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Forward Valuation:\n' +
+    makeToken('calc_out.section.arr_multiple_forward_valuation', '⚖️ Forward Valuation:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
     '• Current ARR:           ' +
     money(arr) +
     '\n' +
-    '• Projected ARR (12 mo): ' +
-    money(projectedARR) +
-    '  (current × (1 + ' +
-    growthRate +
-    '%))\n' +
-    '• Implied fwd multiple:  ' +
-    multipleFmt(impliedFwdMultiple) +
-    '  (at current valuation)\n' +
-    '• At forward 10x:        ' +
-    money(fwdVal10) +
-    '  (next round target)\n' +
-    '• At forward 20x:        ' +
-    money(fwdVal20) +
-    '  (aggressive target)\n\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.projected_arr', '• Projected ARR (12 mo): ' + projectedArrLabel + '  (current × (1 + ' + growthRateLabel + '%))', { value: projectedArrLabel, growth: growthRateLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.implied_fwd_multiple', '• Implied fwd multiple:  ' + impliedFwdLabel + '  (at current valuation)', { value: impliedFwdLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.forward_10x', '• At forward 10x:        ' + fwd10Label + '  (next round target)', { value: fwd10Label }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.forward_20x', '• At forward 20x:        ' + fwd20Label + '  (aggressive target)', { value: fwd20Label }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If Scenarios:\n' +
+    makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Double growth (' +
-    Math.min(200, growthRate * 2) +
-    '%):    expected multiple → ' +
-    doubleGrowthExpected.toFixed(2) +
-    'x\n' +
-    '• Improve margin +20pp:           expected multiple → ' +
-    improvedMarginExpected.toFixed(2) +
-    'x (+4x)\n' +
-    '• Cut valuation 20%:               multiple → ' +
-    cutValMultiple.toFixed(2) +
-    'x\n' +
-    '• Target 10x multiple:             required valuation = ' +
-    money(target10xVal) +
-    '\n' +
-    '• Sell at 20x multiple:            required valuation = ' +
-    money(target20xVal) +
-    '\n\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.whatif_double_growth', '• Double growth (' + doubleGrowthLabel + '%):    expected multiple → ' + doubleGrowthExpectedLabel + 'x', { growth: doubleGrowthLabel, value: doubleGrowthExpectedLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.whatif_margin_20pp', '• Improve margin +20pp:           expected multiple → ' + improvedMarginExpectedLabel + 'x (+4x)', { value: improvedMarginExpectedLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.whatif_cut_valuation', '• Cut valuation 20%:               multiple → ' + cutValMultipleLabel + 'x', { value: cutValMultipleLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.whatif_target_10x', '• Target 10x multiple:             required valuation = ' + target10xLabel, { value: target10xLabel }) + '\n' +
+    makeToken('calc_out.arr_multiple_valuation.row.whatif_sell_20x', '• Sell at 20x multiple:            required valuation = ' + target20xLabel, { value: target20xLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
     tip;
 
@@ -285,14 +274,21 @@ function calculateARRMultiple(inputs: Record<string, string>): string[] {
   for (let idx = 0; idx < arrs.length; idx++) {
     const a = arrs[idx];
     const m = arrMultiple(valuation, a);
+    const arrLabel = fmt(a);
+    const valuationLabel = money(valuation);
+    const comparisonMultipleLabel = multipleFmt(m);
     results.push(
-      'Comparison: $' +
-        fmt(a) +
-        ' ARR at ' +
-        money(valuation) +
-        ' valuation → ' +
-        multipleFmt(m) +
-        ' multiple',
+      makeToken(
+        'calc_out.arr_multiple_valuation.row.comparison',
+        'Comparison: $' +
+          arrLabel +
+          ' ARR at ' +
+          valuationLabel +
+          ' valuation → ' +
+          comparisonMultipleLabel +
+          ' multiple',
+        { arr: arrLabel, valuation: valuationLabel, multiple: comparisonMultipleLabel },
+      ),
     );
   }
 
@@ -302,77 +298,79 @@ function calculateARRMultiple(inputs: Record<string, string>): string[] {
 // ============== customFn ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let f=function(u){return Number.isNaN(u)?0:Math.max(0,u)},g=function(u,t){return t<=0?1/0:u/t},c=function(u,t){return 5+u/10+t/5},F=function(u,t){if(t<=0)return{emoji:"🟡",label:"neutral (no expected baseline)"};const e=u/t;return e>=.7&&e<=1.3?{emoji:"🟢",label:"reasonable — within 30% of expected"}:e>=.4&&e<=1.6?{emoji:"🟡",label:"above/below market — 30-60% off expected"}:{emoji:"🟠",label:"outlier — >60% off expected"}},M=function(u){return u<20?{emoji:"🟡",label:"Slow growth",range:"3-8x"}:u<50?{emoji:"🟢",label:"Medium growth",range:"8-15x"}:u<100?{emoji:"🟢",label:"Fast growth",range:"15-25x"}:{emoji:"🟢",label:"Hyper growth",range:"25-40x"}},w=function(u,t,e){return u*(1+t/100)*e},b=function(u){const t=f(parseFloat(u.arr)||0),e=f(parseFloat(u.valuation)||0),r=parseFloat(u.growthRate)||0,o=parseFloat(u.profitMargin)||0;if(t===0&&e===0)return[\`⏰ ARR Multiple / Valuation Multiplier Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let R=function(t){return Number.isNaN(t)?0:Math.max(0,t)},_=function(t,r){return r<=0?1/0:t/r},g=function(t,r){return 5+t/10+r/5},D=function(t,r){if(r<=0)return{emoji:"🟡",label:"neutral (no expected baseline)"};const e=t/r;return e>=.7&&e<=1.3?{emoji:"🟢",label:"reasonable — within 30% of expected"}:e>=.4&&e<=1.6?{emoji:"🟡",label:"above/below market — 30-60% off expected"}:{emoji:"🟠",label:"outlier — >60% off expected"}},L=function(t){return t<20?{emoji:"🟡",label:"Slow growth",range:"3-8x"}:t<50?{emoji:"🟢",label:"Medium growth",range:"8-15x"}:t<100?{emoji:"🟢",label:"Fast growth",range:"15-25x"}:{emoji:"🟢",label:"Hyper growth",range:"25-40x"}},F=function(t,r,e){return t*(1+r/100)*e},S=function(t){const r=R(parseFloat(t.arr)||0),e=R(parseFloat(t.valuation)||0),a=parseFloat(t.growthRate)||0,c=parseFloat(t.profitMargin)||0;if(r===0&&e===0)return[u("calc_out.section.arr_multiple_calculator","⏰ ARR Multiple / Valuation Multiplier Calculator")+\`
 
-💰 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.\`];if(t===0)return[\`⏰ ARR Multiple / Valuation Multiplier Calculator
+\`+u("calc_out.arr_multiple_valuation.row.need_inputs","💰 Enter ARR and valuation to see your multiple, expected baseline (by growth+margin), and forward valuation projection.")];if(r===0)return[u("calc_out.section.arr_multiple_calculator","⏰ ARR Multiple / Valuation Multiplier Calculator")+\`
 
-💰 Enter ARR > 0 to compute valuation multiples. ARR (Annual Recurring Revenue) is the foundational metric for SaaS valuation.\`];const n=g(e,t),p=c(r,o),A=F(n,p),l=M(r),L=w(t,r,10),H=w(t,r,20),D=t*(1+r/100),k=g(e,D),S=a=>a.toLocaleString("en-US",{maximumFractionDigits:0}),i=a=>"$"+S(a),s=a=>isFinite(a)?a.toFixed(2)+"x":"∞",x=40,v=parseFloat(l.range.split("-")[0]),R=parseFloat(l.range.split("-")[1].replace("x","")),m=a=>Math.max(0,Math.min(x,Math.round(a/40*x)));let d="";d+=" 0x"+" ".repeat(x-4)+\`40x
-\`,d+=" "+"─".repeat(m(v))+"┤"+"─".repeat(Math.max(0,m(n)-m(v)-1))+(n>=v&&n<=R?"●":"◆")+"─".repeat(Math.max(0,m(R)-m(n)-1))+"┤"+"─".repeat(Math.max(0,x-m(R)))+" "+l.range+\`
-\`,d+="           ▲ you: "+s(n);const _=c(Math.min(200,r*2),o),I=c(r,o+20),P=n*.8,T=t*10,B=t*20;let h;n>30?h="💡 Tip: Hyper-growth premium. Make sure you can sustain 100%+ growth for 3+ years — investors will haircut your multiple if growth slows.":n<5?h="💡 Tip: Low multiple. Either growth is slow, retention is weak, or the market does not believe in the model. Cut burn and demonstrate PMF before next round.":h="💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.";const j=[\`⏰ ARR Multiple / Valuation Multiplier Calculator
+\`+u("calc_out.arr_multiple_valuation.row.need_arr","💰 Enter ARR > 0 to compute valuation multiples. ARR (Annual Recurring Revenue) is the foundational metric for SaaS valuation.")];const l=_(e,r),m=g(a,c),M=D(l,m),i=L(a),eu=F(r,a,10),lu=F(r,a,20),C=r*(1+a/100),nu=_(e,C),E=n=>n.toLocaleString("en-US",{maximumFractionDigits:0}),o=n=>"$"+E(n),s=n=>isFinite(n)?n.toFixed(2)+"x":"∞",w=40,y=parseFloat(i.range.split("-")[0]),A=parseFloat(i.range.split("-")[1].replace("x","")),p=n=>Math.max(0,Math.min(w,Math.round(n/40*w)));let v="";v+=" 0x"+" ".repeat(w-4)+\`40x
+\`,v+=" "+"─".repeat(p(y))+"┤"+"─".repeat(Math.max(0,p(l)-p(y)-1))+(l>=y&&l<=A?"●":"◆")+"─".repeat(Math.max(0,p(A)-p(l)-1))+"┤"+"─".repeat(Math.max(0,w-p(A)))+" "+i.range+\`
+\`,v+="           ▲ you: "+s(l);const iu=g(Math.min(200,a*2),c),ou=g(a,c+20),cu=l*.8,pu=r*10,mu=r*20;let d;l>30?d=u("calc_out.arr_multiple_valuation.row.tip_hyper_growth","💡 Tip: Hyper-growth premium. Make sure you can sustain 100%+ growth for 3+ years — investors will haircut your multiple if growth slows."):l<5?d=u("calc_out.arr_multiple_valuation.row.tip_low_multiple","💡 Tip: Low multiple. Either growth is slow, retention is weak, or the market does not believe in the model. Cut burn and demonstrate PMF before next round."):d=u("calc_out.arr_multiple_valuation.row.tip_typical","💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.");const V=s(l),H=(a+c).toFixed(1),I=(a/10).toFixed(2),h=String(a),q=(c/5).toFixed(2),P=String(c),B=m.toFixed(2),G=(l/m).toFixed(2),x=i.emoji,f=i.label,b=i.range,N=o(C),Y=s(nu),$=o(eu),O=o(lu),U=String(Math.min(200,a*2)),W=iu.toFixed(2),J=ou.toFixed(2),K=cu.toFixed(2),z=o(pu),Q=o(mu),X=[\`⏰ ARR Multiple / Valuation Multiplier Calculator
 
-💰 Valuation Snapshot:
+\`+u("calc_out.section.arr_multiple_snapshot","💰 Valuation Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• ARR:                \`+i(t)+\`
-• Valuation:          \`+i(e)+\`
-• Multiple:           \`+s(n)+\`  (valuation / ARR)
-• Growth Rate:        \`+r+\`%
-• Profit Margin:      \`+o+\`%
-• Rule of 40 sum:     \`+(r+o).toFixed(1)+\`%  (growth + margin)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📐 Multiple Determination:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Base:               5.00x  (mature SaaS floor)
-• Growth contribution: +\`+(r/10).toFixed(2)+"x  (growth "+r+\`% / 10)
-• Margin contribution: +\`+(o/5).toFixed(2)+"x  (margin "+o+\`% / 5)
-• Expected multiple:   \`+p.toFixed(2)+\`x  (5 + growth/10 + margin/5)
-• Actual multiple:     \`+s(n)+\`
+• ARR:                \`+o(r)+\`
+• Valuation:          \`+o(e)+\`
+\`+u("calc_out.arr_multiple_valuation.row.multiple","• Multiple:           "+V+"  (valuation / ARR)",{value:V})+\`
+• Growth Rate:        \`+a+\`%
+• Profit Margin:      \`+c+\`%
+\`+u("calc_out.arr_multiple_valuation.row.rule40_sum","• Rule of 40 sum:     "+H+"%  (growth + margin)",{value:H})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🩺 Multiple Health:
+\`+u("calc_out.section.arr_multiple_determination","📐 Multiple Determination:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+A.emoji+" "+A.label+\`
-• Ratio (actual / expected): \`+(n/p).toFixed(2)+\`x
-• Interpretation:  \`+(n>p?"premium — investors pay above market for your growth+margin profile":n<p?"discount — your growth+margin profile suggests a higher multiple":"aligned with market expectations")+\`
+\`+u("calc_out.arr_multiple_valuation.row.base_multiple","• Base:               5.00x  (mature SaaS floor)")+\`
+\`+u("calc_out.arr_multiple_valuation.row.growth_contribution","• Growth contribution: +"+I+"x  (growth "+h+"% / 10)",{value:I,growth:h})+\`
+\`+u("calc_out.arr_multiple_valuation.row.margin_contribution","• Margin contribution: +"+q+"x  (margin "+P+"% / 5)",{value:q,margin:P})+\`
+\`+u("calc_out.arr_multiple_valuation.row.expected_multiple","• Expected multiple:   "+B+"x  (5 + growth/10 + margin/5)",{value:B})+\`
+• Actual multiple:     \`+s(l)+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Multiple Ranges by Stage:
+\`+u("calc_out.section.arr_multiple_health","🩺 Multiple Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(M.label==="neutral (no expected baseline)"?u("calc_out.arr_multiple_valuation.row.health_neutral","• 🟡 neutral (no expected baseline)"):M.label==="reasonable — within 30% of expected"?u("calc_out.arr_multiple_valuation.row.health_reasonable","• 🟢 reasonable — within 30% of expected"):M.label==="above/below market — 30-60% off expected"?u("calc_out.arr_multiple_valuation.row.health_market","• 🟡 above/below market — 30-60% off expected"):u("calc_out.arr_multiple_valuation.row.health_outlier","• 🟠 outlier — >60% off expected"))+\`
+\`+u("calc_out.arr_multiple_valuation.row.actual_expected_ratio","• Ratio (actual / expected): "+G+"x",{value:G})+\`
+\`+(l>m?u("calc_out.arr_multiple_valuation.row.interpretation_premium","• Interpretation:  premium — investors pay above market for your growth+margin profile")+\`
+\`:l<m?u("calc_out.arr_multiple_valuation.row.interpretation_discount","• Interpretation:  discount — your growth+margin profile suggests a higher multiple")+\`
+\`:u("calc_out.arr_multiple_valuation.row.interpretation_aligned","• Interpretation:  aligned with market expectations")+\`
+\`)+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+u("calc_out.section.arr_multiple_ranges","🎯 Multiple Ranges by Stage:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Slow growth (<20%):    3-8x
 • Medium growth (20-50%): 8-15x
 • Fast growth (50-100%):  15-25x
 • Hyper growth (>100%):   25-40x
-• Your tier:  \`+l.emoji+" "+l.label+" ("+l.range+\`)
-\`+d+\`
+\`+(i.label==="Slow growth"?u("calc_out.arr_multiple_valuation.row.tier_slow","• Your tier:  "+x+" "+f+" ("+b+")"):i.label==="Medium growth"?u("calc_out.arr_multiple_valuation.row.tier_medium","• Your tier:  "+x+" "+f+" ("+b+")"):i.label==="Fast growth"?u("calc_out.arr_multiple_valuation.row.tier_fast","• Your tier:  "+x+" "+f+" ("+b+")"):u("calc_out.arr_multiple_valuation.row.tier_hyper","• Your tier:  "+x+" "+f+" ("+b+")"))+\`
+\`+v+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Forward Valuation:
+\`+u("calc_out.section.arr_multiple_forward_valuation","⚖️ Forward Valuation:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Current ARR:           \`+i(t)+\`
-• Projected ARR (12 mo): \`+i(D)+"  (current × (1 + "+r+\`%))
-• Implied fwd multiple:  \`+s(k)+\`  (at current valuation)
-• At forward 10x:        \`+i(L)+\`  (next round target)
-• At forward 20x:        \`+i(H)+\`  (aggressive target)
+• Current ARR:           \`+o(r)+\`
+\`+u("calc_out.arr_multiple_valuation.row.projected_arr","• Projected ARR (12 mo): "+N+"  (current × (1 + "+h+"%))",{value:N,growth:h})+\`
+\`+u("calc_out.arr_multiple_valuation.row.implied_fwd_multiple","• Implied fwd multiple:  "+Y+"  (at current valuation)",{value:Y})+\`
+\`+u("calc_out.arr_multiple_valuation.row.forward_10x","• At forward 10x:        "+$+"  (next round target)",{value:$})+\`
+\`+u("calc_out.arr_multiple_valuation.row.forward_20x","• At forward 20x:        "+O+"  (aggressive target)",{value:O})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If Scenarios:
+\`+u("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Double growth (\`+Math.min(200,r*2)+"%):    expected multiple → "+_.toFixed(2)+\`x
-• Improve margin +20pp:           expected multiple → \`+I.toFixed(2)+\`x (+4x)
-• Cut valuation 20%:               multiple → \`+P.toFixed(2)+\`x
-• Target 10x multiple:             required valuation = \`+i(T)+\`
-• Sell at 20x multiple:            required valuation = \`+i(B)+\`
+\`+u("calc_out.arr_multiple_valuation.row.whatif_double_growth","• Double growth ("+U+"%):    expected multiple → "+W+"x",{growth:U,value:W})+\`
+\`+u("calc_out.arr_multiple_valuation.row.whatif_margin_20pp","• Improve margin +20pp:           expected multiple → "+J+"x (+4x)",{value:J})+\`
+\`+u("calc_out.arr_multiple_valuation.row.whatif_cut_valuation","• Cut valuation 20%:               multiple → "+K+"x",{value:K})+\`
+\`+u("calc_out.arr_multiple_valuation.row.whatif_target_10x","• Target 10x multiple:             required valuation = "+z,{value:z})+\`
+\`+u("calc_out.arr_multiple_valuation.row.whatif_sell_20x","• Sell at 20x multiple:            required valuation = "+Q,{value:Q})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-\`+h],C=[5e5,1e6,5e6,1e7,5e7];for(let a=0;a<C.length;a++){const E=C[a],G=g(e,E);j.push("Comparison: $"+S(E)+" ARR at "+i(e)+" valuation → "+s(G)+" multiple")}return j},y=function(u,t,e){var r=V(u);return Array.isArray(r)?r.join(\`
-\`):String(r)};var q=f,N=g,$=c,U=F,W=M,Y=w,K=b,z=y,V=function(u){return b(u)};return[y(inputs,pick,fill)]}finally{}
+\`+d],Z=[5e5,1e6,5e6,1e7,5e7];for(let n=0;n<Z.length;n++){const T=Z[n],su=_(e,T),k=E(T),uu=o(e),tu=s(su);X.push(u("calc_out.arr_multiple_valuation.row.comparison","Comparison: $"+k+" ARR at "+uu+" valuation → "+tu+" multiple",{arr:k,valuation:uu,multiple:tu}))}return X},j=function(t,r,e){var a=au(t);return Array.isArray(a)?a.join(\`
+\`):String(a)};var _u=R,gu=_,wu=g,vu=D,du=L,hu=F,xu=S,fu=j,u=tk,ru='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',u=new Function("return "+ru)(),au=function(t){return S(t)};return[j(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
   "var gr=parseFloat(inputs.growthRate)||0;" +
   "var pm=parseFloat(inputs.profitMargin)||0;" +
@@ -509,7 +507,7 @@ const engine: ToolEngine = {
   generate(inputs: Record<string, string>): string[] {
     return calculateARRMultiple(inputs);
   },
-  staticExamples: ['⏰ ARR Multiple / Valuation Multiplier Calculator\n\n💰 Valuation Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ARR:                $1,000,000\n• Valuation:          $15,000,000\n• Multiple:           15.00x  (valuation / ARR)\n• Growth Rate:        50%\n• Profit Margin:      0%\n• Rule of 40 sum:     50.0%  (growth + margin)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 Multiple Determination:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Base:               5.00x  (mature SaaS floor)\n• Growth contribution: +5.00x  (growth 50% / 10)\n• Margin contribution: +0.00x  (margin 0% / 5)\n• Expected multiple:   10.00x  (5 + growth/10 + margin/5)\n• Actual multiple:     15.00x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Multiple Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 above/below market — 30-60% off expected\n• Ratio (actual / expected): 1.50x\n• Interpretation:  premium — investors pay above market for your growth+margin profile\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Multiple Ranges by Stage:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Slow growth (<20%):    3-8x\n• Medium growth (20-50%): 8-15x\n• Fast growth (50-100%):  15-25x\n• Hyper growth (>100%):   25-40x\n• Your tier:  🟢 Fast growth (15-25x)\n 0x                                    40x\n ───────────────┤●─────────┤─────────────── 15-25x\n           ▲ you: 15.00x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Forward Valuation:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Current ARR:           $1,000,000\n• Projected ARR (12 mo): $1,500,000  (current × (1 + 50%))\n• Implied fwd multiple:  10.00x  (at current valuation)\n• At forward 10x:        $15,000,000  (next round target)\n• At forward 20x:        $30,000,000  (aggressive target)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Double growth (100%):    expected multiple → 15.00x\n• Improve margin +20pp:           expected multiple → 14.00x (+4x)\n• Cut valuation 20%:               multiple → 12.00x\n• Target 10x multiple:             required valuation = $10,000,000\n• Sell at 20x multiple:            required valuation = $20,000,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.\nComparison: $500,000 ARR at $15,000,000 valuation → 30.00x multiple\nComparison: $1,000,000 ARR at $15,000,000 valuation → 15.00x multiple\nComparison: $5,000,000 ARR at $15,000,000 valuation → 3.00x multiple\nComparison: $10,000,000 ARR at $15,000,000 valuation → 1.50x multiple\nComparison: $50,000,000 ARR at $15,000,000 valuation → 0.30x multiple'],
+  staticExamples: ['⏰ ARR Multiple / Valuation Multiplier Calculator\n\n$calc_out.section.arr_multiple_snapshot|💰 Valuation Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• ARR:                $1,000,000\n• Valuation:          $15,000,000\n$calc_out.arr_multiple_valuation.row.multiple{"value":"15.00x"}|• Multiple:           15.00x  (valuation / ARR)|\n• Growth Rate:        50%\n• Profit Margin:      0%\n$calc_out.arr_multiple_valuation.row.rule40_sum{"value":"50.0"}|• Rule of 40 sum:     50.0%  (growth + margin)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.arr_multiple_determination|📐 Multiple Determination:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.arr_multiple_valuation.row.base_multiple|• Base:               5.00x  (mature SaaS floor)|\n$calc_out.arr_multiple_valuation.row.growth_contribution{"value":"5.00","growth":"50"}|• Growth contribution: +5.00x  (growth 50% / 10)|\n$calc_out.arr_multiple_valuation.row.margin_contribution{"value":"0.00","margin":"0"}|• Margin contribution: +0.00x  (margin 0% / 5)|\n$calc_out.arr_multiple_valuation.row.expected_multiple{"value":"10.00"}|• Expected multiple:   10.00x  (5 + growth/10 + margin/5)|\n• Actual multiple:     15.00x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.arr_multiple_health|🩺 Multiple Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.arr_multiple_valuation.row.health_market|• 🟡 above/below market — 30-60% off expected|\n$calc_out.arr_multiple_valuation.row.actual_expected_ratio{"value":"1.50"}|• Ratio (actual / expected): 1.50x|\n$calc_out.arr_multiple_valuation.row.interpretation_premium|• Interpretation:  premium — investors pay above market for your growth+margin profile|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.arr_multiple_ranges|🎯 Multiple Ranges by Stage:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Slow growth (<20%):    3-8x\n• Medium growth (20-50%): 8-15x\n• Fast growth (50-100%):  15-25x\n• Hyper growth (>100%):   25-40x\n$calc_out.arr_multiple_valuation.row.tier_fast|• Your tier:  🟢 Fast growth (15-25x)|\n 0x                                    40x\n ───────────────┤●─────────┤─────────────── 15-25x\n           ▲ you: 15.00x\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.arr_multiple_forward_valuation|⚖️ Forward Valuation:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Current ARR:           $1,000,000\n$calc_out.arr_multiple_valuation.row.projected_arr{"value":"$1,500,000","growth":"50"}|• Projected ARR (12 mo): $1,500,000  (current × (1 + 50%))|\n$calc_out.arr_multiple_valuation.row.implied_fwd_multiple{"value":"10.00x"}|• Implied fwd multiple:  10.00x  (at current valuation)|\n$calc_out.arr_multiple_valuation.row.forward_10x{"value":"$15,000,000"}|• At forward 10x:        $15,000,000  (next round target)|\n$calc_out.arr_multiple_valuation.row.forward_20x{"value":"$30,000,000"}|• At forward 20x:        $30,000,000  (aggressive target)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.arr_multiple_valuation.row.whatif_double_growth{"growth":"100","value":"15.00"}|• Double growth (100%):    expected multiple → 15.00x|\n$calc_out.arr_multiple_valuation.row.whatif_margin_20pp{"value":"14.00"}|• Improve margin +20pp:           expected multiple → 14.00x (+4x)|\n$calc_out.arr_multiple_valuation.row.whatif_cut_valuation{"value":"12.00"}|• Cut valuation 20%:               multiple → 12.00x|\n$calc_out.arr_multiple_valuation.row.whatif_target_10x{"value":"$10,000,000"}|• Target 10x multiple:             required valuation = $10,000,000|\n$calc_out.arr_multiple_valuation.row.whatif_sell_20x{"value":"$20,000,000"}|• Sell at 20x multiple:            required valuation = $20,000,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.arr_multiple_valuation.row.tip_typical|💡 Tip: ARR multiples depend on growth + margin. 50% growth + 0% margin = 10x is typical. Hyper-growth (100%+) trades at 20-30x. Profitable SaaS commands 2-4x premium over unprofitable peers.|\n$calc_out.arr_multiple_valuation.row.comparison{"arr":"500,000","valuation":"$15,000,000","multiple":"30.00x"}|Comparison: $500,000 ARR at $15,000,000 valuation → 30.00x multiple|\n$calc_out.arr_multiple_valuation.row.comparison{"arr":"1,000,000","valuation":"$15,000,000","multiple":"15.00x"}|Comparison: $1,000,000 ARR at $15,000,000 valuation → 15.00x multiple|\n$calc_out.arr_multiple_valuation.row.comparison{"arr":"5,000,000","valuation":"$15,000,000","multiple":"3.00x"}|Comparison: $5,000,000 ARR at $15,000,000 valuation → 3.00x multiple|\n$calc_out.arr_multiple_valuation.row.comparison{"arr":"10,000,000","valuation":"$15,000,000","multiple":"1.50x"}|Comparison: $10,000,000 ARR at $15,000,000 valuation → 1.50x multiple|\n$calc_out.arr_multiple_valuation.row.comparison{"arr":"50,000,000","valuation":"$15,000,000","multiple":"0.30x"}|Comparison: $50,000,000 ARR at $15,000,000 valuation → 0.30x multiple|'],
   faq: [
     {
       q: 'What is an ARR multiple?',

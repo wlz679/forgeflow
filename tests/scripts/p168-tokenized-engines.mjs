@@ -93,7 +93,25 @@ export const B3_13_BATCH = [
   { slug: 'solopreneur-unit-economics-calculator', file: 'src/engines/valuation/unit-economics-calculator.ts', alias: 'unit_economics', baseline: '94bffb2' },
 ];
 
-export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH];
+/**
+ * P168 B3-14 组 1 —— 全站 zh 整行英文欠账里**最重的 9 个引擎**（219 行）。
+ *
+ * ⭐ baseline = `9abe1f0`（本批令牌化**之前**的最后一个提交）
+ *   —— 不得用 HEAD：一提交就失去意义（G9 会变成「token 对 token」的真空绿）。
+ */
+export const B3_14_BATCH = [
+  { slug: 'solopreneur-sponsorship-rate-calculator', file: 'src/engines/investment/sponsorship-rate-calculator.ts', alias: 'sponsorship_rate', baseline: '9abe1f0' },
+  { slug: 'solopreneur-openai-token-calculator', file: 'src/engines/ai-cost/openai-token-calculator.ts', alias: 'openai_token', baseline: '9abe1f0' },
+  { slug: 'solopreneur-burn-multiple-rule-of-40-calculator', file: 'src/engines/valuation/burn-multiple-rule-of-40-calculator.ts', alias: 'burn_multiple_rule_of_40', baseline: '9abe1f0' },
+  { slug: 'solopreneur-hourly-vs-fixed-calculator', file: 'src/engines/freelance/hourly-vs-fixed-calculator.ts', alias: 'hourly_vs_fixed', baseline: '9abe1f0' },
+  { slug: 'solopreneur-arr-multiple-valuation-calculator', file: 'src/engines/valuation/arr-multiple-valuation-calculator.ts', alias: 'arr_multiple_valuation', baseline: '9abe1f0' },
+  { slug: 'solopreneur-dscr-calculator', file: 'src/engines/real-estate/dscr-calculator.ts', alias: 'dscr', baseline: '9abe1f0' },
+  { slug: 'solopreneur-mortgage-calculator', file: 'src/engines/real-estate/mortgage-calculator.ts', alias: 'mortgage', baseline: '9abe1f0' },
+  { slug: 'solopreneur-affiliate-income-calculator', file: 'src/engines/freelance/affiliate-income-calculator.ts', alias: 'affiliate_income', baseline: '9abe1f0' },
+  { slug: 'solopreneur-fulfillment-cost-calculator', file: 'src/engines/operations/fulfillment-cost-calculator.ts', alias: 'fulfillment_cost', baseline: '9abe1f0' },
+];
+
+export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH, ...B3_14_BATCH];
 
 /**
  * ⭐⭐ P168 B3-11：基线**重钉**表 —— 8 个引擎的英文页因 defaultInputs 修复而**合法地**变了。

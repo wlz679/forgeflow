@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 function calculateSponsorship(inputs: Record<string, string>): string[] {
   const downloads = clampNonNegative(parseInt(inputs.monthlyDownloads) || 0);
@@ -28,13 +31,6 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
   const totalAudience = downloads + subscribers + followers;
   const audienceTier =
     totalAudience >= 100000 ? 'large creator' : totalAudience >= 25000 ? 'mid-tier' : 'micro-influencer';
-  const tierHealth =
-    cpm >= 25
-      ? '🟢 Premium CPM — top-tier brand deals.'
-      : cpm >= 15
-      ? '🟡 Standard CPM — workable rate for content type.'
-      : '🔴 Low CPM — limited monetization potential. Focus on engagement.';
-
   const engagementMultiplier = totalAudience > 0 ? Math.min(2, Math.max(0.5, totalAudience / 50000)) : 1;
   const adjustedRate = perPostValue * engagementMultiplier;
   const yearlyAt1K = (1000 / 1000) * cpm * 4 * 12;
@@ -51,73 +47,90 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
   const fmt = (n: number) => '$' + Math.round(n).toLocaleString();
   const pct = (n: number) => n.toFixed(1) + '%';
   const loc = (n: number) => Math.round(n).toLocaleString();
+  // P168 B3-14：模板推导要求「params 的表达式」与「兜底里的表达式」**同源**
+  //   ⇒ 复合表达式先用局部变量承接，否则推导会把表达式拆成多个占位符（模板污染）。
+  const bundlePremiumPct = pct((bundleValue - perPostValue) / Math.max(perPostValue, 1) * 100);
+  const contentTypeLabel = typeLabel[contentType];
 
   results.push(
-    '🎙️ Sponsorship Rate Calculator\n\n' +
-    '💰 Rate Estimate:\n' +
+    makeToken('calc_out.section.sponsorship_rate_calculator', '🎙️ Sponsorship Rate Calculator') + '\n\n' +
+    makeToken('calc_out.section.sponsorship_rate_rate_estimate', '💰 Rate Estimate:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Content Type:        ' + typeLabel[contentType] + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.content_type', '• Content Type:        ' + contentTypeLabel, { type: contentTypeLabel }) + '\n' +
     '• CPM:                $' + cpm + ' / 1,000 impressions\n' +
-    '• Per Post Value:     ' + fmt(perPostValue) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.per_post_value', '• Per Post Value:     ' + fmt(perPostValue), { value: fmt(perPostValue) }) + '\n' +
     '• Bundle (4 posts):    ' + fmt(bundleValue) + '\n' +
     '• Monthly (4 posts):   ' + fmt(monthlyValue) + '/mo\n' +
     '• Annual Revenue:      ' + fmt(annualValue) + '/yr\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📐 CPM by Niche:\n' +
-    '• Podcast:           $25 CPM  (host-read ads, $18-50 range)\n' +
-    '• Newsletter:        $40 CPM  (high engagement, $30-60 range)\n' +
-    '• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)\n' +
-    '• Blog:              $15 CPM  (display + direct, $10-25 range)\n' +
-    '• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)\n' +
-    '• Lifestyle / General:      $5-15 CPM  (commodity)\n\n' +
+    makeToken('calc_out.section.sponsorship_rate_cpm_by_niche', '📐 CPM by Niche:') + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.niche_podcast', '• Podcast:           $25 CPM  (host-read ads, $18-50 range)') + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.niche_newsletter', '• Newsletter:        $40 CPM  (high engagement, $30-60 range)') + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.niche_youtube', '• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)') + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.niche_blog', '• Blog:              $15 CPM  (display + direct, $10-25 range)') + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.niche_b2b_finance', '• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)') + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.niche_lifestyle', '• Lifestyle / General:      $5-15 CPM  (commodity)') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🩺 Rate Health:\n' +
+    makeToken('calc_out.section.sponsorship_rate_rate_health', '🩺 Rate Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + tierHealth + '\n' +
-    (totalAudience >= 100000
-      ? '• 🟢 Large creator tier — multiple sponsor slots/yr, premium CPMs.\n'
-      : totalAudience >= 25000
-      ? '• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.\n'
-      : '• 🟠 Micro-influencer — building toward monetization threshold (10K+).\n') +
-    (engagementMultiplier >= 1.2
-      ? '• 🟢 Audience-to-deal ratio strong — sponsors see value at this scale.\n'
-      : engagementMultiplier >= 0.8
-      ? '• 🟡 Standard ratio — focus on growing niche engagement.\n'
-      : '• 🟠 Small audience — engagement metrics matter more than reach.\n') +
     (cpm >= 25
-      ? '• 🟢 CPM $' + cpm + ' commands brand attention in this vertical.\n'
-      : '• 🟠 CPM $' + cpm + ' is below premium — niche specialization helps.\n') +
-    '\n🎯 Revenue at Scale:\n' +
+      ? makeToken('calc_out.sponsorship_rate.row.health_cpm_premium', '• 🟢 Premium CPM — top-tier brand deals.') + '\n'
+      : cpm >= 15
+      ? makeToken('calc_out.sponsorship_rate.row.health_cpm_standard', '• 🟡 Standard CPM — workable rate for content type.') + '\n'
+      : makeToken('calc_out.sponsorship_rate.row.health_cpm_low', '• 🔴 Low CPM — limited monetization potential. Focus on engagement.') + '\n') +
+    (totalAudience >= 100000
+      ? makeToken('calc_out.sponsorship_rate.row.health_tier_large', '• 🟢 Large creator tier — multiple sponsor slots/yr, premium CPMs.') + '\n'
+      : totalAudience >= 25000
+      ? makeToken('calc_out.sponsorship_rate.row.health_tier_mid', '• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.') + '\n'
+      : makeToken('calc_out.sponsorship_rate.row.health_tier_micro', '• 🟠 Micro-influencer — building toward monetization threshold (10K+).') + '\n') +
+    (engagementMultiplier >= 1.2
+      ? makeToken('calc_out.sponsorship_rate.row.health_ratio_strong', '• 🟢 Audience-to-deal ratio strong — sponsors see value at this scale.') + '\n'
+      : engagementMultiplier >= 0.8
+      ? makeToken('calc_out.sponsorship_rate.row.health_ratio_standard', '• 🟡 Standard ratio — focus on growing niche engagement.') + '\n'
+      : makeToken('calc_out.sponsorship_rate.row.health_ratio_small', '• 🟠 Small audience — engagement metrics matter more than reach.') + '\n') +
+    (cpm >= 25
+      ? makeToken('calc_out.sponsorship_rate.row.health_cpm_command', '• 🟢 CPM $' + cpm + ' commands brand attention in this vertical.', { cpm: String(cpm) }) + '\n'
+      : makeToken('calc_out.sponsorship_rate.row.health_cpm_below', '• 🟠 CPM $' + cpm + ' is below premium — niche specialization helps.', { cpm: String(cpm) }) + '\n') +
+    '\n' + makeToken('calc_out.section.sponsorship_rate_revenue_at_scale', '🎯 Revenue at Scale:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• At 1,000 audience:     $' + loc(yearlyAt1K) + '/yr  (entry)\n' +
-    '• At 10,000 audience:    $' + loc(yearlyAt10K) + '/yr  (mid-tier)\n' +
-    '• At 100,000 audience:   $' + loc(yearlyAt100K) + '/yr  (premium)\n' +
-    '• Current:                ' + fmt(annualValue) + '/yr  (' + loc(totalAudience) + ' audience)\n\n' +
+    makeToken('calc_out.sponsorship_rate.row.scale_1k', '• At 1,000 audience:     $' + loc(yearlyAt1K) + '/yr  (entry)', { yearly: loc(yearlyAt1K) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.scale_10k', '• At 10,000 audience:    $' + loc(yearlyAt10K) + '/yr  (mid-tier)', { yearly: loc(yearlyAt10K) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.scale_100k', '• At 100,000 audience:   $' + loc(yearlyAt100K) + '/yr  (premium)', { yearly: loc(yearlyAt100K) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.scale_current', '• Current:                ' + fmt(annualValue) + '/yr  (' + loc(totalAudience) + ' audience)', { value: fmt(annualValue), audience: loc(totalAudience) }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Per-Post vs Bundle Break-Even:\n' +
+    makeToken('calc_out.section.sponsorship_rate_per_post_break_even', '⚖️ Per-Post vs Bundle Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Per-post only:        ' + fmt(perPostValue * 12) + '/yr  (1 post/mo, 12 placements)\n' +
-    '• 4-post bundle/mo:     ' + fmt(monthlyValue * 12) + '/yr  (4x exposure)\n' +
-    '• Bundle premium:       +' + pct((bundleValue - perPostValue) / Math.max(perPostValue, 1) * 100) + ' revenue vs per-post\n' +
-    '• Break-even bundle size: need 4+ committed sponsors for retainer\n\n' +
+    makeToken('calc_out.sponsorship_rate.row.breakeven_per_post_only', '• Per-post only:        ' + fmt(perPostValue * 12) + '/yr  (1 post/mo, 12 placements)', { value: fmt(perPostValue * 12) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.breakeven_bundle_monthly', '• 4-post bundle/mo:     ' + fmt(monthlyValue * 12) + '/yr  (4x exposure)', { value: fmt(monthlyValue * 12) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.breakeven_bundle_premium', '• Bundle premium:       +' + bundlePremiumPct + ' revenue vs per-post', { pct: bundlePremiumPct }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.breakeven_bundle_size', '• Break-even bundle size: need 4+ committed sponsors for retainer') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If Scenarios:\n' +
+    makeToken('calc_out.section.what_if_scenarios', '🔄 What-If Scenarios:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Grow engagement 50%:  Rate ' + fmt(perPostValue) + ' → ' + fmt(perPostValue * 1.5) + '/post  (' + fmt(perPostValue * 1.5 * 12 * 4) + '/yr)\n' +
-    '• Raise CPM 25% (negotiate):  Rate ' + fmt(perPostValue) + ' → ' + fmt(perPostValue * 1.25) + '/post  (' + fmt(perPostValue * 1.25 * 12 * 4) + '/yr)\n' +
-    '• Longer bundle (8 posts/mo):  Revenue ' + fmt(monthlyValue) + ' → ' + fmt(perPostValue * 8) + '/mo  (' + fmt(perPostValue * 8 * 12) + '/yr)\n' +
-    '• 2x audience growth:  Revenue ' + fmt(annualValue) + ' → ' + fmt(annualValue * 2) + '/yr\n' +
-    '• Switch to premium niche (B2B/finance):  CPM $' + cpm + ' → $50  → ' + fmt((totalAudience / 1000) * 50 * 4 * 12) + '/yr\n\n' +
-    '💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.',
+    makeToken('calc_out.sponsorship_rate.row.whatif_grow_engagement', '• Grow engagement 50%:  Rate ' + fmt(perPostValue) + ' → ' + fmt(perPostValue * 1.5) + '/post  (' + fmt(perPostValue * 1.5 * 12 * 4) + '/yr)', { from: fmt(perPostValue), to: fmt(perPostValue * 1.5), annual: fmt(perPostValue * 1.5 * 12 * 4) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.whatif_raise_cpm', '• Raise CPM 25% (negotiate):  Rate ' + fmt(perPostValue) + ' → ' + fmt(perPostValue * 1.25) + '/post  (' + fmt(perPostValue * 1.25 * 12 * 4) + '/yr)', { from: fmt(perPostValue), to: fmt(perPostValue * 1.25), annual: fmt(perPostValue * 1.25 * 12 * 4) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.whatif_longer_bundle', '• Longer bundle (8 posts/mo):  Revenue ' + fmt(monthlyValue) + ' → ' + fmt(perPostValue * 8) + '/mo  (' + fmt(perPostValue * 8 * 12) + '/yr)', { from: fmt(monthlyValue), to: fmt(perPostValue * 8), annual: fmt(perPostValue * 8 * 12) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.whatif_2x_audience', '• 2x audience growth:  Revenue ' + fmt(annualValue) + ' → ' + fmt(annualValue * 2) + '/yr', { from: fmt(annualValue), to: fmt(annualValue * 2) }) + '\n' +
+    makeToken('calc_out.sponsorship_rate.row.whatif_premium_niche', '• Switch to premium niche (B2B/finance):  CPM $' + cpm + ' → $50  → ' + fmt((totalAudience / 1000) * 50 * 4 * 12) + '/yr', { cpm: String(cpm), value: fmt((totalAudience / 1000) * 50 * 4 * 12) }) + '\n\n' +
+    makeToken('calc_out.sponsorship_rate.row.tip_direct_sponsorships', '💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.'),
   );
 
   const audienceSizes = [1000, 5000, 15000, 50000, 200000];
   for (let i = 0; i < audienceSizes.length; i++) {
-    const a = audienceSizes[i];
-    const val = (a / 1000) * cpm * 4;
-    const yearly = val * 12;
+    const audienceSize = audienceSizes[i];
+    const monthly = (audienceSize / 1000) * cpm * 4;
+    const yearly = monthly * 12;
+    // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+    const audienceLabel = audienceSize.toLocaleString();
+    const monthlyLabel = loc(monthly);
+    const yearlyLabel = loc(yearly);
+    const sponsorType = typeLabel[contentType].toLowerCase();
     results.push(
-      'At ' + a.toLocaleString() + ' audience: $' + loc(val) + '/mo  ($' + loc(yearly) + '/yr) as ' + typeLabel[contentType].toLowerCase() + ' sponsor',
+      makeToken(
+        'calc_out.sponsorship_rate.row.sponsor_tier',
+        'At ' + audienceLabel + ' audience: $' + monthlyLabel + '/mo  ($' + yearlyLabel + '/yr) as ' + sponsorType + ' sponsor',
+        { audience: audienceLabel, monthly: monthlyLabel, yearly: yearlyLabel, type: sponsorType },
+      ),
     );
   }
 
@@ -125,70 +138,72 @@ function calculateSponsorship(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let c=function(o){return Number.isNaN(o)?0:Math.max(0,o)},h=function(o){const l=c(parseInt(o.monthlyDownloads)||0),d=c(parseInt(o.emailSubscribers)||0),s=c(parseInt(o.socialFollowers)||0),p=o.contentType||"newsletter",y=[],t={podcast:25,newsletter:40,youtube:20,blog:15}[p]||20,v=l>0?l/1e3*t:0,S=d/1e3*t,A=s/1e3*t*.5,n=v+S+A,P=n*4,u=n*4,m=u*12,a=l+d+s,z=a>=1e5?"large creator":a>=25e3?"mid-tier":"micro-influencer",B=t>=25?"🟢 Premium CPM — top-tier brand deals.":t>=15?"🟡 Standard CPM — workable rate for content type.":"🔴 Low CPM — limited monetization potential. Focus on engagement.",g=a>0?Math.min(2,Math.max(.5,a/5e4)):1,K=n*g,R=1e3/1e3*t*4*12,_=1e4/1e3*t*4*12,L=1e5/1e3*t*4*12,C={podcast:"Podcast",newsletter:"Newsletter",youtube:"YouTube Channel",blog:"Blog"},e=r=>"$"+Math.round(r).toLocaleString(),k=r=>r.toFixed(1)+"%",i=r=>Math.round(r).toLocaleString();y.push(\`🎙️ Sponsorship Rate Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let _=function(n){return Number.isNaN(n)?0:Math.max(0,n)},w=function(n){const u=_(parseInt(n.monthlyDownloads)||0),h=_(parseInt(n.emailSubscribers)||0),l=_(parseInt(n.socialFollowers)||0),d=n.contentType||"newsletter",y=[],r={podcast:25,newsletter:40,youtube:20,blog:15}[d]||20,z=u>0?u/1e3*r:0,j=h/1e3*r,K=l/1e3*r*.5,o=z+j+K,b=o*4,p=o*4,i=p*12,s=u+h+l,Y=s>=1e5?"large creator":s>=25e3?"mid-tier":"micro-influencer",m=s>0?Math.min(2,Math.max(.5,s/5e4)):1,H=o*m,f=1e3/1e3*r*4*12,v=1e4/1e3*r*4*12,P=1e5/1e3*r*4*12,M={podcast:"Podcast",newsletter:"Newsletter",youtube:"YouTube Channel",blog:"Blog"},e=c=>"$"+Math.round(c).toLocaleString(),q=c=>c.toFixed(1)+"%",a=c=>Math.round(c).toLocaleString(),C=q((b-o)/Math.max(o,1)*100),$=M[d];y.push(t("calc_out.section.sponsorship_rate_calculator","🎙️ Sponsorship Rate Calculator")+\`
 
-💰 Rate Estimate:
+\`+t("calc_out.section.sponsorship_rate_rate_estimate","💰 Rate Estimate:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Content Type:        \`+C[p]+\`
-• CPM:                $\`+t+\` / 1,000 impressions
-• Per Post Value:     \`+e(n)+\`
-• Bundle (4 posts):    \`+e(P)+\`
-• Monthly (4 posts):   \`+e(u)+\`/mo
-• Annual Revenue:      \`+e(m)+\`/yr
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📐 CPM by Niche:
-• Podcast:           $25 CPM  (host-read ads, $18-50 range)
-• Newsletter:        $40 CPM  (high engagement, $30-60 range)
-• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)
-• Blog:              $15 CPM  (display + direct, $10-25 range)
-• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)
-• Lifestyle / General:      $5-15 CPM  (commodity)
+\`+t("calc_out.sponsorship_rate.row.content_type","• Content Type:        "+$,{type:$})+\`
+• CPM:                $\`+r+\` / 1,000 impressions
+\`+t("calc_out.sponsorship_rate.row.per_post_value","• Per Post Value:     "+e(o),{value:e(o)})+\`
+• Bundle (4 posts):    \`+e(b)+\`
+• Monthly (4 posts):   \`+e(p)+\`/mo
+• Annual Revenue:      \`+e(i)+\`/yr
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🩺 Rate Health:
+\`+t("calc_out.section.sponsorship_rate_cpm_by_niche","📐 CPM by Niche:")+\`
+\`+t("calc_out.sponsorship_rate.row.niche_podcast","• Podcast:           $25 CPM  (host-read ads, $18-50 range)")+\`
+\`+t("calc_out.sponsorship_rate.row.niche_newsletter","• Newsletter:        $40 CPM  (high engagement, $30-60 range)")+\`
+\`+t("calc_out.sponsorship_rate.row.niche_youtube","• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)")+\`
+\`+t("calc_out.sponsorship_rate.row.niche_blog","• Blog:              $15 CPM  (display + direct, $10-25 range)")+\`
+\`+t("calc_out.sponsorship_rate.row.niche_b2b_finance","• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)")+\`
+\`+t("calc_out.sponsorship_rate.row.niche_lifestyle","• Lifestyle / General:      $5-15 CPM  (commodity)")+\`
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+B+\`
-\`+(a>=1e5?\`• 🟢 Large creator tier — multiple sponsor slots/yr, premium CPMs.
-\`:a>=25e3?\`• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.
-\`:\`• 🟠 Micro-influencer — building toward monetization threshold (10K+).
-\`)+(g>=1.2?\`• 🟢 Audience-to-deal ratio strong — sponsors see value at this scale.
-\`:g>=.8?\`• 🟡 Standard ratio — focus on growing niche engagement.
-\`:\`• 🟠 Small audience — engagement metrics matter more than reach.
-\`)+(t>=25?"• 🟢 CPM $"+t+\` commands brand attention in this vertical.
-\`:"• 🟠 CPM $"+t+\` is below premium — niche specialization helps.
+
+\`+t("calc_out.section.sponsorship_rate_rate_health","🩺 Rate Health:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(r>=25?t("calc_out.sponsorship_rate.row.health_cpm_premium","• 🟢 Premium CPM — top-tier brand deals.")+\`
+\`:r>=15?t("calc_out.sponsorship_rate.row.health_cpm_standard","• 🟡 Standard CPM — workable rate for content type.")+\`
+\`:t("calc_out.sponsorship_rate.row.health_cpm_low","• 🔴 Low CPM — limited monetization potential. Focus on engagement.")+\`
+\`)+(s>=1e5?t("calc_out.sponsorship_rate.row.health_tier_large","• 🟢 Large creator tier — multiple sponsor slots/yr, premium CPMs.")+\`
+\`:s>=25e3?t("calc_out.sponsorship_rate.row.health_tier_mid","• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.")+\`
+\`:t("calc_out.sponsorship_rate.row.health_tier_micro","• 🟠 Micro-influencer — building toward monetization threshold (10K+).")+\`
+\`)+(m>=1.2?t("calc_out.sponsorship_rate.row.health_ratio_strong","• 🟢 Audience-to-deal ratio strong — sponsors see value at this scale.")+\`
+\`:m>=.8?t("calc_out.sponsorship_rate.row.health_ratio_standard","• 🟡 Standard ratio — focus on growing niche engagement.")+\`
+\`:t("calc_out.sponsorship_rate.row.health_ratio_small","• 🟠 Small audience — engagement metrics matter more than reach.")+\`
+\`)+(r>=25?t("calc_out.sponsorship_rate.row.health_cpm_command","• 🟢 CPM $"+r+" commands brand attention in this vertical.",{cpm:String(r)})+\`
+\`:t("calc_out.sponsorship_rate.row.health_cpm_below","• 🟠 CPM $"+r+" is below premium — niche specialization helps.",{cpm:String(r)})+\`
 \`)+\`
-🎯 Revenue at Scale:
+\`+t("calc_out.section.sponsorship_rate_revenue_at_scale","🎯 Revenue at Scale:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• At 1,000 audience:     $\`+i(R)+\`/yr  (entry)
-• At 10,000 audience:    $\`+i(_)+\`/yr  (mid-tier)
-• At 100,000 audience:   $\`+i(L)+\`/yr  (premium)
-• Current:                \`+e(m)+"/yr  ("+i(a)+\` audience)
+\`+t("calc_out.sponsorship_rate.row.scale_1k","• At 1,000 audience:     $"+a(f)+"/yr  (entry)",{yearly:a(f)})+\`
+\`+t("calc_out.sponsorship_rate.row.scale_10k","• At 10,000 audience:    $"+a(v)+"/yr  (mid-tier)",{yearly:a(v)})+\`
+\`+t("calc_out.sponsorship_rate.row.scale_100k","• At 100,000 audience:   $"+a(P)+"/yr  (premium)",{yearly:a(P)})+\`
+\`+t("calc_out.sponsorship_rate.row.scale_current","• Current:                "+e(i)+"/yr  ("+a(s)+" audience)",{value:e(i),audience:a(s)})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Per-Post vs Bundle Break-Even:
+\`+t("calc_out.section.sponsorship_rate_per_post_break_even","⚖️ Per-Post vs Bundle Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Per-post only:        \`+e(n*12)+\`/yr  (1 post/mo, 12 placements)
-• 4-post bundle/mo:     \`+e(u*12)+\`/yr  (4x exposure)
-• Bundle premium:       +\`+k((P-n)/Math.max(n,1)*100)+\` revenue vs per-post
-• Break-even bundle size: need 4+ committed sponsors for retainer
+\`+t("calc_out.sponsorship_rate.row.breakeven_per_post_only","• Per-post only:        "+e(o*12)+"/yr  (1 post/mo, 12 placements)",{value:e(o*12)})+\`
+\`+t("calc_out.sponsorship_rate.row.breakeven_bundle_monthly","• 4-post bundle/mo:     "+e(p*12)+"/yr  (4x exposure)",{value:e(p*12)})+\`
+\`+t("calc_out.sponsorship_rate.row.breakeven_bundle_premium","• Bundle premium:       +"+C+" revenue vs per-post",{pct:C})+\`
+\`+t("calc_out.sponsorship_rate.row.breakeven_bundle_size","• Break-even bundle size: need 4+ committed sponsors for retainer")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If Scenarios:
+\`+t("calc_out.section.what_if_scenarios","🔄 What-If Scenarios:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Grow engagement 50%:  Rate \`+e(n)+" → "+e(n*1.5)+"/post  ("+e(n*1.5*12*4)+\`/yr)
-• Raise CPM 25% (negotiate):  Rate \`+e(n)+" → "+e(n*1.25)+"/post  ("+e(n*1.25*12*4)+\`/yr)
-• Longer bundle (8 posts/mo):  Revenue \`+e(u)+" → "+e(n*8)+"/mo  ("+e(n*8*12)+\`/yr)
-• 2x audience growth:  Revenue \`+e(m)+" → "+e(m*2)+\`/yr
-• Switch to premium niche (B2B/finance):  CPM $\`+t+" → $50  → "+e(a/1e3*50*4*12)+\`/yr
+\`+t("calc_out.sponsorship_rate.row.whatif_grow_engagement","• Grow engagement 50%:  Rate "+e(o)+" → "+e(o*1.5)+"/post  ("+e(o*1.5*12*4)+"/yr)",{from:e(o),to:e(o*1.5),annual:e(o*1.5*12*4)})+\`
+\`+t("calc_out.sponsorship_rate.row.whatif_raise_cpm","• Raise CPM 25% (negotiate):  Rate "+e(o)+" → "+e(o*1.25)+"/post  ("+e(o*1.25*12*4)+"/yr)",{from:e(o),to:e(o*1.25),annual:e(o*1.25*12*4)})+\`
+\`+t("calc_out.sponsorship_rate.row.whatif_longer_bundle","• Longer bundle (8 posts/mo):  Revenue "+e(p)+" → "+e(o*8)+"/mo  ("+e(o*8*12)+"/yr)",{from:e(p),to:e(o*8),annual:e(o*8*12)})+\`
+\`+t("calc_out.sponsorship_rate.row.whatif_2x_audience","• 2x audience growth:  Revenue "+e(i)+" → "+e(i*2)+"/yr",{from:e(i),to:e(i*2)})+\`
+\`+t("calc_out.sponsorship_rate.row.whatif_premium_niche","• Switch to premium niche (B2B/finance):  CPM $"+r+" → $50  → "+e(s/1e3*50*4*12)+"/yr",{cpm:String(r),value:e(s/1e3*50*4*12)})+\`
 
-💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.\`);const b=[1e3,5e3,15e3,5e4,2e5];for(let r=0;r<b.length;r++){const $=b[r],w=$/1e3*t*4,V=w*12;y.push("At "+$.toLocaleString()+" audience: $"+i(w)+"/mo  ($"+i(V)+"/yr) as "+C[p].toLowerCase()+" sponsor")}return y},M=function(o,l,d){var s=f(o);return Array.isArray(s)?s.join(\`
-\`):String(s)};var x=c,N=h,T=M,f=function(o){return h(o)};return[M(inputs,pick,fill)]}finally{}
+\`+t("calc_out.sponsorship_rate.row.tip_direct_sponsorships","💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency."));const S=[1e3,5e3,15e3,5e4,2e5];for(let c=0;c<S.length;c++){const A=S[c],B=A/1e3*r*4,E=B*12,L=A.toLocaleString(),R=a(B),F=a(E),x=M[d].toLowerCase();y.push(t("calc_out.sponsorship_rate.row.sponsor_tier","At "+L+" audience: $"+R+"/mo  ($"+F+"/yr) as "+x+" sponsor",{audience:L,monthly:R,yearly:F,type:x}))}return y},g=function(n,u,h){var l=V(n);return Array.isArray(l)?l.join(\`
+\`):String(l)};var I=_,D=w,O=g,t=tk,N='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+N)(),V=function(n){return w(n)};return[g(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -220,7 +235,7 @@ const engine: ToolEngine = {
     return calculateSponsorship(inputs);
   },
   staticExamples: [
-    '🎙️ Sponsorship Rate Calculator\n\n💰 Rate Estimate:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Content Type:        Newsletter\n• CPM:                $40 / 1,000 impressions\n• Per Post Value:     $900\n• Bundle (4 posts):    $3,600\n• Monthly (4 posts):   $3,600/mo\n• Annual Revenue:      $43,200/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📐 CPM by Niche:\n• Podcast:           $25 CPM  (host-read ads, $18-50 range)\n• Newsletter:        $40 CPM  (high engagement, $30-60 range)\n• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)\n• Blog:              $15 CPM  (display + direct, $10-25 range)\n• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)\n• Lifestyle / General:      $5-15 CPM  (commodity)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🩺 Rate Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 Premium CPM — top-tier brand deals.\n• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.\n• 🟠 Small audience — engagement metrics matter more than reach.\n• 🟢 CPM $40 commands brand attention in this vertical.\n\n🎯 Revenue at Scale:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• At 1,000 audience:     $1,920/yr  (entry)\n• At 10,000 audience:    $19,200/yr  (mid-tier)\n• At 100,000 audience:   $192,000/yr  (premium)\n• Current:                $43,200/yr  (30,000 audience)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Per-Post vs Bundle Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Per-post only:        $10,800/yr  (1 post/mo, 12 placements)\n• 4-post bundle/mo:     $43,200/yr  (4x exposure)\n• Bundle premium:       +300.0% revenue vs per-post\n• Break-even bundle size: need 4+ committed sponsors for retainer\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Grow engagement 50%:  Rate $900 → $1,350/post  ($64,800/yr)\n• Raise CPM 25% (negotiate):  Rate $900 → $1,125/post  ($54,000/yr)\n• Longer bundle (8 posts/mo):  Revenue $3,600 → $7,200/mo  ($86,400/yr)\n• 2x audience growth:  Revenue $43,200 → $86,400/yr\n• Switch to premium niche (B2B/finance):  CPM $40 → $50  → $72,000/yr\n\n💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.\nAt 1,000 audience: $160/mo  ($1,920/yr) as newsletter sponsor\nAt 5,000 audience: $800/mo  ($9,600/yr) as newsletter sponsor\nAt 15,000 audience: $2,400/mo  ($28,800/yr) as newsletter sponsor\nAt 50,000 audience: $8,000/mo  ($96,000/yr) as newsletter sponsor\nAt 200,000 audience: $32,000/mo  ($384,000/yr) as newsletter sponsor',
+    '$calc_out.section.sponsorship_rate_calculator|🎙️ Sponsorship Rate Calculator|\n\n$calc_out.section.sponsorship_rate_rate_estimate|💰 Rate Estimate:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.sponsorship_rate.row.content_type{"type":"Newsletter"}|• Content Type:        Newsletter|\n• CPM:                $40 / 1,000 impressions\n$calc_out.sponsorship_rate.row.per_post_value{"value":"$900"}|• Per Post Value:     $900|\n• Bundle (4 posts):    $3,600\n• Monthly (4 posts):   $3,600/mo\n• Annual Revenue:      $43,200/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.sponsorship_rate_cpm_by_niche|📐 CPM by Niche:|\n$calc_out.sponsorship_rate.row.niche_podcast|• Podcast:           $25 CPM  (host-read ads, $18-50 range)|\n$calc_out.sponsorship_rate.row.niche_newsletter|• Newsletter:        $40 CPM  (high engagement, $30-60 range)|\n$calc_out.sponsorship_rate.row.niche_youtube|• YouTube:           $20 CPM  (direct sponsorships, $15-30 range)|\n$calc_out.sponsorship_rate.row.niche_blog|• Blog:              $15 CPM  (display + direct, $10-25 range)|\n$calc_out.sponsorship_rate.row.niche_b2b_finance|• B2B SaaS / Finance niche: $50-80 CPM  (premium verticals)|\n$calc_out.sponsorship_rate.row.niche_lifestyle|• Lifestyle / General:      $5-15 CPM  (commodity)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.sponsorship_rate_rate_health|🩺 Rate Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.sponsorship_rate.row.health_cpm_premium|• 🟢 Premium CPM — top-tier brand deals.|\n$calc_out.sponsorship_rate.row.health_tier_mid|• 🟡 Mid-tier — competitive CPM, 1-2 sponsor slots/yr typical.|\n$calc_out.sponsorship_rate.row.health_ratio_small|• 🟠 Small audience — engagement metrics matter more than reach.|\n$calc_out.sponsorship_rate.row.health_cpm_command{"cpm":"40"}|• 🟢 CPM $40 commands brand attention in this vertical.|\n\n$calc_out.section.sponsorship_rate_revenue_at_scale|🎯 Revenue at Scale:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.sponsorship_rate.row.scale_1k{"yearly":"1,920"}|• At 1,000 audience:     $1,920/yr  (entry)|\n$calc_out.sponsorship_rate.row.scale_10k{"yearly":"19,200"}|• At 10,000 audience:    $19,200/yr  (mid-tier)|\n$calc_out.sponsorship_rate.row.scale_100k{"yearly":"192,000"}|• At 100,000 audience:   $192,000/yr  (premium)|\n$calc_out.sponsorship_rate.row.scale_current{"value":"$43,200","audience":"30,000"}|• Current:                $43,200/yr  (30,000 audience)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.sponsorship_rate_per_post_break_even|⚖️ Per-Post vs Bundle Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.sponsorship_rate.row.breakeven_per_post_only{"value":"$10,800"}|• Per-post only:        $10,800/yr  (1 post/mo, 12 placements)|\n$calc_out.sponsorship_rate.row.breakeven_bundle_monthly{"value":"$43,200"}|• 4-post bundle/mo:     $43,200/yr  (4x exposure)|\n$calc_out.sponsorship_rate.row.breakeven_bundle_premium{"pct":"300.0%"}|• Bundle premium:       +300.0% revenue vs per-post|\n$calc_out.sponsorship_rate.row.breakeven_bundle_size|• Break-even bundle size: need 4+ committed sponsors for retainer|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if_scenarios|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.sponsorship_rate.row.whatif_grow_engagement{"from":"$900","to":"$1,350","annual":"$64,800"}|• Grow engagement 50%:  Rate $900 → $1,350/post  ($64,800/yr)|\n$calc_out.sponsorship_rate.row.whatif_raise_cpm{"from":"$900","to":"$1,125","annual":"$54,000"}|• Raise CPM 25% (negotiate):  Rate $900 → $1,125/post  ($54,000/yr)|\n$calc_out.sponsorship_rate.row.whatif_longer_bundle{"from":"$3,600","to":"$7,200","annual":"$86,400"}|• Longer bundle (8 posts/mo):  Revenue $3,600 → $7,200/mo  ($86,400/yr)|\n$calc_out.sponsorship_rate.row.whatif_2x_audience{"from":"$43,200","to":"$86,400"}|• 2x audience growth:  Revenue $43,200 → $86,400/yr|\n$calc_out.sponsorship_rate.row.whatif_premium_niche{"cpm":"40","value":"$72,000"}|• Switch to premium niche (B2B/finance):  CPM $40 → $50  → $72,000/yr|\n\n$calc_out.sponsorship_rate.row.tip_direct_sponsorships|💡 Tip: Direct sponsorships pay 3-10x more than programmatic ads (AdSense: $2-5 CPM vs direct: $15-40 CPM). Build a media kit with engagement metrics (open rate, listen-through, click-through) — a smaller but engaged audience commands premium CPMs. Bundle 4 placements/mo at a 10-15% discount to lock recurring revenue while brands get consistency.|\n$calc_out.sponsorship_rate.row.sponsor_tier{"audience":"1,000","monthly":"160","yearly":"1,920","type":"newsletter"}|At 1,000 audience: $160/mo  ($1,920/yr) as newsletter sponsor|\n$calc_out.sponsorship_rate.row.sponsor_tier{"audience":"5,000","monthly":"800","yearly":"9,600","type":"newsletter"}|At 5,000 audience: $800/mo  ($9,600/yr) as newsletter sponsor|\n$calc_out.sponsorship_rate.row.sponsor_tier{"audience":"15,000","monthly":"2,400","yearly":"28,800","type":"newsletter"}|At 15,000 audience: $2,400/mo  ($28,800/yr) as newsletter sponsor|\n$calc_out.sponsorship_rate.row.sponsor_tier{"audience":"50,000","monthly":"8,000","yearly":"96,000","type":"newsletter"}|At 50,000 audience: $8,000/mo  ($96,000/yr) as newsletter sponsor|\n$calc_out.sponsorship_rate.row.sponsor_tier{"audience":"200,000","monthly":"32,000","yearly":"384,000","type":"newsletter"}|At 200,000 audience: $32,000/mo  ($384,000/yr) as newsletter sponsor|',
     'At 1,000 audience: $160/mo  ($1,920/yr) as newsletter sponsor',
     'At 5,000 audience: $800/mo  ($9,600/yr) as newsletter sponsor',
     'At 15,000 audience: $2,400/mo  ($28,800/yr) as newsletter sponsor',

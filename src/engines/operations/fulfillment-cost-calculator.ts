@@ -1,7 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Order Fulfillment Cost Calculator (P7-5) — Business v3 standard
@@ -89,8 +91,9 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: zero orders → prompt
   if (ordersPerMonth === 0) {
     return [
-      '⏰ Order Fulfillment Cost Calculator\n\n' +
-        '📊 Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.',
+      makeToken('calc_out.section.fulfillment_cost_calculator', '⏰ Order Fulfillment Cost Calculator') +
+        '\n\n' +
+        makeToken('calc_out.fulfillment_cost.row.need_inputs', '📊 Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.'),
     ];
   }
 
@@ -104,17 +107,30 @@ function calculate(inputs: Record<string, string>): string[] {
   const money = (n: number) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 });
   const moneyR = (n: number) => '$' + Math.round(n).toLocaleString('en-US');
 
-  // Health band
+  // Health band（健康度 4 档各写一个 code 字面量 ⇒ 不动态拼码）
   const band = calcHealthBand(poCost);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? 'Excellent — per-order cost < $5; efficient fulfillment'
-      : band === 'good'
-      ? 'Good — $5–$10 per order; typical retail range'
-      : band === 'warning'
-      ? 'Warning — $10–$20 per order; high; automate or batch'
-      : 'Critical — ≥ $20 per order; restructure or switch to 3PL';
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.fulfillment_cost.row.health_excellent',
+      '• 🟢 Excellent — per-order cost < $5; efficient fulfillment',
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.fulfillment_cost.row.health_good',
+      '• 🟡 Good — $5–$10 per order; typical retail range',
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.fulfillment_cost.row.health_warning',
+      '• 🟠 Warning — $10–$20 per order; high; automate or batch',
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.fulfillment_cost.row.health_critical',
+      '• 🔴 Critical — ≥ $20 per order; restructure or switch to 3PL',
+    );
+  }
 
   // What-If: returns drop to 3%, then labor 25% faster
   const retDown = 3;
@@ -140,60 +156,103 @@ function calculate(inputs: Record<string, string>): string[] {
   const savingsPerOrder1 = 1;
   const annualSavings1 = savingsPerOrder1 * ordersPerMonth * 12;
 
-  // Tip: band-driven contextual advice
+  // Tip: band-driven contextual advice（每个档位一个 code 字面量）
   let tip: string;
   if (band === 'critical') {
-    tip =
-      '≥ $20 per order is unsustainable. Switch to a 3PL (typical $3–$8/order), negotiate shipping rates (50%+ savings possible at scale), and audit SKU-level fulfillment complexity (top 20% of SKUs often drive 80% of cost).';
+    tip = makeToken(
+      'calc_out.fulfillment_cost.row.tip_critical',
+      '💡 Tip: ≥ $20 per order is unsustainable. Switch to a 3PL (typical $3–$8/order), negotiate shipping rates (50%+ savings possible at scale), and audit SKU-level fulfillment complexity (top 20% of SKUs often drive 80% of cost).',
+    );
   } else if (band === 'warning') {
-    tip =
-      '$10–$20 per order is high. Batch pick (process 5+ orders at once), automate packaging (tape dispensers, dunnage systems), and audit return reasons (often 30–50% reducible via better product descriptions).';
+    tip = makeToken(
+      'calc_out.fulfillment_cost.row.tip_warning',
+      '💡 Tip: $10–$20 per order is high. Batch pick (process 5+ orders at once), automate packaging (tape dispensers, dunnage systems), and audit return reasons (often 30–50% reducible via better product descriptions).',
+    );
   } else if (band === 'good') {
-    tip =
-      '$5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).';
+    tip = makeToken(
+      'calc_out.fulfillment_cost.row.tip_good',
+      '💡 Tip: $5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).',
+    );
   } else {
-    tip =
-      'Excellent fulfillment cost. Keep monitoring — as you scale, revisit 3PL pricing (often $3–$5/order), renegotiate carrier rates annually, and watch for return-rate creep (each +1% return adds $0.05/order).';
+    tip = makeToken(
+      'calc_out.fulfillment_cost.row.tip_excellent',
+      '💡 Tip: Excellent fulfillment cost. Keep monitoring — as you scale, revisit 3PL pricing (often $3–$5/order), renegotiate carrier rates annually, and watch for return-rate creep (each +1% return adds $0.05/order).',
+    );
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const ordersLabel = String(ordersPerMonth);
+  const pickLabel = String(pickMin);
+  const packLabel = String(packMin);
+  const laborCostLabel = money(laborCost);
+  const laborMinLabel = String(laborMin);
+  const shippingLabel = money(shippingCost);
+  const packagingLabel = money(packagingCost);
+  const returnRateLabel = returnRate.toFixed(1);
+  const retHandlingLabel = money(retHandling);
+  const poCostLabel = money(poCost);
+  const moTotalLabel = moneyR(moTotal);
+  const annTotalLabel = moneyR(annTotal);
+  const poRetDownLabel = money(poCostRetDown);
+  const savingsRetLabel = moneyR(savingsRet);
+  const poLabor25Label = money(poCostLabor25);
+  const savingsLaborLabel = moneyR(savingsLabor);
+  const targetLaborMinLabel = targetLaborMin.toFixed(1);
+  const headroomMinLabel = laborHeadroom.toFixed(1);
+  const annualSavingsLabel = moneyR(annualSavings1);
+  const reinvestLabel = moneyR(annualSavings1 * 0.08);
+  const compoundedLabel = moneyR(annualSavings1 * 1.08 * 3 - annualSavings1 * 3);
+
   const r =
-    '⏰ Order Fulfillment Cost Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.fulfillment_cost_calculator', '⏰ Order Fulfillment Cost Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Per-order cost: ' + money(poCost) + '  ·  Monthly total: ' + moneyR(moTotal) + '  ·  Annual: ' + moneyR(annTotal) + '\n' +
-    '• Industry benchmark: $5–$10/order  ·  Your status: ' + (poCost < 5 ? 'below benchmark' : poCost < 10 ? 'in benchmark' : poCost < 20 ? 'above benchmark' : 'critical') + '\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.per_order_cost', '• Per-order cost: ' + poCostLabel + '  ·  Monthly total: ' + moTotalLabel + '  ·  Annual: ' + annTotalLabel, { cost: poCostLabel, monthly: moTotalLabel, annual: annTotalLabel }) + '\n' +
+    (poCost < 5
+      ? makeToken('calc_out.fulfillment_cost.row.benchmark_below', '• Industry benchmark: $5–$10/order  ·  Your status: below benchmark')
+      : poCost < 10
+      ? makeToken('calc_out.fulfillment_cost.row.benchmark_in', '• Industry benchmark: $5–$10/order  ·  Your status: in benchmark')
+      : poCost < 20
+      ? makeToken('calc_out.fulfillment_cost.row.benchmark_above', '• Industry benchmark: $5–$10/order  ·  Your status: above benchmark')
+      : makeToken('calc_out.fulfillment_cost.row.benchmark_critical', '• Industry benchmark: $5–$10/order  ·  Your status: critical')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Orders per month:        ' + ordersPerMonth + '\n' +
-    '• Pick time:               ' + pickMin + ' min/order\n' +
-    '• Pack time:               ' + packMin + ' min/order\n' +
+    makeToken('calc_out.fulfillment_cost.row.orders_per_month', '• Orders per month:        ' + ordersLabel, { orders: ordersLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.pick_time', '• Pick time:               ' + pickLabel + ' min/order', { minutes: pickLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.pack_time', '• Pack time:               ' + packLabel + ' min/order', { minutes: packLabel }) + '\n' +
     '• Labor rate:              ' + money(laborRate) + '/hr\n' +
-    '• Labor cost:              ' + money(laborCost) + '/order  (' + laborMin + ' min)\n' +
-    '• Shipping cost:           ' + money(shippingCost) + '/order\n' +
-    '• Packaging cost:          ' + money(packagingCost) + '/order\n' +
-    '• Return rate:             ' + returnRate.toFixed(1) + '%  ·  handling = ' + money(retHandling) + '/order\n' +
-    '• Per-order total:         ' + money(poCost) + '\n\n' +
+    makeToken('calc_out.fulfillment_cost.row.labor_cost', '• Labor cost:              ' + laborCostLabel + '/order  (' + laborMinLabel + ' min)', { cost: laborCostLabel, minutes: laborMinLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.shipping_cost', '• Shipping cost:           ' + shippingLabel + '/order', { cost: shippingLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.packaging_cost', '• Packaging cost:          ' + packagingLabel + '/order', { cost: packagingLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.return_rate', '• Return rate:             ' + returnRateLabel + '%  ·  handling = ' + retHandlingLabel + '/order', { rate: returnRateLabel, handling: retHandlingLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.per_order_total', '• Per-order total:         ' + poCostLabel, { cost: poCostLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Returns drop to 3%: per-order = ' + money(poCostRetDown) + '  ·  monthly savings = ' + moneyR(savingsRet) + '\n' +
-    '• Labor 25% faster: per-order = ' + money(poCostLabor25) + '  ·  monthly savings = ' + moneyR(savingsLabor) + '\n' +
-    '• Combined (3% returns + 25% faster labor): see Milestone\n\n' +
+    makeToken('calc_out.fulfillment_cost.row.whatif_returns_drop', '• Returns drop to 3%: per-order = ' + poRetDownLabel + '  ·  monthly savings = ' + savingsRetLabel, { cost: poRetDownLabel, savings: savingsRetLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.whatif_labor_faster', '• Labor 25% faster: per-order = ' + poLabor25Label + '  ·  monthly savings = ' + savingsLaborLabel, { cost: poLabor25Label, savings: savingsLaborLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.whatif_combined', '• Combined (3% returns + 25% faster labor): see Milestone') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Max labor min for 🟢 (< $5/order total): ' + (isFinite(targetLaborMin) ? targetLaborMin.toFixed(1) + ' min' : 'N/A (fixed costs alone exceed $5)') + '\n' +
-    '• Labor headroom: ' + (laborHeadroom > 0 ? 'reduce pick+pack by ' + laborHeadroom.toFixed(1) + ' min to hit 🟢' : laborHeadroom === 0 ? 'at threshold' : 'already below target') + '\n\n' +
+    (isFinite(targetLaborMin)
+      ? makeToken('calc_out.fulfillment_cost.row.breakeven_max_labor_min', '• Max labor min for 🟢 (< $5/order total): ' + targetLaborMinLabel + ' min', { minutes: targetLaborMinLabel })
+      : makeToken('calc_out.fulfillment_cost.row.breakeven_max_labor_na', '• Max labor min for 🟢 (< $5/order total): N/A (fixed costs alone exceed $5)')) + '\n' +
+    (laborHeadroom > 0
+      ? makeToken('calc_out.fulfillment_cost.row.breakeven_headroom_reduce', '• Labor headroom: reduce pick+pack by ' + headroomMinLabel + ' min to hit 🟢', { minutes: headroomMinLabel })
+      : laborHeadroom === 0
+      ? makeToken('calc_out.fulfillment_cost.row.breakeven_headroom_threshold', '• Labor headroom: at threshold')
+      : makeToken('calc_out.fulfillment_cost.row.breakeven_headroom_below', '• Labor headroom: already below target')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 12-mo savings if cost drops $1/order: ' + moneyR(annualSavings1) + '\n' +
-    '• Reinvested at 8% return: ' + moneyR(annualSavings1 * 0.08) + '/yr additional\n' +
-    '• Compounded over 3 years: ' + moneyR(annualSavings1 * 1.08 * 3 - annualSavings1 * 3) + ' (vs $0 reinvested)\n\n' +
+    makeToken('calc_out.fulfillment_cost.row.milestone_12mo_savings', '• 12-mo savings if cost drops $1/order: ' + annualSavingsLabel, { value: annualSavingsLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.milestone_reinvested', '• Reinvested at 8% return: ' + reinvestLabel + '/yr additional', { value: reinvestLabel }) + '\n' +
+    makeToken('calc_out.fulfillment_cost.row.milestone_compounded', '• Compounded over 3 years: ' + compoundedLabel + ' (vs $0 reinvested)', { value: compoundedLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -201,59 +260,59 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let t=function(n){return Number.isNaN(n)?0:Math.max(0,n)},M=function(n,r){return n+r},v=function(n,r){return n/60*r},$=function(n){return n/100*K},g=function(n,r,c,o){return n+r+c+o},f=function(n,r){return n*r},L=function(n){return n*12},P=function(n){return n<k.excellent?"excellent":n<k.good[1]?"good":n<k.warning[1]?"warning":"critical"},R=function(n,r,c){var o=U(n);return Array.isArray(o)?o.join(\`
-\`):String(o)};var z=t,A=M,B=v,H=$,J=g,Q=f,V=L,X=P,Z=R,I={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},K=4.5,k={excellent:5,good:[5,10],warning:[10,20],critical:20},U=function(n){const r=t(parseFloat(n.ordersPerMonth)||0),c=t(parseFloat(n.pickMin)||0),o=t(parseFloat(n.packMin)||0),l=t(parseFloat(n.shippingCost)||0),d=t(parseFloat(n.packagingCost)||0),u=t(parseFloat(n.laborRate)||0),S=t(Math.min(100,parseFloat(n.returnRate)||0));if(r===0)return[\`⏰ Order Fulfillment Cost Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let n=function(o){return Number.isNaN(o)?0:Math.max(0,o)},R=function(o,r){return o+r},$=function(o,r){return o/60*r},x=function(o){return o/100*et},g=function(o,r,s,e){return o+r+s+e},b=function(o,r){return o*r},P=function(o){return o*12},I=function(o){return o<y.excellent?"excellent":o<y.good[1]?"good":o<y.warning[1]?"warning":"critical"},O=function(o,r,s){var e=lt(o);return Array.isArray(e)?e.join(\`
+\`):String(e)};var _t=n,dt=R,pt=$,gt=x,bt=g,ht=b,mt=P,wt=I,vt=O,t=tk,nt='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+nt)(),et=4.5,y={excellent:5,good:[5,10],warning:[10,20],critical:20},lt=function(o){const r=n(parseFloat(o.ordersPerMonth)||0),s=n(parseFloat(o.pickMin)||0),e=n(parseFloat(o.packMin)||0),u=n(parseFloat(o.shippingCost)||0),f=n(parseFloat(o.packagingCost)||0),_=n(parseFloat(o.laborRate)||0),j=n(Math.min(100,parseFloat(o.returnRate)||0));if(r===0)return[t("calc_out.section.fulfillment_cost_calculator","⏰ Order Fulfillment Cost Calculator")+\`
 
-📊 Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.\`];const h=M(c,o),w=v(h,u),m=$(S),a=g(w,l,d,m),b=f(a,r),N=L(b),e=F=>"$"+F.toLocaleString("en-US",{maximumFractionDigits:2}),i=F=>"$"+Math.round(F).toLocaleString("en-US"),s=P(a),O=I[s],T=s==="excellent"?"Excellent — per-order cost < $5; efficient fulfillment":s==="good"?"Good — $5–$10 per order; typical retail range":s==="warning"?"Warning — $10–$20 per order; high; automate or batch":"Critical — ≥ $20 per order; restructure or switch to 3PL",j=$(3),_=g(w,l,d,j),W=b-f(_,r),G=h*.75,Y=v(G,u),D=g(Y,l,d,m),q=b-f(D,r),E=5-(l+d+m),x=u>0&&E>0?E*60/u:1/0,C=h-x,y=1*r*12;let p;return s==="critical"?p="≥ $20 per order is unsustainable. Switch to a 3PL (typical $3–$8/order), negotiate shipping rates (50%+ savings possible at scale), and audit SKU-level fulfillment complexity (top 20% of SKUs often drive 80% of cost).":s==="warning"?p="$10–$20 per order is high. Batch pick (process 5+ orders at once), automate packaging (tape dispensers, dunnage systems), and audit return reasons (often 30–50% reducible via better product descriptions).":s==="good"?p="$5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).":p="Excellent fulfillment cost. Keep monitoring — as you scale, revisit 3PL pricing (often $3–$5/order), renegotiate carrier rates annually, and watch for return-rate creep (each +1% return adds $0.05/order).",[\`⏰ Order Fulfillment Cost Calculator
+\`+t("calc_out.fulfillment_cost.row.need_inputs","📊 Enter your orders per month, pick/pack time, shipping/packaging costs, labor rate, and return rate to see per-order and monthly fulfillment costs and how you compare to industry benchmarks.")];const h=R(s,e),C=$(h,_),m=x(j),a=g(C,u,f,m),w=b(a,r),ct=P(w),l=S=>"$"+S.toLocaleString("en-US",{maximumFractionDigits:2}),c=S=>"$"+Math.round(S).toLocaleString("en-US"),i=I(a);let d;i==="excellent"?d=t("calc_out.fulfillment_cost.row.health_excellent","• 🟢 Excellent — per-order cost < $5; efficient fulfillment"):i==="good"?d=t("calc_out.fulfillment_cost.row.health_good","• 🟡 Good — $5–$10 per order; typical retail range"):i==="warning"?d=t("calc_out.fulfillment_cost.row.health_warning","• 🟠 Warning — $10–$20 per order; high; automate or batch"):d=t("calc_out.fulfillment_cost.row.health_critical","• 🔴 Critical — ≥ $20 per order; restructure or switch to 3PL");const at=x(3),D=g(C,u,f,at),it=w-b(D,r),st=h*.75,ut=$(st,_),q=g(ut,u,f,m),ft=w-b(q,r),E=5-(u+f+m),M=_>0&&E>0?E*60/_:1/0,F=h-M,v=1*r*12;let p;i==="critical"?p=t("calc_out.fulfillment_cost.row.tip_critical","💡 Tip: ≥ $20 per order is unsustainable. Switch to a 3PL (typical $3–$8/order), negotiate shipping rates (50%+ savings possible at scale), and audit SKU-level fulfillment complexity (top 20% of SKUs often drive 80% of cost)."):i==="warning"?p=t("calc_out.fulfillment_cost.row.tip_warning","💡 Tip: $10–$20 per order is high. Batch pick (process 5+ orders at once), automate packaging (tape dispensers, dunnage systems), and audit return reasons (often 30–50% reducible via better product descriptions)."):i==="good"?p=t("calc_out.fulfillment_cost.row.tip_good","💡 Tip: $5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time)."):p=t("calc_out.fulfillment_cost.row.tip_excellent","💡 Tip: Excellent fulfillment cost. Keep monitoring — as you scale, revisit 3PL pricing (often $3–$5/order), renegotiate carrier rates annually, and watch for return-rate creep (each +1% return adds $0.05/order).");const K=String(r),N=String(s),U=String(e),Y=l(C),W=String(h),G=l(u),H=l(f),J=j.toFixed(1),z=l(m),L=l(a),A=c(w),B=c(ct),Q=l(D),V=c(it),X=l(q),Z=c(ft),k=M.toFixed(1),T=F.toFixed(1),tt=c(v),ot=c(v*.08),rt=c(v*1.08*3-v*3);return[t("calc_out.section.fulfillment_cost_calculator","⏰ Order Fulfillment Cost Calculator")+\`
 
-🩺 Health:
+\`+t("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+O+" "+T+\`
-• Per-order cost: \`+e(a)+"  ·  Monthly total: "+i(b)+"  ·  Annual: "+i(N)+\`
-• Industry benchmark: $5–$10/order  ·  Your status: \`+(a<5?"below benchmark":a<10?"in benchmark":a<20?"above benchmark":"critical")+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Orders per month:        \`+r+\`
-• Pick time:               \`+c+\` min/order
-• Pack time:               \`+o+\` min/order
-• Labor rate:              \`+e(u)+\`/hr
-• Labor cost:              \`+e(w)+"/order  ("+h+\` min)
-• Shipping cost:           \`+e(l)+\`/order
-• Packaging cost:          \`+e(d)+\`/order
-• Return rate:             \`+S.toFixed(1)+"%  ·  handling = "+e(m)+\`/order
-• Per-order total:         \`+e(a)+\`
+\`+d+\`
+\`+t("calc_out.fulfillment_cost.row.per_order_cost","• Per-order cost: "+L+"  ·  Monthly total: "+A+"  ·  Annual: "+B,{cost:L,monthly:A,annual:B})+\`
+\`+(a<5?t("calc_out.fulfillment_cost.row.benchmark_below","• Industry benchmark: $5–$10/order  ·  Your status: below benchmark"):a<10?t("calc_out.fulfillment_cost.row.benchmark_in","• Industry benchmark: $5–$10/order  ·  Your status: in benchmark"):a<20?t("calc_out.fulfillment_cost.row.benchmark_above","• Industry benchmark: $5–$10/order  ·  Your status: above benchmark"):t("calc_out.fulfillment_cost.row.benchmark_critical","• Industry benchmark: $5–$10/order  ·  Your status: critical"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+t("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Returns drop to 3%: per-order = \`+e(_)+"  ·  monthly savings = "+i(W)+\`
-• Labor 25% faster: per-order = \`+e(D)+"  ·  monthly savings = "+i(q)+\`
-• Combined (3% returns + 25% faster labor): see Milestone
+\`+t("calc_out.fulfillment_cost.row.orders_per_month","• Orders per month:        "+K,{orders:K})+\`
+\`+t("calc_out.fulfillment_cost.row.pick_time","• Pick time:               "+N+" min/order",{minutes:N})+\`
+\`+t("calc_out.fulfillment_cost.row.pack_time","• Pack time:               "+U+" min/order",{minutes:U})+\`
+• Labor rate:              \`+l(_)+\`/hr
+\`+t("calc_out.fulfillment_cost.row.labor_cost","• Labor cost:              "+Y+"/order  ("+W+" min)",{cost:Y,minutes:W})+\`
+\`+t("calc_out.fulfillment_cost.row.shipping_cost","• Shipping cost:           "+G+"/order",{cost:G})+\`
+\`+t("calc_out.fulfillment_cost.row.packaging_cost","• Packaging cost:          "+H+"/order",{cost:H})+\`
+\`+t("calc_out.fulfillment_cost.row.return_rate","• Return rate:             "+J+"%  ·  handling = "+z+"/order",{rate:J,handling:z})+\`
+\`+t("calc_out.fulfillment_cost.row.per_order_total","• Per-order total:         "+L,{cost:L})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+t("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Max labor min for 🟢 (< $5/order total): \`+(isFinite(x)?x.toFixed(1)+" min":"N/A (fixed costs alone exceed $5)")+\`
-• Labor headroom: \`+(C>0?"reduce pick+pack by "+C.toFixed(1)+" min to hit 🟢":C===0?"at threshold":"already below target")+\`
+\`+t("calc_out.fulfillment_cost.row.whatif_returns_drop","• Returns drop to 3%: per-order = "+Q+"  ·  monthly savings = "+V,{cost:Q,savings:V})+\`
+\`+t("calc_out.fulfillment_cost.row.whatif_labor_faster","• Labor 25% faster: per-order = "+X+"  ·  monthly savings = "+Z,{cost:X,savings:Z})+\`
+\`+t("calc_out.fulfillment_cost.row.whatif_combined","• Combined (3% returns + 25% faster labor): see Milestone")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+t("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 12-mo savings if cost drops $1/order: \`+i(y)+\`
-• Reinvested at 8% return: \`+i(y*.08)+\`/yr additional
-• Compounded over 3 years: \`+i(y*1.08*3-y*3)+\` (vs $0 reinvested)
+\`+(isFinite(M)?t("calc_out.fulfillment_cost.row.breakeven_max_labor_min","• Max labor min for 🟢 (< $5/order total): "+k+" min",{minutes:k}):t("calc_out.fulfillment_cost.row.breakeven_max_labor_na","• Max labor min for 🟢 (< $5/order total): N/A (fixed costs alone exceed $5)"))+\`
+\`+(F>0?t("calc_out.fulfillment_cost.row.breakeven_headroom_reduce","• Labor headroom: reduce pick+pack by "+T+" min to hit 🟢",{minutes:T}):F===0?t("calc_out.fulfillment_cost.row.breakeven_headroom_threshold","• Labor headroom: at threshold"):t("calc_out.fulfillment_cost.row.breakeven_headroom_below","• Labor headroom: already below target"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+p+\`
-\`]};return[R(inputs,pick,fill)]}finally{}
+\`+t("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.fulfillment_cost.row.milestone_12mo_savings","• 12-mo savings if cost drops $1/order: "+tt,{value:tt})+\`
+\`+t("calc_out.fulfillment_cost.row.milestone_reinvested","• Reinvested at 8% return: "+ot+"/yr additional",{value:ot})+\`
+\`+t("calc_out.fulfillment_cost.row.milestone_compounded","• Compounded over 3 years: "+rt+" (vs $0 reinvested)",{value:rt})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+p+\`
+\`]};return[O(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -308,7 +367,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Order Fulfillment Cost Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — $5–$10 per order; typical retail range\n• Per-order cost: $8.56  ·  Monthly total: $4,280  ·  Annual: $51,360\n• Industry benchmark: $5–$10/order  ·  Your status: in benchmark\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Orders per month:        500\n• Pick time:               3 min/order\n• Pack time:               2 min/order\n• Labor rate:              $18/hr\n• Labor cost:              $1.5/order  (5 min)\n• Shipping cost:           $5.5/order\n• Packaging cost:          $1.2/order\n• Return rate:             8.0%  ·  handling = $0.36/order\n• Per-order total:         $8.56\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Returns drop to 3%: per-order = $8.33  ·  monthly savings = $113\n• Labor 25% faster: per-order = $8.19  ·  monthly savings = $187\n• Combined (3% returns + 25% faster labor): see Milestone\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Max labor min for 🟢 (< $5/order total): N/A (fixed costs alone exceed $5)\n• Labor headroom: already below target\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 12-mo savings if cost drops $1/order: $6,000\n• Reinvested at 8% return: $480/yr additional\n• Compounded over 3 years: $1,440 (vs $0 reinvested)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: $5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).\n'],
+  staticExamples: ['$calc_out.section.fulfillment_cost_calculator|⏰ Order Fulfillment Cost Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.fulfillment_cost.row.health_good|• 🟡 Good — $5–$10 per order; typical retail range|\n$calc_out.fulfillment_cost.row.per_order_cost{"cost":"$8.56","monthly":"$4,280","annual":"$51,360"}|• Per-order cost: $8.56  ·  Monthly total: $4,280  ·  Annual: $51,360|\n$calc_out.fulfillment_cost.row.benchmark_in|• Industry benchmark: $5–$10/order  ·  Your status: in benchmark|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.fulfillment_cost.row.orders_per_month{"orders":"500"}|• Orders per month:        500|\n$calc_out.fulfillment_cost.row.pick_time{"minutes":"3"}|• Pick time:               3 min/order|\n$calc_out.fulfillment_cost.row.pack_time{"minutes":"2"}|• Pack time:               2 min/order|\n• Labor rate:              $18/hr\n$calc_out.fulfillment_cost.row.labor_cost{"cost":"$1.5","minutes":"5"}|• Labor cost:              $1.5/order  (5 min)|\n$calc_out.fulfillment_cost.row.shipping_cost{"cost":"$5.5"}|• Shipping cost:           $5.5/order|\n$calc_out.fulfillment_cost.row.packaging_cost{"cost":"$1.2"}|• Packaging cost:          $1.2/order|\n$calc_out.fulfillment_cost.row.return_rate{"rate":"8.0","handling":"$0.36"}|• Return rate:             8.0%  ·  handling = $0.36/order|\n$calc_out.fulfillment_cost.row.per_order_total{"cost":"$8.56"}|• Per-order total:         $8.56|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.fulfillment_cost.row.whatif_returns_drop{"cost":"$8.33","savings":"$113"}|• Returns drop to 3%: per-order = $8.33  ·  monthly savings = $113|\n$calc_out.fulfillment_cost.row.whatif_labor_faster{"cost":"$8.19","savings":"$187"}|• Labor 25% faster: per-order = $8.19  ·  monthly savings = $187|\n$calc_out.fulfillment_cost.row.whatif_combined|• Combined (3% returns + 25% faster labor): see Milestone|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.fulfillment_cost.row.breakeven_max_labor_na|• Max labor min for 🟢 (< $5/order total): N/A (fixed costs alone exceed $5)|\n$calc_out.fulfillment_cost.row.breakeven_headroom_below|• Labor headroom: already below target|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.fulfillment_cost.row.milestone_12mo_savings{"value":"$6,000"}|• 12-mo savings if cost drops $1/order: $6,000|\n$calc_out.fulfillment_cost.row.milestone_reinvested{"value":"$480"}|• Reinvested at 8% return: $480/yr additional|\n$calc_out.fulfillment_cost.row.milestone_compounded{"value":"$1,440"}|• Compounded over 3 years: $1,440 (vs $0 reinvested)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.fulfillment_cost.row.tip_good|💡 Tip: $5–$10 per order is typical retail. To reach 🟢, focus on shipping negotiation (LTL freight for heavy items, regional carriers), reduce packaging waste, and review labor flow (eliminate walking time).|\n'],
   faq: [
     { q: 'What is a typical per-order fulfillment cost?', a: '$5–$10 is typical retail. <$5 is excellent (high-volume operators or efficient 3PLs). $10–$20 is high (small-volume in-house). ≥$20 is critical (often indicates manual labor + inefficient shipping).' },
     { q: 'Should I use a 3PL or fulfill in-house?', a: '3PLs typically charge $3–$8 per order and become cost-effective above ~200 orders/month. Below that, in-house is often cheaper (3PL minimums + storage fees). Compare using this calculator with 3PL quote.' },

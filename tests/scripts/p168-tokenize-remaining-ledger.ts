@@ -4,8 +4,8 @@
 // 为什么必须有它（不是「再加一个守卫」）
 // ---------------------------------------------
 //   G4c（产物层守卫：zh 结果卡片不得有整行英文）**只覆盖 TOKENIZED**（55 个已令牌化引擎）
-//   ⇒ 剩下 45 个引擎的 zh 欠账**不在任何守卫的视野里**。
-//   ⇒ 「把 45 个引擎的欠账做完」与「把欠账藏进 locale」都能让 CI 全绿
+//   ⇒ 剩下 36 个引擎的 zh 欠账**不在任何守卫的视野里**。
+//   ⇒ 「把 36 个引擎的欠账做完」与「把欠账藏进 locale」都能让 CI 全绿
 //   ⇒ 本台账把这件事变成**显式、可核销、可复算**的清单：
 //     · 实测（loadZhEnRows）—— 逐引擎量出 zh 侧整行英文行数；
 //     · 登记（ZH_EN_DEBT）—— 人写的欠账清单（slug → 行数）；
@@ -57,25 +57,22 @@ export interface ZhEnRow {
  * ⭐ 为什么需要它（台账「只能变小不能变大」的可执行形式）
  *   T1 要求「实测有欠账的引擎必须登记进台账」⇒ 单看 T1，台账**可以变大**。
  *   ⇒ 那正是「欠账在增长」的情形 ⇒ 必须有一个**独立于实测**的硬上限把它挡住。
- *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（45）就是欠账在长。
+ *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（36）就是欠账在长。
  */
-export const DEBT_MAX = 45;
+export const DEBT_MAX = 36;
 
 /**
- * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 45 个引擎）。
+ * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 36 个引擎）。
  * · **不得新增**：修好一条必须销一条 ⇒ 台账只能变小不能变大（DEBT_MAX 守着规模上限）。
  * · 数字必须与实测一致（守卫会核）⇒ 台账条目不是空壳。
  * · 条目按 slug 字典序排列（= --emit 的输出顺序 ⇒ 贴回即可）。
  */
 export const ZH_EN_DEBT: Record<string, number> = {
-  'solopreneur-affiliate-income-calculator': 20,
-  'solopreneur-arr-multiple-valuation-calculator': 25,
   'solopreneur-article-freshness-calculator': 2,
   'solopreneur-article-helpfulness-calculator': 2,
   'solopreneur-attrition-cost-calculator': 2,
   'solopreneur-breach-notification-cost-calculator': 2,
   'solopreneur-break-even-calculator': 14,
-  'solopreneur-burn-multiple-rule-of-40-calculator': 26,
   'solopreneur-carrying-cost-calculator': 12,
   'solopreneur-cmp-roi-calculator': 2,
   'solopreneur-comp-banding-calculator': 1,
@@ -88,26 +85,20 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-documentation-roi-calculator': 2,
   'solopreneur-dpa-cost-calculator': 2,
   'solopreneur-dsar-cost-calculator': 2,
-  'solopreneur-dscr-calculator': 24,
   'solopreneur-equity-refresh-calculator': 2,
   'solopreneur-expansion-revenue-calculator': 16,
   'solopreneur-first-response-time-calculator': 2,
-  'solopreneur-fulfillment-cost-calculator': 20,
   'solopreneur-fully-loaded-employee-cost-calculator': 2,
   'solopreneur-funnel-value-calculator': 12,
   'solopreneur-gdpr-fine-calculator': 1,
   'solopreneur-grr-calculator': 8,
-  'solopreneur-hourly-vs-fixed-calculator': 26,
   'solopreneur-kb-coverage-rate-calculator': 1,
-  'solopreneur-mortgage-calculator': 23,
   'solopreneur-nrr-calculator': 16,
-  'solopreneur-openai-token-calculator': 27,
   'solopreneur-pipeline-value-calculator': 13,
   'solopreneur-power-user-curve-calculator': 5,
   'solopreneur-productivity-ramp-curve-calculator': 2,
   'solopreneur-resolution-time-calculator': 2,
   'solopreneur-search-effectiveness-calculator': 2,
-  'solopreneur-sponsorship-rate-calculator': 28,
   'solopreneur-supplier-scorecard-calculator': 17,
   'solopreneur-support-capacity-planning-calculator': 2,
   'solopreneur-time-to-productivity-calculator': 2,
