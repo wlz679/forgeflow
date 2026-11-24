@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 85, label: '🟢 Excellent', message: 'Healthy buffer — agents have ≥15% capacity for spikes + training.' },
@@ -66,9 +71,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let n=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e){return t*e},d=function(t,e,r){return t*60*(1-e/100)*(r/100)},b=function(t,e){return e<=0?0:t/e},f=function(t,e){return Math.ceil(b(t,e))},h=function(t,e,r){return r<=0?1/0:t/(r*e)*100},_=function(t){return t<=l.excellent.threshold?"excellent":t<=l.good.threshold?"good":t<=l.warning.threshold?"warning":"critical"},c=function(t){return t.toFixed(1)+"%"},m=function(t){return Math.round(t).toLocaleString()+" min"},p=function(t,e,r){var o=v(t);return Array.isArray(o)?o.join(\`
-\`):String(o)};var z=n,W=u,j=d,E=b,G=f,K=h,O=_,S=c,U=m,V=p,l={excellent:{threshold:85,label:"🟢 Excellent",message:"Healthy buffer — agents have ≥15% capacity for spikes + training."},good:{threshold:100,label:"🟡 Good",message:"Healthy utilization — buffer for after-call work, but no room for big spikes."},warning:{threshold:120,label:"🟠 Warning",message:"No buffer — burnout risk; expect attrition within 1-2 quarters."},critical:{threshold:null,label:"🔴 Critical",message:"Overworked — agents cannot complete work; attrition imminent."}},v=function(t){const e=n(Number(t.monthly_tickets)||0),r=n(Number(t.avg_handle_time_min)||0),o=n(Number(t.target_occupancy_pct)||0),x=n(Number(t.work_hours_per_month)||0),k=n(Number(t.shrinkage_pct)||0),N=n(Number(t.target_response_time_min)||0),s=u(e,r),i=d(x,k,o),a=f(s,i),g=h(s,i,a),C=_(g),q=l[C],y=Math.round(e*1.2),F=u(y,r),w=f(F,i),M=w-a,I=h(s,i,a+1);return["🩺 Capacity Health: "+q.label+" ("+a+" agents required · "+c(g)+" utilization)","📊 Snapshot: "+m(s)+"/mo handle time · "+m(i)+"/agent productive · "+c(k)+" shrinkage · target response "+N+"min","🔄 What-If: if volume grows 20% to "+y.toLocaleString()+" tickets/mo, required = "+w+" agents (+"+M+" hires) at same "+c(g)+" util","⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent ("+(a+1)+" total) for "+I.toFixed(1)+"% util","🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors","💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost."]};return[p(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let n=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,e){return t*e},d=function(t,e,r){return t*60*(1-e/100)*(r/100)},b=function(t,e){return e<=0?0:t/e},h=function(t,e){return Math.ceil(b(t,e))},g=function(t,e,r){return r<=0?1/0:t/(r*e)*100},_=function(t){return t<=c.excellent.threshold?"excellent":t<=c.good.threshold?"good":t<=c.warning.threshold?"warning":"critical"},l=function(t){return t.toFixed(1)+"%"},p=function(t){return Math.round(t).toLocaleString()+" min"},k=function(t,e,r){var o=j(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var W=n,G=f,J=d,K=b,U=h,V=g,$=_,P=l,Q=p,R=k,u=tk,C='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',u=new Function("return "+C)(),c={excellent:{threshold:85,label:"🟢 Excellent",message:"Healthy buffer — agents have ≥15% capacity for spikes + training."},good:{threshold:100,label:"🟡 Good",message:"Healthy utilization — buffer for after-call work, but no room for big spikes."},warning:{threshold:120,label:"🟠 Warning",message:"No buffer — burnout risk; expect attrition within 1-2 quarters."},critical:{threshold:null,label:"🔴 Critical",message:"Overworked — agents cannot complete work; attrition imminent."}},j=function(t){const e=n(Number(t.monthly_tickets)||0),r=n(Number(t.avg_handle_time_min)||0),o=n(Number(t.target_occupancy_pct)||0),S=n(Number(t.work_hours_per_month)||0),y=n(Number(t.shrinkage_pct)||0),M=n(Number(t.target_response_time_min)||0),s=f(e,r),a=d(S,y,o),i=h(s,a),m=g(s,a,i),O=_(m),I=c[O],v=Math.round(e*1.2),L=f(v,r),w=h(L,a),z=w-i,E=g(s,a,i+1),N=p(s),q=p(a),x=l(y),F=String(M);return["🩺 Capacity Health: "+I.label+" ("+i+" agents required · "+l(m)+" utilization)",u("calc_out.support_capacity_planning.row.snapshot","📊 Snapshot: "+N+"/mo handle time · "+q+"/agent productive · "+x+" shrinkage · target response "+F+"min",{total:N,productive:q,shrinkage:x,resp:F}),"🔄 What-If: if volume grows 20% to "+v.toLocaleString()+" tickets/mo, required = "+w+" agents (+"+z+" hires) at same "+l(m)+" util","⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent ("+(i+1)+" total) for "+E.toFixed(1)+"% util","🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors",u("calc_out.support_capacity_planning.row.tip","💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.")]};return[k(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -99,17 +104,28 @@ try{let n=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e){re
     const ifAgents = requiredAgents(ifTotal, prod);
     const delta = ifAgents - agents;
     const bufferUtil = utilizationActual(total, prod, agents + 1);
+    const totalLabel = fmtMin(total);
+    const prodLabel = fmtMin(prod);
+    const shrinkageLabel = fmtPct(sh);
+    const respLabel = String(resp);
     return [
       '🩺 Capacity Health: ' + bandInfo.label + ' (' + agents + ' agents required · ' + fmtPct(util) + ' utilization)',
-      '📊 Snapshot: ' + fmtMin(total) + '/mo handle time · ' + fmtMin(prod) + '/agent productive · ' + fmtPct(sh) + ' shrinkage · target response ' + resp + 'min',
+      makeToken(
+        'calc_out.support_capacity_planning.row.snapshot',
+        '📊 Snapshot: ' + totalLabel + '/mo handle time · ' + prodLabel + '/agent productive · ' + shrinkageLabel + ' shrinkage · target response ' + respLabel + 'min',
+        { total: totalLabel, productive: prodLabel, shrinkage: shrinkageLabel, resp: respLabel },
+      ),
       '🔄 What-If: if volume grows 20% to ' + ifVol.toLocaleString() + ' tickets/mo, required = ' + ifAgents + ' agents (+' + delta + ' hires) at same ' + fmtPct(util) + ' util',
       '⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent (' + (agents + 1) + ' total) for ' + bufferUtil.toFixed(1) + '% util',
       '🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors',
-      '💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.',
+      makeToken(
+        'calc_out.support_capacity_planning.row.tip',
+        '💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Capacity Health: 🟡 Good (20 agents required · 95.7% utilization)\n📊 Snapshot: 90,000 min/mo handle time · 4,704 min/agent productive · 30.0% shrinkage · target response 60min\n🔄 What-If: if volume grows 20% to 6,000 tickets/mo, required = 23 agents (+3 hires) at same 95.7% util\n⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent (21 total) for 91.1% util\n🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors\n💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.',
+    '🩺 Capacity Health: 🟡 Good (20 agents required · 95.7% utilization)\n$calc_out.support_capacity_planning.row.snapshot{"total":"90,000 min","productive":"4,704 min","shrinkage":"30.0%","resp":"60"}|📊 Snapshot: 90,000 min/mo handle time · 4,704 min/agent productive · 30.0% shrinkage · target response 60min|\n🔄 What-If: if volume grows 20% to 6,000 tickets/mo, required = 23 agents (+3 hires) at same 95.7% util\n⚖️ Break-Even: to hit 🟢 Excellent (≤85% util), hire 1 more agent (21 total) for 91.1% util\n🎯 Milestone: Capacity plan must refresh monthly; volume spikes >20% require temporary contractors\n$calc_out.support_capacity_planning.row.tip|💡 Tip: 70% occupancy target accounts for after-call work; 85%+ means agents are drowning. Pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost.|',
   ],
   faq: [
     { q: 'What is capacity planning?', a: 'It answers "how many agents do we need to handle X tickets per month at Y service level?" by combining handle time, shrinkage, and target occupancy into a single headcount number.' },

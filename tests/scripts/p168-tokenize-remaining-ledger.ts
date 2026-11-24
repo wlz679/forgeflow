@@ -59,28 +59,23 @@ export interface ZhEnRow {
  *   ⇒ 那正是「欠账在增长」的情形 ⇒ 必须有一个**独立于实测**的硬上限把它挡住。
  *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（36）就是欠账在长。
  */
-export const DEBT_MAX = 12;
+export const DEBT_MAX = 0;
 
 /**
- * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 12 个引擎 —— P168 B3-15 组 3 的 T/H 两组）。
- * · **不得新增**：修好一条必须销一条 ⇒ 台账只能变小不能变大（DEBT_MAX 守着规模上限）。
+ * 台账：当前已知的「zh 页整行英文」欠账。
+ *
+ * ⭐⭐ **P168 B3-15 组 3 之后 = 空台账**（全站 100 个引擎都已令牌化）
+ *   · 上限链：45 → 36 → 27 → 24 → 12 → **0**
+ *   · DEBT_MAX = 0 ⇒ **欠账不许悄悄长回来**：谁再让某个引擎的 zh 页出现整行英文，
+ *     T1（实测集合 ≡ 台账集合）会立刻红（实测有、台账无 ⇒ 「newly」非空）。
+ *   · ⚠️ 空台账的边界（2026-11-24 实测）：本工具的 CLI 对空数组**没有**越界分支
+ *     ⇒ --emit 打印 0 行 / --json 打印 debtEngines=0 / 摘要打印「与实测一致 ✓」
+ *     ⇒ exit 0（实测见 task-3-report.md ④）。
+ *   · **不得新增**：修好一条必须销一条 ⇒ 台账只能变小不能变大（DEBT_MAX 守着规模上限）。
  * · 数字必须与实测一致（守卫会核）⇒ 台账条目不是空壳。
  * · 条目按 slug 字典序排列（= --emit 的输出顺序 ⇒ 贴回即可）。
  */
-export const ZH_EN_DEBT: Record<string, number> = {
-  'solopreneur-attrition-cost-calculator': 2,
-  'solopreneur-comp-banding-calculator': 1,
-  'solopreneur-cost-per-support-ticket-calculator': 2,
-  'solopreneur-csat-calculator': 1,
-  'solopreneur-deflection-rate-calculator': 2,
-  'solopreneur-equity-refresh-calculator': 2,
-  'solopreneur-first-response-time-calculator': 2,
-  'solopreneur-fully-loaded-employee-cost-calculator': 2,
-  'solopreneur-productivity-ramp-curve-calculator': 2,
-  'solopreneur-resolution-time-calculator': 2,
-  'solopreneur-support-capacity-planning-calculator': 2,
-  'solopreneur-time-to-productivity-calculator': 2,
-};
+export const ZH_EN_DEBT: Record<string, number> = {};
 
 /**
  * 被审计的根目录 —— **镜像** p168-zh-remaining-audit.ts 的 ROOT 表达式。

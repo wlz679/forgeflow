@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   IC: {
@@ -51,9 +56,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let c=function(e){return Number.isNaN(e)?0:Math.max(0,e)},l=function(e,t){return e*(t==="Low"?.75:t==="High"?1.4:1)},i=function(e,t){const n=o[t];return e<=n.excellent.threshold?"excellent":e<=n.good.threshold?"good":e<=n.warning.threshold?"warning":"critical"},r=function(e){return e.toFixed(1).replace(/\\.0$/,"")+"w"},d=function(e,t,n){var a=u(e);return Array.isArray(a)?a.join(\`
-\`):String(a)};var w=c,x=l,I=i,C=r,v=d,o={IC:{excellent:{threshold:4,label:"🟢 Excellent",message:"Fast ramp — IC reaches productivity in under a month."},good:{threshold:8,label:"🟡 Good",message:"Healthy IC ramp — under 2 months to first meaningful output."},warning:{threshold:16,label:"🟠 Warning",message:"Slow IC ramp — likely missing documentation, mentorship, or scoped first project."},critical:{threshold:1/0,label:"🔴 Critical",message:"IC ramp >4 months — onboarding program needs immediate overhaul."}},Manager:{excellent:{threshold:8,label:"🟢 Excellent",message:"Fast Manager ramp — leadership transition completed in under 2 months."},good:{threshold:16,label:"🟡 Good",message:"Typical Manager ramp — first 90 days complete with team alignment."},warning:{threshold:26,label:"🟠 Warning",message:"Slow Manager ramp — likely missing executive sponsorship or team context."},critical:{threshold:1/0,label:"🔴 Critical",message:"Manager ramp >6 months — succession risk and team disengagement likely."}}},u=function(e){const t=e.role_level||"IC",n=c(Number(e.ramp_weeks)||0),a=e.industry_complexity||"Med",s=l(n,a),g=i(s,t),p=o[t][g],m=l(n,"Low"),f=i(m,t),y=o[t][f],h=o[t].excellent.threshold,b=h/n;return["🩺 Ramp Health: "+p.label+" ("+r(s)+" for "+t+")","📊 Snapshot: "+n+"w base × "+(a==="Low"?"0.75":a==="High"?"1.40":"1.00")+" ("+a+" complexity) = "+r(s)+" adjusted","🔄 What-If: if complexity drops to Low, ramp = "+r(m)+" (would be "+y.label+")","⚖️ Break-Even: to hit 🟢 Excellent ("+(t==="IC"?"≤4w":"≤8w")+" ceiling), need base ramp of "+r(h)+" — i.e. "+b.toFixed(2)+"x your current "+n+"w","🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve","💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep."]};return[d(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(e){return Number.isNaN(e)?0:Math.max(0,e)},l=function(e,t){return e*(t==="Low"?.75:t==="High"?1.4:1)},s=function(e,t){const n=o[t];return e<=n.excellent.threshold?"excellent":e<=n.good.threshold?"good":e<=n.warning.threshold?"warning":"critical"},r=function(e){return e.toFixed(1).replace(/\\.0$/,"")+"w"},m=function(e,t,n){var a=w(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var I=d,j=l,F=s,M=r,L=m,i=tk,b='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',i=new Function("return "+b)(),o={IC:{excellent:{threshold:4,label:"🟢 Excellent",message:"Fast ramp — IC reaches productivity in under a month."},good:{threshold:8,label:"🟡 Good",message:"Healthy IC ramp — under 2 months to first meaningful output."},warning:{threshold:16,label:"🟠 Warning",message:"Slow IC ramp — likely missing documentation, mentorship, or scoped first project."},critical:{threshold:1/0,label:"🔴 Critical",message:"IC ramp >4 months — onboarding program needs immediate overhaul."}},Manager:{excellent:{threshold:8,label:"🟢 Excellent",message:"Fast Manager ramp — leadership transition completed in under 2 months."},good:{threshold:16,label:"🟡 Good",message:"Typical Manager ramp — first 90 days complete with team alignment."},warning:{threshold:26,label:"🟠 Warning",message:"Slow Manager ramp — likely missing executive sponsorship or team context."},critical:{threshold:1/0,label:"🔴 Critical",message:"Manager ramp >6 months — succession risk and team disengagement likely."}}},w=function(e){const t=e.role_level||"IC",n=d(Number(e.ramp_weeks)||0),a=e.industry_complexity||"Med",c=l(n,a),v=s(c,t),x=o[t][v],u=l(n,"Low"),k=s(u,t),_=o[t][k],p=o[t].excellent.threshold,C=p/n,h=a==="Low"?"0.75":a==="High"?"1.40":"1.00",g=String(n),f=a,y=r(c);return["🩺 Ramp Health: "+x.label+" ("+r(c)+" for "+t+")",i("calc_out.time_to_productivity.row.snapshot","📊 Snapshot: "+g+"w base × "+h+" ("+f+" complexity) = "+y+" adjusted",{weeks:g,factor:h,complexity:f,adjusted:y}),"🔄 What-If: if complexity drops to Low, ramp = "+r(u)+" (would be "+_.label+")","⚖️ Break-Even: to hit 🟢 Excellent ("+(t==="IC"?"≤4w":"≤8w")+" ceiling), need base ramp of "+r(p)+" — i.e. "+C.toFixed(2)+"x your current "+n+"w","🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve",i("calc_out.time_to_productivity.row.tip","💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.")]};return[m(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -78,17 +83,28 @@ try{let c=function(e){return Number.isNaN(e)?0:Math.max(0,e)},l=function(e,t){re
     const altBandInfo = HEALTH_BANDS[role][altBand];
     const targetWeeks = HEALTH_BANDS[role].excellent.threshold;
     const ratioNeeded = targetWeeks / weeks;
+    const complexityFactorLabel = cplx === 'Low' ? '0.75' : cplx === 'High' ? '1.40' : '1.00';
+    const weeksLabel = String(weeks);
+    const complexityLabel = cplx;
+    const adjustedLabel = fmtWeeks(adj);
     return [
       '🩺 Ramp Health: ' + bandInfo.label + ' (' + fmtWeeks(adj) + ' for ' + role + ')',
-      '📊 Snapshot: ' + weeks + 'w base × ' + (cplx === 'Low' ? '0.75' : cplx === 'High' ? '1.40' : '1.00') + ' (' + cplx + ' complexity) = ' + fmtWeeks(adj) + ' adjusted',
+      makeToken(
+        'calc_out.time_to_productivity.row.snapshot',
+        '📊 Snapshot: ' + weeksLabel + 'w base × ' + complexityFactorLabel + ' (' + complexityLabel + ' complexity) = ' + adjustedLabel + ' adjusted',
+        { weeks: weeksLabel, factor: complexityFactorLabel, complexity: complexityLabel, adjusted: adjustedLabel },
+      ),
       '🔄 What-If: if complexity drops to Low, ramp = ' + fmtWeeks(altAdj) + ' (would be ' + altBandInfo.label + ')',
       '⚖️ Break-Even: to hit 🟢 Excellent (' + (role === 'IC' ? '≤4w' : '≤8w') + ' ceiling), need base ramp of ' + fmtWeeks(targetWeeks) + ' — i.e. ' + ratioNeeded.toFixed(2) + 'x your current ' + weeks + 'w',
       '🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve',
-      '💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.',
+      makeToken(
+        'calc_out.time_to_productivity.row.tip',
+        '💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Ramp Health: 🟡 Good (8w for IC)\n📊 Snapshot: 8w base × 1.00 (Med complexity) = 8w adjusted\n🔄 What-If: if complexity drops to Low, ramp = 6w (would be 🟡 Good)\n⚖️ Break-Even: to hit 🟢 Excellent (≤4w ceiling), need base ramp of 4w — i.e. 0.50x your current 8w\n🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve\n💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.',
+    '🩺 Ramp Health: 🟡 Good (8w for IC)\n$calc_out.time_to_productivity.row.snapshot{"weeks":"8","factor":"1.00","complexity":"Med","adjusted":"8w"}|📊 Snapshot: 8w base × 1.00 (Med complexity) = 8w adjusted|\n🔄 What-If: if complexity drops to Low, ramp = 6w (would be 🟡 Good)\n⚖️ Break-Even: to hit 🟢 Excellent (≤4w ceiling), need base ramp of 4w — i.e. 0.50x your current 8w\n🎯 Milestone: Plan first 90-day OKRs landing at week 12; pair with [Productivity Ramp Curve Calculator] (P11-3) to model output curve\n$calc_out.time_to_productivity.row.tip|💡 Tip: Manager ramp is typically 2x IC ramp — budget for this in headcount plan and avoid promoting ICs to management without 6 months of management prep.|',
   ],
   faq: [
     { q: 'What counts as "productivity"?', a: 'A new hire is "productive" when they are contributing at the level expected for their role — usually measured by reaching OKR targets, shipping independent work, or hitting ramp-stage review milestones. Different companies use different definitions; pick one and stick with it.' },

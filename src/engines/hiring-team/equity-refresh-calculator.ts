@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.20, label: '🟢 Excellent', message: 'Top-quartile refresh — strong retention signal, employee sees real upside.' },
@@ -56,9 +61,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let n=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,i,t,r,o){const a=r*t/100,l=u[o],c=i>=4?1:1+(4-i)/4,h=Math.round(a*l*c),d=r===0?0:h/r*100;return{shares:h,dilutionPct:d}},m=function(e){return e>=s.excellent.threshold?"excellent":e>=s.good.threshold?"good":e>=s.warning.threshold?"warning":"critical"},g=function(e){return e.toFixed(2)+"%"},y=function(e,i,t){var r=k(e);return Array.isArray(r)?r.join(\`
-\`):String(r)};var x=n,M=p,F=m,S=g,N=y,s={excellent:{threshold:.2,label:"🟢 Excellent",message:"Top-quartile refresh — strong retention signal, employee sees real upside."},good:{threshold:.1,label:"🟡 Good",message:"Solid refresh grant — competitive with market, retains key employees."},warning:{threshold:.05,label:"🟠 Warning",message:"Below market — employee may not see meaningful upside vs. original grant."},critical:{threshold:null,label:"🔴 Critical",message:"Trivial refresh — retention risk; employee likely shopping for new equity."}},u={High:.15,Med:.08,Low:.03},k=function(e){const i=n(Number(e.current_shares)||0),t=n(Number(e.years_since_grant)||0),r=n(Number(e.refresh_pool_pct)||0),o=n(Number(e.total_company_shares)||0),a=e.role_criticality||"Med",{shares:l,dilutionPct:c}=p(i,t,r,o,a),h=m(c),d=s[h],f=o*r/100,b=u[a],v=t>=4?1:1+(4-t)/4,_=Math.round(f*u.High*v),w=o===0?0:_/o*100;return["🩺 Equity Refresh: "+d.label+" ("+l.toLocaleString()+" shares, "+g(c)+" dilution)","📊 Snapshot: Pool "+Math.round(f).toLocaleString()+" shares · Criticality "+a+" ("+(b*100).toFixed(0)+"% of pool = "+Math.round(f*b).toLocaleString()+" shares) · Years factor "+v.toFixed(2)+" · Net: "+l.toLocaleString()+" shares","🔄 What-If: if criticality is High, refresh = "+_.toLocaleString()+" shares ("+g(w)+" dilution)","⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High (target 28,125+ shares)","🎯 Milestone: Refresh at year 4 anniversary; pair with [Compensation Banding Calculator] (P11-4) for cash + equity total","💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles."]};return[y(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let n=function(e){return Number.isNaN(e)?0:Math.max(0,e)},y=function(e,a,t,r,o){const s=r*t/100,l=g[o],c=a>=4?1:1+(4-a)/4,h=Math.round(s*l*c),p=r===0?0:h/r*100;return{shares:h,dilutionPct:p}},b=function(e){return e>=i.excellent.threshold?"excellent":e>=i.good.threshold?"good":e>=i.warning.threshold?"warning":"critical"},f=function(e){return e.toFixed(2)+"%"},m=function(e,a,t){var r=N(e);return Array.isArray(r)?r.join(\`
+\`):String(r)};var P=n,z=y,I=b,W=f,C=m,u=tk,L='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',u=new Function("return "+L)(),i={excellent:{threshold:.2,label:"🟢 Excellent",message:"Top-quartile refresh — strong retention signal, employee sees real upside."},good:{threshold:.1,label:"🟡 Good",message:"Solid refresh grant — competitive with market, retains key employees."},warning:{threshold:.05,label:"🟠 Warning",message:"Below market — employee may not see meaningful upside vs. original grant."},critical:{threshold:null,label:"🔴 Critical",message:"Trivial refresh — retention risk; employee likely shopping for new equity."}},g={High:.15,Med:.08,Low:.03},N=function(e){const a=n(Number(e.current_shares)||0),t=n(Number(e.years_since_grant)||0),r=n(Number(e.refresh_pool_pct)||0),o=n(Number(e.total_company_shares)||0),s=e.role_criticality||"Med",{shares:l,dilutionPct:c}=y(a,t,r,o,s),h=b(c),p=i[h],d=o*r/100,_=g[s],v=t>=4?1:1+(4-t)/4,k=Math.round(d*g.High*v),j=o===0?0:k/o*100,w=Math.round(d).toLocaleString(),F=s,S=(_*100).toFixed(0),q=Math.round(d*_).toLocaleString(),x=v.toFixed(2),M=l.toLocaleString();return["🩺 Equity Refresh: "+p.label+" ("+l.toLocaleString()+" shares, "+f(c)+" dilution)",u("calc_out.equity_refresh.row.snapshot","📊 Snapshot: Pool "+w+" shares · Criticality "+F+" ("+S+"% of pool = "+q+" shares) · Years factor "+x+" · Net: "+M+" shares",{pool:w,crit:F,crit_pct:S,crit_shares:q,years_factor:x,shares:M}),"🔄 What-If: if criticality is High, refresh = "+k.toLocaleString()+" shares ("+f(j)+" dilution)","⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High (target 28,125+ shares)","🎯 Milestone: Refresh at year 4 anniversary; pair with [Compensation Banding Calculator] (P11-4) for cash + equity total",u("calc_out.equity_refresh.row.tip","💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles.")]};return[m(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -85,17 +90,30 @@ try{let n=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,i,t,r
     const yearsFactor = years >= 4 ? 1.0 : 1.0 + (4 - years) / 4;
     const altShares = Math.round(poolSize * ROLE_TARGET_PCT.High * yearsFactor);
     const altDilution = total === 0 ? 0 : altShares / total * 100;
+    const poolLabel = Math.round(poolSize).toLocaleString();
+    const critLabel = crit;
+    const critPctLabel = (roleTarget * 100).toFixed(0);
+    const critSharesLabel = Math.round(poolSize * roleTarget).toLocaleString();
+    const yearsFactorLabel = yearsFactor.toFixed(2);
+    const sharesLabel = shares.toLocaleString();
     return [
       '🩺 Equity Refresh: ' + bandInfo.label + ' (' + shares.toLocaleString() + ' shares, ' + fmtPct(dilutionPct) + ' dilution)',
-      '📊 Snapshot: Pool ' + Math.round(poolSize).toLocaleString() + ' shares · Criticality ' + crit + ' (' + (roleTarget * 100).toFixed(0) + '% of pool = ' + Math.round(poolSize * roleTarget).toLocaleString() + ' shares) · Years factor ' + yearsFactor.toFixed(2) + ' · Net: ' + shares.toLocaleString() + ' shares',
+      makeToken(
+        'calc_out.equity_refresh.row.snapshot',
+        '📊 Snapshot: Pool ' + poolLabel + ' shares · Criticality ' + critLabel + ' (' + critPctLabel + '% of pool = ' + critSharesLabel + ' shares) · Years factor ' + yearsFactorLabel + ' · Net: ' + sharesLabel + ' shares',
+        { pool: poolLabel, crit: critLabel, crit_pct: critPctLabel, crit_shares: critSharesLabel, years_factor: yearsFactorLabel, shares: sharesLabel },
+      ),
       '🔄 What-If: if criticality is High, refresh = ' + altShares.toLocaleString() + ' shares (' + fmtPct(altDilution) + ' dilution)',
       '⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High (target 28,125+ shares)',
       '🎯 Milestone: Refresh at year 4 anniversary; pair with [Compensation Banding Calculator] (P11-4) for cash + equity total',
-      '💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles.',
+      makeToken(
+        'calc_out.equity_refresh.row.tip',
+        '💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Equity Refresh: 🟡 Good (15,000 shares, 0.15% dilution)\n📊 Snapshot: Pool 150,000 shares · Criticality Med (8% of pool = 12,000 shares) · Years factor 1.25 · Net: 15,000 shares\n🔄 What-If: if criticality is High, refresh = 28,125 shares (0.28% dilution)\n⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High (target 28,125+ shares)\n🎯 Milestone: Refresh at year 4 anniversary; pair with [Compensation Banding Calculator] (P11-4) for cash + equity total\n💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles.',
+    '🩺 Equity Refresh: 🟡 Good (15,000 shares, 0.15% dilution)\n$calc_out.equity_refresh.row.snapshot{"pool":"150,000","crit":"Med","crit_pct":"8","crit_shares":"12,000","years_factor":"1.25","shares":"15,000"}|📊 Snapshot: Pool 150,000 shares · Criticality Med (8% of pool = 12,000 shares) · Years factor 1.25 · Net: 15,000 shares|\n🔄 What-If: if criticality is High, refresh = 28,125 shares (0.28% dilution)\n⚖️ Break-Even: to hit 🟢 Excellent (≥0.20% dilution), need 20,000+ shares — bump criticality to High (target 28,125+ shares)\n🎯 Milestone: Refresh at year 4 anniversary; pair with [Compensation Banding Calculator] (P11-4) for cash + equity total\n$calc_out.equity_refresh.row.tip|💡 Tip: Refresh grants should be top-up not replacement — preserve original grant value to maintain retention signal over multiple cycles.|',
   ],
   faq: [
     { q: 'What is a "refresh grant"?', a: 'A new equity grant given to an existing employee, typically at a vesting anniversary (year 2-4). It supplements (does not replace) the original grant. Purpose: combat equity dilution from continued vesting, recognize ongoing contribution, and create new retention incentives.' },

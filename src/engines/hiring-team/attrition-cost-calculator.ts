@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 50,  label: '🟢 Excellent', message: 'Lean attrition cost — strong retention practices or low-friction backfill.' },
@@ -50,9 +55,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,n,i,r,l){const s=l==="Manager"?1.5:1,c=n,u=t/52*i*.5,g=t/12*r*s,f=c+u+g,h=t===0?0:f/t*100;return{recruitingCost:c,rampCost:u,lostProductivityCost:g,total:f,pctOfSalary:h}},y=function(t){return t<=a.excellent.threshold?"excellent":t<=a.good.threshold?"good":t<=a.warning.threshold?"warning":"critical"},e=function(t){return"$"+Math.round(t).toLocaleString()},m=function(t){return t.toFixed(1)+"%"},p=function(t,n,i){var r=_(t);return Array.isArray(r)?r.join(\`
-\`):String(r)};var k=o,w=d,x=y,M=e,N=m,I=p,a={excellent:{threshold:50,label:"🟢 Excellent",message:"Lean attrition cost — strong retention practices or low-friction backfill."},good:{threshold:100,label:"🟡 Good",message:"Typical attrition cost — within SHRM benchmark range; flag >1.5x salary."},warning:{threshold:200,label:"🟠 Warning",message:"High attrition cost — flight risk concentrated in critical roles; investigate manager tenure."},critical:{threshold:null,label:"🔴 Critical",message:"Severe attrition cost (>2x salary) — every leaver is a major business event."}},_=function(t){const n=o(Number(t.annual_salary)||0),i=o(Number(t.recruiting_cost)||0),r=o(Number(t.ramp_weeks)||0),l=o(Number(t.lost_productivity_months)||0),s=t.role_level||"IC",{recruitingCost:c,rampCost:u,lostProductivityCost:g,total:f,pctOfSalary:h}=d(n,i,r,l,s),b=y(h),C=a[b],v=d(n,i,r,l,"Manager");return["🩺 Attrition Cost: "+C.label+" ("+e(f)+" = "+m(h)+" of salary)","📊 Snapshot: Recruiting "+e(c)+" + Ramp "+e(u)+" + Lost productivity "+e(g)+" (role "+s+")","🔄 What-If: if role is Manager, lost prod = "+e(v.lostProductivityCost)+" → total = "+e(v.total)+" ("+m(v.pctOfSalary)+")","⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ 4 OR cut recruiting/ramp costs proportionally","🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review","💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early."]};return[p(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},v=function(t,n,i,r,l){const s=l==="Manager"?1.5:1,c=n,u=t/52*i*.5,g=t/12*r*s,f=c+u+g,h=t===0?0:f/t*100;return{recruitingCost:c,rampCost:u,lostProductivityCost:g,total:f,pctOfSalary:h}},y=function(t){return t<=a.excellent.threshold?"excellent":t<=a.good.threshold?"good":t<=a.warning.threshold?"warning":"critical"},e=function(t){return"$"+Math.round(t).toLocaleString()},d=function(t){return t.toFixed(1)+"%"},b=function(t,n,i){var r=M(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var F=o,N=v,q=y,S=e,I=d,L=b,p=tk,x='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',p=new Function("return "+x)(),a={excellent:{threshold:50,label:"🟢 Excellent",message:"Lean attrition cost — strong retention practices or low-friction backfill."},good:{threshold:100,label:"🟡 Good",message:"Typical attrition cost — within SHRM benchmark range; flag >1.5x salary."},warning:{threshold:200,label:"🟠 Warning",message:"High attrition cost — flight risk concentrated in critical roles; investigate manager tenure."},critical:{threshold:null,label:"🔴 Critical",message:"Severe attrition cost (>2x salary) — every leaver is a major business event."}},M=function(t){const n=o(Number(t.annual_salary)||0),i=o(Number(t.recruiting_cost)||0),r=o(Number(t.ramp_weeks)||0),l=o(Number(t.lost_productivity_months)||0),s=t.role_level||"IC",{recruitingCost:c,rampCost:u,lostProductivityCost:g,total:f,pctOfSalary:h}=v(n,i,r,l,s),O=y(h),j=a[O],m=v(n,i,r,l,"Manager"),_=e(c),k=e(u),w=e(g),C=s;return["🩺 Attrition Cost: "+j.label+" ("+e(f)+" = "+d(h)+" of salary)",p("calc_out.attrition_cost.row.snapshot","📊 Snapshot: Recruiting "+_+" + Ramp "+k+" + Lost productivity "+w+" (role "+C+")",{recruiting:_,ramp:k,lost:w,role:C}),"🔄 What-If: if role is Manager, lost prod = "+e(m.lostProductivityCost)+" → total = "+e(m.total)+" ("+d(m.pctOfSalary)+")","⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ 4 OR cut recruiting/ramp costs proportionally","🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review",p("calc_out.attrition_cost.row.tip","💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.")]};return[b(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -75,17 +80,28 @@ try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,n,i,r
     const band = calcHealthBand(pctOfSalary);
     const bandInfo = HEALTH_BANDS[band];
     const alt = attritionCost(sal, rec, rw, lpm, 'Manager');
+    const recruitingLabel = fmtMoney(recruitingCost);
+    const rampLabel = fmtMoney(rampCost);
+    const lostLabel = fmtMoney(lostProductivityCost);
+    const roleLabel = role;
     return [
       '🩺 Attrition Cost: ' + bandInfo.label + ' (' + fmtMoney(total) + ' = ' + fmtPct(pctOfSalary) + ' of salary)',
-      '📊 Snapshot: Recruiting ' + fmtMoney(recruitingCost) + ' + Ramp ' + fmtMoney(rampCost) + ' + Lost productivity ' + fmtMoney(lostProductivityCost) + ' (role ' + role + ')',
+      makeToken(
+        'calc_out.attrition_cost.row.snapshot',
+        '📊 Snapshot: Recruiting ' + recruitingLabel + ' + Ramp ' + rampLabel + ' + Lost productivity ' + lostLabel + ' (role ' + roleLabel + ')',
+        { recruiting: recruitingLabel, ramp: rampLabel, lost: lostLabel, role: roleLabel },
+      ),
       '🔄 What-If: if role is Manager, lost prod = ' + fmtMoney(alt.lostProductivityCost) + ' → total = ' + fmtMoney(alt.total) + ' (' + fmtPct(alt.pctOfSalary) + ')',
       '⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ 4 OR cut recruiting/ramp costs proportionally',
       '🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review',
-      '💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.',
+      makeToken(
+        'calc_out.attrition_cost.row.tip',
+        '💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Attrition Cost: 🟡 Good ($81,846 = 68.2% of salary)\n📊 Snapshot: Recruiting $8,000 + Ramp $13,846 + Lost productivity $60,000 (role IC)\n🔄 What-If: if role is Manager, lost prod = $90,000 → total = $111,846 (93.2%)\n⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ 4 OR cut recruiting/ramp costs proportionally\n🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review\n💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.',
+    '🩺 Attrition Cost: 🟡 Good ($81,846 = 68.2% of salary)\n$calc_out.attrition_cost.row.snapshot{"recruiting":"$8,000","ramp":"$13,846","lost":"$60,000","role":"IC"}|📊 Snapshot: Recruiting $8,000 + Ramp $13,846 + Lost productivity $60,000 (role IC)|\n🔄 What-If: if role is Manager, lost prod = $90,000 → total = $111,846 (93.2%)\n⚖️ Break-Even: to hit 🟢 Excellent (≤50%), need lost_productivity_months ≤ 4 OR cut recruiting/ramp costs proportionally\n🎯 Milestone: Track attrition cost per leaver quarterly — flag anyone >100% salary for retention review\n$calc_out.attrition_cost.row.tip|💡 Tip: Manager attrition costs 1.5x IC — invest in skip-level 1:1s and comp reviews to catch flight risks early.|',
   ],
   faq: [
     { q: 'What does "attrition cost" include?', a: 'Three components: (1) Recruiting cost — recruiter fees, job board, interview time, signing bonus. (2) Ramp cost — the new hire takes weeks to reach productivity, during which the team is short-handed. (3) Lost productivity cost — the team and the leaver\'s network produce less during transition. P11-6 captures all three.' },

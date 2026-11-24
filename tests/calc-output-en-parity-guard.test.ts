@@ -101,8 +101,8 @@ test('P168 B3-8 stripPricingBanner 检测器自检：只删 pricing 那一行，
   assert.ok(stripPricingBanner('📅 Usage Scenarios').indexOf('Usage Scenarios') >= 0, '误删了别的 📅 开头行');
 });
 
-test('P168 B3-9 真相源自检：TOKENIZED 必须覆盖 76 个引擎且分组基线不同', () => {
-  assert.equal(TOKENIZED.length, 88, 'TOKENIZED 应有 88 个引擎，实际 ' + TOKENIZED.length);
+test('P168 B3-9 真相源自检：TOKENIZED 必须覆盖 100 个引擎且分组基线不同', () => {
+  assert.equal(TOKENIZED.length, 100, 'TOKENIZED 应有 100 个引擎，实际 ' + TOKENIZED.length);
   const b37 = TOKENIZED.filter((e) => e.baseline === 'd3b3c1d');
   const b38 = TOKENIZED.filter((e) => e.baseline === '5c1c789');
   const b39 = TOKENIZED.filter((e) => e.baseline === '5c1bd52');
@@ -114,8 +114,8 @@ test('P168 B3-9 真相源自检：TOKENIZED 必须覆盖 76 个引擎且分组�
   assert.equal(b313.length, 10, 'B3-13 两组应为 10 个（组 1 五个 + 组 2 五个），实际 ' + b313.length);
   assert.equal(b314.length, 18, 'B3-14 两组应为 18 个（组 1 九个 + 组 2 九个），实际 ' + b314.length);
   const b315 = TOKENIZED.filter((e) => e.baseline === '361e6cc');
-  assert.equal(b315.length, 15, 'B3-15 组 1 + 组 2 应为 15 个，实际 ' + b315.length);
-  assert.equal(new Set(TOKENIZED.map((e) => e.slug)).size, 88, 'TOKENIZED 里有重复 slug');
+  assert.equal(b315.length, 27, 'B3-15 组 1 + 组 2 + 组 3 应为 27 个，实际 ' + b315.length);
+  assert.equal(new Set(TOKENIZED.map((e) => e.slug)).size, 100, 'TOKENIZED 里有重复 slug');
   // 基线不得用 HEAD（一提交就失去意义）
   for (const e of TOKENIZED) assert.notEqual(e.baseline, 'HEAD', e.slug + ' 的基线不得用 HEAD');
 });

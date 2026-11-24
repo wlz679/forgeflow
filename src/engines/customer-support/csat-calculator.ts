@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 90, label: '🟢 Excellent', message: 'World-class CSAT — customers consistently rate interactions positively.' },
@@ -57,9 +62,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let i=function(t){return Number.isNaN(t)?0:Math.max(0,t)},l=function(t,e){if(e<=0)return 1/0;const n=t/100;return 1.96*Math.sqrt(n*(1-n)/e)*100},m=function(t,e){const n=l(t,e);return{low:t-n,high:t+n}},p=function(t,e){return t-e},c=function(t){return t>=o.excellent.threshold?"excellent":t>=o.good.threshold?"good":t>=o.warning.threshold?"warning":"critical"},a=function(t){return t.toFixed(1)+"%"},h=function(t){return Math.round(t).toLocaleString()},u=function(t,e,n){var r=F(t);return Array.isArray(r)?r.join(\`
-\`):String(r)};var M=i,N=l,R=m,J=p,T=c,O=a,I=h,W=u,o={excellent:{threshold:90,label:"🟢 Excellent",message:"World-class CSAT — customers consistently rate interactions positively."},good:{threshold:80,label:"🟡 Good",message:"Healthy CSAT — typical mid-market SaaS benchmark (80-90%)."},warning:{threshold:70,label:"🟠 Warning",message:"Below-market CSAT — investigate common friction points (FRT, resolution time)."},critical:{threshold:null,label:"🔴 Critical",message:"Severe CSAT problem — escalation to Head-of-CS and product investigation required."}},F=function(t){const e=i(Number(t.csat_pct)||0),n=i(Number(t.response_rate)||0),r=i(Number(t.sample_size)||0),d=i(Number(t.target_csat)||0),f=l(e,r),x=m(e,r),b=p(e,d),S=c(e),y=o[S],g=Math.min(100,e+3),C=c(g),_=l(g,r),v=b>=0?"+":"",w=n<20?" · ⚠️ Response rate <20% = biased sample":"",s={csat:e.toFixed(1),target:d.toFixed(1),responseRate:n.toFixed(1),sampleSize:r.toFixed(0),margin:(r>0?f:0).toFixed(1)},k=n<20?JSON.stringify({code:"csat_biased_sample",params:s}):e>=o.excellent.threshold?JSON.stringify({code:"csat_excellent",params:s}):e>=o.good.threshold?JSON.stringify({code:"csat_good",params:s}):e>=o.warning.threshold?JSON.stringify({code:"csat_warning",params:s}):JSON.stringify({code:"csat_critical",params:s});return["🩺 CSAT Health: "+y.label+" ("+a(e)+" CSAT · "+f.toFixed(1)+"pp margin · "+a(n)+" response rate)","📊 Snapshot: "+h(r)+" responses · 95% CI ["+x.low.toFixed(1)+"%, "+x.high.toFixed(1)+"%] · target "+a(d)+" · gap "+v+b.toFixed(1)+"pp"+w,"🔄 What-If: if CSAT climbs to "+a(g)+" (+3pp), band moves to "+o[C].label+" and margin tightens to "+_.toFixed(1)+"pp","⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need "+Math.max(0,90-e).toFixed(1)+"pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT","🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS","💡 Tip: "+k]};return[u(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},c=function(t,e){if(e<=0)return 1/0;const n=t/100;return 1.96*Math.sqrt(n*(1-n)/e)*100},h=function(t,e){const n=c(t,e);return{low:t-n,high:t+n}},u=function(t,e){return t-e},l=function(t){return t>=a.excellent.threshold?"excellent":t>=a.good.threshold?"good":t>=a.warning.threshold?"warning":"critical"},i=function(t){return t.toFixed(1)+"%"},f=function(t){return Math.round(t).toLocaleString()},m=function(t,e,n){var r=N(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var W=o,I=c,z=h,G=u,K=l,L=i,$=f,P=m,p=tk,w='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',p=new Function("return "+w)(),a={excellent:{threshold:90,label:"🟢 Excellent",message:"World-class CSAT — customers consistently rate interactions positively."},good:{threshold:80,label:"🟡 Good",message:"Healthy CSAT — typical mid-market SaaS benchmark (80-90%)."},warning:{threshold:70,label:"🟠 Warning",message:"Below-market CSAT — investigate common friction points (FRT, resolution time)."},critical:{threshold:null,label:"🔴 Critical",message:"Severe CSAT problem — escalation to Head-of-CS and product investigation required."}},N=function(t){const e=o(Number(t.csat_pct)||0),n=o(Number(t.response_rate)||0),r=o(Number(t.sample_size)||0),g=o(Number(t.target_csat)||0),b=c(e,r),x=h(e,r),F=u(e,g),O=l(e),J=a[O],d=Math.min(100,e+3),M=l(d),R=c(d,r),T=F>=0?"+":"",q=n<20?" · ⚠️ Response rate <20% = biased sample":"",s={csat:e.toFixed(1),target:g.toFixed(1),responseRate:n.toFixed(1),sampleSize:r.toFixed(0),margin:(r>0?b:0).toFixed(1)},j=n<20?JSON.stringify({code:"csat_biased_sample",params:s}):e>=a.excellent.threshold?JSON.stringify({code:"csat_excellent",params:s}):e>=a.good.threshold?JSON.stringify({code:"csat_good",params:s}):e>=a.warning.threshold?JSON.stringify({code:"csat_warning",params:s}):JSON.stringify({code:"csat_critical",params:s}),S=f(r),y=x.low.toFixed(1),k=x.high.toFixed(1),v=i(g),C=T+F.toFixed(1),_=q;return["🩺 CSAT Health: "+J.label+" ("+i(e)+" CSAT · "+b.toFixed(1)+"pp margin · "+i(n)+" response rate)",p("calc_out.csat.row.snapshot","📊 Snapshot: "+S+" responses · 95% CI ["+y+"%, "+k+"%] · target "+v+" · gap "+C+"pp"+_,{n:S,low:y,high:k,target:v,gap:C,rr_warning:_}),"🔄 What-If: if CSAT climbs to "+i(d)+" (+3pp), band moves to "+a[M].label+" and margin tightens to "+R.toFixed(1)+"pp","⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need "+Math.max(0,90-e).toFixed(1)+"pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT","🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS","💡 Tip: "+j]};return[m(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   generate(inputs) {
@@ -96,9 +101,19 @@ try{let i=function(t){return Number.isNaN(t)?0:Math.max(0,t)},l=function(t,e){if
         : csat >= HEALTH_BANDS.warning.threshold
         ? JSON.stringify({ code: 'csat_warning', params: tipParams })
         : JSON.stringify({ code: 'csat_critical', params: tipParams });
+    const nLabel = fmtMoney(n);
+    const ciLowLabel = ci.low.toFixed(1);
+    const ciHighLabel = ci.high.toFixed(1);
+    const targetLabel = fmtPct(target);
+    const gapLabel = gapSign + gap.toFixed(1);
+    const rrWarningLabel = rrWarning;
     return [
       '🩺 CSAT Health: ' + bandInfo.label + ' (' + fmtPct(csat) + ' CSAT · ' + m.toFixed(1) + 'pp margin · ' + fmtPct(rr) + ' response rate)',
-      '📊 Snapshot: ' + fmtMoney(n) + ' responses · 95% CI [' + ci.low.toFixed(1) + '%, ' + ci.high.toFixed(1) + '%] · target ' + fmtPct(target) + ' · gap ' + gapSign + gap.toFixed(1) + 'pp' + rrWarning,
+      makeToken(
+        'calc_out.csat.row.snapshot',
+        '📊 Snapshot: ' + nLabel + ' responses · 95% CI [' + ciLowLabel + '%, ' + ciHighLabel + '%] · target ' + targetLabel + ' · gap ' + gapLabel + 'pp' + rrWarningLabel,
+        { n: nLabel, low: ciLowLabel, high: ciHighLabel, target: targetLabel, gap: gapLabel, rr_warning: rrWarningLabel },
+      ),
       '🔄 What-If: if CSAT climbs to ' + fmtPct(ifCsat) + ' (+3pp), band moves to ' + HEALTH_BANDS[ifBand].label + ' and margin tightens to ' + ifM.toFixed(1) + 'pp',
       '⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need ' + Math.max(0, 90 - csat).toFixed(1) + 'pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT',
       '🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS',
@@ -106,7 +121,7 @@ try{let i=function(t){return Number.isNaN(t)?0:Math.max(0,t)},l=function(t,e){if
     ];
   },
   staticExamples: [
-    '🩺 CSAT Health: 🟡 Good (87.0% CSAT · 4.7pp margin · 35.0% response rate)\n📊 Snapshot: 200 responses · 95% CI [82.3%, 91.7%] · target 90.0% · gap -3.0pp\n🔄 What-If: if CSAT climbs to 90.0% (+3pp), band moves to 🟢 Excellent and margin tightens to 4.2pp\n⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need 3.0pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT\n🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS\n💡 Tip: {"code":"csat_good","params":{"csat":"87.0","target":"90.0","responseRate":"35.0","sampleSize":"200","margin":"4.7"}}',
+    '🩺 CSAT Health: 🟡 Good (87.0% CSAT · 4.7pp margin · 35.0% response rate)\n$calc_out.csat.row.snapshot{"n":"200","low":"82.3","high":"91.7","target":"90.0%","gap":"-3.0","rr_warning":""}|📊 Snapshot: 200 responses · 95% CI [82.3%, 91.7%] · target 90.0% · gap -3.0pp|\n🔄 What-If: if CSAT climbs to 90.0% (+3pp), band moves to 🟢 Excellent and margin tightens to 4.2pp\n⚖️ Break-Even: to hit 🟢 Excellent (≥90%), need 3.0pp more — pair with [Resolution Time Calculator] (P12-3) since FRT + resolution drive CSAT\n🎯 Milestone: CSAT is the leading indicator of NRR — track weekly; >5pp drop = escalate to Head-of-CS\n💡 Tip: {"code":"csat_good","params":{"csat":"87.0","target":"90.0","responseRate":"35.0","sampleSize":"200","margin":"4.7"}}',
   ],
   faq: [
     { q: 'What is CSAT?', a: 'CSAT (Customer Satisfaction Score) is the percentage of customers who rate their support interaction positively (typically 4 or 5 on a 5-point scale). It is a per-interaction metric — distinct from NPS, which measures relationship.' },

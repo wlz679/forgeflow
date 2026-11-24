@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 10, label: 'Excellent', message: 'Lean support cost.' },
@@ -50,9 +55,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,r,c,e,n){const s=100-e-n;return(t*e+r*n+c*s)/100},b=function(t,r){return t*r},h=function(t){return t<=a.excellent.threshold?"excellent":t<=a.good.threshold?"good":t<=a.warning.threshold?"warning":"critical"},u=function(t){return"$"+Math.round(t).toLocaleString()},o=function(t){return"$"+t.toFixed(2)},f=function(t,r,c){var e=x(t);return Array.isArray(e)?e.join(\`
-\`):String(e)};var T=l,$=d,N=b,W=h,F=u,I=o,S=f,a={excellent:{threshold:10,label:"Excellent",message:"Lean support cost."},good:{threshold:25,label:"Good",message:"Healthy multi-tier mix."},warning:{threshold:50,label:"Warning",message:"Above-market cost."},critical:{threshold:null,label:"Critical",message:"Severely bloated cost."}},x=function(t){const r=l(Number(t.t1_cost)||0),c=l(Number(t.t2_cost)||0),e=l(Number(t.t3_cost)||0),n=l(Number(t.t1_share)||0),s=l(Number(t.t2_share)||0),y=l(Number(t.monthly_volume)||0),m=Math.max(0,100-n-s),i=d(r,c,e,n,s),g=b(i,y),_=h(i),v=a[_],k=(r*n+c*s+e*10)/100,p=h(k),C=a.excellent.threshold*100,M=r*n+c*s+e*m,w=Math.max(0,(M-C)/Math.max(m,1));return["🩺 Cost-per-Ticket Health: "+v.label+" ("+o(i)+"/ticket · "+u(g)+"/mo)","📊 Snapshot: T1 "+n+"% × "+o(r)+" + T2 "+s+"% × "+o(c)+" + T3 "+m+"% × "+o(e)+" = "+o(i)+" weighted · "+u(g)+"/mo total","🔄 What-If: if T3 share drops to 10%, avg drops to "+o(k)+" (would be "+a[p].label+")","⚖️ Break-Even: to hit 🟢 Excellent ("+o(a.excellent.threshold)+" ceiling), cut T3 cost to ≤$"+Math.round(w)+"/ticket OR push T3 share ≤5%","🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly","💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume."]};return[f(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},b=function(t,r,l,e,n){const s=100-e-n;return(t*e+r*n+l*s)/100},d=function(t,r){return t*r},u=function(t){return t<=a.excellent.threshold?"excellent":t<=a.good.threshold?"good":t<=a.warning.threshold?"warning":"critical"},m=function(t){return"$"+Math.round(t).toLocaleString()},o=function(t){return"$"+t.toFixed(2)},f=function(t,r,l){var e=F(t);return Array.isArray(e)?e.join(\`
+\`):String(e)};var I=c,P=b,R=d,G=u,J=m,K=o,V=f,h=tk,$='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',h=new Function("return "+$)(),a={excellent:{threshold:10,label:"Excellent",message:"Lean support cost."},good:{threshold:25,label:"Good",message:"Healthy multi-tier mix."},warning:{threshold:50,label:"Warning",message:"Above-market cost."},critical:{threshold:null,label:"Critical",message:"Severely bloated cost."}},F=function(t){const r=c(Number(t.t1_cost)||0),l=c(Number(t.t2_cost)||0),e=c(Number(t.t3_cost)||0),n=c(Number(t.t1_share)||0),s=c(Number(t.t2_share)||0),T=c(Number(t.monthly_volume)||0),g=Math.max(0,100-n-s),i=b(r,l,e,n,s),_=d(i,T),j=u(i),q=a[j],k=(r*n+l*s+e*10)/100,N=u(k),L=a.excellent.threshold*100,O=r*n+l*s+e*g,W=Math.max(0,(O-L)/Math.max(g,1)),p=String(n),v=o(r),y=String(s),x=o(l),S=String(g),C=o(e),w=o(i),M=m(_);return["🩺 Cost-per-Ticket Health: "+q.label+" ("+o(i)+"/ticket · "+m(_)+"/mo)",h("calc_out.cost_per_support_ticket.row.snapshot","📊 Snapshot: T1 "+p+"% × "+v+" + T2 "+y+"% × "+x+" + T3 "+S+"% × "+C+" = "+w+" weighted · "+M+"/mo total",{t1_share:p,t1_cost:v,t2_share:y,t2_cost:x,t3_share:S,t3_cost:C,avg:w,monthly:M}),"🔄 What-If: if T3 share drops to 10%, avg drops to "+o(k)+" (would be "+a[N].label+")","⚖️ Break-Even: to hit 🟢 Excellent ("+o(a.excellent.threshold)+" ceiling), cut T3 cost to ≤$"+Math.round(W)+"/ticket OR push T3 share ≤5%","🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly",h("calc_out.cost_per_support_ticket.row.tip","💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume.")]};return[f(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -83,17 +88,32 @@ try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},d=function(t,r,c,e
     const targetWeighted = HEALTH_BANDS.excellent.threshold * 100;
     const currentWeighted = t1Cost * t1Share + t2Cost * t2Share + t3Cost * t3Share;
     const t3Cut = Math.max(0, (currentWeighted - targetWeighted) / Math.max(t3Share, 1));
+    const t1ShareLabel = String(t1Share);
+    const t1CostLabel = fmtAvg(t1Cost);
+    const t2ShareLabel = String(t2Share);
+    const t2CostLabel = fmtAvg(t2Cost);
+    const t3ShareLabel = String(t3Share);
+    const t3CostLabel = fmtAvg(t3Cost);
+    const avgLabel = fmtAvg(avg);
+    const monthlyLabel = fmtMoney(monthly);
     return [
       '🩺 Cost-per-Ticket Health: ' + bandInfo.label + ' (' + fmtAvg(avg) + '/ticket · ' + fmtMoney(monthly) + '/mo)',
-      '📊 Snapshot: T1 ' + t1Share + '% × ' + fmtAvg(t1Cost) + ' + T2 ' + t2Share + '% × ' + fmtAvg(t2Cost) + ' + T3 ' + t3Share + '% × ' + fmtAvg(t3Cost) + ' = ' + fmtAvg(avg) + ' weighted · ' + fmtMoney(monthly) + '/mo total',
+      makeToken(
+        'calc_out.cost_per_support_ticket.row.snapshot',
+        '📊 Snapshot: T1 ' + t1ShareLabel + '% × ' + t1CostLabel + ' + T2 ' + t2ShareLabel + '% × ' + t2CostLabel + ' + T3 ' + t3ShareLabel + '% × ' + t3CostLabel + ' = ' + avgLabel + ' weighted · ' + monthlyLabel + '/mo total',
+        { t1_share: t1ShareLabel, t1_cost: t1CostLabel, t2_share: t2ShareLabel, t2_cost: t2CostLabel, t3_share: t3ShareLabel, t3_cost: t3CostLabel, avg: avgLabel, monthly: monthlyLabel },
+      ),
       '🔄 What-If: if T3 share drops to 10%, avg drops to ' + fmtAvg(altAvg) + ' (would be ' + HEALTH_BANDS[altBand].label + ')',
       '⚖️ Break-Even: to hit 🟢 Excellent (' + fmtAvg(HEALTH_BANDS.excellent.threshold) + ' ceiling), cut T3 cost to ≤$' + Math.round(t3Cut) + '/ticket OR push T3 share ≤5%',
       '🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly',
-      '💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume.',
+      makeToken(
+        'calc_out.cost_per_support_ticket.row.tip',
+        '💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Cost-per-Ticket Health: Good ($22.40/ticket · $112,000/mo)\n📊 Snapshot: T1 55% × $8.00 + T2 30% × $25.00 + T3 15% × $70.00 = $22.40 weighted · $112,000/mo total\n🔄 What-If: if T3 share drops to 10%, avg drops to $18.90 (would be Good)\n⚖️ Break-Even: to hit 🟢 Excellent ($10.00 ceiling), cut T3 cost to ≤$83/ticket OR push T3 share ≤5%\n🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly\n💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume.',
+    '🩺 Cost-per-Ticket Health: Good ($22.40/ticket · $112,000/mo)\n$calc_out.cost_per_support_ticket.row.snapshot{"t1_share":"55","t1_cost":"$8.00","t2_share":"30","t2_cost":"$25.00","t3_share":"15","t3_cost":"$70.00","avg":"$22.40","monthly":"$112,000"}|📊 Snapshot: T1 55% × $8.00 + T2 30% × $25.00 + T3 15% × $70.00 = $22.40 weighted · $112,000/mo total|\n🔄 What-If: if T3 share drops to 10%, avg drops to $18.90 (would be Good)\n⚖️ Break-Even: to hit 🟢 Excellent ($10.00 ceiling), cut T3 cost to ≤$83/ticket OR push T3 share ≤5%\n🎯 Milestone: re-benchmark tier rates quarterly — agent comp inflation ~3-5%/yr; track cost-per-ticket monthly\n$calc_out.cost_per_support_ticket.row.tip|💡 Tip: TSIA 2024 mid-market benchmark is $15-$25/ticket; >$50 indicates over-escalation. Pair with our [Deflection Rate Calculator] (P12-5) to reduce inbound T1 volume.|',
   ],
   faq: [
     { q: 'What are T1/T2/T3 tiers?', a: 'T1 = frontline/junior agents handling common questions (password reset, basic how-to). T2 = senior specialists handling technical issues. T3 = engineering escalations requiring dev involvement. Multi-tier is industry standard — TSIA 2024 reports 87% of mid-market CS teams have ≥2 tiers.' },

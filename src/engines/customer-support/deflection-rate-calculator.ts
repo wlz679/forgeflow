@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 40, label: '🟢 Excellent', message: 'World-class self-service — KB/chatbot deflects ≥40% of tickets before they reach T1.' },
@@ -65,9 +70,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let r=function(e){return Number.isNaN(e)?0:Math.max(0,e)},i=function(e,t){return e*(t/100)},l=function(e,t){return e*t},s=function(e,t){return e-t},g=function(e,t){return t<=0?1/0:e/t*100},b=function(e,t){return e-t},f=function(e){return e>=a.excellent.threshold?"excellent":e>=a.good.threshold?"good":e>=a.warning.threshold?"warning":"critical"},d=function(e){return e.toFixed(1)+"%"},c=function(e){return"$"+Math.round(e).toLocaleString()},k=function(e,t,n){var o=_(e);return Array.isArray(o)?o.join(\`
-\`):String(o)};var I=r,B=i,S=l,W=s,q=g,C=b,R=f,j=d,G=c,O=k,a={excellent:{threshold:40,label:"🟢 Excellent",message:"World-class self-service — KB/chatbot deflects ≥40% of tickets before they reach T1."},good:{threshold:25,label:"🟡 Good",message:"Healthy deflection — typical mid-market benchmark (25-40%)."},warning:{threshold:10,label:"🟠 Warning",message:"Below-market self-service — KB has content gaps or search is failing."},critical:{threshold:null,label:"🔴 Critical",message:"No meaningful self-service — every ticket reaches a human agent."}},_=function(e){const t=r(Number(e.monthly_tickets)||0),n=r(Number(e.deflection_rate)||0),o=r(Number(e.cost_per_ticket)||0),u=r(Number(e.tool_monthly_cost)||0),y=r(Number(e.target_deflection)||0),v=i(t,n),p=l(v,o),h=s(p,u),x=g(h,u),w=b(n,y),M=f(n),N=a[M],m=Math.min(100,n+10),K=f(m),F=s(l(i(t,m),o),u),P=w>=0?"+":"";return["🩺 Deflection Health: "+N.label+" ("+d(n)+" deflected · "+c(h)+"/mo net)","📊 Snapshot: "+Math.round(v).toLocaleString()+" tickets/mo deflected · "+c(p)+" gross saved · "+c(h)+" net · "+Math.round(x).toLocaleString()+"% ROI","🔄 What-If: if deflection climbs to "+d(m)+" (+10pp), band moves to "+a[K].label+" and net savings = "+c(F)+"/mo","⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need "+Math.max(0,40-n).toFixed(1)+"pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction","🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.","💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate."]};return[k(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let r=function(e){return Number.isNaN(e)?0:Math.max(0,e)},i=function(e,t){return e*(t/100)},s=function(e,t){return e*t},f=function(e,t){return e-t},b=function(e,t){return t<=0?1/0:e/t*100},k=function(e,t){return e-t},d=function(e){return e>=a.excellent.threshold?"excellent":e>=a.good.threshold?"good":e>=a.warning.threshold?"warning":"critical"},u=function(e){return e.toFixed(1)+"%"},c=function(e){return"$"+Math.round(e).toLocaleString()},v=function(e,t,n){var o=q(e);return Array.isArray(o)?o.join(\`
+\`):String(o)};var C=r,L=i,W=s,R=f,$=b,E=k,G=d,J=u,P=c,z=v,l=tk,N='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',l=new Function("return "+N)(),a={excellent:{threshold:40,label:"🟢 Excellent",message:"World-class self-service — KB/chatbot deflects ≥40% of tickets before they reach T1."},good:{threshold:25,label:"🟡 Good",message:"Healthy deflection — typical mid-market benchmark (25-40%)."},warning:{threshold:10,label:"🟠 Warning",message:"Below-market self-service — KB has content gaps or search is failing."},critical:{threshold:null,label:"🔴 Critical",message:"No meaningful self-service — every ticket reaches a human agent."}},q=function(e){const t=r(Number(e.monthly_tickets)||0),n=r(Number(e.deflection_rate)||0),o=r(Number(e.cost_per_ticket)||0),h=r(Number(e.tool_monthly_cost)||0),M=r(Number(e.target_deflection)||0),p=i(t,n),_=s(p,o),g=f(_,h),S=b(g,h),j=k(n,M),K=d(n),I=a[K],m=Math.min(100,n+10),O=d(m),B=f(s(i(t,m),o),h),Q=j>=0?"+":"",y=Math.round(p).toLocaleString(),w=c(_),x=c(g),F=Math.round(S).toLocaleString();return["🩺 Deflection Health: "+I.label+" ("+u(n)+" deflected · "+c(g)+"/mo net)",l("calc_out.deflection_rate.row.snapshot","📊 Snapshot: "+y+" tickets/mo deflected · "+w+" gross saved · "+x+" net · "+F+"% ROI",{deflected:y,saved:w,net:x,roi:F}),"🔄 What-If: if deflection climbs to "+u(m)+" (+10pp), band moves to "+a[O].label+" and net savings = "+c(B)+"/mo","⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need "+Math.max(0,40-n).toFixed(1)+"pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction","🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.",l("calc_out.deflection_rate.row.tip","💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.")]};return[v(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -97,17 +102,28 @@ try{let r=function(e){return Number.isNaN(e)?0:Math.max(0,e)},i=function(e,t){re
     const ifBand = calcHealthBand(ifRate);
     const ifSaved = netSavings(savedCost(deflectedVolume(vol, ifRate), cost), tool);
     const gapSign = gap >= 0 ? '+' : '';
+    const deflectedLabel = Math.round(deflected).toLocaleString();
+    const savedLabel = fmtMoney(saved);
+    const netLabel = fmtMoney(net);
+    const roiLabel = Math.round(roi).toLocaleString();
     return [
       '🩺 Deflection Health: ' + bandInfo.label + ' (' + fmtPct(rate) + ' deflected · ' + fmtMoney(net) + '/mo net)',
-      '📊 Snapshot: ' + Math.round(deflected).toLocaleString() + ' tickets/mo deflected · ' + fmtMoney(saved) + ' gross saved · ' + fmtMoney(net) + ' net · ' + Math.round(roi).toLocaleString() + '% ROI',
+      makeToken(
+        'calc_out.deflection_rate.row.snapshot',
+        '📊 Snapshot: ' + deflectedLabel + ' tickets/mo deflected · ' + savedLabel + ' gross saved · ' + netLabel + ' net · ' + roiLabel + '% ROI',
+        { deflected: deflectedLabel, saved: savedLabel, net: netLabel, roi: roiLabel },
+      ),
       '🔄 What-If: if deflection climbs to ' + fmtPct(ifRate) + ' (+10pp), band moves to ' + HEALTH_BANDS[ifBand].label + ' and net savings = ' + fmtMoney(ifSaved) + '/mo',
       '⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need ' + Math.max(0, 40 - rate).toFixed(1) + 'pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction',
       '🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.',
-      '💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.',
+      makeToken(
+        'calc_out.deflection_rate.row.tip',
+        '💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Deflection Health: 🟡 Good (35.0% deflected · $40,500/mo net)\n📊 Snapshot: 1,750 tickets/mo deflected · $42,000 gross saved · $40,500 net · 2,700% ROI\n🔄 What-If: if deflection climbs to 45.0% (+10pp), band moves to 🟢 Excellent and net savings = $52,500/mo\n⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need 5.0pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction\n🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.\n💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.',
+    '🩺 Deflection Health: 🟡 Good (35.0% deflected · $40,500/mo net)\n$calc_out.deflection_rate.row.snapshot{"deflected":"1,750","saved":"$42,000","net":"$40,500","roi":"2,700"}|📊 Snapshot: 1,750 tickets/mo deflected · $42,000 gross saved · $40,500 net · 2,700% ROI|\n🔄 What-If: if deflection climbs to 45.0% (+10pp), band moves to 🟢 Excellent and net savings = $52,500/mo\n⚖️ Break-Even: to hit 🟢 Excellent (≥40%), need 5.0pp more — pair with [Cost-per-Ticket Calculator] (P12-1) to model full cost reduction\n🎯 Milestone: KB content gap is #1 deflection killer — re-audit top 50 articles quarterly. Track deflection rate weekly.\n$calc_out.deflection_rate.row.tip|💡 Tip: Deflection >50% often means KB is masking product gaps — validate top-deflected tickets quarterly to ensure self-service answers are accurate.|',
   ],
   faq: [
     { q: 'What is self-service deflection?', a: 'It is the share of inbound tickets that are resolved by self-service channels (KB articles, in-product help, chatbot) BEFORE they reach a human T1 agent. Industry reporting often combines KB + chatbot under "deflection."' },

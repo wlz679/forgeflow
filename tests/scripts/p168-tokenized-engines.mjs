@@ -144,6 +144,19 @@ export const B3_15_BATCH = [
   { slug: 'solopreneur-dpa-cost-calculator', file: 'src/engines/legal-compliance/dpa-cost-calculator.ts', alias: 'dpa_cost', baseline: '361e6cc' },
   { slug: 'solopreneur-dsar-cost-calculator', file: 'src/engines/legal-compliance/dsar-cost-calculator.ts', alias: 'dsar_cost', baseline: '361e6cc' },
   { slug: 'solopreneur-gdpr-fine-calculator', file: 'src/engines/legal-compliance/gdpr-fine-calculator.ts', alias: 'gdpr_fine', baseline: '361e6cc' },
+  // P168 B3-15 组 3 —— C 档组 B（T 客服 6 + H 招聘团队 6）：22 行 zh 整行英文。
+  { slug: 'solopreneur-cost-per-support-ticket-calculator', file: 'src/engines/customer-support/cost-per-support-ticket-calculator.ts', alias: 'cost_per_support_ticket', baseline: '361e6cc' },
+  { slug: 'solopreneur-deflection-rate-calculator', file: 'src/engines/customer-support/deflection-rate-calculator.ts', alias: 'deflection_rate', baseline: '361e6cc' },
+  { slug: 'solopreneur-first-response-time-calculator', file: 'src/engines/customer-support/first-response-time-calculator.ts', alias: 'first_response_time', baseline: '361e6cc' },
+  { slug: 'solopreneur-resolution-time-calculator', file: 'src/engines/customer-support/resolution-time-calculator.ts', alias: 'resolution_time', baseline: '361e6cc' },
+  { slug: 'solopreneur-support-capacity-planning-calculator', file: 'src/engines/customer-support/support-capacity-planning-calculator.ts', alias: 'support_capacity_planning', baseline: '361e6cc' },
+  { slug: 'solopreneur-csat-calculator', file: 'src/engines/customer-support/csat-calculator.ts', alias: 'csat', baseline: '361e6cc' },
+  { slug: 'solopreneur-attrition-cost-calculator', file: 'src/engines/hiring-team/attrition-cost-calculator.ts', alias: 'attrition_cost', baseline: '361e6cc' },
+  { slug: 'solopreneur-equity-refresh-calculator', file: 'src/engines/hiring-team/equity-refresh-calculator.ts', alias: 'equity_refresh', baseline: '361e6cc' },
+  { slug: 'solopreneur-fully-loaded-employee-cost-calculator', file: 'src/engines/hiring-team/fully-loaded-employee-cost-calculator.ts', alias: 'fully_loaded_employee_cost', baseline: '361e6cc' },
+  { slug: 'solopreneur-productivity-ramp-curve-calculator', file: 'src/engines/hiring-team/productivity-ramp-curve-calculator.ts', alias: 'productivity_ramp_curve', baseline: '361e6cc' },
+  { slug: 'solopreneur-time-to-productivity-calculator', file: 'src/engines/hiring-team/time-to-productivity-calculator.ts', alias: 'time_to_productivity', baseline: '361e6cc' },
+  { slug: 'solopreneur-comp-banding-calculator', file: 'src/engines/hiring-team/comp-banding-calculator.ts', alias: 'comp_banding', baseline: '361e6cc' },
 ];
 
 export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH, ...B3_14_BATCH, ...B3_15_BATCH];

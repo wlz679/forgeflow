@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.30, label: '🟢 Excellent', message: 'Steep ramp — employee reaches P50 productivity in <30% of months_to_full.' },
@@ -64,9 +69,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e,o,r){const a=100-o;if(t<=0)return o;if(t>=e)return 100;if(r==="Linear")return o+a*(t/e);if(r==="SlowStart")return o+a*Math.pow(t/e,2);const c=12/e,s=e/2;return o+a/(1+Math.exp(-c*(t-s)))},i=function(t,e,o){for(let r=.1;r<=t*2;r+=.1)if(u(r,t,e,o)>=50)return Math.round(r*10)/10;return t},h=function(t){const e=t/100;return e<=n.excellent.threshold?"excellent":e<=n.good.threshold?"good":e<=n.warning.threshold?"warning":"critical"},f=function(t){return t.toFixed(1)+"%"},d=function(t){return"$"+Math.round(t).toLocaleString()},m=function(t,e,o){var r=p(t);return Array.isArray(r)?r.join(\`
-\`):String(r)};var g=l,v=u,P=i,S=h,k=f,x=d,M=m,n={excellent:{threshold:.3,label:"🟢 Excellent",message:"Steep ramp — employee reaches P50 productivity in <30% of months_to_full."},good:{threshold:.5,label:"🟡 Good",message:"Healthy ramp — P50 reached at 30-50% of months_to_full (typical for S-Curve)."},warning:{threshold:.7,label:"🟠 Warning",message:"Slow ramp — P50 takes 50-70% of months_to_full. Onboarding likely needs scope/buddy support."},critical:{threshold:null,label:"🔴 Critical",message:"Very slow ramp — employee takes >70% of months_to_full to reach P50 productivity."}},p=function(t){const e=l(Number(t.months_to_full)||6),o=l(Number(t.starting_pct)||0),r=t.curve_shape||"S-Curve",a=l(Number(t.monthly_cost)||0),c=i(e,o,r),s=c/e,_=h(s*100),y=n[_],w=i(e,o,"Linear"),b=i(e,o,"SlowStart");return["🩺 Ramp Health: "+y.label+" (P50 at month "+c+", "+f(s*100)+" of months_to_full)","📊 Snapshot: "+e+"mo "+r+" curve · "+o+"% start · "+d(a)+"/mo fully-loaded","🔄 What-If: Linear curve hits P50 at same month ("+w+"); SlowStart hits P50 at month "+b.toFixed(1)+" (slower)","⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤"+n.excellent.threshold*100+"% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp","🎯 Milestone: At month "+Math.round(e/2)+" the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks","💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications)."]};return[m(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},h=function(t,r,o,e){const a=100-o;if(t<=0)return o;if(t>=r)return 100;if(e==="Linear")return o+a*(t/r);if(e==="SlowStart")return o+a*Math.pow(t/r,2);const c=12/r,s=r/2;return o+a/(1+Math.exp(-c*(t-s)))},i=function(t,r,o){for(let e=.1;e<=t*2;e+=.1)if(h(e,t,r,o)>=50)return Math.round(e*10)/10;return t},f=function(t){const r=t/100;return r<=n.excellent.threshold?"excellent":r<=n.good.threshold?"good":r<=n.warning.threshold?"warning":"critical"},p=function(t){return t.toFixed(1)+"%"},m=function(t){return"$"+Math.round(t).toLocaleString()},d=function(t,r,o){var e=w(t);return Array.isArray(e)?e.join(\`
+\`):String(e)};var C=l,M=h,j=i,q=f,L=p,N=m,O=d,u=tk,b='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',u=new Function("return "+b)(),n={excellent:{threshold:.3,label:"🟢 Excellent",message:"Steep ramp — employee reaches P50 productivity in <30% of months_to_full."},good:{threshold:.5,label:"🟡 Good",message:"Healthy ramp — P50 reached at 30-50% of months_to_full (typical for S-Curve)."},warning:{threshold:.7,label:"🟠 Warning",message:"Slow ramp — P50 takes 50-70% of months_to_full. Onboarding likely needs scope/buddy support."},critical:{threshold:null,label:"🔴 Critical",message:"Very slow ramp — employee takes >70% of months_to_full to reach P50 productivity."}},w=function(t){const r=l(Number(t.months_to_full)||6),o=l(Number(t.starting_pct)||0),e=t.curve_shape||"S-Curve",a=l(Number(t.monthly_cost)||0),c=i(r,o,e),s=c/r,S=f(s*100),k=n[S],P=i(r,o,"Linear"),x=i(r,o,"SlowStart"),_=String(r),g=e,v=String(o),y=m(a);return["🩺 Ramp Health: "+k.label+" (P50 at month "+c+", "+p(s*100)+" of months_to_full)",u("calc_out.productivity_ramp_curve.row.snapshot","📊 Snapshot: "+_+"mo "+g+" curve · "+v+"% start · "+y+"/mo fully-loaded",{months:_,shape:g,start:v,monthly_cost:y}),"🔄 What-If: Linear curve hits P50 at same month ("+P+"); SlowStart hits P50 at month "+x.toFixed(1)+" (slower)","⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤"+n.excellent.threshold*100+"% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp","🎯 Milestone: At month "+Math.round(r/2)+" the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks",u("calc_out.productivity_ramp_curve.row.tip","💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).")]};return[d(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -90,17 +95,28 @@ try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e,o,r
     const bandInfo = HEALTH_BANDS[band];
     const linearP50 = findP50Month(monthsToFull, starting, 'Linear');
     const slowP50 = findP50Month(monthsToFull, starting, 'SlowStart');
+    const monthsLabel = String(monthsToFull);
+    const shapeLabel = shape;
+    const startLabel = String(starting);
+    const monthlyCostLabel = fmtMoney(monthlyCost);
     return [
       '🩺 Ramp Health: ' + bandInfo.label + ' (P50 at month ' + p50Month + ', ' + fmtPct(p50Pct * 100) + ' of months_to_full)',
-      '📊 Snapshot: ' + monthsToFull + 'mo ' + shape + ' curve · ' + starting + '% start · ' + fmtMoney(monthlyCost) + '/mo fully-loaded',
+      makeToken(
+        'calc_out.productivity_ramp_curve.row.snapshot',
+        '📊 Snapshot: ' + monthsLabel + 'mo ' + shapeLabel + ' curve · ' + startLabel + '% start · ' + monthlyCostLabel + '/mo fully-loaded',
+        { months: monthsLabel, shape: shapeLabel, start: startLabel, monthly_cost: monthlyCostLabel },
+      ),
       '🔄 What-If: Linear curve hits P50 at same month (' + linearP50 + '); SlowStart hits P50 at month ' + slowP50.toFixed(1) + ' (slower)',
       '⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤' + (HEALTH_BANDS.excellent.threshold * 100) + '% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp',
       '🎯 Milestone: At month ' + Math.round(monthsToFull / 2) + ' the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks',
-      '💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).',
+      makeToken(
+        'calc_out.productivity_ramp_curve.row.tip',
+        '💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Ramp Health: 🟡 Good (P50 at month 3, 50.0% of months_to_full)\n📊 Snapshot: 6mo S-Curve curve · 0% start · $14,833/mo fully-loaded\n🔄 What-If: Linear curve hits P50 at same month (3); SlowStart hits P50 at month 4.3 (slower)\n⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤30% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp\n🎯 Milestone: At month 3 the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks\n💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).',
+    '🩺 Ramp Health: 🟡 Good (P50 at month 3, 50.0% of months_to_full)\n$calc_out.productivity_ramp_curve.row.snapshot{"months":"6","shape":"S-Curve","start":"0","monthly_cost":"$14,833"}|📊 Snapshot: 6mo S-Curve curve · 0% start · $14,833/mo fully-loaded|\n🔄 What-If: Linear curve hits P50 at same month (3); SlowStart hits P50 at month 4.3 (slower)\n⚖️ Break-Even: to hit 🟢 Excellent (P50 ≤30% of months_to_full), use S-Curve with shorter months_to_full or pre-onboarding bootcamp\n🎯 Milestone: At month 3 the hire should be at ~50% productivity — pair with [Time to Productivity Calculator] (P11-2) for ramp-weeks\n$calc_out.productivity_ramp_curve.row.tip|💡 Tip: S-Curve is realistic for knowledge work; SlowStart fits roles with heavy upfront training (sales, compliance, certifications).|',
   ],
   faq: [
     { q: 'Which curve shape should I pick?', a: 'S-Curve is realistic for most knowledge work (engineering, PM, design, marketing) — slow start while learning, accelerating as they ramp. Linear is the simplest baseline. SlowStart fits roles with heavy upfront training (sales bootcamp, compliance certification, equipment training).' },

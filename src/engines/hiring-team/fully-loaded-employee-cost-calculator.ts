@@ -6,6 +6,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 1.25, label: '🟢 Excellent', message: 'Lean cost structure — benefits + tax + overhead all in line with BLS averages.' },
@@ -48,9 +53,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},d=function(e,t,a,n){return e+e*(t+a+n)/100},u=function(e,t){return t===0?0:e/t},f=function(e){return e<=o.excellent.threshold?"excellent":e<=o.good.threshold?"good":e<=o.warning.threshold?"warning":"critical"},r=function(e){return"$"+Math.round(e).toLocaleString()},i=function(e){return e.toFixed(2)+"x"},s=function(e){return e.toFixed(1)+"%"},b=function(e,t,a){var n=p(e);return Array.isArray(n)?n.join(\`
-\`):String(n)};var M=l,q=d,E=u,N=f,S=r,I=i,W=s,j=b,o={excellent:{threshold:1.25,label:"🟢 Excellent",message:"Lean cost structure — benefits + tax + overhead all in line with BLS averages."},good:{threshold:1.4,label:"🟡 Good",message:"Typical mid-market SaaS overhead — small optimization room in benefits or equipment."},warning:{threshold:1.6,label:"🟠 Warning",message:"Above-market overhead — investigate benefits vendor, equipment refresh, or management bloat."},critical:{threshold:null,label:"🔴 Critical",message:"Severely bloated overhead — every hire costs >60% above base salary."}},p=function(e){const t=l(Number(e.base_salary)||0),a=l(Number(e.benefits_pct)||0),n=l(Number(e.payroll_tax_pct)||0),c=l(Number(e.overhead_pct)||0),h=d(t,a,n,c),m=u(h,t),y=f(m),x=o[y],_=t*a/100,k=t*n/100,C=t*c/100,w=t*o.excellent.threshold,F=h-w,v=t+t*(20+n+c)/100,g=u(v,t);return["🩺 Fully-Loaded Health: "+x.label+" ("+i(m)+" base · "+r(h)+" total)","📊 Snapshot: Total "+r(h)+" = Base "+r(t)+" + Benefits "+s(a)+" ("+r(_)+") + Payroll Tax "+s(n)+" ("+r(k)+") + Overhead "+s(c)+" ("+r(C)+")","🔄 What-If: if benefits drop to 20%, total drops to "+r(v)+" ("+i(g)+", "+(g<m?"improvement":"worsening")+")","⚖️ Break-Even: to hit 🟢 Excellent ("+i(o.excellent.threshold)+" ceiling), must cut "+r(F)+" from benefits + tax + overhead combined","🎯 Milestone: re-benchmark benefits + tax components every Q2 — healthcare inflation averages 5-7%/yr","💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer."]};return[b(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},m=function(e,t,r,n){return e+e*(t+r+n)/100},b=function(e,t){return t===0?0:e/t},d=function(e){return e<=o.excellent.threshold?"excellent":e<=o.good.threshold?"good":e<=o.warning.threshold?"warning":"critical"},a=function(e){return"$"+Math.round(e).toLocaleString()},s=function(e){return e.toFixed(2)+"x"},c=function(e){return e.toFixed(1)+"%"},v=function(e,t,r){var n=S(e);return Array.isArray(n)?n.join(\`
+\`):String(n)};var W=l,$=m,z=b,G=d,J=a,K=s,Q=c,T=v,h=tk,C='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',h=new Function("return "+C)(),o={excellent:{threshold:1.25,label:"🟢 Excellent",message:"Lean cost structure — benefits + tax + overhead all in line with BLS averages."},good:{threshold:1.4,label:"🟡 Good",message:"Typical mid-market SaaS overhead — small optimization room in benefits or equipment."},warning:{threshold:1.6,label:"🟠 Warning",message:"Above-market overhead — investigate benefits vendor, equipment refresh, or management bloat."},critical:{threshold:null,label:"🔴 Critical",message:"Severely bloated overhead — every hire costs >60% above base salary."}},S=function(e){const t=l(Number(e.base_salary)||0),r=l(Number(e.benefits_pct)||0),n=l(Number(e.payroll_tax_pct)||0),i=l(Number(e.overhead_pct)||0),u=m(t,r,n,i),f=b(u,t),j=d(f),E=o[j],M=t*r/100,N=t*n/100,O=t*i/100,P=t*o.excellent.threshold,I=u-P,p=t+t*(20+n+i)/100,g=b(p,t),y=a(u),_=a(t),x=c(r),k=a(M),w=c(n),F=a(N),L=c(i),q=a(O);return["🩺 Fully-Loaded Health: "+E.label+" ("+s(f)+" base · "+a(u)+" total)",h("calc_out.fully_loaded_employee_cost.row.snapshot","📊 Snapshot: Total "+y+" = Base "+_+" + Benefits "+x+" ("+k+") + Payroll Tax "+w+" ("+F+") + Overhead "+L+" ("+q+")",{total:y,base:_,benefits_pct:x,benefits_amt:k,tax_pct:w,tax_amt:F,overhead_pct:L,overhead_amt:q}),"🔄 What-If: if benefits drop to 20%, total drops to "+a(p)+" ("+s(g)+", "+(g<f?"improvement":"worsening")+")","⚖️ Break-Even: to hit 🟢 Excellent ("+s(o.excellent.threshold)+" ceiling), must cut "+a(I)+" from benefits + tax + overhead combined","🎯 Milestone: re-benchmark benefits + tax components every Q2 — healthcare inflation averages 5-7%/yr",h("calc_out.fully_loaded_employee_cost.row.tip","💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer.")]};return[v(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -79,17 +84,32 @@ try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},d=function(e,t,a,n
     const cutAmount = total - targetTotal;
     const altTotal = base + base * (20 + tax + overhead) / 100;
     const altMult = costMultiplier(altTotal, base);
+    const totalLabel = fmtMoney(total);
+    const baseLabel = fmtMoney(base);
+    const benefitsPctLabel = fmtPct(benefits);
+    const benefitsAmtLabel = fmtMoney(benAmt);
+    const taxPctLabel = fmtPct(tax);
+    const taxAmtLabel = fmtMoney(taxAmt);
+    const overheadPctLabel = fmtPct(overhead);
+    const overheadAmtLabel = fmtMoney(ovhAmt);
     return [
       '🩺 Fully-Loaded Health: ' + bandInfo.label + ' (' + fmtMult(mult) + ' base · ' + fmtMoney(total) + ' total)',
-      '📊 Snapshot: Total ' + fmtMoney(total) + ' = Base ' + fmtMoney(base) + ' + Benefits ' + fmtPct(benefits) + ' (' + fmtMoney(benAmt) + ') + Payroll Tax ' + fmtPct(tax) + ' (' + fmtMoney(taxAmt) + ') + Overhead ' + fmtPct(overhead) + ' (' + fmtMoney(ovhAmt) + ')',
+      makeToken(
+        'calc_out.fully_loaded_employee_cost.row.snapshot',
+        '📊 Snapshot: Total ' + totalLabel + ' = Base ' + baseLabel + ' + Benefits ' + benefitsPctLabel + ' (' + benefitsAmtLabel + ') + Payroll Tax ' + taxPctLabel + ' (' + taxAmtLabel + ') + Overhead ' + overheadPctLabel + ' (' + overheadAmtLabel + ')',
+        { total: totalLabel, base: baseLabel, benefits_pct: benefitsPctLabel, benefits_amt: benefitsAmtLabel, tax_pct: taxPctLabel, tax_amt: taxAmtLabel, overhead_pct: overheadPctLabel, overhead_amt: overheadAmtLabel },
+      ),
       '🔄 What-If: if benefits drop to 20%, total drops to ' + fmtMoney(altTotal) + ' (' + fmtMult(altMult) + ', ' + (altMult < mult ? 'improvement' : 'worsening') + ')',
       '⚖️ Break-Even: to hit 🟢 Excellent (' + fmtMult(HEALTH_BANDS.excellent.threshold) + ' ceiling), must cut ' + fmtMoney(cutAmount) + ' from benefits + tax + overhead combined',
       '🎯 Milestone: re-benchmark benefits + tax components every Q2 — healthcare inflation averages 5-7%/yr',
-      '💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer.',
+      makeToken(
+        'calc_out.fully_loaded_employee_cost.row.tip',
+        '💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Fully-Loaded Health: 🟠 Warning (1.48x base · $177,600 total)\n📊 Snapshot: Total $177,600 = Base $120,000 + Benefits 25.0% ($30,000) + Payroll Tax 8.0% ($9,600) + Overhead 15.0% ($18,000)\n🔄 What-If: if benefits drop to 20%, total drops to $171,600 (1.43x, improvement)\n⚖️ Break-Even: to hit 🟢 Excellent (1.25x ceiling), must cut $27,600 from benefits + tax + overhead combined\n🎯 Milestone: re-benchmark benefits + tax components every Q2 — healthcare inflation averages 5-7%/yr\n💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer.',
+    '🩺 Fully-Loaded Health: 🟠 Warning (1.48x base · $177,600 total)\n$calc_out.fully_loaded_employee_cost.row.snapshot{"total":"$177,600","base":"$120,000","benefits_pct":"25.0%","benefits_amt":"$30,000","tax_pct":"8.0%","tax_amt":"$9,600","overhead_pct":"15.0%","overhead_amt":"$18,000"}|📊 Snapshot: Total $177,600 = Base $120,000 + Benefits 25.0% ($30,000) + Payroll Tax 8.0% ($9,600) + Overhead 15.0% ($18,000)|\n🔄 What-If: if benefits drop to 20%, total drops to $171,600 (1.43x, improvement)\n⚖️ Break-Even: to hit 🟢 Excellent (1.25x ceiling), must cut $27,600 from benefits + tax + overhead combined\n🎯 Milestone: re-benchmark benefits + tax components every Q2 — healthcare inflation averages 5-7%/yr\n$calc_out.fully_loaded_employee_cost.row.tip|💡 Tip: BLS Employer Costs for Employee Compensation (ECEC) 2024 tracks national avg ~1.30x multiplier. Companies consistently >1.5x have bloated overhead — typically equipment refresh cycles or management layer.|',
   ],
   faq: [
     { q: 'What does "fully-loaded" mean?', a: 'It is the true cost of an employee beyond base salary — including employer-paid benefits (health insurance, 401k match, PTO accrual), employer-side payroll taxes (FICA, FUTA, SUTA), and per-employee overhead (equipment, software licenses, management allocation).' },

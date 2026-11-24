@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// P168 B3-15 Task 2 —— 结果卡片 token 的 **params 覆盖** 验收脚本。
+// P168 B3-15 Task 2 / Task 3 —— 结果卡片 token 的 **params 覆盖** 验收脚本。
 //
 // 用途（可复算报告 `.superpowers/sdd/2026-11-24-p168-b3-15-tokenize-batch3/task-2-report.md` ① 节的全部数字）：
 //   对本批 12 个引擎的每个结果卡片 token 行，逐行核对三件事：
@@ -22,8 +22,14 @@ import { readFileSync } from 'node:fs';
 const EN = JSON.parse(readFileSync('src/i18n/locales/en.json', 'utf8'));
 const ZH = JSON.parse(readFileSync('src/i18n/locales/zh.json', 'utf8'));
 
-/** 本批 12 个引擎：[别名(= toolAlias(slug)), 引擎文件] */
+/**
+ * B3-15 三组共 24 个引擎：[别名(= toolAlias(slug)), 引擎文件]
+ * · 组 1（B 档 3 个）：snapshot + tip 多行形态，**不在**本脚本口径内（多 bullet / v3 四段）
+ * · 组 2（C 档组 A · K 知识库 6 + L 法律合规 6）：12 个
+ * · 组 3（C 档组 B · T 客服 6 + H 招聘团队 6）：12 个
+ */
 const ENGINES = [
+  // —— 组 2（C 档组 A）——
   ['article_freshness', 'src/engines/knowledge/article-freshness-calculator.ts'],
   ['article_helpfulness', 'src/engines/knowledge/article-helpfulness-calculator.ts'],
   ['deflection_quality', 'src/engines/knowledge/deflection-quality-calculator.ts'],
@@ -36,6 +42,19 @@ const ENGINES = [
   ['dpa_cost', 'src/engines/legal-compliance/dpa-cost-calculator.ts'],
   ['dsar_cost', 'src/engines/legal-compliance/dsar-cost-calculator.ts'],
   ['gdpr_fine', 'src/engines/legal-compliance/gdpr-fine-calculator.ts'],
+  // —— 组 3（C 档组 B · T 客服 6 + H 招聘团队 6）——
+  ['cost_per_support_ticket', 'src/engines/customer-support/cost-per-support-ticket-calculator.ts'],
+  ['deflection_rate', 'src/engines/customer-support/deflection-rate-calculator.ts'],
+  ['first_response_time', 'src/engines/customer-support/first-response-time-calculator.ts'],
+  ['resolution_time', 'src/engines/customer-support/resolution-time-calculator.ts'],
+  ['support_capacity_planning', 'src/engines/customer-support/support-capacity-planning-calculator.ts'],
+  ['csat', 'src/engines/customer-support/csat-calculator.ts'],
+  ['attrition_cost', 'src/engines/hiring-team/attrition-cost-calculator.ts'],
+  ['equity_refresh', 'src/engines/hiring-team/equity-refresh-calculator.ts'],
+  ['fully_loaded_employee_cost', 'src/engines/hiring-team/fully-loaded-employee-cost-calculator.ts'],
+  ['productivity_ramp_curve', 'src/engines/hiring-team/productivity-ramp-curve-calculator.ts'],
+  ['time_to_productivity', 'src/engines/hiring-team/time-to-productivity-calculator.ts'],
+  ['comp_banding', 'src/engines/hiring-team/comp-banding-calculator.ts'],
 ];
 
 /** 英文兜底里的数字（用于识别「未参数化的运行时值」） */

@@ -7,6 +7,11 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+//   ⚠️ 命名空间必须精确等于 toolAlias(slug)（见 tests/scripts/p168-tokenized-engines.mjs）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 85, label: '🟢 Excellent', message: 'Healthy full-cycle resolution — most tickets resolved within SLA, modest tail.' },
@@ -53,9 +58,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},m=function(t,e){return t<=0?0:e/t},f=function(t){return t<=1.5?"uniform":t<=3?"moderate":"heavy"},a=function(t){return t>=n.excellent.threshold?"excellent":t>=n.good.threshold?"good":t>=n.warning.threshold?"warning":"critical"},s=function(t){return t.toFixed(1)+"%"},l=function(t){return t.toFixed(1)+"hr"},r=function(t){return Math.round(t).toLocaleString()},g=function(t,e,c){var i=b(t);return Array.isArray(i)?i.join(\`
-\`):String(i)};var M=o,F=m,S=f,I=a,N=s,K=l,R=r,W=g,n={excellent:{threshold:85,label:"🟢 Excellent",message:"Healthy full-cycle resolution — most tickets resolved within SLA, modest tail."},good:{threshold:70,label:"🟡 Good",message:"Typical mid-market performance — SLA mostly met, investigate outliers."},warning:{threshold:50,label:"🟠 Warning",message:"Below-market resolution health — many tickets miss SLA or drag on."},critical:{threshold:-1/0,label:"🔴 Critical",message:"Severe resolution backlog — systemic issue or insufficient staffing."}},b=function(t){const e=o(Number(t.sla_attainment_pct)||0),c=o(Number(t.median_resolution_hr)||0),i=o(Number(t.p90_resolution_hr)||0),u=o(Number(t.monthly_resolved)||0),d=m(c,i),y=f(d),p=a(e),x=n[p],h=Math.min(100,e+10),k=a(h),v=Math.max(0,n.excellent.threshold-e),_=Math.round(u*(100-e)/100),w=Math.round(u*(100-h)/100);return["🩺 Resolution Health: "+x.label+" ("+s(e)+" in-SLA · tail ratio "+d.toFixed(1)+"x "+y+")","📊 Snapshot: "+r(u)+" resolved/mo · median "+l(c)+" · p90 "+l(i)+" · tail "+d.toFixed(1)+"x → "+r(_)+" tickets missed SLA","🔄 What-If: if attainment climbs to "+s(h)+" (+10pp), band moves to "+n[k].label+" and ~"+r(w)+" tickets would still miss","⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +"+v.toFixed(1)+"pp attainment — investigate the tier with the highest tail ratio","🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.","💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks."]};return[g(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,e){return t<=0?0:e/t},g=function(t){return t<=1.5?"uniform":t<=3?"moderate":"heavy"},a=function(t){return t>=n.excellent.threshold?"excellent":t>=n.good.threshold?"good":t>=n.warning.threshold?"warning":"critical"},l=function(t){return t.toFixed(1)+"%"},c=function(t){return t.toFixed(1)+"hr"},r=function(t){return Math.round(t).toLocaleString()},b=function(t,e,u){var i=w(t);return Array.isArray(i)?i.join(\`
+\`):String(i)};var I=o,O=f,C=g,K=a,R=l,W=c,G=r,J=b,s=tk,x='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',s=new Function("return "+x)(),n={excellent:{threshold:85,label:"🟢 Excellent",message:"Healthy full-cycle resolution — most tickets resolved within SLA, modest tail."},good:{threshold:70,label:"🟡 Good",message:"Typical mid-market performance — SLA mostly met, investigate outliers."},warning:{threshold:50,label:"🟠 Warning",message:"Below-market resolution health — many tickets miss SLA or drag on."},critical:{threshold:-1/0,label:"🔴 Critical",message:"Severe resolution backlog — systemic issue or insufficient staffing."}},w=function(t){const e=o(Number(t.sla_attainment_pct)||0),u=o(Number(t.median_resolution_hr)||0),i=o(Number(t.p90_resolution_hr)||0),d=o(Number(t.monthly_resolved)||0),h=f(u,i),F=g(h),M=a(e),S=n[M],m=Math.min(100,e+10),L=a(m),j=Math.max(0,n.excellent.threshold-e),q=Math.round(d*(100-e)/100),N=Math.round(d*(100-m)/100),p=r(d),k=c(u),v=c(i),y=h.toFixed(1),_=r(q);return["🩺 Resolution Health: "+S.label+" ("+l(e)+" in-SLA · tail ratio "+h.toFixed(1)+"x "+F+")",s("calc_out.resolution_time.row.snapshot","📊 Snapshot: "+p+" resolved/mo · median "+k+" · p90 "+v+" · tail "+y+"x → "+_+" tickets missed SLA",{vol:p,med:k,p90:v,tail:y,missed:_}),"🔄 What-If: if attainment climbs to "+l(m)+" (+10pp), band moves to "+n[L].label+" and ~"+r(N)+" tickets would still miss","⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +"+j.toFixed(1)+"pp attainment — investigate the tier with the highest tail ratio","🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.",s("calc_out.resolution_time.row.tip","💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.")]};return[b(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -82,17 +87,29 @@ try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},m=function(t,e){re
     const gap = Math.max(0, HEALTH_BANDS.excellent.threshold - sla);
     const missed = Math.round(vol * (100 - sla) / 100);
     const ifMissed = Math.round(vol * (100 - ifSla) / 100);
+    const volLabel = fmtMoney(vol);
+    const medLabel = fmtHr(med);
+    const p90Label = fmtHr(p90);
+    const tailLabel = tail.toFixed(1);
+    const missedLabel = fmtMoney(missed);
     return [
       '🩺 Resolution Health: ' + bandInfo.label + ' (' + fmtPct(sla) + ' in-SLA · tail ratio ' + tail.toFixed(1) + 'x ' + tailBand + ')',
-      '📊 Snapshot: ' + fmtMoney(vol) + ' resolved/mo · median ' + fmtHr(med) + ' · p90 ' + fmtHr(p90) + ' · tail ' + tail.toFixed(1) + 'x → ' + fmtMoney(missed) + ' tickets missed SLA',
+      makeToken(
+        'calc_out.resolution_time.row.snapshot',
+        '📊 Snapshot: ' + volLabel + ' resolved/mo · median ' + medLabel + ' · p90 ' + p90Label + ' · tail ' + tailLabel + 'x → ' + missedLabel + ' tickets missed SLA',
+        { vol: volLabel, med: medLabel, p90: p90Label, tail: tailLabel, missed: missedLabel },
+      ),
       '🔄 What-If: if attainment climbs to ' + fmtPct(ifSla) + ' (+10pp), band moves to ' + HEALTH_BANDS[ifBand].label + ' and ~' + fmtMoney(ifMissed) + ' tickets would still miss',
       '⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +' + gap.toFixed(1) + 'pp attainment — investigate the tier with the highest tail ratio',
       '🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.',
-      '💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.',
+      makeToken(
+        'calc_out.resolution_time.row.tip',
+        '💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Resolution Health: 🟡 Good (75.0% in-SLA · tail ratio 4.5x heavy)\n📊 Snapshot: 4,800 resolved/mo · median 8.0hr · p90 36.0hr · tail 4.5x → 1,200 tickets missed SLA\n🔄 What-If: if attainment climbs to 85.0% (+10pp), band moves to 🟢 Excellent and ~720 tickets would still miss\n⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +10.0pp attainment — investigate the tier with the highest tail ratio\n🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.\n💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.',
+    '🩺 Resolution Health: 🟡 Good (75.0% in-SLA · tail ratio 4.5x heavy)\n$calc_out.resolution_time.row.snapshot{"vol":"4,800","med":"8.0hr","p90":"36.0hr","tail":"4.5","missed":"1,200"}|📊 Snapshot: 4,800 resolved/mo · median 8.0hr · p90 36.0hr · tail 4.5x → 1,200 tickets missed SLA|\n🔄 What-If: if attainment climbs to 85.0% (+10pp), band moves to 🟢 Excellent and ~720 tickets would still miss\n⚖️ Break-Even: to hit 🟢 Excellent (≥85%), need +10.0pp attainment — investigate the tier with the highest tail ratio\n🎯 Milestone: tail ratio >5x signals systemic issue — escalations, missing knowledge base, or product gaps. Re-benchmark quarterly.\n$calc_out.resolution_time.row.tip|💡 Tip: Median is vanity; p90 is the truth. Track p90 weekly and dig into outliers — they usually expose KB content gaps or escalation bottlenecks.|',
   ],
   faq: [
     { q: 'What is in-SLA resolution attainment?', a: 'It is the share of tickets that are fully resolved within their promised resolution time window — distinct from first response SLA, which only counts the initial reply.' },
