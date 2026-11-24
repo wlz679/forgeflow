@@ -1,6 +1,9 @@
 import type { ToolEngine } from "../../core/engines/types";
 import { registerEngine } from "../../core/engines/registry";
 import { clampNonNegative } from "../../core/engines/helpers";
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from "../../lib/calc-output-i18n";
 
 function calculateBreakEven(inputs: Record<string, string>): string[] {
   const fmt = (n: number) => "$" + Math.round(n).toLocaleString();
@@ -24,29 +27,42 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
     if (growthMonths === null && cumulativeLoss >= 0) { growthMonths = m; break; }
   }
 
-  let result = "📊 Break-Even Analysis\n\n⏱️ Break-Even Timeline\n";
-  result += "• Initial Investment:  " + fmt(initialInvestment) + "\n• Monthly Costs:       " + fmt(monthlyCosts) + "/mo\n• Monthly Revenue:     " + fmt(monthlyRevenue) + "/mo\n";
+  // P168 B3-14：结果输出 token 化 —— 英文兜底与改写前**逐字相同**，运行时数值一律进 params
+  const invLabel = fmt(initialInvestment);
+  const costsLabel = fmt(monthlyCosts);
+  const revenueLabel = fmt(monthlyRevenue);
+  const growthLabel = pct(monthlyGrowthRate);
 
-  if (flatMonths !== null) result += "• Flat revenue:        " + flatMonths + " months\n";
-  else result += "• Flat revenue:        Never — monthly costs exceed revenue. You need growth or lower costs.\n";
+  let result =
+    makeToken('calc_out.section.break_even_analysis', '📊 Break-Even Analysis') +
+    '\n\n' +
+    makeToken('calc_out.section.break_even_timeline', '⏱️ Break-Even Timeline') +
+    '\n';
+  result +=
+    makeToken('calc_out.break_even.row.initial_investment', '• Initial Investment:  ' + invLabel, { value: invLabel }) + '\n' +
+    makeToken('calc_out.break_even.row.monthly_costs', '• Monthly Costs:       ' + costsLabel + '/mo', { value: costsLabel }) + '\n' +
+    makeToken('calc_out.break_even.row.monthly_revenue', '• Monthly Revenue:     ' + revenueLabel + '/mo', { value: revenueLabel }) + '\n';
+
+  if (flatMonths !== null) result += makeToken('calc_out.break_even.row.flat_revenue', '• Flat revenue:        ' + String(flatMonths) + ' months', { months: String(flatMonths) }) + '\n';
+  else result += makeToken('calc_out.break_even.row.flat_revenue_never', '• Flat revenue:        Never — monthly costs exceed revenue. You need growth or lower costs.') + '\n';
 
   if (monthlyGrowthRate > 0 && growthMonths !== null) {
-    result += "• With " + pct(monthlyGrowthRate) + " growth:  " + growthMonths + " months";
-    if (flatMonths !== null) result += "  (" + (flatMonths - growthMonths) + " months faster)";
-    result += "\n";
+    result += makeToken('calc_out.break_even.row.with_growth', '• With ' + growthLabel + ' growth:  ' + String(growthMonths) + ' months', { growth: growthLabel, months: String(growthMonths) });
+    if (flatMonths !== null) result += makeToken('calc_out.break_even.row.growth_faster', '  (' + String(flatMonths - growthMonths) + ' months faster)', { months: String(flatMonths - growthMonths) });
+    result += '\n';
   } else if (monthlyGrowthRate > 0 && growthMonths === null) {
-    result += "• With " + pct(monthlyGrowthRate) + " growth:  Not within 60 months — need faster growth or lower costs.\n";
+    result += makeToken('calc_out.break_even.row.with_growth_never', '• With ' + growthLabel + ' growth:  Not within 60 months — need faster growth or lower costs.', { growth: growthLabel }) + '\n';
   }
 
   if (growthMonths !== null) {
-    if (growthMonths <= 6) result += "🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.\n";
-    else if (growthMonths <= 12) result += "🟡 Solid — breaking even within a year. Keep an eye on costs.\n";
-    else if (growthMonths <= 24) result += "🟠 Manageable but slow — 1-2 years to break even. Consider boosting growth.\n";
-    else result += "🔴 Long road — over 2 years. Review whether this is sustainable.\n";
+    if (growthMonths <= 6) result += makeToken('calc_out.break_even.row.verdict_excellent', '🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.') + '\n';
+    else if (growthMonths <= 12) result += makeToken('calc_out.break_even.row.verdict_solid', '🟡 Solid — breaking even within a year. Keep an eye on costs.') + '\n';
+    else if (growthMonths <= 24) result += makeToken('calc_out.break_even.row.verdict_manageable', '🟠 Manageable but slow — 1-2 years to break even. Consider boosting growth.') + '\n';
+    else result += makeToken('calc_out.break_even.row.verdict_long_road', '🔴 Long road — over 2 years. Review whether this is sustainable.') + '\n';
   }
 
   if (flatMonthlyProfit > 0 || monthlyGrowthRate > 0) {
-    result += "\n📈 Cumulative P&L Outlook\n";
+    result += '\n' + makeToken('calc_out.section.break_even_cumulative', '📈 Cumulative P&L Outlook') + '\n';
     const checkpoints = [3, 6, 12, 24];
     for (const mo of checkpoints) {
       let cum = -initialInvestment;
@@ -54,61 +70,84 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
         const rev = monthlyRevenue * Math.pow(growthFactor, m - 1);
         cum += rev - monthlyCosts;
       }
-      result += "• Month " + mo + ": " + (cum >= 0 ? "+" : "") + fmt(cum) + (cum >= 0 ? " ✅\n" : "\n");
+      result += (cum >= 0
+        ? makeToken('calc_out.break_even.row.month_checkpoint_positive', '• Month ' + String(mo) + ': +' + fmt(cum) + ' ✅', { month: String(mo), value: fmt(cum) })
+        : makeToken('calc_out.break_even.row.month_checkpoint_negative', '• Month ' + String(mo) + ': ' + fmt(cum), { month: String(mo), value: fmt(cum) })) + '\n';
     }
   }
 
   // 🔄 What-If Scenarios — cost reduction or price increase impact
   if (monthlyRevenue > 0 && monthlyCosts > 0) {
-    result += "\n🔄 What-If Scenarios\n";
+    result += '\n' + makeToken('calc_out.section.break_even_what_if', '🔄 What-If Scenarios') + '\n';
     // Cut costs 20%
     if (monthlyCosts > 0) {
       const newCosts = monthlyCosts * 0.8;
       const newProfit = monthlyRevenue - newCosts;
       const newMonths = newProfit > 0 ? Math.ceil(initialInvestment / newProfit) : null;
-      result += "• Cut costs 20%:  Monthly profit $"
-        + Math.round(monthlyRevenue - monthlyCosts).toLocaleString()
-        + " → $" + Math.round(newProfit).toLocaleString();
-      if (newMonths !== null && flatMonths !== null) result += "  |  Break-even: " + flatMonths + " → " + newMonths + " mo (" + (flatMonths - newMonths) + " faster)\n";
-      else result += "\n";
+      const profitLabel = '$' + Math.round(monthlyRevenue - monthlyCosts).toLocaleString();
+      const newProfitLabel = '$' + Math.round(newProfit).toLocaleString();
+      result += makeToken('calc_out.break_even.row.cut_costs_20', '• Cut costs 20%:  Monthly profit ' + profitLabel + ' → ' + newProfitLabel, { profit: profitLabel, newprofit: newProfitLabel });
+      if (newMonths !== null && flatMonths !== null) {
+        const fromLabel = String(flatMonths);
+        const toLabel = String(newMonths);
+        const fasterLabel = String(flatMonths - newMonths);
+        result += '  |  ' + makeToken('calc_out.break_even.row.cut_costs_20_breakeven', 'Break-even: ' + fromLabel + ' → ' + toLabel + ' mo (' + fasterLabel + ' faster)', { from: fromLabel, to: toLabel, months: fasterLabel }) + '\n';
+      } else result += '\n';
     }
     // Raise price 20%
     if (monthlyRevenue > 0) {
       const newRev = monthlyRevenue * 1.2;
       const newProfit2 = newRev - monthlyCosts;
       const newMonths2 = newProfit2 > 0 ? Math.ceil(initialInvestment / newProfit2) : null;
-      result += "• Raise price 20%:  Revenue $" + Math.round(monthlyRevenue).toLocaleString() + " → $" + Math.round(newRev).toLocaleString();
-      if (newMonths2 !== null && flatMonths !== null) result += "  |  Break-even: " + flatMonths + " → " + newMonths2 + " mo\n";
-      else if (newMonths2 !== null) result += "  |  Break-even: " + newMonths2 + " mo\n";
-      else result += "\n";
+      const revLabel = '$' + Math.round(monthlyRevenue).toLocaleString();
+      const newRevLabel = '$' + Math.round(newRev).toLocaleString();
+      result += makeToken('calc_out.break_even.row.raise_price_20', '• Raise price 20%:  Revenue ' + revLabel + ' → ' + newRevLabel, { revenue: revLabel, newrevenue: newRevLabel });
+      if (newMonths2 !== null && flatMonths !== null) {
+        const fromLabel = String(flatMonths);
+        const toLabel = String(newMonths2);
+        result += '  |  ' + makeToken('calc_out.break_even.row.raise_price_20_breakeven', 'Break-even: ' + fromLabel + ' → ' + toLabel + ' mo', { from: fromLabel, to: toLabel }) + '\n';
+      } else if (newMonths2 !== null) {
+        const toLabel = String(newMonths2);
+        result += '  |  ' + makeToken('calc_out.break_even.row.raise_price_20_breakeven_only', 'Break-even: ' + toLabel + ' mo', { to: toLabel }) + '\n';
+      } else result += '\n';
     }
     // Combined
     const comboRev = monthlyRevenue * 1.1;
     const comboCosts = monthlyCosts * 0.9;
     const comboProfit = comboRev - comboCosts;
     if (comboProfit > 0) {
-      const comboMonths = Math.ceil(initialInvestment / comboProfit);
-      result += "• Combo (+10% price, −10% costs):  Break-even: " + comboMonths + " mo\n";
+      const comboMonthsLabel = String(Math.ceil(initialInvestment / comboProfit));
+      result += makeToken('calc_out.break_even.row.combo_price_costs', '• Combo (+10% price, −10% costs):  Break-even: ' + comboMonthsLabel + ' mo', { months: comboMonthsLabel }) + '\n';
     }
   }
 
   // 🩺 Break-Even Health (v3)
   if (flatMonthlyProfit <= 0) {
-    result += "\n\n🩺 Break-Even Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.";
+    result += '\n\n' + makeToken('calc_out.section.break_even_health', '🩺 Break-Even Health:') + '\n' + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + '\n' +
+      makeToken('calc_out.break_even.row.health_monthly_loss', '• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.');
   } else if (initialInvestment <= 0) {
-    result += "\n\n🩺 Break-Even Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟢 No upfront investment. Every month is profit. Focus on scaling.";
+    result += '\n\n' + makeToken('calc_out.section.break_even_health', '🩺 Break-Even Health:') + '\n' + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + '\n' +
+      makeToken('calc_out.break_even.row.health_no_upfront', '• 🟢 No upfront investment. Every month is profit. Focus on scaling.');
   } else if (flatMonths !== null) {
-    const verdict = flatMonths < 6 ? "🟢 Fast payback — under 6 months. Healthy." :
-                    flatMonths < 12 ? "🟡 Moderate payback — 6-12 months. Standard for SaaS." :
-                    flatMonths < 24 ? "🟠 Slow payback — 1-2 years. Tighten unit economics." :
-                    "🔴 Very slow — over 2 years. Reconsider pricing or costs.";
-    result += "\n\n🩺 Break-Even Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• " + verdict + "\n• Payback: " + flatMonths + " months | ~" + (flatMonths / 12).toFixed(1) + " years";
+    const flatLabel = String(flatMonths);
+    const yearsLabel = (flatMonths / 12).toFixed(1);
+    result += '\n\n' + makeToken('calc_out.section.break_even_health', '🩺 Break-Even Health:') + '\n' + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + '\n' +
+      (flatMonths < 6
+        ? makeToken('calc_out.break_even.row.health_fast_payback', '• 🟢 Fast payback — under 6 months. Healthy.')
+        : flatMonths < 12
+        ? makeToken('calc_out.break_even.row.health_moderate_payback', '• 🟡 Moderate payback — 6-12 months. Standard for SaaS.')
+        : flatMonths < 24
+        ? makeToken('calc_out.break_even.row.health_slow_payback', '• 🟠 Slow payback — 1-2 years. Tighten unit economics.')
+        : makeToken('calc_out.break_even.row.health_very_slow', '• 🔴 Very slow — over 2 years. Reconsider pricing or costs.')) + '\n' +
+      makeToken('calc_out.break_even.row.payback_months', '• Payback: ' + flatLabel + ' months', { months: flatLabel }) + ' | ' +
+      makeToken('calc_out.break_even.row.payback_years', '~' + yearsLabel + ' years', { years: yearsLabel });
   } else {
-    result += "\n\n🩺 Break-Even Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Default alive — no payback needed.";
+    result += '\n\n' + makeToken('calc_out.section.break_even_health', '🩺 Break-Even Health:') + '\n' + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━' + '\n' +
+      makeToken('calc_out.break_even.row.health_default_alive', '• 🟡 Default alive — no payback needed.');
   }
 
   // 🔄 What-If Scenarios (v3)
-  result += "\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━";
+  result += '\n\n' + makeToken('calc_out.section.break_even_what_if_v3', '🔄 What-If Scenarios:') + '\n' + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
   if (flatMonthlyProfit > 0 && initialInvestment > 0 && flatMonths !== null) {
     const rev10 = (monthlyRevenue * 1.1) - monthlyCosts;
     const inv10 = Math.ceil(initialInvestment / rev10);
@@ -116,87 +155,91 @@ function calculateBreakEven(inputs: Record<string, string>): string[] {
     const invCost10 = Math.ceil(initialInvestment / cost10);
     const combo = (monthlyRevenue * 1.1) - (monthlyCosts * 0.9);
     const invCombo = Math.ceil(initialInvestment / combo);
-    result += "\n• Raise price 10%:  Payback " + flatMonths + " → " + inv10 + " mo";
-    result += "\n• Cut costs 10%:  Payback " + flatMonths + " → " + invCost10 + " mo";
-    result += "\n• Combo (+10% price, -10% costs):  Payback " + flatMonths + " → " + invCombo + " mo";
-    result += "\n• At current rate:  Save $" + Math.round(flatMonthlyProfit * 12).toLocaleString() + "/yr after initial investment";
+    const flatLabel = String(flatMonths);
+    const inv10Label = String(inv10);
+    const invCost10Label = String(invCost10);
+    const invComboLabel = String(invCombo);
+    const saveLabel = '$' + Math.round(flatMonthlyProfit * 12).toLocaleString();
+    result += '\n' + makeToken('calc_out.break_even.row.whatif_raise_price_10', '• Raise price 10%:  Payback ' + flatLabel + ' → ' + inv10Label + ' mo', { from: flatLabel, to: inv10Label });
+    result += '\n' + makeToken('calc_out.break_even.row.whatif_cut_costs_10', '• Cut costs 10%:  Payback ' + flatLabel + ' → ' + invCost10Label + ' mo', { from: flatLabel, to: invCost10Label });
+    result += '\n' + makeToken('calc_out.break_even.row.whatif_combo_10_10', '• Combo (+10% price, -10% costs):  Payback ' + flatLabel + ' → ' + invComboLabel + ' mo', { from: flatLabel, to: invComboLabel });
+    result += '\n' + makeToken('calc_out.break_even.row.whatif_current_rate', '• At current rate:  Save ' + saveLabel + '/yr after initial investment', { value: saveLabel });
   } else {
-    result += "\n• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.";
+    result += '\n' + makeToken('calc_out.break_even.row.whatif_cannot_model', '• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.');
   }
 
   // 💡 Tip (v3)
   if (flatMonthlyProfit > 0 && flatMonths !== null && flatMonths <= 12) {
-    result += "\n\n💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.";
+    result += '\n\n' + makeToken('calc_out.break_even.row.tip_fast', '💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.');
   } else if (flatMonthlyProfit <= 0) {
-    result += "\n\n💡 Tip: Negative monthly profit means you're burning cash every month. Either raise prices, cut costs, or accept that you'll need more runway to reach break-even. The longer you delay, the harder it gets.";
+    result += '\n\n' + makeToken('calc_out.break_even.row.tip_negative', "💡 Tip: Negative monthly profit means you're burning cash every month. Either raise prices, cut costs, or accept that you'll need more runway to reach break-even. The longer you delay, the harder it gets.");
   } else {
-    result += "\n\n💡 Tip: Break-even is the floor, not the goal. Aim for a 3-month safety buffer by default — one bad month shouldn't wipe out your margin. Pre-revenue? Cut costs aggressively until you hit $1k MRR, then re-evaluate.";
+    result += '\n\n' + makeToken('calc_out.break_even.row.tip_floor', "💡 Tip: Break-even is the floor, not the goal. Aim for a 3-month safety buffer by default — one bad month shouldn't wipe out your margin. Pre-revenue? Cut costs aggressively until you hit $1k MRR, then re-evaluate.");
   }
 
   return [result];
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let d=function(i){return Number.isNaN(i)?0:Math.max(0,i)},b=function(i){const y=o=>"$"+Math.round(o).toLocaleString(),p=o=>o.toFixed(1)+"%",t=d(parseFloat(i.monthlyCosts)||0),r=d(parseFloat(i.monthlyRevenue)||0),a=d(parseFloat(i.initialInvestment)||0),v=parseFloat(i.monthlyGrowthRate)||0,k=1+v/100,f=r-t,n=f>0?Math.ceil(a/f):null;let l=null,w=-a;for(let o=1;o<=60;o++){const m=r*Math.pow(k,o-1);if(w+=m-t,l===null&&w>=0){l=o;break}}let e=\`📊 Break-Even Analysis
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let S=function(u){return Number.isNaN(u)?0:Math.max(0,u)},M=function(u){const w=r=>"$"+Math.round(r).toLocaleString(),F=r=>r.toFixed(1)+"%",o=S(parseFloat(u.monthlyCosts)||0),a=S(parseFloat(u.monthlyRevenue)||0),s=S(parseFloat(u.initialInvestment)||0),m=parseFloat(u.monthlyGrowthRate)||0,R=1+m/100,g=a-o,n=g>0?Math.ceil(s/g):null;let i=null,B=-s;for(let r=1;r<=60;r++){const c=a*Math.pow(R,r-1);if(B+=c-o,i===null&&B>=0){i=r;break}}const E=w(s),P=w(o),N=w(a),L=F(m);let t=e("calc_out.section.break_even_analysis","📊 Break-Even Analysis")+\`
 
-⏱️ Break-Even Timeline
-\`;if(e+="• Initial Investment:  "+y(a)+\`
-• Monthly Costs:       \`+y(t)+\`/mo
-• Monthly Revenue:     \`+y(r)+\`/mo
-\`,n!==null?e+="• Flat revenue:        "+n+\` months
-\`:e+=\`• Flat revenue:        Never — monthly costs exceed revenue. You need growth or lower costs.
-\`,v>0&&l!==null?(e+="• With "+p(v)+" growth:  "+l+" months",n!==null&&(e+="  ("+(n-l)+" months faster)"),e+=\`
-\`):v>0&&l===null&&(e+="• With "+p(v)+\` growth:  Not within 60 months — need faster growth or lower costs.
-\`),l!==null&&(l<=6?e+=\`🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.
-\`:l<=12?e+=\`🟡 Solid — breaking even within a year. Keep an eye on costs.
-\`:l<=24?e+=\`🟠 Manageable but slow — 1-2 years to break even. Consider boosting growth.
-\`:e+=\`🔴 Long road — over 2 years. Review whether this is sustainable.
-\`),f>0||v>0){e+=\`
-📈 Cumulative P&L Outlook
-\`;const o=[3,6,12,24];for(const m of o){let u=-a;for(let s=1;s<=m;s++){const c=r*Math.pow(k,s-1);u+=c-t}e+="• Month "+m+": "+(u>=0?"+":"")+y(u)+(u>=0?\` ✅
-\`:\`
-\`)}}if(r>0&&t>0){if(e+=\`
-🔄 What-If Scenarios
-\`,t>0){const s=t*.8,c=r-s,h=c>0?Math.ceil(a/c):null;e+="• Cut costs 20%:  Monthly profit $"+Math.round(r-t).toLocaleString()+" → $"+Math.round(c).toLocaleString(),h!==null&&n!==null?e+="  |  Break-even: "+n+" → "+h+" mo ("+(n-h)+\` faster)
-\`:e+=\`
-\`}if(r>0){const s=r*1.2,c=s-t,h=c>0?Math.ceil(a/c):null;e+="• Raise price 20%:  Revenue $"+Math.round(r).toLocaleString()+" → $"+Math.round(s).toLocaleString(),h!==null&&n!==null?e+="  |  Break-even: "+n+" → "+h+\` mo
-\`:h!==null?e+="  |  Break-even: "+h+\` mo
-\`:e+=\`
-\`}const o=r*1.1,m=t*.9,u=o-m;if(u>0){const s=Math.ceil(a/u);e+="• Combo (+10% price, −10% costs):  Break-even: "+s+\` mo
-\`}}if(f<=0)e+=\`
+\`+e("calc_out.section.break_even_timeline","⏱️ Break-Even Timeline")+\`
+\`;if(t+=e("calc_out.break_even.row.initial_investment","• Initial Investment:  "+E,{value:E})+\`
+\`+e("calc_out.break_even.row.monthly_costs","• Monthly Costs:       "+P+"/mo",{value:P})+\`
+\`+e("calc_out.break_even.row.monthly_revenue","• Monthly Revenue:     "+N+"/mo",{value:N})+\`
+\`,n!==null?t+=e("calc_out.break_even.row.flat_revenue","• Flat revenue:        "+String(n)+" months",{months:String(n)})+\`
+\`:t+=e("calc_out.break_even.row.flat_revenue_never","• Flat revenue:        Never — monthly costs exceed revenue. You need growth or lower costs.")+\`
+\`,m>0&&i!==null?(t+=e("calc_out.break_even.row.with_growth","• With "+L+" growth:  "+String(i)+" months",{growth:L,months:String(i)}),n!==null&&(t+=e("calc_out.break_even.row.growth_faster","  ("+String(n-i)+" months faster)",{months:String(n-i)})),t+=\`
+\`):m>0&&i===null&&(t+=e("calc_out.break_even.row.with_growth_never","• With "+L+" growth:  Not within 60 months — need faster growth or lower costs.",{growth:L})+\`
+\`),i!==null&&(i<=6?t+=e("calc_out.break_even.row.verdict_excellent","🟢 Excellent! Breaking even in under 6 months is a very healthy trajectory.")+\`
+\`:i<=12?t+=e("calc_out.break_even.row.verdict_solid","🟡 Solid — breaking even within a year. Keep an eye on costs.")+\`
+\`:i<=24?t+=e("calc_out.break_even.row.verdict_manageable","🟠 Manageable but slow — 1-2 years to break even. Consider boosting growth.")+\`
+\`:t+=e("calc_out.break_even.row.verdict_long_road","🔴 Long road — over 2 years. Review whether this is sustainable.")+\`
+\`),g>0||m>0){t+=\`
+\`+e("calc_out.section.break_even_cumulative","📈 Cumulative P&L Outlook")+\`
+\`;const r=[3,6,12,24];for(const c of r){let h=-s;for(let l=1;l<=c;l++){const b=a*Math.pow(R,l-1);h+=b-o}t+=(h>=0?e("calc_out.break_even.row.month_checkpoint_positive","• Month "+String(c)+": +"+w(h)+" ✅",{month:String(c),value:w(h)}):e("calc_out.break_even.row.month_checkpoint_negative","• Month "+String(c)+": "+w(h),{month:String(c),value:w(h)}))+\`
+\`}}if(a>0&&o>0){if(t+=\`
+\`+e("calc_out.section.break_even_what_if","🔄 What-If Scenarios")+\`
+\`,o>0){const l=o*.8,b=a-l,f=b>0?Math.ceil(s/b):null,_="$"+Math.round(a-o).toLocaleString(),y="$"+Math.round(b).toLocaleString();if(t+=e("calc_out.break_even.row.cut_costs_20","• Cut costs 20%:  Monthly profit "+_+" → "+y,{profit:_,newprofit:y}),f!==null&&n!==null){const v=String(n),p=String(f),d=String(n-f);t+="  |  "+e("calc_out.break_even.row.cut_costs_20_breakeven","Break-even: "+v+" → "+p+" mo ("+d+" faster)",{from:v,to:p,months:d})+\`
+\`}else t+=\`
+\`}if(a>0){const l=a*1.2,b=l-o,f=b>0?Math.ceil(s/b):null,_="$"+Math.round(a).toLocaleString(),y="$"+Math.round(l).toLocaleString();if(t+=e("calc_out.break_even.row.raise_price_20","• Raise price 20%:  Revenue "+_+" → "+y,{revenue:_,newrevenue:y}),f!==null&&n!==null){const v=String(n),p=String(f);t+="  |  "+e("calc_out.break_even.row.raise_price_20_breakeven","Break-even: "+v+" → "+p+" mo",{from:v,to:p})+\`
+\`}else if(f!==null){const v=String(f);t+="  |  "+e("calc_out.break_even.row.raise_price_20_breakeven_only","Break-even: "+v+" mo",{to:v})+\`
+\`}else t+=\`
+\`}const r=a*1.1,c=o*.9,h=r-c;if(h>0){const l=String(Math.ceil(s/h));t+=e("calc_out.break_even.row.combo_price_costs","• Combo (+10% price, −10% costs):  Break-even: "+l+" mo",{months:l})+\`
+\`}}if(g<=0)t+=\`
 
-🩺 Break-Even Health:
+\`+e("calc_out.section.break_even_health","🩺 Break-Even Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.\`;else if(a<=0)e+=\`
+\`+e("calc_out.break_even.row.health_monthly_loss","• 🔴 Monthly loss — expenses exceed revenue. Cannot break even at current rate. Either raise price or cut costs.");else if(s<=0)t+=\`
 
-🩺 Break-Even Health:
+\`+e("calc_out.section.break_even_health","🩺 Break-Even Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 🟢 No upfront investment. Every month is profit. Focus on scaling.\`;else if(n!==null){const o=n<6?"🟢 Fast payback — under 6 months. Healthy.":n<12?"🟡 Moderate payback — 6-12 months. Standard for SaaS.":n<24?"🟠 Slow payback — 1-2 years. Tighten unit economics.":"🔴 Very slow — over 2 years. Reconsider pricing or costs.";e+=\`
+\`+e("calc_out.break_even.row.health_no_upfront","• 🟢 No upfront investment. Every month is profit. Focus on scaling.");else if(n!==null){const r=String(n),c=(n/12).toFixed(1);t+=\`
 
-🩺 Break-Even Health:
+\`+e("calc_out.section.break_even_health","🩺 Break-Even Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+o+\`
-• Payback: \`+n+" months | ~"+(n/12).toFixed(1)+" years"}else e+=\`
+\`+(n<6?e("calc_out.break_even.row.health_fast_payback","• 🟢 Fast payback — under 6 months. Healthy."):n<12?e("calc_out.break_even.row.health_moderate_payback","• 🟡 Moderate payback — 6-12 months. Standard for SaaS."):n<24?e("calc_out.break_even.row.health_slow_payback","• 🟠 Slow payback — 1-2 years. Tighten unit economics."):e("calc_out.break_even.row.health_very_slow","• 🔴 Very slow — over 2 years. Reconsider pricing or costs."))+\`
+\`+e("calc_out.break_even.row.payback_months","• Payback: "+r+" months",{months:r})+" | "+e("calc_out.break_even.row.payback_years","~"+c+" years",{years:c})}else t+=\`
 
-🩺 Break-Even Health:
+\`+e("calc_out.section.break_even_health","🩺 Break-Even Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 🟡 Default alive — no payback needed.\`;if(e+=\`
+\`+e("calc_out.break_even.row.health_default_alive","• 🟡 Default alive — no payback needed.");if(t+=\`
 
-🔄 What-If Scenarios:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\`,f>0&&a>0&&n!==null){const o=r*1.1-t,m=Math.ceil(a/o),u=r-t*.9,s=Math.ceil(a/u),c=r*1.1-t*.9,h=Math.ceil(a/c);e+=\`
-• Raise price 10%:  Payback \`+n+" → "+m+" mo",e+=\`
-• Cut costs 10%:  Payback \`+n+" → "+s+" mo",e+=\`
-• Combo (+10% price, -10% costs):  Payback \`+n+" → "+h+" mo",e+=\`
-• At current rate:  Save $\`+Math.round(f*12).toLocaleString()+"/yr after initial investment"}else e+=\`
-• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.\`;return f>0&&n!==null&&n<=12?e+=\`
+\`+e("calc_out.section.break_even_what_if_v3","🔄 What-If Scenarios:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\`,g>0&&s>0&&n!==null){const r=a*1.1-o,c=Math.ceil(s/r),h=a-o*.9,l=Math.ceil(s/h),b=a*1.1-o*.9,f=Math.ceil(s/b),_=String(n),y=String(c),v=String(l),p=String(f),d="$"+Math.round(g*12).toLocaleString();t+=\`
+\`+e("calc_out.break_even.row.whatif_raise_price_10","• Raise price 10%:  Payback "+_+" → "+y+" mo",{from:_,to:y}),t+=\`
+\`+e("calc_out.break_even.row.whatif_cut_costs_10","• Cut costs 10%:  Payback "+_+" → "+v+" mo",{from:_,to:v}),t+=\`
+\`+e("calc_out.break_even.row.whatif_combo_10_10","• Combo (+10% price, -10% costs):  Payback "+_+" → "+p+" mo",{from:_,to:p}),t+=\`
+\`+e("calc_out.break_even.row.whatif_current_rate","• At current rate:  Save "+d+"/yr after initial investment",{value:d})}else t+=\`
+\`+e("calc_out.break_even.row.whatif_cannot_model","• ⚠️ Cannot model — ensure revenue > costs and initial investment > 0.");return g>0&&n!==null&&n<=12?t+=\`
 
-💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.\`:f<=0?e+=\`
+\`+e("calc_out.break_even.row.tip_fast","💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out."):g<=0?t+=\`
 
-💡 Tip: Negative monthly profit means you're burning cash every month. Either raise prices, cut costs, or accept that you'll need more runway to reach break-even. The longer you delay, the harder it gets.\`:e+=\`
+\`+e("calc_out.break_even.row.tip_negative","💡 Tip: Negative monthly profit means you're burning cash every month. Either raise prices, cut costs, or accept that you'll need more runway to reach break-even. The longer you delay, the harder it gets."):t+=\`
 
-💡 Tip: Break-even is the floor, not the goal. Aim for a 3-month safety buffer by default — one bad month shouldn't wipe out your margin. Pre-revenue? Cut costs aggressively until you hit $1k MRR, then re-evaluate.\`,[e]},g=function(i,y,p){var t=M(i);return Array.isArray(t)?t.join(\`
-\`):String(t)};var C=d,S=b,R=g,M=function(i){return b(i)};return[g(inputs,pick,fill)]}finally{}
+\`+e("calc_out.break_even.row.tip_floor","💡 Tip: Break-even is the floor, not the goal. Aim for a 3-month safety buffer by default — one bad month shouldn't wipe out your margin. Pre-revenue? Cut costs aggressively until you hit $1k MRR, then re-evaluate."),[t]},C=function(u,w,F){var o=$(u);return Array.isArray(o)?o.join(\`
+\`):String(o)};var k=S,j=M,I=C,e=tk,x='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+x)(),$=function(u){return M(u)};return[C(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -222,7 +265,7 @@ const engine: ToolEngine = {
   },
   generate(inputs: Record<string, string>): string[] { return calculateBreakEven(inputs); },
   staticExamples: [
-    '📊 Break-Even Analysis\n\n⏱️ Break-Even Timeline\n• Initial Investment:  $5,000\n• Monthly Costs:       $500/mo\n• Monthly Revenue:     $1,000/mo\n• Flat revenue:        10 months\n• With 10.0% growth:  7 months  (3 months faster)\n🟡 Solid — breaking even within a year. Keep an eye on costs.\n\n📈 Cumulative P&L Outlook\n• Month 3: $-3,190\n• Month 6: $-284\n• Month 12: +$10,384 ✅\n• Month 24: +$71,497 ✅\n\n🔄 What-If Scenarios\n• Cut costs 20%:  Monthly profit $500 → $600  |  Break-even: 10 → 9 mo (1 faster)\n• Raise price 20%:  Revenue $1,000 → $1,200  |  Break-even: 10 → 8 mo\n• Combo (+10% price, −10% costs):  Break-even: 8 mo\n\n\n🩺 Break-Even Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Moderate payback — 6-12 months. Standard for SaaS.\n• Payback: 10 months | ~0.8 years\n\n🔄 What-If Scenarios:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Raise price 10%:  Payback 10 → 9 mo\n• Cut costs 10%:  Payback 10 → 10 mo\n• Combo (+10% price, -10% costs):  Payback 10 → 8 mo\n• At current rate:  Save $6,000/yr after initial investment\n\n💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.',
+    '$calc_out.section.break_even_analysis|📊 Break-Even Analysis|\n\n$calc_out.section.break_even_timeline|⏱️ Break-Even Timeline|\n$calc_out.break_even.row.initial_investment{"value":"$5,000"}|• Initial Investment:  $5,000|\n$calc_out.break_even.row.monthly_costs{"value":"$500"}|• Monthly Costs:       $500/mo|\n$calc_out.break_even.row.monthly_revenue{"value":"$1,000"}|• Monthly Revenue:     $1,000/mo|\n$calc_out.break_even.row.flat_revenue{"months":"10"}|• Flat revenue:        10 months|\n$calc_out.break_even.row.with_growth{"growth":"10.0%","months":"7"}|• With 10.0% growth:  7 months|$calc_out.break_even.row.growth_faster{"months":"3"}|  (3 months faster)|\n$calc_out.break_even.row.verdict_solid|🟡 Solid — breaking even within a year. Keep an eye on costs.|\n\n$calc_out.section.break_even_cumulative|📈 Cumulative P&L Outlook|\n$calc_out.break_even.row.month_checkpoint_negative{"month":"3","value":"$-3,190"}|• Month 3: $-3,190|\n$calc_out.break_even.row.month_checkpoint_negative{"month":"6","value":"$-284"}|• Month 6: $-284|\n$calc_out.break_even.row.month_checkpoint_positive{"month":"12","value":"$10,384"}|• Month 12: +$10,384 ✅|\n$calc_out.break_even.row.month_checkpoint_positive{"month":"24","value":"$71,497"}|• Month 24: +$71,497 ✅|\n\n$calc_out.section.break_even_what_if|🔄 What-If Scenarios|\n$calc_out.break_even.row.cut_costs_20{"profit":"$500","newprofit":"$600"}|• Cut costs 20%:  Monthly profit $500 → $600|  |  $calc_out.break_even.row.cut_costs_20_breakeven{"from":"10","to":"9","months":"1"}|Break-even: 10 → 9 mo (1 faster)|\n$calc_out.break_even.row.raise_price_20{"revenue":"$1,000","newrevenue":"$1,200"}|• Raise price 20%:  Revenue $1,000 → $1,200|  |  $calc_out.break_even.row.raise_price_20_breakeven{"from":"10","to":"8"}|Break-even: 10 → 8 mo|\n$calc_out.break_even.row.combo_price_costs{"months":"8"}|• Combo (+10% price, −10% costs):  Break-even: 8 mo|\n\n\n$calc_out.section.break_even_health|🩺 Break-Even Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.break_even.row.health_moderate_payback|• 🟡 Moderate payback — 6-12 months. Standard for SaaS.|\n$calc_out.break_even.row.payback_months{"months":"10"}|• Payback: 10 months| | $calc_out.break_even.row.payback_years{"years":"0.8"}|~0.8 years|\n\n$calc_out.section.break_even_what_if_v3|🔄 What-If Scenarios:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.break_even.row.whatif_raise_price_10{"from":"10","to":"9"}|• Raise price 10%:  Payback 10 → 9 mo|\n$calc_out.break_even.row.whatif_cut_costs_10{"from":"10","to":"10"}|• Cut costs 10%:  Payback 10 → 10 mo|\n$calc_out.break_even.row.whatif_combo_10_10{"from":"10","to":"8"}|• Combo (+10% price, -10% costs):  Payback 10 → 8 mo|\n$calc_out.break_even.row.whatif_current_rate{"value":"$6,000"}|• At current rate:  Save $6,000/yr after initial investment|\n\n$calc_out.break_even.row.tip_fast|💡 Tip: Sub-12-month break-even is the sweet spot — you have cash to reinvest in growth. Resist the temptation to extract profits early; compound the advantage for 2-3 more months before taking any out.|',
   ],
   faq: [
     { q: "What is a break-even point?", a: "The break-even point is when your cumulative revenue equals your total costs (including initial investment). After this point, every dollar of revenue becomes profit. For solopreneurs, break-even is the first major validation milestone." },

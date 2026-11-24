@@ -1,7 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Win Rate by Stage Calculator (P8-4) — Business v3 standard (6+ emoji sections)
@@ -118,22 +120,36 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: all entered = 0 → prompt to enter values
   if (sqlEntered === 0 && oppEntered === 0 && proposalEntered === 0 && negEntered === 0) {
     return [
-      '🎯 Win Rate by Stage Calculator\n\n' +
-        '🎯 Enter deal counts for each stage transition (SQL→Opp, Opp→Proposal, Proposal→Negotiation, Negotiation→Won) to compute overall win rate and identify the funnel bottleneck.',
+      makeToken('calc_out.section.win_rate_by_stage_calculator', '🎯 Win Rate by Stage Calculator') +
+        '\n\n' +
+        makeToken('calc_out.win_rate_by_stage.row.need_inputs', '🎯 Enter deal counts for each stage transition (SQL→Opp, Opp→Proposal, Proposal→Negotiation, Negotiation→Won) to compute overall win rate and identify the funnel bottleneck.'),
     ];
   }
 
   // Health band (applied to overall win rate × 100)
   const band = calcHealthBand(overallPct);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? 'Excellent — overall win rate ≥ 25%; healthy funnel'
-      : band === 'good'
-      ? 'Good — overall win rate 15%–25%; mid-market B2B SaaS typical'
-      : band === 'warning'
-      ? 'Warning — overall win rate 5%–15%; significant funnel leakage'
-      : 'Critical — overall win rate < 5%; funnel rebuild urgent';
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.win_rate_by_stage.row.health_excellent',
+      '• 🟢 Excellent — overall win rate ≥ 25%; healthy funnel',
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.win_rate_by_stage.row.health_good',
+      '• 🟡 Good — overall win rate 15%–25%; mid-market B2B SaaS typical',
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.win_rate_by_stage.row.health_warning',
+      '• 🟠 Warning — overall win rate 5%–15%; significant funnel leakage',
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.win_rate_by_stage.row.health_critical',
+      '• 🔴 Critical — overall win rate < 5%; funnel rebuild urgent',
+    );
+  }
 
   // What-If: bump bottleneck by 15pp, bump final stage (Neg→Won) by 10pp
   const bottleneckBumped = Math.min(1, rates[bottleneckIdx] + 0.15);
@@ -173,40 +189,30 @@ function calculate(inputs: Record<string, string>): string[] {
   // Tip: band-driven + bottleneck-aware (per spec)
   let tip: string;
   if (band === 'critical') {
-    tip =
-      'Overall win rate < 5% means your funnel is leaking deals at every stage — a single-digit won deal out of 100 entered is a 99-deal loss. Audit qualification criteria first (the leak is likely at top-of-funnel, but also check whether deals that reach Negotiation actually close). Funnel rebuild is overdue; invest in sales training, lead scoring, and stage-gate criteria before scaling spend.';
+    tip = makeToken('calc_out.win_rate_by_stage.row.tip_critical', '💡 Tip: Overall win rate < 5% means your funnel is leaking deals at every stage — a single-digit won deal out of 100 entered is a 99-deal loss. Audit qualification criteria first (the leak is likely at top-of-funnel, but also check whether deals that reach Negotiation actually close). Funnel rebuild is overdue; invest in sales training, lead scoring, and stage-gate criteria before scaling spend.');
   } else if (band === 'warning') {
     if (bottleneckIdx === 0) {
-      tip =
-        'Win rate 5%–15% with the leak at SQL→Opp means lead qualification is the bottleneck — too many low-fit SQLs entering the funnel. Tighten MQL criteria, add BANT/MEDDIC qualification, and require a defined use case before passing to Opp. Volume of weak SQLs will not improve close rate; quality will.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_warning_top', '💡 Tip: Win rate 5%–15% with the leak at SQL→Opp means lead qualification is the bottleneck — too many low-fit SQLs entering the funnel. Tighten MQL criteria, add BANT/MEDDIC qualification, and require a defined use case before passing to Opp. Volume of weak SQLs will not improve close rate; quality will.');
     } else if (bottleneckIdx === 3) {
-      tip =
-        'Win rate 5%–15% with the leak at Negotiation→Won means deals reach late stage but fail to close — likely pricing friction, procurement blockers, or champion loss. Invest in sales coaching for negotiation, add a deal-desk review process, and audit discount authority. Late-stage losses are the most expensive funnel leak.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_warning_late', '💡 Tip: Win rate 5%–15% with the leak at Negotiation→Won means deals reach late stage but fail to close — likely pricing friction, procurement blockers, or champion loss. Invest in sales coaching for negotiation, add a deal-desk review process, and audit discount authority. Late-stage losses are the most expensive funnel leak.');
     } else {
-      tip =
-        'Win rate 5%–15% with mid-funnel leak (' + bottleneck + ') — your team converts leads but the middle of the funnel stalls. Add stage-gate reviews, faster Proposal-to-Negotiation cadence, and clearer next-step criteria. Mid-funnel deals that sit > 30 days rarely close at full rate.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_warning_mid', '💡 Tip: Win rate 5%–15% with mid-funnel leak (' + bottleneck + ') — your team converts leads but the middle of the funnel stalls. Add stage-gate reviews, faster Proposal-to-Negotiation cadence, and clearer next-step criteria. Mid-funnel deals that sit > 30 days rarely close at full rate.', { stage: bottleneck });
     }
   } else if (band === 'good') {
     if (bottleneckIdx === 0) {
-      tip =
-        'Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_good_top', '💡 Tip: Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel.');
     } else if (bottleneckIdx === 3) {
-      tip =
-        'Good 15%–25% win rate with Negotiation→Won as bottleneck — late-stage coaching will move you to Excellent fastest. Audit the last 10 lost deals: pricing, champion, competition, timing. Sales coaching focused on closing techniques typically lifts Neg→Won by 10–15pp.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_good_late', '💡 Tip: Good 15%–25% win rate with Negotiation→Won as bottleneck — late-stage coaching will move you to Excellent fastest. Audit the last 10 lost deals: pricing, champion, competition, timing. Sales coaching focused on closing techniques typically lifts Neg→Won by 10–15pp.');
     } else {
-      tip =
-        'Good 15%–25% win rate is mid-market B2B SaaS typical. To reach Excellent (≥25%), identify your weakest stage and lift it 10pp. Funnel math is multiplicative — a single-stage improvement compounds through all subsequent stages, so focus there for the fastest gain.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_good_mid', '💡 Tip: Good 15%–25% win rate is mid-market B2B SaaS typical. To reach Excellent (≥25%), identify your weakest stage and lift it 10pp. Funnel math is multiplicative — a single-stage improvement compounds through all subsequent stages, so focus there for the fastest gain.');
     }
   } else {
     if (bottleneckIdx === 0) {
-      tip =
-        'Excellent ≥ 25% win rate — your funnel is healthy. Maintain SQL quality; do not let volume pressure erode qualification standards. Watch for ICP drift as you scale; the easiest way to drop from 25% to 15% is to relax the SQL→Opp gate.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_excellent_top', '💡 Tip: Excellent ≥ 25% win rate — your funnel is healthy. Maintain SQL quality; do not let volume pressure erode qualification standards. Watch for ICP drift as you scale; the easiest way to drop from 25% to 15% is to relax the SQL→Opp gate.');
     } else if (bottleneckIdx === 3) {
-      tip =
-        'Excellent ≥ 25% win rate with strong late-stage closing. Protect this — Negotiation→Won is where most funnels collapse under growth pressure. Add deal-desk review, discount governance, and quarterly win/loss analysis to sustain 75%+ close at this stage as volume grows.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_excellent_late', '💡 Tip: Excellent ≥ 25% win rate with strong late-stage closing. Protect this — Negotiation→Won is where most funnels collapse under growth pressure. Add deal-desk review, discount governance, and quarterly win/loss analysis to sustain 75%+ close at this stage as volume grows.');
     } else {
-      tip =
-        'Excellent ≥ 25% win rate with mid-funnel bottleneck. You close well — focus on velocity now (time-to-close), not raw win rate. Pair with sales velocity (P8-2) to identify whether deal-cycle compression or further win-rate lift will accelerate revenue more.';
+      tip = makeToken('calc_out.win_rate_by_stage.row.tip_excellent_mid', '💡 Tip: Excellent ≥ 25% win rate with mid-funnel bottleneck. You close well — focus on velocity now (time-to-close), not raw win rate. Pair with sales velocity (P8-2) to identify whether deal-cycle compression or further win-rate lift will accelerate revenue more.');
     }
   }
 
@@ -214,43 +220,82 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct = (n: number) => (n * 100).toFixed(1) + '%';
   const pctInt = (n: number) => Math.round(n * 100) + '%';
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const overallLabel = pctInt(overall);
+  const sqlRateLabel = pct(sqlRate);
+  const oppRateLabel = pct(oppRate);
+  const proposalRateLabel = pct(proposalRate);
+  const negRateLabel = pct(negRate);
+  const bottleneckRateLabel = pct(rates[bottleneckIdx]);
+  const sqlAdvancedLabel = String(sqlAdvanced);
+  const sqlEnteredLabel = String(sqlEntered);
+  const oppAdvancedLabel = String(oppAdvanced);
+  const oppEnteredLabel = String(oppEntered);
+  const proposalAdvancedLabel = String(proposalAdvanced);
+  const proposalEnteredLabel = String(proposalEntered);
+  const negAdvancedLabel = String(negAdvanced);
+  const negEnteredLabel = String(negEntered);
+  const expectedWonLabel = String(Math.round(sqlEntered * overall));
+  const bottleneckBumpedLabel = pct(bottleneckBumped);
+  const overallIfBottleneckLabel = pctInt(overallIfBottleneck / 100);
+  const liftBottleneckLabel = (overallIfBottleneck - overallPct).toFixed(1);
+  const negBumpedLabel = pct(negBumped);
+  const overallIfNegLabel = pctInt(overallIfNeg / 100);
+  const liftNegLabel = (overallIfNeg - overallPct).toFixed(1);
+  const cumulativeLiftLabel = pctInt(Math.min(1, (sqlRate + 0.05) * (oppRate + 0.05) * (proposalRate + 0.05) * (negRate + 0.05)));
+  const targetPctLabel = String(targetPct);
+  const gapExcellentLabel = gapToExcellent.toFixed(1);
+  const bottleneckNeededLabel = bottleneckNeeded.toFixed(0);
+  const negNeededLabel = negNeeded.toFixed(0);
+  const gapNextLabel = gapToNext.toFixed(1);
+  const wonPerSqlLabel = String(Math.round(sqlEntered * overall));
+  const oneInLabel = String(Math.round(1 / Math.max(overall, 0.0001)));
+
   const r =
-    '🎯 Win Rate by Stage Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.win_rate_by_stage_calculator', '🎯 Win Rate by Stage Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Overall win rate: ' + pctInt(overall) + '  ·  Funnel cascade: ' + pct(sqlRate) + ' × ' + pct(oppRate) + ' × ' + pct(proposalRate) + ' × ' + pct(negRate) + '\n' +
-    '• Bottleneck: ' + bottleneck + ' at ' + pct(rates[bottleneckIdx]) + ' (lowest stage rate)\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.overall_cascade', '• Overall win rate: ' + overallLabel + '  ·  Funnel cascade: ' + sqlRateLabel + ' × ' + oppRateLabel + ' × ' + proposalRateLabel + ' × ' + negRateLabel, { overall: overallLabel, sql: sqlRateLabel, opp: oppRateLabel, proposal: proposalRateLabel, neg: negRateLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.bottleneck', '• Bottleneck: ' + bottleneck + ' at ' + bottleneckRateLabel + ' (lowest stage rate)', { stage: bottleneck, rate: bottleneckRateLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• SQL→Opp:          ' + sqlAdvanced + ' / ' + sqlEntered + ' = ' + pct(sqlRate) + '\n' +
-    '• Opp→Proposal:     ' + oppAdvanced + ' / ' + oppEntered + ' = ' + pct(oppRate) + '\n' +
-    '• Proposal→Neg:     ' + proposalAdvanced + ' / ' + proposalEntered + ' = ' + pct(proposalRate) + '\n' +
-    '• Negotiation→Won:  ' + negAdvanced + ' / ' + negEntered + ' = ' + pct(negRate) + '\n' +
-    '• Funnel product: ' + pct(sqlRate) + ' × ' + pct(oppRate) + ' × ' + pct(proposalRate) + ' × ' + pct(negRate) + ' = ' + pctInt(overall) + '\n' +
-    '• Out of ' + sqlEntered + ' SQLs entered → ~' + Math.round(sqlEntered * overall) + ' expected won deals at this rate\n\n' +
+    makeToken('calc_out.win_rate_by_stage.row.sql_opp', '• SQL→Opp:          ' + sqlAdvancedLabel + ' / ' + sqlEnteredLabel + ' = ' + sqlRateLabel, { advanced: sqlAdvancedLabel, entered: sqlEnteredLabel, rate: sqlRateLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.opp_proposal', '• Opp→Proposal:     ' + oppAdvancedLabel + ' / ' + oppEnteredLabel + ' = ' + oppRateLabel, { advanced: oppAdvancedLabel, entered: oppEnteredLabel, rate: oppRateLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.proposal_neg', '• Proposal→Neg:     ' + proposalAdvancedLabel + ' / ' + proposalEnteredLabel + ' = ' + proposalRateLabel, { advanced: proposalAdvancedLabel, entered: proposalEnteredLabel, rate: proposalRateLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.neg_won', '• Negotiation→Won:  ' + negAdvancedLabel + ' / ' + negEnteredLabel + ' = ' + negRateLabel, { advanced: negAdvancedLabel, entered: negEnteredLabel, rate: negRateLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.funnel_product', '• Funnel product: ' + sqlRateLabel + ' × ' + oppRateLabel + ' × ' + proposalRateLabel + ' × ' + negRateLabel + ' = ' + overallLabel, { sql: sqlRateLabel, opp: oppRateLabel, proposal: proposalRateLabel, neg: negRateLabel, overall: overallLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.expected_won', '• Out of ' + sqlEnteredLabel + ' SQLs entered → ~' + expectedWonLabel + ' expected won deals at this rate', { entered: sqlEnteredLabel, won: expectedWonLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• If ' + bottleneck + ' ' + pct(rates[bottleneckIdx]) + '→' + pct(bottleneckBumped) + ': ' + pctInt(overallIfBottleneck / 100) + ' overall (+' + (overallIfBottleneck - overallPct).toFixed(1) + 'pp)\n' +
-    '• If Negotiation→Won ' + pct(negRate) + '→' + pct(negBumped) + ': ' + pctInt(overallIfNeg / 100) + ' overall (+' + (overallIfNeg - overallPct).toFixed(1) + 'pp)\n' +
-    '• Cumulative lift of +5pp at every stage: ' + pctInt(Math.min(1, (sqlRate + 0.05) * (oppRate + 0.05) * (proposalRate + 0.05) * (negRate + 0.05))) + ' overall\n\n' +
+    makeToken('calc_out.win_rate_by_stage.row.whatif_bottleneck', '• If ' + bottleneck + ' ' + bottleneckRateLabel + '→' + bottleneckBumpedLabel + ': ' + overallIfBottleneckLabel + ' overall (+' + liftBottleneckLabel + 'pp)', { stage: bottleneck, from: bottleneckRateLabel, to: bottleneckBumpedLabel, overall: overallIfBottleneckLabel, lift: liftBottleneckLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.whatif_neg_won', '• If Negotiation→Won ' + negRateLabel + '→' + negBumpedLabel + ': ' + overallIfNegLabel + ' overall (+' + liftNegLabel + 'pp)', { from: negRateLabel, to: negBumpedLabel, overall: overallIfNegLabel, lift: liftNegLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.whatif_cumulative_lift', '• Cumulative lift of +5pp at every stage: ' + cumulativeLiftLabel + ' overall', { overall: cumulativeLiftLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target for 🟢 Excellent: ' + targetPct + '% overall win rate\n' +
-    '• Gap to 🟢: ' + gapToExcellent.toFixed(1) + 'pp\n' +
-    '• Path A — lift ' + bottleneck + ' from ' + pct(rates[bottleneckIdx]) + ' to ~' + bottleneckNeeded.toFixed(0) + '% (or equivalent elsewhere)\n' +
-    '• Path B — lift Negotiation→Won from ' + pct(negRate) + ' to ~' + negNeeded.toFixed(0) + '% (late-stage fix)\n\n' +
+    makeToken('calc_out.win_rate_by_stage.row.breakeven_target', '• Target for 🟢 Excellent: ' + targetPctLabel + '% overall win rate', { target: targetPctLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.breakeven_gap', '• Gap to 🟢: ' + gapExcellentLabel + 'pp', { gap: gapExcellentLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.breakeven_path_a', '• Path A — lift ' + bottleneck + ' from ' + bottleneckRateLabel + ' to ~' + bottleneckNeededLabel + '% (or equivalent elsewhere)', { stage: bottleneck, from: bottleneckRateLabel, to: bottleneckNeededLabel }) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.breakeven_path_b', '• Path B — lift Negotiation→Won from ' + negRateLabel + ' to ~' + negNeededLabel + '% (late-stage fix)', { from: negRateLabel, to: negNeededLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + gapToNext.toFixed(1) + 'pp' + (band === 'excellent' ? ' (already at top)' : '') + '\n' +
-    '• At current pace: ' + Math.round(sqlEntered * overall) + ' won deals per ' + sqlEntered + ' SQLs entered (1 in ' + Math.round(1 / Math.max(overall, 0.0001)) + ')\n\n' +
+    (band === 'critical'
+      ? makeToken('calc_out.win_rate_by_stage.row.milestone_next_tier_critical', '• Next tier: 🟠 Warning (5%)')
+      : band === 'warning'
+      ? makeToken('calc_out.win_rate_by_stage.row.milestone_next_tier_warning', '• Next tier: 🟡 Good (15%)')
+      : band === 'good'
+      ? makeToken('calc_out.win_rate_by_stage.row.milestone_next_tier_good', '• Next tier: 🟢 Excellent (25%)')
+      : makeToken('calc_out.win_rate_by_stage.row.milestone_next_tier_excellent', '• Next tier: top tier maintained')) + '\n' +
+    (band === 'excellent'
+      ? makeToken('calc_out.win_rate_by_stage.row.milestone_gap_top', '• Gap to next tier: ' + gapNextLabel + 'pp (already at top)', { gap: gapNextLabel })
+      : makeToken('calc_out.win_rate_by_stage.row.milestone_gap', '• Gap to next tier: ' + gapNextLabel + 'pp', { gap: gapNextLabel })) + '\n' +
+    makeToken('calc_out.win_rate_by_stage.row.milestone_pace', '• At current pace: ' + wonPerSqlLabel + ' won deals per ' + sqlEnteredLabel + ' SQLs entered (1 in ' + oneInLabel + ')', { won: wonPerSqlLabel, entered: sqlEnteredLabel, onein: oneInLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -258,58 +303,58 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let c=function(e){return Number.isNaN(e)?0:Math.max(0,e)},w=function(e,n){return n<=0?0:e/n},x=function(e){return e[0]*e[1]*e[2]*e[3]},q=function(e){let n=0,p=e[0];for(let a=1;a<e.length;a++)e[a]<p&&(p=e[a],n=a);return n},W=function(e){return e>=N.excellent[0]?"excellent":e>=N.good[0]?"good":e>=N.warning[0]?"warning":"critical"},P=function(e,n,p){var a=R(e);return Array.isArray(a)?a.join(\`
-\`):String(a)};var Y=c,J=w,U=x,X=q,Z=W,$=P,G={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},N={excellent:[25,null],good:[15,25],warning:[5,15],critical:[0,5]},T=["SQL→Opp","Opp→Proposal","Proposal→Negotiation","Negotiation→Won"],R=function(e){const n=c(parseFloat(e.sqlEntered)||0),p=c(parseFloat(e.sqlAdvanced)||0),a=c(parseFloat(e.oppEntered)||0),M=c(parseFloat(e.oppAdvanced)||0),F=c(parseFloat(e.proposalEntered)||0),A=c(parseFloat(e.proposalAdvanced)||0),E=c(parseFloat(e.negEntered)||0),I=c(parseFloat(e.negAdvanced)||0),u=w(p,n),f=w(M,a),g=w(A,F),s=w(I,E),d=[u,f,g,s],h=x(d),i=h*100,o=q(d),k=T[o];if(n===0&&a===0&&F===0&&E===0)return[\`🎯 Win Rate by Stage Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},v=function(e,o){return o<=0?0:e/o},N=function(e){return e[0]*e[1]*e[2]*e[3]},G=function(e){let o=0,g=e[0];for(let a=1;a<e.length;a++)e[a]<g&&(g=e[a],o=a);return o},C=function(e){return e>=O.excellent[0]?"excellent":e>=O.good[0]?"good":e>=O.warning[0]?"warning":"critical"},R=function(e,o,g){var a=ht(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var Lt=s,St=v,Nt=N,mt=G,qt=C,Et=R,t=tk,ft='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+ft)(),O={excellent:[25,null],good:[15,25],warning:[5,15],critical:[0,5]},bt=["SQL→Opp","Opp→Proposal","Proposal→Negotiation","Negotiation→Won"],ht=function(e){const o=s(parseFloat(e.sqlEntered)||0),g=s(parseFloat(e.sqlAdvanced)||0),a=s(parseFloat(e.oppEntered)||0),j=s(parseFloat(e.oppAdvanced)||0),M=s(parseFloat(e.proposalEntered)||0),V=s(parseFloat(e.proposalAdvanced)||0),B=s(parseFloat(e.negEntered)||0),z=s(parseFloat(e.negAdvanced)||0),m=v(g,o),q=v(j,a),E=v(V,M),d=v(z,B),u=[m,q,E,d],x=N(u),l=x*100,i=G(u),_=bt[i];if(o===0&&a===0&&M===0&&B===0)return[t("calc_out.section.win_rate_by_stage_calculator","🎯 Win Rate by Stage Calculator")+\`
 
-🎯 Enter deal counts for each stage transition (SQL→Opp, Opp→Proposal, Proposal→Negotiation, Negotiation→Won) to compute overall win rate and identify the funnel bottleneck.\`];const l=W(i),j=G[l],V=l==="excellent"?"Excellent — overall win rate ≥ 25%; healthy funnel":l==="good"?"Good — overall win rate 15%–25%; mid-market B2B SaaS typical":l==="warning"?"Warning — overall win rate 5%–15%; significant funnel leakage":"Critical — overall win rate < 5%; funnel rebuild urgent",O=Math.min(1,d[o]+.15),L=[...d];L[o]=O;const Q=x(L)*100,B=Math.min(1,s+.1),_=x([u,f,g,B])*100,b=25,z=Math.max(0,b-i),C=d[o],D=C>0&&i>0?C*b/i*100:0,K=s>0&&i>0?s*b/i*100:0;let m,v;l==="critical"?(m=5-i,v="🟠 Warning (5%)"):l==="warning"?(m=15-i,v="🟡 Good (15%)"):l==="good"?(m=25-i,v="🟢 Excellent (25%)"):(m=0,v="top tier maintained");let r;l==="critical"?r="Overall win rate < 5% means your funnel is leaking deals at every stage — a single-digit won deal out of 100 entered is a 99-deal loss. Audit qualification criteria first (the leak is likely at top-of-funnel, but also check whether deals that reach Negotiation actually close). Funnel rebuild is overdue; invest in sales training, lead scoring, and stage-gate criteria before scaling spend.":l==="warning"?o===0?r="Win rate 5%–15% with the leak at SQL→Opp means lead qualification is the bottleneck — too many low-fit SQLs entering the funnel. Tighten MQL criteria, add BANT/MEDDIC qualification, and require a defined use case before passing to Opp. Volume of weak SQLs will not improve close rate; quality will.":o===3?r="Win rate 5%–15% with the leak at Negotiation→Won means deals reach late stage but fail to close — likely pricing friction, procurement blockers, or champion loss. Invest in sales coaching for negotiation, add a deal-desk review process, and audit discount authority. Late-stage losses are the most expensive funnel leak.":r="Win rate 5%–15% with mid-funnel leak ("+k+") — your team converts leads but the middle of the funnel stalls. Add stage-gate reviews, faster Proposal-to-Negotiation cadence, and clearer next-step criteria. Mid-funnel deals that sit > 30 days rarely close at full rate.":l==="good"?o===0?r="Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel.":o===3?r="Good 15%–25% win rate with Negotiation→Won as bottleneck — late-stage coaching will move you to Excellent fastest. Audit the last 10 lost deals: pricing, champion, competition, timing. Sales coaching focused on closing techniques typically lifts Neg→Won by 10–15pp.":r="Good 15%–25% win rate is mid-market B2B SaaS typical. To reach Excellent (≥25%), identify your weakest stage and lift it 10pp. Funnel math is multiplicative — a single-stage improvement compounds through all subsequent stages, so focus there for the fastest gain.":o===0?r="Excellent ≥ 25% win rate — your funnel is healthy. Maintain SQL quality; do not let volume pressure erode qualification standards. Watch for ICP drift as you scale; the easiest way to drop from 25% to 15% is to relax the SQL→Opp gate.":o===3?r="Excellent ≥ 25% win rate with strong late-stage closing. Protect this — Negotiation→Won is where most funnels collapse under growth pressure. Add deal-desk review, discount governance, and quarterly win/loss analysis to sustain 75%+ close at this stage as volume grows.":r="Excellent ≥ 25% win rate with mid-funnel bottleneck. You close well — focus on velocity now (time-to-close), not raw win rate. Pair with sales velocity (P8-2) to identify whether deal-cycle compression or further win-rate lift will accelerate revenue more.";const t=S=>(S*100).toFixed(1)+"%",y=S=>Math.round(S*100)+"%";return[\`🎯 Win Rate by Stage Calculator
+\`+t("calc_out.win_rate_by_stage.row.need_inputs","🎯 Enter deal counts for each stage transition (SQL→Opp, Opp→Proposal, Proposal→Negotiation, Negotiation→Won) to compute overall win rate and identify the funnel bottleneck.")];const n=C(l);let L;n==="excellent"?L=t("calc_out.win_rate_by_stage.row.health_excellent","• 🟢 Excellent — overall win rate ≥ 25%; healthy funnel"):n==="good"?L=t("calc_out.win_rate_by_stage.row.health_good","• 🟡 Good — overall win rate 15%–25%; mid-market B2B SaaS typical"):n==="warning"?L=t("calc_out.win_rate_by_stage.row.health_warning","• 🟠 Warning — overall win rate 5%–15%; significant funnel leakage"):L=t("calc_out.win_rate_by_stage.row.health_critical","• 🔴 Critical — overall win rate < 5%; funnel rebuild urgent");const D=Math.min(1,u[i]+.15),J=[...u];J[i]=D;const K=N(J)*100,Y=Math.min(1,d+.1),$=N([m,q,E,Y])*100,F=25,yt=Math.max(0,F-l),U=u[i],vt=U>0&&l>0?U*F/l*100:0,xt=d>0&&l>0?d*F/l*100:0;let S,W;n==="critical"?(S=5-l,W="🟠 Warning (5%)"):n==="warning"?(S=15-l,W="🟡 Good (15%)"):n==="good"?(S=25-l,W="🟢 Excellent (25%)"):(S=0,W="top tier maintained");let r;n==="critical"?r=t("calc_out.win_rate_by_stage.row.tip_critical","💡 Tip: Overall win rate < 5% means your funnel is leaking deals at every stage — a single-digit won deal out of 100 entered is a 99-deal loss. Audit qualification criteria first (the leak is likely at top-of-funnel, but also check whether deals that reach Negotiation actually close). Funnel rebuild is overdue; invest in sales training, lead scoring, and stage-gate criteria before scaling spend."):n==="warning"?i===0?r=t("calc_out.win_rate_by_stage.row.tip_warning_top","💡 Tip: Win rate 5%–15% with the leak at SQL→Opp means lead qualification is the bottleneck — too many low-fit SQLs entering the funnel. Tighten MQL criteria, add BANT/MEDDIC qualification, and require a defined use case before passing to Opp. Volume of weak SQLs will not improve close rate; quality will."):i===3?r=t("calc_out.win_rate_by_stage.row.tip_warning_late","💡 Tip: Win rate 5%–15% with the leak at Negotiation→Won means deals reach late stage but fail to close — likely pricing friction, procurement blockers, or champion loss. Invest in sales coaching for negotiation, add a deal-desk review process, and audit discount authority. Late-stage losses are the most expensive funnel leak."):r=t("calc_out.win_rate_by_stage.row.tip_warning_mid","💡 Tip: Win rate 5%–15% with mid-funnel leak ("+_+") — your team converts leads but the middle of the funnel stalls. Add stage-gate reviews, faster Proposal-to-Negotiation cadence, and clearer next-step criteria. Mid-funnel deals that sit > 30 days rarely close at full rate.",{stage:_}):n==="good"?i===0?r=t("calc_out.win_rate_by_stage.row.tip_good_top","💡 Tip: Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel."):i===3?r=t("calc_out.win_rate_by_stage.row.tip_good_late","💡 Tip: Good 15%–25% win rate with Negotiation→Won as bottleneck — late-stage coaching will move you to Excellent fastest. Audit the last 10 lost deals: pricing, champion, competition, timing. Sales coaching focused on closing techniques typically lifts Neg→Won by 10–15pp."):r=t("calc_out.win_rate_by_stage.row.tip_good_mid","💡 Tip: Good 15%–25% win rate is mid-market B2B SaaS typical. To reach Excellent (≥25%), identify your weakest stage and lift it 10pp. Funnel math is multiplicative — a single-stage improvement compounds through all subsequent stages, so focus there for the fastest gain."):i===0?r=t("calc_out.win_rate_by_stage.row.tip_excellent_top","💡 Tip: Excellent ≥ 25% win rate — your funnel is healthy. Maintain SQL quality; do not let volume pressure erode qualification standards. Watch for ICP drift as you scale; the easiest way to drop from 25% to 15% is to relax the SQL→Opp gate."):i===3?r=t("calc_out.win_rate_by_stage.row.tip_excellent_late","💡 Tip: Excellent ≥ 25% win rate with strong late-stage closing. Protect this — Negotiation→Won is where most funnels collapse under growth pressure. Add deal-desk review, discount governance, and quarterly win/loss analysis to sustain 75%+ close at this stage as volume grows."):r=t("calc_out.win_rate_by_stage.row.tip_excellent_mid","💡 Tip: Excellent ≥ 25% win rate with mid-funnel bottleneck. You close well — focus on velocity now (time-to-close), not raw win rate. Pair with sales velocity (P8-2) to identify whether deal-cycle compression or further win-rate lift will accelerate revenue more.");const p=Q=>(Q*100).toFixed(1)+"%",A=Q=>Math.round(Q*100)+"%",P=A(x),w=p(m),f=p(q),b=p(E),c=p(d),h=p(u[i]),X=String(g),y=String(o),Z=String(j),H=String(a),T=String(V),k=String(M),tt=String(z),et=String(B),at=String(Math.round(o*x)),nt=p(D),ot=A(K/100),lt=(K-l).toFixed(1),it=p(Y),rt=A($/100),ct=($-l).toFixed(1),st=A(Math.min(1,(m+.05)*(q+.05)*(E+.05)*(d+.05))),_t=String(F),pt=yt.toFixed(1),gt=vt.toFixed(0),dt=xt.toFixed(0),I=S.toFixed(1),ut=String(Math.round(o*x)),wt=String(Math.round(1/Math.max(x,1e-4)));return[t("calc_out.section.win_rate_by_stage_calculator","🎯 Win Rate by Stage Calculator")+\`
 
-🩺 Health:
+\`+t("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+j+" "+V+\`
-• Overall win rate: \`+y(h)+"  ·  Funnel cascade: "+t(u)+" × "+t(f)+" × "+t(g)+" × "+t(s)+\`
-• Bottleneck: \`+k+" at "+t(d[o])+\` (lowest stage rate)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• SQL→Opp:          \`+p+" / "+n+" = "+t(u)+\`
-• Opp→Proposal:     \`+M+" / "+a+" = "+t(f)+\`
-• Proposal→Neg:     \`+A+" / "+F+" = "+t(g)+\`
-• Negotiation→Won:  \`+I+" / "+E+" = "+t(s)+\`
-• Funnel product: \`+t(u)+" × "+t(f)+" × "+t(g)+" × "+t(s)+" = "+y(h)+\`
-• Out of \`+n+" SQLs entered → ~"+Math.round(n*h)+\` expected won deals at this rate
+\`+L+\`
+\`+t("calc_out.win_rate_by_stage.row.overall_cascade","• Overall win rate: "+P+"  ·  Funnel cascade: "+w+" × "+f+" × "+b+" × "+c,{overall:P,sql:w,opp:f,proposal:b,neg:c})+\`
+\`+t("calc_out.win_rate_by_stage.row.bottleneck","• Bottleneck: "+_+" at "+h+" (lowest stage rate)",{stage:_,rate:h})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+t("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• If \`+k+" "+t(d[o])+"→"+t(O)+": "+y(Q/100)+" overall (+"+(Q-i).toFixed(1)+\`pp)
-• If Negotiation→Won \`+t(s)+"→"+t(B)+": "+y(_/100)+" overall (+"+(_-i).toFixed(1)+\`pp)
-• Cumulative lift of +5pp at every stage: \`+y(Math.min(1,(u+.05)*(f+.05)*(g+.05)*(s+.05)))+\` overall
+\`+t("calc_out.win_rate_by_stage.row.sql_opp","• SQL→Opp:          "+X+" / "+y+" = "+w,{advanced:X,entered:y,rate:w})+\`
+\`+t("calc_out.win_rate_by_stage.row.opp_proposal","• Opp→Proposal:     "+Z+" / "+H+" = "+f,{advanced:Z,entered:H,rate:f})+\`
+\`+t("calc_out.win_rate_by_stage.row.proposal_neg","• Proposal→Neg:     "+T+" / "+k+" = "+b,{advanced:T,entered:k,rate:b})+\`
+\`+t("calc_out.win_rate_by_stage.row.neg_won","• Negotiation→Won:  "+tt+" / "+et+" = "+c,{advanced:tt,entered:et,rate:c})+\`
+\`+t("calc_out.win_rate_by_stage.row.funnel_product","• Funnel product: "+w+" × "+f+" × "+b+" × "+c+" = "+P,{sql:w,opp:f,proposal:b,neg:c,overall:P})+\`
+\`+t("calc_out.win_rate_by_stage.row.expected_won","• Out of "+y+" SQLs entered → ~"+at+" expected won deals at this rate",{entered:y,won:at})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+t("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Target for 🟢 Excellent: \`+b+\`% overall win rate
-• Gap to 🟢: \`+z.toFixed(1)+\`pp
-• Path A — lift \`+k+" from "+t(d[o])+" to ~"+D.toFixed(0)+\`% (or equivalent elsewhere)
-• Path B — lift Negotiation→Won from \`+t(s)+" to ~"+K.toFixed(0)+\`% (late-stage fix)
+\`+t("calc_out.win_rate_by_stage.row.whatif_bottleneck","• If "+_+" "+h+"→"+nt+": "+ot+" overall (+"+lt+"pp)",{stage:_,from:h,to:nt,overall:ot,lift:lt})+\`
+\`+t("calc_out.win_rate_by_stage.row.whatif_neg_won","• If Negotiation→Won "+c+"→"+it+": "+rt+" overall (+"+ct+"pp)",{from:c,to:it,overall:rt,lift:ct})+\`
+\`+t("calc_out.win_rate_by_stage.row.whatif_cumulative_lift","• Cumulative lift of +5pp at every stage: "+st+" overall",{overall:st})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+t("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Next tier: \`+v+\`
-• Gap to next tier: \`+m.toFixed(1)+"pp"+(l==="excellent"?" (already at top)":"")+\`
-• At current pace: \`+Math.round(n*h)+" won deals per "+n+" SQLs entered (1 in "+Math.round(1/Math.max(h,1e-4))+\`)
+\`+t("calc_out.win_rate_by_stage.row.breakeven_target","• Target for 🟢 Excellent: "+_t+"% overall win rate",{target:_t})+\`
+\`+t("calc_out.win_rate_by_stage.row.breakeven_gap","• Gap to 🟢: "+pt+"pp",{gap:pt})+\`
+\`+t("calc_out.win_rate_by_stage.row.breakeven_path_a","• Path A — lift "+_+" from "+h+" to ~"+gt+"% (or equivalent elsewhere)",{stage:_,from:h,to:gt})+\`
+\`+t("calc_out.win_rate_by_stage.row.breakeven_path_b","• Path B — lift Negotiation→Won from "+c+" to ~"+dt+"% (late-stage fix)",{from:c,to:dt})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+r+\`
-\`]};return[P(inputs,pick,fill)]}finally{}
+\`+t("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(n==="critical"?t("calc_out.win_rate_by_stage.row.milestone_next_tier_critical","• Next tier: 🟠 Warning (5%)"):n==="warning"?t("calc_out.win_rate_by_stage.row.milestone_next_tier_warning","• Next tier: 🟡 Good (15%)"):n==="good"?t("calc_out.win_rate_by_stage.row.milestone_next_tier_good","• Next tier: 🟢 Excellent (25%)"):t("calc_out.win_rate_by_stage.row.milestone_next_tier_excellent","• Next tier: top tier maintained"))+\`
+\`+(n==="excellent"?t("calc_out.win_rate_by_stage.row.milestone_gap_top","• Gap to next tier: "+I+"pp (already at top)",{gap:I}):t("calc_out.win_rate_by_stage.row.milestone_gap","• Gap to next tier: "+I+"pp",{gap:I}))+\`
+\`+t("calc_out.win_rate_by_stage.row.milestone_pace","• At current pace: "+ut+" won deals per "+y+" SQLs entered (1 in "+wt+")",{won:ut,entered:y,onein:wt})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+r+\`
+\`]};return[R(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -366,7 +411,7 @@ const engine: ToolEngine = {
   },
   generate: calculate,
   staticExamples: [
-    '🎯 Win Rate by Stage Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — overall win rate 15%–25%; mid-market B2B SaaS typical\n• Overall win rate: 15%  ·  Funnel cascade: 50.0% × 60.0% × 66.7% × 75.0%\n• Bottleneck: SQL→Opp at 50.0% (lowest stage rate)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• SQL→Opp:          50 / 100 = 50.0%\n• Opp→Proposal:     30 / 50 = 60.0%\n• Proposal→Neg:     20 / 30 = 66.7%\n• Negotiation→Won:  15 / 20 = 75.0%\n• Funnel product: 50.0% × 60.0% × 66.7% × 75.0% = 15%\n• Out of 100 SQLs entered → ~15 expected won deals at this rate\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• If SQL→Opp 50.0%→65.0%: 20% overall (+4.5pp)\n• If Negotiation→Won 75.0%→85.0%: 17% overall (+2.0pp)\n• Cumulative lift of +5pp at every stage: 20% overall\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: 25% overall win rate\n• Gap to 🟢: 10.0pp\n• Path A — lift SQL→Opp from 50.0% to ~83% (or equivalent elsewhere)\n• Path B — lift Negotiation→Won from 75.0% to ~125% (late-stage fix)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent (25%)\n• Gap to next tier: 10.0pp\n• At current pace: 15 won deals per 100 SQLs entered (1 in 7)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel.\n',
+    '$calc_out.section.win_rate_by_stage_calculator|🎯 Win Rate by Stage Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.win_rate_by_stage.row.health_good|• 🟡 Good — overall win rate 15%–25%; mid-market B2B SaaS typical|\n$calc_out.win_rate_by_stage.row.overall_cascade{"overall":"15%","sql":"50.0%","opp":"60.0%","proposal":"66.7%","neg":"75.0%"}|• Overall win rate: 15%  ·  Funnel cascade: 50.0% × 60.0% × 66.7% × 75.0%|\n$calc_out.win_rate_by_stage.row.bottleneck{"stage":"SQL→Opp","rate":"50.0%"}|• Bottleneck: SQL→Opp at 50.0% (lowest stage rate)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.win_rate_by_stage.row.sql_opp{"advanced":"50","entered":"100","rate":"50.0%"}|• SQL→Opp:          50 / 100 = 50.0%|\n$calc_out.win_rate_by_stage.row.opp_proposal{"advanced":"30","entered":"50","rate":"60.0%"}|• Opp→Proposal:     30 / 50 = 60.0%|\n$calc_out.win_rate_by_stage.row.proposal_neg{"advanced":"20","entered":"30","rate":"66.7%"}|• Proposal→Neg:     20 / 30 = 66.7%|\n$calc_out.win_rate_by_stage.row.neg_won{"advanced":"15","entered":"20","rate":"75.0%"}|• Negotiation→Won:  15 / 20 = 75.0%|\n$calc_out.win_rate_by_stage.row.funnel_product{"sql":"50.0%","opp":"60.0%","proposal":"66.7%","neg":"75.0%","overall":"15%"}|• Funnel product: 50.0% × 60.0% × 66.7% × 75.0% = 15%|\n$calc_out.win_rate_by_stage.row.expected_won{"entered":"100","won":"15"}|• Out of 100 SQLs entered → ~15 expected won deals at this rate|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.win_rate_by_stage.row.whatif_bottleneck{"stage":"SQL→Opp","from":"50.0%","to":"65.0%","overall":"20%","lift":"4.5"}|• If SQL→Opp 50.0%→65.0%: 20% overall (+4.5pp)|\n$calc_out.win_rate_by_stage.row.whatif_neg_won{"from":"75.0%","to":"85.0%","overall":"17%","lift":"2.0"}|• If Negotiation→Won 75.0%→85.0%: 17% overall (+2.0pp)|\n$calc_out.win_rate_by_stage.row.whatif_cumulative_lift{"overall":"20%"}|• Cumulative lift of +5pp at every stage: 20% overall|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.win_rate_by_stage.row.breakeven_target{"target":"25"}|• Target for 🟢 Excellent: 25% overall win rate|\n$calc_out.win_rate_by_stage.row.breakeven_gap{"gap":"10.0"}|• Gap to 🟢: 10.0pp|\n$calc_out.win_rate_by_stage.row.breakeven_path_a{"stage":"SQL→Opp","from":"50.0%","to":"83"}|• Path A — lift SQL→Opp from 50.0% to ~83% (or equivalent elsewhere)|\n$calc_out.win_rate_by_stage.row.breakeven_path_b{"from":"75.0%","to":"125"}|• Path B — lift Negotiation→Won from 75.0% to ~125% (late-stage fix)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.win_rate_by_stage.row.milestone_next_tier_good|• Next tier: 🟢 Excellent (25%)|\n$calc_out.win_rate_by_stage.row.milestone_gap{"gap":"10.0"}|• Gap to next tier: 10.0pp|\n$calc_out.win_rate_by_stage.row.milestone_pace{"won":"15","entered":"100","onein":"7"}|• At current pace: 15 won deals per 100 SQLs entered (1 in 7)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.win_rate_by_stage.row.tip_good_top|💡 Tip: Good 15%–25% win rate with SQL→Opp as bottleneck — qualification is the constraint. Tighten ICP, add lead-scoring, and prioritize fewer-but-better SQLs. A 10pp lift here (50%→60%) compounds through every subsequent stage, so the ROI is highest at the top of the funnel.|\n',
   ],
   faq: [
     { q: 'What is win rate by stage?', a: 'Win rate by stage measures conversion at each funnel transition: SQL→Opp, Opp→Proposal, Proposal→Negotiation, Negotiation→Won. Multiplying all four stage rates gives the overall win rate. This view reveals exactly where the funnel leaks — a single weak stage compounds through every subsequent transition.' },

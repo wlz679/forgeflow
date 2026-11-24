@@ -1,7 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Carrying Cost Calculator (P7-2) — Business v3 standard (6+ emoji sections)
@@ -72,8 +74,9 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: zero inventory → prompt to enter value
   if (avgInventoryValue === 0) {
     return [
-      '⏰ Carrying Cost Calculator\n\n' +
-        '📊 Enter your average inventory value and the five carrying-cost rate components (storage, insurance, shrinkage, opportunity cost, other) to see your total annual carrying cost and how you compare to industry benchmarks.',
+      makeToken('calc_out.section.carrying_cost_calculator', '⏰ Carrying Cost Calculator') +
+        '\n\n' +
+        makeToken('calc_out.carrying_cost.row.need_inputs', '📊 Enter your average inventory value and the five carrying-cost rate components (storage, insurance, shrinkage, opportunity cost, other) to see your total annual carrying cost and how you compare to industry benchmarks.'),
     ];
   }
 
@@ -89,15 +92,28 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band
   const band = calcHealthBand(tr);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? 'Excellent — total carry < 20%; capital is efficient'
-      : band === 'good'
-      ? 'Good — typical retail range (20–25%); review annually'
-      : band === 'warning'
-      ? 'Warning — high carrying cost (25–30%); reduce SKU count or storage spend'
-      : 'Critical — ≥ 30%; urgent renegotiation of 3PL / storage contracts';
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.carrying_cost.row.health_excellent',
+      '• 🟢 Excellent — total carry < 20%; capital is efficient',
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.carrying_cost.row.health_good',
+      '• 🟡 Good — typical retail range (20–25%); review annually',
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.carrying_cost.row.health_warning',
+      '• 🟠 Warning — high carrying cost (25–30%); reduce SKU count or storage spend',
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.carrying_cost.row.health_critical',
+      '• 🔴 Critical — ≥ 30%; urgent renegotiation of 3PL / storage contracts',
+    );
+  }
 
   // What-If: shrinkage drops to 0.5% (loss-prevention win), then total -2pp
   const shrinkageDown = 0.5;
@@ -120,54 +136,88 @@ function calculate(inputs: Record<string, string>): string[] {
   // Tip: band-driven contextual advice
   let tip: string;
   if (band === 'critical') {
-    tip =
-      '≥ 30% carrying cost is unsustainable. Renegotiate 3PL contracts (storage fees are usually the biggest lever), kill bottom-decile SKUs, and consider drop-shipping for slow movers to remove inventory from your books entirely.';
+    tip = makeToken('calc_out.carrying_cost.row.tip_critical', '💡 Tip: ≥ 30% carrying cost is unsustainable. Renegotiate 3PL contracts (storage fees are usually the biggest lever), kill bottom-decile SKUs, and consider drop-shipping for slow movers to remove inventory from your books entirely.');
   } else if (band === 'warning') {
-    tip =
-      '25–30% is high. Reduce SKU count by 20% (typically kills 60% of slow-moving capital), audit shrinkage (most teams find 0.5–1.5% recoverable via better receiving/inventory audits), and check storage rates against 2 alternative 3PLs.';
+    tip = makeToken('calc_out.carrying_cost.row.tip_warning', '💡 Tip: 25–30% is high. Reduce SKU count by 20% (typically kills 60% of slow-moving capital), audit shrinkage (most teams find 0.5–1.5% recoverable via better receiving/inventory audits), and check storage rates against 2 alternative 3PLs.');
   } else if (band === 'good') {
-    tip =
-      '20–25% is solid retail territory. To reach the excellent band, focus on opportunity cost (line of credit at < 8% APR) and storage (consolidate to fewer warehouses). Audit annually for rate changes.';
+    tip = makeToken('calc_out.carrying_cost.row.tip_good', '💡 Tip: 20–25% is solid retail territory. To reach the excellent band, focus on opportunity cost (line of credit at < 8% APR) and storage (consolidate to fewer warehouses). Audit annually for rate changes.');
   } else {
-    tip =
-      'Excellent carry cost. Your capital is efficient — keep monitoring for creep. Watch for: storage rate increases on contract renewal, opportunity cost drift if interest rates fall (re-evaluate opp cost annually).';
+    tip = makeToken('calc_out.carrying_cost.row.tip_excellent', '💡 Tip: Excellent carry cost. Your capital is efficient — keep monitoring for creep. Watch for: storage rate increases on contract renewal, opportunity cost drift if interest rates fall (re-evaluate opp cost annually).');
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const trLabel = tr.toFixed(1);
+  const totalCostLabel = money(totalCost);
+  const avgInventoryLabel = money(avgInventoryValue);
+  const storageRateLabel = storageRate.toFixed(1);
+  const storageCostLabel = money(storageCost);
+  const insuranceRateLabel = insuranceRate.toFixed(1);
+  const insuranceCostLabel = money(insuranceCost);
+  const shrinkageRateLabel = shrinkageRate.toFixed(1);
+  const shrinkageCostLabel = money(shrinkageCost);
+  const oppRateLabel = oppCostRate.toFixed(1);
+  const oppCostLabel = money(oppCost);
+  const otherRateLabel = otherCostsPct.toFixed(1);
+  const otherCostLabel = money(otherCost);
+  const trShrinkageDownLabel = trShrinkageDown.toFixed(1);
+  const totalCostShrinkageDownLabel = money(totalCostShrinkageDown);
+  const savingsFromShrinkageLabel = money(savingsFromShrinkage);
+  const trDown2ppLabel = trDown2pp.toFixed(1);
+  const totalCostDown2ppLabel = money(totalCostDown2pp);
+  const savings2ppLabel = money(savings2pp);
+  const targetStorageLabel = targetStorage.toFixed(1);
+  const storageHeadroomLabel = storageHeadroom.toFixed(1);
+  const annualSavingsLabel = money(annualSavings2pp);
+  const reinvestLabel = money(annualSavings2pp * 0.08);
+  const compoundedLabel = money(annualSavings2pp * 1.08 * 3 - annualSavings2pp * 3);
+
   const r =
-    '⏰ Carrying Cost Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.carrying_cost_calculator', '⏰ Carrying Cost Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Total rate: ' + tr.toFixed(1) + '%/year  ·  Total annual cost: ' + money(totalCost) + '\n' +
-    '• Industry benchmark: 20–30% of inventory value/year  ·  Your status: ' + (tr < 20 ? 'below benchmark' : tr < 25 ? 'in benchmark' : tr < 30 ? 'above benchmark' : 'critical') + '\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.carrying_cost.row.total_rate_cost', '• Total rate: ' + trLabel + '%/year  ·  Total annual cost: ' + totalCostLabel, { rate: trLabel, cost: totalCostLabel }) + '\n' +
+    (tr < 20
+      ? makeToken('calc_out.carrying_cost.row.benchmark_below', '• Industry benchmark: 20–30% of inventory value/year  ·  Your status: below benchmark')
+      : tr < 25
+      ? makeToken('calc_out.carrying_cost.row.benchmark_in', '• Industry benchmark: 20–30% of inventory value/year  ·  Your status: in benchmark')
+      : tr < 30
+      ? makeToken('calc_out.carrying_cost.row.benchmark_above', '• Industry benchmark: 20–30% of inventory value/year  ·  Your status: above benchmark')
+      : makeToken('calc_out.carrying_cost.row.benchmark_critical', '• Industry benchmark: 20–30% of inventory value/year  ·  Your status: critical')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Avg inventory value:    ' + money(avgInventoryValue) + '\n' +
-    '• Storage:                ' + storageRate.toFixed(1) + '%  =  ' + money(storageCost) + '/yr\n' +
-    '• Insurance:              ' + insuranceRate.toFixed(1) + '%  =  ' + money(insuranceCost) + '/yr\n' +
-    '• Shrinkage:              ' + shrinkageRate.toFixed(1) + '%  =  ' + money(shrinkageCost) + '/yr\n' +
-    '• Opportunity cost:       ' + oppCostRate.toFixed(1) + '%  =  ' + money(oppCost) + '/yr\n' +
-    '• Other:                  ' + otherCostsPct.toFixed(1) + '%  =  ' + money(otherCost) + '/yr\n' +
-    '• TOTAL:                  ' + tr.toFixed(1) + '%  =  ' + money(totalCost) + '/yr\n\n' +
+    makeToken('calc_out.carrying_cost.row.avg_inventory', '• Avg inventory value:    ' + avgInventoryLabel, { value: avgInventoryLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.storage', '• Storage:                ' + storageRateLabel + '%  =  ' + storageCostLabel + '/yr', { rate: storageRateLabel, cost: storageCostLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.insurance', '• Insurance:              ' + insuranceRateLabel + '%  =  ' + insuranceCostLabel + '/yr', { rate: insuranceRateLabel, cost: insuranceCostLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.shrinkage', '• Shrinkage:              ' + shrinkageRateLabel + '%  =  ' + shrinkageCostLabel + '/yr', { rate: shrinkageRateLabel, cost: shrinkageCostLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.opportunity_cost', '• Opportunity cost:       ' + oppRateLabel + '%  =  ' + oppCostLabel + '/yr', { rate: oppRateLabel, cost: oppCostLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.other', '• Other:                  ' + otherRateLabel + '%  =  ' + otherCostLabel + '/yr', { rate: otherRateLabel, cost: otherCostLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.total', '• TOTAL:                  ' + trLabel + '%  =  ' + totalCostLabel + '/yr', { rate: trLabel, cost: totalCostLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Shrinkage drops to 0.5% (loss-prevention win): rate = ' + trShrinkageDown.toFixed(1) + '%  ·  annual cost = ' + money(totalCostShrinkageDown) + '  ·  savings = ' + money(savingsFromShrinkage) + '\n' +
-    '• Total rate drops −2pp: rate = ' + trDown2pp.toFixed(1) + '%  ·  annual cost = ' + money(totalCostDown2pp) + '  ·  savings = ' + money(savings2pp) + '\n\n' +
+    makeToken('calc_out.carrying_cost.row.whatif_shrinkage_down', '• Shrinkage drops to 0.5% (loss-prevention win): rate = ' + trShrinkageDownLabel + '%  ·  annual cost = ' + totalCostShrinkageDownLabel + '  ·  savings = ' + savingsFromShrinkageLabel, { rate: trShrinkageDownLabel, cost: totalCostShrinkageDownLabel, savings: savingsFromShrinkageLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.whatif_rate_down_2pp', '• Total rate drops −2pp: rate = ' + trDown2ppLabel + '%  ·  annual cost = ' + totalCostDown2ppLabel + '  ·  savings = ' + savings2ppLabel, { rate: trDown2ppLabel, cost: totalCostDown2ppLabel, savings: savings2ppLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Max storage rate for 🟢 (target <20% total): ' + (targetStorage >= 0 ? targetStorage.toFixed(1) + '%' : 'N/A (other components already exceed 20% — must reduce elsewhere)') + '\n' +
-    '• Storage headroom: ' + (storageHeadroom > 0 ? 'reduce storage by ' + storageHeadroom.toFixed(1) + 'pp to hit 🟢' : storageHeadroom === 0 ? 'at threshold' : 'already below target') + '\n\n' +
+    (targetStorage >= 0
+      ? makeToken('calc_out.carrying_cost.row.breakeven_max_storage', '• Max storage rate for 🟢 (target <20% total): ' + targetStorageLabel + '%', { rate: targetStorageLabel })
+      : makeToken('calc_out.carrying_cost.row.breakeven_max_storage_na', '• Max storage rate for 🟢 (target <20% total): N/A (other components already exceed 20% — must reduce elsewhere)')) + '\n' +
+    (storageHeadroom > 0
+      ? makeToken('calc_out.carrying_cost.row.breakeven_headroom_reduce', '• Storage headroom: reduce storage by ' + storageHeadroomLabel + 'pp to hit 🟢', { points: storageHeadroomLabel })
+      : storageHeadroom === 0
+      ? makeToken('calc_out.carrying_cost.row.breakeven_headroom_threshold', '• Storage headroom: at threshold')
+      : makeToken('calc_out.carrying_cost.row.breakeven_headroom_below', '• Storage headroom: already below target')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• 12-mo savings if rate drops 2pp: ' + money(annualSavings2pp) + '\n' +
-    '• Reinvested at 8% return: ' + money(annualSavings2pp * 0.08) + '/yr additional\n' +
-    '• Compounded over 3 years: ' + money(annualSavings2pp * 1.08 * 3 - annualSavings2pp * 3) + ' (vs $0 reinvested)\n\n' +
+    makeToken('calc_out.carrying_cost.row.milestone_12mo_savings', '• 12-mo savings if rate drops 2pp: ' + annualSavingsLabel, { value: annualSavingsLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.milestone_reinvested', '• Reinvested at 8% return: ' + reinvestLabel + '/yr additional', { value: reinvestLabel }) + '\n' +
+    makeToken('calc_out.carrying_cost.row.milestone_compounded', '• Compounded over 3 years: ' + compoundedLabel + ' (vs $0 reinvested)', { value: compoundedLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -175,56 +225,56 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let s=function(t){return Number.isNaN(t)?0:Math.max(0,t)},k=function(t,n,r,o,l){return t+n+r+o+l},p=function(t,n){return t*(n/100)},c=function(t,n){return t*(n/100)},w=function(t){return t<f.excellent?"excellent":t<f.good[1]?"good":t<f.warning[1]?"warning":"critical"},x=function(t,n,r){var o=I(t);return Array.isArray(o)?o.join(\`
-\`):String(o)};var N=s,O=k,W=p,j=c,V=w,Y=x,_={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},f={excellent:20,good:[20,25],warning:[25,30],critical:30},I=function(t){const n=s(parseFloat(t.avgInventoryValue)||0),r=s(parseFloat(t.storageRate)||0),o=s(parseFloat(t.insuranceRate)||0),l=s(parseFloat(t.shrinkageRate)||0),g=s(parseFloat(t.oppCostRate)||0),u=s(parseFloat(t.otherCostsPct)||0);if(n===0)return[\`⏰ Carrying Cost Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(o){return Number.isNaN(o)?0:Math.max(0,o)},S=function(o,r,e,n,l){return o+r+e+n+l},p=function(o,r){return o*(r/100)},i=function(o,r){return o*(r/100)},x=function(o){return o<b.excellent?"excellent":o<b.good[1]?"good":o<b.warning[1]?"warning":"critical"},F=function(o,r,e){var n=tt(o);return Array.isArray(n)?n.join(\`
+\`):String(n)};var it=c,lt=S,ut=p,gt=i,_t=x,yt=F,t=tk,T='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+T)(),b={excellent:20,good:[20,25],warning:[25,30],critical:30},tt=function(o){const r=c(parseFloat(o.avgInventoryValue)||0),e=c(parseFloat(o.storageRate)||0),n=c(parseFloat(o.insuranceRate)||0),l=c(parseFloat(o.shrinkageRate)||0),g=c(parseFloat(o.oppCostRate)||0),_=c(parseFloat(o.otherCostsPct)||0);if(r===0)return[t("calc_out.section.carrying_cost_calculator","⏰ Carrying Cost Calculator")+\`
 
-📊 Enter your average inventory value and the five carrying-cost rate components (storage, insurance, shrinkage, opportunity cost, other) to see your total annual carrying cost and how you compare to industry benchmarks.\`];const a=k(r,o,l,g,u),h=p(n,a),P=c(n,r),D=c(n,o),M=c(n,l),T=c(n,g),E=c(n,u),e=A=>"$"+Math.round(A).toLocaleString("en-US"),i=w(a),K=_[i],L=i==="excellent"?"Excellent — total carry < 20%; capital is efficient":i==="good"?"Good — typical retail range (20–25%); review annually":i==="warning"?"Warning — high carrying cost (25–30%); reduce SKU count or storage spend":"Critical — ≥ 30%; urgent renegotiation of 3PL / storage contracts",b=r+o+.5+g+u,C=p(n,b),U=h-C,F=Math.max(0,a-2),S=p(n,F),R=h-S,v=19.9-(o+l+g+u),m=r-v,y=R;let d;return i==="critical"?d="≥ 30% carrying cost is unsustainable. Renegotiate 3PL contracts (storage fees are usually the biggest lever), kill bottom-decile SKUs, and consider drop-shipping for slow movers to remove inventory from your books entirely.":i==="warning"?d="25–30% is high. Reduce SKU count by 20% (typically kills 60% of slow-moving capital), audit shrinkage (most teams find 0.5–1.5% recoverable via better receiving/inventory audits), and check storage rates against 2 alternative 3PLs.":i==="good"?d="20–25% is solid retail territory. To reach the excellent band, focus on opportunity cost (line of credit at < 8% APR) and storage (consolidate to fewer warehouses). Audit annually for rate changes.":d="Excellent carry cost. Your capital is efficient — keep monitoring for creep. Watch for: storage rate increases on contract renewal, opportunity cost drift if interest rates fall (re-evaluate opp cost annually).",[\`⏰ Carrying Cost Calculator
+\`+t("calc_out.carrying_cost.row.need_inputs","📊 Enter your average inventory value and the five carrying-cost rate components (storage, insurance, shrinkage, opportunity cost, other) to see your total annual carrying cost and how you compare to industry benchmarks.")];const s=S(e,n,l,g,_),f=p(r,s),ot=i(r,e),rt=i(r,n),at=i(r,l),nt=i(r,g),et=i(r,_),a=st=>"$"+Math.round(st).toLocaleString("en-US"),u=x(s);let y;u==="excellent"?y=t("calc_out.carrying_cost.row.health_excellent","• 🟢 Excellent — total carry < 20%; capital is efficient"):u==="good"?y=t("calc_out.carrying_cost.row.health_good","• 🟡 Good — typical retail range (20–25%); review annually"):u==="warning"?y=t("calc_out.carrying_cost.row.health_warning","• 🟠 Warning — high carrying cost (25–30%); reduce SKU count or storage spend"):y=t("calc_out.carrying_cost.row.health_critical","• 🔴 Critical — ≥ 30%; urgent renegotiation of 3PL / storage contracts");const R=e+n+.5+g+_,m=p(r,R),ct=f-m,I=Math.max(0,s-2),D=p(r,I),M=f-D,C=19.9-(n+l+g+_),L=e-C,d=M;let h;u==="critical"?h=t("calc_out.carrying_cost.row.tip_critical","💡 Tip: ≥ 30% carrying cost is unsustainable. Renegotiate 3PL contracts (storage fees are usually the biggest lever), kill bottom-decile SKUs, and consider drop-shipping for slow movers to remove inventory from your books entirely."):u==="warning"?h=t("calc_out.carrying_cost.row.tip_warning","💡 Tip: 25–30% is high. Reduce SKU count by 20% (typically kills 60% of slow-moving capital), audit shrinkage (most teams find 0.5–1.5% recoverable via better receiving/inventory audits), and check storage rates against 2 alternative 3PLs."):u==="good"?h=t("calc_out.carrying_cost.row.tip_good","💡 Tip: 20–25% is solid retail territory. To reach the excellent band, focus on opportunity cost (line of credit at < 8% APR) and storage (consolidate to fewer warehouses). Audit annually for rate changes."):h=t("calc_out.carrying_cost.row.tip_excellent","💡 Tip: Excellent carry cost. Your capital is efficient — keep monitoring for creep. Watch for: storage rate increases on contract renewal, opportunity cost drift if interest rates fall (re-evaluate opp cost annually).");const v=s.toFixed(1),w=a(f),O=a(r),P=e.toFixed(1),j=a(ot),Y=n.toFixed(1),q=a(rt),E=l.toFixed(1),K=a(at),N=g.toFixed(1),U=a(nt),A=_.toFixed(1),W=a(et),$=R.toFixed(1),V=a(m),G=a(ct),J=I.toFixed(1),z=a(D),Q=a(M),X=C.toFixed(1),Z=L.toFixed(1),B=a(d),H=a(d*.08),k=a(d*1.08*3-d*3);return[t("calc_out.section.carrying_cost_calculator","⏰ Carrying Cost Calculator")+\`
 
-🩺 Health:
+\`+t("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+K+" "+L+\`
-• Total rate: \`+a.toFixed(1)+"%/year  ·  Total annual cost: "+e(h)+\`
-• Industry benchmark: 20–30% of inventory value/year  ·  Your status: \`+(a<20?"below benchmark":a<25?"in benchmark":a<30?"above benchmark":"critical")+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Avg inventory value:    \`+e(n)+\`
-• Storage:                \`+r.toFixed(1)+"%  =  "+e(P)+\`/yr
-• Insurance:              \`+o.toFixed(1)+"%  =  "+e(D)+\`/yr
-• Shrinkage:              \`+l.toFixed(1)+"%  =  "+e(M)+\`/yr
-• Opportunity cost:       \`+g.toFixed(1)+"%  =  "+e(T)+\`/yr
-• Other:                  \`+u.toFixed(1)+"%  =  "+e(E)+\`/yr
-• TOTAL:                  \`+a.toFixed(1)+"%  =  "+e(h)+\`/yr
+\`+y+\`
+\`+t("calc_out.carrying_cost.row.total_rate_cost","• Total rate: "+v+"%/year  ·  Total annual cost: "+w,{rate:v,cost:w})+\`
+\`+(s<20?t("calc_out.carrying_cost.row.benchmark_below","• Industry benchmark: 20–30% of inventory value/year  ·  Your status: below benchmark"):s<25?t("calc_out.carrying_cost.row.benchmark_in","• Industry benchmark: 20–30% of inventory value/year  ·  Your status: in benchmark"):s<30?t("calc_out.carrying_cost.row.benchmark_above","• Industry benchmark: 20–30% of inventory value/year  ·  Your status: above benchmark"):t("calc_out.carrying_cost.row.benchmark_critical","• Industry benchmark: 20–30% of inventory value/year  ·  Your status: critical"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+t("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Shrinkage drops to 0.5% (loss-prevention win): rate = \`+b.toFixed(1)+"%  ·  annual cost = "+e(C)+"  ·  savings = "+e(U)+\`
-• Total rate drops −2pp: rate = \`+F.toFixed(1)+"%  ·  annual cost = "+e(S)+"  ·  savings = "+e(R)+\`
+\`+t("calc_out.carrying_cost.row.avg_inventory","• Avg inventory value:    "+O,{value:O})+\`
+\`+t("calc_out.carrying_cost.row.storage","• Storage:                "+P+"%  =  "+j+"/yr",{rate:P,cost:j})+\`
+\`+t("calc_out.carrying_cost.row.insurance","• Insurance:              "+Y+"%  =  "+q+"/yr",{rate:Y,cost:q})+\`
+\`+t("calc_out.carrying_cost.row.shrinkage","• Shrinkage:              "+E+"%  =  "+K+"/yr",{rate:E,cost:K})+\`
+\`+t("calc_out.carrying_cost.row.opportunity_cost","• Opportunity cost:       "+N+"%  =  "+U+"/yr",{rate:N,cost:U})+\`
+\`+t("calc_out.carrying_cost.row.other","• Other:                  "+A+"%  =  "+W+"/yr",{rate:A,cost:W})+\`
+\`+t("calc_out.carrying_cost.row.total","• TOTAL:                  "+v+"%  =  "+w+"/yr",{rate:v,cost:w})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+t("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Max storage rate for 🟢 (target <20% total): \`+(v>=0?v.toFixed(1)+"%":"N/A (other components already exceed 20% — must reduce elsewhere)")+\`
-• Storage headroom: \`+(m>0?"reduce storage by "+m.toFixed(1)+"pp to hit 🟢":m===0?"at threshold":"already below target")+\`
+\`+t("calc_out.carrying_cost.row.whatif_shrinkage_down","• Shrinkage drops to 0.5% (loss-prevention win): rate = "+$+"%  ·  annual cost = "+V+"  ·  savings = "+G,{rate:$,cost:V,savings:G})+\`
+\`+t("calc_out.carrying_cost.row.whatif_rate_down_2pp","• Total rate drops −2pp: rate = "+J+"%  ·  annual cost = "+z+"  ·  savings = "+Q,{rate:J,cost:z,savings:Q})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+t("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 12-mo savings if rate drops 2pp: \`+e(y)+\`
-• Reinvested at 8% return: \`+e(y*.08)+\`/yr additional
-• Compounded over 3 years: \`+e(y*1.08*3-y*3)+\` (vs $0 reinvested)
+\`+(C>=0?t("calc_out.carrying_cost.row.breakeven_max_storage","• Max storage rate for 🟢 (target <20% total): "+X+"%",{rate:X}):t("calc_out.carrying_cost.row.breakeven_max_storage_na","• Max storage rate for 🟢 (target <20% total): N/A (other components already exceed 20% — must reduce elsewhere)"))+\`
+\`+(L>0?t("calc_out.carrying_cost.row.breakeven_headroom_reduce","• Storage headroom: reduce storage by "+Z+"pp to hit 🟢",{points:Z}):L===0?t("calc_out.carrying_cost.row.breakeven_headroom_threshold","• Storage headroom: at threshold"):t("calc_out.carrying_cost.row.breakeven_headroom_below","• Storage headroom: already below target"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+d+\`
-\`]};return[x(inputs,pick,fill)]}finally{}
+\`+t("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.carrying_cost.row.milestone_12mo_savings","• 12-mo savings if rate drops 2pp: "+B,{value:B})+\`
+\`+t("calc_out.carrying_cost.row.milestone_reinvested","• Reinvested at 8% return: "+H+"/yr additional",{value:H})+\`
+\`+t("calc_out.carrying_cost.row.milestone_compounded","• Compounded over 3 years: "+k+" (vs $0 reinvested)",{value:k})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+h+\`
+\`]};return[F(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -278,7 +328,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Carrying Cost Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — typical retail range (20–25%); review annually\n• Total rate: 21.5%/year  ·  Total annual cost: $10,750\n• Industry benchmark: 20–30% of inventory value/year  ·  Your status: in benchmark\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Avg inventory value:    $50,000\n• Storage:                8.0%  =  $4,000/yr\n• Insurance:              1.5%  =  $750/yr\n• Shrinkage:              2.0%  =  $1,000/yr\n• Opportunity cost:       8.0%  =  $4,000/yr\n• Other:                  2.0%  =  $1,000/yr\n• TOTAL:                  21.5%  =  $10,750/yr\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Shrinkage drops to 0.5% (loss-prevention win): rate = 20.0%  ·  annual cost = $10,000  ·  savings = $750\n• Total rate drops −2pp: rate = 19.5%  ·  annual cost = $9,750  ·  savings = $1,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Max storage rate for 🟢 (target <20% total): 6.4%\n• Storage headroom: reduce storage by 1.6pp to hit 🟢\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 12-mo savings if rate drops 2pp: $1,000\n• Reinvested at 8% return: $80/yr additional\n• Compounded over 3 years: $240 (vs $0 reinvested)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: 20–25% is solid retail territory. To reach the excellent band, focus on opportunity cost (line of credit at < 8% APR) and storage (consolidate to fewer warehouses). Audit annually for rate changes.\n'],
+  staticExamples: ['$calc_out.section.carrying_cost_calculator|⏰ Carrying Cost Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.carrying_cost.row.health_good|• 🟡 Good — typical retail range (20–25%); review annually|\n$calc_out.carrying_cost.row.total_rate_cost{"rate":"21.5","cost":"$10,750"}|• Total rate: 21.5%/year  ·  Total annual cost: $10,750|\n$calc_out.carrying_cost.row.benchmark_in|• Industry benchmark: 20–30% of inventory value/year  ·  Your status: in benchmark|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.carrying_cost.row.avg_inventory{"value":"$50,000"}|• Avg inventory value:    $50,000|\n$calc_out.carrying_cost.row.storage{"rate":"8.0","cost":"$4,000"}|• Storage:                8.0%  =  $4,000/yr|\n$calc_out.carrying_cost.row.insurance{"rate":"1.5","cost":"$750"}|• Insurance:              1.5%  =  $750/yr|\n$calc_out.carrying_cost.row.shrinkage{"rate":"2.0","cost":"$1,000"}|• Shrinkage:              2.0%  =  $1,000/yr|\n$calc_out.carrying_cost.row.opportunity_cost{"rate":"8.0","cost":"$4,000"}|• Opportunity cost:       8.0%  =  $4,000/yr|\n$calc_out.carrying_cost.row.other{"rate":"2.0","cost":"$1,000"}|• Other:                  2.0%  =  $1,000/yr|\n$calc_out.carrying_cost.row.total{"rate":"21.5","cost":"$10,750"}|• TOTAL:                  21.5%  =  $10,750/yr|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.carrying_cost.row.whatif_shrinkage_down{"rate":"20.0","cost":"$10,000","savings":"$750"}|• Shrinkage drops to 0.5% (loss-prevention win): rate = 20.0%  ·  annual cost = $10,000  ·  savings = $750|\n$calc_out.carrying_cost.row.whatif_rate_down_2pp{"rate":"19.5","cost":"$9,750","savings":"$1,000"}|• Total rate drops −2pp: rate = 19.5%  ·  annual cost = $9,750  ·  savings = $1,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.carrying_cost.row.breakeven_max_storage{"rate":"6.4"}|• Max storage rate for 🟢 (target <20% total): 6.4%|\n$calc_out.carrying_cost.row.breakeven_headroom_reduce{"points":"1.6"}|• Storage headroom: reduce storage by 1.6pp to hit 🟢|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.carrying_cost.row.milestone_12mo_savings{"value":"$1,000"}|• 12-mo savings if rate drops 2pp: $1,000|\n$calc_out.carrying_cost.row.milestone_reinvested{"value":"$80"}|• Reinvested at 8% return: $80/yr additional|\n$calc_out.carrying_cost.row.milestone_compounded{"value":"$240"}|• Compounded over 3 years: $240 (vs $0 reinvested)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.carrying_cost.row.tip_good|💡 Tip: 20–25% is solid retail territory. To reach the excellent band, focus on opportunity cost (line of credit at < 8% APR) and storage (consolidate to fewer warehouses). Audit annually for rate changes.|\n'],
   faq: [
     { q: 'What is a typical inventory carrying cost?', a: 'Industry rule of thumb: 20–30% of inventory value per year. Storage is usually the largest component (5–10%), followed by opportunity cost (5–10%), shrinkage (1–3%), insurance (1–2%), and other (1–3%).' },
     { q: 'How do I reduce my carrying cost?', a: 'Three biggest levers: (1) reduce SKU count — kill bottom 20% (typically frees 50%+ of capital), (2) renegotiate 3PL contracts — most teams save 15–30%, (3) tighten reorder points and reduce safety stock (saves 10–20%).' },

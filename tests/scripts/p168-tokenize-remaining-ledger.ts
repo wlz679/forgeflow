@@ -59,10 +59,10 @@ export interface ZhEnRow {
  *   ⇒ 那正是「欠账在增长」的情形 ⇒ 必须有一个**独立于实测**的硬上限把它挡住。
  *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（36）就是欠账在长。
  */
-export const DEBT_MAX = 36;
+export const DEBT_MAX = 27;
 
 /**
- * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 36 个引擎）。
+ * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 27 个引擎）。
  * · **不得新增**：修好一条必须销一条 ⇒ 台账只能变小不能变大（DEBT_MAX 守着规模上限）。
  * · 数字必须与实测一致（守卫会核）⇒ 台账条目不是空壳。
  * · 条目按 slug 字典序排列（= --emit 的输出顺序 ⇒ 贴回即可）。
@@ -72,38 +72,29 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-article-helpfulness-calculator': 2,
   'solopreneur-attrition-cost-calculator': 2,
   'solopreneur-breach-notification-cost-calculator': 2,
-  'solopreneur-break-even-calculator': 14,
-  'solopreneur-carrying-cost-calculator': 12,
   'solopreneur-cmp-roi-calculator': 2,
   'solopreneur-comp-banding-calculator': 1,
   'solopreneur-consent-revenue-impact-calculator': 2,
   'solopreneur-cost-per-support-ticket-calculator': 2,
   'solopreneur-csat-calculator': 1,
-  'solopreneur-customer-health-score-calculator': 14,
   'solopreneur-deflection-quality-calculator': 2,
   'solopreneur-deflection-rate-calculator': 2,
   'solopreneur-documentation-roi-calculator': 2,
   'solopreneur-dpa-cost-calculator': 2,
   'solopreneur-dsar-cost-calculator': 2,
   'solopreneur-equity-refresh-calculator': 2,
-  'solopreneur-expansion-revenue-calculator': 16,
   'solopreneur-first-response-time-calculator': 2,
   'solopreneur-fully-loaded-employee-cost-calculator': 2,
-  'solopreneur-funnel-value-calculator': 12,
   'solopreneur-gdpr-fine-calculator': 1,
   'solopreneur-grr-calculator': 8,
   'solopreneur-kb-coverage-rate-calculator': 1,
-  'solopreneur-nrr-calculator': 16,
-  'solopreneur-pipeline-value-calculator': 13,
   'solopreneur-power-user-curve-calculator': 5,
   'solopreneur-productivity-ramp-curve-calculator': 2,
   'solopreneur-resolution-time-calculator': 2,
   'solopreneur-search-effectiveness-calculator': 2,
-  'solopreneur-supplier-scorecard-calculator': 17,
   'solopreneur-support-capacity-planning-calculator': 2,
   'solopreneur-time-to-productivity-calculator': 2,
   'solopreneur-time-to-value-calculator': 5,
-  'solopreneur-win-rate-by-stage-calculator': 14,
 };
 
 /**

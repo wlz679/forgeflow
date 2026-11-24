@@ -109,6 +109,16 @@ export const B3_14_BATCH = [
   { slug: 'solopreneur-mortgage-calculator', file: 'src/engines/real-estate/mortgage-calculator.ts', alias: 'mortgage', baseline: '9abe1f0' },
   { slug: 'solopreneur-affiliate-income-calculator', file: 'src/engines/freelance/affiliate-income-calculator.ts', alias: 'affiliate_income', baseline: '9abe1f0' },
   { slug: 'solopreneur-fulfillment-cost-calculator', file: 'src/engines/operations/fulfillment-cost-calculator.ts', alias: 'fulfillment_cost', baseline: '9abe1f0' },
+  // P168 B3-14 组 2 —— 次重的 9 个引擎（128 行）。
+  { slug: 'solopreneur-supplier-scorecard-calculator', file: 'src/engines/operations/supplier-scorecard-calculator.ts', alias: 'supplier_scorecard', baseline: '9abe1f0' },
+  { slug: 'solopreneur-expansion-revenue-calculator', file: 'src/engines/retention/expansion-revenue-calculator.ts', alias: 'expansion_revenue', baseline: '9abe1f0' },
+  { slug: 'solopreneur-nrr-calculator', file: 'src/engines/retention/nrr-calculator.ts', alias: 'nrr', baseline: '9abe1f0' },
+  { slug: 'solopreneur-break-even-calculator', file: 'src/engines/valuation/break-even-calculator.ts', alias: 'break_even', baseline: '9abe1f0' },
+  { slug: 'solopreneur-customer-health-score-calculator', file: 'src/engines/retention/customer-health-score-calculator.ts', alias: 'customer_health_score', baseline: '9abe1f0' },
+  { slug: 'solopreneur-win-rate-by-stage-calculator', file: 'src/engines/sales/win-rate-by-stage-calculator.ts', alias: 'win_rate_by_stage', baseline: '9abe1f0' },
+  { slug: 'solopreneur-pipeline-value-calculator', file: 'src/engines/sales/pipeline-value-calculator.ts', alias: 'pipeline_value', baseline: '9abe1f0' },
+  { slug: 'solopreneur-carrying-cost-calculator', file: 'src/engines/operations/carrying-cost-calculator.ts', alias: 'carrying_cost', baseline: '9abe1f0' },
+  { slug: 'solopreneur-funnel-value-calculator', file: 'src/engines/marketing/funnel-value-calculator.ts', alias: 'funnel_value', baseline: '9abe1f0' },
 ];
 
 export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH, ...B3_14_BATCH];

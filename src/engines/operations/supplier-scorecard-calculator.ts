@@ -1,7 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Supplier Performance Scorecard Calculator (P7-6) — Business v3 standard
@@ -105,8 +107,9 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: all zero scores → prompt
   if (onTimePct === 0 && defectRatePct === 0 && leadVarianceDays === 0 && costVariancePct === 0) {
     return [
-      '⏰ Supplier Performance Scorecard Calculator\n\n' +
-        '📊 Enter your supplier performance metrics — on-time delivery %, defect rate %, lead time variance, and cost variance — to see the composite score and letter grade.',
+      makeToken('calc_out.section.supplier_scorecard_calculator', '⏰ Supplier Performance Scorecard Calculator') +
+        '\n\n' +
+        makeToken('calc_out.supplier_scorecard.row.need_inputs', '📊 Enter your supplier performance metrics — on-time delivery %, defect rate %, lead time variance, and cost variance — to see the composite score and letter grade.'),
     ];
   }
 
@@ -118,17 +121,36 @@ function calculate(inputs: Record<string, string>): string[] {
   const score = compositeScore(sOT, sDef, sLead, sCost, weights);
   const grade = gradeFromScore(score);
 
-  // Health band
+  // Health band（健康度 4 档各写一个 code 字面量 ⇒ 不动态拼码）
   const band = calcHealthBand(score);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? `Excellent — composite ${score.toFixed(1)} = grade ${grade}; strategic partner`
-      : band === 'good'
-      ? `Good — composite ${score.toFixed(1)} = grade ${grade}; solid, monitor`
-      : band === 'warning'
-      ? `Warning — composite ${score.toFixed(1)} = grade ${grade}; underperforming`
-      : `Critical — composite ${score.toFixed(1)} = grade ${grade}; replace`;
+  const scoreLabel = score.toFixed(1);
+  const gradeLabel = grade;
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.supplier_scorecard.row.health_excellent',
+      '• 🟢 Excellent — composite ' + scoreLabel + ' = grade ' + gradeLabel + '; strategic partner',
+      { score: scoreLabel, grade: gradeLabel },
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.supplier_scorecard.row.health_good',
+      '• 🟡 Good — composite ' + scoreLabel + ' = grade ' + gradeLabel + '; solid, monitor',
+      { score: scoreLabel, grade: gradeLabel },
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.supplier_scorecard.row.health_warning',
+      '• 🟠 Warning — composite ' + scoreLabel + ' = grade ' + gradeLabel + '; underperforming',
+      { score: scoreLabel, grade: gradeLabel },
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.supplier_scorecard.row.health_critical',
+      '• 🔴 Critical — composite ' + scoreLabel + ' = grade ' + gradeLabel + '; replace',
+      { score: scoreLabel, grade: gradeLabel },
+    );
+  }
 
   // What-If: defect rate drops to 0.5%, then on-time improves to 95%
   const defDown = 0.5;
@@ -154,57 +176,94 @@ function calculate(inputs: Record<string, string>): string[] {
   const nextGradeThreshold = currentGrade === 'D' ? 70 : currentGrade === 'C' ? 80 : currentGrade === 'B' ? 90 : 95;
   const pointsToUpgrade = nextGradeThreshold - score;
 
-  // Tip: band-driven contextual advice
+  // Tip: band-driven contextual advice（每个档位一个 code 字面量）
   let tip: string;
   if (band === 'critical') {
-    tip =
-      'Grade D is a replace signal. Begin dual-sourcing immediately (qualify a backup supplier over 60–90 days). For critical SKUs, air-ship to bridge the gap while transitioning. Do NOT extend POs without backup.';
+    tip = makeToken(
+      'calc_out.supplier_scorecard.row.tip_critical',
+      '💡 Tip: Grade D is a replace signal. Begin dual-sourcing immediately (qualify a backup supplier over 60–90 days). For critical SKUs, air-ship to bridge the gap while transitioning. Do NOT extend POs without backup.',
+    );
   } else if (band === 'warning') {
-    tip =
-      'Grade C means 1–2 dimensions are failing. Identify the weakest metric (likely defect rate or lead variance) and require a corrective action plan (CAP) within 30 days. Hold new SKUs until improvement.';
+    tip = makeToken(
+      'calc_out.supplier_scorecard.row.tip_warning',
+      '💡 Tip: Grade C means 1–2 dimensions are failing. Identify the weakest metric (likely defect rate or lead variance) and require a corrective action plan (CAP) within 30 days. Hold new SKUs until improvement.',
+    );
   } else if (band === 'good') {
-    tip =
-      'Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.';
+    tip = makeToken(
+      'calc_out.supplier_scorecard.row.tip_good',
+      '💡 Tip: Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.',
+    );
   } else {
-    tip =
-      'Grade A — strategic partner. Lock in long-term contracts, request preferred-customer pricing, and ask for early access to new SKUs / capacity. Audit quarterly to ensure quality holds.';
+    tip = makeToken(
+      'calc_out.supplier_scorecard.row.tip_excellent',
+      '💡 Tip: Grade A — strategic partner. Lock in long-term contracts, request preferred-customer pricing, and ask for early access to new SKUs / capacity. Audit quarterly to ensure quality holds.',
+    );
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const onTimeLabel = onTimePct.toFixed(1);
+  const defectRateLabel = defectRatePct.toFixed(1);
+  const leadVarianceLabel = leadVarianceDays.toFixed(1);
+  const costVarianceLabel = costVariancePct.toFixed(1);
+  const sOTLabel = sOT.toFixed(0);
+  const sDefLabel = sDef.toFixed(0);
+  const sLeadLabel = sLead.toFixed(0);
+  const sCostLabel = sCost.toFixed(0);
+  const onTimeWeightLabel = (weights.onTime * 100).toFixed(0);
+  const defectWeightLabel = (weights.defect * 100).toFixed(0);
+  const leadWeightLabel = (weights.lead * 100).toFixed(0);
+  const costWeightLabel = (weights.cost * 100).toFixed(0);
+  const scoreDefDownLabel = scoreDefDown.toFixed(1);
+  const scoreDeltaDefLabel = scoreDeltaDef.toFixed(1);
+  const scoreOTUpLabel = scoreOTUp.toFixed(1);
+  const scoreDeltaOTLabel = scoreDeltaOT.toFixed(1);
+  const targetOnTimeLabel = targetOnTimeScore.toFixed(1);
+  const currentOnTimeLabel = currentOnTimeScore.toFixed(1);
+  const onTimeHeadroomLabel = onTimeHeadroom.toFixed(1);
+  const currentGradeLabel = currentGrade;
+  const nextGradeThresholdLabel = String(nextGradeThreshold);
+  const pointsToUpgradeLabel = pointsToUpgrade.toFixed(1);
+  const presetLabel = weightPreset;
+
   const r =
-    '⏰ Supplier Performance Scorecard Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.supplier_scorecard_calculator', '⏰ Supplier Performance Scorecard Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Composite: ' + score.toFixed(1) + '/100  ·  Grade: ' + grade + '  ·  Weight preset: ' + weightPreset + '\n' +
-    '• Sub-scores: on-time ' + sOT.toFixed(0) + ' · defect ' + sDef.toFixed(0) + ' · lead ' + sLead.toFixed(0) + ' · cost ' + sCost.toFixed(0) + '\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.composite', '• Composite: ' + scoreLabel + '/100  ·  Grade: ' + gradeLabel + '  ·  Weight preset: ' + presetLabel, { score: scoreLabel, grade: gradeLabel, preset: presetLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.sub_scores', '• Sub-scores: on-time ' + sOTLabel + ' · defect ' + sDefLabel + ' · lead ' + sLeadLabel + ' · cost ' + sCostLabel, { ontime: sOTLabel, defect: sDefLabel, lead: sLeadLabel, cost: sCostLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• On-time delivery:        ' + onTimePct.toFixed(1) + '%  →  score ' + sOT.toFixed(0) + '  (weight ' + (weights.onTime * 100).toFixed(0) + '%)\n' +
-    '• Defect rate:             ' + defectRatePct.toFixed(1) + '%  →  score ' + sDef.toFixed(0) + '  (weight ' + (weights.defect * 100).toFixed(0) + '%)\n' +
-    '• Lead time variance:      ' + leadVarianceDays.toFixed(1) + ' days  →  score ' + sLead.toFixed(0) + '  (weight ' + (weights.lead * 100).toFixed(0) + '%)\n' +
-    '• Cost variance:           ' + costVariancePct.toFixed(1) + '%  →  score ' + sCost.toFixed(0) + '  (weight ' + (weights.cost * 100).toFixed(0) + '%)\n' +
-    '• Composite:               ' + score.toFixed(1) + '/100  ·  Grade ' + grade + '\n\n' +
+    makeToken('calc_out.supplier_scorecard.row.on_time_delivery', '• On-time delivery:        ' + onTimeLabel + '%  →  score ' + sOTLabel + '  (weight ' + onTimeWeightLabel + '%)', { pct: onTimeLabel, score: sOTLabel, weight: onTimeWeightLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.defect_rate', '• Defect rate:             ' + defectRateLabel + '%  →  score ' + sDefLabel + '  (weight ' + defectWeightLabel + '%)', { pct: defectRateLabel, score: sDefLabel, weight: defectWeightLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.lead_time_variance', '• Lead time variance:      ' + leadVarianceLabel + ' days  →  score ' + sLeadLabel + '  (weight ' + leadWeightLabel + '%)', { days: leadVarianceLabel, score: sLeadLabel, weight: leadWeightLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.cost_variance', '• Cost variance:           ' + costVarianceLabel + '%  →  score ' + sCostLabel + '  (weight ' + costWeightLabel + '%)', { pct: costVarianceLabel, score: sCostLabel, weight: costWeightLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.composite_inputs', '• Composite:               ' + scoreLabel + '/100  ·  Grade ' + gradeLabel, { score: scoreLabel, grade: gradeLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Defect rate drops to 0.5%: composite = ' + scoreDefDown.toFixed(1) + ' (Δ +' + scoreDeltaDef.toFixed(1) + ' points)\n' +
-    '• On-time improves to 95%: composite = ' + scoreOTUp.toFixed(1) + ' (Δ +' + scoreDeltaOT.toFixed(1) + ' points)\n' +
-    '• Combined (defect 0.5% + on-time 95%): see Milestone\n\n' +
+    makeToken('calc_out.supplier_scorecard.row.whatif_defect_down', '• Defect rate drops to 0.5%: composite = ' + scoreDefDownLabel + ' (Δ +' + scoreDeltaDefLabel + ' points)', { score: scoreDefDownLabel, delta: scoreDeltaDefLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.whatif_ontime_up', '• On-time improves to 95%: composite = ' + scoreOTUpLabel + ' (Δ +' + scoreDeltaOTLabel + ' points)', { score: scoreOTUpLabel, delta: scoreDeltaOTLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.whatif_combined', '• Combined (defect 0.5% + on-time 95%): see Milestone') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Min on-time score for grade B (≥ 80 composite): ' + targetOnTimeScore.toFixed(1) + '\n' +
-    '• Current on-time score: ' + currentOnTimeScore.toFixed(1) + '\n' +
-    '• On-time headroom: ' + (onTimeHeadroom > 0 ? 'raise on-time by ' + onTimeHeadroom.toFixed(1) + ' pts to hit B' : onTimeHeadroom === 0 ? 'at threshold' : 'already above target') + '\n\n' +
+    makeToken('calc_out.supplier_scorecard.row.breakeven_min_ontime', '• Min on-time score for grade B (≥ 80 composite): ' + targetOnTimeLabel, { score: targetOnTimeLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.breakeven_current_ontime', '• Current on-time score: ' + currentOnTimeLabel, { score: currentOnTimeLabel }) + '\n' +
+    (onTimeHeadroom > 0
+      ? makeToken('calc_out.supplier_scorecard.row.breakeven_headroom_raise', '• On-time headroom: raise on-time by ' + onTimeHeadroomLabel + ' pts to hit B', { points: onTimeHeadroomLabel })
+      : onTimeHeadroom === 0
+      ? makeToken('calc_out.supplier_scorecard.row.breakeven_headroom_threshold', '• On-time headroom: at threshold')
+      : makeToken('calc_out.supplier_scorecard.row.breakeven_headroom_above', '• On-time headroom: already above target')) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Current grade: ' + currentGrade + ' (composite ' + score.toFixed(1) + ')\n' +
-    '• Upgrade target: ' + nextGradeThreshold + '+  ·  Points needed: +' + pointsToUpgrade.toFixed(1) + '\n' +
-    '• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)\n\n' +
+    makeToken('calc_out.supplier_scorecard.row.milestone_current_grade', '• Current grade: ' + currentGradeLabel + ' (composite ' + scoreLabel + ')', { grade: currentGradeLabel, score: scoreLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.milestone_upgrade_target', '• Upgrade target: ' + nextGradeThresholdLabel + '+  ·  Points needed: +' + pointsToUpgradeLabel, { target: nextGradeThresholdLabel, points: pointsToUpgradeLabel }) + '\n' +
+    makeToken('calc_out.supplier_scorecard.row.milestone_12mo', '• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)') + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -212,56 +271,56 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let f=function(e){return Number.isNaN(e)?0:Math.max(0,e)},y=function(e){return Math.min(100,e)},w=function(e){return g(100-e*10,0,100)},b=function(e){return g(100-e*5,0,100)},D=function(e){return g(100-Math.abs(e)*2,0,100)},g=function(e,r,i){return Math.max(r,Math.min(i,e))},C=function(e){return T[e]??T.balanced},x=function(e,r,i,o,a){return e*a.onTime+r*a.defect+i*a.lead+o*a.cost},P=function(e){return e>=90?"A":e>=80?"B":e>=70?"C":"D"},k=function(e){return e>=h.excellent?"excellent":e>=h.good[0]?"good":e>=h.warning[0]?"warning":"critical"},O=function(e,r,i){var o=B(e);return Array.isArray(o)?o.join(\`
-\`):String(o)};var I=f,R=y,W=w,z=b,J=D,Q=g,X=C,Y=x,Z=P,H=k,ee=O,q={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},h={excellent:90,good:[80,90],warning:[70,80],critical:0},T={balanced:{onTime:.4,defect:.3,lead:.15,cost:.15},quality:{onTime:.25,defect:.5,lead:.15,cost:.1},speed:{onTime:.5,defect:.2,lead:.25,cost:.05},cost:{onTime:.2,defect:.2,lead:.1,cost:.5}},B=function(e){const r=f(Math.min(100,parseFloat(e.onTimePct)||0)),i=f(parseFloat(e.defectRatePct)||0),o=f(parseFloat(e.leadVarianceDays)||0),a=parseFloat(e.costVariancePct)||0,S=e.weightPreset||"balanced";if(r===0&&i===0&&o===0&&a===0)return[\`⏰ Supplier Performance Scorecard Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let f=function(t){return Number.isNaN(t)?0:Math.max(0,t)},O=function(t){return Math.min(100,t)},C=function(t){return h(100-t*10,0,100)},U=function(t){return h(100-t*5,0,100)},q=function(t){return h(100-Math.abs(t)*2,0,100)},h=function(t,a,i){return Math.max(a,Math.min(i,t))},G=function(t){return P[t]??P.balanced},m=function(t,a,i,n,s){return t*s.onTime+a*s.defect+i*s.lead+n*s.cost},M=function(t){return t>=90?"A":t>=80?"B":t>=70?"C":"D"},V=function(t){return t>=D.excellent?"excellent":t>=D.good[0]?"good":t>=D.warning[0]?"warning":"critical"},W=function(t,a,i){var n=le(t);return Array.isArray(n)?n.join(\`
+\`):String(n)};var fe=f,he=O,me=C,we=U,be=q,ve=h,xe=G,ye=m,Fe=M,Le=V,De=W,e=tk,se='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+se)(),D={excellent:90,good:[80,90],warning:[70,80],critical:0},P={balanced:{onTime:.4,defect:.3,lead:.15,cost:.15},quality:{onTime:.25,defect:.5,lead:.15,cost:.1},speed:{onTime:.5,defect:.2,lead:.25,cost:.05},cost:{onTime:.2,defect:.2,lead:.1,cost:.5}},le=function(t){const a=f(Math.min(100,parseFloat(t.onTimePct)||0)),i=f(parseFloat(t.defectRatePct)||0),n=f(parseFloat(t.leadVarianceDays)||0),s=parseFloat(t.costVariancePct)||0,j=t.weightPreset||"balanced";if(a===0&&i===0&&n===0&&s===0)return[e("calc_out.section.supplier_scorecard_calculator","⏰ Supplier Performance Scorecard Calculator")+\`
 
-📊 Enter your supplier performance metrics — on-time delivery %, defect rate %, lead time variance, and cost variance — to see the composite score and letter grade.\`];const n=C(S),m=y(r),u=w(i),d=b(o),l=D(a),t=x(m,u,d,l,n),c=P(t),s=k(t),A=q[s],K=s==="excellent"?\`Excellent — composite \${t.toFixed(1)} = grade \${c}; strategic partner\`:s==="good"?\`Good — composite \${t.toFixed(1)} = grade \${c}; solid, monitor\`:s==="warning"?\`Warning — composite \${t.toFixed(1)} = grade \${c}; underperforming\`:\`Critical — composite \${t.toFixed(1)} = grade \${c}; replace\`,N=w(.5),M=x(m,N,d,l,n),V=M-t,L=y(95),U=x(L,u,d,l,n),j=U-t,_=(80-(u*n.defect+d*n.lead+l*n.cost))/n.onTime,G=m,v=_-G,F=c,$=F==="D"?70:F==="C"?80:F==="B"?90:95,E=$-t;let p;return s==="critical"?p="Grade D is a replace signal. Begin dual-sourcing immediately (qualify a backup supplier over 60–90 days). For critical SKUs, air-ship to bridge the gap while transitioning. Do NOT extend POs without backup.":s==="warning"?p="Grade C means 1–2 dimensions are failing. Identify the weakest metric (likely defect rate or lead variance) and require a corrective action plan (CAP) within 30 days. Hold new SKUs until improvement.":s==="good"?p="Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.":p="Grade A — strategic partner. Lock in long-term contracts, request preferred-customer pricing, and ask for early access to new SKUs / capacity. Audit quarterly to ensure quality holds.",[\`⏰ Supplier Performance Scorecard Calculator
+\`+e("calc_out.supplier_scorecard.row.need_inputs","📊 Enter your supplier performance metrics — on-time delivery %, defect rate %, lead time variance, and cost variance — to see the composite score and letter grade.")];const c=G(j),w=O(a),b=C(i),p=U(n),u=q(s),l=m(w,b,p,u,c),B=M(l),d=V(l),r=l.toFixed(1),o=B;let _;d==="excellent"?_=e("calc_out.supplier_scorecard.row.health_excellent","• 🟢 Excellent — composite "+r+" = grade "+o+"; strategic partner",{score:r,grade:o}):d==="good"?_=e("calc_out.supplier_scorecard.row.health_good","• 🟡 Good — composite "+r+" = grade "+o+"; solid, monitor",{score:r,grade:o}):d==="warning"?_=e("calc_out.supplier_scorecard.row.health_warning","• 🟠 Warning — composite "+r+" = grade "+o+"; underperforming",{score:r,grade:o}):_=e("calc_out.supplier_scorecard.row.health_critical","• 🔴 Critical — composite "+r+" = grade "+o+"; replace",{score:r,grade:o});const de=C(.5),N=m(w,de,p,u,c),pe=N-l,ue=O(95),A=m(ue,b,p,u,c),_e=A-l,K=(80-(b*c.defect+p*c.lead+u*c.cost))/c.onTime,R=w,S=K-R,v=B,E=v==="D"?70:v==="C"?80:v==="B"?90:95,ge=E-l;let g;d==="critical"?g=e("calc_out.supplier_scorecard.row.tip_critical","💡 Tip: Grade D is a replace signal. Begin dual-sourcing immediately (qualify a backup supplier over 60–90 days). For critical SKUs, air-ship to bridge the gap while transitioning. Do NOT extend POs without backup."):d==="warning"?g=e("calc_out.supplier_scorecard.row.tip_warning","💡 Tip: Grade C means 1–2 dimensions are failing. Identify the weakest metric (likely defect rate or lead variance) and require a corrective action plan (CAP) within 30 days. Hold new SKUs until improvement."):d==="good"?g=e("calc_out.supplier_scorecard.row.tip_good","💡 Tip: Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate."):g=e("calc_out.supplier_scorecard.row.tip_excellent","💡 Tip: Grade A — strategic partner. Lock in long-term contracts, request preferred-customer pricing, and ask for early access to new SKUs / capacity. Audit quarterly to ensure quality holds.");const I=a.toFixed(1),J=i.toFixed(1),$=n.toFixed(1),z=s.toFixed(1),x=w.toFixed(0),y=b.toFixed(0),F=p.toFixed(0),L=u.toFixed(0),Q=(c.onTime*100).toFixed(0),X=(c.defect*100).toFixed(0),Y=(c.lead*100).toFixed(0),Z=(c.cost*100).toFixed(0),H=N.toFixed(1),T=pe.toFixed(1),k=A.toFixed(1),ee=_e.toFixed(1),te=K.toFixed(1),re=R.toFixed(1),oe=S.toFixed(1),ce=v,ne=String(E),ae=ge.toFixed(1),ie=j;return[e("calc_out.section.supplier_scorecard_calculator","⏰ Supplier Performance Scorecard Calculator")+\`
 
-🩺 Health:
+\`+e("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+A+" "+K+\`
-• Composite: \`+t.toFixed(1)+"/100  ·  Grade: "+c+"  ·  Weight preset: "+S+\`
-• Sub-scores: on-time \`+m.toFixed(0)+" · defect "+u.toFixed(0)+" · lead "+d.toFixed(0)+" · cost "+l.toFixed(0)+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• On-time delivery:        \`+r.toFixed(1)+"%  →  score "+m.toFixed(0)+"  (weight "+(n.onTime*100).toFixed(0)+\`%)
-• Defect rate:             \`+i.toFixed(1)+"%  →  score "+u.toFixed(0)+"  (weight "+(n.defect*100).toFixed(0)+\`%)
-• Lead time variance:      \`+o.toFixed(1)+" days  →  score "+d.toFixed(0)+"  (weight "+(n.lead*100).toFixed(0)+\`%)
-• Cost variance:           \`+a.toFixed(1)+"%  →  score "+l.toFixed(0)+"  (weight "+(n.cost*100).toFixed(0)+\`%)
-• Composite:               \`+t.toFixed(1)+"/100  ·  Grade "+c+\`
+\`+_+\`
+\`+e("calc_out.supplier_scorecard.row.composite","• Composite: "+r+"/100  ·  Grade: "+o+"  ·  Weight preset: "+ie,{score:r,grade:o,preset:ie})+\`
+\`+e("calc_out.supplier_scorecard.row.sub_scores","• Sub-scores: on-time "+x+" · defect "+y+" · lead "+F+" · cost "+L,{ontime:x,defect:y,lead:F,cost:L})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+e("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Defect rate drops to 0.5%: composite = \`+M.toFixed(1)+" (Δ +"+V.toFixed(1)+\` points)
-• On-time improves to 95%: composite = \`+U.toFixed(1)+" (Δ +"+j.toFixed(1)+\` points)
-• Combined (defect 0.5% + on-time 95%): see Milestone
+\`+e("calc_out.supplier_scorecard.row.on_time_delivery","• On-time delivery:        "+I+"%  →  score "+x+"  (weight "+Q+"%)",{pct:I,score:x,weight:Q})+\`
+\`+e("calc_out.supplier_scorecard.row.defect_rate","• Defect rate:             "+J+"%  →  score "+y+"  (weight "+X+"%)",{pct:J,score:y,weight:X})+\`
+\`+e("calc_out.supplier_scorecard.row.lead_time_variance","• Lead time variance:      "+$+" days  →  score "+F+"  (weight "+Y+"%)",{days:$,score:F,weight:Y})+\`
+\`+e("calc_out.supplier_scorecard.row.cost_variance","• Cost variance:           "+z+"%  →  score "+L+"  (weight "+Z+"%)",{pct:z,score:L,weight:Z})+\`
+\`+e("calc_out.supplier_scorecard.row.composite_inputs","• Composite:               "+r+"/100  ·  Grade "+o,{score:r,grade:o})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+e("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Min on-time score for grade B (≥ 80 composite): \`+_.toFixed(1)+\`
-• Current on-time score: \`+G.toFixed(1)+\`
-• On-time headroom: \`+(v>0?"raise on-time by "+v.toFixed(1)+" pts to hit B":v===0?"at threshold":"already above target")+\`
+\`+e("calc_out.supplier_scorecard.row.whatif_defect_down","• Defect rate drops to 0.5%: composite = "+H+" (Δ +"+T+" points)",{score:H,delta:T})+\`
+\`+e("calc_out.supplier_scorecard.row.whatif_ontime_up","• On-time improves to 95%: composite = "+k+" (Δ +"+ee+" points)",{score:k,delta:ee})+\`
+\`+e("calc_out.supplier_scorecard.row.whatif_combined","• Combined (defect 0.5% + on-time 95%): see Milestone")+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+e("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Current grade: \`+F+" (composite "+t.toFixed(1)+\`)
-• Upgrade target: \`+$+"+  ·  Points needed: +"+E.toFixed(1)+\`
-• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)
+\`+e("calc_out.supplier_scorecard.row.breakeven_min_ontime","• Min on-time score for grade B (≥ 80 composite): "+te,{score:te})+\`
+\`+e("calc_out.supplier_scorecard.row.breakeven_current_ontime","• Current on-time score: "+re,{score:re})+\`
+\`+(S>0?e("calc_out.supplier_scorecard.row.breakeven_headroom_raise","• On-time headroom: raise on-time by "+oe+" pts to hit B",{points:oe}):S===0?e("calc_out.supplier_scorecard.row.breakeven_headroom_threshold","• On-time headroom: at threshold"):e("calc_out.supplier_scorecard.row.breakeven_headroom_above","• On-time headroom: already above target"))+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+p+\`
-\`]};return[O(inputs,pick,fill)]}finally{}
+\`+e("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+e("calc_out.supplier_scorecard.row.milestone_current_grade","• Current grade: "+ce+" (composite "+r+")",{grade:ce,score:r})+\`
+\`+e("calc_out.supplier_scorecard.row.milestone_upgrade_target","• Upgrade target: "+ne+"+  ·  Points needed: +"+ae,{target:ne,points:ae})+\`
+\`+e("calc_out.supplier_scorecard.row.milestone_12mo","• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)")+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+g+\`
+\`]};return[W(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -320,7 +379,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Supplier Performance Scorecard Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — composite 84.0 = grade B; solid, monitor\n• Composite: 84.0/100  ·  Grade: B  ·  Weight preset: balanced\n• Sub-scores: on-time 88 · defect 75 · lead 85 · cost 90\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• On-time delivery:        88.0%  →  score 88  (weight 40%)\n• Defect rate:             2.5%  →  score 75  (weight 30%)\n• Lead time variance:      3.0 days  →  score 85  (weight 15%)\n• Cost variance:           5.0%  →  score 90  (weight 15%)\n• Composite:               84.0/100  ·  Grade B\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Defect rate drops to 0.5%: composite = 90.0 (Δ +6.0 points)\n• On-time improves to 95%: composite = 86.8 (Δ +2.8 points)\n• Combined (defect 0.5% + on-time 95%): see Milestone\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Min on-time score for grade B (≥ 80 composite): 78.1\n• Current on-time score: 88.0\n• On-time headroom: already above target\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Current grade: B (composite 84.0)\n• Upgrade target: 90+  ·  Points needed: +6.0\n• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.\n'],
+  staticExamples: ['$calc_out.section.supplier_scorecard_calculator|⏰ Supplier Performance Scorecard Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.supplier_scorecard.row.health_good{"score":"84.0","grade":"B"}|• 🟡 Good — composite 84.0 = grade B; solid, monitor|\n$calc_out.supplier_scorecard.row.composite{"score":"84.0","grade":"B","preset":"balanced"}|• Composite: 84.0/100  ·  Grade: B  ·  Weight preset: balanced|\n$calc_out.supplier_scorecard.row.sub_scores{"ontime":"88","defect":"75","lead":"85","cost":"90"}|• Sub-scores: on-time 88 · defect 75 · lead 85 · cost 90|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.supplier_scorecard.row.on_time_delivery{"pct":"88.0","score":"88","weight":"40"}|• On-time delivery:        88.0%  →  score 88  (weight 40%)|\n$calc_out.supplier_scorecard.row.defect_rate{"pct":"2.5","score":"75","weight":"30"}|• Defect rate:             2.5%  →  score 75  (weight 30%)|\n$calc_out.supplier_scorecard.row.lead_time_variance{"days":"3.0","score":"85","weight":"15"}|• Lead time variance:      3.0 days  →  score 85  (weight 15%)|\n$calc_out.supplier_scorecard.row.cost_variance{"pct":"5.0","score":"90","weight":"15"}|• Cost variance:           5.0%  →  score 90  (weight 15%)|\n$calc_out.supplier_scorecard.row.composite_inputs{"score":"84.0","grade":"B"}|• Composite:               84.0/100  ·  Grade B|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.supplier_scorecard.row.whatif_defect_down{"score":"90.0","delta":"6.0"}|• Defect rate drops to 0.5%: composite = 90.0 (Δ +6.0 points)|\n$calc_out.supplier_scorecard.row.whatif_ontime_up{"score":"86.8","delta":"2.8"}|• On-time improves to 95%: composite = 86.8 (Δ +2.8 points)|\n$calc_out.supplier_scorecard.row.whatif_combined|• Combined (defect 0.5% + on-time 95%): see Milestone|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.supplier_scorecard.row.breakeven_min_ontime{"score":"78.1"}|• Min on-time score for grade B (≥ 80 composite): 78.1|\n$calc_out.supplier_scorecard.row.breakeven_current_ontime{"score":"88.0"}|• Current on-time score: 88.0|\n$calc_out.supplier_scorecard.row.breakeven_headroom_above|• On-time headroom: already above target|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.supplier_scorecard.row.milestone_current_grade{"grade":"B","score":"84.0"}|• Current grade: B (composite 84.0)|\n$calc_out.supplier_scorecard.row.milestone_upgrade_target{"target":"90","points":"6.0"}|• Upgrade target: 90+  ·  Points needed: +6.0|\n$calc_out.supplier_scorecard.row.milestone_12mo|• 12-mo: track monthly score; +5 points typically upgrades grade (depends on starting band)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.supplier_scorecard.row.tip_good|💡 Tip: Grade B is solid. To upgrade to A, focus on the lowest-scoring dimension. Negotiate SLAs on lead time variance (common lever) or implement incoming inspection to track defect rate.|\n'],
   faq: [
     { q: 'How is the composite score calculated?', a: 'Each dimension (on-time, defect, lead variance, cost variance) is scored 0–100, then weighted by preset (balanced 40/30/15/15, quality 25/50/15/10, speed 50/20/25/5, cost 20/20/10/50). Default balanced is the standard view.' },
     { q: 'What is a good supplier score?', a: 'Grade A (≥90) is strategic partner territory — lock in long-term contracts. Grade B (80–90) is solid, monitor. Grade C (70–80) means 1–2 dimensions are failing — require corrective action plan. Grade D (<70) is replace signal.' },

@@ -17,7 +17,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: [80, Infinity],
@@ -66,7 +68,9 @@ function calculate(inputs: Record<string, string>): string[] {
 
   if (productUsage === 0 && nps === 0 && supportTickets === 0 && engagement === 0 && contractValue === 0) {
     return [
-      '📊 Customer Health Score Calculator\n\n📊 Enter your 5 customer health signals (product usage, NPS, support tickets, engagement, contract value) and select a weight preset to see your composite score (0-100).',
+      makeToken('calc_out.section.customer_health_score_calculator', '📊 Customer Health Score Calculator') +
+        '\n\n' +
+        makeToken('calc_out.customer_health_score.row.need_inputs', '📊 Enter your 5 customer health signals (product usage, NPS, support tickets, engagement, contract value) and select a weight preset to see your composite score (0-100).'),
     ];
   }
 
@@ -78,15 +82,29 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct1 = (n: number) => n.toFixed(1);
 
   const band = calcHealthBand(score);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? 'Excellent — Score ≥ 80; healthy account, expand motion'
-      : band === 'good'
-      ? 'Good — Score 60–80; monitor closely, engagement check'
-      : band === 'warning'
-      ? 'Warning — Score 40–60; at risk, save play needed'
-      : 'Critical — Score < 40; emergency intervention required';
+  const scoreLabel = pct1(score);
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.customer_health_score.row.health_excellent',
+      '• 🟢 Excellent — Score ≥ 80; healthy account, expand motion',
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.customer_health_score.row.health_good',
+      '• 🟡 Good — Score 60–80; monitor closely, engagement check',
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.customer_health_score.row.health_warning',
+      '• 🟠 Warning — Score 40–60; at risk, save play needed',
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.customer_health_score.row.health_critical',
+      '• 🔴 Critical — Score < 40; emergency intervention required',
+    );
+  }
 
   const scoreNPS70 = healthScore(productUsage, 70, supportTickets, engagement, contractValue, preset);
   const scorePU90 = healthScore(90, nps, supportTickets, engagement, contractValue, preset);
@@ -122,40 +140,76 @@ function calculate(inputs: Record<string, string>): string[] {
   else tipObj = { code: 'healthscore_excellent', params: tipParams };
   const tipJson = JSON.stringify(tipObj);
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const presetLabel = preset;
+  const n0 = pct1(normalized[0]);
+  const n1 = pct1(normalized[1]);
+  const n2 = pct1(normalized[2]);
+  const n3 = pct1(normalized[3]);
+  const n4 = pct1(normalized[4]);
+  const w0 = Math.round(weights[0] * 100) + '%';
+  const w1 = Math.round(weights[1] * 100) + '%';
+  const w2 = Math.round(weights[2] * 100) + '%';
+  const w3 = Math.round(weights[3] * 100) + '%';
+  const w4 = Math.round(weights[4] * 100) + '%';
+  const productUsageLabel = String(productUsage);
+  const npsLabel = String(nps);
+  const supportTicketsLabel = String(supportTickets);
+  const engagementLabel = String(engagement);
+  const contractValueLabel = String(contractValue);
+  const scoreNPS70Label = pct1(scoreNPS70);
+  const liftNPSLabel = pct1(liftNPS);
+  const scorePU90Label = pct1(scorePU90);
+  const liftPULabel = pct1(liftPU);
+  const scoreST2Label = pct1(scoreST2);
+  const liftSTLabel = pct1(liftST);
+  const gapExcellentLabel = pct1(gapToExcellent);
+  const targetUsageLabel = String(Math.round(targetProductUsage));
+  const gapNextLabel = pct1(Math.max(0, gapToNext));
+
   let r =
-  '📊 Customer Health Score Calculator\n\n' +
-  '🩺 Health:\n' +
+  makeToken('calc_out.section.customer_health_score_calculator', '📊 Customer Health Score Calculator') + '\n\n' +
+  makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-  '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-  '• Health Score: ' + pct1(score) + ' / 100  ·  Preset: ' + preset + '\n' +
-  '• Sub-scores: Product ' + pct1(normalized[0]) + ' · NPS ' + pct1(normalized[1]) + ' · Support ' + pct1(normalized[2]) + ' · Engagement ' + pct1(normalized[3]) + ' · Contract ' + pct1(normalized[4]) + '\n\n' +
+  healthLine + '\n' +
+  makeToken('calc_out.customer_health_score.row.health_score', '• Health Score: ' + scoreLabel + ' / 100  ·  Preset: ' + presetLabel, { score: scoreLabel, preset: presetLabel }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.sub_scores', '• Sub-scores: Product ' + n0 + ' · NPS ' + n1 + ' · Support ' + n2 + ' · Engagement ' + n3 + ' · Contract ' + n4, { product: n0, nps: n1, support: n2, engagement: n3, contract: n4 }) + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-  '📊 Inputs Snapshot:\n' +
+  makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-  '• Product Usage:    ' + productUsage + ' → ' + pct1(normalized[0]) + ' normalized\n' +
-  '• NPS:              ' + nps + ' → ' + pct1(normalized[1]) + ' normalized\n' +
-  '• Support Tickets:  ' + supportTickets + ' → ' + pct1(normalized[2]) + ' normalized\n' +
-  '• Engagement:       ' + engagement + ' → ' + pct1(normalized[3]) + ' normalized\n' +
-  '• Contract Value:   ' + contractValue + ' → ' + pct1(normalized[4]) + ' normalized\n' +
-  '• Weights: Product ' + Math.round(weights[0]*100) + '% · NPS ' + Math.round(weights[1]*100) + '% · Support ' + Math.round(weights[2]*100) + '% · Engagement ' + Math.round(weights[3]*100) + '% · Contract ' + Math.round(weights[4]*100) + '%\n\n' +
+  makeToken('calc_out.customer_health_score.row.product_usage', '• Product Usage:    ' + productUsageLabel + ' → ' + n0 + ' normalized', { value: productUsageLabel, score: n0 }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.nps', '• NPS:              ' + npsLabel + ' → ' + n1 + ' normalized', { value: npsLabel, score: n1 }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.support_tickets', '• Support Tickets:  ' + supportTicketsLabel + ' → ' + n2 + ' normalized', { value: supportTicketsLabel, score: n2 }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.engagement', '• Engagement:       ' + engagementLabel + ' → ' + n3 + ' normalized', { value: engagementLabel, score: n3 }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.contract_value', '• Contract Value:   ' + contractValueLabel + ' → ' + n4 + ' normalized', { value: contractValueLabel, score: n4 }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.weights', '• Weights: Product ' + w0 + ' · NPS ' + w1 + ' · Support ' + w2 + ' · Engagement ' + w3 + ' · Contract ' + w4, { product: w0, nps: w1, support: w2, engagement: w3, contract: w4 }) + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-  '🔄 What-If:\n' +
+  makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-  '• NPS 40→70: Score ' + pct1(scoreNPS70) + ' (+' + pct1(liftNPS) + ')\n' +
-  '• Product Usage 75→90: Score ' + pct1(scorePU90) + ' (+' + pct1(liftPU) + ')\n' +
-  '• Support Tickets 5→2: Score ' + pct1(scoreST2) + ' (+' + pct1(liftST) + ')\n\n' +
+  makeToken('calc_out.customer_health_score.row.whatif_nps_70', '• NPS 40→70: Score ' + scoreNPS70Label + ' (+' + liftNPSLabel + ')', { score: scoreNPS70Label, lift: liftNPSLabel }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.whatif_usage_90', '• Product Usage 75→90: Score ' + scorePU90Label + ' (+' + liftPULabel + ')', { score: scorePU90Label, lift: liftPULabel }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.whatif_tickets_2', '• Support Tickets 5→2: Score ' + scoreST2Label + ' (+' + liftSTLabel + ')', { score: scoreST2Label, lift: liftSTLabel }) + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-  '⚖️ Break-Even:\n' +
+  makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-  '• Target for 🟢 Excellent: Score ≥ 80\n' +
-  '• Current score: ' + pct1(score) + '  ·  Gap to 🟢: ' + pct1(gapToExcellent) + ' points\n' +
-  '• Action: raise Product Usage to ' + Math.round(targetProductUsage) + ' OR improve any other signal by ' + pct1(gapToExcellent) + ' normalized points\n\n' +
+  makeToken('calc_out.customer_health_score.row.breakeven_target', '• Target for 🟢 Excellent: Score ≥ 80') + '\n' +
+  makeToken('calc_out.customer_health_score.row.breakeven_current', '• Current score: ' + scoreLabel + '  ·  Gap to 🟢: ' + gapExcellentLabel + ' points', { score: scoreLabel, gap: gapExcellentLabel }) + '\n' +
+  makeToken('calc_out.customer_health_score.row.breakeven_action', '• Action: raise Product Usage to ' + targetUsageLabel + ' OR improve any other signal by ' + gapExcellentLabel + ' normalized points', { target: targetUsageLabel, gap: gapExcellentLabel }) + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-  '🎯 Milestone:\n' +
+  makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-  '• Next tier: ' + nextTier + '\n' +
-  '• Gap to next tier: ' + pct1(Math.max(0, gapToNext)) + ' points' + (band === 'excellent' ? ' already at top' : '') + '\n\n' +
+  (band === 'critical'
+    ? makeToken('calc_out.customer_health_score.row.milestone_next_tier_critical', '• Next tier: 🟠 Warning 40')
+    : band === 'warning'
+    ? makeToken('calc_out.customer_health_score.row.milestone_next_tier_warning', '• Next tier: 🟡 Good 60')
+    : band === 'good'
+    ? makeToken('calc_out.customer_health_score.row.milestone_next_tier_good', '• Next tier: 🟢 Excellent 80')
+    : makeToken('calc_out.customer_health_score.row.milestone_next_tier_excellent', '• Next tier: top tier maintained')) + '\n' +
+  (band === 'excellent'
+    ? makeToken('calc_out.customer_health_score.row.milestone_gap_top', '• Gap to next tier: ' + gapNextLabel + ' points already at top', { value: gapNextLabel })
+    : makeToken('calc_out.customer_health_score.row.milestone_gap', '• Gap to next tier: ' + gapNextLabel + ' points', { value: gapNextLabel })) + '\n\n' +
   '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+  // ⚠️ P168 B3-4：**建议文案已迁到页面 i18n**（decision_tip.<code>）⇒ 这行**保持原样**（不令牌化）
   '💡 Tip: ' + tipJson + '\n';
 
   // P168 B3-4：**🧭 四段已迁到页面的「🧭 算完之后」区块**
@@ -168,56 +222,56 @@ function calculate(inputs: Record<string, string>): string[] {
 }
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let d=function(t){return Number.isNaN(t)?0:Math.max(0,t)},P=function(t,a){return t==="nps"?(a+100)/2:t==="supportTickets"?100-Math.min(a*4,100):a},m=function(t,a,i,o,l,g){const u=["productUsage","nps","supportTickets","engagement","contractValue"],U=[t,a,i,o,l].map((s,r)=>P(u[r],s)),n=x[g]||x.balanced;return U.reduce((s,r,e)=>s+r*n[e],0)},N=function(t){return t>=M.excellent[0]?"excellent":t>=M.good[0]?"good":t>=M.warning[0]?"warning":"critical"},_=function(t,a,i){var o=F(t);return Array.isArray(o)?o.join(\`
-\`):String(o)};var K=d,H=P,L=m,Q=N,X=_,z={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},M={excellent:[80,null],good:[60,80],warning:[40,60],critical:[0,40]},x={balanced:[.2,.2,.2,.2,.2],"product-led":[.5,.15,.1,.15,.1],"service-led":[.1,.2,.35,.25,.1],"sales-led":[.15,.25,.1,.1,.4]},F=function(t){const a=d(Math.min(100,parseFloat(t.productUsage)||0)),i=Math.max(-100,Math.min(100,parseFloat(t.nps)||0)),o=d(parseFloat(t.supportTickets)||0),l=d(Math.min(100,parseFloat(t.engagement)||0)),g=d(Math.min(100,parseFloat(t.contractValue)||0)),u=t.weightPreset||"balanced";if(a===0&&i===0&&o===0&&l===0&&g===0)return[\`📊 Customer Health Score Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let p=function(e){return Number.isNaN(e)?0:Math.max(0,e)},V=function(e,o){return e==="nps"?(o+100)/2:e==="supportTickets"?100-Math.min(o*4,100):o},d=function(e,o,i,a,u,_){const h=["productUsage","nps","supportTickets","engagement","contractValue"],O=[e,o,i,a,u].map((l,r)=>V(h[r],l)),s=S[_]||S.balanced;return O.reduce((l,r,c)=>l+r*s[c],0)},j=function(e){return e>=z.excellent[0]?"excellent":e>=z.good[0]?"good":e>=z.warning[0]?"warning":"critical"},E=function(e,o,i){var a=at(e);return Array.isArray(a)?a.join(\`
+\`):String(a)};var pt=p,dt=V,mt=d,wt=j,ft=E,t=tk,nt='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+nt)(),z={excellent:[80,null],good:[60,80],warning:[40,60],critical:[0,40]},S={balanced:[.2,.2,.2,.2,.2],"product-led":[.5,.15,.1,.15,.1],"service-led":[.1,.2,.35,.25,.1],"sales-led":[.15,.25,.1,.1,.4]},at=function(e){const o=p(Math.min(100,parseFloat(e.productUsage)||0)),i=Math.max(-100,Math.min(100,parseFloat(e.nps)||0)),a=p(parseFloat(e.supportTickets)||0),u=p(Math.min(100,parseFloat(e.engagement)||0)),_=p(Math.min(100,parseFloat(e.contractValue)||0)),h=e.weightPreset||"balanced";if(o===0&&i===0&&a===0&&u===0&&_===0)return[t("calc_out.section.customer_health_score_calculator","📊 Customer Health Score Calculator")+\`
 
-📊 Enter your 5 customer health signals (product usage, NPS, support tickets, engagement, contract value) and select a weight preset to see your composite score (0-100).\`];const b=["productUsage","nps","supportTickets","engagement","contractValue"],n=[a,i,o,l,g].map((p,q)=>P(b[q],p)),s=x[u]||x.balanced,r=m(a,i,o,l,g,u),e=p=>p.toFixed(1),c=N(r),V=z[c],E=c==="excellent"?"Excellent — Score ≥ 80; healthy account, expand motion":c==="good"?"Good — Score 60–80; monitor closely, engagement check":c==="warning"?"Warning — Score 40–60; at risk, save play needed":"Critical — Score < 40; emergency intervention required",C=m(a,70,o,l,g,u),T=m(90,i,o,l,g,u),v=m(a,i,2,l,g,u),G=C-r,W=T-r,j=v-r,y=Math.max(0,80-r),I=Math.min(100,a+y/s[0]);let h,f;c==="critical"?(h=40-r,f="🟠 Warning 40"):c==="warning"?(h=60-r,f="🟡 Good 60"):c==="good"?(h=80-r,f="🟢 Excellent 80"):(h=0,f="top tier maintained");const O=["Product Usage","NPS","Support Tickets","Engagement","Contract Value"];let k=0;for(let p=1;p<n.length;p++)n[p]<n[k]&&(k=p);const w={score:e(r),weakest:O[k],weakestScore:e(n[k])};let S;c==="critical"?S={code:"healthscore_critical",params:w}:c==="warning"?S={code:"healthscore_at_risk",params:w}:c==="good"?S={code:"healthscore_monitor",params:w}:S={code:"healthscore_excellent",params:w};const J=JSON.stringify(S);return[\`📊 Customer Health Score Calculator
+\`+t("calc_out.customer_health_score.row.need_inputs","📊 Enter your 5 customer health signals (product usage, NPS, support tickets, engagement, contract value) and select a weight preset to see your composite score (0-100).")];const G=["productUsage","nps","supportTickets","engagement","contractValue"],s=[o,i,a,u,_].map((g,gt)=>V(G[gt],g)),l=S[h]||S.balanced,r=d(o,i,a,u,_,h),c=g=>g.toFixed(1),n=j(r),b=c(r);let m;n==="excellent"?m=t("calc_out.customer_health_score.row.health_excellent","• 🟢 Excellent — Score ≥ 80; healthy account, expand motion"):n==="good"?m=t("calc_out.customer_health_score.row.health_good","• 🟡 Good — Score 60–80; monitor closely, engagement check"):n==="warning"?m=t("calc_out.customer_health_score.row.health_warning","• 🟠 Warning — Score 40–60; at risk, save play needed"):m=t("calc_out.customer_health_score.row.health_critical","• 🔴 Critical — Score < 40; emergency intervention required");const q=d(o,70,a,u,_,h),W=d(90,i,a,u,_,h),I=d(o,i,2,u,_,h),st=q-r,lt=W-r,it=I-r,J=Math.max(0,80-r),ut=Math.min(100,o+J/l[0]);let w,x;n==="critical"?(w=40-r,x="🟠 Warning 40"):n==="warning"?(w=60-r,x="🟡 Good 60"):n==="good"?(w=80-r,x="🟢 Excellent 80"):(w=0,x="top tier maintained");const _t=["Product Usage","NPS","Support Tickets","Engagement","Contract Value"];let v=0;for(let g=1;g<s.length;g++)s[g]<s[v]&&(v=g);const N={score:c(r),weakest:_t[v],weakestScore:c(s[v])};let f;n==="critical"?f={code:"healthscore_critical",params:N}:n==="warning"?f={code:"healthscore_at_risk",params:N}:n==="good"?f={code:"healthscore_monitor",params:N}:f={code:"healthscore_excellent",params:N};const ht=JSON.stringify(f),K=h,P=c(s[0]),y=c(s[1]),M=c(s[2]),L=c(s[3]),U=c(s[4]),$=Math.round(l[0]*100)+"%",H=Math.round(l[1]*100)+"%",Q=Math.round(l[2]*100)+"%",X=Math.round(l[3]*100)+"%",Y=Math.round(l[4]*100)+"%",Z=String(o),A=String(i),B=String(a),D=String(u),R=String(_),T=c(q),k=c(st),tt=c(W),et=c(lt),ct=c(I),ot=c(it),C=c(J),rt=String(Math.round(ut)),F=c(Math.max(0,w));return[t("calc_out.section.customer_health_score_calculator","📊 Customer Health Score Calculator")+\`
 
-🩺 Health:
+\`+t("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+V+" "+E+\`
-• Health Score: \`+e(r)+" / 100  ·  Preset: "+u+\`
-• Sub-scores: Product \`+e(n[0])+" · NPS "+e(n[1])+" · Support "+e(n[2])+" · Engagement "+e(n[3])+" · Contract "+e(n[4])+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Product Usage:    \`+a+" → "+e(n[0])+\` normalized
-• NPS:              \`+i+" → "+e(n[1])+\` normalized
-• Support Tickets:  \`+o+" → "+e(n[2])+\` normalized
-• Engagement:       \`+l+" → "+e(n[3])+\` normalized
-• Contract Value:   \`+g+" → "+e(n[4])+\` normalized
-• Weights: Product \`+Math.round(s[0]*100)+"% · NPS "+Math.round(s[1]*100)+"% · Support "+Math.round(s[2]*100)+"% · Engagement "+Math.round(s[3]*100)+"% · Contract "+Math.round(s[4]*100)+\`%
+\`+m+\`
+\`+t("calc_out.customer_health_score.row.health_score","• Health Score: "+b+" / 100  ·  Preset: "+K,{score:b,preset:K})+\`
+\`+t("calc_out.customer_health_score.row.sub_scores","• Sub-scores: Product "+P+" · NPS "+y+" · Support "+M+" · Engagement "+L+" · Contract "+U,{product:P,nps:y,support:M,engagement:L,contract:U})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+t("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• NPS 40→70: Score \`+e(C)+" (+"+e(G)+\`)
-• Product Usage 75→90: Score \`+e(T)+" (+"+e(W)+\`)
-• Support Tickets 5→2: Score \`+e(v)+" (+"+e(j)+\`)
+\`+t("calc_out.customer_health_score.row.product_usage","• Product Usage:    "+Z+" → "+P+" normalized",{value:Z,score:P})+\`
+\`+t("calc_out.customer_health_score.row.nps","• NPS:              "+A+" → "+y+" normalized",{value:A,score:y})+\`
+\`+t("calc_out.customer_health_score.row.support_tickets","• Support Tickets:  "+B+" → "+M+" normalized",{value:B,score:M})+\`
+\`+t("calc_out.customer_health_score.row.engagement","• Engagement:       "+D+" → "+L+" normalized",{value:D,score:L})+\`
+\`+t("calc_out.customer_health_score.row.contract_value","• Contract Value:   "+R+" → "+U+" normalized",{value:R,score:U})+\`
+\`+t("calc_out.customer_health_score.row.weights","• Weights: Product "+$+" · NPS "+H+" · Support "+Q+" · Engagement "+X+" · Contract "+Y,{product:$,nps:H,support:Q,engagement:X,contract:Y})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+t("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Target for 🟢 Excellent: Score ≥ 80
-• Current score: \`+e(r)+"  ·  Gap to 🟢: "+e(y)+\` points
-• Action: raise Product Usage to \`+Math.round(I)+" OR improve any other signal by "+e(y)+\` normalized points
+\`+t("calc_out.customer_health_score.row.whatif_nps_70","• NPS 40→70: Score "+T+" (+"+k+")",{score:T,lift:k})+\`
+\`+t("calc_out.customer_health_score.row.whatif_usage_90","• Product Usage 75→90: Score "+tt+" (+"+et+")",{score:tt,lift:et})+\`
+\`+t("calc_out.customer_health_score.row.whatif_tickets_2","• Support Tickets 5→2: Score "+ct+" (+"+ot+")",{score:ct,lift:ot})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+t("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Next tier: \`+f+\`
-• Gap to next tier: \`+e(Math.max(0,h))+" points"+(c==="excellent"?" already at top":"")+\`
+\`+t("calc_out.customer_health_score.row.breakeven_target","• Target for 🟢 Excellent: Score ≥ 80")+\`
+\`+t("calc_out.customer_health_score.row.breakeven_current","• Current score: "+b+"  ·  Gap to 🟢: "+C+" points",{score:b,gap:C})+\`
+\`+t("calc_out.customer_health_score.row.breakeven_action","• Action: raise Product Usage to "+rt+" OR improve any other signal by "+C+" normalized points",{target:rt,gap:C})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+J+\`
-\`]};return[_(inputs,pick,fill)]}finally{}
+\`+t("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(n==="critical"?t("calc_out.customer_health_score.row.milestone_next_tier_critical","• Next tier: 🟠 Warning 40"):n==="warning"?t("calc_out.customer_health_score.row.milestone_next_tier_warning","• Next tier: 🟡 Good 60"):n==="good"?t("calc_out.customer_health_score.row.milestone_next_tier_good","• Next tier: 🟢 Excellent 80"):t("calc_out.customer_health_score.row.milestone_next_tier_excellent","• Next tier: top tier maintained"))+\`
+\`+(n==="excellent"?t("calc_out.customer_health_score.row.milestone_gap_top","• Gap to next tier: "+F+" points already at top",{value:F}):t("calc_out.customer_health_score.row.milestone_gap","• Gap to next tier: "+F+" points",{value:F}))+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 Tip: \`+ht+\`
+\`]};return[E(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -244,7 +298,7 @@ const engine: ToolEngine = {
     'https://www.gainsight.com/blog/customer-health-score/',
     'https://www.churnzero.com/customer-health-score/',
   ],
-  staticExamples: ['📊 Customer Health Score Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — Score 60–80; monitor closely, engagement check\n• Health Score: 73.0 / 100  ·  Preset: balanced\n• Sub-scores: Product 75.0 · NPS 70.0 · Support 80.0 · Engagement 80.0 · Contract 60.0\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Product Usage:    75 → 75.0 normalized\n• NPS:              40 → 70.0 normalized\n• Support Tickets:  5 → 80.0 normalized\n• Engagement:       80 → 80.0 normalized\n• Contract Value:   60 → 60.0 normalized\n• Weights: Product 20% · NPS 20% · Support 20% · Engagement 20% · Contract 20%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• NPS 40→70: Score 76.0 (+3.0)\n• Product Usage 75→90: Score 76.0 (+3.0)\n• Support Tickets 5→2: Score 75.4 (+2.4)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: Score ≥ 80\n• Current score: 73.0  ·  Gap to 🟢: 7.0 points\n• Action: raise Product Usage to 100 OR improve any other signal by 7.0 normalized points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent 80\n• Gap to next tier: 7.0 points\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"healthscore_monitor","params":{"score":"73.0","weakest":"Contract Value","weakestScore":"60.0"}}\n'],
+  staticExamples: ['$calc_out.section.customer_health_score_calculator|📊 Customer Health Score Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.customer_health_score.row.health_good|• 🟡 Good — Score 60–80; monitor closely, engagement check|\n$calc_out.customer_health_score.row.health_score{"score":"73.0","preset":"balanced"}|• Health Score: 73.0 / 100  ·  Preset: balanced|\n$calc_out.customer_health_score.row.sub_scores{"product":"75.0","nps":"70.0","support":"80.0","engagement":"80.0","contract":"60.0"}|• Sub-scores: Product 75.0 · NPS 70.0 · Support 80.0 · Engagement 80.0 · Contract 60.0|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.customer_health_score.row.product_usage{"value":"75","score":"75.0"}|• Product Usage:    75 → 75.0 normalized|\n$calc_out.customer_health_score.row.nps{"value":"40","score":"70.0"}|• NPS:              40 → 70.0 normalized|\n$calc_out.customer_health_score.row.support_tickets{"value":"5","score":"80.0"}|• Support Tickets:  5 → 80.0 normalized|\n$calc_out.customer_health_score.row.engagement{"value":"80","score":"80.0"}|• Engagement:       80 → 80.0 normalized|\n$calc_out.customer_health_score.row.contract_value{"value":"60","score":"60.0"}|• Contract Value:   60 → 60.0 normalized|\n$calc_out.customer_health_score.row.weights{"product":"20%","nps":"20%","support":"20%","engagement":"20%","contract":"20%"}|• Weights: Product 20% · NPS 20% · Support 20% · Engagement 20% · Contract 20%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.customer_health_score.row.whatif_nps_70{"score":"76.0","lift":"3.0"}|• NPS 40→70: Score 76.0 (+3.0)|\n$calc_out.customer_health_score.row.whatif_usage_90{"score":"76.0","lift":"3.0"}|• Product Usage 75→90: Score 76.0 (+3.0)|\n$calc_out.customer_health_score.row.whatif_tickets_2{"score":"75.4","lift":"2.4"}|• Support Tickets 5→2: Score 75.4 (+2.4)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.customer_health_score.row.breakeven_target|• Target for 🟢 Excellent: Score ≥ 80|\n$calc_out.customer_health_score.row.breakeven_current{"score":"73.0","gap":"7.0"}|• Current score: 73.0  ·  Gap to 🟢: 7.0 points|\n$calc_out.customer_health_score.row.breakeven_action{"target":"100","gap":"7.0"}|• Action: raise Product Usage to 100 OR improve any other signal by 7.0 normalized points|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.customer_health_score.row.milestone_next_tier_good|• Next tier: 🟢 Excellent 80|\n$calc_out.customer_health_score.row.milestone_gap{"value":"7.0"}|• Gap to next tier: 7.0 points|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: {"code":"healthscore_monitor","params":{"score":"73.0","weakest":"Contract Value","weakestScore":"60.0"}}\n'],
   clientConfig: { type: 'custom', wordPools: {}, customFn },
   calculate,
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)

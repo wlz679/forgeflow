@@ -1,6 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Funnel Value Calculator (P6-3) — Business v3 standard
@@ -90,8 +93,9 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: no impressions
   if (f.impressions === 0) {
     return [
-      '⏰ Funnel Value Calculator\n\n' +
-        '📊 Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.',
+      makeToken('calc_out.section.funnel_value_calculator', '⏰ Funnel Value Calculator') +
+        '\n\n' +
+        makeToken('calc_out.funnel_value.row.need_inputs', '📊 Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.'),
     ];
   }
 
@@ -109,21 +113,28 @@ function calculate(inputs: Record<string, string>): string[] {
   const d23pct = s2 > 0 ? (d23 / s2) * 100 : 0;
   const d34pct = s3 > 0 ? (d34 / s3) * 100 : 0;
 
-  // Health band
-  let healthEmoji: string;
-  let healthLabel: string;
+  // Health band（健康度 4 档各写一个 code 字面量 ⇒ 不动态拼码）
+  let healthLine: string;
   if (cr >= HEALTH_BANDS.excellent) {
-    healthEmoji = '🟢';
-    healthLabel = 'Excellent — overall CR ≥ 5%; funnel highly optimized';
+    healthLine = makeToken(
+      'calc_out.funnel_value.row.health_excellent',
+      '• 🟢 Excellent — overall CR ≥ 5%; funnel highly optimized',
+    );
   } else if (cr >= HEALTH_BANDS.good[0]) {
-    healthEmoji = '🟡';
-    healthLabel = 'Good — overall CR 1–5%; profitable with optimization upside';
+    healthLine = makeToken(
+      'calc_out.funnel_value.row.health_good',
+      '• 🟡 Good — overall CR 1–5%; profitable with optimization upside',
+    );
   } else if (cr >= HEALTH_BANDS.warning[0]) {
-    healthEmoji = '🟠';
-    healthLabel = 'Warning — overall CR 0.1–1%; significant drop-off';
+    healthLine = makeToken(
+      'calc_out.funnel_value.row.health_warning',
+      '• 🟠 Warning — overall CR 0.1–1%; significant drop-off',
+    );
   } else {
-    healthEmoji = '🔴';
-    healthLabel = 'Critical — overall CR < 0.1%; funnel broken or extreme thin audience';
+    healthLine = makeToken(
+      'calc_out.funnel_value.row.health_critical',
+      '• 🔴 Critical — overall CR < 0.1%; funnel broken or extreme thin audience',
+    );
   }
 
   const fmt = (n: number) => n.toLocaleString('en-US', { maximumFractionDigits: 1 });
@@ -151,52 +162,78 @@ function calculate(inputs: Record<string, string>): string[] {
   // Tip: stage-specific advice
   let tip: string;
   if (leak === '1→2') {
-    tip =
-      'Biggest leak at the awareness stage (1→2): impressions → clickers lost ' + d12pct.toFixed(0) + '%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.';
+    tip = makeToken('calc_out.funnel_value.row.tip_awareness', '💡 Tip: Biggest leak at the awareness stage (1→2): impressions → clickers lost ' + d12pct.toFixed(0) + '%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.', { lost: d12pct.toFixed(0) });
   } else if (leak === '2→3') {
-    tip =
-      'Biggest leak at the consideration stage (2→3): clickers → leads lost ' + d23pct.toFixed(0) + '%. Audit landing page, headline copy, and CTA. Optimize page-load speed and trust signals.';
+    tip = makeToken('calc_out.funnel_value.row.tip_consideration', '💡 Tip: Biggest leak at the consideration stage (2→3): clickers → leads lost ' + d23pct.toFixed(0) + '%. Audit landing page, headline copy, and CTA. Optimize page-load speed and trust signals.', { lost: d23pct.toFixed(0) });
   } else if (leak === '3→4') {
-    tip =
-      'Biggest leak at the decision stage (3→4): leads → sales lost ' + d34pct.toFixed(0) + '%. Test pricing, sales page, checkout flow. Add social proof, testimonials, and risk-reversal (guarantees).';
+    tip = makeToken('calc_out.funnel_value.row.tip_decision', '💡 Tip: Biggest leak at the decision stage (3→4): leads → sales lost ' + d34pct.toFixed(0) + '%. Test pricing, sales page, checkout flow. Add social proof, testimonials, and risk-reversal (guarantees).', { lost: d34pct.toFixed(0) });
   } else {
-    tip = 'Add data to see stage-specific recommendations.';
+    tip = makeToken('calc_out.funnel_value.row.tip_add_data', '💡 Tip: Add data to see stage-specific recommendations.');
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const crLabel = cr.toFixed(3);
+  const revenueLabel = money(totalRevenue);
+  const profitLabel = money(totalProfit);
+  const impressionsLabel = fmt(f.impressions);
+  const clickersLabel = fmt(s2);
+  const ctrLabel = f.ctr.toFixed(1);
+  const d12Label = d12pct.toFixed(1);
+  const leadsLabel = fmt(s3);
+  const leadRateLabel = f.leadRate.toFixed(1);
+  const d23Label = d23pct.toFixed(1);
+  const salesLabel = fmt(s4);
+  const saleRateLabel = f.saleRate.toFixed(1);
+  const d34Label = d34pct.toFixed(1);
+  const aovLabel = money(f.aov);
+  const marginLabel = f.grossMargin.toFixed(0);
+  const leadRateBoostLabel = leadRateBoost.toFixed(1);
+  const newLeadRateLabel = newLeadRate.toFixed(1);
+  const newSalesLabel = fmt(newS4);
+  const newRevenueLabel = money(newRevenue);
+  const newCrLabel = newCR.toFixed(3);
+  const targetRevenueLabel = money(targetRevenue);
+  const needSalesLabel = fmt(targetRevenue / f.aov);
+  const breakEvenCrLabel = breakEvenCR.toFixed(3);
+  const breakEvenLeadRateLabel = breakEvenLeadRate.toFixed(1);
+  const scale2xSalesLabel = fmt(scale2xS4);
+  const scale2xRevenueLabel = money(scale2xRevenue);
+  const annualRevenueLabel = money(annualRevenue);
+
   const r =
-    '⏰ Funnel Value Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.funnel_value_calculator', '⏰ Funnel Value Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Overall conversion rate: ' + cr.toFixed(3) + '%  ·  Biggest leak: stage ' + leak + '\n' +
-    '• Revenue: ' + money(totalRevenue) + '  ·  Net profit: ' + money(totalProfit) + '\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.funnel_value.row.overall_cr_leak', '• Overall conversion rate: ' + crLabel + '%  ·  Biggest leak: stage ' + leak, { cr: crLabel, leak: leak }) + '\n' +
+    makeToken('calc_out.funnel_value.row.revenue_profit', '• Revenue: ' + revenueLabel + '  ·  Net profit: ' + profitLabel, { revenue: revenueLabel, profit: profitLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Impressions:  ' + fmt(f.impressions) + '\n' +
-    '• Clickers:     ' + fmt(s2) + '  (CTR ' + f.ctr.toFixed(1) + '%, drop ' + d12pct.toFixed(1) + '%)\n' +
-    '• Leads:        ' + fmt(s3) + '  (lead rate ' + f.leadRate.toFixed(1) + '%, drop ' + d23pct.toFixed(1) + '%)\n' +
-    '• Sales:        ' + fmt(s4) + '  (sale rate ' + f.saleRate.toFixed(1) + '%, drop ' + d34pct.toFixed(1) + '%)\n' +
-    '• AOV:          ' + money(f.aov) + '  ·  Margin: ' + f.grossMargin.toFixed(0) + '%\n\n' +
+    makeToken('calc_out.funnel_value.row.impressions', '• Impressions:  ' + impressionsLabel, { value: impressionsLabel }) + '\n' +
+    makeToken('calc_out.funnel_value.row.clickers', '• Clickers:     ' + clickersLabel + '  (CTR ' + ctrLabel + '%, drop ' + d12Label + '%)', { value: clickersLabel, ctr: ctrLabel, drop: d12Label }) + '\n' +
+    makeToken('calc_out.funnel_value.row.leads', '• Leads:        ' + leadsLabel + '  (lead rate ' + leadRateLabel + '%, drop ' + d23Label + '%)', { value: leadsLabel, rate: leadRateLabel, drop: d23Label }) + '\n' +
+    makeToken('calc_out.funnel_value.row.sales', '• Sales:        ' + salesLabel + '  (sale rate ' + saleRateLabel + '%, drop ' + d34Label + '%)', { value: salesLabel, rate: saleRateLabel, drop: d34Label }) + '\n' +
+    makeToken('calc_out.funnel_value.row.aov_margin', '• AOV:          ' + aovLabel + '  ·  Margin: ' + marginLabel + '%', { aov: aovLabel, margin: marginLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Lead rate +' + leadRateBoost.toFixed(1) + 'pp (' + f.leadRate.toFixed(1) + '% → ' + newLeadRate.toFixed(1) + '%):\n' +
-    '  • Sales: ' + fmt(s4) + ' → ' + fmt(newS4) + '  ·  Revenue: ' + money(newRevenue) + '\n' +
-    '  • CR: ' + cr.toFixed(3) + '% → ' + newCR.toFixed(3) + '%\n\n' +
+    makeToken('calc_out.funnel_value.row.whatif_lead_rate', '• Lead rate +' + leadRateBoostLabel + 'pp (' + leadRateLabel + '% → ' + newLeadRateLabel + '%):', { boost: leadRateBoostLabel, from: leadRateLabel, to: newLeadRateLabel }) + '\n' +
+    makeToken('calc_out.funnel_value.row.whatif_sales_revenue', '  • Sales: ' + salesLabel + ' → ' + newSalesLabel + '  ·  Revenue: ' + newRevenueLabel, { from: salesLabel, to: newSalesLabel, revenue: newRevenueLabel }) + '\n' +
+    makeToken('calc_out.funnel_value.row.whatif_cr', '  • CR: ' + crLabel + '% → ' + newCrLabel + '%', { from: crLabel, to: newCrLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• To reach ' + money(targetRevenue) + ' revenue at current AOV: need ' + fmt(targetRevenue / f.aov) + ' sales\n' +
-    '  • Required overall CR: ' + breakEvenCR.toFixed(3) + '% (currently ' + cr.toFixed(3) + '%)\n' +
-    '  • Required lead rate: ' + breakEvenLeadRate.toFixed(1) + '% (currently ' + f.leadRate.toFixed(1) + '%)\n\n' +
+    makeToken('calc_out.funnel_value.row.breakeven_target', '• To reach ' + targetRevenueLabel + ' revenue at current AOV: need ' + needSalesLabel + ' sales', { revenue: targetRevenueLabel, sales: needSalesLabel }) + '\n' +
+    makeToken('calc_out.funnel_value.row.breakeven_cr', '  • Required overall CR: ' + breakEvenCrLabel + '% (currently ' + crLabel + '%)', { target: breakEvenCrLabel, current: crLabel }) + '\n' +
+    makeToken('calc_out.funnel_value.row.breakeven_lead_rate', '  • Required lead rate: ' + breakEvenLeadRateLabel + '% (currently ' + leadRateLabel + '%)', { target: breakEvenLeadRateLabel, current: leadRateLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Scale impressions 2x: ' + fmt(scale2xS4) + ' sales → ' + money(scale2xRevenue) + ' revenue\n' +
-    '• 12-month projection (constant funnel): ' + money(annualRevenue) + ' revenue\n\n' +
+    makeToken('calc_out.funnel_value.row.milestone_scale_2x', '• Scale impressions 2x: ' + scale2xSalesLabel + ' sales → ' + scale2xRevenueLabel + ' revenue', { sales: scale2xSalesLabel, revenue: scale2xRevenueLabel }) + '\n' +
+    makeToken('calc_out.funnel_value.row.milestone_12mo', '• 12-month projection (constant funnel): ' + annualRevenueLabel + ' revenue', { revenue: annualRevenueLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -204,55 +241,55 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (minified, mirrors calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let i=function(n){return Number.isNaN(n)?0:Math.max(0,n)},m=function(n,e){return n*(e/100)},u=function(n,e){return n*(e/100)},g=function(n,e){return n*(e/100)},k=function(n,e){return e<=0?0:n/e*100},l=function(n,e){return Math.max(0,n-e)},w=function(n){const e=m(n.impressions,n.ctr),t=u(e,n.leadRate),a=g(t,n.saleRate),o=l(n.impressions,e),s=l(e,t),d=l(t,a),R=Math.max(o,s,d);return R===o?"1→2":R===s?"2→3":"3→4"},S=function(n,e,t){var a=O(n);return Array.isArray(a)?a.join(\`
-\`):String(a)};var K=i,P=m,$=u,D=g,J=k,Q=l,X=w,Y=S,h={excellent:5,good:[1,5],warning:[.1,1],critical:0},O=function(n){const e={impressions:i(parseFloat(n.impressions)||0),ctr:i(parseFloat(n.ctr)||0),leadRate:i(parseFloat(n.leadRate)||0),saleRate:i(parseFloat(n.saleRate)||0),aov:i(parseFloat(n.aov)||0),grossMargin:i(parseFloat(n.grossMargin)||0)};if(e.impressions===0)return[\`⏰ Funnel Value Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let o=function(t){return Number.isNaN(t)?0:Math.max(0,t)},h=function(t,e){return t*(e/100)},f=function(t,e){return t*(e/100)},p=function(t,e){return t*(e/100)},m=function(t,e){return e<=0?0:t/e*100},s=function(t,e){return Math.max(0,t-e)},j=function(t){const e=h(t.impressions,t.ctr),a=f(e,t.leadRate),l=p(a,t.saleRate),r=s(t.impressions,e),c=s(e,a),d=s(a,l),b=Math.max(r,c,d);return b===r?"1→2":b===c?"2→3":"3→4"},E=function(t,e,a){var l=se(t);return Array.isArray(l)?l.join(\`
+\`):String(l)};var Re=o,he=h,be=f,xe=p,Le=m,Fe=s,me=j,Ce=E,n=tk,oe='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',n=new Function("return "+oe)(),F={excellent:5,good:[1,5],warning:[.1,1],critical:0},se=function(t){const e={impressions:o(parseFloat(t.impressions)||0),ctr:o(parseFloat(t.ctr)||0),leadRate:o(parseFloat(t.leadRate)||0),saleRate:o(parseFloat(t.saleRate)||0),aov:o(parseFloat(t.aov)||0),grossMargin:o(parseFloat(t.grossMargin)||0)};if(e.impressions===0)return[n("calc_out.section.funnel_value_calculator","⏰ Funnel Value Calculator")+\`
 
-📊 Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.\`];const t=m(e.impressions,e.ctr),a=u(t,e.leadRate),o=g(a,e.saleRate),s=k(o,e.impressions),d=o*e.aov,R=d*(e.grossMargin/100),V=l(e.impressions,t),j=l(t,a),B=l(a,o),x=w(e),y=e.impressions>0?V/e.impressions*100:0,_=t>0?j/t*100:0,b=a>0?B/a*100:0;let p,f;s>=h.excellent?(p="🟢",f="Excellent — overall CR ≥ 5%; funnel highly optimized"):s>=h.good[0]?(p="🟡",f="Good — overall CR 1–5%; profitable with optimization upside"):s>=h.warning[0]?(p="🟠",f="Warning — overall CR 0.1–1%; significant drop-off"):(p="🔴",f="Critical — overall CR < 0.1%; funnel broken or extreme thin audience");const r=M=>M.toLocaleString("en-US",{maximumFractionDigits:1}),c=M=>"$"+Math.round(M).toLocaleString("en-US"),A=Math.max(e.leadRate*.3,5),E=e.leadRate+A,T=u(t,E),C=g(T,e.saleRate),z=k(C,e.impressions),I=C*e.aov,F=Math.max(d,1e4),N=F/e.aov/e.impressions*100,q=t>0?F/e.aov/t*100:0,U=m(e.impressions*2,e.ctr),L=g(u(U,e.leadRate),e.saleRate),W=L*e.aov,G=d*12;let v;return x==="1→2"?v="Biggest leak at the awareness stage (1→2): impressions → clickers lost "+y.toFixed(0)+"%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.":x==="2→3"?v="Biggest leak at the consideration stage (2→3): clickers → leads lost "+_.toFixed(0)+"%. Audit landing page, headline copy, and CTA. Optimize page-load speed and trust signals.":x==="3→4"?v="Biggest leak at the decision stage (3→4): leads → sales lost "+b.toFixed(0)+"%. Test pricing, sales page, checkout flow. Add social proof, testimonials, and risk-reversal (guarantees).":v="Add data to see stage-specific recommendations.",[\`⏰ Funnel Value Calculator
+\`+n("calc_out.funnel_value.row.need_inputs","📊 Enter impressions, click-through rate, lead conversion rate, sale conversion rate, AOV, and gross margin to see overall funnel conversion rate, biggest drop-off stage, and revenue projections.")];const a=h(e.impressions,e.ctr),l=f(a,e.leadRate),r=p(l,e.saleRate),c=m(r,e.impressions),d=r*e.aov,b=d*(e.grossMargin/100),re=s(e.impressions,a),ce=s(a,l),ie=s(l,r),g=j(e),C=e.impressions>0?re/e.impressions*100:0,S=a>0?ce/a*100:0,M=l>0?ie/l*100:0;let w;c>=F.excellent?w=n("calc_out.funnel_value.row.health_excellent","• 🟢 Excellent — overall CR ≥ 5%; funnel highly optimized"):c>=F.good[0]?w=n("calc_out.funnel_value.row.health_good","• 🟡 Good — overall CR 1–5%; profitable with optimization upside"):c>=F.warning[0]?w=n("calc_out.funnel_value.row.health_warning","• 🟠 Warning — overall CR 0.1–1%; significant drop-off"):w=n("calc_out.funnel_value.row.health_critical","• 🔴 Critical — overall CR < 0.1%; funnel broken or extreme thin audience");const i=O=>O.toLocaleString("en-US",{maximumFractionDigits:1}),u=O=>"$"+Math.round(O).toLocaleString("en-US"),q=Math.max(e.leadRate*.3,5),A=e.leadRate+q,ue=f(a,A),y=p(ue,e.saleRate),de=m(y,e.impressions),ve=y*e.aov,x=Math.max(d,1e4),_e=x/e.aov/e.impressions*100,fe=a>0?x/e.aov/a*100:0,pe=h(e.impressions*2,e.ctr),B=p(f(pe,e.leadRate),e.saleRate),ge=B*e.aov,we=d*12;let R;g==="1→2"?R=n("calc_out.funnel_value.row.tip_awareness","💡 Tip: Biggest leak at the awareness stage (1→2): impressions → clickers lost "+C.toFixed(0)+"%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.",{lost:C.toFixed(0)}):g==="2→3"?R=n("calc_out.funnel_value.row.tip_consideration","💡 Tip: Biggest leak at the consideration stage (2→3): clickers → leads lost "+S.toFixed(0)+"%. Audit landing page, headline copy, and CTA. Optimize page-load speed and trust signals.",{lost:S.toFixed(0)}):g==="3→4"?R=n("calc_out.funnel_value.row.tip_decision","💡 Tip: Biggest leak at the decision stage (3→4): leads → sales lost "+M.toFixed(0)+"%. Test pricing, sales page, checkout flow. Add social proof, testimonials, and risk-reversal (guarantees).",{lost:M.toFixed(0)}):R=n("calc_out.funnel_value.row.tip_add_data","💡 Tip: Add data to see stage-specific recommendations.");const v=c.toFixed(3),V=u(d),N=u(b),z=i(e.impressions),I=i(a),U=e.ctr.toFixed(1),W=C.toFixed(1),$=i(l),_=e.leadRate.toFixed(1),G=S.toFixed(1),L=i(r),J=e.saleRate.toFixed(1),K=M.toFixed(1),P=u(e.aov),D=e.grossMargin.toFixed(0),Q=q.toFixed(1),X=A.toFixed(1),Y=i(y),Z=u(ve),H=de.toFixed(3),T=u(x),k=i(x/e.aov),ee=_e.toFixed(3),ne=fe.toFixed(1),te=i(B),ae=u(ge),le=u(we);return[n("calc_out.section.funnel_value_calculator","⏰ Funnel Value Calculator")+\`
 
-🩺 Health:
+\`+n("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+p+" "+f+\`
-• Overall conversion rate: \`+s.toFixed(3)+"%  ·  Biggest leak: stage "+x+\`
-• Revenue: \`+c(d)+"  ·  Net profit: "+c(R)+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Impressions:  \`+r(e.impressions)+\`
-• Clickers:     \`+r(t)+"  (CTR "+e.ctr.toFixed(1)+"%, drop "+y.toFixed(1)+\`%)
-• Leads:        \`+r(a)+"  (lead rate "+e.leadRate.toFixed(1)+"%, drop "+_.toFixed(1)+\`%)
-• Sales:        \`+r(o)+"  (sale rate "+e.saleRate.toFixed(1)+"%, drop "+b.toFixed(1)+\`%)
-• AOV:          \`+c(e.aov)+"  ·  Margin: "+e.grossMargin.toFixed(0)+\`%
+\`+w+\`
+\`+n("calc_out.funnel_value.row.overall_cr_leak","• Overall conversion rate: "+v+"%  ·  Biggest leak: stage "+g,{cr:v,leak:g})+\`
+\`+n("calc_out.funnel_value.row.revenue_profit","• Revenue: "+V+"  ·  Net profit: "+N,{revenue:V,profit:N})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+n("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Lead rate +\`+A.toFixed(1)+"pp ("+e.leadRate.toFixed(1)+"% → "+E.toFixed(1)+\`%):
-  • Sales: \`+r(o)+" → "+r(C)+"  ·  Revenue: "+c(I)+\`
-  • CR: \`+s.toFixed(3)+"% → "+z.toFixed(3)+\`%
+\`+n("calc_out.funnel_value.row.impressions","• Impressions:  "+z,{value:z})+\`
+\`+n("calc_out.funnel_value.row.clickers","• Clickers:     "+I+"  (CTR "+U+"%, drop "+W+"%)",{value:I,ctr:U,drop:W})+\`
+\`+n("calc_out.funnel_value.row.leads","• Leads:        "+$+"  (lead rate "+_+"%, drop "+G+"%)",{value:$,rate:_,drop:G})+\`
+\`+n("calc_out.funnel_value.row.sales","• Sales:        "+L+"  (sale rate "+J+"%, drop "+K+"%)",{value:L,rate:J,drop:K})+\`
+\`+n("calc_out.funnel_value.row.aov_margin","• AOV:          "+P+"  ·  Margin: "+D+"%",{aov:P,margin:D})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+n("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• To reach \`+c(F)+" revenue at current AOV: need "+r(F/e.aov)+\` sales
-  • Required overall CR: \`+N.toFixed(3)+"% (currently "+s.toFixed(3)+\`%)
-  • Required lead rate: \`+q.toFixed(1)+"% (currently "+e.leadRate.toFixed(1)+\`%)
+\`+n("calc_out.funnel_value.row.whatif_lead_rate","• Lead rate +"+Q+"pp ("+_+"% → "+X+"%):",{boost:Q,from:_,to:X})+\`
+\`+n("calc_out.funnel_value.row.whatif_sales_revenue","  • Sales: "+L+" → "+Y+"  ·  Revenue: "+Z,{from:L,to:Y,revenue:Z})+\`
+\`+n("calc_out.funnel_value.row.whatif_cr","  • CR: "+v+"% → "+H+"%",{from:v,to:H})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+n("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Scale impressions 2x: \`+r(L)+" sales → "+c(W)+\` revenue
-• 12-month projection (constant funnel): \`+c(G)+\` revenue
+\`+n("calc_out.funnel_value.row.breakeven_target","• To reach "+T+" revenue at current AOV: need "+k+" sales",{revenue:T,sales:k})+\`
+\`+n("calc_out.funnel_value.row.breakeven_cr","  • Required overall CR: "+ee+"% (currently "+v+"%)",{target:ee,current:v})+\`
+\`+n("calc_out.funnel_value.row.breakeven_lead_rate","  • Required lead rate: "+ne+"% (currently "+_+"%)",{target:ne,current:_})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+v+\`
-\`]};return[S(inputs,pick,fill)]}finally{}
+\`+n("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+n("calc_out.funnel_value.row.milestone_scale_2x","• Scale impressions 2x: "+te+" sales → "+ae+" revenue",{sales:te,revenue:ae})+\`
+\`+n("calc_out.funnel_value.row.milestone_12mo","• 12-month projection (constant funnel): "+le+" revenue",{revenue:le})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+R+\`
+\`]};return[E(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -307,7 +344,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['⏰ Funnel Value Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🔴 Critical — overall CR < 0.1%; funnel broken or extreme thin audience\n• Overall conversion rate: 0.019%  ·  Biggest leak: stage 1→2\n• Revenue: $1,500  ·  Net profit: $1,050\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Impressions:  100,000\n• Clickers:     2,500  (CTR 2.5%, drop 97.5%)\n• Leads:        375  (lead rate 15.0%, drop 85.0%)\n• Sales:        18.8  (sale rate 5.0%, drop 95.0%)\n• AOV:          $80  ·  Margin: 70%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Lead rate +5.0pp (15.0% → 20.0%):\n  • Sales: 18.8 → 25  ·  Revenue: $2,000\n  • CR: 0.019% → 0.025%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• To reach $10,000 revenue at current AOV: need 125 sales\n  • Required overall CR: 0.125% (currently 0.019%)\n  • Required lead rate: 5.0% (currently 15.0%)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Scale impressions 2x: 37.5 sales → $3,000 revenue\n• 12-month projection (constant funnel): $18,000 revenue\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: Biggest leak at the awareness stage (1→2): impressions → clickers lost 98%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.\n'],
+  staticExamples: ['$calc_out.section.funnel_value_calculator|⏰ Funnel Value Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.funnel_value.row.health_critical|• 🔴 Critical — overall CR < 0.1%; funnel broken or extreme thin audience|\n$calc_out.funnel_value.row.overall_cr_leak{"cr":"0.019","leak":"1→2"}|• Overall conversion rate: 0.019%  ·  Biggest leak: stage 1→2|\n$calc_out.funnel_value.row.revenue_profit{"revenue":"$1,500","profit":"$1,050"}|• Revenue: $1,500  ·  Net profit: $1,050|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.funnel_value.row.impressions{"value":"100,000"}|• Impressions:  100,000|\n$calc_out.funnel_value.row.clickers{"value":"2,500","ctr":"2.5","drop":"97.5"}|• Clickers:     2,500  (CTR 2.5%, drop 97.5%)|\n$calc_out.funnel_value.row.leads{"value":"375","rate":"15.0","drop":"85.0"}|• Leads:        375  (lead rate 15.0%, drop 85.0%)|\n$calc_out.funnel_value.row.sales{"value":"18.8","rate":"5.0","drop":"95.0"}|• Sales:        18.8  (sale rate 5.0%, drop 95.0%)|\n$calc_out.funnel_value.row.aov_margin{"aov":"$80","margin":"70"}|• AOV:          $80  ·  Margin: 70%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.funnel_value.row.whatif_lead_rate{"boost":"5.0","from":"15.0","to":"20.0"}|• Lead rate +5.0pp (15.0% → 20.0%):|\n$calc_out.funnel_value.row.whatif_sales_revenue{"from":"18.8","to":"25","revenue":"$2,000"}|  • Sales: 18.8 → 25  ·  Revenue: $2,000|\n$calc_out.funnel_value.row.whatif_cr{"from":"0.019","to":"0.025"}|  • CR: 0.019% → 0.025%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.funnel_value.row.breakeven_target{"revenue":"$10,000","sales":"125"}|• To reach $10,000 revenue at current AOV: need 125 sales|\n$calc_out.funnel_value.row.breakeven_cr{"target":"0.125","current":"0.019"}|  • Required overall CR: 0.125% (currently 0.019%)|\n$calc_out.funnel_value.row.breakeven_lead_rate{"target":"5.0","current":"15.0"}|  • Required lead rate: 5.0% (currently 15.0%)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.funnel_value.row.milestone_scale_2x{"sales":"37.5","revenue":"$3,000"}|• Scale impressions 2x: 37.5 sales → $3,000 revenue|\n$calc_out.funnel_value.row.milestone_12mo{"revenue":"$18,000"}|• 12-month projection (constant funnel): $18,000 revenue|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.funnel_value.row.tip_awareness{"lost":"98"}|💡 Tip: Biggest leak at the awareness stage (1→2): impressions → clickers lost 98%. Test new ad creative, audience targeting, and channel mix. Most cost-effective lever at this stage.|\n'],
   faq: [
     { q: 'What is a typical funnel conversion rate?', a: 'E-commerce funnels: 1-3% overall CR (impressions → sale). B2B SaaS free-trial funnels: 0.1-1%. Lead-gen funnels: 0.5-2%. Industry varies; benchmark your funnel vs your specific vertical.' },
     { q: 'Where is the biggest leak in most funnels?', a: 'Awareness stage (1→2) — typically 97-99% of impressions never click. Optimization focus: ad creative + targeting. Second-biggest leak varies by business — measure yours.' },

@@ -1,7 +1,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-14：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 服务端与客户端输出逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 // =====================================================================
 // Pipeline Value Calculator (P8-1) — Business v3 standard (6+ emoji sections)
@@ -94,8 +96,9 @@ function calculate(inputs: Record<string, string>): string[] {
   // Edge: all stages empty → prompt to enter values
   if (discoveryCount === 0 && proposalCount === 0 && negotiationCount === 0 && closingCount === 0) {
     return [
-      '📊 Pipeline Value Calculator\n\n' +
-        '📊 Enter the number of deals and average deal size for each pipeline stage (Discovery / Proposal / Negotiation / Closing) to see your weighted pipeline value and revenue forecast.',
+      makeToken('calc_out.section.pipeline_value_calculator', '📊 Pipeline Value Calculator') +
+        '\n\n' +
+        makeToken('calc_out.pipeline_value.row.need_inputs', '📊 Enter the number of deals and average deal size for each pipeline stage (Discovery / Proposal / Negotiation / Closing) to see your weighted pipeline value and revenue forecast.'),
     ];
   }
 
@@ -117,15 +120,28 @@ function calculate(inputs: Record<string, string>): string[] {
 
   // Health band
   const band = calcHealthBand(total);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? 'Excellent — weighted pipeline ≥ $500K; healthy forecast'
-      : band === 'good'
-      ? 'Good — mid-market sweet spot; room to grow top-of-funnel'
-      : band === 'warning'
-      ? 'Warning — light pipeline; needs more qualified opportunities'
-      : 'Critical — pipeline rebuild urgent; revenue at risk';
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.pipeline_value.row.health_excellent',
+      '• 🟢 Excellent — weighted pipeline ≥ $500K; healthy forecast',
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.pipeline_value.row.health_good',
+      '• 🟡 Good — mid-market sweet spot; room to grow top-of-funnel',
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.pipeline_value.row.health_warning',
+      '• 🟠 Warning — light pipeline; needs more qualified opportunities',
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.pipeline_value.row.health_critical',
+      '• 🔴 Critical — pipeline rebuild urgent; revenue at risk',
+    );
+  }
 
   // What-If: boost Proposal probability 40%→50% (+$12.5K per Proposal deal);
   //          add 1 more Closing deal (+$36K = 1 × $45K × 0.80)
@@ -160,55 +176,87 @@ function calculate(inputs: Record<string, string>): string[] {
   // Tip: band-driven contextual advice
   let tip: string;
   if (band === 'critical') {
-    tip =
-      'Pipeline < $50K weighted is a red flag — you likely will not hit quarter. Triple top-of-funnel activity: cold outreach, content syndication, paid lead-gen. Audit discovery-to-proposal conversion first; a leaky top-of-funnel makes everything else moot.';
+    tip = makeToken('calc_out.pipeline_value.row.tip_critical', '💡 Tip: Pipeline < $50K weighted is a red flag — you likely will not hit quarter. Triple top-of-funnel activity: cold outreach, content syndication, paid lead-gen. Audit discovery-to-proposal conversion first; a leaky top-of-funnel makes everything else moot.');
   } else if (band === 'warning') {
-    tip =
-      '$50K–$200K weighted pipeline is light. Focus on late-stage acceleration — move Proposal and Negotiation deals forward faster with stronger sales playbooks. A 10% improvement in Closing-stage conversion is worth more than doubling Discovery count.';
+    tip = makeToken('calc_out.pipeline_value.row.tip_warning', '💡 Tip: $50K–$200K weighted pipeline is light. Focus on late-stage acceleration — move Proposal and Negotiation deals forward faster with stronger sales playbooks. A 10% improvement in Closing-stage conversion is worth more than doubling Discovery count.');
   } else if (band === 'good') {
-    tip =
-      '$200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest.';
+    tip = makeToken('calc_out.pipeline_value.row.tip_good', '💡 Tip: $200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest.');
   } else {
-    tip =
-      'Excellent pipeline — you have revenue visibility for the quarter. Maintain cadence; do not let top-of-funnel slip. Watch for stale Closing-stage deals (>30 days) that may quietly slip from 80% to 50% probability.';
+    tip = makeToken('calc_out.pipeline_value.row.tip_excellent', '💡 Tip: Excellent pipeline — you have revenue visibility for the quarter. Maintain cadence; do not let top-of-funnel slip. Watch for stale Closing-stage deals (>30 days) that may quietly slip from 80% to 50% probability.');
   }
 
+  // P168 B3-14：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const totalLabel = money(total);
+  const nominalLabel = money(nominal);
+  const forecastLabel = money(forecast);
+  const coverageLabel = forecastToNominal.toFixed(1);
+  const discoveryCountLabel = String(discoveryCount);
+  const discoverySizeLabel = money(discoverySize);
+  const discoveryValLabel = money(discoveryVal);
+  const proposalCountLabel = String(proposalCount);
+  const proposalSizeLabel = money(proposalSize);
+  const proposalValLabel = money(proposalVal);
+  const negotiationCountLabel = String(negotiationCount);
+  const negotiationSizeLabel = money(negotiationSize);
+  const negotiationValLabel = money(negotiationVal);
+  const closingCountLabel = String(closingCount);
+  const closingSizeLabel = money(closingSize);
+  const closingValLabel = money(closingVal);
+  const proposalBoostTotalLabel = money(proposalBoostTotal);
+  const proposalBoostPerDealLabel = money(proposalBoostPerDeal);
+  const closingAddOneLabel = money(closingAddOne);
+  const closingConversionLabel = money(closingCount * closingSize * 0.05);
+  const targetLabel = money(500000);
+  const thresholdGapLabel = money(thresholdGap);
+  const extraDealsLabel = String(extraClosingDealsNeeded);
+  const closingDealValueLabel = money(closingDealValue);
+  const gapToNextLabel = money(Math.max(0, gapToNext));
+  const quarterlyLabel = money(total * 0.25);
+
   const r =
-    '📊 Pipeline Value Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.pipeline_value_calculator', '📊 Pipeline Value Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• Weighted pipeline: ' + money(total) + '  ·  Nominal pipeline: ' + money(nominal) + '\n' +
-    '• Weighted forecast (50% confidence): ' + money(forecast) + '  ·  Coverage ratio: ' + forecastToNominal.toFixed(1) + '% of nominal\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.pipeline_value.row.weighted_nominal', '• Weighted pipeline: ' + totalLabel + '  ·  Nominal pipeline: ' + nominalLabel, { weighted: totalLabel, nominal: nominalLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.forecast_coverage', '• Weighted forecast (50% confidence): ' + forecastLabel + '  ·  Coverage ratio: ' + coverageLabel + '% of nominal', { forecast: forecastLabel, coverage: coverageLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Discovery    (' + discoveryCount + ' × ' + money(discoverySize) + ' × 20%) = ' + money(discoveryVal) + '\n' +
-    '• Proposal     (' + proposalCount + ' × ' + money(proposalSize) + ' × 40%) = ' + money(proposalVal) + '\n' +
-    '• Negotiation  (' + negotiationCount + ' × ' + money(negotiationSize) + ' × 60%) = ' + money(negotiationVal) + '\n' +
-    '• Closing      (' + closingCount + ' × ' + money(closingSize) + ' × 80%) = ' + money(closingVal) + '\n' +
-    '• Total weighted: ' + money(total) + '  ·  Nominal face value: ' + money(nominal) + '\n' +
-    '• 50% confidence forecast: ' + money(forecast) + '\n\n' +
+    makeToken('calc_out.pipeline_value.row.stage_discovery', '• Discovery    (' + discoveryCountLabel + ' × ' + discoverySizeLabel + ' × 20%) = ' + discoveryValLabel, { count: discoveryCountLabel, size: discoverySizeLabel, value: discoveryValLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.stage_proposal', '• Proposal     (' + proposalCountLabel + ' × ' + proposalSizeLabel + ' × 40%) = ' + proposalValLabel, { count: proposalCountLabel, size: proposalSizeLabel, value: proposalValLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.stage_negotiation', '• Negotiation  (' + negotiationCountLabel + ' × ' + negotiationSizeLabel + ' × 60%) = ' + negotiationValLabel, { count: negotiationCountLabel, size: negotiationSizeLabel, value: negotiationValLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.stage_closing', '• Closing      (' + closingCountLabel + ' × ' + closingSizeLabel + ' × 80%) = ' + closingValLabel, { count: closingCountLabel, size: closingSizeLabel, value: closingValLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.total_weighted', '• Total weighted: ' + totalLabel + '  ·  Nominal face value: ' + nominalLabel, { weighted: totalLabel, nominal: nominalLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.forecast_50', '• 50% confidence forecast: ' + forecastLabel, { forecast: forecastLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🔄 What-If:\n' +
+    makeToken('calc_out.section.what_if', '🔄 What-If:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Proposal probability 40%→50%: +' + money(proposalBoostTotal) + ' (per deal: ' + money(proposalBoostPerDeal) + ')\n' +
-    '• Add 1 more Closing deal: +' + money(closingAddOne) + ' (immediate lift to weighted)\n' +
-    '• Closing conversion 80%→85%: +' + money(closingCount * closingSize * 0.05) + ' (no extra deals needed)\n\n' +
+    makeToken('calc_out.pipeline_value.row.whatif_proposal_prob', '• Proposal probability 40%→50%: +' + proposalBoostTotalLabel + ' (per deal: ' + proposalBoostPerDealLabel + ')', { total: proposalBoostTotalLabel, perdeal: proposalBoostPerDealLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.whatif_add_closing', '• Add 1 more Closing deal: +' + closingAddOneLabel + ' (immediate lift to weighted)', { value: closingAddOneLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.whatif_closing_conversion', '• Closing conversion 80%→85%: +' + closingConversionLabel + ' (no extra deals needed)', { value: closingConversionLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '⚖️ Break-Even:\n' +
+    makeToken('calc_out.section.break_even', '⚖️ Break-Even:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Target for 🟢 Excellent: ' + money(500000) + ' weighted pipeline\n' +
-    '• Gap to 🟢: ' + money(thresholdGap) + '\n' +
-    '• Action: need ' + extraClosingDealsNeeded + ' more Closing deal(s) at ' + money(closingDealValue) + ' each (or equivalent from Proposal/Negotiation)\n\n' +
+    makeToken('calc_out.pipeline_value.row.breakeven_target', '• Target for 🟢 Excellent: ' + targetLabel + ' weighted pipeline', { target: targetLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.breakeven_gap', '• Gap to 🟢: ' + thresholdGapLabel, { gap: thresholdGapLabel }) + '\n' +
+    makeToken('calc_out.pipeline_value.row.breakeven_action', '• Action: need ' + extraDealsLabel + ' more Closing deal(s) at ' + closingDealValueLabel + ' each (or equivalent from Proposal/Negotiation)', { deals: extraDealsLabel, value: closingDealValueLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap to next tier: ' + money(Math.max(0, gapToNext)) + (band === 'excellent' ? ' (already at top)' : '') + '\n' +
-    '• Quarterly revenue at this pace: ~' + money(total * 0.25) + '/month (if pipeline converts at 25%/qtr)\n\n' +
+    (band === 'critical'
+      ? makeToken('calc_out.pipeline_value.row.milestone_next_tier_critical', '• Next tier: 🟠 Warning ($50K)')
+      : band === 'warning'
+      ? makeToken('calc_out.pipeline_value.row.milestone_next_tier_warning', '• Next tier: 🟡 Good ($200K)')
+      : band === 'good'
+      ? makeToken('calc_out.pipeline_value.row.milestone_next_tier_good', '• Next tier: 🟢 Excellent ($500K)')
+      : makeToken('calc_out.pipeline_value.row.milestone_next_tier_excellent', '• Next tier: top tier maintained')) + '\n' +
+    (band === 'excellent'
+      ? makeToken('calc_out.pipeline_value.row.milestone_gap_top', '• Gap to next tier: ' + gapToNextLabel + ' (already at top)', { value: gapToNextLabel })
+      : makeToken('calc_out.pipeline_value.row.milestone_gap', '• Gap to next tier: ' + gapToNextLabel, { value: gapToNextLabel })) + '\n' +
+    makeToken('calc_out.pipeline_value.row.milestone_quarterly', '• Quarterly revenue at this pace: ~' + quarterlyLabel + '/month (if pipeline converts at 25%/qtr)', { value: quarterlyLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    tip + '\n';
 
   return [r];
 }
@@ -216,57 +264,57 @@ function calculate(inputs: Record<string, string>): string[] {
 // ============== customFn (live = static parity with calculate()) ==============
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let r=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,t,a){return e*t*a},C=function(e,t,a,o){return e+t+a+o},b=function(e,t,a,o,g,d,f,s){return e*t+a*o+g*d+f*s},z=function(e){return e*.5},F=function(e){return e>=w.excellent[0]?"excellent":e>=w.good[0]?"good":e>=w.warning[0]?"warning":"critical"},N=function(e,t,a){var o=P(e);return Array.isArray(o)?o.join(\`
-\`):String(o)};var X=r,Y=p,Z=C,E=b,H=z,T=F,O=N,D={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},w={excellent:[5e5,null],good:[2e5,5e5],warning:[5e4,2e5],critical:[0,5e4]},c={discovery:.2,proposal:.4,negotiation:.6,closing:.8},P=function(e){const t=r(parseFloat(e.discoveryCount)||0),a=r(parseFloat(e.discoverySize)||0),o=r(parseFloat(e.proposalCount)||0),g=r(parseFloat(e.proposalSize)||0),d=r(parseFloat(e.negotiationCount)||0),f=r(parseFloat(e.negotiationSize)||0),s=r(parseFloat(e.closingCount)||0),u=r(parseFloat(e.closingSize)||0);if(t===0&&o===0&&d===0&&s===0)return[\`📊 Pipeline Value Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,l,a){return t*l*a},$=function(t,l,a,i){return t+l+a+i},K=function(t,l,a,i,g,_,d,s){return t*l+a*i+g*_+d*s},m=function(t){return t*.5},q=function(t){return t>=z.excellent[0]?"excellent":t>=z.good[0]?"good":t>=z.warning[0]?"warning":"critical"},S=function(t,l,a){var i=ce(t);return Array.isArray(i)?i.join(\`
+\`):String(i)};var ve=c,de=u,fe=$,he=K,we=m,ye=q,be=S,e=tk,ae='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+ae)(),z={excellent:[5e5,null],good:[2e5,5e5],warning:[5e4,2e5],critical:[0,5e4]},p={discovery:.2,proposal:.4,negotiation:.6,closing:.8},ce=function(t){const l=c(parseFloat(t.discoveryCount)||0),a=c(parseFloat(t.discoverySize)||0),i=c(parseFloat(t.proposalCount)||0),g=c(parseFloat(t.proposalSize)||0),_=c(parseFloat(t.negotiationCount)||0),d=c(parseFloat(t.negotiationSize)||0),s=c(parseFloat(t.closingCount)||0),v=c(parseFloat(t.closingSize)||0);if(l===0&&i===0&&_===0&&s===0)return[e("calc_out.section.pipeline_value_calculator","📊 Pipeline Value Calculator")+\`
 
-📊 Enter the number of deals and average deal size for each pipeline stage (Discovery / Proposal / Negotiation / Closing) to see your weighted pipeline value and revenue forecast.\`];const k=p(t,a,c.discovery),K=p(o,g,c.proposal),$=p(d,f,c.negotiation),M=p(s,u,c.closing),l=C(k,K,$,M),m=b(t,a,o,g,d,f,s,u),V=z(l),_=m>0?l/m*100:0,n=S=>"$"+Math.round(S).toLocaleString("en-US"),i=F(l),j=D[i],Q=i==="excellent"?"Excellent — weighted pipeline ≥ $500K; healthy forecast":i==="good"?"Good — mid-market sweet spot; room to grow top-of-funnel":i==="warning"?"Warning — light pipeline; needs more qualified opportunities":"Critical — pipeline rebuild urgent; revenue at risk",q=g*(.5-.4),U=o*q,G=p(1,u,c.closing),x=u*c.closing,W=Math.max(0,5e5-l),J=x>0?Math.ceil(W/x):0;let h,v;i==="critical"?(h=5e4-l,v="🟠 Warning ($50K)"):i==="warning"?(h=2e5-l,v="🟡 Good ($200K)"):i==="good"?(h=5e5-l,v="🟢 Excellent ($500K)"):(h=0,v="top tier maintained");let y;return i==="critical"?y="Pipeline < $50K weighted is a red flag — you likely will not hit quarter. Triple top-of-funnel activity: cold outreach, content syndication, paid lead-gen. Audit discovery-to-proposal conversion first; a leaky top-of-funnel makes everything else moot.":i==="warning"?y="$50K–$200K weighted pipeline is light. Focus on late-stage acceleration — move Proposal and Negotiation deals forward faster with stronger sales playbooks. A 10% improvement in Closing-stage conversion is worth more than doubling Discovery count.":i==="good"?y="$200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest.":y="Excellent pipeline — you have revenue visibility for the quarter. Maintain cadence; do not let top-of-funnel slip. Watch for stale Closing-stage deals (>30 days) that may quietly slip from 80% to 50% probability.",[\`📊 Pipeline Value Calculator
+\`+e("calc_out.pipeline_value.row.need_inputs","📊 Enter the number of deals and average deal size for each pipeline stage (Discovery / Proposal / Negotiation / Closing) to see your weighted pipeline value and revenue forecast.")];const V=u(l,a,p.discovery),D=u(i,g,p.proposal),M=u(_,d,p.negotiation),W=u(s,v,p.closing),r=$(V,D,M,W),N=K(l,a,i,g,_,d,s,v),re=m(r),se=N>0?r/N*100:0,o=_e=>"$"+Math.round(_e).toLocaleString("en-US"),n=q(r);let f;n==="excellent"?f=e("calc_out.pipeline_value.row.health_excellent","• 🟢 Excellent — weighted pipeline ≥ $500K; healthy forecast"):n==="good"?f=e("calc_out.pipeline_value.row.health_good","• 🟡 Good — mid-market sweet spot; room to grow top-of-funnel"):n==="warning"?f=e("calc_out.pipeline_value.row.health_warning","• 🟠 Warning — light pipeline; needs more qualified opportunities"):f=e("calc_out.pipeline_value.row.health_critical","• 🔴 Critical — pipeline rebuild urgent; revenue at risk");const P=g*(.5-.4),pe=i*P,ue=u(1,v,p.closing),F=v*p.closing,j=Math.max(0,5e5-r),ge=F>0?Math.ceil(j/F):0;let h,y;n==="critical"?(h=5e4-r,y="🟠 Warning ($50K)"):n==="warning"?(h=2e5-r,y="🟡 Good ($200K)"):n==="good"?(h=5e5-r,y="🟢 Excellent ($500K)"):(h=0,y="top tier maintained");let w;n==="critical"?w=e("calc_out.pipeline_value.row.tip_critical","💡 Tip: Pipeline < $50K weighted is a red flag — you likely will not hit quarter. Triple top-of-funnel activity: cold outreach, content syndication, paid lead-gen. Audit discovery-to-proposal conversion first; a leaky top-of-funnel makes everything else moot."):n==="warning"?w=e("calc_out.pipeline_value.row.tip_warning","💡 Tip: $50K–$200K weighted pipeline is light. Focus on late-stage acceleration — move Proposal and Negotiation deals forward faster with stronger sales playbooks. A 10% improvement in Closing-stage conversion is worth more than doubling Discovery count."):n==="good"?w=e("calc_out.pipeline_value.row.tip_good","💡 Tip: $200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest."):w=e("calc_out.pipeline_value.row.tip_excellent","💡 Tip: Excellent pipeline — you have revenue visibility for the quarter. Maintain cadence; do not let top-of-funnel slip. Watch for stale Closing-stage deals (>30 days) that may quietly slip from 80% to 50% probability.");const b=o(r),x=o(N),C=o(re),G=se.toFixed(1),J=String(l),Q=o(a),U=o(V),O=String(i),X=o(g),Y=o(D),Z=String(_),E=o(d),H=o(M),R=String(s),A=o(v),B=o(W),I=o(pe),T=o(P),k=o(ue),ee=o(s*v*.05),te=o(5e5),oe=o(j),ie=String(ge),ne=o(F),L=o(Math.max(0,h)),le=o(r*.25);return[e("calc_out.section.pipeline_value_calculator","📊 Pipeline Value Calculator")+\`
 
-🩺 Health:
+\`+e("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+j+" "+Q+\`
-• Weighted pipeline: \`+n(l)+"  ·  Nominal pipeline: "+n(m)+\`
-• Weighted forecast (50% confidence): \`+n(V)+"  ·  Coverage ratio: "+_.toFixed(1)+\`% of nominal
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Discovery    (\`+t+" × "+n(a)+" × 20%) = "+n(k)+\`
-• Proposal     (\`+o+" × "+n(g)+" × 40%) = "+n(K)+\`
-• Negotiation  (\`+d+" × "+n(f)+" × 60%) = "+n($)+\`
-• Closing      (\`+s+" × "+n(u)+" × 80%) = "+n(M)+\`
-• Total weighted: \`+n(l)+"  ·  Nominal face value: "+n(m)+\`
-• 50% confidence forecast: \`+n(V)+\`
+\`+f+\`
+\`+e("calc_out.pipeline_value.row.weighted_nominal","• Weighted pipeline: "+b+"  ·  Nominal pipeline: "+x,{weighted:b,nominal:x})+\`
+\`+e("calc_out.pipeline_value.row.forecast_coverage","• Weighted forecast (50% confidence): "+C+"  ·  Coverage ratio: "+G+"% of nominal",{forecast:C,coverage:G})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔄 What-If:
+\`+e("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Proposal probability 40%→50%: +\`+n(U)+" (per deal: "+n(q)+\`)
-• Add 1 more Closing deal: +\`+n(G)+\` (immediate lift to weighted)
-• Closing conversion 80%→85%: +\`+n(s*u*.05)+\` (no extra deals needed)
+\`+e("calc_out.pipeline_value.row.stage_discovery","• Discovery    ("+J+" × "+Q+" × 20%) = "+U,{count:J,size:Q,value:U})+\`
+\`+e("calc_out.pipeline_value.row.stage_proposal","• Proposal     ("+O+" × "+X+" × 40%) = "+Y,{count:O,size:X,value:Y})+\`
+\`+e("calc_out.pipeline_value.row.stage_negotiation","• Negotiation  ("+Z+" × "+E+" × 60%) = "+H,{count:Z,size:E,value:H})+\`
+\`+e("calc_out.pipeline_value.row.stage_closing","• Closing      ("+R+" × "+A+" × 80%) = "+B,{count:R,size:A,value:B})+\`
+\`+e("calc_out.pipeline_value.row.total_weighted","• Total weighted: "+b+"  ·  Nominal face value: "+x,{weighted:b,nominal:x})+\`
+\`+e("calc_out.pipeline_value.row.forecast_50","• 50% confidence forecast: "+C,{forecast:C})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚖️ Break-Even:
+\`+e("calc_out.section.what_if","🔄 What-If:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Target for 🟢 Excellent: \`+n(5e5)+\` weighted pipeline
-• Gap to 🟢: \`+n(W)+\`
-• Action: need \`+J+" more Closing deal(s) at "+n(x)+\` each (or equivalent from Proposal/Negotiation)
+\`+e("calc_out.pipeline_value.row.whatif_proposal_prob","• Proposal probability 40%→50%: +"+I+" (per deal: "+T+")",{total:I,perdeal:T})+\`
+\`+e("calc_out.pipeline_value.row.whatif_add_closing","• Add 1 more Closing deal: +"+k+" (immediate lift to weighted)",{value:k})+\`
+\`+e("calc_out.pipeline_value.row.whatif_closing_conversion","• Closing conversion 80%→85%: +"+ee+" (no extra deals needed)",{value:ee})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+e("calc_out.section.break_even","⚖️ Break-Even:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Next tier: \`+v+\`
-• Gap to next tier: \`+n(Math.max(0,h))+(i==="excellent"?" (already at top)":"")+\`
-• Quarterly revenue at this pace: ~\`+n(l*.25)+\`/month (if pipeline converts at 25%/qtr)
+\`+e("calc_out.pipeline_value.row.breakeven_target","• Target for 🟢 Excellent: "+te+" weighted pipeline",{target:te})+\`
+\`+e("calc_out.pipeline_value.row.breakeven_gap","• Gap to 🟢: "+oe,{gap:oe})+\`
+\`+e("calc_out.pipeline_value.row.breakeven_action","• Action: need "+ie+" more Closing deal(s) at "+ne+" each (or equivalent from Proposal/Negotiation)",{deals:ie,value:ne})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💡 Tip: \`+y+\`
-\`]};return[N(inputs,pick,fill)]}finally{}
+\`+e("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(n==="critical"?e("calc_out.pipeline_value.row.milestone_next_tier_critical","• Next tier: 🟠 Warning ($50K)"):n==="warning"?e("calc_out.pipeline_value.row.milestone_next_tier_warning","• Next tier: 🟡 Good ($200K)"):n==="good"?e("calc_out.pipeline_value.row.milestone_next_tier_good","• Next tier: 🟢 Excellent ($500K)"):e("calc_out.pipeline_value.row.milestone_next_tier_excellent","• Next tier: top tier maintained"))+\`
+\`+(n==="excellent"?e("calc_out.pipeline_value.row.milestone_gap_top","• Gap to next tier: "+L+" (already at top)",{value:L}):e("calc_out.pipeline_value.row.milestone_gap","• Gap to next tier: "+L,{value:L}))+\`
+\`+e("calc_out.pipeline_value.row.milestone_quarterly","• Quarterly revenue at this pace: ~"+le+"/month (if pipeline converts at 25%/qtr)",{value:le})+\`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+w+\`
+\`]};return[S(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -322,7 +370,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['📊 Pipeline Value Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟡 Good — mid-market sweet spot; room to grow top-of-funnel\n• Weighted pipeline: $215,000  ·  Nominal pipeline: $470,000\n• Weighted forecast (50% confidence): $107,500  ·  Coverage ratio: 45.7% of nominal\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Discovery    (10 × $15,000 × 20%) = $30,000\n• Proposal     (5 × $25,000 × 40%) = $50,000\n• Negotiation  (3 × $35,000 × 60%) = $63,000\n• Closing      (2 × $45,000 × 80%) = $72,000\n• Total weighted: $215,000  ·  Nominal face value: $470,000\n• 50% confidence forecast: $107,500\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🔄 What-If:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Proposal probability 40%→50%: +$12,500 (per deal: $2,500)\n• Add 1 more Closing deal: +$36,000 (immediate lift to weighted)\n• Closing conversion 80%→85%: +$4,500 (no extra deals needed)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n⚖️ Break-Even:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Target for 🟢 Excellent: $500,000 weighted pipeline\n• Gap to 🟢: $285,000\n• Action: need 8 more Closing deal(s) at $36,000 each (or equivalent from Proposal/Negotiation)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟢 Excellent ($500K)\n• Gap to next tier: $285,000\n• Quarterly revenue at this pace: ~$53,750/month (if pipeline converts at 25%/qtr)\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: $200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest.\n'],
+  staticExamples: ['$calc_out.section.pipeline_value_calculator|📊 Pipeline Value Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.pipeline_value.row.health_good|• 🟡 Good — mid-market sweet spot; room to grow top-of-funnel|\n$calc_out.pipeline_value.row.weighted_nominal{"weighted":"$215,000","nominal":"$470,000"}|• Weighted pipeline: $215,000  ·  Nominal pipeline: $470,000|\n$calc_out.pipeline_value.row.forecast_coverage{"forecast":"$107,500","coverage":"45.7"}|• Weighted forecast (50% confidence): $107,500  ·  Coverage ratio: 45.7% of nominal|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.pipeline_value.row.stage_discovery{"count":"10","size":"$15,000","value":"$30,000"}|• Discovery    (10 × $15,000 × 20%) = $30,000|\n$calc_out.pipeline_value.row.stage_proposal{"count":"5","size":"$25,000","value":"$50,000"}|• Proposal     (5 × $25,000 × 40%) = $50,000|\n$calc_out.pipeline_value.row.stage_negotiation{"count":"3","size":"$35,000","value":"$63,000"}|• Negotiation  (3 × $35,000 × 60%) = $63,000|\n$calc_out.pipeline_value.row.stage_closing{"count":"2","size":"$45,000","value":"$72,000"}|• Closing      (2 × $45,000 × 80%) = $72,000|\n$calc_out.pipeline_value.row.total_weighted{"weighted":"$215,000","nominal":"$470,000"}|• Total weighted: $215,000  ·  Nominal face value: $470,000|\n$calc_out.pipeline_value.row.forecast_50{"forecast":"$107,500"}|• 50% confidence forecast: $107,500|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.what_if|🔄 What-If:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.pipeline_value.row.whatif_proposal_prob{"total":"$12,500","perdeal":"$2,500"}|• Proposal probability 40%→50%: +$12,500 (per deal: $2,500)|\n$calc_out.pipeline_value.row.whatif_add_closing{"value":"$36,000"}|• Add 1 more Closing deal: +$36,000 (immediate lift to weighted)|\n$calc_out.pipeline_value.row.whatif_closing_conversion{"value":"$4,500"}|• Closing conversion 80%→85%: +$4,500 (no extra deals needed)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.break_even|⚖️ Break-Even:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.pipeline_value.row.breakeven_target{"target":"$500,000"}|• Target for 🟢 Excellent: $500,000 weighted pipeline|\n$calc_out.pipeline_value.row.breakeven_gap{"gap":"$285,000"}|• Gap to 🟢: $285,000|\n$calc_out.pipeline_value.row.breakeven_action{"deals":"8","value":"$36,000"}|• Action: need 8 more Closing deal(s) at $36,000 each (or equivalent from Proposal/Negotiation)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.pipeline_value.row.milestone_next_tier_good|• Next tier: 🟢 Excellent ($500K)|\n$calc_out.pipeline_value.row.milestone_gap{"value":"$285,000"}|• Gap to next tier: $285,000|\n$calc_out.pipeline_value.row.milestone_quarterly{"value":"$53,750"}|• Quarterly revenue at this pace: ~$53,750/month (if pipeline converts at 25%/qtr)|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.pipeline_value.row.tip_good|💡 Tip: $200K–$500K is the mid-market sweet spot. To reach Excellent, prioritize deal size (negotiate up) and stage progression (faster cycle). Pair this with a sales velocity calculator to identify which lever (volume × size × win rate ÷ cycle) moves fastest.|\n'],
   faq: [
     { q: 'What is a sales pipeline value?', a: 'Pipeline value is the total dollar amount of all deals in your sales pipeline, weighted by the probability each deal will close at its current stage. A weighted pipeline gives you a realistic forecast, while a raw (nominal) pipeline shows your theoretical maximum.' },
     { q: 'How are stage probabilities determined?', a: 'Stage probabilities reflect historical win rates at each stage of your sales funnel. Common defaults: Discovery 20%, Proposal 40%, Negotiation 60%, Closing 80%. Replace these with your own historical conversion rates for a more accurate forecast.' },
