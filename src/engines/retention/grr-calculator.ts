@@ -8,7 +8,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
-import { BAND_META } from '../../core/engines/band-meta';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: [0.95, Infinity],
@@ -40,7 +42,9 @@ function calculate(inputs: Record<string, string>): string[] {
 
   if (startingMRR === 0 && downgradeMRR === 0 && churnedMRR === 0) {
     return [
-      '📊 GRR Calculator\n\n📊 Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention — the pure retention signal. GRR ≤ 100% always.',
+      makeToken('calc_out.section.grr_calculator', '📊 GRR Calculator') +
+        '\n\n' +
+        makeToken('calc_out.grr.row.need_inputs', '📊 Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention — the pure retention signal. GRR ≤ 100% always.'),
     ];
   }
 
@@ -54,15 +58,29 @@ function calculate(inputs: Record<string, string>): string[] {
   const pct1 = (n: number) => n.toFixed(1);
 
   const band = calcHealthBand(ratio);
-  const healthEmoji = BAND_META[band];
-  const healthLabel =
-    band === 'excellent'
-      ? 'Excellent — GRR ≥ 95%; best-in-class SaaS retention, minimal churn leakage'
-      : band === 'good'
-      ? 'Good — GRR 90–95%; SaaS Capital median, healthy retention engine'
-      : band === 'warning'
-      ? 'Warning — GRR 80–90%; high churn, mid-market median, intervention needed'
-      : 'Critical — GRR < 80%; severe churn, unsustainable, urgent intervention';
+  // P168 B3-15：健康度 4 档各写一个 code 字面量（静态扫描认得出 ⇒ 不许动态拼码）
+  let healthLine: string;
+  if (band === 'excellent') {
+    healthLine = makeToken(
+      'calc_out.grr.row.health_excellent',
+      '• 🟢 Excellent — GRR ≥ 95%; best-in-class SaaS retention, minimal churn leakage',
+    );
+  } else if (band === 'good') {
+    healthLine = makeToken(
+      'calc_out.grr.row.health_good',
+      '• 🟡 Good — GRR 90–95%; SaaS Capital median, healthy retention engine',
+    );
+  } else if (band === 'warning') {
+    healthLine = makeToken(
+      'calc_out.grr.row.health_warning',
+      '• 🟠 Warning — GRR 80–90%; high churn, mid-market median, intervention needed',
+    );
+  } else {
+    healthLine = makeToken(
+      'calc_out.grr.row.health_critical',
+      '• 🔴 Critical — GRR < 80%; severe churn, unsustainable, urgent intervention',
+    );
+  }
 
   // What-If scenarios
   const grrHC = grr(startingMRR, downgradeMRR, churnedMRR / 2);
@@ -77,42 +95,58 @@ function calculate(inputs: Record<string, string>): string[] {
   const gapToExcellent = Math.max(0, targetRetained - retained);
 
   // Milestone: gap to next tier
-  let gapToNext: number, nextTier: string;
-  if (band === 'critical') { gapToNext = 0.80 * startingMRR - retained; nextTier = '🟠 Warning (80%)'; }
-  else if (band === 'warning') { gapToNext = 0.90 * startingMRR - retained; nextTier = '🟡 Good (90%)'; }
-  else if (band === 'good') { gapToNext = 0.95 * startingMRR - retained; nextTier = '🟢 Excellent (95%)'; }
-  else { gapToNext = 0; nextTier = 'top tier maintained'; }
+  let gapToNext: number;
+  if (band === 'critical') { gapToNext = 0.80 * startingMRR - retained; }
+  else if (band === 'warning') { gapToNext = 0.90 * startingMRR - retained; }
+  else if (band === 'good') { gapToNext = 0.95 * startingMRR - retained; }
+  else { gapToNext = 0; }
   const annualCompounded = startingMRR * Math.pow(1 - lostPct / 100, 12);
 
   // Tip: band-driven contextual advice
   let tip: string;
-  if (band === 'critical') tip = 'GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage.';
-  else if (band === 'warning') tip = 'GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.';
-  else if (band === 'good') tip = 'GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR.';
-  else tip = 'GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.';
+  if (band === 'critical') tip = makeToken('calc_out.grr.row.tip_critical', '💡 Tip: GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage.');
+  else if (band === 'warning') tip = makeToken('calc_out.grr.row.tip_warning', '💡 Tip: GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.');
+  else if (band === 'good') tip = makeToken('calc_out.grr.row.tip_good', '💡 Tip: GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR.');
+  else tip = makeToken('calc_out.grr.row.tip_excellent', '💡 Tip: GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.');
+
+  // P168 B3-15：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+  const ratioPctLabel = pctInt(ratio);
+  const lostPctLabel = pct1(lostPct);
+  const retainedLabel = money(retained);
+  const lostLabel = money(lostMRR);
+  const startingLabel = money(startingMRR);
+  const downgradeLabel = money(downgradeMRR);
+  const churnedLabel = money(churnedMRR);
+  const ratioLabel = ratio.toFixed(4);
+  const gapToNextLabel = money(Math.max(0, gapToNext));
 
   const r =
-    '📊 GRR Calculator\n\n' +
-    '🩺 Health:\n' +
+    makeToken('calc_out.section.grr_calculator', '📊 GRR Calculator') + '\n\n' +
+    makeToken('calc_out.section.health', '🩺 Health:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• ' + healthEmoji + ' ' + healthLabel + '\n' +
-    '• GRR: ' + pctInt(ratio) + '%  ·  Lost as % of start: ' + pct1(lostPct) + '%\n' +
-    '• Retained MRR: ' + money(retained) + '  ·  Lost MRR (downgrade + churn): ' + money(lostMRR) + '\n\n' +
+    healthLine + '\n' +
+    makeToken('calc_out.grr.row.grr_summary', '• GRR: ' + ratioPctLabel + '%  ·  Lost as % of start: ' + lostPctLabel + '%', { pct: ratioPctLabel, lost: lostPctLabel }) + '\n' +
+    makeToken('calc_out.grr.row.retained_lost', '• Retained MRR: ' + retainedLabel + '  ·  Lost MRR (downgrade + churn): ' + lostLabel, { retained: retainedLabel, lost: lostLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '📊 Inputs Snapshot:\n' +
+    makeToken('calc_out.section.inputs_snapshot', '📊 Inputs Snapshot:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Starting MRR:           ' + money(startingMRR) + '\n' +
-    '• Downgrade MRR:         -' + money(downgradeMRR) + '\n' +
-    '• Churned MRR:           -' + money(churnedMRR) + '\n' +
-    '• Retained MRR:           ' + money(retained) + ' (starting - downgrade - churn)\n' +
-    '• GRR ratio: ' + ratio.toFixed(4) + ' (' + pctInt(ratio) + '%)  ·  Lost as % of start: ' + pct1(lostPct) + '%\n\n' +
+    makeToken('calc_out.grr.row.starting_mrr', '• Starting MRR:           ' + startingLabel, { value: startingLabel }) + '\n' +
+    makeToken('calc_out.grr.row.downgrade_mrr', '• Downgrade MRR:         -' + downgradeLabel, { value: downgradeLabel }) + '\n' +
+    makeToken('calc_out.grr.row.churned_mrr', '• Churned MRR:           -' + churnedLabel, { value: churnedLabel }) + '\n' +
+    makeToken('calc_out.grr.row.net_retained', '• Retained MRR:           ' + retainedLabel + ' (starting - downgrade - churn)', { value: retainedLabel }) + '\n' +
+    makeToken('calc_out.grr.row.grr_ratio', '• GRR ratio: ' + ratioLabel + ' (' + ratioPctLabel + '%)  ·  Lost as % of start: ' + lostPctLabel + '%', { ratio: ratioLabel, pct: ratioPctLabel, lost: lostPctLabel }) + '\n\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '🎯 Milestone:\n' +
+    makeToken('calc_out.section.milestone', '🎯 Milestone:') + '\n' +
     '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
-    '• Next tier: ' + nextTier + '\n' +
-    '• Gap: ' + money(Math.max(0, gapToNext)) + ' more retained MRR' +
-    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-    '💡 Tip: ' + tip + '\n';
+    (band === 'critical'
+      ? makeToken('calc_out.grr.row.milestone_next_tier_critical', '• Next tier: 🟠 Warning (80%)')
+      : band === 'warning'
+      ? makeToken('calc_out.grr.row.milestone_next_tier_warning', '• Next tier: 🟡 Good (90%)')
+      : band === 'good'
+      ? makeToken('calc_out.grr.row.milestone_next_tier_good', '• Next tier: 🟢 Excellent (95%)')
+      : makeToken('calc_out.grr.row.milestone_next_tier_excellent', '• Next tier: top tier maintained')) + '\n' +
+    makeToken('calc_out.grr.row.milestone_gap', '• Gap: ' + gapToNextLabel + ' more retained MRR' + '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', { value: gapToNextLabel }) + '\n\n' +
+    tip + '\n';
 
   return [r];
 }
@@ -128,37 +162,37 @@ function calculate(inputs: Record<string, string>): string[] {
 // customFn 内不引用任何模块作用域变量，也不含 import。
 
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let d=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,n,e){return t-n-e},c=function(t,n,e){return t===0?0:f(t,n,e)/t},M=function(t){return t>=h.excellent[0]?"excellent":t>=h.good[0]?"good":t>=h.warning[0]?"warning":"critical"},m=function(t,n,e){var r=v(t);return Array.isArray(r)?r.join(\`
-\`):String(r)};var N=d,E=f,B=c,D=M,L=m,y={excellent:"🟢",good:"🟡",warning:"🟠",critical:"🔴"},h={excellent:[.95,null],good:[.9,.95],warning:[.8,.9],critical:[0,.8]},v=function(t){const n=d(parseFloat(t.startingMRR)||0),e=d(parseFloat(t.downgradeMRR)||0),r=d(parseFloat(t.churnedMRR)||0);if(n===0&&e===0&&r===0)return[\`📊 GRR Calculator
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let d=function(n){return Number.isNaN(n)?0:Math.max(0,n)},x=function(n,r,e){return n-r-e},l=function(n,r,e){return n===0?0:x(n,r,e)/n},M=function(n){return n>=f.excellent[0]?"excellent":n>=f.good[0]?"good":n>=f.warning[0]?"warning":"critical"},v=function(n,r,e){var o=j(n);return Array.isArray(o)?o.join(\`
+\`):String(o)};var I=d,W=x,Z=l,$=M,H=v,t=tk,m='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',t=new Function("return "+m)(),f={excellent:[.95,null],good:[.9,.95],warning:[.8,.9],critical:[0,.8]},j=function(n){const r=d(parseFloat(n.startingMRR)||0),e=d(parseFloat(n.downgradeMRR)||0),o=d(parseFloat(n.churnedMRR)||0);if(r===0&&e===0&&o===0)return[t("calc_out.section.grr_calculator","📊 GRR Calculator")+\`
 
-📊 Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention — the pure retention signal. GRR ≤ 100% always.\`];const s=f(n,e,r),a=c(n,e,r),w=e+r,p=n>0?w/n*100:0,i=g=>"$"+Math.round(g).toLocaleString("en-US"),x=g=>Math.round(g*100).toString(),G=g=>g.toFixed(1),o=M(a),S=y[o],b=o==="excellent"?"Excellent — GRR ≥ 95%; best-in-class SaaS retention, minimal churn leakage":o==="good"?"Good — GRR 90–95%; SaaS Capital median, healthy retention engine":o==="warning"?"Warning — GRR 80–90%; high churn, mid-market median, intervention needed":"Critical — GRR < 80%; severe churn, unsustainable, urgent intervention",C=c(n,e,r/2),_=c(n,0,r),k=c(n,e/2,r/2),j=C-a,I=_-a,P=k-a,F=.95*n,T=Math.max(0,F-s);let l,R;o==="critical"?(l=.8*n-s,R="🟠 Warning (80%)"):o==="warning"?(l=.9*n-s,R="🟡 Good (90%)"):o==="good"?(l=.95*n-s,R="🟢 Excellent (95%)"):(l=0,R="top tier maintained");const W=n*Math.pow(1-p/100,12);let u;return o==="critical"?u="GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage.":o==="warning"?u="GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.":o==="good"?u="GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR.":u="GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.",[\`📊 GRR Calculator
+\`+t("calc_out.grr.row.need_inputs","📊 Enter your starting MRR, downgrade MRR, and churned MRR to see your Gross Revenue Retention — the pure retention signal. GRR ≤ 100% always.")];const s=x(r,e,o),a=l(r,e,o),b=e+o,y=r>0?b/r*100:0,c=_=>"$"+Math.round(_).toLocaleString("en-US"),q=_=>Math.round(_*100).toString(),E=_=>_.toFixed(1),i=M(a);let u;i==="excellent"?u=t("calc_out.grr.row.health_excellent","• 🟢 Excellent — GRR ≥ 95%; best-in-class SaaS retention, minimal churn leakage"):i==="good"?u=t("calc_out.grr.row.health_good","• 🟡 Good — GRR 90–95%; SaaS Capital median, healthy retention engine"):i==="warning"?u=t("calc_out.grr.row.health_warning","• 🟠 Warning — GRR 80–90%; high churn, mid-market median, intervention needed"):u=t("calc_out.grr.row.health_critical","• 🔴 Critical — GRR < 80%; severe churn, unsustainable, urgent intervention");const P=l(r,e,o/2),B=l(r,0,o),D=l(r,e/2,o/2),J=P-a,K=B-a,Q=D-a,O=.95*r,U=Math.max(0,O-s);let g;i==="critical"?g=.8*r-s:i==="warning"?g=.9*r-s:i==="good"?g=.95*r-s:g=0;const z=r*Math.pow(1-y/100,12);let R;i==="critical"?R=t("calc_out.grr.row.tip_critical","💡 Tip: GRR < 80% is bleeding your business dry every quarter. Stop the churn first: exit interviews on last 10 lost accounts, save-playbook for top 20 at-risk accounts, reassign CSM coverage."):i==="warning"?R=t("calc_out.grr.row.tip_warning","💡 Tip: GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts."):i==="good"?R=t("calc_out.grr.row.tip_good","💡 Tip: GRR 90-95% is healthy. Focus on tail of at-risk accounts to push to Excellent. Pair with NRR to confirm expansion is also lifting NRR."):R=t("calc_out.grr.row.tip_excellent","💡 Tip: GRR >= 95% is best-in-class. Maintain with QBRs, proactive usage monitoring, save team on standby.");const h=q(a),p=E(y),w=c(s),G=c(b),S=c(r),L=c(e),C=c(o),F=a.toFixed(4),N=c(Math.max(0,g));return[t("calc_out.section.grr_calculator","📊 GRR Calculator")+\`
 
-🩺 Health:
+\`+t("calc_out.section.health","🩺 Health:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• \`+S+" "+b+\`
-• GRR: \`+x(a)+"%  ·  Lost as % of start: "+G(p)+\`%
-• Retained MRR: \`+i(s)+"  ·  Lost MRR (downgrade + churn): "+i(w)+\`
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 Inputs Snapshot:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Starting MRR:           \`+i(n)+\`
-• Downgrade MRR:         -\`+i(e)+\`
-• Churned MRR:           -\`+i(r)+\`
-• Retained MRR:           \`+i(s)+\` (starting - downgrade - churn)
-• GRR ratio: \`+a.toFixed(4)+" ("+x(a)+"%)  ·  Lost as % of start: "+G(p)+\`%
+\`+u+\`
+\`+t("calc_out.grr.row.grr_summary","• GRR: "+h+"%  ·  Lost as % of start: "+p+"%",{pct:h,lost:p})+\`
+\`+t("calc_out.grr.row.retained_lost","• Retained MRR: "+w+"  ·  Lost MRR (downgrade + churn): "+G,{retained:w,lost:G})+\`
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 Milestone:
+\`+t("calc_out.section.inputs_snapshot","📊 Inputs Snapshot:")+\`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• Next tier: \`+R+\`
-• Gap: \`+i(Math.max(0,l))+\` more retained MRR━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+t("calc_out.grr.row.starting_mrr","• Starting MRR:           "+S,{value:S})+\`
+\`+t("calc_out.grr.row.downgrade_mrr","• Downgrade MRR:         -"+L,{value:L})+\`
+\`+t("calc_out.grr.row.churned_mrr","• Churned MRR:           -"+C,{value:C})+\`
+\`+t("calc_out.grr.row.net_retained","• Retained MRR:           "+w+" (starting - downgrade - churn)",{value:w})+\`
+\`+t("calc_out.grr.row.grr_ratio","• GRR ratio: "+F+" ("+h+"%)  ·  Lost as % of start: "+p+"%",{ratio:F,pct:h,lost:p})+\`
 
-💡 Tip: \`+u+\`
-\`]};return[m(inputs,pick,fill)]}finally{}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+\`+t("calc_out.section.milestone","🎯 Milestone:")+\`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\`+(i==="critical"?t("calc_out.grr.row.milestone_next_tier_critical","• Next tier: 🟠 Warning (80%)"):i==="warning"?t("calc_out.grr.row.milestone_next_tier_warning","• Next tier: 🟡 Good (90%)"):i==="good"?t("calc_out.grr.row.milestone_next_tier_good","• Next tier: 🟢 Excellent (95%)"):t("calc_out.grr.row.milestone_next_tier_excellent","• Next tier: top tier maintained"))+\`
+\`+t("calc_out.grr.row.milestone_gap","• Gap: "+N+" more retained MRR━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",{value:N})+\`
+
+\`+R+\`
+\`]};return[v(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 // ============== Engine ==============
@@ -208,7 +242,7 @@ const engine: ToolEngine = {
     memory: 'v2.0 11 business domain benchmark + P140f Phase 4 主题簇',
   },
   generate: calculate,
-  staticExamples: ['📊 GRR Calculator\n\n🩺 Health:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• 🟠 Warning — GRR 80–90%; high churn, mid-market median, intervention needed\n• GRR: 87%  ·  Lost as % of start: 13.0%\n• Retained MRR: $87,000  ·  Lost MRR (downgrade + churn): $13,000\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📊 Inputs Snapshot:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Starting MRR:           $100,000\n• Downgrade MRR:         -$5,000\n• Churned MRR:           -$8,000\n• Retained MRR:           $87,000 (starting - downgrade - churn)\n• GRR ratio: 0.8700 (87%)  ·  Lost as % of start: 13.0%\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n🎯 Milestone:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n• Next tier: 🟡 Good (90%)\n• Gap: $3,000 more retained MRR━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💡 Tip: GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.\n'],
+  staticExamples: ['$calc_out.section.grr_calculator|📊 GRR Calculator|\n\n$calc_out.section.health|🩺 Health:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.grr.row.health_warning|• 🟠 Warning — GRR 80–90%; high churn, mid-market median, intervention needed|\n$calc_out.grr.row.grr_summary{"pct":"87","lost":"13.0"}|• GRR: 87%  ·  Lost as % of start: 13.0%|\n$calc_out.grr.row.retained_lost{"retained":"$87,000","lost":"$13,000"}|• Retained MRR: $87,000  ·  Lost MRR (downgrade + churn): $13,000|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.inputs_snapshot|📊 Inputs Snapshot:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.grr.row.starting_mrr{"value":"$100,000"}|• Starting MRR:           $100,000|\n$calc_out.grr.row.downgrade_mrr{"value":"$5,000"}|• Downgrade MRR:         -$5,000|\n$calc_out.grr.row.churned_mrr{"value":"$8,000"}|• Churned MRR:           -$8,000|\n$calc_out.grr.row.net_retained{"value":"$87,000"}|• Retained MRR:           $87,000 (starting - downgrade - churn)|\n$calc_out.grr.row.grr_ratio{"ratio":"0.8700","pct":"87","lost":"13.0"}|• GRR ratio: 0.8700 (87%)  ·  Lost as % of start: 13.0%|\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n$calc_out.section.milestone|🎯 Milestone:|\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n$calc_out.grr.row.milestone_next_tier_warning|• Next tier: 🟡 Good (90%)|\n$calc_out.grr.row.milestone_gap{"value":"$3,000"}|• Gap: $3,000 more retained MRR━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━|\n\n$calc_out.grr.row.tip_warning|💡 Tip: GRR 80-90% is high churn for mid-market B2B SaaS. Diagnose by cohort, build save motion with CSM outreach and executive sponsor pairing for top-50 accounts.|\n'],
   faq: [
     { q: 'What is Gross Revenue Retention (GRR)?', a: 'GRR measures revenue retained from existing customers, excluding any expansion (upsell/cross-sell). GRR <= 100% always. It is the "pure retention" signal — investors use it to see how leaky the bucket is before counting expansion as a save.' },
     { q: 'How is GRR different from NRR?', a: 'NRR includes expansion and can exceed 100%; GRR excludes expansion and never exceeds 100%. GRR is the pure retention signal; NRR is retention + growth. Best-in-class SaaS targets NRR >= 120% AND GRR >= 90%.' },

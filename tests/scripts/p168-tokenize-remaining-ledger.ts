@@ -59,10 +59,10 @@ export interface ZhEnRow {
  *   ⇒ 那正是「欠账在增长」的情形 ⇒ 必须有一个**独立于实测**的硬上限把它挡住。
  *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（36）就是欠账在长。
  */
-export const DEBT_MAX = 27;
+export const DEBT_MAX = 24;
 
 /**
- * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 27 个引擎）。
+ * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 24 个引擎）。
  * · **不得新增**：修好一条必须销一条 ⇒ 台账只能变小不能变大（DEBT_MAX 守着规模上限）。
  * · 数字必须与实测一致（守卫会核）⇒ 台账条目不是空壳。
  * · 条目按 slug 字典序排列（= --emit 的输出顺序 ⇒ 贴回即可）。
@@ -86,15 +86,12 @@ export const ZH_EN_DEBT: Record<string, number> = {
   'solopreneur-first-response-time-calculator': 2,
   'solopreneur-fully-loaded-employee-cost-calculator': 2,
   'solopreneur-gdpr-fine-calculator': 1,
-  'solopreneur-grr-calculator': 8,
   'solopreneur-kb-coverage-rate-calculator': 1,
-  'solopreneur-power-user-curve-calculator': 5,
   'solopreneur-productivity-ramp-curve-calculator': 2,
   'solopreneur-resolution-time-calculator': 2,
   'solopreneur-search-effectiveness-calculator': 2,
   'solopreneur-support-capacity-planning-calculator': 2,
   'solopreneur-time-to-productivity-calculator': 2,
-  'solopreneur-time-to-value-calculator': 5,
 };
 
 /**

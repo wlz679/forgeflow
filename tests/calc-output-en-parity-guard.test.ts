@@ -28,7 +28,7 @@ import { test } from 'node:test';
 import { strict as assert } from 'node:assert';
 import { ALLOWED_DIFFS, measureEnParity, normalizeDates, BASELINE_SHA, baselineStaticExample, baselineShaFor, PILOT_FILES, stripPricingBanner } from './scripts/p168-en-page-parity.ts';
 import { PILOT_SLUGS } from './scripts/p168-server-client-parity.ts';
-// P168 B3-8：「已令牌化引擎清单」的**单一真相源**（试点 10 + B3-8 15 + B3-9 20 + B3-13 10 + B3-14 18 = 73）
+// P168 B3-8：「已令牌化引擎清单」的**单一真相源**（试点 10 + B3-8 15 + B3-9 20 + B3-13 10 + B3-14 18 + B3-15 3 = 76）
 import { TOKENIZED } from './scripts/p168-tokenized-engines.mjs';
 
 test('P168 B3-7 G9：试点引擎的英文页逐字不变（token 化只改 zh，不改 en）', () => {
@@ -101,8 +101,8 @@ test('P168 B3-8 stripPricingBanner 检测器自检：只删 pricing 那一行，
   assert.ok(stripPricingBanner('📅 Usage Scenarios').indexOf('Usage Scenarios') >= 0, '误删了别的 📅 开头行');
 });
 
-test('P168 B3-9 真相源自检：TOKENIZED 必须覆盖 73 个引擎且分组基线不同', () => {
-  assert.equal(TOKENIZED.length, 73, 'TOKENIZED 应有 73 个引擎，实际 ' + TOKENIZED.length);
+test('P168 B3-9 真相源自检：TOKENIZED 必须覆盖 76 个引擎且分组基线不同', () => {
+  assert.equal(TOKENIZED.length, 76, 'TOKENIZED 应有 76 个引擎，实际 ' + TOKENIZED.length);
   const b37 = TOKENIZED.filter((e) => e.baseline === 'd3b3c1d');
   const b38 = TOKENIZED.filter((e) => e.baseline === '5c1c789');
   const b39 = TOKENIZED.filter((e) => e.baseline === '5c1bd52');
@@ -113,7 +113,9 @@ test('P168 B3-9 真相源自检：TOKENIZED 必须覆盖 73 个引擎且分组�
   assert.equal(b39.length, 20, 'B3-9 本批应为 20 个（15 铺量 + 5 AI cost），实际 ' + b39.length);
   assert.equal(b313.length, 10, 'B3-13 两组应为 10 个（组 1 五个 + 组 2 五个），实际 ' + b313.length);
   assert.equal(b314.length, 18, 'B3-14 两组应为 18 个（组 1 九个 + 组 2 九个），实际 ' + b314.length);
-  assert.equal(new Set(TOKENIZED.map((e) => e.slug)).size, 73, 'TOKENIZED 里有重复 slug');
+  const b315 = TOKENIZED.filter((e) => e.baseline === '361e6cc');
+  assert.equal(b315.length, 3, 'B3-15 组 1 应为 3 个，实际 ' + b315.length);
+  assert.equal(new Set(TOKENIZED.map((e) => e.slug)).size, 76, 'TOKENIZED 里有重复 slug');
   // 基线不得用 HEAD（一提交就失去意义）
   for (const e of TOKENIZED) assert.notEqual(e.baseline, 'HEAD', e.slug + ' 的基线不得用 HEAD');
 });

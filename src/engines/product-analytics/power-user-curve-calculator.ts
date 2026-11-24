@@ -6,6 +6,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 3.5, label: '🟢 Excellent', message: 'Strong power-user concentration — top users drive disproportionate usage.' },
@@ -34,9 +37,9 @@ function fmtRatio(r: number): string {
 // customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
 const customFn =
     // P168 B3-10: client = verbatim mirror of the server generate() (same logic, same order). +
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let a=function(e){return Number.isNaN(e)?0:Math.max(0,e)},s=function(e,r){return r<=0||r>100?0:Math.min(e,100)/r},u=function(e){return e>=o.excellent.threshold?"excellent":e>=o.good.threshold?"good":e>=o.warning.threshold?"warning":"critical"},i=function(e){return e.toFixed(2)+"x"},l=function(e,r,t){var n=c(e);return Array.isArray(n)?n.join(\`
-\`):String(n)};var f=a,b=s,m=u,x=i,w=l,o={excellent:{threshold:3.5,label:"🟢 Excellent",message:"Strong power-user concentration — top users drive disproportionate usage."},good:{threshold:3,label:"🟡 Good",message:"Healthy Pareto distribution; power users exist and are visible."},warning:{threshold:2.5,label:"🟠 Warning",message:"Diffuse usage — no strong power-user tier emerging."},critical:{threshold:0,label:"🔴 Critical",message:"Very even distribution — usage spread across all users, no power-user leverage."}},c=function(e){const r=a(Number(e.top_pct));let t=a(Number(e.top_pct_usage_share));if(r<=0||r>100)return["Top percent must be 1-100."];t>100&&(t=100);const n=s(t,r),h=u(n),g=o[h],d=Math.min(100,t+(100-t)*.1),p=(r*o.good.threshold).toFixed(1);return["Power User Concentration: "+g.label+" ("+i(n)+" ratio — "+t.toFixed(1)+"/"+r.toFixed(1)+")","Snapshot: top "+r.toFixed(1)+"% of users drive "+t.toFixed(1)+"% of total usage. The remaining "+(100-r).toFixed(1)+"% of users account for "+(100-t).toFixed(1)+"% of usage.","What-If: if 10% of mid-tier users upgrade their engagement to power-user level, share rises to "+d.toFixed(1)+"% (ratio lifts to "+i(d/r)+")","Break-Even: to hit Good ("+i(o.good.threshold)+" ratio), need top "+r.toFixed(1)+"% users driving at least "+p+"% of usage (currently "+t.toFixed(1)+"%)","Milestone: power-user programs (VIP support, beta features, dedicated CSM) can amplify existing concentration by +5-15 percentage points in usage share within 1 quarter","Tip: Power users are the seed for referrals and product feedback. Pair with the NRR Calculator (P9 batch) to project revenue impact."]};return[l(inputs,pick,fill)]}finally{}
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},_=function(e,t){return t<=0||t>100?0:Math.min(e,100)/t},g=function(e){return e>=i.excellent.threshold?"excellent":e>=i.good.threshold?"good":e>=i.warning.threshold?"warning":"critical"},u=function(e){return e.toFixed(2)+"x"},h=function(e,t,n){var c=m(e);return Array.isArray(c)?c.join(\`
+\`):String(c)};var C=l,P=_,q=g,L=u,M=h,r=tk,F='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',r=new Function("return "+F)(),i={excellent:{threshold:3.5,label:"🟢 Excellent",message:"Strong power-user concentration — top users drive disproportionate usage."},good:{threshold:3,label:"🟡 Good",message:"Healthy Pareto distribution; power users exist and are visible."},warning:{threshold:2.5,label:"🟠 Warning",message:"Diffuse usage — no strong power-user tier emerging."},critical:{threshold:0,label:"🔴 Critical",message:"Very even distribution — usage spread across all users, no power-user leverage."}},m=function(e){const t=l(Number(e.top_pct));let n=l(Number(e.top_pct_usage_share));if(t<=0||t>100)return[r("calc_out.power_user_curve.row.error_top_pct","Top percent must be 1-100.")];n>100&&(n=100);const c=_(n,t),p=g(c),d=Math.min(100,n+(100-n)*.1),S=(t*i.good.threshold).toFixed(1),s=u(c),o=n.toFixed(1),a=t.toFixed(1),f=(100-t).toFixed(1),w=(100-n).toFixed(1),b=d.toFixed(1),v=u(d/t),x=u(i.good.threshold),y=S,j=p==="excellent"?r("calc_out.power_user_curve.row.concentration_excellent","🟢 Excellent ("+s+" ratio — "+o+"/"+a+")",{ratio:s,share:o,pct:a}):p==="good"?r("calc_out.power_user_curve.row.concentration_good","🟡 Good ("+s+" ratio — "+o+"/"+a+")",{ratio:s,share:o,pct:a}):p==="warning"?r("calc_out.power_user_curve.row.concentration_warning","🟠 Warning ("+s+" ratio — "+o+"/"+a+")",{ratio:s,share:o,pct:a}):r("calc_out.power_user_curve.row.concentration_critical","🔴 Critical ("+s+" ratio — "+o+"/"+a+")",{ratio:s,share:o,pct:a});return[r("calc_out.label.power_user_concentration","Power User Concentration")+": "+j,r("calc_out.label.snapshot","Snapshot")+": "+r("calc_out.power_user_curve.row.snapshot_detail","top "+a+"% of users drive "+o+"% of total usage. The remaining "+f+"% of users account for "+w+"% of usage.",{top:a,share:o,rest_users:f,rest_share:w}),r("calc_out.power_user_curve.row.whatif_upgrade_10pct","What-If: if 10% of mid-tier users upgrade their engagement to power-user level, share rises to "+b+"% (ratio lifts to "+v+")",{share:b,ratio:v}),r("calc_out.power_user_curve.row.break_even_good","Break-Even: to hit Good ("+x+" ratio), need top "+a+"% users driving at least "+y+"% of usage (currently "+o+"%)",{ratio:x,top:a,target:y,current:o}),r("calc_out.power_user_curve.row.milestone_programs","Milestone: power-user programs (VIP support, beta features, dedicated CSM) can amplify existing concentration by +5-15 percentage points in usage share within 1 quarter"),r("calc_out.power_user_curve.row.tip_pair_nrr","Tip: Power users are the seed for referrals and product feedback. Pair with the NRR Calculator (P9 batch) to project revenue impact.")]};return[h(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -68,24 +71,45 @@ const engine: ToolEngine = {
   generate(inputs) {
     const topPct = clampNonNegative(Number(inputs['top_pct']));
     let topShare = clampNonNegative(Number(inputs['top_pct_usage_share']));
-    if (topPct <= 0 || topPct > 100) return ['Top percent must be 1-100.'];
+    if (topPct <= 0 || topPct > 100) return [makeToken('calc_out.power_user_curve.row.error_top_pct', 'Top percent must be 1-100.')];
     if (topShare > 100) topShare = 100;
     const ratio = paretoRatio(topShare, topPct);
     const band = calcHealthBand(ratio);
-    const bandInfo = HEALTH_BANDS[band];
     const l10share = Math.min(100, topShare + (100 - topShare) * 0.10);
     const targetShare = (topPct * HEALTH_BANDS.good.threshold).toFixed(1);
+
+    // P168 B3-15：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+    const ratioLabel = fmtRatio(ratio);
+    const topShareLabel = topShare.toFixed(1);
+    const topPctLabel = topPct.toFixed(1);
+    const restUsersLabel = (100 - topPct).toFixed(1);
+    const restShareLabel = (100 - topShare).toFixed(1);
+    const liftShareLabel = l10share.toFixed(1);
+    const liftRatioLabel = fmtRatio(l10share / topPct);
+    const goodRatioLabel = fmtRatio(HEALTH_BANDS.good.threshold);
+    const targetShareLabel = targetShare;
+
+    // P168 B3-15：健康度 4 档各写一个 code 字面量（静态扫描认得出 ⇒ 不许动态拼码）
+    const bandRow =
+      band === 'excellent'
+        ? makeToken('calc_out.power_user_curve.row.concentration_excellent', '🟢 Excellent (' + ratioLabel + ' ratio — ' + topShareLabel + '/' + topPctLabel + ')', { ratio: ratioLabel, share: topShareLabel, pct: topPctLabel })
+        : band === 'good'
+        ? makeToken('calc_out.power_user_curve.row.concentration_good', '🟡 Good (' + ratioLabel + ' ratio — ' + topShareLabel + '/' + topPctLabel + ')', { ratio: ratioLabel, share: topShareLabel, pct: topPctLabel })
+        : band === 'warning'
+        ? makeToken('calc_out.power_user_curve.row.concentration_warning', '🟠 Warning (' + ratioLabel + ' ratio — ' + topShareLabel + '/' + topPctLabel + ')', { ratio: ratioLabel, share: topShareLabel, pct: topPctLabel })
+        : makeToken('calc_out.power_user_curve.row.concentration_critical', '🔴 Critical (' + ratioLabel + ' ratio — ' + topShareLabel + '/' + topPctLabel + ')', { ratio: ratioLabel, share: topShareLabel, pct: topPctLabel });
+
     return [
-      'Power User Concentration: ' + bandInfo.label + ' (' + fmtRatio(ratio) + ' ratio — ' + topShare.toFixed(1) + '/' + topPct.toFixed(1) + ')',
-      'Snapshot: top ' + topPct.toFixed(1) + '% of users drive ' + topShare.toFixed(1) + '% of total usage. The remaining ' + (100 - topPct).toFixed(1) + '% of users account for ' + (100 - topShare).toFixed(1) + '% of usage.',
-      'What-If: if 10% of mid-tier users upgrade their engagement to power-user level, share rises to ' + l10share.toFixed(1) + '% (ratio lifts to ' + fmtRatio(l10share / topPct) + ')',
-      'Break-Even: to hit Good (' + fmtRatio(HEALTH_BANDS.good.threshold) + ' ratio), need top ' + topPct.toFixed(1) + '% users driving at least ' + targetShare + '% of usage (currently ' + topShare.toFixed(1) + '%)',
-      'Milestone: power-user programs (VIP support, beta features, dedicated CSM) can amplify existing concentration by +5-15 percentage points in usage share within 1 quarter',
-      'Tip: Power users are the seed for referrals and product feedback. Pair with the NRR Calculator (P9 batch) to project revenue impact.',
+      makeToken('calc_out.label.power_user_concentration', 'Power User Concentration') + ': ' + bandRow,
+      makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken('calc_out.power_user_curve.row.snapshot_detail', 'top ' + topPctLabel + '% of users drive ' + topShareLabel + '% of total usage. The remaining ' + restUsersLabel + '% of users account for ' + restShareLabel + '% of usage.', { top: topPctLabel, share: topShareLabel, rest_users: restUsersLabel, rest_share: restShareLabel }),
+      makeToken('calc_out.power_user_curve.row.whatif_upgrade_10pct', 'What-If: if 10% of mid-tier users upgrade their engagement to power-user level, share rises to ' + liftShareLabel + '% (ratio lifts to ' + liftRatioLabel + ')', { share: liftShareLabel, ratio: liftRatioLabel }),
+      makeToken('calc_out.power_user_curve.row.break_even_good', 'Break-Even: to hit Good (' + goodRatioLabel + ' ratio), need top ' + topPctLabel + '% users driving at least ' + targetShareLabel + '% of usage (currently ' + topShareLabel + '%)', { ratio: goodRatioLabel, top: topPctLabel, target: targetShareLabel, current: topShareLabel }),
+      makeToken('calc_out.power_user_curve.row.milestone_programs', 'Milestone: power-user programs (VIP support, beta features, dedicated CSM) can amplify existing concentration by +5-15 percentage points in usage share within 1 quarter'),
+      makeToken('calc_out.power_user_curve.row.tip_pair_nrr', 'Tip: Power users are the seed for referrals and product feedback. Pair with the NRR Calculator (P9 batch) to project revenue impact.'),
     ];
   },
   staticExamples: [
-    'Power User Concentration: 🟢 Excellent (3.50x ratio — 70.0/20.0)\nSnapshot: top 20.0% of users drive 70.0% of total usage. The remaining 80.0% of users account for 30.0% of usage.\nWhat-If: if 10% of mid-tier users upgrade their engagement to power-user level, share rises to 73.0% (ratio lifts to 3.65x)\nBreak-Even: to hit Good (3.00x ratio), need top 20.0% users driving at least 60.0% of usage (currently 70.0%)\nMilestone: power-user programs (VIP support, beta features, dedicated CSM) can amplify existing concentration by +5-15 percentage points in usage share within 1 quarter\nTip: Power users are the seed for referrals and product feedback. Pair with the NRR Calculator (P9 batch) to project revenue impact.',
+    '$calc_out.label.power_user_concentration|Power User Concentration|: $calc_out.power_user_curve.row.concentration_excellent{"ratio":"3.50x","share":"70.0","pct":"20.0"}|🟢 Excellent (3.50x ratio — 70.0/20.0)|\n$calc_out.label.snapshot|Snapshot|: $calc_out.power_user_curve.row.snapshot_detail{"top":"20.0","share":"70.0","rest_users":"80.0","rest_share":"30.0"}|top 20.0% of users drive 70.0% of total usage. The remaining 80.0% of users account for 30.0% of usage.|\n$calc_out.power_user_curve.row.whatif_upgrade_10pct{"share":"73.0","ratio":"3.65x"}|What-If: if 10% of mid-tier users upgrade their engagement to power-user level, share rises to 73.0% (ratio lifts to 3.65x)|\n$calc_out.power_user_curve.row.break_even_good{"ratio":"3.00x","top":"20.0","target":"60.0","current":"70.0"}|Break-Even: to hit Good (3.00x ratio), need top 20.0% users driving at least 60.0% of usage (currently 70.0%)|\n$calc_out.power_user_curve.row.milestone_programs|Milestone: power-user programs (VIP support, beta features, dedicated CSM) can amplify existing concentration by +5-15 percentage points in usage share within 1 quarter|\n$calc_out.power_user_curve.row.tip_pair_nrr|Tip: Power users are the seed for referrals and product feedback. Pair with the NRR Calculator (P9 batch) to project revenue impact.|',
   ],
   faq: [
     { q: 'What is Pareto ratio?', a: 'The ratio of usage share to user share. 70/20 = 3.5 means top 20% of users generate 3.5x their proportional share of usage (70% / 20% = 3.5). Higher = more concentrated.' },

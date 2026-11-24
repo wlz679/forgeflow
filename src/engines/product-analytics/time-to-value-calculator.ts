@@ -9,6 +9,9 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂移。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 1,    label: '🟢 Excellent', message: 'Lightning-fast aha-moment - users see value within their first session.' },
@@ -37,9 +40,9 @@ function fmtDays(n: number): string {
 
 // customFn: minimal live calc. Prepend cnn alias to defensively clamp inputs to [0, ∞).
 const customFn =
-  `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let o=function(e){return Number.isNaN(e)?0:Math.max(0,e)},s=function(e){return e<0?"critical":e<=n.excellent.threshold?"excellent":e<=n.good.threshold?"good":e<=n.warning.threshold?"warning":"critical"},a=function(e){return e===0?"0 days (same-session)":e<1?(e*24).toFixed(1)+" hours":e===1?"1 day":e<7?e.toFixed(1)+" days":e<30?e.toFixed(0)+" days (~"+(e/7).toFixed(1)+" weeks)":e.toFixed(0)+" days (~"+(e/30).toFixed(1)+" months)"},l=function(e,t,i){var r=h(e);return Array.isArray(r)?r.join(\`
-\`):String(r)};var d=o,f=s,g=a,m=l,n={excellent:{threshold:1,label:"🟢 Excellent",message:"Lightning-fast aha-moment - users see value within their first session."},good:{threshold:3,label:"🟡 Good",message:"Fast TTV - users reach aha within a few days. Strong onboarding."},warning:{threshold:7,label:"🟠 Warning",message:"Slow TTV - users take up to a week to find value. Optimize the first-run experience."},critical:{threshold:null,label:"🔴 Critical",message:"Very slow TTV - users wait more than a week. Major activation risk."}},h=function(e){const t=o(Number(e.median_days));let i=o(Number(e.p90_days));if(t<0||i<0)return["Days must be >= 0."];i<t&&(i=t);const r=s(t),c=n[r],u=i-t;return["Time-to-Value: "+c.label+" (median "+a(t)+", p90 "+a(i)+")","Snapshot: 50% of users reach the aha-moment in "+a(t)+". 90% do within "+a(i)+". Long-tail gap: "+u.toFixed(1)+" days.","What-If: cutting the first milestone by 1 day typically improves activation rate by +8 to +12 percentage points (each day saved = more users reach aha within window)","Break-Even: to hit Good (median <=3 days), focus the onboarding flow on the single most important first action; remove any steps that delay aha beyond day 3","Milestone: reduce p50 first (widest impact across users), then close the long-tail gap by tackling p90-causing frictions (e.g. complex initial setup)","Tip: Faster TTV = higher activation = higher retention. Pair with the Activation Rate Calculator and Customer Health Score (P9 batch)."]};return[l(inputs,pick,fill)]}finally{}
+  CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t){return t<0?"critical":t<=l.excellent.threshold?"excellent":t<=l.good.threshold?"good":t<=l.warning.threshold?"warning":"critical"},c=function(t){return t===0?"0 days (same-session)":t<1?(t*24).toFixed(1)+" hours":t===1?"1 day":t<7?t.toFixed(1)+" days":t<30?t.toFixed(0)+" days (~"+(t/7).toFixed(1)+" weeks)":t.toFixed(0)+" days (~"+(t/30).toFixed(1)+" months)"},d=function(t,r,n){var o=g(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var m=s,v=u,w=c,y=d,e=tk,h='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',e=new Function("return "+h)(),l={excellent:{threshold:1,label:"🟢 Excellent",message:"Lightning-fast aha-moment - users see value within their first session."},good:{threshold:3,label:"🟡 Good",message:"Fast TTV - users reach aha within a few days. Strong onboarding."},warning:{threshold:7,label:"🟠 Warning",message:"Slow TTV - users take up to a week to find value. Optimize the first-run experience."},critical:{threshold:null,label:"🔴 Critical",message:"Very slow TTV - users wait more than a week. Major activation risk."}},g=function(t){const r=s(Number(t.median_days));let n=s(Number(t.p90_days));if(r<0||n<0)return[e("calc_out.time_to_value.row.error_days_negative","Days must be >= 0.")];n<r&&(n=r);const o=u(r),p=n-r,a=c(r),i=c(n),_=p.toFixed(1),f=o==="excellent"?e("calc_out.time_to_value.row.ttv_excellent","🟢 Excellent (median "+a+", p90 "+i+")",{median:a,p90:i}):o==="good"?e("calc_out.time_to_value.row.ttv_good","🟡 Good (median "+a+", p90 "+i+")",{median:a,p90:i}):o==="warning"?e("calc_out.time_to_value.row.ttv_warning","🟠 Warning (median "+a+", p90 "+i+")",{median:a,p90:i}):e("calc_out.time_to_value.row.ttv_critical","🔴 Critical (median "+a+", p90 "+i+")",{median:a,p90:i});return[e("calc_out.label.time_to_value","Time-to-Value")+": "+f,e("calc_out.label.snapshot","Snapshot")+": "+e("calc_out.time_to_value.row.snapshot_detail","50% of users reach the aha-moment in "+a+". 90% do within "+i+". Long-tail gap: "+_+" days.",{median:a,p90:i,gap:_}),e("calc_out.time_to_value.row.whatif_cut_one_day","What-If: cutting the first milestone by 1 day typically improves activation rate by +8 to +12 percentage points (each day saved = more users reach aha within window)"),e("calc_out.time_to_value.row.break_even_good","Break-Even: to hit Good (median <=3 days), focus the onboarding flow on the single most important first action; remove any steps that delay aha beyond day 3"),e("calc_out.time_to_value.row.milestone_p50_first","Milestone: reduce p50 first (widest impact across users), then close the long-tail gap by tackling p90-causing frictions (e.g. complex initial setup)"),e("calc_out.time_to_value.row.tip_pair_activation","Tip: Faster TTV = higher activation = higher retention. Pair with the Activation Rate Calculator and Customer Health Score (P9 batch).")]};return[d(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`;
 
 const engine: ToolEngine = {
@@ -71,22 +74,37 @@ const engine: ToolEngine = {
   generate(inputs) {
     const p50 = clampNonNegative(Number(inputs['median_days']));
     let p90 = clampNonNegative(Number(inputs['p90_days']));
-    if (p50 < 0 || p90 < 0) return ['Days must be >= 0.'];
+    if (p50 < 0 || p90 < 0) return [makeToken('calc_out.time_to_value.row.error_days_negative', 'Days must be >= 0.')];
     if (p90 < p50) p90 = p50;
     const band = calcHealthBand(p50);
-    const bandInfo = HEALTH_BANDS[band];
     const gap = p90 - p50;
+
+    // P168 B3-15：params 的表达式与兜底里的表达式必须**同源** ⇒ 先用局部变量承接
+    const medianLabel = fmtDays(p50);
+    const p90Label = fmtDays(p90);
+    const gapLabel = gap.toFixed(1);
+
+    // P168 B3-15：健康度 4 档各写一个 code 字面量（静态扫描认得出 ⇒ 不许动态拼码）
+    const bandRow =
+      band === 'excellent'
+        ? makeToken('calc_out.time_to_value.row.ttv_excellent', '🟢 Excellent (median ' + medianLabel + ', p90 ' + p90Label + ')', { median: medianLabel, p90: p90Label })
+        : band === 'good'
+        ? makeToken('calc_out.time_to_value.row.ttv_good', '🟡 Good (median ' + medianLabel + ', p90 ' + p90Label + ')', { median: medianLabel, p90: p90Label })
+        : band === 'warning'
+        ? makeToken('calc_out.time_to_value.row.ttv_warning', '🟠 Warning (median ' + medianLabel + ', p90 ' + p90Label + ')', { median: medianLabel, p90: p90Label })
+        : makeToken('calc_out.time_to_value.row.ttv_critical', '🔴 Critical (median ' + medianLabel + ', p90 ' + p90Label + ')', { median: medianLabel, p90: p90Label });
+
     return [
-      'Time-to-Value: ' + bandInfo.label + ' (median ' + fmtDays(p50) + ', p90 ' + fmtDays(p90) + ')',
-      'Snapshot: 50% of users reach the aha-moment in ' + fmtDays(p50) + '. 90% do within ' + fmtDays(p90) + '. Long-tail gap: ' + gap.toFixed(1) + ' days.',
-      'What-If: cutting the first milestone by 1 day typically improves activation rate by +8 to +12 percentage points (each day saved = more users reach aha within window)',
-      'Break-Even: to hit Good (median <=3 days), focus the onboarding flow on the single most important first action; remove any steps that delay aha beyond day 3',
-      'Milestone: reduce p50 first (widest impact across users), then close the long-tail gap by tackling p90-causing frictions (e.g. complex initial setup)',
-      'Tip: Faster TTV = higher activation = higher retention. Pair with the Activation Rate Calculator and Customer Health Score (P9 batch).',
+      makeToken('calc_out.label.time_to_value', 'Time-to-Value') + ': ' + bandRow,
+      makeToken('calc_out.label.snapshot', 'Snapshot') + ': ' + makeToken('calc_out.time_to_value.row.snapshot_detail', '50% of users reach the aha-moment in ' + medianLabel + '. 90% do within ' + p90Label + '. Long-tail gap: ' + gapLabel + ' days.', { median: medianLabel, p90: p90Label, gap: gapLabel }),
+      makeToken('calc_out.time_to_value.row.whatif_cut_one_day', 'What-If: cutting the first milestone by 1 day typically improves activation rate by +8 to +12 percentage points (each day saved = more users reach aha within window)'),
+      makeToken('calc_out.time_to_value.row.break_even_good', 'Break-Even: to hit Good (median <=3 days), focus the onboarding flow on the single most important first action; remove any steps that delay aha beyond day 3'),
+      makeToken('calc_out.time_to_value.row.milestone_p50_first', 'Milestone: reduce p50 first (widest impact across users), then close the long-tail gap by tackling p90-causing frictions (e.g. complex initial setup)'),
+      makeToken('calc_out.time_to_value.row.tip_pair_activation', 'Tip: Faster TTV = higher activation = higher retention. Pair with the Activation Rate Calculator and Customer Health Score (P9 batch).'),
     ];
   },
   staticExamples: [
-    'Time-to-Value: 🟡 Good (median 2.0 days, p90 5.0 days)\nSnapshot: 50% of users reach the aha-moment in 2.0 days. 90% do within 5.0 days. Long-tail gap: 3.0 days.\nWhat-If: cutting the first milestone by 1 day typically improves activation rate by +8 to +12 percentage points (each day saved = more users reach aha within window)\nBreak-Even: to hit Good (median <=3 days), focus the onboarding flow on the single most important first action; remove any steps that delay aha beyond day 3\nMilestone: reduce p50 first (widest impact across users), then close the long-tail gap by tackling p90-causing frictions (e.g. complex initial setup)\nTip: Faster TTV = higher activation = higher retention. Pair with the Activation Rate Calculator and Customer Health Score (P9 batch).',
+    '$calc_out.label.time_to_value|Time-to-Value|: $calc_out.time_to_value.row.ttv_good{"median":"2.0 days","p90":"5.0 days"}|🟡 Good (median 2.0 days, p90 5.0 days)|\n$calc_out.label.snapshot|Snapshot|: $calc_out.time_to_value.row.snapshot_detail{"median":"2.0 days","p90":"5.0 days","gap":"3.0"}|50% of users reach the aha-moment in 2.0 days. 90% do within 5.0 days. Long-tail gap: 3.0 days.|\n$calc_out.time_to_value.row.whatif_cut_one_day|What-If: cutting the first milestone by 1 day typically improves activation rate by +8 to +12 percentage points (each day saved = more users reach aha within window)|\n$calc_out.time_to_value.row.break_even_good|Break-Even: to hit Good (median <=3 days), focus the onboarding flow on the single most important first action; remove any steps that delay aha beyond day 3|\n$calc_out.time_to_value.row.milestone_p50_first|Milestone: reduce p50 first (widest impact across users), then close the long-tail gap by tackling p90-causing frictions (e.g. complex initial setup)|\n$calc_out.time_to_value.row.tip_pair_activation|Tip: Faster TTV = higher activation = higher retention. Pair with the Activation Rate Calculator and Customer Health Score (P9 batch).|',
   ],
   faq: [
     { q: 'What is TTV (Time-to-Value)?', a: 'The time from signup (or first session) to the moment the user reaches their first "aha" - the action that correlates with retention. Lower = better.' },

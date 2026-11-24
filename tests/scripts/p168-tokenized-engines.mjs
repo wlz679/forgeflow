@@ -121,7 +121,19 @@ export const B3_14_BATCH = [
   { slug: 'solopreneur-funnel-value-calculator', file: 'src/engines/marketing/funnel-value-calculator.ts', alias: 'funnel_value', baseline: '9abe1f0' },
 ];
 
-export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH, ...B3_14_BATCH];
+/**
+ * P168 B3-15 组 1 —— B 档 3 个引擎（18 行 zh 整行英文）。
+ *
+ * ⭐ baseline = `361e6cc`（本批令牌化**之前**的最后一个提交）
+ *   —— 不得用 HEAD：一提交就失去意义（G9 会变成「token 对 token」的真空绿）。
+ */
+export const B3_15_BATCH = [
+  { slug: 'solopreneur-grr-calculator', file: 'src/engines/retention/grr-calculator.ts', alias: 'grr', baseline: '361e6cc' },
+  { slug: 'solopreneur-power-user-curve-calculator', file: 'src/engines/product-analytics/power-user-curve-calculator.ts', alias: 'power_user_curve', baseline: '361e6cc' },
+  { slug: 'solopreneur-time-to-value-calculator', file: 'src/engines/product-analytics/time-to-value-calculator.ts', alias: 'time_to_value', baseline: '361e6cc' },
+];
+
+export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH, ...B3_14_BATCH, ...B3_15_BATCH];
 
 /**
  * ⭐⭐ P168 B3-11：基线**重钉**表 —— 8 个引擎的英文页因 defaultInputs 修复而**合法地**变了。
