@@ -8,6 +8,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 4.0, label: 'Excellent', message: 'KB is a profit center.' },
@@ -59,9 +63,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},m=function(t,e){return t*e},h=function(t,e){return e>0?(t-e)/e:-1/0},b=function(t,e){return e>0?t/e:1/0},_=function(t,e){const n=t/100;return n>=l.excellent.threshold&&(e===void 0||e<=50)?"excellent":n>=l.good.threshold?"good":n>=l.warning.threshold?"warning":"critical"},s=function(t){return"$"+Math.round(t).toLocaleString()},d=function(t){return"$"+t.toFixed(2)},r=function(t){return Math.round(t).toLocaleString()},p=function(t,e,n){var o=N(t);return Array.isArray(o)?o.join(\`
-\`):String(o)};var C=c,W=m,E=h,P=b,j=_,q=s,z=d,J=r,L=p,l={excellent:{threshold:4,label:"Excellent",message:"KB is a profit center."},good:{threshold:1.5,label:"Good",message:"KB pays for itself."},warning:{threshold:.5,label:"Warning",message:"Marginal return — review spend."},critical:{threshold:null,label:"Critical",message:"KB spend exceeds savings."}},N=function(t){const e=c(Number(t.kb_team_monthly_cost)||0),n=c(Number(t.deflected_tickets_monthly)||0),o=c(Number(t.cost_per_ticket)||0),g=c(Number(t.articles_total)||0),i=c(Number(t.roi_target_pct)||0),f=m(n,o),x=f-e,v=h(f,e),u=v*100,a=b(e,g),w=i-u,M=_(u,a),$=l[M],B=v>=4&&a>50?" — ROI excellent but "+d(a)+"/article >$50 caps it to Good":"",I=isFinite(u)?u.toFixed(0)+"%":"n/a",K=isFinite(a)?d(a):"n/a",y=(x>=0?"":"-")+"$"+Math.abs(Math.round(x)).toLocaleString(),R=o>0?5*e/o:0,O=R*o,D=O-e,G=e*(1+i/100),k=o>0?G/o:0,F=k-n,S=i>-100?f/(1+i/100):0;return["🩺 Documentation ROI Health: "+$.label+" ("+I+" ROI · "+y+"/mo net savings · "+K+"/article/mo)"+B,"📊 Snapshot: "+r(n)+" tickets deflected × $"+o+"/ticket = "+s(f)+"/mo gross · minus "+s(e)+"/mo KB cost = "+y+"/mo net · "+r(g)+" articles · ROI "+I+" vs "+i+"% target ("+w.toFixed(0)+"pp gap)","🔄 What-If: if deflection climbs to "+r(R)+"/mo (from "+r(n)+", see K-1 Coverage), gross = "+s(O)+"/mo, net = "+s(D)+"/mo, ROI hits 400% (Excellent)","⚖️ Break-Even: to hit your "+i+"% ROI target, deflect "+r(k)+"/mo ("+(F>=0?"+":"")+r(F)+"/mo) OR cut KB cost below "+s(S)+"/mo","🎯 Milestone: cost/article = "+K+"/mo across "+r(g)+" articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.","💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection."]};return[p(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},h=function(t,e){return t*e},m=function(t,e){return e>0?(t-e)/e:-1/0},p=function(t,e){return e>0?t/e:1/0},_=function(t,e){const n=t/100;return n>=l.excellent.threshold&&(e===void 0||e<=50)?"excellent":n>=l.good.threshold?"good":n>=l.warning.threshold?"warning":"critical"},s=function(t){return"$"+Math.round(t).toLocaleString()},d=function(t){return"$"+t.toFixed(2)},r=function(t){return Math.round(t).toLocaleString()},v=function(t,e,n){var o=q(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var V=c,X=h,Y=m,Z=p,T=_,A=s,H=d,tt=r,et=v,f=tk,G='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',f=new Function("return "+G)(),l={excellent:{threshold:4,label:"Excellent",message:"KB is a profit center."},good:{threshold:1.5,label:"Good",message:"KB pays for itself."},warning:{threshold:.5,label:"Warning",message:"Marginal return — review spend."},critical:{threshold:null,label:"Critical",message:"KB spend exceeds savings."}},q=function(t){const e=c(Number(t.kb_team_monthly_cost)||0),n=c(Number(t.deflected_tickets_monthly)||0),o=c(Number(t.cost_per_ticket)||0),b=c(Number(t.articles_total)||0),a=c(Number(t.roi_target_pct)||0),u=h(n,o),k=u-e,x=m(u,e),g=x*100,i=p(e,b),E=a-g,P=_(g,i),W=l[P],J=x>=4&&i>50?" — ROI excellent but "+d(i)+"/article >$50 caps it to Good":"",y=isFinite(g)?g.toFixed(0)+"%":"n/a",I=isFinite(i)?d(i):"n/a",O=(k>=0?"":"-")+"$"+Math.abs(Math.round(k)).toLocaleString(),F=o>0?5*e/o:0,K=F*o,z=K-e,Q=e*(1+a/100),w=o>0?Q/o:0,R=w-n,U=a>-100?u/(1+a/100):0,S=r(n),L=String(o),N=s(u),$=s(e),M=O,j=r(b),B=y,C=String(a)+"%",D=E.toFixed(0);return["🩺 Documentation ROI Health: "+W.label+" ("+y+" ROI · "+O+"/mo net savings · "+I+"/article/mo)"+J,f("calc_out.documentation_roi.row.snapshot","📊 Snapshot: "+S+" tickets deflected × $"+L+"/ticket = "+N+"/mo gross · minus "+$+"/mo KB cost = "+M+"/mo net · "+j+" articles · ROI "+B+" vs "+C+" target ("+D+"pp gap)",{deflected:S,cost_per:L,gross:N,kb_cost:$,net:M,articles:j,roi:B,target:C,gap:D}),"🔄 What-If: if deflection climbs to "+r(F)+"/mo (from "+r(n)+", see K-1 Coverage), gross = "+s(K)+"/mo, net = "+s(z)+"/mo, ROI hits 400% (Excellent)","⚖️ Break-Even: to hit your "+a+"% ROI target, deflect "+r(w)+"/mo ("+(R>=0?"+":"")+r(R)+"/mo) OR cut KB cost below "+s(U)+"/mo","🎯 Milestone: cost/article = "+I+"/mo across "+r(b)+" articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.",f("calc_out.documentation_roi.row.tip","💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.")]};return[v(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -99,17 +103,38 @@ try{let c=function(t){return Number.isNaN(t)?0:Math.max(0,t)},m=function(t,e){re
     const targetDeflected = costPer > 0 ? targetGross / costPer : 0;
     const targetDelta = targetDeflected - deflected;
     const kbCostForTarget = target > -100 ? gross / (1 + target / 100) : 0;
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'documentation_roi'（见 B3_15_BATCH）。
+    const deflectedLabel = fmtInt(deflected);
+    const costPerLabel = String(costPer);
+    const grossLabel = fmtMoney(gross);
+    const kbCostLabel = fmtMoney(kbCost);
+    const netLabel = netStr;
+    const articlesLabel = fmtInt(articles);
+    const roiLabel = roiStr;
+    // ⚠️ 默认输入下 articles 与 target 同为 500 ⇒ 运行时取值无法区分 ⇒
+    //   target 的取值带上单位 '%'，两者才互不相同（模板 {target} 仍渲染成 "500%"）。
+    const targetLabel = String(target) + '%';
+    const gapLabel = gap.toFixed(0);
     return [
       '🩺 Documentation ROI Health: ' + bandInfo.label + ' (' + roiStr + ' ROI · ' + netStr + '/mo net savings · ' + costPerArtStr + '/article/mo)' + costWarn,
-      '📊 Snapshot: ' + fmtInt(deflected) + ' tickets deflected × $' + costPer + '/ticket = ' + fmtMoney(gross) + '/mo gross · minus ' + fmtMoney(kbCost) + '/mo KB cost = ' + netStr + '/mo net · ' + fmtInt(articles) + ' articles · ROI ' + roiStr + ' vs ' + target + '% target (' + gap.toFixed(0) + 'pp gap)',
+      makeToken(
+        'calc_out.documentation_roi.row.snapshot',
+        '📊 Snapshot: ' + deflectedLabel + ' tickets deflected × $' + costPerLabel + '/ticket = ' + grossLabel + '/mo gross · minus ' + kbCostLabel + '/mo KB cost = ' + netLabel + '/mo net · ' + articlesLabel + ' articles · ROI ' + roiLabel + ' vs ' + targetLabel + ' target (' + gapLabel + 'pp gap)',
+        { deflected: deflectedLabel, cost_per: costPerLabel, gross: grossLabel, kb_cost: kbCostLabel, net: netLabel, articles: articlesLabel, roi: roiLabel, target: targetLabel, gap: gapLabel },
+      ),
       '🔄 What-If: if deflection climbs to ' + fmtInt(excDeflected) + '/mo (from ' + fmtInt(deflected) + ', see K-1 Coverage), gross = ' + fmtMoney(excGross) + '/mo, net = ' + fmtMoney(excNet) + '/mo, ROI hits 400% (Excellent)',
       '⚖️ Break-Even: to hit your ' + target + '% ROI target, deflect ' + fmtInt(targetDeflected) + '/mo (' + (targetDelta >= 0 ? '+' : '') + fmtInt(targetDelta) + '/mo) OR cut KB cost below ' + fmtMoney(kbCostForTarget) + '/mo',
       '🎯 Milestone: cost/article = ' + costPerArtStr + '/mo across ' + fmtInt(articles) + ' articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.',
-      '💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.',
+      makeToken(
+        'calc_out.documentation_roi.row.tip',
+        '💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Documentation ROI Health: Good (180% ROI · $27,000/mo net savings · $30.00/article/mo)\n📊 Snapshot: 1,750 tickets deflected × $24/ticket = $42,000/mo gross · minus $15,000/mo KB cost = $27,000/mo net · 500 articles · ROI 180% vs 500% target (320pp gap)\n🔄 What-If: if deflection climbs to 3,125/mo (from 1,750, see K-1 Coverage), gross = $75,000/mo, net = $60,000/mo, ROI hits 400% (Excellent)\n⚖️ Break-Even: to hit your 500% ROI target, deflect 3,750/mo (+2,000/mo) OR cut KB cost below $7,000/mo\n🎯 Milestone: cost/article = $30.00/mo across 500 articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.\n💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.',
+    '🩺 Documentation ROI Health: Good (180% ROI · $27,000/mo net savings · $30.00/article/mo)\n$calc_out.documentation_roi.row.snapshot{"deflected":"1,750","cost_per":"24","gross":"$42,000","kb_cost":"$15,000","net":"$27,000","articles":"500","roi":"180%","target":"500%","gap":"320"}|📊 Snapshot: 1,750 tickets deflected × $24/ticket = $42,000/mo gross · minus $15,000/mo KB cost = $27,000/mo net · 500 articles · ROI 180% vs 500% target (320pp gap)|\n🔄 What-If: if deflection climbs to 3,125/mo (from 1,750, see K-1 Coverage), gross = $75,000/mo, net = $60,000/mo, ROI hits 400% (Excellent)\n⚖️ Break-Even: to hit your 500% ROI target, deflect 3,750/mo (+2,000/mo) OR cut KB cost below $7,000/mo\n🎯 Milestone: cost/article = $30.00/mo across 500 articles. Keep it ≤$50 as the KB scales — the Excellent band needs ROI ≥400% AND ≤$50/article.\n$calc_out.documentation_roi.row.tip|💡 Tip: ROI scales with deflection volume first. Grow coverage before cutting team cost — see [KB Coverage Rate] (K-1) to find gap topics that lift deflection.|',
   ],
   faq: [
     { q: 'How is Documentation ROI calculated?', a: 'ROI = (net savings / KB team cost) × 100, where net savings = (tickets deflected × cost per ticket) − KB team monthly cost. Example: 1,750 tickets deflected × $24 = $42,000 gross savings − $15,000 KB cost = $27,000 net → ROI 180%. It answers "for every $1 spent on the KB, how many $ of support cost do we avoid?"' },

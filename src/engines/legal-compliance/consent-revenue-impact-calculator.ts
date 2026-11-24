@@ -15,6 +15,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 const AOV_EUR = 80; // hardcoded per spec — mid-market B2B SaaS ARPU anchor (€80/customer)
 
@@ -70,9 +74,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let i=function(t){return Number.isNaN(t)?0:Math.max(0,t)},h=function(t,n){const o=Math.min(100,Math.max(0,t)),e=Math.min(100,Math.max(0,n));return Math.max(0,e-o)},m=function(t,n){return t*(n/100)},f=function(t,n,o){return t*(n/100)*o},p=function(t){return t*12},d=function(t){return t<l.excellent.threshold?"excellent":t<l.good.threshold?"good":t<l.warning.threshold?"warning":"critical"},a=function(t){return"€"+Math.round(t).toLocaleString()},b=function(t,n){return t.toFixed(n)},r=function(t){return t.toFixed(1)+"pp"},M=function(t,n,o){var e=w(t);return Array.isArray(e)?e.join(\`
-\`):String(e)};var X=i,q=h,K=m,O=f,U=p,z=d,E=a,J=b,L=r,Q=M,u=80,l={excellent:{threshold:5,label:"Excellent",message:"Consent near target — minimal revenue leakage."},good:{threshold:15,label:"Good",message:"Manageable consent gap."},warning:{threshold:30,label:"Warning",message:"Significant revenue exposure."},critical:{threshold:null,label:"Critical",message:"Severe UX failure — most visitors bounce at consent wall."}},w=function(t){const n=i(Number(t.monthly_visitors)||0),o=i(Number(t.current_consent_rate_pct)||0),e=i(Number(t.target_consent_rate_pct)||0),g=i(Number(t.conversion_rate_pct)||0),s=h(o,e),P=m(n,s),v=f(P,g,u),x=p(v),k=d(s),F=l[k],y=70,c=h(y,e),I=m(n,c),N=f(I,g,u),R=p(N),S=d(c),j=c<5?"🟢":c<15?"🟡":c<30?"🟠":"🔴",_=Math.max(0,Math.min(100,e-4.9)),G=Math.max(0,_-o),C=Math.max(0,Math.min(100,o+4.9)),W=Math.max(0,e-C);return["🩺 Consent Revenue: "+F.label+" (gap "+r(s)+" · recoverable "+a(v)+"/mo · "+a(x)+"/yr)","📊 Snapshot: "+n.toLocaleString()+" visitors/mo · consent "+r(o)+" → target "+r(e)+" (gap "+r(s)+") · conv "+b(g,2)+"% × €"+u+" AOV · monthly recoverable "+a(v)+" · annual "+a(x),"🔄 What-If: if consent climbs to "+y+"% (gap="+r(c)+", "+j+" "+l[S].label+"), recoverable drops to "+a(R)+"/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.","⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥"+r(_)+" (lift +"+r(G)+") OR reduce target to ≤"+r(C)+" (drop "+r(W)+")","🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.","💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic."]};return[M(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(t){return Number.isNaN(t)?0:Math.max(0,t)},p=function(t,n){const a=Math.min(100,Math.max(0,t)),e=Math.min(100,Math.max(0,n));return Math.max(0,e-a)},g=function(t,n){return t*(n/100)},m=function(t,n,a){return t*(n/100)*a},f=function(t){return t*12},v=function(t){return t<l.excellent.threshold?"excellent":t<l.good.threshold?"good":t<l.warning.threshold?"warning":"critical"},o=function(t){return"€"+Math.round(t).toLocaleString()},y=function(t,n){return t.toFixed(n)},r=function(t){return t.toFixed(1)+"pp"},M=function(t,n,a){var e=O(t);return Array.isArray(e)?e.join(\`
+\`):String(e)};var Q=s,T=p,Y=g,Z=m,B=f,V=v,D=o,A=y,H=r,tt=M,u=tk,I='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',u=new Function("return "+I)(),h=80,l={excellent:{threshold:5,label:"Excellent",message:"Consent near target — minimal revenue leakage."},good:{threshold:15,label:"Good",message:"Manageable consent gap."},warning:{threshold:30,label:"Warning",message:"Significant revenue exposure."},critical:{threshold:null,label:"Critical",message:"Severe UX failure — most visitors bounce at consent wall."}},O=function(t){const n=s(Number(t.monthly_visitors)||0),a=s(Number(t.current_consent_rate_pct)||0),e=s(Number(t.target_consent_rate_pct)||0),b=s(Number(t.conversion_rate_pct)||0),i=p(a,e),R=g(n,i),d=m(R,b,h),_=f(d),G=v(i),W=l[G],x=70,c=p(x,e),X=g(n,c),E=m(X,b,h),J=f(E),K=v(c),U=c<5?"🟢":c<15?"🟡":c<30?"🟠":"🔴",k=Math.max(0,Math.min(100,e-4.9)),$=Math.max(0,k-a),C=Math.max(0,Math.min(100,a+4.9)),z=Math.max(0,e-C),w=n.toLocaleString(),F=r(a),L=r(e),P=r(i),S=y(b,2),j=String(h),q=o(d),N=o(_);return["🩺 Consent Revenue: "+W.label+" (gap "+r(i)+" · recoverable "+o(d)+"/mo · "+o(_)+"/yr)",u("calc_out.consent_revenue_impact.row.snapshot","📊 Snapshot: "+w+" visitors/mo · consent "+F+" → target "+L+" (gap "+P+") · conv "+S+"% × €"+j+" AOV · monthly recoverable "+q+" · annual "+N,{visitors:w,current:F,target:L,gap:P,conversion:S,aov:j,monthly:q,annual:N}),"🔄 What-If: if consent climbs to "+x+"% (gap="+r(c)+", "+U+" "+l[K].label+"), recoverable drops to "+o(J)+"/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.","⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥"+r(k)+" (lift +"+r($)+") OR reduce target to ≤"+r(C)+" (drop "+r(z)+")","🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.",u("calc_out.consent_revenue_impact.row.tip","💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.")]};return[M(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -112,17 +116,35 @@ try{let i=function(t){return Number.isNaN(t)?0:Math.max(0,t)},h=function(t,n){co
     const needCurrentLift = Math.max(0, needCurrentPct - current);
     const needTargetPct = Math.max(0, Math.min(100, current + 4.9));
     const needTargetReduction = Math.max(0, target - needTargetPct);
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'consent_revenue_impact'（见 B3_15_BATCH）。
+    const visitorsLabel = visitors.toLocaleString();
+    const currentLabel = fmtPp(current);
+    const targetLabel = fmtPp(target);
+    const gapLabel = fmtPp(gap);
+    const convLabel = fmtNum(conv, 2);
+    const aovLabel = String(AOV_EUR);
+    const monthlyLabel = fmtMoney(monthly);
+    const annualLabel = fmtMoney(annual);
     return [
       '🩺 Consent Revenue: ' + bandInfo.label + ' (gap ' + fmtPp(gap) + ' · recoverable ' + fmtMoney(monthly) + '/mo · ' + fmtMoney(annual) + '/yr)',
-      '📊 Snapshot: ' + visitors.toLocaleString() + ' visitors/mo · consent ' + fmtPp(current) + ' → target ' + fmtPp(target) + ' (gap ' + fmtPp(gap) + ') · conv ' + fmtNum(conv, 2) + '% × €' + AOV_EUR + ' AOV · monthly recoverable ' + fmtMoney(monthly) + ' · annual ' + fmtMoney(annual),
+      makeToken(
+        'calc_out.consent_revenue_impact.row.snapshot',
+        '📊 Snapshot: ' + visitorsLabel + ' visitors/mo · consent ' + currentLabel + ' → target ' + targetLabel + ' (gap ' + gapLabel + ') · conv ' + convLabel + '% × €' + aovLabel + ' AOV · monthly recoverable ' + monthlyLabel + ' · annual ' + annualLabel,
+        { visitors: visitorsLabel, current: currentLabel, target: targetLabel, gap: gapLabel, conversion: convLabel, aov: aovLabel, monthly: monthlyLabel, annual: annualLabel },
+      ),
       '🔄 What-If: if consent climbs to ' + altConsent + '% (gap=' + fmtPp(altGap) + ', ' + altEmoji + ' ' + HEALTH_BANDS[altBand].label + '), recoverable drops to ' + fmtMoney(altAnnual) + '/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.',
       '⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥' + fmtPp(needCurrentPct) + ' (lift +' + fmtPp(needCurrentLift) + ') OR reduce target to ≤' + fmtPp(needTargetPct) + ' (drop ' + fmtPp(needTargetReduction) + ')',
       '🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.',
-      '💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.',
+      makeToken(
+        'calc_out.consent_revenue_impact.row.tip',
+        '💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Consent Revenue: Warning (gap 20.0pp · recoverable €64,000/mo · €768,000/yr)\n📊 Snapshot: 200,000 visitors/mo · consent 55.0pp → target 75.0pp (gap 20.0pp) · conv 2.00% × €80 AOV · monthly recoverable €64,000 · annual €768,000\n🔄 What-If: if consent climbs to 70% (gap=5.0pp, 🟡 Good), recoverable drops to €192,000/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.\n⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥70.1pp (lift +15.1pp) OR reduce target to ≤59.9pp (drop 15.1pp)\n🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.\n💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.',
+    '🩺 Consent Revenue: Warning (gap 20.0pp · recoverable €64,000/mo · €768,000/yr)\n$calc_out.consent_revenue_impact.row.snapshot{"visitors":"200,000","current":"55.0pp","target":"75.0pp","gap":"20.0pp","conversion":"2.00","aov":"80","monthly":"€64,000","annual":"€768,000"}|📊 Snapshot: 200,000 visitors/mo · consent 55.0pp → target 75.0pp (gap 20.0pp) · conv 2.00% × €80 AOV · monthly recoverable €64,000 · annual €768,000|\n🔄 What-If: if consent climbs to 70% (gap=5.0pp, 🟡 Good), recoverable drops to €192,000/yr. Premium CMP vendors typically lift consent 10-15pp within 4-6 weeks.\n⚖️ Break-Even: to hit 🟢 Excellent (<5pp), need consent ≥70.1pp (lift +15.1pp) OR reduce target to ≤59.9pp (drop 15.1pp)\n🎯 Milestone: re-baseline quarterly + after any CMP rollout / consent UX change. IAB TCF v2.2 audits can drop consent rate by 5-10pp if vendor compliance slips.\n$calc_out.consent_revenue_impact.row.tip|💡 Tip: pair with [CMP ROI] (L-6) — premium CMP lifts consent 10-15pp. Also pair with our [Funnel Step Calculator] (P-1) — consent wall is the top step-leak for EU traffic.|',
   ],
   faq: [
     { q: 'What is cookie consent revenue impact?', a: 'Cookie consent revenue impact measures the monthly/annual revenue you lose because visitors reject analytics + marketing cookies. EU/EEA traffic under GDPR ePrivacy Recital 32 must give explicit consent before non-essential cookies fire — visitors who decline convert at ~40-60% lower rates (per OneTrust 2024 benchmark).' },

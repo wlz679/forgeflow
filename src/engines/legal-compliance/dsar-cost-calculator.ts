@@ -9,6 +9,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 25_000,   label: 'Excellent', message: 'Low DSAR volume or high automation.' },
@@ -55,9 +59,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},c=function(t,n){const o=Math.min(100,Math.max(0,n));return t*(1-o/100)},h=function(t,n,o,a){return t*12*c(n,a)*o},b=function(t,n,o){return c(t,o)*n},d=function(t){return t<e.excellent.threshold?"excellent":t<e.good.threshold?"good":t<e.warning.threshold?"warning":"critical"},r=function(t){return"€"+Math.round(t).toLocaleString()},i=function(t,n){return t.toFixed(n)},m=function(t){return t.toFixed(1)+"%"},R=function(t,n,o){var a=x(t);return Array.isArray(a)?a.join(\`
-\`):String(a)};var C=l,F=c,k=h,I=b,K=d,N=r,O=i,W=m,j=R,e={excellent:{threshold:25e3,label:"Excellent",message:"Low DSAR volume or high automation."},good:{threshold:1e5,label:"Good",message:"Manageable DSAR cost."},warning:{threshold:3e5,label:"Warning",message:"Significant operational load."},critical:{threshold:null,label:"Critical",message:"DSAR consuming disproportionate resources."}},x=function(t){const n=l(Number(t.dsars_per_month)||0),o=l(Number(t.hours_per_dsar)||0),a=l(Number(t.hourly_rate_dpo)||0),s=l(Number(t.automation_pct)||0),u=c(o,s),M=b(o,a,s),g=h(n,o,a,s),_=d(g),v=e[_],f=60,A=c(o,f),S=h(n,o,a,f),D=d(S),p=e.excellent.threshold,y=n*12*a>0?p/(n*12*a):0,P=o>0?Math.min(100,Math.max(0,(1-y/o)*100)):0,w=12*u*a>0?Math.ceil(p/(12*u*a)):0;return["🩺 DSAR Cost: "+v.label+" (annual cost "+r(g)+" · "+i(u,2)+" hr/DSAR · "+r(M)+"/DSAR)","📊 Snapshot: "+n.toLocaleString()+" DSARs/mo × 12 = "+(n*12).toLocaleString()+"/yr · "+i(o,2)+" hr/DSAR · "+m(s)+" automation ("+i(u,2)+" manual hr) · "+r(a)+"/hr DPO · annual cost "+r(g),"🔄 What-If: if automation climbs to "+f+"%, manual hours drop to "+i(A,2)+", annual cost drops to "+r(S)+" ("+e[D].label+"). Push past ~82% automation to reach 🟢 Excellent (<€25K).","⚖️ Break-Even: to hit 🟢 Excellent (<€"+(p/1e3).toFixed(0)+"K), need automation ≥"+P.toFixed(0)+"% OR cut DSARs to ≤"+w+"/mo (current "+m(s)+")","🎯 Milestone: re-baseline quarterly + after any product launch that adds data-collection surface (DSAR volume correlates with consent changes).","💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget."]};return[R(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(t){return Number.isNaN(t)?0:Math.max(0,t)},l=function(t,a){const n=Math.min(100,Math.max(0,a));return t*(1-n/100)},d=function(t,a,n,o){return t*12*l(a,o)*n},_=function(t,a,n){return l(t,n)*a},m=function(t){return t<r.excellent.threshold?"excellent":t<r.good.threshold?"good":t<r.warning.threshold?"warning":"critical"},e=function(t){return"€"+Math.round(t).toLocaleString()},c=function(t,a){return t.toFixed(a)},g=function(t){return t.toFixed(1)+"%"},S=function(t,a,n){var o=F(t);return Array.isArray(o)?o.join(\`
+\`):String(o)};var K=s,W=l,z=d,E=_,G=m,J=e,Y=c,$=g,Q=S,h=tk,D='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',h=new Function("return "+D)(),r={excellent:{threshold:25e3,label:"Excellent",message:"Low DSAR volume or high automation."},good:{threshold:1e5,label:"Good",message:"Manageable DSAR cost."},warning:{threshold:3e5,label:"Warning",message:"Significant operational load."},critical:{threshold:null,label:"Critical",message:"DSAR consuming disproportionate resources."}},F=function(t){const a=s(Number(t.dsars_per_month)||0),n=s(Number(t.hours_per_dsar)||0),o=s(Number(t.hourly_rate_dpo)||0),u=s(Number(t.automation_pct)||0),i=l(n,u),C=_(n,o,u),f=d(a,n,o,u),P=m(f),L=r[P],b=60,O=l(n,b),v=d(a,n,o,b),j=m(v),p=r.excellent.threshold,q=a*12*o>0?p/(a*12*o):0,N=n>0?Math.min(100,Math.max(0,(1-q/n)*100)):0,I=12*i*o>0?Math.ceil(p/(12*i*o)):0,R=a.toLocaleString(),x=(a*12).toLocaleString(),y=c(n,2),M=g(u),k=c(i,2),w=e(o),A=e(f);return["🩺 DSAR Cost: "+L.label+" (annual cost "+e(f)+" · "+c(i,2)+" hr/DSAR · "+e(C)+"/DSAR)",h("calc_out.dsar_cost.row.snapshot","📊 Snapshot: "+R+" DSARs/mo × 12 = "+x+"/yr · "+y+" hr/DSAR · "+M+" automation ("+k+" manual hr) · "+w+"/hr DPO · annual cost "+A,{dsars:R,dsars_per_year:x,hours:y,automation:M,manual_hours:k,rate:w,annual:A}),"🔄 What-If: if automation climbs to "+b+"%, manual hours drop to "+c(O,2)+", annual cost drops to "+e(v)+" ("+r[j].label+"). Push past ~82% automation to reach 🟢 Excellent (<€25K).","⚖️ Break-Even: to hit 🟢 Excellent (<€"+(p/1e3).toFixed(0)+"K), need automation ≥"+N.toFixed(0)+"% OR cut DSARs to ≤"+I+"/mo (current "+g(u)+")","🎯 Milestone: re-baseline quarterly + after any product launch that adds data-collection surface (DSAR volume correlates with consent changes).",h("calc_out.dsar_cost.row.tip","💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget.")]};return[S(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -88,17 +92,34 @@ try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},c=function(t,n){co
     const targetManualHours = (dsars * 12 * rate) > 0 ? targetCost / (dsars * 12 * rate) : 0;
     const needAutomation = hours > 0 ? Math.min(100, Math.max(0, (1 - targetManualHours / hours) * 100)) : 0;
     const needDSARs = (12 * manualHours * rate) > 0 ? Math.ceil(targetCost / (12 * manualHours * rate)) : 0;
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'dsar_cost'（见 B3_15_BATCH）。
+    const dsarsLabel = dsars.toLocaleString();
+    const dsarsYearLabel = (dsars * 12).toLocaleString();
+    const hoursLabel = fmtNum(hours, 2);
+    const automationLabel = fmtPct(automationPct);
+    const manualHoursLabel = fmtNum(manualHours, 2);
+    const rateLabel = fmtMoney(rate);
+    const annualLabel = fmtMoney(annual);
     return [
       '🩺 DSAR Cost: ' + bandInfo.label + ' (annual cost ' + fmtMoney(annual) + ' · ' + fmtNum(manualHours, 2) + ' hr/DSAR · ' + fmtMoney(costPerDSARv) + '/DSAR)',
-      '📊 Snapshot: ' + dsars.toLocaleString() + ' DSARs/mo × 12 = ' + (dsars * 12).toLocaleString() + '/yr · ' + fmtNum(hours, 2) + ' hr/DSAR · ' + fmtPct(automationPct) + ' automation (' + fmtNum(manualHours, 2) + ' manual hr) · ' + fmtMoney(rate) + '/hr DPO · annual cost ' + fmtMoney(annual),
+      makeToken(
+        'calc_out.dsar_cost.row.snapshot',
+        '📊 Snapshot: ' + dsarsLabel + ' DSARs/mo × 12 = ' + dsarsYearLabel + '/yr · ' + hoursLabel + ' hr/DSAR · ' + automationLabel + ' automation (' + manualHoursLabel + ' manual hr) · ' + rateLabel + '/hr DPO · annual cost ' + annualLabel,
+        { dsars: dsarsLabel, dsars_per_year: dsarsYearLabel, hours: hoursLabel, automation: automationLabel, manual_hours: manualHoursLabel, rate: rateLabel, annual: annualLabel },
+      ),
       '🔄 What-If: if automation climbs to ' + altAutomationPct + '%, manual hours drop to ' + fmtNum(altManualHours, 2) + ', annual cost drops to ' + fmtMoney(altAnnual) + ' (' + HEALTH_BANDS[altBand].label + '). Push past ~82% automation to reach 🟢 Excellent (<€25K).',
       '⚖️ Break-Even: to hit 🟢 Excellent (<€' + (targetCost / 1000).toFixed(0) + 'K), need automation ≥' + needAutomation.toFixed(0) + '% OR cut DSARs to ≤' + needDSARs + '/mo (current ' + fmtPct(automationPct) + ')',
       '🎯 Milestone: re-baseline quarterly + after any product launch that adds data-collection surface (DSAR volume correlates with consent changes).',
-      '💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget.',
+      makeToken(
+        'calc_out.dsar_cost.row.tip',
+        '💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 DSAR Cost: Good (annual cost €99,750 · 1.75 hr/DSAR · €166/DSAR)\n📊 Snapshot: 50 DSARs/mo × 12 = 600/yr · 2.50 hr/DSAR · 30.0% automation (1.75 manual hr) · €95/hr DPO · annual cost €99,750\n🔄 What-If: if automation climbs to 60%, manual hours drop to 1.00, annual cost drops to €57,000 (Good). Push past ~82% automation to reach 🟢 Excellent (<€25K).\n⚖️ Break-Even: to hit 🟢 Excellent (<€25K), need automation ≥82% OR cut DSARs to ≤13/mo (current 30.0%)\n🎯 Milestone: re-baseline quarterly + after any product launch that adds data-collection surface (DSAR volume correlates with consent changes).\n💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget.',
+    '🩺 DSAR Cost: Good (annual cost €99,750 · 1.75 hr/DSAR · €166/DSAR)\n$calc_out.dsar_cost.row.snapshot{"dsars":"50","dsars_per_year":"600","hours":"2.50","automation":"30.0%","manual_hours":"1.75","rate":"€95","annual":"€99,750"}|📊 Snapshot: 50 DSARs/mo × 12 = 600/yr · 2.50 hr/DSAR · 30.0% automation (1.75 manual hr) · €95/hr DPO · annual cost €99,750|\n🔄 What-If: if automation climbs to 60%, manual hours drop to 1.00, annual cost drops to €57,000 (Good). Push past ~82% automation to reach 🟢 Excellent (<€25K).\n⚖️ Break-Even: to hit 🟢 Excellent (<€25K), need automation ≥82% OR cut DSARs to ≤13/mo (current 30.0%)\n🎯 Milestone: re-baseline quarterly + after any product launch that adds data-collection surface (DSAR volume correlates with consent changes).\n$calc_out.dsar_cost.row.tip|💡 Tip: pair with [CMP ROI] (L-6) — CMP reduces DSAR volume via consent logging. Also pair with our [Cost-per-Ticket Calculator] (P12-1) to size the broader privacy ops budget.|',
   ],
   faq: [
     { q: 'What is DSAR processing cost?', a: 'DSAR (Data Subject Access Request) processing cost = annual labor cost to fulfill GDPR Art. 15 access requests. Each request takes manual hours × DPO hourly rate, scaled by annual request volume minus automation savings. Mid-market B2B SaaS averages 30–100 DSARs/mo (IAPP 2024 Privacy Operations Survey).' },

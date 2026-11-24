@@ -6,6 +6,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.80, label: 'Excellent', message: 'Fresh KB - most articles reviewed recently.' },
@@ -46,9 +50,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let o=function(e){return Number.isNaN(e)?0:Math.max(0,e)},d=function(e,t){return t>0?e/t:0},u=function(e,t){return Math.max(0,t-e)},m=function(e){return e>=n.excellent.threshold?"excellent":e>=n.good.threshold?"good":e>=n.warning.threshold?"warning":"critical"},i=function(e){return(e*100).toFixed(1)+"%"},r=function(e){return Math.round(e).toLocaleString()},f=function(e,t,a){var l=b(e);return Array.isArray(l)?l.join(\`
-\`):String(l)};var y=o,M=d,F=u,K=m,k=i,N=r,P=f,n={excellent:{threshold:.8,label:"Excellent",message:"Fresh KB - most articles reviewed recently."},good:{threshold:.55,label:"Good",message:"Healthy review cadence."},warning:{threshold:.4,label:"Warning",message:"Stale content creeping in."},critical:{threshold:null,label:"Critical",message:"KB content outdated."}},b=function(e){const t=o(Number(e.total_articles)||0),a=Math.min(o(Number(e.articles_updated_12mo)||0),t),l=Math.min(o(Number(e.articles_updated_6mo)||0),a),g=o(Number(e.target_freshness_pct)||0),c=d(a,t),I=t>0?l/t:0,h=u(a,t),w=m(c),_=n[w],p=n.excellent.threshold,s=Math.max(0,p*t-a),v=s>0?Math.ceil(s/10):0,x=g-c*100;return["🩺 Article Freshness Health: "+_.label+" ("+i(c)+" fresh in 12mo - "+r(h)+" stale)","📊 Snapshot: "+r(a)+"/"+r(t)+" updated 12mo - "+r(l)+"/"+r(t)+" updated 6mo - "+r(h)+" stale - target "+g+"% ("+(x>=0?"+":"")+x.toFixed(1)+"pp gap)","🔄 What-If: if 12mo freshness climbs to "+i(p)+" (Excellent), "+r(s)+" more articles reviewed (~10/mo cadence)","⚖️ Break-Even: to hit "+i(n.excellent.threshold)+" (Excellent), need "+r(s)+" more articles reviewed; at 10/mo cadence = ~"+v+" months","🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo","💡 Tip: stale articles are the silent killer - "+Math.round(h*100/Math.max(1,t))+"% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen."]};return[f(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},g=function(e,t){return t>0?e/t:0},f=function(e,t){return Math.max(0,t-e)},m=function(e){return e>=n.excellent.threshold?"excellent":e>=n.good.threshold?"good":e>=n.warning.threshold?"warning":"critical"},c=function(e){return(e*100).toFixed(1)+"%"},r=function(e){return Math.round(e).toLocaleString()},p=function(e,t,a){var l=q(e);return Array.isArray(l)?l.join(\`
+\`):String(l)};var S=s,L=g,O=f,C=m,I=c,W=r,E=p,i=tk,j='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',i=new Function("return "+j)(),n={excellent:{threshold:.8,label:"Excellent",message:"Fresh KB - most articles reviewed recently."},good:{threshold:.55,label:"Good",message:"Healthy review cadence."},warning:{threshold:.4,label:"Warning",message:"Stale content creeping in."},critical:{threshold:null,label:"Critical",message:"KB content outdated."}},q=function(e){const t=s(Number(e.total_articles)||0),a=Math.min(s(Number(e.articles_updated_12mo)||0),t),l=Math.min(s(Number(e.articles_updated_6mo)||0),a),b=s(Number(e.target_freshness_pct)||0),h=g(a,t),G=t>0?l/t:0,u=f(a,t),K=m(h),N=n[K],v=n.excellent.threshold,o=Math.max(0,v*t-a),P=o>0?Math.ceil(o/10):0,_=b-h*100,w=r(a),d=r(t),x=r(l),y=r(u),k=String(b),F=(_>=0?"+":"")+_.toFixed(1),M=String(Math.round(u*100/Math.max(1,t)));return["🩺 Article Freshness Health: "+N.label+" ("+c(h)+" fresh in 12mo - "+r(u)+" stale)",i("calc_out.article_freshness.row.snapshot","📊 Snapshot: "+w+"/"+d+" updated 12mo - "+x+"/"+d+" updated 6mo - "+y+" stale - target "+k+"% ("+F+"pp gap)",{up12:w,total:d,up6:x,stale:y,target:k,gap:F}),"🔄 What-If: if 12mo freshness climbs to "+c(v)+" (Excellent), "+r(o)+" more articles reviewed (~10/mo cadence)","⚖️ Break-Even: to hit "+c(n.excellent.threshold)+" (Excellent), need "+r(o)+" more articles reviewed; at 10/mo cadence = ~"+P+" months","🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo",i("calc_out.article_freshness.row.tip","💡 Tip: stale articles are the silent killer - "+M+"% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.",{stale_pct:M})]};return[p(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -75,17 +79,35 @@ try{let o=function(e){return Number.isNaN(e)?0:Math.max(0,e)},d=function(e,t){re
     const lift = Math.max(0, altFresh * total - up12);
     const monthsAt10 = lift > 0 ? Math.ceil(lift / 10) : 0;
     const gapPct = targetPct - fresh12 * 100;
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'article_freshness'（见 B3_15_BATCH）。
+    const up12Label = fmtInt(up12);
+    const totalLabel = fmtInt(total);
+    const up6Label = fmtInt(up6);
+    const staleLabel = fmtInt(stale);
+    const targetLabel = String(targetPct);
+    const gapLabel = (gapPct >= 0 ? '+' : '') + gapPct.toFixed(1);
+    const stalePctLabel = String(Math.round(stale * 100 / Math.max(1, total)));
     return [
       '🩺 Article Freshness Health: ' + bandInfo.label + ' (' + fmtPct(fresh12) + ' fresh in 12mo - ' + fmtInt(stale) + ' stale)',
-      '📊 Snapshot: ' + fmtInt(up12) + '/' + fmtInt(total) + ' updated 12mo - ' + fmtInt(up6) + '/' + fmtInt(total) + ' updated 6mo - ' + fmtInt(stale) + ' stale - target ' + targetPct + '% (' + (gapPct >= 0 ? '+' : '') + gapPct.toFixed(1) + 'pp gap)',
+      makeToken(
+        'calc_out.article_freshness.row.snapshot',
+        '📊 Snapshot: ' + up12Label + '/' + totalLabel + ' updated 12mo - ' + up6Label + '/' + totalLabel + ' updated 6mo - ' + staleLabel + ' stale - target ' + targetLabel + '% (' + gapLabel + 'pp gap)',
+        { up12: up12Label, total: totalLabel, up6: up6Label, stale: staleLabel, target: targetLabel, gap: gapLabel },
+      ),
       '🔄 What-If: if 12mo freshness climbs to ' + fmtPct(altFresh) + ' (Excellent), ' + fmtInt(lift) + ' more articles reviewed (~10/mo cadence)',
       '⚖️ Break-Even: to hit ' + fmtPct(HEALTH_BANDS.excellent.threshold) + ' (Excellent), need ' + fmtInt(lift) + ' more articles reviewed; at 10/mo cadence = ~' + monthsAt10 + ' months',
       '🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo',
-      '💡 Tip: stale articles are the silent killer - ' + Math.round(stale * 100 / Math.max(1, total)) + '% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.',
+      makeToken(
+        'calc_out.article_freshness.row.tip',
+        '💡 Tip: stale articles are the silent killer - ' + stalePctLabel + '% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.',
+        { stale_pct: stalePctLabel },
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Article Freshness Health: Good (65.0% fresh in 12mo - 175 stale)\n📊 Snapshot: 325/500 updated 12mo - 200/500 updated 6mo - 175 stale - target 70% (+5.0pp gap)\n🔄 What-If: if 12mo freshness climbs to 80.0% (Excellent), 75 more articles reviewed (~10/mo cadence)\n⚖️ Break-Even: to hit 80.0% (Excellent), need 75 more articles reviewed; at 10/mo cadence = ~8 months\n🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo\n💡 Tip: stale articles are the silent killer - 35% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.',
+    '🩺 Article Freshness Health: Good (65.0% fresh in 12mo - 175 stale)\n$calc_out.article_freshness.row.snapshot{"up12":"325","total":"500","up6":"200","stale":"175","target":"70","gap":"+5.0"}|📊 Snapshot: 325/500 updated 12mo - 200/500 updated 6mo - 175 stale - target 70% (+5.0pp gap)|\n🔄 What-If: if 12mo freshness climbs to 80.0% (Excellent), 75 more articles reviewed (~10/mo cadence)\n⚖️ Break-Even: to hit 80.0% (Excellent), need 75 more articles reviewed; at 10/mo cadence = ~8 months\n🎯 Milestone: audit stale articles quarterly - products that change >2x/year need reviews every 6mo\n$calc_out.article_freshness.row.tip{"stale_pct":"35"}|💡 Tip: stale articles are the silent killer - 35% of KB has wrong info customers act on. Tag with last-reviewed date. Pair with [Deflection Quality] (K-4) - fresh articles drive lower reopen.|',
   ],
   faq: [
     { q: 'What is "article freshness"?', a: 'The % of KB articles updated within the last 12 months. Stale articles contain outdated steps, screenshots, or product behavior - customers following them hit dead ends and reopen tickets. NN/g recommends 70%+ as the mature target.' },

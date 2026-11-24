@@ -59,37 +59,25 @@ export interface ZhEnRow {
  *   ⇒ 那正是「欠账在增长」的情形 ⇒ 必须有一个**独立于实测**的硬上限把它挡住。
  *   ⇒ 修好一条销一条 ⇒ 条目数只应下降 ⇒ 超过基线（36）就是欠账在长。
  */
-export const DEBT_MAX = 24;
+export const DEBT_MAX = 12;
 
 /**
- * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 24 个引擎）。
+ * 台账：当前已知的「zh 页整行英文」欠账（**未令牌化**的那 12 个引擎 —— P168 B3-15 组 3 的 T/H 两组）。
  * · **不得新增**：修好一条必须销一条 ⇒ 台账只能变小不能变大（DEBT_MAX 守着规模上限）。
  * · 数字必须与实测一致（守卫会核）⇒ 台账条目不是空壳。
  * · 条目按 slug 字典序排列（= --emit 的输出顺序 ⇒ 贴回即可）。
  */
 export const ZH_EN_DEBT: Record<string, number> = {
-  'solopreneur-article-freshness-calculator': 2,
-  'solopreneur-article-helpfulness-calculator': 2,
   'solopreneur-attrition-cost-calculator': 2,
-  'solopreneur-breach-notification-cost-calculator': 2,
-  'solopreneur-cmp-roi-calculator': 2,
   'solopreneur-comp-banding-calculator': 1,
-  'solopreneur-consent-revenue-impact-calculator': 2,
   'solopreneur-cost-per-support-ticket-calculator': 2,
   'solopreneur-csat-calculator': 1,
-  'solopreneur-deflection-quality-calculator': 2,
   'solopreneur-deflection-rate-calculator': 2,
-  'solopreneur-documentation-roi-calculator': 2,
-  'solopreneur-dpa-cost-calculator': 2,
-  'solopreneur-dsar-cost-calculator': 2,
   'solopreneur-equity-refresh-calculator': 2,
   'solopreneur-first-response-time-calculator': 2,
   'solopreneur-fully-loaded-employee-cost-calculator': 2,
-  'solopreneur-gdpr-fine-calculator': 1,
-  'solopreneur-kb-coverage-rate-calculator': 1,
   'solopreneur-productivity-ramp-curve-calculator': 2,
   'solopreneur-resolution-time-calculator': 2,
-  'solopreneur-search-effectiveness-calculator': 2,
   'solopreneur-support-capacity-planning-calculator': 2,
   'solopreneur-time-to-productivity-calculator': 2,
 };

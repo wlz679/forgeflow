@@ -10,6 +10,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold1: 0.85, threshold2: 0.15, label: 'Excellent', message: 'Articles helping customers.' },
@@ -56,9 +60,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let a=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,e){const s=t+e;return s>0?t/s:0},m=function(t,e){return e>0?t/e:0},d=function(t,e){return t>=l.excellent.threshold1&&e>=l.excellent.threshold2?"excellent":t>=l.good.threshold1&&e>=l.good.threshold2?"good":t>=l.warning.threshold1?"warning":"critical"},r=function(t){return(t*100).toFixed(1)+"%"},o=function(t){return Math.round(t).toLocaleString()},b=function(t,e,s){var c=y(t);return Array.isArray(c)?c.join(\`
-\`):String(c)};var N=a,V=f,W=m,K=d,U=r,j=o,G=b,l={excellent:{threshold1:.85,threshold2:.15,label:"Excellent",message:"Articles helping customers."},good:{threshold1:.7,threshold2:.08,label:"Good",message:"Helpful content overall."},warning:{threshold1:.55,label:"Warning",message:"Notable unhelpful share — audit bottom-20."},critical:{threshold:null,label:"Critical",message:"Vote loop broken — improve UI prompt + content."}},y=function(t){const e=a(Number(t.total_article_views)||0),s=a(Number(t.helpful_votes)||0),c=a(Number(t.unhelpful_votes)||0),n=s+c,h=Math.min(s,n),M=Math.min(c,n),g=a(Number(t.total_articles)||0),v=a(Number(t.target_helpful_pct)||0),i=f(h,M),u=m(n,e),x=v-i*100,k=d(i,u),C=l[k],p=l.excellent.threshold1,_=l.excellent.threshold2,w=Math.max(0,p*n-h),F=Math.max(0,_*e-n),I=Math.ceil(g*.2);return["🩺 Article Helpfulness Health: "+C.label+" ("+r(i)+" helpful · "+r(u)+" vote-rate · "+o(h)+" 👍 / "+o(n)+" votes)","📊 Snapshot: "+o(e)+" article views/mo · "+o(n)+" votes ("+r(u)+" vote-rate) · "+r(i)+" helpful · target "+v+"% ("+(x>=0?"+":"")+x.toFixed(1)+"pp gap) · "+o(g)+" articles","🔄 What-If: if helpful climbs to "+r(p)+" (Excellent) at same vote-rate, ~"+o(w)+" more 👍 votes/mo - usually = rewrite top-20 unhelpful articles","⚖️ Break-Even: to hit Excellent (helpful ≥"+r(p)+" AND vote-rate ≥"+r(_)+"), need "+o(w)+" more 👍 OR "+o(F)+" more total votes - audit bottom ~"+I+" articles",'🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom',"💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps."]};return[b(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let a=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,e){const s=t+e;return s>0?t/s:0},m=function(t,e){return e>0?t/e:0},v=function(t,e){return t>=o.excellent.threshold1&&e>=o.excellent.threshold2?"excellent":t>=o.good.threshold1&&e>=o.good.threshold2?"good":t>=o.warning.threshold1?"warning":"critical"},r=function(t){return(t*100).toFixed(1)+"%"},l=function(t){return Math.round(t).toLocaleString()},b=function(t,e,s){var c=O(t);return Array.isArray(c)?c.join(\`
+\`):String(c)};var G=a,J=g,L=m,P=v,R=r,$=l,z=b,h=tk,I='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',h=new Function("return "+I)(),o={excellent:{threshold1:.85,threshold2:.15,label:"Excellent",message:"Articles helping customers."},good:{threshold1:.7,threshold2:.08,label:"Good",message:"Helpful content overall."},warning:{threshold1:.55,label:"Warning",message:"Notable unhelpful share — audit bottom-20."},critical:{threshold:null,label:"Critical",message:"Vote loop broken — improve UI prompt + content."}},O=function(t){const e=a(Number(t.total_article_views)||0),s=a(Number(t.helpful_votes)||0),c=a(Number(t.unhelpful_votes)||0),n=s+c,u=Math.min(s,n),V=Math.min(c,n),d=a(Number(t.total_articles)||0),_=a(Number(t.target_helpful_pct)||0),i=g(u,V),p=m(n,e),w=_-i*100,W=v(i,p),K=o[W],f=o.excellent.threshold1,x=o.excellent.threshold2,y=Math.max(0,f*n-u),S=Math.max(0,x*e-n),U=Math.ceil(d*.2),k=l(e),M=l(n),F=r(p),j=r(i),C=String(_),N=(w>=0?"+":"")+w.toFixed(1),q=l(d);return["🩺 Article Helpfulness Health: "+K.label+" ("+r(i)+" helpful · "+r(p)+" vote-rate · "+l(u)+" 👍 / "+l(n)+" votes)",h("calc_out.article_helpfulness.row.snapshot","📊 Snapshot: "+k+" article views/mo · "+M+" votes ("+F+" vote-rate) · "+j+" helpful · target "+C+"% ("+N+"pp gap) · "+q+" articles",{views:k,votes:M,vote_rate:F,helpful:j,target:C,gap:N,articles:q}),"🔄 What-If: if helpful climbs to "+r(f)+" (Excellent) at same vote-rate, ~"+l(y)+" more 👍 votes/mo - usually = rewrite top-20 unhelpful articles","⚖️ Break-Even: to hit Excellent (helpful ≥"+r(f)+" AND vote-rate ≥"+r(x)+"), need "+l(y)+" more 👍 OR "+l(S)+" more total votes - audit bottom ~"+U+" articles",'🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom',h("calc_out.article_helpfulness.row.tip","💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps.")]};return[b(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -90,17 +94,34 @@ try{let a=function(t){return Number.isNaN(t)?0:Math.max(0,t)},f=function(t,e){co
     const liftHelpful = Math.max(0, altHpct * totalV - helpfulCapped);
     const liftVotes = Math.max(0, altVr * views - totalV);
     const bottom20Count = Math.ceil(articles * 0.2);
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'article_helpfulness'（见 B3_15_BATCH）。
+    const viewsLabel = fmtInt(views);
+    const votesLabel = fmtInt(totalV);
+    const voteRateLabel = fmtPct(vr);
+    const helpfulLabel = fmtPct(hpct);
+    const targetLabel = String(target);
+    const gapLabel = (gap >= 0 ? '+' : '') + gap.toFixed(1);
+    const articlesLabel = fmtInt(articles);
     return [
       '🩺 Article Helpfulness Health: ' + bandInfo.label + ' (' + fmtPct(hpct) + ' helpful · ' + fmtPct(vr) + ' vote-rate · ' + fmtInt(helpfulCapped) + ' 👍 / ' + fmtInt(totalV) + ' votes)',
-      '📊 Snapshot: ' + fmtInt(views) + ' article views/mo · ' + fmtInt(totalV) + ' votes (' + fmtPct(vr) + ' vote-rate) · ' + fmtPct(hpct) + ' helpful · target ' + target + '% (' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp gap) · ' + fmtInt(articles) + ' articles',
+      makeToken(
+        'calc_out.article_helpfulness.row.snapshot',
+        '📊 Snapshot: ' + viewsLabel + ' article views/mo · ' + votesLabel + ' votes (' + voteRateLabel + ' vote-rate) · ' + helpfulLabel + ' helpful · target ' + targetLabel + '% (' + gapLabel + 'pp gap) · ' + articlesLabel + ' articles',
+        { views: viewsLabel, votes: votesLabel, vote_rate: voteRateLabel, helpful: helpfulLabel, target: targetLabel, gap: gapLabel, articles: articlesLabel },
+      ),
       '🔄 What-If: if helpful climbs to ' + fmtPct(altHpct) + ' (Excellent) at same vote-rate, ~' + fmtInt(liftHelpful) + ' more 👍 votes/mo - usually = rewrite top-20 unhelpful articles',
       '⚖️ Break-Even: to hit Excellent (helpful ≥' + fmtPct(altHpct) + ' AND vote-rate ≥' + fmtPct(altVr) + '), need ' + fmtInt(liftHelpful) + ' more 👍 OR ' + fmtInt(liftVotes) + ' more total votes - audit bottom ~' + bottom20Count + ' articles',
       '🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom',
-      '💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps.',
+      makeToken(
+        'calc_out.article_helpfulness.row.tip',
+        '💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Article Helpfulness Health: Good (77.4% helpful · 12.4% vote-rate · 2,400 👍 / 3,100 votes)\n📊 Snapshot: 25,000 article views/mo · 3,100 votes (12.4% vote-rate) · 77.4% helpful · target 75% (-2.4pp gap) · 500 articles\n🔄 What-If: if helpful climbs to 85.0% (Excellent) at same vote-rate, ~235 more 👍 votes/mo - usually = rewrite top-20 unhelpful articles\n⚖️ Break-Even: to hit Excellent (helpful ≥85.0% AND vote-rate ≥15.0%), need 235 more 👍 OR 650 more total votes - audit bottom ~100 articles\n🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom\n💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps.',
+    '🩺 Article Helpfulness Health: Good (77.4% helpful · 12.4% vote-rate · 2,400 👍 / 3,100 votes)\n$calc_out.article_helpfulness.row.snapshot{"views":"25,000","votes":"3,100","vote_rate":"12.4%","helpful":"77.4%","target":"75","gap":"-2.4","articles":"500"}|📊 Snapshot: 25,000 article views/mo · 3,100 votes (12.4% vote-rate) · 77.4% helpful · target 75% (-2.4pp gap) · 500 articles|\n🔄 What-If: if helpful climbs to 85.0% (Excellent) at same vote-rate, ~235 more 👍 votes/mo - usually = rewrite top-20 unhelpful articles\n⚖️ Break-Even: to hit Excellent (helpful ≥85.0% AND vote-rate ≥15.0%), need 235 more 👍 OR 650 more total votes - audit bottom ~100 articles\n🎯 Milestone: very low vote-rate (<8%) means the UI prompt is buried - promote "Was this helpful?" after the action step, not at the bottom\n$calc_out.article_helpfulness.row.tip|💡 Tip: unhelpful 👎 clusters by topic. Sort by 👎 desc, group similar titles → rewrite the cohort. Pair with [Search Effectiveness] (K-3) - searches ending in 👎 reveal taxonomy gaps.|',
   ],
   faq: [
     { q: 'What is article helpfulness?', a: 'Article helpfulness measures two things: (1) helpful share = 👍 / total votes (quality signal - how often an article actually solves the question), and (2) vote rate = total votes / article views (engagement signal - how often users bother to vote at all). Tracking both catches content quality AND UI-prompt issues.' },

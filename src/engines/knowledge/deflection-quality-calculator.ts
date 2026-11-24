@@ -7,6 +7,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.08, label: 'Excellent', message: 'KB content solving customer problems.' },
@@ -52,9 +56,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let a=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,t){return t>0?e/t:0},f=function(e){return Math.max(0,100-e*100)},g=function(e,t){return t-e},m=function(e){return e<=r.excellent.threshold?"excellent":e<=r.good.threshold?"good":e<=r.warning.threshold?"warning":"critical"},l=function(e){return(e*100).toFixed(1)+"%"},s=function(e){return e.toFixed(1)+"%"},n=function(e){return Math.round(e).toLocaleString()},y=function(e,t,i){var o=x(e);return Array.isArray(o)?o.join(\`
-\`):String(o)};var w=a,M=p,q=f,F=g,N=m,R=l,K=s,W=n,G=y,r={excellent:{threshold:.08,label:"Excellent",message:"KB content solving customer problems."},good:{threshold:.15,label:"Good",message:"Most deflected tickets stay solved."},warning:{threshold:.25,label:"Warning",message:"Notable reopen rate - audit top articles."},critical:{threshold:null,label:"Critical",message:"Deflection masking product gaps."}},x=function(e){const t=a(Number(e.tickets_deflected_30d)||0),i=Math.min(a(Number(e.tickets_reopened_30d)||0),t),o=a(Number(e.target_quality_pct)||0),k=String(e.deflection_source||"Both"),c=p(i,t),u=f(c),b=g(u,o),_=m(c),v=r[_],d=r.excellent.threshold,h=Math.max(0,i-d*t);return["🩺 Deflection Quality Health: "+v.label+" ("+l(c)+" reopen · "+s(u)+" quality · "+n(i)+" of "+n(t)+" reopened)","📊 Snapshot: "+n(i)+" of "+n(t)+" tickets reopened ("+l(c)+") via "+k+" · quality "+s(u)+" · target "+o+"% ("+(b>=0?"+":"")+b.toFixed(1)+"pp gap)","🔄 What-If: if reopen rate drops to "+l(d)+" (Excellent), "+n(h)+" fewer reopen tickets/mo - saved quality climbs to "+s(100-d*100),"⚖️ Break-Even: to hit "+l(r.excellent.threshold)+" reopen (Excellent), need "+n(h)+" fewer reopens/mo OR refresh ~"+Math.ceil(h/10)+" top-reopen articles","🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release","💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes."]};return[y(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let c=function(e){return Number.isNaN(e)?0:Math.max(0,e)},h=function(e,t){return t>0?e/t:0},g=function(e){return Math.max(0,100-e*100)},b=function(e,t){return t-e},y=function(e){return e<=r.excellent.threshold?"excellent":e<=r.good.threshold?"good":e<=r.warning.threshold?"warning":"critical"},a=function(e){return(e*100).toFixed(1)+"%"},i=function(e){return e.toFixed(1)+"%"},n=function(e){return Math.round(e).toLocaleString()},k=function(e,t,l){var o=N(e);return Array.isArray(o)?o.join(\`
+\`):String(o)};var L=c,S=h,W=g,C=b,G=y,I=a,P=i,E=n,J=k,u=tk,j='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',u=new Function("return "+j)(),r={excellent:{threshold:.08,label:"Excellent",message:"KB content solving customer problems."},good:{threshold:.15,label:"Good",message:"Most deflected tickets stay solved."},warning:{threshold:.25,label:"Warning",message:"Notable reopen rate - audit top articles."},critical:{threshold:null,label:"Critical",message:"Deflection masking product gaps."}},N=function(e){const t=c(Number(e.tickets_deflected_30d)||0),l=Math.min(c(Number(e.tickets_reopened_30d)||0),t),o=c(Number(e.target_quality_pct)||0),O=String(e.deflection_source||"Both"),s=h(l,t),p=g(s),m=b(p,o),R=y(s),K=r[R],d=r.excellent.threshold,f=Math.max(0,l-d*t),_=n(l),v=n(t),q=a(s),x=O,w=i(p),F=String(o),M=(m>=0?"+":"")+m.toFixed(1);return["🩺 Deflection Quality Health: "+K.label+" ("+a(s)+" reopen · "+i(p)+" quality · "+n(l)+" of "+n(t)+" reopened)",u("calc_out.deflection_quality.row.snapshot","📊 Snapshot: "+_+" of "+v+" tickets reopened ("+q+") via "+x+" · quality "+w+" · target "+F+"% ("+M+"pp gap)",{reopened:_,deflected:v,reopen:q,source:x,quality:w,target:F,gap:M}),"🔄 What-If: if reopen rate drops to "+a(d)+" (Excellent), "+n(f)+" fewer reopen tickets/mo - saved quality climbs to "+i(100-d*100),"⚖️ Break-Even: to hit "+a(r.excellent.threshold)+" reopen (Excellent), need "+n(f)+" fewer reopens/mo OR refresh ~"+Math.ceil(f/10)+" top-reopen articles","🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release",u("calc_out.deflection_quality.row.tip","💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.")]};return[k(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -79,17 +83,34 @@ try{let a=function(e){return Number.isNaN(e)?0:Math.max(0,e)},p=function(e,t){re
     const bandInfo = HEALTH_BANDS[band];
     const altReopen = HEALTH_BANDS.excellent.threshold;
     const liftReopen = Math.max(0, reopened - altReopen * deflected);
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'deflection_quality'（见 B3_15_BATCH）。
+    const reopenedLabel = fmtInt(reopened);
+    const deflectedLabel = fmtInt(deflected);
+    const reopenLabel = fmtPct(reopen);
+    const sourceLabel = source;
+    const qualityLabel = fmtPctRaw(quality);
+    const targetLabel = String(targetPct);
+    const gapLabel = (gap >= 0 ? '+' : '') + gap.toFixed(1);
     return [
       '🩺 Deflection Quality Health: ' + bandInfo.label + ' (' + fmtPct(reopen) + ' reopen · ' + fmtPctRaw(quality) + ' quality · ' + fmtInt(reopened) + ' of ' + fmtInt(deflected) + ' reopened)',
-      '📊 Snapshot: ' + fmtInt(reopened) + ' of ' + fmtInt(deflected) + ' tickets reopened (' + fmtPct(reopen) + ') via ' + source + ' · quality ' + fmtPctRaw(quality) + ' · target ' + targetPct + '% (' + (gap >= 0 ? '+' : '') + gap.toFixed(1) + 'pp gap)',
+      makeToken(
+        'calc_out.deflection_quality.row.snapshot',
+        '📊 Snapshot: ' + reopenedLabel + ' of ' + deflectedLabel + ' tickets reopened (' + reopenLabel + ') via ' + sourceLabel + ' · quality ' + qualityLabel + ' · target ' + targetLabel + '% (' + gapLabel + 'pp gap)',
+        { reopened: reopenedLabel, deflected: deflectedLabel, reopen: reopenLabel, source: sourceLabel, quality: qualityLabel, target: targetLabel, gap: gapLabel },
+      ),
       '🔄 What-If: if reopen rate drops to ' + fmtPct(altReopen) + ' (Excellent), ' + fmtInt(liftReopen) + ' fewer reopen tickets/mo - saved quality climbs to ' + fmtPctRaw(100 - altReopen * 100),
       '⚖️ Break-Even: to hit ' + fmtPct(HEALTH_BANDS.excellent.threshold) + ' reopen (Excellent), need ' + fmtInt(liftReopen) + ' fewer reopens/mo OR refresh ~' + Math.ceil(liftReopen / 10) + ' top-reopen articles',
       '🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release',
-      '💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.',
+      makeToken(
+        'calc_out.deflection_quality.row.tip',
+        '💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Deflection Quality Health: Good (12.0% reopen · 88.0% quality · 210 of 1,750 reopened)\n📊 Snapshot: 210 of 1,750 tickets reopened (12.0%) via Both · quality 88.0% · target 90% (+2.0pp gap)\n🔄 What-If: if reopen rate drops to 8.0% (Excellent), 70 fewer reopen tickets/mo - saved quality climbs to 92.0%\n⚖️ Break-Even: to hit 8.0% reopen (Excellent), need 70 fewer reopens/mo OR refresh ~7 top-reopen articles\n🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release\n💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.',
+    '🩺 Deflection Quality Health: Good (12.0% reopen · 88.0% quality · 210 of 1,750 reopened)\n$calc_out.deflection_quality.row.snapshot{"reopened":"210","deflected":"1,750","reopen":"12.0%","source":"Both","quality":"88.0%","target":"90","gap":"+2.0"}|📊 Snapshot: 210 of 1,750 tickets reopened (12.0%) via Both · quality 88.0% · target 90% (+2.0pp gap)|\n🔄 What-If: if reopen rate drops to 8.0% (Excellent), 70 fewer reopen tickets/mo - saved quality climbs to 92.0%\n⚖️ Break-Even: to hit 8.0% reopen (Excellent), need 70 fewer reopens/mo OR refresh ~7 top-reopen articles\n🎯 Milestone: track reopen weekly - products that change >2x/year see reopen spikes 30 days post-release\n$calc_out.deflection_quality.row.tip|💡 Tip: reopens >20% mean content is technically present but answers the WRONG question. Audit top-reopen articles monthly. Pair with [Article Freshness] (K-2) - stale articles drive reopen spikes.|',
   ],
   faq: [
     { q: 'What is deflection quality?', a: 'Deflection quality measures the % of self-service-deflected tickets (via KB or chatbot) that customers reopen within 30 days. Reopen is the strongest proxy for content quality - if a customer had to come back, the article did not solve their problem. TSIA 2024 reports mature KBs run 8-15% reopen; >25% means content is technically present but wrong.' },

@@ -7,6 +7,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { ctr: 0.85, noResult: 0.05, label: 'Excellent', message: 'Search is working - users find answers quickly.' },
@@ -51,9 +55,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},f=function(e,n){return n>0?e/n:0},h=function(e,n){return n>0?e/n:0},g=function(e,n,o){return Math.max(0,e-n-o)},m=function(e,n){return e>=t.excellent.ctr&&n<=t.excellent.noResult?"excellent":e>=t.good.ctr&&n<=t.good.noResult?"good":e>=t.warning.ctr&&n<=t.warning.noResult?"warning":"critical"},c=function(e){return(e*100).toFixed(1)+"%"},r=function(e){return Math.round(e).toLocaleString()},d=function(e,n,o){var s=R(e);return Array.isArray(s)?s.join(\`
-\`):String(s)};var C=l,M=f,v=h,_=g,q=m,K=c,F=r,I=d,t={excellent:{ctr:.85,noResult:.05,label:"Excellent",message:"Search is working - users find answers quickly."},good:{ctr:.7,noResult:.1,label:"Good",message:"Search mostly works - room for query tuning."},warning:{ctr:.55,noResult:.2,label:"Warning",message:"Search struggles - missing content or bad synonyms."},critical:{ctr:null,noResult:null,label:"Critical",message:"Search is failing users."}},R=function(e){const n=l(Number(e.total_searches)||0),o=Math.min(l(Number(e.searches_with_click)||0),n),s=Math.min(l(Number(e.searches_no_result)||0),n),a=f(o,n),i=h(s,n),b=g(n,o,s),w=m(a,i),x=t[w],k=t.excellent.ctr,u=Math.max(0,k*n-o),y=u*.5,p=Math.max(0,s-t.excellent.noResult*n);return["🩺 Search Effectiveness Health: "+x.label+" (CTR "+c(a)+" / no-result "+c(i)+")","📊 Snapshot: "+r(n)+" searches/mo · "+r(o)+" with click ("+c(a)+" CTR) · "+r(s)+" no-result ("+c(i)+") · "+r(b)+" abandoned/dwell","🔄 What-If: if CTR climbs to "+c(k)+" (Excellent), "+r(u)+" more searches find answers → at ~50% click-to-ticket-prevention rate, ~"+r(y)+" fewer tickets/mo","⚖️ Break-Even: to hit Excellent (CTR ≥"+c(t.excellent.ctr)+" AND no-result ≤"+c(t.excellent.noResult)+"), need "+r(u)+" more clicks OR "+r(p)+" fewer no-result searches",'🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly',"💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries."]};return[d(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let a=function(e){return Number.isNaN(e)?0:Math.max(0,e)},h=function(e,t){return t>0?e/t:0},g=function(e,t){return t>0?e/t:0},b=function(e,t,o){return Math.max(0,e-t-o)},k=function(e,t){return e>=n.excellent.ctr&&t<=n.excellent.noResult?"excellent":e>=n.good.ctr&&t<=n.good.noResult?"good":e>=n.warning.ctr&&t<=n.warning.noResult?"warning":"critical"},c=function(e){return(e*100).toFixed(1)+"%"},r=function(e){return Math.round(e).toLocaleString()},m=function(e,t,o){var s=C(e);return Array.isArray(s)?s.join(\`
+\`):String(s)};var K=a,I=h,W=g,G=b,J=k,S=c,U=r,X=m,l=tk,_='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',l=new Function("return "+_)(),n={excellent:{ctr:.85,noResult:.05,label:"Excellent",message:"Search is working - users find answers quickly."},good:{ctr:.7,noResult:.1,label:"Good",message:"Search mostly works - room for query tuning."},warning:{ctr:.55,noResult:.2,label:"Warning",message:"Search struggles - missing content or bad synonyms."},critical:{ctr:null,noResult:null,label:"Critical",message:"Search is failing users."}},C=function(e){const t=a(Number(e.total_searches)||0),o=Math.min(a(Number(e.searches_with_click)||0),t),s=Math.min(a(Number(e.searches_no_result)||0),t),i=h(o,t),u=g(s,t),q=b(t,o,s),M=k(i,u),F=n[M],d=n.excellent.ctr,f=Math.max(0,d*t-o),j=f*.5,O=Math.max(0,s-n.excellent.noResult*t),w=r(t),R=r(o),p=c(i),y=r(s),v=c(u),x=r(q);return["🩺 Search Effectiveness Health: "+F.label+" (CTR "+c(i)+" / no-result "+c(u)+")",l("calc_out.search_effectiveness.row.snapshot","📊 Snapshot: "+w+" searches/mo · "+R+" with click ("+p+" CTR) · "+y+" no-result ("+v+") · "+x+" abandoned/dwell",{total:w,with_click:R,ctr:p,no_result:y,no_result_rate:v,abandoned:x}),"🔄 What-If: if CTR climbs to "+c(d)+" (Excellent), "+r(f)+" more searches find answers → at ~50% click-to-ticket-prevention rate, ~"+r(j)+" fewer tickets/mo","⚖️ Break-Even: to hit Excellent (CTR ≥"+c(n.excellent.ctr)+" AND no-result ≤"+c(n.excellent.noResult)+"), need "+r(f)+" more clicks OR "+r(O)+" fewer no-result searches",'🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly',l("calc_out.search_effectiveness.row.tip","💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.")]};return[m(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -79,17 +83,33 @@ try{let l=function(e){return Number.isNaN(e)?0:Math.max(0,e)},f=function(e,n){re
     const lift = Math.max(0, altCtr * total - withClick);
     const fewerTickets = lift * 0.5;
     const noResLift = Math.max(0, noRes - HEALTH_BANDS.excellent.noResult * total);
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'search_effectiveness'（见 B3_15_BATCH）。
+    const totalLabel = fmtInt(total);
+    const withClickLabel = fmtInt(withClick);
+    const ctrLabel = fmtPct(ctrVal);
+    const noResultLabel = fmtInt(noRes);
+    const noResultRateLabel = fmtPct(noResR);
+    const abandonedLabel = fmtInt(abandoned);
     return [
       '🩺 Search Effectiveness Health: ' + bandInfo.label + ' (CTR ' + fmtPct(ctrVal) + ' / no-result ' + fmtPct(noResR) + ')',
-      '📊 Snapshot: ' + fmtInt(total) + ' searches/mo · ' + fmtInt(withClick) + ' with click (' + fmtPct(ctrVal) + ' CTR) · ' + fmtInt(noRes) + ' no-result (' + fmtPct(noResR) + ') · ' + fmtInt(abandoned) + ' abandoned/dwell',
+      makeToken(
+        'calc_out.search_effectiveness.row.snapshot',
+        '📊 Snapshot: ' + totalLabel + ' searches/mo · ' + withClickLabel + ' with click (' + ctrLabel + ' CTR) · ' + noResultLabel + ' no-result (' + noResultRateLabel + ') · ' + abandonedLabel + ' abandoned/dwell',
+        { total: totalLabel, with_click: withClickLabel, ctr: ctrLabel, no_result: noResultLabel, no_result_rate: noResultRateLabel, abandoned: abandonedLabel },
+      ),
       '🔄 What-If: if CTR climbs to ' + fmtPct(altCtr) + ' (Excellent), ' + fmtInt(lift) + ' more searches find answers → at ~50% click-to-ticket-prevention rate, ~' + fmtInt(fewerTickets) + ' fewer tickets/mo',
       '⚖️ Break-Even: to hit Excellent (CTR ≥' + fmtPct(HEALTH_BANDS.excellent.ctr) + ' AND no-result ≤' + fmtPct(HEALTH_BANDS.excellent.noResult) + '), need ' + fmtInt(lift) + ' more clicks OR ' + fmtInt(noResLift) + ' fewer no-result searches',
       '🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly',
-      '💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.',
+      makeToken(
+        'calc_out.search_effectiveness.row.tip',
+        '💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.',
+      ),
     ];
   },
   staticExamples: [
-    '🩺 Search Effectiveness Health: Good (CTR 75.0% / no-result 8.0%)\n📊 Snapshot: 12,000 searches/mo · 9,000 with click (75.0% CTR) · 960 no-result (8.0%) · 2,040 abandoned/dwell\n🔄 What-If: if CTR climbs to 85.0% (Excellent), 1,200 more searches find answers → at ~50% click-to-ticket-prevention rate, ~600 fewer tickets/mo\n⚖️ Break-Even: to hit Excellent (CTR ≥85.0% AND no-result ≤5.0%), need 1,200 more clicks OR 360 fewer no-result searches\n🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly\n💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.',
+    '🩺 Search Effectiveness Health: Good (CTR 75.0% / no-result 8.0%)\n$calc_out.search_effectiveness.row.snapshot{"total":"12,000","with_click":"9,000","ctr":"75.0%","no_result":"960","no_result_rate":"8.0%","abandoned":"2,040"}|📊 Snapshot: 12,000 searches/mo · 9,000 with click (75.0% CTR) · 960 no-result (8.0%) · 2,040 abandoned/dwell|\n🔄 What-If: if CTR climbs to 85.0% (Excellent), 1,200 more searches find answers → at ~50% click-to-ticket-prevention rate, ~600 fewer tickets/mo\n⚖️ Break-Even: to hit Excellent (CTR ≥85.0% AND no-result ≤5.0%), need 1,200 more clicks OR 360 fewer no-result searches\n🎯 Milestone: search "pogo-sticking" (search → click → back to search) is the #1 KB UX failure — track per query weekly\n$calc_out.search_effectiveness.row.tip|💡 Tip: no-result >15% means content gaps OR bad search synonyms — run [KB Coverage Rate] (K-1) on top no-result queries.|',
   ],
   faq: [
     { q: 'What is search effectiveness?', a: 'Search effectiveness measures how well your in-app KB search serves users. Two metrics: CTR (% of searches that result in a click) and no-result rate (% of searches returning zero matches). High CTR + low no-result = users find answers quickly.' },

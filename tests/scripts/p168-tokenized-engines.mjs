@@ -131,6 +131,19 @@ export const B3_15_BATCH = [
   { slug: 'solopreneur-grr-calculator', file: 'src/engines/retention/grr-calculator.ts', alias: 'grr', baseline: '361e6cc' },
   { slug: 'solopreneur-power-user-curve-calculator', file: 'src/engines/product-analytics/power-user-curve-calculator.ts', alias: 'power_user_curve', baseline: '361e6cc' },
   { slug: 'solopreneur-time-to-value-calculator', file: 'src/engines/product-analytics/time-to-value-calculator.ts', alias: 'time_to_value', baseline: '361e6cc' },
+  // P168 B3-15 组 2 —— C 档组 A（K 知识库 6 + L 法律合规 6）：22 行 zh 整行英文。
+  { slug: 'solopreneur-article-freshness-calculator', file: 'src/engines/knowledge/article-freshness-calculator.ts', alias: 'article_freshness', baseline: '361e6cc' },
+  { slug: 'solopreneur-article-helpfulness-calculator', file: 'src/engines/knowledge/article-helpfulness-calculator.ts', alias: 'article_helpfulness', baseline: '361e6cc' },
+  { slug: 'solopreneur-deflection-quality-calculator', file: 'src/engines/knowledge/deflection-quality-calculator.ts', alias: 'deflection_quality', baseline: '361e6cc' },
+  { slug: 'solopreneur-documentation-roi-calculator', file: 'src/engines/knowledge/documentation-roi-calculator.ts', alias: 'documentation_roi', baseline: '361e6cc' },
+  { slug: 'solopreneur-search-effectiveness-calculator', file: 'src/engines/knowledge/search-effectiveness-calculator.ts', alias: 'search_effectiveness', baseline: '361e6cc' },
+  { slug: 'solopreneur-kb-coverage-rate-calculator', file: 'src/engines/knowledge/kb-coverage-rate-calculator.ts', alias: 'kb_coverage_rate', baseline: '361e6cc' },
+  { slug: 'solopreneur-breach-notification-cost-calculator', file: 'src/engines/legal-compliance/breach-notification-cost-calculator.ts', alias: 'breach_notification_cost', baseline: '361e6cc' },
+  { slug: 'solopreneur-cmp-roi-calculator', file: 'src/engines/legal-compliance/cmp-roi-calculator.ts', alias: 'cmp_roi', baseline: '361e6cc' },
+  { slug: 'solopreneur-consent-revenue-impact-calculator', file: 'src/engines/legal-compliance/consent-revenue-impact-calculator.ts', alias: 'consent_revenue_impact', baseline: '361e6cc' },
+  { slug: 'solopreneur-dpa-cost-calculator', file: 'src/engines/legal-compliance/dpa-cost-calculator.ts', alias: 'dpa_cost', baseline: '361e6cc' },
+  { slug: 'solopreneur-dsar-cost-calculator', file: 'src/engines/legal-compliance/dsar-cost-calculator.ts', alias: 'dsar_cost', baseline: '361e6cc' },
+  { slug: 'solopreneur-gdpr-fine-calculator', file: 'src/engines/legal-compliance/gdpr-fine-calculator.ts', alias: 'gdpr_fine', baseline: '361e6cc' },
 ];
 
 export const TOKENIZED = [...B3_7_PILOTS, ...B3_8_BATCH, ...B3_9_BATCH, ...B3_9_AI_COST, ...B3_13_BATCH, ...B3_14_BATCH, ...B3_15_BATCH];

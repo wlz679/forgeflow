@@ -7,6 +7,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.85, label: 'Excellent', message: 'Comprehensive KB coverage.' },
@@ -51,9 +55,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,e){return e>0?t/e:0},m=function(t,e){return Math.max(0,e-t)},u=function(t){return Math.max(0,1-t)},f=function(t){return t>=n.excellent.threshold?"excellent":t>=n.good.threshold?"good":t>=n.warning.threshold?"warning":"critical"},i=function(t){return(t*100).toFixed(1)+"%"},r=function(t){return Math.round(t).toLocaleString()},x=function(t,e,c){var a=k(t);return Array.isArray(a)?a.join(\`
-\`):String(a)};var K=l,C=g,J=m,O=u,N=f,I=i,P=r,R=x,n={excellent:{threshold:.85,label:"Excellent",message:"Comprehensive KB coverage."},good:{threshold:.6,label:"Good",message:"Healthy match rate."},warning:{threshold:.4,label:"Warning",message:"Significant KB gaps."},critical:{threshold:null,label:"Critical",message:"KB largely non-existent."}},k=function(t){const e=l(Number(t.monthly_tickets)||0),c=Math.min(l(Number(t.tickets_with_kb_match)||0),e),a=l(Number(t.total_articles)||0),o=g(c,e),p=m(c,e),b=u(o),v=f(o),y=n[v],h=n.excellent.threshold,_=h*e,d=Math.max(0,_-c),M=d*24,w=a>0?Math.ceil(Math.max(0,e*h-c)/Math.max(1,e/a)):0,s={coverage:(o*100).toFixed(1),gapPct:(b*100).toFixed(1),gapTickets:p.toFixed(0),total:e.toFixed(0),articles:a.toFixed(0)},F=o>=n.excellent.threshold?JSON.stringify({code:"kbcover_excellent",params:s}):o>=n.good.threshold?JSON.stringify({code:"kbcover_good",params:s}):o>=n.warning.threshold?JSON.stringify({code:"kbcover_warning",params:s}):JSON.stringify({code:"kbcover_critical",params:s});return["🩺 KB Coverage Health: "+y.label+" ("+i(o)+" coverage · "+i(b)+" gap · "+r(p)+" tickets/mo without KB)","📊 Snapshot: "+r(c)+" of "+r(e)+" tickets matched ("+i(o)+") · "+r(a)+" articles in KB","🔄 What-If: if coverage climbs to "+i(h)+" (Excellent), ~"+r(d)+" more tickets/mo find KB (at ~$24/ticket = ~$"+r(M)+"/mo saved)","⚖️ Break-Even: to hit "+i(n.excellent.threshold)+" (Excellent), need ~"+r(d)+" more matched tickets OR ~"+w+" net new articles","🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics","💡 Tip: "+F]};return[x(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e){return e>0?t/e:0},m=function(t,e){return Math.max(0,e-t)},f=function(t){return Math.max(0,1-t)},k=function(t){return t>=a.excellent.threshold?"excellent":t>=a.good.threshold?"good":t>=a.warning.threshold?"warning":"critical"},o=function(t){return(t*100).toFixed(1)+"%"},n=function(t){return Math.round(t).toLocaleString()},p=function(t,e,i){var r=M(t);return Array.isArray(r)?r.join(\`
+\`):String(r)};var N=l,S=u,$=m,I=f,P=k,R=o,W=n,G=p,g=tk,F='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',g=new Function("return "+F)(),a={excellent:{threshold:.85,label:"Excellent",message:"Comprehensive KB coverage."},good:{threshold:.6,label:"Good",message:"Healthy match rate."},warning:{threshold:.4,label:"Warning",message:"Significant KB gaps."},critical:{threshold:null,label:"Critical",message:"KB largely non-existent."}},M=function(t){const e=l(Number(t.monthly_tickets)||0),i=Math.min(l(Number(t.tickets_with_kb_match)||0),e),r=l(Number(t.total_articles)||0),c=u(i,e),b=m(i,e),v=f(c),K=k(c),O=a[K],h=a.excellent.threshold,C=h*e,d=Math.max(0,C-i),J=d*24,j=r>0?Math.ceil(Math.max(0,e*h-i)/Math.max(1,e/r)):0,s={coverage:(c*100).toFixed(1),gapPct:(v*100).toFixed(1),gapTickets:b.toFixed(0),total:e.toFixed(0),articles:r.toFixed(0)},q=c>=a.excellent.threshold?JSON.stringify({code:"kbcover_excellent",params:s}):c>=a.good.threshold?JSON.stringify({code:"kbcover_good",params:s}):c>=a.warning.threshold?JSON.stringify({code:"kbcover_warning",params:s}):JSON.stringify({code:"kbcover_critical",params:s}),x=n(i),y=n(e),_=o(c),w=n(r);return["🩺 KB Coverage Health: "+O.label+" ("+o(c)+" coverage · "+o(v)+" gap · "+n(b)+" tickets/mo without KB)",g("calc_out.kb_coverage_rate.row.snapshot","📊 Snapshot: "+x+" of "+y+" tickets matched ("+_+") · "+w+" articles in KB",{matched:x,total:y,coverage:_,articles:w}),"🔄 What-If: if coverage climbs to "+o(h)+" (Excellent), ~"+n(d)+" more tickets/mo find KB (at ~$24/ticket = ~$"+n(J)+"/mo saved)","⚖️ Break-Even: to hit "+o(a.excellent.threshold)+" (Excellent), need ~"+n(d)+" more matched tickets OR ~"+j+" net new articles","🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics","💡 Tip: "+q]};return[p(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -97,9 +101,20 @@ try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,e){re
         : coverage >= HEALTH_BANDS.warning.threshold
         ? JSON.stringify({ code: 'kbcover_warning', params: tipParams })
         : JSON.stringify({ code: 'kbcover_critical', params: tipParams });
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'kb_coverage_rate'（见 B3_15_BATCH）。
+    const matchedLabel = fmtInt(matched);
+    const totalLabel = fmtInt(total);
+    const coverageLabel = fmtPct(coverage);
+    const articlesLabel = fmtInt(articles);
     return [
       '🩺 KB Coverage Health: ' + bandInfo.label + ' (' + fmtPct(coverage) + ' coverage · ' + fmtPct(gapR) + ' gap · ' + fmtInt(gap) + ' tickets/mo without KB)',
-      '📊 Snapshot: ' + fmtInt(matched) + ' of ' + fmtInt(total) + ' tickets matched (' + fmtPct(coverage) + ') · ' + fmtInt(articles) + ' articles in KB',
+      makeToken(
+        'calc_out.kb_coverage_rate.row.snapshot',
+        '📊 Snapshot: ' + matchedLabel + ' of ' + totalLabel + ' tickets matched (' + coverageLabel + ') · ' + articlesLabel + ' articles in KB',
+        { matched: matchedLabel, total: totalLabel, coverage: coverageLabel, articles: articlesLabel },
+      ),
       '🔄 What-If: if coverage climbs to ' + fmtPct(altCoverage) + ' (Excellent), ~' + fmtInt(lift) + ' more tickets/mo find KB (at ~$24/ticket = ~$' + fmtInt(atCost24) + '/mo saved)',
       '⚖️ Break-Even: to hit ' + fmtPct(HEALTH_BANDS.excellent.threshold) + ' (Excellent), need ~' + fmtInt(lift) + ' more matched tickets OR ~' + needArticles + ' net new articles',
       '🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics',
@@ -107,7 +122,7 @@ try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},g=function(t,e){re
     ];
   },
   staticExamples: [
-    '🩺 KB Coverage Health: Good (70.0% coverage · 30.0% gap · 1,500 tickets/mo without KB)\n📊 Snapshot: 3,500 of 5,000 tickets matched (70.0%) · 500 articles in KB\n🔄 What-If: if coverage climbs to 85.0% (Excellent), ~750 more tickets/mo find KB (at ~$24/ticket = ~$18,000/mo saved)\n⚖️ Break-Even: to hit 85.0% (Excellent), need ~750 more matched tickets OR ~75 net new articles\n🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics\n💡 Tip: {"code":"kbcover_good","params":{"coverage":"70.0","gapPct":"30.0","gapTickets":"1500","total":"5000","articles":"500"}}',
+    '🩺 KB Coverage Health: Good (70.0% coverage · 30.0% gap · 1,500 tickets/mo without KB)\n$calc_out.kb_coverage_rate.row.snapshot{"matched":"3,500","total":"5,000","coverage":"70.0%","articles":"500"}|📊 Snapshot: 3,500 of 5,000 tickets matched (70.0%) · 500 articles in KB|\n🔄 What-If: if coverage climbs to 85.0% (Excellent), ~750 more tickets/mo find KB (at ~$24/ticket = ~$18,000/mo saved)\n⚖️ Break-Even: to hit 85.0% (Excellent), need ~750 more matched tickets OR ~75 net new articles\n🎯 Milestone: re-audit gap quarterly — product launches add 50-100 new ticket topics\n💡 Tip: {"code":"kbcover_good","params":{"coverage":"70.0","gapPct":"30.0","gapTickets":"1500","total":"5000","articles":"500"}}',
   ],
   faq: [
     { q: 'What is KB coverage rate?', a: 'Coverage rate = (tickets with a matching KB article) / (total inbound tickets). It measures the breadth of your KB content vs. the real questions customers ask. TSIA 2024 reports mid-market B2B SaaS at 50-75% coverage; >85% indicates a mature KB.' },

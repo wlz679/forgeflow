@@ -9,6 +9,10 @@
 import type { ToolEngine } from '../../core/engines/types';
 import { registerEngine } from '../../core/engines/registry';
 import { clampNonNegative } from '../../core/engines/helpers';
+// P168 B3-15：结果输出 token 化 —— 服务端 makeToken / 客户端 customFn 前置**同一份**实现
+//   （CALC_OUTPUT_MAKE_TOKEN_JS）⇒ 两端逐字节相同，不可能漂。
+//   ⚠️ 兜底与 params **同源**（同一个局部变量）⇒ 英文页逐字不变（G9）、模板不冻结数值（G8）。
+import { makeToken, CALC_OUTPUT_MAKE_TOKEN_JS } from '../../lib/calc-output-i18n';
 
 export const HEALTH_BANDS = {
   excellent: { threshold: 0.0025, label: 'Excellent', message: 'Low exposure — mature compliance.' },
@@ -58,9 +62,9 @@ const engine: ToolEngine = {
   clientConfig: {
     type: 'custom',
     wordPools: {},
-    customFn: `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
-try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,n){return e*(n/100)},d=function(e,n){return e*n},f=function(e,n){return e*n},y=function(e,n){return n>0?e/n:0},b=function(e){return e<i.excellent.threshold?"excellent":e<i.good.threshold?"good":e<i.warning.threshold?"warning":"critical"},a=function(e){return"€"+Math.round(e).toLocaleString()},t=function(e){return(e*100).toFixed(2)+"%"},v=function(e){return Math.round(e).toLocaleString()},M=function(e,n,p){var r=S(e);return Array.isArray(r)?r.join(\`
-\`):String(r)};var P=s,I=u,J=d,R=f,C=y,V=b,E=a,G=t,W=v,j=M,i={excellent:{threshold:.0025,label:"Excellent",message:"Low exposure — mature compliance."},good:{threshold:.01,label:"Good",message:"Manageable exposure."},warning:{threshold:.02,label:"Warning",message:"Significant exposure."},critical:{threshold:null,label:"Critical",message:"Fine-tier cap likely to hit."}},S=function(e){const n=s(Number(e.annual_revenue_global)||0),p=Number(String(e.max_fine_pct).replace("%",""))||4,r=s(Number(e.violations_per_year)||0),l=String(e.industry_risk_multiplier),g=l.indexOf("0.8")>=0?.8:l.indexOf("1.0")>=0?1:l.indexOf("1.4")>=0?1.4:l.indexOf("1.6")>=0?1.6:.8,F=u(n,p),O=d(F,g),m=f(O,r),o=y(m,n),c=b(o),k=i[c],h=2,N=u(n,h),x=d(N,g),_=f(x,r),w=x>0?Math.ceil(_/x):0;return["🩺 GDPR Fine Risk: "+k.label+" (annual exposure "+a(m)+" / "+t(o)+" of revenue)","📊 Snapshot: "+a(n)+" global revenue · "+v(r)+" violations/yr · "+p+"% cap tier · industry "+g.toFixed(1)+"× · per-violation "+a(O)+" · annual exposure "+a(m),"🔄 What-If: if tier drops to "+h+"% (procedural), annual exposure drops to "+a(_)+" ("+t(_/Math.max(1,n))+" — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.","⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~"+w+" violation/yr OR move to "+h+"% tier (procedural-only violations)","🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).","💡 Tip: "+JSON.stringify(c==="excellent"?{code:"gdpr_mature",params:{ratio:t(o).replace("%","")}}:c==="good"?{code:"gdpr_manageable",params:{ratio:t(o).replace("%","")}}:c==="warning"?{code:"gdpr_full_programme",params:{ratio:t(o).replace("%","")}}:{code:"gdpr_escalate",params:{ratio:t(o).replace("%","")}})]};return[M(inputs,pick,fill)]}finally{}
+    customFn: CALC_OUTPUT_MAKE_TOKEN_JS + `/* FFK-SERVER-DERIVED:start (generated from the server code by scripts/customfn-port.ts -- do not edit by hand) */
+try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,n){return e*(n/100)},f=function(e,n){return e*n},p=function(e,n){return e*n},_=function(e,n){return n>0?e/n:0},x=function(e){return e<i.excellent.threshold?"excellent":e<i.good.threshold?"good":e<i.warning.threshold?"warning":"critical"},a=function(e){return"€"+Math.round(e).toLocaleString()},t=function(e){return(e*100).toFixed(2)+"%"},k=function(e){return Math.round(e).toLocaleString()},S=function(e,n,d){var r=q(e);return Array.isArray(r)?r.join(\`
+\`):String(r)};var V=s,E=u,G=f,W=p,K=_,$=x,z=a,D=t,Q=k,U=S,y=tk,j='function tk(c,f,p){var q={};Object.keys(p||{}).forEach(function(k){q[k]=String(p[k])});var s=Object.keys(q).length?JSON.stringify(q):"";var j=s?"{"+s.slice(1,s.length-1).replace(/[{]/g,"\\\\\\\\u007b").replace(/[}]/g,"\\\\\\\\u007d")+"}":"";return "$"+c+j+"|"+String(f).replace(/\\\\|/g,"｜")+"|"}',y=new Function("return "+j)(),i={excellent:{threshold:.0025,label:"Excellent",message:"Low exposure — mature compliance."},good:{threshold:.01,label:"Good",message:"Manageable exposure."},warning:{threshold:.02,label:"Warning",message:"Significant exposure."},critical:{threshold:null,label:"Critical",message:"Fine-tier cap likely to hit."}},q=function(e){const n=s(Number(e.annual_revenue_global)||0),d=Number(String(e.max_fine_pct).replace("%",""))||4,r=s(Number(e.violations_per_year)||0),l=String(e.industry_risk_multiplier),g=l.indexOf("0.8")>=0?.8:l.indexOf("1.0")>=0?1:l.indexOf("1.4")>=0?1.4:l.indexOf("1.6")>=0?1.6:.8,J=u(n,d),O=f(J,g),h=p(O,r),o=_(h,n),c=x(o),C=i[c],m=2,I=u(n,m),v=f(I,g),b=p(v,r),R=v>0?Math.ceil(b/v):0,F=a(n),M=k(r),N=String(d),w=g.toFixed(1),L=a(O),P=a(h);return["🩺 GDPR Fine Risk: "+C.label+" (annual exposure "+a(h)+" / "+t(o)+" of revenue)",y("calc_out.gdpr_fine.row.snapshot","📊 Snapshot: "+F+" global revenue · "+M+" violations/yr · "+N+"% cap tier · industry "+w+"× · per-violation "+L+" · annual exposure "+P,{revenue:F,violations:M,fine_pct:N,industry:w,per_violation:L,annual:P}),"🔄 What-If: if tier drops to "+m+"% (procedural), annual exposure drops to "+a(b)+" ("+t(b/Math.max(1,n))+" — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.","⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~"+R+" violation/yr OR move to "+m+"% tier (procedural-only violations)","🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).","💡 Tip: "+JSON.stringify(c==="excellent"?{code:"gdpr_mature",params:{ratio:t(o).replace("%","")}}:c==="good"?{code:"gdpr_manageable",params:{ratio:t(o).replace("%","")}}:c==="warning"?{code:"gdpr_full_programme",params:{ratio:t(o).replace("%","")}}:{code:"gdpr_escalate",params:{ratio:t(o).replace("%","")}})]};return[S(inputs,pick,fill)]}finally{}
 /* FFK-SERVER-DERIVED:end */`,
   },
   // P140f-p3-T7: minimal Playbook 6 字段 template (Goal=该不该决策)
@@ -90,9 +94,22 @@ try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,n){re
     const altPerViolation = perViolationExpected(altMaxFine, industryMult);
     const altAnnual = annualExposure(altPerViolation, violations);
     const needViolations = altPerViolation > 0 ? Math.ceil(altAnnual / altPerViolation) : 0;
+    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
+    //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'gdpr_fine'（见 B3_15_BATCH）。
+    const revenueLabel = fmtMoney(revenue);
+    const violationsLabel = fmtInt(violations);
+    const finePctLabel = String(finePct);
+    const industryLabel = industryMult.toFixed(1);
+    const perViolationLabel = fmtMoney(perViolation);
+    const annualLabel = fmtMoney(annual);
     return [
       '🩺 GDPR Fine Risk: ' + bandInfo.label + ' (annual exposure ' + fmtMoney(annual) + ' / ' + fmtPct(ratio) + ' of revenue)',
-      '📊 Snapshot: ' + fmtMoney(revenue) + ' global revenue · ' + fmtInt(violations) + ' violations/yr · ' + finePct + '% cap tier · industry ' + industryMult.toFixed(1) + '× · per-violation ' + fmtMoney(perViolation) + ' · annual exposure ' + fmtMoney(annual),
+      makeToken(
+        'calc_out.gdpr_fine.row.snapshot',
+        '📊 Snapshot: ' + revenueLabel + ' global revenue · ' + violationsLabel + ' violations/yr · ' + finePctLabel + '% cap tier · industry ' + industryLabel + '× · per-violation ' + perViolationLabel + ' · annual exposure ' + annualLabel,
+        { revenue: revenueLabel, violations: violationsLabel, fine_pct: finePctLabel, industry: industryLabel, per_violation: perViolationLabel, annual: annualLabel },
+      ),
       '🔄 What-If: if tier drops to ' + altFinePct + '% (procedural), annual exposure drops to ' + fmtMoney(altAnnual) + ' (' + fmtPct(altAnnual / Math.max(1, revenue)) + ' — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.',
       '⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~' + needViolations + ' violation/yr OR move to ' + altFinePct + '% tier (procedural-only violations)',
       '🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).',
@@ -100,7 +117,7 @@ try{let s=function(e){return Number.isNaN(e)?0:Math.max(0,e)},u=function(e,n){re
     ];
   },
   staticExamples: [
-    '🩺 GDPR Fine Risk: Critical (annual exposure €1,600,000 / 6.40% of revenue)\n📊 Snapshot: €25,000,000 global revenue · 2 violations/yr · 4% cap tier · industry 0.8× · per-violation €800,000 · annual exposure €1,600,000\n🔄 What-If: if tier drops to 2% (procedural), annual exposure drops to €800,000 (3.20% — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.\n⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~2 violation/yr OR move to 2% tier (procedural-only violations)\n🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).\n💡 Tip: {"code":"gdpr_escalate","params":{"ratio":"6.40"}}',
+    '🩺 GDPR Fine Risk: Critical (annual exposure €1,600,000 / 6.40% of revenue)\n$calc_out.gdpr_fine.row.snapshot{"revenue":"€25,000,000","violations":"2","fine_pct":"4","industry":"0.8","per_violation":"€800,000","annual":"€1,600,000"}|📊 Snapshot: €25,000,000 global revenue · 2 violations/yr · 4% cap tier · industry 0.8× · per-violation €800,000 · annual exposure €1,600,000|\n🔄 What-If: if tier drops to 2% (procedural), annual exposure drops to €800,000 (3.20% — 🟢 Excellent). Invest in DSAR automation + CMP to halve violation rate.\n⚖️ Break-Even: to hit 🟢 Excellent (<0.25%), need ~2 violation/yr OR move to 2% tier (procedural-only violations)\n🎯 Milestone: re-baseline annually + after any material breach. ICO publishes quarterly enforcement summaries (https://ico.org.uk/action-weve-taken/enforcement/).\n💡 Tip: {"code":"gdpr_escalate","params":{"ratio":"6.40"}}',
   ],
   faq: [
     { q: 'What is GDPR fine risk?', a: 'GDPR fine risk quantifies your annualized exposure to fines under GDPR Art. 83. The cap is 4% of global annual revenue (Art. 83(5)) for substantive violations or 2% (Art. 83(4)) for procedural violations. Actual fines depend on case-specific factors (per ICO 2024 guidance).' },
