@@ -101,9 +101,10 @@ try{let l=function(t){return Number.isNaN(t)?0:Math.max(0,t)},u=function(t,e){re
         : coverage >= HEALTH_BANDS.warning.threshold
         ? JSON.stringify({ code: 'kbcover_warning', params: tipParams })
         : JSON.stringify({ code: 'kbcover_critical', params: tipParams });
-    // P168 B3-15：Snapshot / Tip 两行令牌化 —— 兜底与 params 取**同一个局部变量**
+    // P168 B3-15：Snapshot 行令牌化 —— 兜底与 params 取**同一个局部变量**
     //   ⇒ 英文页逐字不变；locale 模板把该变量换成 {param} ⇒ 模板不冻结运行时数值。
     //   ⚠️ 命名空间必须精确等于 toolAlias(slug) = 'kb_coverage_rate'（见 B3_15_BATCH）。
+    //   ℹ️ Tip 行**不**令牌化：沿用 B3-4 语义码（kbcover_* JSON）⇒ 本引擎只新增 1 个 code。
     const matchedLabel = fmtInt(matched);
     const totalLabel = fmtInt(total);
     const coverageLabel = fmtPct(coverage);
