@@ -1,119 +1,96 @@
 #!/usr/bin/env node
-// P168 B3-13 —— 「zh 整行英文」欠账台账**变异台子**（证明守卫有牙）。
+// P168 B3-15 —— 「zh 整行英文」欠账台账**变异台子**（证明守卫有牙）。
 //
-// 为什么需要它
-// -------------
-//   守卫说「台账与现实一致」⇒ 但**守得住吗**？本台子用 4 条变异回答这个问题：
-//   每条变异精确地破坏**一个**不变量 ⇒ 守卫必须精确地红 **1 条**断言（KILLED + 隔离）。
-//   ⇒ 「红」说明有牙；「只红 1 条」说明不变量没有被别处重复守（否则一个变异红一片 ⇒ 变异台子
-//     分不清是哪个不变量在起作用 ⇒ 台账规则会慢慢糊成一团）。
+// 它回答一个问题：守卫 tests/tokenize-remaining-ledger-guard.test.ts 说「台账与现实一致」，
+// 它**守得住吗**？台子用 4 条变异回答：每条变异精确破坏**一个**不变量
+// ⇒ 守卫必须精确地红**恰好 1 条**断言（KILLED + 隔离）。
+//   ⇒ 「红」说明有牙；「只红 1 条」说明不变量没有被别处重复守
+//     （否则一个变异红一片 ⇒ 分不清是哪个不变量在起作用）。
 //
-// ⭐⭐ **必须核对失败断言的「身份」，不只是「有几条红了」**（复审 Important 1）
-//   旧写法只数 TAP 的 `not ok` 条数 ⇒ 两个后果：
-//     ① brief 的映射（M1→T2 / M2→T1 / M3→T1 / M4→T4）**没被强制** —— 期望值只是被打印回来；
-//     ② ⚠️ **假绿**：若某条变异把被改模块改成**语法错误** ⇒ 守卫文件根本加载不了
-//        ⇒ TAP 给出的是**文件级** `not ok 1 - <文件路径>`（**0 条 `ok`**）
-//        ⇒ 「恰好 1 条 not ok」成立 ⇒ 旧写法会把它当成「干净的隔离击杀」并 exit 0
-//        ⇒ **一个坏变异被认证成好变异**。
-//   ⇒ 现在：解析失败项的**标题**，要求它**就是**期望的那条断言；且另外三条必须**绿**
-//     ⇒ 文件级失败（0 条 ok / 标题是文件路径）绝不可能冒充「隔离」。
+// ⭐⭐⭐ 2026-11-24 重写：空台账下旧版 M1/M2「打空 ⇒ SKIP ⇒ 被算成存活 ⇒ exit 1」
+//   B3-15 把全站 100 个引擎全部令牌化 ⇒ 台账 `ZH_EN_DEBT = {}` 且 `DEBT_MAX = 0`
+//   ⇒ 旧版 M1（改某一条的行数）/ M2（删台账里一条）**没有可操作对象**
+//   ⇒ `apply()` 返回原文 ⇒ 变异打空 ⇒ 台子报 SKIP ⇒ 被计入 survived ⇒ exit 1
+//   ⇒ 读起来像「守卫没牙」，实际是「变异没打中」。
+//   （Task 3 只读复审在 TEMP 复刻实测：M1 applied=false（SKIP）· M2 applied=false（SKIP）
+//     · M3 applied=true · M4 applied=true。）
 //
-// 四条变异（每条精确红 1 条断言）
-//   M1 台账里某一条的行数 +1            → T2 红（逐条行数）
-//   M2 删掉台账里一条（该引擎仍有欠账）  → T1 红（集合相等：实测有 / 台账无）
-//   M3 塞一条幽灵 slug（不存在的引擎）   → T1 红（集合相等：台账有 / 实测无）
-//   M4 从 TOKENIZED 里删掉一个引擎        → T4 红（源码含 token ≡ TOKENIZED）
+// ⭐⭐⭐ 本版解法：**场景重建 + shadow repo**（不是放宽判据）
+//   ① 「空台账 ⇒ T2/T3 结构性无法隔离」是**事实**（不是台子的缺陷），推法如下：
+//      · T3 要求「台账 ∩ TOKENIZED = ∅」；B3-15 之后 **100 个引擎全部在 TOKENIZED 里**
+//        ⇒ 台账里**任何真实引擎**都会让 T3 红
+//        ⇒ 想让 T2（逐条行数相等）单独红，就必须让台账登记一个**不在 TOKENIZED 里**的引擎
+//        ⇒ 而 T4（源码含 token ≡ TOKENIZED）又要求那个引擎**源码不吐 token**
+//        ⇒ 两者只能靠「**造一个没令牌化的引擎**」来同时满足
+//        ⇒ 也就是说：**只有「部分引擎未令牌化」的世界里，T2/T3 才是活的不变量**。
+//   ② 所以台子把守卫搬进一个 **shadow repo**（TEMP 目录），在 shadow 里**造出那个世界**：
+//      · 选一个引擎 X：把它从 TOKENIZED 清单里去掉（⇒ X ∉ TOKENIZED）
+//        + 把它源码里的 token 全部摘掉（⇒ X 不再吐 token ⇒ T4 绿）
+//        + 给它的 zh 产物页注入一行英文（⇒ 实测有欠账）
+//        + 台账登记 X（行数 = 实测）+ `DEBT_MAX` 提到 1
+//        ⇒ 这个场景里 **T1/T2/T3/T4 四个不变量同时是活的**，且**未变异时全绿**（负对照）。
+//   ③ 然后在 shadow 里逐条注入 4 条变异，每条**只**破坏一个不变量 ⇒ 必须**恰好红 1 条**。
+//      ⇒ 4 条变异 ⇒ 4/4 KILLED，且每条「红的是哪条断言」都被**核对身份**（不是只数条数）。
 //
-// ⭐⭐⭐ **M1/M2 的锚点必须从「当前台账」动态解析，不能写死 slug**（2026-11-19 Task 5 实测踩坑）
-//   第一版把 M1/M2 写死在两个具体引擎上（meeting-cost / course-pricing）
-//   ⇒ 本批把这 10 个引擎令牌化后**它们已从台账销账** ⇒ 锚点串不存在
-//   ⇒ 变异「没打中」⇒ 台子报 SKIP（而 SKIP 会被算成「存活」⇒ exit 1 ⇒ 验收读起来像「守卫没牙」）。
-//   ⚠️ 这是**同族教训的第三次复发**（P168 B3-4 / B3-8 的变异锚点过期各一次）
-//   ⇒ **锚点必须锚在「一定会变的那部分结构」上**：台账**条目本身**（每销账一次就少一条 ⇒ 位置会变）
-//   ⇒ 改为「解析当前台账 ⇒ 取第一条 / 最后一条 ⇒ 在它身上动手」⇒ 台账怎么变都不会过期。
-//   （TOKENIZED 清单只增不减 ⇒ M4 的锚点不会过期。）
+// ⛔ 本台子**不写真仓库的任何文件**（真仓库只被**读**）⇒
+//   · 中途被会话中止也不会留下「被改坏的受版本控制文件」；
+//   · 真仓库的台账 / 守卫 / 清单的 sha256 在运行前后**逐字节一致**（脚本自己验并打印）。
 //
-// ⚠️ M4 的隔离前提：只跑**本守卫这一个测试文件**
-//   tests/calc-output-en-parity-guard.test.ts 里硬编码了 TOKENIZED.length === 55
-//   ⇒ 从 TOKENIZED 删掉一个引擎会让**那个**套件也红 ⇒ 判定范围只限本守卫。
-//   （M1/M2/M3 只改台账文件 ⇒ 不影响别的套件，但统一只跑一个文件更省时。）
+// ⛔ 绝不做的事（把假绿洗成假绿的三种姿势，本版一律禁止）：
+//   · 把 exit 1 改成 exit 0；
+//   · 把 SKIP / N-A 当成 KILLED；
+//   · 放宽断言（改守卫判定逻辑 / 改 DEBT_MAX 让 T1 变绿 / 换更宽松的量法）。
 //
-// ⚠️ 纪律（照抄 B3-12 的 G6 台子）
-//   · 还原**无条件执行**（finally）+ sha256 **逐字节**校验；
-//   · 每条变异必须**真的改到文件**（写完校验 sha256 已变）——
-//     否则「变异没打中」会被误报成「守卫没牙」⇒ 台子会让人去「修」一个根本没坏的守卫；
-//   · **负对照**：未变异时守卫必须绿（绿了才说明下面的红是变异造成的）；
-//   · ⭐ **期望标题的解析必须在任何写入之前** —— process.exit() 不展开调用栈 ⇒ finally 还原不执行
-//     ⇒ 解析失败若发生在写入之后，工作区会留下被改坏的受版本控制文件（复审 Important）。
+// 用法（**必须从仓库根跑**；脚本要 import shadow 里的 TS 模块 ⇒ 必须走 tsx）：
+//   cmd.exe /c "node node_modules/tsx/dist/cli.mjs tests/scripts/mutate-p168-tokenize-remaining.mjs"
+//   cmd.exe /c "node node_modules/tsx/dist/cli.mjs tests/scripts/mutate-p168-tokenize-remaining.mjs --negative-control"
 //
-// ⚠️ 本台子会**临时改写仓库里的文件** ⇒ 不要与全量套件并行跑，且别接进 pnpm check。
-//
-// 用法（必须从仓库根跑）：
-//   node node_modules/tsx/dist/cli.mjs tests/scripts/mutate-p168-tokenize-remaining.mjs
-//   node node_modules/tsx/dist/cli.mjs tests/scripts/mutate-p168-tokenize-remaining.mjs --negative-control
-//
-//   --negative-control：注入一条**坏变异**（把台账文件改成语法错误 ⇒ 守卫文件加载失败
-//   ⇒ TAP 给出文件级 not ok / 0 条 ok）⇒ 台子必须把它判成 NOT-ISOLATED，
-//   **绝不能**当成 KILLED。用来证明「检测本身有牙」（详见下面对应输出）。
-//   ⭐ **该模式自身 exit 0 = 证明成立**（与仓库既有台子同约定：B3-9 / B3-12 / title-seo /
-//     decision-support 皆如此）—— 「成功识别出未隔离」是**预期结果**，不是失败。
+//   --negative-control：注入一条**坏变异**（把 shadow 台账改成语法错误 ⇒ 守卫文件加载失败
+//   ⇒ TAP 给出**文件级** not ok / 0 条 ok）⇒ 台子必须判成 NOT-ISOLATED，**绝不能**当成 KILLED。
+//   ⭐ 该模式自身 exit 0 = 证明成立（仓库既有台子 B3-9 / B3-12 同约定）。
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 
-const ROOT = resolve(process.cwd());
-const LEDGER = resolve(ROOT, 'tests', 'scripts', 'p168-tokenize-remaining-ledger.ts');
-// ⚠️ 调试/自检用：P168_GUARD_PATH 可让台子跑**别的**守卫文件
-//   （例：验证「标题解析失败时工作区不被改坏」时，指向一个标题不匹配的临时副本）。
-//   ⭐ 台子**只改写** LEDGER / TOKENIZED_LIST；GUARD 只被读取与还原 ⇒ 指到别处不会改坏任何文件。
-const GUARD = process.env.P168_GUARD_PATH
-  ? resolve(process.env.P168_GUARD_PATH)
-  : resolve(ROOT, 'tests', 'tokenize-remaining-ledger-guard.test.ts');
-const TOKENIZED_LIST = resolve(ROOT, 'tests', 'scripts', 'p168-tokenized-engines.mjs');
+const ROOT = resolve(import.meta.dirname, '..', '..');
+const SHADOW = resolve(tmpdir(), 'ffk-p168-ledger-shadow');
+const TSX_CLI = resolve(ROOT, 'node_modules', 'tsx', 'dist', 'cli.mjs');
+
+/** 真仓库的三个文件（本台子**只读**它们） */
+const REAL = {
+  ledger: resolve(ROOT, 'tests', 'scripts', 'p168-tokenize-remaining-ledger.ts'),
+  guard: resolve(ROOT, 'tests', 'tokenize-remaining-ledger-guard.test.ts'),
+  list: resolve(ROOT, 'tests', 'scripts', 'p168-tokenized-engines.mjs'),
+};
+/** shadow repo 里的对应文件（本台子**只改**它们） */
+const SH = {
+  ledger: resolve(SHADOW, 'tests', 'scripts', 'p168-tokenize-remaining-ledger.ts'),
+  guard: resolve(SHADOW, 'tests', 'tokenize-remaining-ledger-guard.test.ts'),
+  list: resolve(SHADOW, 'tests', 'scripts', 'p168-tokenized-engines.mjs'),
+  engine: null,
+  distPage: null,
+};
 
 /** 逐字节 sha256（用 Buffer，不经过 utf-8 解码 ⇒ 行尾/字节差异都能看见） */
 const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
-
-const LEDGER_ORIG = readFileSync(LEDGER);
-const GUARD_ORIG = readFileSync(GUARD);
-const LIST_ORIG = readFileSync(TOKENIZED_LIST);
-const L0 = sha(LEDGER);
-const G0 = sha(GUARD);
-const T0 = sha(TOKENIZED_LIST);
-
 const NL = String.fromCharCode(10);
+const Q = String.fromCharCode(34);
+const SQ = String.fromCharCode(39);
 
-/**
- * 解析**当前**台账的条目（slug + 登记行数）—— ⭐ 动态锚点。
- *
- * ⚠️ 为什么不能写死 slug（2026-11-19 Task 5 实测踩坑）：
- *   第一版把 M1/M2 的锚点写死在两个具体引擎上（meeting-cost / course-pricing）
- *   ⇒ 本批把这 10 个引擎令牌化后**它们已从台账销账** ⇒ 锚点串不存在
- *   ⇒ 变异「没打中」⇒ 台子报 SKIP（而 SKIP 会被算成「存活」⇒ 读起来像「守卫没牙」）。
- *   ⇒ 台账**每销账一次就少一条** ⇒ 锚点必须每轮**现取**，不能写死。
- *
- * 只解析 ZH_EN_DEBT 块（不扫全文）⇒ 不会误收别的数字字面量。
- */
-function ledgerEntries(text) {
-  const start = text.indexOf('export const ZH_EN_DEBT');
-  if (start < 0) return [];
-  const end = text.indexOf('};', start);
-  if (end < 0) return [];
-  const block = text.slice(start, end);
-  const re = /^[ \t]*'([^']+)':[ \t]*(\d+),[ \t]*\r?$/gm;
-  const out = [];
-  let m;
-  while ((m = re.exec(block)) !== null) {
-    out.push({ slug: m[1], n: parseInt(m[2], 10) });
-  }
-  return out;
+/** 替换且要求「恰好命中一次」（命中 0 次或 >1 次都报错 ⇒ 锚点过期必须立刻暴露） */
+function replaceOnce(text, needle, replacement, label) {
+  const n = text.split(needle).length - 1;
+  if (n !== 1) throw new Error(label + ' 锚点命中 ' + n + ' 次（期望 1 次）：' + needle.slice(0, 70));
+  return text.replace(needle, () => replacement);
 }
 
 /** 从守卫源码里解析断言标题（**不手抄** —— 守卫改名时台子不会误判） */
-function guardAssertionTitles() {
-  const src = readFileSync(GUARD, 'utf-8');
+function guardAssertionTitles(guardPath) {
+  const src = readFileSync(guardPath, 'utf-8');
   const names = [];
   const re = /test\(\s*'((?:[^'\\]|\\.)*)'/g;
   let m;
@@ -132,25 +109,6 @@ function assertionId(title) {
   return m ? m[1] : null;
 }
 
-const ASSERTIONS = guardAssertionTitles();
-/**
- * 取某个 id 对应的**唯一**断言标题（找不到或不唯一 ⇒ 台子停止，绝不猜）。
- *
- * ⚠️⚠️ **只能在「任何写入之前」调用**（复审 Important）：
- *   process.exit() **不会**展开调用栈 ⇒ 外层 try 的 finally 还原**不会**执行
- *   ⇒ 若在写入被改文件之后才解析失败，工作区会留下一个**被改坏的受版本控制文件**。
- *   ⇒ 唯一的调用点在下面的「预解析」里（早于任何 writeFileSync）。
- */
-function assertionTitle(id) {
-  const hit = ASSERTIONS.filter((t) => assertionId(t) === id);
-  if (hit.length !== 1) {
-    console.log('守卫里找不到唯一的断言 ' + id + '（找到 ' + hit.length + ' 条）⇒ 台子停止。');
-    for (const t of ASSERTIONS) console.log('  · ' + t);
-    process.exit(1);
-  }
-  return hit[0];
-}
-
 /** TAP 里失败的**标题**（不是条数）—— 文件级失败在这里是「文件路径」，不是断言标题 */
 function failedAssertions(out) {
   const names = [];
@@ -165,30 +123,26 @@ function failedAssertions(out) {
  * 跑**只有**本守卫这一个文件的测试，返回失败**标题**与通过条数。
  *
  * ⚠️ 必须显式给子进程带上 RUN_BUILD_TESTS=1 —— 本守卫是 build-dep（读 dist/），
- *   没有这个变量时 T1/T2 会 t.skip ⇒ 变异 M1/M2 **不会被杀**（台子会误报「守卫没牙」）。
+ *   没有这个变量时 T1/T2 会 t.skip ⇒ 变异**不会被杀**（台子会误报「守卫没牙」）。
  */
-function runGuard() {
+function runGuard(cwd, guardPath) {
   let out = '';
   let code = 0;
   try {
     out = execFileSync(
       process.execPath,
-      [
-        resolve(ROOT, 'node_modules', 'tsx', 'dist', 'cli.mjs'),
-        '--test', '--test-concurrency=1', '--test-reporter=tap', GUARD,
-      ],
+      [TSX_CLI, '--test', '--test-concurrency=1', '--test-reporter=tap', guardPath],
       {
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
-        cwd: ROOT,
+        cwd,
         env: { ...process.env, RUN_BUILD_TESTS: '1' },
       },
     );
     code = 0;
   } catch (e) {
-    const err = e;
-    out = String(err.stdout || '') + String(err.stderr || '');
-    code = err.status === undefined ? -1 : err.status;
+    out = String(e.stdout || '') + String(e.stderr || '');
+    code = e.status === undefined ? -1 : e.status;
   }
   // ⚠️ 用 TAP 报告器逐行取**标题**（spec 报告器只给汇总，定位不到是哪一条红了）
   const failed = failedAssertions(out);
@@ -196,16 +150,13 @@ function runGuard() {
   return { out, code, failed, passed };
 }
 
-/** 期望「另外三条」必须绿 ⇒ 绿条数 = 断言总数 - 1 */
-const EXPECTED_GREEN = ASSERTIONS.length - 1;
-
 /**
  * 判定一次变异的结果 —— 三个条件**缺一不可**：
  *   ① 守卫真的红了（退出码非 0 且有失败项）
  *   ② **恰好红一条**，且那条的**身份**正是期望的那条断言（比较标题，不只数条数）
  *   ③ 另外几条必须**全绿** ⇒ 文件级失败（0 条 ok / 标题是文件路径）绝不可能冒充「隔离」
  */
-function judge(r, expectedTitle, expectedId) {
+function judge(r, expectedTitle, expectedId, expectedGreen) {
   if (r.code === 0 || r.failed.length === 0) {
     return { verdict: 'SURVIVED', reason: '守卫没红 ⇒ 判据抓不到这条变异' };
   }
@@ -218,173 +169,357 @@ function judge(r, expectedTitle, expectedId) {
       reason: '红的是「' + r.failed[0] + '」而不是期望的 ' + expectedId + ' ⇒ 变异打歪了 / 文件级失败',
     };
   }
-  if (r.passed !== EXPECTED_GREEN) {
+  if (r.passed !== expectedGreen) {
     return {
       verdict: 'RED-BUT-NOT-ISOLATED',
-      reason: '另外只绿 ' + r.passed + ' 条（期望 ' + EXPECTED_GREEN + ' 条）⇒ 不是「恰好红一条」',
+      reason: '另外只绿 ' + r.passed + ' 条（期望 ' + expectedGreen + ' 条）⇒ 不是「恰好红一条」',
     };
   }
   return { verdict: 'KILLED', reason: '' };
 }
 
+/**
+ * 把 token 全部摘掉（让引擎「不再吐 token」）—— 只在 shadow 里做。
+ *
+ * ⚠️ 为什么连 `$` 也要去掉：`extractEngineTokenCodes` 扫的是 **token 形态**
+ *   （`$code` 或裸 `'calc_out.x.y'` 字面量）⇒ 只把 `calc_out.` 改名成 `plain.`
+ *   的话 `$plain.x.y` **仍然是合法 token** ⇒ 引擎照样被判「吐 token」⇒ T4 照样红
+ *   ⇒ 必须连 `$` 一起去掉、且命名空间改掉（否则裸字面量扫描还会命中）。
+ */
+function stripTokens(srcText) {
+  let out = srcText.split('$calc_out.').join('plain.');
+  out = out.split('calc_out.').join('plain.');
+  return out;
+}
+
+/**
+ * 往 zh 产物页的**结果卡片**里注入一行英文（只改 shadow 的 dist）。
+ *
+ * ⚠️ 必须落在 `data-history-result` 那个元素的**正文**里（不是属性值里）
+ *   ⇒ 测量口径（staticCard）与守卫用的是同一个函数 ⇒ 注入即被量到。
+ */
+function injectEnglishLine(html, line) {
+  const i = html.indexOf('data-history-result');
+  if (i < 0) throw new Error('zh 产物页里找不到 data-history-result');
+  const lt = html.lastIndexOf('<', i);
+  if (lt < 0) throw new Error('找不到 data-history-result 的开始标签');
+  // ⭐ 按「引号状态」找标签结束位置（属性值里可能有 '>'）
+  let k = lt + 1;
+  let quote = '';
+  let te = -1;
+  while (k < html.length) {
+    const c = html[k];
+    if (quote) {
+      if (c === quote) quote = '';
+    } else if (c === Q || c === SQ) quote = c;
+    else if (c === '>') {
+      te = k;
+      break;
+    }
+    k++;
+  }
+  if (te < 0) throw new Error('找不到开始标签的结束 >');
+  let nameEnd = lt + 1;
+  while (nameEnd < te && html[nameEnd] !== ' ' && html[nameEnd] !== '>') nameEnd++;
+  const tagName = html.slice(lt + 1, nameEnd);
+  const close = '</' + tagName + '>';
+  const end = html.indexOf(close, te + 1);
+  if (end < 0) throw new Error('找不到闭合标签 ' + close);
+  return html.slice(0, end) + NL + line + NL + html.slice(end);
+}
+
+/** shadow repo 搭建（复制 src/ 与 dist/zh/，node_modules 用 junction 指回真仓库） */
+function setupShadow() {
+  if (!SHADOW.startsWith(resolve(tmpdir())) || !SHADOW.includes('ffk-p168-ledger-shadow')) {
+    throw new Error('shadow 路径不安全：' + SHADOW);
+  }
+  if (!existsSync(resolve(ROOT, 'dist', 'zh'))) {
+    throw new Error('dist/zh 不存在 ⇒ 先跑 pnpm build:full（守卫与台子量的是 dist 产物）');
+  }
+  if (existsSync(SHADOW)) rmSync(SHADOW, { recursive: true, force: true });
+  mkdirSync(resolve(SHADOW, 'tests', 'scripts'), { recursive: true });
+  mkdirSync(resolve(SHADOW, 'dist'), { recursive: true });
+  cpSync(resolve(ROOT, 'src'), resolve(SHADOW, 'src'), { recursive: true });
+  cpSync(resolve(ROOT, 'dist', 'zh'), resolve(SHADOW, 'dist', 'zh'), { recursive: true });
+  for (const f of [
+    'p168-tokenize-remaining-ledger.ts',
+    'p168-zh-remaining-audit.ts',
+    'p168-card-text.mjs',
+    'p168-tokenized-engines.mjs',
+  ]) {
+    cpSync(resolve(ROOT, 'tests', 'scripts', f), resolve(SHADOW, 'tests', 'scripts', f));
+  }
+  cpSync(REAL.guard, SH.guard);
+  for (const f of ['package.json', 'tsconfig.json']) {
+    if (existsSync(resolve(ROOT, f))) cpSync(resolve(ROOT, f), resolve(SHADOW, f));
+  }
+  symlinkSync(resolve(ROOT, 'node_modules'), resolve(SHADOW, 'node_modules'), 'junction');
+}
+
+/**
+ * 造场景：把守卫从「全站已令牌化」的世界，带回「部分引擎未令牌化」的世界。
+ *
+ * ⇒ 场景里 T1/T2/T3/T4 四个不变量**同时是活的**，且未变异时全绿。
+ */
+async function buildScenario() {
+  const listMod = await import(pathToFileURL(SH.list).href);
+  const TOKENIZED = listMod.TOKENIZED;
+  if (!TOKENIZED || TOKENIZED.length < 3) throw new Error('TOKENIZED 清单读不到或太短');
+  // X = 清单里的第一个引擎（拿它的 file 字段找源码）；Y = 第二个（M4 用，必须与 X 不同）
+  const X = TOKENIZED[0];
+  const Y = TOKENIZED[1];
+  if (X.slug === Y.slug) throw new Error('X 与 Y 必须是不同引擎');
+
+  // ① X 从 TOKENIZED 清单里去掉（⇒ T3 绿的前提：台账登记的引擎不在清单里）
+  const listText = readFileSync(SH.list, 'utf8');
+  const listLine = new RegExp('^[ \\t]*\\{ slug: ' + JSON.stringify(X.slug).replace(/"/g, "'") + '[^\\n]*\\r?\\n', 'm');
+  if (!listLine.test(listText)) throw new Error('TOKENIZED 清单里找不到 ' + X.slug);
+  writeFileSync(SH.list, listText.replace(listLine, ''), 'utf8');
+
+  // ② X 的源码不再吐 token（⇒ T4 绿的前提）
+  SH.engine = resolve(SHADOW, X.file);
+  if (!existsSync(SH.engine)) throw new Error('shadow 里找不到引擎源码：' + X.file);
+  const srcText = readFileSync(SH.engine, 'utf8');
+  if (!srcText.includes('$calc_out.') && !srcText.includes('calc_out.')) {
+    throw new Error(X.slug + ' 的源码里找不到 token（场景造不出来）');
+  }
+  const stripped = stripTokens(srcText);
+  writeFileSync(SH.engine, stripped, 'utf8');
+
+  // ③ X 的 zh 产物页注入一行英文（⇒ 实测有欠账）
+  SH.distPage = resolve(SHADOW, 'dist', 'zh', X.slug, 'index.html');
+  if (!existsSync(SH.distPage)) throw new Error('shadow 里找不到 zh 产物页：' + X.slug);
+  const pageText = readFileSync(SH.distPage, 'utf8');
+  const injected = injectEnglishLine(pageText, 'Mutation harness injected English line for guard teeth verification');
+  writeFileSync(SH.distPage, injected, 'utf8');
+
+  // ④ 量出 X 的实测欠账行数（用**测量口径同源**的 card-text 模块）
+  const cardText = await import(pathToFileURL(resolve(SHADOW, 'tests', 'scripts', 'p168-card-text.mjs')).href);
+  const card = cardText.staticCard(readFileSync(SH.distPage, 'utf8'));
+  const k = card.filter(cardText.isEnglishLine).length;
+  if (k < 1) throw new Error('注入后仍量不到欠账行（k=' + k + '）⇒ 场景造不出来');
+
+  // ⑤ 台账登记 X（行数 = 实测）+ DEBT_MAX 提到 1（⇒ 台账规模上限与场景一致）
+  const ledgerText = readFileSync(SH.ledger, 'utf8');
+  const ledgerNew = replaceOnce(
+    replaceOnce(ledgerText, 'export const DEBT_MAX = 0;', 'export const DEBT_MAX = 1;', 'DEBT_MAX'),
+    'export const ZH_EN_DEBT: Record<string, number> = {};',
+    "export const ZH_EN_DEBT: Record<string, number> = {" + NL + "  '" + X.slug + "': " + k + "," + NL + '};',
+    'ZH_EN_DEBT',
+  );
+  writeFileSync(SH.ledger, ledgerNew, 'utf8');
+
+  // ⑥ 自证场景真的「X 不吐 token 了」（否则 T4 会红 ⇒ 场景基线不绿）
+  const registry = await import(pathToFileURL(resolve(SHADOW, 'src', 'core', 'engines', 'registry.ts')).href);
+  await import(pathToFileURL(resolve(SHADOW, 'src', 'engines', 'index.ts')).href);
+  const i18n = await import(pathToFileURL(resolve(SHADOW, 'src', 'lib', 'calc-output-i18n.ts')).href);
+  const engines = registry.getAllEngines();
+  const ex = engines.find((e) => e.slug === X.slug);
+  if (!ex) throw new Error('shadow 注册表里找不到 ' + X.slug);
+  const codes = i18n.extractEngineTokenCodes(ex);
+  if (codes.length !== 0) {
+    throw new Error(X.slug + ' 摘 token 后仍吐 ' + codes.length + ' 个 code ⇒ 场景造不出来');
+  }
+
+  return { X, Y, k };
+}
+
+// ── 四条变异（每条精确破坏一个不变量）────────────────────────────────
+//   M1 台账登记的行数与实测差 1        → T2 红（逐条行数相等）
+//   M2 台账漏登一个实测有欠账的引擎    → T1 红（集合相等：实测有 / 台账无）
+//   M3 台账塞进一条不存在的引擎        → T1 红（集合相等：台账有 / 实测无）
+//   M4 从 TOKENIZED 里删掉一个引擎      → T4 红（源码含 token ≡ TOKENIZED）
 const variants = [
   {
     id: 'M1',
-    name: '台账里某一条的行数 +1（数字与现实脱节）',
-    file: LEDGER,
-    orig: LEDGER_ORIG,
-    // ⭐ 动态锚点：取**当前**台账的第一条 ⇒ 台账怎么变都不会打空
-    apply: (t) => {
-      const es = ledgerEntries(t);
-      if (es.length === 0) return t;
-      const e = es[0];
-      const re = new RegExp("('" + e.slug + "':[ \\t]*)" + e.n + ',');
-      return t.replace(re, '$1' + (e.n + 1) + ',');
-    },
+    name: '台账登记的行数与实测差 1（数字与现实脱节）',
     expect: 'T2',
+    file: 'ledger',
+    apply: (t, ctx) => replaceOnce(t, "'" + ctx.X.slug + "': " + ctx.k + ',', "'" + ctx.X.slug + "': " + (ctx.k + 1) + ',', 'M1'),
   },
   {
     id: 'M2',
-    name: '删掉台账里一条（该引擎实测仍有欠账）',
-    file: LEDGER,
-    orig: LEDGER_ORIG,
-    // ⭐ 动态锚点：删**当前**台账的最后一条（该引擎实测仍有欠账 ⇒ T1 红）
-    apply: (t) => {
-      const es = ledgerEntries(t);
-      if (es.length === 0) return t;
-      const e = es[es.length - 1];
-      const re = new RegExp("^[ \\t]*'" + e.slug + "':[ \\t]*\\d+,[ \\t]*\\r?\\n", 'm');
+    name: '台账漏登一个实测有欠账的引擎（集合不再相等）',
+    expect: 'T1',
+    file: 'ledger',
+    apply: (t, ctx) => {
+      const re = new RegExp("^[ \\t]*'" + ctx.X.slug + "':[ \\t]*" + ctx.k + ',[ \\t]*\\r?\\n', 'm');
+      if (!re.test(t)) throw new Error('M2 锚点不存在（台账里没有 ' + ctx.X.slug + '）');
       return t.replace(re, '');
     },
-    expect: 'T1',
   },
   {
     id: 'M3',
     name: '台账塞进一条不存在的引擎（幽灵欠账）',
-    file: LEDGER,
-    orig: LEDGER_ORIG,
-    apply: (t) => t.replace(
-      'export const ZH_EN_DEBT: Record<string, number> = {',
-      'export const ZH_EN_DEBT: Record<string, number> = {' + NL
-        + "  'solopreneur-ghost-engine-calculator': 3,",
-    ),
     expect: 'T1',
+    file: 'ledger',
+    apply: (t) => replaceOnce(
+      t,
+      'export const ZH_EN_DEBT: Record<string, number> = {',
+      'export const ZH_EN_DEBT: Record<string, number> = {' + NL + "  'solopreneur-ghost-engine-calculator': 3,",
+      'M3',
+    ),
   },
   {
     id: 'M4',
-    name: '从 TOKENIZED 里删掉一个引擎（源码仍吐 token ⇒ 那几个守卫不再覆盖它）',
-    file: TOKENIZED_LIST,
-    orig: LIST_ORIG,
-    apply: (t) => t.replace(/  \{ slug: 'solopreneur-gpu-cloud-cost-calculator'[^\n]*\r?\n/, ''),
+    name: '从 TOKENIZED 里删掉一个引擎（那四个守卫不再覆盖它）',
     expect: 'T4',
+    file: 'list',
+    apply: (t, ctx) => {
+      const re = new RegExp('^[ \\t]*\\{ slug: ' + "'" + ctx.Y.slug + "'" + '[^\\n]*\\r?\\n', 'm');
+      if (!re.test(t)) throw new Error('M4 锚点不存在（清单里没有 ' + ctx.Y.slug + '）');
+      return t.replace(re, '');
+    },
   },
 ];
 
 // ⭐⭐ 期望标题**必须在改任何文件之前**全部解析好（复审 Important —— 修复「exit 跳过 finally 还原」）。
 //
 //   事故形态：process.exit() **不展开调用栈** ⇒ try 的 finally 还原**不会**执行
-//   ⇒ 若「标题解析失败」发生在**写入被改文件之后**（旧写法正是这样：正常模式在写完台账后才解析），
-//      工作区会留下一个**被改坏的受版本控制文件**（例：台账里留着 `export const __BROKEN__ = ;`）
-//      —— 那正是本台子「还原无条件执行（finally）」纪律存在的意义所在。
+//   ⇒ 若「标题解析失败」发生在**写入被改文件之后** ⇒ 工作区会留下一个**被改坏的受版本控制文件**。
 //   ⇒ 现在：解析全部提前到**任何 writeFileSync 之前** ⇒ 解析失败时**什么都没改** ⇒ exit 1 是安全的。
-//   （失败依然很响：打印守卫的全部断言标题 + 找不到的 id。）
+const ASSERTIONS = guardAssertionTitles(REAL.guard);
+function assertionTitle(id) {
+  const hit = ASSERTIONS.filter((t) => assertionId(t) === id);
+  if (hit.length !== 1) {
+    console.log('守卫里找不到唯一的断言 ' + id + '（找到 ' + hit.length + ' 条）⇒ 台子停止。');
+    for (const t of ASSERTIONS) console.log('  · ' + t);
+    process.exit(1);
+  }
+  return hit[0];
+}
+
 const EXPECTED_TITLES = new Map();
 for (const v of variants) EXPECTED_TITLES.set(v.id, assertionTitle(v.expect));
 /** 负对照用的名义期望标题（坏变异不该红任何一条断言；这里只作「对照」用） */
 const NEG_EXPECTED_TITLE = assertionTitle('T2');
 
 const NEGATIVE_CONTROL = process.argv.includes('--negative-control');
+const REAL_SHA_BEFORE = { ledger: sha(REAL.ledger), guard: sha(REAL.guard), list: sha(REAL.list) };
 
 let survived = 0;
 let notIsolated = 0;
-/** 负对照模式专用：「成功识别出未隔离」= 证明成立（该模式自身 exit 0） */
 let negControlProved = false;
+let killed = 0;
 
-// ── 负对照：未变异时守卫必须绿（否则下面的红说明不了问题）────────────────
-const control = runGuard();
-const controlOk = control.code === 0 && control.failed.length === 0 && control.passed === EXPECTED_GREEN + 1;
+// ── ① 真仓库负对照（只读）：当前状态必须绿，否则下面的红说明不了问题 ──
+console.log('【真仓库负对照】未变异时守卫必须绿（只读，不改真仓库任何文件）');
+const realControl = runGuard(ROOT, REAL.guard);
+const realControlOk = realControl.code === 0 && realControl.failed.length === 0;
 console.log(
-  '负对照（未变异）：' + (controlOk ? '绿 ✓' : '红 ✗')
-    + '（红 ' + control.failed.length + ' 条 / 绿 ' + control.passed + ' 条，退出码 ' + control.code + '）',
+  '  ' + (realControlOk ? '绿 ✓' : '红 ✗')
+    + '（红 ' + realControl.failed.length + ' 条 / 绿 ' + realControl.passed + ' 条，退出码 ' + realControl.code + '）',
 );
-if (!controlOk) {
-  console.log(control.out);
+if (!realControlOk) {
+  console.log(realControl.out);
   survived++;
 }
 
+let ctx = null;
+let scenarioBaseline = null;
 try {
-  if (NEGATIVE_CONTROL) {
-    // ── 【负对照模式】注入一条「坏变异」：台账文件语法错误 ──────────────
-    //   守卫 import 台账 ⇒ 台账语法错 ⇒ **守卫文件加载失败**
-    //   ⇒ TAP 给出**文件级** not ok（0 条 ok）
-    //   ⇒ 台子必须判成 NOT-ISOLATED，**绝不能**当成「干净的隔离击杀」。
-    console.log('');
-    console.log('【负对照模式】注入「台账语法错误」⇒ 守卫文件加载失败 ⇒ TAP 给出文件级 not ok（0 条 ok）');
-    writeFileSync(LEDGER, 'export const __BROKEN__ = ;' + NL, 'utf-8');
-    const r = runGuard();
-    const j = judge(r, NEG_EXPECTED_TITLE, 'T2');
-    console.log('  实测红「' + (r.failed[0] || '(无)') + '」· 红 ' + r.failed.length + ' 条 / 绿 ' + r.passed + ' 条，退出码 ' + r.code);
-    const detected = j.verdict === 'RED-BUT-NOT-ISOLATED';
-    console.log('  判定：' + j.verdict + (j.reason ? ' —— ' + j.reason : ''));
-    console.log(detected
-      ? '  ✅ 负对照成立 —— 坏变异被判成 NOT-ISOLATED（**没有**被当成 KILLED）⇒ 检测本身有牙。'
-      : '  ❌ 负对照失败 —— 坏变异被判成 ' + j.verdict + ' ⇒ 检测失效。');
-    console.log('  ⇒ 本模式按设计 exit 0（成功识别出未隔离 = 证明成立；仓库既有台子同约定）。');
-    // ⭐ 坏变异被判成 NOT-ISOLATED 是**预期结果** ⇒ 证明「检测本身有牙」
-    //   ⇒ 该模式自身 exit 0（与 B3-9 / B3-12 / title-seo / decision-support 同约定）。
-    //   ⚠️ 若台子把坏变异当成 KILLED ⇒ 检测失效 ⇒ 必须 exit 1。
-    negControlProved = detected;
+  // ── ② 造场景（shadow repo）────────────────────────────────────────
+  setupShadow();
+  ctx = await buildScenario();
+  console.log('【场景】shadow = ' + SHADOW);
+  console.log('  X = ' + ctx.X.slug + '（已从 TOKENIZED 摘掉 + 源码 token 摘掉 + zh 页注入英文）');
+  console.log('  Y = ' + ctx.Y.slug + '（M4 用）');
+  console.log('  X 的实测欠账行数 k = ' + ctx.k + ' · 台账登记 ' + ctx.k + ' 行 · DEBT_MAX = 1');
+
+  // 场景基线：未变异时 **四条断言必须全绿**（否则「红」说明不了问题）
+  const base = runGuard(SHADOW, SH.guard);
+  const baseOk = base.code === 0 && base.failed.length === 0 && base.passed === ASSERTIONS.length;
+  scenarioBaseline = { ok: baseOk, out: base.out, passed: base.passed, failed: base.failed };
+  console.log(
+    '  场景基线（未变异）：' + (baseOk ? '四条断言全绿 ✓' : '红 ✗')
+      + '（红 ' + base.failed.length + ' 条 / 绿 ' + base.passed + ' 条，退出码 ' + base.code + '）',
+  );
+  if (!baseOk) {
+    console.log(base.out);
+    console.log('⛔ 场景基线不绿 ⇒ 四条不变量没有同时是活的 ⇒ 台子停下（不改真仓库）。');
+    process.exitCode = 1;
   } else {
-    for (const v of variants) {
-      const origText = v.orig.toString('utf-8');
-      const mutated = v.apply(origText);
-      // ⚠️ 「变异有没有真的打中目标」的判据 = **改完的内容与原文不同**
-      //   （否则「变异没打中」会被误报成「守卫没牙」⇒ 台子会误导人去修一个没坏的守卫）。
-      if (mutated === origText) {
-        console.log(v.id + ' SKIP：变异没有生效（目标串可能不存在）');
-        survived++;
-        continue;
+    if (NEGATIVE_CONTROL) {
+      // ── 【负对照模式】注入一条「坏变异」：shadow 台账语法错误 ──────────────
+      //   守卫 import 台账 ⇒ 台账语法错 ⇒ **守卫文件加载失败**
+      //   ⇒ TAP 给出**文件级** not ok（0 条 ok）
+      //   ⇒ 台子必须判成 NOT-ISOLATED，**绝不能**当成「干净的隔离击杀」。
+      console.log('');
+      console.log('【负对照模式】注入「台账语法错误」⇒ 守卫文件加载失败 ⇒ TAP 给出文件级 not ok（0 条 ok）');
+      const orig = readFileSync(SH.ledger, 'utf8');
+      writeFileSync(SH.ledger, 'export const __BROKEN__ = ;' + NL, 'utf8');
+      const r = runGuard(SHADOW, SH.guard);
+      const j = judge(r, NEG_EXPECTED_TITLE, 'T2', ASSERTIONS.length - 1);
+      console.log('  实测红「' + (r.failed[0] || '(无)') + '」· 红 ' + r.failed.length + ' 条 / 绿 ' + r.passed + ' 条，退出码 ' + r.code);
+      const detected = j.verdict === 'RED-BUT-NOT-ISOLATED';
+      console.log('  判定：' + j.verdict + (j.reason ? ' —— ' + j.reason : ''));
+      console.log(detected
+        ? '  ✅ 负对照成立 —— 坏变异被判成 NOT-ISOLATED（**没有**被当成 KILLED）⇒ 检测本身有牙。'
+        : '  ❌ 负对照失败 —— 坏变异被判成 ' + j.verdict + ' ⇒ 检测失效。');
+      console.log('  ⇒ 本模式按设计 exit 0（成功识别出未隔离 = 证明成立；仓库既有台子同约定）。');
+      writeFileSync(SH.ledger, orig, 'utf8');
+      negControlProved = detected;
+    } else {
+      // ── ③ 四条变异（逐条注入 ⇒ 必须恰好红 1 条 ⇒ 还原后 sha256 逐字节一致）──
+      const EXPECTED_GREEN = ASSERTIONS.length - 1;
+      for (const v of variants) {
+        const target = v.file === 'ledger' ? SH.ledger : SH.list;
+        const origText = readFileSync(target, 'utf8');
+        const origSha = sha(target);
+        const mutated = v.apply(origText, ctx);
+        // ⚠️ 「变异有没有真的打中目标」的判据 = **改完的内容与原文不同**
+        //   （否则「变异没打中」会被误报成「守卫没牙」⇒ 台子会误导人去修一个没坏的守卫）。
+        if (mutated === origText) {
+          console.log(v.id + ' SKIP：变异没有生效（目标串可能不存在）');
+          survived++;
+          continue;
+        }
+        writeFileSync(target, mutated, 'utf8');
+        const mutatedSha = sha(target);
+        if (mutatedSha === origSha) {
+          console.log(v.id + ' SKIP：写盘后 sha256 没变（文件没被改动？）');
+          survived++;
+          continue;
+        }
+        const r = runGuard(SHADOW, SH.guard);
+        const expectedTitle = EXPECTED_TITLES.get(v.id);
+        const j = judge(r, expectedTitle, v.expect, EXPECTED_GREEN);
+        if (j.verdict === 'KILLED') killed++;
+        else if (j.verdict === 'SURVIVED') survived++;
+        else notIsolated++;
+        console.log(
+          v.id + ' ' + v.name + ' => ' + j.verdict
+            + '（期望红 ' + v.expect + ' · 实测红「' + (r.failed[0] || '(无)') + '」'
+            + ' · 红 ' + r.failed.length + ' 条 / 绿 ' + r.passed + ' 条，退出码 ' + r.code + '）'
+            + ' · 变异前 sha256 ' + origSha.slice(0, 12) + ' → 变异后 ' + mutatedSha.slice(0, 12)
+            + (j.reason ? ' —— ' + j.reason : ''),
+        );
+        if (j.verdict === 'SURVIVED') console.log(r.out);
+        // 还原 + 逐字节校验
+        writeFileSync(target, origText, 'utf8');
+        const backSha = sha(target);
+        console.log('  还原 ' + v.file + '：sha256 ' + backSha.slice(0, 12) + (backSha === origSha ? ' 与变异前逐字节一致 ✓' : ' **不一致 ✗**'));
+        if (backSha !== origSha) {
+          console.log('⛔ 还原校验失败 ⇒ 台子停下。');
+          process.exitCode = 1;
+        }
       }
-      writeFileSync(v.file, mutated, 'utf-8');
-      // ⚠️ 必须真的改到文件（写完校验 sha256 已变）—— 否则文件没落盘 ⇒ 变异等于没做。
-      if (sha(v.file) === (v.file === LEDGER ? L0 : T0)) {
-        console.log(v.id + ' SKIP：写盘后 sha256 没变（文件没被改动？）');
-        survived++;
-        continue;
-      }
-      const r = runGuard();
-      const expectedTitle = EXPECTED_TITLES.get(v.id);
-      const j = judge(r, expectedTitle, v.expect);
-      if (j.verdict === 'KILLED') { /* killed */ }
-      else if (j.verdict === 'SURVIVED') survived++;
-      else notIsolated++;
-      console.log(
-        v.id + ' ' + v.name + ' => ' + j.verdict
-          + '（期望红 ' + v.expect + ' · 实测红「' + (r.failed[0] || '(无)') + '」'
-          + ' · 红 ' + r.failed.length + ' 条 / 绿 ' + r.passed + ' 条，退出码 ' + r.code + '）'
-          + (j.reason ? ' —— ' + j.reason : ''),
-      );
-      if (j.verdict === 'SURVIVED') console.log(r.out);
-      writeFileSync(v.file, v.orig);
     }
   }
 } finally {
-  // ⭐ 还原**无条件执行**（finally）+ sha256 **逐字节**校验
-  writeFileSync(LEDGER, LEDGER_ORIG);
-  writeFileSync(GUARD, GUARD_ORIG);
-  writeFileSync(TOKENIZED_LIST, LIST_ORIG);
-  const okL = sha(LEDGER) === L0;
-  const okG = sha(GUARD) === G0;
-  const okT = sha(TOKENIZED_LIST) === T0;
-  console.log('还原：台账 ' + (okL ? '一致 ✓' : '不一致 ✗')
-    + ' · 守卫 ' + (okG ? '一致 ✓' : '不一致 ✗')
-    + ' · 令牌化清单 ' + (okT ? '一致 ✓' : '不一致 ✗'));
-  if (!okL || !okG || !okT) process.exit(1);
+  // ⭐ 真仓库**只被读** ⇒ 逐字节核对它没被本台子碰过
+  const realAfter = { ledger: sha(REAL.ledger), guard: sha(REAL.guard), list: sha(REAL.list) };
+  const realOk = realAfter.ledger === REAL_SHA_BEFORE.ledger
+    && realAfter.guard === REAL_SHA_BEFORE.guard
+    && realAfter.list === REAL_SHA_BEFORE.list;
+  console.log('真仓库未被改写：' + (realOk ? '台账 / 守卫 / 清单 sha256 逐字节一致 ✓' : '**被改动了 ✗**'));
+  if (!realOk) process.exitCode = 1;
 }
+
 if (NEGATIVE_CONTROL) {
   console.log('负对照证明：' + (negControlProved ? '成立 ✓（坏变异被判成 NOT-ISOLATED）' : '失败 ✗（坏变异被当成 KILLED ⇒ 检测失效）'));
   // 负对照模式：exit 0 = 证明成立；exit 1 = 检测失效
   process.exit(negControlProved && survived === 0 ? 0 : 1);
 }
-console.log('存活 ' + survived + ' · 未隔离 ' + notIsolated);
-process.exit(survived === 0 && notIsolated === 0 ? 0 : 1);
+console.log('—— KILLED ' + killed + ' / 存活 ' + survived + ' · 未隔离 ' + notIsolated + '（共 ' + variants.length + ' 条变异）');
+process.exit(survived === 0 && notIsolated === 0 && killed === variants.length ? 0 : 1);
