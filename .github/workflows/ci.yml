@@ -54,6 +54,13 @@ jobs:
       - name: Drift check (customFn data tables)
         run: pnpm check:customfn
 
+      # P168 B3-15: the non-ratio locale-template parity diagnostic.
+      # --strict only fails on UNEXPECTED inconsistencies (a new code that is
+      # not in the KNOWN_DEFECTS registry); already-known debt and
+      # already-fixed entries are reported but do not block CI.
+      - name: P168 non-ratio template parity (strict — only unexpected inconsistencies fail)
+        run: pnpm exec tsx tests/scripts/p168-locale-roundtrip-nonratio.ts --strict
+
       - name: Check engine coverage (P53)
         run: pnpm check:engine-coverage
 

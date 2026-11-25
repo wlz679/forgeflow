@@ -14,11 +14,17 @@
 //     时，占位符集合照样能对上（因为被删掉的那个占位符不在集合里、字面量也不是占位符）
 //     ⇒ A 段假绿 ⇒ **必须靠 B 段**。
 //
-//   【B 段 · 扰动自检】（真跑引擎：默认输入 vs 数值 ×3+1 输入）
+//   【B 段 · 扰动自检】（真跑引擎：**一组破坏比例关系**的输入变体）
 //     B1 同一 code 在每个变体下，**locale.en 模板渲染**必须与**token 英文兜底渲染**逐字相同；
 //     B2 **兜底变了 ⇒ 模板渲染必须同步变**（模板冻结数值 ⇒ 兜底变、模板不变 ⇒ 判红）。
 //     ⭐ 为什么必须扰动：「数值被冻结」这个缺陷在**默认输入**下常常看不出来
 //       （冻结值恰好等于默认值）⇒ 只跑默认输入 ⇒ 缺陷被漏过。
+//     ⭐⭐ **扰动必须破坏比例关系**（2026-11-25 复审 I-1 的实测教训）：
+//       旧版只有「所有正数输入 ×3+1」**一个**变体 ⇒ **保比**（分子分母同步放大）
+//       ⇒ 比例型 param（如 `stale_pct` = stale/total）在扰动下**值不变**
+//       ⇒ 把模板里的 `{stale_pct}` 冻成字面量 **并**删掉源码 param ⇒ 脚本仍判绿（**假绿逃逸**）。
+//       ⇒ 现在变体集含**逐参数独立扰动**（**只**改一个输入、其余原样）⇒ 分子分母**不同步**
+//       ⇒ 比例型 param 立刻变 ⇒ 逃逸被堵住（复现证据见 final-fix-report.md）。
 //
 //   数据来源：
 //     · A 段：引擎源码里的 staticExamples[0] 载荷 `$calc_out.<code>{json}|<英文兜底>|`
@@ -121,12 +127,59 @@ function syntheticInputs(engine) {
   return out;
 }
 
-/** 扰动变体：所有正数输入 ×3+1（其余保持不变） */
-function perturb(base) {
-  const out = {};
+/**
+ * 扰动变体集 —— ⭐⭐ **必须破坏比例关系**（2026-11-25 复审 I-1 的修法核心）。
+ *
+ * 旧版只有「所有正数输入 ×3+1」**一个**变体 ⇒ **保比**：
+ *   分子分母**同步**放大 ⇒ 比例型 param（如 `stale_pct` = stale/total）**值不变**
+ *   ⇒ 兜底不变 ⇒ 「模板冻结数值」这条逃逸**抓不到**（复审实测：脚本 exit 0 假绿）。
+ *
+ * 现在三组变体：
+ *   ① 默认
+ *   ② 全局 ×3+1（保比）—— 覆盖「绝对值型」param
+ *   ③ **逐参数独立扰动**：**只**改一个输入、其余**原样** ⇒ 分子分母**不同步**
+ *      ⇒ 比例型 param 立刻变 ⇒ 逃逸被堵住
+ *   ④ 逐参数 ×0.4（缩小）—— 与 ③ 互补（×7 可能被引擎 clamp 成同一个值）
+ *
+ * ⚠️ 为什么**不能**只留保比的 ×3+1：它对「绝对值型」param 有效，对「比例型」param **完全无效**
+ *   ⇒ 覆盖面被高估 ⇒ 「模板冻结数值 0」这个验收数字比看上去窄。
+ *
+ * ⚠️ 合法常量**不受影响**：`comp_banding` 的 `75`/`50`（P75/P50 分档线）·
+ *   `time_to_productivity` 的 `2`/`6`（2x IC / 6 months）· `95%` 置信水平
+ *   ⇒ 它们在**兜底与模板里逐字相同**、且**不随输入变** ⇒ B1/B2 都不会命中它们。
+ */
+const SCALES = [7, 0.4];
+
+/** 只把一个输入按倍率改掉（其余原样）⇒ 分子分母不同步 */
+function scaleOne(base, key, factor) {
+  const out = { ...base };
+  const n = Number(base[key]);
+  if (!Number.isFinite(n) || n <= 0) return out;
+  const v = Math.round(n * factor);
+  if (!(v > 0)) return out;
+  out[key] = String(v);
+  return out;
+}
+
+/** 变体集：默认 + 全局保比 + 逐参数独立扰动 */
+function variantsOf(base) {
+  const out = [{ name: '默认', inputs: { ...base } }];
+  // ② 全局 ×3+1（保比）
+  const all = {};
   for (const [k, val] of Object.entries(base)) {
     const n = Number(val);
-    out[k] = Number.isFinite(n) && n > 0 ? String(n * 3 + 1) : val;
+    all[k] = Number.isFinite(n) && n > 0 ? String(n * 3 + 1) : val;
+  }
+  out.push({ name: '全局×3+1', inputs: all });
+  // ③④ 逐参数独立扰动（**破坏比例关系**）
+  for (const key of Object.keys(base)) {
+    const n = Number(base[key]);
+    if (!Number.isFinite(n) || n <= 0) continue;
+    for (const f of SCALES) {
+      const inputs = scaleOne(base, key, f);
+      if (inputs[key] === base[key]) continue;
+      out.push({ name: '仅' + key + '×' + f, inputs });
+    }
   }
   return out;
 }
@@ -193,10 +246,8 @@ for (const { slug, alias } of ENGINES) {
   const base = defaults[slug] ?? syntheticInputs(e);
   const gen = e.generate ?? e.calculate;
   if (typeof gen !== 'function') continue;
-  const variants = [
-    { name: '默认', inputs: base },
-    { name: '扰动', inputs: perturb(base) },
-  ];
+  // ⭐ 变体集必须**破坏比例关系**（见 variantsOf 的注释）⇒ 逐参数独立扰动
+  const variants = variantsOf(base);
   for (const v of variants) {
     let out;
     try {
@@ -223,20 +274,29 @@ let perturbViolations = 0;
 let frozenViolations = 0;
 let reached = 0;
 const detail = [];
+/** params≥1 但扰动未触达的行（⇒ 兜底里没有随输入变的值 ⇒ 需人工确认） */
+const unreachedDynamic = [];
 
 for (const r of rows) {
   const obs = observed.get(r.code) || {};
   const def = obs['默认'];
-  const per = obs['扰动'];
   const variants = Object.keys(obs);
 
   // B1 每个变体下：模板渲染 === 兜底渲染
   const mismatch = variants.filter((v) => obs[v].fb !== obs[v].tp);
   // B2 兜底变了 ⇒ 模板渲染必须同步变（模板冻结数值 ⇒ 兜底变、模板不变）
-  const frozen =
-    def && per && def.fb !== per.fb && def.tp === per.tp ? true : false;
-  const perturbReached = Boolean(def && per && def.fb !== per.fb);
+  //    ⭐ 多变体下**逐变体**判定：任何一个变体「兜底变、模板不变」⇒ 冻结
+  const frozenVariants = variants.filter(
+    (v) => v !== '默认' && def && obs[v].fb !== def.fb && obs[v].tp === def.tp,
+  );
+  const frozen = frozenVariants.length > 0;
+  // 受扰动体检：有没有**任何**变体让兜底发生变化
+  //   （⇒ 这一行真的被扰动体检过；没触达的行只有 A 段静态保护）
+  const perturbReached =
+    Boolean(def) && variants.some((v) => v !== '默认' && obs[v].fb !== def.fb);
   if (perturbReached) reached++;
+  if (!perturbReached && r.keys.length > 0) unreachedDynamic.push(r.alias + '.' + r.kind);
+  r.reached = perturbReached;
 
   if (!r.staticOk) staticViolations++;
   if (mismatch.length) perturbViolations++;
@@ -252,12 +312,12 @@ for (const r of rows) {
       'A段(静态)=' + (r.staticOk ? 'OK' : 'FAIL'),
       'B段(扰动)=' + (mismatch.length || frozen ? 'FAIL' : 'OK'),
       '变体=' + (variants.length || 0),
-      '扰动触达=' + (perturbReached ? '是' : '否'),
+      '受扰动体检=' + (perturbReached ? '是' : '否'),
       '未出现在英文兜底里的param=' + JSON.stringify(r.missing),
       '占位符一致=' + r.phOk,
       '已落库=' + r.landed,
       '模板≠兜底的变体=' + JSON.stringify(mismatch),
-      '模板冻结数值=' + frozen,
+      '模板冻结数值的变体=' + JSON.stringify(frozenVariants),
       '字面量常量(仅诊断)=' + JSON.stringify(r.literals),
     ].join(' | '),
   );
@@ -269,8 +329,26 @@ console.log(
     ' 条（静态体检 ' + staticViolations + ' · 扰动自检 ' + perturbViolations +
     ' · 模板冻结数值 ' + frozenViolations + '）',
 );
+// ⭐ 覆盖口径必须**分开报**（2026-11-25 复审 I-2）：
+//   「总 N 行」里混着「A 段静态核对过的行」与「真的受过扰动体检的行」
+//   ⇒ 只报一个 N ⇒ 读者会以为 N 行全被扰动体检过 ⇒ **覆盖面被高估**。
+const zeroParamRows = rows.filter((r) => r.keys.length === 0).length;
+const dynamicRows = rows.length - zeroParamRows;
+const dynamicNotReached = rows.filter((r) => r.keys.length > 0 && !r.reached).length;
+console.log('覆盖口径（**两段分开**，别把「总行数」当成「受过扰动体检的行数」）：');
 console.log(
-  '扰动触达：' + reached + ' / ' + rows.length + ' 行在扰动输入下兜底发生变化' +
-    '（其余为纯静态行 / 扰动未触达 ⇒ 这些行只有 A 段覆盖）',
+  '  · 总 ' + rows.length + ' 行 = 受扰动体检（B 段）' + reached +
+    ' 行 + 仅静态体检（A 段）' + (rows.length - reached) + ' 行',
 );
+console.log(
+  '  · params=0 的纯静态行 ' + zeroParamRows + ' 行 ⇒ 兜底里**没有任何运行时值** ⇒ 本来就不可能被冻结 ⇒ 实质上**只受 A 段（静态）保护**',
+);
+console.log(
+  '  · params≥1 的动态行 ' + dynamicRows + ' 行 ⇒ 受 B 段扰动体检（其中未触达 ' + dynamicNotReached + ' 行）',
+);
+if (unreachedDynamic.length) {
+  console.log(
+    '  · ⚠️ params≥1 但扰动未触达（需人工确认）：' + unreachedDynamic.join('、'),
+  );
+}
 process.exit(staticViolations + perturbViolations + frozenViolations === 0 ? 0 : 1);

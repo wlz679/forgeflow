@@ -2,7 +2,7 @@
 // P168 B3-15 —— 「zh 整行英文」欠账台账**变异台子**（证明守卫有牙）。
 //
 // 它回答一个问题：守卫 tests/tokenize-remaining-ledger-guard.test.ts 说「台账与现实一致」，
-// 它**守得住吗**？台子用 4 条变异回答：每条变异精确破坏**一个**不变量
+// 它**守得住吗**？台子用 5 条变异回答：每条变异精确破坏**一个**不变量
 // ⇒ 守卫必须精确地红**恰好 1 条**断言（KILLED + 隔离）。
 //   ⇒ 「红」说明有牙；「只红 1 条」说明不变量没有被别处重复守
 //     （否则一个变异红一片 ⇒ 分不清是哪个不变量在起作用）。
@@ -29,8 +29,10 @@
 //        + 给它的 zh 产物页注入一行英文（⇒ 实测有欠账）
 //        + 台账登记 X（行数 = 实测）+ `DEBT_MAX` 提到 1
 //        ⇒ 这个场景里 **T1/T2/T3/T4 四个不变量同时是活的**，且**未变异时全绿**（负对照）。
-//   ③ 然后在 shadow 里逐条注入 4 条变异，每条**只**破坏一个不变量 ⇒ 必须**恰好红 1 条**。
-//      ⇒ 4 条变异 ⇒ 4/4 KILLED，且每条「红的是哪条断言」都被**核对身份**（不是只数条数）。
+//   ③ 然后在 shadow 里逐条注入 5 条变异，每条**只**破坏一个不变量 ⇒ 必须**恰好红 1 条**。
+//      ⇒ 5 条变异 ⇒ 5/5 KILLED，且每条「红的是哪条断言」都被**核对身份**（不是只数条数）。
+//      ⭐ M5 是**唯一一条攻击「场景合成本身」**的变异（M1–M4 攻击的是台账 / 清单两个数据文件）
+//        ⇒ 证明台子测的不只是台账数字，也包括场景的合成前提（2026-11-25 复审 M-2 的建议）。
 //
 // ⛔ 本台子**不写真仓库的任何文件**（真仓库只被**读**）⇒
 //   · 中途被会话中止也不会留下「被改坏的受版本控制文件」；
@@ -285,6 +287,8 @@ async function buildScenario() {
   }
   const stripped = stripTokens(srcText);
   writeFileSync(SH.engine, stripped, 'utf8');
+  // ⭐ 留一份**原文**：M5 要「撤销摘 token 这一步」⇒ 攻击**场景合成本身**（2026-11-25 复审 M-2）
+  const XSourceOriginal = srcText;
 
   // ③ X 的 zh 产物页注入一行英文（⇒ 实测有欠账）
   SH.distPage = resolve(SHADOW, 'dist', 'zh', X.slug, 'index.html');
@@ -321,14 +325,28 @@ async function buildScenario() {
     throw new Error(X.slug + ' 摘 token 后仍吐 ' + codes.length + ' 个 code ⇒ 场景造不出来');
   }
 
-  return { X, Y, k };
+  return { X, Y, k, XSourceOriginal };
 }
 
-// ── 四条变异（每条精确破坏一个不变量）────────────────────────────────
+// ── 五条变异（每条精确破坏一个不变量）────────────────────────────────
 //   M1 台账登记的行数与实测差 1        → T2 红（逐条行数相等）
 //   M2 台账漏登一个实测有欠账的引擎    → T1 红（集合相等：实测有 / 台账无）
 //   M3 台账塞进一条不存在的引擎        → T1 红（集合相等：台账有 / 实测无）
 //   M4 从 TOKENIZED 里删掉一个引擎      → T4 红（源码含 token ≡ TOKENIZED）
+//   M5 **撤销「把 X 的源码 token 摘掉」这一步**（场景合成本身）
+//      → T4 红（源码在吐 token 却不在 TOKENIZED 清单里）
+//
+// ⭐⭐ M5 为什么必须有（2026-11-25 复审 M-2 的方法论弱点）：
+//   M1–M4 全部攻击「台账 / 清单」这两个**数据文件** ⇒ 台子证明的是
+//   「台账数字与现实脱节会被抓住」，**没有**证明「场景的合成前提本身是承重的」。
+//   M5 改的是**场景**（X 的源码不再被摘 token）⇒ 源码重新吐 token、而 X 仍不在 TOKENIZED
+//   ⇒ T4 必须红 ⇒ 证明「T4 之所以活着，是因为场景把 X 摘出了 TOKENIZED 且摘掉了它的 token」
+//   ⇒ **台子测的不只是台账数字，也包括场景的合成前提**。
+//
+// ⚠️ 为什么 M5 不选「把 X 放回 TOKENIZED 清单」（另一种「撤销合成」）：
+//   那会让 **T3（台账 ∩ TOKENIZED ≠ ∅）与 T4 同时红** ⇒ 破坏「一条变异只红一条」的隔离纪律
+//   ⇒ 本台子的隔离判据（红恰好 1 条、且按**标题身份**核对）就没法用了。
+//   ⇒ 选「撤销摘 token」这一步：只破 T4 ⇒ 仍是精确红 1 条 ⇒ 隔离纪律保住。
 const variants = [
   {
     id: 'M1',
@@ -369,6 +387,19 @@ const variants = [
       const re = new RegExp('^[ \\t]*\\{ slug: ' + "'" + ctx.Y.slug + "'" + '[^\\n]*\\r?\\n', 'm');
       if (!re.test(t)) throw new Error('M4 锚点不存在（清单里没有 ' + ctx.Y.slug + '）');
       return t.replace(re, '');
+    },
+  },
+  {
+    id: 'M5',
+    name: '撤销「把 X 的源码 token 摘掉」这一步（**攻击场景合成本身**）',
+    expect: 'T4',
+    file: 'engine',
+    // ⭐ 变异点 = **场景**（不是台账 / 清单）：X 的源码重新吐 token，
+    //   而 X 仍不在 TOKENIZED 清单里 ⇒ T4「源码含 token ≡ TOKENIZED」必须红。
+    apply: (t, ctx) => {
+      if (!ctx.XSourceOriginal) throw new Error('M5 拿不到 X 的原始源码（场景没建好）');
+      if (t === ctx.XSourceOriginal) throw new Error('M5 变异打空：X 的源码没被摘过 token');
+      return ctx.XSourceOriginal;
     },
   },
 ];
@@ -460,10 +491,11 @@ try {
       writeFileSync(SH.ledger, orig, 'utf8');
       negControlProved = detected;
     } else {
-      // ── ③ 四条变异（逐条注入 ⇒ 必须恰好红 1 条 ⇒ 还原后 sha256 逐字节一致）──
+      // ── ③ 五条变异（逐条注入 ⇒ 必须恰好红 1 条 ⇒ 还原后 sha256 逐字节一致）──
       const EXPECTED_GREEN = ASSERTIONS.length - 1;
       for (const v of variants) {
-        const target = v.file === 'ledger' ? SH.ledger : SH.list;
+        const target =
+          v.file === 'ledger' ? SH.ledger : v.file === 'list' ? SH.list : SH.engine;
         const origText = readFileSync(target, 'utf8');
         const origSha = sha(target);
         const mutated = v.apply(origText, ctx);
