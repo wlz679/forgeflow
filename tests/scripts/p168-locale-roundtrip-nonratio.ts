@@ -16,6 +16,16 @@
 //   （默认 + 全局保比 + **逐参数独立扰动**〔只改一个输入、其余原样 ⇒ 分子分母不同步〕）
 //   ⇒ 用来**找出 G8 看不见的真实缺陷**。
 //
+//   ⭐⭐ **2026-11-25 B3-16 T2 —— 这条盲区已经闭合**：
+//     · 缺陷 D-1 / D-2 / D-3 已在 B3-16 T1 修完（user 已拍板授权改 src/engines/**）；
+//     · **G8 本体已升级为「保比 + 非等比」变体集**
+//       （变体集抽成**共享模块** tests/scripts/p168-variant-set.ts ⇒ 本脚本与 G8
+//        **import 同一份** ⇒ 两把尺子不会各自漂移）；
+//     ⇒ 本脚本**剩余的独有价值** = ① **zh 侧 3 条判据**（G8 是 en-only）
+//       ② 已知缺陷登记表（不丢账）③ 实际集合 vs 已知集合的**对账**。
+//     ⇒ 本脚本**继续留在 CI**（--strict）：G8 抓「en 侧模板 ≠ 兜底」，
+//       本脚本抓「zh 侧 + 新增未登记缺陷」⇒ 两层网。
+//
 // ============================================================================
 // ② 它**不是**守卫（但从 2026-11-25 第 2 轮起**进了 CI**，见 ⑤）
 // ============================================================================
@@ -32,16 +42,22 @@
 //   ⇒ 它们**照常被报告**，并与「已知缺陷登记表」逐条对账（见下方 KNOWN_DEFECTS）。
 //
 // ============================================================================
-// ④ 修完这些缺陷之后 —— 下一步该做什么
+// ④ 修完这些缺陷之后 —— 下一步该做什么（**2026-11-25 B3-16 T2 已执行**）
 // ============================================================================
-//   把 **G8 本体**（tests/scripts/p168-locale-roundtrip.ts）的 variantsOf
+//   原计划：把 **G8 本体**（tests/scripts/p168-locale-roundtrip.ts）的 variantsOf
 //   升级成**本脚本这套非等比变体集**，并让 CI 守卫
 //   （tests/calc-output-template-parity-guard.test.ts）重新变严。
-//   ⚠️ 本轮（纯测试/文档修复轮）**不做**这一步：
-//      · 升级 G8 本体 ⇒ 守卫立刻红（当前确有 3 条真实缺陷未修）
+//   ⚠️ 当时（纯测试/文档修复轮）**做不了**这一步：
+//      · 升级 G8 本体 ⇒ 守卫立刻红（当时确有 3 条真实缺陷未修）
 //      · 修 D-2 / D-3 ⇒ 要改 src/engines/**（AI cost 引擎的 params）
-//        ⇒ 按项目宪法**必须 user 拍板** ⇒ 本轮**不得**擅自改引擎。
-//   ⇒ 所以：G8 本体保持原样（守卫不红），增强能力放在本诊断脚本里（不藏发现、不越权）。
+//        ⇒ 按项目宪法**必须 user 拍板** ⇒ 当时**不得**擅自改引擎。
+//
+//   ⭐ **B3-16 已按顺序走完**（user 2026-11-25 拍板授权改引擎）：
+//     ① T1 修完 D-1 / D-2 / D-3（含两个 codegen 重生成）
+//     ② T2 升级 G8 本体 ⇒ CI 守卫重新变严（**实测 2,715 code · 不一致 0**）
+//     ③ 变体集抽成**共享模块**（p168-variant-set.ts）⇒ 本脚本与 G8 同一份实现
+//   ⇒ G8 从「只对默认形态有效」变成「**对全站 2,715 个 code 的多形态有效**」。
+//   ⚠️ **D-4 仍未修**（已知 · 当前不可达）⇒ 仍留在下方登记表里。
 //
 // ============================================================================
 // ⑤ ⭐ 第 2 轮（2026-11-25 复审 M-B / M-F）：**补上 zh 侧** + **进 CI**
@@ -101,77 +117,18 @@ import { getAllEngines } from '../../src/core/engines/registry.ts';
 import { renderCalcOutput, CALC_OUTPUT_TOKEN_RE, decodeHtmlEntities } from '../../src/lib/calc-output-i18n.ts';
 import { TOKENIZED } from './p168-tokenized-engines.mjs';
 import { codegenDefaults, syntheticInputs } from './p168-server-client-parity.ts';
+import { variantsOf } from './p168-variant-set.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const NL = String.fromCharCode(10);
 const JSON_OUT = process.argv.includes('--json');
 const STRICT = process.argv.includes('--strict');
 
-// ── 变体集：默认 + 全局保比 + **逐参数独立扰动**（非等比）─────────────────
-/**
- * ⭐ 逐参数独立扰动的倍率（与 tests/scripts/p168-b315-params-coverage.mjs **同构**）
- *   · ×7   —— 把一个输入放大（可能被引擎 clamp ⇒ 与 ×0.4 互补）
- *   · ×0.4 —— 把一个输入缩小（放大被 clamp 时靠它仍能打破比例）
- */
-const SCALES = [7, 0.4];
-
-/** 只把一个输入按倍率改掉（其余原样）⇒ 分子分母不同步 */
-function scaleOne(
-  base: Record<string, string>,
-  key: string,
-  factor: number,
-): Record<string, string> {
-  const out: Record<string, string> = { ...base };
-  const n = Number(base[key]);
-  if (!Number.isFinite(n) || n <= 0) return out;
-  const v = Math.round(n * factor);
-  if (!(v > 0)) return out;
-  out[key] = String(v);
-  return out;
-}
-
-interface Variant {
-  name: string;
-  inputs: Record<string, string>;
-  /** 该变体是否**保比**（分子分母同步 ⇒ 比例型 param 恒定） */
-  ratioPreserving: boolean;
-}
-
-/**
- * 变体集 —— 与 G8 的变体集**同构 + 追加非等比**：
- *   ① 默认
- *   ② 全局 ×2（保比）· ③ 全局 ×3+1（保比）  ← G8 原有的保比变体
- *   ④ 逐参数独立扰动（**破坏比例关系**）      ← G8 缺的那一块
- */
-function variantsOf(base: Record<string, string>): Variant[] {
-  const out: Variant[] = [{ name: '默认', inputs: { ...base }, ratioPreserving: true }];
-  for (const [label, fn] of [
-    ['全局×2', (n: number) => n * 2],
-    ['全局×3+1', (n: number) => n * 3 + 1],
-  ] as [string, (n: number) => number][]) {
-    const inputs: Record<string, string> = {};
-    for (const [k, val] of Object.entries(base)) {
-      const n = Number(val);
-      inputs[k] = Number.isFinite(n) && n > 0 ? String(fn(n)) : val;
-    }
-    out.push({ name: label, inputs, ratioPreserving: true });
-  }
-  // ④ 逐参数独立扰动（**只**改一个输入、其余原样 ⇒ 分子分母**不同步**）
-  for (const key of Object.keys(base)) {
-    const n = Number(base[key]);
-    if (!Number.isFinite(n) || n <= 0) continue;
-    for (const f of SCALES) {
-      const inputs = scaleOne(base, key, f);
-      if (inputs[key] === base[key]) continue;
-      out.push({
-        name: '仅' + key + '×' + f,
-        inputs,
-        ratioPreserving: false,
-      });
-    }
-  }
-  return out;
-}
+// ── 变体集：**共享模块**（tests/scripts/p168-variant-set.ts）────────────────
+//   ⭐⭐ 2026-11-25 B3-16 T2：变体集原本在本文件里**另写了一份**（与 G8 各自一份）
+//     ⇒ 两把尺子迟早各自漂移 ⇒ 现已抽成**唯一一份实现**（p168-variant-set.ts）
+//     ⇒ **G8 本体与本脚本都 import 它** ⇒ 变体集**只有一处**。
+//   内容：默认 · 全局 ×2（保比）· 全局 ×3+1（保比）· **逐参数独立扰动（非等比）**。
 
 /** 该文本里出现的全部 token code */
 function codesOf(text: string): string[] {
@@ -290,6 +247,15 @@ interface Inconsistency {
 interface KnownDefect {
   id: string;
   code: string;
+  /**
+   * ⭐ 该条缺陷在登记时的**状态** —— 决定「这次没复现」该怎么解读：
+   *   · 'fixed'       —— **已修**（本次不复现属正常 ⇒ **可从登记表移除**）
+   *   · 'unreachable' —— **已知 · 当前不可达**（当前变体集下永远测不到
+   *                      ⇒ 本次不复现属正常 ⇒ **仍保留**在登记表里）
+   * ⚠️ 二者「本次不复现」的**含义不同** ⇒ 必须分开报告：
+   *    否则会把 D-4（当前不可达）误报成「已修 ⇒ 可销账」⇒ 欠账被静默抹掉。
+   */
+  state: 'fixed' | 'unreachable';
   status: string;
   symptom: string;
   rootCause: string;
@@ -307,7 +273,8 @@ const KNOWN_DEFECTS: KnownDefect[] = [
   {
     id: 'D-1',
     code: 'calc_out.revenue_projector.row.whatif_runway',
-    status: '待修 · 需 user 拍板',
+    state: 'fixed',
+    status: '已修 · B3-16 T1（2026-11-25 · 改 locale 模板第二处 {from} → {to}）',
     symptom:
       '兜底渲染「Runway: 60.0 mo → 150.0 mo」，模板渲染成「Runway: 60.0 mo → 60.0 mo」' +
       ' ⇒ **第二个数字被冻结成第一个** ⇒ 用户看到**错误的跑道数字**。',
@@ -330,7 +297,8 @@ const KNOWN_DEFECTS: KnownDefect[] = [
   {
     id: 'D-2',
     code: 'calc_out.deepseek_api_cost.row.input_cost',
-    status: '待修 · 需 user 拍板',
+    state: 'fixed',
+    status: '已修 · B3-16 T1（2026-11-25 · 引擎 params 传 pad 值 + locale 模板 3 空格 → 1 空格 + 两个 codegen 重生成）',
     symptom:
       '兜底渲染「Input:  400     tokens × …」（{tokens} 后 **5** 个空格），' +
       '模板渲染「Input:  400   tokens × …」（{tokens} 后 **3** 个空格）' +
@@ -364,7 +332,8 @@ const KNOWN_DEFECTS: KnownDefect[] = [
   {
     id: 'D-3',
     code: 'calc_out.gemini_api_cost.row.input_cost',
-    status: '待修 · 需 user 拍板',
+    state: 'fixed',
+    status: '已修 · B3-16 T1（2026-11-25 · 引擎 params 传 pad 值 + locale 模板 3 空格 → 1 空格 + 两个 codegen 重生成）',
     symptom:
       '同 D-2（gemini 与 deepseek 同族 ⇒ 同样的 **2** 空格列对齐偏差：模板 {tokens} 后 3 空格、兜底 5 空格）。',
     rootCause: '同 D-2（同一套 ai-cost 引擎骨架：input_cost 的 params 漏了 pad，output_cost 有 pad）。',
@@ -376,6 +345,35 @@ const KNOWN_DEFECTS: KnownDefect[] = [
       slug: 'solopreneur-gemini-api-cost-calculator',
       alias: 'gemini_api_cost',
       override: { inputTokens: '400' },
+    },
+  },
+  {
+    id: 'D-4',
+    code: 'calc_out.openai_token.row.header_realtime_cache',
+    state: 'unreachable',
+    status: '已知 · 当前不可达（需 cacheHitRate > 0 才吐出）',
+    symptom:
+      '引擎兜底渲染「🔴 Real-time Pricing \uFF5C 💾 50% Cache Hit Rate」（**全角** 竖线 U+FF5C），' +
+      'locale 模板渲染「🔴 Real-time Pricing | 💾 50% Cache Hit Rate」（**半角** |）' +
+      ' ⇒ 兜底 ≠ 模板（同一个字符、两种宽度 ⇒ en 页动态卡片与 zh 页排版不一致）。',
+    rootCause:
+      '引擎兜底经 makeToken 净化（src/lib/calc-output-i18n.ts：兜底段里的半角 | 一律换成全角 \uFF5C，' +
+      '否则 token 的 fallback 段会以第一个 | 结束、尾部漏成孤儿尾巴）⇒ 兜底是全角；' +
+      '而 locale 模板仍是半角 | ⇒ 两侧渲染不等价。',
+    fix:
+      '**本批只登记、不修**（不在 user 本批授权范围内）。' +
+      '修法方向 = 把 locale 模板里的**半角 | 换成全角 \uFF5C**（en + zh 各一处）。' +
+      '⚠️ 但这会改**英文页可见文本**（半角 → 全角竖线）⇒ 必须**单独判 G9**' +
+      '（tests/scripts/p168-en-page-parity.ts，基线 361e6cc）⇒ 不能顺手改、不能与 D-1/D-2/D-3 同批混改。',
+    impact:
+      '**当前不可达 ⇒ 零用户影响**：该 code 只在 cacheHitRate > 0 时吐出，' +
+      '而 openai-token 的输入名是 **cacheHitRate**（**不是** cacheReadHitRate）、codegen 默认值 = **0** ⇒ ' +
+      '非等比扰动只扰动**正数**输入 ⇒ 全站变体集里该输入恒为 0 ⇒ 该 code 一次都没被吐出 ⇒ 命中 0 实例。' +
+      '⚠️ 下一批若改 openai-token 的默认输入（cacheHitRate > 0）就会撞上 —— 本条就是那时的台账。',
+    repro: {
+      slug: 'solopreneur-openai-token-calculator',
+      alias: 'openai_token',
+      override: { cacheHitRate: '50' },
     },
   },
 ];
@@ -700,9 +698,31 @@ inconsistencies.sort((a, b) => a.code.localeCompare(b.code));
 // ── 已知缺陷集合 vs 实际不一致集合（**对账**）─────────────────────────────
 const actualSet = inconsistencies.map((r) => r.code).sort();
 const knownSet = KNOWN_DEFECTS.map((d) => d.code).sort();
+const knownByCode = new Map(KNOWN_DEFECTS.map((d) => [d.code, d]));
 const unexpected = actualSet.filter((c) => !knownSet.includes(c));
 const vanished = knownSet.filter((c) => !actualSet.includes(c));
-const setMatch = unexpected.length === 0 && vanished.length === 0;
+// ⭐⭐ 「本次没复现」有**两种不同含义** ⇒ 必须分开（2026-11-25 B3-16 T2 修）：
+//   · state='fixed'       —— 已修 ⇒ 不复现属正常 ⇒ **可从登记表移除**
+//   · state='unreachable' —— 已知 · 当前不可达 ⇒ 不复现属正常 ⇒ **仍保留**在登记表里
+//   ⚠️ 若不区分 ⇒ D-4（当前不可达）会被当成「已修 ⇒ 可销账」⇒ 欠账被静默抹掉。
+const vanishedFixed = vanished.filter((c) => knownByCode.get(c)?.state === 'fixed');
+const vanishedUnreachable = vanished.filter((c) => knownByCode.get(c)?.state === 'unreachable');
+// ⚠️ 当前**恒为空**（`state` 是必填字段 ⇒ 只有 'fixed' / 'unreachable' 两种）
+//   ⇒ 保留它是为**将来新增 state 时**的兜底，不是「存在第三种状态」
+const vanishedUnclassified = vanished.filter((c) => {
+  const st = knownByCode.get(c)?.state;
+  return st !== 'fixed' && st !== 'unreachable';
+});
+// ⭐ 反向检查：登记为「已修」却**又复现** ⇒ 修复回归。
+//   ⚠️ 本次**只醒目提示**、**不改 --strict 判据**（判据 = 实际集合 ⊋ 已知集合 ⇒ exit 1）。
+const regressedFixed = actualSet.filter((c) => knownByCode.get(c)?.state === 'fixed');
+// ⭐⭐ 登记为「已知 · 当前不可达」的缺陷**本次复现**了 ⇒ 欠账仍在场
+//   （⚠️ **不改 --strict 退出条件** —— 已知欠账不挡路是本脚本的既定语义；
+//    本行只负责**不被当成「对账通过」** ⇒ 醒目提示，不改判据）
+const regressedUnreachable = actualSet.filter((c) => knownByCode.get(c)?.state === 'unreachable');
+// ⭐ 语义（2026-11-25 B3-16 改）：「对账通过」= 没有「未知的不一致」+ 没有「已修却回归」
+//   （**不等于**「实际集合 == 已知集合」—— 已知欠账可以合法留在登记表里）
+const reconciled = unexpected.length === 0 && regressedFixed.length === 0;
 
 // ── 复现校验（用登记的复现输入实跑一遍 ⇒ 证明「现象」这一栏是真的）─────────
 interface ReproResult {
@@ -751,8 +771,14 @@ for (const d of KNOWN_DEFECTS) {
     ok: fb !== tp,
     note:
       fb !== tp
-        ? '✔ 复现成功（en 侧：兜底 ≠ 模板）'
-        : '⚠️ 复现输入下**没有**复现（登记表可能已过期）',
+        ? d.state === 'fixed'
+          ? '🚨 登记为「已修」却**又复现**（en 侧：兜底 ≠ 模板）⇒ 修复回归'
+          : '✔ 复现成功（en 侧：兜底 ≠ 模板）'
+        : d.state === 'fixed'
+          ? '✔ 复现输入下**没有**复现（该条**已修** ⇒ 可从登记表移除）'
+          : d.state === 'unreachable'
+            ? 'ℹ️ 该条**当前不可达**（当前变体集测不到 ⇒ 仍保留在登记表里）'
+            : '⚠️ 复现输入下**没有**复现（登记表可能已过期）',
     fallbackLine: diff.a,
     templateLine: diff.b,
     zhTemplateLine: zhDiff.b,
@@ -774,9 +800,14 @@ const summary = {
   zhWordingAllowlistSize: Object.keys(ZH_WORDING_EXCEPTIONS).length,
   zhWordingAllowedHits: wordingAllowedHits,
   inconsistencyCount: inconsistencies.length,
-  setMatch,
+  reconciled,
   unexpected,
   vanished,
+  vanishedFixed,
+  vanishedUnreachable,
+  vanishedUnclassified,
+  regressedFixed,
+  regressedUnreachable,
   inconsistencies,
   knownDefects: KNOWN_DEFECTS,
   zhWordingExceptions: ZH_WORDING_EXCEPTIONS,
@@ -829,7 +860,12 @@ if (JSON_OUT) {
     }
   }
   console.log('');
-  console.log('—— 已知缺陷登记表（' + KNOWN_DEFECTS.length + ' 条 · **只登记，本轮不修**）——');
+  console.log(
+    '—— 已知缺陷登记表（' + KNOWN_DEFECTS.length + ' 条 · 已修 ' +
+      KNOWN_DEFECTS.filter((d) => d.state === 'fixed').length +
+      ' 条 · 已知·当前不可达 ' +
+      KNOWN_DEFECTS.filter((d) => d.state === 'unreachable').length + ' 条）——',
+  );
   for (const d of KNOWN_DEFECTS) {
     console.log('[' + d.id + '] ' + d.code + ' | ' + d.status);
     console.log('  现象: ' + d.symptom);
@@ -850,19 +886,40 @@ if (JSON_OUT) {
   }
   console.log('');
   console.log('—— 实际不一致集合 vs 已知缺陷集合（对账）——');
-  if (setMatch) {
-    console.log('  ✔ 一致（' + actualSet.length + ' 条）：实际不一致集合 == 已知缺陷集合');
+  console.log('  实际不一致 ' + actualSet.length + ' 条 · 登记表 ' + knownSet.length + ' 条');
+  if (unexpected.length) {
+    console.log('  🚨 新增（**不在登记表里** ⇒ 必须登记 + 修）· ' + unexpected.length + ' 条：');
+    for (const c of unexpected) console.log('     · ' + c);
+  }
+  if (regressedFixed.length) {
+    console.log('  🚨 回归（登记为「已修」却**又复现**了 ⇒ 修复失效）· ' + regressedFixed.length + ' 条：');
+    for (const c of regressedFixed) console.log('     · ' + c);
+  }
+  if (regressedUnreachable.length) {
+    console.log('  🚨 复活（登记为「已知 · 当前不可达」却**本次复现**了 ⇒ 欠账仍在场，**不可当作已修**）· ' + regressedUnreachable.length + ' 条：');
+    for (const c of regressedUnreachable) console.log('     · ' + c);
+  }
+  if (vanishedFixed.length) {
+    console.log('  ✔ 已修（登记表里有、但这次**en + zh 两侧都不复现** ⇒ 可销账）· ' + vanishedFixed.length + ' 条：');
+    console.log('     ⚠️ **须 en + zh 两侧同时不复现才可从登记表移除** ⇒ 请同步更新 KNOWN_DEFECTS 登记表');
+    for (const c of vanishedFixed) console.log('     · ' + c);
+  }
+  if (vanishedUnreachable.length) {
+    console.log('  ℹ️ 当前测不到（**已知 · 当前不可达** ⇒ 不复现属正常，**仍保留**在登记表里）· ' + vanishedUnreachable.length + ' 条：');
+    for (const c of vanishedUnreachable) console.log('     · ' + c);
+  }
+  if (vanishedUnclassified.length) {
+    console.log('  ⚠️ 未分类（登记表里有、但本次不复现、且**没登记 state**）· ' + vanishedUnclassified.length + ' 条：');
+    for (const c of vanishedUnclassified) console.log('     · ' + c);
+  }
+  if (reconciled) {
+    console.log(
+      actualSet.length
+        ? '  ⚠️ 对账通过（无「未知的不一致」）· 但仍有 ' + actualSet.length + ' 条**已知欠账**在场（其中已修回归 ' + regressedFixed.length + ' 条 · 当前不可达复活 ' + regressedUnreachable.length + ' 条）'
+        : '  ✔ 对账通过（实际不一致 0 条 · 无未知不一致 · 无回归）',
+    );
   } else {
-    console.log('  🚨⚠️ **实际不一致集合 != 已知缺陷集合** ⇒ 必须人工确认');
-    if (unexpected.length) {
-      console.log('  🚨 新增（**不在登记表里** ⇒ 必须登记 + 修）：');
-      for (const c of unexpected) console.log('     · ' + c);
-    }
-    if (vanished.length) {
-      console.log('  ✔ 已消失（登记表里有、但这次**en + zh 两侧都不复现** ⇒ 可能已修）：');
-      console.log('     ⚠️ **须 en + zh 两侧同时不复现才可从登记表移除** ⇒ 请同步更新 KNOWN_DEFECTS 登记表');
-      for (const c of vanished) console.log('     · ' + c);
-    }
+    console.log('  🚨 对账不通过（实际不一致 ' + actualSet.length + ' 条 · 存在「未知的不一致」或「已修却回归」⇒ 必须人工确认）');
   }
   console.log('');
   if (STRICT) {
@@ -871,7 +928,12 @@ if (JSON_OUT) {
     } else {
       console.log(
         '退出码：0（--strict 已开 · 实际集合 ⊆ 已知集合 ⇒ 已修不挡路、仅提示' +
-          (vanished.length ? '（有 ' + vanished.length + ' 条已修 ⇒ 请同步更新 KNOWN_DEFECTS 登记表）' : '') +
+          (vanishedFixed.length
+            ? '（已修 ' + vanishedFixed.length + ' 条 ⇒ 请同步更新 KNOWN_DEFECTS 登记表）'
+            : '') +
+          (vanishedUnreachable.length
+            ? '（已知·当前不可达 ' + vanishedUnreachable.length + ' 条 ⇒ 仍保留在登记表里）'
+            : '') +
           '）',
       );
     }

@@ -29,6 +29,7 @@ import { getAllEngines } from '../../src/core/engines/registry.ts';
 import { renderCalcOutput, CALC_OUTPUT_TOKEN_RE } from '../../src/lib/calc-output-i18n.ts';
 import { TOKENIZED } from './p168-tokenized-engines.mjs';
 import { codegenDefaults, syntheticInputs } from './p168-server-client-parity.ts';
+import { variantsOf } from './p168-variant-set.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const NL = String.fromCharCode(10);
@@ -50,17 +51,10 @@ function placeholders(s: string): string[] {
   return [...new Set(out)].sort();
 }
 
-function variantsOf(base: Record<string, string>): Record<string, string>[] {
-  const v2: Record<string, string> = {};
-  const v3: Record<string, string> = {};
-  for (const [k, val] of Object.entries(base)) {
-    const n = Number(val);
-    if (Number.isFinite(n) && n > 0) { v2[k] = String(n * 2); v3[k] = String(n * 3 + 1); }
-    else { v2[k] = val; v3[k] = val; }
-  }
-  return [base, v2, v3];
-}
-
+// ⭐⭐ 2026-11-25 B3-16 T2：变体集原先在本文件里**又写了一份**（保比）⇒ 仓库里
+//   同一套「要试哪些输入」有 **3 份**实现 ⇒ 必然各自漂移。
+//   ⇒ 现统一 import **共享模块** tests/scripts/p168-variant-set.ts
+//     （保比 + **非等比** ⇒ 采样到的 token 更多 ⇒ 覆盖更全；判据本身一字未改）。
 function tokensOf(text: string): { code: string; params: Record<string, string>; fallback: string; token: string }[] {
   const re = new RegExp(CALC_OUTPUT_TOKEN_RE.source, 'g');
   const out: { code: string; params: Record<string, string>; fallback: string; token: string }[] = [];
@@ -87,15 +81,15 @@ export function check(): { violations: Violation[]; codes: number; occurrences: 
     const base = defaults[meta.slug] ?? syntheticInputs(e);
     const gen = e.generate ?? e.calculate;
     const texts: string[] = [];
-    for (const inp of variantsOf(base)) {
-      try { texts.push((gen(inp) || []).join(NL)); } catch { /* 输入无效 */ }
+    for (const v of variantsOf(base)) {
+      try { texts.push((gen(v.inputs) || []).join(NL)); } catch { /* 输入无效 */ }
     }
     for (const ex of e.staticExamples ?? []) texts.push(ex);
     const cf = e.clientConfig && e.clientConfig.customFn;
     if (cf) {
       try {
         const fn = new Function('inputs', 'pick', 'fill', cf);
-        for (const inp of variantsOf(base)) texts.push((fn(inp ?? {}, (x: any) => x, (a: any, b: any) => b) || []).join(NL));
+        for (const v of variantsOf(base)) texts.push((fn(v.inputs ?? {}, (x: any) => x, (a: any, b: any) => b) || []).join(NL));
       } catch { /* 忽略 */ }
     }
     for (const t of texts) {
