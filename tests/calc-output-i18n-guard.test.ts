@@ -759,3 +759,250 @@ test('P168 B3-7 G12b：页面必须把「引擎声明的 code 集合」传给模
   assert.match(astroSrc, /extractEngineTokenCodes\(engine\)/, '页面没有算引擎声明的 code 集合');
   assert.match(astroSrc, /calcOutputTemplates\(pageLang, calcOutAlias, calcOutCodes\)/, '页面没有把 code 集合传给模板函数');
 });
+
+// ═══ P168 B3-17：客户端动态卡片的**结构不变式**（源码级 · 零浏览器成本）═══
+//
+// ⚠️ 为什么要有这一段（2026-11-26 实测背景，缺陷已闭环但**没有第二道防线**）：
+//   ① 服务端 src/components/ResultCard.astro 用 hideIndex={engine.clientConfig.type === 'custom'}
+//      决定卡片形态（<h3> 标题 + .font-mono 正文，**无折叠区**）；
+//   ② 客户端 submit handler 以前**先**判「文本里有没有 ' → ' 和 ' | '」⇒ 命中就渲染
+//      analysis-card（标题 + 「查看详情」折叠，正文全塞进折叠区），**后**判 custom 分支
+//      ⇒ **custom 引擎被劫持**：用户点「计算」后动态卡片只剩 3 行，正文藏在折叠区里。
+//   ③ 实测：100/100 个引擎的 clientConfig.type 都是 'custom'（src/engines/** 全扫，0 个非 custom）
+//      ⇒ 那个 analysis-card 分支会劫持**任何输出同时含 ' → ' 和 ' | ' 的引擎**。
+//      控制器在 HEAD(06a7ae5) 上静态扫 dist/zh/*/index.html 的 data-calc-output-raw
+//      ⇒ 24/100 个页面命中。
+//   ④ ⭐ 浏览器守卫 tests/scripts/p168-browser-verify.ts 的动态清单**已扩到 34 个 slug**
+//      （覆盖全部 24 个受害引擎）⇒ 但浏览器守卫**不在 CI 里**
+//      ⇒ 源码层补这一道顺序不变式：零浏览器成本、覆盖 100/100 引擎、**进 CI**。
+//
+// ⭐ 判据**语言无关**：只断言**结构**（谁在前），
+//   不硬编码任何 slug 清单 / 引擎数量（那是浏览器层的事，源码层管不着）。
+
+/**
+ * 客户端「custom 卡片分支」与「analysis-card 分支」的判别式。
+ *
+ * ⚠️ 为什么不用朴素 indexOf（2026-11-26 实测踩到的坑）：
+ *   src/pages/[lang]/[slug].astro 的**注释里**就写着这两个条件
+ *   （「⚠️ 以前这里先判『文本里有没有 ' → ' 和 ' | '』」）⇒ 朴素 indexOf 会取到
+ *   **注释里**的位置 ⇒ 判据整体错位（实测：注释在 2218 行 / 真代码在 2239 行
+ *   ⇒ 朴素口径会把正确顺序误判成「custom 在后」）。
+ *   ⇒ 统一用仓库现成的 stripComments（tests/build-dep-suites.mjs）先抹注释再定位。
+ *   ⚠️ stripComments 是**整段删除**（不是替换成等长空白）⇒ 不能拿 strip 后的偏移
+ *   映射回原文；但**相对顺序**不受影响（只删除、不重排）⇒ 顺序判据成立。
+ *   ⭐ stripComments 逐字保留字符串字面量 ⇒ 实测 ' → ' / ' | ' 在 strip 后仍可被找到。
+ */
+const CUSTOM_CARD_BRANCH_RE =
+  /if\s*\(\s*config\.type\s*===\s*['"]custom['"]\s*&&\s*results\.length\s*===\s*1\s*\)/;
+const ANALYSIS_CARD_BRANCH_RE =
+  /r\.indexOf\(\s*['"]\s*→\s*['"]\s*\)\s*>\s*-1\s*&&\s*r\.indexOf\(\s*['"]\s*\|\s*['"]\s*\)\s*>\s*-1/;
+
+interface BranchOrder {
+  /** 判据是否通过 */
+  ok: boolean;
+  /** 不通过的原因（中文，直接可读） */
+  reason: string;
+  /** custom 分支在 **strip 后**文本里的位置（-1 = 没找到） */
+  customAt: number;
+  /** analysis-card 分支在 **strip 后**文本里的位置（-1 = 没找到） */
+  analysisAt: number;
+  /** 剥掉注释后的源码（供调用方做行号 / 作用域定位） */
+  code: string;
+}
+
+/**
+ * 定位客户端的两个卡片分支并判断**相对顺序**。
+ * ⚠️ 找不到分支 ⇒ 判红（不得空转）：将来有人删掉分支时，这条断言必须报警。
+ */
+function locateClientCardBranches(src: string): BranchOrder {
+  const code = stripComments(src);
+  const customAt = CUSTOM_CARD_BRANCH_RE.exec(code)?.index ?? -1;
+  const analysisAt = ANALYSIS_CARD_BRANCH_RE.exec(code)?.index ?? -1;
+  if (customAt < 0) {
+    return {
+      ok: false,
+      reason: "页面里找不到 custom 卡片分支（config.type === 'custom' && results.length === 1）",
+      customAt,
+      analysisAt,
+      code,
+    };
+  }
+  if (analysisAt < 0) {
+    return {
+      ok: false,
+      reason: "页面里找不到 analysis-card 分支（r.indexOf(' → ') > -1 && r.indexOf(' | ') > -1）",
+      customAt,
+      analysisAt,
+      code,
+    };
+  }
+  if (customAt > analysisAt) {
+    return {
+      ok: false,
+      reason:
+        "custom 卡片分支排在了 analysis-card 分支之后 ⇒ 输出同时含 ' → ' 与 ' | ' 的 custom 引擎会被劫持成折叠卡片",
+      customAt,
+      analysisAt,
+      code,
+    };
+  }
+  return { ok: true, reason: 'custom 分支在前', customAt, analysisAt, code };
+}
+
+/** 位置 → 行号（1 起） */
+function lineOf(text: string, pos: number): number {
+  return text.slice(0, pos).split('\n').length;
+}
+
+// ── 断言 1：custom 卡片分支必须排在 analysis-card 分支之前 ────────────────
+test('P168 B3-17 顺序不变式：custom 卡片分支必须排在 analysis-card 分支之前（否则 custom 引擎被劫持）', () => {
+  const r = locateClientCardBranches(astroSrc);
+  assert.ok(r.ok, r.reason);
+  // ⭐ 两个分支都必须落在**客户端脚本块**里（不是服务端代码、不是模板文案）
+  const scriptStart = r.code.indexOf('define:vars');
+  assert.ok(scriptStart > 0, '页面里找不到客户端脚本注入块（define:vars）');
+  const scriptEnd = r.code.indexOf('</script>', scriptStart);
+  assert.ok(scriptEnd > scriptStart, '客户端脚本块没有正常闭合');
+  assert.ok(
+    r.customAt > scriptStart && r.customAt < scriptEnd,
+    'custom 分支不在客户端脚本块里（strip 后第 ' + lineOf(r.code, r.customAt) + ' 行）',
+  );
+  assert.ok(
+    r.analysisAt > scriptStart && r.analysisAt < scriptEnd,
+    'analysis-card 分支不在客户端脚本块里（strip 后第 ' + lineOf(r.code, r.analysisAt) + ' 行）',
+  );
+
+  // ⭐ 检测器自检 1：把两个分支**写反**的样本必须被判红
+  //   （仓库纪律：检查违规的断言在没有违规时本来就绿 ⇒ 必须证明检测器本身有效）
+  const SAMPLE_CUSTOM = "if (config.type === 'custom' && results.length === 1) { html += 'v3'; }";
+  const SAMPLE_ANALYSIS = "if (r.indexOf(' → ') > -1 && r.indexOf(' | ') > -1) { html += 'analysis'; }";
+  const swapped = locateClientCardBranches([SAMPLE_ANALYSIS, SAMPLE_CUSTOM].join('\n'));
+  assert.equal(swapped.ok, false, "检测器没认出「analysis-card 在前」的样本（这条断言是恒绿？）");
+  assert.ok(swapped.reason.includes('排在了'), '检测器没给出顺序错误的原因：' + swapped.reason);
+  const good = locateClientCardBranches([SAMPLE_CUSTOM, SAMPLE_ANALYSIS].join('\n'));
+  assert.equal(good.ok, true, '检测器把正确的顺序判成了红：' + good.reason);
+
+  // ⭐ 检测器自检 2：**注释里**提到 analysis 条件，不得被当成代码位置
+  //   （这正是朴素 indexOf 会踩的坑：注释在 2218 行、真代码在 2239 行）
+  const withComment = locateClientCardBranches(
+    [
+      "// ⚠️ 旧代码先判 r.indexOf(' → ') > -1 && r.indexOf(' | ') > -1 ⇒ 劫持 custom 引擎",
+      SAMPLE_CUSTOM,
+      SAMPLE_ANALYSIS,
+    ].join('\n'),
+  );
+  assert.equal(withComment.ok, true, '注释里的字串被当成了代码位置：' + withComment.reason);
+
+  // ⭐ 检测器自检 3：analysis 分支**只出现在注释里** ⇒ 必须报「找不到分支」（不得静默通过）
+  const onlyComment = locateClientCardBranches(
+    ['// r.indexOf(' + "' → '" + ') > -1 && r.indexOf(' + "' | '" + ') > -1', SAMPLE_CUSTOM].join('\n'),
+  );
+  assert.equal(onlyComment.ok, false, '注释里的 analysis-card 分支被当成了真代码');
+  assert.ok(onlyComment.reason.includes('找不到'), '检测器没报「找不到分支」：' + onlyComment.reason);
+});
+
+/**
+ * 找出代码里内联的 **tip 标记字面量**（= 第二份标记清单）。
+ * ⭐ 口径收窄（2026-11-26 实测）：只认「emoji + Tip/提示」的**标记文本**形态。
+ *   页面里**合法**存在裸 '💡' 字面量 —— v3 区块图标映射 'Tip': '💡'、
+ *   iconRegex /[🩺📊🔄⚖️🎯💡]/u、表格行首 emoji 检测 indexOf('💡')
+ *   ⇒ 它们判的是**区块图标**，不是 tip 标记文本 ⇒ 不能一刀切禁掉裸 emoji。
+ */
+function inlineTipMarkers(code: string): string[] {
+  const out: string[] = [];
+  for (const m of code.matchAll(/['"][^'"\n]*💡\s*(?:Tip|提示)[^'"\n]*['"]/g)) out.push(m[0]);
+  return out;
+}
+
+// ── 断言 2：客户端必须用**共享**的 tip 判定实现 ──────────────────────────
+test('P168 B3-17 共享 tip 判定：客户端必须用 CALC_OUTPUT_IS_TIP_LINE_JS（不得内联第二份标记清单）', () => {
+  const code = stripComments(astroSrc);
+  // ① 必须注入并求值共享实现（页面是 .astro ⇒ 不能 import ⇒ 靠 define:vars 注入源码字符串）
+  assert.match(astroSrc, /CALC_OUTPUT_IS_TIP_LINE_JS/, '页面没有引用共享的 tip 判定实现');
+  assert.match(code, /new Function\([^)]*CALC_OUTPUT_IS_TIP_LINE_JS/, '客户端没有求值共享的 tip 判定实现');
+  // ② 客户端必须真的用这个判定（而不是另写一份过滤）
+  assert.match(code, /isCalcOutputTipLine/, '客户端没有调用共享的 tip 判定函数');
+  // ③ 不得内联第二份标记清单（⭐ 口径见 inlineTipMarkers 的注释）
+  const inlined = inlineTipMarkers(code);
+  assert.deepEqual(inlined, [], '客户端内联了 tip 标记字面量（第二份标记清单）：' + inlined.join(' | '));
+
+  // ⭐ 检测器自检：造一份**内联过滤**的样本 ⇒ 检测器必须看得见它
+  const inlineSample =
+    "var stripped = r.indexOf('💡 Tip:') > -1 ? r : r.split('\\n').filter(function(l) { return !isCalcOutputTipLine(l); }).join('\\n');";
+  assert.deepEqual(inlineTipMarkers(inlineSample).length, 1, '检测器没认出内联的 tip 标记字面量');
+  // ⭐ 检测器自检 2：走共享实现的样本 ⇒ 检测器不得误报
+  const sharedSample =
+    "var stripped = preserveTip ? r : r.split('\\n').filter(function(l) { return !isCalcOutputTipLine(l); }).join('\\n');";
+  assert.deepEqual(inlineTipMarkers(sharedSample), [], '检测器把共享实现误判成内联标记');
+  // ⭐ 检测器自检 3：裸 emoji（区块图标）**不得**被误判成标记清单
+  const iconSample = "var icons = { 'Tip': '💡', 'Milestone': '🎯' }; var re = /[🩺💡]/u;";
+  assert.deepEqual(inlineTipMarkers(iconSample), [], '检测器把区块图标误判成 tip 标记清单');
+});
+
+// ── 断言 3：客户端 tip 保留条件必须与服务端**真实行为**一致 ───────────────
+/** 客户端的 preserveTip 定义表达式（只认 var/let/const 赋值 ⇒ 不吃服务端 JSX 的同名 prop） */
+function clientPreserveTipExpr(code: string): string | null {
+  const m = /(?:var|let|const)\s+preserveTip\s*=\s*([^;\n]+)/.exec(code);
+  return m ? m[1].trim() : null;
+}
+
+/** 判定客户端的 preserveTip 条件是否与服务端真实行为一致 */
+function preserveTipConditionOk(expr: string | null): { ok: boolean; reason: string } {
+  if (expr === null) return { ok: false, reason: '客户端没有 preserveTip 定义' };
+  if (!/bizConfigKey\s*===\s*['"]BIZ_V3['"]/.test(expr)) {
+    return { ok: false, reason: "preserveTip 缺少 BIZ_V3 条件：" + expr };
+  }
+  if (!/!\s*decisionRender/.test(expr)) {
+    return { ok: false, reason: 'preserveTip 缺少 !decisionRender（服务端已结构性剥离）：' + expr };
+  }
+  return { ok: true, reason: expr };
+}
+
+test('P168 B3-17 tip 保留条件：客户端必须与服务端真实行为一致（BIZ_V3 且决策区块未接管）', () => {
+  const code = stripComments(astroSrc);
+
+  // ① 先把**服务端真实行为**钉住（否则「一致」无从谈起）
+  //   服务端 ResultCard.astro：preserveTip 为真 ⇒ 保留 tip 行；否则用共享判定过滤掉
+  const cardSrc = readFileSync(resolve(process.cwd(), 'src/components/ResultCard.astro'), 'utf8');
+  assert.match(cardSrc, /preserveTip\s*\?\s*text\s*:/, 'ResultCard 不再按 preserveTip 决定是否过滤 tip 行');
+  assert.match(cardSrc, /isCalcOutputTipLine/, 'ResultCard 不再用共享的 tip 判定');
+  //   服务端 prop 的取值来自页面 JSX：preserveTip={bizConfigKey === 'BIZ_V3'}
+  assert.match(
+    code,
+    /preserveTip=\{bizConfigKey\s*===\s*'BIZ_V3'\}/,
+    '页面没有按 BIZ_V3 把 preserveTip 传给 ResultCard',
+  );
+  //   页面上游还有一道**结构性剥离**：决策区块接管 ⇒ 卡片里本就没有 tip
+  assert.match(
+    code,
+    /decisionRender\s*\?\s*stripDecisionTip\(ex\)\s*:\s*ex/,
+    '页面没有结构化剥离决策区块接管的 tip',
+  );
+  //   ⇒ 卡片里**实际**保留 tip 的条件 = BIZ_V3 && !decisionRender
+
+  // ② 客户端的 preserveTip 定义必须与之一致
+  const expr = clientPreserveTipExpr(code);
+  const verdict = preserveTipConditionOk(expr);
+  assert.ok(verdict.ok, verdict.reason);
+  //   ⭐ 且它必须落在**客户端脚本块**里（不是服务端 JSX 的同名 prop）
+  const scriptStart = code.indexOf('define:vars');
+  assert.ok(scriptStart > 0, '页面里找不到客户端脚本注入块（define:vars）');
+  const scriptEnd = code.indexOf('</script>', scriptStart);
+  const defAt = code.search(/(?:var|let|const)\s+preserveTip\s*=/);
+  assert.ok(defAt > scriptStart && defAt < scriptEnd, '客户端的 preserveTip 定义不在客户端脚本块里');
+
+  // ⭐ 检测器自检：缺 !decisionRender 的样本必须判红（证明这条断言不是恒绿）
+  const missingDecision = preserveTipConditionOk("bizConfigKey === 'BIZ_V3'");
+  assert.equal(missingDecision.ok, false, '检测器没认出「缺 !decisionRender」的样本');
+  assert.ok(missingDecision.reason.includes('!decisionRender'), '检测器没给出缺条件的原因：' + missingDecision.reason);
+  // ⭐ 检测器自检 2：缺 BIZ_V3 的样本必须判红
+  const missingBiz = preserveTipConditionOk('!decisionRender');
+  assert.equal(missingBiz.ok, false, '检测器没认出「缺 BIZ_V3」的样本');
+  // ⭐ 检测器自检 3：正确的样本必须判绿
+  assert.equal(
+    preserveTipConditionOk("bizConfigKey === 'BIZ_V3' && !decisionRender").ok,
+    true,
+    '检测器把正确条件判成了红',
+  );
+});
+

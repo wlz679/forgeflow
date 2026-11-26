@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang='zh'>
-<head><meta charset='utf-8'><title>P168 B3-9 browser harness</title></head>
+<head><meta charset='utf-8'><title>P168 B3-17 browser harness</title></head>
 <body>
 <pre id='out'>running…</pre>
 <script>
@@ -10,6 +10,10 @@
   const cjk = (s) => { let n = 0; for (const ch of s) { const c = ch.codePointAt(0); if (c >= 0x3400 && c <= 0x9fff) n++; } return n; };
   const ew = (s) => { let n = 0, run = 0; for (const ch of s) { const c = ch.codePointAt(0); const isL = (c >= 65 && c <= 90) || (c >= 97 && c <= 122); if (isL) run++; else { if (run >= 3) n++; run = 0; } } if (run >= 3) n++; return n; };
   const isEn = (l) => { const t = l.trim(); if (!t) return false; if (cjk(t) > 2) return false; return ew(t) >= 3; };
+  // 输出用 '|' 分隔 ⇒ 样本里的 '|' 必须转义，否则字段会被劈开
+  const safe = (s) => String(s == null ? '' : s).replace(/\|/g, '/');
+  // base64 编码：英文行里可能有 '|' / 换行 ⇒ 逐条上报时不能劈开字段
+  const b64 = (s) => { const bytes = new TextEncoder().encode(s); let bin = ''; for (const b of bytes) bin += String.fromCharCode(b); return btoa(bin); };
   const out = [];
   const load = (url) => new Promise((res) => {
     const f = document.createElement('iframe');
@@ -19,16 +23,47 @@
     f.onerror = () => res(f);
     f.src = url;
   });
+  // P168 B3-17：⭐ **点「计算」前必须填表**。
+  //   表单输入框没有默认值（只有 placeholder）⇒ 空表单提交时引擎走「请输入…」短路分支
+  //   ⇒ 动态卡片天然只剩 2~3 行 ⇒ 与静态卡片（引擎默认示例）**无法比较**。
+  //   ⇒ 数字输入框按 placeholder 里的示例数字填表（= 引擎静态示例用的那组值）；
+  //     select 没有 placeholder ⇒ 取第一个非空 option（如 pricingMode=realtime）。
+  //   ⇒ 模拟真实用户「填数字 → 点计算」的那条路径。
+  const fillForm = (form) => {
+    if (!form) return;
+    form.querySelectorAll('input, select').forEach((el) => {
+      if (el.tagName === 'SELECT') {
+        if (el.value) return;                       // 已有默认值（如 pricingMode=realtime）⇒ 不动
+        for (const opt of el.options) { if (opt.value) { el.value = opt.value; break; } }
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+      if (el.type !== 'number') return;             // text / textarea 保持 SSR 给的值
+      const ph = el.getAttribute('placeholder') || '';
+      // ⭐ M-2：负号必须带上 —— placeholder 里可能是 "-5%" / "-2.5" 这类负值示例
+      const m = ph.match(/-?\d[\d,]*(?:\.\d+)?/);
+      let v = m ? m[0].replace(/,/g, '') : '';
+      if (!v) {
+        const min = Number(el.getAttribute('min') || 0);
+        v = min > 0 ? String(min * 10) : '1000';
+      }
+      el.value = v;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  };
   for (const slug of SLUGS) {
     const f = await load('/zh/' + slug + '/index.html');
     await new Promise((r) => setTimeout(r, 500));
     const doc = f.contentDocument;
     const card = doc && doc.getElementById('static-results');
     const ls = card ? card.innerText.split('\n').map((x) => x.trim()).filter((x) => x) : [];
+    const h3 = card ? card.querySelectorAll('h3').length : 0;
     const en = ls.filter(isEn);
     const dd = ls.filter((l) => l.indexOf('$$') >= 0);
     const bare = ls.filter((l) => l.indexOf('$calc_out') >= 0);
-    out.push(['S', slug, ls.length, en.length, dd.length, bare.length, en.slice(0, 3).join(' ~~ ')]);
+    out.push(['S', slug, ls.length, en.length, dd.length, bare.length, h3, safe(en.slice(0, 3).join(' ~~ '))].join('|'));
+    // ⭐ 静态卡的整行英文**逐条**上报（与动态卡共用同一台账 ⇒ 两侧都不能有未登记英文）
+    for (const l of Array.from(new Set(en))) out.push(['E', slug, 'S', b64(l)].join('|'));
     f.remove();
   }
   for (const slug of DYN) {
@@ -36,19 +71,46 @@
     await new Promise((r) => setTimeout(r, 500));
     const doc = f.contentDocument;
     const form = doc && doc.getElementById('tool-form');
+    const card = doc && doc.getElementById('static-results');
+    const ls = card ? card.innerText.split('\n').map((x) => x.trim()).filter((x) => x) : [];
+    const staticH3 = card ? card.querySelectorAll('h3').length : 0;
+    fillForm(form);
     const btn = form ? form.querySelector('button[type=submit]') : null;
     if (btn) { btn.click(); await new Promise((r) => setTimeout(r, 1200)); }
     const dr = doc && doc.getElementById('dynamic-results');
     const dl = dr ? dr.innerText.split('\n').map((x) => x.trim()).filter((x) => x) : [];
-    const det = dr ? dr.querySelectorAll('.detail') : [];
-    const detail = det.length ? det[0].innerText.length : 0;
-    const visible = dl.join(' ').length + detail;
-    const en = dl.filter(isEn);
-    out.push(['D', slug, dl.length, visible, detail, en.length, en.slice(0, 3).join(' ~~ ')]);
+    // ⭐ P168 B3-17：**「可见」与「存在」必须分开量** ——
+    //   .detail 是 display:none 的折叠区 ⇒ innerText 本来就不含它（可见口径天然正确），
+    //   但它**存在**在 DOM 里 ⇒ 单独作为 detailLen 诊断字段上报（不再计入「可见」）。
+    const visibleLen = dl.join(' ').length;
+    const dets = dr ? Array.from(dr.querySelectorAll('.detail')) : [];
+    const detailLines = dets.length ? dets.map((d) => d.innerText).join('\n').split('\n').map((x) => x.trim()).filter((x) => x) : [];
+    const detailLen = detailLines.join(' ').length;
+    const h3 = dr ? dr.querySelectorAll('h3').length : 0;
+    const exp = dr ? dr.querySelectorAll('.expand-btn').length : 0;
+    // 英文行的判定 —— ⭐ P168 B3-17 复审 I-1：**绝对**判定
+    //   旧口径是「相对静态卡片」（静态没有、客户端才有才算）⇒ 两张卡片**都有的**整行英文
+    //   （例如引擎自己写死的英文行）永远不会被报 ⇒ 结构性盲区（实测 19 行用户可见英文无守卫）。
+    //   现在**绝对**统计动态卡片里的全部整行英文（可见区 + 折叠区），
+    //   由 verify.ts 的 ENGLISH_DEBT 台账**逐条登记**豁免 ⇒ 豁免必须落到具体行。
+    //   相对口径（enVNew/enDNew）保留为诊断字段，但不再作为判定依据。
+    const staticEn = new Set(ls.filter(isEn));
+    // ⭐ 静态卡的整行英文也**逐条**上报（同一台账同时约束 SSR 静态卡与客户端动态卡）
+    for (const l of Array.from(staticEn)) out.push(['E', slug, 'S', b64(l)].join('|'));
+    const enV = dl.filter(isEn);
+    const enVNew = enV.filter((l) => !staticEn.has(l));
+    const enD = detailLines.filter(isEn);
+    const enDNew = enD.filter((l) => !staticEn.has(l));
+    out.push(['D', slug, dl.length, visibleLen, detailLen, h3, exp, ls.length, staticH3,
+      enV.length, enVNew.length, enD.length, enDNew.length,
+      safe(enVNew.concat(enDNew).slice(0, 3).join(' ~~ '))].join('|'));
+    // ⭐ 绝对英文行**逐条**上报（base64：'|' / 换行 / 中文标点都不能劈开字段）
+    for (const l of Array.from(new Set(enV))) out.push(['E', slug, 'V', b64(l)].join('|'));
+    for (const l of Array.from(new Set(enD))) out.push(['E', slug, 'D', b64(l)].join('|'));
     f.remove();
   }
   out.push(['DONE']);
-  const text = out.map((r) => r.join('|')).join('\n');
+  const text = out.join('\n');
   document.getElementById('out').textContent = text;
   await fetch('/result', { method: 'POST', body: text });
 })().catch((e) => {

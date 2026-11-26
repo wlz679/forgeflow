@@ -16,6 +16,22 @@ const lang = getLang(Astro);
 //     beautify 的行结构不一致（hydration 后 tip 消失 ⇒ 布局跳动）。
 //   ⭐ 标记清单与判定在 src/lib/calc-output-i18n.ts（**唯一实现**）
 //     ⇒ 源码级守卫能直接单测，变异台子也能覆盖（见 G11）。
+//
+// P168 B3-17：**卡片形态的服务端契约**（本文件与客户端脚本都不随页面下发 ⇒ 长解释写这里）——
+//   hideIndex={engine.clientConfig.type === 'custom'} 决定卡片形态
+//   （<h3> 标题 + .font-mono 正文，**无折叠区**）
+//   ⇒ 客户端 src/pages/[lang]/[slug].astro 必须用**同一个**判据（config.type === 'custom'），
+//     不能靠「文本里有没有 ' → ' / ' | '」去猜。
+//   ⚠️ 以前客户端先判文本特征 ⇒ 输出同时含这两个符号的引擎被劫持成 analysis-card
+//     （标题 + 「查看详情」折叠，正文全塞进折叠区）⇒ 实测 **24/100 个引擎**中招
+//     （AI cost 家族 6 个 + BIZ_SAAS 2 + BIZ_VALUATION 5 + BIZ_FREELANCE 5 + BIZ_COST 5 + BIZ_V3 1）
+//     ⇒ 用户必须手动点「查看详情」才看得到正文（正文 196~5187 字符）。
+//   ⇒ 源码级顺序不变式守卫在 tests/calc-output-i18n-guard.test.ts
+//     （零浏览器成本、覆盖 100/100 引擎、进 CI）；浏览器层守卫在
+//     tests/scripts/p168-browser-verify.ts（49 页 · 负对照精确红 24 处）。
+//   ⚠️ ⭐ **内联脚本每页都要下发 ⇒ 注释字节 = 每个用户的下载成本** ——
+//     B3-17 实测：把长注释留在客户端内联脚本里，2 个 zh 页被顶过 200 KB 的页面体积阈值
+//     （gpu-cloud 201.4 KB / churn-rate 200.3 KB）⇒ 长解释一律放服务端模块或计划文档。
 const stripped = preserveTip
   ? text
   : text.split('\n').filter((l: string) => !isCalcOutputTipLine(l)).join('\n');

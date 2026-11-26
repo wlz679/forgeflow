@@ -54,6 +54,36 @@ export function isCalcOutputTipLine(line: string): boolean {
   return CALC_OUTPUT_TIP_MARKERS.some((m) => line.includes(m));
 }
 
+/**
+ * tip 行判定的**客户端可执行实现**（JS 源码字符串）。
+ *
+ * ⭐ 为什么需要它（P168 B3-17 实测）
+ *   服务端 ResultCard.astro 用 `isCalcOutputTipLine` 过滤 tip 行，
+ *   客户端内联脚本（define:vars，不能 import）以前写死英文标记 `'💡 Tip:'`
+ *   ⇒ ① 与服务端不是同一份实现（会漂）② 只认英文标记（zh 页失配）。
+ *   ⇒ 这里把**同一份标记清单**编成 JS 源码，页面经 define:vars 注入后 `new Function` 求值
+ *     （与 CALC_OUTPUT_SPLIT_V3_LINE_JS 完全同款套路）。
+ *
+ * ⭐ tip 的**保留条件**（P168 B3-17 实测，服务端**实际**行为）
+ *   服务端 ResultCard 的 prop 是 `preserveTip={bizConfigKey === 'BIZ_V3'}`，
+ *   但页面上游还有一道**结构性剥离**：`decisionRender ? stripDecisionTip(ex) : ex`
+ *   ⇒ 卡片里**实际**保留 tip 的条件 = `BIZ_V3 && !decisionRender`
+ *   ⚠️ 实测：roas / funnel-step / kb-coverage 的 tip 是**裸 JSON**
+ *     （`💡 Tip: {"code":"roas_excellent",...}`）且决策区块已接管 ⇒ 服务端剥掉；
+ *     nrr / logo-churn 的 tip 是 token 且未接管 ⇒ 服务端保留。
+ *   ⇒ 客户端只按 `bizConfigKey === 'BIZ_V3'` 判断 ⇒ 会把裸 JSON 的 tip 显示给用户。
+ *
+ * ⚠️ 为什么**不用** `String.raw`
+ *   标记清单里没有反斜杠 ⇒ 直接用 JSON.stringify 序列化最安全
+ *   （`String.raw` 里多写一层反斜杠会让正则变成「匹配一个字面反斜杠」——
+ *   见 CALC_OUTPUT_SPLIT_V3_LINE_JS 的注释）。
+ *   ⇒ 清单**只有这一处**（CALC_OUTPUT_TIP_MARKERS）⇒ 两端不可能漂。
+ */
+export const CALC_OUTPUT_IS_TIP_LINE_JS =
+  'function isCalcOutputTipLine(line){if(!line)return false;var m=' +
+  JSON.stringify(CALC_OUTPUT_TIP_MARKERS) +
+  ';for(var i=0;i<m.length;i++){if(String(line).indexOf(m[i])>-1)return true;}return false;}';
+
 
 /**
  * token 正则（全局）。
